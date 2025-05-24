@@ -1,0 +1,29 @@
+services:
+  api:
+    image: emmanuelpean/fastapi
+    depends_on:
+      - postgres # wait for postgres to be ready before starting the api
+    ports:
+      - 80 :8000  # redirect the port <port on localhost>:<port on container>
+    volumes:
+      - ./:/usr/src/app:ro # mount the current directory to /usr/src/app in the container
+    # command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      DATABASE_HOSTNAME: ${DATABASE_HOSTNAME}
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - postgres_db:/var/lib/postgresql/data # where db data is stored
+
+volumes:
+  postgres_db: # volume name
