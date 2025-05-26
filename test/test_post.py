@@ -6,14 +6,10 @@ from app import schemas, models
 # ---------------------------------------------------- GETTING POSTS ---------------------------------------------------
 
 
-def test_get_all_posts(
-    authorized_client, test_user: dict, test_posts: List[models.Post]
-):
+def test_get_all_posts(authorized_client, test_user1: dict, test_posts: List[models.Post]):
     response = authorized_client.get("/posts")
     posts = [schemas.PostOut(**post) for post in response.json()]
-    assert (len(posts)) == len(
-        [post for post in test_posts if post.owner_id == test_user["id"]]
-    )
+    assert (len(posts)) == len([post for post in test_posts if post.owner_id == test_user1["id"]])
     assert response.status_code == 200
 
 
@@ -56,17 +52,17 @@ def test_get_one_post(authorized_client, test_posts: List[models.Post]):
         ("new 4th title", "new 4th content", False),
     ],
 )
-def test_create_post(title, content, published, authorized_client, test_user: dict):
+def test_create_post(title, content, published, authorized_client, test_user1: dict):
     post_data = {"title": title, "content": content, "published": published}
     response = authorized_client.post("/posts", json=post_data)
     created_post = schemas.Post(**response.json())
     assert response.status_code == 201
     for attr in post_data:
         assert getattr(created_post, attr) == post_data[attr]
-    assert created_post.owner_id == test_user["id"]
+    assert created_post.owner_id == test_user1["id"]
 
 
-def test_create_post_default_published_true(authorized_client, test_user: dict):
+def test_create_post_default_published_true(authorized_client, test_user1: dict):
     post_data = {"title": "some title", "content": "some content"}
     response = authorized_client.post("/posts", json=post_data)
     created_post = schemas.Post(**response.json())
@@ -74,7 +70,7 @@ def test_create_post_default_published_true(authorized_client, test_user: dict):
     for attr in post_data:
         assert getattr(created_post, attr) == post_data[attr]
     assert created_post.published == True
-    assert created_post.owner_id == test_user["id"]
+    assert created_post.owner_id == test_user1["id"]
 
 
 def test_unauthorised_user_create_post(client):
@@ -109,14 +105,14 @@ def test_delete_other_user_post(authorized_client, test_posts: List[models.Post]
 # --------------------------------------------------- UPDATING POSTS ---------------------------------------------------
 
 
-def test_update_post(authorized_client, test_user, test_posts: List[models.Post]):
+def test_update_post(authorized_client, test_user1, test_posts: List[models.Post]):
     post_data = {
         "title": "some title",
         "content": "some content",
         "id": test_posts[0].id,
     }
     response = authorized_client.put(f"/posts/{post_data['id']}", json=post_data)
-    updated_post = schemas.Post(**response.json(), owner=test_user)
+    updated_post = schemas.Post(**response.json(), owner=test_user1)
     assert response.status_code == 200
     for attr in post_data:
         assert getattr(updated_post, attr) == post_data[attr]

@@ -1,116 +1,129 @@
+"""Job route"""
+
 from fastapi import HTTPException, Depends, APIRouter, status
-from app import models, schemas, oauth2, database
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-router = APIRouter(prefix="/posts", tags=["posts"])
+from app import models, schemas, oauth2, database
+
+router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 
-@router.get("/", response_model=list[schemas.PostOut])
-def get_all_posts(
+@router.get("/", response_model=list[schemas.JobOut])
+def get_all_jobs(
     db: Session = Depends(database.get_db),
-    current_user: int = Depends(oauth2.get_current_user),
+    current_user: models.User = Depends(oauth2.get_current_user),
     limit: int = 10,
-    skip: int = 0,
     search: str = "",
 ):
-    posts = (
-        db.query(models.Post, func.count(models.Vote.post_id).label("votes"))
-        .outerjoin(models.Vote, models.Vote.post_id == models.Post.id)
-        .filter(models.Post.title.contains(search))
-        .filter(models.Post.owner_id == current_user.id)
-        .group_by(models.Post.id)
+    """Get all jobs.
+    :param db: The database session.
+    :param current_user: The current user.
+    :param limit: The number of jobs to return.
+    :param search: The search query.
+    :returns: A list of jobs."""
+
+    jobs = (
+        db.query(models.Job)
+        .filter(models.Job.title.contains(search))
+        .filter(models.Job.owner_id.is_equal(current_user.id))
         .limit(limit)
-        .offset(skip)
         .all()
     )
 
-    return posts
+    return jobs
 
 
-@router.get("/{post_id}", response_model=schemas.PostOut)
-def get_post(
-    post_id: int,
+@router.get("/{job_id}", response_model=schemas.JobOut)
+def get_job(
+    job_id: int,
     db: Session = Depends(database.get_db),
-    current_user: int = Depends(oauth2.get_current_user),
+    current_user: models.User = Depends(oauth2.get_current_user),
 ):
+    """Get a job by ID.
+    :param job_id: The job ID.
+    :param db: The database session.
+    :param current_user: The current user."""
 
-    post = (
-        db.query(models.Post, func.count(models.Vote.post_id).label("votes"))
-        .outerjoin(models.Vote, models.Vote.post_id == models.Post.id)
-        .group_by(models.Post.id)
-        .filter(models.Post.owner_id == current_user.id)
-        .filter(models.Post.id == post_id)
+    job = (
+        db.query(models.Job)
+        .group_by(models.Job.id)
+        .filter(models.Job.owner_id.is_equal(current_user.id))
+        .filter(models.Job.id.is_equal(job_id))
         .first()
     )
 
-    if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
 
-    return post
+    return job
 
 
-@router.post("/", status_code=201, response_model=schemas.Post)
-def create_post(
-    post: schemas.PostCreate,
+@router.post("/", status_code=201, response_model=schemas.Job)
+def create_job(
+    job: schemas.JobCreate,
     db: Session = Depends(database.get_db),
-    current_user: int = Depends(oauth2.get_current_user),
+    current_user: models.User = Depends(oauth2.get_current_user),
 ):
+    """Create a new job.
+    :param job: The job data.
+    :param db: The database session.
+    :param current_user: The current user."""
 
-    new_post = models.Post(owner_id=current_user.id, **post.model_dump())
-    db.add(new_post)
+    new_job = models.Job(owner_id=current_user.id, **job.model_dump())
+    db.add(new_job)
     db.commit()
-    db.refresh(new_post)
-    return new_post
+    db.refresh(new_job)
+    return new_job
 
 
-@router.delete("/{post_id}", status_code=204)
-def delete_post(
-    post_id: int,
+@router.delete("/{job_id}", status_code=204)
+def delete_job(
+    job_id: int,
     db: Session = Depends(database.get_db),
-    current_user: int = Depends(oauth2.get_current_user),
+    current_user: models.User = Depends(oauth2.get_current_user),
 ):
+    """Delete a job.
+    :param job_id: The job ID.
+    :param db: The database session.
+    :param current_user: The current user."""
 
-    post_query = db.query(models.Post).filter(models.Post.id == post_id)
-    post = post_query.first()
+    job_query = db.query(models.Job).filter(models.Job.id.is_equal(job_id))
+    job = job_query.first()
 
-    if post is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
-        )
+    if job is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
 
-    if post.owner_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized access"
-        )
+    if job.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized access")
 
-    post_query.delete(synchronize_session=False)
+    job_query.delete(synchronize_session=False)
     db.commit()
-    return post_query
+    return job_query
 
 
-@router.put("/{post_id}")
-def update_post(
-    post_id: int,
-    post: schemas.PostCreate,
+@router.put("/{job_id}")
+def update_job(
+    job_id: int,
+    job: schemas.JobCreate,
     db: Session = Depends(database.get_db),
-    current_user: int = Depends(oauth2.get_current_user),
+    current_user: models.User = Depends(oauth2.get_current_user),
 ):
+    """Update a job.
+    :param job_id: The job ID.
+    :param job: The job data.
+    :param db: The database session.
+    :param current_user: The current user."""
 
-    # Find the post
-    post_query = db.query(models.Post).filter(models.Post.id == post_id)
-    old_post = post_query.first()
+    # Find the job
+    job_query = db.query(models.Job).filter(models.Job.id.is_equal(job_id))
+    old_job = job_query.first()
 
-    if old_post is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
-        )
+    if old_job is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
 
-    if old_post.owner_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized access"
-        )
+    if old_job.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized access")
 
-    post_query.update(post.model_dump(exclude_defaults=True), synchronize_session=False)
+    job_query.update(job.model_dump(exclude_defaults=True), synchronize_session=False)
     db.commit()
-    return post_query.first()
+    return job_query.first()

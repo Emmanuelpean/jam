@@ -1,31 +1,49 @@
-from fastapi.testclient import TestClient
-from app.main import app
-from app import database, models
-import sqlalchemy
-import pytest
-from app.oauth2 import create_access_token
-from typing import List
+"""
+This module is designed to facilitate testing and database interaction in the application. It includes utility functions,
+fixtures, and configurations for setting up and managing the SQLAlchemy database, test users, test tokens, and mock
+clients for API testing. The provided components streamline testing by enabling convenient access to preconfigured
+resources.
 
+Key Components:
+----------------
+- **SQLALCHEMY_DATABASE_URL**: Configuration for the database connection URL.
+- **engine**: SQLAlchemy engine used to manage connections and interact with the database.
+- **TestingSessionLocal**: A SQLAlchemy session factory designed specifically for testing purposes.
+- **session**: A fixture to provide a database session for tests.
+- **client**: A fixture to provide an API test client.
+- **create_user**: Utility function for creating test users in the database.
+- **test_user1** and **test_user2**: Fixtures for pre-configured test users.
+- **token1** and **token2**: Fixtures for generating authentication tokens for the pre-configured test users.
+- **authorized_client** and **authorized_client2**: Fixtures to provide authenticated API clients for the test users.
+- **test_posts**: Fixture for creating and managing test posts in the application.
+
+This module is instrumental for efficiently executing unit and integration tests by establishing a robust test environment
+and providing the necessary utilities for seamless interactions with the application's data and APIs.
+"""
+
+from typing import Any, Generator
+
+import pytest
+from sqlalchemy import create_engine, orm
+from starlette.testclient import TestClient
+
+from app import database, models
+from app.main import app
+from app.oauth2 import create_access_token
 
 SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
-engine = sqlalchemy.create_engine(SQLALCHEMY_DATABASE_URL)
-TestingSessionLocal = sqlalchemy.orm.sessionmaker(
-    autocommit=False, autoflush=False, bind=engine
-)
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 @pytest.fixture(scope="function")
-def session() -> sqlalchemy.orm.Session:
-    """
-    Fixture that sets up and tears down a new database session for each test function.
-
+def session() -> Generator[orm.Session, Any, None]:
+    """Fixture that sets up and tears down a new database session for each test function.
     This fixture creates a fresh database session by creating and dropping all tables in the
     test database. It yields a session that can be used by test functions. After the test
     function completes, the session is closed.
+    :yield: A new SQLAlchemy session bound to the test database."""
 
-    :yield: A new SQLAlchemy session bound to the test database.
-    :rtype: sqlalchemy.orm.Session
-    """
     models.Base.metadata.drop_all(bind=engine)
     models.Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
@@ -36,20 +54,16 @@ def session() -> sqlalchemy.orm.Session:
 
 
 @pytest.fixture()
-def client(session) -> TestClient:
-    """
-    Fixture that provides a test client with an overridden database dependency.
-
+def client(session) -> Generator[TestClient, Any, None]:
+    """Fixture that provides a test client with an overridden database dependency.
     This fixture creates a test client by overriding the default database dependency
     to use the test database session. It yields the TestClient, allowing the test
     functions to make requests to the FastAPI application.
-
     :param session: The database session fixture to override the database dependency.
-    :yield: The FastAPI TestClient with the overridden database dependency.
-    :rtype: fastapi.testclient.TestClient
-    """
+    :yield: The FastAPI TestClient with the overridden database dependency."""
 
-    def override_get_db():
+    def override_get_db() -> Generator[orm.Session, Any, None]:
+        """Override the default database dependency to use the test database session."""
         try:
             yield session
         finally:
@@ -61,18 +75,14 @@ def client(session) -> TestClient:
 
 
 def create_user(client: TestClient, **user_data) -> dict:
-    """
-    Helper function to create a new user via the FastAPI application.
-
+    """Helper function to create a new user via the FastAPI application.
     This function sends a POST request to the "/users/" endpoint with the provided
     user data to create a new user. It asserts that the response status code is 201
     (created), and it returns the newly created user data, including the password.
-
     :param client: The FastAPI TestClient to make the request.
     :param user_data: A dictionary of user attributes (e.g., email, password, username).
-    :return: The created user data, including the password.
-    :rtype: dict
-    """
+    :return: The created user data, including the password."""
+
     response = client.post("/users/", json=user_data)
     assert response.status_code == 201
     new_user = response.json()
@@ -81,12 +91,12 @@ def create_user(client: TestClient, **user_data) -> dict:
 
 
 @pytest.fixture
-def test_user(client: TestClient) -> dict:
+def test_user1(client: TestClient) -> dict:
     """First test user"""
     user_data = {
-        "email": "emmanuel.pean@gmail.com",
-        "password": "pass123",
-        "username": "emmanuelpean",
+        "email": "user1@email.com",
+        "password": "user1_password",
+        "username": "user1",
     }
     return create_user(client, **user_data)
 
@@ -96,105 +106,83 @@ def test_user2(client: TestClient) -> dict:
     """Second test user"""
 
     user_data = {
-        "email": "john@gmail.com",
-        "password": "password123",
-        "username": "john",
+        "email": "user2@email.com",
+        "password": "user2_password",
+        "username": "user2",
     }
     return create_user(client, **user_data)
 
 
 @pytest.fixture
-def token(test_user: dict) -> str:
-    """
-    Fixture that generates an access token for the given test user.
-
+def token1(test_user1: dict) -> str:
+    """Fixture that generates an access token for the given test user.
     This fixture uses the `create_access_token` function to generate a JWT token
     for the provided test user, which is then used for authorization in test requests.
+    :param test_user1: The test user for whom to generate the access token.
+    :return: The generated JWT access token."""
 
-    :param test_user: The test user for whom to generate the access token.
-    :return: The generated JWT access token.
-    :rtype: str
-    """
-    return create_access_token({"user_id": test_user["id"]})
+    return create_access_token({"user_id": test_user1["id"]})
 
 
 @pytest.fixture
 def token2(test_user2: dict) -> str:
-    """
-    Fixture that generates an access token for the given test user.
-
+    """Fixture that generates an access token for the given test user.
     This fixture uses the `create_access_token` function to generate a JWT token
     for the provided test user, which is then used for authorization in test requests.
+    :param test_user2: The test user for whom to generate the access token.
+    :return: The generated JWT access token."""
 
-    :param test_user: The test user for whom to generate the access token.
-    :return: The generated JWT access token.
-    :rtype: str
-    """
     return create_access_token({"user_id": test_user2["id"]})
 
 
 @pytest.fixture
-def authorized_client(client: TestClient, token: str) -> TestClient:
-    """
-    Fixture that provides a test client with authorization headers.
-
+def authorized_client(client: TestClient, token1: str) -> TestClient:
+    """Fixture that provides a test client with authorization headers.
     This fixture adds the generated JWT token to the headers of the FastAPI TestClient
     to simulate an authorized request, allowing the client to make requests as the
     authenticated user.
-
     :param client: The FastAPI TestClient to make the request.
-    :param token: The JWT token to add to the Authorization header.
-    :return: The FastAPI TestClient with the Authorization header set.
-    :rtype: fastapi.testclient.TestClient
-    """
-    client.headers = {**client.headers, "Authorization": f"Bearer {token}"}
+    :param token1: The JWT token to add to the Authorization header.
+    :return: The FastAPI TestClient with the Authorization header set."""
+
+    client.headers = {**client.headers, "Authorization": f"Bearer {token1}"}
     return client
 
 
 @pytest.fixture
 def authorized_client2(client: TestClient, token2: str) -> TestClient:
-    """
-    Fixture that provides a test client with authorization headers.
-
+    """Fixture that provides a test client with authorization headers.
     This fixture adds the generated JWT token to the headers of the FastAPI TestClient
     to simulate an authorized request, allowing the client to make requests as the
     authenticated user.
-
     :param client: The FastAPI TestClient to make the request.
-    :param token: The JWT token to add to the Authorization header.
-    :return: The FastAPI TestClient with the Authorization header set.
-    :rtype: fastapi.testclient.TestClient
-    """
-    client.headers = {**client.headers, "Authorization": f"Bearer {token}"}
+    :param token2: The JWT token to add to the Authorization header.
+    :return: The FastAPI TestClient with the Authorization header set."""
+
+    client.headers = {**client.headers, "Authorization": f"Bearer {token2}"}
     return client
 
 
 @pytest.fixture
-def test_posts(
-    test_user: dict, session: sqlalchemy.orm.Session, test_user2: dict
-) -> List[models.Post]:
-    """
-    Fixture that creates and returns a list of test posts.
-
+def test_posts(test_user1: dict, test_user2: dict, session: orm.Session) -> list[models.Job]:
+    """Fixture that creates and returns a list of test posts.
     This fixture creates several posts in the test database for two users. It adds
     the posts to the database and commits the transaction. It then returns the list
     of all posts from the database.
-
-    :param test_user: The first test user who owns some of the posts.
-    :param session: The SQLAlchemy session to interact with the database.
+    :param test_user1: The first test user who owns some of the posts.
     :param test_user2: The second test user who owns other posts.
-    :return: A list of all posts created for the test users.
-    :rtype: List[models.Post]
-    """
-    posts_data = [
-        {"title": "1st title", "content": "1st content", "owner_id": test_user["id"]},
-        {"title": "2nd title", "content": "2nd content", "owner_id": test_user["id"]},
-        {"title": "3rd title", "content": "3rd content", "owner_id": test_user["id"]},
+    :param session: The SQLAlchemy session to interact with the database.
+    :return: A list of all posts created for the test users."""
+
+    data = [
+        {"title": "1st title", "content": "1st content", "owner_id": test_user1["id"]},
+        {"title": "2nd title", "content": "2nd content", "owner_id": test_user1["id"]},
+        {"title": "3rd title", "content": "3rd content", "owner_id": test_user1["id"]},
         {"title": "1st title", "content": "1st content", "owner_id": test_user2["id"]},
     ]
 
-    posts = [models.Post(**post) for post in posts_data]
+    posts = [models.Job(**job) for job in data]
     session.add_all(posts)
     session.commit()
-    posts = session.query(models.Post).all()
+    posts = session.query(models.Job).all()
     return posts

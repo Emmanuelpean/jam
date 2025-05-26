@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr
-from pydantic.types import conint
 from datetime import datetime
+
+from pydantic import BaseModel, EmailStr
 
 
 class UserCreate(BaseModel):
@@ -30,28 +30,17 @@ class TokenData(BaseModel):
     id: str | None = None
 
 
-class PostBase(BaseModel):
+class JobOut(BaseModel):
     title: str
-    content: str
-    published: bool = True
-
-
-class PostCreate(PostBase):
-    pass
-
-
-class Post(PostBase):
-    id: int
+    description: str
     created_at: datetime
-    owner_id: int
-    owner: UserOut
 
 
-class PostOut(BaseModel):
-    Post: Post
-    votes: int
+class JobCreate(BaseModel):
+    title: str
+    description: str
 
 
-class Vote(BaseModel):
-    post_id: int
-    value: int
+class Job(BaseModel):
+    id: int
+    title: str
