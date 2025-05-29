@@ -1,3 +1,19 @@
+"""
+This module handles authentication and authorization functionality for the application, including the creation, verification,
+and usage of JWT access tokens.
+
+Key Features:
+-------------
+1. **Token Creation**:
+   - Generates JSON Web Tokens (JWT) with an expiration time using a secret key and algorithm defined in the application's configuration.
+
+2. **Token Verification**:
+   - Decodes and verifies JWTs by checking their validity and extracting user information (e.g., user ID).
+
+3. **Current User Retrieval**:
+   - Extracts the current authenticated user based on the token included in requests and validates against the database.
+"""
+
 from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, status
@@ -55,16 +71,16 @@ def verify_access_token(
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(database.get_db),
-) -> models.User:
+) -> models.User | None:
     """Get the current user from the token and check if the token has expired.
     :param token: The JWT access token.
     :param db: The database session.
-    :returns: The current user."""
+    :returns: The current user or None"""
 
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
     )
     token = verify_access_token(token, credentials_exception)
-    user = db.query(models.User).filter(models.User.id == token.id).first()
+    user = db.query(models.User).filter(token.id == models.User.id).first()
     return user

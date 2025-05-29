@@ -15,7 +15,7 @@ Key Components:
 - **test_user1** and **test_user2**: Fixtures for pre-configured test users.
 - **token1** and **token2**: Fixtures for generating authentication tokens for the pre-configured test users.
 - **authorized_client** and **authorized_client2**: Fixtures to provide authenticated API clients for the test users.
-- **test_posts**: Fixture for creating and managing test posts in the application.
+- **test_jobs**: Fixture for creating and managing test jobs in the application.
 
 This module is instrumental for efficiently executing unit and integration tests by establishing a robust test environment
 and providing the necessary utilities for seamless interactions with the application's data and APIs.
@@ -136,7 +136,10 @@ def token2(test_user2: dict) -> str:
 
 
 @pytest.fixture
-def authorized_client(client: TestClient, token1: str) -> TestClient:
+def authorized_client1(
+    client: TestClient,
+    token1: str,
+) -> TestClient:
     """Fixture that provides a test client with authorization headers.
     This fixture adds the generated JWT token to the headers of the FastAPI TestClient
     to simulate an authorized request, allowing the client to make requests as the
@@ -150,7 +153,10 @@ def authorized_client(client: TestClient, token1: str) -> TestClient:
 
 
 @pytest.fixture
-def authorized_client2(client: TestClient, token2: str) -> TestClient:
+def authorized_client2(
+    client: TestClient,
+    token2: str,
+) -> TestClient:
     """Fixture that provides a test client with authorization headers.
     This fixture adds the generated JWT token to the headers of the FastAPI TestClient
     to simulate an authorized request, allowing the client to make requests as the
@@ -164,15 +170,19 @@ def authorized_client2(client: TestClient, token2: str) -> TestClient:
 
 
 @pytest.fixture
-def test_posts(test_user1: dict, test_user2: dict, session: orm.Session) -> list[models.Job]:
-    """Fixture that creates and returns a list of test posts.
-    This fixture creates several posts in the test database for two users. It adds
-    the posts to the database and commits the transaction. It then returns the list
-    of all posts from the database.
-    :param test_user1: The first test user who owns some of the posts.
-    :param test_user2: The second test user who owns other posts.
+def test_jobs(
+    test_user1: dict,
+    test_user2: dict,
+    session: orm.Session,
+):
+    """Fixture that creates and returns a list of test jobs.
+    This fixture creates several jobs in the test database for two users. It adds
+    the jobs to the database and commits the transaction. It then returns the list
+    of all jobs from the database.
+    :param test_user1: The first test user who owns some of the jobs.
+    :param test_user2: The second test user who owns other jobs.
     :param session: The SQLAlchemy session to interact with the database.
-    :return: A list of all posts created for the test users."""
+    :return: A list of all jobs created for the test users."""
 
     data = [
         {"title": "1st title", "content": "1st content", "owner_id": test_user1["id"]},
@@ -181,8 +191,51 @@ def test_posts(test_user1: dict, test_user2: dict, session: orm.Session) -> list
         {"title": "1st title", "content": "1st content", "owner_id": test_user2["id"]},
     ]
 
-    posts = [models.Job(**job) for job in data]
-    session.add_all(posts)
+    jobs = [models.Job(**job) for job in data]
+    session.add_all(jobs)
     session.commit()
-    posts = session.query(models.Job).all()
-    return posts
+    jobs = session.query(models.Job).all()
+    return jobs
+
+
+@pytest.fixture
+def test_locations(
+    test_user1: dict,
+    test_user2: dict,
+    session: orm.Session,
+):
+    """Fixture that creates and returns a list of test locations.
+    This fixture creates several locations in the test database for two users. It adds
+    the locations to the database and commits the transaction. It then returns the list
+    of all locations from the database.
+    :param test_user1: The first test user who owns some of the locations.
+    :param test_user2: The second test user who owns other locations.
+    :param session: The SQLAlchemy session to interact with the database.
+    :return: A list of all locations created for the test users."""
+
+    data = [
+        {"postcode": "OX5 1HN", "owner_id": test_user1["id"]},
+        {"city": "Oxford", "owner_id": test_user1["id"]},
+        {"country": "UK", "owner_id": test_user1["id"]},
+        {"remote": True, "owner_id": test_user2["id"]},
+        {"postcode": "OX5 1HN", "owner_id": test_user1["id"], "country": "UK"},
+    ]
+
+    locations = [models.Location(**location) for location in data]
+    session.add_all(locations)
+    session.commit()
+    locations = session.query(models.Location).all()
+    return locations
+
+
+def compare(location_queried, location_obtained):
+
+    if isinstance(location_queried, list):
+        for loc1, loc2 in zip(location_queried, location_obtained):
+            compare(loc1, loc2)
+    elif isinstance(location_queried, dict):
+        for key, value in location_queried.items():
+            assert getattr(location_obtained, key) == value
+    else:
+        for key, value in vars(location_queried).items():
+            assert value == getattr(location_obtained, key)

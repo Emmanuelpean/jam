@@ -58,7 +58,7 @@ def get_job(
     return job
 
 
-@router.post("/", status_code=201, response_model=schemas.Job)
+@router.post("/", status_code=201, response_model=schemas.JobOut)
 def create_job(
     job: schemas.JobCreate,
     db: Session = Depends(database.get_db),
