@@ -309,6 +309,34 @@ def test_persons(
     return persons
 
 
+@pytest.fixture
+def test_aggregator(
+    test_user1: dict,
+    test_user2: dict,
+    test_companies: list[models.Company],
+    session: orm.Session,
+):
+    """Fixture that creates and returns a list of test aggregator websites.
+    This fixture adds several websites associated with aggregators to the database,
+    commits them, and returns the list of all websites in the database.
+    :param test_user1: The first test user who owns some of the persons.
+    :param test_user2: The second test user who owns other persons.
+    :param session: The SQLAlchemy session to interact with the database.
+    :return: A list of all aggregator websites added to the database."""
+
+    data = [
+        {"name": "LinkedIn", "url": "https://linkedin.com", "owner_id": test_user1["id"]},
+        {"name": "Indeed", "url": "https://indeed.com", "owner_id": test_user1["id"]},
+        {"name": "Glassdoor", "url": "https://glassdoor.com", "owner_id": test_user2["id"]},
+    ]
+
+    aggregator_websites = [models.Aggregator(**website) for website in data]
+    session.add_all(aggregator_websites)
+    session.commit()
+    aggregator_websites = session.query(models.Aggregator).all()
+    return aggregator_websites
+
+
 def compare(location_queried, location_obtained):
 
     if isinstance(location_queried, list):

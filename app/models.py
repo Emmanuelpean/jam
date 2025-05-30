@@ -140,7 +140,7 @@ class Location(CommonBase, Base):
     remote = Column(Boolean, nullable=True)
 
 
-class AggregatorWebsite(CommonBase, Base):
+class Aggregator(CommonBase, Base):
     """Represents a website associated with an aggregator company (e.g. LinkedIn, Indeed).
 
     Attributes:

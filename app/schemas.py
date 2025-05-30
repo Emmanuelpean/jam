@@ -118,3 +118,19 @@ class PersonUpdate(Person):
     first_name: str | None = None
     last_name: str | None = None
     company_id: int | None = None
+
+
+# ----------------------------------------------------- AGGREGATOR -----------------------------------------------------
+
+
+class Aggregator(BaseModel):
+    name: str
+    url: str | None = None
+
+
+class AggregatorOut(Aggregator):
+    pass
+
+
+class AggregatorUpdate(Aggregator):
+    name: str | None = None
