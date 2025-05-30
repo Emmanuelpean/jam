@@ -151,11 +151,9 @@ class TestPut:
             "id": test_locations[0].id,
         }
         response = authorized_client1.put(f"/locations/{location_data['id']}", json=location_data)
-        print(response.json())
         updated_location = schemas.LocationOut(**response.json())
         assert response.status_code == 200
-        for attr in location_data:
-            assert getattr(updated_location, attr) == location_data[attr]
+        compare(location_data, updated_location)
 
     def test_unauthorized_user(
         self,
@@ -168,6 +166,14 @@ class TestPut:
         }
         res = client.put(f"/locations/{test_locations[0].id}", json=location_data)
         assert res.status_code == 401
+
+    def test_empty(
+        self,
+        authorized_client1,
+        test_locations,
+    ) -> None:
+        res = authorized_client1.put(f"/locations/{test_locations[0].id}", json={})
+        assert res.status_code == 400
 
     def test_incorrect_user(
         self,

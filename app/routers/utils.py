@@ -148,8 +148,13 @@ def _update_entry(
     if entry.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
 
+    # Check if there are fields to update
+    updated_dict = updated_data.model_dump(exclude_defaults=True)
+    if not updated_dict:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided for update")
+
     # Update the entry with the new data
-    entry_query.update(updated_data.model_dump(exclude_defaults=True), synchronize_session=False)
+    entry_query.update(updated_dict, synchronize_session=False)
     db.commit()
 
     # Return the updated entry

@@ -86,9 +86,11 @@ class Company(CommonBase, Base):
     Attributes:
     -----------
     - `name` (str): Name of the company.
+    - `description` (str, optional): Description or details about the company.
     - `url` (str, optional): Web link to the company's website."""
 
     name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
     url = Column(String, nullable=True)
 
 
@@ -109,7 +111,7 @@ class Job(CommonBase, Base):
     - `url` (str, optional): Web link to the job posting."""
 
     title = Column(String, nullable=False)
-    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False)
+    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=True)
     company = relationship("Company")
     salary_min = Column(Float, nullable=True)
     salary_max = Column(Float, nullable=True)

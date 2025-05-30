@@ -52,13 +52,13 @@ class JobOut(BaseModel):
 
 class JobCreate(BaseModel):
     title: str
-    description: str
+    description: str | None = None
     salary_min: int | None = None
     salary_max: int | None = None
     personal_rating: int | None = None
-    url: str
-    company_id: int
-    location_id: int
+    url: str | None = None
+    company_id: int | None = None
+    location_id: int | None = None
 
 
 # ------------------------------------------------------ LOCATION ------------------------------------------------------
@@ -75,3 +75,22 @@ class LocationOut(Location):
     id: int
     created_at: datetime
     owner_id: int
+
+
+# ------------------------------------------------------ LOCATION ------------------------------------------------------
+
+
+class Company(BaseModel):
+    name: str
+    description: str | None = None
+    url: str | None = None
+
+
+class CompanyOut(Company):
+    id: int
+    created_at: datetime
+    owner_id: int
+
+
+class CompanyUpdate(Company):
+    name: str | None = None

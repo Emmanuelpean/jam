@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import job, user, auth, location
+from app.routers import job, user, auth, location, company
 
 # models.Base.metadata.create_all(bind=engine)
 
@@ -25,6 +25,7 @@ app.include_router(job.router)
 app.include_router(location.router)
 app.include_router(user.router)
 app.include_router(auth.router)
+app.include_router(company.router)
 
 
 @app.get("/")

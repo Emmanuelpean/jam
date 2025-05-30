@@ -228,6 +228,34 @@ def test_locations(
     return locations
 
 
+@pytest.fixture
+def test_companies(
+    test_user1: dict,
+    test_user2: dict,
+    session: orm.Session,
+):
+    """Fixture that creates and returns a list of test companies.
+    This fixture creates several companies in the test database for two users. It adds
+    the companies to the database and commits the transaction. It then returns the list
+    of all companies from the database.
+    :param test_user1: The first test user who owns some of the companies.
+    :param test_user2: The second test user who owns other companies.
+    :param session: The SQLAlchemy session to interact with the database.
+    :return: A list of all companies created for the test users."""
+
+    data = [
+        {"name": "Oxford PV", "owner_id": test_user1["id"]},
+        {"name": "Oxford PV", "description": "an Oxford company", "owner_id": test_user1["id"]},
+        {"name": "Oxford PV", "url": "oxfordpv.com", "owner_id": test_user1["id"]},
+    ]
+
+    companies = [models.Company(**company) for company in data]
+    session.add_all(companies)
+    session.commit()
+    companies = session.query(models.Company).all()
+    return companies
+
+
 def compare(location_queried, location_obtained):
 
     if isinstance(location_queried, list):
