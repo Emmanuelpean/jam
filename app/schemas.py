@@ -3,6 +3,12 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr
 
 
+class Out(BaseModel):
+    id: int
+    created_at: datetime
+    owner_id: int
+
+
 # -------------------------------------------------------- USER --------------------------------------------------------
 
 
@@ -39,18 +45,7 @@ class TokenData(BaseModel):
 # --------------------------------------------------------- JOB --------------------------------------------------------
 
 
-class JobOut(BaseModel):
-    title: str
-    description: str
-    salary_min: int
-    salary_max: int
-    personal_rating: int
-    url: str
-    company_id: int
-    location_id: int
-
-
-class JobCreate(BaseModel):
+class Job(BaseModel):
     title: str
     description: str | None = None
     salary_min: int | None = None
@@ -59,6 +54,14 @@ class JobCreate(BaseModel):
     url: str | None = None
     company_id: int | None = None
     location_id: int | None = None
+
+
+class JobOut(Job, Out):
+    pass
+
+
+class JobUpdate(Job):
+    title: str | None = None
 
 
 # ------------------------------------------------------ LOCATION ------------------------------------------------------
@@ -71,10 +74,12 @@ class Location(BaseModel):
     remote: bool | None = None
 
 
-class LocationOut(Location):
-    id: int
-    created_at: datetime
-    owner_id: int
+class LocationOut(Location, Out):
+    pass
+
+
+class LocationUpdate(Location):
+    pass
 
 
 # ------------------------------------------------------- COMPANY ------------------------------------------------------
@@ -86,10 +91,8 @@ class Company(BaseModel):
     url: str | None = None
 
 
-class CompanyOut(Company):
-    id: int
-    created_at: datetime
-    owner_id: int
+class CompanyOut(Company, Out):
+    pass
 
 
 class CompanyUpdate(Company):
@@ -102,16 +105,14 @@ class CompanyUpdate(Company):
 class Person(BaseModel):
     first_name: str
     last_name: str
-    email: str | None = None
+    email: EmailStr | None = None
     phone: str | None = None
     linkedin_url: str | None = None
     company_id: int
 
 
-class PersonOut(Person):
-    id: int
-    created_at: datetime
-    owner_id: int
+class PersonOut(Person, Out):
+    pass
 
 
 class PersonUpdate(Person):
@@ -128,7 +129,7 @@ class Aggregator(BaseModel):
     url: str | None = None
 
 
-class AggregatorOut(Aggregator):
+class AggregatorOut(Aggregator, Out):
     pass
 
 

@@ -94,7 +94,7 @@ def delete_location(
 @router.put("/{location_id}", response_model=schemas.LocationOut)
 def update_location(
     location_id: int,
-    updated_location: schemas.Location,
+    updated_location: schemas.LocationUpdate,
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
 ):

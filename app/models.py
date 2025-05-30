@@ -113,15 +113,15 @@ class Job(CommonBase, Base):
     - `url` (str, optional): Web link to the job posting."""
 
     title = Column(String, nullable=False)
-    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=True)
-    company = relationship("Company")
+    description = Column(String, nullable=True)
     salary_min = Column(Float, nullable=True)
     salary_max = Column(Float, nullable=True)
-    description = Column(String, nullable=True)
+    url = Column(String, nullable=True)
+    personal_rating = Column(Integer, CheckConstraint("personal_rating >= 0 AND personal_rating <= 10"), nullable=True)
+    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=True)
+    company = relationship("Company")
     location_id = Column(Integer, ForeignKey("location.id", ondelete="CASCADE"), nullable=True)
     location = relationship("Location")
-    personal_rating = Column(Integer, CheckConstraint("personal_rating >= 0 AND personal_rating <= 10"), nullable=True)
-    url = Column(String, nullable=True)
 
 
 class Location(CommonBase, Base):

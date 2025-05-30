@@ -170,35 +170,6 @@ def authorized_client2(
 
 
 @pytest.fixture
-def test_jobs(
-    test_user1: dict,
-    test_user2: dict,
-    session: orm.Session,
-):
-    """Fixture that creates and returns a list of test jobs.
-    This fixture creates several jobs in the test database for two users. It adds
-    the jobs to the database and commits the transaction. It then returns the list
-    of all jobs from the database.
-    :param test_user1: The first test user who owns some of the jobs.
-    :param test_user2: The second test user who owns other jobs.
-    :param session: The SQLAlchemy session to interact with the database.
-    :return: A list of all jobs created for the test users."""
-
-    data = [
-        {"title": "1st title", "content": "1st content", "owner_id": test_user1["id"]},
-        {"title": "2nd title", "content": "2nd content", "owner_id": test_user1["id"]},
-        {"title": "3rd title", "content": "3rd content", "owner_id": test_user1["id"]},
-        {"title": "1st title", "content": "1st content", "owner_id": test_user2["id"]},
-    ]
-
-    jobs = [models.Job(**job) for job in data]
-    session.add_all(jobs)
-    session.commit()
-    jobs = session.query(models.Job).all()
-    return jobs
-
-
-@pytest.fixture
 def test_locations(
     test_user1: dict,
     test_user2: dict,
@@ -310,7 +281,7 @@ def test_persons(
 
 
 @pytest.fixture
-def test_aggregator(
+def test_aggregators(
     test_user1: dict,
     test_user2: dict,
     test_companies: list[models.Company],
@@ -335,6 +306,65 @@ def test_aggregator(
     session.commit()
     aggregator_websites = session.query(models.Aggregator).all()
     return aggregator_websites
+
+
+@pytest.fixture
+def test_jobs(
+    test_user1: dict,
+    test_user2: dict,
+    session: orm.Session,
+    test_companies,
+    test_locations,
+):
+    """
+    Fixture that creates and returns a list of test job postings.
+
+    :param session: The SQLAlchemy session to interact with the database.
+    :param test_companies: A fixture that provides example companies for the job postings.
+    :param test_locations: A fixture that provides example locations for the job postings.
+    :return: A list of all job postings added to the database.
+    """
+    data = [
+        {
+            "title": "Software Engineer",
+            "company_id": test_companies[0].id,
+            "salary_min": 50000,
+            "salary_max": 100000,
+            "description": "Design, develop, and maintain software solutions.",
+            "location_id": test_locations[0].id,
+            "personal_rating": 8,
+            "url": "https://example.com/jobs/software_engineer",
+            "owner_id": test_user1["id"],
+        },
+        {
+            "title": "Data Scientist",
+            "company_id": test_companies[1].id,
+            "salary_min": 60000,
+            "salary_max": 120000,
+            "description": "Analyze complex datasets and derive insights.",
+            "location_id": test_locations[1].id,
+            "personal_rating": 9,
+            "url": "https://example.com/jobs/data_scientist",
+            "owner_id": test_user1["id"],
+        },
+        {
+            "title": "Frontend Developer",
+            "company_id": test_companies[0].id,
+            "salary_min": 55000,
+            "salary_max": 90000,
+            "description": "Build interactive and responsive web interfaces.",
+            "location_id": test_locations[0].id,
+            "personal_rating": 7,
+            "url": "https://example.com/jobs/frontend_developer",
+            "owner_id": test_user2["id"],
+        },
+    ]
+
+    jobs = [models.Job(**job) for job in data]
+    session.add_all(jobs)
+    session.commit()
+    jobs = session.query(models.Job).all()
+    return jobs
 
 
 def compare(location_queried, location_obtained):
