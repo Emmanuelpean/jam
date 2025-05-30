@@ -256,6 +256,59 @@ def test_companies(
     return companies
 
 
+@pytest.fixture
+def test_persons(
+    test_user1: dict,
+    test_user2: dict,
+    test_companies: list[models.Company],
+    session: orm.Session,
+):
+    """Fixture that creates and returns a list of test persons.
+    This fixture creates several persons in the test database for two users. It adds
+    the persons to the database and commits the transaction. It then returns the list
+    of all persons from the database.
+    :param test_user1: The first test user who owns some of the persons.
+    :param test_user2: The second test user who owns other persons.
+    :param session: The SQLAlchemy session to interact with the database.
+    :return: A list of all persons created for the test users."""
+
+    data = [
+        {
+            "first_name": "Steve",
+            "last_name": "Durrant",
+            "owner_id": test_user1["id"],
+            "company_id": test_companies[0].id,
+        },
+        {
+            "first_name": "Steve",
+            "last_name": "Durrant",
+            "email": "steve.durrant@email.com",
+            "owner_id": test_user1["id"],
+            "company_id": test_companies[0].id,
+        },
+        {
+            "first_name": "Steve",
+            "last_name": "Durrant",
+            "phone": "00000000000",
+            "owner_id": test_user1["id"],
+            "company_id": test_companies[0].id,
+        },
+        {
+            "first_name": "Steve",
+            "last_name": "Durrant",
+            "linkedin_url": "https://linkedin/steve.durrant",
+            "owner_id": test_user1["id"],
+            "company_id": test_companies[0].id,
+        },
+    ]
+
+    persons = [models.Person(**person) for person in data]
+    session.add_all(persons)
+    session.commit()
+    persons = session.query(models.Person).all()
+    return persons
+
+
 def compare(location_queried, location_obtained):
 
     if isinstance(location_queried, list):

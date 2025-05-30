@@ -69,6 +69,7 @@ class Person(CommonBase, Base):
     - `last_name` (str): Last name of the person.
     - `email` (str, optional): Email address of the person.
     - `phone` (str, optional): Phone number of the person.
+    - `linkedin_url` (str, optional): LinkedIn profile URL of the person.
     - `company_id` (int): Foreign key linking the person to a company.
     - `company` (Company): Relationship to access the associated company."""
 
@@ -76,6 +77,7 @@ class Person(CommonBase, Base):
     last_name = Column(String, nullable=False)
     email = Column(String, nullable=True)
     phone = Column(String, nullable=True)
+    linkedin_url = Column(String, nullable=True)
     company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False)
     company = relationship("Company")
 

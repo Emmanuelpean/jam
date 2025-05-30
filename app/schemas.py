@@ -77,7 +77,7 @@ class LocationOut(Location):
     owner_id: int
 
 
-# ------------------------------------------------------ LOCATION ------------------------------------------------------
+# ------------------------------------------------------- COMPANY ------------------------------------------------------
 
 
 class Company(BaseModel):
@@ -94,3 +94,27 @@ class CompanyOut(Company):
 
 class CompanyUpdate(Company):
     name: str | None = None
+
+
+# ------------------------------------------------------- PERSON -------------------------------------------------------
+
+
+class Person(BaseModel):
+    first_name: str
+    last_name: str
+    email: str | None = None
+    phone: str | None = None
+    linkedin_url: str | None = None
+    company_id: int
+
+
+class PersonOut(Person):
+    id: int
+    created_at: datetime
+    owner_id: int
+
+
+class PersonUpdate(Person):
+    first_name: str | None = None
+    last_name: str | None = None
+    company_id: int | None = None
