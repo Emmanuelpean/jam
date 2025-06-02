@@ -28,14 +28,12 @@ def test_create_user(client) -> None:
     """Test creating a new user."""
 
     user_data = {
-        "username": "test_user",
         "email": "test_user@email.com",
         "password": "test_password",
     }
     response = client.post("/users", json=user_data)
     new_user = schemas.UserOut(**response.json())  # validate the output
-    for key in ("username", "email"):
-        assert getattr(new_user, key) == user_data[key]
+    assert new_user.email == user_data["email"]
     assert response.status_code == 201
 
 

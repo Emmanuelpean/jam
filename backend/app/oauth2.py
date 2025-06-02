@@ -21,7 +21,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from sqlalchemy.orm import Session
 
-from app import schemas, database, models
+from app import models, database, schemas
 from app.config import settings
 from app.schemas import TokenData
 

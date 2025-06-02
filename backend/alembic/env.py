@@ -5,8 +5,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from app.database import SQLALCHEMY_DATABASE_URL
-from app.models import (
+from backend.app.database import SQLALCHEMY_DATABASE_URL
+from backend.app.models import (
     Base,
 )  # needs to be imported from model to get the models defined in that module
 

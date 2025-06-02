@@ -1,3 +1,5 @@
+"""Module containing utility functions."""
+
 import bcrypt
 
 

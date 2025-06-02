@@ -1,3 +1,5 @@
+"""JAM configuration"""
+
 from pydantic_settings import BaseSettings
 
 

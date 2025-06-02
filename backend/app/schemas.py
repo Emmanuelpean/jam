@@ -1,3 +1,5 @@
+"""Schemas for the JAM database"""
+
 from datetime import datetime
 
 from pydantic import BaseModel, EmailStr
@@ -13,14 +15,12 @@ class Out(BaseModel):
 
 
 class UserCreate(BaseModel):
-    username: str
     password: str
     email: EmailStr
 
 
 class UserOut(BaseModel):
     id: int
-    username: str
     email: EmailStr
     created_at: datetime
 

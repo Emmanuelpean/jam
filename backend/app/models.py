@@ -19,7 +19,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, TIME
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from .database import Base
+from app.database import Base
 
 
 class CommonBase(object):
@@ -57,7 +57,6 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
-    username = Column(String, index=True, nullable=False, unique=True)
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
 

@@ -29,7 +29,7 @@ from requests import Response
 from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
-from app import database, models, schemas
+from app import models, database, schemas
 from app.main import app
 from app.oauth2 import create_access_token
 

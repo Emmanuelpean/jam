@@ -3,17 +3,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import job, user, auth, location, company, person, aggregator
+from app.routers import job, user, location, company, aggregator, auth, person
+from app import models
+from app.database import engine
 
-# models.Base.metadata.create_all(bind=engine)
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-origins = ["https://www.google.com"]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

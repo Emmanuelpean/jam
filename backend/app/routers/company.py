@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app import database, models, oauth2, schemas
+from app import models, database, schemas, oauth2
 from app.routers.utils import _get_all_entries, _get_entry_by_id, _update_entry, _create_entry, _delete_entry
 
 router = APIRouter(prefix="/companies", tags=["companies"])
