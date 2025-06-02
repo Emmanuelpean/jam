@@ -122,6 +122,7 @@ class Job(CommonBase, Base):
     company = relationship("Company")
     location_id = Column(Integer, ForeignKey("location.id", ondelete="CASCADE"), nullable=True)
     location = relationship("Location")
+    duplicate_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=True)
 
 
 class Location(CommonBase, Base):
@@ -174,3 +175,27 @@ class Aggregator(CommonBase, Base):
 #     job = relationship("Job")
 #     person_id = Column(Integer, ForeignKey("people.id", ondelete="CASCADE"), nullable=False)
 #     person = relationship("Person")
+
+
+# class JobApplication(CommonBase, Base):
+#
+#     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+#     url = Column(String, nullable=True)
+#     job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False)
+#     job = relationship("Job")
+#     rejected = Column(Boolean, nullable=True)
+#     notes = relationship("Note", cascade="all, delete-orphan")
+#
+#
+# class Note(CommonBase, Base):
+#
+#     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+#     content = Column(String, nullable=False)
+#     jobapplication_id = Column(Integer, ForeignKey("jobapplication.id", ondelete="CASCADE"), nullable=False)
+#     jobapplication = relationship("jobapplication")
+
+
+class Keyword(CommonBase, Base):
+    """Represents keywords associated with job postings."""
+
+    name = Column(String, nullable=False)

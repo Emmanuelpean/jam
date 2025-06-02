@@ -24,10 +24,12 @@ and providing the necessary utilities for seamless interactions with the applica
 from typing import Any, Generator
 
 import pytest
+from fastapi import status
+from requests import Response
 from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
-from app import database, models
+from app import database, models, schemas
 from app.main import app
 from app.oauth2 import create_access_token
 
@@ -378,3 +380,351 @@ def compare(location_queried, location_obtained):
     else:
         for key, value in vars(location_queried).items():
             assert value == getattr(location_obtained, key)
+
+
+class CRUDTestBase:
+    """Base class for CRUD tests on FastAPI routes.
+
+    Subclasses must override:
+    - endpoint: str - base URL path for the resource (e.g. "/aggregators")
+    - schema: Pydantic model class for input validation (e.g. schemas.Aggregator)
+    - out_schema: Pydantic model class for output validation (e.g. schemas.AggregatorOut)
+    - test_data_fixture: str - name of pytest fixture providing list of test objects"""
+
+    endpoint: str = ""
+    schema = None
+    out_schema = None
+    test_data: str = ""
+    update_data: list[dict] = None
+    create_data: dict = None
+    add_fixture = None
+
+    def check_output(
+        self,
+        test_data: list[schemas.BaseModel] | list[dict] | dict | schemas.BaseModel,
+        response_data: list[dict] | dict,
+    ):
+        """Check that the output of a test matches the test data.
+        :param test_data: The test data to compare against.
+        :param response_data: The output data to compare against."""
+
+        if isinstance(test_data, list) and isinstance(response_data, list):
+            for d1, d2 in zip(test_data, response_data):
+                return self.check_output(d1, d2)
+
+        # Process the response
+        if isinstance(response_data, dict):
+            response_data = self.out_schema(**response_data)
+
+        # # Process the input
+        # if isinstance(test_data, dict):
+        #     test_data = self.schema(**test_data)
+
+        if isinstance(test_data, dict):
+            items = test_data.items()
+        else:
+            items = vars(test_data).items()
+
+        for key, value in items:
+            if key[0] != "_":
+                assert value == getattr(response_data, key)
+
+    # ------------------------------------------------- HELPER METHODS -------------------------------------------------
+
+    def get_all(self, client) -> Response:
+        """Helper method to get all items from the endpoint."""
+
+        return client.get(self.endpoint)
+
+    def get_one(self, client, item_id) -> Response:
+        """Helper method to get one item from the endpoint."""
+
+        return client.get(f"{self.endpoint}/{item_id}")
+
+    def post(self, client, data) -> Response:
+        """Helper method to post a new item to the endpoint."""
+
+        return client.post(self.endpoint, json=data)
+
+    def put(self, client: TestClient, item_id: int, data) -> Response:
+        """Helper method to update an existing item in the endpoint."""
+
+        return client.put(f"{self.endpoint}/{item_id}", json=data)
+
+    def delete(self, client, item_id) -> Response:
+        """Helper method to delete an existing item from the endpoint."""
+
+        return client.delete(f"{self.endpoint}/{item_id}")
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, request) -> None:
+        """Fixture that runs before each test method."""
+
+        if isinstance(self.add_fixture, list):
+            for fixture in self.add_fixture:
+                request.getfixturevalue(fixture)
+
+    # ------------------------------------------------------- GET ------------------------------------------------------
+
+    def test_get_all_success(
+        self,
+        authorized_client1,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.get_all(authorized_client1)
+        assert response.status_code == status.HTTP_200_OK
+        self.check_output(test_data, response.json())
+
+    def test_get_all_unauthorized(
+        self,
+        client: TestClient,
+    ) -> None:
+        response = self.get_all(client)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_get_one_success(
+        self,
+        authorized_client1,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.get_one(authorized_client1, test_data[0].id)
+        assert response.status_code == status.HTTP_200_OK
+        self.check_output(test_data[0], response.json())
+
+    def test_get_one_unauthorized(
+        self,
+        client,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.get_one(client, test_data[0].id)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_get_one_other_user(
+        self,
+        authorized_client2,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.get_one(authorized_client2, test_data[0].id)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_get_one_non_exist(
+        self,
+        authorized_client1,
+    ) -> None:
+        response = self.get_one(authorized_client1, 999999)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    # ------------------------------------------------------ POST ------------------------------------------------------
+
+    def test_post_success(
+        self,
+        authorized_client1,
+    ) -> None:
+        """
+        Generic POST test using class attribute post_test_data.
+        Subclasses should set post_test_data = [dict(...), ...]
+        """
+        for create_data in self.create_data:
+            response = self.post(authorized_client1, create_data)
+            assert response.status_code == status.HTTP_201_CREATED
+            self.check_output(create_data, response.json())
+
+    def test_post_unauthorized(
+        self,
+        client,
+    ) -> None:
+        response = self.post(client, {})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    # ------------------------------------------------------- PUT ------------------------------------------------------
+
+    def test_put_success(
+        self,
+        authorized_client1,
+        request,
+    ) -> None:
+        request.getfixturevalue(self.test_data)
+        response = self.put(authorized_client1, self.update_data["id"], self.update_data)
+        assert response.status_code == status.HTTP_200_OK
+        self.check_output(self.update_data, response.json())
+
+    def test_put_empty_body(self, authorized_client1, request) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.put(authorized_client1, test_data[0].id, {})
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_put_non_exist(self, authorized_client1) -> None:
+        response = self.put(authorized_client1, 999999, {})
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_put_unauthorized(self, client, request) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.put(client, test_data[0].id, {"name": "Test"})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_put_other_user(self, authorized_client2, request) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.put(authorized_client2, test_data[0].id, {"name": "Test"})
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    # ----------------------------------------------------- DELETE -----------------------------------------------------
+
+    def test_delete_success(self, authorized_client1, request) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.delete(authorized_client1, test_data[0].id)
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    def test_delete_non_exist(self, authorized_client1) -> None:
+        response = self.delete(authorized_client1, 999999)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_unauthorized(self, client, request) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.delete(client, test_data[0].id)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_delete_other_user(self, authorized_client2, request) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.delete(authorized_client2, test_data[0].id)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+class TestAggregatorCRUD(CRUDTestBase):
+    endpoint = "/aggregators"
+    schema = schemas.Aggregator
+    out_schema = schemas.AggregatorOut
+    test_data = "test_aggregators"
+    create_data = [
+        {"name": "LinkedIn", "url": "https://linkedin.com"},
+        {"name": "Indeed", "url": "https://indeed.com"},
+        {"name": "Glassdoor", "url": "https://glassdoor.com"},
+    ]
+    update_data = {
+        "name": "Updated LinkedIn",
+        "url": "https://updated-linkedin.com",
+        "id": 1,
+    }
+
+
+class TestCompanyCRUD(CRUDTestBase):
+    endpoint = "/companies"
+    schema = schemas.Company
+    out_schema = schemas.CompanyOut
+    test_data = "test_companies"
+    create_data = [
+        {"name": "Oxford PV", "description": "an Oxford company"},
+        {"name": "Oxford PV", "url": "oxfordpv.com"},
+        {"name": "Oxford PV"},
+    ]
+    update_data = {
+        "name": "OXPV",
+        "id": 1,
+    }
+
+
+class TestJobCRUD(CRUDTestBase):
+    endpoint = "/jobs"
+    schema = schemas.Job
+    out_schema = schemas.JobOut
+    test_data = "test_jobs"
+    create_data = [
+        {
+            "title": "Software Engineer",
+            "salary_min": 50000,
+            "salary_max": 100000,
+            "description": "Design, develop, and maintain software solutions.",
+            "personal_rating": 8,
+            "url": "https://example.com/jobs/software_engineer",
+        },
+        {
+            "title": "Data Scientist",
+            "salary_min": 60000,
+            "salary_max": 120000,
+            "description": "Analyze complex datasets and derive insights.",
+            "personal_rating": 9,
+            "url": "https://example.com/jobs/data_scientist",
+        },
+        {
+            "title": "Frontend Developer",
+            "salary_min": 55000,
+            "salary_max": 90000,
+            "description": "Build interactive and responsive web interfaces.",
+            "personal_rating": 7,
+            "url": "https://example.com/jobs/frontend_developer",
+        },
+    ]
+    update_data = {
+        "title": "Updated title",
+        "url": "https://updated-linkedin.com",
+        "id": 1,
+    }
+
+
+class TestLocationCRUD(CRUDTestBase):
+    endpoint = "/locations"
+    schema = schemas.Location
+    out_schema = schemas.LocationOut
+    test_data = "test_locations"
+    create_data = [
+        {"postcode": "OX5 1HN"},
+        {"city": "Oxford"},
+        {"country": "UK"},
+        {"remote": True},
+        {"postcode": "OX5 1HN", "remote": True},
+    ]
+    update_data = {
+        "postcode": "OX5 1HN",
+        "id": 1,
+    }
+
+
+class TestPersonCRUD(CRUDTestBase):
+    endpoint = "/persons"
+    schema = schemas.Person
+    out_schema = schemas.PersonOut
+    test_data = "test_persons"
+    add_fixture = ["test_companies", "test_locations"]
+    create_data = [
+        {
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john.doe@example.com",
+            "phone": "1234567890",
+            "linkedin_url": "https://linkedin.com/in/johndoe",
+            "company_id": 1,
+        },
+        {
+            "first_name": "Jane",
+            "last_name": "Smith",
+            "email": "jane.smith@example.com",
+            "linkedin_url": "https://linkedin.com/in/janesmith",
+            "company_id": 2,
+        },
+        {
+            "first_name": "Mike",
+            "last_name": "Taylor",
+            "phone": "9876543210",
+            "company_id": 1,
+        },
+        {
+            "first_name": "Emily",
+            "last_name": "Davis",
+            "email": "emily.davis@example.com",
+            "company_id": 2,
+        },
+        {
+            "first_name": "Chris",
+            "last_name": "Brown",
+            "linkedin_url": "https://linkedin.com/in/chrisbrown",
+            "company_id": 1,
+        },
+    ]
+
+    update_data = {
+        "first_name": "OX",
+        "id": 1,
+    }

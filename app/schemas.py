@@ -54,6 +54,7 @@ class Job(BaseModel):
     url: str | None = None
     company_id: int | None = None
     location_id: int | None = None
+    duplicate_id: int | None = None
 
 
 class JobOut(Job, Out):
