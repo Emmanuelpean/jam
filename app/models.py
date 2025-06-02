@@ -24,7 +24,9 @@ from .database import Base
 
 class CommonBase(object):
     """A base class that contains common attributes shared by multiple tables.
+
     Attributes:
+    -----------
     - `id` (int): Primary key of the record.
     - `created_at` (datetime): The timestamp of when the record was created.
     - `owner_id` (int): Identifier for the owner of the record. Linked to the user table."""
@@ -48,8 +50,8 @@ class User(Base):
     - `id` (int): Primary key for the user.
     - `created_at` (datetime): The timestamp of when the user record was created.
     - `username` (str): Unique identifier for the user.
-    - `email` (str): User's email address (must be unique).
-    - `password` (str): Encrypted password for authentication."""
+    - `password` (str): Encrypted password for authentication.
+    - `email` (str): User's email address (must be unique)."""
 
     __tablename__ = "user"
 
@@ -78,7 +80,7 @@ class Person(CommonBase, Base):
     email = Column(String, nullable=True)
     phone = Column(String, nullable=True)
     linkedin_url = Column(String, nullable=True)
-    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False)
+    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=True)
     company = relationship("Company")
 
 
@@ -102,15 +104,16 @@ class Job(CommonBase, Base):
     Attributes:
     -----------
     - `title` (str): The job title.
-    - `company_id` (int): Identifier for the company offering the job.
-    - `company` (Company): Company object associated with the job posting.
+    - `description` (str, optional): Description or details about the job.
     - `salary_min` (float, optional): Minimum salary offered for the job.
     - `salary_max` (float, optional): Maximum salary offered for the job.
-    - `description` (str, optional): Description or details about the job.
+    - `url` (str, optional): Web link to the job posting.
+    - `personal_rating` (int, optional): Personalized rating given to the job.
+    - `company_id` (int): Identifier for the company offering the job.
+    - `company` (Company): Company object associated with the job posting.
     - `location_id` (int, optional): Identifier for the geographical location where the job is located.
     - `location` (Location): Location object associated with the job posting.
-    - `personal_rating` (int, optional): Personalized rating given to the job.
-    - `url` (str, optional): Web link to the job posting."""
+    - `duplicate_id` (int, optional): Identifier for a duplicate job posting."""
 
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
@@ -153,49 +156,51 @@ class Aggregator(CommonBase, Base):
     url = Column(String, nullable=False)
 
 
-#
-# class Interview(CommonBase, Base):  # TODO to finish
-#     """Represents interviews for job applications.
-#
-#     Attributes:
-#     -----------
-#     - `date` (datetime): The date and time of the interview.
-#     - `location_id` (int): Identifier for the location of the interview.
-#     - `location` (Location): Location object related to the interview.
-#     - `job_id` (int): Identifier for the job associated with the interview.
-#     - `job` (Job): Job object related to the interview.
-#     - `person_id` (int): Identifier for the person attending the interview.
-#     - `person` (Person): Person object who is attending the interview.
-#     """
-#
-#     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
-#     location_id = Column(Integer, ForeignKey("location.id", ondelete="CASCADE"), nullable=False)
-#     location = relationship("Location")
-#     job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False)
-#     job = relationship("Job")
-#     person_id = Column(Integer, ForeignKey("people.id", ondelete="CASCADE"), nullable=False)
-#     person = relationship("Person")
+class Interview(CommonBase, Base):
+    """Represents interviews for job applications.
+
+    Attributes:
+    -----------
+    - `date` (datetime): The date and time of the interview.
+    - `location_id` (int): Identifier for the location of the interview.
+    - `location` (Location): Location object related to the interview.
+    - `job_id` (int): Identifier for the job associated with the interview.
+    - `job` (Job): Job object related to the interview.
+    - `note` (str, optional): Additional notes or comments about the interview."""
+
+    date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+    location_id = Column(Integer, ForeignKey("location.id", ondelete="CASCADE"), nullable=False)
+    location = relationship("Location")
+    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False)
+    job = relationship("Job")
+    note = Column(String, nullable=True)
 
 
-# class JobApplication(CommonBase, Base):
-#
-#     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
-#     url = Column(String, nullable=True)
-#     job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False)
-#     job = relationship("Job")
-#     rejected = Column(Boolean, nullable=True)
-#     notes = relationship("Note", cascade="all, delete-orphan")
-#
-#
-# class Note(CommonBase, Base):
-#
-#     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
-#     content = Column(String, nullable=False)
-#     jobapplication_id = Column(Integer, ForeignKey("jobapplication.id", ondelete="CASCADE"), nullable=False)
-#     jobapplication = relationship("jobapplication")
+class JobApplication(CommonBase, Base):
+    """Represents job applications for a person.
+
+    Attributes:
+    -----------
+    - `date` (datetime): The date and time of the application.
+    - `url` (str, optional): URL to the job application.
+    - `job_id` (int): Identifier for the job associated with the application.
+    - `job` (Job): Job object related to the application.
+    - `rejected` (bool, optional): Indicates if the application was rejected.
+    - `note` (str, optional): Additional notes or comments about the application."""
+
+    date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+    url = Column(String, nullable=True)
+    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False)
+    job = relationship("Job")
+    rejected = Column(Boolean, nullable=True)
+    note = Column(String, nullable=True)
 
 
 class Keyword(CommonBase, Base):
-    """Represents keywords associated with job postings."""
+    """Represents keywords associated with job postings.
+
+    Attributes:
+    -----------
+    - `name` (str): The keyword name."""
 
     name = Column(String, nullable=False)
