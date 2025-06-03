@@ -11,7 +11,8 @@ const GenericFormModal = ({
                               initialData = {},
                               endpoint,
                               onSuccess,
-                              validationRules = {}
+                              validationRules = {},
+                              isEdit = false
                           }) => {
     const {token} = useAuth();
     const [formData, setFormData] = useState(initialData);
@@ -79,8 +80,15 @@ const GenericFormModal = ({
         setErrors({});
 
         try {
-            const response = await fetch(`http://localhost:8000/${endpoint}/`, {
-                method: 'POST', headers: {
+            const url = isEdit
+                ? `http://localhost:8000/${endpoint}/${initialData.id}/`
+                : `http://localhost:8000/${endpoint}/`;
+
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
@@ -88,15 +96,15 @@ const GenericFormModal = ({
             });
 
             if (!response.ok) {
-                throw new Error(`Failed to create ${title.toLowerCase()}`);
+                throw new Error(`Failed to ${isEdit ? 'update' : 'create'} ${title.toLowerCase()}`);
             }
 
             const result = await response.json();
             onSuccess(result);
             handleHide(); // Use handleHide instead of onHide to reset form
         } catch (err) {
-            console.error(`Error creating ${title.toLowerCase()}:`, err);
-            setErrors({submit: `Failed to create ${title.toLowerCase()}. Please try again.`});
+            console.error(`Error ${isEdit ? 'updating' : 'creating'} ${title.toLowerCase()}:`, err);
+            setErrors({submit: `Failed to ${isEdit ? 'update' : 'create'} ${title.toLowerCase()}. Please try again.`});
         } finally {
             setSubmitting(false);
         }
@@ -152,7 +160,7 @@ const GenericFormModal = ({
     return (
         <Modal show={show} onHide={handleHide} size="lg">
             <Modal.Header closeButton>
-                <Modal.Title>Add New {title}</Modal.Title>
+                <Modal.Title>{isEdit ? 'Edit' : 'Add New'} {title}</Modal.Title>
             </Modal.Header>
 
             <Form onSubmit={handleSubmit}>
@@ -184,7 +192,7 @@ const GenericFormModal = ({
                             type="submit"
                             disabled={submitting}
                         >
-                            {submitting ? 'Saving...' : "Save " + title}
+                            {submitting ? (isEdit ? 'Updating...' : 'Saving...') : (isEdit ? 'Update' : 'Save') + " " + title}
                         </Button></div>
                 </Modal.Footer>
             </Form>

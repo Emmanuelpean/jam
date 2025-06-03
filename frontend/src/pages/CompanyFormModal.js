@@ -4,7 +4,9 @@ import GenericFormModal from '../components/GenericFormModal';
 const CompanyFormModal = ({
                               show,
                               onHide,
-                              onSuccess
+                              onSuccess,
+                              initialData = {},
+                              isEdit = false
                           }) => {
     // Define form fields for company
     const formFields = [
@@ -31,16 +33,6 @@ const CompanyFormModal = ({
         }
     ];
 
-    // Validation rules for company form
-    const validationRules = {
-        url: (value) => {
-            if (value && !value.match(/^https?:\/\/.+/)) {
-                return { isValid: false, message: 'Please enter a valid URL starting with http:// or https://' };
-            }
-            return { isValid: true };
-        }
-    };
-
     return (
         <GenericFormModal
             show={show}
@@ -49,7 +41,8 @@ const CompanyFormModal = ({
             fields={formFields}
             endpoint="companies"
             onSuccess={onSuccess}
-            validationRules={validationRules}
+            initialData={initialData}
+            isEdit={isEdit}
         />
     );
 };

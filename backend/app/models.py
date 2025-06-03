@@ -29,7 +29,8 @@ class CommonBase(object):
     -----------
     - `id` (int): Primary key of the record.
     - `created_at` (datetime): The timestamp of when the record was created.
-    - `owner_id` (int): Identifier for the owner of the record. Linked to the user table."""
+    - `owner_id` (int): Identifier for the owner of the record. Linked to the user table.
+    """
 
     # noinspection PyMethodParameters
     @declared_attr
@@ -39,6 +40,9 @@ class CommonBase(object):
 
     id = Column(Integer, primary_key=True, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+    modified_at = Column(
+        TIMESTAMP(timezone=True), server_default=text("now()"), server_onupdate=text("now()"), nullable=False
+    )
     owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
 
@@ -119,7 +123,11 @@ class Job(CommonBase, Base):
     salary_min = Column(Float, nullable=True)
     salary_max = Column(Float, nullable=True)
     url = Column(String, nullable=True)
-    personal_rating = Column(Integer, CheckConstraint("personal_rating >= 0 AND personal_rating <= 10"), nullable=True)
+    personal_rating = Column(
+        Integer,
+        CheckConstraint("personal_rating >= 0 AND personal_rating <= 10"),
+        nullable=True,
+    )
     company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=True)
     company = relationship("Company")
     location_id = Column(Integer, ForeignKey("location.id", ondelete="CASCADE"), nullable=True)

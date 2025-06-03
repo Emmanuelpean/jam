@@ -5,7 +5,7 @@ import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import JobsPage from './pages/JobsPage';
 import LocationsPage from './pages/LocationsPage';
-import CompaniesPage from './pages/ComapniesPage';
+import CompaniesPage from './pages/CompaniesPage';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 

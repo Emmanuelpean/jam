@@ -8,6 +8,7 @@ from pydantic import BaseModel, EmailStr
 class Out(BaseModel):
     id: int
     created_at: datetime
+    modified_at: datetime
     owner_id: int
 
 
