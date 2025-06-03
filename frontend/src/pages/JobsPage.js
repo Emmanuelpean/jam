@@ -44,7 +44,7 @@ const JobsPage = () => {
   });
   const [locationFormData, setLocationFormData] = useState({
     city: '',
-    state: '',
+    postcode: '',
     country: '',
     remote: false
   });

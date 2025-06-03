@@ -1,21 +1,104 @@
+
 import React, { useState } from 'react';
 import GenericTable from '../components/GenericTable';
-import GenericFormModal from '../components/GenericFormModal';
+import LocationFormModal from '../components/modals/LocationFormModal';
+import LocationViewModal from '../components/modals/LocationViewModal';
+import ConfirmationModal from '../components/ConfirmationModal';
+import LocationMap from '../components/LocationMap';
 import { useTableData } from '../components/Table';
+import { useAuth } from '../contexts/AuthContext';
+import { useConfirmation } from '../hooks/useConfirmation';
 
 const LocationsPage = () => {
+    const { token } = useAuth();
     const {
         data: locations,
+        setData: setLocations,
         loading,
         error,
         sortConfig,
         setSortConfig,
         searchTerm,
         setSearchTerm,
-        addItem
+        addItem,
+        updateItem,
+        removeItem
     } = useTableData('locations');
 
     const [showModal, setShowModal] = useState(false);
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedLocation, setSelectedLocation] = useState(null);
+
+    const { confirmationState, showConfirmation, hideConfirmation } = useConfirmation();
+
+    // Handle view location
+    const handleView = (location) => {
+        setSelectedLocation(location);
+        setShowViewModal(true);
+    };
+
+    // Handle edit location
+    const handleEdit = (location) => {
+        setSelectedLocation(location);
+        setShowEditModal(true);
+    };
+
+    // Handle edit success
+    const handleEditSuccess = (updatedLocation) => {
+        updateItem(updatedLocation);
+        setShowEditModal(false);
+        setSelectedLocation(null);
+    };
+
+    // Handle edit modal close
+    const handleEditModalClose = () => {
+        setShowEditModal(false);
+        setSelectedLocation(null);
+    };
+
+    // Handle delete location
+    const handleDelete = async (location) => {
+        const locationName = location.city
+            ? `${location.city}${location.country ? `, ${location.country}` : ''}`
+            : 'this location';
+
+        await showConfirmation({
+            title: 'Delete Location',
+            message: `Are you sure you want to delete "${locationName}"? This action cannot be undone.`,
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            confirmVariant: 'danger',
+            icon: '🗑️',
+            onConfirm: async () => {
+                try {
+                    const response = await fetch(`http://localhost:8000/locations/${location.id}/`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        if (typeof removeItem === 'function') {
+                            removeItem(location.id);
+                        } else if (typeof setLocations === 'function') {
+                            setLocations(prevLocations =>
+                                prevLocations.filter(l => l.id !== location.id)
+                            );
+                        } else {
+                            window.location.reload();
+                        }
+                    } else {
+                        alert('Failed to delete location');
+                    }
+                } catch (error) {
+                    console.error('Error deleting location:', error);
+                    alert('Failed to delete location');
+                }
+            }
+        });
+    };
 
     // Define table columns
     const columns = [
@@ -23,19 +106,22 @@ const LocationsPage = () => {
             key: 'city',
             label: 'City',
             sortable: true,
-            searchable: true
+            searchable: true,
+            render: (location) => location.city || 'Not specified'
         },
         {
             key: 'postcode',
             label: 'Postcode',
             sortable: true,
-            searchable: true
+            searchable: true,
+            render: (location) => location.postcode || 'Not specified'
         },
         {
             key: 'country',
             label: 'Country',
             sortable: true,
-            searchable: true
+            searchable: true,
+            render: (location) => location.country || 'Not specified'
         },
         {
             key: 'remote',
@@ -43,8 +129,8 @@ const LocationsPage = () => {
             sortable: true,
             render: (location) => (
                 <span className={`badge ${location.remote ? 'bg-success' : 'bg-secondary'}`}>
-          {location.remote ? 'Yes' : 'No'}
-        </span>
+                    {location.remote ? 'Yes' : 'No'}
+                </span>
             )
         },
         {
@@ -59,42 +145,26 @@ const LocationsPage = () => {
             sortable: false,
             render: (location) => (
                 <div>
-                    <button className="btn btn-sm btn-outline-primary me-1">View</button>
-                    <button className="btn btn-sm btn-outline-secondary">Edit</button>
+                    <button
+                        className="btn btn-sm btn-outline-primary me-1"
+                        onClick={() => handleView(location)}
+                    >
+                        View
+                    </button>
+                    <button
+                        className="btn btn-sm btn-outline-secondary me-1"
+                        onClick={() => handleEdit(location)}
+                    >
+                        Edit
+                    </button>
+                    <button
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handleDelete(location)}
+                    >
+                        Delete
+                    </button>
                 </div>
             )
-        }
-    ];
-
-    // Define form fields
-    const formFields = [
-        {
-            name: 'city',
-            label: 'City',
-            type: 'text',
-            required: false,
-            placeholder: 'Enter city name'
-        },
-        {
-            name: 'postcode',
-            label: 'Postcode',
-            type: 'text',
-            required: false,
-            placeholder: 'Enter postcode'
-        },
-        {
-            name: 'country',
-            label: 'Country',
-            type: 'text',
-            required: false,
-            placeholder: 'Enter country'
-        },
-        {
-            name: 'remote',
-            label: 'Remote Work',
-            type: 'checkbox',
-            required: false,
-            checkboxLabel: 'This is a remote position'
         }
     ];
 
@@ -106,6 +176,7 @@ const LocationsPage = () => {
         <div className="container">
             <h2 className="my-4">Locations</h2>
 
+            {/* Table first */}
             <GenericTable
                 data={locations}
                 columns={columns}
@@ -120,13 +191,44 @@ const LocationsPage = () => {
                 emptyMessage="No locations found"
             />
 
-            <GenericFormModal
+            {/* Map below table */}
+            <div className="mt-4">
+                <h5 className="mb-3">Location Map</h5>
+                <LocationMap locations={locations || []} height="500px" />
+            </div>
+
+            {/* Modals */}
+            <LocationFormModal
                 show={showModal}
                 onHide={() => setShowModal(false)}
-                title="Location"
-                fields={formFields}
-                endpoint="locations"
                 onSuccess={handleAddSuccess}
+            />
+
+            <LocationFormModal
+                show={showEditModal}
+                onHide={handleEditModalClose}
+                onSuccess={handleEditSuccess}
+                initialData={selectedLocation || {}}
+                isEdit={true}
+            />
+
+            <LocationViewModal
+                show={showViewModal}
+                onHide={() => setShowViewModal(false)}
+                location={selectedLocation}
+                onEdit={handleEdit}
+            />
+
+            <ConfirmationModal
+                show={confirmationState.show}
+                onHide={hideConfirmation}
+                onConfirm={confirmationState.onConfirm}
+                title={confirmationState.title}
+                message={confirmationState.message}
+                confirmText={confirmationState.confirmText}
+                cancelText={confirmationState.cancelText}
+                confirmVariant={confirmationState.confirmVariant}
+                icon={confirmationState.icon}
             />
         </div>
     );

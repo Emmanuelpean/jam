@@ -1,7 +1,9 @@
-import React, {useEffect, useState} from 'react';
-import {Alert, Button, Form, Modal} from 'react-bootstrap';
-import {useAuth} from '../contexts/AuthContext';
-import './modals/GenericFormModal.css'; // Add this import
+
+import React, { useEffect, useState } from 'react';
+import { Alert, Button, Form, Modal } from 'react-bootstrap';
+import Select from 'react-select';
+import { useAuth } from '../contexts/AuthContext';
+import './GenericFormModal.css';
 
 const GenericFormModal = ({
                               show,
@@ -12,57 +14,120 @@ const GenericFormModal = ({
                               endpoint,
                               onSuccess,
                               validationRules = {},
+                              customValidation = null,
+                              customFormContent = null,
+                              transformFormData = null,
                               isEdit = false
                           }) => {
-    const {token} = useAuth();
+    const { token } = useAuth();
     const [formData, setFormData] = useState(initialData);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
 
-    // Reset form data only when modal opens (show changes from false to true)
+    // Reset form data only when modal opens
     useEffect(() => {
         if (show) {
-            // Reset form when modal opens
-            setFormData({...initialData});
+            setFormData({ ...initialData });
             setErrors({});
         }
-    }, [show]); // Remove initialData from dependencies
+    }, [show]);
 
     // Also reset when modal is hidden
     const handleHide = () => {
-        setFormData({...initialData});
+        setFormData({ ...initialData });
         setErrors({});
         setSubmitting(false);
         onHide();
     };
 
     const handleChange = (e) => {
-        const {name, value, type, checked} = e.target;
+        const { name, value, type, checked } = e.target;
         setFormData(prev => ({
-            ...prev, [name]: type === 'checkbox' ? checked : value
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
         }));
 
         // Clear error when user starts typing
         if (errors[name]) {
-            setErrors(prev => ({...prev, [name]: ''}));
+            setErrors(prev => ({ ...prev, [name]: '' }));
         }
+    };
+
+    // Handle react-select changes
+    const handleSelectChange = (selectedOption, { name }) => {
+        setFormData(prev => ({
+            ...prev,
+            [name]: selectedOption ? selectedOption.value : ''
+        }));
+
+        // Clear error when user makes selection
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    // Custom styles for react-select to match Bootstrap and remove focus outline
+    const customSelectStyles = {
+        control: (provided, state) => ({
+            ...provided,
+            borderColor: errors[state.selectProps.name] ? '#dc3545' : '#dee2e6',
+            boxShadow: state.isFocused ? '0 0 0 0.2rem rgba(13, 110, 253, 0.25)' : 'none',
+            '&:hover': {
+                borderColor: errors[state.selectProps.name] ? '#dc3545' : '#86b7fe'
+            },
+            minHeight: '38px'
+        }),
+        valueContainer: (provided) => ({
+            ...provided,
+            padding: '6px 12px'
+        }),
+        input: (provided) => ({
+            ...provided,
+            margin: 0,
+            padding: 0,
+            color: '#212529'
+        }),
+        placeholder: (provided) => ({
+            ...provided,
+            color: '#6c757d'
+        }),
+        singleValue: (provided) => ({
+            ...provided,
+            color: '#212529'
+        }),
+        menu: (provided) => ({
+            ...provided,
+            zIndex: 9999
+        }),
+        menuPortal: (provided) => ({
+            ...provided,
+            zIndex: 9999
+        })
     };
 
     const validateForm = () => {
         const newErrors = {};
 
+        // Standard field validation
         fields.forEach(field => {
             if (field.required && !formData[field.name]) {
                 newErrors[field.name] = `${field.label} is required`;
             }
 
+            // Individual field validation rules
             if (validationRules[field.name]) {
-                const validation = validationRules[field.name](formData[field.name]);
+                const validation = validationRules[field.name](formData[field.name], formData);
                 if (!validation.isValid) {
                     newErrors[field.name] = validation.message;
                 }
             }
         });
+
+        // Custom validation (gets entire form data)
+        if (customValidation) {
+            const customErrors = customValidation(formData);
+            Object.assign(newErrors, customErrors);
+        }
 
         return newErrors;
     };
@@ -86,13 +151,16 @@ const GenericFormModal = ({
 
             const method = isEdit ? 'PUT' : 'POST';
 
+            // Transform form data if transformation function is provided
+            const dataToSubmit = transformFormData ? transformFormData(formData) : formData;
+
             const response = await fetch(url, {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(dataToSubmit)
             });
 
             if (!response.ok) {
@@ -101,10 +169,10 @@ const GenericFormModal = ({
 
             const result = await response.json();
             onSuccess(result);
-            handleHide(); // Use handleHide instead of onHide to reset form
+            handleHide();
         } catch (err) {
             console.error(`Error ${isEdit ? 'updating' : 'creating'} ${title.toLowerCase()}:`, err);
-            setErrors({submit: `Failed to ${isEdit ? 'update' : 'create'} ${title.toLowerCase()}. Please try again.`});
+            setErrors({ submit: `Failed to ${isEdit ? 'update' : 'create'} ${title.toLowerCase()}. Please try again.` });
         } finally {
             setSubmitting(false);
         }
@@ -113,47 +181,78 @@ const GenericFormModal = ({
     const renderField = (field) => {
         switch (field.type) {
             case 'textarea':
-                return (<Form.Control
-                    as="textarea"
-                    rows={3}
-                    name={field.name}
-                    value={formData[field.name] || ''}
-                    onChange={handleChange}
-                    placeholder={field.placeholder}
-                    isInvalid={!!errors[field.name]}
-                />);
+                return (
+                    <Form.Control
+                        as="textarea"
+                        rows={3}
+                        name={field.name}
+                        value={formData[field.name] || ''}
+                        onChange={handleChange}
+                        placeholder={field.placeholder}
+                        isInvalid={!!errors[field.name]}
+                    />
+                );
 
             case 'checkbox':
-                return (<Form.Check
-                    type="checkbox"
-                    name={field.name}
-                    checked={formData[field.name] || false}
-                    onChange={handleChange}
-                    label={field.checkboxLabel || field.label}
-                />);
+                return (
+                    <Form.Check
+                        type="checkbox"
+                        name={field.name}
+                        checked={formData[field.name] || false}
+                        onChange={handleChange}
+                        label={field.checkboxLabel || field.label}
+                    />
+                );
 
             case 'select':
-                return (<Form.Select
-                    name={field.name}
-                    value={formData[field.name] || ''}
-                    onChange={handleChange}
-                    isInvalid={!!errors[field.name]}
-                >
-                    <option value="">Select {field.label}</option>
-                    {field.options?.map(option => (<option key={option.value} value={option.value}>
-                        {option.label}
-                    </option>))}
-                </Form.Select>);
+                return (
+                    <Form.Select
+                        name={field.name}
+                        value={formData[field.name] || ''}
+                        onChange={handleChange}
+                        isInvalid={!!errors[field.name]}
+                    >
+                        <option value="">Select {field.label}</option>
+                        {field.options?.map(option => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </Form.Select>
+                );
+
+            case 'react-select':
+                const selectedValue = field.options?.find(option => option.value === formData[field.name]);
+
+                return (
+                    <Select
+                        name={field.name}
+                        value={selectedValue || null}
+                        onChange={(selectedOption, actionMeta) => handleSelectChange(selectedOption, actionMeta)}
+                        options={field.options}
+                        placeholder={field.placeholder || `Select ${field.label}`}
+                        isSearchable={field.isSearchable !== false}
+                        isClearable={field.isClearable}
+                        isDisabled={field.isDisabled}
+                        styles={customSelectStyles}
+                        menuPortalTarget={document.body}
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                    />
+                );
 
             default:
-                return (<Form.Control
-                    type={field.type || 'text'}
-                    name={field.name}
-                    value={formData[field.name] || ''}
-                    onChange={handleChange}
-                    placeholder={field.placeholder}
-                    isInvalid={!!errors[field.name]}
-                />);
+                return (
+                    <Form.Control
+                        type={field.type || 'text'}
+                        name={field.name}
+                        value={formData[field.name] || ''}
+                        onChange={handleChange}
+                        placeholder={field.placeholder}
+                        isInvalid={!!errors[field.name]}
+                        step={field.step}
+                    />
+                );
         }
     };
 
@@ -165,18 +264,27 @@ const GenericFormModal = ({
 
             <Form onSubmit={handleSubmit}>
                 <Modal.Body>
-                    {errors.submit && (<Alert variant="danger">{errors.submit}</Alert>)}
+                    {errors.submit && (
+                        <Alert variant="danger">{errors.submit}</Alert>
+                    )}
 
-                    {fields.map((field) => (<Form.Group key={field.name} className="mb-3">
-                        <Form.Label>
-                            {field.label}
-                            {field.required && <span className="text-danger">*</span>}
-                        </Form.Label>
-                        {renderField(field)}
-                        {errors[field.name] && (<Form.Control.Feedback type="invalid">
-                            {errors[field.name]}
-                        </Form.Control.Feedback>)}
-                    </Form.Group>))}
+                    {fields.map((field) => (
+                        <Form.Group key={field.name} className="mb-3">
+                            <Form.Label>
+                                {field.label}
+                                {field.required && <span className="text-danger">*</span>}
+                            </Form.Label>
+                            {renderField(field)}
+                            {errors[field.name] && (
+                                <div className="invalid-feedback d-block">
+                                    {errors[field.name]}
+                                </div>
+                            )}
+                        </Form.Group>
+                    ))}
+
+                    {/* Render custom form content if provided */}
+                    {customFormContent && customFormContent(formData, setFormData, errors)}
                 </Modal.Body>
 
                 <Modal.Footer>
@@ -193,10 +301,12 @@ const GenericFormModal = ({
                             disabled={submitting}
                         >
                             {submitting ? (isEdit ? 'Updating...' : 'Saving...') : (isEdit ? 'Update' : 'Save') + " " + title}
-                        </Button></div>
+                        </Button>
+                    </div>
                 </Modal.Footer>
             </Form>
-        </Modal>);
+        </Modal>
+    );
 };
 
 export default GenericFormModal;
