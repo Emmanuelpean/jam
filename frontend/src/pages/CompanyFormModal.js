@@ -1,101 +1,56 @@
-import React, {useState} from 'react';
-import {Button, Form, Modal} from 'react-bootstrap';
-import '../App.css';
-
+import React from 'react';
+import GenericFormModal from '../components/GenericFormModal';
 
 const CompanyFormModal = ({
-                              showCompanyModal,
-                              setShowCompanyModal,
-                              companyFormData,
-                              handleCompanyChange,
-                              handleCompanySubmit,
-                              formErrors,
-                              submitting
+                              show,
+                              onHide,
+                              onSuccess
                           }) => {
-    const [touched, setTouched] = useState({});
+    // Define form fields for company
+    const formFields = [
+        {
+            name: 'name',
+            label: 'Company Name',
+            type: 'text',
+            required: true,
+            placeholder: 'Enter company name'
+        },
+        {
+            name: 'url',
+            label: 'Website',
+            type: 'text',
+            required: false,
+            placeholder: 'https://example.com'
+        },
+        {
+            name: 'description',
+            label: 'Description',
+            type: 'textarea',
+            required: false,
+            placeholder: 'Enter company description'
+        }
+    ];
 
-    const handleBlur = (e) => {
-        const {name} = e.target;
-        setTouched(prev => ({...prev, [name]: true}));
-    };
-
-    const isFieldInvalid = (fieldName) => {
-        return touched[fieldName] && !companyFormData[fieldName];
-    };
-
-    const onSubmit = (e) => {
-        e.preventDefault();
-        // Mark all fields as touched when submitting
-        const newTouched = {};
-        Object.keys(companyFormData).forEach(key => {
-            newTouched[key] = true;
-        });
-        setTouched(newTouched);
-
-        if (e.currentTarget.checkValidity()) {
-            handleCompanySubmit(e);
+    // Validation rules for company form
+    const validationRules = {
+        url: (value) => {
+            if (value && !value.match(/^https?:\/\/.+/)) {
+                return { isValid: false, message: 'Please enter a valid URL starting with http:// or https://' };
+            }
+            return { isValid: true };
         }
     };
 
     return (
-        <Modal show={showCompanyModal} onHide={() => setShowCompanyModal(false)}>
-            <Modal.Header closeButton>
-                <Modal.Title>Add New Company</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <Form onSubmit={onSubmit}>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Company Name</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="name"
-                            value={companyFormData.name}
-                            onChange={handleCompanyChange}
-                            onBlur={handleBlur}
-                            required
-                            className={isFieldInvalid('name') ? 'is-invalid' : ''}
-                        />
-                        <div className="invalid-feedback">
-                            Please enter a company name
-                        </div>
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                        <Form.Label>Website</Form.Label>
-                        <Form.Control
-                            type="url"
-                            name="website"
-                            value={companyFormData.website}
-                            onChange={handleCompanyChange}
-                        />
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                        <Form.Label>Notes</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            name="notes"
-                            value={companyFormData.notes}
-                            onChange={handleCompanyChange}
-                            rows={3}
-                        />
-                    </Form.Group>
-
-                    {formErrors.company && (
-                        <div className="alert alert-danger">{formErrors.company}</div>
-                    )}
-
-                    <div className="d-flex justify-content-end">
-                        <Button variant="secondary" onClick={() => setShowCompanyModal(false)} className="me-2">
-                            Cancel
-                        </Button>
-                        <Button variant="primary" type="submit" disabled={submitting}>
-                            {submitting ? 'Saving...' : 'Save Company'}
-                        </Button>
-                    </div>
-                </Form>
-            </Modal.Body>
-        </Modal>
+        <GenericFormModal
+            show={show}
+            onHide={onHide}
+            title="Company"
+            fields={formFields}
+            endpoint="companies"
+            onSuccess={onSuccess}
+            validationRules={validationRules}
+        />
     );
 };
 
