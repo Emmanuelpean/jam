@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Alert, Button, Form, Modal} from 'react-bootstrap';
 import {useAuth} from '../contexts/AuthContext';
-import './GenericFormModal.css'; // Add this import
+import './modals/GenericFormModal.css'; // Add this import
 
 const GenericFormModal = ({
                               show,

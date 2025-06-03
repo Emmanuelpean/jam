@@ -1,5 +1,5 @@
 import React from 'react';
-import GenericFormModal from '../components/GenericFormModal';
+import GenericFormModal from '../GenericFormModal';
 
 const LocationFormModal = ({
                                show,

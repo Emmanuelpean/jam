@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 // Import the modal components
-import JobFormModal from './JobFormModal';
-import CompanyFormModal from './CompanyFormModal';
-import LocationFormModal from './LocationFormModal';
+import JobFormModal from '../components/modals/JobFormModal';
+import CompanyFormModal from '../components/modals/CompanyFormModal';
+import LocationFormModal from '../components/modals/LocationFormModal';
 
 const JobsPage = () => {
   const { token } = useAuth();

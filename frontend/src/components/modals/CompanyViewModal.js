@@ -1,5 +1,5 @@
 import React from 'react';
-import GenericViewModal from '../components/GenericViewModal';
+import GenericViewModal from '../GenericViewModal';
 
 const CompanyViewModal = ({show, onHide, company, onEdit}) => {
     // Define view fields for company (same structure as form fields)
