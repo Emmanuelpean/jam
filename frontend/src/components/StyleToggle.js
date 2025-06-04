@@ -2,25 +2,25 @@ import React, {useEffect, useState} from 'react';
 import {Dropdown} from 'react-bootstrap';
 
 const BerryJamThemeToggle = () => {
-    const [currentTheme, setCurrentTheme] = useState('strawberry');
+    const [currentTheme, setCurrentTheme] = useState('mixed-berry');
 
     const themes = [
         {
             key: 'strawberry',
             name: 'Strawberry Jam',
-            colors: ['#ff6b6b', '#c44569'],
+            colors: ['#c44569', '#ff6b6b'],
             description: 'Sweet and vibrant'
         },
         {
             key: 'blueberry',
             name: 'Blueberry Jam',
-            colors: ['#4834d4', '#686de0'],
+            colors: ['#686de0', '#4834d4'],
             description: 'Deep and rich'
         },
         {
             key: 'raspberry',
             name: 'Raspberry Jam',
-            colors: ['#e84393', '#fd79a8'],
+            colors: ['#fd79a8', '#e84393'],
             description: 'Tart and bold'
         },
         {
@@ -28,6 +28,24 @@ const BerryJamThemeToggle = () => {
             name: 'Mixed Berry Jam',
             colors: ['#a29bfe', '#6c5ce7', '#fd79a8'],
             description: 'Complex and layered'
+        },
+        {
+            key: 'forest-berry',
+            name: 'Forest Berry',
+            colors: ['#a8b3a8', '#1a2e1a'],
+            description: 'Natural and earthy'
+        },
+        {
+            key: 'elderberry',
+            name: 'Elderberry',
+            colors: ['#b8a8c8', '#22183c'],
+            description: 'Mysterious and refined'
+        },
+        {
+            key: 'blackberry',
+            name: 'Wild Blackberry',
+            colors: ['#8a7a9a', '#0a0015'],
+            description: 'Deep and sophisticated'
         }
     ];
 
@@ -109,6 +127,6 @@ const BerryJamThemeToggle = () => {
             </Dropdown.Menu>
         </Dropdown>
     );
-};
+}
 
 export default BerryJamThemeToggle;

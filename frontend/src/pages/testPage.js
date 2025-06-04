@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Alert } from 'react-bootstrap';
 import Select from 'react-select';
+import BerryJamThemeToggle from '../components/StyleToggle';
 import '../index.css';
 
 const StyleShowcase = () => {
@@ -15,6 +17,9 @@ const StyleShowcase = () => {
         textareaInput: '',
         selectInput: '',
         checkboxInput: false,
+        toggleInput: false,
+        notificationToggle: true,
+        darkModeToggle: false,
         rangeInput: 3,
         reactSelectInput: ''
     });
@@ -98,11 +103,14 @@ const StyleShowcase = () => {
             <Row className="justify-content-center">
                 <Col lg={10}>
                     <Card className="shadow-lg">
-                        <Card.Header className="bg-primary text-white">
-                            <h2 className="mb-0">Form Styles Showcase</h2>
-                            <p className="mb-0 mt-2 opacity-75">
-                                Comprehensive demonstration of all form styling components
-                            </p>
+                        <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 className="mb-0">Form Styles Showcase</h2>
+                                <p className="mb-0 mt-2 opacity-75">
+                                    Comprehensive demonstration of all form styling components
+                                </p>
+                            </div>
+                            <BerryJamThemeToggle />
                         </Card.Header>
                         <Card.Body className="p-4">
                             {/* Control Buttons */}
@@ -293,13 +301,45 @@ const StyleShowcase = () => {
                                         )}
                                     </Form.Group>
 
+                                    <h5 className="mb-3">Checkbox & Toggle Controls</h5>
+
                                     <Form.Group className="mb-3">
                                         <Form.Check
                                             type="checkbox"
                                             name="checkboxInput"
                                             checked={formData.checkboxInput}
                                             onChange={handleChange}
-                                            label="I agree to the terms and conditions"
+                                            label="I agree to the terms and conditions of service and privacy policy"
+                                        />
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-3">
+                                        <Form.Check
+                                            type="switch"
+                                            name="toggleInput"
+                                            checked={formData.toggleInput}
+                                            onChange={handleChange}
+                                            label="Enable advanced features"
+                                        />
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-3">
+                                        <Form.Check
+                                            type="switch"
+                                            name="notificationToggle"
+                                            checked={formData.notificationToggle}
+                                            onChange={handleChange}
+                                            label="Receive email notifications"
+                                        />
+                                    </Form.Group>
+
+                                    <Form.Group className="mb-3">
+                                        <Form.Check
+                                            type="switch"
+                                            name="darkModeToggle"
+                                            checked={formData.darkModeToggle}
+                                            onChange={handleChange}
+                                            label="Enable dark mode interface"
                                         />
                                     </Form.Group>
 
@@ -451,7 +491,14 @@ const StyleShowcase = () => {
                         <Form.Group className="mb-3">
                             <Form.Check
                                 type="checkbox"
-                                label="I want to receive email notifications"
+                                label="I want to receive email notifications about important updates"
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="switch"
+                                label="Enable advanced user privileges"
                             />
                         </Form.Group>
 
