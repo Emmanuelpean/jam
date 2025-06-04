@@ -36,14 +36,11 @@ export const geocodeLocation = async (location) => {
         const query = queryParts.join(', ');
 
         // Use Nominatim geocoding service
-        const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=1`,
-            {
-                headers: {
-                    'User-Agent': 'LocationMapper/1.0' // Be respectful to the service
-                }
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=1`, {
+            headers: {
+                'User-Agent': 'LocationMapper/1.0'
             }
-        );
+        });
 
         if (!response.ok) {
             throw new Error('Geocoding service unavailable');
@@ -58,9 +55,7 @@ export const geocodeLocation = async (location) => {
         }
 
         const result = {
-            latitude: parseFloat(data[0].lat),
-            longitude: parseFloat(data[0].lon),
-            displayName: data[0].display_name
+            latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon), displayName: data[0].display_name
         };
 
         // Cache the result
@@ -87,8 +82,7 @@ export const geocodeLocationsBatch = async (locations, onProgress = null) => {
         const batchPromises = batch.map(async (location) => {
             const coords = await geocodeLocation(location);
             return {
-                ...location,
-                geocoded: coords
+                ...location, geocoded: coords
             };
         });
 

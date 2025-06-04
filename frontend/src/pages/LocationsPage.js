@@ -119,6 +119,7 @@ const LocationsPage = () => {
         {
             key: 'country',
             label: 'Country',
+            type: 'category',
             sortable: true,
             searchable: true,
             render: (location) => location.country || 'Not specified'
@@ -136,8 +137,9 @@ const LocationsPage = () => {
         {
             key: 'created_at',
             label: 'Date Added',
+            type: 'date',
             sortable: true,
-            render: (location) => new Date(location.created_at).toLocaleDateString()
+            render: (item) => new Date(item.created_at).toLocaleDateString()
         },
         {
             key: 'actions',
