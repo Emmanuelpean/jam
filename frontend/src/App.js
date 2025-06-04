@@ -6,8 +6,10 @@ import Register from './components/Auth/Register';
 import JobsPage from './pages/JobsPage';
 import LocationsPage from './pages/LocationsPage';
 import CompaniesPage from './pages/CompaniesPage';
+import StyleShowcase from './pages/testPage';
+import 'bootstrap/dist/css/bootstrap.min.css';  // Bootstrap first
 import './App.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 function App() {
   return (
@@ -20,6 +22,7 @@ function App() {
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/locations" element={<LocationsPage />} />
           <Route path="/companies" element={<CompaniesPage />} />
+          <Route path="/showcase" element={<StyleShowcase/>} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

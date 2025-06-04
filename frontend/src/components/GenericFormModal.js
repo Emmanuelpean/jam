@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Button, Form, Modal } from 'react-bootstrap';
 import Select from 'react-select';
 import { useAuth } from '../contexts/AuthContext';
-import './GenericFormModal.css';
+import '../index.css';
 
 const GenericFormModal = ({
                               show,

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import Select from 'react-select';
 
 const GenericTable = ({
@@ -32,8 +31,7 @@ const GenericTable = ({
                 const filterRef = filterRefs.current[columnKey];
                 if (filterRef && !filterRef.contains(event.target)) {
                     setShowFilters(prev => ({
-                        ...prev,
-                        [columnKey]: false
+                        ...prev, [columnKey]: false
                     }));
                 }
             }
@@ -45,8 +43,7 @@ const GenericTable = ({
                 const tooltipRef = tooltipRefs.current[columnKey];
                 if (tooltipRef && !tooltipRef.contains(event.target)) {
                     setShowTooltips(prev => ({
-                        ...prev,
-                        [columnKey]: false
+                        ...prev, [columnKey]: false
                     }));
                 }
             }
@@ -77,16 +74,14 @@ const GenericTable = ({
     // Toggle filter visibility for a column
     const toggleFilter = (columnKey) => {
         setShowFilters(prev => ({
-            ...prev,
-            [columnKey]: !prev[columnKey]
+            ...prev, [columnKey]: !prev[columnKey]
         }));
     };
 
     // Handle column filter change
     const handleColumnFilterChange = (columnKey, value) => {
         setColumnFilters(prev => ({
-            ...prev,
-            [columnKey]: value
+            ...prev, [columnKey]: value
         }));
     };
 
@@ -94,18 +89,15 @@ const GenericTable = ({
     const handleCategoryFilterChange = (columnKey, selectedOptions) => {
         const selectedValues = selectedOptions ? selectedOptions.map(option => option.value) : [];
         setColumnFilters(prev => ({
-            ...prev,
-            [columnKey]: selectedValues
+            ...prev, [columnKey]: selectedValues
         }));
     };
 
     // Handle date filter change
     const handleDateFilterChange = (columnKey, field, value) => {
         setColumnFilters(prev => ({
-            ...prev,
-            [columnKey]: {
-                ...prev[columnKey],
-                [field]: value
+            ...prev, [columnKey]: {
+                ...prev[columnKey], [field]: value
             }
         }));
     };
@@ -113,10 +105,8 @@ const GenericTable = ({
     // Handle number filter change
     const handleNumberFilterChange = (columnKey, field, value) => {
         setColumnFilters(prev => ({
-            ...prev,
-            [columnKey]: {
-                ...prev[columnKey],
-                [field]: value
+            ...prev, [columnKey]: {
+                ...prev[columnKey], [field]: value
             }
         }));
     };
@@ -129,8 +119,7 @@ const GenericTable = ({
             return newFilters;
         });
         setShowFilters(prev => ({
-            ...prev,
-            [columnKey]: false
+            ...prev, [columnKey]: false
         }));
     };
 
@@ -159,8 +148,7 @@ const GenericTable = ({
 
         // Convert to react-select format
         return uniqueValues.map(value => ({
-            value: value,
-            label: value
+            value: value, label: value
         }));
     };
 
@@ -372,43 +360,24 @@ const GenericTable = ({
             '&:hover': {
                 borderColor: state.isFocused ? '#86b7fe' : '#adb5bd'
             }
-        }),
-        valueContainer: (provided) => ({
-            ...provided,
-            height: '29px',
-            padding: '0 8px'
-        }),
-        input: (provided) => ({
-            ...provided,
-            margin: '0px'
-        }),
-        indicatorSeparator: () => ({
+        }), valueContainer: (provided) => ({
+            ...provided, height: '29px', padding: '0 8px'
+        }), input: (provided) => ({
+            ...provided, margin: '0px'
+        }), indicatorSeparator: () => ({
             display: 'none'
-        }),
-        indicatorsContainer: (provided) => ({
-            ...provided,
-            height: '29px'
-        }),
-        multiValue: (provided) => ({
-            ...provided,
-            fontSize: '0.75rem'
-        }),
-        multiValueLabel: (provided) => ({
-            ...provided,
-            fontSize: '0.75rem'
-        }),
-        option: (provided, state) => ({
-            ...provided,
-            fontSize: '0.875rem'
-        }),
-        menu: (provided) => ({
-            ...provided,
-            fontSize: '0.875rem',
-            zIndex: 9999
-        }),
-        menuPortal: (provided) => ({
-            ...provided,
-            zIndex: 9999
+        }), indicatorsContainer: (provided) => ({
+            ...provided, height: '29px'
+        }), multiValue: (provided) => ({
+            ...provided, fontSize: '0.75rem'
+        }), multiValueLabel: (provided) => ({
+            ...provided, fontSize: '0.75rem'
+        }), option: (provided, state) => ({
+            ...provided, fontSize: '0.875rem'
+        }), menu: (provided) => ({
+            ...provided, fontSize: '0.875rem', zIndex: 9999
+        }), menuPortal: (provided) => ({
+            ...provided, zIndex: 9999
         })
     };
 
@@ -417,47 +386,39 @@ const GenericTable = ({
         switch (column.type) {
             case 'date':
             case 'datetime':
-                return (
-                    <div className="small text-dark">
+                return (<div className="small text-dark">
                         <strong>Date Filtering:</strong>
                         <ul className="mb-0 ps-3 mt-1">
                             <li>One date = exact match</li>
                             <li>Two dates = date range</li>
                         </ul>
-                    </div>
-                );
+                    </div>);
             case 'number':
-                return (
-                    <div className="small text-dark">
+                return (<div className="small text-dark">
                         <strong>Number Filtering:</strong>
                         <ul className="mb-0 ps-3 mt-1">
                             <li>Set minimum and/or maximum values</li>
                             <li>Leave empty for no limit</li>
                         </ul>
-                    </div>
-                );
+                    </div>);
             case 'category':
-                return (
-                    <div className="small text-dark">
+                return (<div className="small text-dark">
                         <strong>Category Filtering:</strong>
                         <ul className="mb-0 ps-3 mt-1">
                             <li>Multi-select dropdown with search</li>
                             <li>Type to search within options</li>
                             <li>Shows only items matching selected categories</li>
                         </ul>
-                    </div>
-                );
+                    </div>);
             default:
-                return (
-                    <div className="small text-dark">
+                return (<div className="small text-dark">
                         <strong>Text Filtering:</strong>
                         <ul className="mb-0 ps-3 mt-1">
                             <li><code>%manager%</code> - wildcard matching</li>
                             <li><code>software engineer</code> - multiple keywords (AND)</li>
                             <li><code>^Java</code> - regex patterns</li>
                         </ul>
-                    </div>
-                );
+                    </div>);
         }
     };
 
@@ -467,37 +428,30 @@ const GenericTable = ({
 
         if (column.type === 'date' || column.type === 'datetime') {
             const filter = columnFilters[column.key] || {};
-            return (
-                <div className="d-flex flex-column gap-2">
+            return (<div className="d-flex flex-column gap-2">
                     <div className="d-flex align-items-center gap-2">
                         <label className="form-label mb-0 small text-muted">
                             {filter.date1 && filter.date2 ? 'Date Range' : 'Single Date'}
                         </label>
-                        <div style={{ position: 'relative' }}>
+                        <div style={{position: 'relative'}}>
                             <button
                                 className="btn btn-sm p-0 border-0 bg-transparent text-info"
-                                style={{ fontSize: '0.75rem', width: '16px', height: '16px' }}
-                                onMouseEnter={() => setShowTooltips(prev => ({ ...prev, [tooltipKey]: true }))}
-                                onMouseLeave={() => setShowTooltips(prev => ({ ...prev, [tooltipKey]: false }))}
+                                style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
+                                onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
+                                onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 ℹ️
                             </button>
-                            {showTooltips[tooltipKey] && (
-                                <div
+                            {showTooltips[tooltipKey] && (<div
                                     ref={el => tooltipRefs.current[tooltipKey] = el}
                                     className="position-absolute bg-white border rounded shadow-lg p-2"
                                     style={{
-                                        top: '20px',
-                                        left: '-100px',
-                                        zIndex: 1002,
-                                        width: '200px',
-                                        fontSize: '0.8rem'
+                                        top: '20px', left: '-100px', zIndex: 1002, width: '200px', fontSize: '0.8rem'
                                     }}
                                 >
                                     {getFilterTooltip(column)}
-                                </div>
-                            )}
+                                </div>)}
                         </div>
                     </div>
                     <input
@@ -516,39 +470,31 @@ const GenericTable = ({
                         onChange={(e) => handleDateFilterChange(column.key, 'date2', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                     />
-                </div>
-            );
+                </div>);
         } else if (column.type === 'number') {
             const filter = columnFilters[column.key] || {};
-            return (
-                <div className="d-flex flex-column gap-2">
+            return (<div className="d-flex flex-column gap-2">
                     <div className="d-flex align-items-center gap-2">
                         <label className="form-label mb-0 small text-muted">Number Range</label>
-                        <div style={{ position: 'relative' }}>
+                        <div style={{position: 'relative'}}>
                             <button
                                 className="btn btn-sm p-0 border-0 bg-transparent text-info"
-                                style={{ fontSize: '0.75rem', width: '16px', height: '16px' }}
-                                onMouseEnter={() => setShowTooltips(prev => ({ ...prev, [tooltipKey]: true }))}
-                                onMouseLeave={() => setShowTooltips(prev => ({ ...prev, [tooltipKey]: false }))}
+                                style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
+                                onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
+                                onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 ℹ️
                             </button>
-                            {showTooltips[tooltipKey] && (
-                                <div
+                            {showTooltips[tooltipKey] && (<div
                                     ref={el => tooltipRefs.current[tooltipKey] = el}
                                     className="position-absolute bg-white border rounded shadow-lg p-2"
                                     style={{
-                                        top: '20px',
-                                        left: '-100px',
-                                        zIndex: 1002,
-                                        width: '200px',
-                                        fontSize: '0.8rem'
+                                        top: '20px', left: '-100px', zIndex: 1002, width: '200px', fontSize: '0.8rem'
                                     }}
                                 >
                                     {getFilterTooltip(column)}
-                                </div>
-                            )}
+                                </div>)}
                         </div>
                     </div>
                     <input
@@ -567,53 +513,41 @@ const GenericTable = ({
                         onChange={(e) => handleNumberFilterChange(column.key, 'max', e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                     />
-                </div>
-            );
+                </div>);
         } else if (column.type === 'category') {
             const categoryOptions = getUniqueCategories(column);
             const selectedCategories = columnFilters[column.key] || [];
-            const selectedOptions = categoryOptions.filter(option =>
-                selectedCategories.includes(option.value)
-            );
+            const selectedOptions = categoryOptions.filter(option => selectedCategories.includes(option.value));
 
-            return (
-                <div className="d-flex flex-column gap-2">
+            return (<div className="d-flex flex-column gap-2">
                     <div className="d-flex align-items-center gap-2">
                         <label className="form-label mb-0 small text-muted">Select Categories</label>
-                        <div style={{ position: 'relative' }}>
+                        <div style={{position: 'relative'}}>
                             <button
                                 className="btn btn-sm p-0 border-0 bg-transparent text-info"
-                                style={{ fontSize: '0.75rem', width: '16px', height: '16px' }}
-                                onMouseEnter={() => setShowTooltips(prev => ({ ...prev, [tooltipKey]: true }))}
-                                onMouseLeave={() => setShowTooltips(prev => ({ ...prev, [tooltipKey]: false }))}
+                                style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
+                                onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
+                                onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 ℹ️
                             </button>
-                            {showTooltips[tooltipKey] && (
-                                <div
+                            {showTooltips[tooltipKey] && (<div
                                     ref={el => tooltipRefs.current[tooltipKey] = el}
                                     className="position-absolute bg-white border rounded shadow-lg p-2"
                                     style={{
-                                        top: '20px',
-                                        left: '-100px',
-                                        zIndex: 1002,
-                                        width: '250px',
-                                        fontSize: '0.8rem'
+                                        top: '20px', left: '-100px', zIndex: 1002, width: '250px', fontSize: '0.8rem'
                                     }}
                                 >
                                     {getFilterTooltip(column)}
-                                </div>
-                            )}
+                                </div>)}
                         </div>
                     </div>
                     <div onClick={(e) => e.stopPropagation()}>
                         <Select
                             isMulti
                             value={selectedOptions}
-                            onChange={(selectedOptions) =>
-                                handleCategoryFilterChange(column.key, selectedOptions)
-                            }
+                            onChange={(selectedOptions) => handleCategoryFilterChange(column.key, selectedOptions)}
                             options={categoryOptions}
                             placeholder={categoryOptions.length === 0 ? 'No options available' : `Filter by ${column.label.toLowerCase()}...`}
                             noOptionsMessage={() => 'No options found'}
@@ -629,48 +563,36 @@ const GenericTable = ({
                             maxMenuHeight={200}
                         />
                     </div>
-                    {selectedCategories.length > 0 && (
-                        <small className="text-muted">
+                    {selectedCategories.length > 0 && (<small className="text-muted">
                             {selectedCategories.length} selected
-                        </small>
-                    )}
-                    {categoryOptions.length === 0 && (
-                        <small className="text-muted">
+                        </small>)}
+                    {categoryOptions.length === 0 && (<small className="text-muted">
                             No data available for filtering
-                        </small>
-                    )}
-                </div>
-            );
+                        </small>)}
+                </div>);
         } else {
-            return (
-                <div className="d-flex flex-column gap-2">
+            return (<div className="d-flex flex-column gap-2">
                     <div className="d-flex align-items-center gap-2">
                         <label className="form-label mb-0 small text-muted">Filter Text</label>
-                        <div style={{ position: 'relative' }}>
+                        <div style={{position: 'relative'}}>
                             <button
                                 className="btn btn-sm p-0 border-0 bg-transparent text-info"
-                                style={{ fontSize: '0.75rem', width: '16px', height: '16px' }}
-                                onMouseEnter={() => setShowTooltips(prev => ({ ...prev, [tooltipKey]: true }))}
-                                onMouseLeave={() => setShowTooltips(prev => ({ ...prev, [tooltipKey]: false }))}
+                                style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
+                                onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
+                                onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 ℹ️
                             </button>
-                            {showTooltips[tooltipKey] && (
-                                <div
+                            {showTooltips[tooltipKey] && (<div
                                     ref={el => tooltipRefs.current[tooltipKey] = el}
                                     className="position-absolute bg-white border rounded shadow-lg p-2"
                                     style={{
-                                        top: '20px',
-                                        left: '-150px',
-                                        zIndex: 1002,
-                                        width: '280px',
-                                        fontSize: '0.8rem'
+                                        top: '20px', left: '-150px', zIndex: 1002, width: '280px', fontSize: '0.8rem'
                                     }}
                                 >
                                     {getFilterTooltip(column)}
-                                </div>
-                            )}
+                                </div>)}
                         </div>
                     </div>
                     <input
@@ -682,25 +604,21 @@ const GenericTable = ({
                         onClick={(e) => e.stopPropagation()}
                         autoFocus
                     />
-                </div>
-            );
+                </div>);
         }
     };
 
     if (loading) {
-        return (
-            <div className="d-flex justify-content-center mt-5">
+        return (<div className="d-flex justify-content-center mt-5">
                 <div className="spinner-border" role="status"></div>
-            </div>
-        );
+            </div>);
     }
 
     if (error) {
         return <div className="alert alert-danger mt-3">{error}</div>;
     }
 
-    return (
-        <div>
+    return (<div>
             {/* Header with search and filters */}
             <div className="d-flex justify-content-between mb-3">
                 <div className="d-flex">
@@ -729,8 +647,7 @@ const GenericTable = ({
             <table className="table table-striped">
                 <thead>
                 <tr>
-                    {columns.map((column) => (
-                        <th key={column.key} style={{position: 'relative'}}>
+                    {columns.map((column) => (<th key={column.key} style={{position: 'relative'}}>
                             <div className="d-flex align-items-center justify-content-between">
                                 <span
                                     onClick={() => toggleFilter(column.key)}
@@ -738,37 +655,25 @@ const GenericTable = ({
                                     title="Click to filter"
                                 >
                                     {column.label}
-                                    {columnFilters[column.key] && (
-                                        <span
+                                    {columnFilters[column.key] && (<span
                                             className="badge bg-primary ms-1"
                                             style={{fontSize: '0.6em'}}
                                         >
                                             F
-                                        </span>
-                                    )}
+                                        </span>)}
                                 </span>
-                                {column.sortable && (
-                                    <button
+                                {column.sortable && (<button
                                         className="btn btn-sm p-1 ms-2"
                                         onClick={() => handleSort(column.key)}
                                         style={{
-                                            border: 'none',
-                                            background: 'none',
-                                            fontSize: '0.8em',
-                                            minWidth: '20px'
+                                            border: 'none', background: 'none', fontSize: '0.8em', minWidth: '20px'
                                         }}
                                         title="Sort column"
                                     >
-                                        {sortConfig.key === column.key ? (
-                                            sortConfig.direction === 'asc' ? '↑' : '↓'
-                                        ) : (
-                                            '↕'
-                                        )}
-                                    </button>
-                                )}
+                                        {sortConfig.key === column.key ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ('↕')}
+                                    </button>)}
                             </div>
-                            {showFilters[column.key] && (
-                                <div
+                            {showFilters[column.key] && (<div
                                     ref={el => filterRefs.current[column.key] = el}
                                     className="position-absolute bg-white border rounded shadow-sm p-3 mt-1"
                                     style={{
@@ -787,38 +692,24 @@ const GenericTable = ({
                                             Clear Filter
                                         </button>
                                     </div>
-                                </div>
-                            )}
-                        </th>
-                    ))}
+                                </div>)}
+                        </th>))}
                 </tr>
                 </thead>
                 <tbody>
-                {getSortedData().map((item) => (
-                    <tr key={item.id}>
-                        {columns.map((column) => (
-                            <td key={column.key}>
-                                {column.render
-                                    ? column.render(item)
-                                    : column.accessor
-                                        ? column.accessor(item)
-                                        : item[column.key]
-                                }
-                            </td>
-                        ))}
-                    </tr>
-                ))}
-                {getSortedData().length === 0 && (
-                    <tr>
+                {getSortedData().map((item) => (<tr key={item.id}>
+                        {columns.map((column) => (<td key={column.key}>
+                                {column.render ? column.render(item) : column.accessor ? column.accessor(item) : item[column.key]}
+                            </td>))}
+                    </tr>))}
+                {getSortedData().length === 0 && (<tr>
                         <td colSpan={columns.length} className="text-center">
                             {emptyMessage}
                         </td>
-                    </tr>
-                )}
+                    </tr>)}
                 </tbody>
             </table>
-        </div>
-    );
+        </div>);
 };
 
 export default GenericTable;

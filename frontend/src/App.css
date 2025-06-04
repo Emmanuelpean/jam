@@ -51,3 +51,463 @@
   border-color: #dc3545 !important;
   box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
 }
+
+:root {
+  --primary-gradient: linear-gradient(135deg, #ff6b6b 0%, #c44569 100%);
+  --primary-start: #ff6b6b;
+  --primary-end: #c44569;
+  --primary-hover-gradient: linear-gradient(135deg, #ff5252 0%, #b73e56 100%);
+  --primary-light: #ffb3b3;
+  --primary-dark: #a63952;
+  --theme-name: 'Strawberry Jam';
+}
+
+/* Strawberry Jam Theme */
+:root[data-theme="strawberry"] {
+  --primary-gradient: linear-gradient(135deg, #ff6b6b 0%, #c44569 100%);
+  --primary-start: #ff6b6b;
+  --primary-end: #c44569;
+  --primary-hover-gradient: linear-gradient(135deg, #ff5252 0%, #b73e56 100%);
+  --primary-light: #ffb3b3;
+  --primary-dark: #a63952;
+  --theme-name: 'Strawberry Jam';
+}
+
+/* Blueberry Jam Theme */
+:root[data-theme="blueberry"] {
+  --primary-gradient: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
+  --primary-start: #4834d4;
+  --primary-end: #686de0;
+  --primary-hover-gradient: linear-gradient(135deg, #3d2db7 0%, #5a5fcf 100%);
+  --primary-light: #a4a8f0;
+  --primary-dark: #2d1f8f;
+  --theme-name: 'Blueberry Jam';
+}
+
+/* Raspberry Jam Theme */
+:root[data-theme="raspberry"] {
+  --primary-gradient: linear-gradient(135deg, #e84393 0%, #fd79a8 100%);
+  --primary-start: #e84393;
+  --primary-end: #fd79a8;
+  --primary-hover-gradient: linear-gradient(135deg, #e32e7c 0%, #fc5d95 100%);
+  --primary-light: #f5a8c9;
+  --primary-dark: #d1206b;
+  --theme-name: 'Raspberry Jam';
+}
+
+/* Mixed Berry Jam Theme */
+:root[data-theme="mixed-berry"] {
+  --primary-gradient: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 50%, #fd79a8 100%);
+  --primary-start: #a29bfe;
+  --primary-end: #fd79a8;
+  --primary-hover-gradient: linear-gradient(135deg, #9085fd 0%, #5b4bd1 50%, #fc5d95 100%);
+  --primary-light: #d1cbfe;
+  --primary-dark: #4a3bb8;
+  --theme-name: 'Mixed Berry Jam';
+}
+
+
+
+/* ------------------------------------------------------ MODAL ----------------------------------------------------- */
+
+.modal-content {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  padding: 1.25rem 1.5rem;
+}
+
+.modal-header .modal-title {
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.modal-header .btn-close {
+  filter: invert(1);
+  opacity: 0.8;
+}
+
+.modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  background-color: #fafbfc;
+}
+
+.modal-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  border-radius: 0 0 12px 12px;
+  padding: 1rem 1.5rem;
+}
+
+/* Centered button container with fixed width */
+.modal-buttons-container {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  width: 500px;
+  margin: 0 auto;
+}
+
+.modal-buttons-container .btn {
+  flex: 1;
+  min-width: 100px;
+}
+
+/* ------------------------------------------------------ FORM ------------------------------------------------------ */
+
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-control::placeholder {
+  color: #adb5bd;
+  font-style: italic;
+}
+
+/* ----------------------------------------------------- WIDGET ----------------------------------------------------- */
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Required field asterisk */
+.text-danger {
+  color: #dc3545 !important;
+  font-weight: bold;
+}
+
+/* Error states */
+.form-control.is-invalid,
+.form-select.is-invalid {
+  border-color: #dc3545;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 1.4 1.4-1.4 1.4'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.invalid-feedback {
+  display: block;
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Button styling */
+.btn {
+  border-radius: 8px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b4596 100%);
+}
+
+.btn-primary:disabled {
+  background: #6c757d;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+
+/* Alert styling */
+.alert {
+  border-radius: 8px;
+  border: none;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-left: 4px solid #dc3545;
+}
+
+/* Checkbox styling */
+.form-check {
+  padding-left: 1.75rem;
+}
+
+.form-check-input {
+  margin-top: 0.25rem;
+  border-radius: 4px;
+  border: 2px solid #dee2e6;
+}
+
+.form-check-input:checked {
+  background-color: #667eea;
+  border-color: #667eea;
+}
+
+.form-check-label {
+  color: #495057;
+  font-weight: 500;
+}
+
+/* Range input styling */
+.form-range {
+  margin: 1rem 0;
+}
+
+.form-range::-webkit-slider-thumb {
+  background: #667eea;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+.form-range::-moz-range-thumb {
+  background: #667eea;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+/* React Select styling within modals */
+.react-select__control {
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  min-height: 48px;
+  box-shadow: none;
+}
+
+.react-select__control:hover {
+  border-color: #ced4da;
+}
+
+.react-select__control--is-focused {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.react-select__value-container {
+  padding: 0.375rem 0.75rem;
+}
+
+.react-select__placeholder {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.react-select__menu {
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e9ecef;
+}
+
+.react-select__option--is-focused {
+  background-color: #f8f9fa;
+}
+
+.react-select__option--is-selected {
+  background-color: #667eea;
+}
+
+/* Inline forms (for company/location creation within job modal) */
+.bg-light {
+  background-color: #f8f9fa !important;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.bg-light h6 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.bg-light .btn {
+  margin-top: 0.5rem;
+}
+
+/* Loading state */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .modal-dialog {
+    margin: 1rem;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 1rem;
+  }
+
+  .modal .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .modal-buttons-container {
+    width: 240px;
+  }
+}
+
+/* Animation for modal appearance */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out;
+  transform: translate(0, -50px);
+}
+
+.modal.show .modal-dialog {
+  transform: none;
+}
+
+/* Focus management */
+.modal-content:focus {
+  outline: none;
+}
+
+/* Better spacing for form groups */
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* URL input specific styling */
+input[type="url"] {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+/* Number input styling */
+input[type="number"] {
+  text-align: right;
+}
+
+/* Validation feedback positioning */
+.form-control + .invalid-feedback {
+  margin-top: 0.25rem;
+}
+
+.modal-buttons-container {
+  display: flex;
+  gap: 10px;
+}
+
+/* React-select custom styles */
+.react-select-container .react-select__control {
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.react-select-container .react-select__control:hover {
+  border-color: #86b7fe;
+}
+
+.react-select-container .react-select__control--is-focused {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  outline: none;
+}
+
+.react-select-container .react-select__input-container {
+  color: #212529;
+}
+
+.react-select-container .react-select__input {
+  caret-color: #212529;
+}
+
+.react-select-container .react-select__placeholder {
+  color: #6c757d;
+}
+
+.react-select-container .react-select__single-value {
+  color: #212529;
+}
+
+.react-select-container .react-select__menu {
+  z-index: 9999;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.react-select-container .react-select__option {
+  color: #212529;
+}
+
+.react-select-container .react-select__option--is-focused {
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+.react-select-container .react-select__option--is-selected {
+  background-color: #0d6efd;
+  color: white;
+}
+
+/* Remove any unwanted focus outlines */
+.react-select-container .react-select__input:focus,
+.react-select-container .react-select__input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.react-select-container .react-select__value-container {
+  padding: 6px 12px;
+}
+
+.react-select-container .react-select__indicators {
+  padding-right: 8px;
+}
