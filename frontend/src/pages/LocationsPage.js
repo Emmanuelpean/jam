@@ -1,16 +1,15 @@
-
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import GenericTable from '../components/GenericTable';
 import LocationFormModal from '../components/modals/LocationFormModal';
 import LocationViewModal from '../components/modals/LocationViewModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import LocationMap from '../components/LocationMap';
-import { useTableData } from '../components/Table';
-import { useAuth } from '../contexts/AuthContext';
-import { useConfirmation } from '../hooks/useConfirmation';
+import {useTableData} from '../components/Table';
+import {useAuth} from '../contexts/AuthContext';
+import {useConfirmation} from '../hooks/useConfirmation';
 
 const LocationsPage = () => {
-    const { token } = useAuth();
+    const {token} = useAuth();
     const {
         data: locations,
         setData: setLocations,
@@ -30,7 +29,7 @@ const LocationsPage = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
 
-    const { confirmationState, showConfirmation, hideConfirmation } = useConfirmation();
+    const {confirmationState, showConfirmation, hideConfirmation} = useConfirmation();
 
     // Handle view location
     const handleView = (location) => {
@@ -59,9 +58,7 @@ const LocationsPage = () => {
 
     // Handle delete location
     const handleDelete = async (location) => {
-        const locationName = location.city
-            ? `${location.city}${location.country ? `, ${location.country}` : ''}`
-            : 'this location';
+        const locationName = location.city ? `${location.city}${location.country ? `, ${location.country}` : ''}` : 'this location';
 
         await showConfirmation({
             title: 'Delete Location',
@@ -73,8 +70,7 @@ const LocationsPage = () => {
             onConfirm: async () => {
                 try {
                     const response = await fetch(`http://localhost:8000/locations/${location.id}/`, {
-                        method: 'DELETE',
-                        headers: {
+                        method: 'DELETE', headers: {
                             'Authorization': `Bearer ${token}`
                         }
                     });
@@ -83,9 +79,7 @@ const LocationsPage = () => {
                         if (typeof removeItem === 'function') {
                             removeItem(location.id);
                         } else if (typeof setLocations === 'function') {
-                            setLocations(prevLocations =>
-                                prevLocations.filter(l => l.id !== location.id)
-                            );
+                            setLocations(prevLocations => prevLocations.filter(l => l.id !== location.id));
                         } else {
                             window.location.reload();
                         }
@@ -101,139 +95,126 @@ const LocationsPage = () => {
     };
 
     // Define table columns
-    const columns = [
-        {
-            key: 'city',
-            label: 'City',
-            sortable: true,
-            searchable: true,
-            render: (location) => location.city || 'Not specified'
-        },
-        {
-            key: 'postcode',
-            label: 'Postcode',
-            sortable: true,
-            searchable: true,
-            render: (location) => location.postcode || 'Not specified'
-        },
-        {
-            key: 'country',
-            label: 'Country',
-            type: 'category',
-            sortable: true,
-            searchable: true,
-            render: (location) => location.country || 'Not specified'
-        },
-        {
-            key: 'remote',
-            label: 'Remote',
-            sortable: true,
-            render: (location) => (
-                <span className={`badge ${location.remote ? 'bg-success' : 'bg-secondary'}`}>
+    const columns = [{
+        key: 'city',
+        label: 'City',
+        sortable: true,
+        searchable: true,
+        render: (location) => location.city || 'Not specified'
+    }, {
+        key: 'postcode',
+        label: 'Postcode',
+        sortable: true,
+        searchable: true,
+        render: (location) => location.postcode || 'Not specified'
+    }, {
+        key: 'country',
+        label: 'Country',
+        type: 'category',
+        sortable: true,
+        searchable: true,
+        render: (location) => location.country || 'Not specified'
+    }, {
+        key: 'remote',
+        label: 'Remote',
+        sortable: true,
+        render: (location) => (<span className={`badge ${location.remote ? 'bg-success' : 'bg-secondary'}`}>
                     {location.remote ? 'Yes' : 'No'}
-                </span>
-            )
-        },
-        {
-            key: 'created_at',
-            label: 'Date Added',
-            type: 'date',
-            sortable: true,
-            render: (item) => new Date(item.created_at).toLocaleDateString()
-        },
-        {
-            key: 'actions',
-            label: 'Actions',
-            sortable: false,
-            render: (location) => (
-                <div>
-                    <button
-                        className="btn btn-sm btn-outline-primary me-1"
-                        onClick={() => handleView(location)}
-                    >
-                        View
-                    </button>
-                    <button
-                        className="btn btn-sm btn-outline-secondary me-1"
-                        onClick={() => handleEdit(location)}
-                    >
-                        Edit
-                    </button>
-                    <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDelete(location)}
-                    >
-                        Delete
-                    </button>
-                </div>
-            )
-        }
-    ];
+                </span>)
+    }, {
+        key: 'created_at',
+        label: 'Date Added',
+        type: 'date',
+        sortable: true,
+        render: (item) => new Date(item.created_at).toLocaleDateString()
+    }, {
+        key: 'actions', label: 'Actions', sortable: false, render: (location) => (<div className={"d-flex gap-2"}>
+            <button
+                className="btn btn-action btn-action-view"
+                onClick={() => handleView(location)}
+            >
+                <i className="bi bi-eye"></i>View
+            </button>
+            <button
+                className="btn btn-action btn-action-edit"
+                onClick={() => handleEdit(location)}
+            ><i className="bi bi-pencil"></i>
+
+                Edit
+            </button>
+            <button
+                className="btn btn-action btn-action-delete
+"
+                onClick={() => handleDelete(location)}
+            >
+                <i className="bi bi-trash"></i>
+                Delete
+            </button>
+        </div>)
+    }];
 
     const handleAddSuccess = (newLocation) => {
         addItem(newLocation);
     };
 
-    return (
-        <div className="container">
-            <h2 className="my-4">Locations</h2>
+    return (<div className="container">
+        <h2 className="my-4">Locations</h2>
 
-            {/* Table first */}
-            <GenericTable
-                data={locations}
-                columns={columns}
-                sortConfig={sortConfig}
-                onSort={setSortConfig}
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                onAddClick={() => setShowModal(true)}
-                addButtonText="Add Location"
-                loading={loading}
-                error={error}
-                emptyMessage="No locations found"
-            />
+        {/* Table first */}
+        <GenericTable
+            data={locations}
+            columns={columns}
+            sortConfig={sortConfig}
+            onSort={setSortConfig}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onAddClick={() => setShowModal(true)}
+            addButtonText="Add Location"
+            loading={loading}
+            error={error}
+            emptyMessage="No locations found"
+        />
 
-            {/* Map below table */}
-            <div className="mt-4">
-                <h5 className="mb-3">Location Map</h5>
-                <LocationMap locations={locations || []} height="500px" />
-            </div>
-
-            {/* Modals */}
-            <LocationFormModal
-                show={showModal}
-                onHide={() => setShowModal(false)}
-                onSuccess={handleAddSuccess}
-            />
-
-            <LocationFormModal
-                show={showEditModal}
-                onHide={handleEditModalClose}
-                onSuccess={handleEditSuccess}
-                initialData={selectedLocation || {}}
-                isEdit={true}
-            />
-
-            <LocationViewModal
-                show={showViewModal}
-                onHide={() => setShowViewModal(false)}
-                location={selectedLocation}
-                onEdit={handleEdit}
-            />
-
-            <ConfirmationModal
-                show={confirmationState.show}
-                onHide={hideConfirmation}
-                onConfirm={confirmationState.onConfirm}
-                title={confirmationState.title}
-                message={confirmationState.message}
-                confirmText={confirmationState.confirmText}
-                cancelText={confirmationState.cancelText}
-                confirmVariant={confirmationState.confirmVariant}
-                icon={confirmationState.icon}
-            />
+        {/* Map below table */}
+        <div className="mt-4">
+            <h5 className="mb-3">Location Map</h5>
+            <LocationMap locations={locations || []} height="500px"/>
         </div>
-    );
+
+        {/* Modals */}
+        <LocationFormModal
+            show={showModal}
+            onHide={() => setShowModal(false)}
+            onSuccess={handleAddSuccess}
+        />
+
+        <LocationFormModal
+            show={showEditModal}
+            onHide={handleEditModalClose}
+            onSuccess={handleEditSuccess}
+            initialData={selectedLocation || {}}
+            isEdit={true}
+        />
+
+        <LocationViewModal
+            show={showViewModal}
+            onHide={() => setShowViewModal(false)}
+            location={selectedLocation}
+            onEdit={handleEdit}
+        />
+
+        <ConfirmationModal
+            show={confirmationState.show}
+            onHide={hideConfirmation}
+            onConfirm={confirmationState.onConfirm}
+            title={confirmationState.title}
+            message={confirmationState.message}
+            confirmText={confirmationState.confirmText}
+            cancelText={confirmationState.cancelText}
+            confirmVariant={confirmationState.confirmVariant}
+            icon={confirmationState.icon}
+        />
+    </div>);
 };
 
 export default LocationsPage;

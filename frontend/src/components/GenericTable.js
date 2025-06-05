@@ -698,15 +698,15 @@ const GenericTable = ({
                 </thead>
                 <tbody>
                 {getSortedData().map((item) => (<tr key={item.id}>
-                        {columns.map((column) => (<td key={column.key}>
-                                {column.render ? column.render(item) : column.accessor ? column.accessor(item) : item[column.key]}
-                            </td>))}
-                    </tr>))}
+                    {columns.map((column) => (<td key={column.key} className="align-middle">
+                        {column.render ? column.render(item) : column.accessor ? column.accessor(item) : item[column.key]}
+                    </td>))}
+                </tr>))}
                 {getSortedData().length === 0 && (<tr>
-                        <td colSpan={columns.length} className="text-center">
-                            {emptyMessage}
-                        </td>
-                    </tr>)}
+                    <td colSpan={columns.length} className="text-center align-middle">
+                        {emptyMessage}
+                    </td>
+                </tr>)}
                 </tbody>
             </table>
         </div>);

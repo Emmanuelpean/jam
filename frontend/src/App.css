@@ -295,7 +295,6 @@ textarea.form-control {
     font-size: 0.95rem;
     letter-spacing: 0.025em;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border: none;
 }
 
@@ -392,6 +391,77 @@ textarea.form-control {
     background: var(--primary-hover-gradient) !important;
     transform: translateY(-2px) !important;
     box-shadow: 0 8px 25px var(--jam-glow), 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Compact action button styling for Edit/View/Delete buttons */
+.btn-action {
+    border: 1.5px solid;
+    background: transparent;
+    border-radius: 8px;
+    padding: 0.375rem 0.75rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+    min-width: auto;
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.btn-action:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Edit button - blue theme */
+.btn-action-edit {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.btn-action-edit:hover {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+/* View button - green theme */
+.btn-action-view {
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.btn-action-view:hover {
+    background-color: #10b981;
+    color: white;
+    border-color: #10b981;
+}
+
+/* Delete button - red theme */
+.btn-action-delete {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.btn-action-delete:hover {
+    background-color: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+/* Optional: Small size variant for extra compact buttons */
+.btn-action-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 6px;
 }
 
 /* Bootstrap Badge Styling */
