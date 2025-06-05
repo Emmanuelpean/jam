@@ -6,7 +6,7 @@ import LocationMap from "../components/maps/LocationMap";
 import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
 import { useConfirmation } from "../hooks/useConfirmation";
-import { useGenericAlert } from "../hooks/useGenericAlert";
+import useGenericAlert from "../hooks/useGenericAlert";
 import GenericModal from "../components/GenericModal";
 
 const LocationsPage = () => {
@@ -31,7 +31,7 @@ const LocationsPage = () => {
 	const [selectedLocation, setSelectedLocation] = useState(null);
 
 	const { confirmationState, showConfirmation, hideConfirmation } = useConfirmation();
-	const { alertState, showAlert, hideAlert } = useGenericAlert();
+	const { alertState, hideAlert, showError, showConfirm } = useGenericAlert();
 
 	// Handle view location
 	const handleView = (location) => {
@@ -88,34 +88,16 @@ const LocationsPage = () => {
 						} else {
 							window.location.reload();
 						}
-
-						// Show success alert using GenericModal
-						await showAlert({
-							title: "Success",
-							message: `Location "${locationName}" has been deleted successfully.`,
-							type: "success",
-							confirmText: "OK",
-							icon: "✅",
-						});
 					} else {
-						// Show error alert using GenericModal
-						await showAlert({
+						await showError({
 							title: "Error",
 							message: "Failed to delete location. Please try again.",
-							type: "error",
-							confirmText: "OK",
-							icon: "❌",
 						});
 					}
 				} catch (error) {
-					console.error("Error deleting location:", error);
-					// Show error alert using GenericModal
-					await showAlert({
+					await showError({
 						title: "Error",
 						message: "Failed to delete location. Please check your connection and try again.",
-						type: "error",
-						confirmText: "OK",
-						icon: "❌",
 					});
 				}
 			},
