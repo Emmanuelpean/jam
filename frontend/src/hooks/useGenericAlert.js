@@ -1,7 +1,7 @@
-// src/hooks/useAlert.js
+
 import { useState } from 'react';
 
-export const useAlert = () => {
+export const useGenericAlert = () => {
     const [alertState, setAlertState] = useState({
         show: false,
         title: 'Alert',
@@ -10,18 +10,18 @@ export const useAlert = () => {
         confirmText: 'OK',
         icon: null,
         size: 'md',
-        onConfirm: null
+        onSuccess: null
     });
 
     const showAlert = ({
-        title = 'Alert',
-        message,
-        type = 'info',
-        confirmText = 'OK',
-        icon = null,
-        size = 'md',
-        onConfirm = null
-    }) => {
+                           title = 'Alert',
+                           message,
+                           type = 'info',
+                           confirmText = 'OK',
+                           icon = null,
+                           size = 'md',
+                           onSuccess = null
+                       }) => {
         return new Promise((resolve) => {
             setAlertState({
                 show: true,
@@ -31,8 +31,8 @@ export const useAlert = () => {
                 confirmText,
                 icon,
                 size,
-                onConfirm: () => {
-                    if (onConfirm) onConfirm();
+                onSuccess: () => {
+                    if (onSuccess) onSuccess();
                     resolve(true);
                     hideAlert();
                 }

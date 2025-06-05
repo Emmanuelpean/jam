@@ -1,128 +1,66 @@
-import React, { useState, useEffect } from 'react';
-import GenericFormModal from '../GenericFormModal';
-import { fetchCountries, getCountryCodeSync, getCountryNameSync } from '../../hooks/CountryUtils';
+import React from 'react';
+import GenericModal from '../GenericModal';
 
 const LocationFormModal = ({
                                show,
                                onHide,
-                               onSuccess,
                                initialData = {},
+                               onSuccess,
                                isEdit = false
                            }) => {
-    const [countries, setCountries] = useState([]);
-    const [loadingCountries, setLoadingCountries] = useState(false);
-
-    // Load countries when component mounts
-    useEffect(() => {
-        const loadCountries = async () => {
-            setLoadingCountries(true);
-            try {
-                const countriesList = await fetchCountries();
-                console.log('Countries:', countriesList);
-                setCountries(countriesList);
-            } catch (error) {
-                console.error('Failed to load countries:', error);
-            } finally {
-                setLoadingCountries(false);
-            }
-        };
-
-        loadCountries();
-    }, []);
-
-    const formFields = [
-        {
-            name: 'postcode',
-            label: 'Post Code',
-            type: 'text',
-            required: false,
-            placeholder: 'Enter a post code'
-        },
+    const locationFields = [
         {
             name: 'city',
             label: 'City',
             type: 'text',
-            required: false,
-            placeholder: 'Enter a city name'
+            placeholder: 'Enter city name...',
+            required: true
+        },
+        {
+            name: 'state',
+            label: 'State/Province',
+            type: 'text',
+            placeholder: 'Enter state or province...'
         },
         {
             name: 'country',
             label: 'Country',
-            type: 'react-select',
-            required: false,
-            options: countries,
-            placeholder: loadingCountries ? 'Loading countries...' : 'Search and select a country...',
-            isSearchable: true,
-            isClearable: true,
-            isDisabled: loadingCountries
+            type: 'text',
+            placeholder: 'Enter country...',
+            required: true
+        },
+        {
+            name: 'postcode',
+            label: 'Postal Code',
+            type: 'text',
+            placeholder: 'Enter postal code...'
         },
         {
             name: 'remote',
-            label: 'Remote',
+            label: 'Remote Position',
             type: 'checkbox',
-            required: false
+            checkboxLabel: 'This is a remote position'
         }
     ];
 
-    // Transform the initial data to work with react-select
-    const transformInitialData = (data) => {
-        if (!data.country || countries.length === 0) return data;
-
-        // If country is already a code, keep it
-        if (countries.some(c => c.value === data.country)) {
-            return data;
-        }
-
-        // If country is a name, convert to code
-        const countryCode = getCountryCodeSync(data.country, countries);
-        return {
-            ...data,
-            country: countryCode
-        };
-    };
-
-    // Transform the form data before submission
-    const transformFormData = (formData) => {
-        if (!formData.country || countries.length === 0) return formData;
-
-        // Convert country code back to name for API
-        const countryName = getCountryNameSync(formData.country, countries);
-        return {
-            ...formData,
-            country: countryName
-        };
-    };
-
-    // Custom validation to ensure at least one field is filled
-    const customValidation = (formData) => {
-        const errors = {};
-
-        const hasCity = formData.city && formData.city.trim();
-        const hasPostcode = formData.postcode && formData.postcode.trim();
-        const hasCountry = formData.country && formData.country.trim();
-        const isRemote = formData.remote;
-
-        const hasAnyValue = hasCity || hasPostcode || hasCountry || isRemote;
-
-        if (!hasAnyValue) {
-            errors.city = 'Please fill in at least one field (city, postcode, country, or check remote)';
-        }
-
-        return errors;
-    };
-
     return (
-        <GenericFormModal
+        <GenericModal
             show={show}
             onHide={onHide}
+            mode="form"
             title="Location"
-            fields={formFields}
+            fields={locationFields}
+            initialData={{
+                city: '',
+                state: '',
+                country: '',
+                postcode: '',
+                remote: false,
+                ...initialData
+            }}
             endpoint="locations"
             onSuccess={onSuccess}
-            initialData={transformInitialData(initialData)}
             isEdit={isEdit}
-            customValidation={customValidation}
-            transformFormData={transformFormData}
         />
     );
 };

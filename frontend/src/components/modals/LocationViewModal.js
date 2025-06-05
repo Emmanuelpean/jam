@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
-import LocationMap from '../LocationMap';
+import LocationMap from '../maps/LocationMap';
 
 const LocationViewModal = ({ show, onHide, location, onEdit }) => {
     // Define view fields for location

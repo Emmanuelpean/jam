@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Dropdown} from 'react-bootstrap';
 
-const BerryJamThemeToggle = () => {
+const ThemeToggle = () => {
     const [currentTheme, setCurrentTheme] = useState('mixed-berry');
     const [currentColors, setCurrentColors] = useState({
         start: '#ffffff', mid: '#ffffff', end: '#ffffff'
@@ -17,8 +17,6 @@ const BerryJamThemeToggle = () => {
         key: 'mixed-berry', name: 'Mixed Berry Jam', description: 'Complex and layered'
     }, {
         key: 'forest-berry', name: 'Forest Berry', description: 'Natural and earthy'
-    }, {
-        key: 'elderberry', name: 'Elderberry', description: 'Mysterious and refined'
     }, {
         key: 'blackberry', name: 'Wild Blackberry', description: 'Deep and sophisticated'
     }];
@@ -38,7 +36,7 @@ const BerryJamThemeToggle = () => {
         document.documentElement.setAttribute('data-theme', currentTheme);
 
         // Store theme preference in localStorage
-        localStorage.setItem('berryJamTheme', currentTheme);
+        localStorage.setItem('theme', currentTheme);
 
         // Update current colors from CSS variables after theme change
         // Use setTimeout to ensure CSS has been updated
@@ -49,7 +47,7 @@ const BerryJamThemeToggle = () => {
 
     // Load saved theme on component mount
     useEffect(() => {
-        const savedTheme = localStorage.getItem('berryJamTheme');
+        const savedTheme = localStorage.getItem('theme');
         if (savedTheme && themes.find(theme => theme.key === savedTheme)) {
             setCurrentTheme(savedTheme);
         }
@@ -122,7 +120,7 @@ const BerryJamThemeToggle = () => {
 
         <Dropdown.Menu>
             <Dropdown.Header>
-                <small className="text-muted">Choose Berry Jam Theme</small>
+                <small className="text-muted">Choose A Jam Theme</small>
             </Dropdown.Header>
             <Dropdown.Divider/>
 
@@ -147,4 +145,4 @@ const BerryJamThemeToggle = () => {
     </Dropdown>);
 }
 
-export default BerryJamThemeToggle;
+export default ThemeToggle;
