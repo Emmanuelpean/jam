@@ -1019,18 +1019,17 @@ input[type="number"] {
 }
 
 .filter-dropdown .form-label {
-    font-size: 0.7rem;
+    font-size: 0.85rem;
 }
 
 .filter-dropdown .form-control-xs {
     padding: 0.25rem 0.5rem;
-    font-size: 0.7rem;
-    height: calc(1.5em + 0.5rem + 2px);
+    font-size: 1rem;
+    height: 2rem;
 }
 
 .filter-info-icon {
-    font-size: 0.7rem;
+    font-size: 0.9rem;
     line-height: 1;
     vertical-align: middle;
-    color: #6c757d;
 }

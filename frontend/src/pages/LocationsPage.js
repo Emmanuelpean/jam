@@ -112,7 +112,7 @@ const LocationsPage = () => {
 		},
 	];
 
-	// Create standardized actions using the utility function
+	// Create standardised actions using the utility function
 	const tableActions = createTableActions([
 		{ type: "view", onClick: handleView, title: "View location details" },
 		{ type: "edit", onClick: handleEdit, title: "Edit location" },

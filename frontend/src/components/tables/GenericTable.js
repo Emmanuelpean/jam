@@ -647,7 +647,7 @@ const GenericTable = ({
 				);
 			default:
 				return (
-					<div className="small text-dark">
+					<div>
 						<strong>Text Filtering:</strong>
 						<ul className="mb-0 ps-3 mt-1">
 							<li>
@@ -666,27 +666,26 @@ const GenericTable = ({
 	};
 
 	// Render filter input based on column type
+	// Update the renderFilterInput function to use smaller sizes and Bootstrap icons
 	const renderFilterInput = (column) => {
 		const tooltipKey = `${column.key}_tooltip`;
 
 		if (column.type === "date" || column.type === "datetime") {
 			const filter = columnFilters[column.key] || {};
 			return (
-				<div className="d-flex flex-column gap-2">
+				<div className="d-flex flex-column gap-2 filter-dropdown">
 					<div className="d-flex align-items-center gap-2">
-						<label className="form-label mb-0 small text-muted">
+						<label className="form-label mb-0 text-muted">
 							{filter.date1 && filter.date2 ? "Date Range" : "Single Date"}
 						</label>
 						<div style={{ position: "relative" }}>
-							<button
-								className="btn btn-sm p-0 border-0 bg-transparent text-info"
-								style={{ fontSize: "0.75rem", width: "16px", height: "16px" }}
+							<i
+								className="bi bi-info-circle filter-info-icon"
+								style={{ cursor: "pointer" }}
 								onMouseEnter={() => setShowTooltips((prev) => ({ ...prev, [tooltipKey]: true }))}
 								onMouseLeave={() => setShowTooltips((prev) => ({ ...prev, [tooltipKey]: false }))}
 								onClick={(e) => e.stopPropagation()}
-							>
-								ℹ️
-							</button>
+							></i>
 							{showTooltips[tooltipKey] && (
 								<div
 									ref={(el) => (tooltipRefs.current[tooltipKey] = el)}
@@ -696,7 +695,7 @@ const GenericTable = ({
 										left: "-100px",
 										zIndex: 1002,
 										width: "200px",
-										fontSize: "0.8rem",
+										fontSize: "0.7rem",
 									}}
 								>
 									{getFilterTooltip(column)}
@@ -706,7 +705,7 @@ const GenericTable = ({
 					</div>
 					<input
 						type="date"
-						className="form-control form-control-sm"
+						className="form-control form-control-xs"
 						placeholder="Date"
 						value={filter.date1 || ""}
 						onChange={(e) => handleDateFilterChange(column.key, "date1", e.target.value)}
@@ -714,7 +713,7 @@ const GenericTable = ({
 					/>
 					<input
 						type="date"
-						className="form-control form-control-sm"
+						className="form-control form-control-xs"
 						placeholder="Second date (optional)"
 						value={filter.date2 || ""}
 						onChange={(e) => handleDateFilterChange(column.key, "date2", e.target.value)}
@@ -725,19 +724,17 @@ const GenericTable = ({
 		} else if (column.type === "number") {
 			const filter = columnFilters[column.key] || {};
 			return (
-				<div className="d-flex flex-column gap-2">
+				<div className="d-flex flex-column gap-2 filter-dropdown">
 					<div className="d-flex align-items-center gap-2">
-						<label className="form-label mb-0 small text-muted">Number Range</label>
+						<label className="form-label mb-0 text-muted">Number Range</label>
 						<div style={{ position: "relative" }}>
-							<button
-								className="btn btn-sm p-0 border-0 bg-transparent text-info"
-								style={{ fontSize: "0.75rem", width: "16px", height: "16px" }}
+							<i
+								className="bi bi-info-circle filter-info-icon"
+								style={{ cursor: "pointer" }}
 								onMouseEnter={() => setShowTooltips((prev) => ({ ...prev, [tooltipKey]: true }))}
 								onMouseLeave={() => setShowTooltips((prev) => ({ ...prev, [tooltipKey]: false }))}
 								onClick={(e) => e.stopPropagation()}
-							>
-								ℹ️
-							</button>
+							></i>
 							{showTooltips[tooltipKey] && (
 								<div
 									ref={(el) => (tooltipRefs.current[tooltipKey] = el)}
@@ -747,7 +744,7 @@ const GenericTable = ({
 										left: "-100px",
 										zIndex: 1002,
 										width: "200px",
-										fontSize: "0.8rem",
+										fontSize: "0.7rem",
 									}}
 								>
 									{getFilterTooltip(column)}
@@ -757,7 +754,7 @@ const GenericTable = ({
 					</div>
 					<input
 						type="number"
-						className="form-control form-control-sm"
+						className="form-control form-control-xs"
 						placeholder="Minimum"
 						value={filter.min || ""}
 						onChange={(e) => handleNumberFilterChange(column.key, "min", e.target.value)}
@@ -765,7 +762,7 @@ const GenericTable = ({
 					/>
 					<input
 						type="number"
-						className="form-control form-control-sm"
+						className="form-control form-control-xs"
 						placeholder="Maximum"
 						value={filter.max || ""}
 						onChange={(e) => handleNumberFilterChange(column.key, "max", e.target.value)}
@@ -779,19 +776,17 @@ const GenericTable = ({
 			const selectedOptions = categoryOptions.filter((option) => selectedCategories.includes(option.value));
 
 			return (
-				<div className="d-flex flex-column gap-2">
+				<div className="d-flex flex-column gap-2 filter-dropdown">
 					<div className="d-flex align-items-center gap-2">
-						<label className="form-label mb-0 small text-muted">Select Categories</label>
+						<label className="form-label mb-0 text-muted">Select Categories</label>
 						<div style={{ position: "relative" }}>
-							<button
-								className="btn btn-sm p-0 border-0 bg-transparent text-info"
-								style={{ fontSize: "0.75rem", width: "16px", height: "16px" }}
+							<i
+								className="bi bi-info-circle filter-info-icon"
+								style={{ cursor: "pointer" }}
 								onMouseEnter={() => setShowTooltips((prev) => ({ ...prev, [tooltipKey]: true }))}
 								onMouseLeave={() => setShowTooltips((prev) => ({ ...prev, [tooltipKey]: false }))}
 								onClick={(e) => e.stopPropagation()}
-							>
-								ℹ️
-							</button>
+							></i>
 							{showTooltips[tooltipKey] && (
 								<div
 									ref={(el) => (tooltipRefs.current[tooltipKey] = el)}
@@ -801,7 +796,7 @@ const GenericTable = ({
 										left: "-100px",
 										zIndex: 1002,
 										width: "250px",
-										fontSize: "0.8rem",
+										fontSize: "0.7rem",
 									}}
 								>
 									{getFilterTooltip(column)}
@@ -834,28 +829,30 @@ const GenericTable = ({
 						/>
 					</div>
 					{selectedCategories.length > 0 && (
-						<small className="text-muted">{selectedCategories.length} selected</small>
+						<small className="text-muted" style={{ fontSize: "0.65rem" }}>
+							{selectedCategories.length} selected
+						</small>
 					)}
 					{categoryOptions.length === 0 && (
-						<small className="text-muted">No data available for filtering</small>
+						<small className="text-muted" style={{ fontSize: "0.65rem" }}>
+							No data available for filtering
+						</small>
 					)}
 				</div>
 			);
 		} else {
 			return (
-				<div className="d-flex flex-column gap-2">
+				<div className="d-flex flex-column gap-2 filter-dropdown">
 					<div className="d-flex align-items-center gap-2">
-						<label className="form-label mb-0 small text-muted">Filter Text</label>
+						<label className="form-label mb-0 text-muted">Filter Text</label>
 						<div style={{ position: "relative" }}>
-							<button
-								className="btn btn-sm p-0 border-0 bg-transparent text-info"
-								style={{ fontSize: "0.75rem", width: "16px", height: "16px" }}
+							<i
+								className="bi bi-info-circle filter-info-icon"
+								style={{ cursor: "pointer" }}
 								onMouseEnter={() => setShowTooltips((prev) => ({ ...prev, [tooltipKey]: true }))}
 								onMouseLeave={() => setShowTooltips((prev) => ({ ...prev, [tooltipKey]: false }))}
 								onClick={(e) => e.stopPropagation()}
-							>
-								<i class="bi bi-info-circle"></i>
-							</button>
+							></i>
 							{showTooltips[tooltipKey] && (
 								<div
 									ref={(el) => (tooltipRefs.current[tooltipKey] = el)}
@@ -865,7 +862,7 @@ const GenericTable = ({
 										left: "-150px",
 										zIndex: 1002,
 										width: "280px",
-										fontSize: "0.8rem",
+										fontSize: "0.7rem",
 									}}
 								>
 									{getFilterTooltip(column)}
@@ -875,7 +872,7 @@ const GenericTable = ({
 					</div>
 					<input
 						type="text"
-						className="form-control form-control-sm"
+						className="form-control form-control-xs"
 						placeholder={`Filter ${column.label}...`}
 						value={columnFilters[column.key] || ""}
 						onChange={(e) => handleColumnFilterChange(column.key, e.target.value)}
