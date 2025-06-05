@@ -1,5 +1,83 @@
+
 import React, {useState, useEffect, useRef} from 'react';
 import Select from 'react-select';
+
+// Utility function to create standardized action buttons
+export const createTableAction = (type, onClick, customTitle = null) => {
+    const actionTypes = {
+        view: {
+            label: 'View',
+            icon: 'bi bi-eye',
+            className: 'btn-action-view',
+            title: 'View details'
+        },
+        edit: {
+            label: 'Edit',
+            icon: 'bi bi-pencil',
+            className: 'btn-action-edit',
+            title: 'Edit item'
+        },
+        delete: {
+            label: 'Delete',
+            icon: 'bi bi-trash',
+            className: 'btn-action-delete',
+            title: 'Delete item'
+        },
+        duplicate: {
+            label: 'Duplicate',
+            icon: 'bi bi-copy',
+            className: 'btn-action-duplicate',
+            title: 'Duplicate item'
+        },
+        download: {
+            label: 'Download',
+            icon: 'bi bi-download',
+            className: 'btn-action-download',
+            title: 'Download item'
+        },
+        archive: {
+            label: 'Archive',
+            icon: 'bi bi-archive',
+            className: 'btn-action-archive',
+            title: 'Archive item'
+        },
+        restore: {
+            label: 'Restore',
+            icon: 'bi bi-arrow-counterclockwise',
+            className: 'btn-action-restore',
+            title: 'Restore item'
+        },
+        settings: {
+            label: 'Settings',
+            icon: 'bi bi-gear',
+            className: 'btn-action-settings',
+            title: 'Item settings'
+        }
+    };
+
+    const actionConfig = actionTypes[type];
+    if (!actionConfig) {
+        throw new Error(`Unknown action type: ${type}. Available types: ${Object.keys(actionTypes).join(', ')}`);
+    }
+
+    return {
+        ...actionConfig,
+        onClick,
+        title: customTitle || actionConfig.title
+    };
+};
+
+// Utility function to create multiple actions at once
+export const createTableActions = (actionConfigs) => {
+    return actionConfigs.map(config => {
+        if (typeof config === 'string') {
+            throw new Error('Action config must include onClick function. Use: { type: "view", onClick: yourFunction }');
+        }
+
+        const { type, onClick, title } = config;
+        return createTableAction(type, onClick, title);
+    });
+};
 
 const GenericTable = ({
                           data,
@@ -13,7 +91,8 @@ const GenericTable = ({
                           filterComponent = null,
                           loading = false,
                           error = null,
-                          emptyMessage = "No items found"
+                          emptyMessage = "No items found",
+                          actions = null // New prop for action buttons
                       }) => {
     const [columnFilters, setColumnFilters] = useState({});
     const [showFilters, setShowFilters] = useState({});
@@ -387,38 +466,38 @@ const GenericTable = ({
             case 'date':
             case 'datetime':
                 return (<div className="small text-dark">
-                        <strong>Date Filtering:</strong>
-                        <ul className="mb-0 ps-3 mt-1">
-                            <li>One date = exact match</li>
-                            <li>Two dates = date range</li>
-                        </ul>
-                    </div>);
+                    <strong>Date Filtering:</strong>
+                    <ul className="mb-0 ps-3 mt-1">
+                        <li>One date = exact match</li>
+                        <li>Two dates = date range</li>
+                    </ul>
+                </div>);
             case 'number':
                 return (<div className="small text-dark">
-                        <strong>Number Filtering:</strong>
-                        <ul className="mb-0 ps-3 mt-1">
-                            <li>Set minimum and/or maximum values</li>
-                            <li>Leave empty for no limit</li>
-                        </ul>
-                    </div>);
+                    <strong>Number Filtering:</strong>
+                    <ul className="mb-0 ps-3 mt-1">
+                        <li>Set minimum and/or maximum values</li>
+                        <li>Leave empty for no limit</li>
+                    </ul>
+                </div>);
             case 'category':
                 return (<div className="small text-dark">
-                        <strong>Category Filtering:</strong>
-                        <ul className="mb-0 ps-3 mt-1">
-                            <li>Multi-select dropdown with search</li>
-                            <li>Type to search within options</li>
-                            <li>Shows only items matching selected categories</li>
-                        </ul>
-                    </div>);
+                    <strong>Category Filtering:</strong>
+                    <ul className="mb-0 ps-3 mt-1">
+                        <li>Multi-select dropdown with search</li>
+                        <li>Type to search within options</li>
+                        <li>Shows only items matching selected categories</li>
+                    </ul>
+                </div>);
             default:
                 return (<div className="small text-dark">
-                        <strong>Text Filtering:</strong>
-                        <ul className="mb-0 ps-3 mt-1">
-                            <li><code>%manager%</code> - wildcard matching</li>
-                            <li><code>software engineer</code> - multiple keywords (AND)</li>
-                            <li><code>^Java</code> - regex patterns</li>
-                        </ul>
-                    </div>);
+                    <strong>Text Filtering:</strong>
+                    <ul className="mb-0 ps-3 mt-1">
+                        <li><code>%manager%</code> - wildcard matching</li>
+                        <li><code>software engineer</code> - multiple keywords (AND)</li>
+                        <li><code>^Java</code> - regex patterns</li>
+                    </ul>
+                </div>);
         }
     };
 
@@ -429,189 +508,215 @@ const GenericTable = ({
         if (column.type === 'date' || column.type === 'datetime') {
             const filter = columnFilters[column.key] || {};
             return (<div className="d-flex flex-column gap-2">
-                    <div className="d-flex align-items-center gap-2">
-                        <label className="form-label mb-0 small text-muted">
-                            {filter.date1 && filter.date2 ? 'Date Range' : 'Single Date'}
-                        </label>
-                        <div style={{position: 'relative'}}>
-                            <button
-                                className="btn btn-sm p-0 border-0 bg-transparent text-info"
-                                style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
-                                onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
-                                onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                ℹ️
-                            </button>
-                            {showTooltips[tooltipKey] && (<div
-                                    ref={el => tooltipRefs.current[tooltipKey] = el}
-                                    className="position-absolute bg-white border rounded shadow-lg p-2"
-                                    style={{
-                                        top: '20px', left: '-100px', zIndex: 1002, width: '200px', fontSize: '0.8rem'
-                                    }}
-                                >
-                                    {getFilterTooltip(column)}
-                                </div>)}
-                        </div>
+                <div className="d-flex align-items-center gap-2">
+                    <label className="form-label mb-0 small text-muted">
+                        {filter.date1 && filter.date2 ? 'Date Range' : 'Single Date'}
+                    </label>
+                    <div style={{position: 'relative'}}>
+                        <button
+                            className="btn btn-sm p-0 border-0 bg-transparent text-info"
+                            style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
+                            onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
+                            onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            ℹ️
+                        </button>
+                        {showTooltips[tooltipKey] && (<div
+                            ref={el => tooltipRefs.current[tooltipKey] = el}
+                            className="position-absolute bg-white border rounded shadow-lg p-2"
+                            style={{
+                                top: '20px', left: '-100px', zIndex: 1002, width: '200px', fontSize: '0.8rem'
+                            }}
+                        >
+                            {getFilterTooltip(column)}
+                        </div>)}
                     </div>
-                    <input
-                        type="date"
-                        className="form-control form-control-sm"
-                        placeholder="Date"
-                        value={filter.date1 || ''}
-                        onChange={(e) => handleDateFilterChange(column.key, 'date1', e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                    <input
-                        type="date"
-                        className="form-control form-control-sm"
-                        placeholder="Second date (optional)"
-                        value={filter.date2 || ''}
-                        onChange={(e) => handleDateFilterChange(column.key, 'date2', e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                </div>);
+                </div>
+                <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    placeholder="Date"
+                    value={filter.date1 || ''}
+                    onChange={(e) => handleDateFilterChange(column.key, 'date1', e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                />
+                <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    placeholder="Second date (optional)"
+                    value={filter.date2 || ''}
+                    onChange={(e) => handleDateFilterChange(column.key, 'date2', e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                />
+            </div>);
         } else if (column.type === 'number') {
             const filter = columnFilters[column.key] || {};
             return (<div className="d-flex flex-column gap-2">
-                    <div className="d-flex align-items-center gap-2">
-                        <label className="form-label mb-0 small text-muted">Number Range</label>
-                        <div style={{position: 'relative'}}>
-                            <button
-                                className="btn btn-sm p-0 border-0 bg-transparent text-info"
-                                style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
-                                onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
-                                onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                ℹ️
-                            </button>
-                            {showTooltips[tooltipKey] && (<div
-                                    ref={el => tooltipRefs.current[tooltipKey] = el}
-                                    className="position-absolute bg-white border rounded shadow-lg p-2"
-                                    style={{
-                                        top: '20px', left: '-100px', zIndex: 1002, width: '200px', fontSize: '0.8rem'
-                                    }}
-                                >
-                                    {getFilterTooltip(column)}
-                                </div>)}
-                        </div>
+                <div className="d-flex align-items-center gap-2">
+                    <label className="form-label mb-0 small text-muted">Number Range</label>
+                    <div style={{position: 'relative'}}>
+                        <button
+                            className="btn btn-sm p-0 border-0 bg-transparent text-info"
+                            style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
+                            onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
+                            onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            ℹ️
+                        </button>
+                        {showTooltips[tooltipKey] && (<div
+                            ref={el => tooltipRefs.current[tooltipKey] = el}
+                            className="position-absolute bg-white border rounded shadow-lg p-2"
+                            style={{
+                                top: '20px', left: '-100px', zIndex: 1002, width: '200px', fontSize: '0.8rem'
+                            }}
+                        >
+                            {getFilterTooltip(column)}
+                        </div>)}
                     </div>
-                    <input
-                        type="number"
-                        className="form-control form-control-sm"
-                        placeholder="Minimum"
-                        value={filter.min || ''}
-                        onChange={(e) => handleNumberFilterChange(column.key, 'min', e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                    <input
-                        type="number"
-                        className="form-control form-control-sm"
-                        placeholder="Maximum"
-                        value={filter.max || ''}
-                        onChange={(e) => handleNumberFilterChange(column.key, 'max', e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                </div>);
+                </div>
+                <input
+                    type="number"
+                    className="form-control form-control-sm"
+                    placeholder="Minimum"
+                    value={filter.min || ''}
+                    onChange={(e) => handleNumberFilterChange(column.key, 'min', e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                />
+                <input
+                    type="number"
+                    className="form-control form-control-sm"
+                    placeholder="Maximum"
+                    value={filter.max || ''}
+                    onChange={(e) => handleNumberFilterChange(column.key, 'max', e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                />
+            </div>);
         } else if (column.type === 'category') {
             const categoryOptions = getUniqueCategories(column);
             const selectedCategories = columnFilters[column.key] || [];
             const selectedOptions = categoryOptions.filter(option => selectedCategories.includes(option.value));
 
             return (<div className="d-flex flex-column gap-2">
-                    <div className="d-flex align-items-center gap-2">
-                        <label className="form-label mb-0 small text-muted">Select Categories</label>
-                        <div style={{position: 'relative'}}>
-                            <button
-                                className="btn btn-sm p-0 border-0 bg-transparent text-info"
-                                style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
-                                onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
-                                onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                ℹ️
-                            </button>
-                            {showTooltips[tooltipKey] && (<div
-                                    ref={el => tooltipRefs.current[tooltipKey] = el}
-                                    className="position-absolute bg-white border rounded shadow-lg p-2"
-                                    style={{
-                                        top: '20px', left: '-100px', zIndex: 1002, width: '250px', fontSize: '0.8rem'
-                                    }}
-                                >
-                                    {getFilterTooltip(column)}
-                                </div>)}
-                        </div>
+                <div className="d-flex align-items-center gap-2">
+                    <label className="form-label mb-0 small text-muted">Select Categories</label>
+                    <div style={{position: 'relative'}}>
+                        <button
+                            className="btn btn-sm p-0 border-0 bg-transparent text-info"
+                            style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
+                            onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
+                            onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            ℹ️
+                        </button>
+                        {showTooltips[tooltipKey] && (<div
+                            ref={el => tooltipRefs.current[tooltipKey] = el}
+                            className="position-absolute bg-white border rounded shadow-lg p-2"
+                            style={{
+                                top: '20px', left: '-100px', zIndex: 1002, width: '250px', fontSize: '0.8rem'
+                            }}
+                        >
+                            {getFilterTooltip(column)}
+                        </div>)}
                     </div>
-                    <div onClick={(e) => e.stopPropagation()}>
-                        <Select
-                            isMulti
-                            value={selectedOptions}
-                            onChange={(selectedOptions) => handleCategoryFilterChange(column.key, selectedOptions)}
-                            options={categoryOptions}
-                            placeholder={categoryOptions.length === 0 ? 'No options available' : `Filter by ${column.label.toLowerCase()}...`}
-                            noOptionsMessage={() => 'No options found'}
-                            isSearchable={true}
-                            isClearable={true}
-                            closeMenuOnSelect={false}
-                            hideSelectedOptions={false}
-                            styles={customSelectStyles}
-                            menuPortalTarget={document.body}
-                            menuPosition="fixed"
-                            className="react-select-container"
-                            classNamePrefix="react-select"
-                            maxMenuHeight={200}
-                        />
-                    </div>
-                    {selectedCategories.length > 0 && (<small className="text-muted">
-                            {selectedCategories.length} selected
-                        </small>)}
-                    {categoryOptions.length === 0 && (<small className="text-muted">
-                            No data available for filtering
-                        </small>)}
-                </div>);
+                </div>
+                <div onClick={(e) => e.stopPropagation()}>
+                    <Select
+                        isMulti
+                        value={selectedOptions}
+                        onChange={(selectedOptions) => handleCategoryFilterChange(column.key, selectedOptions)}
+                        options={categoryOptions}
+                        placeholder={categoryOptions.length === 0 ? 'No options available' : `Filter by ${column.label.toLowerCase()}...`}
+                        noOptionsMessage={() => 'No options found'}
+                        isSearchable={true}
+                        isClearable={true}
+                        closeMenuOnSelect={false}
+                        hideSelectedOptions={false}
+                        styles={customSelectStyles}
+                        menuPortalTarget={document.body}
+                        menuPosition="fixed"
+                        className="react-select-container"
+                        classNamePrefix="react-select"
+                        maxMenuHeight={200}
+                    />
+                </div>
+                {selectedCategories.length > 0 && (<small className="text-muted">
+                    {selectedCategories.length} selected
+                </small>)}
+                {categoryOptions.length === 0 && (<small className="text-muted">
+                    No data available for filtering
+                </small>)}
+            </div>);
         } else {
             return (<div className="d-flex flex-column gap-2">
-                    <div className="d-flex align-items-center gap-2">
-                        <label className="form-label mb-0 small text-muted">Filter Text</label>
-                        <div style={{position: 'relative'}}>
-                            <button
-                                className="btn btn-sm p-0 border-0 bg-transparent text-info"
-                                style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
-                                onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
-                                onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                ℹ️
-                            </button>
-                            {showTooltips[tooltipKey] && (<div
-                                    ref={el => tooltipRefs.current[tooltipKey] = el}
-                                    className="position-absolute bg-white border rounded shadow-lg p-2"
-                                    style={{
-                                        top: '20px', left: '-150px', zIndex: 1002, width: '280px', fontSize: '0.8rem'
-                                    }}
-                                >
-                                    {getFilterTooltip(column)}
-                                </div>)}
-                        </div>
+                <div className="d-flex align-items-center gap-2">
+                    <label className="form-label mb-0 small text-muted">Filter Text</label>
+                    <div style={{position: 'relative'}}>
+                        <button
+                            className="btn btn-sm p-0 border-0 bg-transparent text-info"
+                            style={{fontSize: '0.75rem', width: '16px', height: '16px'}}
+                            onMouseEnter={() => setShowTooltips(prev => ({...prev, [tooltipKey]: true}))}
+                            onMouseLeave={() => setShowTooltips(prev => ({...prev, [tooltipKey]: false}))}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            ℹ️
+                        </button>
+                        {showTooltips[tooltipKey] && (<div
+                            ref={el => tooltipRefs.current[tooltipKey] = el}
+                            className="position-absolute bg-white border rounded shadow-lg p-2"
+                            style={{
+                                top: '20px', left: '-150px', zIndex: 1002, width: '280px', fontSize: '0.8rem'
+                            }}
+                        >
+                            {getFilterTooltip(column)}
+                        </div>)}
                     </div>
-                    <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        placeholder={`Filter ${column.label}...`}
-                        value={columnFilters[column.key] || ''}
-                        onChange={(e) => handleColumnFilterChange(column.key, e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        autoFocus
-                    />
-                </div>);
+                </div>
+                <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    placeholder={`Filter ${column.label}...`}
+                    value={columnFilters[column.key] || ''}
+                    onChange={(e) => handleColumnFilterChange(column.key, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    autoFocus
+                />
+            </div>);
         }
     };
 
+    // Create columns with actions if provided
+    const tableColumns = [...columns];
+    if (actions) {
+        tableColumns.push({
+            key: 'actions',
+            label: 'Actions',
+            sortable: false,
+            filterable: false, // Don't allow filtering on actions
+            render: (item) => (
+                <div className="d-flex gap-2">
+                    {actions.map((action, index) => (
+                        <button
+                            key={index}
+                            className={`btn btn-action ${action.className || ''}`}
+                            onClick={() => action.onClick(item)}
+                            title={action.title}
+                        >
+                            {action.icon && <i className={action.icon}></i>}
+                            {action.label}
+                        </button>
+                    ))}
+                </div>
+            )
+        });
+    }
+
     if (loading) {
         return (<div className="d-flex justify-content-center mt-5">
-                <div className="spinner-border" role="status"></div>
-            </div>);
+            <div className="spinner-border" role="status"></div>
+        </div>);
     }
 
     if (error) {
@@ -619,97 +724,100 @@ const GenericTable = ({
     }
 
     return (<div>
-            {/* Header with search and filters */}
-            <div className="d-flex justify-content-between mb-3">
-                <div className="d-flex">
-                    <input
-                        type="text"
-                        className="form-control me-2"
-                        placeholder="Search..."
-                        value={searchTerm}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                        style={{width: '200px'}}
-                    />
-                    {filterComponent}
-                </div>
-
-                <div className="d-flex gap-2">
-                    <button
-                        className="btn btn-primary"
-                        onClick={onAddClick}
-                    >
-                        {addButtonText}
-                    </button>
-                </div>
+        {/* Header with search and filters */}
+        <div className="d-flex justify-content-between mb-3">
+            <div className="d-flex">
+                <input
+                    type="text"
+                    className="form-control me-2"
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    style={{width: '200px'}}
+                />
+                {filterComponent}
             </div>
 
-            {/* Table */}
-            <table className="table table-striped">
-                <thead>
-                <tr>
-                    {columns.map((column) => (<th key={column.key} style={{position: 'relative'}}>
-                            <div className="d-flex align-items-center justify-content-between">
+            <div className="d-flex gap-2">
+                <button
+                    className="btn btn-primary"
+                    onClick={onAddClick}
+                >
+                    {addButtonText}
+                </button>
+            </div>
+        </div>
+
+        {/* Table */}
+        <table className="table table-striped">
+            <thead>
+            <tr>
+                {tableColumns.map((column) => (<th key={column.key} style={{position: 'relative'}}>
+                    <div className="d-flex align-items-center justify-content-between">
                                 <span
-                                    onClick={() => toggleFilter(column.key)}
-                                    style={{cursor: 'pointer', flex: 1}}
-                                    title="Click to filter"
+                                    onClick={() => column.filterable !== false ? toggleFilter(column.key) : null}
+                                    style={{
+                                        cursor: column.filterable !== false ? 'pointer' : 'default',
+                                        flex: 1
+                                    }}
+                                    title={column.filterable !== false ? "Click to filter" : ""}
                                 >
                                     {column.label}
                                     {columnFilters[column.key] && (<span
-                                            className="badge bg-primary ms-1"
-                                            style={{fontSize: '0.6em'}}
-                                        >
+                                        className="badge bg-primary ms-1"
+                                        style={{fontSize: '0.6em'}}
+                                    >
                                             F
                                         </span>)}
                                 </span>
-                                {column.sortable && (<button
-                                        className="btn btn-sm p-1 ms-2"
-                                        onClick={() => handleSort(column.key)}
-                                        style={{
-                                            border: 'none', background: 'none', fontSize: '0.8em', minWidth: '20px'
-                                        }}
-                                        title="Sort column"
-                                    >
-                                        {sortConfig.key === column.key ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ('↕')}
-                                    </button>)}
-                            </div>
-                            {showFilters[column.key] && (<div
-                                    ref={el => filterRefs.current[column.key] = el}
-                                    className="position-absolute bg-white border rounded shadow-sm p-3 mt-1"
-                                    style={{
-                                        top: '100%',
-                                        left: 0,
-                                        zIndex: 1001,
-                                        minWidth: column.type === 'category' ? '350px' : '300px'
-                                    }}
-                                >
-                                    <div className="d-flex flex-column">
-                                        {renderFilterInput(column)}
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary mt-3"
-                                            onClick={() => clearColumnFilter(column.key)}
-                                        >
-                                            Clear Filter
-                                        </button>
-                                    </div>
-                                </div>)}
-                        </th>))}
-                </tr>
-                </thead>
-                <tbody>
-                {getSortedData().map((item) => (<tr key={item.id}>
-                    {columns.map((column) => (<td key={column.key} className="align-middle">
-                        {column.render ? column.render(item) : column.accessor ? column.accessor(item) : item[column.key]}
-                    </td>))}
-                </tr>))}
-                {getSortedData().length === 0 && (<tr>
-                    <td colSpan={columns.length} className="text-center align-middle">
-                        {emptyMessage}
-                    </td>
-                </tr>)}
-                </tbody>
-            </table>
-        </div>);
+                        {column.sortable && (<button
+                            className="btn btn-sm p-1 ms-2"
+                            onClick={() => handleSort(column.key)}
+                            style={{
+                                border: 'none', background: 'none', fontSize: '0.8em', minWidth: '20px'
+                            }}
+                            title="Sort column"
+                        >
+                            {sortConfig.key === column.key ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ('↕')}
+                        </button>)}
+                    </div>
+                    {showFilters[column.key] && column.filterable !== false && (<div
+                        ref={el => filterRefs.current[column.key] = el}
+                        className="position-absolute bg-white border rounded shadow-sm p-3 mt-1"
+                        style={{
+                            top: '100%',
+                            left: 0,
+                            zIndex: 1001,
+                            minWidth: column.type === 'category' ? '350px' : '300px'
+                        }}
+                    >
+                        <div className="d-flex flex-column">
+                            {renderFilterInput(column)}
+                            <button
+                                className="btn btn-sm btn-outline-secondary mt-3"
+                                onClick={() => clearColumnFilter(column.key)}
+                            >
+                                Clear Filter
+                            </button>
+                        </div>
+                    </div>)}
+                </th>))}
+            </tr>
+            </thead>
+            <tbody>
+            {getSortedData().map((item) => (<tr key={item.id}>
+                {tableColumns.map((column) => (<td key={column.key} className="align-middle">
+                    {column.render ? column.render(item) : column.accessor ? column.accessor(item) : item[column.key]}
+                </td>))}
+            </tr>))}
+            {getSortedData().length === 0 && (<tr>
+                <td colSpan={tableColumns.length} className="text-center align-middle">
+                    {emptyMessage}
+                </td>
+            </tr>)}
+            </tbody>
+        </table>
+    </div>);
 };
 
 export default GenericTable;

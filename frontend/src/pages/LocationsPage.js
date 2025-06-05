@@ -1,12 +1,15 @@
+
 import React, {useState} from 'react';
-import GenericTable from '../components/GenericTable';
+import GenericTable, { createTableActions } from '../components/GenericTable';
 import LocationFormModal from '../components/modals/LocationFormModal';
 import LocationViewModal from '../components/modals/LocationViewModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 import LocationMap from '../components/LocationMap';
+import AlertModal from '../components/modals/AlertModal';
 import {useTableData} from '../components/Table';
 import {useAuth} from '../contexts/AuthContext';
 import {useConfirmation} from '../hooks/useConfirmation';
+import {useAlert} from '../hooks/UseAlert'; // Import directly from the hook file
 
 const LocationsPage = () => {
     const {token} = useAuth();
@@ -30,6 +33,7 @@ const LocationsPage = () => {
     const [selectedLocation, setSelectedLocation] = useState(null);
 
     const {confirmationState, showConfirmation, hideConfirmation} = useConfirmation();
+    const { alertState, showAlert, hideAlert } = useAlert();
 
     // Handle view location
     const handleView = (location) => {
@@ -83,18 +87,38 @@ const LocationsPage = () => {
                         } else {
                             window.location.reload();
                         }
+
+                        // Show success alert instead of browser alert
+                        await showAlert({
+                            title: 'Success',
+                            message: `Location "${locationName}" has been deleted successfully.`,
+                            type: 'success',
+                            confirmText: 'OK'
+                        });
                     } else {
-                        alert('Failed to delete location');
+                        // Show error alert instead of browser alert
+                        await showAlert({
+                            title: 'Error',
+                            message: 'Failed to delete location. Please try again.',
+                            type: 'error',
+                            confirmText: 'OK'
+                        });
                     }
                 } catch (error) {
                     console.error('Error deleting location:', error);
-                    alert('Failed to delete location');
+                    // Show error alert instead of browser alert
+                    await showAlert({
+                        title: 'Error',
+                        message: 'Failed to delete location. Please check your connection and try again.',
+                        type: 'error',
+                        confirmText: 'OK'
+                    });
                 }
             }
         });
     };
 
-    // Define table columns
+    // Define table columns (without actions)
     const columns = [{
         key: 'city',
         label: 'City',
@@ -127,31 +151,14 @@ const LocationsPage = () => {
         type: 'date',
         sortable: true,
         render: (item) => new Date(item.created_at).toLocaleDateString()
-    }, {
-        key: 'actions', label: 'Actions', sortable: false, render: (location) => (<div className={"d-flex gap-2"}>
-            <button
-                className="btn btn-action btn-action-view"
-                onClick={() => handleView(location)}
-            >
-                <i className="bi bi-eye"></i>View
-            </button>
-            <button
-                className="btn btn-action btn-action-edit"
-                onClick={() => handleEdit(location)}
-            ><i className="bi bi-pencil"></i>
-
-                Edit
-            </button>
-            <button
-                className="btn btn-action btn-action-delete
-"
-                onClick={() => handleDelete(location)}
-            >
-                <i className="bi bi-trash"></i>
-                Delete
-            </button>
-        </div>)
     }];
+
+    // Create standardized actions using the utility function
+    const tableActions = createTableActions([
+        { type: 'view', onClick: handleView, title: 'View location details' },
+        { type: 'edit', onClick: handleEdit, title: 'Edit location' },
+        { type: 'delete', onClick: handleDelete, title: 'Delete location' }
+    ]);
 
     const handleAddSuccess = (newLocation) => {
         addItem(newLocation);
@@ -164,6 +171,7 @@ const LocationsPage = () => {
         <GenericTable
             data={locations}
             columns={columns}
+            actions={tableActions}
             sortConfig={sortConfig}
             onSort={setSortConfig}
             searchTerm={searchTerm}
@@ -213,6 +221,18 @@ const LocationsPage = () => {
             cancelText={confirmationState.cancelText}
             confirmVariant={confirmationState.confirmVariant}
             icon={confirmationState.icon}
+        />
+
+        {/* Alert Modal */}
+        <AlertModal
+            show={alertState.show}
+            onHide={hideAlert}
+            title={alertState.title}
+            message={alertState.message}
+            type={alertState.type}
+            confirmText={alertState.confirmText}
+            icon={alertState.icon}
+            size={alertState.size}
         />
     </div>);
 };
