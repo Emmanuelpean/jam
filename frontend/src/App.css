@@ -52,98 +52,186 @@
     box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
 }
 
+/* Default theme - Mixed Berry */
 :root {
-    --primary-gradient: linear-gradient(135deg, #ff6b6b 0%, #c44569 100%);
-    --primary-start: #ff6b6b;
-    --primary-end: #c44569;
-    --primary-hover-gradient: linear-gradient(135deg, #ff5252 0%, #b73e56 100%);
-    --primary-light: #ffb3b3;
-    --primary-dark: #a63952;
-    --theme-name: 'Strawberry Jam';
+    --theme-name: 'Mixed Berry Jam';
+    --primary-start: #a29bfe;
+    --primary-mid: #6c5ce7;
+    --primary-end: #fd79a8;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #9085fd 0%, #5b4bd1 50%, #fc5d95 100%);
+    --primary-light: #d1cbfe;
+    --primary-dark: #4a3bb8;
+    --jam-glow: rgba(162, 155, 254, 0.3);
 }
 
 /* Strawberry Jam Theme */
 :root[data-theme="strawberry"] {
-    --primary-gradient: linear-gradient(135deg, #ff6b6b 0%, #c44569 100%);
-    --primary-start: #ff6b6b;
-    --primary-end: #c44569;
-    --primary-hover-gradient: linear-gradient(135deg, #ff5252 0%, #b73e56 100%);
-    --primary-light: #ffb3b3;
-    --primary-dark: #a63952;
     --theme-name: 'Strawberry Jam';
+    --primary-start: #ff9a9e;
+    --primary-mid: #ff6b6b;
+    --primary-end: #c44569;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #ff8a8e 0%, #ff5252 50%, #b73e56 100%);
+    --primary-light: #ffccce;
+    --primary-dark: #a63952;
+    --jam-glow: rgba(255, 154, 158, 0.3);
 }
 
 /* Blueberry Jam Theme */
 :root[data-theme="blueberry"] {
-    --primary-gradient: linear-gradient(135deg, #686de0 0%, #4834d4 100%);
-    --primary-start: #686de0;
-    --primary-end: #4834d4;
-    --primary-hover-gradient: linear-gradient(135deg, #5a5fcf 0%, #3d2db7 100%);
-    --primary-light: #a4a8f0;
-    --primary-dark: #2d1f8f;
     --theme-name: 'Blueberry Jam';
+    --primary-start: #a8edea;
+    --primary-mid: #686de0;
+    --primary-end: #4834d4;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #98e7e4 0%, #5a5fcf 50%, #3d2db7 100%);
+    --primary-light: #c8f3f0;
+    --primary-dark: #2d1f8f;
+    --jam-glow: rgba(168, 237, 234, 0.3);
 }
 
 /* Raspberry Jam Theme */
 :root[data-theme="raspberry"] {
-    --primary-gradient: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
-    --primary-start: #fd79a8;
-    --primary-end: #e84393;
-    --primary-hover-gradient: linear-gradient(135deg, #fc5d95 0%, #e32e7c 100%);
-    --primary-light: #f5a8c9;
-    --primary-dark: #d1206b;
     --theme-name: 'Raspberry Jam';
+    --primary-start: #ffecd2;
+    --primary-mid: #fd79a8;
+    --primary-end: #e84393;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #ffe3c2 0%, #fc5d95 50%, #e32e7c 100%);
+    --primary-light: #fff6e8;
+    --primary-dark: #d1206b;
+    --jam-glow: rgba(255, 236, 210, 0.3);
 }
 
 /* Mixed Berry Jam Theme */
 :root[data-theme="mixed-berry"] {
-    --primary-gradient: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 50%, #fd79a8 100%);
+    --theme-name: 'Mixed Berry Jam';
     --primary-start: #a29bfe;
+    --primary-mid: #6c5ce7;
     --primary-end: #fd79a8;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
     --primary-hover-gradient: linear-gradient(135deg, #9085fd 0%, #5b4bd1 50%, #fc5d95 100%);
     --primary-light: #d1cbfe;
     --primary-dark: #4a3bb8;
-    --theme-name: 'Mixed Berry Jam';
     --jam-glow: rgba(162, 155, 254, 0.3);
 }
 
 /* Forest Berry Theme */
 :root[data-theme="forest-berry"] {
-    --primary-gradient: linear-gradient(135deg, #a8b3a8 0%, #8a9a8a 20%, #6b8e6b 40%, #4a6741 60%, #2d4a2d 80%, #1a2e1a 100%);
-    --primary-start: #a8b3a8;
-    --primary-mid: #8a9a8a;
-    --primary-end: #1a2e1a;
-    --primary-hover-gradient: linear-gradient(135deg, #9aa59a 0%, #7d8d7d 20%, #5f825f 40%, #435c3b 60%, #294229 80%, #162816 100%);
-    --primary-light: #d4ddd4;
-    --primary-dark: #0f1a0f;
     --theme-name: 'Forest Berry';
-    --jam-glow: rgba(138, 154, 138, 0.3);
+    --primary-start: #d4e4d4;
+    --primary-mid: #a8b3a8;
+    --primary-end: #1a2e1a;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #c4d4c4 0%, #9aa59a 50%, #162816 100%);
+    --primary-light: #e4f4e4;
+    --primary-dark: #0f1a0f;
+    --jam-glow: rgba(212, 228, 212, 0.3);
 }
 
 /* Elderberry Theme */
 :root[data-theme="elderberry"] {
-    --primary-gradient: linear-gradient(135deg, #b8a8c8 0%, #9a8aac 20%, #7c6b90 40%, #5e4d74 60%, #403058 80%, #22183c 100%);
-    --primary-start: #b8a8c8;
-    --primary-mid: #9a8aac;
-    --primary-end: #22183c;
-    --primary-hover-gradient: linear-gradient(135deg, #ab9bbb 0%, #8d7d9f 20%, #6f5e83 40%, #514067 60%, #33254b 80%, #1c1130 100%);
-    --primary-light: #e1d9eb;
-    --primary-dark: #150f29;
     --theme-name: 'Elderberry';
-    --jam-glow: rgba(154, 138, 172, 0.3);
+    --primary-start: #e8d8f8;
+    --primary-mid: #b8a8c8;
+    --primary-end: #22183c;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #e1ceee 0%, #ab9bbb 50%, #1c1130 100%);
+    --primary-light: #f4e8fc;
+    --primary-dark: #150f29;
+    --jam-glow: rgba(232, 216, 248, 0.3);
 }
 
 /* Wild Blackberry Theme */
 :root[data-theme="blackberry"] {
-    --primary-gradient: linear-gradient(135deg, #8a7a9a 0%, #6d5d7d 20%, #504060 40%, #332543 60%, #1d0f2d 80%, #0a0015 100%);
-    --primary-start: #8a7a9a;
-    --primary-mid: #6d5d7d;
-    --primary-end: #0a0015;
-    --primary-hover-gradient: linear-gradient(135deg, #7e6e8e 0%, #615171 20%, #463954 40%, #2d1f3d 60%, #190b27 80%, #080012 100%);
-    --primary-light: #c4b9d4;
-    --primary-dark: #050008;
     --theme-name: 'Wild Blackberry';
-    --jam-glow: rgba(109, 93, 125, 0.3);
+    --primary-start: #d8c8e8;
+    --primary-mid: #8a7a9a;
+    --primary-end: #0a0015;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #ccb8dc 0%, #7e6e8e 50%, #080012 100%);
+    --primary-light: #e8d8f8;
+    --primary-dark: #050008;
+    --jam-glow: rgba(216, 200, 232, 0.3);
+}
+
+/* Apply the gradient colors to Bootstrap primary */
+:root {
+    --bs-primary: var(--primary-mid);
+    --bs-primary-rgb: 108, 92, 231;
+}
+
+/* Custom gradient utilities */
+.bg-gradient-primary {
+    background: var(--primary-gradient) !important;
+}
+
+.text-gradient-primary {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Custom button with gradient */
+.btn-jam-primary {
+    background: var(--primary-gradient);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-jam-primary:hover {
+    background: var(--primary-hover-gradient);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--jam-glow);
+}
+
+/* Update spinner color to use primary-end */
+.spinner-border {
+    border-color: var(--primary-end) transparent var(--primary-end) transparent;
+}
+
+.text-primary .spinner-border {
+    border-color: var(--primary-end) transparent var(--primary-end) transparent;
+}
+
+/* Additional utility classes for the three-color system */
+.text-primary-start {
+    color: var(--primary-start) !important;
+}
+
+.text-primary-mid {
+    color: var(--primary-mid) !important;
+}
+
+.text-primary-end {
+    color: var(--primary-end) !important;
+}
+
+.bg-primary-start {
+    background-color: var(--primary-start) !important;
+}
+
+.bg-primary-mid {
+    background-color: var(--primary-mid) !important;
+}
+
+.bg-primary-end {
+    background-color: var(--primary-end) !important;
+}
+
+.border-primary-start {
+    border-color: var(--primary-start) !important;
+}
+
+.border-primary-mid {
+    border-color: var(--primary-mid) !important;
+}
+
+.border-primary-end {
+    border-color: var(--primary-end) !important;
 }
 
 /* Global body styling for berry jam theme */
@@ -1026,21 +1114,7 @@ input[type="number"] {
     padding: 1.25rem 1.75rem;
 }
 
-.spinner {
-    border: 4px solid;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-}
-
-/* Enhanced Bootstrap spinner styling to match */
 .spinner-border {
-    border: 4px solid var(--primary-gradient);
-    border-right-color: transparent;
+    border-color: var(--primary-end) transparent;
 }
 
-/* Button spinner styling */
-.btn .spinner-border-sm {
-    border-color: rgba(255, 255, 255, 0.3);
-    border-right-color: white;
-}

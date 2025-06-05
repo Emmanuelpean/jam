@@ -8,43 +8,71 @@ const BerryJamThemeToggle = () => {
         {
             key: 'strawberry',
             name: 'Strawberry Jam',
-            colors: ['#c44569', '#ff6b6b'],
+            colors: {
+                start: '#ff9a9e',
+                mid: '#ff6b6b',
+                end: '#c44569'
+            },
             description: 'Sweet and vibrant'
         },
         {
             key: 'blueberry',
             name: 'Blueberry Jam',
-            colors: ['#686de0', '#4834d4'],
+            colors: {
+                start: '#a8edea',
+                mid: '#686de0',
+                end: '#4834d4'
+            },
             description: 'Deep and rich'
         },
         {
             key: 'raspberry',
             name: 'Raspberry Jam',
-            colors: ['#fd79a8', '#e84393'],
+            colors: {
+                start: '#ffecd2',
+                mid: '#fd79a8',
+                end: '#e84393'
+            },
             description: 'Tart and bold'
         },
         {
             key: 'mixed-berry',
             name: 'Mixed Berry Jam',
-            colors: ['#a29bfe', '#6c5ce7', '#fd79a8'],
+            colors: {
+                start: '#a29bfe',
+                mid: '#6c5ce7',
+                end: '#fd79a8'
+            },
             description: 'Complex and layered'
         },
         {
             key: 'forest-berry',
             name: 'Forest Berry',
-            colors: ['#a8b3a8', '#1a2e1a'],
+            colors: {
+                start: '#d4e4d4',
+                mid: '#a8b3a8',
+                end: '#1a2e1a'
+            },
             description: 'Natural and earthy'
         },
         {
             key: 'elderberry',
             name: 'Elderberry',
-            colors: ['#b8a8c8', '#22183c'],
+            colors: {
+                start: '#e8d8f8',
+                mid: '#b8a8c8',
+                end: '#22183c'
+            },
             description: 'Mysterious and refined'
         },
         {
             key: 'blackberry',
             name: 'Wild Blackberry',
-            colors: ['#8a7a9a', '#0a0015'],
+            colors: {
+                start: '#d8c8e8',
+                mid: '#8a7a9a',
+                end: '#0a0015'
+            },
             description: 'Deep and sophisticated'
         }
     ];
@@ -75,19 +103,35 @@ const BerryJamThemeToggle = () => {
 
     const renderColorPreview = (colors) => (
         <div className="d-flex align-items-center me-2">
-            {colors.map((color, index) => (
-                <div
-                    key={index}
-                    style={{
-                        width: '12px',
-                        height: '12px',
-                        backgroundColor: color,
-                        borderRadius: '50%',
-                        marginRight: index < colors.length - 1 ? '2px' : '0',
-                        border: '1px solid rgba(255,255,255,0.3)'
-                    }}
-                />
-            ))}
+            <div
+                style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: colors.start,
+                    borderRadius: '50%',
+                    marginRight: '2px',
+                    border: '1px solid rgba(255,255,255,0.3)'
+                }}
+            />
+            <div
+                style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: colors.mid,
+                    borderRadius: '50%',
+                    marginRight: '2px',
+                    border: '1px solid rgba(255,255,255,0.3)'
+                }}
+            />
+            <div
+                style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: colors.end,
+                    borderRadius: '50%',
+                    border: '1px solid rgba(255,255,255,0.3)'
+                }}
+            />
         </div>
     );
 
@@ -96,7 +140,7 @@ const BerryJamThemeToggle = () => {
             <Dropdown.Toggle
                 className="btn-jam-primary d-flex align-items-center"
                 style={{
-                    background: `linear-gradient(135deg, ${getCurrentTheme().colors[0]} 0%, ${getCurrentTheme().colors[getCurrentTheme().colors.length - 1]} 100%)`,
+                    background: `linear-gradient(135deg, ${getCurrentTheme().colors.start} 0%, ${getCurrentTheme().colors.mid} 50%, ${getCurrentTheme().colors.end} 100%)`,
                     border: 'none'
                 }}
             >

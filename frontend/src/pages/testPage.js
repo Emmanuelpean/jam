@@ -1,8 +1,9 @@
-
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Alert } from 'react-bootstrap';
 import Select from 'react-select';
 import BerryJamThemeToggle from '../components/StyleToggle';
+import AlertModal from '../components/modals/AlertModal';
+import { useAlert } from '../hooks/UseAlert';
 import '../index.css';
 
 const StyleShowcase = () => {
@@ -25,6 +26,9 @@ const StyleShowcase = () => {
     });
     const [errors, setErrors] = useState({});
     const [showErrorStates, setShowErrorStates] = useState(false);
+
+    // Alert modal state
+    const { alertState, showAlert, hideAlert } = useAlert();
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -53,6 +57,86 @@ const StyleShowcase = () => {
             setErrors({});
         }
         setShowErrorStates(!showErrorStates);
+    };
+
+    // Alert modal handlers
+    const handleInfoAlert = () => {
+        showAlert({
+            title: 'Information',
+            message: 'This is an informational alert. It provides helpful information to the user.',
+            type: 'info',
+            confirmText: 'Got it!'
+        });
+    };
+
+    const handleSuccessAlert = () => {
+        showAlert({
+            title: 'Success!',
+            message: 'Your operation was completed successfully. All changes have been saved.',
+            type: 'success',
+            confirmText: 'Awesome!'
+        });
+    };
+
+    const handleWarningAlert = () => {
+        showAlert({
+            title: 'Warning',
+            message: 'Please be careful! This action might have unexpected consequences. Do you want to continue?',
+            type: 'warning',
+            confirmText: 'I understand'
+        });
+    };
+
+    const handleErrorAlert = () => {
+        showAlert({
+            title: 'Error Occurred',
+            message: 'Something went wrong while processing your request. Please try again later or contact support.',
+            type: 'error',
+            confirmText: 'Close'
+        });
+    };
+
+    const handleCustomAlert = () => {
+        showAlert({
+            title: 'Custom Alert',
+            message: (
+                <div>
+                    <p>This is a custom alert with HTML content!</p>
+                    <ul>
+                        <li>You can include lists</li>
+                        <li>Multiple paragraphs</li>
+                        <li>And other formatting</li>
+                    </ul>
+                    <p className="text-muted mb-0">
+                        <small>This demonstrates the flexibility of the alert system.</small>
+                    </p>
+                </div>
+            ),
+            type: 'info',
+            icon: '🚀',
+            size: 'lg',
+            confirmText: 'Amazing!'
+        });
+    };
+
+    const handleLargeAlert = () => {
+        showAlert({
+            title: 'Large Alert Modal',
+            message: 'This is a large-sized alert modal that provides more space for content. It\'s useful when you need to display more detailed information or longer messages that require better readability and formatting.',
+            type: 'info',
+            size: 'lg',
+            confirmText: 'Perfect!'
+        });
+    };
+
+    const handleSmallAlert = () => {
+        showAlert({
+            title: 'Quick Note',
+            message: 'Small alert for brief messages.',
+            type: 'warning',
+            size: 'sm',
+            confirmText: 'OK'
+        });
     };
 
     const selectOptions = [
@@ -131,6 +215,38 @@ const StyleShowcase = () => {
                                         </Button>
                                         <Button variant="secondary" disabled>
                                             Disabled Button
+                                        </Button>
+                                    </div>
+                                </Col>
+                            </Row>
+
+                            {/* Alert Modal Examples */}
+                            <Row className="mb-4">
+                                <Col>
+                                    <h4 className="mb-3">Alert Modal Examples</h4>
+                                    <div className="d-flex gap-2 flex-wrap mb-3">
+                                        <Button variant="info" onClick={handleInfoAlert}>
+                                            Info Alert
+                                        </Button>
+                                        <Button variant="success" onClick={handleSuccessAlert}>
+                                            Success Alert
+                                        </Button>
+                                        <Button variant="warning" onClick={handleWarningAlert}>
+                                            Warning Alert
+                                        </Button>
+                                        <Button variant="danger" onClick={handleErrorAlert}>
+                                            Error Alert
+                                        </Button>
+                                        <Button variant="primary" onClick={handleCustomAlert}>
+                                            Custom Alert
+                                        </Button>
+                                    </div>
+                                    <div className="d-flex gap-2 flex-wrap">
+                                        <Button variant="outline-primary" onClick={handleLargeAlert}>
+                                            Large Alert
+                                        </Button>
+                                        <Button variant="outline-secondary" onClick={handleSmallAlert}>
+                                            Small Alert
                                         </Button>
                                     </div>
                                 </Col>
@@ -528,6 +644,18 @@ const StyleShowcase = () => {
                     </div>
                 </Modal.Footer>
             </Modal>
+
+            {/* Alert Modal Component */}
+            <AlertModal
+                show={alertState.show}
+                onHide={hideAlert}
+                title={alertState.title}
+                message={alertState.message}
+                type={alertState.type}
+                confirmText={alertState.confirmText}
+                icon={alertState.icon}
+                size={alertState.size}
+            />
         </Container>
     );
 };
