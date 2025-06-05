@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import GenericTable, { createTableActions } from "../components/tables/GenericTable";
+import GenericTable, {
+	createGenericDeleteHandler,
+	createTableActions,
+	displayNameFunctions,
+} from "../components/tables/GenericTable";
 import LocationFormModal from "../components/modals/LocationFormModal";
 import LocationViewModal from "../components/modals/LocationViewModal";
 import LocationMap from "../components/maps/LocationMap";
 import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
-import { useConfirmation } from "../hooks/useConfirmation";
 import useGenericAlert from "../hooks/useGenericAlert";
 import GenericModal from "../components/GenericModal";
 
@@ -30,8 +33,7 @@ const LocationsPage = () => {
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [selectedLocation, setSelectedLocation] = useState(null);
 
-	const { confirmationState, showConfirmation, hideConfirmation } = useConfirmation();
-	const { alertState, hideAlert, showError, showConfirm } = useGenericAlert();
+	const { alertState, showConfirm, showError, hideAlert } = useGenericAlert();
 
 	// Handle view location
 	const handleView = (location) => {
@@ -58,51 +60,17 @@ const LocationsPage = () => {
 		setSelectedLocation(null);
 	};
 
-	// Handle delete location
-	const handleDelete = async (location) => {
-		const locationName = location.city
-			? `${location.city}${location.country ? `, ${location.country}` : ""}`
-			: "this location";
-
-		await showConfirmation({
-			title: "Delete Location",
-			message: `Are you sure you want to delete "${locationName}"? This action cannot be undone.`,
-			confirmText: "Delete",
-			cancelText: "Cancel",
-			confirmVariant: "danger",
-			icon: "🗑️",
-			onConfirm: async () => {
-				try {
-					const response = await fetch(`http://localhost:8000/locations/${location.id}/`, {
-						method: "DELETE",
-						headers: {
-							Authorization: `Bearer ${token}`,
-						},
-					});
-
-					if (response.ok) {
-						if (typeof removeItem === "function") {
-							removeItem(location.id);
-						} else if (typeof setLocations === "function") {
-							setLocations((prevLocations) => prevLocations.filter((l) => l.id !== location.id));
-						} else {
-							window.location.reload();
-						}
-					} else {
-						await showError({
-							title: "Error",
-							message: "Failed to delete location. Please try again.",
-						});
-					}
-				} catch (error) {
-					await showError({
-						title: "Error",
-						message: "Failed to delete location. Please check your connection and try again.",
-					});
-				}
-			},
-		});
-	};
+	// Create reusable delete handler using the generic function
+	const handleDelete = createGenericDeleteHandler({
+		endpoint: "locations",
+		token,
+		showConfirm, // Pass showConfirm instead of showConfirmation
+		showError,
+		removeItem,
+		setData: setLocations,
+		getItemDisplayName: displayNameFunctions.location,
+		itemType: "Location",
+	});
 
 	// Define table columns (without actions)
 	const columns = [
@@ -199,32 +167,21 @@ const LocationsPage = () => {
 				onEdit={handleEdit}
 			/>
 
-			{/* Confirmation Modal */}
-			<GenericModal
-				show={confirmationState.show}
-				onHide={hideConfirmation}
-				mode="confirmation"
-				title={confirmationState.title}
-				confirmationMessage={confirmationState.message}
-				confirmText={confirmationState.confirmText}
-				cancelText={confirmationState.cancelText}
-				confirmVariant={confirmationState.confirmVariant}
-				alertIcon={confirmationState.icon}
-				onConfirm={confirmationState.onConfirm}
-			/>
-
-			{/* Alert Modal using GenericModal */}
+			{/* Alert Modal using GenericModal - handles both alerts and confirmations */}
 			<GenericModal
 				show={alertState.show}
 				onHide={hideAlert}
-				mode="alert"
+				mode={alertState.cancelText ? "confirmation" : "alert"}
 				title={alertState.title}
 				alertMessage={alertState.message}
+				confirmationMessage={alertState.message}
 				alertType={alertState.type}
 				confirmText={alertState.confirmText}
+				cancelText={alertState.cancelText}
 				alertIcon={alertState.icon}
 				size={alertState.size}
 				onSuccess={alertState.onSuccess}
+				onConfirm={alertState.onSuccess}
 			/>
 		</div>
 	);

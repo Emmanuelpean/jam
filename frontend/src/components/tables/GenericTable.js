@@ -10,6 +10,111 @@ const formatDisplayValue = (value, defaultText = "Not specified") => {
 	return value;
 };
 
+// Generic delete function for table items
+export const createGenericDeleteHandler = ({
+	endpoint,
+	token,
+	showConfirm, // Use showConfirm instead of showConfirmation
+	showError,
+	removeItem,
+	setData,
+	getItemDisplayName = (item) => `item #${item.id}`,
+	itemType = "item",
+}) => {
+	return async (item) => {
+		const itemName = getItemDisplayName(item);
+
+		try {
+			await showConfirm({
+				title: `Delete ${itemType}`,
+				message: `Are you sure you want to delete "${itemName}"? This action cannot be undone.`,
+				confirmText: "Delete",
+				cancelText: "Cancel",
+			});
+
+			// If we reach here, user confirmed
+			try {
+				const response = await fetch(`http://localhost:8000/${endpoint}/${item.id}/`, {
+					method: "DELETE",
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				});
+
+				if (response.ok) {
+					// Try removeItem first, then setData, then reload as fallback
+					if (typeof removeItem === "function") {
+						removeItem(item.id);
+					} else if (typeof setData === "function") {
+						setData((prevData) => prevData.filter((dataItem) => dataItem.id !== item.id));
+					} else {
+						window.location.reload();
+					}
+				} else {
+					await showError({
+						message: `Failed to delete ${itemType.toLowerCase()}. Please try again.`,
+					});
+				}
+			} catch (error) {
+				console.error(`Error deleting ${itemType.toLowerCase()}:`, error);
+				await showError({
+					message: `Failed to delete ${itemType.toLowerCase()}. Please check your connection and try again.`,
+				});
+			}
+		} catch (error) {
+			// User cancelled the confirmation
+			console.log(`${itemType} deletion cancelled`);
+		}
+	};
+};
+
+// Predefined display name functions for common item types
+export const displayNameFunctions = {
+	location: (location) => {
+		return location.city
+			? `${location.city}${location.country ? `, ${location.country}` : ""}`
+			: `location #${location.id}`;
+	},
+	user: (user) => {
+		return user.name || user.email || user.username || `user #${user.id}`;
+	},
+	company: (company) => {
+		return company.name || `company #${company.id}`;
+	},
+	project: (project) => {
+		return project.name || project.title || `project #${project.id}`;
+	},
+	task: (task) => {
+		return task.title || task.name || `task #${task.id}`;
+	},
+	category: (category) => {
+		return category.name || `category #${category.id}`;
+	},
+	product: (product) => {
+		return product.name || product.title || `product #${product.id}`;
+	},
+	order: (order) => {
+		return order.order_number || `order #${order.id}`;
+	},
+	invoice: (invoice) => {
+		return invoice.invoice_number || `invoice #${invoice.id}`;
+	},
+	contact: (contact) => {
+		const name =
+			contact.first_name && contact.last_name
+				? `${contact.first_name} ${contact.last_name}`
+				: contact.name || contact.email;
+		return name || `contact #${contact.id}`;
+	},
+	article: (article) => {
+		return article.title || `article #${article.id}`;
+	},
+	event: (event) => {
+		return event.name || event.title || `event #${event.id}`;
+	},
+	generic: (item) => `item #${item.id}`,
+};
+
 // Utility function to create standardized action buttons
 export const createTableAction = (type, onClick, customTitle = null) => {
 	const actionTypes = {
@@ -749,7 +854,7 @@ const GenericTable = ({
 								onMouseLeave={() => setShowTooltips((prev) => ({ ...prev, [tooltipKey]: false }))}
 								onClick={(e) => e.stopPropagation()}
 							>
-								ℹ️
+								<i class="bi bi-info-circle"></i>
 							</button>
 							{showTooltips[tooltipKey] && (
 								<div
@@ -899,7 +1004,7 @@ const GenericTable = ({
 										<div className="d-flex flex-column">
 											{renderFilterInput(column)}
 											<button
-												className="btn btn-sm btn-outline-secondary mt-3"
+												className="btn btn-sm btn-outline-secondary mt-3 btn-action"
 												onClick={() => clearColumnFilter(column.key)}
 											>
 												Clear Filter

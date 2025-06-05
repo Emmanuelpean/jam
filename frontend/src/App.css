@@ -1014,3 +1014,23 @@ input[type="number"] {
     border-color: var(--primary-end) transparent;
 }
 
+.filter-dropdown {
+    font-size: 0.75rem;
+}
+
+.filter-dropdown .form-label {
+    font-size: 0.7rem;
+}
+
+.filter-dropdown .form-control-xs {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+    height: calc(1.5em + 0.5rem + 2px);
+}
+
+.filter-info-icon {
+    font-size: 0.7rem;
+    line-height: 1;
+    vertical-align: middle;
+    color: #6c757d;
+}
