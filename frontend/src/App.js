@@ -8,6 +8,9 @@ import StyleShowcase from "./pages/TestPage";
 import Header from "./components/Header";
 import "bootstrap/dist/css/bootstrap.min.css"; // Bootstrap first
 import "./App.css";
+import CompaniesPage from "./pages/CompaniesPage";
+import JobFormModal from "./components/modals/JobFormModal";
+import JobsPage from "./pages/JobsPage";
 
 // Layout wrapper component to conditionally show header
 function AppLayout({ children }) {
@@ -46,6 +49,22 @@ function App() {
 							element={
 								<ProtectedRoute>
 									<LocationsPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/companies"
+							element={
+								<ProtectedRoute>
+									<CompaniesPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/jobs"
+							element={
+								<ProtectedRoute>
+									<JobsPage />
 								</ProtectedRoute>
 							}
 						/>
