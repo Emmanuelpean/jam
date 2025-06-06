@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import "./AuthForm.css";
 import "../Logo.css";
-import logo from "../../assets/jam-jam.png";
+import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 
 function Login() {
 	const [email, setEmail] = useState("");
@@ -12,6 +12,14 @@ function Login() {
 	const [loading, setLoading] = useState(false);
 	const { login } = useAuth();
 	const navigate = useNavigate();
+
+	const themes = ["strawberry", "blueberry", "raspberry", "mixed-berry", "forest-berry", "blackberry"];
+
+	// Randomly pick a theme when component mounts
+	useEffect(() => {
+		const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+		document.documentElement.setAttribute("data-theme", randomTheme);
+	}, []);
 
 	async function handleSubmit(e) {
 		e.preventDefault();
@@ -36,8 +44,8 @@ function Login() {
 		<div className="auth-container">
 			<div className="auth-logo">
 				<div className="logo-container logo-container-vertical">
-					<img src={logo} alt="Logo" style={{ height: "175px" }} />
-					<div className="logo-text logo-text-below">Job Application Manager</div>
+					<JamLogo style={{ height: "175px", width: "auto" }} alt="Logo" />
+					<div className="logo-text logo-text-below text-gradient-primary">Job Application Manager</div>
 				</div>
 			</div>
 

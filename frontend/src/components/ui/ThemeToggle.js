@@ -38,7 +38,7 @@ const ThemeToggle = () => {
 		},
 		{
 			key: "blackberry",
-			name: "Wild Blackberry",
+			name: "Blackberry",
 			description: "Deep and sophisticated",
 		},
 	];
@@ -104,7 +104,7 @@ const ThemeToggle = () => {
 	return (
 		<Dropdown>
 			<Dropdown.Toggle className="theme-toggle-btn d-flex align-items-center">
-				<span>{getCurrentTheme().name}</span>
+				<span>JAM</span>
 			</Dropdown.Toggle>
 			<Dropdown.Menu>
 				{themes.map((theme) => {

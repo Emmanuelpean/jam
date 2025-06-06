@@ -2,9 +2,9 @@ import React from "react";
 import { Container, Nav, Navbar } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import ThemeToggle from "./ui/ThemeToggle";
-import logo from "../assets/jam-jam.png";
+import { ReactComponent as JamLogo } from "../assets/Logo.svg";
 
-const Header = ({ onLogout }) => {
+const Header = ({ user, onLogout }) => {
 	const navigate = useNavigate();
 
 	const handleLogoClick = () => {
@@ -17,8 +17,7 @@ const Header = ({ onLogout }) => {
 				<div style={{ display: "flex", alignItems: "center" }}>
 					<Navbar.Brand onClick={handleLogoClick} className="header-logo">
 						<div className="logo-container logo-container-horizontal">
-							<img src={logo} alt="Logo" className="logo-image" style={{ height: "60px" }} />
-							<span className="logo-text logo-text-right text-gradient-primary">JAM</span>
+							<JamLogo style={{ height: "60px", width: "auto" }} className="logo-image" />
 						</div>
 					</Navbar.Brand>
 					<ThemeToggle />
