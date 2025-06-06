@@ -1,0 +1,28 @@
+.theme-toggle-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3)
+}
+
+.theme-toggle-dot-container {
+    gap: 2px;
+}
+
+.btn.theme-toggle-btn {
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+    width: 170px;
+    justify-content: left;
+
+}
+
+.theme-toggle-btn::after {
+    order: -1;
+    margin-right: 8px;
+    margin-left: 0;
+}
+
+.theme-dropdown-item-text {
+    font-size: 0.85rem;
+}

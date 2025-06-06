@@ -11,6 +11,24 @@
     pointer-events: none;
 }
 
+* {
+    margin: 0;
+    padding: 0;
+    /*border: 1px dashed rgb(255, 0, 0); !*For debugging*!*/
+}
+
+body {
+    font-family: "Poppins", sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+p {
+    font-size: 1rem;
+}
+
 @media (prefers-reduced-motion: no-preference) {
     .App-logo {
         animation: App-logo-spin infinite 20s linear;
@@ -174,20 +192,6 @@
     background-clip: text;
 }
 
-/* Custom button with gradient */
-.btn-jam-primary {
-    background: var(--primary-gradient);
-    border: none;
-    color: white;
-    transition: all 0.3s ease;
-}
-
-.btn-jam-primary:hover {
-    background: var(--primary-hover-gradient);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--jam-glow);
-}
-
 /* Update spinner color to use primary-end */
 .spinner-border {
     border-color: var(--primary-end) transparent var(--primary-end) transparent;
@@ -319,7 +323,6 @@ textarea.form-control {
     padding: 0.75rem 2rem;
     font-weight: 600;
     font-size: 0.95rem;
-    letter-spacing: 0.025em;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: none;
 }
@@ -398,25 +401,6 @@ textarea.form-control {
     background: linear-gradient(135deg, #f56565 0%, #e53e3e 25%, #c53030 50%, #9b2c2c 75%, #742a2a 100%);
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(245, 101, 101, 0.4), 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Special button class for theme toggle */
-.btn-jam-primary {
-    background: var(--primary-gradient) !important;
-    border: none !important;
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 12px !important;
-    padding: 0.75rem 1.5rem !important;
-    box-shadow: 0 6px 20px var(--jam-glow), 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
-}
-
-.btn-jam-primary:hover {
-    background: var(--primary-hover-gradient) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px var(--jam-glow), 0 4px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* Compact action button styling for Edit/View/Delete buttons */
@@ -827,9 +811,6 @@ textarea.form-control {
     font-size: 1.1rem;
 }
 
-.bg-light .btn {
-    margin-top: 0.75rem;
-}
 
 /* Loading state */
 .spinner-border-sm {

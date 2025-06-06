@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Card, Button, Modal, Form, Alert } from "react-bootstrap";
 import Select from "react-select";
-import ThemeToggle from "../components/ui/StyleToggle";
+import ThemeToggle from "../components/ui/ThemeToggle";
 import GenericModal from "../components/GenericModal";
 import useGenericAlert from "../hooks/useGenericAlert";
 import "../index.css";

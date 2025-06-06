@@ -1,0 +1,46 @@
+/* Logo Container Styles */
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-container-vertical {
+    flex-direction: column;
+}
+
+.logo-container-horizontal {
+    flex-direction: row;
+}
+
+.logo-image {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Text Positioning */
+.logo-text {
+    font-weight: 600;
+    font-size: 2rem;
+    color: #ff5555ff;
+}
+
+.logo-text-below {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.logo-text-right {
+    margin-left: 1rem;
+    text-align: left;
+}
+
+/* Header logo styles */
+.header-logo {
+    cursor: pointer;
+}
+
+/* Auth form logo */
+.auth-logo {
+    margin-bottom: 2rem;
+}
