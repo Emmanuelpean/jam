@@ -1,19 +1,7 @@
 """
 This module defines the database table models for the application using SQLAlchemy ORM. Each class represents a table in
 the database, with its fields defining the table's columns and relationships. The module utilizes a `CommonBase` class
-to provide a shared structure for all models, including common attributes like `id`, `created_at`, and `created_by`.
-
-Key Classes:
-------------
-1. **CommonBase**: Base class with common attributes shared by multiple tables.
-2. **User**: Represents application users and their credentials.
-3. **Person**: Represents individual persons and their contact information.
-4. **Company**: Stores information about companies.
-5. **Job**: Represents job postings, their details, and associated companies.
-6. **Location**: Defines geographic locations, including city and country.
-7. **AggregatorWebsite**: Represents job aggregation platforms with their metadata.
-8. **Interview**: Tracks interviews, including date, location, job, and person details.
-"""
+to provide a shared structure for all models, including common attributes like `id`, `created_at`, and `created_by`."""
 
 from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, TIMESTAMP, text, CheckConstraint
 from sqlalchemy.ext.declarative import declared_attr
@@ -65,6 +53,65 @@ class User(Base):
     email = Column(String, nullable=False, unique=True)
 
 
+class Company(CommonBase, Base):
+    """Represents a company or organisation.
+
+    Attributes:
+    -----------
+    - `name` (str): Name of the company.
+    - `description` (str, optional): Description or details about the company.
+    - `url` (str, optional): Web link to the company's website."""
+
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    url = Column(String, nullable=True)
+
+
+class Keyword(CommonBase, Base):
+    """Represents keywords associated with job postings.
+
+    Attributes:
+    -----------
+    - `name` (str): The keyword name."""
+
+    name = Column(String, nullable=False)
+
+
+class Aggregator(CommonBase, Base):
+    """Represents a website associated with an aggregator company (e.g. LinkedIn, Indeed).
+
+    Attributes:
+    -----------
+    - `name` (str): The website's name.
+    - `url` (str): The website's URL."""
+
+    name = Column(String, nullable=False)
+    url = Column(String, nullable=False)
+
+
+class Location(CommonBase, Base):
+    """Represents geographical locations.
+
+    Attributes:
+    -----------
+    - `postcode` (str, optional): Postcode of the location.
+    - `city` (str, optional): City of the location.
+    - `country` (str, optional): Country where the location resides.
+    - `remote` (bool, optional): Indicates if the location is remote"""
+
+    postcode = Column(String, nullable=True)
+    city = Column(String, nullable=True)
+    country = Column(String, nullable=True)
+    remote = Column(Boolean, nullable=True)  # TODO
+
+    __table_args__ = (
+        CheckConstraint(
+            "postcode IS NOT NULL OR city IS NOT NULL OR country IS NOT NULL OR remote IS NOT NULL",
+            name="at_least_one_location_field_required",
+        ),
+    )
+
+
 class Person(CommonBase, Base):
     """Represents an individual linked to a company.
 
@@ -85,20 +132,6 @@ class Person(CommonBase, Base):
     linkedin_url = Column(String, nullable=True)
     company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=True)
     company = relationship("Company")
-
-
-class Company(CommonBase, Base):
-    """Represents a company or organization.
-
-    Attributes:
-    -----------
-    - `name` (str): Name of the company.
-    - `description` (str, optional): Description or details about the company.
-    - `url` (str, optional): Web link to the company's website."""
-
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    url = Column(String, nullable=True)
 
 
 class Job(CommonBase, Base):
@@ -123,44 +156,12 @@ class Job(CommonBase, Base):
     salary_min = Column(Float, nullable=True)
     salary_max = Column(Float, nullable=True)
     url = Column(String, nullable=True)
-    personal_rating = Column(
-        Integer,
-        CheckConstraint("personal_rating >= 0 AND personal_rating <= 10"),
-        nullable=True,
-    )
+    personal_rating = Column(Integer, nullable=True)
     company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=True)
     company = relationship("Company")
     location_id = Column(Integer, ForeignKey("location.id", ondelete="CASCADE"), nullable=True)
     location = relationship("Location")
     duplicate_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=True)
-
-
-class Location(CommonBase, Base):
-    """Represents geographical locations.
-
-    Attributes:
-    -----------
-    - `postcode` (str, optional): Postal or ZIP code of the location.
-    - `city` (str, optional): City of the location.
-    - `country` (str, optional): Country where the location resides.
-    - `remote` (bool, optional): Indicates if the location is remote"""
-
-    postcode = Column(String, nullable=True)
-    city = Column(String, nullable=True)
-    country = Column(String, nullable=True)
-    remote = Column(Boolean, nullable=True)
-
-
-class Aggregator(CommonBase, Base):
-    """Represents a website associated with an aggregator company (e.g. LinkedIn, Indeed).
-
-    Attributes:
-    -----------
-    - `name` (str): The website's name.
-    - `url` (str): The website's URL."""
-
-    name = Column(String, nullable=False)
-    url = Column(String, nullable=False)
 
 
 class Interview(CommonBase, Base):
@@ -201,13 +202,3 @@ class JobApplication(CommonBase, Base):
     job = relationship("Job")
     rejected = Column(Boolean, nullable=True)
     note = Column(String, nullable=True)
-
-
-class Keyword(CommonBase, Base):
-    """Represents keywords associated with job postings.
-
-    Attributes:
-    -----------
-    - `name` (str): The keyword name."""
-
-    name = Column(String, nullable=False)

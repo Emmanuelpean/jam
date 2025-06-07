@@ -106,7 +106,7 @@ const PersonPage = () => {
 			key: "phone",
 			label: "Phone",
 			sortable: false,
-			searchable: true, // Make phone searchable
+			searchable: true,
 			type: "text",
 			render: (person) =>
 				person.phone ? (
@@ -120,7 +120,7 @@ const PersonPage = () => {
 			key: "linkedin_url",
 			label: "LinkedIn",
 			sortable: false,
-			searchable: true, // Make LinkedIn searchable
+			searchable: true,
 			type: "text",
 			render: (person) =>
 				person.linkedin_url ? (

@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import job, user, location, company, aggregator, auth, person
+from app.routers import tables, user, auth
 from app import models
 from app.database import engine
 
@@ -21,14 +21,19 @@ app.add_middleware(
 )
 
 
-# Include the routers
-app.include_router(job.router)
-app.include_router(location.router)
-app.include_router(user.router)
+# Table routers
+app.include_router(tables.company_router)
+app.include_router(tables.person_router)
+app.include_router(tables.location_router)
+app.include_router(tables.job_router)
+# app.include_router(tables.jobapplication_router)
+app.include_router(tables.aggregator_router)
+# app.include_router(tables.interview_router)
+# app.include_router(tables.keyword_router)
+
+# Authentification router
+app.include_router(user.user_router)
 app.include_router(auth.router)
-app.include_router(company.router)
-app.include_router(person.router)
-app.include_router(aggregator.router)
 
 
 @app.get("/")

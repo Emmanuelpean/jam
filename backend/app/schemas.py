@@ -43,27 +43,52 @@ class TokenData(BaseModel):
     id: str | None = None
 
 
-# --------------------------------------------------------- JOB --------------------------------------------------------
+# ------------------------------------------------------- COMPANY ------------------------------------------------------
 
 
-class Job(BaseModel):
-    title: str
+class Company(BaseModel):
+    name: str
     description: str | None = None
-    salary_min: int | None = None
-    salary_max: int | None = None
-    personal_rating: int | None = None
     url: str | None = None
-    company_id: int | None = None
-    location_id: int | None = None
-    duplicate_id: int | None = None
 
 
-class JobOut(Job, Out):
+class CompanyOut(Company, Out):
     pass
 
 
-class JobUpdate(Job):
-    title: str | None = None
+class CompanyUpdate(Company):
+    name: str | None = None
+
+
+# ------------------------------------------------------- KEYWORD ------------------------------------------------------
+
+
+class Keyword(BaseModel):
+    name: str
+
+
+class KeywordOut(Keyword, Out):
+    pass
+
+
+class KeywordUpdate(Keyword):
+    name: str | None = None
+
+
+# ----------------------------------------------------- AGGREGATOR -----------------------------------------------------
+
+
+class Aggregator(BaseModel):
+    name: str
+    url: str | None = None
+
+
+class AggregatorOut(Aggregator, Out):
+    pass
+
+
+class AggregatorUpdate(Aggregator):
+    name: str | None = None
 
 
 # ------------------------------------------------------ LOCATION ------------------------------------------------------
@@ -82,23 +107,6 @@ class LocationOut(Location, Out):
 
 class LocationUpdate(Location):
     pass
-
-
-# ------------------------------------------------------- COMPANY ------------------------------------------------------
-
-
-class Company(BaseModel):
-    name: str
-    description: str | None = None
-    url: str | None = None
-
-
-class CompanyOut(Company, Out):
-    pass
-
-
-class CompanyUpdate(Company):
-    name: str | None = None
 
 
 # ------------------------------------------------------- PERSON -------------------------------------------------------
@@ -123,17 +131,25 @@ class PersonUpdate(Person):
     company_id: int | None = None
 
 
-# ----------------------------------------------------- AGGREGATOR -----------------------------------------------------
+# --------------------------------------------------------- JOB --------------------------------------------------------
 
 
-class Aggregator(BaseModel):
-    name: str
+class Job(BaseModel):
+    title: str
+    description: str | None = None
+    salary_min: int | None = None
+    salary_max: int | None = None
+    personal_rating: int | None = None
     url: str | None = None
+    company_id: int | None = None
+    location_id: int | None = None
+    duplicate_id: int | None = None
 
 
-class AggregatorOut(Aggregator, Out):
-    pass
+class JobOut(Job, Out):
+    company: CompanyOut | None = None
+    location: LocationOut | None = None
 
 
-class AggregatorUpdate(Aggregator):
-    name: str | None = None
+class JobUpdate(Job):
+    title: str | None = None

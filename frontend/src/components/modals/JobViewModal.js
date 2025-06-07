@@ -69,17 +69,29 @@ const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 			: "Unknown Location",
 		salary_range: (() => {
 			if (job.salary_min && job.salary_max) {
-				return `$${Number(job.salary_min).toLocaleString()} - $${Number(job.salary_max).toLocaleString()}`;
+				// Check if min and max are the same
+				if (job.salary_min === job.salary_max) {
+					return `£${Number(job.salary_min).toLocaleString()}`;
+				}
+				return `£${Number(job.salary_min).toLocaleString()} - £${Number(job.salary_max).toLocaleString()}`;
 			} else if (job.salary_min) {
-				return `From $${Number(job.salary_min).toLocaleString()}`;
+				return `From £${Number(job.salary_min).toLocaleString()}`;
 			} else if (job.salary_max) {
-				return `Up to $${Number(job.salary_max).toLocaleString()}`;
+				return `Up to £${Number(job.salary_max).toLocaleString()}`;
 			}
 			return "Not specified";
 		})(),
 		personal_rating: (() => {
-			const rating = job.personal_rating || 0;
-			return `${"★".repeat(rating)}${"☆".repeat(5 - rating)} (${rating}/5)`;
+			// Check if rating is null or undefined
+			if (job.personal_rating === null || job.personal_rating === undefined) {
+				return "/";
+			}
+
+			const rating = Math.max(0, Math.min(5, job.personal_rating)); // Clamp between 0 and 5
+			const filledStars = Math.floor(rating);
+			const emptyStars = 5 - filledStars;
+
+			return `${"★".repeat(filledStars)}${"☆".repeat(emptyStars)} (${rating}/5)`;
 		})(),
 		status:
 			job.status && typeof job.status === "string"

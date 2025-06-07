@@ -83,7 +83,7 @@ const JobsPage = () => {
 			sortable: true,
 			searchable: true,
 			type: "text",
-			render: (job) => job.company_name || "/",
+			// render: (job) => job.company.name || "/",
 		},
 		{
 			key: "location_name",
@@ -120,16 +120,20 @@ const JobsPage = () => {
 		},
 		{
 			key: "salary_min",
-			label: "Salary Range",
+			label: "Salary",
 			sortable: true,
 			type: "number",
 			render: (job) => {
 				if (job.salary_min && job.salary_max) {
-					return `$${Number(job.salary_min).toLocaleString()} - $${Number(job.salary_max).toLocaleString()}`;
+					// Check if min and max are the same
+					if (job.salary_min === job.salary_max) {
+						return `£${Number(job.salary_min).toLocaleString()}`;
+					}
+					return `£${Number(job.salary_min).toLocaleString()} - £${Number(job.salary_max).toLocaleString()}`;
 				} else if (job.salary_min) {
-					return `From $${Number(job.salary_min).toLocaleString()}`;
+					return `From £${Number(job.salary_min).toLocaleString()}`;
 				} else if (job.salary_max) {
-					return `Up to $${Number(job.salary_max).toLocaleString()}`;
+					return `Up to £${Number(job.salary_max).toLocaleString()}`;
 				}
 				return "Not specified";
 			},
@@ -140,11 +144,19 @@ const JobsPage = () => {
 			sortable: true,
 			type: "number",
 			render: (job) => {
-				const rating = job.personal_rating || 0;
+				// Check if rating is null or undefined
+				if (job.personal_rating === null || job.personal_rating === undefined) {
+					return "/";
+				}
+
+				const rating = Math.max(0, Math.min(5, job.personal_rating)); // Clamp between 0 and 5
+				const filledStars = Math.floor(rating);
+				const emptyStars = 5 - filledStars;
+
 				return (
 					<div>
-						{"★".repeat(rating)}
-						{"☆".repeat(5 - rating)}
+						{"★".repeat(filledStars)}
+						{"☆".repeat(emptyStars)}
 					</div>
 				);
 			},
