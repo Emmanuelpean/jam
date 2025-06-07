@@ -1,7 +1,7 @@
 import React from "react";
 import GenericFormModal from "../GenericModal";
 
-const CompanyFormModal = ({ show, onHide, onSuccess, initialData = {}, isEdit = false }) => {
+const CompanyFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 	// Define form fields for company
 	const formFields = [
 		{
@@ -48,6 +48,7 @@ const CompanyFormModal = ({ show, onHide, onSuccess, initialData = {}, isEdit = 
 			initialData={initialData}
 			isEdit={isEdit}
 			transformFormData={transformFormData}
+			size={size}
 		/>
 	);
 };

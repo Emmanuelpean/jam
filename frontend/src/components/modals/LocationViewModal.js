@@ -2,7 +2,7 @@ import React from "react";
 import GenericModal from "../GenericModal";
 import LocationMap from "../maps/LocationMap";
 
-const LocationViewModal = ({ show, onHide, location, onEdit }) => {
+const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
 	// Define view fields for location
 	const viewFields = [
 		{
@@ -66,7 +66,7 @@ const LocationViewModal = ({ show, onHide, location, onEdit }) => {
 			onEdit={onEdit}
 			showEditButton={true}
 			showSystemFields={true}
-			size="lg"
+			size={size}
 			customContent={customContent}
 		/>
 	);

@@ -1,13 +1,24 @@
 import React, { useState } from "react";
 import { Button, Form } from "react-bootstrap";
 
-// Utility function to format display values
-const formatDisplayValue = (value, defaultText = "Not specified") => {
-	// Check for null, undefined, empty string, or whitespace-only string
-	if (value === null || value === undefined || value === "" || (typeof value === "string" && value.trim() === "")) {
-		return defaultText;
+const renderCellContent = (column, row) => {
+	if (column.render) {
+		const renderedContent = column.render(row);
+
+		// Check if the rendered content is empty or falsy
+		if (
+			!renderedContent ||
+			(React.isValidElement(renderedContent) && !renderedContent.props.children) ||
+			(typeof renderedContent === "string" && renderedContent.trim() === "")
+		) {
+			return <span className="text-muted">/</span>;
+		}
+
+		return renderedContent;
 	}
-	return value;
+
+	// Fallback to the raw value or empty indicator
+	return row[column.key] || <span className="text-muted">/</span>;
 };
 
 // Generic delete function for table items
@@ -80,6 +91,9 @@ export const displayNameFunctions = {
 	},
 	company: (company) => {
 		return company.name || `company #${company.id}`;
+	},
+	job: (job) => {
+		return job.title || `job #${job.id}`;
 	},
 	project: (project) => {
 		return project.name || project.title || `project #${project.id}`;
@@ -392,12 +406,7 @@ const GenericTable = ({
 							<tr key={item.id || index}>
 								{tableColumns.map((column) => (
 									<td key={column.key} className="align-middle">
-										{column.render
-											? column.render(item)
-											: formatDisplayValue(
-													column.accessor ? column.accessor(item) : item[column.key],
-													defaultDisplayText,
-												)}
+										{renderCellContent(column, item)}
 									</td>
 								))}
 							</tr>

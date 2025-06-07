@@ -1,7 +1,7 @@
 import React from "react";
 import GenericModal from "../GenericModal";
 
-const CompanyViewModal = ({ show, onHide, company, onEdit }) => {
+const CompanyViewModal = ({ show, onHide, company, onEdit, size }) => {
 	// Define view fields for company
 	const viewFields = [
 		{
@@ -34,7 +34,7 @@ const CompanyViewModal = ({ show, onHide, company, onEdit }) => {
 			onEdit={onEdit}
 			showEditButton={true}
 			showSystemFields={true}
-			size="lg"
+			size={size}
 		/>
 	);
 };

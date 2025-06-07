@@ -9,7 +9,7 @@ import CompanyViewModal from "../components/modals/CompanyViewModal";
 import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
 import useGenericAlert from "../hooks/useGenericAlert";
-import GenericModal from "../components/GenericModal";
+import AlertModal from "../components/AlertModal";
 
 const CompaniesPage = () => {
 	const { token } = useAuth();
@@ -164,21 +164,7 @@ const CompaniesPage = () => {
 			/>
 
 			{/* Alert Modal using GenericModal - handles both alerts and confirmations */}
-			<GenericModal
-				show={alertState.show}
-				onHide={hideAlert}
-				mode={alertState.cancelText ? "confirmation" : "alert"}
-				title={alertState.title}
-				alertMessage={alertState.message}
-				confirmationMessage={alertState.message}
-				alertType={alertState.type}
-				confirmText={alertState.confirmText}
-				cancelText={alertState.cancelText}
-				alertIcon={alertState.icon}
-				size={alertState.size}
-				onSuccess={alertState.onSuccess}
-				onConfirm={alertState.onSuccess}
-			/>
+			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</div>
 	);
 };

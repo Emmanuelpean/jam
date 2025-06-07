@@ -1,7 +1,7 @@
 import React from "react";
 import GenericModal from "../GenericModal";
 
-const JobViewModal = ({ show, onHide, job, onEdit }) => {
+const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 	if (!job) return null;
 
 	// Define the fields to display in the view modal
@@ -81,7 +81,10 @@ const JobViewModal = ({ show, onHide, job, onEdit }) => {
 			const rating = job.personal_rating || 0;
 			return `${"★".repeat(rating)}${"☆".repeat(5 - rating)} (${rating}/5)`;
 		})(),
-		status: job.status ? job.status.charAt(0).toUpperCase() + job.status.slice(1) : "Unknown",
+		status:
+			job.status && typeof job.status === "string"
+				? job.status.charAt(0).toUpperCase() + job.status.slice(1)
+				: "Unknown",
 	};
 
 	// Custom content for additional job information
@@ -104,7 +107,9 @@ const JobViewModal = ({ show, onHide, job, onEdit }) => {
 							<div className="card-body text-center">
 								<h6 className="card-title mb-2">Application Status</h6>
 								<span className={`badge fs-6 ${getStatusBadgeClass(job.status)}`}>
-									{job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+									{job.status && typeof job.status === "string"
+										? job.status.charAt(0).toUpperCase() + job.status.slice(1)
+										: "Unknown"}
 								</span>
 							</div>
 						</div>
@@ -120,7 +125,7 @@ const JobViewModal = ({ show, onHide, job, onEdit }) => {
 			onHide={onHide}
 			mode="view"
 			title="Job Application"
-			size="lg"
+			size={size}
 			data={displayData}
 			viewFields={viewFields}
 			onEdit={onEdit}
@@ -133,6 +138,8 @@ const JobViewModal = ({ show, onHide, job, onEdit }) => {
 
 // Helper function to get status badge class
 const getStatusBadgeClass = (status) => {
+	if (!status || typeof status !== "string") return "bg-primary";
+
 	const statusMap = {
 		applied: "bg-primary",
 		interview: "bg-warning text-dark",
@@ -140,7 +147,7 @@ const getStatusBadgeClass = (status) => {
 		rejected: "bg-danger",
 		withdrawn: "bg-secondary",
 	};
-	return statusMap[status] || "bg-primary";
+	return statusMap[status.toLowerCase()] || "bg-primary";
 };
 
 export default JobViewModal;

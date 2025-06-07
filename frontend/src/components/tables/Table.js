@@ -31,6 +31,7 @@ export const useTableData = (endpoint, dependencies = []) => {
 				}
 
 				const result = await response.json();
+				console.log(result);
 				setData(result);
 			} catch (err) {
 				console.error(`Error fetching ${endpoint}:`, err);

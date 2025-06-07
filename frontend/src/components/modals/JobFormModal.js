@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { Button } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
 import CompanyFormModal from "./CompanyFormModal";
 import LocationFormModal from "./LocationFormModal";
 
-const JobFormModal = ({ show, onHide, onSuccess, initialData = {}, isEdit = false }) => {
+const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 	const { token } = useAuth();
 	const [showCompanyModal, setShowCompanyModal] = useState(false);
 	const [showLocationModal, setShowLocationModal] = useState(false);
@@ -77,93 +78,168 @@ const JobFormModal = ({ show, onHide, onSuccess, initialData = {}, isEdit = fals
 		setShowLocationModal(false);
 	};
 
-	// Define form fields for the job application
-	const fields = [
+	// Define layout groups for custom form layout
+	const layoutGroups = [
+		// Job Title (full width)
 		{
-			name: "title",
-			label: "Job Title",
-			type: "text",
-			required: true,
-			placeholder: "Enter job title",
-		},
-		{
-			name: "company_id",
-			label: "Company",
-			type: "react-select",
-			required: true,
-			placeholder: "Select or search company...",
-			isSearchable: true,
-			isClearable: true,
-			options: companyOptions,
-		},
-		{
-			name: "location_id",
-			label: "Location",
-			type: "react-select",
-			required: true,
-			placeholder: "Select or search location...",
-			isSearchable: true,
-			isClearable: true,
-			options: locationOptions,
-		},
-		{
-			name: "status",
-			label: "Status",
-			type: "select",
-			required: true,
-			options: [
-				{ value: "applied", label: "Applied" },
-				{ value: "interview", label: "Interview" },
-				{ value: "offer", label: "Offer" },
-				{ value: "rejected", label: "Rejected" },
-				{ value: "withdrawn", label: "Withdrawn" },
+			id: "title",
+			type: "default",
+			fields: [
+				{
+					name: "title",
+					label: "Job Title",
+					type: "text",
+					required: true,
+					placeholder: "Enter job title",
+				},
 			],
 		},
+		// Company and Location (side by side)
 		{
-			name: "url",
-			label: "Job URL",
-			type: "url",
-			placeholder: "https://...",
-		},
-		{
-			name: "salary_min",
-			label: "Minimum Salary",
-			type: "number",
-			placeholder: "Enter minimum salary",
-			step: "1000",
-		},
-		{
-			name: "salary_max",
-			label: "Maximum Salary",
-			type: "number",
-			placeholder: "Enter maximum salary",
-			step: "1000",
-		},
-		{
-			name: "personal_rating",
-			label: "Personal Rating (1-5)",
-			type: "select",
-			options: [
-				{ value: 1, label: "1 - Poor" },
-				{ value: 2, label: "2 - Fair" },
-				{ value: 3, label: "3 - Good" },
-				{ value: 4, label: "4 - Very Good" },
-				{ value: 5, label: "5 - Excellent" },
+			id: "company-location",
+			type: "row",
+			className: "mb-0",
+			fields: [
+				{
+					name: "company_id",
+					label: "Company",
+					type: "react-select",
+					required: true,
+					placeholder: "Select or search company...",
+					isSearchable: true,
+					isClearable: true,
+					options: companyOptions,
+					columnClass: "col-md-6",
+				},
+				{
+					name: "location_id",
+					label: "Location",
+					type: "react-select",
+					required: true,
+					placeholder: "Select or search location...",
+					isSearchable: true,
+					isClearable: true,
+					options: locationOptions,
+					columnClass: "col-md-6",
+				},
 			],
 		},
+		// Add New buttons (side by side)
 		{
-			name: "description",
-			label: "Job Description",
-			type: "textarea",
-			rows: 4,
-			placeholder: "Enter job description...",
+			id: "add-buttons",
+			type: "custom",
+			className: "mb-3",
+			content: (
+				<div className="row">
+					<div className="col-md-6">
+						<div className="d-grid">
+							<Button variant="outline-primary" size="sm" onClick={() => setShowCompanyModal(true)}>
+								<i className="bi bi-plus-circle me-2"></i>
+								Add New Company
+							</Button>
+						</div>
+					</div>
+					<div className="col-md-6">
+						<div className="d-grid">
+							<Button variant="outline-primary" size="sm" onClick={() => setShowLocationModal(true)}>
+								<i className="bi bi-plus-circle me-2"></i>
+								Add New Location
+							</Button>
+						</div>
+					</div>
+				</div>
+			),
 		},
+		// Status and URL (side by side)
 		{
-			name: "notes",
-			label: "Personal Notes",
-			type: "textarea",
-			rows: 3,
-			placeholder: "Add your notes about this job...",
+			id: "status-url",
+			type: "row",
+			fields: [
+				{
+					name: "status",
+					label: "Status",
+					type: "select",
+					required: true,
+					options: [
+						{ value: "applied", label: "Applied" },
+						{ value: "interview", label: "Interview" },
+						{ value: "offer", label: "Offer" },
+						{ value: "rejected", label: "Rejected" },
+						{ value: "withdrawn", label: "Withdrawn" },
+					],
+					columnClass: "col-md-6",
+				},
+				{
+					name: "url",
+					label: "Job URL",
+					type: "url",
+					placeholder: "https://...",
+					columnClass: "col-md-6",
+				},
+			],
+		},
+		// Salary fields (side by side)
+		{
+			id: "salary",
+			type: "row",
+			fields: [
+				{
+					name: "salary_min",
+					label: "Minimum Salary",
+					type: "number",
+					placeholder: "Enter minimum salary",
+					step: "1000",
+					columnClass: "col-md-6",
+				},
+				{
+					name: "salary_max",
+					label: "Maximum Salary",
+					type: "number",
+					placeholder: "Enter maximum salary",
+					step: "1000",
+					columnClass: "col-md-6",
+				},
+			],
+		},
+		// Personal Rating (full width)
+		{
+			id: "rating",
+			type: "default",
+			fields: [
+				{
+					name: "personal_rating",
+					label: "Personal Rating (1-5)",
+					type: "select",
+					options: [
+						{ value: 1, label: "1 - Poor" },
+						{ value: 2, label: "2 - Fair" },
+						{ value: 3, label: "3 - Good" },
+						{ value: 4, label: "4 - Very Good" },
+						{ value: 5, label: "5 - Excellent" },
+					],
+				},
+			],
+		},
+		// Description and Notes (full width)
+		{
+			id: "text-fields",
+			type: "default",
+			fields: [
+				{
+					name: "description",
+					label: "Job Description",
+					type: "textarea",
+					rows: 4,
+					placeholder: "Enter job description...",
+				},
+				{
+					name: "notes",
+					label: "Personal Notes",
+					type: "textarea",
+					rows: 3,
+					placeholder: "Add your notes about this job...",
+				},
+			],
 		},
 	];
 
@@ -214,36 +290,6 @@ const JobFormModal = ({ show, onHide, onSuccess, initialData = {}, isEdit = fals
 		return transformed;
 	};
 
-	// Custom content to add the "Add New" buttons
-	const customContent = (
-		<div className="row mb-3">
-			<div className="col-md-6">
-				<div className="d-grid">
-					<button
-						type="button"
-						className="btn btn-outline-primary btn-sm"
-						onClick={() => setShowCompanyModal(true)}
-					>
-						<i className="bi bi-plus-circle me-2"></i>
-						Add New Company
-					</button>
-				</div>
-			</div>
-			<div className="col-md-6">
-				<div className="d-grid">
-					<button
-						type="button"
-						className="btn btn-outline-primary btn-sm"
-						onClick={() => setShowLocationModal(true)}
-					>
-						<i className="bi bi-plus-circle me-2"></i>
-						Add New Location
-					</button>
-				</div>
-			</div>
-		</div>
-	);
-
 	return (
 		<>
 			<GenericModal
@@ -251,15 +297,15 @@ const JobFormModal = ({ show, onHide, onSuccess, initialData = {}, isEdit = fals
 				onHide={onHide}
 				mode="form"
 				title="Job Application"
-				size="lg"
-				fields={fields}
+				size={size}
+				useCustomLayout={true}
+				layoutGroups={layoutGroups}
 				initialData={initialData}
 				endpoint="jobs"
 				onSuccess={onSuccess}
 				validationRules={validationRules}
 				transformFormData={transformFormData}
 				isEdit={isEdit}
-				customContent={customContent}
 			/>
 
 			{/* Company Form Modal */}

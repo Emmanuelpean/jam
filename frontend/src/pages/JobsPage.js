@@ -2,14 +2,11 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTableData } from "../components/tables/Table";
 import useGenericAlert from "../hooks/useGenericAlert";
-import GenericTable, {
-	createGenericDeleteHandler,
-	createTableActions,
-	displayNameFunctions,
-} from "../components/tables/GenericTable";
+import GenericTable, { createGenericDeleteHandler, createTableActions } from "../components/tables/GenericTable";
 import GenericModal from "../components/GenericModal";
 import JobFormModal from "../components/modals/JobFormModal";
 import JobViewModal from "../components/modals/JobViewModal";
+import AlertModal from "../components/AlertModal";
 
 const JobsPage = () => {
 	const { token } = useAuth();
@@ -67,7 +64,7 @@ const JobsPage = () => {
 		showError,
 		removeItem,
 		setData: setJobs,
-		getItemDisplayName: displayNameFunctions.job,
+		getItemDisplayName: (job) => job.title || `job #${job.id}`,
 		itemType: "Job",
 	});
 
@@ -86,7 +83,7 @@ const JobsPage = () => {
 			sortable: true,
 			searchable: true,
 			type: "text",
-			render: (job) => job.company_name || "Unknown",
+			render: (job) => job.company_name || "/",
 		},
 		{
 			key: "location_name",
@@ -95,7 +92,7 @@ const JobsPage = () => {
 			searchable: true,
 			type: "text",
 			render: (job) => {
-				if (!job.location_city) return "Unknown";
+				if (!job.location_city) return "/";
 				return `${job.location_city}, ${job.location_country}${job.location_remote ? " (Remote)" : ""}`;
 			},
 		},
@@ -114,11 +111,11 @@ const JobsPage = () => {
 					withdrawn: "secondary",
 				};
 
-				return (
-					<span className={`badge bg-${statusMap[job.status] || "primary"}`}>
-						{job.status.charAt(0).toUpperCase() + job.status.slice(1)}
-					</span>
-				);
+				// Add null check and type check before calling charAt
+				const status = job.status && typeof job.status === "string" ? job.status : "unknown";
+				const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+
+				return <span className={`badge bg-${statusMap[job.status] || "primary"}`}>{statusText}</span>;
 			},
 		},
 		{
@@ -192,7 +189,7 @@ const JobsPage = () => {
 			/>
 
 			{/* Modals */}
-			<JobFormModal show={showModal} onHide={() => setShowModal(false)} onSuccess={handleAddSuccess} />
+			<JobFormModal show={showModal} size="xl" onHide={() => setShowModal(false)} onSuccess={handleAddSuccess} />
 
 			<JobFormModal
 				show={showEditModal}
@@ -200,6 +197,7 @@ const JobsPage = () => {
 				onSuccess={handleEditSuccess}
 				initialData={selectedJob || {}}
 				isEdit={true}
+				size="xl"
 			/>
 
 			<JobViewModal
@@ -207,24 +205,11 @@ const JobsPage = () => {
 				onHide={() => setShowViewModal(false)}
 				job={selectedJob}
 				onEdit={handleEdit}
+				size="xl"
 			/>
 
 			{/* Alert Modal using GenericModal - handles both alerts and confirmations */}
-			<GenericModal
-				show={alertState.show}
-				onHide={hideAlert}
-				mode={alertState.cancelText ? "confirmation" : "alert"}
-				title={alertState.title}
-				alertMessage={alertState.message}
-				confirmationMessage={alertState.message}
-				alertType={alertState.type}
-				confirmText={alertState.confirmText}
-				cancelText={alertState.cancelText}
-				alertIcon={alertState.icon}
-				size={alertState.size}
-				onSuccess={alertState.onSuccess}
-				onConfirm={alertState.onSuccess}
-			/>
+			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</div>
 	);
 };

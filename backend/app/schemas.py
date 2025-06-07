@@ -114,7 +114,7 @@ class Person(BaseModel):
 
 
 class PersonOut(Person, Out):
-    pass
+    company: CompanyOut | None = None
 
 
 class PersonUpdate(Person):

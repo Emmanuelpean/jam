@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Alert, Button, Form, Modal } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Modal, Form, Button, Alert } from "react-bootstrap";
 import Select from "react-select";
 import { useAuth } from "../contexts/AuthContext";
 import "./GenericModal.css";
@@ -26,6 +26,10 @@ const GenericModal = ({
 	customValidation = null,
 	transformFormData = null,
 	isEdit = false,
+
+	// Layout options
+	useCustomLayout = false, // Enable custom field layouts
+	layoutGroups = [], // Define groups of fields with custom layouts
 
 	// View mode props
 	data = null,
@@ -170,7 +174,10 @@ const GenericModal = ({
 	const validateForm = () => {
 		const newErrors = {};
 
-		fields.forEach((field) => {
+		// Get all fields from both regular fields and layout groups
+		const allFields = useCustomLayout ? layoutGroups.flatMap((group) => group.fields || []).concat(fields) : fields;
+
+		allFields.forEach((field) => {
 			if (field.required && !formData[field.name]) {
 				newErrors[field.name] = `${field.label} is required`;
 			}
@@ -254,6 +261,17 @@ const GenericModal = ({
 
 	// Field rendering for forms
 	const renderField = (field) => {
+		// Handle custom render function
+		if (field.render && typeof field.render === "function") {
+			return field.render({
+				value: formData[field.name] || "",
+				onChange: handleChange,
+				formData,
+				errors,
+				handleSelectChange,
+			});
+		}
+
 		switch (field.type) {
 			case "textarea":
 				return (
@@ -306,7 +324,7 @@ const GenericModal = ({
 						onChange={(selectedOption, actionMeta) => handleSelectChange(selectedOption, actionMeta)}
 						options={field.options}
 						placeholder={field.placeholder || `Select ${field.label}`}
-						isSearchable={field.isSearchable !== false}
+						isSearchable={field.isSearchable}
 						isClearable={field.isClearable}
 						isDisabled={field.isDisabled}
 						styles={customSelectStyles}
@@ -329,6 +347,54 @@ const GenericModal = ({
 					/>
 				);
 		}
+	};
+
+	// Render a field group (for custom layouts)
+	const renderFieldGroup = (group) => {
+		if (group.type === "row") {
+			return (
+				<div key={group.id || Math.random()} className={`row ${group.className || ""}`}>
+					{group.fields.map((field) => (
+						<div key={field.name} className={field.columnClass || "col-md-6"}>
+							<Form.Group className="mb-3">
+								<Form.Label>
+									{field.label}
+									{field.required && <span className="text-danger">*</span>}
+								</Form.Label>
+								{renderField(field)}
+								{errors[field.name] && (
+									<div className="invalid-feedback d-block">{errors[field.name]}</div>
+								)}
+							</Form.Group>
+						</div>
+					))}
+				</div>
+			);
+		}
+
+		if (group.type === "custom") {
+			return (
+				<div key={group.id || Math.random()} className={group.className || ""}>
+					{group.content}
+				</div>
+			);
+		}
+
+		// Default: full-width fields
+		return (
+			<div key={group.id || Math.random()}>
+				{group.fields.map((field) => (
+					<Form.Group key={field.name} className="mb-3">
+						<Form.Label>
+							{field.label}
+							{field.required && <span className="text-danger">*</span>}
+						</Form.Label>
+						{renderField(field)}
+						{errors[field.name] && <div className="invalid-feedback d-block">{errors[field.name]}</div>}
+					</Form.Group>
+				))}
+			</div>
+		);
 	};
 
 	// Field value rendering for view mode
@@ -418,19 +484,45 @@ const GenericModal = ({
 				return (
 					<Modal.Body className={bodyClassName}>
 						{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
-						<div className="mt-4">{customContent}</div>
-						{fields.map((field) => (
-							<Form.Group key={field.name} className="mb-3">
-								<Form.Label>
-									{field.label}
-									{field.required && <span className="text-danger">*</span>}
-								</Form.Label>
-								{renderField(field)}
-								{errors[field.name] && (
-									<div className="invalid-feedback d-block">{errors[field.name]}</div>
-								)}
-							</Form.Group>
-						))}
+
+						{customContent && <div className="mt-4">{customContent}</div>}
+
+						{useCustomLayout ? (
+							// Render custom layout groups
+							<>
+								{layoutGroups.map((group, index) => renderFieldGroup(group))}
+								{/* Render any remaining fields not in groups */}
+								{fields.length > 0 &&
+									fields.map((field) => (
+										<Form.Group key={field.name} className="mb-3">
+											<Form.Label>
+												{field.label}
+												{field.required && <span className="text-danger">*</span>}
+											</Form.Label>
+											{renderField(field)}
+											{errors[field.name] && (
+												<div className="invalid-feedback d-block">{errors[field.name]}</div>
+											)}
+										</Form.Group>
+									))}
+							</>
+						) : (
+							// Render traditional layout
+							<>
+								{fields.map((field) => (
+									<Form.Group key={field.name} className="mb-3">
+										<Form.Label>
+											{field.label}
+											{field.required && <span className="text-danger">*</span>}
+										</Form.Label>
+										{renderField(field)}
+										{errors[field.name] && (
+											<div className="invalid-feedback d-block">{errors[field.name]}</div>
+										)}
+									</Form.Group>
+								))}
+							</>
+						)}
 					</Modal.Body>
 				);
 

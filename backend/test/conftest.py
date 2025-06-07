@@ -473,6 +473,7 @@ class CRUDTestBase:
     ) -> None:
         test_data = request.getfixturevalue(self.test_data)
         response = self.get_all(authorized_client1)
+        print(response.json())
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
 
