@@ -3,7 +3,7 @@ This module defines the database table models for the application using SQLAlche
 the database, with its fields defining the table's columns and relationships. The module utilizes a `CommonBase` class
 to provide a shared structure for all models, including common attributes like `id`, `created_at`, and `created_by`."""
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, TIMESTAMP, text, CheckConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, TIMESTAMP, text, CheckConstraint, Table
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
@@ -67,6 +67,14 @@ class Company(CommonBase, Base):
     url = Column(String, nullable=True)
 
 
+job_keywords = Table(
+    "job_keywords",
+    Base.metadata,
+    Column("job_id", Integer, ForeignKey("job.id"), primary_key=True),
+    Column("keyword_id", Integer, ForeignKey("keyword.id"), primary_key=True),
+)
+
+
 class Keyword(CommonBase, Base):
     """Represents keywords associated with job postings.
 
@@ -75,6 +83,7 @@ class Keyword(CommonBase, Base):
     - `name` (str): The keyword name."""
 
     name = Column(String, nullable=False)
+    jobs = relationship("Job", secondary=job_keywords, back_populates="keywords")
 
 
 class Aggregator(CommonBase, Base):
@@ -162,6 +171,7 @@ class Job(CommonBase, Base):
     location_id = Column(Integer, ForeignKey("location.id", ondelete="CASCADE"), nullable=True)
     location = relationship("Location")
     duplicate_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=True)
+    keywords = relationship("Keyword", secondary=job_keywords, back_populates="jobs", lazy="selectin")
 
 
 class Interview(CommonBase, Base):

@@ -144,6 +144,7 @@ class Job(BaseModel):
     company_id: int | None = None
     location_id: int | None = None
     duplicate_id: int | None = None
+    keyword_ids: list[int] | None = None
 
 
 class JobOut(Job, Out):

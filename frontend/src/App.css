@@ -185,6 +185,16 @@ p {
     background: var(--primary-gradient) !important;
 }
 
+thead.custom-header {
+    --bs-table-bg: transparent;
+    background: var(--primary-gradient) !important;
+    color: white !important;
+}
+
+thead.custom-header th {
+    color: white !important;
+}
+
 .text-gradient-primary {
     background: var(--primary-gradient);
     -webkit-background-clip: text;

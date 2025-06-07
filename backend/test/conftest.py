@@ -369,17 +369,35 @@ def test_jobs(
     return jobs
 
 
-def compare(location_queried, location_obtained):
+@pytest.fixture
+def test_keywords(
+    test_user1: dict,
+    test_user2: dict,
+    session: orm.Session,
+):
+    """Fixture that creates and returns a list of test keywords.
+    This fixture creates several keywords in the test database for two users. It adds
+    the keywords to the database and commits the transaction. It then returns the list
+    of all keywords from the database.
+    :param test_user1: The first test user who owns some of the keywords.
+    :param test_user2: The second test user who owns other keywords.
+    :param session: The SQLAlchemy session to interact with the database.
+    :return: A list of all keywords created for the test users."""
 
-    if isinstance(location_queried, list):
-        for loc1, loc2 in zip(location_queried, location_obtained):
-            compare(loc1, loc2)
-    elif isinstance(location_queried, dict):
-        for key, value in location_queried.items():
-            assert getattr(location_obtained, key) == value
-    else:
-        for key, value in vars(location_queried).items():
-            assert value == getattr(location_obtained, key)
+    data = [
+        {"name": "Python", "owner_id": test_user1["id"]},
+        {"name": "JavaScript", "owner_id": test_user1["id"]},
+        {"name": "React", "owner_id": test_user1["id"]},
+        {"name": "Node.js", "owner_id": test_user1["id"]},
+        {"name": "AWS", "owner_id": test_user2["id"]},
+        {"name": "Docker", "owner_id": test_user2["id"]},
+    ]
+
+    keywords = [models.Keyword(**keyword) for keyword in data]
+    session.add_all(keywords)
+    session.commit()
+    keywords = session.query(models.Keyword).all()
+    return keywords
 
 
 class CRUDTestBase:

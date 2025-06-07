@@ -26,9 +26,9 @@ from app.schemas import (
     # JobApplication,
     # JobApplicationUpdate,
     # JobApplicationOut,
-    # Keyword,
-    # KeywordUpdate,
-    # KeywordOut,
+    Keyword,
+    KeywordUpdate,
+    KeywordOut,
 )
 
 
@@ -255,12 +255,12 @@ aggregator_router = generate_crud_router(
 #     not_found_msg="Job Application not found",
 # )
 #
-# # Keyword router
-# keyword_router = generate_crud_router(
-#     table_model=models.Keyword,
-#     create_schema=Keyword,
-#     update_schema=KeywordUpdate,
-#     out_schema=KeywordOut,
-#     endpoint="keyword",
-#     not_found_msg="Keyword not found",
-# )
+# Keyword router
+keyword_router = generate_crud_router(
+    table_model=models.Keyword,
+    create_schema=Keyword,
+    update_schema=KeywordUpdate,
+    out_schema=KeywordOut,
+    endpoint="keywords",
+    not_found_msg="Keyword not found",
+)

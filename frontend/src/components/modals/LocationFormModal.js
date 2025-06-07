@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import GenericFormModal from "../GenericModal";
+import GenericModal from "../GenericModal";
 import { fetchCountries, getCountryCodeSync, getCountryNameSync } from "../../utils/CountryUtils";
 
 const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
@@ -109,7 +109,7 @@ const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, is
 	};
 
 	return (
-		<GenericFormModal
+		<GenericModal
 			show={show}
 			onHide={onHide}
 			title="Location"

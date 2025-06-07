@@ -29,7 +29,7 @@ app.include_router(tables.job_router)
 # app.include_router(tables.jobapplication_router)
 app.include_router(tables.aggregator_router)
 # app.include_router(tables.interview_router)
-# app.include_router(tables.keyword_router)
+app.include_router(tables.keyword_router)
 
 # Authentification router
 app.include_router(user.user_router)

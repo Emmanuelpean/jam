@@ -370,7 +370,7 @@ const GenericTable = ({
 			{/* Table with rounded corners */}
 			<div className="table-responsive">
 				<table className="table table-striped table-hover rounded-3 overflow-hidden">
-					<thead className="table-dark">
+					<thead className="custom-header">
 						<tr>
 							{tableColumns.map((column) => (
 								<th key={column.key}>

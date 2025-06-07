@@ -83,7 +83,7 @@ const JobsPage = () => {
 			sortable: true,
 			searchable: true,
 			type: "text",
-			// render: (job) => job.company.name || "/",
+			render: (job) => job.company.name || "/",
 		},
 		{
 			key: "location_name",
@@ -92,8 +92,8 @@ const JobsPage = () => {
 			searchable: true,
 			type: "text",
 			render: (job) => {
-				if (!job.location_city) return "/";
-				return `${job.location_city}, ${job.location_country}${job.location_remote ? " (Remote)" : ""}`;
+				if (!job.location.city) return "/";
+				return `${job.location.city}, ${job.location.country}${job.location.remote ? " (Remote)" : ""}`;
 			},
 		},
 		{

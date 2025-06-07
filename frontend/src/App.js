@@ -11,6 +11,7 @@ import "./App.css";
 import CompaniesPage from "./pages/CompaniesPage";
 import JobsPage from "./pages/JobsPage";
 import PersonPage from "./pages/PersonPage";
+import KeywordsPage from "./pages/KeywordsPage";
 
 // Layout wrapper component to conditionally show header
 function AppLayout({ children }) {
@@ -81,6 +82,14 @@ function App() {
 							element={
 								<ProtectedRoute>
 									<PersonPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/keywords"
+							element={
+								<ProtectedRoute>
+									<KeywordsPage />
 								</ProtectedRoute>
 							}
 						/>

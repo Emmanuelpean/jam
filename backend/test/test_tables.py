@@ -132,8 +132,25 @@ class TestPersonCRUD(CRUDTestBase):
             "company_id": 1,
         },
     ]
-
     update_data = {
         "first_name": "OX",
         "id": 1,
+    }
+
+
+class TestKeywordCRUD(CRUDTestBase):
+    endpoint = "/keywords"
+    schema = schemas.Keyword
+    out_schema = schemas.KeywordOut
+    test_data = "test_keywords"
+    create_data = [
+        {"name": "TypeScript"},
+        {"name": "PostgreSQL"},
+        {"name": "FastAPI"},
+        {"name": "Machine Learning"},
+        {"name": "DevOps"},
+    ]
+    update_data = {
+        "id": 1,
+        "name": "Updated Python",
     }
