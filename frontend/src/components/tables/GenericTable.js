@@ -236,7 +236,6 @@ const GenericTable = ({
 		onSort({ key, direction });
 	};
 
-	// Get sorted and filtered data
 	const getSortedData = () => {
 		let filteredData = [...data];
 
@@ -246,7 +245,27 @@ const GenericTable = ({
 			filteredData = filteredData.filter((item) => {
 				return columns.some((column) => {
 					if (!column.searchable) return false;
-					const value = column.accessor ? column.accessor(item) : item[column.key];
+
+					let value;
+					if (column.accessor) {
+						value = column.accessor(item);
+					} else if (column.searchFields) {
+						// Handle nested field searching
+						value = column.searchFields
+							.map((field) => {
+								const parts = field.split(".");
+								let obj = item;
+								for (const part of parts) {
+									obj = obj?.[part];
+									if (obj === null || obj === undefined) break;
+								}
+								return obj;
+							})
+							.join(" ");
+					} else {
+						value = item[column.key];
+					}
+
 					return value?.toString().toLowerCase().includes(searchTermLower);
 				});
 			});
@@ -261,9 +280,25 @@ const GenericTable = ({
 				if (column?.accessor) {
 					aValue = column.accessor(a);
 					bValue = column.accessor(b);
+				} else if (column?.sortField) {
+					// Handle nested field sorting
+					const parts = column.sortField.split(".");
+					aValue = parts.reduce((obj, part) => obj?.[part], a);
+					bValue = parts.reduce((obj, part) => obj?.[part], b);
 				} else {
 					aValue = a[sortConfig.key];
 					bValue = b[sortConfig.key];
+				}
+
+				// Handle null/undefined values
+				if (aValue == null && bValue == null) return 0;
+				if (aValue == null) return sortConfig.direction === "asc" ? 1 : -1;
+				if (bValue == null) return sortConfig.direction === "asc" ? -1 : 1;
+
+				// Convert to strings for comparison if needed
+				if (typeof aValue === "string" && typeof bValue === "string") {
+					aValue = aValue.toLowerCase();
+					bValue = bValue.toLowerCase();
 				}
 
 				if (aValue < bValue) {

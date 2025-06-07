@@ -83,7 +83,9 @@ const JobsPage = () => {
 			sortable: true,
 			searchable: true,
 			type: "text",
-			render: (job) => job.company.name || "/",
+			sortField: "company.name",
+			searchFields: ["company.name"],
+			render: (job) => job.company?.name,
 		},
 		{
 			key: "location_name",
@@ -91,11 +93,22 @@ const JobsPage = () => {
 			sortable: true,
 			searchable: true,
 			type: "text",
+			sortField: "location.city", // You might want to sort by city
+			searchFields: ["location.city", "location.country", "location.postcode"],
+			accessor: (job) => {
+				const loc = job.location;
+				if (!loc) return "";
+				if (loc.remote) return "Remote";
+				return [loc.city, loc.country].filter(Boolean).join(", ");
+			},
 			render: (job) => {
-				if (!job.location.city) return "/";
-				return `${job.location.city}, ${job.location.country}${job.location.remote ? " (Remote)" : ""}`;
+				const loc = job.location;
+				if (!loc) return "No location";
+				if (loc.remote) return <span className="badge bg-success">Remote</span>;
+				return [loc.city, loc.country].filter(Boolean).join(", ");
 			},
 		},
+
 		{
 			key: "status",
 			label: "Status",

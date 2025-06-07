@@ -445,7 +445,10 @@ class CRUDTestBase:
 
         for key, value in items:
             if key[0] != "_":
-                assert value == getattr(response_data, key)
+                if isinstance(value, models.Base):
+                    self.check_output(value, getattr(response_data, key))
+                else:
+                    assert value == getattr(response_data, key)
 
         return None
 
@@ -493,6 +496,8 @@ class CRUDTestBase:
     ) -> None:
         test_data = request.getfixturevalue(self.test_data)
         response = self.get_all(authorized_client1)
+        print(response.json())
+        print(test_data)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
 

@@ -79,8 +79,6 @@ const PersonPage = () => {
 			sortable: true,
 			searchable: true,
 			type: "text",
-			// Custom search function that searches both first_name and last_name
-			searchFields: ["first_name", "last_name", "email"], // Add multiple fields to search
 			render: (person) => (
 				<div>
 					<strong>{`${person.first_name} ${person.last_name}`}</strong>
@@ -99,6 +97,7 @@ const PersonPage = () => {
 			sortable: true,
 			searchable: true,
 			type: "text",
+			sortField: "company.name",
 			searchFields: ["company.name"], // Search nested company name
 			render: (person) => person.company?.name,
 		},

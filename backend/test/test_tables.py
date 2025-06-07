@@ -1,22 +1,5 @@
-from conftest import CRUDTestBase
 from app import schemas
-
-
-class TestAggregatorCRUD(CRUDTestBase):
-    endpoint = "/aggregators"
-    schema = schemas.Aggregator
-    out_schema = schemas.AggregatorOut
-    test_data = "test_aggregators"
-    create_data = [
-        {"name": "LinkedIn", "url": "https://linkedin.com"},
-        {"name": "Indeed", "url": "https://indeed.com"},
-        {"name": "Glassdoor", "url": "https://glassdoor.com"},
-    ]
-    update_data = {
-        "name": "Updated LinkedIn",
-        "url": "https://updated-linkedin.com",
-        "id": 1,
-    }
+from conftest import CRUDTestBase
 
 
 class TestCompanyCRUD(CRUDTestBase):
@@ -35,39 +18,36 @@ class TestCompanyCRUD(CRUDTestBase):
     }
 
 
-class TestJobCRUD(CRUDTestBase):
-    endpoint = "/jobs"
-    schema = schemas.Job
-    out_schema = schemas.JobOut
-    test_data = "test_jobs"
+class TestKeywordCRUD(CRUDTestBase):
+    endpoint = "/keywords"
+    schema = schemas.Keyword
+    out_schema = schemas.KeywordOut
+    test_data = "test_keywords"
     create_data = [
-        {
-            "title": "Software Engineer",
-            "salary_min": 50000,
-            "salary_max": 100000,
-            "description": "Design, develop, and maintain software solutions.",
-            "personal_rating": 8,
-            "url": "https://example.com/jobs/software_engineer",
-        },
-        {
-            "title": "Data Scientist",
-            "salary_min": 60000,
-            "salary_max": 120000,
-            "description": "Analyze complex datasets and derive insights.",
-            "personal_rating": 9,
-            "url": "https://example.com/jobs/data_scientist",
-        },
-        {
-            "title": "Frontend Developer",
-            "salary_min": 55000,
-            "salary_max": 90000,
-            "description": "Build interactive and responsive web interfaces.",
-            "personal_rating": 7,
-            "url": "https://example.com/jobs/frontend_developer",
-        },
+        {"name": "TypeScript"},
+        {"name": "PostgreSQL"},
+        {"name": "FastAPI"},
+        {"name": "Machine Learning"},
+        {"name": "DevOps"},
     ]
     update_data = {
-        "title": "Updated title",
+        "id": 1,
+        "name": "Updated Python",
+    }
+
+
+class TestAggregatorCRUD(CRUDTestBase):
+    endpoint = "/aggregators"
+    schema = schemas.Aggregator
+    out_schema = schemas.AggregatorOut
+    test_data = "test_aggregators"
+    create_data = [
+        {"name": "LinkedIn", "url": "https://linkedin.com"},
+        {"name": "Indeed", "url": "https://indeed.com"},
+        {"name": "Glassdoor", "url": "https://glassdoor.com"},
+    ]
+    update_data = {
+        "name": "Updated LinkedIn",
         "url": "https://updated-linkedin.com",
         "id": 1,
     }
@@ -138,19 +118,182 @@ class TestPersonCRUD(CRUDTestBase):
     }
 
 
-class TestKeywordCRUD(CRUDTestBase):
-    endpoint = "/keywords"
-    schema = schemas.Keyword
-    out_schema = schemas.KeywordOut
-    test_data = "test_keywords"
+class TestJobCRUD(CRUDTestBase):
+    endpoint = "/jobs"
+    schema = schemas.Job
+    out_schema = schemas.JobOut
+    test_data = "test_jobs"
+    add_fixture = ["test_persons", "test_locations", "test_keywords"]
     create_data = [
-        {"name": "TypeScript"},
-        {"name": "PostgreSQL"},
-        {"name": "FastAPI"},
-        {"name": "Machine Learning"},
-        {"name": "DevOps"},
+        # Jobs using existing locations, companies, and keywords
+        {
+            "title": "Senior Python Developer",
+            "salary_min": 80000,
+            "salary_max": 130000,
+            "description": "Lead backend development using Python and modern frameworks.",
+            "personal_rating": 9,
+            "url": "https://example.com/jobs/senior_python_developer",
+            "company_id": 1,  # First test company
+            "location_id": 2,  # Oxford city
+            "keyword_ids": [1],  # Python
+        },
+        {
+            "title": "Full Stack JavaScript Developer",
+            "salary_min": 65000,
+            "salary_max": 105000,
+            "description": "Build end-to-end web applications with React and Node.js.",
+            "personal_rating": 8,
+            "url": "https://example.com/jobs/fullstack_js_developer",
+            "company_id": 2,  # Second test company
+            "location_id": 1,  # OX5 1HN postcode location
+            "keyword_ids": [2, 3, 4],  # JavaScript, React, Node.js
+        },
+        {
+            "title": "Remote React Developer",
+            "salary_min": 60000,
+            "salary_max": 95000,
+            "description": "Build modern React applications for distributed team.",
+            "personal_rating": 7,
+            "url": "https://example.com/jobs/remote_react_developer",
+            "company_id": 1,
+            "location_id": 4,  # Remote location
+            "keyword_ids": [2, 3],  # JavaScript, React
+        },
+        {
+            "title": "Cloud Engineer",
+            "salary_min": 75000,
+            "salary_max": 120000,
+            "description": "Design and maintain AWS cloud infrastructure.",
+            "personal_rating": 8,
+            "url": "https://example.com/jobs/cloud_engineer",
+            "company_id": 2,
+            "location_id": 3,  # UK country location
+            "keyword_ids": [1, 5],  # Python, AWS
+        },
+        {
+            "title": "Frontend Developer",
+            "salary_min": 55000,
+            "salary_max": 85000,
+            "description": "Create beautiful user interfaces with React and JavaScript.",
+            "personal_rating": 6,
+            "url": "https://example.com/jobs/frontend_developer",
+            "company_id": 1,
+            "location_id": 5,  # OX5 1HN + UK location
+            "keyword_ids": [2, 3],  # JavaScript, React
+        },
+        {
+            "title": "DevOps Engineer",
+            "salary_min": 70000,
+            "salary_max": 110000,
+            "description": "Automate deployment pipelines and manage AWS infrastructure.",
+            "personal_rating": 7,
+            "url": "https://example.com/jobs/devops_engineer",
+            "company_id": 2,
+            "location_id": 2,  # Oxford city
+            "keyword_ids": [1, 4, 5],  # Python, Node.js, AWS
+        },
+        {
+            "title": "Junior JavaScript Developer",
+            "salary_min": 45000,
+            "salary_max": 65000,
+            "description": "Entry-level position for new graduates with JavaScript training.",
+            "personal_rating": 5,
+            "url": "https://example.com/jobs/junior_js_developer",
+            "company_id": 1,
+            "location_id": 1,  # OX5 1HN postcode
+            "keyword_ids": [2],  # JavaScript
+        },
+        {
+            "title": "Remote Python Data Engineer",
+            "salary_min": 85000,
+            "salary_max": 125000,
+            "description": "Process large datasets and build data pipelines using Python.",
+            "personal_rating": 9,
+            "url": "https://example.com/jobs/remote_python_data_engineer",
+            "company_id": 2,
+            "location_id": 4,  # Remote
+            "keyword_ids": [1, 5],  # Python, AWS
+        },
+        {
+            "title": "Full Stack React Engineer",
+            "salary_min": 70000,
+            "salary_max": 100000,
+            "description": "Develop complete web applications using React, Node.js, and AWS.",
+            "personal_rating": 8,
+            "url": "https://example.com/jobs/fullstack_react_engineer",
+            "company_id": 1,
+            "location_id": 3,  # UK country
+            "keyword_ids": [2, 3, 4, 5],  # JavaScript, React, Node.js, AWS
+        },
+        {
+            "title": "Senior Node.js Developer",
+            "salary_min": 75000,
+            "salary_max": 115000,
+            "description": "Build scalable backend services with Node.js and cloud technologies.",
+            "personal_rating": 8,
+            "url": "https://example.com/jobs/senior_nodejs_developer",
+            "company_id": 2,
+            "location_id": 5,  # OX5 1HN + UK
+            "keyword_ids": [2, 4, 5],  # JavaScript, Node.js, AWS
+        },
+        {
+            "title": "Remote Full Stack Developer",
+            "salary_min": 65000,
+            "salary_max": 95000,
+            "description": "Work remotely on diverse projects using modern tech stack.",
+            "personal_rating": 7,
+            "url": "https://example.com/jobs/remote_fullstack",
+            "company_id": 1,
+            "location_id": 4,  # Remote
+            "keyword_ids": [1, 2, 3, 4],  # Python, JavaScript, React, Node.js
+        },
+        {
+            "title": "AWS Solutions Architect",
+            "salary_min": 90000,
+            "salary_max": 140000,
+            "description": "Design and implement cloud solutions using AWS services.",
+            "personal_rating": 9,
+            "url": "https://example.com/jobs/aws_solutions_architect",
+            "company_id": 2,
+            "location_id": 2,  # Oxford city
+            "keyword_ids": [1, 5],  # Python, AWS
+        },
+        {
+            "title": "React Frontend Specialist",
+            "salary_min": 60000,
+            "salary_max": 90000,
+            "description": "Specialize in building complex React applications and components.",
+            "personal_rating": 7,
+            "url": "https://example.com/jobs/react_frontend_specialist",
+            "company_id": 1,
+            "location_id": 1,  # OX5 1HN postcode
+            "keyword_ids": [2, 3],  # JavaScript, React
+        },
+        {
+            "title": "Python Backend Engineer",
+            "salary_min": 70000,
+            "salary_max": 105000,
+            "description": "Develop robust backend systems and APIs using Python.",
+            "personal_rating": 8,
+            "url": "https://example.com/jobs/python_backend_engineer",
+            "company_id": 2,
+            "location_id": 3,  # UK country
+            "keyword_ids": [1],  # Python
+        },
+        {
+            "title": "Multi-Stack Developer",
+            "salary_min": 65000,
+            "salary_max": 100000,
+            "description": "Work across the full technology stack with Python, JavaScript, React, Node.js, and AWS.",
+            "personal_rating": 8,
+            "url": "https://example.com/jobs/multi_stack_developer",
+            "company_id": 1,
+            "location_id": 4,  # Remote
+            "keyword_ids": [1, 2, 3, 4, 5],  # All keywords: Python, JavaScript, React, Node.js, AWS
+        },
     ]
     update_data = {
+        "title": "Updated title",
+        "url": "https://updated-linkedin.com",
         "id": 1,
-        "name": "Updated Python",
     }
