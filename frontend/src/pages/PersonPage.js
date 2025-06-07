@@ -10,6 +10,7 @@ import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
 import useGenericAlert from "../hooks/useGenericAlert";
 import AlertModal from "../components/AlertModal";
+import { columns } from "../components/tables/ColumnDefinitions";
 
 const PersonPage = () => {
 	const { token } = useAuth();
@@ -72,83 +73,20 @@ const PersonPage = () => {
 	});
 
 	// Define table columns
-	const columns = [
-		{
-			key: "name", // Changed from "full_name"
-			label: "Name",
-			sortable: true,
-			searchable: true,
-			type: "text",
-			render: (person) => (
-				<div>
-					<strong>{`${person.first_name} ${person.last_name}`}</strong>
-					{person.email && (
-						<div className="small text-muted">
-							<i className="bi bi-envelope me-1"></i>
-							{person.email}
-						</div>
-					)}
-				</div>
-			),
-		},
-		{
-			key: "company_name",
-			label: "Company",
-			sortable: true,
-			searchable: true,
-			type: "text",
-			sortField: "company.name",
-			searchFields: ["company.name"], // Search nested company name
-			render: (person) => person.company?.name,
-		},
-		{
-			key: "phone",
-			label: "Phone",
-			sortable: false,
-			searchable: true,
-			type: "text",
-			render: (person) =>
-				person.phone ? (
-					<a href={`tel:${person.phone}`} className="text-decoration-none">
-						<i className="bi bi-telephone me-1"></i>
-						{person.phone}
-					</a>
-				) : null,
-		},
-		{
-			key: "linkedin_url",
-			label: "LinkedIn",
-			sortable: false,
-			searchable: true,
-			type: "text",
-			render: (person) =>
-				person.linkedin_url ? (
-					<a
-						href={person.linkedin_url}
-						target="_blank"
-						rel="noopener noreferrer"
-						className="text-decoration-none"
-					>
-						<i className="bi bi-linkedin me-1"></i>
-						Profile <i className="bi bi-box-arrow-up-right ms-1"></i>
-					</a>
-				) : null,
-		},
-		{
-			key: "created_at",
-			label: "Date Added",
-			type: "date",
-			sortable: true,
-			searchable: false, // Dates typically aren't searchable via text
-			render: (person) => new Date(person.created_at).toLocaleDateString(),
-		},
+	const tableColumns = [
+		columns.personName,
+		columns.email,
+		columns.company,
+		columns.phone,
+		columns.linkedinUrl,
+		columns.createdAt,
 	];
 
 	// Create standardized actions using the utility function
 	const tableActions = createTableActions([
-		{ type: "view", onClick: handleView, title: "View person details" },
-		{ type: "edit", onClick: handleEdit, title: "Edit person" },
-		{ type: "delete", onClick: handleDelete, title: "Delete person" },
+		{ type: "view", onClick: handleView },
+		{ type: "edit", onClick: handleEdit },
+		{ type: "delete", onClick: handleDelete },
 	]);
 
 	const handleAddSuccess = (newPerson) => {
@@ -161,7 +99,7 @@ const PersonPage = () => {
 
 			<GenericTable
 				data={people}
-				columns={columns}
+				columns={tableColumns}
 				actions={tableActions}
 				sortConfig={sortConfig}
 				onSort={setSortConfig}

@@ -10,6 +10,7 @@ import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
 import useGenericAlert from "../hooks/useGenericAlert";
 import AlertModal from "../components/AlertModal";
+import { columns } from "../components/tables/ColumnDefinitions";
 
 const KeywordsPage = () => {
 	const { token } = useAuth();
@@ -72,29 +73,13 @@ const KeywordsPage = () => {
 	});
 
 	// Define table columns (without actions)
-	const columns = [
-		{
-			key: "name",
-			label: "Keyword Name",
-			sortable: true,
-			searchable: true,
-			type: "text",
-			render: (keyword) => <span className="badge bg-secondary fs-6">{keyword.name}</span>,
-		},
-		{
-			key: "created_at",
-			label: "Date Added",
-			type: "date",
-			sortable: true,
-			render: (keyword) => new Date(keyword.created_at).toLocaleDateString(),
-		},
-	];
+	const tableColumns = [columns.Name, columns.createdAt];
 
 	// Create standardised actions using the utility function
 	const tableActions = createTableActions([
-		{ type: "view", onClick: handleView, title: "View keyword details" },
-		{ type: "edit", onClick: handleEdit, title: "Edit keyword" },
-		{ type: "delete", onClick: handleDelete, title: "Delete keyword" },
+		{ type: "view", onClick: handleView },
+		{ type: "edit", onClick: handleEdit },
+		{ type: "delete", onClick: handleDelete },
 	]);
 
 	const handleAddSuccess = (newKeyword) => {
@@ -107,7 +92,7 @@ const KeywordsPage = () => {
 
 			<GenericTable
 				data={keywords}
-				columns={columns}
+				columns={tableColumns}
 				actions={tableActions}
 				sortConfig={sortConfig}
 				onSort={setSortConfig}

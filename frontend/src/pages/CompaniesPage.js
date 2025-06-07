@@ -10,6 +10,7 @@ import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
 import useGenericAlert from "../hooks/useGenericAlert";
 import AlertModal from "../components/AlertModal";
+import { columns } from "../components/tables/ColumnDefinitions";
 
 const CompaniesPage = () => {
 	const { token } = useAuth();
@@ -72,54 +73,13 @@ const CompaniesPage = () => {
 	});
 
 	// Define table columns (without actions)
-	const columns = [
-		{
-			key: "name",
-			label: "Company Name",
-			sortable: true,
-			searchable: true,
-			type: "text",
-		},
-		{
-			key: "description",
-			label: "Description",
-			sortable: false,
-			searchable: true,
-			type: "text",
-			render: (company) => (
-				<div style={{ maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis" }}>
-					{company.description || "No description"}
-				</div>
-			),
-		},
-		{
-			key: "url",
-			label: "Website",
-			sortable: false,
-			type: "text",
-			render: (company) =>
-				company.url ? (
-					<a href={company.url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
-						Visit Website <i className="bi bi-box-arrow-up-right ms-1"></i>
-					</a>
-				) : (
-					"No website"
-				),
-		},
-		{
-			key: "created_at",
-			label: "Date Added",
-			type: "date",
-			sortable: true,
-			render: (company) => new Date(company.created_at).toLocaleDateString(),
-		},
-	];
+	const tableColumns = [columns.Name, columns.description, columns.url, columns.createdAt];
 
 	// Create standardized actions using the utility function
 	const tableActions = createTableActions([
-		{ type: "view", onClick: handleView, title: "View company details" },
-		{ type: "edit", onClick: handleEdit, title: "Edit company" },
-		{ type: "delete", onClick: handleDelete, title: "Delete company" },
+		{ type: "view", onClick: handleView },
+		{ type: "edit", onClick: handleEdit },
+		{ type: "delete", onClick: handleDelete },
 	]);
 
 	const handleAddSuccess = (newCompany) => {
@@ -132,7 +92,7 @@ const CompaniesPage = () => {
 
 			<GenericTable
 				data={companies}
-				columns={columns}
+				columns={tableColumns}
 				actions={tableActions}
 				sortConfig={sortConfig}
 				onSort={setSortConfig}

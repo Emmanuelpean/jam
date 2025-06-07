@@ -20,11 +20,6 @@ const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
 			label: "Country",
 			type: "text",
 		},
-		{
-			name: "remote",
-			label: "Remote Work",
-			type: "checkbox",
-		},
 	];
 
 	if (!location) return null;

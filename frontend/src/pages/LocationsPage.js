@@ -11,6 +11,7 @@ import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
 import useGenericAlert from "../hooks/useGenericAlert";
 import AlertModal from "../components/AlertModal";
+import { columns } from "../components/tables/ColumnDefinitions";
 
 const LocationsPage = () => {
 	const { token } = useAuth();
@@ -73,50 +74,13 @@ const LocationsPage = () => {
 	});
 
 	// Define table columns (without actions)
-	const columns = [
-		{
-			key: "city",
-			label: "City",
-			sortable: true,
-			searchable: true,
-		},
-		{
-			key: "postcode",
-			label: "Postcode",
-			sortable: true,
-			searchable: true,
-		},
-		{
-			key: "country",
-			label: "Country",
-			type: "category",
-			sortable: true,
-			searchable: true,
-		},
-		{
-			key: "remote",
-			label: "Remote",
-			sortable: true,
-			render: (location) => (
-				<span className={`badge ${location.remote ? "bg-success" : "bg-secondary"}`}>
-					{location.remote ? "Yes" : "No"}
-				</span>
-			),
-		},
-		{
-			key: "created_at",
-			label: "Date Added",
-			type: "date",
-			sortable: true,
-			render: (item) => new Date(item.created_at).toLocaleDateString(),
-		},
-	];
+	const tableColumns = [columns.city, columns.postcode, columns.country, columns.createdAt];
 
 	// Create standardised actions using the utility function
 	const tableActions = createTableActions([
-		{ type: "view", onClick: handleView, title: "View location details" },
-		{ type: "edit", onClick: handleEdit, title: "Edit location" },
-		{ type: "delete", onClick: handleDelete, title: "Delete location" },
+		{ type: "view", onClick: handleView },
+		{ type: "edit", onClick: handleEdit },
+		{ type: "delete", onClick: handleDelete },
 	]);
 
 	const handleAddSuccess = (newLocation) => {
@@ -130,7 +94,7 @@ const LocationsPage = () => {
 			{/* Table first */}
 			<GenericTable
 				data={locations}
-				columns={columns}
+				columns={tableColumns}
 				actions={tableActions}
 				sortConfig={sortConfig}
 				onSort={setSortConfig}

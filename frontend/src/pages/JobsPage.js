@@ -3,10 +3,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTableData } from "../components/tables/Table";
 import useGenericAlert from "../hooks/useGenericAlert";
 import GenericTable, { createGenericDeleteHandler, createTableActions } from "../components/tables/GenericTable";
-import GenericModal from "../components/GenericModal";
 import JobFormModal from "../components/modals/JobFormModal";
 import JobViewModal from "../components/modals/JobViewModal";
 import AlertModal from "../components/AlertModal";
+import { columns } from "../components/tables/ColumnDefinitions";
 
 const JobsPage = () => {
 	const { token } = useAuth();
@@ -69,125 +69,20 @@ const JobsPage = () => {
 	});
 
 	// Define table columns (without actions)
-	const columns = [
-		{
-			key: "title",
-			label: "Job Title",
-			sortable: true,
-			searchable: true,
-			type: "text",
-		},
-		{
-			key: "company_name",
-			label: "Company",
-			sortable: true,
-			searchable: true,
-			type: "text",
-			sortField: "company.name",
-			searchFields: ["company.name"],
-			render: (job) => job.company?.name,
-		},
-		{
-			key: "location_name",
-			label: "Location",
-			sortable: true,
-			searchable: true,
-			type: "text",
-			sortField: "location.city", // You might want to sort by city
-			searchFields: ["location.city", "location.country", "location.postcode"],
-			accessor: (job) => {
-				const loc = job.location;
-				if (!loc) return "";
-				if (loc.remote) return "Remote";
-				return [loc.city, loc.country].filter(Boolean).join(", ");
-			},
-			render: (job) => {
-				const loc = job.location;
-				if (!loc) return "No location";
-				if (loc.remote) return <span className="badge bg-success">Remote</span>;
-				return [loc.city, loc.country].filter(Boolean).join(", ");
-			},
-		},
-
-		{
-			key: "status",
-			label: "Status",
-			sortable: true,
-			searchable: true,
-			type: "category",
-			render: (job) => {
-				const statusMap = {
-					applied: "primary",
-					interview: "warning",
-					offer: "success",
-					rejected: "danger",
-					withdrawn: "secondary",
-				};
-
-				// Add null check and type check before calling charAt
-				const status = job.status && typeof job.status === "string" ? job.status : "unknown";
-				const statusText = status.charAt(0).toUpperCase() + status.slice(1);
-
-				return <span className={`badge bg-${statusMap[job.status] || "primary"}`}>{statusText}</span>;
-			},
-		},
-		{
-			key: "salary_min",
-			label: "Salary",
-			sortable: true,
-			type: "number",
-			render: (job) => {
-				if (job.salary_min && job.salary_max) {
-					// Check if min and max are the same
-					if (job.salary_min === job.salary_max) {
-						return `£${Number(job.salary_min).toLocaleString()}`;
-					}
-					return `£${Number(job.salary_min).toLocaleString()} - £${Number(job.salary_max).toLocaleString()}`;
-				} else if (job.salary_min) {
-					return `From £${Number(job.salary_min).toLocaleString()}`;
-				} else if (job.salary_max) {
-					return `Up to £${Number(job.salary_max).toLocaleString()}`;
-				}
-				return "Not specified";
-			},
-		},
-		{
-			key: "personal_rating",
-			label: "Rating",
-			sortable: true,
-			type: "number",
-			render: (job) => {
-				// Check if rating is null or undefined
-				if (job.personal_rating === null || job.personal_rating === undefined) {
-					return "/";
-				}
-
-				const rating = Math.max(0, Math.min(5, job.personal_rating)); // Clamp between 0 and 5
-				const filledStars = Math.floor(rating);
-				const emptyStars = 5 - filledStars;
-
-				return (
-					<div>
-						{"★".repeat(filledStars)}
-						{"☆".repeat(emptyStars)}
-					</div>
-				);
-			},
-		},
-		{
-			key: "created_at",
-			label: "Date Applied",
-			type: "date",
-			sortable: true,
-			render: (job) => new Date(job.created_at).toLocaleDateString(),
-		},
+	const tableColumns = [
+		columns.Title,
+		columns.company,
+		columns.location,
+		columns.salaryRange,
+		columns.personalRating,
+		columns.createdAt,
 	];
 
 	// Create standardized actions using the utility function
 	const tableActions = createTableActions([
-		{ type: "view", onClick: handleView, title: "View job details" },
-		{ type: "edit", onClick: handleEdit, title: "Edit job" },
-		{ type: "delete", onClick: handleDelete, title: "Delete job" },
+		{ type: "view", onClick: handleView },
+		{ type: "edit", onClick: handleEdit },
+		{ type: "delete", onClick: handleDelete },
 	]);
 
 	const handleAddSuccess = (newJob) => {
@@ -200,7 +95,7 @@ const JobsPage = () => {
 
 			<GenericTable
 				data={jobs}
-				columns={columns}
+				columns={tableColumns}
 				actions={tableActions}
 				sortConfig={sortConfig}
 				onSort={setSortConfig}

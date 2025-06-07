@@ -49,12 +49,6 @@ const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, is
 			isClearable: true,
 			isDisabled: loadingCountries,
 		},
-		{
-			name: "remote",
-			label: "Remote",
-			type: "checkbox",
-			required: false,
-		},
 	];
 
 	// Transform the initial data to work with react-select

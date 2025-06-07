@@ -277,14 +277,15 @@ const GenericTable = ({
 				const column = columns.find((col) => col.key === sortConfig.key);
 				let aValue, bValue;
 
-				if (column?.accessor) {
-					aValue = column.accessor(a);
-					bValue = column.accessor(b);
-				} else if (column?.sortField) {
+				// FIXED: Check sortField first, then accessor, then fallback to key
+				if (column?.sortField) {
 					// Handle nested field sorting
 					const parts = column.sortField.split(".");
 					aValue = parts.reduce((obj, part) => obj?.[part], a);
 					bValue = parts.reduce((obj, part) => obj?.[part], b);
+				} else if (column?.accessor) {
+					aValue = column.accessor(a);
+					bValue = column.accessor(b);
 				} else {
 					aValue = a[sortConfig.key];
 					bValue = b[sortConfig.key];
