@@ -29,7 +29,7 @@ function Login() {
 		try {
 			const result = await login(email, password);
 			if (result.success) {
-				navigate("/users");
+				navigate("/dashboard");
 			} else {
 				setError(result.error);
 			}
