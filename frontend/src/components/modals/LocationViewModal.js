@@ -3,7 +3,9 @@ import GenericModal from "../GenericModal";
 import LocationMap from "../maps/LocationMap";
 
 const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
-	// Define view fields for location
+	if (!location) return null;
+
+	// Define view fields for location - no render functions needed since these are simple text fields
 	const viewFields = [
 		{
 			name: "postcode",
@@ -21,8 +23,6 @@ const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
 			type: "text",
 		},
 	];
-
-	if (!location) return null;
 
 	// Custom content for map or remote note
 	const customContent = (

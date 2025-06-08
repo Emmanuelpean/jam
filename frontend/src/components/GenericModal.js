@@ -76,6 +76,14 @@ const GenericModal = ({
 			};
 		}
 
+		// Check if there are already open modals
+		const existingModals = document.querySelectorAll(".modal.show").length;
+
+		// If this is a nested modal (there are already open modals), don't show backdrop
+		if (existingModals > 0) {
+			return { backdrop: false, keyboard: true };
+		}
+
 		switch (mode) {
 			case "alert":
 			case "confirmation":
@@ -398,7 +406,14 @@ const GenericModal = ({
 	};
 
 	// Field value rendering for view mode
+
+	// Field value rendering for view mode
 	const renderFieldValue = (field) => {
+		// Check if field has a custom render function first
+		if (field.render && typeof field.render === "function") {
+			return field.render();
+		}
+
 		const value = data[field.name];
 
 		switch (field.type) {

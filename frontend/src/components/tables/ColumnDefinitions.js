@@ -1,55 +1,4 @@
-import React, { useState } from "react";
-
-import LocationViewModal from "../modals/LocationViewModal";
-import CompanyViewModal from "../modals/CompanyViewModal";
-
-// Generic modal manager factory
-const createModalManager = (ModalComponent, modalProp, sizeProp = "lg") => {
-	return ({ children, onEdit }) => {
-		const [showModal, setShowModal] = useState(false);
-		const [selectedItem, setSelectedItem] = useState(null);
-
-		const handleItemClick = (item) => {
-			setSelectedItem(item);
-			setShowModal(true);
-		};
-
-		const closeModal = () => {
-			setShowModal(false);
-			// Delay clearing the selected item to allow closing animation
-			setTimeout(() => {
-				setSelectedItem(null);
-			}, 300); // Bootstrap modal animation duration is typically 300ms
-		};
-
-		const handleEdit = () => {
-			if (onEdit && selectedItem) {
-				onEdit(selectedItem);
-				closeModal();
-			}
-		};
-
-		const modalProps = {
-			show: showModal,
-			onHide: closeModal,
-			size: sizeProp,
-			[modalProp]: selectedItem,
-			showEditButton: true,
-			onEdit: handleEdit,
-		};
-
-		return (
-			<>
-				{children(handleItemClick)}
-				<ModalComponent {...modalProps} />
-			</>
-		);
-	};
-};
-
-// Create specific modal managers
-const LocationModalManager = createModalManager(LocationViewModal, "location", "lg");
-const CompanyModalManager = createModalManager(CompanyViewModal, "company", "lg");
+import { renderFunctions, accessorFunctions } from "../Renders";
 
 // Reusable column definitions that can be used across different tables
 export const columns = {
@@ -62,7 +11,7 @@ export const columns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: (item) => <strong>{item.name}</strong>,
+		render: (item) => renderFunctions.strongText(item, "name"),
 	},
 
 	// Simple title column
@@ -72,7 +21,7 @@ export const columns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: (job) => <strong>{job.title}</strong>,
+		render: renderFunctions.jobTitle,
 	},
 
 	// Description column
@@ -82,13 +31,7 @@ export const columns = {
 		sortable: false,
 		searchable: true,
 		type: "text",
-		render: (item) => {
-			const description = item.description || "No description";
-			const firstSentence = description.match(/^[^.!?]*[.!?]/)?.[0] || description;
-			return (
-				<div style={{ maxWidth: "600px", overflow: "hidden", textOverflow: "ellipsis" }}>{firstSentence}</div>
-			);
-		},
+		render: renderFunctions.description,
 	},
 
 	// URL/Website column
@@ -98,12 +41,7 @@ export const columns = {
 		sortable: false,
 		searchable: true,
 		type: "text",
-		render: (item) =>
-			item.url ? (
-				<a href={item.url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
-					Visit Website <i className="bi bi-box-arrow-up-right ms-1"></i>
-				</a>
-			) : null,
+		render: renderFunctions.websiteUrl,
 	},
 
 	// Created date column - common across all entities
@@ -113,7 +51,7 @@ export const columns = {
 		type: "date",
 		sortable: true,
 		searchable: false,
-		render: (item) => new Date(item.created_at).toLocaleDateString(),
+		render: renderFunctions.createdDate,
 	},
 
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
@@ -127,31 +65,8 @@ export const columns = {
 		type: "text",
 		sortField: "location.name",
 		searchFields: ["location.name"],
-		accessor: (item) => {
-			const loc = item.location;
-			if (!loc) return "";
-			return loc.name;
-		},
-		render: (item) => {
-			const loc = item.location;
-			if (!loc) return <span className="text-muted">No location</span>;
-
-			return (
-				<LocationModalManager>
-					{(handleLocationClick) => (
-						<span
-							className={`badge ${loc.remote ? "bg-success" : "bg-primary"} clickable-badge`}
-							onClick={() => handleLocationClick(loc)}
-							style={{ cursor: "pointer" }}
-							title="Click to view location details"
-						>
-							<i className="bi bi-geo-alt me-1"></i>
-							{loc.name}
-						</span>
-					)}
-				</LocationModalManager>
-			);
-		},
+		accessor: accessorFunctions.locationName,
+		render: renderFunctions.locationBadge,
 	},
 
 	// City column for location table
@@ -192,27 +107,8 @@ export const columns = {
 		type: "text",
 		sortField: "company.name",
 		searchFields: ["company.name"],
-		accessor: (item) => item.company?.name || "",
-		render: (item) => {
-			const company = item.company;
-			if (!company) return <span className="text-muted">No company</span>;
-
-			return (
-				<CompanyModalManager>
-					{(handleCompanyClick) => (
-						<span
-							className="badge bg-info clickable-badge"
-							onClick={() => handleCompanyClick(company)}
-							style={{ cursor: "pointer" }}
-							title="Click to view company details"
-						>
-							<i className="bi bi-building me-1"></i>
-							{company.name}
-						</span>
-					)}
-				</CompanyModalManager>
-			);
-		},
+		accessor: accessorFunctions.companyName,
+		render: renderFunctions.companyBadge,
 	},
 
 	// ---------------------------------------------------- PERSONS ----------------------------------------------------
@@ -225,8 +121,8 @@ export const columns = {
 		searchable: true,
 		type: "text",
 		sortField: "last_name",
-		accessor: (person) => `${person.first_name} ${person.last_name}`,
-		render: (person) => <strong>{`${person.first_name} ${person.last_name}`}</strong>,
+		accessor: accessorFunctions.personName,
+		render: renderFunctions.personName,
 	},
 
 	// Email column
@@ -236,13 +132,7 @@ export const columns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: (item) =>
-			item.email ? (
-				<a href={`mailto:${item.email}`} className="text-decoration-none">
-					<i className="bi bi-envelope me-1"></i>
-					{item.email}
-				</a>
-			) : null,
+		render: renderFunctions.email,
 	},
 
 	// Phone column
@@ -252,13 +142,7 @@ export const columns = {
 		sortable: false,
 		searchable: true,
 		type: "text",
-		render: (item) =>
-			item.phone ? (
-				<a href={`tel:${item.phone}`} className="text-decoration-none">
-					<i className="bi bi-telephone me-1"></i>
-					{item.phone}
-				</a>
-			) : null,
+		render: renderFunctions.phone,
 	},
 
 	// LinkedIn URL column - for people
@@ -268,13 +152,7 @@ export const columns = {
 		sortable: false,
 		searchable: true,
 		type: "text",
-		render: (item) =>
-			item.linkedin_url ? (
-				<a href={item.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
-					<i className="bi bi-linkedin me-1"></i>
-					Profile <i className="bi bi-box-arrow-up-right ms-1"></i>
-				</a>
-			) : null,
+		render: renderFunctions.linkedinUrl,
 	},
 
 	// ------------------------------------------------------ JOBS -----------------------------------------------------
@@ -287,26 +165,8 @@ export const columns = {
 		searchable: false,
 		type: "text",
 		sortField: "salary_min",
-		accessor: (job) => {
-			if (!job.salary_min && !job.salary_max) return "";
-			if (job.salary_min && job.salary_max) {
-				return `£${job.salary_min.toLocaleString()} - £${job.salary_max.toLocaleString()}`;
-			}
-			if (job.salary_min) return `From £${job.salary_min.toLocaleString()}`;
-			if (job.salary_max) return `Up to £${job.salary_max.toLocaleString()}`;
-			return "";
-		},
-		render: (job) => {
-			if (!job.salary_min && !job.salary_max) {
-				return <span className="text-muted">Not specified</span>;
-			}
-			if (job.salary_min && job.salary_max) {
-				return `£${job.salary_min.toLocaleString()} - £${job.salary_max.toLocaleString()}`;
-			}
-			if (job.salary_min) return `From £${job.salary_min.toLocaleString()}`;
-			if (job.salary_max) return `Up to £${job.salary_max.toLocaleString()}`;
-			return "";
-		},
+		accessor: accessorFunctions.salaryRange,
+		render: renderFunctions.salaryRange,
 	},
 
 	// Personal rating column - for jobs
@@ -315,23 +175,7 @@ export const columns = {
 		label: "Rating",
 		sortable: true,
 		type: "number",
-		render: (job) => {
-			// Check if rating is null or undefined
-			if (job.personal_rating === null || job.personal_rating === undefined) {
-				return "/";
-			}
-
-			const rating = Math.max(0, Math.min(5, job.personal_rating)); // Clamp between 0 and 5
-			const filledStars = Math.floor(rating);
-			const emptyStars = 5 - filledStars;
-
-			return (
-				<div>
-					{"★".repeat(filledStars)}
-					{"☆".repeat(emptyStars)}
-				</div>
-			);
-		},
+		render: renderFunctions.personalRating,
 	},
 
 	// Job reference column - for applications, interviews
@@ -343,16 +187,8 @@ export const columns = {
 		type: "text",
 		sortField: "job.title",
 		searchFields: ["job.title", "job.company.name"],
-		accessor: (item) => item.job?.title || "",
-		render: (item) => {
-			if (!item.job) return "No job";
-			return (
-				<div>
-					<strong>{item.job.title}</strong>
-					{item.job.company && <div className="small text-muted">at {item.job.company.name}</div>}
-				</div>
-			);
-		},
+		accessor: accessorFunctions.jobTitle,
+		render: renderFunctions.jobReference,
 	},
 
 	// Note column - for applications, interviews
@@ -362,11 +198,7 @@ export const columns = {
 		sortable: false,
 		searchable: true,
 		type: "text",
-		render: (item) => (
-			<div style={{ maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis" }}>
-				{item.note || <span className="text-muted">No notes</span>}
-			</div>
-		),
+		render: renderFunctions.note,
 	},
 
 	// Keywords column - can be used in Jobs
@@ -377,20 +209,7 @@ export const columns = {
 		searchable: true,
 		type: "text",
 		searchFields: ["keywords.name"],
-		accessor: (item) => item.keywords?.map((k) => k.name).join(", ") || "",
-		render: (item) => {
-			if (!item.keywords || item.keywords.length === 0) {
-				return <span className="text-muted">No keywords</span>;
-			}
-			return (
-				<div>
-					{item.keywords.map((keyword, index) => (
-						<span key={keyword.id} className="badge bg-secondary me-1 mb-1">
-							{keyword.name}
-						</span>
-					))}
-				</div>
-			);
-		},
+		accessor: accessorFunctions.keywords,
+		render: renderFunctions.keywords,
 	},
 };

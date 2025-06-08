@@ -20,7 +20,7 @@ const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, is
 			}
 		};
 
-		loadCountries();
+		loadCountries().then(() => null);
 	}, []);
 
 	const formFields = [
@@ -55,12 +55,12 @@ const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, is
 	const transformInitialData = (data) => {
 		if (!data.country || countries.length === 0) return data;
 
-		// If country is already a code, keep it
+		// If the country is already a code, keep it
 		if (countries.some((c) => c.value === data.country)) {
 			return data;
 		}
 
-		// If country is a name, convert to code
+		// If the country is a name, convert to code
 		const countryCode = getCountryCodeSync(data.country, countries);
 		return {
 			...data,
