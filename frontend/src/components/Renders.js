@@ -71,34 +71,40 @@ const getStatusBadgeClass = (status) => {
 // Render Functions
 export const renderFunctions = {
 	// Basic text renderers
-	strongText: (item, fieldKey) => <strong>{item[fieldKey]}</strong>,
+	strongText: (item, fieldKey, view = false) => <strong>{item[fieldKey]}</strong>,
 
-	jobTitle: (job) => <strong>{job.title}</strong>,
+	jobTitle: (job, view = false) => <strong>{job.title}</strong>,
 
-	personName: (person) => <strong>{`${person.first_name} ${person.last_name}`}</strong>,
+	personName: (person, view = false) => <strong>{`${person.first_name} ${person.last_name}`}</strong>,
 
 	// Description with truncation
-	description: (item) => {
+	description: (item, view = false) => {
 		const description = item.description || "No description";
 		const firstSentence = description.match(/^[^.!?]*[.!?]/)?.[0] || description;
 		return <div style={{ maxWidth: "600px", overflow: "hidden", textOverflow: "ellipsis" }}>{firstSentence}</div>;
 	},
 
 	// URL/Website links
-	websiteUrl: (item) =>
-		item.url ? (
-			<a href={item.url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
-				Visit Website <i className="bi bi-box-arrow-up-right ms-1"></i>
-			</a>
-		) : null,
+	websiteUrl: (item, view = false) => {
+		if (item.url) {
+			return (
+				<a href={item.url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
+					Visit Website <i className="bi bi-box-arrow-up-right ms-1"></i>
+				</a>
+			);
+		}
+		return view ? <span className="text-muted">No website provided</span> : null;
+	},
 
 	// Date formatting
-	createdDate: (item) => new Date(item.created_at).toLocaleDateString(),
+	createdDate: (item, view = false) => new Date(item.created_at).toLocaleDateString(),
 
 	// Location with modal
-	locationBadge: (item) => {
+	locationBadge: (item, view = false) => {
 		const loc = item.location;
-		if (!loc) return <span className="text-muted">No location</span>;
+		if (!loc) {
+			return view ? <span className="text-muted">No location provided</span> : null;
+		}
 
 		return (
 			<LocationModalManager>
@@ -118,56 +124,71 @@ export const renderFunctions = {
 	},
 
 	// Company with modal
-	companyBadge: (item) => {
+	companyBadge: (item, view = false) => {
 		const company = item.company;
-		if (!company) return <span className="text-muted">No company</span>;
 
-		return (
-			<CompanyModalManager>
-				{(handleCompanyClick) => (
-					<span
-						className="badge bg-info clickable-badge"
-						onClick={() => handleCompanyClick(company)}
-						style={{ cursor: "pointer" }}
-						title="Click to view company details"
-					>
-						<i className="bi bi-building me-1"></i>
-						{company.name}
-					</span>
-				)}
-			</CompanyModalManager>
-		);
+		if (company) {
+			return (
+				<CompanyModalManager>
+					{(handleCompanyClick) => (
+						<span
+							className="badge bg-info clickable-badge"
+							onClick={() => handleCompanyClick(company)}
+							style={{ cursor: "pointer" }}
+							title="Click to view company details"
+						>
+							<i className="bi bi-building me-1"></i>
+							{company.name}
+						</span>
+					)}
+				</CompanyModalManager>
+			);
+		}
+
+		return view ? <span className="text-muted">No company provided</span> : null;
 	},
 
 	// Contact information
-	email: (item) =>
-		item.email ? (
-			<a href={`mailto:${item.email}`} className="text-decoration-none">
-				<i className="bi bi-envelope me-1"></i>
-				{item.email}
-			</a>
-		) : null,
+	email: (item, view = false) => {
+		if (item.email) {
+			return (
+				<a href={`mailto:${item.email}`} className="text-decoration-none">
+					<i className="bi bi-envelope me-1"></i>
+					{item.email}
+				</a>
+			);
+		}
+		return view ? <span className="text-muted">No email address provided</span> : null;
+	},
 
-	phone: (item) =>
-		item.phone ? (
-			<a href={`tel:${item.phone}`} className="text-decoration-none">
-				<i className="bi bi-telephone me-1"></i>
-				{item.phone}
-			</a>
-		) : null,
+	phone: (item, view = false) => {
+		if (item.phone) {
+			return (
+				<a href={`tel:${item.phone}`} className="text-decoration-none">
+					<i className="bi bi-telephone me-1"></i>
+					{item.phone}
+				</a>
+			);
+		}
+		return view ? <span className="text-muted">No phone number provided</span> : null;
+	},
 
-	linkedinUrl: (item) =>
-		item.linkedin_url ? (
-			<a href={item.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
-				<i className="bi bi-linkedin me-1"></i>
-				Profile <i className="bi bi-box-arrow-up-right ms-1"></i>
-			</a>
-		) : null,
+	linkedinUrl: (item, view = false) => {
+		if (item.linkedin_url) {
+			return (
+				<a href={item.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
+					<i className="bi bi-linkedin me-1"></i>
+					Profile <i className="bi bi-box-arrow-up-right ms-1"></i>
+				</a>
+			);
+		}
+		return view ? <span className="text-muted">No LinkedIn profile provided</span> : null;
+	},
 
 	// Job-specific renderers
-	salaryRange: (job) => {
+	salaryRange: (job, view = false) => {
 		if (!job.salary_min && !job.salary_max) {
-			return <span className="text-muted">Not specified</span>;
+			return view ? <span className="text-muted">Salary not specified</span> : null;
 		}
 		if (job.salary_min === job.salary_max) {
 			return `£${job.salary_min.toLocaleString()}`;
@@ -180,10 +201,10 @@ export const renderFunctions = {
 		return "";
 	},
 
-	personalRating: (job) => {
+	personalRating: (job, view = false) => {
 		// Check if rating is null or undefined
 		if (job.personal_rating === null || job.personal_rating === undefined) {
-			return "/";
+			return view ? <span className="text-muted">No rating provided</span> : null;
 		}
 
 		const rating = Math.max(0, Math.min(5, job.personal_rating)); // Clamp between 0 and 5
@@ -198,8 +219,10 @@ export const renderFunctions = {
 		);
 	},
 
-	jobReference: (item) => {
-		if (!item.job) return "No job";
+	jobReference: (item, view = false) => {
+		if (!item.job) {
+			return view ? <span className="text-muted">No job provided</span> : null;
+		}
 		return (
 			<div>
 				<strong>{item.job.title}</strong>
@@ -209,8 +232,14 @@ export const renderFunctions = {
 	},
 
 	// Status badge
-	statusBadge: (item) => {
-		if (!item.status) return <span className="text-muted">Unknown</span>;
+	statusBadge: (item, view = false) => {
+		if (!item.status) {
+			return view ? (
+				<span className="text-muted">No status provided</span>
+			) : (
+				<span className="text-muted">Unknown</span>
+			);
+		}
 
 		const status =
 			typeof item.status === "string" ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Unknown";
@@ -219,16 +248,17 @@ export const renderFunctions = {
 	},
 
 	// Notes with truncation
-	note: (item) => (
-		<div style={{ maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis" }}>
-			{item.note || <span className="text-muted">No notes</span>}
-		</div>
-	),
+	note: (item, view = false) => {
+		if (item.note) {
+			return <div style={{ maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis" }}>{item.note}</div>;
+		}
+		return view ? <span className="text-muted">No notes provided</span> : null;
+	},
 
 	// Keywords as badges
-	keywords: (item) => {
+	keywords: (item, view = false) => {
 		if (!item.keywords || item.keywords.length === 0) {
-			return <span className="text-muted">No keywords</span>;
+			return view ? <span className="text-muted">No keywords assigned</span> : null;
 		}
 		return (
 			<div>

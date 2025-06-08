@@ -411,7 +411,12 @@ const GenericModal = ({
 	const renderFieldValue = (field) => {
 		// Check if field has a custom render function first
 		if (field.render && typeof field.render === "function") {
-			return field.render();
+			const rendered = field.render();
+			// If render function returns null or undefined, show fallback
+			if (rendered === null || rendered === undefined) {
+				return <span className="text-muted">/</span>;
+			}
+			return rendered;
 		}
 
 		const value = data[field.name];

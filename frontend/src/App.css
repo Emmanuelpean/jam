@@ -415,6 +415,7 @@ textarea.form-control {
 
 /* Compact action button styling for Edit/View/Delete buttons */
 .btn-action {
+    /*noinspection CssNonIntegerLengthInPixels*/
     border: 1.5px solid;
     background: transparent;
     border-radius: 8px;
@@ -1071,112 +1072,6 @@ input[type="number"] {
 
 .btn-outline-primary:not(:disabled):not(.disabled):hover {
     background: var(--primary-gradient) !important;
-}
-
-/* Modal stacking styles */
-.modal[data-modal-id] {
-    transition: filter 0.15s ease-in-out;
-}
-
-/* Darken underlying modals when stacked */
-.modal[data-modal-id].modal-dimmed {
-    filter: brightness(0.7) blur(1px);
-}
-
-/* Ensure the top modal is always bright and clear */
-.modal[data-modal-id].modal-active {
-    filter: none;
-}
-
-/* Custom backdrop styling for stacked modals */
-.modal-backdrop.modal-backdrop-stacked {
-    background-color: rgba(0, 0, 0, 0.3);
-}
-
-/* React Select menu positioning for stacked modals */
-.react-select-container .react-select__menu {
-    z-index: 9999;
-}
-
-.react-select-container .react-select__menu-portal {
-    z-index: 9999;
-}
-
-/* Modal buttons container */
-.modal-buttons-container {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-/* Responsive adjustments */
-@media (max-width: 576px) {
-    .modal-buttons-container {
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .modal-buttons-container .btn {
-        width: 100%;
-    }
-}
-/* Add to your existing CSS */
-
-/* Handle nested modals by increasing z-index */
-.modal {
-    z-index: 1050;
-}
-
-.modal.show {
-    z-index: 1050;
-}
-
-/* Nested modals should have higher z-index */
-.modal + .modal {
-    z-index: 1060;
-}
-
-.modal + .modal + .modal {
-    z-index: 1070;
-}
-
-.modal + .modal + .modal + .modal {
-    z-index: 1080;
-}
-
-/* Darken all modal contents that are not the topmost */
-.modal:not(:last-of-type) .modal-content {
-    position: relative;
-}
-
-.modal:not(:last-of-type) .modal-content::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 10;
-    pointer-events: none;
-    border-radius: inherit;
-    transition: background-color 0.3s ease;
-}
-
-/* Keep the topmost modal bright */
-.modal:last-of-type .modal-content::after {
-    display: none;
-}
-
-/* Only the first modal should have a backdrop */
-.modal-backdrop {
-    z-index: 1040;
-}
-
-/* Hide additional backdrops from nested modals */
-.modal-backdrop + .modal-backdrop {
-    display: none;
 }
 
 /* React-select in modals */
