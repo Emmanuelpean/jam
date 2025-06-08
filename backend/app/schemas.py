@@ -100,11 +100,11 @@ class Location(BaseModel):
     postcode: str | None = None
     city: str | None = None
     country: str | None = None
-    remote: bool | None = None
+    remote: bool = False
 
 
 class LocationOut(Location, Out):
-    pass
+    name: str
 
 
 class LocationUpdate(Location):
@@ -121,7 +121,7 @@ class Person(BaseModel):
     phone: str | None = None
     linkedin_url: str | None = None
     role: str | None = None
-    company_id: int
+    company_id: int | None = None
 
 
 # Simple person schema without interviews/jobs to avoid circular reference

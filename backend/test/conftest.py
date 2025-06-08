@@ -326,7 +326,7 @@ def test_keywords(session, test_user1, test_user2):
 
 
 @pytest.fixture
-def test_jobs(session, test_user1, test_user2, test_companies, test_locations, test_keywords):
+def test_jobs(session, test_user1, test_user2, test_companies, test_locations, test_keywords, test_persons):
     """Create test job data"""
 
     jobs = [
@@ -386,6 +386,10 @@ def test_jobs(session, test_user1, test_user2, test_companies, test_locations, t
             location_id=test_locations[4].id,
             owner_id=test_user2["id"],
         ),
+        models.Job(
+            title="DevOps Engineer 2",
+            owner_id=test_user2["id"],
+        ),
     ]
 
     session.add_all(jobs)
@@ -399,8 +403,15 @@ def test_jobs(session, test_user1, test_user2, test_companies, test_locations, t
     jobs[3].keywords.extend([test_keywords[0], test_keywords[1], test_keywords[3]])  # Python, JavaScript, Node.js
     jobs[4].keywords.extend([test_keywords[6], test_keywords[7], test_keywords[5]])  # Docker, Kubernetes, AWS
 
-    jobs = session.query(models.Job).all()
+    # Add contacts to jobs (many-to-many relationship)
+    jobs[0].contacts.extend([test_persons[0], test_persons[1]])  # Senior Python: John Smith, Sarah Johnson
+    jobs[1].contacts.append(test_persons[1])  # Frontend React: Sarah Johnson
+    jobs[2].contacts.append(test_persons[2])  # Cloud Engineer: Michael Brown
+    jobs[3].contacts.append(test_persons[3])  # Full Stack: Emma Davis
+    jobs[4].contacts.extend([test_persons[4], test_persons[2]])  # DevOps: David Wilson, Michael Brown
+
     session.commit()
+    jobs = session.query(models.Job).all()
     return jobs
 
 
@@ -415,6 +426,8 @@ def test_job_applications(session, test_user1, test_user2, test_jobs):
             job_id=test_jobs[0].id,
             status="Applied",
             note="Applied through company website",
+            cv=b"Sample CV content for Senior Python Developer position - John Doe, 5 years Python experience",
+            cover_letter=b"Dear Hiring Manager, I am writing to express my interest in the Senior Python Developer position...",
             owner_id=test_user1["id"],
         ),
         models.JobApplication(
@@ -423,6 +436,8 @@ def test_job_applications(session, test_user1, test_user2, test_jobs):
             job_id=test_jobs[1].id,
             status="Interview Scheduled",
             note="HR reached out, phone interview scheduled",
+            cv=b"Frontend React Developer CV - Jane Smith, 3 years React experience, portfolio included",
+            cover_letter=None,  # No cover letter for this application
             owner_id=test_user1["id"],
         ),
         models.JobApplication(
@@ -430,6 +445,8 @@ def test_job_applications(session, test_user1, test_user2, test_jobs):
             job_id=test_jobs[2].id,
             status="Rejected",
             note="Position filled internally",
+            cv=b"Cloud Engineer CV - Michael Johnson, AWS certified, 4 years cloud infrastructure experience",
+            cover_letter=b"Standard cover letter for Cloud Engineer position highlighting relevant AWS experience",
             owner_id=test_user2["id"],
         ),
         models.JobApplication(
@@ -438,6 +455,8 @@ def test_job_applications(session, test_user1, test_user2, test_jobs):
             job_id=test_jobs[3].id,
             status="Under Review",
             note="Submitted portfolio and references",
+            cv=b"Full Stack Developer CV - Sarah Williams, startup experience, equity-focused candidate",
+            cover_letter=b"Enthusiastic cover letter for fintech startup highlighting passion for innovation",
             owner_id=test_user1["id"],
         ),
         models.JobApplication(
@@ -445,13 +464,14 @@ def test_job_applications(session, test_user1, test_user2, test_jobs):
             job_id=test_jobs[4].id,
             status="Offer Extended",
             note="Waiting for final decision",
+            cv=b"DevOps Engineer CV - Alex Chen, kubernetes expert, CI/CD pipeline specialist",
+            cover_letter=b"Professional cover letter emphasizing DevOps automation and infrastructure skills",
             owner_id=test_user2["id"],
         ),
     ]
     session.add_all(job_applications)
     session.commit()
-    for job_app in job_applications:
-        session.refresh(job_app)
+    job_applications = session.query(models.JobApplication).all()
     return job_applications
 
 
@@ -565,6 +585,14 @@ class CRUDTestBase:
                         assert parsed_value == response_value
                     else:
                         assert value == response_value
+
+                elif isinstance(response_value, bytes):
+                    # Handle base64 binary field comparison
+                    if value is None:
+                        assert response_value is None
+                    else:
+                        # Compare the base64 string with the decoded bytes
+                        assert value == response_value.decode("utf-8")
                 else:
                     assert value == response_value
 

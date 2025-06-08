@@ -18,6 +18,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.sql import expression
 
 from app.database import Base
 
@@ -132,12 +134,29 @@ class Location(CommonBase, Base):
     - `postcode` (str, optional): Postcode of the location.
     - `city` (str, optional): City of the location.
     - `country` (str, optional): Country where the location resides.
-    - `remote` (bool, optional): Indicates if the location is remote"""
+    - `remote` (bool, optional): Indicates if the location is remote
+    - `name` (str): Computed property combining city, country, and postcode"""
 
     postcode = Column(String, nullable=True)
     city = Column(String, nullable=True)
     country = Column(String, nullable=True)
-    remote = Column(Boolean, nullable=True)  # TODO
+    remote = Column(Boolean, nullable=False, server_default=expression.false())
+
+    @hybrid_property
+    def name(self):
+        """Computed property that combines city, country, and postcode into a readable location name"""
+        if self.remote:
+            return "Remote"
+
+        parts = []
+        if self.city:
+            parts.append(self.city)
+        if self.country:
+            parts.append(self.country)
+        if self.postcode:
+            parts.append(self.postcode)
+
+        return ", ".join(parts) if parts else "Unknown Location"
 
     __table_args__ = (
         CheckConstraint(

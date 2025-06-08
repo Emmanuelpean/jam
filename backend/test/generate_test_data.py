@@ -128,7 +128,6 @@ def create_locations(db, users):
             "postcode": None,
             "city": "Berlin",
             "country": None,
-            "remote": None,
             "owner_id": users[0].id,
         },
         {
@@ -136,7 +135,6 @@ def create_locations(db, users):
             "postcode": None,
             "city": None,
             "country": "Canada",
-            "remote": None,
             "owner_id": users[0].id,
         },
     ]

@@ -11,6 +11,7 @@ class TestCompanyCRUD(CRUDTestBase):
         {"name": "Oxford PV", "description": "an Oxford company"},
         {"name": "Oxford PV", "url": "oxfordpv.com"},
         {"name": "Oxford PV"},
+        {"name": "TechStartup Inc"},  # Incomplete company data
     ]
     update_data = {
         "name": "OXPV",
@@ -29,6 +30,9 @@ class TestKeywordCRUD(CRUDTestBase):
         {"name": "FastAPI"},
         {"name": "Machine Learning"},
         {"name": "DevOps"},
+        {"name": "Docker"},
+        {"name": "Kubernetes"},
+        {"name": "AWS"},
     ]
     update_data = {
         "id": 1,
@@ -45,6 +49,8 @@ class TestAggregatorCRUD(CRUDTestBase):
         {"name": "LinkedIn", "url": "https://linkedin.com"},
         {"name": "Indeed", "url": "https://indeed.com"},
         {"name": "Glassdoor", "url": "https://glassdoor.com"},
+        {"name": "AngelList", "url": "https://angel.co"},
+        {"name": "Stack Overflow Jobs", "url": "https://stackoverflow.com/jobs"},
     ]
     update_data = {
         "name": "Updated LinkedIn",
@@ -64,6 +70,8 @@ class TestLocationCRUD(CRUDTestBase):
         {"country": "UK"},
         {"remote": True},
         {"postcode": "OX5 1HN", "remote": True},
+        {"city": "Berlin"},  # Incomplete location - only city
+        {"country": "Canada"},  # Incomplete location - only country
     ]
     update_data = {
         "postcode": "OX5 1HN",
@@ -84,6 +92,7 @@ class TestPersonCRUD(CRUDTestBase):
             "email": "john.doe@example.com",
             "phone": "1234567890",
             "linkedin_url": "https://linkedin.com/in/johndoe",
+            "role": "Senior Engineering Manager",
             "company_id": 1,
         },
         {
@@ -91,25 +100,42 @@ class TestPersonCRUD(CRUDTestBase):
             "last_name": "Smith",
             "email": "jane.smith@example.com",
             "linkedin_url": "https://linkedin.com/in/janesmith",
+            "role": "Product Manager",
             "company_id": 2,
         },
         {
             "first_name": "Mike",
             "last_name": "Taylor",
             "phone": "9876543210",
+            "role": "Lead Developer",
             "company_id": 1,
         },
         {
             "first_name": "Emily",
             "last_name": "Davis",
             "email": "emily.davis@example.com",
+            "role": "DevOps Engineer",
             "company_id": 2,
         },
         {
             "first_name": "Chris",
             "last_name": "Brown",
             "linkedin_url": "https://linkedin.com/in/chrisbrown",
+            "role": "Data Science Manager",
             "company_id": 1,
+        },
+        {
+            # Incomplete person - no company
+            "first_name": "Anonymous",
+            "last_name": "Recruiter",
+            "company_id": None,
+        },
+        {
+            # Incomplete person - no contact details but has company
+            "first_name": "Tech",
+            "last_name": "Recruiter",
+            "role": "Talent Acquisition",
+            "company_id": 3,  # Changed from 4 to 3 (Oxford PV from create_data)
         },
     ]
     update_data = {
@@ -134,7 +160,8 @@ class TestJobCRUD(CRUDTestBase):
             "personal_rating": 9,
             "url": "https://example.com/jobs/senior_python_developer",
             "company_id": 1,  # First test company
-            "location_id": 2,  # Oxford city
+            "location_id": 2,  # Beverly Hills
+            "note": "Excellent opportunity for senior developer",
         },
         {
             "title": "Full Stack JavaScript Developer",
@@ -144,7 +171,8 @@ class TestJobCRUD(CRUDTestBase):
             "personal_rating": 8,
             "url": "https://example.com/jobs/fullstack_js_developer",
             "company_id": 2,  # Second test company
-            "location_id": 1,  # OX5 1HN postcode location
+            "location_id": 1,  # New York
+            "note": "Great team culture mentioned in reviews",
         },
         {
             "title": "Remote React Developer",
@@ -154,7 +182,7 @@ class TestJobCRUD(CRUDTestBase):
             "personal_rating": 7,
             "url": "https://example.com/jobs/remote_react_developer",
             "company_id": 1,
-            "location_id": 4,  # Remote location
+            "location_id": 4,  # San Francisco (remote)
         },
         {
             "title": "Cloud Engineer",
@@ -164,7 +192,7 @@ class TestJobCRUD(CRUDTestBase):
             "personal_rating": 8,
             "url": "https://example.com/jobs/cloud_engineer",
             "company_id": 2,
-            "location_id": 3,  # UK country location
+            "location_id": 3,  # London
         },
         {
             "title": "Frontend Developer",
@@ -174,107 +202,28 @@ class TestJobCRUD(CRUDTestBase):
             "personal_rating": 6,
             "url": "https://example.com/jobs/frontend_developer",
             "company_id": 1,
-            "location_id": 5,  # OX5 1HN + UK location
+            "location_id": 5,  # Germany (remote)
         },
         {
-            "title": "DevOps Engineer",
-            "salary_min": 70000,
-            "salary_max": 110000,
-            "description": "Automate deployment pipelines and manage AWS infrastructure.",
-            "personal_rating": 7,
-            "url": "https://example.com/jobs/devops_engineer",
-            "company_id": 2,
-            "location_id": 2,  # Oxford city
+            # Incomplete job - no company
+            "title": "Backend Developer",
+            "description": "Looking for a backend developer with Python experience.",
+            "company_id": None,
+            "location_id": 4,  # San Francisco (remote)
         },
         {
-            "title": "Junior JavaScript Developer",
-            "salary_min": 45000,
-            "salary_max": 65000,
-            "description": "Entry-level position for new graduates with JavaScript training.",
-            "personal_rating": 5,
-            "url": "https://example.com/jobs/junior_js_developer",
-            "company_id": 1,
-            "location_id": 1,  # OX5 1HN postcode
+            # Incomplete job - no location
+            "title": "Software Engineer Intern",
+            "description": "Summer internship opportunity for computer science students.",
+            "personal_rating": 3,
+            "company_id": 3,  # Third company from create_data
+            "location_id": None,
         },
         {
-            "title": "Remote Python Data Engineer",
-            "salary_min": 85000,
-            "salary_max": 125000,
-            "description": "Process large datasets and build data pipelines using Python.",
-            "personal_rating": 9,
-            "url": "https://example.com/jobs/remote_python_data_engineer",
-            "company_id": 2,
-            "location_id": 4,  # Remote
-        },
-        {
-            "title": "Full Stack React Engineer",
-            "salary_min": 70000,
-            "salary_max": 100000,
-            "description": "Develop complete web applications using React, Node.js, and AWS.",
-            "personal_rating": 8,
-            "url": "https://example.com/jobs/fullstack_react_engineer",
-            "company_id": 1,
-            "location_id": 3,  # UK country
-        },
-        {
-            "title": "Senior Node.js Developer",
-            "salary_min": 75000,
-            "salary_max": 115000,
-            "description": "Build scalable backend services with Node.js and cloud technologies.",
-            "personal_rating": 8,
-            "url": "https://example.com/jobs/senior_nodejs_developer",
-            "company_id": 2,
-            "location_id": 5,  # OX5 1HN + UK
-        },
-        {
-            "title": "Remote Full Stack Developer",
-            "salary_min": 65000,
-            "salary_max": 95000,
-            "description": "Work remotely on diverse projects using modern tech stack.",
-            "personal_rating": 7,
-            "url": "https://example.com/jobs/remote_fullstack",
-            "company_id": 1,
-            "location_id": 4,  # Remote
-        },
-        {
-            "title": "AWS Solutions Architect",
-            "salary_min": 90000,
-            "salary_max": 140000,
-            "description": "Design and implement cloud solutions using AWS services.",
-            "personal_rating": 9,
-            "url": "https://example.com/jobs/aws_solutions_architect",
-            "company_id": 2,
-            "location_id": 2,  # Oxford city
-        },
-        {
-            "title": "React Frontend Specialist",
-            "salary_min": 60000,
-            "salary_max": 90000,
-            "description": "Specialize in building complex React applications and components.",
-            "personal_rating": 7,
-            "url": "https://example.com/jobs/react_frontend_specialist",
-            "company_id": 1,
-            "location_id": 1,  # OX5 1HN postcode
-        },
-        {
-            "title": "Python Backend Engineer",
-            "salary_min": 70000,
-            "salary_max": 105000,
-            "description": "Develop robust backend systems and APIs using Python.",
-            "personal_rating": 8,
-            "url": "https://example.com/jobs/python_backend_engineer",
-            "company_id": 2,
-            "location_id": 3,  # UK country
-        },
-        {
-            "title": "Multi-Stack Developer",
-            "salary_min": 65000,
-            "salary_max": 100000,
-            "description": "Work across the full technology stack with Python, JavaScript, React, Node.js, and AWS.",
-            "personal_rating": 8,
-            "url": "https://example.com/jobs/multi_stack_developer",
-            "company_id": 1,
-            "location_id": 4,  # Remote
+            # Incomplete job - minimal information
+            "title": "Developer Position",
+            "company_id": 3,  # Third company from create_data
+            "location_id": 5,  # Germany (remote) - changed from 6 to 5
         },
     ]
     update_data = {
@@ -282,6 +231,11 @@ class TestJobCRUD(CRUDTestBase):
         "url": "https://updated-linkedin.com",
         "id": 1,
     }
+
+
+import base64
+from app import schemas
+from conftest import CRUDTestBase
 
 
 class TestJobApplicationCRUD(CRUDTestBase):
@@ -297,6 +251,12 @@ class TestJobApplicationCRUD(CRUDTestBase):
             "job_id": 1,
             "status": "Applied",
             "note": "Submitted application with cover letter",
+            "cv": base64.b64encode(
+                b"Sample CV content - John Doe, Software Engineer with 5 years experience..."
+            ).decode("utf-8"),
+            "cover_letter": base64.b64encode(
+                b"Dear Hiring Manager, I am writing to express my interest in the position..."
+            ).decode("utf-8"),
         },
         {
             "date": "2024-01-16T14:30:00",
@@ -304,20 +264,49 @@ class TestJobApplicationCRUD(CRUDTestBase):
             "job_id": 2,
             "status": "Interview Scheduled",
             "note": "Phone screening scheduled for next week",
+            "cv": base64.b64encode(
+                b"Sample CV content - Full stack developer with React and Node.js experience..."
+            ).decode("utf-8"),
+            "cover_letter": None,  # No cover letter submitted
         },
-        {"date": "2024-01-17T09:15:00", "job_id": 3, "status": "Applied", "note": "Applied through LinkedIn"},
+        {
+            "date": "2024-01-17T09:15:00",
+            "job_id": 3,
+            "status": "Applied",
+            "note": "Applied through LinkedIn",
+            "cv": None,  # No CV attached (used portfolio instead)
+            "cover_letter": base64.b64encode(b"Portfolio-based application cover letter...").decode("utf-8"),
+        },
         {
             "date": "2024-01-18T16:45:00",
             "url": "https://company3.com/careers/cloud-engineer",
             "job_id": 4,
             "status": "Rejected",
             "note": "Not enough cloud experience",
+            "cv": base64.b64encode(b"Junior developer CV with limited cloud experience...").decode("utf-8"),
+            "cover_letter": base64.b64encode(b"Standard cover letter for cloud engineer position...").decode("utf-8"),
         },
-        {"date": "2024-01-19T11:20:00", "job_id": 5, "status": "Applied"},
+        {
+            "date": "2024-01-19T11:20:00",
+            "job_id": 5,
+            "status": "Applied",
+            "cv": base64.b64encode(b"Frontend specialist CV with React focus...").decode("utf-8"),
+            "cover_letter": base64.b64encode(b"Frontend developer cover letter...").decode("utf-8"),
+        },
+        {
+            # Incomplete application - no CV or cover letter
+            "date": "2024-01-20T13:30:00",
+            "job_id": 6,
+            "status": "Applied",
+            "note": "Quick application through company form",
+            "cv": None,
+            "cover_letter": None,
+        },
     ]
     update_data = {
         "status": "Interview Completed",
         "note": "Technical interview went well",
+        "cv": base64.b64encode(b"Updated CV with recent project experience...").decode("utf-8"),
         "id": 1,
     }
 
@@ -343,6 +332,7 @@ class TestInterviewCRUD(CRUDTestBase):
         },
         {
             "date": "2024-01-22T10:15:00",
+            "location_id": 4,  # Remote
             "jobapplication_id": 3,
             "note": "Remote technical assessment",
         },
@@ -357,6 +347,20 @@ class TestInterviewCRUD(CRUDTestBase):
             "location_id": 3,
             "jobapplication_id": 5,
             "note": "Cultural fit interview",
+        },
+        {
+            # Incomplete interview - no location specified
+            "date": "2024-01-25T16:00:00",
+            "location_id": None,
+            "jobapplication_id": 6,
+            "note": "Phone screening with recruiter. Location TBD.",
+        },
+        {
+            # Incomplete interview - minimal information
+            "date": "2024-01-26T09:00:00",
+            "location_id": 7,  # Canada location (only country specified)
+            "jobapplication_id": 1,  # Same application, second interview
+            "note": None,
         },
     ]
     update_data = {
