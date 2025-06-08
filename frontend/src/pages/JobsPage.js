@@ -70,7 +70,7 @@ const JobsPage = () => {
 
 	// Define table columns (without actions)
 	const tableColumns = [
-		columns.Title,
+		columns.title,
 		columns.company,
 		columns.location,
 		columns.salaryRange,

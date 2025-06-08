@@ -5,7 +5,7 @@ import CompanyViewModal from "../modals/CompanyViewModal";
 
 // Generic modal manager factory
 const createModalManager = (ModalComponent, modalProp, sizeProp = "lg") => {
-	return ({ children }) => {
+	return ({ children, onEdit }) => {
 		const [showModal, setShowModal] = useState(false);
 		const [selectedItem, setSelectedItem] = useState(null);
 
@@ -16,7 +16,17 @@ const createModalManager = (ModalComponent, modalProp, sizeProp = "lg") => {
 
 		const closeModal = () => {
 			setShowModal(false);
-			setSelectedItem(null);
+			// Delay clearing the selected item to allow closing animation
+			setTimeout(() => {
+				setSelectedItem(null);
+			}, 300); // Bootstrap modal animation duration is typically 300ms
+		};
+
+		const handleEdit = () => {
+			if (onEdit && selectedItem) {
+				onEdit(selectedItem);
+				closeModal();
+			}
 		};
 
 		const modalProps = {
@@ -24,6 +34,8 @@ const createModalManager = (ModalComponent, modalProp, sizeProp = "lg") => {
 			onHide: closeModal,
 			size: sizeProp,
 			[modalProp]: selectedItem,
+			showEditButton: true,
+			onEdit: handleEdit,
 		};
 
 		return (
@@ -44,9 +56,9 @@ export const columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
 
 	// Simple name column
-	Name: {
+	name: {
 		key: "name",
-		label: "Name",
+		label: "name",
 		sortable: true,
 		searchable: true,
 		type: "text",
@@ -54,7 +66,7 @@ export const columns = {
 	},
 
 	// Simple title column
-	Title: {
+	title: {
 		key: "title",
 		label: "Job Title",
 		sortable: true,
@@ -113,19 +125,16 @@ export const columns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		sortField: "location.city",
-		searchFields: ["location.city", "location.country", "location.postcode"],
+		sortField: "location.name",
+		searchFields: ["location.name"],
 		accessor: (item) => {
 			const loc = item.location;
 			if (!loc) return "";
-			if (loc.remote) return "Remote";
-			return [loc.city, loc.country, loc.postcode].filter(Boolean).join(", ");
+			return loc.name;
 		},
 		render: (item) => {
 			const loc = item.location;
 			if (!loc) return <span className="text-muted">No location</span>;
-
-			const displayText = loc.remote ? "Remote" : [loc.city, loc.country].filter(Boolean).join(", ");
 
 			return (
 				<LocationModalManager>
@@ -137,7 +146,7 @@ export const columns = {
 							title="Click to view location details"
 						>
 							<i className="bi bi-geo-alt me-1"></i>
-							{displayText}
+							{loc.name}
 						</span>
 					)}
 				</LocationModalManager>
@@ -211,7 +220,7 @@ export const columns = {
 	// Person full name column
 	personName: {
 		key: "name",
-		label: "Name",
+		label: "name",
 		sortable: true,
 		searchable: true,
 		type: "text",

@@ -74,7 +74,7 @@ const LocationsPage = () => {
 	});
 
 	// Define table columns (without actions)
-	const tableColumns = [columns.city, columns.postcode, columns.country, columns.createdAt];
+	const tableColumns = [columns.name, columns.city, columns.postcode, columns.country, columns.createdAt];
 
 	// Create standardised actions using the utility function
 	const tableActions = createTableActions([

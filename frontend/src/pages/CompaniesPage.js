@@ -73,7 +73,7 @@ const CompaniesPage = () => {
 	});
 
 	// Define table columns (without actions)
-	const tableColumns = [columns.Name, columns.description, columns.url, columns.createdAt];
+	const tableColumns = [columns.name, columns.description, columns.url, columns.createdAt];
 
 	// Create standardized actions using the utility function
 	const tableActions = createTableActions([

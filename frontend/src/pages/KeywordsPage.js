@@ -73,7 +73,7 @@ const KeywordsPage = () => {
 	});
 
 	// Define table columns (without actions)
-	const tableColumns = [columns.Name, columns.createdAt];
+	const tableColumns = [columns.name, columns.createdAt];
 
 	// Create standardised actions using the utility function
 	const tableActions = createTableActions([
