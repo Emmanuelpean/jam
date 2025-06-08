@@ -86,7 +86,7 @@ class User(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
-    # theme = Column(String, nullable=False, server_default="mixed-berry")
+    theme = Column(String, nullable=False, server_default="mixed-berry")
 
 
 class Company(CommonBase, Base):

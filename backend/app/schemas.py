@@ -25,12 +25,18 @@ class UserOut(BaseModel):
     id: int
     email: EmailStr
     created_at: datetime
-    # theme: str
+    theme: str
 
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    theme: str | None = None
+    password: str | None = None
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------

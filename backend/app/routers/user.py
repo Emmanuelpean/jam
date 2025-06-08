@@ -1,7 +1,6 @@
 """User route"""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app import database, schemas
@@ -52,37 +51,53 @@ def get_user(
     return user
 
 
-@user_router.get("/", response_model=list[schemas.UserOut])
-def get_user(db: Session = Depends(database.get_db)):
-    """Get all users.
+# Routes for authenticated user operations
+@user_router.get("/me", response_model=schemas.UserOut)
+def get_current_user_profile(
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    """Get the current user's profile.
+    :param current_user: The current authenticated user."""
+    return current_user
+
+
+@user_router.patch("/me", response_model=schemas.UserOut)
+def update_current_user_profile(
+    user_update: schemas.UserUpdate,
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
+):
+    """Update the current user's profile.
+    :param user_update: The user update data.
+    :param current_user: The current authenticated user.
     :param db: The database session."""
 
-    user = db.query(models.User).all()
-    return user
+    # Check if email is being updated and if it's already taken
+    if user_update.email and user_update.email != current_user.email:
+        existing_user = db.query(models.User).filter(models.User.email == user_update.email).first()
+        if existing_user:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
+    # Validate theme if provided
+    if user_update.theme:
+        valid_themes = ["strawberry", "blueberry", "raspberry", "mixed-berry", "forest-berry", "blackberry"]
+        if user_update.theme not in valid_themes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid theme. Must be one of: {', '.join(valid_themes)}",
+            )
 
-auth_router = APIRouter(tags=["Authentication"])
+    # Update only fields that are provided
+    update_data = user_update.model_dump(exclude_unset=True)
 
+    # Hash password if it's being updated
+    if "password" in update_data:
+        update_data["password"] = utils.hash_password(update_data["password"])
 
-@auth_router.post("/login", status_code=status.HTTP_200_OK, response_model=schemas.Token)
-def login(
-    user_credentials: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(database.get_db),
-) -> dict:
-    """Login a user.
-    :param user_credentials: The user credentials (note: username is the email field).
-    :param db: The database session.
-    :returns: The access token."""
+    # Apply updates
+    for field, value in update_data.items():
+        setattr(current_user, field, value)
 
-    # Find the user in the list based on the email provided
-    user = db.query(models.User).filter(user_credentials.username.strip() == models.User.email).first()
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found")
-
-    # Check that the password correspond to that user
-    if not utils.verify_password(user_credentials.password, user.password):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Incorrect password")
-
-    # Create an access token and return it
-    access_token = oauth2.create_access_token(data={"user_id": user.id})
-    return {"access_token": access_token, "token_type": "bearer"}
+    db.commit()
+    db.refresh(current_user)
+    return current_user

@@ -1,49 +1,34 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Dropdown } from "react-bootstrap";
+import { useAuth } from "../../contexts/AuthContext";
 import "./ThemeToggle.css";
 
 const ThemeToggle = () => {
-	const [currentTheme, setCurrentTheme] = useState("mixed-berry");
-	const [currentColors, setCurrentColors] = useState({
-		start: "#ffffff",
-		mid: "#ffffff",
-		end: "#ffffff",
-	});
+	const { token } = useAuth();
 
-	const themes = [
-		{
-			key: "strawberry",
-			name: "Strawberry",
-			description: "Sweet and vibrant",
-		},
-		{
-			key: "blueberry",
-			name: "Blueberry",
-			description: "Deep and rich",
-		},
-		{
-			key: "raspberry",
-			name: "Raspberry",
-			description: "Tart and bold",
-		},
-		{
-			key: "mixed-berry",
-			name: "Mixed Berry",
-			description: "Complex and layered",
-		},
-		{
-			key: "forest-berry",
-			name: "Forest Berry",
-			description: "Natural and earthy",
-		},
-		{
-			key: "blackberry",
-			name: "Blackberry",
-			description: "Deep and sophisticated",
-		},
-	];
+	// Move themes to a constant outside component to prevent recreation
+	const themes = useMemo(
+		() => [
+			{ key: "strawberry", name: "Strawberry", description: "Sweet and vibrant" },
+			{ key: "blueberry", name: "Blueberry", description: "Deep and rich" },
+			{ key: "raspberry", name: "Raspberry", description: "Tart and bold" },
+			{ key: "mixed-berry", name: "Mixed Berry", description: "Complex and layered" },
+			{ key: "forest-berry", name: "Forest Berry", description: "Natural and earthy" },
+			{ key: "blackberry", name: "Blackberry", description: "Deep and sophisticated" },
+		],
+		[],
+	);
 
-	// Function to get current CSS variable values
+	const getInitialTheme = () => {
+		const savedTheme = localStorage.getItem("theme");
+		return savedTheme && themes.some((theme) => theme.key === savedTheme) ? savedTheme : "mixed-berry";
+	};
+
+	const [currentTheme, setCurrentTheme] = useState(getInitialTheme);
+
+	// Extract API URL to a constant
+	const API_BASE_URL = "http://localhost:8000";
+
 	const getCurrentCSSColors = () => {
 		const computedStyle = getComputedStyle(document.documentElement);
 		return {
@@ -53,54 +38,103 @@ const ThemeToggle = () => {
 		};
 	};
 
-	// Apply theme and update colors
-	useEffect(() => {
-		document.documentElement.setAttribute("data-theme", currentTheme);
+	const applyTheme = (themeKey) => {
+		document.documentElement.setAttribute("data-theme", themeKey);
+	};
 
-		// Store theme preference in localStorage
-		localStorage.setItem("theme", currentTheme);
+	const fetchUserTheme = async () => {
+		if (!token) return null;
 
-		// Update current colors from CSS variables after theme change
-		// Use setTimeout to ensure CSS has been updated
-		setTimeout(() => {
-			setCurrentColors(getCurrentCSSColors());
-		}, 10);
-	}, [currentTheme]);
+		try {
+			const response = await fetch(`${API_BASE_URL}/users/me`, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
 
-	// Load saved theme on component mount
-	useEffect(() => {
-		const savedTheme = localStorage.getItem("theme");
-		if (savedTheme && themes.find((theme) => theme.key === savedTheme)) {
-			setCurrentTheme(savedTheme);
+			if (response.ok) {
+				const userData = await response.json();
+				if (userData.theme && themes.find((theme) => theme.key === userData.theme)) {
+					return userData.theme;
+				}
+			}
+		} catch (error) {
+			console.error("Error fetching user theme:", error);
 		}
-		setCurrentColors(getCurrentCSSColors());
+		return null;
+	};
+
+	const saveThemeToDatabase = async (themeKey) => {
+		// Always save to localStorage first
+		localStorage.setItem("theme", themeKey);
+
+		if (!token) return;
+
+		try {
+			const response = await fetch(`${API_BASE_URL}/users/me`, {
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({ theme: themeKey }),
+			});
+
+			if (!response.ok) {
+				console.error("Failed to save theme to database");
+			}
+		} catch (error) {
+			console.error("Error saving theme:", error);
+		}
+	};
+
+	// Initialize theme on mount
+	useEffect(() => {
+		applyTheme(currentTheme);
 	}, []);
 
-	const handleThemeChange = (themeKey) => {
+	// Sync with database when token changes
+	useEffect(() => {
+		if (!token) return;
+
+		const syncWithDatabase = async () => {
+			const dbTheme = await fetchUserTheme();
+			if (dbTheme && dbTheme !== currentTheme) {
+				setCurrentTheme(dbTheme);
+				applyTheme(dbTheme);
+				localStorage.setItem("theme", dbTheme);
+			}
+		};
+
+		syncWithDatabase();
+	}, [token, currentTheme]);
+
+	// Apply theme when it changes
+	useEffect(() => {
+		applyTheme(currentTheme);
+	}, [currentTheme]);
+
+	const handleThemeChange = async (themeKey) => {
 		setCurrentTheme(themeKey);
+		await saveThemeToDatabase(themeKey);
 	};
-
-	const getCurrentTheme = () => {
-		return themes.find((theme) => theme.key === currentTheme);
-	};
-
-	const renderColorPreview = (colors) => (
-		<div className="d-flex align-items-center me-2 theme-toggle-dot-container">
-			<div className="theme-toggle-dot" style={{ backgroundColor: colors.start }} />
-			<div className="theme-toggle-dot" style={{ backgroundColor: colors.mid }} />
-			<div className="theme-toggle-dot" style={{ backgroundColor: colors.end }} />
-		</div>
-	);
 
 	const getThemeColors = (themeKey) => {
 		const originalTheme = document.documentElement.getAttribute("data-theme");
 		document.documentElement.setAttribute("data-theme", themeKey);
 		const colors = getCurrentCSSColors();
-		document.documentElement.setAttribute("data-theme", originalTheme);
+		if (originalTheme) {
+			document.documentElement.setAttribute("data-theme", originalTheme);
+		}
 		return colors;
 	};
 
-	// noinspection JSValidateTypes
+	const renderColorPreview = (colors) => (
+		<div className="d-flex align-items-center me-2 theme-toggle-dot-container">
+			{Object.values(colors).map((color, index) => (
+				<div key={index} className="theme-toggle-dot" style={{ backgroundColor: color }} />
+			))}
+		</div>
+	);
+
 	return (
 		<Dropdown>
 			<Dropdown.Toggle className="theme-toggle-btn d-flex align-items-center">

@@ -127,7 +127,7 @@ def generate_crud_router(
         :returns: The updated entry.
         :raises: HTTPException with a 404 status code if an entry is not found.
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action.
-        :raises: HTTPException with a 400 status code if no fields is provided for the update."""
+        :raises: HTTPException with a 400 status code if no field is provided for the update."""
 
         entry_query = db.query(table_model).filter(table_model.id == entry_id)
         entry = entry_query.first()
