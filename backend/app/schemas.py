@@ -1,6 +1,7 @@
 """Schemas for the JAM database"""
 
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
@@ -24,6 +25,7 @@ class UserOut(BaseModel):
     id: int
     email: EmailStr
     created_at: datetime
+    # theme: str
 
 
 class UserLogin(BaseModel):
@@ -118,11 +120,19 @@ class Person(BaseModel):
     email: EmailStr | None = None
     phone: str | None = None
     linkedin_url: str | None = None
+    role: str | None = None
     company_id: int
+
+
+# Simple person schema without interviews/jobs to avoid circular reference
+class PersonSimple(Person, Out):
+    company: CompanyOut | None = None
 
 
 class PersonOut(Person, Out):
     company: CompanyOut | None = None
+    interviews: list["InterviewSimple"] | None = None  # Use InterviewSimple to avoid circular reference
+    jobs: list["JobSimple"] | None = None  # Add jobs relationship
 
 
 class PersonUpdate(Person):
@@ -137,20 +147,79 @@ class PersonUpdate(Person):
 class Job(BaseModel):
     title: str
     description: str | None = None
-    salary_min: int | None = None
-    salary_max: int | None = None
+    salary_min: float | None = None
+    salary_max: float | None = None
     personal_rating: int | None = None
     url: str | None = None
     company_id: int | None = None
     location_id: int | None = None
     duplicate_id: int | None = None
-    keyword_ids: list[int] | None = None
+    note: str | None = None
+
+
+# Simple job schema without job_application/contacts to avoid circular reference
+class JobSimple(Job, Out):
+    company: CompanyOut | None = None
+    location: LocationOut | None = None
+    keywords: list[KeywordOut] | None = None
 
 
 class JobOut(Job, Out):
     company: CompanyOut | None = None
     location: LocationOut | None = None
+    keywords: list[KeywordOut] | None = None
+    job_application: Optional["JobApplicationOut"] = None  # One-to-one relationship
+    contacts: list[PersonSimple] | None = None  # Add contacts relationship
 
 
 class JobUpdate(Job):
     title: str | None = None
+
+
+# --------------------------------------------------- JOB APPLICATION --------------------------------------------------
+
+
+class JobApplication(BaseModel):
+    date: datetime
+    url: str | None = None
+    job_id: int
+    status: str
+    note: str | None = None
+    cv: bytes | None = None
+    cover_letter: bytes | None = None
+
+
+class JobApplicationOut(JobApplication, Out):
+    job: JobSimple | None = None  # Use JobSimple to avoid circular reference
+    interviews: list["InterviewSimple"] | None = None  # Use InterviewSimple to avoid circular reference
+
+
+class JobApplicationUpdate(JobApplication):
+    date: datetime | None = None
+    job_id: int | None = None
+    status: str | None = None
+
+
+# ------------------------------------------------------ INTERVIEW -----------------------------------------------------
+
+
+class Interview(BaseModel):
+    date: datetime
+    location_id: int | None = None
+    jobapplication_id: int
+    note: str | None = None
+
+
+class InterviewSimple(Interview, Out):
+    location: LocationOut | None = None
+
+
+class InterviewOut(Interview, Out):
+    job_application: Optional["JobApplicationOut"] = None
+    location: LocationOut | None = None
+    interviewers: list["PersonSimple"] | None = None
+
+
+class InterviewUpdate(Interview):
+    date: datetime | None = None
+    jobapplication_id: int | None = None

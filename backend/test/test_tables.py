@@ -135,7 +135,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/senior_python_developer",
             "company_id": 1,  # First test company
             "location_id": 2,  # Oxford city
-            "keyword_ids": [1],  # Python
         },
         {
             "title": "Full Stack JavaScript Developer",
@@ -146,7 +145,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/fullstack_js_developer",
             "company_id": 2,  # Second test company
             "location_id": 1,  # OX5 1HN postcode location
-            "keyword_ids": [2, 3, 4],  # JavaScript, React, Node.js
         },
         {
             "title": "Remote React Developer",
@@ -157,7 +155,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/remote_react_developer",
             "company_id": 1,
             "location_id": 4,  # Remote location
-            "keyword_ids": [2, 3],  # JavaScript, React
         },
         {
             "title": "Cloud Engineer",
@@ -168,7 +165,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/cloud_engineer",
             "company_id": 2,
             "location_id": 3,  # UK country location
-            "keyword_ids": [1, 5],  # Python, AWS
         },
         {
             "title": "Frontend Developer",
@@ -179,7 +175,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/frontend_developer",
             "company_id": 1,
             "location_id": 5,  # OX5 1HN + UK location
-            "keyword_ids": [2, 3],  # JavaScript, React
         },
         {
             "title": "DevOps Engineer",
@@ -190,7 +185,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/devops_engineer",
             "company_id": 2,
             "location_id": 2,  # Oxford city
-            "keyword_ids": [1, 4, 5],  # Python, Node.js, AWS
         },
         {
             "title": "Junior JavaScript Developer",
@@ -201,7 +195,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/junior_js_developer",
             "company_id": 1,
             "location_id": 1,  # OX5 1HN postcode
-            "keyword_ids": [2],  # JavaScript
         },
         {
             "title": "Remote Python Data Engineer",
@@ -212,7 +205,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/remote_python_data_engineer",
             "company_id": 2,
             "location_id": 4,  # Remote
-            "keyword_ids": [1, 5],  # Python, AWS
         },
         {
             "title": "Full Stack React Engineer",
@@ -223,7 +215,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/fullstack_react_engineer",
             "company_id": 1,
             "location_id": 3,  # UK country
-            "keyword_ids": [2, 3, 4, 5],  # JavaScript, React, Node.js, AWS
         },
         {
             "title": "Senior Node.js Developer",
@@ -234,7 +225,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/senior_nodejs_developer",
             "company_id": 2,
             "location_id": 5,  # OX5 1HN + UK
-            "keyword_ids": [2, 4, 5],  # JavaScript, Node.js, AWS
         },
         {
             "title": "Remote Full Stack Developer",
@@ -245,7 +235,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/remote_fullstack",
             "company_id": 1,
             "location_id": 4,  # Remote
-            "keyword_ids": [1, 2, 3, 4],  # Python, JavaScript, React, Node.js
         },
         {
             "title": "AWS Solutions Architect",
@@ -256,7 +245,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/aws_solutions_architect",
             "company_id": 2,
             "location_id": 2,  # Oxford city
-            "keyword_ids": [1, 5],  # Python, AWS
         },
         {
             "title": "React Frontend Specialist",
@@ -267,7 +255,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/react_frontend_specialist",
             "company_id": 1,
             "location_id": 1,  # OX5 1HN postcode
-            "keyword_ids": [2, 3],  # JavaScript, React
         },
         {
             "title": "Python Backend Engineer",
@@ -278,7 +265,6 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/python_backend_engineer",
             "company_id": 2,
             "location_id": 3,  # UK country
-            "keyword_ids": [1],  # Python
         },
         {
             "title": "Multi-Stack Developer",
@@ -289,11 +275,92 @@ class TestJobCRUD(CRUDTestBase):
             "url": "https://example.com/jobs/multi_stack_developer",
             "company_id": 1,
             "location_id": 4,  # Remote
-            "keyword_ids": [1, 2, 3, 4, 5],  # All keywords: Python, JavaScript, React, Node.js, AWS
         },
     ]
     update_data = {
         "title": "Updated title",
         "url": "https://updated-linkedin.com",
+        "id": 1,
+    }
+
+
+class TestJobApplicationCRUD(CRUDTestBase):
+    endpoint = "/jobapplications"
+    schema = schemas.JobApplication
+    out_schema = schemas.JobApplicationOut
+    test_data = "test_job_applications"
+    add_fixture = ["test_jobs"]
+    create_data = [
+        {
+            "date": "2024-01-15T10:00:00",
+            "url": "https://company1.com/apply/senior-python",
+            "job_id": 1,
+            "status": "Applied",
+            "note": "Submitted application with cover letter",
+        },
+        {
+            "date": "2024-01-16T14:30:00",
+            "url": "https://company2.com/apply/fullstack-js",
+            "job_id": 2,
+            "status": "Interview Scheduled",
+            "note": "Phone screening scheduled for next week",
+        },
+        {"date": "2024-01-17T09:15:00", "job_id": 3, "status": "Applied", "note": "Applied through LinkedIn"},
+        {
+            "date": "2024-01-18T16:45:00",
+            "url": "https://company3.com/careers/cloud-engineer",
+            "job_id": 4,
+            "status": "Rejected",
+            "note": "Not enough cloud experience",
+        },
+        {"date": "2024-01-19T11:20:00", "job_id": 5, "status": "Applied"},
+    ]
+    update_data = {
+        "status": "Interview Completed",
+        "note": "Technical interview went well",
+        "id": 1,
+    }
+
+
+class TestInterviewCRUD(CRUDTestBase):
+    endpoint = "/interviews"
+    schema = schemas.Interview
+    out_schema = schemas.InterviewOut
+    test_data = "test_interviews"
+    add_fixture = ["test_job_applications", "test_locations", "test_persons"]
+    create_data = [
+        {
+            "date": "2024-01-20T09:30:00",
+            "location_id": 1,
+            "jobapplication_id": 1,
+            "note": "First round technical interview",
+        },
+        {
+            "date": "2024-01-21T14:00:00",
+            "location_id": 2,
+            "jobapplication_id": 2,
+            "note": "HR screening call",
+        },
+        {
+            "date": "2024-01-22T10:15:00",
+            "jobapplication_id": 3,
+            "note": "Remote technical assessment",
+        },
+        {
+            "date": "2024-01-23T16:30:00",
+            "location_id": 1,
+            "jobapplication_id": 4,
+            "note": "Final round with team lead",
+        },
+        {
+            "date": "2024-01-24T11:45:00",
+            "location_id": 3,
+            "jobapplication_id": 5,
+            "note": "Cultural fit interview",
+        },
+    ]
+    update_data = {
+        "note": "Interview went very well - positive feedback",
+        "date": "2024-01-20T10:00:00",
         "id": 1,
     }

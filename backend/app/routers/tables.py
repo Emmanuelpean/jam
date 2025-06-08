@@ -20,12 +20,12 @@ from app.schemas import (
     Aggregator,
     AggregatorUpdate,
     AggregatorOut,
-    # Interview,
-    # InterviewUpdate,
-    # InterviewOut,
-    # JobApplication,
-    # JobApplicationUpdate,
-    # JobApplicationOut,
+    Interview,
+    InterviewUpdate,
+    InterviewOut,
+    JobApplication,
+    JobApplicationUpdate,
+    JobApplicationOut,
     Keyword,
     KeywordUpdate,
     KeywordOut,
@@ -234,27 +234,27 @@ aggregator_router = generate_crud_router(
     endpoint="aggregators",
     not_found_msg="Aggregator not found",
 )
-#
-# # Interview router
-# interview_router = generate_crud_router(
-#     table_model=models.Interview,
-#     create_schema=Interview,
-#     update_schema=InterviewUpdate,
-#     out_schema=InterviewOut,
-#     endpoint="interview",
-#     not_found_msg="Interview not found",
-# )
-#
-# # JobApplication router
-# jobapplication_router = generate_crud_router(
-#     table_model=models.JobApplication,
-#     create_schema=JobApplication,
-#     update_schema=JobApplicationUpdate,
-#     out_schema=JobApplicationOut,
-#     endpoint="jobapplication",
-#     not_found_msg="Job Application not found",
-# )
-#
+
+# Interview router
+interview_router = generate_crud_router(
+    table_model=models.Interview,
+    create_schema=Interview,
+    update_schema=InterviewUpdate,
+    out_schema=InterviewOut,
+    endpoint="interviews",
+    not_found_msg="Interview not found",
+)
+
+# JobApplication router
+jobapplication_router = generate_crud_router(
+    table_model=models.JobApplication,
+    create_schema=JobApplication,
+    update_schema=JobApplicationUpdate,
+    out_schema=JobApplicationOut,
+    endpoint="jobapplications",
+    not_found_msg="Job Application not found",
+)
+
 # Keyword router
 keyword_router = generate_crud_router(
     table_model=models.Keyword,

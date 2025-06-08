@@ -1,4 +1,3 @@
-# backend/seed_database.py
 """
 Database seeding script for development.
 This script will drop all data and repopulate with hard-coded sample data.
@@ -83,6 +82,13 @@ def create_companies(db, users):
             "url": "https://amazon.com",
             "owner_id": users[0].id,
         },
+        {
+            # Incomplete company - minimal data
+            "name": "TechStartup Inc",
+            "description": None,
+            "url": None,
+            "owner_id": users[0].id,
+        },
     ]
 
     companies = []
@@ -117,6 +123,22 @@ def create_locations(db, users):
             "owner_id": users[0].id,
         },
         {"postcode": None, "city": "Remote", "country": "Global", "remote": True, "owner_id": users[0].id},
+        {
+            # Incomplete location - only city
+            "postcode": None,
+            "city": "Berlin",
+            "country": None,
+            "remote": None,
+            "owner_id": users[0].id,
+        },
+        {
+            # Incomplete location - only country
+            "postcode": None,
+            "city": None,
+            "country": "Canada",
+            "remote": None,
+            "owner_id": users[0].id,
+        },
     ]
 
     locations = []
@@ -161,6 +183,9 @@ def create_keywords(db, users):
         {"name": "React", "owner_id": users[0].id},
         {"name": "Node.js", "owner_id": users[0].id},
         {"name": "AWS", "owner_id": users[0].id},
+        {"name": "Docker", "owner_id": users[0].id},
+        {"name": "Kubernetes", "owner_id": users[0].id},
+        {"name": "Machine Learning", "owner_id": users[0].id},
     ]
 
     keywords = []
@@ -184,6 +209,7 @@ def create_people(db, users, companies):
             "email": "john.smith@google.com",
             "phone": "+1-555-0101",
             "linkedin_url": "https://linkedin.com/in/johnsmith",
+            "role": "Senior Engineering Manager",
             "company_id": companies[0].id,
             "owner_id": users[0].id,
         },
@@ -193,6 +219,7 @@ def create_people(db, users, companies):
             "email": "emily.johnson@microsoft.com",
             "phone": "+1-555-0102",
             "linkedin_url": "https://linkedin.com/in/emilyjohnson",
+            "role": "Product Manager",
             "company_id": companies[1].id,
             "owner_id": users[0].id,
         },
@@ -202,6 +229,7 @@ def create_people(db, users, companies):
             "email": "michael.brown@apple.com",
             "phone": "+1-555-0103",
             "linkedin_url": "https://linkedin.com/in/michaelbrown",
+            "role": "Lead Developer",
             "company_id": companies[2].id,
             "owner_id": users[0].id,
         },
@@ -211,6 +239,7 @@ def create_people(db, users, companies):
             "email": "sarah.davis@meta.com",
             "phone": "+1-555-0104",
             "linkedin_url": "https://linkedin.com/in/sarahdavis",
+            "role": "DevOps Engineer",
             "company_id": companies[3].id,
             "owner_id": users[0].id,
         },
@@ -220,7 +249,41 @@ def create_people(db, users, companies):
             "email": "david.wilson@amazon.com",
             "phone": "+1-555-0105",
             "linkedin_url": "https://linkedin.com/in/davidwilson",
+            "role": "Data Science Manager",
             "company_id": companies[4].id,
+            "owner_id": users[0].id,
+        },
+        {
+            # Incomplete person - minimal data, no company
+            "first_name": "Anonymous",
+            "last_name": "Recruiter",
+            "email": None,
+            "phone": None,
+            "linkedin_url": None,
+            "role": None,
+            "company_id": None,
+            "owner_id": users[0].id,
+        },
+        {
+            # Incomplete person - no contact details
+            "first_name": "Jane",
+            "last_name": "Doe",
+            "email": None,
+            "phone": None,
+            "linkedin_url": None,
+            "role": "HR Representative",
+            "company_id": companies[5].id,
+            "owner_id": users[0].id,
+        },
+        {
+            # Incomplete person - only basic info
+            "first_name": "Tech",
+            "last_name": "Recruiter",
+            "email": "recruiter@techstartup.com",
+            "phone": None,
+            "linkedin_url": None,
+            "role": "Talent Acquisition",
+            "company_id": companies[5].id,
             "owner_id": users[0].id,
         },
     ]
@@ -294,6 +357,42 @@ def create_jobs(db, users, companies, locations):
             "location_id": locations[4].id,
             "owner_id": users[0].id,
         },
+        {
+            # Incomplete job - no company
+            "title": "Backend Developer",
+            "description": "Looking for a backend developer with Python experience.",
+            "salary_min": None,
+            "salary_max": None,
+            "url": None,
+            "personal_rating": None,
+            "company_id": None,
+            "location_id": locations[4].id,
+            "owner_id": users[0].id,
+        },
+        {
+            # Incomplete job - no location
+            "title": "Software Engineer Intern",
+            "description": "Summer internship opportunity for computer science students.",
+            "salary_min": None,
+            "salary_max": None,
+            "url": "https://techstartup.com/careers/intern",
+            "personal_rating": 3,
+            "company_id": companies[5].id,
+            "location_id": None,
+            "owner_id": users[0].id,
+        },
+        {
+            # Incomplete job - minimal information
+            "title": "Developer Position",
+            "description": None,
+            "salary_min": None,
+            "salary_max": None,
+            "url": None,
+            "personal_rating": None,
+            "company_id": companies[5].id,
+            "location_id": locations[5].id,
+            "owner_id": users[0].id,
+        },
     ]
 
     jobs = []
@@ -310,45 +409,71 @@ def create_jobs(db, users, companies, locations):
 def create_job_applications(db, users, jobs):
     """Create sample job applications"""
     print("Creating job applications...")
+
+    # Sample CV and cover letter content (as bytes)
+    sample_cv = b"Sample CV content - John Doe, Software Engineer with 5 years experience..."
+    sample_cover_letter = b"Dear Hiring Manager, I am writing to express my interest in the position..."
+
     applications_data = [
         {
             "date": datetime(2024, 1, 15, 10, 30),
             "url": "https://careers.google.com/applications/12345",
             "job_id": jobs[0].id,
-            "rejected": False,
+            "status": "Applied",
             "note": "Applied through company website. Waiting for response.",
+            "cv": sample_cv,
+            "cover_letter": sample_cover_letter,
             "owner_id": users[0].id,
         },
         {
             "date": datetime(2024, 1, 20, 14, 15),
             "url": "https://careers.microsoft.com/applications/23456",
             "job_id": jobs[1].id,
-            "rejected": None,
+            "status": "Interview",
             "note": "Applied via LinkedIn. Got confirmation email.",
+            "cv": sample_cv,
+            "cover_letter": None,  # No cover letter submitted
             "owner_id": users[0].id,
         },
         {
             "date": datetime(2024, 1, 25, 9, 45),
             "url": "https://jobs.apple.com/applications/34567",
             "job_id": jobs[2].id,
-            "rejected": False,
+            "status": "Applied",
             "note": "Submitted application with portfolio. Fingers crossed!",
+            "cv": None,  # No CV attached (used portfolio instead)
+            "cover_letter": sample_cover_letter,
             "owner_id": users[0].id,
         },
         {
             "date": datetime(2024, 2, 1, 16, 20),
             "url": "https://metacareers.com/applications/45678",
             "job_id": jobs[3].id,
-            "rejected": True,
+            "status": "Rejected",
             "note": "Unfortunately rejected after initial screening.",
+            "cv": sample_cv,
+            "cover_letter": sample_cover_letter,
             "owner_id": users[0].id,
         },
         {
             "date": datetime(2024, 2, 5, 11, 10),
             "url": "https://amazon.jobs/applications/56789",
             "job_id": jobs[4].id,
-            "rejected": None,
+            "status": "Applied",
             "note": "Applied through recruiter referral. Hope it helps!",
+            "cv": sample_cv,
+            "cover_letter": sample_cover_letter,
+            "owner_id": users[0].id,
+        },
+        {
+            # Incomplete application - no CV or cover letter
+            "date": datetime(2024, 2, 10, 13, 30),
+            "url": None,
+            "job_id": jobs[5].id,
+            "status": "Applied",
+            "note": "Quick application through company form.",
+            "cv": None,
+            "cover_letter": None,
             "owner_id": users[0].id,
         },
     ]
@@ -364,43 +489,59 @@ def create_job_applications(db, users, jobs):
     return applications
 
 
-def create_interviews(db, users, jobs, locations):
+def create_interviews(db, users, applications, locations):
     """Create sample interviews"""
     print("Creating interviews...")
     interviews_data = [
         {
             "date": datetime(2024, 2, 20, 14, 0),
             "location_id": locations[0].id,
-            "job_id": jobs[0].id,
+            "jobapplication_id": applications[0].id,
             "note": "Technical interview with the engineering team. Prepare for coding questions.",
             "owner_id": users[0].id,
         },
         {
             "date": datetime(2024, 2, 22, 10, 30),
             "location_id": locations[4].id,  # Remote interview
-            "job_id": jobs[1].id,
+            "jobapplication_id": applications[1].id,
             "note": "Video call interview with hiring manager. Discuss experience and projects.",
             "owner_id": users[0].id,
         },
         {
             "date": datetime(2024, 2, 25, 15, 15),
             "location_id": locations[2].id,
-            "job_id": jobs[2].id,
+            "jobapplication_id": applications[2].id,
             "note": "On-site interview at NYC office. System design round.",
             "owner_id": users[0].id,
         },
         {
             "date": datetime(2024, 3, 1, 13, 45),
             "location_id": locations[4].id,  # Remote interview
-            "job_id": jobs[3].id,
+            "jobapplication_id": applications[1].id,  # Same application as interview 2
             "note": "Final round with VP of Engineering. Behavioral questions expected.",
             "owner_id": users[0].id,
         },
         {
             "date": datetime(2024, 3, 5, 11, 0),
             "location_id": locations[4].id,  # Remote interview
-            "job_id": jobs[4].id,
+            "jobapplication_id": applications[4].id,
             "note": "Data science case study presentation. 45 minutes allocated.",
+            "owner_id": users[0].id,
+        },
+        {
+            # Incomplete interview - no location specified
+            "date": datetime(2024, 3, 10, 16, 0),
+            "location_id": None,
+            "jobapplication_id": applications[5].id,
+            "note": "Phone screening with recruiter. Location TBD.",
+            "owner_id": users[0].id,
+        },
+        {
+            # Incomplete interview - minimal information
+            "date": datetime(2024, 3, 15, 9, 0),
+            "location_id": locations[6].id,  # Only country specified
+            "jobapplication_id": applications[1].id,
+            "note": None,
             "owner_id": users[0].id,
         },
     ]
@@ -414,6 +555,77 @@ def create_interviews(db, users, jobs, locations):
     db.commit()
     print(f"Created {len(interviews)} interviews")
     return interviews
+
+
+def assign_keywords_to_jobs(db, jobs, keywords):
+    """Assign keywords to jobs (many-to-many)"""
+    print("Assigning keywords to jobs...")
+
+    # Assign specific keywords to each job
+    keyword_assignments = [
+        (jobs[0], [keywords[0], keywords[4]]),  # Senior Software Engineer: Python, AWS
+        (jobs[1], [keywords[1], keywords[2]]),  # Frontend Developer: JavaScript, React
+        (jobs[2], [keywords[0], keywords[1], keywords[3]]),  # Full Stack: Python, JavaScript, Node.js
+        (jobs[3], [keywords[4], keywords[5], keywords[6]]),  # DevOps: AWS, Docker, Kubernetes
+        (jobs[4], [keywords[0], keywords[7]]),  # Data Scientist: Python, Machine Learning
+        (jobs[5], [keywords[0]]),  # Backend Developer: Python
+        (jobs[6], [keywords[0], keywords[1]]),  # Intern: Python, JavaScript
+        # jobs[7] gets no keywords (incomplete data)
+    ]
+
+    for job, job_keywords in keyword_assignments:
+        job.keywords = job_keywords
+        db.add(job)
+
+    db.commit()
+    print("Assigned keywords to jobs.")
+
+
+def assign_interviewers_to_interviews(db, interviews, people):
+    """Assign interviewers to interviews (many-to-many)"""
+    print("Assigning interviewers to interviews...")
+
+    # Assign specific interviewers to each interview
+    interviewer_assignments = [
+        (interviews[0], [people[0]]),  # John Smith
+        (interviews[1], [people[1]]),  # Emily Johnson
+        (interviews[2], [people[2], people[0]]),  # Michael Brown + John Smith
+        (interviews[3], [people[1]]),  # Emily Johnson
+        (interviews[4], [people[4]]),  # David Wilson
+        (interviews[5], [people[5]]),  # Anonymous Recruiter
+        # interviews[6] gets no interviewers (incomplete data)
+    ]
+
+    for interview, interview_people in interviewer_assignments:
+        interview.interviewers = interview_people
+        db.add(interview)
+
+    db.commit()
+    print("Assigned interviewers to interviews.")
+
+
+def assign_contacts_to_jobs(db, jobs, people):
+    """Assign contacts to jobs (many-to-many relationship)"""
+    print("Assigning contacts to jobs...")
+
+    # Assign specific contacts to each job
+    contact_assignments = [
+        (jobs[0], [people[0]]),  # Google job: John Smith
+        (jobs[1], [people[1]]),  # Microsoft job: Emily Johnson
+        (jobs[2], [people[2]]),  # Apple job: Michael Brown
+        (jobs[3], [people[3]]),  # Meta job: Sarah Davis
+        (jobs[4], [people[4]]),  # Amazon job: David Wilson
+        (jobs[5], [people[5], people[7]]),  # Backend job: Anonymous Recruiter + Tech Recruiter
+        (jobs[6], [people[6], people[7]]),  # Intern job: Jane Doe + Tech Recruiter
+        # jobs[7] gets no contacts (incomplete data)
+    ]
+
+    for job, job_contacts in contact_assignments:
+        job.contacts = job_contacts
+        db.add(job)
+
+    db.commit()
+    print("Assigned contacts to jobs.")
 
 
 def seed_database():
@@ -436,7 +648,10 @@ def seed_database():
         people = create_people(db, users, companies)
         jobs = create_jobs(db, users, companies, locations)
         applications = create_job_applications(db, users, jobs)
-        interviews = create_interviews(db, users, jobs, locations)
+        interviews = create_interviews(db, users, applications, locations)
+        assign_keywords_to_jobs(db, jobs, keywords)
+        assign_interviewers_to_interviews(db, interviews, people)
+        assign_contacts_to_jobs(db, jobs, people)
 
         print("\n" + "=" * 50)
         print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
@@ -461,11 +676,5 @@ def seed_database():
 
 
 if __name__ == "__main__":
-    # Check if user wants to proceed
-    print("This will DELETE ALL DATA in the database and replace it with sample data.")
-    confirm = input("Are you sure you want to continue? (yes/no): ")
 
-    if confirm.lower() in ["yes", "y"]:
-        seed_database()
-    else:
-        print("Seeding cancelled.")
+    seed_database()

@@ -21,6 +21,7 @@ This module is instrumental for efficiently executing unit and integration tests
 and providing the necessary utilities for seamless interactions with the application's data and APIs.
 """
 
+import datetime as dt
 from typing import Any, Generator
 
 import pytest
@@ -172,29 +173,16 @@ def authorized_client2(
 
 
 @pytest.fixture
-def test_locations(
-    test_user1: dict,
-    test_user2: dict,
-    session: orm.Session,
-):
-    """Fixture that creates and returns a list of test locations.
-    This fixture creates several locations in the test database for two users. It adds
-    the locations to the database and commits the transaction. It then returns the list
-    of all locations from the database.
-    :param test_user1: The first test user who owns some of the locations.
-    :param test_user2: The second test user who owns other locations.
-    :param session: The SQLAlchemy session to interact with the database.
-    :return: A list of all locations created for the test users."""
-
-    data = [
-        {"postcode": "OX5 1HN", "owner_id": test_user1["id"]},
-        {"city": "Oxford", "owner_id": test_user1["id"]},
-        {"country": "UK", "owner_id": test_user1["id"]},
-        {"remote": True, "owner_id": test_user2["id"]},
-        {"postcode": "OX5 1HN", "owner_id": test_user1["id"], "country": "UK"},
+def test_locations(session, test_user1, test_user2):
+    """Create test location data"""
+    locations = [
+        models.Location(postcode="10001", city="New York", country="USA", remote=False, owner_id=test_user1["id"]),
+        models.Location(postcode="90210", city="Beverly Hills", country="USA", remote=False, owner_id=test_user1["id"]),
+        models.Location(postcode="SW1A 1AA", city="London", country="UK", remote=False, owner_id=test_user2["id"]),
+        models.Location(city="San Francisco", country="USA", remote=True, owner_id=test_user1["id"]),
+        models.Location(country="Germany", remote=True, owner_id=test_user2["id"]),
     ]
 
-    locations = [models.Location(**location) for location in data]
     session.add_all(locations)
     session.commit()
     locations = session.query(models.Location).all()
@@ -202,27 +190,41 @@ def test_locations(
 
 
 @pytest.fixture
-def test_companies(
-    test_user1: dict,
-    test_user2: dict,
-    session: orm.Session,
-):
-    """Fixture that creates and returns a list of test companies.
-    This fixture creates several companies in the test database for two users. It adds
-    the companies to the database and commits the transaction. It then returns the list
-    of all companies from the database.
-    :param test_user1: The first test user who owns some of the companies.
-    :param test_user2: The second test user who owns other companies.
-    :param session: The SQLAlchemy session to interact with the database.
-    :return: A list of all companies created for the test users."""
+def test_companies(session, test_user1, test_user2):
+    """Create test company data"""
 
-    data = [
-        {"name": "Oxford PV", "owner_id": test_user1["id"]},
-        {"name": "Oxford PV", "description": "an Oxford company", "owner_id": test_user1["id"]},
-        {"name": "Oxford PV", "url": "oxfordpv.com", "owner_id": test_user1["id"]},
+    companies = [
+        models.Company(
+            name="Tech Corp",
+            description="A leading technology company specializing in software development",
+            url="https://techcorp.com",
+            owner_id=test_user1["id"],
+        ),
+        models.Company(
+            name="Data Systems Inc",
+            description="Enterprise data solutions and analytics",
+            url="https://datasystems.com",
+            owner_id=test_user1["id"],
+        ),
+        models.Company(
+            name="Cloud Solutions Ltd",
+            description="Cloud infrastructure and services provider",
+            url="https://cloudsolutions.co.uk",
+            owner_id=test_user2["id"],
+        ),
+        models.Company(
+            name="StartupXYZ",
+            description="Innovative fintech startup",
+            url="https://startupxyz.io",
+            owner_id=test_user1["id"],
+        ),
+        models.Company(
+            name="Enterprise Corp",
+            description="Large enterprise software solutions",
+            owner_id=test_user2["id"],
+        ),
     ]
 
-    companies = [models.Company(**company) for company in data]
     session.add_all(companies)
     session.commit()
     companies = session.query(models.Company).all()
@@ -230,52 +232,54 @@ def test_companies(
 
 
 @pytest.fixture
-def test_persons(
-    test_user1: dict,
-    test_user2: dict,
-    test_companies: list[models.Company],
-    session: orm.Session,
-):
-    """Fixture that creates and returns a list of test persons.
-    This fixture creates several persons in the test database for two users. It adds
-    the persons to the database and commits the transaction. It then returns the list
-    of all persons from the database.
-    :param test_user1: The first test user who owns some of the persons.
-    :param test_user2: The second test user who owns other persons.
-    :param session: The SQLAlchemy session to interact with the database.
-    :return: A list of all persons created for the test users."""
+def test_persons(session, test_user1, test_user2, test_companies):
+    """Create test person data"""
 
-    data = [
-        {
-            "first_name": "Steve",
-            "last_name": "Durrant",
-            "owner_id": test_user1["id"],
-            "company_id": test_companies[0].id,
-        },
-        {
-            "first_name": "Steve",
-            "last_name": "Durrant",
-            "email": "steve.durrant@email.com",
-            "owner_id": test_user1["id"],
-            "company_id": test_companies[0].id,
-        },
-        {
-            "first_name": "Steve",
-            "last_name": "Durrant",
-            "phone": "00000000000",
-            "owner_id": test_user1["id"],
-            "company_id": test_companies[0].id,
-        },
-        {
-            "first_name": "Steve",
-            "last_name": "Durrant",
-            "linkedin_url": "https://linkedin/steve.durrant",
-            "owner_id": test_user1["id"],
-            "company_id": test_companies[0].id,
-        },
+    persons = [
+        models.Person(
+            first_name="John",
+            last_name="Smith",
+            email="john.smith@techcorp.com",
+            phone="+1-555-0123",
+            linkedin_url="https://linkedin.com/in/johnsmith",
+            company_id=test_companies[0].id,
+            owner_id=test_user1["id"],
+        ),
+        models.Person(
+            first_name="Sarah",
+            last_name="Johnson",
+            email="sarah.johnson@datasystems.com",
+            phone="+1-555-0456",
+            linkedin_url="https://linkedin.com/in/sarahjohnson",
+            company_id=test_companies[1].id,
+            owner_id=test_user1["id"],
+        ),
+        models.Person(
+            first_name="Michael",
+            last_name="Brown",
+            email="m.brown@cloudsolutions.co.uk",
+            phone="+44-20-7946-0958",
+            linkedin_url="https://linkedin.com/in/michaelbrown",
+            company_id=test_companies[2].id,
+            owner_id=test_user2["id"],
+        ),
+        models.Person(
+            first_name="Emma",
+            last_name="Davis",
+            email="emma@startupxyz.io",
+            phone="+1-555-0789",
+            company_id=test_companies[3].id,
+            owner_id=test_user1["id"],
+        ),
+        models.Person(
+            first_name="David",
+            last_name="Wilson",
+            linkedin_url="https://linkedin.com/in/davidwilson",
+            company_id=test_companies[4].id,
+            owner_id=test_user2["id"],
+        ),
     ]
 
-    persons = [models.Person(**person) for person in data]
     session.add_all(persons)
     session.commit()
     persons = session.query(models.Person).all()
@@ -283,121 +287,221 @@ def test_persons(
 
 
 @pytest.fixture
-def test_aggregators(
-    test_user1: dict,
-    test_user2: dict,
-    test_companies: list[models.Company],
-    session: orm.Session,
-):
-    """Fixture that creates and returns a list of test aggregator websites.
-    This fixture adds several websites associated with aggregators to the database,
-    commits them, and returns the list of all websites in the database.
-    :param test_user1: The first test user who owns some of the persons.
-    :param test_user2: The second test user who owns other persons.
-    :param session: The SQLAlchemy session to interact with the database.
-    :return: A list of all aggregator websites added to the database."""
+def test_aggregators(session, test_user1, test_user2):
+    """Create test aggregator data"""
 
-    data = [
-        {"name": "LinkedIn", "url": "https://linkedin.com", "owner_id": test_user1["id"]},
-        {"name": "Indeed", "url": "https://indeed.com", "owner_id": test_user1["id"]},
-        {"name": "Glassdoor", "url": "https://glassdoor.com", "owner_id": test_user2["id"]},
+    aggregators = [
+        models.Aggregator(name="LinkedIn Jobs", url="https://linkedin.com/jobs", owner_id=test_user1["id"]),
+        models.Aggregator(name="Indeed", url="https://indeed.com", owner_id=test_user1["id"]),
+        models.Aggregator(name="Glassdoor", url="https://glassdoor.com", owner_id=test_user2["id"]),
+        models.Aggregator(name="Stack Overflow Jobs", url="https://stackoverflow.com/jobs", owner_id=test_user1["id"]),
+        models.Aggregator(name="AngelList", url="https://angel.co", owner_id=test_user2["id"]),
     ]
 
-    aggregator_websites = [models.Aggregator(**website) for website in data]
-    session.add_all(aggregator_websites)
+    session.add_all(aggregators)
     session.commit()
-    aggregator_websites = session.query(models.Aggregator).all()
-    return aggregator_websites
+    aggregators = session.query(models.Aggregator).all()
+    return aggregators
 
 
 @pytest.fixture
-def test_jobs(
-    test_user1: dict,
-    test_user2: dict,
-    session: orm.Session,
-    test_companies,
-    test_locations,
-):
-    """
-    Fixture that creates and returns a list of test job postings.
-
-    :param session: The SQLAlchemy session to interact with the database.
-    :param test_companies: A fixture that provides example companies for the job postings.
-    :param test_locations: A fixture that provides example locations for the job postings.
-    :return: A list of all job postings added to the database.
-    """
-    data = [
-        {
-            "title": "Software Engineer",
-            "company_id": test_companies[0].id,
-            "salary_min": 50000,
-            "salary_max": 100000,
-            "description": "Design, develop, and maintain software solutions.",
-            "location_id": test_locations[0].id,
-            "personal_rating": 8,
-            "url": "https://example.com/jobs/software_engineer",
-            "owner_id": test_user1["id"],
-        },
-        {
-            "title": "Data Scientist",
-            "company_id": test_companies[1].id,
-            "salary_min": 60000,
-            "salary_max": 120000,
-            "description": "Analyze complex datasets and derive insights.",
-            "location_id": test_locations[1].id,
-            "personal_rating": 9,
-            "url": "https://example.com/jobs/data_scientist",
-            "owner_id": test_user1["id"],
-        },
-        {
-            "title": "Frontend Developer",
-            "company_id": test_companies[0].id,
-            "salary_min": 55000,
-            "salary_max": 90000,
-            "description": "Build interactive and responsive web interfaces.",
-            "location_id": test_locations[0].id,
-            "personal_rating": 7,
-            "url": "https://example.com/jobs/frontend_developer",
-            "owner_id": test_user2["id"],
-        },
+def test_keywords(session, test_user1, test_user2):
+    """Create test keyword data"""
+    keywords = [
+        models.Keyword(name="Python", owner_id=test_user1["id"]),
+        models.Keyword(name="JavaScript", owner_id=test_user1["id"]),
+        models.Keyword(name="React", owner_id=test_user1["id"]),
+        models.Keyword(name="Node.js", owner_id=test_user1["id"]),
+        models.Keyword(name="Machine Learning", owner_id=test_user2["id"]),
+        models.Keyword(name="AWS", owner_id=test_user1["id"]),
+        models.Keyword(name="Docker", owner_id=test_user2["id"]),
+        models.Keyword(name="Kubernetes", owner_id=test_user1["id"]),
+        models.Keyword(name="SQL", owner_id=test_user2["id"]),
+        models.Keyword(name="FastAPI", owner_id=test_user1["id"]),
     ]
-
-    jobs = [models.Job(**job) for job in data]
-    session.add_all(jobs)
-    session.commit()
-    jobs = session.query(models.Job).all()
-    return jobs
-
-
-@pytest.fixture
-def test_keywords(
-    test_user1: dict,
-    test_user2: dict,
-    session: orm.Session,
-):
-    """Fixture that creates and returns a list of test keywords.
-    This fixture creates several keywords in the test database for two users. It adds
-    the keywords to the database and commits the transaction. It then returns the list
-    of all keywords from the database.
-    :param test_user1: The first test user who owns some of the keywords.
-    :param test_user2: The second test user who owns other keywords.
-    :param session: The SQLAlchemy session to interact with the database.
-    :return: A list of all keywords created for the test users."""
-
-    data = [
-        {"name": "Python", "owner_id": test_user1["id"]},
-        {"name": "JavaScript", "owner_id": test_user1["id"]},
-        {"name": "React", "owner_id": test_user1["id"]},
-        {"name": "Node.js", "owner_id": test_user1["id"]},
-        {"name": "AWS", "owner_id": test_user2["id"]},
-        {"name": "Docker", "owner_id": test_user2["id"]},
-    ]
-
-    keywords = [models.Keyword(**keyword) for keyword in data]
     session.add_all(keywords)
     session.commit()
     keywords = session.query(models.Keyword).all()
     return keywords
+
+
+@pytest.fixture
+def test_jobs(session, test_user1, test_user2, test_companies, test_locations, test_keywords):
+    """Create test job data"""
+
+    jobs = [
+        models.Job(
+            title="Senior Python Developer",
+            description="Looking for an experienced Python developer to join our backend team",
+            salary_min=80000,
+            salary_max=120000,
+            personal_rating=8,
+            url="https://techcorp.com/careers/senior-python-dev",
+            company_id=test_companies[0].id,
+            location_id=test_locations[0].id,
+            note="Great company culture, flexible hours",
+            owner_id=test_user1["id"],
+        ),
+        models.Job(
+            title="Frontend React Developer",
+            description="Join our frontend team building modern web applications",
+            salary_min=70000,
+            salary_max=100000,
+            personal_rating=7,
+            url="https://datasystems.com/jobs/react-dev",
+            company_id=test_companies[1].id,
+            location_id=test_locations[1].id,
+            note="Remote-friendly, good benefits",
+            owner_id=test_user1["id"],
+        ),
+        models.Job(
+            title="Cloud Engineer",
+            description="Design and implement cloud infrastructure solutions",
+            salary_min=90000,
+            salary_max=130000,
+            personal_rating=9,
+            url="https://cloudsolutions.co.uk/careers/cloud-engineer",
+            company_id=test_companies[2].id,
+            location_id=test_locations[2].id,
+            note="Cutting-edge technology, excellent team",
+            owner_id=test_user2["id"],
+        ),
+        models.Job(
+            title="Full Stack Developer",
+            description="Work on both frontend and backend of our fintech platform",
+            salary_min=85000,
+            salary_max=110000,
+            personal_rating=6,
+            company_id=test_companies[3].id,
+            location_id=test_locations[3].id,
+            note="Startup environment, equity options",
+            owner_id=test_user1["id"],
+        ),
+        models.Job(
+            title="DevOps Engineer",
+            description="Manage CI/CD pipelines and infrastructure automation",
+            salary_min=95000,
+            salary_max=140000,
+            company_id=test_companies[4].id,
+            location_id=test_locations[4].id,
+            owner_id=test_user2["id"],
+        ),
+    ]
+
+    session.add_all(jobs)
+    session.commit()
+    jobs = session.query(models.Job).all()
+
+    # Add keywords to jobs
+    jobs[0].keywords.extend([test_keywords[0], test_keywords[5], test_keywords[9]])  # Python, AWS, FastAPI
+    jobs[1].keywords.extend([test_keywords[1], test_keywords[2]])  # JavaScript, React
+    jobs[2].keywords.extend([test_keywords[5], test_keywords[6], test_keywords[7]])  # AWS, Docker, Kubernetes
+    jobs[3].keywords.extend([test_keywords[0], test_keywords[1], test_keywords[3]])  # Python, JavaScript, Node.js
+    jobs[4].keywords.extend([test_keywords[6], test_keywords[7], test_keywords[5]])  # Docker, Kubernetes, AWS
+
+    jobs = session.query(models.Job).all()
+    session.commit()
+    return jobs
+
+
+@pytest.fixture
+def test_job_applications(session, test_user1, test_user2, test_jobs):
+    """Create test job application data"""
+    base_date = dt.datetime.now()
+    job_applications = [
+        models.JobApplication(
+            date=base_date - dt.timedelta(days=30),
+            url="https://techcorp.com/application/12345",
+            job_id=test_jobs[0].id,
+            status="Applied",
+            note="Applied through company website",
+            owner_id=test_user1["id"],
+        ),
+        models.JobApplication(
+            date=base_date - dt.timedelta(days=25),
+            url="https://linkedin.com/jobs/application/67890",
+            job_id=test_jobs[1].id,
+            status="Interview Scheduled",
+            note="HR reached out, phone interview scheduled",
+            owner_id=test_user1["id"],
+        ),
+        models.JobApplication(
+            date=base_date - dt.timedelta(days=20),
+            job_id=test_jobs[2].id,
+            status="Rejected",
+            note="Position filled internally",
+            owner_id=test_user2["id"],
+        ),
+        models.JobApplication(
+            date=base_date - dt.timedelta(days=15),
+            url="https://startupxyz.io/apply/54321",
+            job_id=test_jobs[3].id,
+            status="Under Review",
+            note="Submitted portfolio and references",
+            owner_id=test_user1["id"],
+        ),
+        models.JobApplication(
+            date=base_date - dt.timedelta(days=10),
+            job_id=test_jobs[4].id,
+            status="Offer Extended",
+            note="Waiting for final decision",
+            owner_id=test_user2["id"],
+        ),
+    ]
+    session.add_all(job_applications)
+    session.commit()
+    for job_app in job_applications:
+        session.refresh(job_app)
+    return job_applications
+
+
+@pytest.fixture
+def test_interviews(session, test_user1, test_user2, test_job_applications, test_locations, test_persons):
+    """Create test interview data"""
+    base_date = dt.datetime.now()
+    interviews = [
+        models.Interview(
+            date=base_date + dt.timedelta(days=3),
+            location_id=test_locations[0].id,
+            jobapplication_id=test_job_applications[1].id,  # For the "Interview Scheduled" application
+            note="Technical interview with team lead",
+            owner_id=test_user1["id"],
+        ),
+        models.Interview(
+            date=base_date + dt.timedelta(days=7),
+            location_id=test_locations[3].id,  # Remote location
+            jobapplication_id=test_job_applications[3].id,  # For the "Under Review" application
+            note="Video call with founder and CTO",
+            owner_id=test_user1["id"],
+        ),
+        models.Interview(
+            date=base_date - dt.timedelta(days=5),  # Past interview
+            location_id=test_locations[2].id,
+            jobapplication_id=test_job_applications[2].id,  # For the rejected application
+            note="Initial screening - went well but position filled",
+            owner_id=test_user2["id"],
+        ),
+        models.Interview(
+            date=base_date + dt.timedelta(days=1),  # Tomorrow
+            location_id=test_locations[4].id,  # Remote
+            jobapplication_id=test_job_applications[4].id,  # For the offer extended application
+            note="Final interview before decision",
+            owner_id=test_user2["id"],
+        ),
+    ]
+
+    session.add_all(interviews)
+    session.commit()
+    interviews = session.query(models.Interview).all()
+
+    # Add interviewers to interviews using the many-to-many relationship
+    interviews[0].interviewers.extend([test_persons[0], test_persons[1]])  # John Smith, Sarah Johnson
+    interviews[1].interviewers.append(test_persons[3])  # Emma Davis
+    interviews[2].interviewers.append(test_persons[2])  # Michael Brown
+    interviews[3].interviewers.extend([test_persons[4], test_persons[2]])  # David Wilson, Michael Brown
+
+    session.commit()
+    return interviews
 
 
 class CRUDTestBase:
@@ -445,10 +549,24 @@ class CRUDTestBase:
 
         for key, value in items:
             if key[0] != "_":
-                if isinstance(value, models.Base):
-                    self.check_output(value, getattr(response_data, key))
+                response_value = getattr(response_data, key)
+                if isinstance(value, models.Base) or isinstance(value, list):
+                    self.check_output(value, response_value)
+                elif key == "date" and isinstance(value, str):
+                    # Handle datetime string comparison using fromisoformat
+                    if isinstance(response_value, dt.datetime):
+                        # Parse the string datetime and compare
+                        parsed_value = dt.datetime.fromisoformat(value)
+                        # Handle timezone differences - normalize both to the same timezone state
+                        if response_value.tzinfo is not None and parsed_value.tzinfo is None:
+                            parsed_value = parsed_value.replace(tzinfo=dt.timezone.utc)
+                        elif response_value.tzinfo is None and parsed_value.tzinfo is not None:
+                            parsed_value = parsed_value.replace(tzinfo=None)
+                        assert parsed_value == response_value
+                    else:
+                        assert value == response_value
                 else:
-                    assert value == getattr(response_data, key)
+                    assert value == response_value
 
         return None
 

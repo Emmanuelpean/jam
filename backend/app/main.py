@@ -3,10 +3,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import tables, user, auth
 from app import models
 from app.database import engine
-
+from app.routers import tables, user, auth
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -26,9 +25,9 @@ app.include_router(tables.company_router)
 app.include_router(tables.person_router)
 app.include_router(tables.location_router)
 app.include_router(tables.job_router)
-# app.include_router(tables.jobapplication_router)
+app.include_router(tables.jobapplication_router)
 app.include_router(tables.aggregator_router)
-# app.include_router(tables.interview_router)
+app.include_router(tables.interview_router)
 app.include_router(tables.keyword_router)
 
 # Authentification router

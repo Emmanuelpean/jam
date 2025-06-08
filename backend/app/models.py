@@ -3,11 +3,44 @@ This module defines the database table models for the application using SQLAlche
 the database, with its fields defining the table's columns and relationships. The module utilizes a `CommonBase` class
 to provide a shared structure for all models, including common attributes like `id`, `created_at`, and `created_by`."""
 
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, Boolean, TIMESTAMP, text, CheckConstraint, Table
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    Float,
+    Boolean,
+    TIMESTAMP,
+    text,
+    CheckConstraint,
+    Table,
+    LargeBinary,
+)
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
 from app.database import Base
+
+job_keywords = Table(
+    "job_keywords",
+    Base.metadata,
+    Column("job_id", Integer, ForeignKey("job.id", ondelete="CASCADE"), primary_key=True),
+    Column("keyword_id", Integer, ForeignKey("keyword.id", ondelete="CASCADE"), primary_key=True),
+)
+
+interview_interviewers = Table(
+    "interview_interviewers",
+    Base.metadata,
+    Column("interview_id", Integer, ForeignKey("interview.id", ondelete="CASCADE"), primary_key=True),
+    Column("person_id", Integer, ForeignKey("person.id", ondelete="CASCADE"), primary_key=True),
+)
+
+job_contacts = Table(
+    "job_contacts",
+    Base.metadata,
+    Column("job_id", Integer, ForeignKey("job.id", ondelete="CASCADE"), primary_key=True),
+    Column("person_id", Integer, ForeignKey("person.id", ondelete="CASCADE"), primary_key=True),
+)
 
 
 class CommonBase(object):
@@ -51,6 +84,7 @@ class User(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
+    # theme = Column(String, nullable=False, server_default="mixed-berry")
 
 
 class Company(CommonBase, Base):
@@ -65,14 +99,6 @@ class Company(CommonBase, Base):
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     url = Column(String, nullable=True)
-
-
-job_keywords = Table(
-    "job_keywords",
-    Base.metadata,
-    Column("job_id", Integer, ForeignKey("job.id"), primary_key=True),
-    Column("keyword_id", Integer, ForeignKey("keyword.id"), primary_key=True),
-)
 
 
 class Keyword(CommonBase, Base):
@@ -131,16 +157,21 @@ class Person(CommonBase, Base):
     - `email` (str, optional): Email address of the person.
     - `phone` (str, optional): Phone number of the person.
     - `linkedin_url` (str, optional): LinkedIn profile URL of the person.
+    - `role` (str, optional): Role or position held by the person within the company.
     - `company_id` (int): Foreign key linking the person to a company.
-    - `company` (Company): Relationship to access the associated company."""
+    - `company` (Company): Relationship to access the associated company.
+    - `interviews` (list of Interview): List of interviews performed by the person within the company."""
 
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     email = Column(String, nullable=True)
     phone = Column(String, nullable=True)
+    role = Column(String, nullable=True)
     linkedin_url = Column(String, nullable=True)
-    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=True)
+    company_id = Column(Integer, ForeignKey("company.id"), nullable=True)
     company = relationship("Company")
+    interviews = relationship("Interview", secondary=interview_interviewers, back_populates="interviewers")
+    jobs = relationship("Job", secondary=job_contacts, back_populates="contacts")
 
 
 class Job(CommonBase, Base):
@@ -166,32 +197,15 @@ class Job(CommonBase, Base):
     salary_max = Column(Float, nullable=True)
     url = Column(String, nullable=True)
     personal_rating = Column(Integer, nullable=True)
-    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=True)
+    company_id = Column(Integer, ForeignKey("company.id"), nullable=True)
     company = relationship("Company")
-    location_id = Column(Integer, ForeignKey("location.id", ondelete="CASCADE"), nullable=True)
+    location_id = Column(Integer, ForeignKey("location.id"), nullable=True)
     location = relationship("Location")
-    duplicate_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=True)
+    duplicate_id = Column(Integer, ForeignKey("job.id"), nullable=True)
     keywords = relationship("Keyword", secondary=job_keywords, back_populates="jobs", lazy="selectin")
-
-
-class Interview(CommonBase, Base):
-    """Represents interviews for job applications.
-
-    Attributes:
-    -----------
-    - `date` (datetime): The date and time of the interview.
-    - `location_id` (int): Identifier for the location of the interview.
-    - `location` (Location): Location object related to the interview.
-    - `job_id` (int): Identifier for the job associated with the interview.
-    - `job` (Job): Job object related to the interview.
-    - `note` (str, optional): Additional notes or comments about the interview."""
-
-    date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
-    location_id = Column(Integer, ForeignKey("location.id", ondelete="CASCADE"), nullable=False)
-    location = relationship("Location")
-    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False)
-    job = relationship("Job")
     note = Column(String, nullable=True)
+    job_application = relationship("JobApplication", back_populates="job", uselist=False)
+    contacts = relationship("Person", secondary=job_contacts, back_populates="jobs")
 
 
 class JobApplication(CommonBase, Base):
@@ -203,12 +217,36 @@ class JobApplication(CommonBase, Base):
     - `url` (str, optional): URL to the job application.
     - `job_id` (int): Identifier for the job associated with the application.
     - `job` (Job): Job object related to the application.
-    - `rejected` (bool, optional): Indicates if the application was rejected.
+    - `status` (str): Status of the application (Applied, Interview, Rejected, etc.).
     - `note` (str, optional): Additional notes or comments about the application."""
 
     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     url = Column(String, nullable=True)
-    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False)
-    job = relationship("Job")
-    rejected = Column(Boolean, nullable=True)
+    job_id = Column(Integer, ForeignKey("job.id"), nullable=False, unique=True)  # unique=True ensures one-to-one
+    job = relationship("Job", back_populates="job_application")
+    status = Column(String, server_default="Applied", nullable=False)
     note = Column(String, nullable=True)
+    cv = Column(LargeBinary, nullable=True)
+    cover_letter = Column(LargeBinary, nullable=True)
+    interviews = relationship("Interview", back_populates="job_application")
+
+
+class Interview(CommonBase, Base):
+    """Represents interviews for job applications.
+
+    Attributes:
+    -----------
+    - `date` (datetime): The date and time of the interview.
+    - `location_id` (int): Identifier for the location of the interview.
+    - `location` (Location): Location object related to the interview.
+    - `job_id` (int): Identifier for the job application associated with the interview.
+    - `job_application` (JobApplication): JobApplication object related to the interview.
+    - `note` (str, optional): Additional notes or comments about the interview."""
+
+    date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+    location_id = Column(Integer, ForeignKey("location.id"), nullable=True)
+    location = relationship("Location")
+    jobapplication_id = Column(Integer, ForeignKey("jobapplication.id"), nullable=False)
+    job_application = relationship("JobApplication", back_populates="interviews")
+    note = Column(String, nullable=True)
+    interviewers = relationship("Person", secondary=interview_interviewers, back_populates="interviews")
