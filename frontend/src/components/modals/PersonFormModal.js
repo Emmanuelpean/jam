@@ -187,6 +187,7 @@ const PersonFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEd
 				title="Person"
 				size={size}
 				useCustomLayout={true}
+				backdrop={true}
 				layoutGroups={layoutGroups}
 				initialData={initialData}
 				endpoint="persons"

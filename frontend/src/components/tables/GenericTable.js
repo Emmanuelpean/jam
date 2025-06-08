@@ -81,6 +81,7 @@ export const createGenericDeleteHandler = ({
 
 // Predefined display name functions for common item types
 export const displayNameFunctions = {
+	// TODO
 	location: (location) => {
 		return location.city
 			? `${location.city}${location.country ? `, ${location.country}` : ""}`
@@ -382,20 +383,21 @@ const GenericTable = ({
 	return (
 		<div>
 			{/* Header with search and add button */}
-			<div className="d-flex justify-content-between mb-3">
-				<div className="d-flex align-items-center gap-3">
+			<div className="d-flex justify-content-between mb-3" style={{ gap: "1rem" }}>
+				<div className="d-flex align-items-center gap-3" style={{ width: "40%" }}>
 					<input
 						type="text"
 						className="form-control"
 						placeholder="Search..."
 						value={searchTerm}
 						onChange={(e) => onSearchChange(e.target.value)}
-						style={{ width: "300px" }}
 					/>
-					<span className="text-muted small">Showing {sortedData.length} Entries</span>
+					<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
+						Showing {sortedData.length} Entries
+					</span>
 				</div>
 
-				<Button variant="primary" onClick={onAddClick}>
+				<Button variant="primary" onClick={onAddClick} style={{ width: "60%" }}>
 					{addButtonText}
 				</Button>
 			</div>

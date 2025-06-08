@@ -35,6 +35,11 @@ p {
     }
 }
 
+.container {
+    max-width: 90%;
+}
+
+
 .App-header {
     background-color: #282c34;
     min-height: 100vh;
@@ -1091,4 +1096,39 @@ input[type="number"] {
 
 .clickable-badge:hover {
     opacity: 0.8;
+}
+
+.nav-link-custom {
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 0.75rem 1rem !important;
+    margin: 0 0.25rem;
+    border-radius: 8px;
+    transition: 0s ease-out;
+}
+
+.nav-link-custom.active,
+.nav-link-custom:hover {
+    color: white !important;
+    background: var(--primary-gradient);
+    transform: translateY(-1px);
+}
+
+.nav-link-custom.text-danger {
+    border: 2px solid transparent;
+    transition: border-color 0.15s ease-out;
+}
+
+.nav-link-custom.text-danger:hover {
+    color: black !important;  /* TODO replace with theme colour */
+    background: transparent;
+    border-color: red;
+}
+
+.header-logo:hover {
+    transform: scale(1.05);
+}
+
+.nav-link-custom.active {
+    font-weight: 600;
 }
