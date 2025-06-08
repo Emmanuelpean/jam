@@ -12,12 +12,12 @@ const Header = ({ user, onLogout }) => {
 	};
 
 	return (
-		<Navbar bg="light" style={{ height: "80px" }}>
+		<Navbar bg="light" style={{ height: "100px" }}>
 			<Container>
 				<div style={{ display: "flex", alignItems: "center" }}>
 					<Navbar.Brand onClick={handleLogoClick} className="header-logo">
 						<div className="logo-container logo-container-horizontal">
-							<JamLogo style={{ height: "60px", width: "auto" }} className="logo-image" />
+							<JamLogo style={{ height: "80px", width: "auto" }} className="logo-image" />
 						</div>
 					</Navbar.Brand>
 					<ThemeToggle />
@@ -25,6 +25,10 @@ const Header = ({ user, onLogout }) => {
 
 				<Nav className="ms-auto d-flex align-items-center">
 					<Nav.Link href="/dashboard">Dashboard</Nav.Link>
+					<Nav.Link href="/jobs">Jobs</Nav.Link>
+					<Nav.Link href="/persons">People</Nav.Link>
+					<Nav.Link href="/companies">Companies</Nav.Link>
+					<Nav.Link href="/keywords">Keywords</Nav.Link>
 					<Nav.Link href="/locations">Locations</Nav.Link>
 					<Nav.Link onClick={onLogout}>Logout</Nav.Link>
 				</Nav>
