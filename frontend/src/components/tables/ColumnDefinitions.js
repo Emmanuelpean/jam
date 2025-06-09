@@ -1,62 +1,73 @@
 import { renderFunctions, accessorFunctions } from "../Renders";
 
-// Reusable column definitions that can be used across different tables
 export const columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
 
-	// Simple name column
 	name: {
 		key: "name",
-		label: "name",
+		label: "Name",
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: (item) => renderFunctions.strongText(item, "name"),
+		render: renderFunctions.name,
 	},
 
-	// Simple title column
 	title: {
 		key: "title",
-		label: "Job Title",
+		label: "Title",
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: renderFunctions.jobTitle,
+		render: renderFunctions.title,
 	},
 
-	// Description column
 	description: {
 		key: "description",
 		label: "Description",
-		sortable: false,
+		sortable: true,
 		searchable: true,
 		type: "text",
 		render: renderFunctions.description,
 	},
 
-	// URL/Website column
 	url: {
 		key: "url",
 		label: "Website",
-		sortable: false,
+		sortable: true,
 		searchable: true,
 		type: "text",
-		render: renderFunctions.websiteUrl,
+		render: renderFunctions.url,
 	},
 
-	// Created date column - common across all entities
 	createdAt: {
 		key: "created_at",
 		label: "Date Added",
 		type: "date",
 		sortable: true,
-		searchable: false,
+		searchable: true,
 		render: renderFunctions.createdDate,
+	},
+
+	modifiedAt: {
+		key: "modified_at",
+		label: "Modified On",
+		type: "date",
+		sortable: true,
+		searchable: true,
+		render: renderFunctions.createdDate,
+	},
+
+	note: {
+		key: "note",
+		label: "Notes",
+		sortable: false,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.note,
 	},
 
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
-	// Location column with built-in modal handling
 	location: {
 		key: "location",
 		label: "Location",
@@ -65,11 +76,9 @@ export const columns = {
 		type: "text",
 		sortField: "location.name",
 		searchFields: ["location.name"],
-		accessor: accessorFunctions.locationName,
-		render: renderFunctions.locationBadge,
+		render: renderFunctions.location,
 	},
 
-	// City column for location table
 	city: {
 		key: "city",
 		label: "City",
@@ -78,7 +87,6 @@ export const columns = {
 		type: "text",
 	},
 
-	// Postcode column for location table
 	postcode: {
 		key: "postcode",
 		label: "Postcode",
@@ -87,7 +95,6 @@ export const columns = {
 		type: "text",
 	},
 
-	// Country column for location table
 	country: {
 		key: "country",
 		label: "Country",
@@ -98,7 +105,6 @@ export const columns = {
 
 	// --------------------------------------------------- COMPANIES ---------------------------------------------------
 
-	// Company column with built-in modal handling
 	company: {
 		key: "company",
 		label: "Company",
@@ -108,12 +114,11 @@ export const columns = {
 		sortField: "company.name",
 		searchFields: ["company.name"],
 		accessor: accessorFunctions.companyName,
-		render: renderFunctions.companyBadge,
+		render: renderFunctions.company,
 	},
 
 	// ---------------------------------------------------- PERSONS ----------------------------------------------------
 
-	// Person full name column
 	personName: {
 		key: "name",
 		label: "name",
@@ -122,10 +127,9 @@ export const columns = {
 		type: "text",
 		sortField: "last_name",
 		accessor: accessorFunctions.personName,
-		render: renderFunctions.personName,
+		render: renderFunctions.name,
 	},
 
-	// Email column
 	email: {
 		key: "email",
 		label: "Email",
@@ -135,7 +139,6 @@ export const columns = {
 		render: renderFunctions.email,
 	},
 
-	// Phone column
 	phone: {
 		key: "phone",
 		label: "Phone",
@@ -145,7 +148,6 @@ export const columns = {
 		render: renderFunctions.phone,
 	},
 
-	// LinkedIn URL column - for people
 	linkedinUrl: {
 		key: "linkedin_url",
 		label: "LinkedIn",
@@ -157,7 +159,6 @@ export const columns = {
 
 	// ------------------------------------------------------ JOBS -----------------------------------------------------
 
-	// Salary range column - for jobs
 	salaryRange: {
 		key: "salary_range",
 		label: "Salary",
@@ -169,7 +170,6 @@ export const columns = {
 		render: renderFunctions.salaryRange,
 	},
 
-	// Personal rating column - for jobs
 	personalRating: {
 		key: "personal_rating",
 		label: "Rating",
@@ -178,30 +178,6 @@ export const columns = {
 		render: renderFunctions.personalRating,
 	},
 
-	// Job reference column - for applications, interviews
-	jobReference: {
-		key: "job_title",
-		label: "Job",
-		sortable: true,
-		searchable: true,
-		type: "text",
-		sortField: "job.title",
-		searchFields: ["job.title", "job.company.name"],
-		accessor: accessorFunctions.jobTitle,
-		render: renderFunctions.jobReference,
-	},
-
-	// Note column - for applications, interviews
-	note: {
-		key: "note",
-		label: "Notes",
-		sortable: false,
-		searchable: true,
-		type: "text",
-		render: renderFunctions.note,
-	},
-
-	// Keywords column - can be used in Jobs
 	keywords: {
 		key: "keywords",
 		label: "Keywords",

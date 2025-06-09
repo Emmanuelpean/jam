@@ -15,6 +15,7 @@ from sqlalchemy import (
     CheckConstraint,
     Table,
     LargeBinary,
+    func,
 )
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
@@ -63,9 +64,7 @@ class CommonBase(object):
 
     id = Column(Integer, primary_key=True, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
-    modified_at = Column(
-        TIMESTAMP(timezone=True), server_default=text("now()"), server_onupdate=text("now()"), nullable=False
-    )
+    modified_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
 
@@ -179,7 +178,9 @@ class Person(CommonBase, Base):
     - `role` (str, optional): Role or position held by the person within the company.
     - `company_id` (int): Foreign key linking the person to a company.
     - `company` (Company): Relationship to access the associated company.
-    - `interviews` (list of Interview): List of interviews performed by the person within the company."""
+    - `interviews` (list of Interview): List of interviews performed by the person within the company.
+    - `jobs` (list of Job): List of jobs linked to the person within the company.
+    - `name` (str): Computed property combining first and last name."""
 
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
@@ -191,6 +192,15 @@ class Person(CommonBase, Base):
     company = relationship("Company")
     interviews = relationship("Interview", secondary=interview_interviewers, back_populates="interviewers")
     jobs = relationship("Job", secondary=job_contacts, back_populates="contacts")
+
+    @hybrid_property
+    def name(self):
+        """Computed property that combines the first and last name"""
+
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        else:
+            return "Unknown Person"
 
 
 class Job(CommonBase, Base):
@@ -208,7 +218,12 @@ class Job(CommonBase, Base):
     - `company` (Company): Company object associated with the job posting.
     - `location_id` (int, optional): Identifier for the geographical location where the job is located.
     - `location` (Location): Location object associated with the job posting.
-    - `duplicate_id` (int, optional): Identifier for a duplicate job posting."""
+    - `duplicate_id` (int, optional): Identifier for a duplicate job posting.
+    - `keywords` (list of Keyword): List of keywords associated with the job posting.
+    - `note` (str, optional): Additional notes or comments about the job posting.
+    - `job_application` (JobApplication): JobApplication object related to the job posting.
+    - `contacts` (list of Person): List of people linked to the company that may be interested in the job posting.
+    - `name` (str): Computed property combining the job title and company name."""
 
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
@@ -225,6 +240,17 @@ class Job(CommonBase, Base):
     note = Column(String, nullable=True)
     job_application = relationship("JobApplication", back_populates="job", uselist=False)
     contacts = relationship("Person", secondary=job_contacts, back_populates="jobs")
+
+    @hybrid_property
+    def name(self):
+        """Computed property that combines the job title and company name"""
+
+        if self.title and self.company and self.company.name:
+            return f"{self.first_name} - {self.company.name}"
+        elif self.title:
+            return self.title
+        else:
+            return "Unknown Job"
 
 
 class JobApplication(CommonBase, Base):

@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import LocationViewModal from "./modals/LocationViewModal";
 import CompanyViewModal from "./modals/CompanyViewModal";
+import PersonViewModal from "./modals/PersonViewModal";
+import KeywordViewModal from "./modals/KeywordViewModal";
 
-// Generic modal manager factory
-const createModalManager = (ModalComponent, modalProp, sizeProp = "lg") => {
+const createModalManager = (ModalComponent, modalProp) => {
 	return ({ children, onEdit }) => {
 		const [showModal, setShowModal] = useState(false);
 		const [selectedItem, setSelectedItem] = useState(null);
@@ -31,7 +32,6 @@ const createModalManager = (ModalComponent, modalProp, sizeProp = "lg") => {
 		const modalProps = {
 			show: showModal,
 			onHide: closeModal,
-			size: sizeProp,
 			[modalProp]: selectedItem,
 			showEditButton: false, // Remove edit button from view modals
 			onEdit: handleEdit,
@@ -47,11 +47,14 @@ const createModalManager = (ModalComponent, modalProp, sizeProp = "lg") => {
 };
 
 // Create specific modal managers
-const LocationModalManager = createModalManager(LocationViewModal, "location", "lg");
-const CompanyModalManager = createModalManager(CompanyViewModal, "company", "lg");
+const LocationModalManager = createModalManager(LocationViewModal, "location");
+const CompanyModalManager = createModalManager(CompanyViewModal, "company");
+const PersonModalManager = createModalManager(PersonViewModal, "person");
+const KeywordModalManager = createModalManager(KeywordViewModal, "keywords");
+const JobApplicationModalManager = createModalManager(KeywordViewModal, "jobApplication"); // TODO to change
 
 // Helper function to get status badge class
-const getStatusBadgeClass = (status) => {
+const getApplicationStatusBadgeClass = (status) => {
 	switch (status?.toLowerCase()) {
 		case "applied":
 			return "bg-primary";
@@ -68,89 +71,81 @@ const getStatusBadgeClass = (status) => {
 	}
 };
 
-// Render Functions
 export const renderFunctions = {
-	// Basic text renderers
-	strongText: (item, fieldKey, view = false) => <strong>{item[fieldKey]}</strong>,
+	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
-	jobTitle: (job, view = false) => <strong>{job.title}</strong>,
-
-	personName: (person, view = false) => <strong>{`${person.first_name} ${person.last_name}`}</strong>,
-
-	// Description with truncation
-	description: (item, view = false) => {
-		const description = item.description || "No description";
-		const firstSentence = description.match(/^[^.!?]*[.!?]/)?.[0] || description;
-		return <div style={{ maxWidth: "600px", overflow: "hidden", textOverflow: "ellipsis" }}>{firstSentence}</div>;
+	name: (item, view = false) => {
+		// TODO see if the first column can be bolden instead
+		if (!item.name) {
+			return view ? <span className="text-muted">No name provided</span> : null;
+		} else {
+			if (view) {
+				return <div>{item.name}</div>;
+			} else {
+				return <strong>{item.name}</strong>;
+			}
+		}
 	},
 
-	// URL/Website links
-	websiteUrl: (item, view = false) => {
-		if (item.url) {
+	title: (item, view = false) => {
+		if (!item.title) {
+			return view ? <span className="text-muted">No title provided</span> : null;
+		} else {
+			if (view) {
+				return <div>{item.title}</div>;
+			} else {
+				return <strong>{item.title}</strong>;
+			}
+		}
+	},
+
+	_longText: (item, noText, view = false) => {
+		if (!item.description) {
+			return view ? <span className="text-muted">{noText}</span> : null;
+		} else {
+			if (view) {
+				return item.description;
+			} else {
+				const words = item.description.split(" ");
+				const truncated = words.slice(0, 12).join(" ");
+				const needsEllipsis = words.length > 12;
+
+				return (
+					<div style={{ maxWidth: "500px", overflow: "hidden", textOverflow: "ellipsis" }}>
+						{truncated}
+						{needsEllipsis ? "..." : ""}
+					</div>
+				);
+			}
+		}
+	},
+
+	note: (item, view = false) => {
+		return renderFunctions._longText(item, "No note provided", view);
+	},
+
+	description: (item, view = false) => {
+		return renderFunctions._longText(item, "No description provided", view);
+	},
+
+	url: (item, view = false) => {
+		if (!item.url) {
+			return view ? <span className="text-muted">No URL provided</span> : null;
+		} else {
 			return (
 				<a href={item.url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
 					Visit Website <i className="bi bi-box-arrow-up-right ms-1"></i>
 				</a>
 			);
 		}
-		return view ? <span className="text-muted">No website provided</span> : null;
 	},
 
-	// Date formatting
-	createdDate: (item, view = false) => new Date(item.created_at).toLocaleDateString(),
+	createdDate: (item) => new Date(item.created_at).toLocaleDateString(),
 
-	// Location with modal
-	locationBadge: (item, view = false) => {
-		const loc = item.location;
-		if (!loc) {
-			return view ? <span className="text-muted">No location provided</span> : null;
-		}
-
-		return (
-			<LocationModalManager>
-				{(handleLocationClick) => (
-					<span
-						className={`badge ${loc.remote ? "bg-success" : "bg-primary"} clickable-badge`}
-						onClick={() => handleLocationClick(loc)}
-						style={{ cursor: "pointer" }}
-						title="Click to view location details"
-					>
-						<i className="bi bi-geo-alt me-1"></i>
-						{loc.name}
-					</span>
-				)}
-			</LocationModalManager>
-		);
-	},
-
-	// Company with modal
-	companyBadge: (item, view = false) => {
-		const company = item.company;
-
-		if (company) {
-			return (
-				<CompanyModalManager>
-					{(handleCompanyClick) => (
-						<span
-							className="badge bg-info clickable-badge"
-							onClick={() => handleCompanyClick(company)}
-							style={{ cursor: "pointer" }}
-							title="Click to view company details"
-						>
-							<i className="bi bi-building me-1"></i>
-							{company.name}
-						</span>
-					)}
-				</CompanyModalManager>
-			);
-		}
-
-		return view ? <span className="text-muted">No company provided</span> : null;
-	},
-
-	// Contact information
 	email: (item, view = false) => {
-		if (item.email) {
+		if (!item.email) {
+			return view ? <span className="text-muted">No email address provided</span> : null;
+		} else {
 			return (
 				<a href={`mailto:${item.email}`} className="text-decoration-none">
 					<i className="bi bi-envelope me-1"></i>
@@ -158,11 +153,12 @@ export const renderFunctions = {
 				</a>
 			);
 		}
-		return view ? <span className="text-muted">No email address provided</span> : null;
 	},
 
 	phone: (item, view = false) => {
-		if (item.phone) {
+		if (!item.phone) {
+			return view ? <span className="text-muted">No phone number provided</span> : null;
+		} else {
 			return (
 				<a href={`tel:${item.phone}`} className="text-decoration-none">
 					<i className="bi bi-telephone me-1"></i>
@@ -170,11 +166,12 @@ export const renderFunctions = {
 				</a>
 			);
 		}
-		return view ? <span className="text-muted">No phone number provided</span> : null;
 	},
 
 	linkedinUrl: (item, view = false) => {
-		if (item.linkedin_url) {
+		if (!item.linkedin_url) {
+			return view ? <span className="text-muted">No LinkedIn profile provided</span> : null;
+		} else {
 			return (
 				<a href={item.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
 					<i className="bi bi-linkedin me-1"></i>
@@ -182,107 +179,145 @@ export const renderFunctions = {
 				</a>
 			);
 		}
-		return view ? <span className="text-muted">No LinkedIn profile provided</span> : null;
 	},
 
-	// Job-specific renderers
-	salaryRange: (job, view = false) => {
-		if (!job.salary_min && !job.salary_max) {
-			return view ? <span className="text-muted">Salary not specified</span> : null;
-		}
-		if (job.salary_min === job.salary_max) {
-			return `£${job.salary_min.toLocaleString()}`;
-		}
-		if (job.salary_min && job.salary_max) {
-			return `£${job.salary_min.toLocaleString()} - £${job.salary_max.toLocaleString()}`;
-		}
-		if (job.salary_min) return `From £${job.salary_min.toLocaleString()}`;
-		if (job.salary_max) return `Up to £${job.salary_max.toLocaleString()}`;
-		return "";
+	salaryRange: (item, view = false) => {
+		if (!item.salary_min && !item.salary_max) {
+			return view ? <span className="text-muted">No salary provided</span> : null;
+		} else if (item.salary_min === item.salary_max) {
+			return `£${item.salary_min.toLocaleString()}`;
+		} else if (item.salary_min && item.salary_max) {
+			return `£${item.salary_min.toLocaleString()} - £${item.salary_max.toLocaleString()}`;
+		} else if (item.salary_min) return `From £${item.salary_min.toLocaleString()}`;
+		else if (item.salary_max) return `Up to £${item.salary_max.toLocaleString()}`;
 	},
 
-	personalRating: (job, view = false) => {
-		// Check if rating is null or undefined
-		if (job.personal_rating === null || job.personal_rating === undefined) {
+	personalRating: (item, view = false) => {
+		if (!item.personal_rating) {
 			return view ? <span className="text-muted">No rating provided</span> : null;
-		}
-
-		const rating = Math.max(0, Math.min(5, job.personal_rating)); // Clamp between 0 and 5
-		const filledStars = Math.floor(rating);
-		const emptyStars = 5 - filledStars;
-
-		return (
-			<div>
-				{"★".repeat(filledStars)}
-				{"☆".repeat(emptyStars)}
-			</div>
-		);
-	},
-
-	jobReference: (item, view = false) => {
-		if (!item.job) {
-			return view ? <span className="text-muted">No job provided</span> : null;
-		}
-		return (
-			<div>
-				<strong>{item.job.title}</strong>
-				{item.job.company && <div className="small text-muted">at {item.job.company.name}</div>}
-			</div>
-		);
-	},
-
-	// Status badge
-	statusBadge: (item, view = false) => {
-		if (!item.status) {
-			return view ? (
-				<span className="text-muted">No status provided</span>
-			) : (
-				<span className="text-muted">Unknown</span>
+		} else {
+			const rating = Math.max(0, Math.min(5, item.personal_rating));
+			const filledStars = Math.floor(rating);
+			const emptyStars = 5 - filledStars;
+			return (
+				<div>
+					{"★".repeat(filledStars)}
+					{"☆".repeat(emptyStars)}
+				</div>
 			);
 		}
-
-		const status =
-			typeof item.status === "string" ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Unknown";
-
-		return <span className={`badge ${getStatusBadgeClass(item.status)}`}>{status}</span>;
 	},
 
-	// Notes with truncation
-	note: (item, view = false) => {
-		if (item.note) {
-			return <div style={{ maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis" }}>{item.note}</div>;
+	// ----------------------------------------------------- BADGES ----------------------------------------------------
+
+	jobApplication: (item, view = false) => {
+		if (!item.job_application) {
+			return view ? <span className="text-muted">No status provided</span> : null;
+		} else {
+			return (
+				<JobApplicationModalManager>
+					{(handleClick) => (
+						<span
+							className={`badge ${getApplicationStatusBadgeClass(item.job_application.status)} clickable-badge`}
+							onClick={() => handleClick(item.job_application)}
+						>
+							{item.job_application.status}
+						</span>
+					)}
+				</JobApplicationModalManager>
+			);
 		}
-		return view ? <span className="text-muted">No notes provided</span> : null;
 	},
 
-	// Keywords as badges
 	keywords: (item, view = false) => {
 		if (!item.keywords || item.keywords.length === 0) {
-			return view ? <span className="text-muted">No keywords assigned</span> : null;
+			return view ? <span className="text-muted">No keywords provided</span> : null;
+		} else {
+			return (
+				<div>
+					{item.keywords.map((keyword, index) => (
+						<KeywordModalManager key={keyword.id || index}>
+							{(handleClick) => (
+								<span
+									className="badge bg-info clickable-badge me-1"
+									onClick={() => handleClick(keyword)}
+								>
+									<i className="bi bi-tag me-1"></i>
+									{keyword.name}
+								</span>
+							)}
+						</KeywordModalManager>
+					))}
+				</div>
+			);
 		}
-		return (
-			<div>
-				{item.keywords.map((keyword, index) => (
-					<span key={keyword.id} className="badge bg-secondary me-1 mb-1">
-						{keyword.name}
-					</span>
-				))}
-			</div>
-		);
+	},
+
+	location: (item, view = false) => {
+		if (!item.location) {
+			return view ? <span className="text-muted">No location provided</span> : null;
+		} else {
+			return (
+				<LocationModalManager>
+					{(handleClick) => (
+						<span className={`badge bg-primary clickable-badge`} onClick={() => handleClick(item.location)}>
+							<i className="bi bi-geo-alt me-1"></i>
+							{item.location.name}
+						</span>
+					)}
+				</LocationModalManager>
+			);
+		}
+	},
+
+	company: (item, view = false) => {
+		if (!item.company) {
+			return view ? <span className="text-muted">No company provided</span> : null;
+		} else {
+			return (
+				<CompanyModalManager>
+					{(handleClick) => (
+						<span className={"badge bg-info clickable-badge"} onClick={() => handleClick(item.company)}>
+							<i className="bi bi-building me-1"></i>
+							{item.company.name}
+						</span>
+					)}
+				</CompanyModalManager>
+			);
+		}
+	},
+
+	persons: (item, view = false) => {
+		if (!item.persons || item.persons.length === 0) {
+			return view ? <span className="text-muted">No persons provided</span> : null;
+		} else {
+			return (
+				<div>
+					{item.persons.map((person, index) => (
+						<span key={person.id || index} className="me-1">
+							<PersonModalManager>
+								{(handleClick) => (
+									<span
+										className={"badge bg-info clickable-badge"}
+										onClick={() => handleClick(item.name)}
+									>
+										<i className="bi bi-file-person me-1"></i>
+										{item.name}
+									</span>
+								)}
+							</PersonModalManager>
+						</span>
+					))}
+				</div>
+			);
+		}
 	},
 };
 
 // Accessor functions for sorting and searching
 export const accessorFunctions = {
+	// TODO to replace with sorting function
 	personName: (person) => `${person.first_name} ${person.last_name}`,
-
-	locationName: (item) => {
-		const loc = item.location;
-		if (!loc) return "";
-		return loc.name;
-	},
-
-	companyName: (item) => item.company?.name || "",
 
 	salaryRange: (job) => {
 		if (!job.salary_min && !job.salary_max) return "";

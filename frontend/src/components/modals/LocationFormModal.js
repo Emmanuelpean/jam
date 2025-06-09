@@ -87,16 +87,14 @@ const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, is
 		const hasCity = formData.city && formData.city.trim();
 		const hasPostcode = formData.postcode && formData.postcode.trim();
 		const hasCountry = formData.country && formData.country.trim();
-		const isRemote = formData.remote;
 
-		const hasAnyValue = hasCity || hasPostcode || hasCountry || isRemote;
+		const hasAnyValue = hasCity || hasPostcode || hasCountry;
 
 		if (!hasAnyValue) {
 			errors.city =
 				errors.country =
 				errors.postcode =
-				errors.remote =
-					"Please fill in at least one field (city, postcode, country, or check remote)";
+					"Please fill in at least one field (city, postcode, or country)";
 		}
 
 		return errors;

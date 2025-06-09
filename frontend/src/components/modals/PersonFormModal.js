@@ -1,51 +1,88 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "react-bootstrap";
+import { Button, ButtonGroup } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
 import CompanyFormModal from "./CompanyFormModal";
+import CompanyViewModal from "./CompanyViewModal";
+import useGenericAlert from "../../hooks/useGenericAlert";
+import AlertModal from "../AlertModal";
 
-const PersonFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
+const PersonFormModal = ({
+	show,
+	onHide,
+	onSuccess,
+	size,
+	initialData = {},
+	isEdit = false,
+	// Company handling props - passed from parent
+	companyOptions = [],
+	onCompanyAdd = null,
+	onCompanyEdit = null,
+	onCompanyView = null,
+	onCompanyDelete = null,
+	refreshCompanies = null,
+}) => {
 	const { token } = useAuth();
 	const [showCompanyModal, setShowCompanyModal] = useState(false);
-	const [companyOptions, setCompanyOptions] = useState([]);
+	const [selectedCompany, setSelectedCompany] = useState(null);
 
-	// Fetch companies for the select options
+	const { alertState, showConfirm, showError, hideAlert } = useGenericAlert();
+
+	// Update selected company when company_id changes
 	useEffect(() => {
-		const fetchCompanies = async () => {
-			if (!token || !show) return;
-
-			try {
-				const response = await fetch("http://localhost:8000/companies/", {
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				});
-
-				if (response.ok) {
-					const companiesData = await response.json();
-					setCompanyOptions(
-						companiesData.map((company) => ({
-							value: company.id,
-							label: company.name,
-						})),
-					);
-				}
-			} catch (error) {
-				console.error("Error fetching companies:", error);
-			}
-		};
-
-		fetchCompanies();
-	}, [token, show]);
+		if (initialData?.company_id) {
+			const company = companyOptions.find((opt) => opt.value === initialData.company_id);
+			setSelectedCompany(company || null);
+		}
+	}, [initialData?.company_id, companyOptions]);
 
 	// Handle successful company creation
-	const handleCompanySuccess = (newCompany) => {
+	const handleCompanyAddSuccess = (newCompany) => {
+		// Call parent's add handler if available
+		if (onCompanyAdd) {
+			onCompanyAdd(newCompany);
+		}
+
+		// Select the new company
 		const newOption = {
 			value: newCompany.id,
 			label: newCompany.name,
+			...newCompany,
 		};
-		setCompanyOptions((prev) => [...prev, newOption]);
+		setSelectedCompany(newOption);
 		setShowCompanyModal(false);
+	};
+
+	// Company action handlers - delegate to parent functions
+	const handleViewCompany = (company) => {
+		if (onCompanyView) {
+			onCompanyView(company);
+		}
+	};
+
+	const handleEditCompany = (company) => {
+		if (onCompanyEdit) {
+			onCompanyEdit(company);
+		}
+	};
+
+	const handleDeleteCompany = async (company) => {
+		if (onCompanyDelete) {
+			await onCompanyDelete(company);
+			// Clear selection if deleted company was selected
+			if (selectedCompany?.value === company.value) {
+				setSelectedCompany(null);
+			}
+			// Refresh companies list
+			if (refreshCompanies) {
+				refreshCompanies();
+			}
+		}
+	};
+
+	// Handle company selection change
+	const handleCompanyChange = (selectedOption) => {
+		setSelectedCompany(selectedOption);
 	};
 
 	// Define layout groups for custom form layout
@@ -88,21 +125,58 @@ const PersonFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEd
 					isSearchable: true,
 					isClearable: true,
 					options: companyOptions,
+					onChange: handleCompanyChange,
 				},
 			],
 		},
-		// Add Company button
+		// Company action buttons
 		{
-			id: "add-company-button",
+			id: "company-actions",
 			type: "custom",
 			className: "mb-3",
 			content: (
-				<div className="d-grid">
-					<Button variant="outline-primary" size="sm" onClick={() => setShowCompanyModal(true)}>
-						<i className="bi bi-plus-circle me-2"></i>
-						Add New Company
+				<ButtonGroup size="sm" className="w-100">
+					<Button
+						variant="outline-secondary"
+						onClick={() => setShowCompanyModal(true)}
+						title="Add new company"
+					>
+						<i className="bi bi-plus-circle me-1"></i>
+						Add New
 					</Button>
-				</div>
+
+					{selectedCompany && (
+						<>
+							<Button
+								variant="outline-secondary"
+								onClick={() => handleViewCompany(selectedCompany)}
+								title="View company details"
+								disabled={!onCompanyView}
+							>
+								<i className="bi bi-eye me-1"></i>
+								View
+							</Button>
+							<Button
+								variant="outline-secondary"
+								onClick={() => handleEditCompany(selectedCompany)}
+								title="Edit company"
+								disabled={!onCompanyEdit}
+							>
+								<i className="bi bi-pencil me-1"></i>
+								Edit
+							</Button>
+							<Button
+								variant="outline-secondary"
+								onClick={() => handleDeleteCompany(selectedCompany)}
+								title="Delete company"
+								disabled={!onCompanyDelete}
+							>
+								<i className="bi bi-trash me-1"></i>
+								Delete
+							</Button>
+						</>
+					)}
+				</ButtonGroup>
 			),
 		},
 		// Contact fields (side by side)
@@ -197,13 +271,16 @@ const PersonFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEd
 				isEdit={isEdit}
 			/>
 
-			{/* Company Form Modal */}
+			{/* Company Add Modal - only this one is managed locally */}
 			<CompanyFormModal
 				show={showCompanyModal}
 				onHide={() => setShowCompanyModal(false)}
-				onSuccess={handleCompanySuccess}
+				onSuccess={handleCompanyAddSuccess}
 				size="md"
 			/>
+
+			{/* Alert Modal for local confirmations and errors */}
+			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</>
 	);
 };

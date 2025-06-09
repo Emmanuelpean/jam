@@ -110,7 +110,7 @@ class Location(BaseModel):
 
 
 class LocationOut(Location, Out):
-    name: str
+    name: str | None = None
 
 
 class LocationUpdate(Location):
@@ -133,12 +133,14 @@ class Person(BaseModel):
 # Simple person schema without interviews/jobs to avoid circular reference
 class PersonSimple(Person, Out):
     company: CompanyOut | None = None
+    name: str | None = None
 
 
 class PersonOut(Person, Out):
     company: CompanyOut | None = None
-    interviews: list["InterviewSimple"] | None = None  # Use InterviewSimple to avoid circular reference
-    jobs: list["JobSimple"] | None = None  # Add jobs relationship
+    interviews: list["InterviewSimple"] | None = None
+    jobs: list["JobSimple"] | None = None
+    name: str | None = None
 
 
 class PersonUpdate(Person):
@@ -168,14 +170,16 @@ class JobSimple(Job, Out):
     company: CompanyOut | None = None
     location: LocationOut | None = None
     keywords: list[KeywordOut] | None = None
+    name: str | None = None
 
 
 class JobOut(Job, Out):
     company: CompanyOut | None = None
     location: LocationOut | None = None
     keywords: list[KeywordOut] | None = None
-    job_application: Optional["JobApplicationOut"] = None  # One-to-one relationship
-    contacts: list[PersonSimple] | None = None  # Add contacts relationship
+    job_application: Optional["JobApplicationOut"] = None
+    contacts: list[PersonSimple] | None = None
+    name: str | None = None
 
 
 class JobUpdate(Job):

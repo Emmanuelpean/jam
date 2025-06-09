@@ -51,12 +51,20 @@ const KeywordsPage = () => {
 	const handleEditSuccess = (updatedKeyword) => {
 		updateItem(updatedKeyword);
 		setShowEditModal(false);
-		setSelectedKeyword(null);
+		// Update the selected keyword with fresh data instead of clearing it
+		setSelectedKeyword(updatedKeyword);
+		// Don't close the view modal - keep setShowViewModal(true) intact
 	};
 
 	// Handle edit modal close
 	const handleEditModalClose = () => {
 		setShowEditModal(false);
+		// Don't clear selectedKeyword here - keep the view modal's data intact
+	};
+
+	// Handle view modal close
+	const handleViewModalClose = () => {
+		setShowViewModal(false);
 		setSelectedKeyword(null);
 	};
 
@@ -118,7 +126,7 @@ const KeywordsPage = () => {
 
 			<KeywordViewModal
 				show={showViewModal}
-				onHide={() => setShowViewModal(false)}
+				onHide={handleViewModalClose}
 				keyword={selectedKeyword}
 				onEdit={handleEdit}
 			/>

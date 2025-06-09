@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import GenericTable, {
 	createGenericDeleteHandler,
 	createTableActions,
@@ -16,7 +16,7 @@ import { columns } from "../components/tables/ColumnDefinitions";
 const LocationsPage = () => {
 	const { token } = useAuth();
 	const {
-		data: locations,
+		data: allLocations,
 		setData: setLocations,
 		loading,
 		error,
@@ -28,6 +28,11 @@ const LocationsPage = () => {
 		updateItem,
 		removeItem,
 	} = useTableData("locations");
+
+	// Filter out remote locations
+	const locations = useMemo(() => {
+		return allLocations?.filter((location) => !location.remote) || [];
+	}, [allLocations]);
 
 	const [showModal, setShowModal] = useState(false);
 	const [showViewModal, setShowViewModal] = useState(false);
@@ -65,7 +70,7 @@ const LocationsPage = () => {
 	const handleDelete = createGenericDeleteHandler({
 		endpoint: "locations",
 		token,
-		showConfirm, // Pass showConfirm instead of showConfirmation
+		showConfirm,
 		showError,
 		removeItem,
 		setData: setLocations,
@@ -110,7 +115,7 @@ const LocationsPage = () => {
 			{/* Map below table */}
 			<div className="mt-4">
 				<h5 className="mb-3">Location Map</h5>
-				<LocationMap locations={locations || []} height="500px" />
+				<LocationMap locations={locations} height="500px" />
 			</div>
 
 			{/* Modals */}
@@ -118,7 +123,7 @@ const LocationsPage = () => {
 
 			<LocationFormModal
 				show={showEditModal}
-				onHide={handleEditModalClose}
+				onHide={() => setShowModal(false)}
 				onSuccess={handleEditSuccess}
 				initialData={selectedLocation || {}}
 				isEdit={true}

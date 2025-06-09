@@ -29,7 +29,7 @@ const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 			name: "title",
 			label: "Job Title",
 			type: "text",
-			render: () => renderFunctions.jobTitle(job),
+			render: () => renderFunctions.title(job),
 		},
 		{
 			name: "company_name",
@@ -40,12 +40,6 @@ const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 			name: "location_display",
 			label: "Location",
 			type: "text",
-		},
-		{
-			name: "status",
-			label: "Status",
-			type: "text",
-			render: () => renderFunctions.statusBadge(job),
 		},
 		{
 			name: "description",
@@ -76,7 +70,7 @@ const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 			name: "url",
 			label: "Job URL",
 			type: "url",
-			render: () => renderFunctions.websiteUrl(job),
+			render: () => renderFunctions.url(job),
 		},
 		{
 			name: "notes",
@@ -118,7 +112,7 @@ const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 						<div className="card bg-light">
 							<div className="card-body text-center">
 								<h6 className="card-title mb-2">Application Status</h6>
-								{renderFunctions.statusBadge({ ...job, status: job.status })}
+								{/*{renderFunctions.statusBadge({ ...job, status: job.status })}*/}
 							</div>
 						</div>
 					</div>

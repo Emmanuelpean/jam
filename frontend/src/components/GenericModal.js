@@ -6,96 +6,64 @@ import "./GenericModal.css";
 
 const GenericModal = ({
 	// Basic modal props
-	show,
-	onHide,
-	title,
-	size = "lg",
-	centered = true,
-	backdrop = null,
-	keyboard = null,
+	show, // Boolean - Controls modal visibility
+	onHide, // Function - Called when modal should be closed
+	title, // String - Modal title text
+	size = "lg", // String - Modal size: "sm", "md", "lg", "xl"
+	centered = true, // Boolean - Whether to center modal vertically
 
-	// Modal type and mode
-	mode = "form", // 'form', 'view', 'alert', 'confirmation', 'custom'
+	// Modal mode
+	mode = "form", // String - Modal type: 'form', 'view', 'alert', 'confirmation', 'custom'
 
 	// Form mode props
-	fields = [],
-	initialData = {},
-	endpoint,
-	onSuccess,
-	validationRules = {},
-	customValidation = null,
-	transformFormData = null,
-	isEdit = false,
+	fields = [], // Array - Field definitions for form mode
+	initialData = {}, // Object - Initial form data
+	endpoint, // String - API endpoint for form submission
+	onSuccess, // Function - Called on successful form submission
+	validationRules = {}, // Object - Custom validation rules for fields
+	customValidation = null, // Function - Custom validation function
+	transformFormData = null, // Function - Transform form data before submission
+	isEdit = false, // Boolean - Whether form is in edit mode
 
 	// Layout options
-	useCustomLayout = false, // Enable custom field layouts
-	layoutGroups = [], // Define groups of fields with custom layouts
+	useCustomLayout = false, // Boolean - Enable custom field layouts
+	layoutGroups = [], // Array - Define groups of fields with custom layouts
 
 	// View mode props
-	data = null,
-	viewFields = [],
-	onEdit = null,
-	showEditButton = true,
-	showSystemFields = true,
+	data = null, // Object - Data to display in view mode
+	viewFields = [], // Array - Field definitions for view mode display
+	onEdit = null, // Function - Called when edit button is clicked
+	showEditButton = true, // Boolean - Whether to show edit button in view mode
+	showSystemFields = true, // Boolean - Whether to show created/modified dates
 
 	// Alert mode props
-	alertType = "info", // 'info', 'success', 'warning', 'error'
-	alertMessage,
-	alertIcon = null,
-	confirmText = "OK",
-	cancelText = "Cancel",
-	showCancel = false,
+	alertType = "info", // String - Alert type: 'info', 'success', 'warning', 'error'
+	alertMessage, // String|React.Node - Message to display in alert mode
+	alertIcon = null, // String - Custom icon class for alert
+	confirmText = "OK", // String - Text for confirm button
+	cancelText = "Cancel", // String - Text for cancel button
+	showCancel = false, // Boolean - Whether to show cancel button in alert mode
 
 	// Confirmation mode props
-	confirmationMessage = "Are you sure you want to proceed?",
-	onConfirm = null,
-	confirmVariant = "danger",
+	confirmationMessage = "Are you sure you want to proceed?", // String - Message for confirmation dialog
+	onConfirm = null, // Function - Called when user confirms action
+	confirmVariant = "danger", // String - Bootstrap variant for confirm button
 
 	// Custom mode props
-	customContent = null,
-	customHeader = null,
-	customFooter = null,
+	customContent = null, // React.Node - Custom content for modal body
+	customHeader = null, // React.Node - Custom header content
+	customFooter = null, // React.Node - Custom footer content
 
 	// Advanced customization
-	headerClassName = "",
-	bodyClassName = "",
-	footerClassName = "",
-	buttonContainerClassName = "modal-buttons-container",
+	headerClassName = "", // String - Additional CSS classes for header
+	bodyClassName = "", // String - Additional CSS classes for body
+	footerClassName = "", // String - Additional CSS classes for footer
+	buttonContainerClassName = "modal-buttons-container", // String - CSS class for button container
 }) => {
 	const { token } = useAuth();
 	const [formData, setFormData] = useState(initialData);
 	const [submitting, setSubmitting] = useState(false);
 	const [errors, setErrors] = useState({});
-
-	// Determine modal behavior based on mode
-	const getModalBehavior = () => {
-		if (backdrop !== null || keyboard !== null) {
-			return {
-				backdrop: backdrop !== null ? backdrop : true,
-				keyboard: keyboard !== null ? keyboard : true,
-			};
-		}
-
-		// Check if there are already open modals
-		const existingModals = document.querySelectorAll(".modal.show").length;
-
-		// If this is a nested modal (there are already open modals), don't show backdrop
-		if (existingModals > 0) {
-			return { backdrop: false, keyboard: true };
-		}
-
-		switch (mode) {
-			case "alert":
-			case "confirmation":
-				return { backdrop: true, keyboard: true };
-			case "form":
-				return { backdrop: true, keyboard: true };
-			default:
-				return { backdrop: true, keyboard: true };
-		}
-	};
-
-	const { backdrop: modalBackdrop, keyboard: modalKeyboard } = getModalBehavior();
 
 	// Reset form data when modal opens
 	useEffect(() => {
@@ -569,7 +537,7 @@ const GenericModal = ({
 
 								<div className="col-md-6">
 									<h6>Last Updated</h6>
-									<p>{new Date(data.updated_at || data.created_at).toLocaleDateString()}</p>
+									<p>{new Date(data.modified_at).toLocaleDateString()}</p>
 								</div>
 							</div>
 						)}
@@ -633,7 +601,6 @@ const GenericModal = ({
 								<Button
 									variant="primary"
 									onClick={() => {
-										handleHide();
 										onEdit(data);
 									}}
 								>
@@ -695,14 +662,7 @@ const GenericModal = ({
 	);
 
 	return (
-		<Modal
-			show={show}
-			onHide={handleHide}
-			size={size}
-			centered={centered}
-			backdrop={modalBackdrop}
-			keyboard={modalKeyboard}
-		>
+		<Modal show={show} onHide={handleHide} size={size} centered={centered} backdrop={true} keyboard={true}>
 			{mode === "form" ? <Form onSubmit={handleSubmit}>{modalContent}</Form> : modalContent}
 		</Modal>
 	);

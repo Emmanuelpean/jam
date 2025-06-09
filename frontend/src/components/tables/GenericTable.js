@@ -2,26 +2,15 @@ import React, { useState } from "react";
 import { Button, Form } from "react-bootstrap";
 
 const renderCellContent = (column, row) => {
+	// TODO need to use that function in the view modals
+	const noText = <span className="text-muted">/</span>;
 	if (column.render) {
-		const renderedContent = column.render(row);
-
-		// Check if the rendered content is empty or falsy
-		if (
-			!renderedContent ||
-			(React.isValidElement(renderedContent) && !renderedContent.props.children) ||
-			(typeof renderedContent === "string" && renderedContent.trim() === "")
-		) {
-			return <span className="text-muted">/</span>;
-		}
-
-		return renderedContent;
+		return column.render(row) ?? noText;
+	} else {
+		return row[column.key] || noText;
 	}
-
-	// Fallback to the raw value or empty indicator
-	return row[column.key] || <span className="text-muted">/</span>;
 };
 
-// Generic delete function for table items
 export const createGenericDeleteHandler = ({
 	endpoint,
 	token,

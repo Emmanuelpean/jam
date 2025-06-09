@@ -11,13 +11,13 @@ const PersonViewModal = ({ show, onHide, person, onEdit, size }) => {
 			name: "full_name",
 			label: "Full Name",
 			type: "text",
-			render: () => renderFunctions.personName(person, true),
+			render: () => renderFunctions.name(person, true),
 		},
 		{
 			name: "company_name",
 			label: "Company",
 			type: "text",
-			render: () => renderFunctions.companyBadge(person, true),
+			render: () => renderFunctions.company(person, true),
 		},
 		{
 			name: "email",
