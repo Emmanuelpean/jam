@@ -119,7 +119,7 @@ const PersonFormModal = ({
 				{
 					name: "company_id",
 					label: "Company",
-					type: "react-select",
+					type: "select",
 					required: true,
 					placeholder: "Select or search company...",
 					isSearchable: true,

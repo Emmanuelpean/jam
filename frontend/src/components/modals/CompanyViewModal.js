@@ -1,6 +1,6 @@
 import React from "react";
 import GenericModal from "../GenericModal";
-// import { renderFunctions } from "../Renders";
+import { renderFunctions } from "../Renders";
 
 const CompanyViewModal = ({ show, onHide, company, onEdit, size }) => {
 	const viewFields = [
@@ -8,18 +8,19 @@ const CompanyViewModal = ({ show, onHide, company, onEdit, size }) => {
 			name: "name",
 			label: "Company Name",
 			type: "text",
+			render: () => renderFunctions.name(company, true),
 		},
 		{
 			name: "url",
 			label: "Website",
 			type: "url",
-			// render: () => renderFunctions.websiteUrl(company, true),
+			render: () => renderFunctions.url(company, true),
 		},
 		{
 			name: "description",
 			label: "Description",
 			type: "textarea",
-			// render: () => renderFunctions.description(company, true),
+			render: () => renderFunctions.description(company, true),
 		},
 	];
 

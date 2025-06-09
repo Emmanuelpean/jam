@@ -1,8 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { Modal, Form, Button, Alert } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { Alert, Button, Form, Modal } from "react-bootstrap";
 import Select from "react-select";
 import { useAuth } from "../contexts/AuthContext";
 import "./GenericModal.css";
+import { renderFieldValue, renderFunctions } from "./Renders";
+
+const DEFAULT_ICONS = {
+	form: "bi bi-pencil",
+	view: "bi bi-eye",
+	confirmation: "bi bi-exclamation-triangle",
+	custom: "",
+};
+
+const DEFAULT_ALERT_ICONS = {
+	success: "bi-check-circle-fill",
+	warning: "bi-exclamation-triangle-fill",
+	error: "bi-x-circle-fill",
+	info: "bi-info-circle-fill",
+};
 
 const GenericModal = ({
 	// Basic modal props
@@ -51,7 +66,6 @@ const GenericModal = ({
 
 	// Custom mode props
 	customContent = null, // React.Node - Custom content for modal body
-	customHeader = null, // React.Node - Custom header content
 	customFooter = null, // React.Node - Custom footer content
 
 	// Advanced customization
@@ -105,45 +119,6 @@ const GenericModal = ({
 		if (errors[name]) {
 			setErrors((prev) => ({ ...prev, [name]: "" }));
 		}
-	};
-
-	// Custom styles for react-select
-	const customSelectStyles = {
-		control: (provided, state) => ({
-			...provided,
-			borderColor: errors[state.selectProps.name] ? "#dc3545" : "#dee2e6",
-			boxShadow: state.isFocused ? "0 0 0 0.2rem rgba(13, 110, 253, 0.25)" : "none",
-			"&:hover": {
-				borderColor: errors[state.selectProps.name] ? "#dc3545" : "#86b7fe",
-			},
-			minHeight: "38px",
-		}),
-		valueContainer: (provided) => ({
-			...provided,
-			padding: "6px 12px",
-		}),
-		input: (provided) => ({
-			...provided,
-			margin: 0,
-			padding: 0,
-			color: "#212529",
-		}),
-		placeholder: (provided) => ({
-			...provided,
-			color: "#6c757d",
-		}),
-		singleValue: (provided) => ({
-			...provided,
-			color: "#212529",
-		}),
-		menu: (provided) => ({
-			...provided,
-			zIndex: 9999,
-		}),
-		menuPortal: (provided) => ({
-			...provided,
-			zIndex: 9999,
-		}),
 	};
 
 	// Form validation
@@ -236,11 +211,12 @@ const GenericModal = ({
 	};
 
 	// Field rendering for forms
-	const renderField = (field) => {
-		// Handle custom render function
-		if (field.render && typeof field.render === "function") {
+	const renderInputField = (field) => {
+		const value = formData[field.name];
+
+		if (typeof field.render === "function") {
 			return field.render({
-				value: formData[field.name] || "",
+				value: value || "",
 				onChange: handleChange,
 				formData,
 				errors,
@@ -248,81 +224,61 @@ const GenericModal = ({
 			});
 		}
 
-		switch (field.type) {
-			case "textarea":
-				return (
-					<Form.Control
-						as="textarea"
-						rows={field.rows || 3}
-						name={field.name}
-						value={formData[field.name] || ""}
-						onChange={handleChange}
-						placeholder={field.placeholder}
-						isInvalid={!!errors[field.name]}
-					/>
-				);
-
-			case "checkbox":
-				return (
-					<Form.Check
-						type="checkbox"
-						name={field.name}
-						checked={formData[field.name] || false}
-						onChange={handleChange}
-						label={field.checkboxLabel || field.label}
-					/>
-				);
-
-			case "select":
-				return (
-					<Form.Select
-						name={field.name}
-						value={formData[field.name] || ""}
-						onChange={handleChange}
-						isInvalid={!!errors[field.name]}
-					>
-						<option value="">Select {field.label}</option>
-						{field.options?.map((option) => (
-							<option key={option.value} value={option.value}>
-								{option.label}
-							</option>
-						))}
-					</Form.Select>
-				);
-
-			case "react-select":
-				const selectedValue = field.options?.find((option) => option.value === formData[field.name]);
-
-				return (
-					<Select
-						name={field.name}
-						value={selectedValue || null}
-						onChange={(selectedOption, actionMeta) => handleSelectChange(selectedOption, actionMeta)}
-						options={field.options}
-						placeholder={field.placeholder || `Select ${field.label}`}
-						isSearchable={field.isSearchable}
-						isClearable={field.isClearable}
-						isDisabled={field.isDisabled}
-						styles={customSelectStyles}
-						menuPortalTarget={document.body}
-						className="react-select-container"
-						classNamePrefix="react-select"
-					/>
-				);
-
-			default:
-				return (
-					<Form.Control
-						type={field.type || "text"}
-						name={field.name}
-						value={formData[field.name] || ""}
-						onChange={handleChange}
-						placeholder={field.placeholder}
-						isInvalid={!!errors[field.name]}
-						step={field.step}
-					/>
-				);
+		if (field.type === "textarea") {
+			return (
+				<Form.Control
+					as="textarea"
+					rows={field.rows || 3}
+					name={field.name}
+					value={value || ""}
+					onChange={handleChange}
+					placeholder={field.placeholder}
+					isInvalid={!!errors[field.name]}
+				/>
+			);
 		}
+		if (field.type === "checkbox") {
+			return (
+				<Form.Check
+					type="checkbox"
+					name={field.name}
+					checked={value || false}
+					onChange={handleChange}
+					label={field.checkboxLabel || field.label}
+				/>
+			);
+		}
+		if (field.type === "select") {
+			const selectedValue = field.options?.find((option) => option.value === value);
+
+			return (
+				<Select
+					name={field.name}
+					value={selectedValue || null}
+					onChange={(selectedOption, actionMeta) => handleSelectChange(selectedOption, actionMeta)}
+					options={field.options}
+					placeholder={field.placeholder || `Select ${field.label}`}
+					isSearchable={field.isSearchable}
+					isClearable={field.isClearable}
+					isDisabled={field.isDisabled}
+					isMulti={field.isMulti}
+					menuPortalTarget={document.body}
+					className="react-select-container"
+					classNamePrefix="react-select"
+				/>
+			);
+		}
+		return (
+			<Form.Control
+				type={field.type || "text"}
+				name={field.name}
+				value={value || ""}
+				onChange={handleChange}
+				placeholder={field.placeholder}
+				isInvalid={!!errors[field.name]}
+				step={field.step}
+			/>
+		);
 	};
 
 	// Render a field group (for custom layouts)
@@ -337,7 +293,7 @@ const GenericModal = ({
 									{field.label}
 									{field.required && <span className="text-danger">*</span>}
 								</Form.Label>
-								{renderField(field)}
+								{renderInputField(field)}
 								{errors[field.name] && (
 									<div className="invalid-feedback d-block">{errors[field.name]}</div>
 								)}
@@ -365,7 +321,7 @@ const GenericModal = ({
 							{field.label}
 							{field.required && <span className="text-danger">*</span>}
 						</Form.Label>
-						{renderField(field)}
+						{renderInputField(field)}
 						{errors[field.name] && <div className="invalid-feedback d-block">{errors[field.name]}</div>}
 					</Form.Group>
 				))}
@@ -373,197 +329,118 @@ const GenericModal = ({
 		);
 	};
 
-	// Field value rendering for view mode
-
-	// Field value rendering for view mode
-	const renderFieldValue = (field) => {
-		// Check if field has a custom render function first
-		if (field.render && typeof field.render === "function") {
-			const rendered = field.render();
-			// If render function returns null or undefined, show fallback
-			if (rendered === null || rendered === undefined) {
-				return <span className="text-muted">/</span>;
-			}
-			return rendered;
-		}
-
-		const value = data[field.name];
-
-		switch (field.type) {
-			case "checkbox":
-				return <span className={`badge ${value ? "bg-success" : "bg-secondary"}`}>{value ? "Yes" : "No"}</span>;
-
-			case "url":
-				return value ? (
-					<a href={value} target="_blank" rel="noopener noreferrer">
-						{value}
-					</a>
-				) : (
-					"No URL provided"
-				);
-
-			case "textarea":
-				return value || `No ${field.label.toLowerCase()}`;
-
-			case "select":
-				if (field.options) {
-					const option = field.options.find((opt) => opt.value === value);
-					return option ? option.label : value || `No ${field.label.toLowerCase()}`;
-				}
-				return value || `No ${field.label.toLowerCase()}`;
-
-			default:
-				return value || `No ${field.label.toLowerCase()}`;
-		}
-	};
-
-	// Helper functions for alert styling
-	const getTypeVariant = (type) => {
-		switch (type) {
-			case "success":
-				return "success";
-			case "warning":
-				return "warning";
-			case "error":
-				return "danger";
-			default:
-				return "primary";
-		}
-	};
-
-	const getDefaultIcon = (type) => {
-		switch (type) {
-			case "success":
-				return "bi-check-circle-fill";
-			case "warning":
-				return "bi-exclamation-triangle-fill";
-			case "error":
-				return "bi-x-circle-fill";
-			default:
-				return "bi-info-circle-fill";
-		}
-	};
-
-	// Render modal header
+	// Modal header (DONE)
 	const renderHeader = () => {
-		if (customHeader) return customHeader;
+		// Icon
+		let icon = "";
+		if (alertIcon) {
+			icon = alertIcon;
+		} else if (mode === "alert") {
+			icon = DEFAULT_ALERT_ICONS[alertType];
+		} else {
+			icon = DEFAULT_ICONS[mode];
+		}
 
-		const displayIcon = alertIcon || (mode === "alert" ? getDefaultIcon(alertType) : null);
-		const headerClass = mode === "alert" ? `bg-${getTypeVariant(alertType)} bg-opacity-10` : "";
+		// Title
+		let text = title;
+		if (mode === "view") {
+			text = `${title} Details`;
+		} else if (mode === "form") {
+			if (isEdit) {
+				text = `Edit ${title}`;
+			} else {
+				text = `Add New ${title}`;
+			}
+		}
 
 		return (
-			<Modal.Header closeButton className={`${headerClass} ${headerClassName}`}>
-				<Modal.Title className="d-flex align-items-center">
-					{displayIcon && <i className={`${displayIcon} me-2`} style={{ fontSize: "1.2em" }} />}
-					{mode === "view"
-						? `${title} Details`
-						: mode === "form"
-							? `${isEdit ? "Edit" : "Add New"} ${title}`
-							: title}
+			<Modal.Header closeButton className={headerClassName}>
+				<Modal.Title>
+					{icon && <i className={`${icon} me-2`} style={{ fontSize: "1.05em" }} />}
+					{text}
 				</Modal.Title>
 			</Modal.Header>
 		);
 	};
 
+	const renderFormGroup = (field) => (
+		<Form.Group key={field.name} className="mb-3">
+			<Form.Label>
+				{field.label}
+				{field.required && <span className="text-danger">*</span>}
+			</Form.Label>
+			{renderInputField(field)}
+			{errors[field.name] && <div className="invalid-feedback d-block">{errors[field.name]}</div>}
+		</Form.Group>
+	);
+
 	// Render modal body
 	const renderBody = () => {
-		switch (mode) {
-			case "form":
-				return (
-					<Modal.Body className={bodyClassName}>
-						{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
+		if (mode === "form") {
+			return (
+				<div>
+					{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
 
-						{customContent && <div className="mt-4">{customContent}</div>}
-
-						{useCustomLayout ? (
-							// Render custom layout groups
-							<>
-								{layoutGroups.map((group, index) => renderFieldGroup(group))}
-								{/* Render any remaining fields not in groups */}
-								{fields.length > 0 &&
-									fields.map((field) => (
-										<Form.Group key={field.name} className="mb-3">
-											<Form.Label>
-												{field.label}
-												{field.required && <span className="text-danger">*</span>}
-											</Form.Label>
-											{renderField(field)}
-											{errors[field.name] && (
-												<div className="invalid-feedback d-block">{errors[field.name]}</div>
-											)}
-										</Form.Group>
-									))}
-							</>
-						) : (
-							// Render traditional layout
-							<>
-								{fields.map((field) => (
-									<Form.Group key={field.name} className="mb-3">
-										<Form.Label>
-											{field.label}
-											{field.required && <span className="text-danger">*</span>}
-										</Form.Label>
-										{renderField(field)}
-										{errors[field.name] && (
-											<div className="invalid-feedback d-block">{errors[field.name]}</div>
-										)}
-									</Form.Group>
-								))}
-							</>
-						)}
-					</Modal.Body>
-				);
-
-			case "view":
-				if (!data) return null;
-
-				return (
-					<Modal.Body className={bodyClassName}>
-						<div className="row">
-							{viewFields.map((field) => (
-								<div key={field.name} className={field.type === "textarea" ? "col-12" : "col-md-6"}>
-									<h6>{field.label}</h6>
-									<p>{renderFieldValue(field)}</p>
-								</div>
-							))}
+					{customContent && <div className="mt-4">{customContent}</div>}
+					{useCustomLayout ? (
+						<div>
+							{layoutGroups.map((group, _index) => renderFieldGroup(group))}
+							{fields.length > 0 && fields.map(renderFormGroup)}
 						</div>
-						<div className="mt-4">{customContent}</div>
-						{showSystemFields && data.created_at && (
-							<div className="row mt-3 pt-3 border-top">
-								<div className="col-md-6">
-									<h6>Date Added</h6>
-									<p>{new Date(data.created_at).toLocaleDateString()}</p>
-								</div>
+					) : (
+						<>{fields.map(renderFormGroup)}</>
+					)}
+				</div>
+			);
+		}
 
-								<div className="col-md-6">
-									<h6>Last Updated</h6>
-									<p>{new Date(data.modified_at).toLocaleDateString()}</p>
-								</div>
+		if (mode === "view") {
+			return (
+				<div>
+					<div className="row">
+						{viewFields.map((field) => (
+							<div key={field.name} className={field.type === "textarea" ? "col-12" : "col-md-6"}>
+								<h6>{field.label}</h6>
+								{/*TODO normalise the use of render for tables/view? */}
+								<div className="mb-3">{renderFieldValue(field)}</div>
 							</div>
-						)}
-					</Modal.Body>
-				);
+						))}
+					</div>
+					<div className="mt-4">{customContent}</div>
+					{showSystemFields && (
+						<div className="row mt-3 pt-3 border-top">
+							<div className="col-md-6">
+								<h6>Date Added</h6>
+								<div className="mb-3">{renderFunctions.createdDate(data, true)}</div>
+							</div>
 
-			case "alert":
-				return (
-					<Modal.Body className={bodyClassName}>
-						<div className="text-center py-3">
-							{typeof alertMessage === "string" ? <p className="mb-0">{alertMessage}</p> : alertMessage}
+							<div className="col-md-6">
+								<h6>Last Updated</h6>
+								<div className="mb-3">{renderFunctions.modifiedDate(data, true)}</div>
+							</div>
 						</div>
-						<div className="mt-4">{customContent}</div>
-					</Modal.Body>
-				);
-
-			case "confirmation":
-				return (
-					<Modal.Body className={bodyClassName}>
-						<p className="mb-0">{confirmationMessage}</p>
-						<div className="mt-4">{customContent}</div>
-					</Modal.Body>
-				);
-
-			default:
-				return <Modal.Body className={bodyClassName}>{customContent}</Modal.Body>;
+					)}
+				</div>
+			);
+			// 	TODO here
+		} else if (mode === "alert") {
+			return (
+				<div>
+					<div className="text-center py-3">
+						{typeof alertMessage === "string" ? <p className="mb-0">{alertMessage}</p> : alertMessage}
+					</div>
+					<div className="mt-4">{customContent}</div>
+				</div>
+			);
+		} else if (mode === "confirmation") {
+			return (
+				<div>
+					<p className="mb-0">{confirmationMessage}</p>
+					<div className="mt-4">{customContent}</div>
+				</div>
+			);
+		} else {
+			return { customContent };
 		}
 	};
 
@@ -625,12 +502,7 @@ const GenericModal = ({
 								{cancelText}
 							</Button>
 						)}
-						<Button
-							variant={getTypeVariant(alertType)}
-							onClick={handleSubmit}
-							size="lg"
-							style={{ minWidth: "100px" }}
-						>
+						<Button onClick={handleSubmit} size="lg" style={{ minWidth: "100px" }}>
 							{confirmText}
 						</Button>
 					</Modal.Footer>
@@ -656,7 +528,7 @@ const GenericModal = ({
 	const modalContent = (
 		<>
 			{renderHeader()}
-			{renderBody()}
+			{<Modal.Body className={bodyClassName}>{renderBody()}</Modal.Body>}
 			{renderFooter()}
 		</>
 	);

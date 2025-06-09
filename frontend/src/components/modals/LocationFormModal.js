@@ -41,7 +41,7 @@ const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, is
 		{
 			name: "country",
 			label: "Country",
-			type: "react-select",
+			type: "select",
 			required: false,
 			options: countries,
 			placeholder: loadingCountries ? "Loading countries..." : "Search and select a country...",

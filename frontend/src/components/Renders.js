@@ -3,6 +3,7 @@ import LocationViewModal from "./modals/LocationViewModal";
 import CompanyViewModal from "./modals/CompanyViewModal";
 import PersonViewModal from "./modals/PersonViewModal";
 import KeywordViewModal from "./modals/KeywordViewModal";
+import { formatDateWithTimezone } from "../utils/TimeUtils";
 
 const createModalManager = (ModalComponent, modalProp) => {
 	return ({ children, onEdit }) => {
@@ -140,7 +141,15 @@ export const renderFunctions = {
 		}
 	},
 
-	createdDate: (item) => new Date(item.created_at).toLocaleDateString(),
+	datetime: (date, view = false) => {
+		if (view) {
+			return formatDateWithTimezone(date);
+		} else return new Date(date).toLocaleDateString();
+	},
+
+	createdDate: (item, view = false) => renderFunctions.datetime(item.created_at, view),
+
+	modifiedDate: (item, view = false) => renderFunctions.datetime(item.modified_at, view),
 
 	email: (item, view = false) => {
 		if (!item.email) {
@@ -312,6 +321,25 @@ export const renderFunctions = {
 			);
 		}
 	},
+};
+
+export const renderColumnValue = (field, row = null) => {
+	const noText = <span className="text-muted">/</span>;
+	if (field.render) {
+		return field.render(row) ?? noText;
+	} else {
+		return row[field.key] || noText;
+	}
+};
+
+export const renderFieldValue = (field) => {
+	const noText = <span className="text-muted">/</span>;
+	const rendered = field.render();
+	if (rendered === null || rendered === undefined) {
+		return noText;
+	} else {
+		return rendered;
+	}
 };
 
 // Accessor functions for sorting and searching

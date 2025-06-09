@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 import LocationsPage from "./pages/LocationsPage";
-import StyleShowcase from "./pages/TestPage";
+import StyleShowcase from "./pages/_TestPage";
 import Header from "./components/Header";
 import "bootstrap/dist/css/bootstrap.min.css"; // Bootstrap first
 import "./App.css";
