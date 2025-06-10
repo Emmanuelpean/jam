@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Button, Form, Modal } from "react-bootstrap";
-import Select from "react-select";
 import { useAuth } from "../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue, renderFunctions } from "./Renders";
+import { renderInputFieldGroup, renderInputField } from "./formFieldRender";
 
 const DEFAULT_ICONS = {
 	form: "bi bi-pencil",
@@ -48,7 +48,6 @@ const GenericModal = ({
 	data = null, // Object - Data to display in view mode
 	viewFields = [], // Array - Field definitions for view mode display
 	onEdit = null, // Function - Called when edit button is clicked
-	showEditButton = true, // Boolean - Whether to show edit button in view mode
 	showSystemFields = true, // Boolean - Whether to show created/modified dates
 
 	// Alert mode props
@@ -66,13 +65,10 @@ const GenericModal = ({
 
 	// Custom mode props
 	customContent = null, // React.Node - Custom content for modal body
-	customFooter = null, // React.Node - Custom footer content
 
 	// Advanced customization
 	headerClassName = "", // String - Additional CSS classes for header
 	bodyClassName = "", // String - Additional CSS classes for body
-	footerClassName = "", // String - Additional CSS classes for footer
-	buttonContainerClassName = "modal-buttons-container", // String - CSS class for button container
 }) => {
 	const { token } = useAuth();
 	const [formData, setFormData] = useState(initialData);
@@ -210,129 +206,10 @@ const GenericModal = ({
 		}
 	};
 
-	// Field rendering for forms
-	const renderInputField = (field) => {
-		const value = formData[field.name];
-
-		if (typeof field.render === "function") {
-			return field.render({
-				value: value || "",
-				onChange: handleChange,
-				formData,
-				errors,
-				handleSelectChange,
-			});
-		}
-
-		if (field.type === "textarea") {
-			return (
-				<Form.Control
-					as="textarea"
-					rows={field.rows || 3}
-					name={field.name}
-					value={value || ""}
-					onChange={handleChange}
-					placeholder={field.placeholder}
-					isInvalid={!!errors[field.name]}
-				/>
-			);
-		}
-		if (field.type === "checkbox") {
-			return (
-				<Form.Check
-					type="checkbox"
-					name={field.name}
-					checked={value || false}
-					onChange={handleChange}
-					label={field.checkboxLabel || field.label}
-				/>
-			);
-		}
-		if (field.type === "select") {
-			const selectedValue = field.options?.find((option) => option.value === value);
-
-			return (
-				<Select
-					name={field.name}
-					value={selectedValue || null}
-					onChange={(selectedOption, actionMeta) => handleSelectChange(selectedOption, actionMeta)}
-					options={field.options}
-					placeholder={field.placeholder || `Select ${field.label}`}
-					isSearchable={field.isSearchable}
-					isClearable={field.isClearable}
-					isDisabled={field.isDisabled}
-					isMulti={field.isMulti}
-					menuPortalTarget={document.body}
-					className="react-select-container"
-					classNamePrefix="react-select"
-				/>
-			);
-		}
-		return (
-			<Form.Control
-				type={field.type || "text"}
-				name={field.name}
-				value={value || ""}
-				onChange={handleChange}
-				placeholder={field.placeholder}
-				isInvalid={!!errors[field.name]}
-				step={field.step}
-			/>
-		);
-	};
-
-	// Render a field group (for custom layouts)
-	const renderFieldGroup = (group) => {
-		if (group.type === "row") {
-			return (
-				<div key={group.id || Math.random()} className={`row ${group.className || ""}`}>
-					{group.fields.map((field) => (
-						<div key={field.name} className={field.columnClass || "col-md-6"}>
-							<Form.Group className="mb-3">
-								<Form.Label>
-									{field.label}
-									{field.required && <span className="text-danger">*</span>}
-								</Form.Label>
-								{renderInputField(field)}
-								{errors[field.name] && (
-									<div className="invalid-feedback d-block">{errors[field.name]}</div>
-								)}
-							</Form.Group>
-						</div>
-					))}
-				</div>
-			);
-		}
-
-		if (group.type === "custom") {
-			return (
-				<div key={group.id || Math.random()} className={group.className || ""}>
-					{group.content}
-				</div>
-			);
-		}
-
-		// Default: full-width fields
-		return (
-			<div key={group.id || Math.random()}>
-				{group.fields.map((field) => (
-					<Form.Group key={field.name} className="mb-3">
-						<Form.Label>
-							{field.label}
-							{field.required && <span className="text-danger">*</span>}
-						</Form.Label>
-						{renderInputField(field)}
-						{errors[field.name] && <div className="invalid-feedback d-block">{errors[field.name]}</div>}
-					</Form.Group>
-				))}
-			</div>
-		);
-	};
-
 	// Modal header (DONE)
 	const renderHeader = () => {
 		// Icon
-		let icon = "";
+		let icon;
 		if (alertIcon) {
 			icon = alertIcon;
 		} else if (mode === "alert") {
@@ -369,7 +246,7 @@ const GenericModal = ({
 				{field.label}
 				{field.required && <span className="text-danger">*</span>}
 			</Form.Label>
-			{renderInputField(field)}
+			{renderInputField(field, formData, handleChange, errors, handleSelectChange)}
 			{errors[field.name] && <div className="invalid-feedback d-block">{errors[field.name]}</div>}
 		</Form.Group>
 	);
@@ -384,7 +261,9 @@ const GenericModal = ({
 					{customContent && <div className="mt-4">{customContent}</div>}
 					{useCustomLayout ? (
 						<div>
-							{layoutGroups.map((group, _index) => renderFieldGroup(group))}
+							{layoutGroups.map((group, _index) =>
+								renderInputFieldGroup(group, formData, handleChange, errors, handleSelectChange),
+							)}
 							{fields.length > 0 && fields.map(renderFormGroup)}
 						</div>
 					) : (
@@ -392,17 +271,14 @@ const GenericModal = ({
 					)}
 				</div>
 			);
-		}
-
-		if (mode === "view") {
+		} else if (mode === "view") {
 			return (
 				<div>
 					<div className="row">
 						{viewFields.map((field) => (
 							<div key={field.name} className={field.type === "textarea" ? "col-12" : "col-md-6"}>
 								<h6>{field.label}</h6>
-								{/*TODO normalise the use of render for tables/view? */}
-								<div className="mb-3">{renderFieldValue(field)}</div>
+								<div className="mb-3">{renderFieldValue(field, data)}</div>
 							</div>
 						))}
 					</div>
@@ -446,82 +322,70 @@ const GenericModal = ({
 
 	// Render modal footer
 	const renderFooter = () => {
-		if (customFooter) return customFooter;
-
-		switch (mode) {
-			case "form":
-				return (
-					<Modal.Footer className={footerClassName}>
-						<div className={buttonContainerClassName}>
-							<Button variant="secondary" onClick={handleHide}>
-								Cancel
-							</Button>
-							<Button variant="primary" type="submit" disabled={submitting}>
-								{submitting
-									? isEdit
-										? "Updating..."
-										: "Saving..."
-									: (isEdit ? "Update" : "Save") + ` ${title}`}
-							</Button>
-						</div>
-					</Modal.Footer>
-				);
-
-			case "view":
-				return (
-					<Modal.Footer className={footerClassName}>
-						<div className={buttonContainerClassName}>
-							<Button variant="secondary" onClick={handleHide}>
-								Close
-							</Button>
-							{showEditButton && onEdit && (
-								<Button
-									variant="primary"
-									onClick={() => {
-										onEdit(data);
-									}}
-								>
-									Edit {title}
-								</Button>
-							)}
-						</div>
-					</Modal.Footer>
-				);
-
-			case "alert":
-				return (
-					<Modal.Footer className={`justify-content-center ${footerClassName}`}>
-						{showCancel && (
-							<Button
-								variant="secondary"
-								onClick={handleHide}
-								size="lg"
-								style={{ minWidth: "100px" }}
-								className="me-2"
-							>
-								{cancelText}
+		if (mode === "form") {
+			return (
+				<Modal.Footer>
+					<div className={"modal-buttons-container"}>
+						<Button variant="secondary" onClick={handleHide}>
+							Cancel
+						</Button>
+						<Button variant="primary" type="submit" disabled={submitting}>
+							{submitting
+								? isEdit
+									? "Updating..."
+									: "Saving..."
+								: (isEdit ? "Update" : "Save") + ` ${title}`}
+						</Button>
+					</div>
+				</Modal.Footer>
+			);
+		} else if (mode === "view") {
+			return (
+				<Modal.Footer>
+					<div className={"modal-buttons-container"}>
+						<Button variant="secondary" onClick={handleHide}>
+							Close
+						</Button>
+						{onEdit && (
+							<Button variant="primary" onClick={() => onEdit?.(data)}>
+								Edit {title}
 							</Button>
 						)}
-						<Button onClick={handleSubmit} size="lg" style={{ minWidth: "100px" }}>
-							{confirmText}
-						</Button>
-					</Modal.Footer>
-				);
-
-			case "confirmation":
-				return (
-					<Modal.Footer className={footerClassName}>
-						<Button variant="secondary" onClick={handleHide}>
+					</div>
+				</Modal.Footer>
+			);
+		} else if (mode === "alert") {
+			return (
+				<Modal.Footer className={"modal-buttons-container"}>
+					{showCancel && (
+						<Button
+							variant="secondary"
+							onClick={handleHide}
+							size="lg"
+							style={{ minWidth: "100px" }}
+							className="me-2"
+						>
 							{cancelText}
 						</Button>
-						<Button variant={confirmVariant} onClick={handleSubmit}>
-							{confirmText}
-						</Button>
-					</Modal.Footer>
-				);
-
-			default:
-				return null;
+					)}
+					<Button onClick={handleSubmit} size="lg" style={{ minWidth: "100px" }}>
+						{confirmText}
+					</Button>
+				</Modal.Footer>
+			);
+		} else if (mode === "confirmation") {
+			return (
+				<Modal.Footer className={"modal-buttons-container"}>
+					<Button variant="secondary" onClick={handleHide}>
+						{cancelText}
+					</Button>
+					<Button variant={confirmVariant} onClick={handleSubmit}>
+						{confirmText}
+					</Button>
+				</Modal.Footer>
+			);
+		} else {
+			return null;
 		}
 	};
 
@@ -541,3 +405,5 @@ const GenericModal = ({
 };
 
 export default GenericModal;
+
+// TODO add https to websites

@@ -72,6 +72,12 @@ const getApplicationStatusBadgeClass = (status) => {
 	}
 };
 
+const ensureHttpPrefix = (url) => {
+	if (!url) return url;
+	if (url.match(/^https?:\/\//)) return url;
+	return `http://${url}`;
+};
+
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
@@ -129,16 +135,20 @@ export const renderFunctions = {
 		return renderFunctions._longText(item, "No description provided", view);
 	},
 
-	url: (item, view = false) => {
+	_url: (item, view = false) => {
 		if (!item.url) {
 			return view ? <span className="text-muted">No URL provided</span> : null;
 		} else {
+			const safeUrl = ensureHttpPrefix(item.url);
 			return (
-				<a href={item.url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
+				<a href={safeUrl} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
 					Visit Website <i className="bi bi-box-arrow-up-right ms-1"></i>
 				</a>
 			);
 		}
+	},
+	url: (item, view = false) => {
+		return renderFunctions._url(item, view);
 	},
 
 	datetime: (date, view = false) => {
@@ -332,32 +342,23 @@ export const renderColumnValue = (field, row = null) => {
 	}
 };
 
-export const renderFieldValue = (field) => {
-	const noText = <span className="text-muted">/</span>;
-	const rendered = field.render();
-	if (rendered === null || rendered === undefined) {
-		return noText;
+export const renderFieldValue = (field, item) => {
+	const noText = <span className="text-muted">Not Provided</span>;
+	if (field.render) {
+		const rendered = field.render(item);
+		if (rendered) {
+			return rendered;
+		} else {
+			return noText;
+		}
 	} else {
-		return rendered;
+		const rendered = item[field.key];
+		if (rendered) {
+			return rendered;
+		} else {
+			return noText;
+		}
 	}
 };
 
-// Accessor functions for sorting and searching
-export const accessorFunctions = {
-	// TODO to replace with sorting function
-	personName: (person) => `${person.first_name} ${person.last_name}`,
-
-	salaryRange: (job) => {
-		if (!job.salary_min && !job.salary_max) return "";
-		if (job.salary_min && job.salary_max) {
-			return `£${job.salary_min.toLocaleString()} - £${job.salary_max.toLocaleString()}`;
-		}
-		if (job.salary_min) return `From £${job.salary_min.toLocaleString()}`;
-		if (job.salary_max) return `Up to £${job.salary_max.toLocaleString()}`;
-		return "";
-	},
-
-	jobTitle: (item) => item.job?.title || "",
-
-	keywords: (item) => item.keywords?.map((k) => k.name).join(", ") || "",
-};
+// TODO remove the view from the renderFunctions

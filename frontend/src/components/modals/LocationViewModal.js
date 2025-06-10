@@ -1,28 +1,12 @@
 import React from "react";
 import GenericModal from "../GenericModal";
 import LocationMap from "../maps/LocationMap";
+import { viewFields } from "../ViewRenders";
 
 const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
 	if (!location) return null;
 
-	// Define view fields for location - no render functions needed since these are simple text fields
-	const viewFields = [
-		{
-			name: "postcode",
-			label: "Postcode",
-			type: "text",
-		},
-		{
-			name: "city",
-			label: "City",
-			type: "text",
-		},
-		{
-			name: "country",
-			label: "Country",
-			type: "text",
-		},
-	];
+	const fields = [viewFields.city, viewFields.postcode, viewFields.country];
 
 	// Custom content for map or remote note
 	const customContent = (
@@ -57,10 +41,8 @@ const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
 			mode="view"
 			title="Location"
 			data={location}
-			viewFields={viewFields}
+			viewFields={fields}
 			onEdit={onEdit}
-			showEditButton={true}
-			showSystemFields={true}
 			size={size}
 			customContent={customContent}
 		/>

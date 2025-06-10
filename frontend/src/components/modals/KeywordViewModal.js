@@ -1,13 +1,11 @@
 import React from "react";
 import GenericModal from "../GenericModal";
+import { viewFields } from "../ViewRenders";
 
 const KeywordViewModal = ({ show, onHide, keyword, onEdit }) => {
 	if (!keyword) return null;
 
-	// Transform keyword data for display
-	const displayData = {
-		...keyword,
-	};
+	const fields = [viewFields.name];
 
 	// Custom content for additional keyword information
 	const customContent = (
@@ -32,10 +30,9 @@ const KeywordViewModal = ({ show, onHide, keyword, onEdit }) => {
 			mode="view"
 			title="Keyword Details"
 			size="md"
-			data={displayData}
+			viewFields={fields}
+			data={keyword}
 			onEdit={onEdit}
-			showEditButton={true}
-			showSystemFields={true}
 			customContent={customContent}
 		/>
 	);

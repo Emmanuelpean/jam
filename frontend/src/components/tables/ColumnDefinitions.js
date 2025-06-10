@@ -1,4 +1,4 @@
-import { renderFunctions, accessorFunctions } from "../Renders";
+import { renderFunctions } from "../Renders";
 
 export const columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
@@ -113,20 +113,29 @@ export const columns = {
 		type: "text",
 		sortField: "company.name",
 		searchFields: ["company.name"],
-		accessor: accessorFunctions.companyName,
 		render: renderFunctions.company,
 	},
 
 	// ---------------------------------------------------- PERSONS ----------------------------------------------------
 
+	persons: {
+		key: "person",
+		label: "Contacts",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		sortField: "person.last_name",
+		searchFields: ["company.name"],
+		render: renderFunctions.persons,
+	},
+
 	personName: {
 		key: "name",
-		label: "name",
+		label: "Name",
 		sortable: true,
 		searchable: true,
 		type: "text",
 		sortField: "last_name",
-		accessor: accessorFunctions.personName,
 		render: renderFunctions.name,
 	},
 
@@ -166,7 +175,6 @@ export const columns = {
 		searchable: false,
 		type: "text",
 		sortField: "salary_min",
-		accessor: accessorFunctions.salaryRange,
 		render: renderFunctions.salaryRange,
 	},
 
@@ -185,7 +193,6 @@ export const columns = {
 		searchable: true,
 		type: "text",
 		searchFields: ["keywords.name"],
-		accessor: accessorFunctions.keywords,
 		render: renderFunctions.keywords,
 	},
 };

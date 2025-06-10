@@ -1,56 +1,30 @@
 import React from "react";
 import GenericModal from "../GenericModal";
-import { renderFunctions } from "../Renders";
+import { viewFields } from "../ViewRenders";
+import Select from "react-select";
 
-const PersonViewModal = ({ show, onHide, person, onEdit, size }) => {
+const PersonViewModal = ({ person, show, onHide, onEdit, size }) => {
 	if (!person) return null;
 
 	// Define the fields to display in the view modal
-	const viewFields = [
-		{
-			name: "full_name",
-			label: "Full Name",
-			type: "text",
-			render: () => renderFunctions.name(person, true),
-		},
-		{
-			name: "company_name",
-			label: "Company",
-			type: "text",
-			render: () => renderFunctions.company(person, true),
-		},
-		{
-			name: "email",
-			label: "Email",
-			type: "email",
-			render: () => renderFunctions.email(person, true),
-		},
-		{
-			name: "phone",
-			label: "Phone",
-			type: "text",
-			render: () => renderFunctions.phone(person, true),
-		},
-		{
-			name: "linkedin_url",
-			label: "LinkedIn Profile",
-			type: "url",
-			render: () => renderFunctions.linkedinUrl(person, true),
-		},
+	const fields = [
+		viewFields.personName,
+		viewFields.company,
+		viewFields.email,
+		viewFields.phone,
+		viewFields.linkedinUrl,
 	];
 
 	return (
 		<GenericModal
+			mode="view"
+			title="Person"
+			viewFields={fields}
 			show={show}
 			onHide={onHide}
-			mode="view"
-			title="Person Details"
 			size={size}
 			data={person}
-			viewFields={viewFields}
 			onEdit={onEdit}
-			showEditButton={true}
-			showSystemFields={true}
 		/>
 	);
 };

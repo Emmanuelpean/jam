@@ -131,8 +131,6 @@ const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 			data={displayData}
 			viewFields={viewFields}
 			onEdit={onEdit}
-			showEditButton={true}
-			showSystemFields={true}
 			customContent={customContent}
 		/>
 	);

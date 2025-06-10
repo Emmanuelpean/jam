@@ -1,30 +1,11 @@
 import React from "react";
 import GenericModal from "../GenericModal";
-import { renderFunctions } from "../Renders";
+import { viewFields } from "../ViewRenders";
 
 const CompanyViewModal = ({ show, onHide, company, onEdit, size }) => {
-	const viewFields = [
-		{
-			name: "name",
-			label: "Company Name",
-			type: "text",
-			render: () => renderFunctions.name(company, true),
-		},
-		{
-			name: "url",
-			label: "Website",
-			type: "url",
-			render: () => renderFunctions.url(company, true),
-		},
-		{
-			name: "description",
-			label: "Description",
-			type: "textarea",
-			render: () => renderFunctions.description(company, true),
-		},
-	];
+	if (!company) return null; // TODO to remove if can prevent initial calling
 
-	if (!company) return null;
+	const fields = [viewFields.name, viewFields.url, viewFields.description];
 
 	return (
 		<GenericModal
@@ -33,10 +14,8 @@ const CompanyViewModal = ({ show, onHide, company, onEdit, size }) => {
 			mode="view"
 			title="Company"
 			data={company}
-			viewFields={viewFields}
+			viewFields={fields}
 			onEdit={onEdit}
-			showEditButton={true}
-			showSystemFields={true}
 			size={size}
 		/>
 	);
