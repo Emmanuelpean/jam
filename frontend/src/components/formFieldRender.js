@@ -42,17 +42,6 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 	if (field.type === "select") {
 		const selectedValue = field.options?.find((option) => option.value === value);
 
-		const customStyles = {
-			menu: (provided) => ({
-				...provided,
-				animation: 'slideDown 0.2s ease-out',
-			}),
-			menuList: (provided) => ({
-				...provided,
-				animation: 'fadeIn 0.15s ease-out',
-			}),
-		};
-
 		return (
 			<Select
 				name={field.name}
@@ -65,14 +54,10 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 				isDisabled={field.isDisabled}
 				isMulti={field.isMulti}
 				menuPortalTarget={document.body}
-				menuShouldBlockScroll={false}
-				closeMenuOnScroll={false}
-				styles={customStyles}
 				className="react-select-container"
 				classNamePrefix="react-select"
 			/>
 		);
-
 	}
 
 	return (
