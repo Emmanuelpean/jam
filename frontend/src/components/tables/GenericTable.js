@@ -1,28 +1,20 @@
 import React, { useState } from "react";
 import { Button, Form } from "react-bootstrap";
-
-const renderCellContent = (column, row) => {
-	// TODO need to use that function in the view modals
-	const noText = <span className="text-muted">/</span>;
-	if (column.render) {
-		return column.render(row) ?? noText;
-	} else {
-		return row[column.key] || noText;
-	}
-};
+import { renderFieldValue } from "../Renders";
 
 export const createGenericDeleteHandler = ({
 	endpoint,
 	token,
-	showConfirm, // Use showConfirm instead of showConfirmation
+	showConfirm,
 	showError,
 	removeItem,
 	setData,
-	getItemDisplayName = (item) => `item #${item.id}`,
+	nameKey,
 	itemType = "item",
 }) => {
 	return async (item) => {
-		const itemName = getItemDisplayName(item);
+		console.log(nameKey, item);
+		const itemName = item[nameKey];
 
 		try {
 			await showConfirm({
@@ -68,107 +60,43 @@ export const createGenericDeleteHandler = ({
 	};
 };
 
-// Predefined display name functions for common item types
-export const displayNameFunctions = {
-	// TODO
-	location: (location) => {
-		return location.city
-			? `${location.city}${location.country ? `, ${location.country}` : ""}`
-			: `location #${location.id}`;
-	},
-	user: (user) => {
-		return user.name || user.email || user.username || `user #${user.id}`;
-	},
-	company: (company) => {
-		return company.name || `company #${company.id}`;
-	},
-	job: (job) => {
-		return job.title || `job #${job.id}`;
-	},
-	project: (project) => {
-		return project.name || project.title || `project #${project.id}`;
-	},
-	task: (task) => {
-		return task.title || task.name || `task #${task.id}`;
-	},
-	category: (category) => {
-		return category.name || `category #${category.id}`;
-	},
-	product: (product) => {
-		return product.name || product.title || `product #${product.id}`;
-	},
-	order: (order) => {
-		return order.order_number || `order #${order.id}`;
-	},
-	invoice: (invoice) => {
-		return invoice.invoice_number || `invoice #${invoice.id}`;
-	},
-	contact: (contact) => {
-		const name =
-			contact.first_name && contact.last_name
-				? `${contact.first_name} ${contact.last_name}`
-				: contact.name || contact.email;
-		return name || `contact #${contact.id}`;
-	},
-	article: (article) => {
-		return article.title || `article #${article.id}`;
-	},
-	event: (event) => {
-		return event.name || event.title || `event #${event.id}`;
-	},
-	generic: (item) => `item #${item.id}`,
-};
-
 // Utility function to create standardized action buttons
-export const createTableAction = (type, onClick, customTitle = null) => {
+export const createTableAction = (type, onClick) => {
 	const actionTypes = {
 		view: {
 			label: "View",
 			icon: "bi bi-eye",
 			className: "btn-action-view",
-			title: "View details",
 		},
 		edit: {
 			label: "Edit",
 			icon: "bi bi-pencil",
 			className: "btn-action-edit",
-			title: "Edit item",
 		},
 		delete: {
 			label: "Delete",
 			icon: "bi bi-trash",
 			className: "btn-action-delete",
-			title: "Delete item",
 		},
 		duplicate: {
 			label: "Duplicate",
 			icon: "bi bi-copy",
 			className: "btn-action-duplicate",
-			title: "Duplicate item",
 		},
 		download: {
 			label: "Download",
 			icon: "bi bi-download",
 			className: "btn-action-download",
-			title: "Download item",
 		},
 		archive: {
 			label: "Archive",
 			icon: "bi bi-archive",
 			className: "btn-action-archive",
-			title: "Archive item",
 		},
 		restore: {
 			label: "Restore",
 			icon: "bi bi-arrow-counterclockwise",
 			className: "btn-action-restore",
-			title: "Restore item",
-		},
-		settings: {
-			label: "Settings",
-			icon: "bi bi-gear",
-			className: "btn-action-settings",
-			title: "Item settings",
 		},
 	};
 
@@ -180,7 +108,6 @@ export const createTableAction = (type, onClick, customTitle = null) => {
 	return {
 		...actionConfig,
 		onClick,
-		title: customTitle || actionConfig.title,
 	};
 };
 
@@ -207,12 +134,11 @@ const GenericTable = ({
 	onSearchChange,
 	onAddClick,
 	addButtonText = "Add Item",
-	filterComponent = null,
 	loading = false,
 	error = null,
 	emptyMessage = "No items found",
 	actions = null,
-	defaultDisplayText = "/",
+	onRowClick = null,
 }) => {
 	const [currentPage, setCurrentPage] = useState(0);
 	const [pageSize, setPageSize] = useState(10);
@@ -333,7 +259,8 @@ const GenericTable = ({
 
 	const sortedData = getSortedData();
 
-	// Pagination calculations
+	// ----------------------------------------------------- PAGES -----------------------------------------------------
+
 	const totalPages = Math.ceil(sortedData.length / pageSize);
 	const startIndex = currentPage * pageSize;
 	const endIndex = startIndex + pageSize;
@@ -352,7 +279,7 @@ const GenericTable = ({
 
 	const handlePageSizeChange = (newPageSize) => {
 		setPageSize(newPageSize);
-		setCurrentPage(0); // Reset to first page when changing page size
+		setCurrentPage(0);
 	};
 
 	if (loading) {
@@ -391,9 +318,6 @@ const GenericTable = ({
 				</Button>
 			</div>
 
-			{/* Filter component if provided */}
-			{filterComponent && <div className="mb-3">{filterComponent}</div>}
-
 			{/* Table with rounded corners */}
 			<div className="table-responsive">
 				<table className="table table-striped table-hover rounded-3 overflow-hidden">
@@ -430,10 +354,18 @@ const GenericTable = ({
 					</thead>
 					<tbody>
 						{currentPageData.map((item, index) => (
-							<tr key={item.id || index}>
-								{tableColumns.map((column) => (
-									<td key={column.key} className="align-middle">
-										{renderCellContent(column, item)}
+							<tr
+								key={item.id || index}
+								onClick={() => onRowClick && onRowClick(item)}
+								style={onRowClick ? { cursor: "pointer" } : {}}
+							>
+								{tableColumns.map((column, columnIndex) => (
+									<td
+										key={column.key}
+										className="align-middle"
+										style={columnIndex === 0 ? { fontWeight: "bold" } : {}}
+									>
+										{renderFieldValue(column, item)}
 									</td>
 								))}
 							</tr>
@@ -449,7 +381,7 @@ const GenericTable = ({
 				</table>
 			</div>
 
-			{/* Pagination with reduced spacing */}
+			{/* Page controls */}
 			<div className="d-flex justify-content-between align-items-center mt-0ds">
 				<div className="d-flex align-items-center gap-1">
 					<Button
@@ -458,7 +390,7 @@ const GenericTable = ({
 						className="py-0 px-2"
 						onClick={goToFirstPage}
 						disabled={currentPage === 0}
-						hidden={currentPage === 0}
+						hidden={currentPage <= 1}
 						aria-label="First page"
 					>
 						<i className="bi bi-chevron-double-left" aria-hidden="true"></i>
@@ -469,7 +401,7 @@ const GenericTable = ({
 						className="py-0 px-2"
 						onClick={goToPreviousPage}
 						disabled={currentPage === 0}
-						hidden={currentPage === 0}
+						hidden={currentPage <= 1}
 						aria-label="Previous page"
 					>
 						<i className="bi bi-chevron-left" aria-hidden="true"></i>
@@ -479,8 +411,8 @@ const GenericTable = ({
 						size="sm"
 						className="py-0 px-2"
 						onClick={goToNextPage}
-						disabled={currentPage >= totalPages - 1}
-						hidden={totalPages === 1}
+						disabled={currentPage >= totalPages - 2}
+						hidden={totalPages <= 1}
 						aria-label="Next page"
 					>
 						<i className="bi bi-chevron-right" aria-hidden="true"></i>
@@ -490,8 +422,8 @@ const GenericTable = ({
 						size="sm"
 						className="py-0 px-2"
 						onClick={goToLastPage}
-						disabled={currentPage >= totalPages - 1}
-						hidden={totalPages === 1}
+						disabled={currentPage >= totalPages - 2}
+						hidden={totalPages <= 1}
 						aria-label="Last page"
 					>
 						<i className="bi bi-chevron-double-right" aria-hidden="true"></i>
@@ -510,7 +442,7 @@ const GenericTable = ({
 					>
 						{[10, 20, 30, 40, 50, 100].map((size) => (
 							<option key={size} value={size}>
-								Show {size} entries
+								Show {size} Entries
 							</option>
 						))}
 					</Form.Select>

@@ -1,9 +1,5 @@
 import React, { useState } from "react";
-import GenericTable, {
-	createGenericDeleteHandler,
-	createTableActions,
-	displayNameFunctions,
-} from "../components/tables/GenericTable";
+import GenericTable, { createGenericDeleteHandler, createTableActions } from "../components/tables/GenericTable";
 import CompanyFormModal from "../components/modals/CompanyFormModal";
 import CompanyViewModal from "../components/modals/CompanyViewModal";
 import { useTableData } from "../components/tables/Table";
@@ -68,7 +64,7 @@ const CompaniesPage = () => {
 		showError,
 		removeItem,
 		setData: setCompanies,
-		getItemDisplayName: displayNameFunctions.company,
+		nameKey: "name",
 		itemType: "Company",
 	});
 

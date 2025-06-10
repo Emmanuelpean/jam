@@ -1,9 +1,5 @@
 import React, { useState } from "react";
-import GenericTable, {
-	createGenericDeleteHandler,
-	createTableActions,
-	displayNameFunctions,
-} from "../components/tables/GenericTable";
+import GenericTable, { createGenericDeleteHandler, createTableActions } from "../components/tables/GenericTable";
 import PersonFormModal from "../components/modals/PersonFormModal";
 import PersonViewModal from "../components/modals/PersonViewModal";
 import { useTableData } from "../components/tables/Table";
@@ -68,7 +64,7 @@ const PersonPage = () => {
 		showError,
 		removeItem,
 		setData: setPeople,
-		getItemDisplayName: displayNameFunctions.contact,
+		nameKey: "name",
 		itemType: "Person",
 	});
 

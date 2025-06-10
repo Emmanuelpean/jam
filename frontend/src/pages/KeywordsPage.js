@@ -1,9 +1,5 @@
 import React, { useState } from "react";
-import GenericTable, {
-	createGenericDeleteHandler,
-	createTableActions,
-	displayNameFunctions,
-} from "../components/tables/GenericTable";
+import GenericTable, { createGenericDeleteHandler, createTableActions } from "../components/tables/GenericTable";
 import KeywordFormModal from "../components/modals/KeywordFormModal";
 import KeywordViewModal from "../components/modals/KeywordViewModal";
 import { useTableData } from "../components/tables/Table";
@@ -76,7 +72,7 @@ const KeywordsPage = () => {
 		showError,
 		removeItem,
 		setData: setKeywords,
-		getItemDisplayName: displayNameFunctions.keyword,
+		nameKey: "name",
 		itemType: "Keyword",
 	});
 

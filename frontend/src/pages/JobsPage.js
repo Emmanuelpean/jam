@@ -64,7 +64,7 @@ const JobsPage = () => {
 		showError,
 		removeItem,
 		setData: setJobs,
-		getItemDisplayName: (job) => job.title || `job #${job.id}`,
+		nameKey: "title",
 		itemType: "Job",
 	});
 

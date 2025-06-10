@@ -1,9 +1,5 @@
-import React, { useState, useMemo } from "react";
-import GenericTable, {
-	createGenericDeleteHandler,
-	createTableActions,
-	displayNameFunctions,
-} from "../components/tables/GenericTable";
+import React, { useMemo, useState } from "react";
+import GenericTable, { createGenericDeleteHandler, createTableActions } from "../components/tables/GenericTable";
 import LocationFormModal from "../components/modals/LocationFormModal";
 import LocationViewModal from "../components/modals/LocationViewModal";
 import LocationMap from "../components/maps/LocationMap";
@@ -74,7 +70,7 @@ const LocationsPage = () => {
 		showError,
 		removeItem,
 		setData: setLocations,
-		getItemDisplayName: displayNameFunctions.location,
+		nameKey: "name",
 		itemType: "Location",
 	});
 

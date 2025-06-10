@@ -14,7 +14,6 @@ const PersonFormModal = ({
 	size,
 	initialData = {},
 	isEdit = false,
-	// Company handling props - passed from parent
 	companyOptions = [],
 	onCompanyAdd = null,
 	onCompanyEdit = null,

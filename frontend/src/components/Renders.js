@@ -75,7 +75,7 @@ const getApplicationStatusBadgeClass = (status) => {
 const ensureHttpPrefix = (url) => {
 	if (!url) return url;
 	if (url.match(/^https?:\/\//)) return url;
-	return `http://${url}`;
+	return `https://${url}`;
 };
 
 export const renderFunctions = {
@@ -86,11 +86,7 @@ export const renderFunctions = {
 		if (!item.name) {
 			return view ? <span className="text-muted">No name provided</span> : null;
 		} else {
-			if (view) {
-				return <div>{item.name}</div>;
-			} else {
-				return <strong>{item.name}</strong>;
-			}
+			return <div>{item.name}</div>;
 		}
 	},
 
@@ -98,11 +94,7 @@ export const renderFunctions = {
 		if (!item.title) {
 			return view ? <span className="text-muted">No title provided</span> : null;
 		} else {
-			if (view) {
-				return <div>{item.title}</div>;
-			} else {
-				return <strong>{item.title}</strong>;
-			}
+			return <div>{item.name}</div>;
 		}
 	},
 
@@ -333,15 +325,6 @@ export const renderFunctions = {
 	},
 };
 
-export const renderColumnValue = (field, row = null) => {
-	const noText = <span className="text-muted">/</span>;
-	if (field.render) {
-		return field.render(row) ?? noText;
-	} else {
-		return row[field.key] || noText;
-	}
-};
-
 export const renderFieldValue = (field, item) => {
 	const noText = <span className="text-muted">Not Provided</span>;
 	if (field.render) {
@@ -360,5 +343,3 @@ export const renderFieldValue = (field, item) => {
 		}
 	}
 };
-
-// TODO remove the view from the renderFunctions
