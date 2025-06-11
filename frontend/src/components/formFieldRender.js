@@ -73,7 +73,7 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 	);
 };
 
-export const renderInputFieldGroup = (group, field, formData, handleChange, errors, handleSelectChange) => {
+export const renderInputFieldGroup = (group, formData, handleChange, errors, handleSelectChange) => {
 	if (group.type === "row") {
 		return (
 			<div key={group.id || Math.random()} className={`row ${group.className || ""}`}>
