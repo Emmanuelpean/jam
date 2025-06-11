@@ -88,6 +88,15 @@ export const viewFields = {
 		render: (x) => renderFunctions.company(x, true),
 	},
 
+	// ---------------------------------------------------- KEYWORDS ---------------------------------------------------
+
+	keywords: {
+		key: "keywords",
+		label: "Tags",
+		type: "text",
+		render: (x) => renderFunctions.keywords(x, true),
+	},
+
 	// ---------------------------------------------------- PERSONS ----------------------------------------------------
 
 	persons: {
@@ -124,6 +133,8 @@ export const viewFields = {
 		type: "url",
 		render: (x) => renderFunctions.linkedinUrl(x, true),
 	},
+
+	// ------------------------------------------------------ JOBS -----------------------------------------------------
 
 	status: {
 		key: "status",

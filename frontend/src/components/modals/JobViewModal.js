@@ -14,6 +14,8 @@ const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 		viewFields.salaryRange,
 		viewFields.personalRating,
 		viewFields.url,
+		viewFields.keywords,
+		viewFields.persons,
 	];
 
 	return (
@@ -21,7 +23,7 @@ const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 			show={show}
 			onHide={onHide}
 			mode="view"
-			title="Job Application"
+			title="Job"
 			size={size}
 			viewFields={fields}
 			data={job}

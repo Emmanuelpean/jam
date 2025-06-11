@@ -1,8 +1,8 @@
 import React from "react";
 import GenericModal from "../GenericModal";
-import renderInputField from "../formFieldRender";
 
 const KeywordFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
+
 	const formFields = [
 		{
 			name: "name",

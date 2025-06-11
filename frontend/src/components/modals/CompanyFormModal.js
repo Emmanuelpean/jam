@@ -2,7 +2,7 @@ import React from "react";
 import GenericModal from "../GenericModal";
 
 const CompanyFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
-	// Define form fields for company
+
 	const formFields = [
 		{
 			name: "name",

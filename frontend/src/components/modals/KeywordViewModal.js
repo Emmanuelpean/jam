@@ -28,10 +28,10 @@ const KeywordViewModal = ({ show, onHide, keyword, onEdit }) => {
 			show={show}
 			onHide={onHide}
 			mode="view"
-			title="Keyword Details"
+			title="Keyword"
 			size="md"
-			viewFields={fields}
 			data={keyword}
+			viewFields={fields}
 			onEdit={onEdit}
 			customContent={customContent}
 		/>

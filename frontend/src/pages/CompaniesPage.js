@@ -27,20 +27,19 @@ const CompaniesPage = () => {
 	const [showModal, setShowModal] = useState(false);
 	const [showViewModal, setShowViewModal] = useState(false);
 	const [showEditModal, setShowEditModal] = useState(false);
-	const [selectedCompany, setSelectedCompany] = useState(null);
-	const [selectedCompanies, setSelectedCompanies] = useState([]);
+	const [selected, setSelected] = useState(null);
 
 	const { alertState, showConfirm, showError, hideAlert } = useGenericAlert();
 
 	// Handle view company
 	const handleView = (company) => {
-		setSelectedCompany(company);
+		setSelected(company);
 		setShowViewModal(true);
 	};
 
 	// Handle edit company
 	const handleEdit = (company) => {
-		setSelectedCompany(company);
+		setSelected(company);
 		setShowEditModal(true);
 	};
 
@@ -48,13 +47,13 @@ const CompaniesPage = () => {
 	const handleEditSuccess = (updatedCompany) => {
 		updateItem(updatedCompany);
 		setShowEditModal(false);
-		setSelectedCompany(null);
+		setSelected(null);
 	};
 
 	// Handle edit modal close
 	const handleEditModalClose = () => {
 		setShowEditModal(false);
-		setSelectedCompany(null);
+		setSelected(null);
 	};
 
 	// Create reusable delete handler using the generic function
@@ -102,9 +101,6 @@ const CompaniesPage = () => {
 				emptyMessage="No companies found"
 				onRowClick={handleView}
 				selectable={true}
-				selectedRows={selectedCompanies}
-				onSelectionChange={setSelectedCompanies}
-
 			/>
 
 			{/* Modals */}
@@ -114,14 +110,14 @@ const CompaniesPage = () => {
 				show={showEditModal}
 				onHide={handleEditModalClose}
 				onSuccess={handleEditSuccess}
-				initialData={selectedCompany || {}}
+				initialData={selected || {}}
 				isEdit={true}
 			/>
 
 			<CompanyViewModal
 				show={showViewModal}
 				onHide={() => setShowViewModal(false)}
-				company={selectedCompany}
+				company={selected}
 				onEdit={handleEdit}
 			/>
 

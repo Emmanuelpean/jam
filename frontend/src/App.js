@@ -4,16 +4,15 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 import LocationsPage from "./pages/LocationsPage";
-import StyleShowcase from "./pages/_TestPage";
 import Header from "./components/Header";
-import "bootstrap/dist/css/bootstrap.min.css"; // Bootstrap first
+import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import CompaniesPage from "./pages/CompaniesPage";
 import JobsPage from "./pages/JobsPage";
 import PersonPage from "./pages/PersonPage";
 import KeywordsPage from "./pages/KeywordsPage";
 
-// Layout wrapper component to conditionally show header
+
 function AppLayout({ children }) {
 	const location = useLocation();
 	const { currentUser, logout } = useAuth();
@@ -66,14 +65,6 @@ function App() {
 							element={
 								<ProtectedRoute>
 									<JobsPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="/showcase"
-							element={
-								<ProtectedRoute>
-									<StyleShowcase />
 								</ProtectedRoute>
 							}
 						/>

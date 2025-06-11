@@ -342,22 +342,22 @@ const GenericModal = ({
 		} else if (mode === "view") {
 			return (
 				<Modal.Footer>
-					{(onEdit || onDelete) && (
-						<div className="d-flex gap-2 w-100 mb-3">
-							{
-								<button className="btn btn-action btn-action-edit" onClick={() => onEdit?.(data)}>
-									<i className="bi bi-pencil me-2"></i>
-									Edit {title}
-								</button>
-							}
-							{
-								<button className="btn btn-action btn-action-delete" onClick={() => onDelete?.(data)}>
-									<i className="bi bi-trash me-2"></i>
-									Delete {title}
-								</button>
-							}
-						</div>
-					)}
+					{/*{(onEdit || onDelete) && (*/}
+					{/*	<div className="d-flex gap-2 w-100 mb-3">*/}
+					{/*		{*/}
+					{/*			<button className="btn btn-action btn-action-edit" onClick={() => onEdit?.(data)}>*/}
+					{/*				<i className="bi bi-pencil me-2"></i>*/}
+					{/*				Edit {title}*/}
+					{/*			</button>*/}
+					{/*		}*/}
+					{/*		{*/}
+					{/*			<button className="btn btn-action btn-action-delete" onClick={() => onDelete?.(data)}>*/}
+					{/*				<i className="bi bi-trash me-2"></i>*/}
+					{/*				Delete {title}*/}
+					{/*			</button>*/}
+					{/*		}*/}
+					{/*	</div>*/}
+					{/*)}*/}
 					<div className="w-100">
 						<Button variant="primary" onClick={handleHide} className="w-100">
 							Close

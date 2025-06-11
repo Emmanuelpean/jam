@@ -2,8 +2,8 @@ import React from "react";
 import GenericModal from "../GenericModal";
 import { viewFields } from "../ViewRenders";
 
-const CompanyViewModal = ({ show, onHide, company, onEdit, size }) => {
-	if (!company) return null; // TODO to remove if can prevent initial calling
+const CompanyViewModal = ({ show, onHide, company, onEdit, onDelete, size }) => {
+	if (!company) return null;
 
 	const fields = [viewFields.name, viewFields.url, viewFields.description];
 
@@ -13,10 +13,11 @@ const CompanyViewModal = ({ show, onHide, company, onEdit, size }) => {
 			onHide={onHide}
 			mode="view"
 			title="Company"
+			size={size}
 			data={company}
 			viewFields={fields}
 			onEdit={onEdit}
-			size={size}
+			onDelete={onDelete}
 		/>
 	);
 };

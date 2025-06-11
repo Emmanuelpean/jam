@@ -91,7 +91,7 @@ const JobsPage = () => {
 
 	return (
 		<div className="container">
-			<h2 className="my-4">Job Applications</h2>
+			<h2 className="my-4">Jobs</h2>
 
 			<GenericTable
 				data={jobs}
@@ -105,7 +105,7 @@ const JobsPage = () => {
 				addButtonText="Add Job"
 				loading={loading}
 				error={error}
-				emptyMessage="No job applications found"
+				emptyMessage="No job found"
 			/>
 
 			{/* Modals */}

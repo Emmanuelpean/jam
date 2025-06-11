@@ -8,11 +8,8 @@ const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
 
 	const fields = [viewFields.city, viewFields.postcode, viewFields.country];
 
-	// Custom content for map or remote note
 	const customContent = (
 		<>
-			{/* Location fields are handled by GenericModal */}
-			{/* Map or Remote Info */}
 			{!location.remote ? (
 				<div className="mb-4">
 					<h6 className="mb-3">📍 Location on Map</h6>

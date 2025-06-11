@@ -47,20 +47,12 @@ const KeywordsPage = () => {
 	const handleEditSuccess = (updatedKeyword) => {
 		updateItem(updatedKeyword);
 		setShowEditModal(false);
-		// Update the selected keyword with fresh data instead of clearing it
-		setSelectedKeyword(updatedKeyword);
-		// Don't close the view modal - keep setShowViewModal(true) intact
+		setSelectedKeyword(null);
 	};
 
 	// Handle edit modal close
 	const handleEditModalClose = () => {
 		setShowEditModal(false);
-		// Don't clear selectedKeyword here - keep the view modal's data intact
-	};
-
-	// Handle view modal close
-	const handleViewModalClose = () => {
-		setShowViewModal(false);
 		setSelectedKeyword(null);
 	};
 
@@ -92,7 +84,7 @@ const KeywordsPage = () => {
 
 	return (
 		<div className="container">
-			<h2 className="my-4">Keywords</h2>
+			<h2 className="my-4">Tags</h2>
 
 			<GenericTable
 				data={keywords}
@@ -103,10 +95,10 @@ const KeywordsPage = () => {
 				searchTerm={searchTerm}
 				onSearchChange={setSearchTerm}
 				onAddClick={() => setShowModal(true)}
-				addButtonText="Add Keyword"
+				addButtonText="Add Tag"
 				loading={loading}
 				error={error}
-				emptyMessage="No keywords found"
+				emptyMessage="No tag found"
 			/>
 
 			{/* Modals */}
@@ -122,7 +114,7 @@ const KeywordsPage = () => {
 
 			<KeywordViewModal
 				show={showViewModal}
-				onHide={handleViewModalClose}
+				onHide={() => setShowViewModal(false)}
 				keyword={selectedKeyword}
 				onEdit={handleEdit}
 			/>

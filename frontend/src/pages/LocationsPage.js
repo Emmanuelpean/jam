@@ -119,7 +119,7 @@ const LocationsPage = () => {
 
 			<LocationFormModal
 				show={showEditModal}
-				onHide={() => setShowModal(false)}
+				onHide={handleEditModalClose}
 				onSuccess={handleEditSuccess}
 				initialData={selectedLocation || {}}
 				isEdit={true}

@@ -18,8 +18,8 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
 from app.database import Base
@@ -101,6 +101,10 @@ class Company(CommonBase, Base):
     description = Column(String, nullable=True)
     url = Column(String, nullable=True)
 
+    # Relationships
+    jobs = relationship("Job", back_populates="company")
+    persons = relationship("Person", back_populates="company")
+
 
 class Keyword(CommonBase, Base):
     """Represents keywords associated with job postings.
@@ -141,6 +145,10 @@ class Location(CommonBase, Base):
     country = Column(String, nullable=True)
     remote = Column(Boolean, nullable=False, server_default=expression.false())
 
+    # Relationships
+    jobs = relationship("Job", back_populates="location")
+    interviews = relationship("Interview", back_populates="location")
+
     @hybrid_property
     def name(self):
         """Computed property that combines city, country, and postcode into a readable location name"""
@@ -159,8 +167,8 @@ class Location(CommonBase, Base):
 
     __table_args__ = (
         CheckConstraint(
-            "postcode IS NOT NULL OR city IS NOT NULL OR country IS NOT NULL OR remote IS NOT NULL",
-            name="at_least_one_location_field_required",
+            "(postcode IS NOT NULL OR city IS NOT NULL OR country IS NOT NULL) OR remote = true",
+            name="location_data_required_unless_remote",
         ),
     )
 
@@ -188,8 +196,10 @@ class Person(CommonBase, Base):
     phone = Column(String, nullable=True)
     role = Column(String, nullable=True)
     linkedin_url = Column(String, nullable=True)
-    company_id = Column(Integer, ForeignKey("company.id"), nullable=True)
-    company = relationship("Company")
+    company_id = Column(Integer, ForeignKey("company.id", ondelete="SET NULL"), nullable=True, index=True)
+
+    # Relationships
+    company = relationship("Company", back_populates="persons")
     interviews = relationship("Interview", secondary=interview_interviewers, back_populates="interviewers")
     jobs = relationship("Job", secondary=job_contacts, back_populates="contacts")
 
@@ -231,26 +241,33 @@ class Job(CommonBase, Base):
     salary_max = Column(Float, nullable=True)
     url = Column(String, nullable=True)
     personal_rating = Column(Integer, nullable=True)
-    company_id = Column(Integer, ForeignKey("company.id"), nullable=True)
-    company = relationship("Company")
-    location_id = Column(Integer, ForeignKey("location.id"), nullable=True)
-    location = relationship("Location")
-    duplicate_id = Column(Integer, ForeignKey("job.id"), nullable=True)
-    keywords = relationship("Keyword", secondary=job_keywords, back_populates="jobs", lazy="selectin")
+    company_id = Column(Integer, ForeignKey("company.id", ondelete="SET NULL"), nullable=True, index=True)
+    location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
+    duplicate_id = Column(Integer, ForeignKey("job.id", ondelete="SET NULL"), nullable=True)
     note = Column(String, nullable=True)
+
+    # Relationships
+    company = relationship("Company", back_populates="jobs")
+    location = relationship("Location", back_populates="jobs")
+    keywords = relationship("Keyword", secondary=job_keywords, back_populates="jobs", lazy="selectin")
     job_application = relationship("JobApplication", back_populates="job", uselist=False)
-    contacts = relationship("Person", secondary=job_contacts, back_populates="jobs")
+    contacts = relationship("Person", secondary=job_contacts, back_populates="jobs", lazy="selectin")
 
     @hybrid_property
     def name(self):
         """Computed property that combines the job title and company name"""
 
         if self.title and self.company and self.company.name:
-            return f"{self.first_name} - {self.company.name}"
+            return f"{self.title} - {self.company.name}"
         elif self.title:
             return self.title
         else:
             return "Unknown Job"
+
+    __table_args__ = (
+        CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name="valid_rating_range"),
+        CheckConstraint("salary_min <= salary_max", name="valid_salary_range"),
+    )
 
 
 class JobApplication(CommonBase, Base):
@@ -267,12 +284,14 @@ class JobApplication(CommonBase, Base):
 
     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     url = Column(String, nullable=True)
-    job_id = Column(Integer, ForeignKey("job.id"), nullable=False, unique=True)  # unique=True ensures one-to-one
-    job = relationship("Job", back_populates="job_application")
+    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False, unique=True)
     status = Column(String, server_default="Applied", nullable=False)
     note = Column(String, nullable=True)
     cv = Column(LargeBinary, nullable=True)
     cover_letter = Column(LargeBinary, nullable=True)
+
+    # Relationships
+    job = relationship("Job", back_populates="job_application")
     interviews = relationship("Interview", back_populates="job_application")
 
 
@@ -289,9 +308,11 @@ class Interview(CommonBase, Base):
     - `note` (str, optional): Additional notes or comments about the interview."""
 
     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
-    location_id = Column(Integer, ForeignKey("location.id"), nullable=True)
-    location = relationship("Location")
-    jobapplication_id = Column(Integer, ForeignKey("jobapplication.id"), nullable=False)
-    job_application = relationship("JobApplication", back_populates="interviews")
+    location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
+    jobapplication_id = Column(Integer, ForeignKey("jobapplication.id", ondelete="CASCADE"), nullable=False, index=True)
     note = Column(String, nullable=True)
+
+    # Relationships
+    location = relationship("Location", back_populates="interviews")
+    job_application = relationship("JobApplication", back_populates="interviews")
     interviewers = relationship("Person", secondary=interview_interviewers, back_populates="interviews")

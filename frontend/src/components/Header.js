@@ -45,7 +45,7 @@ const Header = ({ user, onLogout }) => {
 					</Nav.Link>
 					<Nav.Link href="/keywords" className={`nav-link-custom ${isActive("/keywords") ? "active" : ""}`}>
 						<i className="bi bi-tags me-2"></i>
-						<span>Keywords</span>
+						<span>Tags</span>
 					</Nav.Link>
 					<Nav.Link href="/locations" className={`nav-link-custom ${isActive("/locations") ? "active" : ""}`}>
 						<i className="bi bi-geo-alt me-2"></i>
