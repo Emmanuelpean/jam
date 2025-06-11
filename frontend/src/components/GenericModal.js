@@ -3,7 +3,7 @@ import { Alert, Button, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue, renderFunctions } from "./Renders";
-import { renderInputFieldGroup, renderInputField } from "./formFieldRender";
+import { renderInputField, renderInputFieldGroup } from "./formFieldRender";
 
 const DEFAULT_ICONS = {
 	form: "bi bi-pencil",
@@ -48,6 +48,7 @@ const GenericModal = ({
 	data = null, // Object - Data to display in view mode
 	viewFields = [], // Array - Field definitions for view mode display
 	onEdit = null, // Function - Called when edit button is clicked
+	onDelete = null, // Function - Called when delete button is clicked
 	showSystemFields = true, // Boolean - Whether to show created/modified dates
 
 	// Alert mode props
@@ -298,7 +299,6 @@ const GenericModal = ({
 					)}
 				</div>
 			);
-			// 	TODO here
 		} else if (mode === "alert") {
 			return (
 				<div>
@@ -342,15 +342,26 @@ const GenericModal = ({
 		} else if (mode === "view") {
 			return (
 				<Modal.Footer>
-					<div className={"modal-buttons-container"}>
-						<Button variant="secondary" onClick={handleHide}>
+					{(onEdit || onDelete) && (
+						<div className="d-flex gap-2 w-100 mb-3">
+							{
+								<button className="btn btn-action btn-action-edit" onClick={() => onEdit?.(data)}>
+									<i className="bi bi-pencil me-2"></i>
+									Edit {title}
+								</button>
+							}
+							{
+								<button className="btn btn-action btn-action-delete" onClick={() => onDelete?.(data)}>
+									<i className="bi bi-trash me-2"></i>
+									Delete {title}
+								</button>
+							}
+						</div>
+					)}
+					<div className="w-100">
+						<Button variant="primary" onClick={handleHide} className="w-100">
 							Close
 						</Button>
-						{onEdit && (
-							<Button variant="primary" onClick={() => onEdit?.(data)}>
-								Edit {title}
-							</Button>
-						)}
 					</div>
 				</Modal.Footer>
 			);
@@ -405,5 +416,3 @@ const GenericModal = ({
 };
 
 export default GenericModal;
-
-// TODO add https to websites
