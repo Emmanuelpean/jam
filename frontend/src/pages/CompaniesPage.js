@@ -28,6 +28,7 @@ const CompaniesPage = () => {
 	const [showViewModal, setShowViewModal] = useState(false);
 	const [showEditModal, setShowEditModal] = useState(false);
 	const [selectedCompany, setSelectedCompany] = useState(null);
+	const [selectedCompanies, setSelectedCompanies] = useState([]);
 
 	const { alertState, showConfirm, showError, hideAlert } = useGenericAlert();
 
@@ -99,6 +100,11 @@ const CompaniesPage = () => {
 				loading={loading}
 				error={error}
 				emptyMessage="No companies found"
+				onRowClick={handleView}
+				selectable={true}
+				selectedRows={selectedCompanies}
+				onSelectionChange={setSelectedCompanies}
+
 			/>
 
 			{/* Modals */}

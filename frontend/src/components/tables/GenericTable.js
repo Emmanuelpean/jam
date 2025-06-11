@@ -44,17 +44,16 @@ export const createGenericDeleteHandler = ({
 					}
 				} else {
 					await showError({
-						message: `Failed to delete ${itemType.toLowerCase()}. Please try again.`,
+						message: `Failed to delete ${itemType}. Please try again.`,
 					});
 				}
 			} catch (error) {
-				console.error(`Error deleting ${itemType.toLowerCase()}:`, error);
+				console.error(`Error deleting ${itemType}:`, error);
 				await showError({
-					message: `Failed to delete ${itemType.toLowerCase()}. Please check your connection and try again.`,
+					message: `Failed to delete ${itemType}. Please check your connection and try again.`,
 				});
 			}
 		} catch (error) {
-			// User cancelled the confirmation
 			console.log(`${itemType} deletion cancelled`);
 		}
 	};
@@ -151,6 +150,39 @@ const GenericTable = ({
 		}
 		onSort({ key, direction });
 	};
+
+    // Handle row click with interactive element check
+    const handleRowClick = (event, item) => {
+        // Check if the clicked element or any parent is an interactive element
+        const isInteractiveElement = (element) => {
+            if (!element) return false;
+
+            const tagName = element.tagName?.toLowerCase();
+            const isButton = tagName === 'button';
+            const isLink = tagName === 'a';
+            const isInput = ['input', 'select', 'textarea'].includes(tagName);
+            const hasOnClick = element.onclick || element.getAttribute('onclick');
+            const isClickable = element.classList?.contains('clickable-badge') ||
+                element.classList?.contains('btn') ||
+                element.style?.cursor === 'pointer';
+
+            return isButton || isLink || isInput || hasOnClick || isClickable;
+        };
+
+        // Check the clicked element and its parents
+        let currentElement = event.target;
+        while (currentElement && currentElement !== event.currentTarget) {
+            if (isInteractiveElement(currentElement)) {
+                return; // Don't trigger row click if interactive element was clicked
+            }
+            currentElement = currentElement.parentElement;
+        }
+
+        // If we reach here, it's safe to trigger the row click
+        if (onRowClick) {
+            onRowClick(item);
+        }
+    };
 
 	const getSortedData = () => {
 		let filteredData = [...data];
@@ -356,7 +388,7 @@ const GenericTable = ({
 						{currentPageData.map((item, index) => (
 							<tr
 								key={item.id || index}
-								onClick={() => onRowClick && onRowClick(item)}
+								onClick={(event) => handleRowClick(event, item)}
 								style={onRowClick ? { cursor: "pointer" } : {}}
 							>
 								{tableColumns.map((column, columnIndex) => (
