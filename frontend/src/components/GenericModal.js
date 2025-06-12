@@ -39,6 +39,7 @@ const GenericModal = ({
 	customValidation = null, // Function - Custom validation function
 	transformFormData = null, // Function - Transform form data before submission
 	isEdit = false, // Boolean - Whether form is in edit mode
+	customFieldComponents = {},
 
 	// Layout options
 	useCustomLayout = false, // Boolean - Enable custom field layouts
@@ -247,10 +248,11 @@ const GenericModal = ({
 				{field.label}
 				{field.required && <span className="text-danger">*</span>}
 			</Form.Label>
-			{renderInputField(field, formData, handleChange, errors, handleSelectChange)}
+			{renderInputField(field, formData, handleChange, errors, handleSelectChange, customFieldComponents)}
 			{errors[field.name] && <div className="invalid-feedback d-block">{errors[field.name]}</div>}
 		</Form.Group>
 	);
+
 
 	// Render modal body
 	const renderBody = () => {
@@ -263,7 +265,7 @@ const GenericModal = ({
 					{useCustomLayout ? (
 						<div>
 							{layoutGroups.map((group, _index) =>
-								renderInputFieldGroup(group, formData, handleChange, errors, handleSelectChange),
+								renderInputFieldGroup(group, formData, handleChange, errors, handleSelectChange, customFieldComponents),
 							)}
 							{fields.length > 0 && fields.map(renderFormGroup)}
 						</div>
@@ -272,7 +274,8 @@ const GenericModal = ({
 					)}
 				</div>
 			);
-		} else if (mode === "view") {
+
+	} else if (mode === "view") {
 			return (
 				<div>
 					<div className="row">

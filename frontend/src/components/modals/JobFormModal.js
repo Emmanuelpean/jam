@@ -1,16 +1,77 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "react-bootstrap";
+import { Button, Badge } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
 import CompanyFormModal from "./CompanyFormModal";
 import LocationFormModal from "./LocationFormModal";
+import JobApplicationFormModal from "./JobApplicationFormModal";
 
 const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 	const { token } = useAuth();
 	const [showCompanyModal, setShowCompanyModal] = useState(false);
 	const [showLocationModal, setShowLocationModal] = useState(false);
+	const [showApplicationModal, setShowApplicationModal] = useState(false);
 	const [companyOptions, setCompanyOptions] = useState([]);
 	const [locationOptions, setLocationOptions] = useState([]);
+	const [currentJobId, setCurrentJobId] = useState(null);
+	const [existingApplication, setExistingApplication] = useState(null);
+	const [isLoadingApplication, setIsLoadingApplication] = useState(false);
+
+	// Set current job ID when editing or after successful creation
+	useEffect(() => {
+		if (isEdit && initialData.id) {
+			setCurrentJobId(initialData.id);
+		}
+	}, [isEdit, initialData.id]);
+
+	// Function to get application status badge class (from renders.js)
+	const getApplicationStatusBadgeClass = (status) => {
+		switch (status?.toLowerCase()) {
+			case "applied":
+				return "bg-primary";
+			case "interview":
+				return "bg-warning text-dark";
+			case "offer":
+				return "bg-success";
+			case "rejected":
+				return "bg-danger";
+			case "withdrawn":
+				return "bg-secondary";
+			default:
+				return "bg-light text-dark";
+		}
+	};
+
+	// Check for existing job application
+	const checkExistingApplication = async (jobId) => {
+		if (!jobId || !token) return;
+
+		setIsLoadingApplication(true);
+		try {
+			const response = await fetch("http://localhost:8000/jobapplications/", {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			if (response.ok) {
+				const applications = await response.json();
+				const existing = applications.find((app) => app.job_id === jobId);
+				setExistingApplication(existing);
+			}
+		} catch (error) {
+			console.error("Error fetching job applications:", error);
+		} finally {
+			setIsLoadingApplication(false);
+		}
+	};
+
+	// Check for existing application when job ID changes
+	useEffect(() => {
+		if (currentJobId) {
+			checkExistingApplication(currentJobId);
+		}
+	}, [currentJobId, token]);
 
 	// Fetch companies and locations for the select options
 	useEffect(() => {
@@ -78,9 +139,35 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		setShowLocationModal(false);
 	};
 
-	// Define layout groups for custom form layout
-	const layoutGroups = [
+	// Handle successful job creation/update
+	const handleJobSuccess = (jobData) => {
+		// Store the job ID for potential application creation
+		if (jobData && jobData.id) {
+			setCurrentJobId(jobData.id);
+		}
+		// Call the original onSuccess callback
+		if (onSuccess) {
+			onSuccess(jobData);
+		}
+	};
 
+	// Handle successful job application creation/update
+	const handleApplicationSuccess = (applicationData) => {
+		setShowApplicationModal(false);
+		// Refresh the existing application data
+		if (currentJobId) {
+			checkExistingApplication(currentJobId);
+		}
+		console.log("Job application created/updated successfully:", applicationData);
+	};
+
+	// Handle opening application modal (create or edit)
+	const handleOpenApplicationModal = () => {
+		setShowApplicationModal(true);
+	};
+
+	// Define layout groups for job information only
+	const layoutGroups = [
 		{
 			id: "title",
 			type: "default",
@@ -94,7 +181,6 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				},
 			],
 		},
-
 		{
 			id: "company-location",
 			type: "row",
@@ -151,27 +237,13 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		// Status and URL (side by side)
 		{
 			id: "status-url",
-			type: "row",
+			type: "default",
 			fields: [
-				{
-					name: "status",
-					label: "Status",
-					type: "select",
-					options: [
-						{ value: "applied", label: "Applied" },
-						{ value: "interview", label: "Interview" },
-						{ value: "offer", label: "Offer" },
-						{ value: "rejected", label: "Rejected" },
-						{ value: "withdrawn", label: "Withdrawn" },
-					],
-					columnClass: "col-md-6",
-				},
 				{
 					name: "url",
 					label: "Job URL",
 					type: "url",
 					placeholder: "https://...",
-					columnClass: "col-md-6",
 				},
 			],
 		},
@@ -238,117 +310,85 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				},
 			],
 		},
-		// Job Application Fields Section
+		// Job Application Section
 		{
-			id: "application-header",
+			id: "application-section",
 			type: "custom",
 			className: "mt-4 mb-3",
 			content: (
-				<div className="border-top pt-3">
-					<h5 className="mb-0">
-						<i className="bi bi-file-earmark-text me-2"></i>
-						Application Details
-					</h5>
-					<small className="text-muted">Track your application progress and files</small>
+				<div className="border-top pt-4">
+					<div className="text-center">
+						<div className="d-flex justify-content-center align-items-center mb-3">
+							<h5 className="mb-0 me-3">
+								<i className="bi bi-file-earmark-text me-2"></i>
+								Job Application
+							</h5>
+							{existingApplication && (
+								<Badge
+									className={`${getApplicationStatusBadgeClass(existingApplication.status)} text-uppercase fw-bold`}
+									style={{ fontSize: "0.75rem" }}
+								>
+									{existingApplication.status}
+								</Badge>
+							)}
+							{isLoadingApplication && (
+								<div className="spinner-border spinner-border-sm text-primary" role="status">
+									<span className="visually-hidden">Loading...</span>
+								</div>
+							)}
+						</div>
+
+						{existingApplication ? (
+							<>
+								<p className="text-muted mb-3">
+									Application submitted on {new Date(existingApplication.date).toLocaleDateString()}
+								</p>
+								<div className="d-grid gap-2 d-md-flex justify-content-md-center">
+									<Button
+										variant="outline-primary"
+										size="lg"
+										onClick={handleOpenApplicationModal}
+										className="px-4"
+									>
+										<i className="bi bi-pencil me-2"></i>
+										Edit Application
+									</Button>
+								</div>
+							</>
+						) : (
+							<>
+								<p className="text-muted mb-3">
+									{currentJobId || isEdit
+										? "Add an application for this job position"
+										: "Save the job first, then you can add an application"}
+								</p>
+								<div className="d-grid gap-2 d-md-flex justify-content-md-center">
+									<Button
+										variant="success"
+										size="lg"
+										onClick={handleOpenApplicationModal}
+										disabled={!currentJobId && !isEdit}
+										className="px-4"
+									>
+										<i className="bi bi-plus-circle me-2"></i>
+										{currentJobId || isEdit ? "Create Job Application" : "Save Job First"}
+									</Button>
+								</div>
+								{!currentJobId && !isEdit && (
+									<small className="text-muted d-block mt-2">
+										<i className="bi bi-info-circle me-1"></i>
+										Complete and save this job form to enable application creation
+									</small>
+								)}
+							</>
+						)}
+					</div>
 				</div>
 			),
-		},
-		// Application Date and Status
-		{
-			id: "application-date-status",
-			type: "row",
-			fields: [
-				{
-					name: "application_date",
-					label: "Application Date",
-					type: "datetime-local",
-					placeholder: "Select application date and time",
-					columnClass: "col-md-6",
-				},
-				{
-					name: "application_status",
-					label: "Application Status",
-					type: "select",
-					options: [
-						{ value: "Applied", label: "Applied" },
-						{ value: "Interview", label: "Interview" },
-						{ value: "Rejected", label: "Rejected" },
-						{ value: "Offer", label: "Offer" },
-						{ value: "Withdrawn", label: "Withdrawn" },
-					],
-					defaultValue: "Applied",
-					columnClass: "col-md-6",
-				},
-			],
-		},
-		// Application URL
-		{
-			id: "application-url",
-			type: "default",
-			fields: [
-				{
-					name: "application_url",
-					label: "Application URL",
-					type: "url",
-					placeholder: "https://... (link to your application submission)",
-				},
-			],
-		},
-		// Application Note
-		{
-			id: "application-note",
-			type: "default",
-			fields: [
-				{
-					name: "application_note",
-					label: "Application Notes",
-					type: "textarea",
-					rows: 3,
-					placeholder: "Add notes about your application process, interview details, etc...",
-				},
-			],
-		},
-		// File Uploads Section
-		{
-			id: "files-header",
-			type: "custom",
-			className: "mt-4 mb-3",
-			content: (
-				<div className="border-top pt-3">
-					<h6 className="mb-0">
-						<i className="bi bi-paperclip me-2"></i>
-						Application Documents
-					</h6>
-					<small className="text-muted">Upload your CV and cover letter</small>
-				</div>
-			),
-		},
-		// File uploads (side by side)
-		{
-			id: "application-files",
-			type: "row",
-			fields: [
-				{
-					name: "cv",
-					label: "CV/Resume",
-					type: "file",
-					accept: ".pdf,.doc,.docx",
-					placeholder: "Upload your CV or resume",
-					columnClass: "col-md-6",
-				},
-				{
-					name: "cover_letter",
-					label: "Cover Letter",
-					type: "file",
-					accept: ".pdf,.doc,.docx",
-					placeholder: "Upload your cover letter",
-					columnClass: "col-md-6",
-				},
-			],
 		},
 	];
 
-	// Custom validation rules
+	// Custom validation rules for job fields only
 	const validationRules = {
 		salary_min: (value, formData) => {
 			if (value && formData.salary_max && parseInt(value) > parseInt(formData.salary_max)) {
@@ -368,40 +408,9 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 			}
 			return { isValid: true };
 		},
-		application_date: (value) => {
-			if (value) {
-				const selectedDate = new Date(value);
-				const now = new Date();
-				if (selectedDate > now) {
-					return {
-						isValid: false,
-						message: "Application date cannot be in the future",
-					};
-				}
-			}
-			return { isValid: true };
-		},
-		cv: (value) => {
-			if (value && value.size > 10 * 1024 * 1024) { // 10MB limit
-				return {
-					isValid: false,
-					message: "CV file size must be less than 10MB",
-				};
-			}
-			return { isValid: true };
-		},
-		cover_letter: (value) => {
-			if (value && value.size > 10 * 1024 * 1024) { // 10MB limit
-				return {
-					isValid: false,
-					message: "Cover letter file size must be less than 10MB",
-				};
-			}
-			return { isValid: true };
-		},
 	};
 
-	// Transform form data before submission
+	// Transform form data before submission (job fields only)
 	const transformFormData = (data) => {
 		const transformed = { ...data };
 
@@ -423,40 +432,8 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 			transformed.status = "applied";
 		}
 
-		// Handle job application data - only include if application_date is set
-		if (transformed.application_date) {
-			// Convert to ISO string for backend
-			transformed.application_date = new Date(transformed.application_date).toISOString();
-
-			// Set default application status to "Applied" if not provided
-			if (!transformed.application_status) {
-				transformed.application_status = "Applied";
-			}
-
-			// Include application fields only when application_date is provided
-			transformed.job_application = {
-				date: transformed.application_date,
-				status: transformed.application_status,
-				url: transformed.application_url?.trim() || null,
-				note: transformed.application_note?.trim() || null,
-				// Files will be handled separately by the form submission
-				cv: transformed.cv || null,
-				cover_letter: transformed.cover_letter || null,
-			};
-		}
-
-		// Remove the individual application fields from the main object
-		// since they're now nested in job_application
-		delete transformed.application_date;
-		delete transformed.application_status;
-		delete transformed.application_url;
-		delete transformed.application_note;
-		delete transformed.cv;
-		delete transformed.cover_letter;
-
 		return transformed;
 	};
-
 
 	return (
 		<>
@@ -464,13 +441,13 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				show={show}
 				onHide={onHide}
 				mode="form"
-				title="Job Application"
+				title="Job"
 				size={size}
 				useCustomLayout={true}
 				layoutGroups={layoutGroups}
 				initialData={initialData}
 				endpoint="jobs"
-				onSuccess={onSuccess}
+				onSuccess={handleJobSuccess}
 				validationRules={validationRules}
 				transformFormData={transformFormData}
 				isEdit={isEdit}
@@ -488,6 +465,17 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				show={showLocationModal}
 				onHide={() => setShowLocationModal(false)}
 				onSuccess={handleLocationSuccess}
+			/>
+
+			{/* Job Application Form Modal */}
+			<JobApplicationFormModal
+				show={showApplicationModal}
+				onHide={() => setShowApplicationModal(false)}
+				onSuccess={handleApplicationSuccess}
+				jobId={currentJobId || (isEdit ? initialData.id : null)}
+				initialData={existingApplication || {}}
+				isEdit={!!existingApplication}
+				size="lg"
 			/>
 		</>
 	);

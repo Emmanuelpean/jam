@@ -2,8 +2,9 @@ import { Form } from "react-bootstrap";
 import React from "react";
 import Select from "react-select";
 
-export const renderInputField = (field, formData, handleChange, errors, handleSelectChange) => {
-	const value = formData[field.name];
+export const renderInputField = (field, formData, handleChange, errors, handleSelectChange, customFieldComponents = {}) => {
+	const value = formData[field.name] || "";
+	const error = errors[field.name];
 
 	if (typeof field.render === "function") {
 		return field.render({
@@ -60,6 +61,21 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 		);
 	}
 
+	// Handle custom field types
+	if (field.type === "drag-drop" && customFieldComponents["drag-drop"]) {
+		const DragDropComponent = customFieldComponents["drag-drop"];
+		return (
+			<DragDropComponent
+				fieldName={field.name}
+				label={field.label}
+				value={value}
+				onChange={handleChange}
+				error={error}
+			/>
+		);
+	}
+
+
 	return (
 		<Form.Control
 			type={field.type || "text"}
@@ -73,19 +89,23 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 	);
 };
 
-export const renderInputFieldGroup = (group, formData, handleChange, errors, handleSelectChange) => {
+export const renderInputFieldGroup = (group, formData, handleChange, errors, handleSelectChange, customFieldComponents = {}) => {
 	if (group.type === "row") {
 		return (
 			<div key={group.id || Math.random()} className={`row ${group.className || ""}`}>
 				{group.fields.map((field) => (
 					<div key={field.name} className={field.columnClass || "col-md-6"}>
 						<Form.Group className="mb-3">
-							<Form.Label>
-								{field.label}
-								{field.required && <span className="text-danger">*</span>}
-							</Form.Label>
-							{renderInputField(field, formData, handleChange, errors, handleSelectChange)}
-							{errors[field.name] && <div className="invalid-feedback d-block">{errors[field.name]}</div>}
+							{field.type !== "drag-drop" && (
+								<Form.Label>
+									{field.label}
+									{field.required && <span className="text-danger">*</span>}
+								</Form.Label>
+							)}
+							{renderInputField(field, formData, handleChange, errors, handleSelectChange, customFieldComponents)}
+							{errors[field.name] && field.type !== "drag-drop" && (
+								<div className="invalid-feedback d-block">{errors[field.name]}</div>
+							)}
 						</Form.Group>
 					</div>
 				))}
@@ -106,12 +126,16 @@ export const renderInputFieldGroup = (group, formData, handleChange, errors, han
 		<div key={group.id || Math.random()}>
 			{group.fields.map((field) => (
 				<Form.Group key={field.name} className="mb-3">
-					<Form.Label>
-						{field.label}
-						{field.required && <span className="text-danger">*</span>}
-					</Form.Label>
-					{renderInputField(field, formData, handleChange, errors, handleSelectChange)}
-					{errors[field.name] && <div className="invalid-feedback d-block">{errors[field.name]}</div>}
+					{field.type !== "drag-drop" && (
+						<Form.Label>
+							{field.label}
+							{field.required && <span className="text-danger">*</span>}
+						</Form.Label>
+					)}
+					{renderInputField(field, formData, handleChange, errors, handleSelectChange, customFieldComponents)}
+					{errors[field.name] && field.type !== "drag-drop" && (
+						<div className="invalid-feedback d-block">{errors[field.name]}</div>
+					)}
 				</Form.Group>
 			))}
 		</div>

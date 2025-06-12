@@ -3,7 +3,6 @@ import LocationViewModal from "./modals/LocationViewModal";
 import CompanyViewModal from "./modals/CompanyViewModal";
 import PersonViewModal from "./modals/PersonViewModal";
 import KeywordViewModal from "./modals/KeywordViewModal";
-import { formatDateWithTimezone } from "../utils/TimeUtils";
 
 const createModalManager = (ModalComponent, modalProp) => {
 	return ({ children, onEdit }) => {
@@ -81,27 +80,8 @@ const ensureHttpPrefix = (url) => {
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
-	name: (item, view = false) => {
-		// TODO see if the first column can be bolden instead
-		if (!item.name) {
-			return view ? <span className="text-muted">No name provided</span> : null;
-		} else {
-			return <div>{item.name}</div>;
-		}
-	},
-
-	title: (item, view = false) => {
-		if (!item.title) {
-			return view ? <span className="text-muted">No title provided</span> : null;
-		} else {
-			return <div>{item.name}</div>;
-		}
-	},
-
 	_longText: (item, noText, view = false) => {
-		if (!item.description) {
-			return view ? <span className="text-muted">{noText}</span> : null;
-		} else {
+		if (item.description) {
 			if (view) {
 				return item.description;
 			} else {
@@ -110,7 +90,7 @@ export const renderFunctions = {
 				const needsEllipsis = words.length > 12;
 
 				return (
-					<div style={{ maxWidth: "500px", overflow: "hidden", textOverflow: "ellipsis" }}>
+					<div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
 						{truncated}
 						{needsEllipsis ? "..." : ""}
 					</div>
@@ -120,17 +100,15 @@ export const renderFunctions = {
 	},
 
 	note: (item, view = false) => {
-		return renderFunctions._longText(item, "No note provided", view);
+		return renderFunctions._longText(item, view);
 	},
 
 	description: (item, view = false) => {
-		return renderFunctions._longText(item, "No description provided", view);
+		return renderFunctions._longText(item, view);
 	},
 
-	_url: (item, view = false) => {
-		if (!item.url) {
-			return view ? <span className="text-muted">No URL provided</span> : null;
-		} else {
+	_url: (item) => {
+		if (item.url) {
 			const safeUrl = ensureHttpPrefix(item.url);
 			return (
 				<a href={safeUrl} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
@@ -143,33 +121,26 @@ export const renderFunctions = {
 		return renderFunctions._url(item, view);
 	},
 
-	datetime: (date, view = false) => {
-		if (view) {
-			return formatDateWithTimezone(date);
-		} else return new Date(date).toLocaleDateString();
+	datetime: (date) => {
+		return new Date(date).toLocaleDateString();
 	},
 
-	createdDate: (item, view = false) => renderFunctions.datetime(item.created_at, view),
+	createdDate: (item) => renderFunctions.datetime(item.created_at),
 
-	modifiedDate: (item, view = false) => renderFunctions.datetime(item.modified_at, view),
+	modifiedDate: (item) => renderFunctions.datetime(item.modified_at),
 
-	email: (item, view = false) => {
-		if (!item.email) {
-			return view ? <span className="text-muted">No email address provided</span> : null;
-		} else {
+	email: (item) => {
+		if (item.email)
 			return (
 				<a href={`mailto:${item.email}`} className="text-decoration-none">
 					<i className="bi bi-envelope me-1"></i>
 					{item.email}
 				</a>
 			);
-		}
 	},
 
-	phone: (item, view = false) => {
-		if (!item.phone) {
-			return view ? <span className="text-muted">No phone number provided</span> : null;
-		} else {
+	phone: (item) => {
+		if (item.phone) {
 			return (
 				<a href={`tel:${item.phone}`} className="text-decoration-none">
 					<i className="bi bi-telephone me-1"></i>
@@ -179,10 +150,8 @@ export const renderFunctions = {
 		}
 	},
 
-	linkedinUrl: (item, view = false) => {
-		if (!item.linkedin_url) {
-			return view ? <span className="text-muted">No LinkedIn profile provided</span> : null;
-		} else {
+	linkedinUrl: (item) => {
+		if (item.linkedin_url) {
 			return (
 				<a href={item.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
 					<i className="bi bi-linkedin me-1"></i>
@@ -192,21 +161,22 @@ export const renderFunctions = {
 		}
 	},
 
-	salaryRange: (item, view = false) => {
+	salaryRange: (item) => {
 		if (!item.salary_min && !item.salary_max) {
-			return view ? <span className="text-muted">No salary provided</span> : null;
-		} else if (item.salary_min === item.salary_max) {
+			return null;
+		}
+		if (item.salary_min === item.salary_max) {
 			return `£${item.salary_min.toLocaleString()}`;
-		} else if (item.salary_min && item.salary_max) {
+		}
+		if (item.salary_min && item.salary_max) {
 			return `£${item.salary_min.toLocaleString()} - £${item.salary_max.toLocaleString()}`;
-		} else if (item.salary_min) return `From £${item.salary_min.toLocaleString()}`;
-		else if (item.salary_max) return `Up to £${item.salary_max.toLocaleString()}`;
+		}
+		if (item.salary_min) return `From £${item.salary_min.toLocaleString()}`;
+		if (item.salary_max) return `Up to £${item.salary_max.toLocaleString()}`;
 	},
 
-	personalRating: (item, view = false) => {
-		if (!item.personal_rating) {
-			return view ? <span className="text-muted">No rating provided</span> : null;
-		} else {
+	personalRating: (item) => {
+		if (item.personal_rating) {
 			const rating = Math.max(0, Math.min(5, item.personal_rating));
 			const filledStars = Math.floor(rating);
 			const emptyStars = 5 - filledStars;
@@ -221,10 +191,8 @@ export const renderFunctions = {
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
-	jobApplication: (item, view = false) => {
-		if (!item.job_application) {
-			return view ? <span className="text-muted">No status provided</span> : null;
-		} else {
+	jobApplication: (item) => {
+		if (item.job_application) {
 			return (
 				<JobApplicationModalManager>
 					{(handleClick) => (
@@ -240,10 +208,8 @@ export const renderFunctions = {
 		}
 	},
 
-	keywords: (item, view = false) => {
-		if (!item.keywords || item.keywords.length === 0) {
-			return view ? <span className="text-muted">No keywords provided</span> : null;
-		} else {
+	keywords: (item) => {
+		if (item.keywords && item.keywords.length > 0) {
 			return (
 				<div>
 					{item.keywords.map((keyword, index) => (
@@ -264,10 +230,8 @@ export const renderFunctions = {
 		}
 	},
 
-	location: (item, view = false) => {
-		if (!item.location) {
-			return view ? <span className="text-muted">No location provided</span> : null;
-		} else {
+	location: (item) => {
+		if (item.location) {
 			return (
 				<LocationModalManager>
 					{(handleClick) => (
@@ -281,10 +245,8 @@ export const renderFunctions = {
 		}
 	},
 
-	company: (item, view = false) => {
-		if (!item.company) {
-			return view ? <span className="text-muted">No company provided</span> : null;
-		} else {
+	company: (item) => {
+		if (item.company) {
 			return (
 				<CompanyModalManager>
 					{(handleClick) => (
@@ -298,10 +260,8 @@ export const renderFunctions = {
 		}
 	},
 
-	persons: (item, view = false) => {
-		if (!item.persons || item.persons.length === 0) {
-			return view ? <span className="text-muted">No persons provided</span> : null;
-		} else {
+	persons: (item) => {
+		if (item.persons && item.persons.length > 0) {
 			return (
 				<div>
 					{item.persons.map((person, index) => (
@@ -327,19 +287,15 @@ export const renderFunctions = {
 
 export const renderFieldValue = (field, item) => {
 	const noText = <span className="text-muted">Not Provided</span>;
+	let rendered;
 	if (field.render) {
-		const rendered = field.render(item);
-		if (rendered) {
-			return rendered;
-		} else {
-			return noText;
-		}
+		rendered = field.render(item);
 	} else {
-		const rendered = item[field.key];
-		if (rendered) {
-			return rendered;
-		} else {
-			return noText;
-		}
+		rendered = item[field.key];
+	}
+	if (rendered) {
+		return rendered;
+	} else {
+		return noText;
 	}
 };

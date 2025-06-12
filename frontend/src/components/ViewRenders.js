@@ -7,14 +7,12 @@ export const viewFields = {
 		key: "name",
 		label: "Name",
 		type: "text",
-		render: (x) => renderFunctions.name(x, true),
 	},
 
 	title: {
 		key: "title",
 		label: "Title",
 		type: "text",
-		render: (x) => renderFunctions.title(x, true),
 	},
 
 	description: {
@@ -107,10 +105,9 @@ export const viewFields = {
 	},
 
 	personName: {
-		key: "full_name",
+		key: "name",
 		label: "Full Name",
 		type: "text",
-		render: (x) => renderFunctions.name(x, true),
 	},
 
 	email: {

@@ -9,7 +9,6 @@ export const columns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: renderFunctions.name,
 	},
 
 	title: {
@@ -18,7 +17,6 @@ export const columns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: renderFunctions.title,
 	},
 
 	description: {
@@ -136,7 +134,6 @@ export const columns = {
 		searchable: true,
 		type: "text",
 		sortField: "last_name",
-		render: renderFunctions.name,
 	},
 
 	email: {
@@ -195,4 +192,15 @@ export const columns = {
 		searchFields: ["keywords.name"],
 		render: renderFunctions.keywords,
 	},
+
+	jobapplication: {
+		key: "jobapplication",
+		label: "Application Status",
+		sortable: true,
+		searchable: true,
+		sortField: "jobapplication.status",
+		searchFields: ["jobapplication.status"],
+		render: renderFunctions.jobApplication,
+
+	}
 };

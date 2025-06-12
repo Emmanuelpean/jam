@@ -75,6 +75,7 @@ const JobsPage = () => {
 		columns.location,
 		columns.salaryRange,
 		columns.personalRating,
+		columns.jobapplication,
 		columns.createdAt,
 	];
 
