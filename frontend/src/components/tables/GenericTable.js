@@ -225,12 +225,22 @@ const GenericTable = ({
 				const column = columns.find((col) => col.key === sortConfig.key);
 				let aValue, bValue;
 
-				// FIXED: Check sortField first, then accessor, then fallback to key
-				if (column?.sortField) {
-					// Handle nested field sorting
-					const parts = column.sortField.split(".");
-					aValue = parts.reduce((obj, part) => obj?.[part], a);
-					bValue = parts.reduce((obj, part) => obj?.[part], b);
+				// Enhanced sorting: Check sortFunction first, then sortField, then accessor, then fallback to key
+				if (column?.sortFunction && typeof column.sortFunction === 'function') {
+					// Use custom sorting function
+					aValue = column.sortFunction(a);
+					bValue = column.sortFunction(b);
+				} else if (column?.sortField) {
+					// Handle nested field sorting using string path
+					if (typeof column.sortField === 'string') {
+						const parts = column.sortField.split(".");
+						aValue = parts.reduce((obj, part) => obj?.[part], a);
+						bValue = parts.reduce((obj, part) => obj?.[part], b);
+					} else if (typeof column.sortField === 'function') {
+						// sortField can also be a function
+						aValue = column.sortField(a);
+						bValue = column.sortField(b);
+					}
 				} else if (column?.accessor) {
 					aValue = column.accessor(a);
 					bValue = column.accessor(b);
@@ -239,10 +249,10 @@ const GenericTable = ({
 					bValue = b[sortConfig.key];
 				}
 
-				// Handle null/undefined values
+				// Handle null/undefined values - always place them at the bottom
 				if (aValue == null && bValue == null) return 0;
-				if (aValue == null) return sortConfig.direction === "asc" ? 1 : -1;
-				if (bValue == null) return sortConfig.direction === "asc" ? -1 : 1;
+				if (aValue == null) return 1; // Always place null values at the bottom
+				if (bValue == null) return -1; // Always place null values at the bottom
 
 				// Convert to strings for comparison if needed
 				if (typeof aValue === "string" && typeof bValue === "string") {

@@ -1,8 +1,16 @@
-import { Form } from "react-bootstrap";
+import { getCurrentDateTime } from "../utils/TimeUtils";
+import { Button, Form, InputGroup } from "react-bootstrap";
 import React from "react";
 import Select from "react-select";
 
-export const renderInputField = (field, formData, handleChange, errors, handleSelectChange, customFieldComponents = {}) => {
+export const renderInputField = (
+	field,
+	formData,
+	handleChange,
+	errors,
+	handleSelectChange,
+	customFieldComponents = {},
+) => {
 	const value = formData[field.name] || "";
 	const error = errors[field.name];
 
@@ -29,6 +37,7 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 			/>
 		);
 	}
+
 	if (field.type === "checkbox") {
 		return (
 			<Form.Check
@@ -40,6 +49,7 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 			/>
 		);
 	}
+
 	if (field.type === "select") {
 		const selectedValue = field.options?.find((option) => option.value === value);
 
@@ -61,6 +71,40 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 		);
 	}
 
+	// Handle datetime-local with current time default and "Set Current Time" button
+	if (field.type === "datetime-local") {
+		const currentDateTime = getCurrentDateTime();
+
+		const setCurrentTime = (e) => {
+			e.preventDefault();
+			const newDateTime = getCurrentDateTime();
+			// Create a synthetic event to update the form
+			const syntheticEvent = {
+				target: {
+					name: field.name,
+					value: newDateTime,
+				},
+			};
+			handleChange(syntheticEvent);
+		};
+
+		return (
+			<InputGroup>
+				<Form.Control
+					type="datetime-local"
+					name={field.name}
+					value={value || currentDateTime}
+					onChange={handleChange}
+					isInvalid={!!error}
+					placeholder={field.placeholder || "Select date and time"}
+				/>
+				<Button variant="outline-secondary" onClick={setCurrentTime} title="Set current time">
+					<i className="bi bi-clock"></i>
+				</Button>
+			</InputGroup>
+		);
+	}
+
 	// Handle custom field types
 	if (field.type === "drag-drop" && customFieldComponents["drag-drop"]) {
 		const DragDropComponent = customFieldComponents["drag-drop"];
@@ -75,7 +119,6 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 		);
 	}
 
-
 	return (
 		<Form.Control
 			type={field.type || "text"}
@@ -89,7 +132,14 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 	);
 };
 
-export const renderInputFieldGroup = (group, formData, handleChange, errors, handleSelectChange, customFieldComponents = {}) => {
+export const renderInputFieldGroup = (
+	group,
+	formData,
+	handleChange,
+	errors,
+	handleSelectChange,
+	customFieldComponents = {},
+) => {
 	if (group.type === "row") {
 		return (
 			<div key={group.id || Math.random()} className={`row ${group.className || ""}`}>
@@ -102,7 +152,14 @@ export const renderInputFieldGroup = (group, formData, handleChange, errors, han
 									{field.required && <span className="text-danger">*</span>}
 								</Form.Label>
 							)}
-							{renderInputField(field, formData, handleChange, errors, handleSelectChange, customFieldComponents)}
+							{renderInputField(
+								field,
+								formData,
+								handleChange,
+								errors,
+								handleSelectChange,
+								customFieldComponents,
+							)}
 							{errors[field.name] && field.type !== "drag-drop" && (
 								<div className="invalid-feedback d-block">{errors[field.name]}</div>
 							)}

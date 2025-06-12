@@ -14,7 +14,7 @@ const CompanyFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isE
 		{
 			name: "url",
 			label: "Website",
-			type: "url-prefix",
+			type: "text",
 			required: false,
 			placeholder: "https://example.com",
 		},

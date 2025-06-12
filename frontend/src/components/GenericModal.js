@@ -3,7 +3,7 @@ import { Alert, Button, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue, renderFunctions } from "./Renders";
-import { renderInputField, renderInputFieldGroup } from "./formFieldRender";
+import { renderInputField, renderInputFieldGroup } from "./FormFieldRender";
 
 const DEFAULT_ICONS = {
 	form: "bi bi-pencil",

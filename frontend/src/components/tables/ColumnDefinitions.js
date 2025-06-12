@@ -73,7 +73,7 @@ export const columns = {
 		searchable: true,
 		type: "text",
 		sortField: "location.name",
-		searchFields: ["location.name"],
+		searchFields: "location.name",
 		render: renderFunctions.location,
 	},
 
@@ -110,7 +110,7 @@ export const columns = {
 		searchable: true,
 		type: "text",
 		sortField: "company.name",
-		searchFields: ["company.name"],
+		searchFields: "company.name",
 		render: renderFunctions.company,
 	},
 
@@ -123,7 +123,7 @@ export const columns = {
 		searchable: true,
 		type: "text",
 		sortField: "person.last_name",
-		searchFields: ["company.name"],
+		searchFields: "company.name",
 		render: renderFunctions.persons,
 	},
 
@@ -189,7 +189,6 @@ export const columns = {
 		sortable: false,
 		searchable: true,
 		type: "text",
-		searchFields: ["keywords.name"],
 		render: renderFunctions.keywords,
 	},
 
@@ -198,9 +197,8 @@ export const columns = {
 		label: "Application Status",
 		sortable: true,
 		searchable: true,
-		sortField: "jobapplication.status",
-		searchFields: ["jobapplication.status"],
+		sortField: "job_application.status",
+		searchFields: "job_application.status",
 		render: renderFunctions.jobApplication,
-
 	}
 };

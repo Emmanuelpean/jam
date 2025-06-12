@@ -107,7 +107,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 					setLocationOptions(
 						locationsData.map((location) => ({
 							value: location.id,
-							label: `${location.city}, ${location.country}${location.remote ? " (Remote)" : ""}`,
+							label: location.name,
 						})),
 					);
 				}
@@ -133,7 +133,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 	const handleLocationSuccess = (newLocation) => {
 		const newOption = {
 			value: newLocation.id,
-			label: `${newLocation.city}, ${newLocation.country}${newLocation.remote ? " (Remote)" : ""}`,
+			label: newLocation.name,
 		};
 		setLocationOptions((prev) => [...prev, newOption]);
 		setShowLocationModal(false);
@@ -242,7 +242,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				{
 					name: "url",
 					label: "Job URL",
-					type: "url",
+					type: "text",
 					placeholder: "https://...",
 				},
 			],
