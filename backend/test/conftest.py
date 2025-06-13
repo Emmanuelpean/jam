@@ -34,6 +34,23 @@ from app import models, database, schemas
 from app.main import app
 from app.oauth2 import create_access_token
 
+from test.data import (
+    COMPANIES_DATA,
+    LOCATIONS_DATA,
+    PERSONS_DATA,
+    AGGREGATORS_DATA,
+    KEYWORDS_DATA,
+    FILES_DATA,
+    JOBS_DATA,
+    JOB_APPLICATIONS_DATA,
+    INTERVIEWS_DATA,
+    JOB_KEYWORD_MAPPINGS,
+    JOB_CONTACT_MAPPINGS,
+    INTERVIEW_INTERVIEWER_MAPPINGS,
+    add_mappings,
+)
+
+
 SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -105,8 +122,8 @@ def test_user1(client: TestClient) -> dict:
 
 
 @pytest.fixture
-def test_user2(client: TestClient) -> dict:
-    """Second test user"""
+def test_user2(client: TestClient, test_user1) -> dict:
+    """Second test user. Test user 1 is called to get it created first"""
 
     user_data = {
         "email": "user2@email.com",
@@ -175,16 +192,8 @@ def authorized_client2(
 @pytest.fixture
 def test_locations(session, test_user1, test_user2):
     """Create test location data"""
-    locations = [
-        models.Location(postcode="10001", city="New York", country="USA", remote=False, owner_id=test_user1["id"]),
-        models.Location(postcode="90210", city="Beverly Hills", country="USA", remote=False, owner_id=test_user1["id"]),
-        models.Location(postcode="SW1A 1AA", city="London", country="UK", remote=False, owner_id=test_user2["id"]),
-        models.Location(city="San Francisco", country="USA", remote=True, owner_id=test_user1["id"]),
-        models.Location(country="Germany", remote=True, owner_id=test_user2["id"]),
-        models.Location(postcode="OX1 2JD", city="Oxford", country="UK", remote=False, owner_id=test_user1["id"]),
-        models.Location(country="Canada", remote=True, owner_id=test_user2["id"]),
-    ]
 
+    locations = [models.Location(**location) for location in LOCATIONS_DATA]
     session.add_all(locations)
     session.commit()
     locations = session.query(models.Location).all()
@@ -195,38 +204,7 @@ def test_locations(session, test_user1, test_user2):
 def test_companies(session, test_user1, test_user2):
     """Create test company data"""
 
-    companies = [
-        models.Company(
-            name="Tech Corp",
-            description="A leading technology company specializing in software development",
-            url="https://techcorp.com",
-            owner_id=test_user1["id"],
-        ),
-        models.Company(
-            name="Data Systems Inc",
-            description="Enterprise data solutions and analytics",
-            url="https://datasystems.com",
-            owner_id=test_user1["id"],
-        ),
-        models.Company(
-            name="Cloud Solutions Ltd",
-            description="Cloud infrastructure and services provider",
-            url="https://cloudsolutions.co.uk",
-            owner_id=test_user2["id"],
-        ),
-        models.Company(
-            name="StartupXYZ",
-            description="Innovative fintech startup",
-            url="https://startupxyz.io",
-            owner_id=test_user1["id"],
-        ),
-        models.Company(
-            name="Enterprise Corp",
-            description="Large enterprise software solutions",
-            owner_id=test_user2["id"],
-        ),
-    ]
-
+    companies = [models.Company(**company) for company in COMPANIES_DATA]
     session.add_all(companies)
     session.commit()
     companies = session.query(models.Company).all()
@@ -237,51 +215,7 @@ def test_companies(session, test_user1, test_user2):
 def test_persons(session, test_user1, test_user2, test_companies):
     """Create test person data"""
 
-    persons = [
-        models.Person(
-            first_name="John",
-            last_name="Smith",
-            email="john.smith@techcorp.com",
-            phone="+1-555-0123",
-            linkedin_url="https://linkedin.com/in/johnsmith",
-            company_id=test_companies[0].id,
-            owner_id=test_user1["id"],
-        ),
-        models.Person(
-            first_name="Sarah",
-            last_name="Johnson",
-            email="sarah.johnson@datasystems.com",
-            phone="+1-555-0456",
-            linkedin_url="https://linkedin.com/in/sarahjohnson",
-            company_id=test_companies[1].id,
-            owner_id=test_user1["id"],
-        ),
-        models.Person(
-            first_name="Michael",
-            last_name="Brown",
-            email="m.brown@cloudsolutions.co.uk",
-            phone="+44-20-7946-0958",
-            linkedin_url="https://linkedin.com/in/michaelbrown",
-            company_id=test_companies[2].id,
-            owner_id=test_user2["id"],
-        ),
-        models.Person(
-            first_name="Emma",
-            last_name="Davis",
-            email="emma@startupxyz.io",
-            phone="+1-555-0789",
-            company_id=test_companies[3].id,
-            owner_id=test_user1["id"],
-        ),
-        models.Person(
-            first_name="David",
-            last_name="Wilson",
-            linkedin_url="https://linkedin.com/in/davidwilson",
-            company_id=test_companies[4].id,
-            owner_id=test_user2["id"],
-        ),
-    ]
-
+    persons = [models.Person(**person) for person in PERSONS_DATA]
     session.add_all(persons)
     session.commit()
     persons = session.query(models.Person).all()
@@ -292,14 +226,7 @@ def test_persons(session, test_user1, test_user2, test_companies):
 def test_aggregators(session, test_user1, test_user2):
     """Create test aggregator data"""
 
-    aggregators = [
-        models.Aggregator(name="LinkedIn Jobs", url="https://linkedin.com/jobs", owner_id=test_user1["id"]),
-        models.Aggregator(name="Indeed", url="https://indeed.com", owner_id=test_user1["id"]),
-        models.Aggregator(name="Glassdoor", url="https://glassdoor.com", owner_id=test_user2["id"]),
-        models.Aggregator(name="Stack Overflow Jobs", url="https://stackoverflow.com/jobs", owner_id=test_user1["id"]),
-        models.Aggregator(name="AngelList", url="https://angel.co", owner_id=test_user2["id"]),
-    ]
-
+    aggregators = [models.Aggregator(**aggregator) for aggregator in AGGREGATORS_DATA]
     session.add_all(aggregators)
     session.commit()
     aggregators = session.query(models.Aggregator).all()
@@ -309,18 +236,8 @@ def test_aggregators(session, test_user1, test_user2):
 @pytest.fixture
 def test_keywords(session, test_user1, test_user2):
     """Create test keyword data"""
-    keywords = [
-        models.Keyword(name="Python", owner_id=test_user1["id"]),
-        models.Keyword(name="JavaScript", owner_id=test_user1["id"]),
-        models.Keyword(name="React", owner_id=test_user1["id"]),
-        models.Keyword(name="Node.js", owner_id=test_user1["id"]),
-        models.Keyword(name="Machine Learning", owner_id=test_user2["id"]),
-        models.Keyword(name="AWS", owner_id=test_user1["id"]),
-        models.Keyword(name="Docker", owner_id=test_user2["id"]),
-        models.Keyword(name="Kubernetes", owner_id=test_user1["id"]),
-        models.Keyword(name="SQL", owner_id=test_user2["id"]),
-        models.Keyword(name="FastAPI", owner_id=test_user1["id"]),
-    ]
+
+    keywords = [models.Keyword(**keyword) for keyword in KEYWORDS_DATA]
     session.add_all(keywords)
     session.commit()
     keywords = session.query(models.Keyword).all()
@@ -330,105 +247,8 @@ def test_keywords(session, test_user1, test_user2):
 @pytest.fixture
 def test_files(session, test_user1, test_user2):
     """Create test files for job applications"""
-    files = [
-        models.File(
-            filename="john_doe_cv_2024.pdf",
-            content=b"""John Doe - Software Engineer
 
-EXPERIENCE:
-- Senior Software Developer at TechCorp (2019-2024)
-- Full Stack Developer at StartupXYZ (2017-2019)
-- Junior Developer at WebSolutions (2015-2017)
-
-SKILLS:
-- Python, JavaScript, React, Node.js
-- AWS, Docker, Kubernetes
-- PostgreSQL, MongoDB
-- Git, CI/CD, Agile methodologies
-
-EDUCATION:
-- B.S. Computer Science, University of Technology (2015)
-
-CERTIFICATIONS:
-- AWS Certified Solutions Architect
-- Certified Kubernetes Administrator""",
-            type="application/pdf",
-            size=2048,
-            owner_id=test_user1["id"],
-        ),
-        models.File(
-            filename="cover_letter_senior_python.pdf",
-            content=b"""Dear Hiring Manager,
-
-I am writing to express my strong interest in the Senior Python Developer position at your company. With over 8 years of experience in full-stack development and a proven track record of delivering scalable solutions, I am excited about the opportunity to contribute to your team.
-
-In my current role at TechCorp, I have:
-- Led a team of 5 developers in building microservices architecture
-- Implemented CI/CD pipelines that reduced deployment time by 60%
-- Designed and developed RESTful APIs serving 1M+ requests daily
-- Mentored junior developers and conducted code reviews
-
-I am particularly drawn to your company's mission and would love to discuss how my experience with Python, React, and cloud technologies can help drive your projects forward.
-
-Thank you for considering my application. I look forward to hearing from you.
-
-Best regards,
-John Doe""",
-            type="application/pdf",
-            size=1536,
-            owner_id=test_user1["id"],
-        ),
-        models.File(
-            filename="fullstack_developer_cv.pdf",
-            content=b"Full stack developer CV with React and Node.js experience - detailed project portfolio included...",
-            type="application/pdf",
-            size=1792,
-            owner_id=test_user1["id"],
-        ),
-        models.File(
-            filename="portfolio_cover_letter.txt",
-            content=b"Portfolio-based application cover letter highlighting creative projects and technical achievements...",
-            type="text/plain",
-            size=512,
-            owner_id=test_user2["id"],
-        ),
-        models.File(
-            filename="junior_cloud_cv.docx",
-            content=b"Junior developer CV with limited cloud experience but strong fundamentals in AWS and containerization...",
-            type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            size=1024,
-            owner_id=test_user2["id"],
-        ),
-        models.File(
-            filename="cloud_engineer_cover_letter.pdf",
-            content=b"Standard cover letter for cloud engineer position emphasizing DevOps skills and infrastructure experience...",
-            type="application/pdf",
-            size=768,
-            owner_id=test_user2["id"],
-        ),
-        models.File(
-            filename="frontend_specialist_cv.pdf",
-            content=b"Frontend specialist CV with React focus - includes modern JavaScript frameworks and UI/UX design experience...",
-            type="application/pdf",
-            size=1280,
-            owner_id=test_user1["id"],
-        ),
-        models.File(
-            filename="frontend_developer_cover_letter.pdf",
-            content=b"Frontend developer cover letter showcasing responsive design skills and component library experience...",
-            type="application/pdf",
-            size=640,
-            owner_id=test_user1["id"],
-        ),
-        models.File(
-            filename="updated_cv_2024.pdf",
-            content=b"Updated CV with recent project experience including microservices architecture and cloud-native development...",
-            type="application/pdf",
-            size=2304,
-            owner_id=test_user2["id"],
-        ),
-    ]
-
+    files = [models.File(**file) for file in FILES_DATA]
     session.add_all(files)
     session.commit()
     files = session.query(models.File).all()
@@ -439,103 +259,30 @@ John Doe""",
 def test_jobs(session, test_user1, test_user2, test_companies, test_locations, test_keywords, test_persons):
     """Create test job data"""
 
-    jobs = [
-        models.Job(
-            title="Senior Python Developer",
-            description="Looking for an experienced Python developer to join our backend team",
-            salary_min=80000,
-            salary_max=120000,
-            personal_rating=4,
-            url="https://techcorp.com/careers/senior-python-dev",
-            company_id=test_companies[0].id,
-            location_id=test_locations[0].id,
-            note="Great company culture, flexible hours",
-            owner_id=test_user1["id"],
-        ),
-        models.Job(
-            title="Frontend React Developer",
-            description="Join our frontend team building modern web applications",
-            salary_min=70000,
-            salary_max=100000,
-            personal_rating=3,
-            url="https://datasystems.com/jobs/react-dev",
-            company_id=test_companies[1].id,
-            location_id=test_locations[1].id,
-            note="Remote-friendly, good benefits",
-            owner_id=test_user1["id"],
-        ),
-        models.Job(
-            title="Cloud Engineer",
-            description="Design and implement cloud infrastructure solutions",
-            salary_min=90000,
-            salary_max=130000,
-            personal_rating=4,
-            url="https://cloudsolutions.co.uk/careers/cloud-engineer",
-            company_id=test_companies[2].id,
-            location_id=test_locations[2].id,
-            note="Cutting-edge technology, excellent team",
-            owner_id=test_user2["id"],
-        ),
-        models.Job(
-            title="Full Stack Developer",
-            description="Work on both frontend and backend of our fintech platform",
-            salary_min=85000,
-            salary_max=110000,
-            personal_rating=2,
-            company_id=test_companies[3].id,
-            location_id=test_locations[3].id,
-            note="Startup environment, equity options",
-            owner_id=test_user1["id"],
-        ),
-        models.Job(
-            title="DevOps Engineer",
-            description="Manage CI/CD pipelines and infrastructure automation",
-            salary_min=95000,
-            salary_max=140000,
-            company_id=test_companies[4].id,
-            location_id=test_locations[4].id,
-            owner_id=test_user2["id"],
-        ),
-        models.Job(
-            title="Backend Developer",
-            description="Python backend development for microservices",
-            company_id=test_companies[0].id,
-            location_id=test_locations[3].id,
-            owner_id=test_user1["id"],
-        ),
-        models.Job(
-            title="Software Engineer Intern",
-            description="Summer internship opportunity for computer science students",
-            personal_rating=1,
-            company_id=test_companies[1].id,
-            location_id=test_locations[4].id,
-            owner_id=test_user1["id"],
-        ),
-        models.Job(
-            title="Developer Position",
-            company_id=test_companies[2].id,
-            location_id=test_locations[4].id,
-            owner_id=test_user2["id"],
-        ),
-    ]
-
+    jobs = [models.Job(**job) for job in JOBS_DATA]
     session.add_all(jobs)
     session.commit()
     jobs = session.query(models.Job).all()
 
     # Add keywords to jobs
-    jobs[0].keywords.extend([test_keywords[0], test_keywords[5], test_keywords[9]])  # Python, AWS, FastAPI
-    jobs[1].keywords.extend([test_keywords[1], test_keywords[2]])  # JavaScript, React
-    jobs[2].keywords.extend([test_keywords[5], test_keywords[6], test_keywords[7]])  # AWS, Docker, Kubernetes
-    jobs[3].keywords.extend([test_keywords[0], test_keywords[1], test_keywords[3]])  # Python, JavaScript, Node.js
-    jobs[4].keywords.extend([test_keywords[6], test_keywords[7], test_keywords[5]])  # Docker, Kubernetes, AWS
+    add_mappings(
+        primary_data=jobs,
+        secondary_data=test_keywords,
+        mapping_data=JOB_KEYWORD_MAPPINGS,
+        primary_key="job_id",
+        secondary_key="keyword_ids",
+        relationship_attr="keywords",
+    )
 
-    # Add contacts to jobs (many-to-many relationship)
-    jobs[0].contacts.extend([test_persons[0], test_persons[1]])  # Senior Python: John Smith, Sarah Johnson
-    jobs[1].contacts.append(test_persons[1])  # Frontend React: Sarah Johnson
-    jobs[2].contacts.append(test_persons[2])  # Cloud Engineer: Michael Brown
-    jobs[3].contacts.append(test_persons[3])  # Full Stack: Emma Davis
-    jobs[4].contacts.extend([test_persons[4], test_persons[2]])  # DevOps: David Wilson, Michael Brown
+    # Add contacts to jobs
+    add_mappings(
+        primary_data=jobs,
+        secondary_data=test_persons,
+        mapping_data=JOB_CONTACT_MAPPINGS,
+        primary_key="job_id",
+        secondary_key="person_ids",
+        relationship_attr="contacts",
+    )
 
     session.commit()
     jobs = session.query(models.Job).all()
@@ -545,84 +292,8 @@ def test_jobs(session, test_user1, test_user2, test_companies, test_locations, t
 @pytest.fixture
 def test_job_applications(session, test_user1, test_user2, test_jobs, test_files):
     """Create test job application data using File references"""
-    base_date = dt.datetime.now()
-    job_applications = [
-        models.JobApplication(
-            date=base_date - dt.timedelta(days=30),
-            url="https://techcorp.com/application/12345",
-            job_id=test_jobs[0].id,
-            status="Applied",
-            note="Applied through company website",
-            cv_id=test_files[0].id,  # john_doe_cv_2024.pdf
-            cover_letter_id=test_files[1].id,  # cover_letter_senior_python.pdf
-            owner_id=test_user1["id"],
-        ),
-        models.JobApplication(
-            date=base_date - dt.timedelta(days=25),
-            url="https://linkedin.com/jobs/application/67890",
-            job_id=test_jobs[1].id,
-            status="Interview Scheduled",
-            note="HR reached out, phone interview scheduled",
-            cv_id=test_files[2].id,  # fullstack_developer_cv.pdf
-            cover_letter_id=None,  # No cover letter
-            owner_id=test_user1["id"],
-        ),
-        models.JobApplication(
-            date=base_date - dt.timedelta(days=20),
-            job_id=test_jobs[2].id,
-            status="Rejected",
-            note="Position filled internally",
-            cv_id=test_files[4].id,  # junior_cloud_cv.docx
-            cover_letter_id=test_files[5].id,  # cloud_engineer_cover_letter.pdf
-            owner_id=test_user2["id"],
-        ),
-        models.JobApplication(
-            date=base_date - dt.timedelta(days=15),
-            url="https://startupxyz.io/apply/54321",
-            job_id=test_jobs[3].id,
-            status="Under Review",
-            note="Submitted portfolio and references",
-            cv_id=test_files[6].id,  # frontend_specialist_cv.pdf
-            cover_letter_id=test_files[7].id,  # frontend_developer_cover_letter.pdf
-            owner_id=test_user1["id"],
-        ),
-        models.JobApplication(
-            date=base_date - dt.timedelta(days=10),
-            job_id=test_jobs[4].id,
-            status="Offer Extended",
-            note="Waiting for final decision",
-            cv_id=test_files[8].id,  # updated_cv_2024.pdf
-            cover_letter_id=test_files[5].id,  # cloud_engineer_cover_letter.pdf (reused)
-            owner_id=test_user2["id"],
-        ),
-        models.JobApplication(
-            date=base_date - dt.timedelta(days=5),
-            job_id=test_jobs[5].id,
-            status="Applied",
-            note="Quick application through company form",
-            cv_id=None,  # No CV
-            cover_letter_id=None,  # No cover letter
-            owner_id=test_user1["id"],
-        ),
-        models.JobApplication(
-            date=base_date - dt.timedelta(days=3),
-            job_id=test_jobs[6].id,
-            status="Applied",
-            note="Internship application with portfolio",
-            cv_id=None,  # No CV for internship
-            cover_letter_id=test_files[3].id,  # portfolio_cover_letter.txt
-            owner_id=test_user1["id"],
-        ),
-        models.JobApplication(
-            date=base_date - dt.timedelta(days=1),
-            job_id=test_jobs[7].id,
-            status="Applied",
-            note="Basic application submission",
-            cv_id=test_files[0].id,  # john_doe_cv_2024.pdf (reused)
-            cover_letter_id=test_files[3].id,  # portfolio_cover_letter.txt (reused)
-            owner_id=test_user2["id"],
-        ),
-    ]
+
+    job_applications = [models.JobApplication(**job_application) for job_application in JOB_APPLICATIONS_DATA]
     session.add_all(job_applications)
     session.commit()
     job_applications = session.query(models.JobApplication).all()
@@ -632,61 +303,21 @@ def test_job_applications(session, test_user1, test_user2, test_jobs, test_files
 @pytest.fixture
 def test_interviews(session, test_user1, test_user2, test_job_applications, test_locations, test_persons):
     """Create test interview data"""
-    base_date = dt.datetime.now()
-    interviews = [
-        models.Interview(
-            date=base_date + dt.timedelta(days=3),
-            location_id=test_locations[0].id,
-            jobapplication_id=test_job_applications[1].id,  # For the "Interview Scheduled" application
-            note="Technical interview with team lead",
-            owner_id=test_user1["id"],
-        ),
-        models.Interview(
-            date=base_date + dt.timedelta(days=7),
-            location_id=test_locations[3].id,  # Remote location
-            jobapplication_id=test_job_applications[3].id,  # For the "Under Review" application
-            note="Video call with founder and CTO",
-            owner_id=test_user1["id"],
-        ),
-        models.Interview(
-            date=base_date - dt.timedelta(days=5),  # Past interview
-            location_id=test_locations[2].id,
-            jobapplication_id=test_job_applications[2].id,  # For the rejected application
-            note="Initial screening - went well but position filled",
-            owner_id=test_user2["id"],
-        ),
-        models.Interview(
-            date=base_date + dt.timedelta(days=1),  # Tomorrow
-            location_id=test_locations[4].id,  # Remote
-            jobapplication_id=test_job_applications[4].id,  # For the offer extended application
-            note="Final interview before decision",
-            owner_id=test_user2["id"],
-        ),
-        models.Interview(
-            date=base_date + dt.timedelta(days=5),
-            location_id=None,  # No location specified
-            jobapplication_id=test_job_applications[5].id,
-            note="Phone screening with recruiter. Location TBD.",
-            owner_id=test_user1["id"],
-        ),
-        models.Interview(
-            date=base_date + dt.timedelta(days=10),
-            location_id=test_locations[6].id,  # Canada location
-            jobapplication_id=test_job_applications[0].id,  # Same application, second interview
-            note="Follow-up interview with senior management",
-            owner_id=test_user1["id"],
-        ),
-    ]
 
+    interviews = [models.Interview(**interview) for interview in INTERVIEWS_DATA]
     session.add_all(interviews)
     session.commit()
     interviews = session.query(models.Interview).all()
 
-    # Add interviewers to interviews using the many-to-many relationship
-    interviews[0].interviewers.extend([test_persons[0], test_persons[1]])  # John Smith, Sarah Johnson
-    interviews[1].interviewers.append(test_persons[3])  # Emma Davis
-    interviews[2].interviewers.append(test_persons[2])  # Michael Brown
-    interviews[3].interviewers.extend([test_persons[4], test_persons[2]])  # David Wilson, Michael Brown
+    # Add interviewers to interviews
+    add_mappings(
+        primary_data=interviews,
+        secondary_data=test_persons,
+        mapping_data=INTERVIEW_INTERVIEWER_MAPPINGS,
+        primary_key="interview_id",
+        secondary_key="person_ids",
+        relationship_attr="interviewers",
+    )
 
     session.commit()
     return interviews
@@ -807,8 +438,6 @@ class CRUDTestBase:
     ) -> None:
         test_data = request.getfixturevalue(self.test_data)
         response = self.get_all(authorized_client1)
-        print(response.json())
-        print(test_data)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
 
@@ -865,6 +494,7 @@ class CRUDTestBase:
         Subclasses should set post_test_data = [dict(...), ...]
         """
         for create_data in self.create_data:
+            create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
             response = self.post(authorized_client1, create_data)
             assert response.status_code == status.HTTP_201_CREATED
             self.check_output(create_data, response.json())
