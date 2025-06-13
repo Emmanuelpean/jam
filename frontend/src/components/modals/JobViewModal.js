@@ -9,7 +9,7 @@ const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 		viewFields.title,
 		viewFields.company,
 		viewFields.location,
-		viewFields.status,
+		viewFields.jobApplication,
 		viewFields.description,
 		viewFields.salaryRange,
 		viewFields.personalRating,

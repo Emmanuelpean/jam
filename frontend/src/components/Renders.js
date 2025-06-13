@@ -80,7 +80,7 @@ const ensureHttpPrefix = (url) => {
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
-	_longText: (item, noText, view = false) => {
+	_longText: (item, view = false) => {
 		if (item.description) {
 			if (view) {
 				return item.description;
@@ -260,20 +260,20 @@ export const renderFunctions = {
 		}
 	},
 
-	persons: (item) => {
-		if (item.persons && item.persons.length > 0) {
+	contacts: (item) => {
+		if (item.contacts && item.contacts.length > 0) {
 			return (
 				<div>
-					{item.persons.map((person, index) => (
+					{item.contacts.map((person, index) => (
 						<span key={person.id || index} className="me-1">
 							<PersonModalManager>
 								{(handleClick) => (
 									<span
-										className={"badge bg-info clickable-badge"}
-										onClick={() => handleClick(item.name)}
+										className="badge bg-info clickable-badge"
+										onClick={() => handleClick(person)}
 									>
 										<i className="bi bi-file-person me-1"></i>
-										{item.name}
+										{person.name}
 									</span>
 								)}
 							</PersonModalManager>

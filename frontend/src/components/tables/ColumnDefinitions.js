@@ -124,7 +124,7 @@ export const columns = {
 		type: "text",
 		sortField: "person.last_name",
 		searchFields: "company.name",
-		render: renderFunctions.persons,
+		render: renderFunctions.contacts,
 	},
 
 	personName: {
@@ -196,9 +196,10 @@ export const columns = {
 		key: "jobapplication",
 		label: "Application Status",
 		sortable: true,
-		searchable: true,
+		searchable: false,
 		sortField: "job_application.status",
 		searchFields: "job_application.status",
 		render: renderFunctions.jobApplication,
-	}
+	},
+
 };

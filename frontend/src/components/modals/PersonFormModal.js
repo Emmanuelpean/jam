@@ -149,7 +149,7 @@ const PersonFormModal = ({
 				{
 					name: "linkedin_url",
 					label: "LinkedIn Profile",
-					type: "url",
+					type: "text",
 					required: false,
 					placeholder: "https://linkedin.com/in/username",
 				},

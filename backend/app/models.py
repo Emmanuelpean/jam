@@ -129,6 +129,35 @@ class Aggregator(CommonBase, Base):
     url = Column(String, nullable=False)
 
 
+class File(CommonBase, Base):
+    """Represents files uploaded by users.
+
+    Attributes:
+    - filename (str): Name of the file.
+    - content (bytes): Content of the file.
+    - type (str): MIME type of the file.
+    - size (int): Size of the file in bytes."""
+
+    filename = Column(String, nullable=False)
+    content = Column(LargeBinary, nullable=False)
+    type = Column(String, nullable=False)
+    size = Column(Integer, nullable=False)
+
+    # Add these back-references
+    # job_cv = relationship(
+    #     "JobApplication",
+    #     foreign_keys="JobApplication.cv_id",
+    #     back_populates="cv",
+    #     lazy="noload",
+    # )
+    # job_cover_letter = relationship(
+    #     "JobApplication",
+    #     foreign_keys="JobApplication.cover_letter_id",
+    #     back_populates="cover_letter",
+    #     lazy="noload",
+    # )
+
+
 class Location(CommonBase, Base):
     """Represents geographical locations.
 
@@ -287,12 +316,14 @@ class JobApplication(CommonBase, Base):
     job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False, unique=True)
     status = Column(String, server_default="Applied", nullable=False)
     note = Column(String, nullable=True)
-    cv = Column(LargeBinary, nullable=True)
-    cover_letter = Column(LargeBinary, nullable=True)
+    cv_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
+    cover_letter_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
     job = relationship("Job", back_populates="job_application")
     interviews = relationship("Interview", back_populates="job_application")
+    cv = relationship("File", foreign_keys=[cv_id], lazy="select")
+    cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
 
 
 class Interview(CommonBase, Base):

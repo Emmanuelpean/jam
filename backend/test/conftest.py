@@ -181,6 +181,8 @@ def test_locations(session, test_user1, test_user2):
         models.Location(postcode="SW1A 1AA", city="London", country="UK", remote=False, owner_id=test_user2["id"]),
         models.Location(city="San Francisco", country="USA", remote=True, owner_id=test_user1["id"]),
         models.Location(country="Germany", remote=True, owner_id=test_user2["id"]),
+        models.Location(postcode="OX1 2JD", city="Oxford", country="UK", remote=False, owner_id=test_user1["id"]),
+        models.Location(country="Canada", remote=True, owner_id=test_user2["id"]),
     ]
 
     session.add_all(locations)
@@ -326,6 +328,114 @@ def test_keywords(session, test_user1, test_user2):
 
 
 @pytest.fixture
+def test_files(session, test_user1, test_user2):
+    """Create test files for job applications"""
+    files = [
+        models.File(
+            filename="john_doe_cv_2024.pdf",
+            content=b"""John Doe - Software Engineer
+
+EXPERIENCE:
+- Senior Software Developer at TechCorp (2019-2024)
+- Full Stack Developer at StartupXYZ (2017-2019)
+- Junior Developer at WebSolutions (2015-2017)
+
+SKILLS:
+- Python, JavaScript, React, Node.js
+- AWS, Docker, Kubernetes
+- PostgreSQL, MongoDB
+- Git, CI/CD, Agile methodologies
+
+EDUCATION:
+- B.S. Computer Science, University of Technology (2015)
+
+CERTIFICATIONS:
+- AWS Certified Solutions Architect
+- Certified Kubernetes Administrator""",
+            type="application/pdf",
+            size=2048,
+            owner_id=test_user1["id"],
+        ),
+        models.File(
+            filename="cover_letter_senior_python.pdf",
+            content=b"""Dear Hiring Manager,
+
+I am writing to express my strong interest in the Senior Python Developer position at your company. With over 8 years of experience in full-stack development and a proven track record of delivering scalable solutions, I am excited about the opportunity to contribute to your team.
+
+In my current role at TechCorp, I have:
+- Led a team of 5 developers in building microservices architecture
+- Implemented CI/CD pipelines that reduced deployment time by 60%
+- Designed and developed RESTful APIs serving 1M+ requests daily
+- Mentored junior developers and conducted code reviews
+
+I am particularly drawn to your company's mission and would love to discuss how my experience with Python, React, and cloud technologies can help drive your projects forward.
+
+Thank you for considering my application. I look forward to hearing from you.
+
+Best regards,
+John Doe""",
+            type="application/pdf",
+            size=1536,
+            owner_id=test_user1["id"],
+        ),
+        models.File(
+            filename="fullstack_developer_cv.pdf",
+            content=b"Full stack developer CV with React and Node.js experience - detailed project portfolio included...",
+            type="application/pdf",
+            size=1792,
+            owner_id=test_user1["id"],
+        ),
+        models.File(
+            filename="portfolio_cover_letter.txt",
+            content=b"Portfolio-based application cover letter highlighting creative projects and technical achievements...",
+            type="text/plain",
+            size=512,
+            owner_id=test_user2["id"],
+        ),
+        models.File(
+            filename="junior_cloud_cv.docx",
+            content=b"Junior developer CV with limited cloud experience but strong fundamentals in AWS and containerization...",
+            type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            size=1024,
+            owner_id=test_user2["id"],
+        ),
+        models.File(
+            filename="cloud_engineer_cover_letter.pdf",
+            content=b"Standard cover letter for cloud engineer position emphasizing DevOps skills and infrastructure experience...",
+            type="application/pdf",
+            size=768,
+            owner_id=test_user2["id"],
+        ),
+        models.File(
+            filename="frontend_specialist_cv.pdf",
+            content=b"Frontend specialist CV with React focus - includes modern JavaScript frameworks and UI/UX design experience...",
+            type="application/pdf",
+            size=1280,
+            owner_id=test_user1["id"],
+        ),
+        models.File(
+            filename="frontend_developer_cover_letter.pdf",
+            content=b"Frontend developer cover letter showcasing responsive design skills and component library experience...",
+            type="application/pdf",
+            size=640,
+            owner_id=test_user1["id"],
+        ),
+        models.File(
+            filename="updated_cv_2024.pdf",
+            content=b"Updated CV with recent project experience including microservices architecture and cloud-native development...",
+            type="application/pdf",
+            size=2304,
+            owner_id=test_user2["id"],
+        ),
+    ]
+
+    session.add_all(files)
+    session.commit()
+    files = session.query(models.File).all()
+    return files
+
+
+@pytest.fixture
 def test_jobs(session, test_user1, test_user2, test_companies, test_locations, test_keywords, test_persons):
     """Create test job data"""
 
@@ -335,7 +445,7 @@ def test_jobs(session, test_user1, test_user2, test_companies, test_locations, t
             description="Looking for an experienced Python developer to join our backend team",
             salary_min=80000,
             salary_max=120000,
-            personal_rating=8,
+            personal_rating=4,
             url="https://techcorp.com/careers/senior-python-dev",
             company_id=test_companies[0].id,
             location_id=test_locations[0].id,
@@ -347,7 +457,7 @@ def test_jobs(session, test_user1, test_user2, test_companies, test_locations, t
             description="Join our frontend team building modern web applications",
             salary_min=70000,
             salary_max=100000,
-            personal_rating=7,
+            personal_rating=3,
             url="https://datasystems.com/jobs/react-dev",
             company_id=test_companies[1].id,
             location_id=test_locations[1].id,
@@ -359,7 +469,7 @@ def test_jobs(session, test_user1, test_user2, test_companies, test_locations, t
             description="Design and implement cloud infrastructure solutions",
             salary_min=90000,
             salary_max=130000,
-            personal_rating=9,
+            personal_rating=4,
             url="https://cloudsolutions.co.uk/careers/cloud-engineer",
             company_id=test_companies[2].id,
             location_id=test_locations[2].id,
@@ -371,7 +481,7 @@ def test_jobs(session, test_user1, test_user2, test_companies, test_locations, t
             description="Work on both frontend and backend of our fintech platform",
             salary_min=85000,
             salary_max=110000,
-            personal_rating=6,
+            personal_rating=2,
             company_id=test_companies[3].id,
             location_id=test_locations[3].id,
             note="Startup environment, equity options",
@@ -387,7 +497,24 @@ def test_jobs(session, test_user1, test_user2, test_companies, test_locations, t
             owner_id=test_user2["id"],
         ),
         models.Job(
-            title="DevOps Engineer 2",
+            title="Backend Developer",
+            description="Python backend development for microservices",
+            company_id=test_companies[0].id,
+            location_id=test_locations[3].id,
+            owner_id=test_user1["id"],
+        ),
+        models.Job(
+            title="Software Engineer Intern",
+            description="Summer internship opportunity for computer science students",
+            personal_rating=1,
+            company_id=test_companies[1].id,
+            location_id=test_locations[4].id,
+            owner_id=test_user1["id"],
+        ),
+        models.Job(
+            title="Developer Position",
+            company_id=test_companies[2].id,
+            location_id=test_locations[4].id,
             owner_id=test_user2["id"],
         ),
     ]
@@ -416,8 +543,8 @@ def test_jobs(session, test_user1, test_user2, test_companies, test_locations, t
 
 
 @pytest.fixture
-def test_job_applications(session, test_user1, test_user2, test_jobs):
-    """Create test job application data"""
+def test_job_applications(session, test_user1, test_user2, test_jobs, test_files):
+    """Create test job application data using File references"""
     base_date = dt.datetime.now()
     job_applications = [
         models.JobApplication(
@@ -426,8 +553,8 @@ def test_job_applications(session, test_user1, test_user2, test_jobs):
             job_id=test_jobs[0].id,
             status="Applied",
             note="Applied through company website",
-            cv=b"Sample CV content for Senior Python Developer position - John Doe, 5 years Python experience",
-            cover_letter=b"Dear Hiring Manager, I am writing to express my interest in the Senior Python Developer position...",
+            cv_id=test_files[0].id,  # john_doe_cv_2024.pdf
+            cover_letter_id=test_files[1].id,  # cover_letter_senior_python.pdf
             owner_id=test_user1["id"],
         ),
         models.JobApplication(
@@ -436,8 +563,8 @@ def test_job_applications(session, test_user1, test_user2, test_jobs):
             job_id=test_jobs[1].id,
             status="Interview Scheduled",
             note="HR reached out, phone interview scheduled",
-            cv=b"Frontend React Developer CV - Jane Smith, 3 years React experience, portfolio included",
-            cover_letter=None,  # No cover letter for this application
+            cv_id=test_files[2].id,  # fullstack_developer_cv.pdf
+            cover_letter_id=None,  # No cover letter
             owner_id=test_user1["id"],
         ),
         models.JobApplication(
@@ -445,8 +572,8 @@ def test_job_applications(session, test_user1, test_user2, test_jobs):
             job_id=test_jobs[2].id,
             status="Rejected",
             note="Position filled internally",
-            cv=b"Cloud Engineer CV - Michael Johnson, AWS certified, 4 years cloud infrastructure experience",
-            cover_letter=b"Standard cover letter for Cloud Engineer position highlighting relevant AWS experience",
+            cv_id=test_files[4].id,  # junior_cloud_cv.docx
+            cover_letter_id=test_files[5].id,  # cloud_engineer_cover_letter.pdf
             owner_id=test_user2["id"],
         ),
         models.JobApplication(
@@ -455,8 +582,8 @@ def test_job_applications(session, test_user1, test_user2, test_jobs):
             job_id=test_jobs[3].id,
             status="Under Review",
             note="Submitted portfolio and references",
-            cv=b"Full Stack Developer CV - Sarah Williams, startup experience, equity-focused candidate",
-            cover_letter=b"Enthusiastic cover letter for fintech startup highlighting passion for innovation",
+            cv_id=test_files[6].id,  # frontend_specialist_cv.pdf
+            cover_letter_id=test_files[7].id,  # frontend_developer_cover_letter.pdf
             owner_id=test_user1["id"],
         ),
         models.JobApplication(
@@ -464,8 +591,35 @@ def test_job_applications(session, test_user1, test_user2, test_jobs):
             job_id=test_jobs[4].id,
             status="Offer Extended",
             note="Waiting for final decision",
-            cv=b"DevOps Engineer CV - Alex Chen, kubernetes expert, CI/CD pipeline specialist",
-            cover_letter=b"Professional cover letter emphasizing DevOps automation and infrastructure skills",
+            cv_id=test_files[8].id,  # updated_cv_2024.pdf
+            cover_letter_id=test_files[5].id,  # cloud_engineer_cover_letter.pdf (reused)
+            owner_id=test_user2["id"],
+        ),
+        models.JobApplication(
+            date=base_date - dt.timedelta(days=5),
+            job_id=test_jobs[5].id,
+            status="Applied",
+            note="Quick application through company form",
+            cv_id=None,  # No CV
+            cover_letter_id=None,  # No cover letter
+            owner_id=test_user1["id"],
+        ),
+        models.JobApplication(
+            date=base_date - dt.timedelta(days=3),
+            job_id=test_jobs[6].id,
+            status="Applied",
+            note="Internship application with portfolio",
+            cv_id=None,  # No CV for internship
+            cover_letter_id=test_files[3].id,  # portfolio_cover_letter.txt
+            owner_id=test_user1["id"],
+        ),
+        models.JobApplication(
+            date=base_date - dt.timedelta(days=1),
+            job_id=test_jobs[7].id,
+            status="Applied",
+            note="Basic application submission",
+            cv_id=test_files[0].id,  # john_doe_cv_2024.pdf (reused)
+            cover_letter_id=test_files[3].id,  # portfolio_cover_letter.txt (reused)
             owner_id=test_user2["id"],
         ),
     ]
@@ -507,6 +661,20 @@ def test_interviews(session, test_user1, test_user2, test_job_applications, test
             jobapplication_id=test_job_applications[4].id,  # For the offer extended application
             note="Final interview before decision",
             owner_id=test_user2["id"],
+        ),
+        models.Interview(
+            date=base_date + dt.timedelta(days=5),
+            location_id=None,  # No location specified
+            jobapplication_id=test_job_applications[5].id,
+            note="Phone screening with recruiter. Location TBD.",
+            owner_id=test_user1["id"],
+        ),
+        models.Interview(
+            date=base_date + dt.timedelta(days=10),
+            location_id=test_locations[6].id,  # Canada location
+            jobapplication_id=test_job_applications[0].id,  # Same application, second interview
+            note="Follow-up interview with senior management",
+            owner_id=test_user1["id"],
         ),
     ]
 
@@ -585,16 +753,13 @@ class CRUDTestBase:
                         assert parsed_value == response_value
                     else:
                         assert value == response_value
-
-                elif isinstance(response_value, bytes):
-                    # Handle base64 binary field comparison
-                    if value is None:
-                        assert response_value is None
-                    else:
-                        # Compare the base64 string with the decoded bytes
-                        assert value == response_value.decode("utf-8")
                 else:
-                    assert value == response_value
+                    try:
+                        assert value == response_value
+                    except Exception:
+                        print(value)
+                        print(response_value)
+                        raise AssertionError
 
         return None
 

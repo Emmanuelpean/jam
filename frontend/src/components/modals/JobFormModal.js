@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Button, Badge } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
@@ -13,6 +14,8 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 	const [showApplicationModal, setShowApplicationModal] = useState(false);
 	const [companyOptions, setCompanyOptions] = useState([]);
 	const [locationOptions, setLocationOptions] = useState([]);
+	const [keywordOptions, setKeywordOptions] = useState([]);
+	const [personOptions, setPersonOptions] = useState([]);
 	const [currentJobId, setCurrentJobId] = useState(null);
 	const [existingApplication, setExistingApplication] = useState(null);
 	const [isLoadingApplication, setIsLoadingApplication] = useState(false);
@@ -73,41 +76,64 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		}
 	}, [currentJobId, token]);
 
-	// Fetch companies and locations for the select options
+	// Fetch all options for the select fields
 	useEffect(() => {
 		const fetchOptions = async () => {
 			if (!token || !show) return;
 
 			try {
-				// Fetch companies
-				const companiesResponse = await fetch("http://localhost:8000/companies/", {
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				});
+				// Fetch all data in parallel
+				const [companiesResponse, locationsResponse, keywordsResponse, personsResponse] = await Promise.all([
+					fetch("http://localhost:8000/companies/", {
+						headers: { Authorization: `Bearer ${token}` },
+					}),
+					fetch("http://localhost:8000/locations/", {
+						headers: { Authorization: `Bearer ${token}` },
+					}),
+					fetch("http://localhost:8000/keywords/", {
+						headers: { Authorization: `Bearer ${token}` },
+					}),
+					fetch("http://localhost:8000/persons/", {
+						headers: { Authorization: `Bearer ${token}` },
+					}),
+				]);
 
-				// Fetch locations
-				const locationsResponse = await fetch("http://localhost:8000/locations/", {
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				});
-
-				if (companiesResponse.ok && locationsResponse.ok) {
+				if (companiesResponse.ok) {
 					const companiesData = await companiesResponse.json();
-					const locationsData = await locationsResponse.json();
-
 					setCompanyOptions(
 						companiesData.map((company) => ({
 							value: company.id,
 							label: company.name,
 						})),
 					);
+				}
 
+				if (locationsResponse.ok) {
+					const locationsData = await locationsResponse.json();
 					setLocationOptions(
 						locationsData.map((location) => ({
 							value: location.id,
 							label: location.name,
+						})),
+					);
+				}
+
+				if (keywordsResponse.ok) {
+					const keywordsData = await keywordsResponse.json();
+					setKeywordOptions(
+						keywordsData.map((keyword) => ({
+							value: keyword.id,
+							label: keyword.name,
+						})),
+					);
+				}
+
+				if (personsResponse.ok) {
+					const personsData = await personsResponse.json();
+					setPersonOptions(
+						personsData.map((person) => ({
+							value: person.id,
+							label: person.name,
 						})),
 					);
 				}
@@ -166,7 +192,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		setShowApplicationModal(true);
 	};
 
-	// Define layout groups for job information only
+	// Define layout groups for job information
 	const layoutGroups = [
 		{
 			id: "title",
@@ -234,7 +260,33 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				</div>
 			),
 		},
-		// Status and URL (side by side)
+		// Keywords and Contacts (side by side)
+		{
+			id: "keywords-contacts",
+			type: "row",
+			fields: [
+				{
+					name: "keywords",
+					label: "Keywords/Tags",
+					type: "multiselect",
+					placeholder: "Select or search keywords...",
+					isSearchable: true,
+					isCreatable: true,
+					options: keywordOptions,
+					columnClass: "col-md-6",
+				},
+				{
+					name: "contacts",
+					label: "Contacts",
+					type: "multiselect",
+					placeholder: "Select or search contacts...",
+					isSearchable: true,
+					options: personOptions,
+					columnClass: "col-md-6",
+				},
+			],
+		},
+		// Status and URL
 		{
 			id: "status-url",
 			type: "default",
@@ -302,7 +354,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 					placeholder: "Enter job description...",
 				},
 				{
-					name: "notes",
+					name: "note",
 					label: "Personal Notes",
 					type: "textarea",
 					rows: 3,
@@ -388,7 +440,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		},
 	];
 
-	// Custom validation rules for job fields only
+	// Custom validation rules for job fields
 	const validationRules = {
 		salary_min: (value, formData) => {
 			if (value && formData.salary_max && parseInt(value) > parseInt(formData.salary_max)) {
@@ -410,7 +462,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		},
 	};
 
-	// Transform form data before submission (job fields only)
+	// Transform form data before submission
 	const transformFormData = (data) => {
 		const transformed = { ...data };
 
@@ -427,9 +479,20 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 			transformed.personal_rating = parseInt(transformed.personal_rating);
 		}
 
-		// Set default status if not provided
-		if (!transformed.status) {
-			transformed.status = "applied";
+		// Transform keywords multiselect to array of IDs
+		if (transformed.keywords && Array.isArray(transformed.keywords)) {
+			transformed.keyword_ids = transformed.keywords.map(item =>
+				typeof item === 'object' ? item.value : item
+			);
+			delete transformed.keywords;
+		}
+
+		// Transform contacts multiselect to array of IDs
+		if (transformed.contacts && Array.isArray(transformed.contacts)) {
+			transformed.contact_ids = transformed.contacts.map(item =>
+				typeof item === 'object' ? item.value : item
+			);
+			delete transformed.contacts;
 		}
 
 		return transformed;

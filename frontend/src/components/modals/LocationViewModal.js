@@ -6,16 +6,21 @@ import { viewFields } from "../ViewRenders";
 const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
 	if (!location) return null;
 
-	const fields = [viewFields.city, viewFields.postcode, viewFields.country];
-
-	const customContent = (
-		<>
-			{!location.remote ? (
+	let customContent;
+	let fields = [];
+	if (!location.remote) {
+		fields = [viewFields.city, viewFields.postcode, viewFields.country];
+		customContent = (
+			<>
 				<div className="mb-4">
 					<h6 className="mb-3">📍 Location on Map</h6>
 					<LocationMap locations={[location]} height="300px" />
 				</div>
-			) : (
+			</>
+		);
+	} else {
+		customContent = (
+			<>
 				<div className="mb-4 p-3 bg-light rounded">
 					<div className="text-center">
 						<div className="mb-2" style={{ fontSize: "2rem" }}>
@@ -27,9 +32,9 @@ const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
 						</p>
 					</div>
 				</div>
-			)}
-		</>
-	);
+			</>
+		);
+	}
 
 	return (
 		<GenericModal

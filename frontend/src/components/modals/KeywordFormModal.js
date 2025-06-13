@@ -14,7 +14,7 @@ const KeywordFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isE
 	];
 
 	// Transform the form data before submission (trim whitespace)
-	const transformFormData = (formData) => {
+	const transformFormData = (formData) => {  // TODO create function that transforms the data based on the field type
 		return {
 			...formData,
 			name: formData.name.trim(),

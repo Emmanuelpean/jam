@@ -36,6 +36,57 @@ def create_user(
     return new_user
 
 
+@user_router.get("/me", response_model=schemas.UserOut)
+def get_current_user_profile(
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    """Get the current user's profile.
+    :param current_user: The current authenticated user."""
+
+    return current_user
+
+
+@user_router.put("/me", response_model=schemas.UserOut)
+def update_current_user_profile(
+    user_update: schemas.UserUpdate,
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
+):
+    """Update the current user's profile.
+    :param user_update: The user update data.
+    :param current_user: The current authenticated user.
+    :param db: The database session."""
+
+    user_update = user_update.model_dump(exclude_defaults=True)
+
+    # Check if email is being updated and if it's already taken
+    if "email" in user_update and user_update["email"] != current_user.email:
+        existing_user = db.query(models.User).filter(models.User.email == user_update["email"]).first()
+        if existing_user:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
+    # Validate theme if provided
+    if "theme" in user_update:
+        valid_themes = ["strawberry", "blueberry", "raspberry", "mixed-berry", "forest-berry", "blackberry"]
+        if user_update["theme"] not in valid_themes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid theme. Must be one of: {', '.join(valid_themes)}",
+            )
+
+    # Hash password if it's being updated
+    if "password" in user_update:
+        user_update["password"] = utils.hash_password(user_update["password"])
+
+    # Apply updates
+    for field, value in user_update.items():
+        setattr(current_user, field, value)
+
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
 @user_router.get("/{id}", response_model=schemas.UserOut)
 def get_user(
     user_id: int,
@@ -49,55 +100,3 @@ def get_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
-
-
-# Routes for authenticated user operations
-@user_router.get("/me", response_model=schemas.UserOut)
-def get_current_user_profile(
-    current_user: models.User = Depends(oauth2.get_current_user),
-):
-    """Get the current user's profile.
-    :param current_user: The current authenticated user."""
-    return current_user
-
-
-@user_router.patch("/me", response_model=schemas.UserOut)
-def update_current_user_profile(
-    user_update: schemas.UserUpdate,
-    current_user: models.User = Depends(oauth2.get_current_user),
-    db: Session = Depends(database.get_db),
-):
-    """Update the current user's profile.
-    :param user_update: The user update data.
-    :param current_user: The current authenticated user.
-    :param db: The database session."""
-
-    # Check if email is being updated and if it's already taken
-    if user_update.email and user_update.email != current_user.email:
-        existing_user = db.query(models.User).filter(models.User.email == user_update.email).first()
-        if existing_user:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-
-    # Validate theme if provided
-    if user_update.theme:
-        valid_themes = ["strawberry", "blueberry", "raspberry", "mixed-berry", "forest-berry", "blackberry"]
-        if user_update.theme not in valid_themes:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid theme. Must be one of: {', '.join(valid_themes)}",
-            )
-
-    # Update only fields that are provided
-    update_data = user_update.model_dump(exclude_unset=True)
-
-    # Hash password if it's being updated
-    if "password" in update_data:
-        update_data["password"] = utils.hash_password(update_data["password"])
-
-    # Apply updates
-    for field, value in update_data.items():
-        setattr(current_user, field, value)
-
-    db.commit()
-    db.refresh(current_user)
-    return current_user

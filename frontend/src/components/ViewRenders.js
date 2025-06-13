@@ -101,7 +101,7 @@ export const viewFields = {
 		key: "person",
 		label: "Contacts",
 		type: "text",
-		render: (x) => renderFunctions.persons(x, true),
+		render: (x) => renderFunctions.contacts(x, true),
 	},
 
 	personName: {
@@ -133,12 +133,6 @@ export const viewFields = {
 
 	// ------------------------------------------------------ JOBS -----------------------------------------------------
 
-	status: {
-		key: "status",
-		label: "Status",
-		type: "select",
-	},
-
 	salaryRange: {
 		key: "salary_range",
 		label: "Salary Range",
@@ -152,4 +146,11 @@ export const viewFields = {
 		type: "text",
 		render: (x) => renderFunctions.personalRating(x, true),
 	},
+
+	jobApplication: {
+		key: "job_application",
+		label: "Application Status",
+		type: "text",
+		render: (x) => renderFunctions.jobApplication(x, true),
+	}
 };

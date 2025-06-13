@@ -3,33 +3,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app import models, database, oauth2
-from app.schemas import (
-    Person,
-    PersonUpdate,
-    PersonOut,
-    Company,
-    CompanyUpdate,
-    CompanyOut,
-    Job,
-    JobUpdate,
-    JobOut,
-    Location,
-    LocationUpdate,
-    LocationOut,
-    Aggregator,
-    AggregatorUpdate,
-    AggregatorOut,
-    Interview,
-    InterviewUpdate,
-    InterviewOut,
-    JobApplication,
-    JobApplicationUpdate,
-    JobApplicationOut,
-    Keyword,
-    KeywordUpdate,
-    KeywordOut,
-)
+from app import models, database, oauth2, schemas
 
 
 def generate_crud_router(
@@ -188,9 +162,9 @@ def generate_crud_router(
 # Person router
 person_router = generate_crud_router(
     table_model=models.Person,
-    create_schema=Person,
-    update_schema=PersonUpdate,
-    out_schema=PersonOut,
+    create_schema=schemas.Person,
+    update_schema=schemas.PersonUpdate,
+    out_schema=schemas.PersonOut,
     endpoint="persons",
     not_found_msg="Person not found",
 )
@@ -198,9 +172,9 @@ person_router = generate_crud_router(
 # Company router
 company_router = generate_crud_router(
     table_model=models.Company,
-    create_schema=Company,
-    update_schema=CompanyUpdate,
-    out_schema=CompanyOut,
+    create_schema=schemas.Company,
+    update_schema=schemas.CompanyUpdate,
+    out_schema=schemas.CompanyOut,
     endpoint="companies",
     not_found_msg="Company not found",
 )
@@ -208,9 +182,9 @@ company_router = generate_crud_router(
 # Job router
 job_router = generate_crud_router(
     table_model=models.Job,
-    create_schema=Job,
-    update_schema=JobUpdate,
-    out_schema=JobOut,
+    create_schema=schemas.Job,
+    update_schema=schemas.JobUpdate,
+    out_schema=schemas.JobOut,
     endpoint="jobs",
     not_found_msg="Job not found",
 )
@@ -218,9 +192,9 @@ job_router = generate_crud_router(
 # Location router
 location_router = generate_crud_router(
     table_model=models.Location,
-    create_schema=Location,
-    update_schema=LocationUpdate,
-    out_schema=LocationOut,
+    create_schema=schemas.Location,
+    update_schema=schemas.LocationUpdate,
+    out_schema=schemas.LocationOut,
     endpoint="locations",
     not_found_msg="Location not found",
 )
@@ -228,9 +202,9 @@ location_router = generate_crud_router(
 # Aggregator router
 aggregator_router = generate_crud_router(
     table_model=models.Aggregator,
-    create_schema=Aggregator,
-    update_schema=AggregatorUpdate,
-    out_schema=AggregatorOut,
+    create_schema=schemas.Aggregator,
+    update_schema=schemas.AggregatorUpdate,
+    out_schema=schemas.AggregatorOut,
     endpoint="aggregators",
     not_found_msg="Aggregator not found",
 )
@@ -238,9 +212,9 @@ aggregator_router = generate_crud_router(
 # Interview router
 interview_router = generate_crud_router(
     table_model=models.Interview,
-    create_schema=Interview,
-    update_schema=InterviewUpdate,
-    out_schema=InterviewOut,
+    create_schema=schemas.Interview,
+    update_schema=schemas.InterviewUpdate,
+    out_schema=schemas.InterviewOut,
     endpoint="interviews",
     not_found_msg="Interview not found",
 )
@@ -248,9 +222,9 @@ interview_router = generate_crud_router(
 # JobApplication router
 jobapplication_router = generate_crud_router(
     table_model=models.JobApplication,
-    create_schema=JobApplication,
-    update_schema=JobApplicationUpdate,
-    out_schema=JobApplicationOut,
+    create_schema=schemas.JobApplication,
+    update_schema=schemas.JobApplicationUpdate,
+    out_schema=schemas.JobApplicationOut,
     endpoint="jobapplications",
     not_found_msg="Job Application not found",
 )
@@ -258,9 +232,19 @@ jobapplication_router = generate_crud_router(
 # Keyword router
 keyword_router = generate_crud_router(
     table_model=models.Keyword,
-    create_schema=Keyword,
-    update_schema=KeywordUpdate,
-    out_schema=KeywordOut,
+    create_schema=schemas.Keyword,
+    update_schema=schemas.KeywordUpdate,
+    out_schema=schemas.KeywordOut,
     endpoint="keywords",
     not_found_msg="Keyword not found",
+)
+
+# File router
+file_router = generate_crud_router(
+    table_model=models.File,
+    create_schema=schemas.File,
+    update_schema=schemas.FileUpdate,
+    out_schema=schemas.FileOut,
+    endpoint="files",
+    not_found_msg="File not found",
 )

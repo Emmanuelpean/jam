@@ -1,3 +1,5 @@
+import base64
+
 from app import schemas
 from conftest import CRUDTestBase
 
@@ -233,11 +235,6 @@ class TestJobCRUD(CRUDTestBase):
     }
 
 
-import base64
-from app import schemas
-from conftest import CRUDTestBase
-
-
 class TestJobApplicationCRUD(CRUDTestBase):
     endpoint = "/jobapplications"
     schema = schemas.JobApplication
@@ -366,5 +363,106 @@ class TestInterviewCRUD(CRUDTestBase):
     update_data = {
         "note": "Interview went very well - positive feedback",
         "date": "2024-01-20T10:00:00",
+        "id": 1,
+    }
+
+
+class TestFileCRUD(CRUDTestBase):
+    endpoint = "/files"
+    schema = schemas.File
+    out_schema = schemas.FileOut
+    test_data = "test_files"
+    create_data = [
+        {
+            "filename": "john_doe_cv_2024.pdf",
+            "content": b"""John Doe - Software Engineer
+
+EXPERIENCE:
+- Senior Software Developer at TechCorp (2019-2024)
+- Full Stack Developer at StartupXYZ (2017-2019)
+- Junior Developer at WebSolutions (2015-2017)
+
+SKILLS:
+- Python, JavaScript, React, Node.js
+- AWS, Docker, Kubernetes
+- PostgreSQL, MongoDB
+- Git, CI/CD, Agile methodologies
+
+EDUCATION:
+- B.S. Computer Science, University of Technology (2015)
+
+CERTIFICATIONS:
+- AWS Certified Solutions Architect
+- Certified Kubernetes Administrator""",
+            "type": "application/pdf",
+            "size": 2048,
+        },
+        {
+            "filename": "cover_letter_senior_python.pdf",
+            "content": b"""Dear Hiring Manager,
+
+I am writing to express my strong interest in the Senior Python Developer position at your company. With over 8 years of experience in full-stack development and a proven track record of delivering scalable solutions, I am excited about the opportunity to contribute to your team.
+
+In my current role at TechCorp, I have:
+- Led a team of 5 developers in building microservices architecture
+- Implemented CI/CD pipelines that reduced deployment time by 60%
+- Designed and developed RESTful APIs serving 1M+ requests daily
+- Mentored junior developers and conducted code reviews
+
+I am particularly drawn to your company's mission and would love to discuss how my experience with Python, React, and cloud technologies can help drive your projects forward.
+
+Thank you for considering my application. I look forward to hearing from you.
+
+Best regards,
+John Doe""",
+            "type": "application/pdf",
+            "size": 1536,
+        },
+        {
+            "filename": "fullstack_developer_cv.pdf",
+            "content": b"Full stack developer CV with React and Node.js experience - detailed project portfolio included...",
+            "type": "application/pdf",
+            "size": 1792,
+        },
+        {
+            "filename": "portfolio_cover_letter.txt",
+            "content": b"Portfolio-based application cover letter highlighting creative projects and technical achievements...",
+            "type": "text/plain",
+            "size": 512,
+        },
+        {
+            "filename": "junior_cloud_cv.docx",
+            "content": b"Junior developer CV with limited cloud experience but strong fundamentals in AWS and containerization...",
+            "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "size": 1024,
+        },
+        {
+            "filename": "cloud_engineer_cover_letter.pdf",
+            "content": b"Standard cover letter for cloud engineer position emphasizing DevOps skills and infrastructure experience...",
+            "type": "application/pdf",
+            "size": 768,
+        },
+        {
+            "filename": "frontend_specialist_cv.pdf",
+            "content": b"Frontend specialist CV with React focus - includes modern JavaScript frameworks and UI/UX design experience...",
+            "type": "application/pdf",
+            "size": 1280,
+        },
+        {
+            "filename": "frontend_developer_cover_letter.pdf",
+            "content": b"Frontend developer cover letter showcasing responsive design skills and component library experience...",
+            "type": "application/pdf",
+            "size": 640,
+        },
+        {
+            "filename": "updated_cv_2024.pdf",
+            "content": b"Updated CV with recent project experience including microservices architecture and cloud-native development...",
+            "type": "application/pdf",
+            "size": 2304,
+        },
+    ]
+    update_data = {
+        "filename": "updated_john_doe_cv_2024.pdf",
+        "size": 2560,
         "id": 1,
     }

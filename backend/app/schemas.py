@@ -117,6 +117,27 @@ class LocationUpdate(Location):
     pass
 
 
+# -------------------------------------------------------- FILES -------------------------------------------------------
+
+
+class File(BaseModel):
+    filename: str
+    type: str
+    content: bytes
+    size: int
+
+
+class FileOut(File, Out):
+    pass
+
+
+class FileUpdate(File):
+    filename: str | None = None
+    type: str | None = None
+    content: bytes | None = None
+    size: int | None = None
+
+
 # ------------------------------------------------------- PERSON -------------------------------------------------------
 
 
@@ -195,13 +216,15 @@ class JobApplication(BaseModel):
     job_id: int
     status: str
     note: str | None = None
-    cv: bytes | None = None
-    cover_letter: bytes | None = None
+    cv_id: int | None = None
+    cover_letter_id: int | None = None
 
 
 class JobApplicationOut(JobApplication, Out):
     job: JobSimple | None = None  # Use JobSimple to avoid circular reference
     interviews: list["InterviewSimple"] | None = None  # Use InterviewSimple to avoid circular reference
+    cv: FileOut | None = None
+    cover_letter: FileOut | None = None
 
 
 class JobApplicationUpdate(JobApplication):

@@ -7,11 +7,10 @@ import os
 import sys
 from datetime import datetime
 
-# Add the backend directory to the Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 from app.database import engine, SessionLocal, Base
-from app.models import User, Person, Company, Job, Location, Aggregator, Interview, JobApplication, Keyword
+from app.models import User, Person, Company, Job, Location, Aggregator, Interview, JobApplication, Keyword, File
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
 def reset_database():
@@ -404,13 +403,130 @@ def create_jobs(db, users, companies, locations):
     return jobs
 
 
-def create_job_applications(db, users, jobs):
+def create_files(db, users):
+    """Create sample files (CVs and cover letters)"""
+    print("Creating files...")
+
+    # Sample file contents
+    sample_cv_content = b"""John Doe - Software Engineer
+
+EXPERIENCE:
+- Senior Software Developer at TechCorp (2019-2024)
+- Full Stack Developer at StartupXYZ (2017-2019)
+- Junior Developer at WebSolutions (2015-2017)
+
+SKILLS:
+- Python, JavaScript, React, Node.js
+- AWS, Docker, Kubernetes
+- PostgreSQL, MongoDB
+- Git, CI/CD, Agile methodologies
+
+EDUCATION:
+- B.S. Computer Science, University of Technology (2015)
+
+CERTIFICATIONS:
+- AWS Certified Solutions Architect
+- Certified Kubernetes Administrator
+"""
+
+    sample_cover_letter_content = b"""Dear Hiring Manager,
+
+I am writing to express my strong interest in the Software Engineer position at your company. With over 8 years of experience in full-stack development and a proven track record of delivering scalable solutions, I am excited about the opportunity to contribute to your team.
+
+In my current role at TechCorp, I have:
+- Led a team of 5 developers in building microservices architecture
+- Implemented CI/CD pipelines that reduced deployment time by 60%
+- Designed and developed RESTful APIs serving 1M+ requests daily
+- Mentored junior developers and conducted code reviews
+
+I am particularly drawn to your company's mission and would love to discuss how my experience with Python, React, and cloud technologies can help drive your projects forward.
+
+Thank you for considering my application. I look forward to hearing from you.
+
+Best regards,
+John Doe
+"""
+
+    sample_portfolio_content = b"""John Doe - Portfolio
+
+PROJECT 1: E-commerce Platform
+- Built with React, Node.js, PostgreSQL
+- Handles 10k+ daily transactions
+- Implemented real-time inventory management
+- GitHub: github.com/johndoe/ecommerce
+
+PROJECT 2: Data Analytics Dashboard
+- Python, Flask, D3.js visualization
+- Processes 1TB+ data daily
+- Real-time streaming with Apache Kafka
+- Deployed on AWS with auto-scaling
+
+PROJECT 3: Mobile App Backend
+- RESTful API with Node.js and Express
+- JWT authentication and rate limiting
+- Integrated with payment gateways
+- 99.9% uptime SLA achieved
+"""
+
+    files_data = [
+        {
+            "filename": "john_doe_cv_2024.pdf",
+            "content": sample_cv_content,
+            "type": "application/pdf",
+            "size": len(sample_cv_content),
+            "owner_id": users[0].id,
+        },
+        {
+            "filename": "cover_letter_google.pdf",
+            "content": sample_cover_letter_content,
+            "type": "application/pdf",
+            "size": len(sample_cover_letter_content),
+            "owner_id": users[0].id,
+        },
+        {
+            "filename": "cover_letter_microsoft.pdf",
+            "content": sample_cover_letter_content,
+            "type": "application/pdf",
+            "size": len(sample_cover_letter_content),
+            "owner_id": users[0].id,
+        },
+        {
+            "filename": "john_doe_portfolio.pdf",
+            "content": sample_portfolio_content,
+            "type": "application/pdf",
+            "size": len(sample_portfolio_content),
+            "owner_id": users[0].id,
+        },
+        {
+            "filename": "resume_v2.docx",
+            "content": sample_cv_content,
+            "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "size": len(sample_cv_content),
+            "owner_id": users[0].id,
+        },
+        {
+            "filename": "technical_cover_letter.txt",
+            "content": b"Brief cover letter for technical positions focusing on coding skills and experience.",
+            "type": "text/plain",
+            "size": 85,
+            "owner_id": users[0].id,
+        },
+    ]
+
+    files = []
+    for file_data in files_data:
+        file_obj = File(**file_data)
+        files.append(file_obj)
+        db.add(file_obj)
+
+    db.commit()
+    print(f"Created {len(files)} files")
+    return files
+
+
+def create_job_applications(db, users, jobs, files):
     """Create sample job applications"""
     print("Creating job applications...")
-
-    # Sample CV and cover letter content (as bytes)
-    sample_cv = b"Sample CV content - John Doe, Software Engineer with 5 years experience..."
-    sample_cover_letter = b"Dear Hiring Manager, I am writing to express my interest in the position..."
 
     applications_data = [
         {
@@ -419,8 +535,8 @@ def create_job_applications(db, users, jobs):
             "job_id": jobs[0].id,
             "status": "Applied",
             "note": "Applied through company website. Waiting for response.",
-            "cv": sample_cv,
-            "cover_letter": sample_cover_letter,
+            "cv_id": files[0].id,  # john_doe_cv_2024.pdf
+            "cover_letter_id": files[1].id,  # cover_letter_google.pdf
             "owner_id": users[0].id,
         },
         {
@@ -429,8 +545,8 @@ def create_job_applications(db, users, jobs):
             "job_id": jobs[1].id,
             "status": "Interview",
             "note": "Applied via LinkedIn. Got confirmation email.",
-            "cv": sample_cv,
-            "cover_letter": None,  # No cover letter submitted
+            "cv_id": files[0].id,  # john_doe_cv_2024.pdf
+            "cover_letter_id": files[2].id,  # cover_letter_microsoft.pdf
             "owner_id": users[0].id,
         },
         {
@@ -439,8 +555,8 @@ def create_job_applications(db, users, jobs):
             "job_id": jobs[2].id,
             "status": "Applied",
             "note": "Submitted application with portfolio. Fingers crossed!",
-            "cv": None,  # No CV attached (used portfolio instead)
-            "cover_letter": sample_cover_letter,
+            "cv_id": files[3].id,  # john_doe_portfolio.pdf (used as CV)
+            "cover_letter_id": files[5].id,  # technical_cover_letter.txt
             "owner_id": users[0].id,
         },
         {
@@ -449,8 +565,8 @@ def create_job_applications(db, users, jobs):
             "job_id": jobs[3].id,
             "status": "Rejected",
             "note": "Unfortunately rejected after initial screening.",
-            "cv": sample_cv,
-            "cover_letter": sample_cover_letter,
+            "cv_id": files[4].id,  # resume_v2.docx
+            "cover_letter_id": files[1].id,  # cover_letter_google.pdf (reused)
             "owner_id": users[0].id,
         },
         {
@@ -459,19 +575,41 @@ def create_job_applications(db, users, jobs):
             "job_id": jobs[4].id,
             "status": "Applied",
             "note": "Applied through recruiter referral. Hope it helps!",
-            "cv": sample_cv,
-            "cover_letter": sample_cover_letter,
+            "cv_id": files[0].id,  # john_doe_cv_2024.pdf
+            "cover_letter_id": files[5].id,  # technical_cover_letter.txt
             "owner_id": users[0].id,
         },
         {
-            # Incomplete application - no CV or cover letter
+            # Application with only CV, no cover letter
             "date": datetime(2024, 2, 10, 13, 30),
             "url": None,
             "job_id": jobs[5].id,
             "status": "Applied",
-            "note": "Quick application through company form.",
-            "cv": None,
-            "cover_letter": None,
+            "note": "Quick application through company form. No cover letter required.",
+            "cv_id": files[4].id,  # resume_v2.docx
+            "cover_letter_id": None,  # No cover letter
+            "owner_id": users[0].id,
+        },
+        {
+            # Application with only cover letter, no CV
+            "date": datetime(2024, 2, 12, 15, 45),
+            "url": "https://techstartup.com/apply/67890",
+            "job_id": jobs[6].id,
+            "status": "Applied",
+            "note": "Startup prefers cover letters over formal CVs.",
+            "cv_id": None,  # No CV
+            "cover_letter_id": files[2].id,  # cover_letter_microsoft.pdf
+            "owner_id": users[0].id,
+        },
+        {
+            # Minimal application - no files attached
+            "date": datetime(2024, 2, 15, 11, 20),
+            "url": None,
+            "job_id": jobs[7].id,
+            "status": "Applied",
+            "note": "Applied through internal referral. Files sent separately.",
+            "cv_id": None,  # No CV
+            "cover_letter_id": None,  # No cover letter
             "owner_id": users[0].id,
         },
     ]
@@ -645,7 +783,8 @@ def seed_database():
         keywords = create_keywords(db, users)
         people = create_people(db, users, companies)
         jobs = create_jobs(db, users, companies, locations)
-        applications = create_job_applications(db, users, jobs)
+        files = create_files(db, users)
+        applications = create_job_applications(db, users, jobs, files)
         interviews = create_interviews(db, users, applications, locations)
         assign_keywords_to_jobs(db, jobs, keywords)
         assign_interviewers_to_interviews(db, interviews, people)
@@ -661,6 +800,7 @@ def seed_database():
         print(f"Keywords: {len(keywords)}")
         print(f"People: {len(people)}")
         print(f"Jobs: {len(jobs)}")
+        print(f"Files: {len(files)}")
         print(f"Job Applications: {len(applications)}")
         print(f"Interviews: {len(interviews)}")
         print("=" * 50)

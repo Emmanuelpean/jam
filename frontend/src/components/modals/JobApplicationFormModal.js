@@ -2,11 +2,12 @@ import React, { useCallback, useMemo, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import GenericModal from "../GenericModal";
 import { getCurrentDateTime } from "../../utils/TimeUtils";
+import {fileToBase64} from "../../utils/FileUtils";
 
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
 	const [dragStates, setDragStates] = useState({ cv: false, cover_letter: false });
 
-	const currentDateTime = useMemo(() => getCurrentDateTime(), [show]);
+	const currentDateTime = getCurrentDateTime();
 
 	// Prepare initial data with defaults and clean values
 	const preparedInitialData = useMemo(() => {
@@ -33,9 +34,18 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			}
 		});
 
-		// Specifically remove file fields from initial data to prevent form issues
-		delete cleanedData.cv;
-		delete cleanedData.cover_letter;
+		// Keep file fields if they exist in initial data (for edit mode)
+		if (initialData.cv && typeof initialData.cv === 'object' && initialData.cv.filename) {
+			cleanedData.cv = initialData.cv;
+		} else {
+			delete cleanedData.cv;
+		}
+
+		if (initialData.cover_letter && typeof initialData.cover_letter === 'object' && initialData.cover_letter.filename) {
+			cleanedData.cover_letter = initialData.cover_letter;
+		} else {
+			delete cleanedData.cover_letter;
+		}
 
 		return cleanedData;
 	}, [initialData, currentDateTime]);
@@ -56,6 +66,56 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			return { valid: false, error: "File size must be less than 10MB" };
 		}
 		return { valid: true };
+	};
+
+	// Helper function to open/download a file
+	const handleOpenFile = (fileData) => {
+		if (fileData && fileData.content) {
+			try {
+				// Convert bytes to blob
+				const byteArray = new Uint8Array(fileData.content);
+				const blob = new Blob([byteArray], { type: fileData.type || 'application/pdf' });
+
+				// Create download link
+				const url = window.URL.createObjectURL(blob);
+				const link = document.createElement('a');
+				link.href = url;
+				link.download = fileData.filename || 'document';
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+				window.URL.revokeObjectURL(url);
+			} catch (error) {
+				console.error('Error opening file:', error);
+				// Fallback: try to open as base64 if the content is base64 encoded
+				try {
+					const base64Data = fileData.content;
+					const byteCharacters = atob(base64Data.split(',')[1] || base64Data);
+					const byteNumbers = new Array(byteCharacters.length);
+					for (let i = 0; i < byteCharacters.length; i++) {
+						byteNumbers[i] = byteCharacters.charCodeAt(i);
+					}
+					const byteArray = new Uint8Array(byteNumbers);
+					const blob = new Blob([byteArray], { type: fileData.type || 'application/pdf' });
+
+					const url = window.URL.createObjectURL(blob);
+					const link = document.createElement('a');
+					link.href = url;
+					link.download = fileData.filename || 'document';
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+					window.URL.revokeObjectURL(url);
+				} catch (fallbackError) {
+					console.error('Failed to open file with fallback method:', fallbackError);
+				}
+			}
+		}
+	};
+
+	// Helper function to remove a file
+	const handleRemoveFile = (fieldName, onChange) => {
+		onChange({ target: { name: fieldName, value: null } });
 	};
 
 	// Create drag and drop component
@@ -120,7 +180,11 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		);
 
 		const isDragging = dragStates[fieldName];
-		const hasFile = value && value.name;
+
+		// Check if we have a new file (File object) or existing file (database object)
+		const hasNewFile = value && value instanceof File;
+		const hasExistingFile = value && typeof value === 'object' && value.filename && !value.name;
+		const hasFile = hasNewFile || hasExistingFile;
 
 		return (
 			<div>
@@ -144,6 +208,7 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 						flexDirection: "column",
 						justifyContent: "center",
 						alignItems: "center",
+						position: "relative",
 					}}
 					onClick={() => document.getElementById(`${fieldName}-input`).click()}
 				>
@@ -156,12 +221,47 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 						style={{ display: "none" }}
 					/>
 
-					{hasFile ? (
+					{/* Remove button - positioned at top right */}
+					{hasFile && (
+						<Button
+							variant="outline-danger"
+							size="sm"
+							className="position-absolute"
+							style={{ top: "8px", right: "8px", zIndex: 1 }}
+							onClick={(e) => {
+								e.stopPropagation();
+								handleRemoveFile(fieldName, onChange);
+							}}
+							title="Remove file"
+						>
+							<i className="bi bi-x"></i>
+						</Button>
+					)}
+
+					{hasNewFile ? (
 						<>
 							<i className="bi bi-check-circle-fill text-success mb-2" style={{ fontSize: "2rem" }}></i>
 							<div className="fw-semibold text-success">{value.name}</div>
 							<small className="text-muted">{(value.size / 1024 / 1024).toFixed(2)} MB</small>
 							<small className="text-muted mt-1">Click to replace</small>
+						</>
+					) : hasExistingFile ? (
+						<>
+							<i className="bi bi-file-earmark-text text-info mb-2" style={{ fontSize: "2rem" }}></i>
+							<div className="fw-semibold text-info mb-2">{value.filename}</div>
+							<Button
+								variant="outline-info"
+								size="sm"
+								className="mb-2"
+								onClick={(e) => {
+									e.stopPropagation();
+									handleOpenFile(value);
+								}}
+							>
+								<i className="bi bi-download me-1"></i>
+								Open File
+							</Button>
+							<small className="text-muted">Click anywhere to replace</small>
 						</>
 					) : isDragging ? (
 						<>
@@ -320,7 +420,8 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 	};
 
 	// Transform form data before submission
-	const transformFormData = (data) => {
+	// Modify the transformFormData function
+	const transformFormData = async (data) => {
 		const transformed = { ...data };
 
 		// Convert date to ISO string for backend
@@ -346,11 +447,26 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			delete transformed.note;
 		}
 
-		// Handle file fields properly
-		if (!transformed.cv || transformed.cv === "") {
+		// Handle file fields - convert to base64 for database storage
+		if (transformed.cv && transformed.cv instanceof File) {
+			try {
+				transformed.cv = await fileToBase64(transformed.cv);
+			} catch (error) {
+				console.error('Error converting CV to base64:', error);
+				delete transformed.cv;
+			}
+		} else if (!transformed.cv || transformed.cv === "" || transformed.cv === null || (typeof transformed.cv === 'object' && !transformed.cv.filename)) {
 			delete transformed.cv;
 		}
-		if (!transformed.cover_letter || transformed.cover_letter === "") {
+
+		if (transformed.cover_letter && transformed.cover_letter instanceof File) {
+			try {
+				transformed.cover_letter = await fileToBase64(transformed.cover_letter);
+			} catch (error) {
+				console.error('Error converting cover letter to base64:', error);
+				delete transformed.cover_letter;
+			}
+		} else if (!transformed.cover_letter || transformed.cover_letter === "" || transformed.cover_letter === null || (typeof transformed.cover_letter === 'object' && !transformed.cover_letter.filename)) {
 			delete transformed.cover_letter;
 		}
 
