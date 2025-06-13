@@ -34,22 +34,18 @@ from app import models, database, schemas
 from app.main import app
 from app.oauth2 import create_access_token
 
-from test.data import (
-    COMPANIES_DATA,
-    LOCATIONS_DATA,
-    PERSONS_DATA,
-    AGGREGATORS_DATA,
-    KEYWORDS_DATA,
-    FILES_DATA,
-    JOBS_DATA,
-    JOB_APPLICATIONS_DATA,
-    INTERVIEWS_DATA,
-    JOB_KEYWORD_MAPPINGS,
-    JOB_CONTACT_MAPPINGS,
-    INTERVIEW_INTERVIEWER_MAPPINGS,
-    add_mappings,
+from create_data import (
+    create_users,
+    create_companies,
+    create_locations,
+    create_aggregators,
+    create_keywords,
+    create_people,
+    create_jobs,
+    create_files,
+    create_job_applications,
+    create_interviews,
 )
-
 
 SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
@@ -135,22 +131,14 @@ def test_user2(client: TestClient, test_user1) -> dict:
 
 @pytest.fixture
 def token1(test_user1: dict) -> str:
-    """Fixture that generates an access token for the given test user.
-    This fixture uses the `create_access_token` function to generate a JWT token
-    for the provided test user, which is then used for authorization in test requests.
-    :param test_user1: The test user for whom to generate the access token.
-    :return: The generated JWT access token."""
+    """Fixture that generates an access token for the given test user."""
 
     return create_access_token({"user_id": test_user1["id"]})
 
 
 @pytest.fixture
 def token2(test_user2: dict) -> str:
-    """Fixture that generates an access token for the given test user.
-    This fixture uses the `create_access_token` function to generate a JWT token
-    for the provided test user, which is then used for authorization in test requests.
-    :param test_user2: The test user for whom to generate the access token.
-    :return: The generated JWT access token."""
+    """Fixture that generates an access token for the given test user."""
 
     return create_access_token({"user_id": test_user2["id"]})
 
@@ -160,13 +148,7 @@ def authorized_client1(
     client: TestClient,
     token1: str,
 ) -> TestClient:
-    """Fixture that provides a test client with authorization headers.
-    This fixture adds the generated JWT token to the headers of the FastAPI TestClient
-    to simulate an authorized request, allowing the client to make requests as the
-    authenticated user.
-    :param client: The FastAPI TestClient to make the request.
-    :param token1: The JWT token to add to the Authorization header.
-    :return: The FastAPI TestClient with the Authorization header set."""
+    """Fixture that provides a test client with authorization headers."""
 
     client.headers = {**client.headers, "Authorization": f"Bearer {token1}"}
     return client
@@ -177,13 +159,7 @@ def authorized_client2(
     client: TestClient,
     token2: str,
 ) -> TestClient:
-    """Fixture that provides a test client with authorization headers.
-    This fixture adds the generated JWT token to the headers of the FastAPI TestClient
-    to simulate an authorized request, allowing the client to make requests as the
-    authenticated user.
-    :param client: The FastAPI TestClient to make the request.
-    :param token2: The JWT token to add to the Authorization header.
-    :return: The FastAPI TestClient with the Authorization header set."""
+    """Fixture that provides a test client with authorization headers.."""
 
     client.headers = {**client.headers, "Authorization": f"Bearer {token2}"}
     return client
@@ -193,134 +169,63 @@ def authorized_client2(
 def test_locations(session, test_user1, test_user2):
     """Create test location data"""
 
-    locations = [models.Location(**location) for location in LOCATIONS_DATA]
-    session.add_all(locations)
-    session.commit()
-    locations = session.query(models.Location).all()
-    return locations
+    return create_locations(session)
 
 
 @pytest.fixture
 def test_companies(session, test_user1, test_user2):
     """Create test company data"""
 
-    companies = [models.Company(**company) for company in COMPANIES_DATA]
-    session.add_all(companies)
-    session.commit()
-    companies = session.query(models.Company).all()
-    return companies
+    return create_companies(session)
 
 
 @pytest.fixture
 def test_persons(session, test_user1, test_user2, test_companies):
     """Create test person data"""
 
-    persons = [models.Person(**person) for person in PERSONS_DATA]
-    session.add_all(persons)
-    session.commit()
-    persons = session.query(models.Person).all()
-    return persons
+    return create_people(session)
 
 
 @pytest.fixture
 def test_aggregators(session, test_user1, test_user2):
     """Create test aggregator data"""
 
-    aggregators = [models.Aggregator(**aggregator) for aggregator in AGGREGATORS_DATA]
-    session.add_all(aggregators)
-    session.commit()
-    aggregators = session.query(models.Aggregator).all()
-    return aggregators
+    return create_aggregators(session)
 
 
 @pytest.fixture
 def test_keywords(session, test_user1, test_user2):
     """Create test keyword data"""
 
-    keywords = [models.Keyword(**keyword) for keyword in KEYWORDS_DATA]
-    session.add_all(keywords)
-    session.commit()
-    keywords = session.query(models.Keyword).all()
-    return keywords
+    return create_keywords(session)
 
 
 @pytest.fixture
 def test_files(session, test_user1, test_user2):
     """Create test files for job applications"""
 
-    files = [models.File(**file) for file in FILES_DATA]
-    session.add_all(files)
-    session.commit()
-    files = session.query(models.File).all()
-    return files
+    return create_files(session)
 
 
 @pytest.fixture
 def test_jobs(session, test_user1, test_user2, test_companies, test_locations, test_keywords, test_persons):
     """Create test job data"""
 
-    jobs = [models.Job(**job) for job in JOBS_DATA]
-    session.add_all(jobs)
-    session.commit()
-    jobs = session.query(models.Job).all()
-
-    # Add keywords to jobs
-    add_mappings(
-        primary_data=jobs,
-        secondary_data=test_keywords,
-        mapping_data=JOB_KEYWORD_MAPPINGS,
-        primary_key="job_id",
-        secondary_key="keyword_ids",
-        relationship_attr="keywords",
-    )
-
-    # Add contacts to jobs
-    add_mappings(
-        primary_data=jobs,
-        secondary_data=test_persons,
-        mapping_data=JOB_CONTACT_MAPPINGS,
-        primary_key="job_id",
-        secondary_key="person_ids",
-        relationship_attr="contacts",
-    )
-
-    session.commit()
-    jobs = session.query(models.Job).all()
-    return jobs
+    return create_jobs(session, test_keywords, test_persons)
 
 
 @pytest.fixture
 def test_job_applications(session, test_user1, test_user2, test_jobs, test_files):
     """Create test job application data using File references"""
 
-    job_applications = [models.JobApplication(**job_application) for job_application in JOB_APPLICATIONS_DATA]
-    session.add_all(job_applications)
-    session.commit()
-    job_applications = session.query(models.JobApplication).all()
-    return job_applications
+    return create_job_applications(session)
 
 
 @pytest.fixture
 def test_interviews(session, test_user1, test_user2, test_job_applications, test_locations, test_persons):
     """Create test interview data"""
 
-    interviews = [models.Interview(**interview) for interview in INTERVIEWS_DATA]
-    session.add_all(interviews)
-    session.commit()
-    interviews = session.query(models.Interview).all()
-
-    # Add interviewers to interviews
-    add_mappings(
-        primary_data=interviews,
-        secondary_data=test_persons,
-        mapping_data=INTERVIEW_INTERVIEWER_MAPPINGS,
-        primary_key="interview_id",
-        secondary_key="person_ids",
-        relationship_attr="interviewers",
-    )
-
-    session.commit()
-    return interviews
+    return create_interviews(session, test_persons)
 
 
 class CRUDTestBase:

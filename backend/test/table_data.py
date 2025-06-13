@@ -1,4 +1,4 @@
-"""Centralized test data for both conftest.py and generate_test_data.py"""
+"""Centralized test data for both conftest.py and seed_database.py"""
 
 USERS_DATA = [
     {

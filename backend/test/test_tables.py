@@ -1,7 +1,7 @@
 from app import schemas
 from conftest import CRUDTestBase
 
-from test.data import (
+from test.table_data import (
     COMPANIES_DATA,
     LOCATIONS_DATA,
     PERSONS_DATA,
