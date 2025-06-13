@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue, renderFunctions } from "./Renders";
 import { renderInputField, renderInputFieldGroup } from "./FormFieldRender";
+import { api } from "../services/api";
 
 const DEFAULT_ICONS = {
 	form: "bi bi-pencil",
@@ -147,7 +148,6 @@ const GenericModal = ({
 		return newErrors;
 	};
 
-	// Handle form submission
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 
@@ -175,38 +175,32 @@ const GenericModal = ({
 		setErrors({});
 
 		try {
-			const url = isEdit
-				? `http://localhost:8000/${endpoint}/${initialData.id}/`
-				: `http://localhost:8000/${endpoint}/`;
-
-			const method = isEdit ? "PUT" : "POST";
 			const dataToSubmit = transformFormData ? transformFormData(formData) : formData;
 
-			const response = await fetch(url, {
-				method: method,
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-				},
-				body: JSON.stringify(dataToSubmit),
-			});
-
-			if (!response.ok) {
-				throw new Error(`Failed to ${isEdit ? "update" : "create"} ${title.toLowerCase()}`);
+			let result;
+			if (isEdit) {
+				result = await api.put(`${endpoint}/${initialData.id}`, dataToSubmit, token);
+			} else {
+				result = await api.post(`${endpoint}/`, dataToSubmit, token);
 			}
 
-			const result = await response.json();
 			onSuccess(result);
 			handleHide();
 		} catch (err) {
 			console.error(`Error ${isEdit ? "updating" : "creating"} ${title.toLowerCase()}:`, err);
+
+			// Use the error message from the API response if available
+			const errorMessage = err.data?.detail || err.message ||
+				`Failed to ${isEdit ? "update" : "create"} ${title.toLowerCase()}. Please try again.`;
+
 			setErrors({
-				submit: `Failed to ${isEdit ? "update" : "create"} ${title.toLowerCase()}. Please try again.`,
+				submit: errorMessage,
 			});
 		} finally {
 			setSubmitting(false);
 		}
 	};
+
 
 	// Modal header (DONE)
 	const renderHeader = () => {

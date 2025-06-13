@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { api } from "../../services/api";
 
 export const useTableData = (endpoint, dependencies = []) => {
 	const { token } = useAuth();
@@ -20,18 +21,7 @@ export const useTableData = (endpoint, dependencies = []) => {
 
 			setLoading(true);
 			try {
-				const response = await fetch(`http://localhost:8000/${endpoint}/`, {
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				});
-
-				if (!response.ok) {
-					throw new Error(`Failed to fetch ${endpoint}`);
-				}
-
-				const result = await response.json();
-				console.log(result);
+				const result = await api.get(`${endpoint}/`, token);
 				setData(result);
 			} catch (err) {
 				console.error(`Error fetching ${endpoint}:`, err);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Dropdown } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
+import { authApi } from "../../services/api";
 import "./ThemeToggle.css";
 
 const ThemeToggle = () => {
@@ -26,9 +27,6 @@ const ThemeToggle = () => {
 
 	const [currentTheme, setCurrentTheme] = useState(getInitialTheme);
 
-	// Extract API URL to a constant
-	const API_BASE_URL = "http://localhost:8000";
-
 	const getCurrentCSSColors = () => {
 		const computedStyle = getComputedStyle(document.documentElement);
 		return {
@@ -46,15 +44,9 @@ const ThemeToggle = () => {
 		if (!token) return null;
 
 		try {
-			const response = await fetch(`${API_BASE_URL}/users/me`, {
-				headers: { Authorization: `Bearer ${token}` },
-			});
-
-			if (response.ok) {
-				const userData = await response.json();
-				if (userData.theme && themes.find((theme) => theme.key === userData.theme)) {
-					return userData.theme;
-				}
+			const userData = await authApi.getCurrentUser(token);
+			if (userData.theme && themes.find((theme) => theme.key === userData.theme)) {
+				return userData.theme;
 			}
 		} catch (error) {
 			console.error("Error fetching user theme:", error);
@@ -66,25 +58,25 @@ const ThemeToggle = () => {
 		// Always save to localStorage first
 		localStorage.setItem("theme", themeKey);
 
-		if (!token) return;
+		console.log("Saving theme to database:", themeKey);
+		console.log("Token available:", !!token);
+
+		if (!token) {
+			console.log("No token available, skipping database save");
+			return;
+		}
 
 		try {
-			const response = await fetch(`${API_BASE_URL}/users/me`, {
-				method: "PATCH",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${token}`,
-				},
-				body: JSON.stringify({ theme: themeKey }),
-			});
-
-			if (!response.ok) {
-				console.error("Failed to save theme to database");
-			}
+			console.log("Calling updateUserTheme API...");
+			const result = await authApi.updateUserTheme(themeKey, token);
+			console.log("Theme saved successfully:", result);
 		} catch (error) {
 			console.error("Error saving theme:", error);
+			// Log more details about the error
+			console.error("Error details:", error.response?.data || error.message);
 		}
 	};
+
 
 	// Initialize theme on mount
 	useEffect(() => {
@@ -105,7 +97,8 @@ const ThemeToggle = () => {
 		};
 
 		syncWithDatabase();
-	}, [token, currentTheme]);
+	}, [token]);
+
 
 	// Apply theme when it changes
 	useEffect(() => {

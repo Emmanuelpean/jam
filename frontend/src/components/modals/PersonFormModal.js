@@ -1,4 +1,4 @@
-
+import { companiesApi, apiHelpers } from '../../services/api';
 import React, { useState, useEffect } from "react";
 import { Button } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
@@ -17,27 +17,13 @@ const PersonFormModal = ({
 	const [showCompanyModal, setShowCompanyModal] = useState(false);
 	const [companyOptions, setCompanyOptions] = useState([]);
 
-	// Fetch companies for the select options
 	useEffect(() => {
 		const fetchCompanies = async () => {
 			if (!token || !show) return;
 
 			try {
-				const response = await fetch("http://localhost:8000/companies/", {
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				});
-
-				if (response.ok) {
-					const companiesData = await response.json();
-					setCompanyOptions(
-						companiesData.map((company) => ({
-							value: company.id,
-							label: company.name,
-						}))
-					);
-				}
+				const companiesData = await companiesApi.getAll(token);
+				setCompanyOptions(apiHelpers.toSelectOptions(companiesData));
 			} catch (error) {
 				console.error("Error fetching companies:", error);
 			}
@@ -45,6 +31,7 @@ const PersonFormModal = ({
 
 		fetchCompanies();
 	}, [token, show]);
+
 
 	// Handle successful company creation
 	const handleCompanyAddSuccess = (newCompany) => {

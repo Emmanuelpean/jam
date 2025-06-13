@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { renderFieldValue } from "../Renders";
+import { api } from "../../services/api";
 
 export const createGenericDeleteHandler = ({
 	endpoint,
@@ -26,26 +27,15 @@ export const createGenericDeleteHandler = ({
 
 			// If we reach here, user confirmed
 			try {
-				const response = await fetch(`http://localhost:8000/${endpoint}/${item.id}/`, {
-					method: "DELETE",
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				});
+				await api.delete(`${endpoint}/${item.id}`, token);
 
-				if (response.ok) {
-					// Try removeItem first, then setData, then reload as fallback
-					if (typeof removeItem === "function") {
-						removeItem(item.id);
-					} else if (typeof setData === "function") {
-						setData((prevData) => prevData.filter((dataItem) => dataItem.id !== item.id));
-					} else {
-						window.location.reload();
-					}
+				// Try removeItem first, then setData, then reload as fallback
+				if (typeof removeItem === "function") {
+					removeItem(item.id);
+				} else if (typeof setData === "function") {
+					setData((prevData) => prevData.filter((dataItem) => dataItem.id !== item.id));
 				} else {
-					await showError({
-						message: `Failed to delete ${itemType}. Please try again.`,
-					});
+					window.location.reload();
 				}
 			} catch (error) {
 				console.error(`Error deleting ${itemType}:`, error);
@@ -151,38 +141,39 @@ const GenericTable = ({
 		onSort({ key, direction });
 	};
 
-    // Handle row click with interactive element check
-    const handleRowClick = (event, item) => {
-        // Check if the clicked element or any parent is an interactive element
-        const isInteractiveElement = (element) => {
-            if (!element) return false;
+	// Handle row click with interactive element check
+	const handleRowClick = (event, item) => {
+		// Check if the clicked element or any parent is an interactive element
+		const isInteractiveElement = (element) => {
+			if (!element) return false;
 
-            const tagName = element.tagName?.toLowerCase();
-            const isButton = tagName === 'button';
-            const isLink = tagName === 'a';
-            const isInput = ['input', 'select', 'textarea'].includes(tagName);
-            const hasOnClick = element.onclick || element.getAttribute('onclick');
-            const isClickable = element.classList?.contains('clickable-badge') ||
-                element.classList?.contains('btn') ||
-                element.style?.cursor === 'pointer';
+			const tagName = element.tagName?.toLowerCase();
+			const isButton = tagName === "button";
+			const isLink = tagName === "a";
+			const isInput = ["input", "select", "textarea"].includes(tagName);
+			const hasOnClick = element.onclick || element.getAttribute("onclick");
+			const isClickable =
+				element.classList?.contains("clickable-badge") ||
+				element.classList?.contains("btn") ||
+				element.style?.cursor === "pointer";
 
-            return isButton || isLink || isInput || hasOnClick || isClickable;
-        };
+			return isButton || isLink || isInput || hasOnClick || isClickable;
+		};
 
-        // Check the clicked element and its parents
-        let currentElement = event.target;
-        while (currentElement && currentElement !== event.currentTarget) {
-            if (isInteractiveElement(currentElement)) {
-                return; // Don't trigger row click if interactive element was clicked
-            }
-            currentElement = currentElement.parentElement;
-        }
+		// Check the clicked element and its parents
+		let currentElement = event.target;
+		while (currentElement && currentElement !== event.currentTarget) {
+			if (isInteractiveElement(currentElement)) {
+				return; // Don't trigger row click if interactive element was clicked
+			}
+			currentElement = currentElement.parentElement;
+		}
 
-        // If we reach here, it's safe to trigger the row click
-        if (onRowClick) {
-            onRowClick(item);
-        }
-    };
+		// If we reach here, it's safe to trigger the row click
+		if (onRowClick) {
+			onRowClick(item);
+		}
+	};
 
 	const getSortedData = () => {
 		let filteredData = [...data];
@@ -226,17 +217,17 @@ const GenericTable = ({
 				let aValue, bValue;
 
 				// Enhanced sorting: Check sortFunction first, then sortField, then accessor, then fallback to key
-				if (column?.sortFunction && typeof column.sortFunction === 'function') {
+				if (column?.sortFunction && typeof column.sortFunction === "function") {
 					// Use custom sorting function
 					aValue = column.sortFunction(a);
 					bValue = column.sortFunction(b);
 				} else if (column?.sortField) {
 					// Handle nested field sorting using string path
-					if (typeof column.sortField === 'string') {
+					if (typeof column.sortField === "string") {
 						const parts = column.sortField.split(".");
 						aValue = parts.reduce((obj, part) => obj?.[part], a);
 						bValue = parts.reduce((obj, part) => obj?.[part], b);
-					} else if (typeof column.sortField === 'function') {
+					} else if (typeof column.sortField === "function") {
 						// sortField can also be a function
 						aValue = column.sortField(a);
 						bValue = column.sortField(b);

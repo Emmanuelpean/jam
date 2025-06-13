@@ -1180,3 +1180,18 @@ input[type="number"] {
     border-color: #dc3545;
     box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
 }
+
+/* Add to your CSS file */
+.form-control[as="textarea"] {
+    will-change: height;
+    transition: none !important;
+    resize: vertical;
+}
+
+/* Or create a specific class */
+.optimized-textarea {
+    will-change: height;
+    transition: none !important;
+    resize: vertical;
+    transform: translateZ(0); /* Force hardware acceleration */
+}

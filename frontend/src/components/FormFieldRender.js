@@ -2,7 +2,6 @@ import { getCurrentDateTime } from "../utils/TimeUtils";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import React from "react";
 import Select from "react-select";
-import CreatableSelect from "react-select/creatable";
 
 export const renderInputField = (
 	field,
@@ -35,6 +34,7 @@ export const renderInputField = (
 				onChange={handleChange}
 				placeholder={field.placeholder}
 				isInvalid={!!errors[field.name]}
+				className="optimized-textarea"
 			/>
 		);
 	}
@@ -73,58 +73,35 @@ export const renderInputField = (
 	}
 
 	if (field.type === "multiselect") {
-		// Handle multiselect values - safely convert from various formats to option objects
+		console.log(field.options);
+		// Convert array of IDs to react-select format
 		let selectedValues = [];
-
 		if (value && Array.isArray(value)) {
-			selectedValues = value.map(item => {
-				// If it's already a proper option object, use it
-				if (item && typeof item === 'object' && item.value !== undefined && item.label !== undefined) {
-					return item;
-				}
-
-				// If it's a database object with an id and name, convert it
-				if (item && typeof item === 'object' && item.id !== undefined && item.name !== undefined) {
-					return { value: item.id, label: item.name };
-				}
-
-				// If it's just an ID (number or string), try to find the corresponding option
-				if (typeof item === 'number' || typeof item === 'string') {
-					const option = field.options?.find(opt => opt.value === item);
-					return option || { value: item, label: String(item) };
-				}
-
-				// Fallback: convert whatever it is to a string
-				return { value: String(item), label: String(item) };
-			}).filter(item => item.value !== undefined && item.label !== undefined);
+			selectedValues = value
+				.map(id => field.options?.find(opt => opt.value === id))
+				.filter(Boolean); // Remove any undefined values
 		}
-
-		// Choose between regular Select and CreatableSelect
-		const SelectComponent = field.isCreatable ? CreatableSelect : Select;
+		console.log(selectedValues);
 
 		return (
-			<SelectComponent
+			<Select
 				name={field.name}
 				value={selectedValues}
 				onChange={(selectedOptions, _actionMeta) => {
-					// Use handleChange for multiselect since we need to store the array directly
-					// Convert selectedOptions array to the format expected by the backend
-					const eventValue = selectedOptions ? selectedOptions.map(option => ({
-						value: option.value,
-						label: option.label,
-						...(option.__isNew__ && { __isNew__: true })
-					})) : [];
+					// Extract just the IDs for storage
+					const ids = selectedOptions ? selectedOptions.map(option => option.value) : [];
 
 					const syntheticEvent = {
 						target: {
 							name: field.name,
-							value: eventValue
+							value: ids // Store as simple array of IDs
 						}
 					};
 
 					handleChange(syntheticEvent);
 				}}
 				options={field.options || []}
+				closeMenuOnSelect={false}
 				placeholder={field.placeholder || `Select ${field.label}`}
 				isSearchable={field.isSearchable !== false}
 				isClearable={field.isClearable !== false}
@@ -133,27 +110,6 @@ export const renderInputField = (
 				menuPortalTarget={document.body}
 				className={`react-select-container ${error ? 'is-invalid' : ''}`}
 				classNamePrefix="react-select"
-				// Handle creating new options if isCreatable is true
-				{...(field.isCreatable && {
-					formatCreateLabel: (inputValue) => `Create "${inputValue}"`,
-					onCreateOption: (inputValue) => {
-						const newOption = {
-							value: inputValue.toLowerCase().replace(/\s+/g, '-'),
-							label: inputValue,
-							__isNew__: true
-						};
-
-						// Add the new option to the current selection
-						const newSelectedValues = [...selectedValues, newOption];
-						const syntheticEvent = {
-							target: {
-								name: field.name,
-								value: newSelectedValues
-							}
-						};
-						handleChange(syntheticEvent);
-					}
-				})}
 			/>
 		);
 	}

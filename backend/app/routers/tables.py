@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Request
 from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -30,17 +30,49 @@ def generate_crud_router(
     # noinspection PyTypeHints
     @router.get("/", response_model=list[out_schema])
     def get_all(
+        request: Request,
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(oauth2.get_current_user),
         limit: int = 10,
     ):
         """Retrieve all entries for the current user.
+        :param request: FastAPI request object to access query parameters
         :param db: Database session.
         :param current_user: Authenticated user.
         :param limit: Maximum number of entries to return.
         :return: List of entries."""
 
-        return db.query(table_model).filter(table_model.owner_id == current_user.id).limit(limit).all()
+        # Start with base query
+        query = db.query(table_model).filter(table_model.owner_id == current_user.id)
+
+        # Get all query parameters except 'limit'
+        filter_params = dict(request.query_params)
+        filter_params.pop("limit", None)  # Remove limit from filters
+
+        # Apply filters for each parameter that matches a table column
+        for param_name, param_value in filter_params.items():
+            if hasattr(table_model, param_name):
+                column = getattr(table_model, param_name)
+
+                # Handle different data types
+                try:
+                    # Try to convert to appropriate type based on column type
+                    if hasattr(column.type, "python_type"):
+                        if column.type.python_type == int:
+                            param_value = int(param_value)
+                        elif column.type.python_type == float:
+                            param_value = float(param_value)
+                        elif column.type.python_type == bool:
+                            param_value = param_value.lower() in ("true", "1", "yes", "on")
+
+                    # Add filter to query
+                    query = query.filter(column == param_value)
+
+                except (ValueError, TypeError):
+                    # If conversion fails, treat as string comparison
+                    query = query.filter(column == param_value)
+
+        return query.limit(limit).all()
 
     @router.get("/{entry_id}", response_model=out_schema)
     def get_one(

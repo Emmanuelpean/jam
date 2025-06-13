@@ -3,6 +3,7 @@ import LocationViewModal from "./modals/LocationViewModal";
 import CompanyViewModal from "./modals/CompanyViewModal";
 import PersonViewModal from "./modals/PersonViewModal";
 import KeywordViewModal from "./modals/KeywordViewModal";
+import JobApplicationViewModal from "./modals/JobApplicationViewModal";
 
 const createModalManager = (ModalComponent, modalProp) => {
 	return ({ children, onEdit }) => {
@@ -51,10 +52,10 @@ const LocationModalManager = createModalManager(LocationViewModal, "location");
 const CompanyModalManager = createModalManager(CompanyViewModal, "company");
 const PersonModalManager = createModalManager(PersonViewModal, "person");
 const KeywordModalManager = createModalManager(KeywordViewModal, "keywords");
-const JobApplicationModalManager = createModalManager(KeywordViewModal, "jobApplication"); // TODO to change
+const JobApplicationModalManager = createModalManager(JobApplicationViewModal, "jobApplication");
 
 // Helper function to get status badge class
-const getApplicationStatusBadgeClass = (status) => {
+export const getApplicationStatusBadgeClass = (status) => {
 	switch (status?.toLowerCase()) {
 		case "applied":
 			return "bg-primary";

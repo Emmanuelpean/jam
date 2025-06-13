@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { authApi, apiHelpers } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -27,53 +28,23 @@ export function AuthProvider({ children }) {
 	// Login function
 	const login = async (email, password) => {
 		try {
-			const formData = new FormData();
-			formData.append("username", email);
-			formData.append("password", password);
-
-			const response = await fetch("http://localhost:8000/login", {
-				method: "POST",
-				body: formData,
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.detail || "Login failed");
-			}
-
-			const data = await response.json();
+			const data = await authApi.login(email, password);
 			localStorage.setItem("token", data.access_token);
 			setToken(data.access_token);
 			setCurrentUser({ isLoggedIn: true });
 			return { success: true };
 		} catch (error) {
-			return { success: false, error: error.message };
+			return apiHelpers.handleError(error, "Login failed");
 		}
 	};
 
 	// Register function
 	const register = async (email, password) => {
 		try {
-			const response = await fetch("http://localhost:8000/users/", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ email, password }),
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				// Extract the specific error message or provide a default
-				const errorMessage =
-					errorData.detail ||
-					(typeof errorData === "object" ? JSON.stringify(errorData) : "Registration failed");
-				throw new Error(errorMessage);
-			}
-
+			await authApi.register(email, password);
 			return { success: true };
 		} catch (error) {
-			return { success: false, error: error.message };
+			return apiHelpers.handleError(error, "Registration failed");
 		}
 	};
 

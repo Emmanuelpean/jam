@@ -1,11 +1,19 @@
-
 import React, { useEffect, useState } from "react";
-import { Button, Badge } from "react-bootstrap";
+import { Badge, Button } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
 import CompanyFormModal from "./CompanyFormModal";
 import LocationFormModal from "./LocationFormModal";
 import JobApplicationFormModal from "./JobApplicationFormModal";
+import {
+	apiHelpers,
+	companiesApi,
+	jobApplicationsApi,
+	keywordsApi,
+	locationsApi,
+	personsApi,
+} from "../../services/api";
+import { getApplicationStatusBadgeClass } from "../Renders";
 
 const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 	const { token } = useAuth();
@@ -27,41 +35,14 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		}
 	}, [isEdit, initialData.id]);
 
-	// Function to get application status badge class (from renders.js)
-	const getApplicationStatusBadgeClass = (status) => {
-		switch (status?.toLowerCase()) {
-			case "applied":
-				return "bg-primary";
-			case "interview":
-				return "bg-warning text-dark";
-			case "offer":
-				return "bg-success";
-			case "rejected":
-				return "bg-danger";
-			case "withdrawn":
-				return "bg-secondary";
-			default:
-				return "bg-light text-dark";
-		}
-	};
-
 	// Check for existing job application
 	const checkExistingApplication = async (jobId) => {
 		if (!jobId || !token) return;
 
 		setIsLoadingApplication(true);
 		try {
-			const response = await fetch("http://localhost:8000/jobapplications/", {
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			});
-
-			if (response.ok) {
-				const applications = await response.json();
-				const existing = applications.find((app) => app.job_id === jobId);
-				setExistingApplication(existing);
-			}
+			const applications = await jobApplicationsApi.getAll(token, { job_id: jobId });
+			setExistingApplication(applications.length > 0 ? applications[0] : null);
 		} catch (error) {
 			console.error("Error fetching job applications:", error);
 		} finally {
@@ -82,61 +63,19 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 			if (!token || !show) return;
 
 			try {
-				// Fetch all data in parallel
-				const [companiesResponse, locationsResponse, keywordsResponse, personsResponse] = await Promise.all([
-					fetch("http://localhost:8000/companies/", {
-						headers: { Authorization: `Bearer ${token}` },
-					}),
-					fetch("http://localhost:8000/locations/", {
-						headers: { Authorization: `Bearer ${token}` },
-					}),
-					fetch("http://localhost:8000/keywords/", {
-						headers: { Authorization: `Bearer ${token}` },
-					}),
-					fetch("http://localhost:8000/persons/", {
-						headers: { Authorization: `Bearer ${token}` },
-					}),
+				// Use your existing API structure
+				const [companiesData, locationsData, keywordsData, personsData] = await Promise.all([
+					companiesApi.getAll(token),
+					locationsApi.getAll(token),
+					keywordsApi.getAll(token),
+					personsApi.getAll(token),
 				]);
 
-				if (companiesResponse.ok) {
-					const companiesData = await companiesResponse.json();
-					setCompanyOptions(
-						companiesData.map((company) => ({
-							value: company.id,
-							label: company.name,
-						})),
-					);
-				}
-
-				if (locationsResponse.ok) {
-					const locationsData = await locationsResponse.json();
-					setLocationOptions(
-						locationsData.map((location) => ({
-							value: location.id,
-							label: location.name,
-						})),
-					);
-				}
-
-				if (keywordsResponse.ok) {
-					const keywordsData = await keywordsResponse.json();
-					setKeywordOptions(
-						keywordsData.map((keyword) => ({
-							value: keyword.id,
-							label: keyword.name,
-						})),
-					);
-				}
-
-				if (personsResponse.ok) {
-					const personsData = await personsResponse.json();
-					setPersonOptions(
-						personsData.map((person) => ({
-							value: person.id,
-							label: person.name,
-						})),
-					);
-				}
+				setCompanyOptions(apiHelpers.toSelectOptions(companiesData));
+				setLocationOptions(apiHelpers.toSelectOptions(locationsData));
+				setKeywordOptions(apiHelpers.toSelectOptions(keywordsData));
+				setPersonOptions(apiHelpers.toSelectOptions(personsData));
+				let init = apiHelpers.toSelectOptions(initialData.contacts || []);
 			} catch (error) {
 				console.error("Error fetching options:", error);
 			}
@@ -271,7 +210,6 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 					type: "multiselect",
 					placeholder: "Select or search keywords...",
 					isSearchable: true,
-					isCreatable: true,
 					options: keywordOptions,
 					columnClass: "col-md-6",
 				},
@@ -481,16 +419,16 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 
 		// Transform keywords multiselect to array of IDs
 		if (transformed.keywords && Array.isArray(transformed.keywords)) {
-			transformed.keyword_ids = transformed.keywords.map(item =>
-				typeof item === 'object' ? item.value : item
+			transformed.keyword_ids = transformed.keywords.map((item) =>
+				typeof item === "object" ? item.value : item,
 			);
 			delete transformed.keywords;
 		}
 
 		// Transform contacts multiselect to array of IDs
 		if (transformed.contacts && Array.isArray(transformed.contacts)) {
-			transformed.contact_ids = transformed.contacts.map(item =>
-				typeof item === 'object' ? item.value : item
+			transformed.contact_ids = transformed.contacts.map((item) =>
+				typeof item === "object" ? item.value : item,
 			);
 			delete transformed.contacts;
 		}
