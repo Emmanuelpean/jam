@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Alert, Button, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import "./GenericModal.css";
@@ -77,13 +77,15 @@ const GenericModal = ({
 	const [formData, setFormData] = useState(initialData);
 	const [submitting, setSubmitting] = useState(false);
 	const [errors, setErrors] = useState({});
+	const previousShow = useRef(show);
 
-	// Reset form data when modal opens
+	// Reset form data only when modal transitions from closed to open
 	useEffect(() => {
-		if (show && mode === "form") {
+		if (show && !previousShow.current && mode === "form") {
 			setFormData({ ...initialData });
 			setErrors({});
 		}
+		previousShow.current = show;
 	}, [show, initialData, mode]);
 
 	// Handle modal hide

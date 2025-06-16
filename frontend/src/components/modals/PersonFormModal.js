@@ -32,7 +32,6 @@ const PersonFormModal = ({
 		fetchCompanies();
 	}, [token, show]);
 
-
 	// Handle successful company creation
 	const handleCompanyAddSuccess = (newCompany) => {
 		const newOption = {
@@ -68,11 +67,11 @@ const PersonFormModal = ({
 				},
 			],
 		},
-		// Company (full width)
+		// Company (full width) - Fixed structure
 		{
 			id: "company",
 			type: "default",
-			className: "mb-0",
+			className: "mb-2",
 			fields: [
 				{
 					name: "company_id",
@@ -83,27 +82,11 @@ const PersonFormModal = ({
 					isSearchable: true,
 					isClearable: true,
 					options: companyOptions,
+					addButton: {
+						onClick: () => setShowCompanyModal(true),
+					},
 				},
 			],
-		},
-		// Company add button
-		{
-			id: "company-action",
-			type: "custom",
-			className: "mb-3",
-			content: (
-				<div className="d-grid">
-					<Button
-						variant="outline-primary"
-						size="sm"
-						onClick={() => setShowCompanyModal(true)}
-						title="Add new company"
-					>
-						<i className="bi bi-plus-circle me-2"></i>
-						Add New Company
-					</Button>
-				</div>
-			),
 		},
 		// Contact fields (side by side)
 		{

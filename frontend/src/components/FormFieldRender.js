@@ -1,12 +1,11 @@
+
 import { getCurrentDateTime } from "../utils/TimeUtils";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { useState, React } from "react";
 import Select from "react-select";
 import makeAnimated from 'react-select/animated';
 
-
 const animatedComponents = makeAnimated();
-
 
 const CustomDropdownIndicator = (props) => {
 	const [hover, setHover] = useState(false);
@@ -31,6 +30,10 @@ const CustomDropdownIndicator = (props) => {
 					props.selectProps.onAddButtonClick(e);
 				}
 			}}
+			onClick={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+			}}
 			onMouseEnter={() => setHover(true)}
 			onMouseLeave={() => setHover(false)}
 			tabIndex={-1}
@@ -43,8 +46,6 @@ const CustomDropdownIndicator = (props) => {
 	);
 };
 
-
-
 export const renderInputField = (
 	field,
 	formData,
@@ -53,7 +54,7 @@ export const renderInputField = (
 	handleSelectChange,
 	customFieldComponents = {},
 ) => {
-	const value = formData[field.name] || "";
+	const value = formData[field.name];
 	const error = errors[field.name];
 
 	if (typeof field.render === "function") {
@@ -93,24 +94,30 @@ export const renderInputField = (
 		);
 	}
 
-
 	// Unified handling for both select and multiselect
 	if (field.type === "select" || field.type === "multiselect") {
 		const isMulti = field.type === "multiselect";
 		let selectedValue = null;
 
 		if (isMulti) {
-			// Convert array of IDs to react-select format for multiselect
-			if (value && Array.isArray(value)) {
+			// For multiselect, ensure we have a valid array and options exist
+			if (Array.isArray(value) && field.options && field.options.length > 0) {
 				selectedValue = value
-					.map(id => field.options?.find(opt => opt.value === id))
-					.filter(Boolean); // Remove any undefined values
+					.map(id => field.options.find(opt =>
+						// Handle different data types for IDs
+						opt.value == id || opt.value === parseInt(id) || opt.value === String(id)
+					))
+					.filter(Boolean); // Remove undefined values
 			} else {
-				selectedValue = [];
+				selectedValue = []; // Always return empty array for multiselect
 			}
 		} else {
-			// Find single selected value for regular select
-			selectedValue = field.options?.find((option) => option.value === value) || null;
+			// For single select
+			if (value !== null && value !== undefined && value !== "" && field.options) {
+				selectedValue = field.options.find((option) =>
+					option.value == value || option.value === parseInt(value) || option.value === String(value)
+				) || null;
+			}
 		}
 
 		// Determine which components to use
@@ -128,7 +135,10 @@ export const renderInputField = (
 				onChange={(selectedOptions, actionMeta) => {
 					if (isMulti) {
 						// Extract just the IDs for storage in multiselect
-						const ids = selectedOptions ? selectedOptions.map(option => option.value) : [];
+						const ids = Array.isArray(selectedOptions)
+							? selectedOptions.map(option => option.value)
+							: [];
+
 						const syntheticEvent = {
 							target: {
 								name: field.name,
@@ -153,13 +163,15 @@ export const renderInputField = (
 				classNamePrefix="react-select"
 				components={selectComponents}
 				onAddButtonClick={field.addButton?.onClick} // Pass the onClick handler
+				menuIsOpen={field.forceMenuClosed ? false : undefined} // Allow external control
+				// Add these props to help maintain selection
+				hideSelectedOptions={false}
+				controlShouldRenderValue={true}
 			/>
 		);
 
 		return selectComponent;
 	}
-
-
 
 	// Handle datetime-local with current time default and "Set Current Time" button
 	if (field.type === "datetime-local") {
