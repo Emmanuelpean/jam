@@ -1,0 +1,172 @@
+
+.file-uploader-container {
+    margin-bottom: 1rem;
+}
+
+.file-dropzone {
+    border: 2px dashed #6c757d;
+    border-radius: 0.5rem;
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #f8f9fa;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.file-dropzone:hover {
+    border-color: #0d6efd;
+    background-color: #e7f1ff;
+}
+
+.file-dropzone.drag-active {
+    border-color: #0d6efd;
+    background-color: #e7f1ff;
+    border-style: solid;
+}
+
+.file-dropzone.has-file {
+    background-color: #e8f5e8;
+    border-color: #198754;
+}
+
+.file-dropzone.is-invalid {
+    border-color: #dc3545;
+}
+
+.file-dropzone.is-invalid:hover {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
+
+.dropzone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dropzone-icon {
+    font-size: 2rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.file-dropzone.drag-active .dropzone-icon {
+    color: #0d6efd;
+}
+
+.dropzone-text {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.25rem;
+}
+
+.file-dropzone.drag-active .dropzone-text {
+    color: #0d6efd;
+}
+
+.dropzone-or {
+    color: #6c757d;
+    margin: 0.25rem 0;
+}
+
+.dropzone-info {
+    color: #6c757d;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.file-card {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.file-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.file-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-weight: 600;
+    color: #495057;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.25rem;
+}
+
+.file-size {
+    font-size: 0.875rem;
+}
+
+.file-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.file-replace-hint {
+    text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .file-dropzone {
+        padding: 1.5rem 0.75rem;
+    }
+
+    .file-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .file-actions .btn {
+        width: 100%;
+        max-width: 150px;
+    }
+}
+
+/* Focus styles for accessibility */
+.file-dropzone:focus-within {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+/* Animation for drag state */
+.file-dropzone.drag-active {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
