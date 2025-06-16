@@ -90,6 +90,35 @@ def client(session) -> Generator[TestClient, Any, None]:
     app.dependency_overrides.pop(database.get_db, None)  # Clean up dependency override
 
 
+@pytest.fixture
+def test_users(session):
+    """Create test user data"""
+
+    return create_users(session)
+
+
+@pytest.fixture
+def tokens(test_users) -> list[str]:
+    """Fixture that generates access tokens for the given test users."""
+
+    return [create_access_token({"user_id": user.id}) for user in test_users]
+
+
+@pytest.fixture
+def authorised_clients(
+    client: TestClient,
+    tokens: list[str],
+) -> list[TestClient]:
+    """Fixture that provides a list of authenticated test clients."""
+
+    clients = []
+    for token in tokens:
+        authorized_client = TestClient(client.app)
+        authorized_client.headers = {**client.headers, "Authorization": f"Bearer {token}"}
+        clients.append(authorized_client)
+    return clients
+
+
 def create_user(client: TestClient, **user_data) -> dict:
     """Helper function to create a new user via the FastAPI application.
     This function sends a POST request to the "/users/" endpoint with the provided
@@ -137,13 +166,6 @@ def token1(test_user1: dict) -> str:
 
 
 @pytest.fixture
-def token2(test_user2: dict) -> str:
-    """Fixture that generates an access token for the given test user."""
-
-    return create_access_token({"user_id": test_user2["id"]})
-
-
-@pytest.fixture
 def authorized_client1(
     client: TestClient,
     token1: str,
@@ -155,74 +177,63 @@ def authorized_client1(
 
 
 @pytest.fixture
-def authorized_client2(
-    client: TestClient,
-    token2: str,
-) -> TestClient:
-    """Fixture that provides a test client with authorization headers.."""
-
-    client.headers = {**client.headers, "Authorization": f"Bearer {token2}"}
-    return client
-
-
-@pytest.fixture
-def test_locations(session, test_user1, test_user2):
+def test_locations(session, test_users):
     """Create test location data"""
 
     return create_locations(session)
 
 
 @pytest.fixture
-def test_companies(session, test_user1, test_user2):
+def test_companies(session, test_users):
     """Create test company data"""
 
     return create_companies(session)
 
 
 @pytest.fixture
-def test_persons(session, test_user1, test_user2, test_companies):
+def test_persons(session, test_users, test_companies):
     """Create test person data"""
 
     return create_people(session)
 
 
 @pytest.fixture
-def test_aggregators(session, test_user1, test_user2):
+def test_aggregators(session, test_users):
     """Create test aggregator data"""
 
     return create_aggregators(session)
 
 
 @pytest.fixture
-def test_keywords(session, test_user1, test_user2):
+def test_keywords(session, test_users):
     """Create test keyword data"""
 
     return create_keywords(session)
 
 
 @pytest.fixture
-def test_files(session, test_user1, test_user2):
+def test_files(session, test_users):
     """Create test files for job applications"""
 
     return create_files(session)
 
 
 @pytest.fixture
-def test_jobs(session, test_user1, test_user2, test_companies, test_locations, test_keywords, test_persons):
+def test_jobs(session, test_users, test_companies, test_locations, test_keywords, test_persons):
     """Create test job data"""
 
     return create_jobs(session, test_keywords, test_persons)
 
 
 @pytest.fixture
-def test_job_applications(session, test_user1, test_user2, test_jobs, test_files):
+def test_job_applications(session, test_users, test_jobs, test_files):
     """Create test job application data using File references"""
 
     return create_job_applications(session)
 
 
 @pytest.fixture
-def test_interviews(session, test_user1, test_user2, test_job_applications, test_locations, test_persons):
+def test_interviews(session, test_users, test_job_applications, test_locations, test_persons):
     """Create test interview data"""
 
     return create_interviews(session, test_persons)
@@ -338,11 +349,11 @@ class CRUDTestBase:
 
     def test_get_all_success(
         self,
-        authorized_client1,
+        authorised_clients,
         request,
     ) -> None:
         test_data = request.getfixturevalue(self.test_data)
-        response = self.get_all(authorized_client1)
+        response = self.get_all(authorised_clients[0])
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
 
@@ -355,11 +366,11 @@ class CRUDTestBase:
 
     def test_get_one_success(
         self,
-        authorized_client1,
+        authorised_clients,
         request,
     ) -> None:
         test_data = request.getfixturevalue(self.test_data)
-        response = self.get_one(authorized_client1, test_data[0].id)
+        response = self.get_one(authorised_clients[0], test_data[0].id)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data[0], response.json())
 
@@ -374,33 +385,34 @@ class CRUDTestBase:
 
     def test_get_one_other_user(
         self,
-        authorized_client2,
+        authorised_clients,
         request,
     ) -> None:
         test_data = request.getfixturevalue(self.test_data)
-        response = self.get_one(authorized_client2, test_data[0].id)
+        response = self.get_one(authorised_clients[1], test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_get_one_non_exist(
         self,
-        authorized_client1,
+        authorised_clients,
     ) -> None:
-        response = self.get_one(authorized_client1, 999999)
+        response = self.get_one(authorised_clients[0], 999999)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
     def test_post_success(
         self,
-        authorized_client1,
+        authorised_clients,
     ) -> None:
         """
         Generic POST test using class attribute post_test_data.
         Subclasses should set post_test_data = [dict(...), ...]
         """
+
         for create_data in self.create_data:
             create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
-            response = self.post(authorized_client1, create_data)
+            response = self.post(authorised_clients[0], create_data)
             assert response.status_code == status.HTTP_201_CREATED
             self.check_output(create_data, response.json())
 
@@ -415,21 +427,21 @@ class CRUDTestBase:
 
     def test_put_success(
         self,
-        authorized_client1,
+        authorised_clients,
         request,
     ) -> None:
         request.getfixturevalue(self.test_data)
-        response = self.put(authorized_client1, self.update_data["id"], self.update_data)
+        response = self.put(authorised_clients[0], self.update_data["id"], self.update_data)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(self.update_data, response.json())
 
-    def test_put_empty_body(self, authorized_client1, request) -> None:
+    def test_put_empty_body(self, authorised_clients, request) -> None:
         test_data = request.getfixturevalue(self.test_data)
-        response = self.put(authorized_client1, test_data[0].id, {})
+        response = self.put(authorised_clients[0], test_data[0].id, {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_put_non_exist(self, authorized_client1) -> None:
-        response = self.put(authorized_client1, 999999, {})
+    def test_put_non_exist(self, authorised_clients) -> None:
+        response = self.put(authorised_clients[0], 999999, {})
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_put_unauthorized(self, client, request) -> None:
@@ -437,20 +449,20 @@ class CRUDTestBase:
         response = self.put(client, test_data[0].id, {"name": "Test"})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_put_other_user(self, authorized_client2, request) -> None:
+    def test_put_other_user(self, authorised_clients, request) -> None:
         test_data = request.getfixturevalue(self.test_data)
-        response = self.put(authorized_client2, test_data[0].id, {"name": "Test"})
+        response = self.put(authorised_clients[1], test_data[0].id, {"name": "Test"})
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
-    def test_delete_success(self, authorized_client1, request) -> None:
+    def test_delete_success(self, authorised_clients, request) -> None:
         test_data = request.getfixturevalue(self.test_data)
-        response = self.delete(authorized_client1, test_data[0].id)
+        response = self.delete(authorised_clients[0], test_data[0].id)
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    def test_delete_non_exist(self, authorized_client1) -> None:
-        response = self.delete(authorized_client1, 999999)
+    def test_delete_non_exist(self, authorised_clients) -> None:
+        response = self.delete(authorised_clients[0], 999999)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_unauthorized(self, client, request) -> None:

@@ -1,4 +1,4 @@
-import models
+from app import models
 from table_data import (
     USERS_DATA,
     COMPANIES_DATA,

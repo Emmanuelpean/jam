@@ -27,8 +27,8 @@ class TestCompanyCRUD(CRUDTestBase):
         "id": 1,
     }
 
-    def test_get_all_specific_company(self, authorized_client1, test_companies):
-        response = authorized_client1.get(f"{self.endpoint}/?url=https://techcorp.com")
+    def test_get_all_specific_company(self, authorised_clients, test_companies):
+        response = authorised_clients[0].get(f"{self.endpoint}/?url=https://techcorp.com")
         assert response.status_code == 200
 
         # The response should be a list, so check the first item
