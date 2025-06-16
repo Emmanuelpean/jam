@@ -132,7 +132,21 @@ export const authApi = {
 
 // Generic API factory function
 const createCrudApi = (endpoint) => ({
-	getAll: (token) => api.get(`${endpoint}/`, token),
+	getAll: (token, queryParams = null) => {
+		let url = `${endpoint}/`;
+		if (queryParams) {
+			const searchParams = new URLSearchParams();
+			Object.keys(queryParams).forEach(key => {
+				if (queryParams[key] !== null && queryParams[key] !== undefined) {
+					searchParams.append(key, queryParams[key]);
+				}
+			});
+			if (searchParams.toString()) {
+				url += `?${searchParams.toString()}`;
+			}
+		}
+		return api.get(url, token);
+	},
 	getById: (id, token) => api.get(`${endpoint}/${id}`, token),
 	create: (data, token) => api.post(`${endpoint}/`, data, token),
 	update: (id, data, token) => api.put(`${endpoint}/${id}`, data, token),

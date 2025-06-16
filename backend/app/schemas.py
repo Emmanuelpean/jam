@@ -1,9 +1,10 @@
 """Schemas for the JAM database"""
 
+import base64
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_serializer
 
 
 class Out(BaseModel):
@@ -25,6 +26,7 @@ class UserOut(BaseModel):
     id: int
     email: EmailStr
     created_at: datetime
+    modified_at: datetime
     theme: str
 
 
@@ -128,7 +130,10 @@ class File(BaseModel):
 
 
 class FileOut(File, Out):
-    pass
+    @field_serializer("content")
+    def serialize_content(self, content: bytes) -> str:
+        """Convert bytes to base64 string for JSON serialization"""
+        return base64.b64encode(content).decode("utf-8")
 
 
 class FileUpdate(File):
@@ -136,6 +141,13 @@ class FileUpdate(File):
     type: str | None = None
     content: bytes | None = None
     size: int | None = None
+
+    @field_serializer("content")
+    def serialize_content(self, content: bytes | None) -> str | None:
+        """Convert bytes to base64 string for JSON serialization"""
+        if content is None:
+            return None
+        return base64.b64encode(content).decode("utf-8")
 
 
 # ------------------------------------------------------- PERSON -------------------------------------------------------
@@ -184,6 +196,8 @@ class Job(BaseModel):
     location_id: int | None = None
     duplicate_id: int | None = None
     note: str | None = None
+    keywords: list[int] | None = None
+    contacts: list[int] | None = None
 
 
 # Simple job schema without job_application/contacts to avoid circular reference
@@ -191,6 +205,7 @@ class JobSimple(Job, Out):
     company: CompanyOut | None = None
     location: LocationOut | None = None
     keywords: list[KeywordOut] | None = None
+    contacts: list[PersonSimple] | None = None
     name: str | None = None
 
 
@@ -241,6 +256,7 @@ class Interview(BaseModel):
     location_id: int | None = None
     jobapplication_id: int
     note: str | None = None
+    # interviewers: list[int] | None = None
 
 
 class InterviewSimple(Interview, Out):

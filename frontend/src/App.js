@@ -11,7 +11,7 @@ import CompaniesPage from "./pages/CompaniesPage";
 import JobsPage from "./pages/JobsPage";
 import PersonPage from "./pages/PersonPage";
 import KeywordsPage from "./pages/KeywordsPage";
-
+import "./Themes.css"
 
 function AppLayout({ children }) {
 	const location = useLocation();

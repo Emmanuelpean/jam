@@ -95,7 +95,7 @@ class TestPersonCRUD(CRUDTestBase):
     schema = schemas.Person
     out_schema = schemas.PersonOut
     test_data = "test_persons"
-    add_fixture = "test_companies"
+    add_fixture = ["test_companies"]
     create_data = PERSONS_DATA
     update_data = {
         "first_name": "OX",
@@ -122,7 +122,7 @@ class TestJobApplicationCRUD(CRUDTestBase):
     schema = schemas.JobApplication
     out_schema = schemas.JobApplicationOut
     test_data = "test_job_applications"
-    add_fixture = ["test_jobs"]
+    add_fixture = ["test_jobs", "test_files"]
     create_data = JOB_APPLICATIONS_DATA
     update_data = {
         "status": "Interview Completed",

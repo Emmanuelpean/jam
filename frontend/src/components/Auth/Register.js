@@ -52,7 +52,7 @@ try {
         {error && <div className="error-message active">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
+          <div className="auth-form-group">
             <label htmlFor="email">Email</label>
             <input
               type="email"
@@ -63,7 +63,7 @@ try {
             />
           </div>
 
-          <div className="form-group">
+          <div className="auth-form-group">
             <label htmlFor="password">Password</label>
             <input
               type="password"
@@ -76,7 +76,7 @@ try {
             <small>Password must be at least 8 characters long</small>
           </div>
 
-          <div className="form-group">
+          <div className="auth-form-group">
             <label htmlFor="confirm-password">Confirm Password</label>
             <input
               type="password"

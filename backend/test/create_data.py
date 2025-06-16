@@ -1,4 +1,6 @@
-from app import models
+import copy
+
+from app import models, utils
 from table_data import (
     USERS_DATA,
     COMPANIES_DATA,
@@ -18,13 +20,33 @@ from table_data import (
 
 
 def create_users(db):
-    """Create sample users"""
+    """Create sample users and return them with non-hashed passwords but with database IDs"""
 
     print("Creating users...")
-    users = [models.User(**user) for user in USERS_DATA]
-    db.add_all(users)
+    users_hash = []
+    original_passwords = []
+
+    for user_data in USERS_DATA:
+        user_dict = user_data.copy()
+        original_passwords.append(user_dict["password"])  # Store original password
+        user_dict["password"] = utils.hash_password(user_dict["password"])
+        users_hash.append(models.User(**user_dict))
+
+    db.add_all(users_hash)
     db.commit()
-    return users
+
+    for user in users_hash:
+        db.refresh(user)
+
+    # Create new user objects that won't become detached with the original passwords and database attributes
+    result_users = []
+    for i, user in enumerate(users_hash):
+        user_dict = {key: value for key, value in user.__dict__.items() if key != "_sa_instance_state"}
+        user_dict["password"] = original_passwords[i]
+        new_user = models.User(**user_dict)
+        result_users.append(new_user)
+
+    return result_users
 
 
 def create_companies(db):

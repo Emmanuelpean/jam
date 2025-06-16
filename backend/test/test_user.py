@@ -46,6 +46,7 @@ class TestUser:
             "username": test_users[0].email,
             "password": test_users[0].password,
         }
+        print(user_data)
         response = client.post("/login", data=user_data)
         login_response = schemas.Token(**response.json())
         payload = jwt.decode(
@@ -54,7 +55,7 @@ class TestUser:
             algorithms=[settings.algorithm],
         )
         user_id = payload.get("user_id")
-        assert user_id == test_users.id
+        assert user_id == test_users[0].id
         assert login_response.token_type == "bearer"
         assert response.status_code == 200
 
@@ -106,7 +107,7 @@ class TestUserMe:
         assert user_data["email"] == "newemail@example.com"
         assert user_data["id"] == test_users[0].id
 
-    def test_update_current_user_profile_theme_success(self, authorised_clients, test_users):
+    def test_update_current_user_profile_theme_success(self, authorised_clients):
         """Test successfully updating user theme."""
         valid_themes = ["strawberry", "blueberry", "raspberry", "mixed-berry", "forest-berry", "blackberry"]
 
@@ -131,7 +132,7 @@ class TestUserMe:
         assert user_in_db.password != "new_secure_password123"
         assert user_in_db.password != test_users[0].password
 
-    def test_update_current_user_profile_multiple_fields(self, authorised_clients, test_users):
+    def test_update_current_user_profile_multiple_fields(self, authorised_clients):
         """Test updating multiple user fields at once."""
 
         update_data = {"email": "updated@example.com", "theme": "strawberry"}
@@ -183,7 +184,7 @@ class TestUserMe:
         response = client.put("/users/me", json=update_data)
         assert response.status_code == 401
 
-    def test_update_current_user_profile_partial_update(self, authorised_clients, test_user1):
+    def test_update_current_user_profile_partial_update(self, authorised_clients):
         """Test that only provided fields are updated."""
 
         # Get original user data

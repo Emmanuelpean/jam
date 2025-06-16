@@ -14,6 +14,7 @@ def generate_crud_router(
     out_schema: BaseModel,  # Pydantic schema for output
     endpoint: str,  # e.g. "companies"
     not_found_msg: str = "Entry not found",
+    many_to_many_fields: dict = None,  # New parameter for M2M relationships
 ) -> APIRouter:
     """Generate a FastAPI router with standard CRUD endpoints for a given table.
 
@@ -23,9 +24,55 @@ def generate_crud_router(
     :param out_schema: Pydantic schema used for serialising output.
     :param endpoint: Endpoint name (used as route prefix and tag).
     :param not_found_msg: Default message when an entry is not found.
+    :param many_to_many_fields: Dict defining M2M relationships.
+                               Format: {
+                                   'field_name': {
+                                       'table': association_table,
+                                       'local_key': 'local_foreign_key',
+                                       'remote_key': 'remote_foreign_key'
+                                   }
+                               }
     :return: Configured APIRouter instance with CRUD endpoints.
     """
     router = APIRouter(prefix=f"/{endpoint}", tags=[endpoint])
+
+    # Helper function to handle many-to-many relationships
+    def handle_many_to_many_create(db: Session, entry_id: int, item_data: dict):
+        """Handle creation of many-to-many relationships."""
+        if not many_to_many_fields:
+            return
+
+        for field_name, m2m_config in many_to_many_fields.items():
+            if field_name in item_data and item_data[field_name] is not None:
+                values = item_data[field_name]
+                if isinstance(values, list):
+                    association_table = m2m_config["table"]
+                    local_key = m2m_config["local_key"]
+                    remote_key = m2m_config["remote_key"]
+
+                    # Insert the relationships
+                    for value_id in values:
+                        db.execute(association_table.insert().values(**{local_key: entry_id, remote_key: value_id}))
+
+    def handle_many_to_many_update(db: Session, entry_id: int, item_data: dict):
+        """Handle updating of many-to-many relationships."""
+        if not many_to_many_fields:
+            return
+
+        for field_name, m2m_config in many_to_many_fields.items():
+            if field_name in item_data:
+                association_table = m2m_config["table"]
+                local_key = m2m_config["local_key"]
+                remote_key = m2m_config["remote_key"]
+
+                # Delete existing relationships
+                db.execute(association_table.delete().where(getattr(association_table.c, local_key) == entry_id))
+
+                # Add new relationships if provided
+                values = item_data[field_name]
+                if values is not None and isinstance(values, list):
+                    for value_id in values:
+                        db.execute(association_table.insert().values(**{local_key: entry_id, remote_key: value_id}))
 
     # noinspection PyTypeHints
     @router.get("/", response_model=list[out_schema])
@@ -112,10 +159,30 @@ def generate_crud_router(
         :param current_user: Authenticated user.
         :return: The created entry."""
 
-        new_entry = table_model(**item.model_dump(), owner_id=current_user.id)
+        # Extract the item data and exclude many-to-many fields from main creation
+        item_dict = item.model_dump()
+
+        # Remove many-to-many fields from main creation data
+        main_data = item_dict.copy()
+        m2m_data = {}
+
+        if many_to_many_fields:
+            for field_name in many_to_many_fields.keys():
+                if field_name in main_data:
+                    m2m_data[field_name] = main_data.pop(field_name)
+
+        # Create the main entry
+        new_entry = table_model(**main_data, owner_id=current_user.id)
         db.add(new_entry)
         db.commit()
         db.refresh(new_entry)
+
+        # Handle many-to-many relationships
+        if m2m_data:
+            handle_many_to_many_create(db, new_entry.id, m2m_data)
+            db.commit()
+            db.refresh(new_entry)
+
         return new_entry
 
     @router.put("/{entry_id}", response_model=out_schema)
@@ -146,13 +213,29 @@ def generate_crud_router(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action"
             )
 
-        # Check if there are fields to update
-        updated_dict = item.model_dump(exclude_defaults=True)
-        if not updated_dict:
+        # Extract the item data
+        item_dict = item.model_dump(exclude_defaults=True)
+
+        if not item_dict:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided for update")
 
-        # Update the entry with the new data
-        entry_query.update(updated_dict, synchronize_session=False)
+        # Separate main fields from many-to-many fields
+        main_data = item_dict.copy()
+        m2m_data = {}
+
+        if many_to_many_fields:
+            for field_name in many_to_many_fields.keys():
+                if field_name in main_data:
+                    m2m_data[field_name] = main_data.pop(field_name)
+
+        # Update main fields if any
+        if main_data:
+            entry_query.update(main_data, synchronize_session=False)
+
+        # Handle many-to-many relationships
+        if m2m_data:
+            handle_many_to_many_update(db, entry_id, m2m_data)
+
         db.commit()
 
         # Return the updated entry
@@ -182,6 +265,14 @@ def generate_crud_router(
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action"
             )
+
+        # Delete many-to-many relationships first if they exist
+        if many_to_many_fields:
+            for field_name, m2m_config in many_to_many_fields.items():
+                association_table = m2m_config["table"]
+                local_key = m2m_config["local_key"]
+
+                db.execute(association_table.delete().where(getattr(association_table.c, local_key) == entry_id))
 
         entry_query.delete(synchronize_session=False)
         db.commit()
@@ -219,6 +310,10 @@ job_router = generate_crud_router(
     out_schema=schemas.JobOut,
     endpoint="jobs",
     not_found_msg="Job not found",
+    many_to_many_fields={
+        "keywords": {"table": models.job_keywords, "local_key": "job_id", "remote_key": "keyword_id"},
+        "contacts": {"table": models.job_contacts, "local_key": "job_id", "remote_key": "person_id"},
+    },
 )
 
 # Location router

@@ -19,6 +19,11 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			...initialData, // Override with any provided initial data
 		};
 
+		// For edit mode, ensure we preserve the ID
+		if (isEdit && initialData.id) {
+			cleanedData.id = initialData.id;
+		}
+
 		// Clean up any null/undefined values that could cause form issues
 		Object.keys(cleanedData).forEach((key) => {
 			if (cleanedData[key] === null || cleanedData[key] === undefined) {
@@ -26,15 +31,17 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 					cleanedData[key] = currentDateTime;
 				} else if (key === "status") {
 					cleanedData[key] = "Applied";
-				} else if (typeof cleanedData[key] === "string" || key === "url" || key === "note") {
+				} else if (key === "url" || key === "note") {
+					// Always ensure these are strings for form inputs
 					cleanedData[key] = "";
-				} else {
-					delete cleanedData[key]; // Remove file fields and other non-string fields
+				} else if (!["cv", "cover_letter", "id"].includes(key)) {
+					// Don't delete file fields or ID, but delete other undefined fields
+					delete cleanedData[key];
 				}
 			}
 		});
 
-		// Keep file fields if they exist in initial data (for edit mode)
+		// Handle file fields separately - only keep them if they have valid content
 		if (initialData.cv && typeof initialData.cv === 'object' && initialData.cv.filename) {
 			cleanedData.cv = initialData.cv;
 		} else {
@@ -47,8 +54,17 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			delete cleanedData.cover_letter;
 		}
 
+		// Ensure all string fields are properly initialized
+		if (typeof cleanedData.url !== 'string') cleanedData.url = "";
+		if (typeof cleanedData.note !== 'string') cleanedData.note = "";
+		if (!cleanedData.status) cleanedData.status = "Applied";
+		if (!cleanedData.date) cleanedData.date = currentDateTime;
+
+		console.log('Prepared initial data:', cleanedData); // Debug log
+
 		return cleanedData;
-	}, [initialData, currentDateTime]);
+	}, [initialData, currentDateTime, isEdit]);
+
 
 	// Validate file type and size
 	const validateFile = (file) => {
@@ -68,49 +84,92 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		return { valid: true };
 	};
 
-	// Helper function to open/download a file
 	const handleOpenFile = (fileData) => {
-		if (fileData && fileData.content) {
+
+		if (!fileData?.content) {
+			alert('No file content available');
+			return;
+		}
+
+		// Handle base64 string content (from backend)
+		if (typeof fileData.content === 'string') {
+
 			try {
-				// Convert bytes to blob
-				const byteArray = new Uint8Array(fileData.content);
-				const blob = new Blob([byteArray], { type: fileData.type || 'application/pdf' });
+				// Clean the base64 string (remove data URL prefix if present)
+				let base64Content = fileData.content;
+				if (base64Content.includes(',')) {
+					base64Content = base64Content.split(',')[1];
+				}
+
+				// Convert base64 to binary string
+				const binaryString = atob(base64Content);
+
+				// Convert binary string to Uint8Array
+				const bytes = new Uint8Array(binaryString.length);
+				for (let i = 0; i < binaryString.length; i++) {
+					bytes[i] = binaryString.charCodeAt(i);
+				}
+
+				// Create blob with correct MIME type
+				const blob = new Blob([bytes], {
+					type: fileData.type || 'application/octet-stream'
+				});
+
+				if (blob.size === 0) {
+					alert('File is empty (0 bytes)');
+					return;
+				}
 
 				// Create download link
 				const url = window.URL.createObjectURL(blob);
 				const link = document.createElement('a');
 				link.href = url;
 				link.download = fileData.filename || 'document';
+
+				// Add to DOM temporarily to trigger download
+				document.body.appendChild(link);
+				link.click();
+				document.body.removeChild(link);
+
+				// Clean up the URL
+				window.URL.revokeObjectURL(url);
+				return;
+
+			} catch (error) {
+				console.error('Error processing base64 content:', error);
+				alert('Error opening file: ' + error.message);
+				return;
+			}
+		}
+
+		// Handle binary data (if content is not a string)
+		if (typeof fileData.content !== 'string') {
+			try {
+				const blob = new Blob([fileData.content], {
+					type: fileData.type || 'application/pdf'
+				});
+
+				if (blob.size === 0) {
+					alert('File is empty (0 bytes)');
+					return;
+				}
+
+				// Create download link
+				const url = window.URL.createObjectURL(blob);
+				const link = document.createElement('a');
+				link.href = url;
+				link.download = fileData.filename || 'document.pdf';
 				document.body.appendChild(link);
 				link.click();
 				document.body.removeChild(link);
 				window.URL.revokeObjectURL(url);
-			} catch (error) {
-				console.error('Error opening file:', error);
-				// Fallback: try to open as base64 if the content is base64 encoded
-				try {
-					const base64Data = fileData.content;
-					const byteCharacters = atob(base64Data.split(',')[1] || base64Data);
-					const byteNumbers = new Array(byteCharacters.length);
-					for (let i = 0; i < byteCharacters.length; i++) {
-						byteNumbers[i] = byteCharacters.charCodeAt(i);
-					}
-					const byteArray = new Uint8Array(byteNumbers);
-					const blob = new Blob([byteArray], { type: fileData.type || 'application/pdf' });
-
-					const url = window.URL.createObjectURL(blob);
-					const link = document.createElement('a');
-					link.href = url;
-					link.download = fileData.filename || 'document';
-					document.body.appendChild(link);
-					link.click();
-					document.body.removeChild(link);
-					window.URL.revokeObjectURL(url);
-				} catch (fallbackError) {
-					console.error('Failed to open file with fallback method:', fallbackError);
-				}
+				return;
+			} catch (binaryError) {
+				console.error('Binary data processing failed:', binaryError);
 			}
 		}
+
+		alert('Unable to process file. Check console for details.');
 	};
 
 	// Helper function to remove a file

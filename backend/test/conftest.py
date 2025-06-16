@@ -21,6 +21,7 @@ This module is instrumental for efficiently executing unit and integration tests
 and providing the necessary utilities for seamless interactions with the application's data and APIs.
 """
 
+import base64
 import datetime as dt
 from typing import Any, Generator
 
@@ -33,7 +34,6 @@ from starlette.testclient import TestClient
 from app import models, database, schemas
 from app.main import app
 from app.oauth2 import create_access_token
-
 from create_data import (
     create_users,
     create_companies,
@@ -119,63 +119,6 @@ def authorised_clients(
     return clients
 
 
-def create_user(client: TestClient, **user_data) -> dict:
-    """Helper function to create a new user via the FastAPI application.
-    This function sends a POST request to the "/users/" endpoint with the provided
-    user data to create a new user. It asserts that the response status code is 201
-    (created), and it returns the newly created user data, including the password.
-    :param client: The FastAPI TestClient to make the request.
-    :param user_data: A dictionary of user attributes (e.g., email, password, username).
-    :return: The created user data, including the password."""
-
-    response = client.post("/users/", json=user_data)
-    assert response.status_code == 201
-    new_user = response.json()
-    new_user["password"] = user_data["password"]
-    return new_user
-
-
-@pytest.fixture
-def test_user1(client: TestClient) -> dict:
-    """First test user"""
-    user_data = {
-        "email": "user1@email.com",
-        "password": "user1_password",
-        "username": "user1",
-    }
-    return create_user(client, **user_data)
-
-
-@pytest.fixture
-def test_user2(client: TestClient, test_user1) -> dict:
-    """Second test user. Test user 1 is called to get it created first"""
-
-    user_data = {
-        "email": "user2@email.com",
-        "password": "user2_password",
-        "username": "user2",
-    }
-    return create_user(client, **user_data)
-
-
-@pytest.fixture
-def token1(test_user1: dict) -> str:
-    """Fixture that generates an access token for the given test user."""
-
-    return create_access_token({"user_id": test_user1["id"]})
-
-
-@pytest.fixture
-def authorized_client1(
-    client: TestClient,
-    token1: str,
-) -> TestClient:
-    """Fixture that provides a test client with authorization headers."""
-
-    client.headers = {**client.headers, "Authorization": f"Bearer {token1}"}
-    return client
-
-
 @pytest.fixture
 def test_locations(session, test_users):
     """Create test location data"""
@@ -252,8 +195,8 @@ class CRUDTestBase:
     schema = None
     out_schema = None
     test_data: str = ""
-    update_data: list[dict] = None
-    create_data: dict = None
+    update_data: dict = None
+    create_data: list[dict] = None
     add_fixture = None
 
     def check_output(
@@ -412,6 +355,8 @@ class CRUDTestBase:
 
         for create_data in self.create_data:
             create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
+            if isinstance(create_data.get("content"), bytes):
+                create_data["content"] = base64.b64encode(create_data["content"]).decode("utf-8")
             response = self.post(authorised_clients[0], create_data)
             assert response.status_code == status.HTTP_201_CREATED
             self.check_output(create_data, response.json())
@@ -470,7 +415,7 @@ class CRUDTestBase:
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_delete_other_user(self, authorized_client2, request) -> None:
+    def test_delete_other_user(self, authorised_clients, request) -> None:
         test_data = request.getfixturevalue(self.test_data)
-        response = self.delete(authorized_client2, test_data[0].id)
+        response = self.delete(authorised_clients[1], test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN

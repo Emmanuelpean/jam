@@ -45,14 +45,14 @@ def seed_database():
     try:
         # Create data in order of dependencies
         users = create_users(db)
-        companies = create_companies(db, users)
-        locations = create_locations(db, users)
-        aggregators = create_aggregators(db, users)
-        keywords = create_keywords(db, users)
-        people = create_people(db, users, companies)
-        jobs = create_jobs(db, companies, people, locations)
-        files = create_files(db, users)
-        applications = create_job_applications(db, users, jobs, files)
+        companies = create_companies(db)
+        locations = create_locations(db)
+        aggregators = create_aggregators(db)
+        keywords = create_keywords(db)
+        people = create_people(db)
+        jobs = create_jobs(db, keywords, people)
+        files = create_files(db)
+        applications = create_job_applications(db)
         interviews = create_interviews(db, people)
 
         print("\n" + "=" * 50)

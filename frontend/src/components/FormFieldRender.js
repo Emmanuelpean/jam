@@ -1,7 +1,49 @@
 import { getCurrentDateTime } from "../utils/TimeUtils";
 import { Button, Form, InputGroup } from "react-bootstrap";
-import React from "react";
+import { useState, React } from "react";
 import Select from "react-select";
+import makeAnimated from 'react-select/animated';
+
+
+const animatedComponents = makeAnimated();
+
+
+const CustomDropdownIndicator = (props) => {
+	const [hover, setHover] = useState(false);
+	const menuIsOpen = props.selectProps.menuIsOpen;
+	const isActive = hover || menuIsOpen;
+
+	return (
+		<div
+			style={{
+				display: "flex",
+				alignItems: "center",
+				marginLeft: 11,
+				boxSizing: "border-box",
+				cursor: "pointer",
+				color: isActive ? "hsl(0, 0%, 60%)" : "hsl(0, 0%, 80%)",
+				transition: "color 150ms",
+			}}
+			onMouseDown={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				if (props.selectProps.onAddButtonClick) {
+					props.selectProps.onAddButtonClick(e);
+				}
+			}}
+			onMouseEnter={() => setHover(true)}
+			onMouseLeave={() => setHover(false)}
+			tabIndex={-1}
+			aria-label="Add new item"
+			role="button"
+			title="Add new item"
+		>
+			<i className="bi bi-plus-circle" style={{ fontSize: '21px' }}></i>
+		</div>
+	);
+};
+
+
 
 export const renderInputField = (
 	field,
@@ -51,68 +93,73 @@ export const renderInputField = (
 		);
 	}
 
-	if (field.type === "select") {
-		const selectedValue = field.options?.find((option) => option.value === value);
 
-		return (
-			<Select
-				name={field.name}
-				value={selectedValue || null}
-				onChange={(selectedOption, actionMeta) => handleSelectChange(selectedOption, actionMeta)}
-				options={field.options}
-				placeholder={field.placeholder || `Select ${field.label}`}
-				isSearchable={field.isSearchable}
-				isClearable={field.isClearable}
-				isDisabled={field.isDisabled}
-				isMulti={field.isMulti}
-				menuPortalTarget={document.body}
-				className="react-select-container"
-				classNamePrefix="react-select"
-			/>
-		);
-	}
+	// Unified handling for both select and multiselect
+	if (field.type === "select" || field.type === "multiselect") {
+		const isMulti = field.type === "multiselect";
+		let selectedValue = null;
 
-	if (field.type === "multiselect") {
-		console.log(field.options);
-		// Convert array of IDs to react-select format
-		let selectedValues = [];
-		if (value && Array.isArray(value)) {
-			selectedValues = value
-				.map(id => field.options?.find(opt => opt.value === id))
-				.filter(Boolean); // Remove any undefined values
+		if (isMulti) {
+			// Convert array of IDs to react-select format for multiselect
+			if (value && Array.isArray(value)) {
+				selectedValue = value
+					.map(id => field.options?.find(opt => opt.value === id))
+					.filter(Boolean); // Remove any undefined values
+			} else {
+				selectedValue = [];
+			}
+		} else {
+			// Find single selected value for regular select
+			selectedValue = field.options?.find((option) => option.value === value) || null;
 		}
-		console.log(selectedValues);
 
-		return (
+		// Determine which components to use
+		const selectComponents = { ...animatedComponents };
+
+		// If there's an add button, replace the dropdown indicator
+		if (field.addButton) {
+			selectComponents.DropdownIndicator = CustomDropdownIndicator;
+		}
+
+		const selectComponent = (
 			<Select
 				name={field.name}
-				value={selectedValues}
-				onChange={(selectedOptions, _actionMeta) => {
-					// Extract just the IDs for storage
-					const ids = selectedOptions ? selectedOptions.map(option => option.value) : [];
-
-					const syntheticEvent = {
-						target: {
-							name: field.name,
-							value: ids // Store as simple array of IDs
-						}
-					};
-
-					handleChange(syntheticEvent);
+				value={selectedValue}
+				onChange={(selectedOptions, actionMeta) => {
+					if (isMulti) {
+						// Extract just the IDs for storage in multiselect
+						const ids = selectedOptions ? selectedOptions.map(option => option.value) : [];
+						const syntheticEvent = {
+							target: {
+								name: field.name,
+								value: ids // Store as simple array of IDs
+							}
+						};
+						handleChange(syntheticEvent);
+					} else {
+						// Handle single select
+						handleSelectChange(selectedOptions, actionMeta);
+					}
 				}}
 				options={field.options || []}
-				closeMenuOnSelect={false}
+				closeMenuOnSelect={!isMulti}
 				placeholder={field.placeholder || `Select ${field.label}`}
 				isSearchable={field.isSearchable !== false}
 				isClearable={field.isClearable !== false}
 				isDisabled={field.isDisabled}
-				isMulti={true}
+				isMulti={isMulti}
 				menuPortalTarget={document.body}
 				className={`react-select-container ${error ? 'is-invalid' : ''}`}
 				classNamePrefix="react-select"
+				components={selectComponents}
+				onAddButtonClick={field.addButton?.onClick} // Pass the onClick handler
 			/>
 		);
+
+		return selectComponent;
 	}
+
+
 
 	// Handle datetime-local with current time default and "Set Current Time" button
 	if (field.type === "datetime-local") {
@@ -204,7 +251,7 @@ export const renderInputFieldGroup = (
 								customFieldComponents,
 							)}
 							{errors[field.name] && field.type !== "drag-drop" && (
-								<div className="invalid-feedback d-block">{errors[field.name]}</div>
+								<div className="d-block">{errors[field.name]}</div>
 							)}
 						</Form.Group>
 					</div>

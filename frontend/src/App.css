@@ -1,10 +1,6 @@
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-.App {
-    text-align: center;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-}
 
 .App-logo {
     height: 40vmin;
@@ -14,25 +10,18 @@
 * {
     margin: 0;
     padding: 0;
-    /*border: 1px dashed rgb(255, 0, 0); !*For debugging*!*/
 }
 
 body {
     font-family: "Poppins", sans-serif;
+    font-size: 1rem;
+    background: linear-gradient(145deg, #fafafa 0%, #f5f5f5 100%);
+    color: #2c3e50;
+    line-height: 1.6;
 }
 
 html {
     scroll-behavior: smooth;
-}
-
-p {
-    font-size: 1rem;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
 }
 
 .container {
@@ -40,149 +29,14 @@ p {
 }
 
 
-.App-header {
-    background-color: #282c34;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
-}
-
-.App-link {
-    color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 .form-control.is-invalid {
-    border-color: #dc3545 !important;
     background-image: none !important;
-    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
 }
 
-.form-control:focus.is-invalid {
-    border-color: #dc3545 !important;
-    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
-}
-
-/* Default theme - Mixed Berry */
-:root {
-    --theme-name: 'Mixed Berry Jam';
-    --primary-start: #a29bfe;
-    --primary-mid: #6c5ce7;
-    --primary-end: #fd79a8;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #9085fd 0%, #5b4bd1 50%, #fc5d95 100%);
-    --primary-light: #d1cbfe;
-    --primary-dark: #4a3bb8;
-    --jam-glow: rgba(162, 155, 254, 0.3);
-}
-
-/* Strawberry Jam Theme */
-:root[data-theme="strawberry"] {
-    --theme-name: 'Strawberry Jam';
-    --primary-start: #ff9a9e;
-    --primary-mid: #ff6b6b;
-    --primary-end: #c44569;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #ff8a8e 0%, #ff5252 50%, #b73e56 100%);
-    --primary-light: #ffccce;
-    --primary-dark: #a63952;
-    --jam-glow: rgba(255, 154, 158, 0.3);
-}
-
-/* Blueberry Jam Theme */
-:root[data-theme="blueberry"] {
-    --theme-name: 'Blueberry Jam';
-    --primary-start: #a8edea;
-    --primary-mid: #686de0;
-    --primary-end: #4834d4;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #98e7e4 0%, #5a5fcf 50%, #3d2db7 100%);
-    --primary-light: #c8f3f0;
-    --primary-dark: #2d1f8f;
-    --jam-glow: rgba(168, 237, 234, 0.3);
-}
-
-/* Raspberry Jam Theme */
-:root[data-theme="raspberry"] {
-    --theme-name: 'Raspberry Jam';
-    --primary-start: #ffecd2;
-    --primary-mid: #fd79a8;
-    --primary-end: #e84393;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #ffe3c2 0%, #fc5d95 50%, #e32e7c 100%);
-    --primary-light: #fff6e8;
-    --primary-dark: #d1206b;
-    --jam-glow: rgba(255, 236, 210, 0.3);
-}
-
-/* Mixed Berry Jam Theme */
-:root[data-theme="mixed-berry"] {
-    --theme-name: 'Mixed Berry Jam';
-    --primary-start: #a29bfe;
-    --primary-mid: #6c5ce7;
-    --primary-end: #fd79a8;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #9085fd 0%, #5b4bd1 50%, #fc5d95 100%);
-    --primary-light: #d1cbfe;
-    --primary-dark: #4a3bb8;
-    --jam-glow: rgba(162, 155, 254, 0.3);
-}
-
-/* Forest Berry Theme */
-:root[data-theme="forest-berry"] {
-    --theme-name: 'Forest Berry';
-    --primary-start: #d4e4d4;
-    --primary-mid: #a8b3a8;
-    --primary-end: #1a2e1a;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #c4d4c4 0%, #9aa59a 50%, #162816 100%);
-    --primary-light: #e4f4e4;
-    --primary-dark: #0f1a0f;
-    --jam-glow: rgba(212, 228, 212, 0.3);
-}
-
-/* Elderberry Theme */
-:root[data-theme="elderberry"] {
-    --theme-name: 'Elderberry';
-    --primary-start: #e8d8f8;
-    --primary-mid: #b8a8c8;
-    --primary-end: #22183c;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #e1ceee 0%, #ab9bbb 50%, #1c1130 100%);
-    --primary-light: #f4e8fc;
-    --primary-dark: #150f29;
-    --jam-glow: rgba(232, 216, 248, 0.3);
-}
-
-/* Wild Blackberry Theme */
-:root[data-theme="blackberry"] {
-    --theme-name: 'Wild Blackberry';
-    --primary-start: #d8c8e8;
-    --primary-mid: #8a7a9a;
-    --primary-end: #0a0015;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #ccb8dc 0%, #7e6e8e 50%, #080012 100%);
-    --primary-light: #e8d8f8;
-    --primary-dark: #050008;
-    --jam-glow: rgba(216, 200, 232, 0.3);
-}
 
 /* Apply the gradient colors to Bootstrap primary */
 :root {
     --bs-primary: var(--primary-mid);
-    --bs-primary-rgb: 108, 92, 231;
 }
 
 /* Custom gradient utilities */
@@ -190,14 +44,46 @@ p {
     background: var(--primary-gradient) !important;
 }
 
+/* TODO Needed?*/
+
+/* Required field asterisk */
+.text-danger {
+    color: #e74c3c !important;
+    font-weight: bold;
+}
+
+
+.invalid-feedback {
+    display: block;
+    color: #e74c3c;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+* {
+    --edit-color: rgb(59, 130, 246);
+    --view-color: rgb(16, 185, 129);
+    --delete-color: rgb(239, 68, 68);
+}
+
+
+/* Number input styling */
+input[type="number"] {
+    text-align: right;
+}
+
+
+/*Tables ##########################################################################################*/
+
 thead.custom-header {
     --bs-table-bg: transparent;
-    background: var(--primary-gradient) !important;
-    color: white !important;
+    background: var(--primary-gradient);
+    color: white;
 }
 
 thead.custom-header th {
-    color: white !important;
+    color: white;
 }
 
 .text-gradient-primary {
@@ -207,71 +93,14 @@ thead.custom-header th {
     background-clip: text;
 }
 
-/* Update spinner color to use primary-end */
-.spinner-border {
-    border-color: var(--primary-end) transparent var(--primary-end) transparent;
-}
-
-.text-primary .spinner-border {
-    border-color: var(--primary-end) transparent var(--primary-end) transparent;
-}
-
-/* Additional utility classes for the three-color system */
-.text-primary-start {
-    color: var(--primary-start) !important;
-}
-
-.text-primary-mid {
-    color: var(--primary-mid) !important;
-}
-
-.text-primary-end {
-    color: var(--primary-end) !important;
-}
-
-.bg-primary-start {
-    background-color: var(--primary-start) !important;
-}
-
-.bg-primary-mid {
-    background-color: var(--primary-mid) !important;
-}
-
-.bg-primary-end {
-    background-color: var(--primary-end) !important;
-}
-
-.border-primary-start {
-    border-color: var(--primary-start) !important;
-}
-
-.border-primary-mid {
-    border-color: var(--primary-mid) !important;
-}
-
-.border-primary-end {
-    border-color: var(--primary-end) !important;
-}
-
-/* Global body styling for berry jam theme */
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    background: linear-gradient(145deg, #fafafa 0%, #f5f5f5 100%);
-    color: #2c3e50;
-    line-height: 1.6;
-}
 
 /* ------------------------------------------------------ FORM ------------------------------------------------------ */
 
-.form-group {
-    margin-bottom: 1.75rem;
-}
-
 .form-label {
     font-weight: 600;
-    color: #34495e;
+    color: #181b1e;
     margin-bottom: 0.75rem;
-    font-size: 0.95rem;
+    font-size: 1rem;
     letter-spacing: 0.025em;
 }
 
@@ -282,7 +111,7 @@ body {
     padding: 0.875rem 1.25rem;
     font-size: 0.95rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
+    background: rgba(255, 255, 255, 100%);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
@@ -290,54 +119,28 @@ body {
 .form-select:focus {
     border-color: var(--primary-mid);
     box-shadow: 0 0 0 0.25rem var(--jam-glow), 0 4px 12px rgba(0, 0, 0, 0.1);
-    background: #ffffff;
-    transform: translateY(-1px);
 }
 
 .form-control::placeholder {
-    color: #adb5bd;
+    color: rgb(173, 181, 189);
     font-style: italic;
     font-weight: 300;
 }
 
-/* ----------------------------------------------------- WIDGET ----------------------------------------------------- */
-
 textarea.form-control {
     resize: vertical;
-    min-height: 120px;
+    min-height: 8rem;
 }
 
-/* Required field asterisk */
-.text-danger {
-    color: #e74c3c !important;
-    font-weight: bold;
-}
 
-/* Error states */
-.form-control.is-invalid,
-.form-select.is-invalid {
-    border-color: #e74c3c;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23e74c3c'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 1.4 1.4-1.4 1.4'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right calc(0.375em + 0.1875rem) center;
-    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
-    box-shadow: 0 0 0 0.25rem rgba(231, 76, 60, 0.15);
-}
+/* ----------------------------------------------------- BUTTONS ----------------------------------------------------- */
 
-.invalid-feedback {
-    display: block;
-    color: #e74c3c;
-    font-size: 0.875rem;
-    margin-top: 0.5rem;
-    font-weight: 500;
-}
 
-/* Button styling with enhanced jam theme */
 .btn {
     border-radius: 12px;
     padding: 0.75rem 2rem;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 1rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: none;
 }
@@ -356,15 +159,7 @@ textarea.form-control {
 }
 
 .btn-primary:active {
-    transform: translateY(0);
     box-shadow: 0 4px 15px var(--jam-glow), 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.btn-primary:disabled {
-    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-    transform: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    opacity: 0.7;
 }
 
 .btn-secondary {
@@ -418,7 +213,7 @@ textarea.form-control {
     box-shadow: 0 8px 25px rgba(245, 101, 101, 0.4), 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* Compact action button styling for Edit/View/Delete buttons */
+
 .btn-action {
     /*noinspection CssNonIntegerLengthInPixels*/
     border: 1.5px solid;
@@ -440,6 +235,7 @@ textarea.form-control {
 
 .btn-action:hover {
     transform: none;
+    color: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -448,50 +244,37 @@ textarea.form-control {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Edit button - blue theme */
 .btn-action-edit {
-    border-color: #3b82f6;
-    color: #3b82f6;
+    border-color: var(--edit-color);
+    color: var(--edit-color);
 }
 
 .btn-action-edit:hover {
-    background-color: #3b82f6;
-    color: white;
-    border-color: #3b82f6;
+    background-color: var(--edit-color);
 }
 
-/* View button - green theme */
 .btn-action-view {
-    border-color: #10b981;
-    color: #10b981;
+    border-color: var(--view-color);
+    color: var(--view-color);
 }
 
 .btn-action-view:hover {
-    background-color: #10b981;
-    color: white;
-    border-color: #10b981;
+    background-color: var(--view-color);
 }
 
-/* Delete button - red theme */
 .btn-action-delete {
-    border-color: #ef4444;
-    color: #ef4444;
+    border-color: var(--delete-color);
+    color: var(--delete-color);
 }
 
 .btn-action-delete:hover {
-    background-color: #ef4444;
-    color: white;
-    border-color: #ef4444;
+    background-color: var(--delete-color);
 }
 
-/* Optional: Small size variant for extra compact buttons */
-.btn-action-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-    border-radius: 6px;
-}
 
-/* Bootstrap Badge Styling */
+/* ----------------------------------------------------- BADGES ----------------------------------------------------- */
+
+
 .badge {
     border-radius: 8px;
     padding: 0.5rem 0.875rem;
@@ -503,71 +286,49 @@ textarea.form-control {
 }
 
 .badge.bg-primary {
-    background: var(--primary-gradient) !important;
+    background: var(--primary-gradient);
     color: white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .badge.bg-warning {
-    background: linear-gradient(135deg, #f6ad55 0%, #ed8936 50%, #dd6b20 100%) !important;
+    background: linear-gradient(135deg, #f6ad55 0%, #ed8936 50%, #dd6b20 100%);
     color: white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .badge.bg-success {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 50%, #2f855a 100%) !important;
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 50%, #2f855a 100%);
     color: white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .badge.bg-danger {
-    background: linear-gradient(135deg, #f56565 0%, #e53e3e 50%, #c53030 100%) !important;
+    background: linear-gradient(135deg, #f56565 0%, #e53e3e 50%, #c53030 100%);
     color: white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .badge.bg-secondary {
-    background: linear-gradient(135deg, #8b9dc3 0%, #6b7280 50%, #4b5563 100%) !important;
+    background: linear-gradient(135deg, #8b9dc3 0%, #6b7280 50%, #4b5563 100%);
     color: white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Alert styling */
-.alert {
-    border-radius: 12px;
-    border: none;
-    padding: 1rem 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* Clickable badges */
+.clickable-badge {
+    cursor: pointer !important;
+    transition: opacity 0.2s ease;
 }
 
-.alert-danger {
-    background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
-    color: #742a2a;
-    border-left: 4px solid #e53e3e;
-    box-shadow: 0 4px 12px rgba(229, 62, 62, 0.2);
+.clickable-badge:hover {
+    opacity: 0.8;
 }
 
-.alert-success {
-    background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
-    color: #22543d;
-    border-left: 4px solid #38a169;
-    box-shadow: 0 4px 12px rgba(56, 161, 105, 0.2);
-}
 
-.alert-warning {
-    background: linear-gradient(135deg, #fef5e7 0%, #fbd38d 100%);
-    color: #744210;
-    border-left: 4px solid #ed8936;
-    box-shadow: 0 4px 12px rgba(237, 137, 54, 0.2);
-}
+/* ----------------------------------------------------- TOGGLE ----------------------------------------------------- */
 
-.alert-info {
-    background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
-    color: #234e52;
-    border-left: 4px solid #38b2ac;
-    box-shadow: 0 4px 12px rgba(56, 178, 172, 0.2);
-}
+
 /* Improved Checkbox styling */
 .form-check {
     padding-left: 0;
@@ -665,7 +426,6 @@ textarea.form-control {
 
 /* Standard checkbox label */
 .form-check:not(.form-switch) .form-check-label {
-    color: #34495e;
     font-weight: 500;
     line-height: 1.5;
     cursor: pointer;
@@ -737,82 +497,14 @@ textarea.form-control {
 }
 
 .form-switch .form-check-label {
-    color: #34495e;
     font-weight: 500;
     cursor: pointer;
     margin-bottom: 0;
     line-height: 1.5;
 }
 
-/* Range input styling */
-.form-range {
-    margin: 1.5rem 0;
-    height: 8px;
-}
+/* --------------------------------------------------- BACKGROUNDS -------------------------------------------------- */
 
-.form-range::-webkit-slider-thumb {
-    background: var(--primary-gradient);
-    border: none;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    box-shadow: 0 4px 12px var(--jam-glow);
-}
-
-.form-range::-moz-range-thumb {
-    background: var(--primary-gradient);
-    border: none;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    box-shadow: 0 4px 12px var(--jam-glow);
-}
-
-/* React Select styling within modals */
-.react-select__control {
-    border: 2px solid #e8eaed;
-    border-radius: 12px;
-    min-height: 52px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-    background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
-}
-
-.react-select__control:hover {
-    border-color: #d1d5db;
-}
-
-.react-select__control--is-focused {
-    border-color: var(--primary-mid);
-    box-shadow: 0 0 0 0.25rem var(--jam-glow), 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.react-select__value-container {
-    padding: 0.5rem 1rem;
-}
-
-.react-select__placeholder {
-    color: #6b7280;
-    font-style: italic;
-    font-weight: 300;
-}
-
-.react-select__menu {
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-    border: 1px solid #e8eaed;
-    background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
-}
-
-.react-select__option--is-focused {
-    background: linear-gradient(135deg, var(--primary-light) 0%, rgba(255, 255, 255, 0.8) 100%);
-}
-
-.react-select__option--is-selected {
-    background: var(--primary-gradient);
-    color: white;
-}
-
-/* Inline forms (for company/location creation within job modal) */
 .bg-light {
     background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%) !important;
     border: 1px solid #dee2e6;
@@ -828,15 +520,31 @@ textarea.form-control {
     font-size: 1.1rem;
 }
 
+/* ----------------------------------------------------- SPINNER ---------------------------------------------------- */
 
-/* Loading state */
 .spinner-border-sm {
     width: 1.25rem;
     height: 1.25rem;
     margin-right: 0.75rem;
 }
 
-/* Dropdown styling */
+
+/* Update spinner color to use primary-end */
+.spinner-border {
+    border-color: var(--primary-end) transparent var(--primary-end) transparent;
+}
+
+.text-primary .spinner-border {
+    border-color: var(--primary-end) transparent var(--primary-end) transparent;
+}
+
+
+.spinner-border {
+    border-color: var(--primary-end) transparent;
+}
+
+/* ---------------------------------------------------- DROPDOWN ---------------------------------------------------- */
+
 .dropdown-menu {
     border-radius: 12px;
     border: none;
@@ -862,58 +570,52 @@ textarea.form-control {
     color: white;
 }
 
-.dropdown-divider {
-    margin: 0.5rem 0;
-    border-color: rgba(0, 0, 0, 0.08);
-}
 
-.dropdown-header {
-    padding: 0.75rem 1.5rem 0.5rem;
-    font-weight: 600;
-    color: #6b7280;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
+/* -------------------------------------------------- SELECT WIDGET ------------------------------------------------- */
 
-/* Better spacing for form groups */
-.form-group:last-child {
-    margin-bottom: 0;
-}
-
-/* URL input specific styling */
-input[type="url"] {
-    font-family: 'JetBrains Mono', 'Courier New', monospace;
-    font-size: 0.9rem;
-}
-
-/* Number input styling */
-input[type="number"] {
-    text-align: right;
-}
-
-/* Validation feedback positioning */
-.form-control + .invalid-feedback {
-    margin-top: 0.5rem;
-}
-
-
-/* React-select custom styles */
+/* React Select Styling - Fixed for proper text display and height */
+.react-select__control,
 .react-select-container .react-select__control {
     border: 2px solid #e8eaed;
     border-radius: 12px;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    min-height: 52px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+.react-select__control:hover,
 .react-select-container .react-select__control:hover {
     border-color: var(--primary-light);
 }
 
+.react-select__control--is-focused,
 .react-select-container .react-select__control--is-focused {
     border-color: var(--primary-mid);
-    box-shadow: 0 0 0 0.25rem var(--jam-glow);
+    box-shadow: 0 0 0 0.25rem var(--jam-glow), 0 4px 12px rgba(0, 0, 0, 0.1);
     outline: none;
+}
+
+.react-select__value-container,
+.react-select-container .react-select__value-container {
+    padding: 8px 16px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+}
+
+.react-select__placeholder,
+.react-select-container .react-select__placeholder {
+    color: #6b7280;
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.5;
+}
+
+.react-select-container .react-select__single-value {
+    color: #2c3e50;
+    font-weight: 500;
+    line-height: 1.5;
 }
 
 .react-select-container .react-select__input-container {
@@ -924,16 +626,7 @@ input[type="number"] {
     caret-color: #2c3e50;
 }
 
-.react-select-container .react-select__placeholder {
-    color: #6b7280;
-    font-weight: 300;
-}
-
-.react-select-container .react-select__single-value {
-    color: #2c3e50;
-    font-weight: 500;
-}
-
+.react-select__menu,
 .react-select-container .react-select__menu {
     z-index: 9999;
     border: none;
@@ -945,19 +638,29 @@ input[type="number"] {
 .react-select-container .react-select__option {
     color: #2c3e50;
     font-weight: 500;
+    line-height: 1.5;
+    padding: 8px 16px;
 }
 
+.react-select__option--is-focused,
 .react-select-container .react-select__option--is-focused {
     background: linear-gradient(135deg, var(--primary-light) 0%, rgba(255, 255, 255, 0.8) 100%);
     color: var(--primary-dark);
 }
 
+.react-select__option--is-selected,
 .react-select-container .react-select__option--is-selected {
     background: var(--primary-gradient);
     color: white;
 }
 
-/* Remove any unwanted focus outlines */
+.react-select-container .react-select__indicators {
+    padding-right: 12px;
+    height: 48px;
+    align-items: center;
+}
+
+/* Remove focus outlines */
 .react-select-container .react-select__input:focus,
 .react-select-container .react-select__input:focus-visible {
     outline: none !important;
@@ -965,138 +668,52 @@ input[type="number"] {
     border: none !important;
 }
 
-.react-select-container .react-select__value-container {
-    padding: 8px 16px;
-}
-
-.react-select-container .react-select__indicators {
-    padding-right: 12px;
-}
-
-/* Card styling */
-.card {
-    border-radius: 16px;
-    border: none;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-}
-
-.card-header {
-    background: var(--primary-gradient);
-    color: white;
-    border-radius: 16px 16px 0 0;
-    padding: 1.25rem 1.75rem;
-    border-bottom: none;
-    font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.card-body {
-    padding: 1.75rem;
-}
-
-.card-footer {
-    background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 0 0 16px 16px;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    padding: 1.25rem 1.75rem;
-}
-
-.spinner-border {
-    border-color: var(--primary-end) transparent;
-}
-
-.filter-dropdown {
-    font-size: 0.75rem;
-}
-
-.filter-dropdown .form-label {
-    font-size: 0.85rem;
-}
-
-.filter-dropdown .form-control-xs {
-    padding: 0.25rem 0.5rem;
-    font-size: 1rem;
-    height: 2rem;
-}
-
-.filter-info-icon {
-    font-size: 0.9rem;
-    line-height: 1;
-    vertical-align: middle;
-}
-
-
-/* Outline button styling - ensure these display properly */
-.btn-outline-primary {
-    color: var(--primary-mid) !important;
-    border: 2px solid var(--primary-mid) !important;
-    background-color: transparent !important;
-    font-weight: 600;
-}
-
-.btn-outline-primary:hover {
-    color: white !important;
-    background: var(--primary-gradient) !important;
-    border-color: var(--primary-mid) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--jam-glow);
-}
-
-.btn-outline-primary:focus {
-    color: white !important;
-    background: var(--primary-gradient) !important;
-    border-color: var(--primary-mid) !important;
-    box-shadow: 0 0 0 0.25rem var(--jam-glow);
-}
-
-.btn-outline-primary:active {
-    color: white !important;
-    background: var(--primary-hover-gradient) !important;
-    border-color: var(--primary-mid) !important;
-    transform: translateY(0);
-}
-
-/* Ensure small outline buttons work too */
-.btn-outline-primary.btn-sm {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-    border-radius: 8px;
-}
-
-/* Override any conflicting styles */
-.btn-outline-primary:not(:disabled):not(.disabled) {
-    background-color: transparent !important;
-}
-
-.btn-outline-primary:not(:disabled):not(.disabled):hover {
-    background: var(--primary-gradient) !important;
-}
-
-/* React-select in modals */
-.react-select__menu {
-    z-index: 9999 !important;
-}
-
+/* Modal z-index fixes */
 .react-select__menu-portal {
     z-index: 9999 !important;
 }
 
-/* Clickable badges */
-.clickable-badge {
-    cursor: pointer !important;
-    transition: opacity 0.2s ease;
+/* Multi-select styling - with proper height for text */
+.react-select__multi-value {
+    align-items: center !important;
+    padding: 6px 8px !important;
+    border-radius: 6px !important;
+    background-color: #e3f2fd !important;
+    border: 1px solid #bbdefb !important;
+    margin: 2px !important;
+    min-height: 28px !important;
 }
 
-.clickable-badge:hover {
-    opacity: 0.8;
+.react-select__multi-value__label {
+    padding: 2px 4px !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    color: #1565c0 !important;
+    font-weight: 500 !important;
 }
+
+.react-select__multi-value__remove {
+    padding: 4px !important;
+    margin-left: 4px !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: #1976d2 !important;
+    color: white !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+}
+
+.react-select__value-container,
+.react-select-container .react-select__value-container {
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+}
+
+/* ------------------------------------------------------ MENU ------------------------------------------------------ */
+
 
 .nav-link-custom {
     font-size: 1.1rem;
@@ -1114,13 +731,17 @@ input[type="number"] {
     transform: translateY(-1px);
 }
 
+.nav-link-custom.active:not(:active) {
+    font-weight: 600;
+}
+
 .nav-link-custom.text-danger {
     border: 2px solid transparent;
     transition: border-color 0.15s ease-out;
 }
 
 .nav-link-custom.text-danger:hover {
-    color: black !important;  /* TODO replace with theme colour */
+    color: inherit !important;
     background: transparent;
     border-color: red;
 }
@@ -1129,59 +750,9 @@ input[type="number"] {
     transform: scale(1.05);
 }
 
-.nav-link-custom.active {
-    font-weight: 600;
-}
+/* --------------------------------------------------- TEXT BOXES --------------------------------------------------- */
 
-/* React Select Multiselect Styles */
-.react-select-container .react-select__multi-value {
-    background-color: #e9ecef;
-    border-radius: 0.25rem;
-}
 
-.react-select-container .react-select__multi-value__label {
-    color: #495057;
-    font-size: 0.875rem;
-}
-
-.react-select-container .react-select__multi-value__remove {
-    color: #6c757d;
-}
-
-.react-select-container .react-select__multi-value__remove:hover {
-    background-color: #dc3545;
-    color: white;
-}
-
-/* Optional: Additional multiselect styling */
-.react-select-container .react-select__control {
-    min-height: 38px;
-}
-
-.react-select-container .react-select__value-container {
-    padding: 2px 8px;
-}
-
-.react-select-container .react-select__multi-value {
-    margin: 2px;
-}
-
-/* Focus and validation states */
-.react-select-container .react-select__control--is-focused {
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-.react-select-container.is-invalid .react-select__control {
-    border-color: #dc3545;
-}
-
-.react-select-container.is-invalid .react-select__control--is-focused {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
-}
-
-/* Add to your CSS file */
 .form-control[as="textarea"] {
     will-change: height;
     transition: none !important;

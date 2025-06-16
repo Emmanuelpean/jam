@@ -1,0 +1,104 @@
+
+/* Default theme - Mixed Berry */
+:root {
+    --theme-name: 'Mixed Berry Jam';
+    --primary-start: #a29bfe;
+    --primary-mid: #6c5ce7;
+    --primary-end: #fd79a8;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #9085fd 0%, #5b4bd1 50%, #fc5d95 100%);
+    --primary-light: #d1cbfe;
+    --primary-dark: #4a3bb8;
+    --jam-glow: rgba(162, 155, 254, 0.3);
+}
+
+/* Strawberry Jam Theme */
+:root[data-theme="strawberry"] {
+    --theme-name: 'Strawberry Jam';
+    --primary-start: #ff9a9e;
+    --primary-mid: #ff6b6b;
+    --primary-end: #c44569;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #ff8a8e 0%, #ff5252 50%, #b73e56 100%);
+    --primary-light: #ffccce;
+    --primary-dark: #a63952;
+    --jam-glow: rgba(255, 154, 158, 0.3);
+}
+
+/* Blueberry Jam Theme */
+:root[data-theme="blueberry"] {
+    --theme-name: 'Blueberry Jam';
+    --primary-start: #a8edea;
+    --primary-mid: #686de0;
+    --primary-end: #4834d4;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #98e7e4 0%, #5a5fcf 50%, #3d2db7 100%);
+    --primary-light: #c8f3f0;
+    --primary-dark: #2d1f8f;
+    --jam-glow: rgba(168, 237, 234, 0.3);
+}
+
+/* Raspberry Jam Theme */
+:root[data-theme="raspberry"] {
+    --theme-name: 'Raspberry Jam';
+    --primary-start: #ffecd2;
+    --primary-mid: #fd79a8;
+    --primary-end: #e84393;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #ffe3c2 0%, #fc5d95 50%, #e32e7c 100%);
+    --primary-light: #fff6e8;
+    --primary-dark: #d1206b;
+    --jam-glow: rgba(255, 236, 210, 0.3);
+}
+
+/* Mixed Berry Jam Theme */
+:root[data-theme="mixed-berry"] {
+    --theme-name: 'Mixed Berry Jam';
+    --primary-start: #a29bfe;
+    --primary-mid: #6c5ce7;
+    --primary-end: #fd79a8;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #9085fd 0%, #5b4bd1 50%, #fc5d95 100%);
+    --primary-light: #d1cbfe;
+    --primary-dark: #4a3bb8;
+    --jam-glow: rgba(162, 155, 254, 0.3);
+}
+
+/* Forest Berry Theme */
+:root[data-theme="forest-berry"] {
+    --theme-name: 'Forest Berry';
+    --primary-start: #d4e4d4;
+    --primary-mid: #a8b3a8;
+    --primary-end: #1a2e1a;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #c4d4c4 0%, #9aa59a 50%, #162816 100%);
+    --primary-light: #e4f4e4;
+    --primary-dark: #0f1a0f;
+    --jam-glow: rgba(212, 228, 212, 0.3);
+}
+
+/* Elderberry Theme */
+:root[data-theme="elderberry"] {
+    --theme-name: 'Elderberry';
+    --primary-start: #e8d8f8;
+    --primary-mid: #b8a8c8;
+    --primary-end: #22183c;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #e1ceee 0%, #ab9bbb 50%, #1c1130 100%);
+    --primary-light: #f4e8fc;
+    --primary-dark: #150f29;
+    --jam-glow: rgba(232, 216, 248, 0.3);
+}
+
+/* Wild Blackberry Theme */
+:root[data-theme="blackberry"] {
+    --theme-name: 'Wild Blackberry';
+    --primary-start: #d8c8e8;
+    --primary-mid: #8a7a9a;
+    --primary-end: #0a0015;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #ccb8dc 0%, #7e6e8e 50%, #080012 100%);
+    --primary-light: #e8d8f8;
+    --primary-dark: #050008;
+    --jam-glow: rgba(216, 200, 232, 0.3);
+}

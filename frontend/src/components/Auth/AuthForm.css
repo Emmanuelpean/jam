@@ -25,8 +25,8 @@ h1 {
 }
 
 /* Form elements */
-.form-group {
-    margin-bottom: 1.5rem;
+.auth-form-group {
+    margin-bottom: 1.75rem;
 }
 
 label {
@@ -107,4 +107,10 @@ small {
 
 .auth-footer a:hover {
     text-decoration: underline;
+}
+
+
+/* Better spacing for form groups */
+.auth-form-group:last-child {
+    margin-bottom: 0;
 }

@@ -5,6 +5,9 @@ import GenericModal from "../GenericModal";
 import CompanyFormModal from "./CompanyFormModal";
 import LocationFormModal from "./LocationFormModal";
 import JobApplicationFormModal from "./JobApplicationFormModal";
+import KeywordFormModal from "./KeywordFormModal";
+import PersonFormModal from "./PersonFormModal";
+
 import {
 	apiHelpers,
 	companiesApi,
@@ -27,6 +30,53 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 	const [currentJobId, setCurrentJobId] = useState(null);
 	const [existingApplication, setExistingApplication] = useState(null);
 	const [isLoadingApplication, setIsLoadingApplication] = useState(false);
+	const [showKeywordModal, setShowKeywordModal] = useState(false);
+	const [showPersonModal, setShowPersonModal] = useState(false);
+
+	// Transform initial data to work with multiselect (convert objects to IDs)
+
+	// Transform initial data to work with multiselect (convert objects to IDs)
+	const transformInitialData = (data) => {
+		if (!data) return data;
+
+		const transformed = { ...data };
+
+		// Convert keywords array to array of IDs
+		if (transformed.keywords && Array.isArray(transformed.keywords)) {
+			transformed.keywords = transformed.keywords.map((keyword) => {
+				const id = typeof keyword === "object" ? keyword.id : keyword;
+				return id;
+			});
+		}
+
+		// Convert contacts array to array of IDs
+		if (transformed.contacts && Array.isArray(transformed.contacts)) {
+			transformed.contacts = transformed.contacts.map((contact) => {
+				const id = typeof contact === "object" ? contact.id : contact;
+				return id;
+			});
+		}
+
+		return transformed;
+	};
+	const handleKeywordSuccess = (newKeyword) => {
+		const newOption = {
+			value: newKeyword.id,
+			label: newKeyword.name,
+		};
+		setKeywordOptions((prev) => [...prev, newOption]);
+		setShowKeywordModal(false);
+	};
+
+	// Handle successful person creation
+	const handlePersonSuccess = (newPerson) => {
+		const newOption = {
+			value: newPerson.id,
+			label: newPerson.name,
+		};
+		setPersonOptions((prev) => [...prev, newOption]);
+		setShowPersonModal(false);
+	};
 
 	// Set current job ID when editing or after successful creation
 	useEffect(() => {
@@ -75,7 +125,6 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				setLocationOptions(apiHelpers.toSelectOptions(locationsData));
 				setKeywordOptions(apiHelpers.toSelectOptions(keywordsData));
 				setPersonOptions(apiHelpers.toSelectOptions(personsData));
-				let init = apiHelpers.toSelectOptions(initialData.contacts || []);
 			} catch (error) {
 				console.error("Error fetching options:", error);
 			}
@@ -123,7 +172,6 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		if (currentJobId) {
 			checkExistingApplication(currentJobId);
 		}
-		console.log("Job application created/updated successfully:", applicationData);
 	};
 
 	// Handle opening application modal (create or edit)
@@ -160,6 +208,9 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 					isClearable: true,
 					options: companyOptions,
 					columnClass: "col-md-6",
+					addButton: {
+						onClick: () => setShowCompanyModal(true),
+					},
 				},
 				{
 					name: "location_id",
@@ -170,34 +221,11 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 					isClearable: true,
 					options: locationOptions,
 					columnClass: "col-md-6",
+					addButton: {
+						onClick: () => setShowLocationModal(true),
+					},
 				},
 			],
-		},
-		// Add New buttons (side by side)
-		{
-			id: "add-buttons",
-			type: "custom",
-			className: "mb-3",
-			content: (
-				<div className="row">
-					<div className="col-md-6">
-						<div className="d-grid">
-							<Button variant="outline-primary" size="sm" onClick={() => setShowCompanyModal(true)}>
-								<i className="bi bi-plus-circle me-2"></i>
-								Add New Company
-							</Button>
-						</div>
-					</div>
-					<div className="col-md-6">
-						<div className="d-grid">
-							<Button variant="outline-primary" size="sm" onClick={() => setShowLocationModal(true)}>
-								<i className="bi bi-plus-circle me-2"></i>
-								Add New Location
-							</Button>
-						</div>
-					</div>
-				</div>
-			),
 		},
 		// Keywords and Contacts (side by side)
 		{
@@ -212,6 +240,9 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 					isSearchable: true,
 					options: keywordOptions,
 					columnClass: "col-md-6",
+					addButton: {
+						onClick: () => setShowKeywordModal(true),
+					},
 				},
 				{
 					name: "contacts",
@@ -221,6 +252,9 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 					isSearchable: true,
 					options: personOptions,
 					columnClass: "col-md-6",
+					addButton: {
+						onClick: () => setShowPersonModal(true),
+					},
 				},
 			],
 		},
@@ -300,6 +334,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				},
 			],
 		},
+
 		// Job Application Section
 		{
 			id: "application-section",
@@ -417,21 +452,11 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 			transformed.personal_rating = parseInt(transformed.personal_rating);
 		}
 
-		// Transform keywords multiselect to array of IDs
-		if (transformed.keywords && Array.isArray(transformed.keywords)) {
-			transformed.keyword_ids = transformed.keywords.map((item) =>
-				typeof item === "object" ? item.value : item,
-			);
-			delete transformed.keywords;
-		}
-
-		// Transform contacts multiselect to array of IDs
-		if (transformed.contacts && Array.isArray(transformed.contacts)) {
-			transformed.contact_ids = transformed.contacts.map((item) =>
-				typeof item === "object" ? item.value : item,
-			);
-			delete transformed.contacts;
-		}
+		// Clean up unnecessary fields that shouldn't be sent to backend
+		delete transformed.company; // Remove the company object, keep company_id
+		delete transformed.location; // Remove the location object, keep location_id
+		delete transformed.job_application; // Remove existing application data
+		delete transformed.name; // Remove computed name field
 
 		return transformed;
 	};
@@ -446,7 +471,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				size={size}
 				useCustomLayout={true}
 				layoutGroups={layoutGroups}
-				initialData={initialData}
+				initialData={transformInitialData(initialData)}
 				endpoint="jobs"
 				onSuccess={handleJobSuccess}
 				validationRules={validationRules}
@@ -468,6 +493,20 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				onSuccess={handleLocationSuccess}
 			/>
 
+			{/* Keyword Form Modal */}
+			<KeywordFormModal
+				show={showKeywordModal}
+				onHide={() => setShowKeywordModal(false)}
+				onSuccess={handleKeywordSuccess}
+			/>
+
+			{/* Person Form Modal */}
+			<PersonFormModal
+				show={showPersonModal}
+				onHide={() => setShowPersonModal(false)}
+				onSuccess={handlePersonSuccess}
+			/>
+
 			{/* Job Application Form Modal */}
 			<JobApplicationFormModal
 				show={showApplicationModal}
@@ -481,5 +520,6 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		</>
 	);
 };
+
 
 export default JobFormModal;

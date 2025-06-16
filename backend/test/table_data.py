@@ -1,30 +1,30 @@
 """Centralized test data for both conftest.py and seed_database.py"""
 
+from files import load_all_resource_files
+
+RESOURCE_FILES = load_all_resource_files()
+
+
 USERS_DATA = [
     {
         "email": "emmanuel.pean@gmail.com",
-        "password": "$2b$12$Dwf3QPkI2SSbcXkqw3gxkOTr9WZxVjSEkBfOLR4KuzW9zX/xfBjmW",
-        "id": 1,
+        "password": "password1",
     },
     {
         "email": "jane.smith@example.com",
-        "password": "$2b$12$hashed_password_here",
-        "id": 2,
+        "password": "password2",
     },
     {
         "email": "mike.johnson@example.com",
-        "password": "$2b$12$hashed_password_here",
-        "id": 3,
+        "password": "password3",
     },
     {
         "email": "sarah.wilson@example.com",
-        "password": "$2b$12$hashed_password_here",
-        "id": 4,
+        "password": "password4",
     },
     {
         "email": "admin@example.com",
-        "password": "$2b$12$hashed_password_here",
-        "id": 5,
+        "password": "password5",
     },
 ]
 
@@ -35,35 +35,30 @@ COMPANIES_DATA = [
         "description": "A leading technology company specializing in web applications",
         "url": "https://techcorp.com",
         "owner_id": 1,
-        "id": 1,
     },
     {
         "name": "StartupXYZ",
         "description": "An innovative startup focused on AI-driven solutions",
         "url": "https://startupxyz.com",
         "owner_id": 1,
-        "id": 2,
     },
     {
         "name": "Oxford PV",
         "description": "Oxford-based company specializing in photovoltaic technology",
         "url": "https://oxfordpv.com",
         "owner_id": 1,
-        "id": 3,
     },
     {
         "name": "WebSolutions Ltd",
         "description": "Full-service web development and digital marketing agency",
         "url": "https://websolutions.com",
         "owner_id": 2,
-        "id": 4,
     },
     {
         "name": "DataTech Industries",
         "description": "Big data analytics and business intelligence solutions",
         "url": "https://datatech.com",
         "owner_id": 2,
-        "id": 5,
     },
 ]
 
@@ -75,7 +70,6 @@ LOCATIONS_DATA = [
         "country": "USA",
         "remote": False,
         "owner_id": 1,
-        "id": 1,
     },
     {
         "postcode": "90210",
@@ -83,7 +77,6 @@ LOCATIONS_DATA = [
         "country": "USA",
         "remote": False,
         "owner_id": 1,
-        "id": 2,
     },
     {
         "postcode": "SW1A 1AA",
@@ -91,20 +84,17 @@ LOCATIONS_DATA = [
         "country": "UK",
         "remote": False,
         "owner_id": 2,
-        "id": 3,
     },
     {
         "city": "San Francisco",
         "country": "USA",
         "remote": True,
         "owner_id": 1,
-        "id": 4,
     },
     {
         "country": "Germany",
         "remote": True,
         "owner_id": 2,
-        "id": 5,
     },
     {
         "postcode": "OX1 2JD",
@@ -112,13 +102,11 @@ LOCATIONS_DATA = [
         "country": "UK",
         "remote": False,
         "owner_id": 1,
-        "id": 6,
     },
     {
         "country": "Canada",
         "remote": True,
         "owner_id": 2,
-        "id": 7,
     },
 ]
 
@@ -128,31 +116,26 @@ AGGREGATORS_DATA = [
         "name": "LinkedIn",
         "url": "https://linkedin.com/jobs",
         "owner_id": 1,
-        "id": 1,
     },
     {
         "name": "Indeed",
         "url": "https://indeed.com",
         "owner_id": 1,
-        "id": 2,
     },
     {
         "name": "Glassdoor",
         "url": "https://glassdoor.com",
         "owner_id": 1,
-        "id": 3,
     },
     {
         "name": "AngelList",
         "url": "https://angel.co",
         "owner_id": 2,
-        "id": 4,
     },
     {
         "name": "Stack Overflow Jobs",
         "url": "https://stackoverflow.com/jobs",
         "owner_id": 2,
-        "id": 5,
     },
 ]
 
@@ -161,77 +144,62 @@ KEYWORDS_DATA = [
     {
         "name": "Python",
         "owner_id": 1,
-        "id": 1,
     },
     {
         "name": "JavaScript",
         "owner_id": 1,
-        "id": 2,
     },
     {
         "name": "React",
         "owner_id": 1,
-        "id": 3,
     },
     {
         "name": "Node.js",
         "owner_id": 1,
-        "id": 4,
     },
     {
         "name": "TypeScript",
         "owner_id": 1,
-        "id": 5,
     },
     {
         "name": "PostgreSQL",
         "owner_id": 1,
-        "id": 6,
     },
     {
         "name": "FastAPI",
         "owner_id": 1,
-        "id": 7,
     },
     {
         "name": "Machine Learning",
         "owner_id": 2,
-        "id": 8,
     },
     {
         "name": "DevOps",
         "owner_id": 2,
-        "id": 9,
     },
     {
         "name": "Docker",
         "owner_id": 2,
-        "id": 10,
     },
     {
         "name": "Kubernetes",
         "owner_id": 2,
-        "id": 11,
     },
     {
         "name": "AWS",
         "owner_id": 2,
-        "id": 12,
     },
     {
         "name": "REST API",
         "owner_id": 1,
-        "id": 13,
     },
     {
         "name": "Git",
         "owner_id": 1,
-        "id": 14,
     },
     {
         "name": "Agile",
         "owner_id": 1,
-        "id": 15,
     },
 ]
 
@@ -246,7 +214,6 @@ PERSONS_DATA = [
         "role": "Senior Engineering Manager",
         "company_id": 1,  # Tech Corp
         "owner_id": 1,
-        "id": 1,
     },
     {
         "first_name": "Jane",
@@ -256,7 +223,6 @@ PERSONS_DATA = [
         "role": "Product Manager",
         "company_id": 2,  # StartupXYZ
         "owner_id": 1,
-        "id": 2,
     },
     {
         "first_name": "Mike",
@@ -265,7 +231,6 @@ PERSONS_DATA = [
         "role": "Lead Developer",
         "company_id": 1,  # Tech Corp
         "owner_id": 1,
-        "id": 3,
     },
     {
         "first_name": "Emily",
@@ -274,7 +239,6 @@ PERSONS_DATA = [
         "role": "DevOps Engineer",
         "company_id": 2,  # StartupXYZ
         "owner_id": 1,
-        "id": 4,
     },
     {
         "first_name": "Chris",
@@ -283,7 +247,6 @@ PERSONS_DATA = [
         "role": "Data Science Manager",
         "company_id": 1,  # Tech Corp
         "owner_id": 1,
-        "id": 5,
     },
     {
         "first_name": "Sarah",
@@ -292,14 +255,12 @@ PERSONS_DATA = [
         "role": "Technical Recruiter",
         "company_id": 3,  # Oxford PV
         "owner_id": 2,
-        "id": 6,
     },
     {
         "first_name": "Anonymous",
         "last_name": "Recruiter",
         "company_id": None,
         "owner_id": 2,
-        "id": 7,
     },
     {
         "first_name": "Tech",
@@ -307,7 +268,6 @@ PERSONS_DATA = [
         "role": "Talent Acquisition",
         "company_id": 3,  # Oxford PV
         "owner_id": 2,
-        "id": 8,
     },
 ]
 
@@ -395,99 +355,38 @@ JOBS_DATA = [
 FILES_DATA = [
     {
         "filename": "john_doe_cv_2024.pdf",
-        "content": b"""John Doe - Software Engineer
-
-EXPERIENCE:
-- Senior Software Developer at TechCorp (2019-2024)
-- Full Stack Developer at StartupXYZ (2017-2019)
-- Junior Developer at WebSolutions (2015-2017)
-
-SKILLS:
-- Python, JavaScript, React, Node.js
-- AWS, Docker, Kubernetes
-- PostgreSQL, MongoDB
-- Git, CI/CD, Agile methodologies
-
-EDUCATION:
-- B.S. Computer Science, University of Technology (2015)
-
-CERTIFICATIONS:
-- AWS Certified Solutions Architect
-- Certified Kubernetes Administrator""",
-        "type": "application/pdf",
-        "size": 2048,
         "owner_id": 1,
+        **RESOURCE_FILES["CV.pdf"],
     },
     {
-        "filename": "cover_letter_senior_python.pdf",
-        "content": b"""Dear Hiring Manager,
-
-I am writing to express my strong interest in the Senior Python Developer position at your company. With over 8 years of experience in full-stack development and a proven track record of delivering scalable solutions, I am excited about the opportunity to contribute to your team.
-
-In my current role at TechCorp, I have:
-- Led a team of 5 developers in building microservices architecture
-- Implemented CI/CD pipelines that reduced deployment time by 60%
-- Designed and developed RESTful APIs serving 1M+ requests daily
-- Mentored junior developers and conducted code reviews
-
-I am particularly drawn to your company's mission and would love to discuss how my experience with Python, React, and cloud technologies can help drive your projects forward.
-
-Thank you for considering my application. I look forward to hearing from you.
-
-Best regards,
-John Doe""",
-        "type": "application/pdf",
-        "size": 1536,
+        "filename": "cover_letter_senior_python.docx",
         "owner_id": 1,
+        **RESOURCE_FILES["Cover Letter.docx"],
     },
     {
         "filename": "fullstack_developer_cv.pdf",
-        "content": b"Full stack developer CV with React and Node.js experience - detailed project portfolio included...",
-        "type": "application/pdf",
-        "size": 1792,
         "owner_id": 1,
+        **RESOURCE_FILES["CV.pdf"],
     },
     {
         "filename": "portfolio_cover_letter.txt",
-        "content": b"Portfolio-based application cover letter highlighting creative projects and technical achievements...",
-        "type": "text/plain",
-        "size": 512,
         "owner_id": 1,
+        **RESOURCE_FILES["Cover Letter.txt"],
     },
     {
         "filename": "junior_cloud_cv.docx",
-        "content": b"Junior developer CV with limited cloud experience but strong fundamentals in AWS and containerization...",
-        "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "size": 1024,
         "owner_id": 2,
-    },
-    {
-        "filename": "cloud_engineer_cover_letter.pdf",
-        "content": b"Standard cover letter for cloud engineer position emphasizing DevOps skills and infrastructure experience...",
-        "type": "application/pdf",
-        "size": 768,
-        "owner_id": 2,
+        **RESOURCE_FILES["Cover Letter.docx"],
     },
     {
         "filename": "frontend_specialist_cv.pdf",
-        "content": b"Frontend specialist CV with React focus - includes modern JavaScript frameworks and UI/UX design experience...",
-        "type": "application/pdf",
-        "size": 1280,
         "owner_id": 1,
+        **RESOURCE_FILES["CV.pdf"],
     },
     {
-        "filename": "frontend_developer_cover_letter.pdf",
-        "content": b"Frontend developer cover letter showcasing responsive design skills and component library experience...",
-        "type": "application/pdf",
-        "size": 640,
+        "filename": "frontend_developer_cover_letter.docx",
         "owner_id": 1,
-    },
-    {
-        "filename": "updated_cv_2024.pdf",
-        "content": b"Updated CV with recent project experience including microservices architecture and cloud-native development...",
-        "type": "application/pdf",
-        "size": 2304,
-        "owner_id": 2,
+        **RESOURCE_FILES["Cover Letter.docx"],
     },
 ]
 
@@ -575,13 +474,6 @@ INTERVIEWS_DATA = [
         "jobapplication_id": 5,
         "note": "Cultural fit interview",
         "owner_id": 1,
-    },
-    {
-        "date": "2024-01-25T16:00:00",
-        "location_id": None,
-        "jobapplication_id": 6,
-        "note": "Phone screening with recruiter. Location TBD.",
-        "owner_id": 2,
     },
     {
         "date": "2024-01-26T09:00:00",
