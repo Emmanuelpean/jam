@@ -1,298 +1,433 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Badge, Button } from "react-bootstrap";
+import { useAuth } from "../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
-import { getCurrentDateTime } from "../../utils/TimeUtils";
-import { fileToBase64 } from "../../utils/FileUtils";
-import { DragDropFile } from "../FormFieldRender";
+import CompanyFormModal from "./CompanyFormModal";
+import LocationFormModal from "./LocationFormModal";
+import JobApplicationFormModal from "./JobApplicationFormModal";
+import KeywordFormModal from "./KeywordFormModal";
+import PersonFormModal from "./PersonFormModal";
+import {
+	apiHelpers,
+	companiesApi,
+	jobApplicationsApi,
+	keywordsApi,
+	locationsApi,
+	personsApi,
+} from "../../services/api";
+import { getApplicationStatusBadgeClass } from "../Renders";
 
-const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
-	const [dragStates, setDragStates] = useState({ cv: false, cover_letter: false });
+const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
+	const { token } = useAuth();
+	const [showCompanyModal, setShowCompanyModal] = useState(false);
+	const [showLocationModal, setShowLocationModal] = useState(false);
+	const [showApplicationModal, setShowApplicationModal] = useState(false);
+	const [companyOptions, setCompanyOptions] = useState([]);
+	const [locationOptions, setLocationOptions] = useState([]);
+	const [keywordOptions, setKeywordOptions] = useState([]);
+	const [personOptions, setPersonOptions] = useState([]);
+	const [currentJobId, setCurrentJobId] = useState(null);
+	const [existingApplication, setExistingApplication] = useState(null);
+	const [isLoadingApplication, setIsLoadingApplication] = useState(false);
+	const [showKeywordModal, setShowKeywordModal] = useState(false);
+	const [showPersonModal, setShowPersonModal] = useState(false);
 
-	const currentDateTime = getCurrentDateTime();
+	// Transform initial data to work with multiselect (convert objects to IDs)
 
-	// Prepare initial data with defaults and clean values
-	const preparedInitialData = useMemo(() => {
-		const cleanedData = {
-			status: "Applied",
-			date: currentDateTime,
-			url: "",
-			note: "",
-			...initialData,
+	// Transform initial data to work with multiselect (convert objects to IDs)
+	const transformInitialData = (data) => {
+		if (!data) return data;
+
+		const transformed = { ...data };
+
+		// Convert keywords array to array of IDs
+		if (transformed.keywords && Array.isArray(transformed.keywords)) {
+			transformed.keywords = transformed.keywords.map((keyword) => {
+				const id = typeof keyword === "object" ? keyword.id : keyword;
+				return id;
+			});
+		}
+
+		// Convert contacts array to array of IDs
+		if (transformed.contacts && Array.isArray(transformed.contacts)) {
+			transformed.contacts = transformed.contacts.map((contact) => {
+				const id = typeof contact === "object" ? contact.id : contact;
+				return id;
+			});
+		}
+
+		return transformed;
+	};
+	const handleKeywordSuccess = (newKeyword) => {
+		const newOption = {
+			value: newKeyword.id,
+			label: newKeyword.name,
+		};
+		setKeywordOptions((prev) => [...prev, newOption]);
+		setShowKeywordModal(false);
+	};
+
+	// Handle successful person creation
+	const handlePersonSuccess = (newPerson) => {
+		const newOption = {
+			value: newPerson.id,
+			label: newPerson.name,
+		};
+		setPersonOptions((prev) => [...prev, newOption]);
+		setShowPersonModal(false);
+	};
+
+	// Set current job ID when editing or after successful creation
+	useEffect(() => {
+		if (isEdit && initialData.id) {
+			setCurrentJobId(initialData.id);
+		}
+	}, [isEdit, initialData.id]);
+
+	// Check for existing job application
+	const checkExistingApplication = async (jobId) => {
+		if (!jobId || !token) return;
+
+		setIsLoadingApplication(true);
+		try {
+			const applications = await jobApplicationsApi.getAll(token, { job_id: jobId });
+			setExistingApplication(applications.length > 0 ? applications[0] : null);
+		} catch (error) {
+			console.error("Error fetching job applications:", error);
+		} finally {
+			setIsLoadingApplication(false);
+		}
+	};
+
+	// Check for existing application when job ID changes
+	useEffect(() => {
+		if (currentJobId) {
+			checkExistingApplication(currentJobId);
+		}
+	}, [currentJobId, token]);
+
+	// Fetch all options for the select fields
+	useEffect(() => {
+		const fetchOptions = async () => {
+			if (!token || !show) return;
+
+			try {
+				// Use your existing API structure
+				const [companiesData, locationsData, keywordsData, personsData] = await Promise.all([
+					companiesApi.getAll(token),
+					locationsApi.getAll(token),
+					keywordsApi.getAll(token),
+					personsApi.getAll(token),
+				]);
+
+				setCompanyOptions(apiHelpers.toSelectOptions(companiesData));
+				setLocationOptions(apiHelpers.toSelectOptions(locationsData));
+				setKeywordOptions(apiHelpers.toSelectOptions(keywordsData));
+				setPersonOptions(apiHelpers.toSelectOptions(personsData));
+			} catch (error) {
+				console.error("Error fetching options:", error);
+			}
 		};
 
-		if (isEdit && initialData.id) {
-			cleanedData.id = initialData.id;
-		}
+		fetchOptions();
+	}, [token, show]);
 
-		Object.keys(cleanedData).forEach((key) => {
-			if (cleanedData[key] === null || cleanedData[key] === undefined) {
-				if (key === "date") {
-					cleanedData[key] = currentDateTime;
-				} else if (key === "status") {
-					cleanedData[key] = "Applied";
-				} else if (key === "url" || key === "note") {
-					cleanedData[key] = "";
-				} else if (!["cv", "cover_letter", "id"].includes(key)) {
-					delete cleanedData[key];
-				}
-			}
-		});
-
-		if (initialData.cv && typeof initialData.cv === "object" && initialData.cv.filename) {
-			cleanedData.cv = initialData.cv;
-		} else {
-			delete cleanedData.cv;
-		}
-
-		if (
-			initialData.cover_letter &&
-			typeof initialData.cover_letter === "object" &&
-			initialData.cover_letter.filename
-		) {
-			cleanedData.cover_letter = initialData.cover_letter;
-		} else {
-			delete cleanedData.cover_letter;
-		}
-
-		if (typeof cleanedData.url !== "string") cleanedData.url = "";
-		if (typeof cleanedData.note !== "string") cleanedData.note = "";
-		if (!cleanedData.status) cleanedData.status = "Applied";
-		if (!cleanedData.date) cleanedData.date = currentDateTime;
-
-		console.log("Prepared initial data:", cleanedData);
-
-		return cleanedData;
-	}, [initialData, currentDateTime, isEdit]);
-
-	// Validate file type and size
-	const validateFile = (file) => {
-		const allowedTypes = [
-			"application/pdf",
-			"application/msword",
-			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-		];
-		const maxSize = 10 * 1024 * 1024; // 10MB
-
-		if (!allowedTypes.includes(file.type)) {
-			return { valid: false, error: "Please upload a PDF, DOC, or DOCX file" };
-		}
-		if (file.size > maxSize) {
-			return { valid: false, error: "File size must be less than 10MB" };
-		}
-		return { valid: true };
+	// Handle successful company creation
+	const handleCompanySuccess = (newCompany) => {
+		const newOption = {
+			value: newCompany.id,
+			label: newCompany.name,
+		};
+		setCompanyOptions((prev) => [...prev, newOption]);
+		setShowCompanyModal(false);
 	};
 
-	const handleOpenFile = (fileData) => {
-		if (!fileData?.content) {
-			alert("No file content available");
-			return;
-		}
-
-		if (typeof fileData.content === "string") {
-			try {
-				let base64Content = fileData.content;
-				if (base64Content.includes(",")) {
-					base64Content = base64Content.split(",")[1];
-				}
-
-				const binaryString = atob(base64Content);
-				const bytes = new Uint8Array(binaryString.length);
-				for (let i = 0; i < binaryString.length; i++) {
-					bytes[i] = binaryString.charCodeAt(i);
-				}
-
-				const blob = new Blob([bytes], {
-					type: fileData.type || "application/octet-stream",
-				});
-
-				if (blob.size === 0) {
-					alert("File is empty (0 bytes)");
-					return;
-				}
-
-				const url = window.URL.createObjectURL(blob);
-				const link = document.createElement("a");
-				link.href = url;
-				link.download = fileData.filename || "document";
-				document.body.appendChild(link);
-				link.click();
-				document.body.removeChild(link);
-				window.URL.revokeObjectURL(url);
-				return;
-			} catch (error) {
-				console.error("Error processing base64 content:", error);
-				alert("Error opening file: " + error.message);
-				return;
-			}
-		}
-
-		if (typeof fileData.content !== "string") {
-			try {
-				const blob = new Blob([fileData.content], {
-					type: fileData.type || "application/pdf",
-				});
-
-				if (blob.size === 0) {
-					alert("File is empty (0 bytes)");
-					return;
-				}
-
-				const url = window.URL.createObjectURL(blob);
-				const link = document.createElement("a");
-				link.href = url;
-				link.download = fileData.filename || "document.pdf";
-				document.body.appendChild(link);
-				link.click();
-				document.body.removeChild(link);
-				window.URL.revokeObjectURL(url);
-				return;
-			} catch (binaryError) {
-				console.error("Binary data processing failed:", binaryError);
-			}
-		}
-
-		alert("Unable to process file. Check console for details.");
+	// Handle successful location creation
+	const handleLocationSuccess = (newLocation) => {
+		const newOption = {
+			value: newLocation.id,
+			label: newLocation.name,
+		};
+		setLocationOptions((prev) => [...prev, newOption]);
+		setShowLocationModal(false);
 	};
 
-	const handleRemoveFile = (fieldName, onChange) => {
-		onChange({ target: { name: fieldName, value: null } });
+	// Handle successful job creation/update
+	const handleJobSuccess = (jobData) => {
+		// Store the job ID for potential application creation
+		if (jobData && jobData.id) {
+			setCurrentJobId(jobData.id);
+		}
+		// Call the original onSuccess callback
+		if (onSuccess) {
+			onSuccess(jobData);
+		}
 	};
 
-	// Create a wrapper for the DragDropFile component with required props
-	const DragDropFileWrapper = ({ fieldName, label, value, onChange, error }) => {
-		return (
-			<DragDropFile
-				fieldName={fieldName}
-				label={label}
-				value={value}
-				onChange={onChange}
-				error={error}
-				dragStates={dragStates}
-				setDragStates={setDragStates}
-				validateFile={validateFile}
-				handleOpenFile={handleOpenFile}
-				handleRemoveFile={handleRemoveFile}
-			/>
-		);
+	// Handle successful job application creation/update
+	const handleApplicationSuccess = (applicationData) => {
+		setShowApplicationModal(false);
+		// Refresh the existing application data
+		if (currentJobId) {
+			checkExistingApplication(currentJobId);
+		}
 	};
 
-	// Define layout groups for job application fields
+	// Handle opening application modal (create or edit)
+	const handleOpenApplicationModal = () => {
+		setShowApplicationModal(true);
+	};
+
+	// Define layout groups for job information
 	const layoutGroups = [
 		{
-			id: "application-date-status",
-			type: "row",
+			id: "title",
+			type: "default",
 			fields: [
 				{
-					name: "date",
-					label: "Application Date",
-					type: "datetime-local",
+					name: "title",
+					label: "Job Title",
+					type: "text",
 					required: true,
-					columnClass: "col-md-6",
-					placeholder: "Select application date and time",
-				},
-				{
-					name: "status",
-					label: "Application Status",
-					type: "select",
-					options: [
-						{ value: "Applied", label: "Applied" },
-						{ value: "Interview", label: "Interview" },
-						{ value: "Rejected", label: "Rejected" },
-						{ value: "Offer", label: "Offer" },
-						{ value: "Withdrawn", label: "Withdrawn" },
-					],
-					required: true,
-					columnClass: "col-md-6",
+					placeholder: "Enter job title",
 				},
 			],
 		},
 		{
-			id: "application-url",
+			id: "company-location",
+			type: "row",
+			className: "mb-0",
+			fields: [
+				{
+					name: "company_id",
+					label: "Company",
+					type: "select",
+					placeholder: "Select or search company...",
+					isSearchable: true,
+					isClearable: true,
+					options: companyOptions,
+					columnClass: "col-md-6",
+					addButton: {
+						onClick: () => setShowCompanyModal(true),
+					},
+				},
+				{
+					name: "location_id",
+					label: "Location",
+					type: "select",
+					placeholder: "Select or search location...",
+					isSearchable: true,
+					isClearable: true,
+					options: locationOptions,
+					columnClass: "col-md-6",
+					addButton: {
+						onClick: () => setShowLocationModal(true),
+					},
+				},
+			],
+		},
+		// Keywords and Contacts (side by side)
+		{
+			id: "keywords-contacts",
+			type: "row",
+			fields: [
+				{
+					name: "keywords",
+					label: "Keywords/Tags",
+					type: "multiselect",
+					placeholder: "Select or search keywords...",
+					isSearchable: true,
+					options: keywordOptions,
+					columnClass: "col-md-6",
+					addButton: {
+						onClick: () => setShowKeywordModal(true),
+					},
+				},
+				{
+					name: "contacts",
+					label: "Contacts",
+					type: "multiselect",
+					placeholder: "Select or search contacts...",
+					isSearchable: true,
+					options: personOptions,
+					columnClass: "col-md-6",
+					addButton: {
+						onClick: () => setShowPersonModal(true),
+					},
+				},
+			],
+		},
+		// Status and URL
+		{
+			id: "status-url",
 			type: "default",
 			fields: [
 				{
 					name: "url",
-					label: "Application URL",
+					label: "Job URL",
 					type: "text",
-					placeholder: "https://... (link to your application submission)",
+					placeholder: "https://...",
 				},
 			],
 		},
+		// Salary fields (side by side)
 		{
-			id: "application-note",
-			type: "default",
-			fields: [
-				{
-					name: "note",
-					label: "Application Notes",
-					type: "textarea",
-					rows: 3,
-					placeholder: "Add notes about your application process, interview details, etc...",
-				},
-			],
-		},
-		{
-			id: "files-header",
-			type: "custom",
-			className: "mt-4 mb-3",
-			content: (
-				<div className="border-top pt-3">
-					<h6 className="mb-0">
-						<i className="bi bi-paperclip me-2"></i>
-						Application Documents
-					</h6>
-					<small className="text-muted">Upload your CV and cover letter by dragging and dropping</small>
-				</div>
-			),
-		},
-		{
-			id: "application-files",
+			id: "salary",
 			type: "row",
 			fields: [
 				{
-					name: "cv",
-					label: "CV/Resume",
-					type: "drag-drop",
+					name: "salary_min",
+					label: "Minimum Salary",
+					type: "number",
+					placeholder: "Enter minimum salary",
+					step: "1000",
 					columnClass: "col-md-6",
 				},
 				{
-					name: "cover_letter",
-					label: "Cover Letter",
-					type: "drag-drop",
+					name: "salary_max",
+					label: "Maximum Salary",
+					type: "number",
+					placeholder: "Enter maximum salary",
+					step: "1000",
 					columnClass: "col-md-6",
 				},
 			],
 		},
+		// Personal Rating (full width)
+		{
+			id: "rating",
+			type: "default",
+			fields: [
+				{
+					name: "personal_rating",
+					label: "Personal Rating (1-5)",
+					type: "select",
+					options: [
+						{ value: 1, label: "1 - Poor" },
+						{ value: 2, label: "2 - Fair" },
+						{ value: 3, label: "3 - Good" },
+						{ value: 4, label: "4 - Very Good" },
+						{ value: 5, label: "5 - Excellent" },
+					],
+				},
+			],
+		},
+		// Description and Notes (full width)
+		{
+			id: "text-fields",
+			type: "default",
+			fields: [
+				{
+					name: "description",
+					label: "Job Description",
+					type: "textarea",
+					rows: 4,
+					placeholder: "Enter job description...",
+				},
+				{
+					name: "note",
+					label: "Personal Notes",
+					type: "textarea",
+					rows: 3,
+					placeholder: "Add your notes about this job...",
+				},
+			],
+		},
+
+		// Job Application Section
+		{
+			id: "application-section",
+			type: "custom",
+			className: "mt-4 mb-3",
+			content: (
+				<div className="border-top pt-4">
+					<div className="text-center">
+						<div className="d-flex justify-content-center align-items-center mb-3">
+							<h5 className="mb-0 me-3">
+								<i className="bi bi-file-earmark-text me-2"></i>
+								Job Application
+							</h5>
+							{existingApplication && (
+								<Badge
+									className={`${getApplicationStatusBadgeClass(existingApplication.status)} text-uppercase fw-bold`}
+									style={{ fontSize: "0.75rem" }}
+								>
+									{existingApplication.status}
+								</Badge>
+							)}
+							{isLoadingApplication && (
+								<div className="spinner-border spinner-border-sm text-primary" role="status">
+									<span className="visually-hidden">Loading...</span>
+								</div>
+							)}
+						</div>
+
+						{existingApplication ? (
+							<>
+								<p className="text-muted mb-3">
+									Application submitted on {new Date(existingApplication.date).toLocaleDateString()}
+								</p>
+								<div className="d-grid gap-2 d-md-flex justify-content-md-center">
+									<Button
+										variant="outline-primary"
+										size="lg"
+										onClick={handleOpenApplicationModal}
+										className="px-4"
+									>
+										<i className="bi bi-pencil me-2"></i>
+										Edit Application
+									</Button>
+								</div>
+							</>
+						) : (
+							<>
+								<p className="text-muted mb-3">
+									{currentJobId || isEdit
+										? "Add an application for this job position"
+										: "Save the job first, then you can add an application"}
+								</p>
+								<div className="d-grid gap-2 d-md-flex justify-content-md-center">
+									<Button
+										variant="success"
+										size="lg"
+										onClick={handleOpenApplicationModal}
+										disabled={!currentJobId && !isEdit}
+										className="px-4"
+									>
+										<i className="bi bi-plus-circle me-2"></i>
+										{currentJobId || isEdit ? "Create Job Application" : "Save Job First"}
+									</Button>
+								</div>
+								{!currentJobId && !isEdit && (
+									<small className="text-muted d-block mt-2">
+										<i className="bi bi-info-circle me-1"></i>
+										Complete and save this job form to enable application creation
+									</small>
+								)}
+							</>
+						)}
+					</div>
+				</div>
+			),
+		},
 	];
 
-	// Custom validation rules for application fields
+	// Custom validation rules for job fields
 	const validationRules = {
-		date: (value) => {
-			if (value) {
-				const selectedDate = new Date(value);
-				const now = new Date();
-				if (selectedDate > now) {
-					return {
-						isValid: false,
-						message: "Application date cannot be in the future",
-					};
-				}
-			}
-			return { isValid: true };
-		},
-		cv: (value) => {
-			if (value && value.size > 10 * 1024 * 1024) {
+		salary_min: (value, formData) => {
+			if (value && formData.salary_max && parseInt(value) > parseInt(formData.salary_max)) {
 				return {
 					isValid: false,
-					message: "CV file size must be less than 10MB",
+					message: "Minimum salary cannot be greater than maximum salary",
 				};
 			}
 			return { isValid: true };
 		},
-		cover_letter: (value) => {
-			if (value && value.size > 10 * 1024 * 1024) {
+		salary_max: (value, formData) => {
+			if (value && formData.salary_min && parseInt(value) < parseInt(formData.salary_min)) {
 				return {
 					isValid: false,
-					message: "Cover letter file size must be less than 10MB",
+					message: "Maximum salary cannot be less than minimum salary",
 				};
 			}
 			return { isValid: true };
@@ -300,82 +435,89 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 	};
 
 	// Transform form data before submission
-	const transformFormData = async (data) => {
+	const transformFormData = (data) => {
 		const transformed = { ...data };
 
-		if (transformed.date) {
-			transformed.date = new Date(transformed.date).toISOString();
+		// Convert salary fields to integers if they exist
+		if (transformed.salary_min) {
+			transformed.salary_min = parseInt(transformed.salary_min);
+		}
+		if (transformed.salary_max) {
+			transformed.salary_max = parseInt(transformed.salary_max);
 		}
 
-		if (!transformed.status) {
-			transformed.status = "Applied";
+		// Convert personal_rating to integer
+		if (transformed.personal_rating) {
+			transformed.personal_rating = parseInt(transformed.personal_rating);
 		}
 
-		if (jobId) {
-			transformed.job_id = jobId;
-		}
-
-		if (transformed.url && !transformed.url.trim()) {
-			delete transformed.url;
-		}
-		if (transformed.note && !transformed.note.trim()) {
-			delete transformed.note;
-		}
-
-		// Handle file fields
-		if (transformed.cv && transformed.cv instanceof File) {
-			try {
-				transformed.cv = await fileToBase64(transformed.cv);
-			} catch (error) {
-				console.error("Error converting CV to base64:", error);
-				delete transformed.cv;
-			}
-		} else if (
-			!transformed.cv ||
-			transformed.cv === "" ||
-			transformed.cv === null ||
-			(typeof transformed.cv === "object" && !transformed.cv.filename)
-		) {
-			delete transformed.cv;
-		}
-
-		if (transformed.cover_letter && transformed.cover_letter instanceof File) {
-			try {
-				transformed.cover_letter = await fileToBase64(transformed.cover_letter);
-			} catch (error) {
-				console.error("Error converting cover letter to base64:", error);
-				delete transformed.cover_letter;
-			}
-		} else if (
-			!transformed.cover_letter ||
-			transformed.cover_letter === "" ||
-			transformed.cover_letter === null ||
-			(typeof transformed.cover_letter === "object" && !transformed.cover_letter.filename)
-		) {
-			delete transformed.cover_letter;
-		}
+		// Clean up unnecessary fields that shouldn't be sent to backend
+		delete transformed.company; // Remove the company object, keep company_id
+		delete transformed.location; // Remove the location object, keep location_id
+		delete transformed.job_application; // Remove existing application data
+		delete transformed.name; // Remove computed name field
 
 		return transformed;
 	};
 
 	return (
-		<GenericModal
-			show={show}
-			onHide={onHide}
-			mode="form"
-			title={isEdit ? "Edit Job Application" : "New Job Application"}
-			size={size}
-			useCustomLayout={true}
-			layoutGroups={layoutGroups}
-			initialData={preparedInitialData}
-			endpoint="jobapplications"
-			onSuccess={onSuccess}
-			validationRules={validationRules}
-			transformFormData={transformFormData}
-			isEdit={isEdit}
-			customFieldComponents={{ "drag-drop": DragDropFileWrapper }}
-		/>
+		<>
+			<GenericModal
+				show={show}
+				onHide={onHide}
+				mode="form"
+				title="Job"
+				size={size}
+				useCustomLayout={true}
+				layoutGroups={layoutGroups}
+				initialData={transformInitialData(initialData)}
+				endpoint="jobs"
+				onSuccess={handleJobSuccess}
+				validationRules={validationRules}
+				transformFormData={transformFormData}
+				isEdit={isEdit}
+			/>
+
+			{/* Company Form Modal */}
+			<CompanyFormModal
+				show={showCompanyModal}
+				onHide={() => setShowCompanyModal(false)}
+				onSuccess={handleCompanySuccess}
+			/>
+
+			{/* Location Form Modal */}
+			<LocationFormModal
+				show={showLocationModal}
+				onHide={() => setShowLocationModal(false)}
+				onSuccess={handleLocationSuccess}
+			/>
+
+			{/* Keyword Form Modal */}
+			<KeywordFormModal
+				show={showKeywordModal}
+				onHide={() => setShowKeywordModal(false)}
+				onSuccess={handleKeywordSuccess}
+			/>
+
+			{/* Person Form Modal */}
+			<PersonFormModal
+				show={showPersonModal}
+				onHide={() => setShowPersonModal(false)}
+				onSuccess={handlePersonSuccess}
+			/>
+
+			{/* Job Application Form Modal */}
+			<JobApplicationFormModal
+				show={showApplicationModal}
+				onHide={() => setShowApplicationModal(false)}
+				onSuccess={handleApplicationSuccess}
+				jobId={currentJobId || (isEdit ? initialData.id : null)}
+				initialData={existingApplication || {}}
+				isEdit={!!existingApplication}
+				size="lg"
+			/>
+		</>
 	);
 };
 
-export default JobApplicationFormModal;
+export default JobFormModal;
