@@ -7,6 +7,7 @@ import makeAnimated from 'react-select/animated';
 
 const animatedComponents = makeAnimated();
 
+
 const CustomDropdownIndicator = (props) => {
 	const [hover, setHover] = useState(false);
 	const menuIsOpen = props.selectProps.menuIsOpen;
@@ -173,9 +174,37 @@ export const renderInputField = (
 		return selectComponent;
 	}
 
-	// Handle datetime-local with current time default and "Set Current Time" button
+
+// Handle datetime-local with current time default and "Set Current Time" button
 	if (field.type === "datetime-local") {
 		const currentDateTime = getCurrentDateTime();
+
+		// Function to format datetime for datetime-local input
+		const formatDateTimeForInput = (dateTimeValue) => {
+			if (!dateTimeValue) return currentDateTime;
+
+			try {
+				// Create a Date object from the value
+				const date = new Date(dateTimeValue);
+
+				// Check if the date is valid
+				if (isNaN(date.getTime())) {
+					return currentDateTime;
+				}
+
+				// Format to yyyy-MM-ddThh:mm (remove seconds and timezone)
+				const year = date.getFullYear();
+				const month = String(date.getMonth() + 1).padStart(2, '0');
+				const day = String(date.getDate()).padStart(2, '0');
+				const hours = String(date.getHours()).padStart(2, '0');
+				const minutes = String(date.getMinutes()).padStart(2, '0');
+
+				return `${year}-${month}-${day}T${hours}:${minutes}`;
+			} catch (error) {
+				console.error('Error formatting datetime:', error);
+				return currentDateTime;
+			}
+		};
 
 		const setCurrentTime = (e) => {
 			e.preventDefault();
@@ -190,12 +219,15 @@ export const renderInputField = (
 			handleChange(syntheticEvent);
 		};
 
+		// Format the value for the input
+		const formattedValue = formatDateTimeForInput(value);
+
 		return (
 			<InputGroup>
 				<Form.Control
 					type="datetime-local"
 					name={field.name}
-					value={value || currentDateTime}
+					value={formattedValue}
 					onChange={handleChange}
 					isInvalid={!!error}
 					placeholder={field.placeholder || "Select date and time"}
@@ -206,7 +238,6 @@ export const renderInputField = (
 			</InputGroup>
 		);
 	}
-
 	// Handle custom field types
 	if (field.type === "drag-drop" && customFieldComponents["drag-drop"]) {
 		const DragDropComponent = customFieldComponents["drag-drop"];

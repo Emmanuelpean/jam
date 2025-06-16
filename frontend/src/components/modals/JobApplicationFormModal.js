@@ -201,8 +201,9 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			e.preventDefault();
 		}, []);
 
+
 		const handleDrop = useCallback(
-			(e) => {
+			async (e) => {
 				e.preventDefault();
 				setDragStates((prev) => ({ ...prev, [fieldName]: false }));
 
@@ -211,10 +212,18 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 					const file = files[0];
 					const validation = validateFile(file);
 					if (validation.valid) {
-						onChange({ target: { name: fieldName, files: [file] } });
+						// Create a synthetic event that matches what the form expects
+						const syntheticEvent = {
+							target: {
+								name: fieldName,
+								value: file, // Pass file as value instead of files array
+								files: [file] // Also include files for compatibility
+							}
+						};
+						onChange(syntheticEvent);
 					} else {
-						// You might want to show this error somewhere
 						console.error(validation.error);
+						alert(validation.error);
 					}
 				}
 			},
@@ -222,22 +231,29 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		);
 
 		const handleFileSelect = useCallback(
-			(e) => {
+			async (e) => {
 				const file = e.target.files[0];
 				if (file) {
 					const validation = validateFile(file);
 					if (validation.valid) {
-						onChange(e);
+						// Create a synthetic event that matches what the form expects
+						const syntheticEvent = {
+							target: {
+								name: fieldName,
+								value: file, // Pass file as value
+								files: e.target.files // Keep original files array
+							}
+						};
+						onChange(syntheticEvent);
 					} else {
-						// Clear the input and show error
 						e.target.value = "";
 						console.error(validation.error);
+						alert(validation.error);
 					}
 				}
 			},
 			[onChange],
 		);
-
 		const isDragging = dragStates[fieldName];
 
 		// Check if we have a new file (File object) or existing file (database object)
