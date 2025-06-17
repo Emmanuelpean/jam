@@ -130,15 +130,6 @@
     overflow: hidden;
 }
 
-.btn-file-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.btn-file-action:active {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
 
 .btn-file-download {
     border-color: #0ea5e9;
@@ -148,7 +139,6 @@
 .btn-file-download:hover {
     background: #0ea5e9;
     color: white;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
 }
 
 .btn-file-remove {
@@ -159,44 +149,8 @@
 .btn-file-remove:hover {
     background: #ef4444;
     color: white;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
 .file-replace-hint {
     text-align: center;
-}
-
-/* Responsive adjustments */
-@media (max-width: 576px) {
-    .file-dropzone {
-        padding: 1.5rem 0.75rem;
-    }
-
-    .file-actions {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .file-actions .btn {
-        width: 100%;
-        max-width: 150px;
-    }
-
-    .btn-file-action {
-        width: 2.25rem;
-        height: 2.25rem;
-        font-size: 0.9rem;
-    }
-}
-
-/* Focus styles for accessibility */
-.file-dropzone:focus-within {
-    outline: 2px solid #0d6efd;
-    outline-offset: 2px;
-}
-
-.btn-file-action:focus {
-    outline: 2px solid var(--primary-mid);
-    outline-offset: 2px;
-    box-shadow: 0 0 0 4px var(--jam-glow);
 }

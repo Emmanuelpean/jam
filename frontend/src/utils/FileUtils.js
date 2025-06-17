@@ -35,6 +35,30 @@ const parseSizeText = (sizeText) => {
 	}
 };
 
+// Helper function to format file size from bytes
+const formatFileSize = (bytes) => {
+	if (!bytes || bytes === 0) return "";
+	if (bytes < 1024) return `${bytes} B`;
+	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+// Helper function to calculate file size from base64 content
+const calculateBase64Size = (base64Content) => {
+	if (!base64Content) return 0;
+
+	// Remove data URL prefix if present
+	let content = base64Content;
+	if (content.includes(",")) {
+		content = content.split(",")[1];
+	}
+
+	// Calculate approximate size (base64 is ~1.33x larger than original)
+	const base64Length = content.length;
+	const padding = (content.match(/=/g) || []).length;
+	return Math.floor((base64Length * 3) / 4) - padding;
+};
+
 const FileUploader = ({
 	fieldName,
 	label,
@@ -45,7 +69,7 @@ const FileUploader = ({
 	onOpenFile,
 	onRemoveFile,
 	acceptedFileTypes = ".txt, .pdf, .doc, .docx",
-	maxSizeText = "10KB",
+	maxSizeText = "10MB",
 }) => {
 	const [file, setFile] = useState(null);
 	const [downloadUrl, setDownloadUrl] = useState("");
@@ -208,6 +232,22 @@ const FileUploader = ({
 		}
 	};
 
+	// Get file size for display
+	const getFileSize = () => {
+		if (file && file instanceof File) {
+			// New file - use File.size
+			return formatFileSize(file.size);
+		} else if (file && file.content) {
+			// Database file - calculate from base64 content
+			const size = calculateBase64Size(file.content);
+			return formatFileSize(size);
+		} else if (file && file.size) {
+			// Database file with size property
+			return formatFileSize(file.size);
+		}
+		return "";
+	};
+
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
 		onDrop,
 		onDropRejected,
@@ -224,6 +264,7 @@ const FileUploader = ({
 	const hasNewFile = file && file instanceof File;
 	const hasExistingFile = file && typeof file === "object" && file.filename && !file.name;
 	const hasFile = hasNewFile || hasExistingFile;
+	const fileSize = getFileSize();
 
 	return (
 		<>
@@ -255,11 +296,7 @@ const FileUploader = ({
 								<i className={`bi bi-file-earmark-text file-icon`}></i>
 								<div className="file-details">
 									<div className="file-name">{hasNewFile ? file.name : file.filename}</div>
-									{hasNewFile && (
-										<small className="file-size text-muted">
-											{(file.size / 1024).toFixed(2)} KB
-										</small>
-									)}
+									{fileSize && <small className="file-size text-muted">{fileSize}</small>}
 								</div>
 							</div>
 
