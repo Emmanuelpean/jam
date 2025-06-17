@@ -166,6 +166,8 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 		);
 	}
 
+
+
 	// Handle datetime-local
 	if (field.type === "datetime-local") {
 		const currentDateTime = getCurrentDateTime();
@@ -194,6 +196,7 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 
 		const setCurrentTime = (e) => {
 			e.preventDefault();
+			e.stopPropagation();
 			const newDateTime = getCurrentDateTime();
 			const syntheticEvent = {
 				target: {
@@ -208,7 +211,7 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 
 		return (
 			<>
-				<InputGroup className={error ? "is-invalid" : ""}>
+				<div className="datetime-input-wrapper">
 					<Form.Control
 						type="datetime-local"
 						name={field.name}
@@ -216,11 +219,14 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 						onChange={handleChange}
 						isInvalid={!!error}
 						placeholder={field.placeholder || "Select date and time"}
+						className="datetime-input-with-icon"
 					/>
-					<Button variant="outline-secondary" onClick={setCurrentTime} title="Set current time">
-						<i className="bi bi-clock"></i>
-					</Button>
-				</InputGroup>
+					<i
+						className="bi bi-clock datetime-embedded-icon"
+						onClick={setCurrentTime}
+						title="Set to current date and time"
+					></i>
+				</div>
 				{error && <div className="invalid-feedback d-block">{error}</div>}
 			</>
 		);
