@@ -21,15 +21,6 @@
     border-style: solid
 }
 
-.file-dropzone.is-invalid {
-    border-color: #dc3545;
-}
-
-.file-dropzone.is-invalid:hover {
-    border-color: #dc3545;
-    background-color: #f8d7da;
-}
-
 .dropzone-content {
     display: flex;
     flex-direction: column;
@@ -125,7 +116,6 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 1.25rem;
     position: relative;
     overflow: hidden;
@@ -150,8 +140,4 @@
 .btn-file-remove:hover {
     background: #ef4444;
     color: white;
-}
-
-.file-replace-hint {
-    text-align: center;
 }

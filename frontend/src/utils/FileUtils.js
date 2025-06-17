@@ -73,17 +73,64 @@ const getFileSize = (file) => {
 	}
 };
 
+const parseAcceptedFileTypes = (acceptedFileTypes) => {
+	if (!acceptedFileTypes) return {};
+
+	const extensions = acceptedFileTypes.split(",").map((ext) => ext.trim().toLowerCase());
+	const acceptObject = {};
+
+	extensions.forEach((ext) => {
+		switch (ext) {
+			case ".pdf":
+				acceptObject["application/pdf"] = [".pdf"];
+				break;
+			case ".doc":
+				acceptObject["application/msword"] = [".doc"];
+				break;
+			case ".docx":
+				acceptObject["application/vnd.openxmlformats-officedocument.wordprocessingml.document"] = [".docx"];
+				break;
+			case ".txt":
+				acceptObject["text/plain"] = [".txt"];
+				break;
+			case ".jpg":
+			case ".jpeg":
+				acceptObject["image/jpeg"] = [".jpg", ".jpeg"];
+				break;
+			case ".png":
+				acceptObject["image/png"] = [".png"];
+				break;
+			case ".gif":
+				acceptObject["image/gif"] = [".gif"];
+				break;
+			case ".csv":
+				acceptObject["text/csv"] = [".csv"];
+				break;
+			case ".xlsx":
+				acceptObject["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"] = [".xlsx"];
+				break;
+			case ".xls":
+				acceptObject["application/vnd.ms-excel"] = [".xls"];
+				break;
+			default:
+				// For unknown extensions, create a generic entry
+				acceptObject[`application/octet-stream${ext}`] = [ext];
+		}
+	});
+
+	return acceptObject;
+};
+
 const FileUploader = ({
 	fieldName,
 	label,
 	value,
 	onChange,
 	error,
-	validateFile,
 	onOpenFile,
 	onRemoveFile,
-	acceptedFileTypes = ".txt, .pdf, .doc, .docx",
-	maxSizeText = "10KB",
+	acceptedFileTypes = ".TXT, .PDF, .DOC, .DOCX",
+	maxSizeText = "10 MB",
 }) => {
 	const [file, setFile] = useState(null);
 	const [downloadUrl, setDownloadUrl] = useState("");
@@ -119,72 +166,15 @@ const FileUploader = ({
 		}).then(() => null);
 	};
 
-	const validateFileInternal = (file) => {
-		// Check file size
-		if (file.size > maxSizeBytes) {
-			return {
-				valid: false,
-				error: `File size must be less than ${maxSizeText}. Current file is ${formatFileSize(file.size)}.`,
-			};
-		}
-
-		// Check file type if acceptedFileTypes is provided
-		if (acceptedFileTypes) {
-			const extensions = acceptedFileTypes.split(",").map((ext) => ext.trim().toLowerCase());
-			const fileName = file.name.toLowerCase();
-			const isValidType = extensions.some((ext) => fileName.endsWith(ext.replace(".", "")));
-
-			if (!isValidType) {
-				return {
-					valid: false,
-					error: `Please upload a file with one of these extensions: ${acceptedFileTypes}`,
-				};
-			}
-		}
-
-		return { valid: true };
-	};
-
 	const onDrop = useCallback(
 		(acceptedFiles) => {
 			if (acceptedFiles.length > 0) {
-				const droppedFile = acceptedFiles[0];
-
-				// First run internal validation
-				const internalValidation = validateFileInternal(droppedFile);
-				if (!internalValidation.valid) {
-					showFileError(internalValidation.error);
-					return;
-				}
-
-				// Then run custom validation if provided
-				if (validateFile) {
-					const customValidation = validateFile(droppedFile);
-					if (!customValidation.valid) {
-						showFileError(customValidation.error);
-						return;
-					}
-				}
-
-				setFile(droppedFile);
-
-				// Trigger onChange for parent component
-				if (onChange) {
-					const syntheticEvent = {
-						target: {
-							name: fieldName,
-							value: droppedFile,
-							files: [droppedFile],
-						},
-					};
-					onChange(syntheticEvent);
-				}
+				setFile(acceptedFiles[0]);
 			}
 		},
-		[fieldName, onChange, validateFile, validateFileInternal, showFileError],
+		[fieldName],
 	);
 
-	// Handle rejected files (too large, wrong type, etc.)
 	const onDropRejected = useCallback(
 		(fileRejections) => {
 			if (fileRejections.length > 0) {
@@ -198,12 +188,11 @@ const FileUploader = ({
 
 				if (sizeError) {
 					showFileError(
-						`File size must be less than ${maxSizeText}. Current file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`,
+						`File size must be less than ${maxSizeText}. Current file is ${formatFileSize(file.size)}.`,
 					);
 				} else if (typeError) {
 					showFileError(`Please upload a file with one of these extensions: ${acceptedFileTypes}`);
 				} else {
-					// Generic error message
 					showFileError(errors[0]?.message || "File upload failed");
 				}
 			}
@@ -242,16 +231,11 @@ const FileUploader = ({
 	};
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
-		onDrop,
-		onDropRejected,
+		onDrop: onDrop,
+		onDropRejected: onDropRejected,
 		multiple: false,
 		maxSize: maxSizeBytes,
-		accept: {
-			"application/pdf": [".pdf"],
-			"application/msword": [".doc"],
-			"application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
-			"text/plain": [".txt"],
-		},
+		accept: parseAcceptedFileTypes(acceptedFileTypes),
 	});
 
 	const hasNewFile = file && file instanceof File;
@@ -270,20 +254,25 @@ const FileUploader = ({
 				>
 					<input {...getInputProps()} />
 
-					{!hasFile && (
+					{/* Always show drag state when dragging, regardless of file presence */}
+					{isDragActive ? (
 						<div className="dropzone-content">
-							<i
-								className={`bi ${isDragActive ? "bi-cloud-arrow-down" : "bi-cloud-arrow-up"} dropzone-icon`}
-							></i>
+							<i className="bi bi-cloud-arrow-down dropzone-icon"></i>
+							<div className="dropzone-text">Drop your file here</div>
+							<div className="dropzone-info">
+								Max size: {maxSizeText} • {acceptedFileTypes.replace(/\./g, "").toUpperCase()}
+							</div>
+						</div>
+					) : !hasFile ? (
+						<div className="dropzone-content">
+							<i className="bi bi-cloud-arrow-up dropzone-icon"></i>
 							<div className="dropzone-text">Drag & drop your file here</div>
 							<div className="dropzone-text">Or click to select a file</div>
 							<div className="dropzone-info">
 								Max size: {maxSizeText} • {acceptedFileTypes.replace(/\./g, "").toUpperCase()}
 							</div>
 						</div>
-					)}
-
-					{hasFile && (
+					) : (
 						<div className="file-card">
 							<div className="file-info">
 								<i className={`bi bi-file-earmark-text file-icon`}></i>
