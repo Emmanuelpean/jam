@@ -44,8 +44,6 @@ html {
     background: var(--primary-gradient) !important;
 }
 
-/* TODO Needed?*/
-
 /* Required field asterisk */
 .text-danger {
     color: #e74c3c !important;
@@ -60,6 +58,12 @@ html {
     margin-top: 0.5rem;
     font-weight: 500;
 }
+
+.react-select-container.is-invalid .react-select__control,
+.react-select-container.is-invalid .react-select__control:hover {
+    border-color: #dc3545 !important;
+}
+
 
 * {
     --edit-color: rgb(59, 130, 246);

@@ -1,152 +1,47 @@
-import React, { useMemo } from "react";
+import React from "react";
 import GenericModal from "../GenericModal";
-import { getCurrentDateTime } from "../../utils/TimeUtils";
-import { fileToBase64 } from "../../utils/FileUtils";
 import FileUploader from "../../utils/FileUtils";
 
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
-	const currentDateTime = getCurrentDateTime();
-
-	const preparedInitialData = useMemo(() => {
-		const cleanedData = {
-			status: "Applied",
-			date: currentDateTime,
-			url: "",
-			note: "",
-			...initialData,
-		};
-
-		if (isEdit && initialData.id) {
-			cleanedData.id = initialData.id;
-		}
-
-		Object.keys(cleanedData).forEach((key) => {
-			if (cleanedData[key] === null || cleanedData[key] === undefined) {
-				if (key === "date") {
-					cleanedData[key] = currentDateTime;
-				} else if (key === "status") {
-					cleanedData[key] = "Applied";
-				} else if (key === "url" || key === "note") {
-					cleanedData[key] = "";
-				} else if (!["cv", "cover_letter", "id"].includes(key)) {
-					delete cleanedData[key];
-				}
-			}
-		});
-
-		if (initialData.cv && typeof initialData.cv === "object" && initialData.cv.filename) {
-			cleanedData.cv = initialData.cv;
-		} else {
-			delete cleanedData.cv;
-		}
-
-		if (
-			initialData.cover_letter &&
-			typeof initialData.cover_letter === "object" &&
-			initialData.cover_letter.filename
-		) {
-			cleanedData.cover_letter = initialData.cover_letter;
-		} else {
-			delete cleanedData.cover_letter;
-		}
-
-		if (typeof cleanedData.url !== "string") cleanedData.url = "";
-		if (typeof cleanedData.note !== "string") cleanedData.note = "";
-		if (!cleanedData.status) cleanedData.status = "Applied";
-		if (!cleanedData.date) cleanedData.date = currentDateTime;
-
-		return cleanedData;
-	}, [initialData, currentDateTime, isEdit]);
-
-	const handleOpenFile = (fileData) => {
-		if (!fileData?.content) {
-			alert("No file content available");
-			return;
-		}
-
-		if (typeof fileData.content === "string") {
-			try {
-				let base64Content = fileData.content;
-				if (base64Content.includes(",")) {
-					base64Content = base64Content.split(",")[1];
-				}
-
-				const binaryString = atob(base64Content);
-				const bytes = new Uint8Array(binaryString.length);
-				for (let i = 0; i < binaryString.length; i++) {
-					bytes[i] = binaryString.charCodeAt(i);
-				}
-
-				const blob = new Blob([bytes], {
-					type: fileData.type || "application/octet-stream",
-				});
-
-				if (blob.size === 0) {
-					alert("File is empty (0 bytes)");
-					return;
-				}
-
-				const url = window.URL.createObjectURL(blob);
-				const link = document.createElement("a");
-				link.href = url;
-				link.download = fileData.filename || "document";
-				document.body.appendChild(link);
-				link.click();
-				document.body.removeChild(link);
-				window.URL.revokeObjectURL(url);
-				return;
-			} catch (error) {
-				console.error("Error processing base64 content:", error);
-				alert("Error opening file: " + error.message);
-				return;
-			}
-		}
-
-		if (typeof fileData.content !== "string") {
-			try {
-				const blob = new Blob([fileData.content], {
-					type: fileData.type || "application/pdf",
-				});
-
-				if (blob.size === 0) {
-					alert("File is empty (0 bytes)");
-					return;
-				}
-
-				const url = window.URL.createObjectURL(blob);
-				const link = document.createElement("a");
-				link.href = url;
-				link.download = fileData.filename || "document.pdf";
-				document.body.appendChild(link);
-				link.click();
-				document.body.removeChild(link);
-				window.URL.revokeObjectURL(url);
-				return;
-			} catch (binaryError) {
-				console.error("Binary data processing failed:", binaryError);
-			}
-		}
-
-		alert("Unable to process file. Check console for details.");
-	};
-
-	const handleRemoveFile = (fieldName, onChange) => {
-		onChange({ target: { name: fieldName, value: null } });
-	};
-
-
 	const FileUploaderWrapper = ({ fieldName, label, value, onChange, error }) => {
-		return (
-			<FileUploader
-				fieldName={fieldName}
-				label={label}
-				value={value}
-				onChange={onChange}
-				error={error}
-				onOpenFile={handleOpenFile}
-				onRemoveFile={handleRemoveFile}
-			/>
-		);
+		return <FileUploader fieldName={fieldName} label={label} value={value} onChange={onChange} error={error} />;
+	};
+
+	// Transform initial data to match form field expectations
+	const transformInitialData = (data) => {
+		if (!data || Object.keys(data).length === 0) return data;
+
+		const transformed = { ...data };
+
+		// Convert ISO datetime to datetime-local format for the input
+		if (transformed.date) {
+			const date = new Date(transformed.date);
+			// Convert to local datetime string format (YYYY-MM-DDTHH:MM)
+			const year = date.getFullYear();
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const day = String(date.getDate()).padStart(2, '0');
+			const hours = String(date.getHours()).padStart(2, '0');
+			const minutes = String(date.getMinutes()).padStart(2, '0');
+			transformed.date = `${year}-${month}-${day}T${hours}:${minutes}`;
+		}
+
+		// Ensure string fields are not null/undefined
+		if (transformed.url === null || transformed.url === undefined) {
+			transformed.url = "";
+		}
+		if (transformed.note === null || transformed.note === undefined) {
+			transformed.note = "";
+		}
+
+		// Handle file fields - keep the file objects for display
+		if (transformed.cv && typeof transformed.cv === 'object') {
+			// Keep the cv object as-is for the file uploader
+		}
+		if (transformed.cover_letter && typeof transformed.cover_letter === 'object') {
+			// Keep the cover_letter object as-is for the file uploader
+		}
+
+		return transformed;
 	};
 
 	// Define layout groups for job application fields
@@ -199,7 +94,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 					name: "note",
 					label: "Application Notes",
 					type: "textarea",
-					rows: 3,
 					placeholder: "Add notes about your application process, interview details, etc...",
 				},
 			],
@@ -224,70 +118,45 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		},
 	];
 
-	const transformFormData = async (data) => {
+	const transformFormData = (data) => {
+		console.log("Original form data:", data);
+		console.log("Initial data:", initialData);
+		console.log("Is edit mode:", isEdit);
+
 		const transformed = { ...data };
 
+		// Convert datetime-local back to ISO format
 		if (transformed.date) {
 			transformed.date = new Date(transformed.date).toISOString();
 		}
 
-		if (!transformed.status) {
-			transformed.status = "Applied";
-		}
-
-		if (jobId) {
+		// Add job_id for new applications
+		if (!isEdit && jobId) {
 			transformed.job_id = jobId;
 		}
 
-		if (transformed.url && !transformed.url.trim()) {
-			delete transformed.url;
-		}
-		if (transformed.note && !transformed.note.trim()) {
-			delete transformed.note;
-		}
+		// Clean up system fields that shouldn't be sent to backend
+		delete transformed.created_at;
+		delete transformed.modified_at;
+		delete transformed.owner_id;
+		delete transformed.cv_id;
+		delete transformed.cover_letter_id;
+		delete transformed.job;
+		delete transformed.interviews;
 
-		// Handle file fields
-		if (transformed.cv && transformed.cv instanceof File) {
-			try {
-				transformed.cv = await fileToBase64(transformed.cv);
-			} catch (error) {
-				console.error("Error converting CV to base64:", error);
-				delete transformed.cv;
-			}
-		} else if (
-			!transformed.cv ||
-			transformed.cv === "" ||
-			transformed.cv === null ||
-			(typeof transformed.cv === "object" && !transformed.cv.filename)
-		) {
-			delete transformed.cv;
-		}
-
-		if (transformed.cover_letter && transformed.cover_letter instanceof File) {
-			try {
-				transformed.cover_letter = await fileToBase64(transformed.cover_letter);
-			} catch (error) {
-				console.error("Error converting cover letter to base64:", error);
-				delete transformed.cover_letter;
-			}
-		} else if (
-			!transformed.cover_letter ||
-			transformed.cover_letter === "" ||
-			transformed.cover_letter === null ||
-			(typeof transformed.cover_letter === "object" && !transformed.cover_letter.filename)
-		) {
-			delete transformed.cover_letter;
-		}
-
+		console.log("Transformed data for submission:", transformed);
 		return transformed;
 	};
+
+	// Prepare initial data for the form
+	const preparedInitialData = transformInitialData(initialData);
 
 	return (
 		<GenericModal
 			show={show}
 			onHide={onHide}
 			mode="form"
-			title={isEdit ? "Edit Job Application" : "New Job Application"}
+			title="Job Application"
 			size={size}
 			useCustomLayout={true}
 			layoutGroups={layoutGroups}

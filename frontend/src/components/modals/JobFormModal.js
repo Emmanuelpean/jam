@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Badge, Button } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
@@ -7,6 +8,8 @@ import LocationFormModal from "./LocationFormModal";
 import JobApplicationFormModal from "./JobApplicationFormModal";
 import KeywordFormModal from "./KeywordFormModal";
 import PersonFormModal from "./PersonFormModal";
+import AlertModal from "../AlertModal";
+import useGenericAlert from "../../hooks/useGenericAlert";
 import {
 	apiHelpers,
 	companiesApi,
@@ -19,6 +22,7 @@ import { getApplicationStatusBadgeClass } from "../Renders";
 
 const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 	const { token } = useAuth();
+	const { alertState, hideAlert, showDelete, showError } = useGenericAlert();
 	const [showCompanyModal, setShowCompanyModal] = useState(false);
 	const [showLocationModal, setShowLocationModal] = useState(false);
 	const [showApplicationModal, setShowApplicationModal] = useState(false);
@@ -31,8 +35,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 	const [isLoadingApplication, setIsLoadingApplication] = useState(false);
 	const [showKeywordModal, setShowKeywordModal] = useState(false);
 	const [showPersonModal, setShowPersonModal] = useState(false);
-
-	// Transform initial data to work with multiselect (convert objects to IDs)
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	// Transform initial data to work with multiselect (convert objects to IDs)
 	const transformInitialData = (data) => {
@@ -56,6 +59,40 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 
 		return transformed;
 	};
+
+	// Handle delete job application
+	const handleDeleteApplication = async () => {
+		if (!existingApplication?.id) return;
+
+		try {
+			await showDelete({
+				title: "Delete Job Application",
+				message: "Are you sure you want to delete this job application? This action cannot be undone.",
+				confirmText: "Delete",
+				cancelText: "Cancel",
+			});
+
+			// If we reach here, user confirmed deletion
+			setIsDeleting(true);
+			try {
+				await jobApplicationsApi.delete(existingApplication.id, token);
+				setExistingApplication(null);
+				console.log("Job application deleted successfully");
+			} catch (error) {
+				console.error("Error deleting job application:", error);
+				showError({
+					title: "Delete Failed",
+					message: "Failed to delete job application. Please try again.",
+				});
+			} finally {
+				setIsDeleting(false);
+			}
+		} catch (error) {
+			// User cancelled deletion, do nothing
+			console.log("Job application deletion cancelled");
+		}
+	};
+
 	const handleKeywordSuccess = (newKeyword) => {
 		const newOption = {
 			value: newKeyword.id,
@@ -374,6 +411,25 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 										<i className="bi bi-pencil me-2"></i>
 										Edit Application
 									</Button>
+									<Button
+										variant="danger"
+										onClick={handleDeleteApplication}
+										disabled={isDeleting}
+										className="px-4"
+										style={{ width: "auto" }}
+									>
+										{isDeleting ? (
+											<>
+												<span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+												Deleting...
+											</>
+										) : (
+											<>
+												<i className="bi bi-trash me-2"></i>
+												Delete Application
+											</>
+										)}
+									</Button>
 								</div>
 							</>
 						) : (
@@ -513,6 +569,9 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				isEdit={!!existingApplication}
 				size="lg"
 			/>
+
+			{/* Alert Modal */}
+			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</>
 	);
 };

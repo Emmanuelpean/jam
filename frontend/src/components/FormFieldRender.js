@@ -46,13 +46,7 @@ const CustomDropdownIndicator = (props) => {
 	);
 };
 
-export const renderInputField = (
-	field,
-	formData,
-	handleChange,
-	errors,
-	handleSelectChange,
-) => {
+export const renderInputField = (field, formData, handleChange, errors, handleSelectChange) => {
 	const value = formData[field.name];
 	const error = errors[field.name];
 
@@ -68,16 +62,19 @@ export const renderInputField = (
 
 	if (field.type === "textarea") {
 		return (
-			<Form.Control
-				as="textarea"
-				rows={field.rows || 3}
-				name={field.name}
-				value={value || ""}
-				onChange={handleChange}
-				placeholder={field.placeholder}
-				isInvalid={!!errors[field.name]}
-				className="optimized-textarea"
-			/>
+			<>
+				<Form.Control
+					as="textarea"
+					rows={field.rows || 3}
+					name={field.name}
+					value={value || ""}
+					onChange={handleChange}
+					placeholder={field.placeholder}
+					isInvalid={!!errors[field.name]}
+					className="optimized-textarea"
+				/>
+				{error && <div className="invalid-feedback">{error}</div>}
+			</>
 		);
 	}
 
@@ -127,40 +124,45 @@ export const renderInputField = (
 		}
 
 		return (
-			<Select
-				name={field.name}
-				value={selectedValue}
-				onChange={(selectedOptions, actionMeta) => {
-					if (isMulti) {
-						const ids = Array.isArray(selectedOptions) ? selectedOptions.map((option) => option.value) : [];
+			<>
+				<Select
+					name={field.name}
+					value={selectedValue}
+					onChange={(selectedOptions, actionMeta) => {
+						if (isMulti) {
+							const ids = Array.isArray(selectedOptions)
+								? selectedOptions.map((option) => option.value)
+								: [];
 
-						const syntheticEvent = {
-							target: {
-								name: field.name,
-								value: ids,
-							},
-						};
-						handleChange(syntheticEvent);
-					} else {
-						handleSelectChange(selectedOptions, actionMeta);
-					}
-				}}
-				options={field.options || []}
-				closeMenuOnSelect={!isMulti}
-				placeholder={field.placeholder || `Select ${field.label}`}
-				isSearchable={field.isSearchable !== false}
-				isClearable={field.isClearable !== false}
-				isDisabled={field.isDisabled}
-				isMulti={isMulti}
-				menuPortalTarget={document.body}
-				className={`react-select-container ${error ? "is-invalid" : ""}`}
-				classNamePrefix="react-select"
-				components={selectComponents}
-				onAddButtonClick={field.addButton?.onClick}
-				menuIsOpen={field.forceMenuClosed ? false : undefined}
-				hideSelectedOptions={false}
-				controlShouldRenderValue={true}
-			/>
+							const syntheticEvent = {
+								target: {
+									name: field.name,
+									value: ids,
+								},
+							};
+							handleChange(syntheticEvent);
+						} else {
+							handleSelectChange(selectedOptions, actionMeta);
+						}
+					}}
+					options={field.options || []}
+					closeMenuOnSelect={!isMulti}
+					placeholder={field.placeholder || `Select ${field.label}`}
+					isSearchable={field.isSearchable !== false}
+					isClearable={field.isClearable !== false}
+					isDisabled={field.isDisabled}
+					isMulti={isMulti}
+					menuPortalTarget={document.body}
+					className={`react-select-container ${error ? "is-invalid" : ""} ${field.required ? "required" : ""}`}
+					classNamePrefix="react-select"
+					components={selectComponents}
+					onAddButtonClick={field.addButton?.onClick}
+					menuIsOpen={field.forceMenuClosed ? false : undefined}
+					hideSelectedOptions={false}
+					controlShouldRenderValue={true}
+				/>
+				{error && <div className="invalid-feedback d-block">{error}</div>}
+			</>
 		);
 	}
 
@@ -205,19 +207,22 @@ export const renderInputField = (
 		const formattedValue = formatDateTimeForInput(value);
 
 		return (
-			<InputGroup>
-				<Form.Control
-					type="datetime-local"
-					name={field.name}
-					value={formattedValue}
-					onChange={handleChange}
-					isInvalid={!!error}
-					placeholder={field.placeholder || "Select date and time"}
-				/>
-				<Button variant="outline-secondary" onClick={setCurrentTime} title="Set current time">
-					<i className="bi bi-clock"></i>
-				</Button>
-			</InputGroup>
+			<>
+				<InputGroup className={error ? "is-invalid" : ""}>
+					<Form.Control
+						type="datetime-local"
+						name={field.name}
+						value={formattedValue}
+						onChange={handleChange}
+						isInvalid={!!error}
+						placeholder={field.placeholder || "Select date and time"}
+					/>
+					<Button variant="outline-secondary" onClick={setCurrentTime} title="Set current time">
+						<i className="bi bi-clock"></i>
+					</Button>
+				</InputGroup>
+				{error && <div className="invalid-feedback d-block">{error}</div>}
+			</>
 		);
 	}
 
@@ -235,15 +240,18 @@ export const renderInputField = (
 	}
 
 	return (
-		<Form.Control
-			type={field.type || "text"}
-			name={field.name}
-			value={value || ""}
-			onChange={handleChange}
-			placeholder={field.placeholder}
-			isInvalid={!!errors[field.name]}
-			step={field.step}
-		/>
+		<>
+			<Form.Control
+				type={field.type || "text"}
+				name={field.name}
+				value={value || ""}
+				onChange={handleChange}
+				placeholder={field.placeholder}
+				isInvalid={!!errors[field.name]}
+				step={field.step}
+			/>
+			{error && <div className="invalid-feedback">{error}</div>}
+		</>
 	);
 };
 
@@ -275,9 +283,6 @@ export const renderInputFieldGroup = (
 								handleSelectChange,
 								customFieldComponents,
 							)}
-							{errors[field.name] && field.type !== "drag-drop" && (
-								<div className="d-block">{errors[field.name]}</div>
-							)}
 						</Form.Group>
 					</div>
 				))}
@@ -304,9 +309,6 @@ export const renderInputFieldGroup = (
 						</Form.Label>
 					)}
 					{renderInputField(field, formData, handleChange, errors, handleSelectChange, customFieldComponents)}
-					{errors[field.name] && field.type !== "drag-drop" && (
-						<div className="invalid-feedback d-block">{errors[field.name]}</div>
-					)}
 				</Form.Group>
 			))}
 		</div>
