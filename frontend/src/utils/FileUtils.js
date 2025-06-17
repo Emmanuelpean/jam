@@ -13,12 +13,13 @@ export const fileToBase64 = (file) => {
 	});
 };
 
-// Helper function to parse size text like "10MB" to bytes
 const parseSizeText = (sizeText) => {
-	if (!sizeText) return 10 * 1024 * 1024; // Default 10MB
+	let defaultSize = 10 * 1024 * 1024;
+
+	if (!sizeText) return defaultSize;
 
 	const match = sizeText.match(/^(\d+(?:\.\d+)?)\s*(KB|MB|GB)$/i);
-	if (!match) return 10 * 1024 * 1024; // Default 10MB if invalid format
+	if (!match) return defaultSize;
 
 	const value = parseFloat(match[1]);
 	const unit = match[2].toUpperCase();
@@ -31,11 +32,10 @@ const parseSizeText = (sizeText) => {
 		case "GB":
 			return value * 1024 * 1024 * 1024;
 		default:
-			return 10 * 1024 * 1024; // Default 10MB
+			return defaultSize;
 	}
 };
 
-// Helper function to format file size from bytes
 const formatFileSize = (bytes) => {
 	if (!bytes || bytes === 0) return "";
 	if (bytes < 1024) return `${bytes} B`;
@@ -43,7 +43,6 @@ const formatFileSize = (bytes) => {
 	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-// Helper function to calculate file size from base64 content
 const calculateBase64Size = (base64Content) => {
 	if (!base64Content) return 0;
 
@@ -59,6 +58,21 @@ const calculateBase64Size = (base64Content) => {
 	return Math.floor((base64Length * 3) / 4) - padding;
 };
 
+const getFileSize = (file) => {
+	if (file) {
+		if (file.content) {
+			const size = calculateBase64Size(file.content);
+			return formatFileSize(size);
+		} else if (file.size) {
+			return formatFileSize(file.size);
+		} else {
+			return "";
+		}
+	} else {
+		return "";
+	}
+};
+
 const FileUploader = ({
 	fieldName,
 	label,
@@ -69,16 +83,14 @@ const FileUploader = ({
 	onOpenFile,
 	onRemoveFile,
 	acceptedFileTypes = ".txt, .pdf, .doc, .docx",
-	maxSizeText = "10MB",
+	maxSizeText = "10KB",
 }) => {
 	const [file, setFile] = useState(null);
 	const [downloadUrl, setDownloadUrl] = useState("");
 	const { alertState, showError, hideAlert } = useGenericAlert();
 
-	// Parse max size from text
 	const maxSizeBytes = parseSizeText(maxSizeText);
 
-	// Initialize file from value prop
 	useEffect(() => {
 		if (value && value instanceof File) {
 			setFile(value);
@@ -89,7 +101,6 @@ const FileUploader = ({
 		}
 	}, [value]);
 
-	// Create download URL for new files
 	useEffect(() => {
 		if (file && file instanceof File) {
 			const url = URL.createObjectURL(file);
@@ -100,22 +111,20 @@ const FileUploader = ({
 		}
 	}, [file]);
 
-	// Show error using custom modal
 	const showFileError = (message) => {
 		showError({
 			title: "File Upload Error",
 			message: message,
 			size: "md",
-		});
+		}).then(() => null);
 	};
 
-	// Built-in validation for file size and type
 	const validateFileInternal = (file) => {
 		// Check file size
 		if (file.size > maxSizeBytes) {
 			return {
 				valid: false,
-				error: `File size must be less than ${maxSizeText}. Current file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`,
+				error: `File size must be less than ${maxSizeText}. Current file is ${formatFileSize(file.size)}.`,
 			};
 		}
 
@@ -232,22 +241,6 @@ const FileUploader = ({
 		}
 	};
 
-	// Get file size for display
-	const getFileSize = () => {
-		if (file && file instanceof File) {
-			// New file - use File.size
-			return formatFileSize(file.size);
-		} else if (file && file.content) {
-			// Database file - calculate from base64 content
-			const size = calculateBase64Size(file.content);
-			return formatFileSize(size);
-		} else if (file && file.size) {
-			// Database file with size property
-			return formatFileSize(file.size);
-		}
-		return "";
-	};
-
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
 		onDrop,
 		onDropRejected,
@@ -264,7 +257,7 @@ const FileUploader = ({
 	const hasNewFile = file && file instanceof File;
 	const hasExistingFile = file && typeof file === "object" && file.filename && !file.name;
 	const hasFile = hasNewFile || hasExistingFile;
-	const fileSize = getFileSize();
+	const fileSize = getFileSize(file);
 
 	return (
 		<>
