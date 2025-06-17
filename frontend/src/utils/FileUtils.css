@@ -30,31 +30,26 @@
 
 .dropzone-icon {
     font-size: 2rem;
-    color: #6c757d;
+    color: var(--primary-end);
     margin-bottom: 0.5rem;
 }
 
 .file-dropzone.drag-active .dropzone-icon {
-    color: #0d6efd;
+    color: var(--primary-end);
 }
 
 .dropzone-text {
     font-weight: 600;
-    color: #495057;
+    color: var(--primary-end);
     margin-bottom: 0.25rem;
 }
 
 .file-dropzone.drag-active .dropzone-text {
-    color: #0d6efd;
-}
-
-.dropzone-or {
-    color: #6c757d;
-    margin: 0.25rem 0;
+    color: var(--primary-end);
 }
 
 .dropzone-info {
-    color: #6c757d;
+    color: var(--primary-mid);
     margin-top: 0.5rem;
     font-size: 0.875rem;
 }

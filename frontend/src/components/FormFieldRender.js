@@ -1,6 +1,6 @@
 import { getCurrentDateTime } from "../utils/TimeUtils";
 import { Button, Form, InputGroup } from "react-bootstrap";
-import { useState, React, useCallback } from "react";
+import { React, useState } from "react";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
 import FileUploader from "../utils/FileUtils";
@@ -52,7 +52,6 @@ export const renderInputField = (
 	handleChange,
 	errors,
 	handleSelectChange,
-	customFieldComponents = {},
 ) => {
 	const value = formData[field.name];
 	const error = errors[field.name];
@@ -127,7 +126,7 @@ export const renderInputField = (
 			selectComponents.DropdownIndicator = CustomDropdownIndicator;
 		}
 
-		const selectComponent = (
+		return (
 			<Select
 				name={field.name}
 				value={selectedValue}
@@ -163,8 +162,6 @@ export const renderInputField = (
 				controlShouldRenderValue={true}
 			/>
 		);
-
-		return selectComponent;
 	}
 
 	// Handle datetime-local
@@ -226,21 +223,6 @@ export const renderInputField = (
 
 	// Handle drag-drop field type with new FileUploader
 	if (field.type === "drag-drop") {
-		// Check if we have the required functions passed through customFieldComponents
-		if (customFieldComponents["drag-drop"]) {
-			const DragDropComponent = customFieldComponents["drag-drop"];
-			return (
-				<DragDropComponent
-					fieldName={field.name}
-					label={field.label}
-					value={value}
-					onChange={handleChange}
-					error={error}
-				/>
-			);
-		}
-
-		// Use the new FileUploader component by default
 		return (
 			<FileUploader
 				fieldName={field.name}
@@ -248,7 +230,6 @@ export const renderInputField = (
 				value={value}
 				onChange={handleChange}
 				error={error}
-				maxSizeText="10MB"
 			/>
 		);
 	}
@@ -265,199 +246,6 @@ export const renderInputField = (
 		/>
 	);
 };
-
-// Keep the old DragDropFile component for backward compatibility
-const DragDropFile = ({
-	fieldName,
-	label,
-	value,
-	onChange,
-	error,
-	dragStates,
-	setDragStates,
-	validateFile,
-	handleOpenFile,
-	handleRemoveFile,
-}) => {
-	const handleDragEnter = useCallback(
-		(e) => {
-			e.preventDefault();
-			setDragStates((prev) => ({ ...prev, [fieldName]: true }));
-		},
-		[fieldName, setDragStates],
-	);
-
-	const handleDragLeave = useCallback(
-		(e) => {
-			e.preventDefault();
-			if (!e.currentTarget.contains(e.relatedTarget)) {
-				setDragStates((prev) => ({ ...prev, [fieldName]: false }));
-			}
-		},
-		[fieldName, setDragStates],
-	);
-
-	const handleDragOver = useCallback((e) => {
-		e.preventDefault();
-	}, []);
-
-	const handleDrop = useCallback(
-		async (e) => {
-			e.preventDefault();
-			setDragStates((prev) => ({ ...prev, [fieldName]: false }));
-
-			const files = Array.from(e.dataTransfer.files);
-			if (files.length > 0) {
-				const file = files[0];
-				const validation = validateFile(file);
-				if (validation.valid) {
-					const syntheticEvent = {
-						target: {
-							name: fieldName,
-							value: file,
-							files: [file],
-						},
-					};
-					onChange(syntheticEvent);
-				} else {
-					console.error(validation.error);
-					alert(validation.error);
-				}
-			}
-		},
-		[fieldName, onChange, setDragStates, validateFile],
-	);
-
-	const handleFileSelect = useCallback(
-		async (e) => {
-			const file = e.target.files[0];
-			if (file) {
-				const validation = validateFile(file);
-				if (validation.valid) {
-					const syntheticEvent = {
-						target: {
-							name: fieldName,
-							value: file,
-							files: e.target.files,
-						},
-					};
-					onChange(syntheticEvent);
-				} else {
-					e.target.value = "";
-					console.error(validation.error);
-					alert(validation.error);
-				}
-			}
-		},
-		[onChange, validateFile, fieldName],
-	);
-
-	const isDragging = dragStates[fieldName];
-	const hasNewFile = value && value instanceof File;
-	const hasExistingFile = value && typeof value === "object" && value.filename && !value.name;
-	const hasFile = hasNewFile || hasExistingFile;
-
-	return (
-		<div>
-			<Form.Label>{label}</Form.Label>
-			<div
-				className={`drag-drop-zone ${isDragging ? "dragging" : ""} ${hasFile ? "has-file" : ""} ${error ? "is-invalid" : ""}`}
-				onDragEnter={handleDragEnter}
-				onDragLeave={handleDragLeave}
-				onDragOver={handleDragOver}
-				onDrop={handleDrop}
-				style={{
-					border: `2px dashed ${error ? "#dc3545" : isDragging ? "#0d6efd" : "#dee2e6"}`,
-					borderRadius: "0.375rem",
-					padding: "2rem 1rem",
-					textAlign: "center",
-					backgroundColor: isDragging ? "#f8f9fa" : hasFile ? "#e8f5e8" : "#fafafa",
-					cursor: "pointer",
-					transition: "all 0.2s ease",
-					minHeight: "120px",
-					display: "flex",
-					flexDirection: "column",
-					justifyContent: "center",
-					alignItems: "center",
-					position: "relative",
-				}}
-				onClick={() => document.getElementById(`${fieldName}-input`).click()}
-			>
-				<input
-					id={`${fieldName}-input`}
-					type="file"
-					name={fieldName}
-					accept=".pdf,.doc,.docx"
-					onChange={handleFileSelect}
-					style={{ display: "none" }}
-				/>
-
-				{hasFile && (
-					<Button
-						variant="outline-danger"
-						size="sm"
-						className="position-absolute"
-						style={{ top: "8px", right: "8px", zIndex: 1 }}
-						onClick={(e) => {
-							e.stopPropagation();
-							handleRemoveFile(fieldName, onChange);
-						}}
-						title="Remove file"
-					>
-						<i className="bi bi-x"></i>
-					</Button>
-				)}
-
-				{hasNewFile ? (
-					<>
-						<i className="bi bi-check-circle-fill text-success mb-2" style={{ fontSize: "2rem" }}></i>
-						<div className="fw-semibold text-success">{value.name}</div>
-						<small className="text-muted">{(value.size / 1024 / 1024).toFixed(2)} MB</small>
-						<small className="text-muted mt-1">Click to replace</small>
-					</>
-				) : hasExistingFile ? (
-					<>
-						<i className="bi bi-file-earmark-text text-info mb-2" style={{ fontSize: "2rem" }}></i>
-						<div className="fw-semibold text-info mb-2">{value.filename}</div>
-						<Button
-							variant="outline-info"
-							size="sm"
-							className="mb-2"
-							onClick={(e) => {
-								e.stopPropagation();
-								handleOpenFile(value);
-							}}
-						>
-							<i className="bi bi-download me-1"></i>
-							Open File
-						</Button>
-						<small className="text-muted">Click anywhere to replace</small>
-					</>
-				) : isDragging ? (
-					<>
-						<i className="bi bi-cloud-arrow-down text-primary mb-2" style={{ fontSize: "2rem" }}></i>
-						<div className="fw-semibold text-primary">Drop your file here</div>
-					</>
-				) : (
-					<>
-						<i className="bi bi-cloud-arrow-up text-muted mb-2" style={{ fontSize: "2rem" }}></i>
-						<div className="fw-semibold text-muted mb-1">Drag & drop your {label.toLowerCase()} here</div>
-						<div className="text-muted mb-2">or</div>
-						<Button variant="outline-primary" size="sm">
-							<i className="bi bi-folder2-open me-1"></i>
-							Browse Files
-						</Button>
-						<small className="text-muted mt-2">PDF, DOC, DOCX up to 10MB</small>
-					</>
-				)}
-			</div>
-			{error && <div className="invalid-feedback d-block mt-1">{error}</div>}
-		</div>
-	);
-};
-
-// Export the DragDropFile component for use in other components
-export { DragDropFile };
 
 export const renderInputFieldGroup = (
 	group,

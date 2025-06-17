@@ -43,16 +43,14 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		// Convert keywords array to array of IDs
 		if (transformed.keywords && Array.isArray(transformed.keywords)) {
 			transformed.keywords = transformed.keywords.map((keyword) => {
-				const id = typeof keyword === "object" ? keyword.id : keyword;
-				return id;
+				return typeof keyword === "object" ? keyword.id : keyword;
 			});
 		}
 
 		// Convert contacts array to array of IDs
 		if (transformed.contacts && Array.isArray(transformed.contacts)) {
 			transformed.contacts = transformed.contacts.map((contact) => {
-				const id = typeof contact === "object" ? contact.id : contact;
-				return id;
+				return typeof contact === "object" ? contact.id : contact;
 			});
 		}
 
@@ -350,7 +348,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 							{existingApplication && (
 								<Badge
 									className={`${getApplicationStatusBadgeClass(existingApplication.status)} text-uppercase fw-bold`}
-									style={{ fontSize: "0.75rem" }}
+									style={{ fontSize: "1.25rem" }}
 								>
 									{existingApplication.status}
 								</Badge>
@@ -369,10 +367,9 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 								</p>
 								<div className="d-grid gap-2 d-md-flex justify-content-md-center">
 									<Button
-										variant="outline-primary"
-										size="lg"
 										onClick={handleOpenApplicationModal}
 										className="px-4"
+										style={{ width: "auto" }}
 									>
 										<i className="bi bi-pencil me-2"></i>
 										Edit Application

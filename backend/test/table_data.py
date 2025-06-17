@@ -406,7 +406,7 @@ JOB_APPLICATIONS_DATA = [
         "date": "2024-01-16T14:30:00",
         "url": "https://startupxyz.com/apply/fullstack-js",
         "job_id": 2,
-        "status": "Interview Scheduled",
+        "status": "Interview",
         "note": "Phone screening scheduled for next week",
         "cv_id": 1,
         "owner_id": 1,

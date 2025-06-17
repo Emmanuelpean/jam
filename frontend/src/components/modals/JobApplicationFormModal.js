@@ -7,7 +7,6 @@ import FileUploader from "../../utils/FileUtils";
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
 	const currentDateTime = getCurrentDateTime();
 
-	// Prepare initial data with defaults and clean values
 	const preparedInitialData = useMemo(() => {
 		const cleanedData = {
 			status: "Applied",
@@ -58,24 +57,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 
 		return cleanedData;
 	}, [initialData, currentDateTime, isEdit]);
-
-	// Validate file type and size
-	const validateFile = (file) => {
-		const allowedTypes = [
-			"application/pdf",
-			"application/msword",
-			"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-		];
-		const maxSize = 10 * 1024 * 1024; // 10MB
-
-		if (!allowedTypes.includes(file.type)) {
-			return { valid: false, error: "Please upload a PDF, DOC, or DOCX file" };
-		}
-		if (file.size > maxSize) {
-			return { valid: false, error: "File size must be less than 10MB" };
-		}
-		return { valid: true };
-	};
 
 	const handleOpenFile = (fileData) => {
 		if (!fileData?.content) {
@@ -153,7 +134,7 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		onChange({ target: { name: fieldName, value: null } });
 	};
 
-	// Create a wrapper for the FileUploader component
+
 	const FileUploaderWrapper = ({ fieldName, label, value, onChange, error }) => {
 		return (
 			<FileUploader
@@ -162,7 +143,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				value={value}
 				onChange={onChange}
 				error={error}
-				validateFile={validateFile}
 				onOpenFile={handleOpenFile}
 				onRemoveFile={handleRemoveFile}
 			/>
@@ -225,20 +205,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			],
 		},
 		{
-			id: "files-header",
-			type: "custom",
-			className: "mt-4 mb-3",
-			content: (
-				<div className="border-top pt-3">
-					<h6 className="mb-0">
-						<i className="bi bi-paperclip me-2"></i>
-						Application Documents
-					</h6>
-					<small className="text-muted">Upload your CV and cover letter</small>
-				</div>
-			),
-		},
-		{
 			id: "application-files",
 			type: "row",
 			fields: [
@@ -258,42 +224,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		},
 	];
 
-	// Custom validation rules for application fields
-	const validationRules = {
-		date: (value) => {
-			if (value) {
-				const selectedDate = new Date(value);
-				const now = new Date();
-				if (selectedDate > now) {
-					return {
-						isValid: false,
-						message: "Application date cannot be in the future",
-					};
-				}
-			}
-			return { isValid: true };
-		},
-		cv: (value) => {
-			if (value && value.size > 10 * 1024 * 1024) {
-				return {
-					isValid: false,
-					message: "CV file size must be less than 10MB",
-				};
-			}
-			return { isValid: true };
-		},
-		cover_letter: (value) => {
-			if (value && value.size > 10 * 1024 * 1024) {
-				return {
-					isValid: false,
-					message: "Cover letter file size must be less than 10MB",
-				};
-			}
-			return { isValid: true };
-		},
-	};
-
-	// Transform form data before submission
 	const transformFormData = async (data) => {
 		const transformed = { ...data };
 
@@ -364,7 +294,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			initialData={preparedInitialData}
 			endpoint="jobapplications"
 			onSuccess={onSuccess}
-			validationRules={validationRules}
 			transformFormData={transformFormData}
 			isEdit={isEdit}
 			customFieldComponents={{ "drag-drop": FileUploaderWrapper }}
