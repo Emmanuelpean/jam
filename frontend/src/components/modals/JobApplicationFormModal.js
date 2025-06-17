@@ -165,8 +165,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				validateFile={validateFile}
 				onOpenFile={handleOpenFile}
 				onRemoveFile={handleRemoveFile}
-				acceptedFileTypes=".pdf,.doc,.docx"
-				maxSizeText="10MB"
 			/>
 		);
 	};

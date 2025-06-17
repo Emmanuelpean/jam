@@ -1,9 +1,8 @@
-
 import { getCurrentDateTime } from "../utils/TimeUtils";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import { useState, React, useCallback } from "react";
 import Select from "react-select";
-import makeAnimated from 'react-select/animated';
+import makeAnimated from "react-select/animated";
 import FileUploader from "../utils/FileUtils";
 
 const animatedComponents = makeAnimated();
@@ -42,7 +41,7 @@ const CustomDropdownIndicator = (props) => {
 			role="button"
 			title="Add new item"
 		>
-			<i className="bi bi-plus-circle" style={{ fontSize: '21px' }}></i>
+			<i className="bi bi-plus-circle" style={{ fontSize: "21px" }}></i>
 		</div>
 	);
 };
@@ -103,18 +102,22 @@ export const renderInputField = (
 		if (isMulti) {
 			if (Array.isArray(value) && field.options && field.options.length > 0) {
 				selectedValue = value
-					.map(id => field.options.find(opt =>
-						opt.value == id || opt.value === parseInt(id) || opt.value === String(id)
-					))
+					.map((id) =>
+						field.options.find(
+							(opt) => opt.value == id || opt.value === parseInt(id) || opt.value === String(id),
+						),
+					)
 					.filter(Boolean);
 			} else {
 				selectedValue = [];
 			}
 		} else {
 			if (value !== null && value !== undefined && value !== "" && field.options) {
-				selectedValue = field.options.find((option) =>
-					option.value == value || option.value === parseInt(value) || option.value === String(value)
-				) || null;
+				selectedValue =
+					field.options.find(
+						(option) =>
+							option.value == value || option.value === parseInt(value) || option.value === String(value),
+					) || null;
 			}
 		}
 
@@ -130,15 +133,13 @@ export const renderInputField = (
 				value={selectedValue}
 				onChange={(selectedOptions, actionMeta) => {
 					if (isMulti) {
-						const ids = Array.isArray(selectedOptions)
-							? selectedOptions.map(option => option.value)
-							: [];
+						const ids = Array.isArray(selectedOptions) ? selectedOptions.map((option) => option.value) : [];
 
 						const syntheticEvent = {
 							target: {
 								name: field.name,
-								value: ids
-							}
+								value: ids,
+							},
 						};
 						handleChange(syntheticEvent);
 					} else {
@@ -153,7 +154,7 @@ export const renderInputField = (
 				isDisabled={field.isDisabled}
 				isMulti={isMulti}
 				menuPortalTarget={document.body}
-				className={`react-select-container ${error ? 'is-invalid' : ''}`}
+				className={`react-select-container ${error ? "is-invalid" : ""}`}
 				classNamePrefix="react-select"
 				components={selectComponents}
 				onAddButtonClick={field.addButton?.onClick}
@@ -180,14 +181,14 @@ export const renderInputField = (
 				}
 
 				const year = date.getFullYear();
-				const month = String(date.getMonth() + 1).padStart(2, '0');
-				const day = String(date.getDate()).padStart(2, '0');
-				const hours = String(date.getHours()).padStart(2, '0');
-				const minutes = String(date.getMinutes()).padStart(2, '0');
+				const month = String(date.getMonth() + 1).padStart(2, "0");
+				const day = String(date.getDate()).padStart(2, "0");
+				const hours = String(date.getHours()).padStart(2, "0");
+				const minutes = String(date.getMinutes()).padStart(2, "0");
 
 				return `${year}-${month}-${day}T${hours}:${minutes}`;
 			} catch (error) {
-				console.error('Error formatting datetime:', error);
+				console.error("Error formatting datetime:", error);
 				return currentDateTime;
 			}
 		};
@@ -247,7 +248,6 @@ export const renderInputField = (
 				value={value}
 				onChange={handleChange}
 				error={error}
-				acceptedFileTypes=".pdf,.doc,.docx"
 				maxSizeText="10MB"
 			/>
 		);
@@ -267,7 +267,18 @@ export const renderInputField = (
 };
 
 // Keep the old DragDropFile component for backward compatibility
-const DragDropFile = ({ fieldName, label, value, onChange, error, dragStates, setDragStates, validateFile, handleOpenFile, handleRemoveFile }) => {
+const DragDropFile = ({
+	fieldName,
+	label,
+	value,
+	onChange,
+	error,
+	dragStates,
+	setDragStates,
+	validateFile,
+	handleOpenFile,
+	handleRemoveFile,
+}) => {
 	const handleDragEnter = useCallback(
 		(e) => {
 			e.preventDefault();
@@ -304,8 +315,8 @@ const DragDropFile = ({ fieldName, label, value, onChange, error, dragStates, se
 						target: {
 							name: fieldName,
 							value: file,
-							files: [file]
-						}
+							files: [file],
+						},
 					};
 					onChange(syntheticEvent);
 				} else {
@@ -327,8 +338,8 @@ const DragDropFile = ({ fieldName, label, value, onChange, error, dragStates, se
 						target: {
 							name: fieldName,
 							value: file,
-							files: e.target.files
-						}
+							files: e.target.files,
+						},
 					};
 					onChange(syntheticEvent);
 				} else {
@@ -343,7 +354,7 @@ const DragDropFile = ({ fieldName, label, value, onChange, error, dragStates, se
 
 	const isDragging = dragStates[fieldName];
 	const hasNewFile = value && value instanceof File;
-	const hasExistingFile = value && typeof value === 'object' && value.filename && !value.name;
+	const hasExistingFile = value && typeof value === "object" && value.filename && !value.name;
 	const hasFile = hasNewFile || hasExistingFile;
 
 	return (
@@ -430,9 +441,7 @@ const DragDropFile = ({ fieldName, label, value, onChange, error, dragStates, se
 				) : (
 					<>
 						<i className="bi bi-cloud-arrow-up text-muted mb-2" style={{ fontSize: "2rem" }}></i>
-						<div className="fw-semibold text-muted mb-1">
-							Drag & drop your {label.toLowerCase()} here
-						</div>
+						<div className="fw-semibold text-muted mb-1">Drag & drop your {label.toLowerCase()} here</div>
 						<div className="text-muted mb-2">or</div>
 						<Button variant="outline-primary" size="sm">
 							<i className="bi bi-folder2-open me-1"></i>
