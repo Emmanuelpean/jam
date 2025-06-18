@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, status, Request
-from fastapi import HTTPException
+from fastapi import APIRouter, Depends, status, Request, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -375,3 +374,38 @@ file_router = generate_crud_router(
     endpoint="files",
     not_found_msg="File not found",
 )
+
+
+@file_router.get("/{file_id}/download")
+def download_file(
+    file_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    # Get file record from database
+    file_record = (
+        db.query(models.File).filter(models.File.id == file_id, models.File.owner_id == current_user.id).first()
+    )
+
+    if not file_record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+    # Check if file has content stored in database
+    if not file_record.content:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File content not found")
+
+    # The content is already binary data (bytes), no need to decode
+    file_content = file_record.content
+
+    # Use the type from database if available, otherwise determine from filename
+    content_type = file_record.type if file_record.type else "application/octet-stream"
+
+    # Return file as response
+    return Response(
+        content=file_content,
+        media_type=content_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{file_record.filename}"',
+            "Content-Length": str(len(file_content)),
+        },
+    )

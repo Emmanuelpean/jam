@@ -3,8 +3,37 @@ import GenericModal from "../GenericModal";
 import FileUploader from "../../utils/FileUtils";
 
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
+	// Add a function to handle file downloads from the database
+	const handleFileDownload = async (fileObject) => {
+		try {
+			// Construct the download URL for the backend
+			const downloadUrl = `${process.env.REACT_APP_API_BASE_URL || "http://localhost:8000"}/api/files/${fileObject.id}/download`;
+
+			// Create a temporary link and trigger download
+			const link = document.createElement("a");
+			link.href = downloadUrl;
+			link.download = fileObject.filename;
+			link.target = "_blank"; // Open in new tab as fallback
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		} catch (error) {
+			console.error("Error downloading file:", error);
+			alert("Error downloading file. Please try again.");
+		}
+	};
+
 	const FileUploaderWrapper = ({ fieldName, label, value, onChange, error }) => {
-		return <FileUploader fieldName={fieldName} label={label} value={value} onChange={onChange} error={error} />;
+		return (
+			<FileUploader
+				fieldName={fieldName}
+				label={label}
+				value={value}
+				onChange={onChange}
+				error={error}
+				onOpenFile={handleFileDownload}
+			/>
+		);
 	};
 
 	// Transform initial data to match form field expectations
@@ -18,10 +47,10 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			const date = new Date(transformed.date);
 			// Convert to local datetime string format (YYYY-MM-DDTHH:MM)
 			const year = date.getFullYear();
-			const month = String(date.getMonth() + 1).padStart(2, '0');
-			const day = String(date.getDate()).padStart(2, '0');
-			const hours = String(date.getHours()).padStart(2, '0');
-			const minutes = String(date.getMinutes()).padStart(2, '0');
+			const month = String(date.getMonth() + 1).padStart(2, "0");
+			const day = String(date.getDate()).padStart(2, "0");
+			const hours = String(date.getHours()).padStart(2, "0");
+			const minutes = String(date.getMinutes()).padStart(2, "0");
 			transformed.date = `${year}-${month}-${day}T${hours}:${minutes}`;
 		}
 
@@ -34,10 +63,10 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		}
 
 		// Handle file fields - keep the file objects for display
-		if (transformed.cv && typeof transformed.cv === 'object') {
+		if (transformed.cv && typeof transformed.cv === "object") {
 			// Keep the cv object as-is for the file uploader
 		}
-		if (transformed.cover_letter && typeof transformed.cover_letter === 'object') {
+		if (transformed.cover_letter && typeof transformed.cover_letter === "object") {
 			// Keep the cover_letter object as-is for the file uploader
 		}
 
