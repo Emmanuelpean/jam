@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Alert, Button, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import "./GenericModal.css";
@@ -41,6 +41,7 @@ const GenericModal = ({
 	transformFormData = null, // Function - Transform form data before submission
 	isEdit = false, // Boolean - Whether form is in edit mode
 	customFieldComponents = {},
+	customSubmitHandler = null,
 
 	// Layout options
 	useCustomLayout = false, // Boolean - Enable custom field layouts
@@ -177,22 +178,43 @@ const GenericModal = ({
 		setErrors({});
 
 		try {
-			const dataToSubmit = transformFormData ? transformFormData(formData) : formData;
+			// If custom submit handler is provided, use it
+			if (customSubmitHandler) {
+				await customSubmitHandler(e.target, async (processedData) => {
+					// This callback will be called by the custom handler with processed data
+					const dataToSubmit = transformFormData ? transformFormData(processedData) : processedData;
 
-			let result;
-			if (isEdit) {
-				result = await api.put(`${endpoint}/${initialData.id}`, dataToSubmit, token);
+					let result;
+					if (isEdit) {
+						result = await api.put(`${endpoint}/${initialData.id}`, dataToSubmit, token);
+					} else {
+						result = await api.post(`${endpoint}/`, dataToSubmit, token);
+					}
+
+					if (onSuccess) onSuccess(result);
+					handleHide();
+				});
 			} else {
-				result = await api.post(`${endpoint}/`, dataToSubmit, token);
-			}
+				// Default submission logic for forms without custom handling
+				const dataToSubmit = transformFormData ? transformFormData(formData) : formData;
 
-			onSuccess(result);
-			handleHide();
+				let result;
+				if (isEdit) {
+					result = await api.put(`${endpoint}/${initialData.id}`, dataToSubmit, token);
+				} else {
+					result = await api.post(`${endpoint}/`, dataToSubmit, token);
+				}
+
+				if (onSuccess) onSuccess(result);
+				handleHide();
+			}
 		} catch (err) {
 			console.error(`Error ${isEdit ? "updating" : "creating"} ${title.toLowerCase()}:`, err);
 
 			// Use the error message from the API response if available
-			const errorMessage = err.data?.detail || err.message ||
+			const errorMessage =
+				err.data?.detail ||
+				err.message ||
 				`Failed to ${isEdit ? "update" : "create"} ${title.toLowerCase()}. Please try again.`;
 
 			setErrors({
@@ -202,7 +224,6 @@ const GenericModal = ({
 			setSubmitting(false);
 		}
 	};
-
 
 	// Modal header (DONE)
 	const renderHeader = () => {
@@ -249,7 +270,6 @@ const GenericModal = ({
 		</Form.Group>
 	);
 
-
 	// Render modal body
 	const renderBody = () => {
 		if (mode === "form") {
@@ -261,7 +281,14 @@ const GenericModal = ({
 					{useCustomLayout ? (
 						<div>
 							{layoutGroups.map((group, _index) =>
-								renderInputFieldGroup(group, formData, handleChange, errors, handleSelectChange, customFieldComponents),
+								renderInputFieldGroup(
+									group,
+									formData,
+									handleChange,
+									errors,
+									handleSelectChange,
+									customFieldComponents,
+								),
 							)}
 							{fields.length > 0 && fields.map(renderFormGroup)}
 						</div>
@@ -270,8 +297,7 @@ const GenericModal = ({
 					)}
 				</div>
 			);
-
-	} else if (mode === "view") {
+		} else if (mode === "view") {
 			return (
 				<div>
 					<div className="row">
@@ -315,7 +341,7 @@ const GenericModal = ({
 				</div>
 			);
 		} else {
-			return { customContent };
+			return customContent;
 		}
 	};
 

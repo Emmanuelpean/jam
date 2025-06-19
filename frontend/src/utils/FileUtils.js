@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import useGenericAlert from "../hooks/useGenericAlert";
 import AlertModal from "../components/AlertModal";
@@ -41,21 +41,6 @@ const formatFileSize = (bytes) => {
 	if (bytes < 1024) return `${bytes} B`;
 	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
 	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
-
-const calculateBase64Size = (base64Content) => {
-	if (!base64Content) return 0;
-
-	// Remove data URL prefix if present
-	let content = base64Content;
-	if (content.includes(",")) {
-		content = content.split(",")[1];
-	}
-
-	// Calculate approximate size (base64 is ~1.33x larger than original)
-	const base64Length = content.length;
-	const padding = (content.match(/=/g) || []).length;
-	return Math.floor((base64Length * 3) / 4) - padding;
 };
 
 const getFileType = (file) => {
@@ -119,39 +104,40 @@ const FileUploader = ({
 	fieldName,
 	label,
 	value,
-	onChange, // TODO remove if not needed
+	onChange,
 	error,
 	onOpenFile = null,
-	onRemoveFile, // TODO remove if not needed
+	onRemoveFile,
 	acceptedFileTypes = ".TXT, .PDF, .DOC, .DOCX",
 	maxSizeText = "10 MB",
+	required = false,
 }) => {
-	const [file, setFile] = useState(null);
+	const [displayFile, setDisplayFile] = useState(null);
 	const [downloadUrl, setDownloadUrl] = useState("");
 	const { alertState, showError, hideAlert } = useGenericAlert();
-	console.log(onOpenFile);
+	const hiddenInputRef = useRef(null);
 
 	const maxSizeBytes = parseSizeText(maxSizeText);
 
 	useEffect(() => {
 		if (value && value instanceof File) {
-			setFile(value);
+			setDisplayFile(value);
 		} else if (value && typeof value === "object" && value.filename) {
-			setFile(value);
+			setDisplayFile(value);
 		} else {
-			setFile(null);
+			setDisplayFile(null);
 		}
 	}, [value]);
 
 	useEffect(() => {
-		if (file && file instanceof File) {
-			const url = URL.createObjectURL(file);
+		if (displayFile && displayFile instanceof File) {
+			const url = URL.createObjectURL(displayFile);
 			setDownloadUrl(url);
 			return () => URL.revokeObjectURL(url);
 		} else {
 			setDownloadUrl("");
 		}
-	}, [file]);
+	}, [displayFile]);
 
 	const showFileError = (message) => {
 		showError({
@@ -161,13 +147,38 @@ const FileUploader = ({
 		}).then(() => null);
 	};
 
+	const updateHiddenInput = (files) => {
+		if (hiddenInputRef.current) {
+			const dataTransfer = new DataTransfer();
+			files.forEach((file) => {
+				dataTransfer.items.add(file);
+			});
+			hiddenInputRef.current.files = dataTransfer.files;
+		}
+	};
+
 	const onDrop = useCallback(
 		(acceptedFiles) => {
 			if (acceptedFiles.length > 0) {
-				setFile(acceptedFiles[0]);
+				const selectedFile = acceptedFiles[0];
+				setDisplayFile(selectedFile);
+
+				// Update the hidden input for form submission
+				updateHiddenInput([selectedFile]);
+
+				// Also trigger onChange if provided (for compatibility)
+				if (onChange) {
+					const syntheticEvent = {
+						target: {
+							name: fieldName,
+							value: selectedFile,
+						},
+					};
+					onChange(syntheticEvent);
+				}
 			}
 		},
-		[fieldName],
+		[fieldName, onChange],
 	);
 
 	const onDropRejected = useCallback(
@@ -196,8 +207,13 @@ const FileUploader = ({
 	);
 
 	const removeFile = () => {
-		setFile(null);
+		setDisplayFile(null);
 		setDownloadUrl("");
+
+		// Clear the hidden input
+		if (hiddenInputRef.current) {
+			hiddenInputRef.current.value = "";
+		}
 
 		if (onRemoveFile) {
 			onRemoveFile(fieldName, onChange);
@@ -213,19 +229,19 @@ const FileUploader = ({
 	};
 
 	const handleDownload = () => {
-		const filetype = getFileType(file);
+		const filetype = getFileType(displayFile);
 		if (filetype === "uploaded") {
 			const link = document.createElement("a");
 			link.href = downloadUrl;
-			link.download = file.name;
+			link.download = displayFile.name;
 			link.click();
 		} else if (filetype === "database" && onOpenFile) {
-			onOpenFile(file);
+			onOpenFile(displayFile);
 		}
 	};
 
 	const canDownload = () => {
-		const filetype = getFileType(file);
+		const filetype = getFileType(displayFile);
 		if (filetype === "uploaded") {
 			return true;
 		} else if (filetype === "database" && onOpenFile) {
@@ -234,18 +250,20 @@ const FileUploader = ({
 		return false;
 	};
 
-	const { getRootProps, getInputProps, isDragActive } = useDropzone({
+	const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
 		onDrop: onDrop,
 		onDropRejected: onDropRejected,
 		multiple: false,
 		maxSize: maxSizeBytes,
 		accept: parseAcceptedFileTypes(acceptedFileTypes),
+		noClick: true, // We'll handle click ourselves
+		noKeyboard: true, // We'll handle keyboard ourselves
 	});
 
-	const hasNewFile = file && file instanceof File;
-	const hasExistingFile = file && typeof file === "object" && file.filename && !file.name;
+	const hasNewFile = displayFile && displayFile instanceof File;
+	const hasExistingFile = displayFile && typeof displayFile === "object" && displayFile.filename && !displayFile.name;
 	const hasFile = hasNewFile || hasExistingFile;
-	const fileSize = formatFileSize(file?.size);
+	const fileSize = formatFileSize(displayFile?.size);
 
 	return (
 		<>
@@ -256,9 +274,19 @@ const FileUploader = ({
 					{...getRootProps()}
 					className={`file-dropzone ${isDragActive ? "drag-active" : ""} ${hasFile ? "has-file" : ""} ${error ? "is-invalid" : ""}`}
 				>
+					{/* Hidden file input for form submission */}
+					<input
+						type="file"
+						name={fieldName}
+						required={required}
+						style={{ opacity: 0, position: "absolute", pointerEvents: "none" }}
+						ref={hiddenInputRef}
+						accept={acceptedFileTypes}
+					/>
+
+					{/* Dropzone input (hidden) */}
 					<input {...getInputProps()} />
 
-					{/* Always show drag state when dragging, regardless of file presence */}
 					{isDragActive ? (
 						<div className="dropzone-content">
 							<i className="bi bi-cloud-arrow-down dropzone-icon"></i>
@@ -268,7 +296,7 @@ const FileUploader = ({
 							</div>
 						</div>
 					) : !hasFile ? (
-						<div className="dropzone-content">
+						<div className="dropzone-content" onClick={open} style={{ cursor: "pointer" }}>
 							<i className="bi bi-cloud-arrow-up dropzone-icon"></i>
 							<div className="dropzone-text">Drag & drop your file here</div>
 							<div className="dropzone-text">Or click to select a file</div>
@@ -281,7 +309,9 @@ const FileUploader = ({
 							<div className="file-info">
 								<i className={`bi bi-file-earmark-text file-icon`}></i>
 								<div className="file-details">
-									<div className="file-name">{hasNewFile ? file.name : file.filename}</div>
+									<div className="file-name">
+										{hasNewFile ? displayFile.name : displayFile.filename}
+									</div>
 									{fileSize && <small className="file-size text-muted">{fileSize}</small>}
 								</div>
 							</div>
@@ -300,6 +330,18 @@ const FileUploader = ({
 										<i className="bi bi-download"></i>
 									</button>
 								)}
+
+								<button
+									type="button"
+									className="btn-file-action btn-file-browse"
+									onClick={(e) => {
+										e.stopPropagation();
+										open();
+									}}
+									title="Browse files"
+								>
+									<i className="bi bi-folder2-open"></i>
+								</button>
 
 								<button
 									type="button"
