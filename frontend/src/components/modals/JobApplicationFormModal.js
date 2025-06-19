@@ -1,39 +1,24 @@
 import React from "react";
 import GenericModal from "../GenericModal";
-import FileUploader from "../../utils/FileUtils";
+import useGenericAlert from "../../hooks/useGenericAlert";
+import { filesApi } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
-	// Add a function to handle file downloads from the database
+	const { token } = useAuth();
+	const { alertState, showError, hideAlert } = useGenericAlert();
+
 	const handleFileDownload = async (fileObject) => {
 		try {
-			// Construct the download URL for the backend
-			const downloadUrl = `${process.env.REACT_APP_API_BASE_URL || "http://localhost:8000"}/api/files/${fileObject.id}/download`;
-
-			// Create a temporary link and trigger download
-			const link = document.createElement("a");
-			link.href = downloadUrl;
-			link.download = fileObject.filename;
-			link.target = "_blank"; // Open in new tab as fallback
-			document.body.appendChild(link);
-			link.click();
-			document.body.removeChild(link);
+			await filesApi.download(fileObject.id, fileObject.filename, token);
 		} catch (error) {
 			console.error("Error downloading file:", error);
-			alert("Error downloading file. Please try again.");
+			showError({
+				title: "Download Error",
+				message: "Error downloading file. Please try again.",
+				size: "md"
+			});
 		}
-	};
-
-	const FileUploaderWrapper = ({ fieldName, label, value, onChange, error }) => {
-		return (
-			<FileUploader
-				fieldName={fieldName}
-				label={label}
-				value={value}
-				onChange={onChange}
-				error={error}
-				onOpenFile={handleFileDownload}
-			/>
-		);
 	};
 
 	// Transform initial data to match form field expectations
@@ -136,12 +121,14 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 					label: "CV/Resume",
 					type: "drag-drop",
 					columnClass: "col-md-6",
+					handleFileDownload: handleFileDownload
 				},
 				{
 					name: "cover_letter",
 					label: "Cover Letter",
 					type: "drag-drop",
 					columnClass: "col-md-6",
+					handleFileDownload: handleFileDownload
 				},
 			],
 		},
@@ -194,7 +181,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			onSuccess={onSuccess}
 			transformFormData={transformFormData}
 			isEdit={isEdit}
-			customFieldComponents={{ "drag-drop": FileUploaderWrapper }}
 		/>
 	);
 };

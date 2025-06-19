@@ -58,19 +58,13 @@ const calculateBase64Size = (base64Content) => {
 	return Math.floor((base64Length * 3) / 4) - padding;
 };
 
-const getFileSize = (file) => {
-	if (file) {
-		if (file.content) {
-			const size = calculateBase64Size(file.content);
-			return formatFileSize(size);
-		} else if (file.size) {
-			return formatFileSize(file.size);
-		} else {
-			return "";
-		}
-	} else {
-		return "";
+const getFileType = (file) => {
+	if (file && file.path) {
+		return "uploaded";
+	} else if (file) {
+		return "database";
 	}
+	return "";
 };
 
 const parseAcceptedFileTypes = (acceptedFileTypes) => {
@@ -125,16 +119,17 @@ const FileUploader = ({
 	fieldName,
 	label,
 	value,
-	onChange,
+	onChange, // TODO remove if not needed
 	error,
-	onOpenFile,
-	onRemoveFile,
+	onOpenFile = null,
+	onRemoveFile, // TODO remove if not needed
 	acceptedFileTypes = ".TXT, .PDF, .DOC, .DOCX",
 	maxSizeText = "10 MB",
 }) => {
 	const [file, setFile] = useState(null);
 	const [downloadUrl, setDownloadUrl] = useState("");
 	const { alertState, showError, hideAlert } = useGenericAlert();
+	console.log(onOpenFile);
 
 	const maxSizeBytes = parseSizeText(maxSizeText);
 
@@ -218,16 +213,25 @@ const FileUploader = ({
 	};
 
 	const handleDownload = () => {
-		if (file && file instanceof File && downloadUrl) {
+		const filetype = getFileType(file);
+		if (filetype === "uploaded") {
 			const link = document.createElement("a");
 			link.href = downloadUrl;
 			link.download = file.name;
-			document.body.appendChild(link);
 			link.click();
-			document.body.removeChild(link);
-		} else if (file && file.filename && onOpenFile) {
+		} else if (filetype === "database" && onOpenFile) {
 			onOpenFile(file);
 		}
+	};
+
+	const canDownload = () => {
+		const filetype = getFileType(file);
+		if (filetype === "uploaded") {
+			return true;
+		} else if (filetype === "database" && onOpenFile) {
+			return true;
+		}
+		return false;
 	};
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -241,7 +245,7 @@ const FileUploader = ({
 	const hasNewFile = file && file instanceof File;
 	const hasExistingFile = file && typeof file === "object" && file.filename && !file.name;
 	const hasFile = hasNewFile || hasExistingFile;
-	const fileSize = getFileSize(file);
+	const fileSize = formatFileSize(file?.size);
 
 	return (
 		<>
@@ -283,17 +287,19 @@ const FileUploader = ({
 							</div>
 
 							<div className="file-actions">
-								<button
-									type="button"
-									className="btn-file-action btn-file-download"
-									onClick={(e) => {
-										e.stopPropagation();
-										handleDownload();
-									}}
-									title={hasNewFile ? "Download file" : "Open file"}
-								>
-									<i className="bi bi-download"></i>
-								</button>
+								{canDownload() && (
+									<button
+										type="button"
+										className="btn-file-action btn-file-download"
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDownload();
+										}}
+										title="Download file"
+									>
+										<i className="bi bi-download"></i>
+									</button>
+								)}
 
 								<button
 									type="button"

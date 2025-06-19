@@ -241,6 +241,7 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 				value={value}
 				onChange={handleChange}
 				error={error}
+				onOpenFile={field.handleFileDownload}
 			/>
 		);
 	}

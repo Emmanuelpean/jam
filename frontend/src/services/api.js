@@ -45,12 +45,23 @@ class ApiService {
 		this.baseUrl = baseUrl;
 	}
 
-	// Generic GET request
-	async get(endpoint, token = null) {
+	async get(endpoint, token = null, options = {}) {
 		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "GET",
 			headers: getAuthHeaders(token),
 		});
+
+		// Handle blob responses (for file downloads)
+		if (options.responseType === 'blob') {
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({}));
+				const error = new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+				error.status = response.status;
+				throw error;
+			}
+			return response.blob();
+		}
+
 		return handleResponse(response);
 	}
 
@@ -103,6 +114,35 @@ class ApiService {
 		});
 		return handleResponse(response);
 	}
+
+	// Add a specific method for downloading files that triggers browser download
+	async downloadFile(endpoint, filename, token = null) {
+		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+			method: "GET",
+			headers: getAuthHeaders(token),
+		});
+
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({}));
+			const error = new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+			error.status = response.status;
+			throw error;
+		}
+
+		// Get the blob from response
+		const blob = await response.blob();
+
+		// Create download link and trigger download
+		const url = window.URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = filename;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		window.URL.revokeObjectURL(url);
+	}
+
 }
 
 // Create API service instance
@@ -203,6 +243,20 @@ export const apiHelpers = {
 			return apiHelpers.handleError(error);
 		}
 	},
+};
+
+export const filesApi = {
+	...createCrudApi('files'),
+
+	// Method that returns blob for manual handling
+	downloadBlob: (id, token) => {
+		return api.get(`files/${id}/download`, token, { responseType: 'blob' });
+	},
+
+	// Method that directly triggers browser download
+	download: (id, filename, token) => {
+		return api.downloadFile(`files/${id}/download`, filename, token);
+	}
 };
 
 
