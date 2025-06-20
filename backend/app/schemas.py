@@ -198,6 +198,8 @@ class Job(BaseModel):
     note: str | None = None
     keywords: list[int] = []
     contacts: list[int] = []
+    deadline: datetime | None = None
+    source_id: int | None = None
 
 
 # Simple job schema without job_application/contacts to avoid circular reference
@@ -207,6 +209,7 @@ class JobSimple(Job, Out):
     keywords: list[KeywordOut] = []
     contacts: list[PersonSimple] = []
     name: str | None = None
+    source: AggregatorOut | None = None
 
 
 class JobOut(Job, Out):
@@ -216,6 +219,7 @@ class JobOut(Job, Out):
     job_application: Optional["JobApplicationOut"] = None
     contacts: list[PersonSimple] = []
     name: str | None = None
+    source: AggregatorOut | None = None
 
 
 class JobUpdate(Job):

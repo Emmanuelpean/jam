@@ -129,6 +129,8 @@ class Aggregator(CommonBase, Base):
     name = Column(String, nullable=False)
     url = Column(String, nullable=False)
 
+    jobs = relationship("Job", back_populates="source")
+
 
 class File(CommonBase, Base):
     """Represents files uploaded by users.
@@ -263,7 +265,9 @@ class Job(CommonBase, Base):
     - `note` (str, optional): Additional notes or comments about the job posting.
     - `job_application` (JobApplication): JobApplication object related to the job posting.
     - `contacts` (list of Person): List of people linked to the company that may be interested in the job posting.
-    - `name` (str): Computed property combining the job title and company name."""
+    - `name` (str): Computed property combining the job title and company name.
+    - `deadline` (datetime, optional): Deadline for the job application.
+    - `source` (str, optional): Source of the job posting (e.g. LinkedIn, Indeed, etc.)."""
 
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
@@ -275,6 +279,8 @@ class Job(CommonBase, Base):
     location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
     duplicate_id = Column(Integer, ForeignKey("job.id", ondelete="SET NULL"), nullable=True)
     note = Column(String, nullable=True)
+    deadline = Column(TIMESTAMP(timezone=True), nullable=True)
+    source_id = Column(Integer, ForeignKey("aggregator.id"), nullable=True)
 
     # Relationships
     company = relationship("Company", back_populates="jobs")
@@ -282,6 +288,7 @@ class Job(CommonBase, Base):
     keywords = relationship("Keyword", secondary=job_keywords, back_populates="jobs", lazy="selectin")
     job_application = relationship("JobApplication", back_populates="job", uselist=False)
     contacts = relationship("Person", secondary=job_contacts, back_populates="jobs", lazy="selectin")
+    source = relationship("Aggregator", back_populates="jobs")
 
     @hybrid_property
     def name(self):
