@@ -73,6 +73,14 @@ export const columns = {
 		render: renderFunctions.date,
 	},
 
+	type: {
+		key: "type",
+		label: "Type",
+		sortable: true,
+		searchable: true,
+		type: "text",
+	},
+
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
 	location: {

@@ -256,6 +256,7 @@ class Interview(BaseModel):
     location_id: int | None = None
     jobapplication_id: int
     note: str | None = None
+    type: str | None = None
     # interviewers: list[int] | None = None
 
 
@@ -264,7 +265,6 @@ class InterviewSimple(Interview, Out):
 
 
 class InterviewOut(Interview, Out):
-    job_application: Optional["JobApplicationOut"] = None
     location: LocationOut | None = None
     interviewers: list["PersonSimple"] | None = None
 

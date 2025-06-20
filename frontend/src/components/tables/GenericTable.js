@@ -128,6 +128,7 @@ const GenericTable = ({
 	emptyMessage = "No items found",
 	actions = null,
 	onRowClick = null,
+	showAllEntries = false,
 }) => {
 	const [currentPage, setCurrentPage] = useState(0);
 	const [pageSize, setPageSize] = useState(10);
@@ -278,7 +279,10 @@ const GenericTable = ({
 						<button
 							key={index}
 							className={`btn btn-action ${action.className || ""}`}
-							onClick={() => action.onClick(item)}
+							onClick={(event) => {
+								event.stopPropagation(); // Add this line
+								action.onClick(item, event);
+							}}
 							title={action.title}
 						>
 							{action.icon && <i className={action.icon}></i>}
@@ -295,8 +299,8 @@ const GenericTable = ({
 	// ----------------------------------------------------- PAGES -----------------------------------------------------
 
 	const totalPages = Math.ceil(sortedData.length / pageSize);
-	const startIndex = currentPage * pageSize;
-	const endIndex = startIndex + pageSize;
+	const startIndex = showAllEntries ? 0 : currentPage * pageSize;
+	const endIndex = showAllEntries ? sortedData.length : startIndex + pageSize;
 	const currentPageData = sortedData.slice(startIndex, endIndex);
 
 	// Reset to first page when data changes
@@ -390,7 +394,6 @@ const GenericTable = ({
 							<tr
 								key={item.id || index}
 								onClick={(event) => handleRowClick(event, item)}
-								style={onRowClick ? { cursor: "pointer" } : {}}
 							>
 								{tableColumns.map((column, columnIndex) => (
 									<td
@@ -414,7 +417,8 @@ const GenericTable = ({
 				</table>
 			</div>
 
-			{/* Page controls */}
+			{/* Page controls - Hidden when showAllEntries is true */}
+			{!showAllEntries && (
 			<div className="d-flex justify-content-between align-items-center mt-0ds">
 				<div className="d-flex align-items-center gap-1">
 					<Button
@@ -481,6 +485,7 @@ const GenericTable = ({
 					</Form.Select>
 				</div>
 			</div>
+			)}
 		</div>
 	);
 };

@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../services/api";
 
-export const useTableData = (endpoint, dependencies = []) => {
+
+export const useTableData = (endpoint, dependencies = [], queryParams = {}) => {
 	const { token } = useAuth();
 	const navigate = useNavigate();
 	const [data, setData] = useState([]);
@@ -21,7 +22,12 @@ export const useTableData = (endpoint, dependencies = []) => {
 
 			setLoading(true);
 			try {
-				const result = await api.get(`${endpoint}/`, token);
+				// Build query string from queryParams
+				const queryString = Object.keys(queryParams).length > 0
+					? '?' + new URLSearchParams(queryParams).toString()
+					: '';
+
+				const result = await api.get(`${endpoint}/${queryString}`, token);
 				setData(result);
 			} catch (err) {
 				console.error(`Error fetching ${endpoint}:`, err);

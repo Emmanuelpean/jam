@@ -97,6 +97,11 @@ thead.custom-header th {
     background-clip: text;
 }
 
+.table-container {
+    max-width: 90%;
+    margin: auto auto;
+}
+
 
 /* ------------------------------------------------------ FORM ------------------------------------------------------ */
 

@@ -1,125 +1,95 @@
-import React, { useState } from "react";
-import { useAuth } from "../../contexts/AuthContext";
-import GenericTable, { createGenericDeleteHandler, createTableActions } from "./GenericTable";
-import { columns } from "../rendering/ColumnRenders";
+
+import React from "react";
+import GenericTableWithModals from "./GenericTableWithModals";
 import InterviewFormModal from "../modals/interview/InterviewFormModal";
 import InterviewViewModal from "../modals/interview/InterviewViewModal";
-import AlertModal from "../modals/alert/AlertModal";
-import useGenericAlert from "../../hooks/useGenericAlert";
-import "./InterviewTable.css";
+import { useTableData } from "./Table";
+import { columns } from "../rendering/ColumnRenders";
 
-const InterviewsTable = ({ interviews = [], jobApplicationId, onInterviewChange }) => {
-	const { token } = useAuth();
-	const [showModal, setShowModal] = useState(false);
-	const [showViewModal, setShowViewModal] = useState(false);
-	const [showEditModal, setShowEditModal] = useState(false);
-	const [selectedInterview, setSelectedInterview] = useState(null);
+const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
+	const {
+		data: interviews,
+		loading,
+		error,
+		sortConfig,
+		setSortConfig,
+		searchTerm,
+		setSearchTerm,
+		addItem,
+		updateItem,
+		deleteItem,
+	} = useTableData("interviews", [jobApplicationId], { jobapplication_id: jobApplicationId });
 
-	const { alertState, showConfirm, showError, hideAlert } = useGenericAlert();
-
-	// Handle view interview
-	const handleView = (interview) => {
-		setSelectedInterview(interview);
-		setShowViewModal(true);
-	};
-
-	// Handle edit interview
-	const handleEdit = (interview) => {
-		setSelectedInterview(interview);
-		setShowEditModal(true);
-	};
-
-	// Handle add success
+	// Wrapper for success handlers to trigger parent refresh
 	const handleAddSuccess = (newInterview) => {
+		addItem(newInterview);
+		// if (onInterviewChange) {
+		// 	onInterviewChange();
+		// }
+	};
+
+	const handleUpdateSuccess = (updatedInterview) => {
+		updateItem(updatedInterview);
 		if (onInterviewChange) {
 			onInterviewChange();
 		}
-		setShowModal(false);
 	};
 
-	// Handle edit success
-	const handleEditSuccess = (updatedInterview) => {
+	const handleDeleteSuccess = (deletedId) => {
+		deleteItem(deletedId);
 		if (onInterviewChange) {
 			onInterviewChange();
 		}
-		setShowEditModal(false);
-		setSelectedInterview(null);
 	};
-
-	// Handle edit modal close
-	const handleEditModalClose = () => {
-		setShowEditModal(false);
-		setSelectedInterview(null);
-	};
-
-	// Create reusable delete handler using the generic function
-	const handleDelete = createGenericDeleteHandler({
-		endpoint: "interviews",
-		token,
-		showConfirm,
-		showError,
-		removeItem: (id) => {
-			if (onInterviewChange) {
-				onInterviewChange();
-			}
-		},
-		nameKey: "date",
-		itemType: "Interview",
-	});
 
 	// Define columns for interview table
-	const interviewColumns = [columns.date, columns.location, columns.note];
+	const interviewColumns = [columns.date, columns.type, columns.location, columns.note];
 
-	// Define actions for each row
-	const tableActions = createTableActions([
-		{ type: "view", onClick: handleView },
-		{ type: "edit", onClick: handleEdit },
-		{ type: "delete", onClick: handleDelete },
-	]);
+	// Create wrapper components that pass the jobApplicationId
+	const InterviewFormModalWithProps = (props) => (
+		<InterviewFormModal
+			{...props}
+			jobApplicationId={jobApplicationId}
+			onSuccess={props.isEdit ? handleUpdateSuccess : handleAddSuccess}
+		/>
+	);
+
+	const InterviewViewModalWithProps = (props) => (
+		<InterviewViewModal
+			{...props}
+			interview={props.item}
+		/>
+	);
 
 	return (
 		<div className="interviews-table-container">
 			<div className="mb-3">
 				<h6 className="mb-3">Interviews {interviews.length > 0 && `(${interviews.length})`}</h6>
 
-				<GenericTable
+				<GenericTableWithModals
 					data={interviews}
 					columns={interviewColumns}
-					actions={tableActions}
-					onAddClick={() => setShowModal(true)}
+					sortConfig={sortConfig}
+					onSort={setSortConfig}
+					searchTerm={searchTerm}
+					onSearchChange={setSearchTerm}
 					addButtonText="Add Interview"
+					loading={loading}
+					error={error}
 					emptyMessage="No interviews found"
+					FormModal={InterviewFormModalWithProps}
+					ViewModal={InterviewViewModalWithProps}
+					endpoint="interviews"
+					nameKey="date"
+					itemType="Interview"
+					addItem={addItem}
+					updateItem={updateItem}
+					removeItem={handleDeleteSuccess}
+					formModalSize="xl"
+					viewModalSize="xl"
+					isInModal={true}
+					showAllEntries={true}
 				/>
-
-				{/* Modals */}
-				<InterviewFormModal
-					show={showModal}
-					size="xl"
-					onHide={() => setShowModal(false)}
-					onSuccess={handleAddSuccess}
-					jobApplicationId={jobApplicationId}
-				/>
-
-				<InterviewFormModal
-					show={showEditModal}
-					onHide={handleEditModalClose}
-					onSuccess={handleEditSuccess}
-					initialData={selectedInterview || {}}
-					isEdit={true}
-					size="xl"
-					jobApplicationId={jobApplicationId}
-				/>
-
-				<InterviewViewModal
-					show={showViewModal}
-					onHide={() => setShowViewModal(false)}
-					interview={selectedInterview}
-					onEdit={handleEdit}
-					size="xl"
-				/>
-
-				{/* Alert Modal using GenericModal - handles both alerts and confirmations */}
-				<AlertModal alertState={alertState} hideAlert={hideAlert} />
 			</div>
 		</div>
 	);

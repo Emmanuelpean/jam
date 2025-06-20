@@ -30,3 +30,9 @@
     color: #495057;
     font-weight: 600;
 }
+
+.table-container-modal {
+    max-width: 100% !important;
+    margin: auto auto !important;
+    padding: 0 !important;
+}

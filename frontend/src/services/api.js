@@ -193,6 +193,7 @@ export const locationsApi = createCrudApi("locations");
 export const keywordsApi = createCrudApi("keywords");
 export const personsApi = createCrudApi("persons");
 export const jobApplicationsApi = createCrudApi("jobapplications");
+export const interviewsApi = createCrudApi("interviews");
 
 export { api, API_BASE_URL };
 
