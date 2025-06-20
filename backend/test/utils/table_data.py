@@ -1,3 +1,4 @@
+
 """Centralized test data for both conftest.py and seed_database.py"""
 
 from test.utils.files import load_all_resource_files
@@ -26,9 +27,17 @@ USERS_DATA = [
         "email": "admin@example.com",
         "password": "password5",
     },
+    {
+        "email": "developer@techstartup.com",
+        "password": "password6",
+    },
+    {
+        "email": "recruiter@talent.com",
+        "password": "password7",
+    },
 ]
 
-# Company test data
+# Company test data - expanded with more variety
 COMPANIES_DATA = [
     {
         "name": "Tech Corp",
@@ -52,35 +61,45 @@ COMPANIES_DATA = [
         "name": "WebSolutions Ltd",
         "description": "Full-service web development and digital marketing agency",
         "url": "https://websolutions.com",
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
         "name": "DataTech Industries",
         "description": "Big data analytics and business intelligence solutions",
         "url": "https://datatech.com",
+        "owner_id": 2,
+    },
+    # New entries with different parameter combinations
+    {
+        "name": "CloudFirst Inc",
+        "description": "",  # Empty description
+        "url": "https://cloudfirst.io",
         "owner_id": 1,
     },
     {
-        "name": "CloudNine Systems",
-        "description": "Enterprise cloud infrastructure and DevOps solutions",
-        "url": "https://cloudnine.com",
+        "name": "Minimal Corp",
+        "owner_id": 1,  # Only required fields
+    },
+    {
+        "name": "No URL Company",
+        "description": "Company without website",
         "owner_id": 1,
     },
     {
-        "name": "FinTech Solutions",
-        "description": "Financial technology and blockchain innovations",
-        "url": "https://fintechsol.com",
+        "name": "Enterprise Solutions",
+        "description": "Large enterprise software solutions provider with comprehensive digital transformation services",
+        "url": "https://enterprise-solutions.com",
         "owner_id": 1,
     },
     {
-        "name": "GreenEnergy Co",
-        "description": "Renewable energy and sustainability technology",
-        "url": "https://greenenergy.com",
+        "name": "LocalBiz",
+        "description": "Small local business",
+        "url": "https://localbiz.com",
         "owner_id": 1,
     },
 ]
 
-# Location test data
+# Location test data - expanded with more combinations
 LOCATIONS_DATA = [
     {
         "postcode": "10001",
@@ -101,7 +120,7 @@ LOCATIONS_DATA = [
         "city": "London",
         "country": "UK",
         "remote": False,
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
         "city": "San Francisco",
@@ -112,7 +131,7 @@ LOCATIONS_DATA = [
     {
         "country": "Germany",
         "remote": True,
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
         "postcode": "OX1 2JD",
@@ -124,31 +143,54 @@ LOCATIONS_DATA = [
     {
         "country": "Canada",
         "remote": True,
+        "owner_id": 2,
+    },
+    # New entries with different combinations
+    {
+        "postcode": "75001",
+        "city": "Paris",
+        "country": "France",
+        "remote": False,
+        "owner_id": 1,
+    },
+    {
+        "postcode": "10115",
+        "country": "Germany",  # No city provided
+        "remote": False,
+        "owner_id": 1,
+    },
+    {
+        "city": "Tokyo",
+        "country": "Japan",  # No postcode
+        "remote": False,
+        "owner_id": 1,
+    },
+    {
+        "country": "Australia",  # Only country, remote
+        "remote": True,
         "owner_id": 1,
     },
     {
         "postcode": "M5V 3A8",
         "city": "Toronto",
         "country": "Canada",
-        "remote": False,
-        "owner_id": 1,
-    },
-    {
-        "postcode": "2000",
-        "city": "Sydney",
-        "country": "Australia",
-        "remote": False,
+        "remote": True,  # Hybrid - has location but remote friendly
         "owner_id": 1,
     },
     {
         "city": "Amsterdam",
         "country": "Netherlands",
-        "remote": False,
+        "remote": True,
+        "owner_id": 1,
+    },
+    {
+        "country": "Brazil",
+        "remote": True,
         "owner_id": 1,
     },
 ]
 
-# Aggregator test data
+# Aggregator test data - expanded
 AGGREGATORS_DATA = [
     {
         "name": "LinkedIn",
@@ -168,31 +210,42 @@ AGGREGATORS_DATA = [
     {
         "name": "AngelList",
         "url": "https://angel.co",
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
         "name": "Stack Overflow Jobs",
         "url": "https://stackoverflow.com/jobs",
+        "owner_id": 2,
+    },
+    # New entries
+    {
+        "name": "RemoteOK",
+        "url": "https://remoteok.io",
         "owner_id": 1,
     },
     {
-        "name": "Company Website",
-        "url": "https://example.com/careers",
+        "name": "WeWorkRemotely",
+        "url": "https://weworkremotely.com",
         "owner_id": 1,
     },
     {
-        "name": "Recruiter",
-        "url": "https://recruiter-portal.com",
+        "name": "Upwork",
+        "url": "https://upwork.com",
         "owner_id": 1,
     },
     {
-        "name": "Job Fair",
-        "url": "https://jobfair.com",
+        "name": "Freelancer",
+        "url": "https://freelancer.com",
+        "owner_id": 1,
+    },
+    {
+        "name": "ZipRecruiter",
+        "url": "https://ziprecruiter.com",
         "owner_id": 1,
     },
 ]
 
-# Keyword test data
+# Keyword test data - expanded with more variety
 KEYWORDS_DATA = [
     {
         "name": "Python",
@@ -224,23 +277,23 @@ KEYWORDS_DATA = [
     },
     {
         "name": "Machine Learning",
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
         "name": "DevOps",
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
         "name": "Docker",
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
         "name": "Kubernetes",
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
         "name": "AWS",
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
         "name": "REST API",
@@ -254,14 +307,7 @@ KEYWORDS_DATA = [
         "name": "Agile",
         "owner_id": 1,
     },
-    {
-        "name": "Java",
-        "owner_id": 1,
-    },
-    {
-        "name": "Spring Boot",
-        "owner_id": 1,
-    },
+    # New keywords for better coverage
     {
         "name": "Vue.js",
         "owner_id": 1,
@@ -274,9 +320,37 @@ KEYWORDS_DATA = [
         "name": "MongoDB",
         "owner_id": 1,
     },
+    {
+        "name": "Redis",
+        "owner_id": 1,
+    },
+    {
+        "name": "GraphQL",
+        "owner_id": 1,
+    },
+    {
+        "name": "Microservices",
+        "owner_id": 1,
+    },
+    {
+        "name": "CI/CD",
+        "owner_id": 1,
+    },
+    {
+        "name": "Terraform",
+        "owner_id": 1,
+    },
+    {
+        "name": "Jenkins",
+        "owner_id": 1,
+    },
+    {
+        "name": "Scrum",
+        "owner_id": 1,
+    },
 ]
 
-# Person test data
+# Person test data - expanded with more combinations
 PERSONS_DATA = [
     {
         "first_name": "John",
@@ -327,41 +401,91 @@ PERSONS_DATA = [
         "email": "sarah.wilson@oxfordpv.com",
         "role": "Technical Recruiter",
         "company_id": 3,  # Oxford PV
-        "owner_id": 1,
-    },
-    {
-        "first_name": "Alex",
-        "last_name": "Johnson",
-        "email": "alex.johnson@websolutions.com",
-        "role": "Full Stack Developer",
-        "company_id": 4,  # WebSolutions Ltd
-        "owner_id": 1,
-    },
-    {
-        "first_name": "Lisa",
-        "last_name": "Chen",
-        "email": "lisa.chen@datatech.com",
-        "role": "Data Scientist",
-        "company_id": 5,  # DataTech Industries
-        "owner_id": 1,
-    },
-    {
-        "first_name": "Robert",
-        "last_name": "Martinez",
-        "phone": "555-0123",
-        "role": "Cloud Architect",
-        "company_id": 6,  # CloudNine Systems
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
         "first_name": "Anonymous",
         "last_name": "Recruiter",
         "company_id": None,
+        "owner_id": 2,
+    },
+    {
+        "first_name": "Tech",
+        "last_name": "Recruiter",
+        "role": "Talent Acquisition",
+        "company_id": 3,  # Oxford PV
+        "owner_id": 2,
+    },
+    # New entries with different combinations
+    {
+        "first_name": "Alex",
+        "last_name": "Johnson",
+        "email": "alex@cloudfirst.io",
+        "phone": "5551234567",
+        "linkedin_url": "https://linkedin.com/in/alexjohnson",
+        "role": "CTO",
+        "company_id": 6,  # CloudFirst Inc
         "owner_id": 1,
+    },
+    {
+        "first_name": "Maria",
+        "last_name": "Garcia",
+        "email": "maria.garcia@enterprise.com",
+        "role": "HR Director",
+        "company_id": 9,  # Enterprise Solutions
+        "owner_id": 1,
+    },
+    {
+        "first_name": "David",
+        "last_name": "Kim",
+        "phone": "5559876543",
+        "linkedin_url": "https://linkedin.com/in/davidkim",
+        "company_id": None,  # Freelancer/Independent
+        "owner_id": 1,
+    },
+    {
+        "first_name": "Lisa",
+        "last_name": "Chen",
+        "email": "lisa@localbiz.com",
+        "role": "Founder",
+        "company_id": 10,  # LocalBiz
+        "owner_id": 1,
+    },
+    {
+        "first_name": "Robert",
+        "last_name": "Anderson",
+        "linkedin_url": "https://linkedin.com/in/robertanderson",
+        "role": "Senior Developer",
+        "company_id": 7,  # Minimal Corp
+        "owner_id": 1,
+    },
+    {
+        "first_name": "Jennifer",
+        "last_name": "Brown",
+        "phone": "5555551234",
+        "role": "Product Owner",
+        "company_id": 8,  # No URL Company
+        "owner_id": 1,
+    },
+    {
+        "first_name": "Michael",
+        "last_name": "Wilson",
+        "email": "m.wilson@datatech.com",
+        "phone": "5557778888",
+        "linkedin_url": "https://linkedin.com/in/michaelwilson",
+        "role": "Data Scientist",
+        "company_id": 5,  # DataTech Industries
+        "owner_id": 1,
+    },
+    {
+        "first_name": "Freelance",
+        "last_name": "Developer",
+        "email": "freelance@dev.com",
+        "owner_id": 1,  # No company, minimal info
     },
 ]
 
-# Job test data with deadline and source_id
+# Job test data - expanded with more variety
 JOBS_DATA = [
     {
         "title": "Senior Python Developer",
@@ -373,8 +497,6 @@ JOBS_DATA = [
         "company_id": 1,  # Tech Corp
         "location_id": 2,  # Beverly Hills
         "note": "Excellent opportunity for senior developer",
-        "deadline": "2024-02-15T23:59:59",
-        "source_id": 1,  # LinkedIn
         "owner_id": 1,
     },
     {
@@ -387,8 +509,6 @@ JOBS_DATA = [
         "company_id": 2,  # StartupXYZ
         "location_id": 1,  # New York
         "note": "Great team culture mentioned in reviews",
-        "deadline": "2024-02-20T17:00:00",
-        "source_id": 2,  # Indeed
         "owner_id": 1,
     },
     {
@@ -400,8 +520,6 @@ JOBS_DATA = [
         "url": "https://techcorp.com/jobs/remote_react_developer",
         "company_id": 1,  # Tech Corp
         "location_id": 4,  # San Francisco (remote)
-        "deadline": "2024-03-01T12:00:00",
-        "source_id": 6,  # Company Website
         "owner_id": 1,
     },
     {
@@ -413,8 +531,6 @@ JOBS_DATA = [
         "url": "https://startupxyz.com/jobs/cloud_engineer",
         "company_id": 2,  # StartupXYZ
         "location_id": 3,  # London
-        "deadline": "2024-02-28T23:59:59",
-        "source_id": 3,  # Glassdoor
         "owner_id": 1,
     },
     {
@@ -425,128 +541,118 @@ JOBS_DATA = [
         "personal_rating": 2,
         "url": "https://techcorp.com/jobs/frontend_developer",
         "company_id": 1,  # Tech Corp
-        "location_id": 5,  # Germany (remote)
-        "source_id": 5,  # Stack Overflow Jobs
+        "location_id": 5,  # Berlin (remote)
         "owner_id": 1,
     },
     {
         "title": "Backend Developer",
         "description": "Looking for a backend developer with Python experience. FastAPI knowledge preferred.",
         "location_id": 4,  # San Francisco (remote)
-        "deadline": "2024-04-15T18:00:00",
-        "source_id": 7,  # Recruiter
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
         "title": "Software Engineer Intern",
         "description": "Summer internship opportunity for computer science students. Great learning environment.",
         "personal_rating": 1,
         "company_id": 3,  # Oxford PV
-        "deadline": "2024-03-31T23:59:59",
-        "source_id": 8,  # Job Fair
-        "owner_id": 1,
+        "owner_id": 2,
     },
     {
+        "title": "Developer Position",
+        "company_id": 3,  # Oxford PV
+        "location_id": 5,  # Berlin (remote)
+        "owner_id": 2,
+    },
+    # New entries with different parameter combinations
+    {
         "title": "DevOps Engineer",
-        "salary_min": 70000,
-        "salary_max": 110000,
-        "description": "Manage CI/CD pipelines and cloud infrastructure. Docker and Kubernetes experience required.",
-        "personal_rating": 4,
-        "url": "https://cloudnine.com/careers/devops",
-        "company_id": 6,  # CloudNine Systems
-        "location_id": 8,  # Toronto
-        "deadline": "2024-02-25T16:00:00",
-        "source_id": 1,  # LinkedIn
+        "salary_min": 90000,
+        "salary_max": 140000,
+        "description": "Build and maintain CI/CD pipelines, manage cloud infrastructure",
+        "personal_rating": 5,
+        "url": "https://cloudfirst.io/careers/devops",
+        "company_id": 6,  # CloudFirst Inc
+        "location_id": 8,  # Paris
+        "note": "Strong DevOps culture, great tools",
         "owner_id": 1,
     },
     {
         "title": "Data Scientist",
         "salary_min": 85000,
-        "salary_max": 135000,
-        "description": "Analyze large datasets and build machine learning models. Python and R experience required.",
-        "personal_rating": 5,
-        "url": "https://datatech.com/jobs/data-scientist",
-        "company_id": 5,  # DataTech Industries
-        "location_id": 9,  # Sydney
-        "deadline": "2024-03-10T09:00:00",
-        "source_id": 4,  # AngelList
-        "owner_id": 1,
-    },
-    {
-        "title": "Java Spring Developer",
-        "salary_min": 70000,
-        "salary_max": 115000,
-        "description": "Develop enterprise applications using Java and Spring Boot. Microservices architecture experience preferred.",
-        "personal_rating": 3,
-        "url": "https://websolutions.com/careers/java-dev",
-        "company_id": 4,  # WebSolutions Ltd
-        "location_id": 10,  # Amsterdam
-        "source_id": 2,  # Indeed
-        "owner_id": 1,
-    },
-    {
-        "title": "Blockchain Developer",
-        "salary_min": 90000,
-        "salary_max": 150000,
-        "description": "Build decentralized applications and smart contracts. Solidity and Web3 experience required.",
-        "personal_rating": 5,
-        "url": "https://fintechsol.com/jobs/blockchain",
-        "company_id": 7,  # FinTech Solutions
-        "location_id": 7,  # Canada (remote)
-        "deadline": "2024-02-18T23:59:59",
-        "source_id": 4,  # AngelList
-        "owner_id": 1,
-    },
-    {
-        "title": "Sustainability Tech Lead",
-        "salary_min": 95000,
-        "salary_max": 140000,
-        "description": "Lead development of renewable energy management systems. IoT and embedded systems experience preferred.",
+        "salary_max": 125000,
+        "description": "Work with big data to derive insights and build ML models",
         "personal_rating": 4,
-        "company_id": 8,  # GreenEnergy Co
-        "location_id": 6,  # Oxford
-        "deadline": "2024-03-05T15:30:00",
-        "source_id": 6,  # Company Website
+        "company_id": 5,  # DataTech Industries
+        "location_id": 9,  # Germany (no city)
         "owner_id": 1,
     },
     {
-        "title": "Junior Web Developer",
+        "title": "Vue.js Frontend Developer",
+        "salary_min": 50000,
+        "salary_max": 80000,
+        "description": "Build modern SPAs with Vue.js and TypeScript",
+        "url": "https://enterprise-solutions.com/jobs/vue-dev",
+        "company_id": 9,  # Enterprise Solutions
+        "location_id": 10,  # Tokyo
+        "owner_id": 1,
+    },
+    {
+        "title": "Remote Full Stack Engineer",
+        "salary_min": 70000,
+        "salary_max": 110000,
+        "description": "Work remotely on full stack applications",
+        "personal_rating": 3,
+        "url": "https://localbiz.com/jobs/fullstack",
+        "company_id": 10,  # LocalBiz
+        "location_id": 11,  # Australia (remote)
+        "note": "Small team, lots of autonomy",
+        "owner_id": 1,
+    },
+    {
+        "title": "Junior Developer",
         "salary_min": 40000,
         "salary_max": 60000,
-        "description": "Entry-level position for recent graduates. Training provided in modern web technologies.",
+        "description": "Entry-level position for new graduates",
         "personal_rating": 2,
-        "company_id": 4,  # WebSolutions Ltd
-        "location_id": 3,  # London
-        "source_id": 8,  # Job Fair
+        "company_id": 7,  # Minimal Corp
+        "location_id": 12,  # Toronto
         "owner_id": 1,
     },
     {
-        "title": "Technical Product Manager",
-        "salary_min": 100000,
-        "salary_max": 160000,
-        "description": "Bridge technical and business teams. Previous engineering experience required.",
-        "personal_rating": 5,
-        "url": "https://startupxyz.com/careers/tech-pm",
-        "company_id": 2,  # StartupXYZ
-        "location_id": 1,  # New York
-        "deadline": "2024-02-22T12:00:00",
-        "source_id": 7,  # Recruiter
+        "title": "Freelance Web Developer",
+        "description": "Contract position for web development projects",
+        "location_id": 13,  # Amsterdam (remote)
+        "note": "Flexible hours, project-based",
         "owner_id": 1,
     },
     {
         "title": "Mobile App Developer",
-        "salary_min": 65000,
+        "salary_min": 60000,
         "salary_max": 100000,
-        "description": "Develop cross-platform mobile applications. React Native experience preferred.",
-        "personal_rating": 3,
-        "company_id": 1,  # Tech Corp
-        "location_id": 4,  # San Francisco (remote)
-        "source_id": 5,  # Stack Overflow Jobs
+        "description": "Develop iOS and Android applications",
+        "personal_rating": 4,
+        "url": "https://websolutions.com/jobs/mobile-dev",
+        "company_id": 4,  # WebSolutions Ltd
+        "location_id": 14,  # Brazil (remote)
+        "owner_id": 1,
+    },
+    {
+        "title": "Minimum Required Job",
+        "owner_id": 1,  # Only required field
+    },
+    {
+        "title": "High Salary Position",
+        "salary_min": 150000,
+        "salary_max": 250000,
+        "description": "Senior leadership role with high compensation",
+        "personal_rating": 5,
+        "company_id": 9,  # Enterprise Solutions
+        "location_id": 1,  # New York
         "owner_id": 1,
     },
 ]
 
-# File test data
+# File test data - expanded
 FILES_DATA = [
     {
         "filename": "john_doe_cv_2024.pdf",
@@ -570,7 +676,7 @@ FILES_DATA = [
     },
     {
         "filename": "junior_cloud_cv.docx",
-        "owner_id": 1,
+        "owner_id": 2,
         **RESOURCE_FILES["Cover Letter.docx"],
     },
     {
@@ -579,18 +685,39 @@ FILES_DATA = [
         **RESOURCE_FILES["CV.pdf"],
     },
     {
-        "filename": "data_scientist_cv.pdf",
+        "filename": "frontend_developer_cover_letter.docx",
+        "owner_id": 1,
+        **RESOURCE_FILES["Cover Letter.docx"],
+    },
+    # New entries
+    {
+        "filename": "devops_engineer_cv.pdf",
         "owner_id": 1,
         **RESOURCE_FILES["CV.pdf"],
     },
     {
-        "filename": "blockchain_dev_cover_letter.docx",
+        "filename": "data_scientist_resume.pdf",
+        "owner_id": 1,
+        **RESOURCE_FILES["CV.pdf"],
+    },
+    {
+        "filename": "vue_developer_cover_letter.txt",
+        "owner_id": 1,
+        **RESOURCE_FILES["Cover Letter.txt"],
+    },
+    {
+        "filename": "mobile_dev_portfolio.pdf",
+        "owner_id": 1,
+        **RESOURCE_FILES["CV.pdf"],
+    },
+    {
+        "filename": "generic_cover_letter.docx",
         "owner_id": 1,
         **RESOURCE_FILES["Cover Letter.docx"],
     },
 ]
 
-# Job Application test data
+# Job Application test data - expanded with more variety
 JOB_APPLICATIONS_DATA = [
     {
         "date": "2024-01-15T10:00:00",
@@ -598,8 +725,8 @@ JOB_APPLICATIONS_DATA = [
         "job_id": 1,
         "status": "Applied",
         "note": "Submitted application with cover letter",
-        "cv_id": 1,
-        "cover_letter_id": 2,
+        "cv_id": 3,
+        "cover_letter_id": 3,
         "owner_id": 1,
     },
     {
@@ -608,7 +735,7 @@ JOB_APPLICATIONS_DATA = [
         "job_id": 2,
         "status": "Interview",
         "note": "Phone screening scheduled for next week",
-        "cv_id": 3,
+        "cv_id": 1,
         "owner_id": 1,
     },
     {
@@ -616,7 +743,7 @@ JOB_APPLICATIONS_DATA = [
         "job_id": 3,
         "status": "Applied",
         "note": "Applied through LinkedIn",
-        "cover_letter_id": 4,
+        "cover_letter_id": 2,
         "owner_id": 1,
     },
     {
@@ -625,46 +752,96 @@ JOB_APPLICATIONS_DATA = [
         "job_id": 4,
         "status": "Rejected",
         "note": "Not enough cloud experience",
-        "cv_id": 5,
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-19T11:20:00",
-        "job_id": 9,
-        "status": "Offer",
-        "note": "Received offer! Negotiating salary",
-        "cv_id": 7,
-        "cover_letter_id": 8,
+        "cv_id": 4,
+        "cover_letter_id": 4,
         "owner_id": 1,
     },
     {
         "date": "2024-01-20T13:30:00",
-        "job_id": 11,
+        "job_id": 6,
         "status": "Applied",
-        "note": "Exciting blockchain opportunity",
-        "cv_id": 1,
+        "note": "Quick application through company form",
+        "owner_id": 2,
+    },
+    # New entries with different combinations
+    {
+        "date": "2024-01-21T09:00:00",
+        "url": "https://cloudfirst.io/apply/devops",
+        "job_id": 9,  # DevOps Engineer
+        "status": "Interview",
+        "note": "Technical interview scheduled",
+        "cv_id": 8,  # devops_engineer_cv.pdf
+        "cover_letter_id": 10,  # vue_developer_cover_letter.txt
         "owner_id": 1,
     },
     {
-        "date": "2024-01-21T08:45:00",
-        "url": "https://fintechsol.com/apply",
-        "job_id": 14,
-        "status": "Interview",
-        "note": "Technical interview scheduled",
+        "date": "2024-01-22T11:15:00",
+        "job_id": 10,  # Data Scientist
+        "status": "Applied",
+        "cv_id": 9,  # data_scientist_resume.pdf
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-23T15:45:00",
+        "url": "https://enterprise-solutions.com/apply/vue-dev",
+        "job_id": 11,  # Vue.js Frontend Developer
+        "status": "Rejected",
+        "note": "Position filled internally",
+        "cv_id": 6,
+        "cover_letter_id": 12,  # generic_cover_letter.docx
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-24T08:30:00",
+        "job_id": 12,  # Remote Full Stack Engineer
+        "status": "Applied",
+        "note": "Applied directly through website",
         "cv_id": 3,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-25T10:00:00",
+        "job_id": 13,  # Junior Developer
+        "status": "Interview",
+        "cv_id": 1,
+        "cover_letter_id": 7,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-26T16:00:00",
+        "url": "https://websolutions.com/apply/mobile-dev",
+        "job_id": 15,  # Mobile App Developer
+        "status": "Applied",
+        "note": "Excited about mobile development opportunity",
+        "cv_id": 11,  # mobile_dev_portfolio.pdf
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-27T12:00:00",
+        "job_id": 16,  # Minimum Required Job
+        "status": "Applied",
+        "owner_id": 1,  # Minimal application
+    },
+    {
+        "date": "2024-01-28T14:20:00",
+        "url": "https://enterprise-solutions.com/apply/high-salary",
+        "job_id": 17,  # High Salary Position
+        "status": "Interview",
+        "note": "Executive-level interview process",
+        "cv_id": 8,
         "cover_letter_id": 2,
         "owner_id": 1,
     },
 ]
 
-# Interview test data
+# Interview test data - expanded with more variety
 INTERVIEWS_DATA = [
     {
         "date": "2024-01-20T09:30:00",
         "type": "HR",
         "location_id": 1,
         "jobapplication_id": 1,
-        "note": "Initial HR screening call",
+        "note": "First round technical interview",
         "owner_id": 1,
     },
     {
@@ -672,91 +849,135 @@ INTERVIEWS_DATA = [
         "type": "Technical",
         "location_id": 2,
         "jobapplication_id": 2,
-        "note": "Coding challenge and system design",
+        "note": "HR screening call",
         "owner_id": 1,
     },
     {
         "date": "2024-01-22T10:15:00",
         "type": "Management",
         "location_id": 4,  # Remote
-        "jobapplication_id": 2,
-        "note": "Meeting with team lead",
+        "jobapplication_id": 3,
+        "note": "Remote technical assessment",
         "owner_id": 1,
     },
     {
         "date": "2024-01-23T16:30:00",
-        "type": "Technical",
-        "location_id": 3,
-        "jobapplication_id": 5,
-        "note": "Machine learning case study",
+        "type": "HR",
+        "location_id": 1,
+        "jobapplication_id": 4,
+        "note": "Final round with team lead",
         "owner_id": 1,
     },
     {
         "date": "2024-01-24T11:45:00",
-        "type": "Final",
-        "location_id": 1,
+        "type": "Other",
+        "location_id": 3,
         "jobapplication_id": 5,
-        "note": "Final round with CTO",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-25T15:00:00",
-        "type": "HR",
-        "location_id": 7,  # Canada remote
-        "jobapplication_id": 7,
         "note": "Cultural fit interview",
         "owner_id": 1,
     },
     {
         "date": "2024-01-26T09:00:00",
-        "type": "Technical",
-        "location_id": 1,
-        "jobapplication_id": 7,
-        "note": "Blockchain architecture discussion",
+        "type": "HR",
+        "location_id": 7,  # Canada location
+        "jobapplication_id": 1,  # Same application, second interview
+        "note": None,
         "owner_id": 1,
+    },
+    # New entries with different combinations
+    {
+        "date": "2024-01-29T10:30:00",
+        "type": "Technical",
+        "location_id": 8,  # Paris
+        "jobapplication_id": 6,  # DevOps application
+        "note": "Deep technical dive into infrastructure",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-30T15:00:00",
+        "type": "Management",
+        "location_id": 11,  # Australia (remote)
+        "jobapplication_id": 8,  # Remote Full Stack application
+        "note": "Meeting with team leads",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-01T09:45:00",
+        "type": "HR",
+        "location_id": 12,  # Toronto
+        "jobapplication_id": 10,  # Junior Developer application
+        "note": "Initial screening for junior position",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-02T11:00:00",
+        "type": "Technical",
+        "location_id": 14,  # Brazil (remote)
+        "jobapplication_id": 11,  # Mobile App Developer
+        "note": "Technical skills assessment for mobile development",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-03T14:15:00",
+        "type": "Other",
+        "location_id": 1,  # New York
+        "jobapplication_id": 13,  # High Salary Position
+        "note": "Panel interview with executives",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-04T16:30:00",
+        "type": "Management",
+        "location_id": 5,  # Germany (remote)
+        "jobapplication_id": 7,  # Data Scientist application
+        "owner_id": 1,  # Minimal interview info
     },
 ]
 
-# Relationship mappings for many-to-many relationships
+# Relationship mappings for many-to-many relationships - expanded
 JOB_KEYWORD_MAPPINGS = [
-    {"job_id": 1, "keyword_ids": [1, 7, 6, 13]},  # Senior Python Developer
-    {"job_id": 2, "keyword_ids": [2, 3, 4, 13]},  # Full Stack JS Developer
-    {"job_id": 3, "keyword_ids": [3, 2, 14, 15]},  # Remote React Developer
-    {"job_id": 4, "keyword_ids": [12, 10, 11, 9]},  # Cloud Engineer
-    {"job_id": 5, "keyword_ids": [2, 3, 14]},  # Frontend Developer
-    {"job_id": 6, "keyword_ids": [1, 7, 13]},  # Backend Developer
-    {"job_id": 8, "keyword_ids": [9, 10, 11, 12]},  # DevOps Engineer
-    {"job_id": 9, "keyword_ids": [1, 8, 6]},  # Data Scientist
-    {"job_id": 10, "keyword_ids": [16, 17, 13]},  # Java Spring Developer
-    {"job_id": 11, "keyword_ids": [2, 1]},  # Blockchain Developer
-    {"job_id": 12, "keyword_ids": [1, 2]},  # Sustainability Tech Lead
-    {"job_id": 13, "keyword_ids": [2, 3, 14]},  # Junior Web Developer
-    {"job_id": 14, "keyword_ids": [15, 1, 3]},  # Technical Product Manager
-    {"job_id": 15, "keyword_ids": [2, 3, 18]},  # Mobile App Developer
+    {"job_id": 1, "keyword_ids": [1, 2, 6, 7]},  # Senior Python Developer - Python, JavaScript, PostgreSQL, FastAPI
+    {"job_id": 2, "keyword_ids": [2, 3, 4, 13]},  # Full Stack JS Developer - JavaScript, React, Node.js, REST API
+    {"job_id": 3, "keyword_ids": [3, 2, 14]},  # Remote React Developer - React, JavaScript, Git
+    {"job_id": 4, "keyword_ids": [12, 10, 11, 9]},  # Cloud Engineer - AWS, Docker, Kubernetes, DevOps
+    {"job_id": 5, "keyword_ids": [2, 3, 14, 15]},  # Frontend Developer - JavaScript, React, Git, Agile
+    # New mappings
+    {"job_id": 9, "keyword_ids": [9, 10, 11, 22, 23]},  # DevOps Engineer - DevOps, Docker, Kubernetes, CI/CD, Terraform
+    {"job_id": 10, "keyword_ids": [8, 1, 18]},  # Data Scientist - Machine Learning, Python, MongoDB
+    {"job_id": 11, "keyword_ids": [16, 5, 2]},  # Vue.js Developer - Vue.js, TypeScript, JavaScript
+    {"job_id": 12, "keyword_ids": [2, 3, 4, 1]},  # Remote Full Stack - JavaScript, React, Node.js, Python
+    {"job_id": 13, "keyword_ids": [2, 14, 15]},  # Junior Developer - JavaScript, Git, Agile
+    {"job_id": 15, "keyword_ids": [2, 3, 17]},  # Mobile App Developer - JavaScript, React, Angular
 ]
 
 JOB_CONTACT_MAPPINGS = [
-    {"job_id": 1, "person_ids": [1, 3]},  # Senior Python Developer
-    {"job_id": 2, "person_ids": [2, 4]},  # Full Stack JS Developer
-    {"job_id": 3, "person_ids": [1]},  # Remote React Developer
-    {"job_id": 4, "person_ids": [4]},  # Cloud Engineer
-    {"job_id": 5, "person_ids": [5]},  # Frontend Developer
-    {"job_id": 8, "person_ids": [9]},  # DevOps Engineer
-    {"job_id": 9, "person_ids": [8]},  # Data Scientist
-    {"job_id": 10, "person_ids": [7]},  # Java Spring Developer
-    {"job_id": 11, "person_ids": [10]},  # Blockchain Developer
-    {"job_id": 12, "person_ids": [6]},  # Sustainability Tech Lead
-    {"job_id": 14, "person_ids": [2]},  # Technical Product Manager
+    {"job_id": 1, "person_ids": [1, 3]},  # Senior Python Developer - John Doe, Mike Taylor
+    {"job_id": 2, "person_ids": [2, 4]},  # Full Stack JS Developer - Jane Smith, Emily Davis
+    {"job_id": 3, "person_ids": [1]},  # Remote React Developer - John Doe
+    {"job_id": 4, "person_ids": [4]},  # Cloud Engineer - Emily Davis
+    {"job_id": 5, "person_ids": [5]},  # Frontend Developer - Chris Brown
+    # New mappings
+    {"job_id": 9, "person_ids": [9]},  # DevOps Engineer - Alex Johnson
+    {"job_id": 10, "person_ids": [15]},  # Data Scientist - Michael Wilson
+    {"job_id": 11, "person_ids": [10]},  # Vue.js Developer - Maria Garcia
+    {"job_id": 12, "person_ids": [12]},  # Remote Full Stack - Lisa Chen
+    {"job_id": 13, "person_ids": [13]},  # Junior Developer - Robert Anderson
+    {"job_id": 15, "person_ids": [11, 16]},  # Mobile App Developer - David Kim, Freelance Developer
 ]
 
 INTERVIEW_INTERVIEWER_MAPPINGS = [
-    {"interview_id": 1, "person_ids": [6]},  # HR screening
-    {"interview_id": 2, "person_ids": [2, 4]},  # Technical interview
-    {"interview_id": 3, "person_ids": [2]},  # Management interview
-    {"interview_id": 4, "person_ids": [8]},  # ML case study
-    {"interview_id": 5, "person_ids": [5, 8]},  # Final round
-    {"interview_id": 6, "person_ids": [10]},  # Cultural fit
-    {"interview_id": 7, "person_ids": [1, 3]},  # Blockchain discussion
+    {"interview_id": 1, "person_ids": [1]},  # First round - John Doe
+    {"interview_id": 2, "person_ids": [2]},  # HR screening - Jane Smith
+    {"interview_id": 3, "person_ids": [3, 5]},  # Remote assessment - Mike Taylor, Chris Brown
+    {"interview_id": 4, "person_ids": [1]},  # Final round - John Doe
+    {"interview_id": 5, "person_ids": [4]},  # Cultural fit - Emily Davis
+    # New mappings
+    {"interview_id": 7, "person_ids": [9]},  # DevOps technical - Alex Johnson
+    {"interview_id": 8, "person_ids": [12, 11]},  # Remote Full Stack - Lisa Chen, David Kim
+    {"interview_id": 9, "person_ids": [13]},  # Junior Developer - Robert Anderson
+    {"interview_id": 10, "person_ids": [16]},  # Mobile App - Freelance Developer
+    {"interview_id": 11, "person_ids": [10, 15]},  # High Salary Position - Maria Garcia, Michael Wilson
+    {"interview_id": 12, "person_ids": [15]},  # Data Scientist - Michael Wilson
 ]
 
 
