@@ -59,6 +59,10 @@ const Header = ({ user, onLogout }) => {
 						<i className="bi bi-people-fill me-2"></i>
 						<span>Interviews</span>
 					</Nav.Link>
+					<Nav.Link href="/aggregators" className={`nav-link-custom ${isActive("/aggregators") ? "active" : ""}`}>
+						<i className="bi bi-linkedin me-2"></i>
+						<span>Aggregators</span>
+					</Nav.Link>
 					<Nav.Link onClick={onLogout} className="nav-link-custom text-danger">
 						<i className="bi bi-box-arrow-right me-2"></i>
 						<span>Logout</span>

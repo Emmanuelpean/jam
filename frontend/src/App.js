@@ -15,6 +15,7 @@ import InterviewsPage from "./pages/InterviewsPage";
 import JobApplicationPage from "./pages/JobApplicationsPage";
 import "./Themes.css"
 import DashboardPage from "./pages/DashboardPage";
+import AggregatorsPage from "./pages/AggregatorsPage";
 
 function AppLayout({ children }) {
 	const location = useLocation();
@@ -116,6 +117,14 @@ function App() {
 							element={
 								<ProtectedRoute>
 									<DashboardPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/aggregators"
+							element={
+								<ProtectedRoute>
+									<AggregatorsPage />
 								</ProtectedRoute>
 							}
 						/>
