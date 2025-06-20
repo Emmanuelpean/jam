@@ -3,7 +3,7 @@ import { Alert, Button, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue, renderFunctions } from "../rendering/Renders";
-import { renderInputField, renderInputFieldGroup } from "../rendering/FormRender";
+import { renderInputField, renderInputFieldGroup } from "../rendering/FormRenders";
 import { api } from "../../services/api";
 
 const DEFAULT_ICONS = {

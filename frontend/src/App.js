@@ -4,13 +4,15 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 import LocationsPage from "./pages/LocationsPage";
-import Header from "./components/Header";
+import Header from "./Header";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import CompaniesPage from "./pages/CompaniesPage";
 import JobsPage from "./pages/JobsPage";
 import PersonPage from "./pages/PersonPage";
 import KeywordsPage from "./pages/KeywordsPage";
+import InterviewsPage from "./pages/InterviewsPage";
+import JobApplicationPage from "./pages/JobApplicationsPage";
 import "./Themes.css"
 
 function AppLayout({ children }) {
@@ -85,10 +87,26 @@ function App() {
 							}
 						/>
 						<Route
-							path="/users"
+							path="/locations"
 							element={
 								<ProtectedRoute>
 									<LocationsPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/interviews"
+							element={
+								<ProtectedRoute>
+									<InterviewsPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/jobapplications"
+							element={
+								<ProtectedRoute>
+									<JobApplicationPage />
 								</ProtectedRoute>
 							}
 						/>

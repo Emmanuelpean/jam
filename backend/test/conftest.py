@@ -34,7 +34,7 @@ from starlette.testclient import TestClient
 from app import models, database, schemas
 from app.main import app
 from app.oauth2 import create_access_token
-from create_data import (
+from test.utils.create_data import (
     create_users,
     create_companies,
     create_locations,

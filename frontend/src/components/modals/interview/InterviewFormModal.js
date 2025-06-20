@@ -1,181 +1,183 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import GenericModal from "../GenericModal";
-import useGenericAlert from "../../../hooks/useGenericAlert";
-import { api } from "../../../services/api";
+import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
+import GenericModal from "../GenericModal";
+import LocationFormModal from "../location/LocationFormModal";
+import PersonFormModal from "../person/PersonFormModal";
 import AlertModal from "../alert/AlertModal";
+import useGenericAlert from "../../../hooks/useGenericAlert";
+import {
+	apiHelpers,
+	jobApplicationsApi,
+	locationsApi,
+	personsApi,
+} from "../../../services/api";
 
 const InterviewFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobApplicationId }) => {
 	const { token } = useAuth();
 	const { alertState, showError, hideAlert } = useGenericAlert();
-	const formRef = useRef();
 
-	// State for dropdown options and interview data
-	const [locations, setLocations] = useState([]);
-	const [jobApplications, setJobApplications] = useState([]);
-	const [interviewData, setInterviewData] = useState({});
+	// State for dropdown options and modals
+	const [locationOptions, setLocationOptions] = useState([]);
+	const [jobApplicationOptions, setJobApplicationOptions] = useState([]);
+	const [personOptions, setPersonOptions] = useState([]);
 	const [loading, setLoading] = useState(false);
-	const [dataLoaded, setDataLoaded] = useState(false);
+	const [showLocationModal, setShowLocationModal] = useState(false);
+	const [showPersonModal, setShowPersonModal] = useState(false);
 
-	// Load data when modal opens
+	// Interview type options
+	const interviewTypeOptions = [
+		{ value: "HR", label: "HR Interview" },
+		{ value: "Technical", label: "Technical Interview" },
+		{ value: "Management", label: "Management Interview" },
+		{ value: "Panel", label: "Panel Interview" },
+		{ value: "Phone", label: "Phone Interview" },
+		{ value: "Video", label: "Video Interview" },
+		{ value: "Assessment", label: "Assessment/Test" },
+		{ value: "Final", label: "Final Interview" },
+		{ value: "Other", label: "Other" },
+	];
+
+	// Fetch all options for the select fields
 	useEffect(() => {
-		if (show) {
-			setDataLoaded(false);
-			loadData();
-		} else {
-			// Reset state when modal closes
-			setInterviewData({});
-			setDataLoaded(false);
-		}
-	}, [show, token, initialData?.id, isEdit]);
+		const fetchOptions = async () => {
+			if (!token || !show) return;
 
-	const loadData = async () => {
-		setLoading(true);
-		try {
-			// Load dropdown data first
-			await loadDropdownData();
+			setLoading(true);
+			try {
+				// Use your existing API structure
+				const [locationsData, jobApplicationsData, personsData] = await Promise.all([
+					locationsApi.getAll(token),
+					jobApplicationsApi.getAll(token),
+					personsApi.getAll(token),
+				]);
 
-			// Load interview data if editing
-			if (isEdit && initialData?.id) {
-				await loadInterviewData(initialData.id);
-			} else {
-				// For new interviews, set default data
-				setInterviewData({
-					date: "",
-					location_id: "",
-					note: "",
-					...(jobApplicationId && !isEdit ? { jobapplication_id: jobApplicationId } : {}),
-				});
-			}
-
-			setDataLoaded(true);
-		} catch (error) {
-			console.error("Error loading data:", error);
-			showError({
-				title: "Data Loading Error",
-				message: "Error loading form data. Please try again.",
-				size: "md",
-			});
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	const loadDropdownData = async () => {
-		try {
-			// Load locations
-			const locationsData = await api.get("locations", token);
-			setLocations(
-				locationsData.map((location) => ({
-					value: location.id,
-					label: `${location.name} - ${location.city}, ${location.country}`,
-				})),
-			);
-
-			// Load job applications if not passed as prop
-			if (!jobApplicationId) {
-				const jobApplicationsData = await api.get("jobapplications", token);
-				setJobApplications(
+				setLocationOptions(apiHelpers.toSelectOptions(locationsData));
+				setJobApplicationOptions(
 					jobApplicationsData.map((jobApp) => ({
 						value: jobApp.id,
-						label: `${jobApp.job?.title} at ${jobApp.job?.company?.name} (${jobApp.status})`,
-					})),
+						label: `${jobApp.job.name}`,
+					}))
 				);
+				setPersonOptions(apiHelpers.toSelectOptions(personsData));
+			} catch (error) {
+				console.error("Error fetching options:", error);
+				showError({
+					title: "Data Loading Error",
+					message: "Error loading form data. Please try again.",
+					size: "md",
+				});
+			} finally {
+				setLoading(false);
 			}
-		} catch (error) {
-			console.error("Error loading dropdown data:", error);
-			throw error; // Re-throw to be caught by parent loadData function
-		}
+		};
+
+		fetchOptions();
+	}, [token, show]);
+
+	// Handle successful location creation
+	const handleLocationSuccess = (newLocation) => {
+		const newOption = {
+			value: newLocation.id,
+			label: newLocation.name,
+		};
+		setLocationOptions((prev) => [...prev, newOption]);
+		setShowLocationModal(false);
 	};
 
-	const loadInterviewData = async (interviewId) => {
-		try {
-			console.log("Fetching interview data for ID:", interviewId);
-			const interview = await api.get(`interviews/${interviewId}`, token);
-			console.log("Fetched interview data:", interview);
-			setInterviewData(interview);
-		} catch (error) {
-			console.error("Error loading interview data:", error);
-			showError({
-				title: "Interview Loading Error",
-				message: "Error loading interview data. Please try again.",
-				size: "md",
-			});
-			throw error;
-		}
+	// Handle successful person creation
+	const handlePersonSuccess = (newPerson) => {
+		const newOption = {
+			value: newPerson.id,
+			label: newPerson.name,
+		};
+		setPersonOptions((prev) => [...prev, newOption]);
+		setShowPersonModal(false);
 	};
 
-	// Transform data to match form field expectations
-	const transformDataForForm = useCallback(
-		(data) => {
-			console.log("Transform data for form input:", data);
+	// Transform initial data to match form field expectations
+	const transformInitialData = (data) => {
+		console.log("Transform initial data for form:", data);
 
-			if (!data || Object.keys(data).length === 0) {
-				const defaultData = {
-					date: "",
-					location_id: "",
-					note: "",
-				};
+		if (!data || Object.keys(data).length === 0) {
+			const defaultData = {
+				date: "",
+				type: "",
+				location_id: "",
+				note: "",
+				interviewers: [],
+			};
 
-				// Set jobapplication_id from prop if provided for new interviews
-				if (jobApplicationId && !isEdit) {
-					defaultData.jobapplication_id = jobApplicationId;
-				}
-
-				console.log("Using default data:", defaultData);
-				return defaultData;
+			// Set jobapplication_id from prop if provided for new interviews
+			if (jobApplicationId && !isEdit) {
+				defaultData.jobapplication_id = jobApplicationId;
 			}
 
-			const transformed = { ...data };
+			console.log("Using default data:", defaultData);
+			return defaultData;
+		}
 
-			// Convert ISO datetime to datetime-local format for the input
-			if (transformed.date) {
-				const date = new Date(transformed.date);
-				// Validate the date
-				if (!isNaN(date.getTime())) {
-					// Convert to local datetime string format (YYYY-MM-DDTHH:MM)
-					const year = date.getFullYear();
-					const month = String(date.getMonth() + 1).padStart(2, "0");
-					const day = String(date.getDate()).padStart(2, "0");
-					const hours = String(date.getHours()).padStart(2, "0");
-					const minutes = String(date.getMinutes()).padStart(2, "0");
-					transformed.date = `${year}-${month}-${day}T${hours}:${minutes}`;
-				} else {
-					transformed.date = "";
-				}
+		const transformed = { ...data };
+
+		// Convert ISO datetime to datetime-local format for the input
+		if (transformed.date) {
+			const date = new Date(transformed.date);
+			// Validate the date
+			if (!isNaN(date.getTime())) {
+				// Convert to local datetime string format (YYYY-MM-DDTHH:MM)
+				const year = date.getFullYear();
+				const month = String(date.getMonth() + 1).padStart(2, "0");
+				const day = String(date.getDate()).padStart(2, "0");
+				const hours = String(date.getHours()).padStart(2, "0");
+				const minutes = String(date.getMinutes()).padStart(2, "0");
+				transformed.date = `${year}-${month}-${day}T${hours}:${minutes}`;
 			} else {
 				transformed.date = "";
 			}
+		} else {
+			transformed.date = "";
+		}
 
-			// Ensure note field is not null/undefined
-			if (transformed.note === null || transformed.note === undefined) {
-				transformed.note = "";
+		// Ensure required fields are not null/undefined
+		if (transformed.type === null || transformed.type === undefined) {
+			transformed.type = "";
+		}
+
+		// Ensure note field is not null/undefined
+		if (transformed.note === null || transformed.note === undefined) {
+			transformed.note = "";
+		}
+
+		// Handle location_id - ensure it's properly set for the select
+		if (transformed.location_id === null || transformed.location_id === undefined) {
+			transformed.location_id = "";
+		}
+
+		// Handle jobapplication_id - ensure it's properly set for the select
+		if (transformed.jobapplication_id === null || transformed.jobapplication_id === undefined) {
+			if (jobApplicationId && !isEdit) {
+				transformed.jobapplication_id = jobApplicationId;
+			} else {
+				transformed.jobapplication_id = "";
 			}
+		}
 
-			// Handle location_id - ensure it's properly set for the select
-			if (transformed.location_id === null || transformed.location_id === undefined) {
-				transformed.location_id = "";
-			}
+		// Handle interviewers - convert from objects to IDs for multiselect
+		if (transformed.interviewers && Array.isArray(transformed.interviewers)) {
+			transformed.interviewers = transformed.interviewers.map((interviewer) => {
+				return typeof interviewer === "object" ? interviewer.id : interviewer;
+			});
+		} else {
+			transformed.interviewers = [];
+		}
 
-			// Handle jobapplication_id - ensure it's properly set for the select
-			if (transformed.jobapplication_id === null || transformed.jobapplication_id === undefined) {
-				if (jobApplicationId && !isEdit) {
-					transformed.jobapplication_id = jobApplicationId;
-				} else {
-					transformed.jobapplication_id = "";
-				}
-			}
+		console.log("Transformed initial data output:", transformed);
+		return transformed;
+	};
 
-			console.log("Transformed data output:", transformed);
-			return transformed;
-		},
-		[jobApplicationId, isEdit],
-	);
-
-	// Define layout groups for interview fields
-	const layoutGroups = [
+	// Define layout groups for interview fields using useMemo to update when options change
+	const layoutGroups = useMemo(() => [
 		{
-			id: "interview-date-location",
+			id: "interview-basic-info",
 			type: "row",
 			fields: [
 				{
@@ -183,16 +185,35 @@ const InterviewFormModal = ({ show, onHide, onSuccess, size, initialData = {}, i
 					label: "Interview Date & Time",
 					type: "datetime-local",
 					required: true,
-					columnClass: "col-md-8",
+					columnClass: "col-md-6",
 					placeholder: "Select interview date and time",
 				},
+				{
+					name: "type",
+					label: "Interview Type",
+					type: "select",
+					required: true,
+					options: interviewTypeOptions,
+					placeholder: "Select interview type",
+					columnClass: "col-md-6",
+				},
+			],
+		},
+		{
+			id: "interview-location",
+			type: "default",
+			fields: [
 				{
 					name: "location_id",
 					label: "Location",
 					type: "select",
-					options: locations,
-					columnClass: "col-md-4",
-					placeholder: "Select location (optional)",
+					placeholder: "Select or search location...",
+					isSearchable: true,
+					isClearable: true,
+					options: locationOptions,
+					addButton: {
+						onClick: () => setShowLocationModal(true),
+					},
 				},
 			],
 		},
@@ -202,15 +223,33 @@ const InterviewFormModal = ({ show, onHide, onSuccess, size, initialData = {}, i
 			fields: jobApplicationId
 				? []
 				: [
-						{
-							name: "jobapplication_id",
-							label: "Job Application",
-							type: "select",
-							options: jobApplications,
-							required: true,
-							placeholder: "Select job application",
-						},
-					],
+					{
+						name: "jobapplication_id",
+						label: "Job Application",
+						type: "select",
+						options: jobApplicationOptions,
+						required: true,
+						placeholder: "Select job application",
+						isSearchable: true,
+					},
+				],
+		},
+		{
+			id: "interview-contacts",
+			type: "default",
+			fields: [
+				{
+					name: "interviewers",
+					label: "Interviewers/Contacts",
+					type: "multiselect",
+					placeholder: "Select interviewers and contacts...",
+					isSearchable: true,
+					options: personOptions,
+					addButton: {
+						onClick: () => setShowPersonModal(true),
+					},
+				},
+			],
 		},
 		{
 			id: "interview-notes",
@@ -224,11 +263,13 @@ const InterviewFormModal = ({ show, onHide, onSuccess, size, initialData = {}, i
 				},
 			],
 		},
-	];
+	], [locationOptions, jobApplicationOptions, personOptions, jobApplicationId]);
 
-	// Data transformation function for form submission
+
+// In your transformFormData function, add this logging at the very end:
 	const transformFormData = (data) => {
-		console.log("Transforming interview form data for submission:", data);
+		console.log("=== INTERVIEW FORM DATA TRANSFORMATION DEBUG ===");
+		console.log("Raw form data received:", JSON.stringify(data, null, 2));
 
 		const transformed = { ...data };
 
@@ -257,52 +298,53 @@ const InterviewFormModal = ({ show, onHide, onSuccess, size, initialData = {}, i
 			transformed.jobapplication_id = parseInt(transformed.jobapplication_id, 10);
 		}
 
+		// Handle interviewers array - ensure it contains only numbers
+		console.log("Interviewers raw:", transformed.interviewers, "Type:", typeof transformed.interviewers);
+		if (transformed.interviewers && Array.isArray(transformed.interviewers)) {
+			transformed.interviewers = transformed.interviewers
+				.map((id) => {
+					const converted = typeof id === "string" ? parseInt(id, 10) : id;
+					console.log(`Converting interviewer: ${id} (${typeof id}) -> ${converted} (${typeof converted})`);
+					return converted;
+				})
+				.filter((id) => !isNaN(id));
+			console.log("Final interviewers array:", transformed.interviewers);
+		} else {
+			console.log("Interviewers is not an array, setting to empty array");
+			transformed.interviewers = [];
+		}
+
 		// Remove system fields that shouldn't be sent to backend
 		delete transformed.created_at;
 		delete transformed.modified_at;
 		delete transformed.owner_id;
 		delete transformed.location;
 		delete transformed.job_application;
-		delete transformed.interviewers;
 
-		// Clean up empty values but preserve legitimate empty strings for notes
+		// Clean up empty values but preserve legitimate empty strings for notes and empty arrays for interviewers
 		const cleanedData = Object.fromEntries(
 			Object.entries(transformed).filter(([key, value]) => {
 				if (value === null || value === undefined) return key === "location_id"; // Allow null for optional location
 				if (typeof value === "string" && value === "" && key !== "note") return false;
+				if (Array.isArray(value) && key === "interviewers") return true; // Keep empty interviewers array
 				return true;
-			}),
+			})
 		);
 
-		console.log("Final transformed interview data:", cleanedData);
+		console.log("=== FINAL DATA TO BE SENT TO API ===");
+		console.log(JSON.stringify(cleanedData, null, 2));
+		console.log("Interviewers specifically:", cleanedData.interviewers);
+		console.log("=== END TRANSFORMATION DEBUG ===");
+
 		return cleanedData;
 	};
 
-	// Don't render the modal until data is loaded
-	if (show && !dataLoaded) {
-		return (
-			<>
-				<GenericModal
-					show={show}
-					onHide={onHide}
-					mode="form"
-					title="Interview"
-					size={size}
-					loading={loading}
-					loadingMessage="Loading interview data..."
-				/>
-				<AlertModal alertState={alertState} hideAlert={hideAlert} />
-			</>
-		);
-	}
-
-	// Prepare data for the form
-	const preparedData = transformDataForForm(interviewData);
+	// Prepare the initial data using the transform function
+	const preparedInitialData = transformInitialData(initialData);
 
 	return (
 		<>
 			<GenericModal
-				ref={formRef}
 				show={show}
 				onHide={onHide}
 				mode="form"
@@ -310,12 +352,26 @@ const InterviewFormModal = ({ show, onHide, onSuccess, size, initialData = {}, i
 				size={size}
 				useCustomLayout={true}
 				layoutGroups={layoutGroups}
-				initialData={preparedData}
+				initialData={preparedInitialData}
 				transformFormData={transformFormData}
 				endpoint="interviews"
 				onSuccess={onSuccess}
 				isEdit={isEdit}
 				loading={loading}
+			/>
+
+			{/* Location Form Modal */}
+			<LocationFormModal
+				show={showLocationModal}
+				onHide={() => setShowLocationModal(false)}
+				onSuccess={handleLocationSuccess}
+			/>
+
+			{/* Person Form Modal */}
+			<PersonFormModal
+				show={showPersonModal}
+				onHide={() => setShowPersonModal(false)}
+				onSuccess={handlePersonSuccess}
 			/>
 
 			{/* Alert Modal for error messages */}

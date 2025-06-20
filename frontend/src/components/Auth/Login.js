@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import "./AuthForm.css";
-import "../Logo.css";
+import "../../Logo.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 
 function Login() {

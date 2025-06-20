@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Badge, Button } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -420,7 +419,11 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 									>
 										{isDeleting ? (
 											<>
-												<span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+												<span
+													className="spinner-border spinner-border-sm me-2"
+													role="status"
+													aria-hidden="true"
+												></span>
 												Deleting...
 											</>
 										) : (

@@ -4,6 +4,7 @@ import CompanyViewModal from "../modals/company/CompanyViewModal";
 import PersonViewModal from "../modals/person/PersonViewModal";
 import KeywordViewModal from "../modals/keyword/KeywordViewModal";
 import JobApplicationViewModal from "../modals/job_application/JobApplicationViewModal";
+import JobViewModal from "../modals/job/JobViewModal";
 
 const createModalManager = (ModalComponent, modalProp) => {
 	return ({ children, onEdit }) => {
@@ -53,6 +54,7 @@ const CompanyModalManager = createModalManager(CompanyViewModal, "company");
 const PersonModalManager = createModalManager(PersonViewModal, "person");
 const KeywordModalManager = createModalManager(KeywordViewModal, "keywords");
 const JobApplicationModalManager = createModalManager(JobApplicationViewModal, "jobApplication");
+const JobModalManager = createModalManager(JobViewModal, "job");
 
 // Helper function to get status badge class
 export const getApplicationStatusBadgeClass = (status) => {
@@ -128,12 +130,16 @@ export const renderFunctions = {
 		}
 	},
 
-	createdDate: (item) => renderFunctions.datetime(item.created_at),
+	createdDate: (item) => {
+		return renderFunctions.datetime(item.created_at);
+	},
 
-	modifiedDate: (item) => renderFunctions.datetime(item.modified_at),
+	modifiedDate: (item) => {
+		return renderFunctions.datetime(item.modified_at)
+	},
 
 	date: (item) => {
-		renderFunctions.datetime(item.date);
+		return renderFunctions.datetime(item.date);
 	},
 
 	email: (item) => {
@@ -196,6 +202,20 @@ export const renderFunctions = {
 		}
 	},
 
+	status: (item) => {
+		return (
+			<span
+				className={`badge ${getApplicationStatusBadgeClass(item.status)} badge`}
+			>
+            {item.status}
+        </span>
+		);
+	},
+
+	interviewCount: (item) => {
+		return item.interviews?.length || 0
+	},
+
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
 	jobApplication: (item) => {
@@ -211,6 +231,24 @@ export const renderFunctions = {
 						</span>
 					)}
 				</JobApplicationModalManager>
+			);
+		}
+	},
+
+	job: (item) => {
+		if (item.job) {
+			return (
+				<JobModalManager>
+					{(handleClick) => (
+						<span
+							className={`badge bg-info clickable-badge`}
+							onClick={() => handleClick(item.job)}
+						>
+                        <i className="bi bi-briefcase me-1"></i>
+							{item.job.title}
+                    </span>
+					)}
+				</JobModalManager>
 			);
 		}
 	},
@@ -267,11 +305,12 @@ export const renderFunctions = {
 		}
 	},
 
-	contacts: (item) => {
-		if (item.contacts && item.contacts.length > 0) {
+	contacts: (item, key="contacts") => {
+		const cont = item[key]
+		if (cont && cont.length > 0) {
 			return (
 				<div>
-					{item.contacts.map((person, index) => (
+					{cont.map((person, index) => (
 						<span key={person.id || index} className="me-1">
 							<PersonModalManager>
 								{(handleClick) => (

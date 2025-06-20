@@ -1,6 +1,6 @@
 """Centralized test data for both conftest.py and seed_database.py"""
 
-from files import load_all_resource_files
+from test.utils.files import load_all_resource_files
 
 RESOURCE_FILES = load_all_resource_files()
 

@@ -140,7 +140,7 @@ export const columns = {
 		searchable: true,
 		type: "text",
 		sortField: "person.last_name",
-		searchFields: "company.name",
+		searchFields: "person.name",
 		render: renderFunctions.contacts,
 	},
 
@@ -179,6 +179,18 @@ export const columns = {
 		type: "text",
 		render: renderFunctions.linkedinUrl,
 	},
+
+	interviewers: {
+		key: "person",
+		label: "Interviewers",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		sortField: "person.last_name",
+		searchFields: "person.name",
+		render: (item) => renderFunctions.contacts(item, "interviewers"),
+	},
+
 
 	// ------------------------------------------------------ JOBS -----------------------------------------------------
 
@@ -219,4 +231,30 @@ export const columns = {
 		render: renderFunctions.jobApplication,
 	},
 
+	job: {
+		key: "job",
+		label: "Job",
+		sortable: true,
+		searchable: true,
+		searchFields: "job.title",
+		sortField: "job.title",
+		render: renderFunctions.job,
+	},
+
+	status: {
+		key: "status",
+		label: "Status",
+		sortable: true,
+		searchable: true,
+		render: renderFunctions.status,
+	},
+
+	interviewCount: {
+		key: "interview_count",
+		label: "Interviews",
+		sortable: true,
+		sortField: "interview_count",  // TODO
+		searchable: false,
+		render: renderFunctions.interviewCount,
+	}
 };

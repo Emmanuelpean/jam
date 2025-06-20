@@ -10,7 +10,7 @@ from pathlib import Path
 def get_resources_path():
     """Get the path to the resources folder"""
     current_dir = Path(__file__).parent
-    resources_dir = current_dir / "resources"
+    resources_dir = current_dir / "../resources"
 
     # Create resources directory if it doesn't exist
     resources_dir.mkdir(exist_ok=True)

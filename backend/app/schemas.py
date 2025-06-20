@@ -171,8 +171,8 @@ class PersonSimple(Person, Out):
 
 class PersonOut(Person, Out):
     company: CompanyOut | None = None
-    interviews: list["InterviewSimple"] | None = None
-    jobs: list["JobSimple"] | None = None
+    interviews: list["InterviewSimple"] = []
+    jobs: list["JobSimple"] = []
     name: str | None = None
 
 
@@ -196,25 +196,25 @@ class Job(BaseModel):
     location_id: int | None = None
     duplicate_id: int | None = None
     note: str | None = None
-    keywords: list[int] | None = None
-    contacts: list[int] | None = None
+    keywords: list[int] = []
+    contacts: list[int] = []
 
 
 # Simple job schema without job_application/contacts to avoid circular reference
 class JobSimple(Job, Out):
     company: CompanyOut | None = None
     location: LocationOut | None = None
-    keywords: list[KeywordOut] | None = None
-    contacts: list[PersonSimple] | None = None
+    keywords: list[KeywordOut] = []
+    contacts: list[PersonSimple] = []
     name: str | None = None
 
 
 class JobOut(Job, Out):
     company: CompanyOut | None = None
     location: LocationOut | None = None
-    keywords: list[KeywordOut] | None = None
+    keywords: list[KeywordOut] = []
     job_application: Optional["JobApplicationOut"] = None
-    contacts: list[PersonSimple] | None = None
+    contacts: list[PersonSimple] = []
     name: str | None = None
 
 
@@ -236,8 +236,8 @@ class JobApplication(BaseModel):
 
 
 class JobApplicationOut(JobApplication, Out):
-    job: JobSimple | None = None  # Use JobSimple to avoid circular reference
-    interviews: list["InterviewSimple"] | None = None  # Use InterviewSimple to avoid circular reference
+    job: JobSimple | None = None
+    interviews: list["InterviewSimple"] = []
     cv: FileOut | None = None
     cover_letter: FileOut | None = None
 
@@ -266,7 +266,7 @@ class InterviewSimple(Interview, Out):
 
 class InterviewOut(Interview, Out):
     location: LocationOut | None = None
-    interviewers: list["PersonSimple"] | None = None
+    interviewers: list["PersonSimple"] = []
 
 
 class InterviewUpdate(Interview):

@@ -2,7 +2,7 @@ import base64
 
 from app import schemas
 from conftest import CRUDTestBase
-from test.table_data import (
+from test.utils.table_data import (
     COMPANIES_DATA,
     LOCATIONS_DATA,
     PERSONS_DATA,

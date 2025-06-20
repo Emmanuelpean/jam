@@ -1,8 +1,8 @@
 import React from "react";
 import { Container, Nav, Navbar } from "react-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
-import ThemeToggle from "./theme/ThemeToggle";
-import { ReactComponent as JamLogo } from "../assets/Logo.svg";
+import ThemeToggle from "./components/theme/ThemeToggle";
+import { ReactComponent as JamLogo } from "./assets/Logo.svg";
 
 const Header = ({ user, onLogout }) => {
 	const navigate = useNavigate();
@@ -50,6 +50,14 @@ const Header = ({ user, onLogout }) => {
 					<Nav.Link href="/locations" className={`nav-link-custom ${isActive("/locations") ? "active" : ""}`}>
 						<i className="bi bi-geo-alt me-2"></i>
 						<span>Locations</span>
+					</Nav.Link>
+					<Nav.Link href="/jobapplications" className={`nav-link-custom ${isActive("/jobapplications") ? "active" : ""}`}>
+						<i className="bi bi-person-workspace me-2"></i>
+						<span>Job Applications</span>
+					</Nav.Link>
+					<Nav.Link href="/interviews" className={`nav-link-custom ${isActive("/interviews") ? "active" : ""}`}>
+						<i className="bi bi-people-fill me-2"></i>
+						<span>Interviews</span>
 					</Nav.Link>
 					<Nav.Link onClick={onLogout} className="nav-link-custom text-danger">
 						<i className="bi bi-box-arrow-right me-2"></i>
