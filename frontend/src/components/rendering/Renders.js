@@ -5,6 +5,7 @@ import PersonViewModal from "../modals/person/PersonViewModal";
 import KeywordViewModal from "../modals/keyword/KeywordViewModal";
 import JobApplicationViewModal from "../modals/job_application/JobApplicationViewModal";
 import JobViewModal from "../modals/job/JobViewModal";
+import { accessAttribute } from "../../utils/Utils";
 
 const createModalManager = (ModalComponent, modalProp) => {
 	return ({ children, onEdit }) => {
@@ -48,7 +49,6 @@ const createModalManager = (ModalComponent, modalProp) => {
 	};
 };
 
-// Create specific modal managers
 const LocationModalManager = createModalManager(LocationViewModal, "location");
 const CompanyModalManager = createModalManager(CompanyViewModal, "company");
 const PersonModalManager = createModalManager(PersonViewModal, "person");
@@ -56,7 +56,6 @@ const KeywordModalManager = createModalManager(KeywordViewModal, "keywords");
 const JobApplicationModalManager = createModalManager(JobApplicationViewModal, "jobApplication");
 const JobModalManager = createModalManager(JobViewModal, "job");
 
-// Helper function to get status badge class
 export const getApplicationStatusBadgeClass = (status) => {
 	switch (status?.toLowerCase()) {
 		case "applied":
@@ -83,12 +82,13 @@ const ensureHttpPrefix = (url) => {
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
-	_longText: (item, view = false) => {
-		if (item.description) {
+	_longText: (item, view = false, key = "description") => {
+		const description = accessAttribute(item, key);
+		if (description) {
 			if (view) {
-				return item.description;
+				return description;
 			} else {
-				const words = item.description.split(" ");
+				const words = description.split(" ");
 				const truncated = words.slice(0, 12).join(" ");
 				const needsEllipsis = words.length > 12;
 
@@ -102,17 +102,18 @@ export const renderFunctions = {
 		}
 	},
 
-	note: (item, view = false) => {
-		return renderFunctions._longText(item, view);
+	note: (item, view = false, key = "description") => {
+		return renderFunctions._longText(item, view, key);
 	},
 
-	description: (item, view = false) => {
-		return renderFunctions._longText(item, view);
+	description: (item, view = false, key = "description") => {
+		return renderFunctions._longText(item, view, key);
 	},
 
-	_url: (item) => {
-		if (item.url) {
-			const safeUrl = ensureHttpPrefix(item.url);
+	url: (item, view = false, key = "url") => {
+		const url = accessAttribute(item, key);
+		if (url) {
+			const safeUrl = ensureHttpPrefix(url);
 			return (
 				<a href={safeUrl} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
 					Visit Website <i className="bi bi-box-arrow-up-right ms-1"></i>
@@ -120,53 +121,56 @@ export const renderFunctions = {
 			);
 		}
 	},
-	url: (item, view = false) => {
-		return renderFunctions._url(item, view);
-	},
 
-	datetime: (date) => {
+	_datetime: (date) => {
 		if (date) {
 			return new Date(date).toLocaleDateString();
 		}
 	},
 
-	createdDate: (item) => {
-		return renderFunctions.datetime(item.created_at);
+	createdDate: (item, view = false, key = "created_at") => {
+		const date = accessAttribute(item, key);
+		return renderFunctions._datetime(date);
 	},
 
-	modifiedDate: (item) => {
-		return renderFunctions.datetime(item.modified_at)
+	modifiedDate: (item, view = false, key = "modified_at") => {
+		const date = accessAttribute(item, key);
+		return renderFunctions._datetime(date);
 	},
 
-	date: (item) => {
-		return renderFunctions.datetime(item.date);
+	date: (item, view = false, key = "date") => {
+		const date = accessAttribute(item, key);
+		return renderFunctions._datetime(date);
 	},
 
-	email: (item) => {
-		if (item.email)
+	email: (item, view = false, key = "email") => {
+		const email = accessAttribute(item, key);
+		if (email)
 			return (
-				<a href={`mailto:${item.email}`} className="text-decoration-none">
+				<a href={`mailto:${email}`} className="text-decoration-none">
 					<i className="bi bi-envelope me-1"></i>
-					{item.email}
+					{email}
 				</a>
 			);
 	},
 
-	phone: (item) => {
-		if (item.phone) {
+	phone: (item, view = false, key = "phone") => {
+		const phone = accessAttribute(item, key);
+		if (phone) {
 			return (
-				<a href={`tel:${item.phone}`} className="text-decoration-none">
+				<a href={`tel:${phone}`} className="text-decoration-none">
 					<i className="bi bi-telephone me-1"></i>
-					{item.phone}
+					{phone}
 				</a>
 			);
 		}
 	},
 
-	linkedinUrl: (item) => {
-		if (item.linkedin_url) {
+	linkedinUrl: (item, view = false, key = "linkedin_url") => {
+		const url = accessAttribute(item, key);
+		if (url) {
 			return (
-				<a href={item.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
+				<a href={url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
 					<i className="bi bi-linkedin me-1"></i>
 					Profile <i className="bi bi-box-arrow-up-right ms-1"></i>
 				</a>
@@ -188,9 +192,10 @@ export const renderFunctions = {
 		if (item.salary_max) return `Up to £${item.salary_max.toLocaleString()}`;
 	},
 
-	personalRating: (item) => {
-		if (item.personal_rating) {
-			const rating = Math.max(0, Math.min(5, item.personal_rating));
+	personalRating: (item, view = false, key = "personal_rating") => {
+		const personal_rating = accessAttribute(item, key);
+		if (personal_rating) {
+			const rating = Math.max(0, Math.min(5, personal_rating));
 			const filledStars = Math.floor(rating);
 			const emptyStars = 5 - filledStars;
 			return (
@@ -202,32 +207,29 @@ export const renderFunctions = {
 		}
 	},
 
-	status: (item) => {
-		return (
-			<span
-				className={`badge ${getApplicationStatusBadgeClass(item.status)} badge`}
-			>
-            {item.status}
-        </span>
-		);
+	status: (item, view = false, key = "status") => {
+		const status = accessAttribute(item, key);
+		return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
 	},
 
-	interviewCount: (item) => {
-		return item.interviews?.length || 0
+	interviewCount: (item, view = false, key = "interviews") => {
+		const interviews = accessAttribute(item, key);
+		return interviews?.length || 0;
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
-	jobApplication: (item) => {
-		if (item.job_application) {
+	jobApplication: (item, view = false, key = "job_application") => {
+		const job_application = accessAttribute(item, key);
+		if (job_application) {
 			return (
 				<JobApplicationModalManager>
 					{(handleClick) => (
 						<span
-							className={`badge ${getApplicationStatusBadgeClass(item.job_application.status)} clickable-badge`}
-							onClick={() => handleClick(item.job_application)}
+							className={`badge ${getApplicationStatusBadgeClass(job_application.status)} clickable-badge`}
+							onClick={() => handleClick(job_application)}
 						>
-							{item.job_application.status}
+							{job_application.status}
 						</span>
 					)}
 				</JobApplicationModalManager>
@@ -235,29 +237,28 @@ export const renderFunctions = {
 		}
 	},
 
-	job: (item) => {
-		if (item.job) {
+	job: (item, view = false, key = "job") => {
+		const job = accessAttribute(item, key);
+		if (job) {
 			return (
 				<JobModalManager>
 					{(handleClick) => (
-						<span
-							className={`badge bg-info clickable-badge`}
-							onClick={() => handleClick(item.job)}
-						>
-                        <i className="bi bi-briefcase me-1"></i>
-							{item.job.title}
-                    </span>
+						<span className={`badge bg-info clickable-badge`} onClick={() => handleClick(job)}>
+							<i className="bi bi-briefcase me-1"></i>
+							{job.title}
+						</span>
 					)}
 				</JobModalManager>
 			);
 		}
 	},
 
-	keywords: (item) => {
-		if (item.keywords && item.keywords.length > 0) {
+	keywords: (item, view = false, key = "keywords") => {
+		const keywords = accessAttribute(item, key);
+		if (keywords && keywords.length > 0) {
 			return (
 				<div>
-					{item.keywords.map((keyword, index) => (
+					{keywords.map((keyword, index) => (
 						<KeywordModalManager key={keyword.id || index}>
 							{(handleClick) => (
 								<span
@@ -275,14 +276,15 @@ export const renderFunctions = {
 		}
 	},
 
-	location: (item) => {
-		if (item.location) {
+	location: (item, view = false, key = "location") => {
+		const location = accessAttribute(item, key);
+		if (location) {
 			return (
 				<LocationModalManager>
 					{(handleClick) => (
-						<span className={`badge bg-primary clickable-badge`} onClick={() => handleClick(item.location)}>
+						<span className={`badge bg-warning clickable-badge`} onClick={() => handleClick(location)}>
 							<i className="bi bi-geo-alt me-1"></i>
-							{item.location.name}
+							{location.name}
 						</span>
 					)}
 				</LocationModalManager>
@@ -290,14 +292,16 @@ export const renderFunctions = {
 		}
 	},
 
-	company: (item) => {
-		if (item.company) {
+	company: (item, view = false, key = "company") => {
+		console.log(key);
+		const company = accessAttribute(item, key);
+		if (company) {
 			return (
 				<CompanyModalManager>
 					{(handleClick) => (
-						<span className={"badge bg-info clickable-badge"} onClick={() => handleClick(item.company)}>
+						<span className={"badge bg-info clickable-badge"} onClick={() => handleClick(company)}>
 							<i className="bi bi-building me-1"></i>
-							{item.company.name}
+							{company.name}
 						</span>
 					)}
 				</CompanyModalManager>
@@ -305,12 +309,12 @@ export const renderFunctions = {
 		}
 	},
 
-	contacts: (item, key="contacts") => {
-		const cont = item[key]
-		if (cont && cont.length > 0) {
+	contacts: (item, view = false, key = "contacts") => {
+		const contacts = accessAttribute(item, key);
+		if (contacts && contacts.length > 0) {
 			return (
 				<div>
-					{cont.map((person, index) => (
+					{contacts.map((person, index) => (
 						<span key={person.id || index} className="me-1">
 							<PersonModalManager>
 								{(handleClick) => (

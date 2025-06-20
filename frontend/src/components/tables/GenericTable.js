@@ -190,8 +190,8 @@ const GenericTable = ({
 					if (column.accessor) {
 						value = column.accessor(item);
 					} else if (column.searchFields) {
-						// Handle nested field searching
-						value = column.searchFields
+						const fields = Array.isArray(column.searchFields) ? column.searchFields : [column.searchFields];
+						value = fields
 							.map((field) => {
 								const parts = field.split(".");
 								let obj = item;
