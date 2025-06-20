@@ -14,6 +14,7 @@ import KeywordsPage from "./pages/KeywordsPage";
 import InterviewsPage from "./pages/InterviewsPage";
 import JobApplicationPage from "./pages/JobApplicationsPage";
 import "./Themes.css"
+import DashboardPage from "./pages/DashboardPage";
 
 function AppLayout({ children }) {
 	const location = useLocation();
@@ -107,6 +108,14 @@ function App() {
 							element={
 								<ProtectedRoute>
 									<JobApplicationPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/dashboard"
+							element={
+								<ProtectedRoute>
+									<DashboardPage />
 								</ProtectedRoute>
 							}
 						/>

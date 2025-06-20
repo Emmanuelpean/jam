@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@nivo/bar": "^0.99.0",
+    "@nivo/line": "^0.99.0",
+    "@nivo/pie": "^0.99.0",
     "@restart/ui": "^1.9.4",
     "@tanstack/react-table": "^8.21.3",
     "@testing-library/dom": "10.4.0",
