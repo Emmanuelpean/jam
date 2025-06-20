@@ -92,7 +92,7 @@ class TestFileCRUD(CRUDTestBase):
         """Test file download with Base64 data URL format"""
         # Create test file content
         original_content = b"This is test file content for download testing"
-        base64_content = base64.b64encode(original_content).decode('utf-8')
+        base64_content = base64.b64encode(original_content).decode("utf-8")
         data_url = f"data:text/plain;base64,{base64_content}"
 
         # Create file in database
@@ -100,7 +100,7 @@ class TestFileCRUD(CRUDTestBase):
             "filename": "test_download.txt",
             "content": data_url,
             "type": "text/plain",
-            "size": len(original_content)
+            "size": len(original_content),
         }
 
         create_response = authorised_clients[0].post(f"{self.endpoint}/", json=file_data)
@@ -125,14 +125,14 @@ class TestFileCRUD(CRUDTestBase):
         """Test file download with plain Base64 format (without data URL prefix)"""
         # Create test file content
         original_content = b"Another test file for plain base64 format"
-        base64_content = base64.b64encode(original_content).decode('utf-8')
+        base64_content = base64.b64encode(original_content).decode("utf-8")
 
         # Create file in database (without data URL prefix)
         file_data = {
             "filename": "test_plain_base64.txt",
             "content": base64_content,
             "type": "text/plain",
-            "size": len(original_content)
+            "size": len(original_content),
         }
 
         create_response = authorised_clients[0].post(f"{self.endpoint}/", json=file_data)
@@ -152,7 +152,7 @@ class TestFileCRUD(CRUDTestBase):
         """Test file download with binary content (simulating image/PDF)"""
         # Create fake binary content (simulating a small image)
         original_content = bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A] + list(range(100)))
-        base64_content = base64.b64encode(original_content).decode('utf-8')
+        base64_content = base64.b64encode(original_content).decode("utf-8")
         data_url = f"data:image/png;base64,{base64_content}"
 
         # Create file in database
@@ -160,7 +160,7 @@ class TestFileCRUD(CRUDTestBase):
             "filename": "test_image.png",
             "content": data_url,
             "type": "image/png",
-            "size": len(original_content)
+            "size": len(original_content),
         }
 
         create_response = authorised_clients[0].post(f"{self.endpoint}/", json=file_data)
@@ -190,14 +190,14 @@ class TestFileCRUD(CRUDTestBase):
         """Test file download access control - users can only download their own files"""
         # Create file with first user
         original_content = b"Private file content"
-        base64_content = base64.b64encode(original_content).decode('utf-8')
+        base64_content = base64.b64encode(original_content).decode("utf-8")
         data_url = f"data:text/plain;base64,{base64_content}"
 
         file_data = {
             "filename": "private_file.txt",
             "content": data_url,
             "type": "text/plain",
-            "size": len(original_content)
+            "size": len(original_content),
         }
 
         create_response = authorised_clients[0].post(f"{self.endpoint}/", json=file_data)
@@ -214,12 +214,7 @@ class TestFileCRUD(CRUDTestBase):
         """Test file download with empty/null content"""
         # This test assumes the backend validates content on creation
         # If not, you might need to manually insert a record with null content
-        file_data = {
-            "filename": "empty_file.txt",
-            "content": "",
-            "type": "text/plain",
-            "size": 0
-        }
+        file_data = {"filename": "empty_file.txt", "content": "", "type": "text/plain", "size": 0}
 
         # This might fail at creation if backend validates non-empty content
         # Adjust based on your actual validation rules
@@ -237,7 +232,7 @@ class TestFileCRUD(CRUDTestBase):
             "filename": "corrupted_file.txt",
             "content": "data:text/plain;base64,invalid-base64-content!!!",
             "type": "text/plain",
-            "size": 100
+            "size": 100,
         }
 
         create_response = authorised_clients[0].post(f"{self.endpoint}/", json=file_data)
