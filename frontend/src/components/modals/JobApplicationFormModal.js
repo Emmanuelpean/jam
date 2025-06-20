@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import GenericModal from "../GenericModal";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { filesApi } from "../../services/api";
@@ -26,11 +26,11 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 
 	// Helper function to normalize content for comparison
 	const normalizeFileContent = (content) => {
-		if (!content) return '';
+		if (!content) return "";
 
 		// If it's a data URL, extract just the base64 part
-		if (content.startsWith('data:')) {
-			const base64Index = content.indexOf(',');
+		if (content.startsWith("data:")) {
+			const base64Index = content.indexOf(",");
 			if (base64Index !== -1) {
 				return content.substring(base64Index + 1);
 			}
@@ -39,8 +39,8 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		// If it's already base64 encoded data URL, decode it first
 		try {
 			const decoded = atob(content);
-			if (decoded.startsWith('data:')) {
-				const base64Index = decoded.indexOf(',');
+			if (decoded.startsWith("data:")) {
+				const base64Index = decoded.indexOf(",");
 				if (base64Index !== -1) {
 					return decoded.substring(base64Index + 1);
 				}
@@ -59,14 +59,13 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		}
 
 		try {
-			console.log(`Processing file: ${file.name}`);
-
 			// Convert file to base64
 			const base64Content = await fileToBase64(file);
 			const normalizedNewContent = normalizeFileContent(base64Content);
 
-			// Check if file already exists
+			// Check for existing files
 			const files = await filesApi.getAll(token);
+
 			const existingFile = files.find((f) => {
 				const normalizedExistingContent = normalizeFileContent(f.content);
 				return f.filename === file.name && normalizedExistingContent === normalizedNewContent;
@@ -82,8 +81,9 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 					filename: file.name,
 					content: base64Content, // Store the full data URL
 					type: file.type,
-					size: file.size
+					size: file.size,
 				};
+
 				const newFile = await filesApi.create(fileData, token);
 				console.log(`File created with ID: ${newFile.id}`);
 				return newFile.id;
@@ -95,9 +95,9 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			if (error.data && error.data.detail) {
 				// If it's a validation error, extract a meaningful message
 				if (Array.isArray(error.data.detail)) {
-					const messages = error.data.detail.map(err => err.msg || JSON.stringify(err)).join(', ');
+					const messages = error.data.detail.map((err) => err.msg || JSON.stringify(err)).join(", ");
 					throw new Error(`File validation error: ${messages}`);
-				} else if (typeof error.data.detail === 'string') {
+				} else if (typeof error.data.detail === "string") {
 					throw new Error(error.data.detail);
 				} else {
 					throw new Error(`File processing failed: ${JSON.stringify(error.data.detail)}`);
@@ -222,13 +222,25 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			const formData = new FormData(formElement);
 			const transformedData = {};
 
-			// Process all form fields
+			// Collect all files first
+			const filesToProcess = [];
 			for (const [key, value] of formData.entries()) {
 				if (value instanceof File && value.size > 0) {
-					// Process file and get ID
+					filesToProcess.push({ key, file: value });
+				} else if (typeof value === "string") {
+					// Regular form field
+					transformedData[key] = value;
+				}
+			}
+
+			// Process files
+			if (filesToProcess.length > 0) {
+				for (let i = 0; i < filesToProcess.length; i++) {
+					const { key, file } = filesToProcess[i];
 					console.log(`Processing file field: ${key}`);
+
 					try {
-						const fileId = await processFile(value);
+						const fileId = await processFile(file, i, filesToProcess.length);
 
 						// Convert field name from 'cv' to 'cv_id', 'cover_letter' to 'cover_letter_id'
 						const idFieldName = `${key}_id`;
@@ -237,9 +249,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 						console.error(`Error processing file ${key}:`, fileError);
 						throw new Error(`Failed to process ${key}: ${fileError.message}`);
 					}
-				} else if (typeof value === 'string') {
-					// Regular form field
-					transformedData[key] = value;
 				}
 			}
 
@@ -247,7 +256,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 
 			// Now submit the form with file IDs
 			await submitCallback(transformedData);
-
 		} catch (error) {
 			console.error("Error processing files:", error);
 
@@ -294,9 +302,9 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			Object.entries(transformed).filter(([key, value]) => {
 				if (value === null || value === undefined) return false;
 				// Allow empty strings for url and note fields
-				if (typeof value === 'string' && value === '' && key !== 'url' && key !== 'note') return false;
+				if (typeof value === "string" && value === "" && key !== "url" && key !== "note") return false;
 				return true;
-			})
+			}),
 		);
 
 		console.log("Final transformed data:", cleanedData);
@@ -322,7 +330,7 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				endpoint="jobapplications"
 				onSuccess={onSuccess}
 				isEdit={isEdit}
-				customSubmitHandler={handleCustomSubmit} // Pass custom submit handler
+				customSubmitHandler={handleCustomSubmit}
 			/>
 
 			{/* Alert Modal for error messages */}

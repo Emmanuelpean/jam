@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Alert, Button, Form, Modal } from "react-bootstrap";
+import { Alert, Button, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue, renderFunctions } from "./Renders";
@@ -50,8 +50,6 @@ const GenericModal = ({
 	// View mode props
 	data = null, // Object - Data to display in view mode
 	viewFields = [], // Array - Field definitions for view mode display
-	onEdit = null, // Function - Called when edit button is clicked
-	onDelete = null, // Function - Called when delete button is clicked
 	showSystemFields = true, // Boolean - Whether to show created/modified dates
 
 	// Alert mode props
@@ -355,11 +353,14 @@ const GenericModal = ({
 							Cancel
 						</Button>
 						<Button variant="primary" type="submit" disabled={submitting}>
-							{submitting
-								? isEdit
-									? "Updating..."
-									: "Saving..."
-								: (isEdit ? "Update" : "Save") + ` ${title}`}
+							{submitting ? (
+								<>
+									<Spinner animation="border" size="sm" className="me-2" />
+									{isEdit ? "Updating..." : "Saving..."}
+								</>
+							) : (
+								(isEdit ? "Update" : "Save") + ` ${title}`
+							)}
 						</Button>
 					</div>
 				</Modal.Footer>
@@ -367,22 +368,6 @@ const GenericModal = ({
 		} else if (mode === "view") {
 			return (
 				<Modal.Footer>
-					{/*{(onEdit || onDelete) && (*/}
-					{/*	<div className="d-flex gap-2 w-100 mb-3">*/}
-					{/*		{*/}
-					{/*			<button className="btn btn-action btn-action-edit" onClick={() => onEdit?.(data)}>*/}
-					{/*				<i className="bi bi-pencil me-2"></i>*/}
-					{/*				Edit {title}*/}
-					{/*			</button>*/}
-					{/*		}*/}
-					{/*		{*/}
-					{/*			<button className="btn btn-action btn-action-delete" onClick={() => onDelete?.(data)}>*/}
-					{/*				<i className="bi bi-trash me-2"></i>*/}
-					{/*				Delete {title}*/}
-					{/*			</button>*/}
-					{/*		}*/}
-					{/*	</div>*/}
-					{/*)}*/}
 					<div className="w-100">
 						<Button variant="primary" onClick={handleHide} className="w-100">
 							Close

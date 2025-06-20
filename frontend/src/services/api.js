@@ -45,24 +45,30 @@ class ApiService {
 		this.baseUrl = baseUrl;
 	}
 
+	// Enhanced error handling helper for blob responses
+	async handleResponseWithBlob(response, isBlob = false) {
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({}));
+			const error = new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+			error.status = response.status;
+			error.data = errorData;
+			throw error;
+		}
+
+		if (isBlob) {
+			return response.blob();
+		}
+
+		return handleResponse(response);
+	}
+
 	async get(endpoint, token = null, options = {}) {
 		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "GET",
 			headers: getAuthHeaders(token),
 		});
 
-		// Handle blob responses (for file downloads)
-		if (options.responseType === 'blob') {
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}));
-				const error = new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-				error.status = response.status;
-				throw error;
-			}
-			return response.blob();
-		}
-
-		return handleResponse(response);
+		return this.handleResponseWithBlob(response, options.responseType === 'blob');
 	}
 
 	// Generic POST request
@@ -104,7 +110,7 @@ class ApiService {
 		return handleResponse(response);
 	}
 
-	// Form data POST (for file uploads, login, etc.)
+	// Form data POST (for login, etc.)
 	async postFormData(endpoint, formData, token = null) {
 		const headers = token ? { Authorization: `Bearer ${token}` } : {};
 		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
@@ -115,22 +121,10 @@ class ApiService {
 		return handleResponse(response);
 	}
 
-	// Add a specific method for downloading files that triggers browser download
+	// Simplified download method using existing get method
 	async downloadFile(endpoint, filename, token = null) {
-		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
-			method: "GET",
-			headers: getAuthHeaders(token),
-		});
-
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
-			const error = new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-			error.status = response.status;
-			throw error;
-		}
-
-		// Get the blob from response
-		const blob = await response.blob();
+		// Use the existing get method with blob response type
+		const blob = await this.get(endpoint, token, { responseType: 'blob' });
 
 		// Create download link and trigger download
 		const url = window.URL.createObjectURL(blob);
@@ -142,7 +136,6 @@ class ApiService {
 		document.body.removeChild(link);
 		window.URL.revokeObjectURL(url);
 	}
-
 }
 
 // Create API service instance
@@ -187,7 +180,7 @@ const createCrudApi = (endpoint) => ({
 		}
 		return api.get(url, token);
 	},
-	getById: (id, token) => api.get(`${endpoint}/${id}`, token),
+	get: (id, token) => api.get(`${endpoint}/${id}`, token),
 	create: (data, token) => api.post(`${endpoint}/`, data, token),
 	update: (id, data, token) => api.put(`${endpoint}/${id}`, data, token),
 	delete: (id, token) => api.delete(`${endpoint}/${id}`, token),
@@ -205,7 +198,6 @@ export { api, API_BASE_URL };
 
 // Helper functions for common patterns
 export const apiHelpers = {
-
 	// Convert data to select options
 	toSelectOptions: (data, valueKey = "id", labelKey = "name") => {
 		return data.map((item) => ({
@@ -249,16 +241,11 @@ export const filesApi = {
 	...createCrudApi('files'),
 
 	// Method that returns blob for manual handling
-	downloadBlob: (id, token) => {
-		return api.get(`files/${id}/download`, token, { responseType: 'blob' });
-	},
+	downloadBlob: (id, token) => api.get(`files/${id}/download`, token, { responseType: 'blob' }),
 
 	// Method that directly triggers browser download
-	download: (id, filename, token) => {
-		return api.downloadFile(`files/${id}/download`, filename, token);
-	}
+	download: (id, filename, token) => api.downloadFile(`files/${id}/download`, filename, token)
 };
-
 
 export const themesApi = {
 	getAll: () => {
