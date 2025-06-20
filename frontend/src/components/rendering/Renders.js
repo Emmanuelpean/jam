@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import LocationViewModal from "../modals/LocationViewModal";
-import CompanyViewModal from "../modals/CompanyViewModal";
-import PersonViewModal from "../modals/PersonViewModal";
-import KeywordViewModal from "../modals/KeywordViewModal";
-import JobApplicationViewModal from "../modals/JobApplicationViewModal";
+import LocationViewModal from "../modals/location/LocationViewModal";
+import CompanyViewModal from "../modals/company/CompanyViewModal";
+import PersonViewModal from "../modals/person/PersonViewModal";
+import KeywordViewModal from "../modals/keyword/KeywordViewModal";
+import JobApplicationViewModal from "../modals/job_application/JobApplicationViewModal";
 
 const createModalManager = (ModalComponent, modalProp) => {
 	return ({ children, onEdit }) => {

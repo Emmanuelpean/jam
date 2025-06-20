@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import GenericTable, { createGenericDeleteHandler, createTableActions } from "./GenericTable";
 import { columns } from "../rendering/ColumnRenders";
-import InterviewFormModal from "../modals/InterviewFormModal";
-import InterviewViewModal from "../modals/InterviewViewModal";
-import AlertModal from "../AlertModal";
+import InterviewFormModal from "../modals/interview/InterviewFormModal";
+import InterviewViewModal from "../modals/interview/InterviewViewModal";
+import AlertModal from "../modals/alert/AlertModal";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import "./InterviewTable.css";
 

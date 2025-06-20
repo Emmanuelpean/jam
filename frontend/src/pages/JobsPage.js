@@ -3,9 +3,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTableData } from "../components/tables/Table";
 import useGenericAlert from "../hooks/useGenericAlert";
 import GenericTable, { createGenericDeleteHandler, createTableActions } from "../components/tables/GenericTable";
-import JobFormModal from "../components/modals/JobFormModal";
-import JobViewModal from "../components/modals/JobViewModal";
-import AlertModal from "../components/AlertModal";
+import JobFormModal from "../components/modals/job/JobFormModal";
+import JobViewModal from "../components/modals/job/JobViewModal";
+import AlertModal from "../components/modals/alert/AlertModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const JobsPage = () => {

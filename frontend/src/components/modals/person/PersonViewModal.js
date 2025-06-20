@@ -1,6 +1,6 @@
 import React from "react";
 import GenericModal from "../GenericModal";
-import { viewFields } from "../rendering/ViewRenders";
+import { viewFields } from "../../rendering/ViewRenders";
 import Select from "react-select";
 
 const PersonViewModal = ({ person, show, onHide, onEdit, size }) => {

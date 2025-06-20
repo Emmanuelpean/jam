@@ -1,15 +1,15 @@
 
 import React, { useEffect, useState } from "react";
 import { Badge, Button } from "react-bootstrap";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
-import CompanyFormModal from "./CompanyFormModal";
-import LocationFormModal from "./LocationFormModal";
-import JobApplicationFormModal from "./JobApplicationFormModal";
-import KeywordFormModal from "./KeywordFormModal";
-import PersonFormModal from "./PersonFormModal";
-import AlertModal from "../AlertModal";
-import useGenericAlert from "../../hooks/useGenericAlert";
+import CompanyFormModal from "../company/CompanyFormModal";
+import LocationFormModal from "../location/LocationFormModal";
+import JobApplicationFormModal from "../job_application/JobApplicationFormModal";
+import KeywordFormModal from "../keyword/KeywordFormModal";
+import PersonFormModal from "../person/PersonFormModal";
+import AlertModal from "../alert/AlertModal";
+import useGenericAlert from "../../../hooks/useGenericAlert";
 import {
 	apiHelpers,
 	companiesApi,
@@ -17,8 +17,8 @@ import {
 	keywordsApi,
 	locationsApi,
 	personsApi,
-} from "../../services/api";
-import { getApplicationStatusBadgeClass } from "../rendering/Renders";
+} from "../../../services/api";
+import { getApplicationStatusBadgeClass } from "../../rendering/Renders";
 
 const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 	const { token } = useAuth();

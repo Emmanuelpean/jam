@@ -1,7 +1,7 @@
 import React from "react";
 import GenericModal from "../GenericModal";
-import LocationMap from "../maps/LocationMap";
-import { viewFields } from "../rendering/ViewRenders";
+import LocationMap from "../../maps/LocationMap";
+import { viewFields } from "../../rendering/ViewRenders";
 
 const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
 	if (!location) return null;

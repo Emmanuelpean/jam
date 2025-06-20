@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import GenericModal from "../GenericModal";
-import { fetchCountries, getCountryCodeSync, getCountryNameSync } from "../../utils/CountryUtils";
+import { fetchCountries, getCountryCodeSync, getCountryNameSync } from "../../../utils/CountryUtils";
 
 const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 	const [countries, setCountries] = useState([]);

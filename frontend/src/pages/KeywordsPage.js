@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import GenericTable, { createGenericDeleteHandler, createTableActions } from "../components/tables/GenericTable";
-import KeywordFormModal from "../components/modals/KeywordFormModal";
-import KeywordViewModal from "../components/modals/KeywordViewModal";
+import KeywordFormModal from "../components/modals/keyword/KeywordFormModal";
+import KeywordViewModal from "../components/modals/keyword/KeywordViewModal";
 import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
 import useGenericAlert from "../hooks/useGenericAlert";
-import AlertModal from "../components/AlertModal";
+import AlertModal from "../components/modals/alert/AlertModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const KeywordsPage = () => {

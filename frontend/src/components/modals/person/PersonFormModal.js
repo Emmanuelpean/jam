@@ -1,9 +1,9 @@
-import { companiesApi, apiHelpers } from '../../services/api';
+import { companiesApi, apiHelpers } from '../../../services/api';
 import React, { useState, useEffect } from "react";
 import { Button } from "react-bootstrap";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
-import CompanyFormModal from "./CompanyFormModal";
+import CompanyFormModal from "../company/CompanyFormModal";
 
 const PersonFormModal = ({
 							 show,

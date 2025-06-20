@@ -1,11 +1,11 @@
 import React from "react";
 import GenericModal from "../GenericModal";
-import { viewFields } from "../rendering/ViewRenders";
+import { viewFields } from "../../rendering/ViewRenders";
 
-const CompanyViewModal = ({ show, onHide, company, onEdit, onDelete, size }) => {
+const InterviewViewModal = ({ show, onHide, company, onEdit, onDelete, size }) => {
 	if (!company) return null;
 
-	const fields = [viewFields.name, viewFields.url, viewFields.description];
+	const fields = [viewFields.date, viewFields.location, viewFields.type, viewFields.note];
 
 	return (
 		<GenericModal
@@ -22,4 +22,4 @@ const CompanyViewModal = ({ show, onHide, company, onEdit, onDelete, size }) => 
 	);
 };
 
-export default CompanyViewModal;
+export default InterviewViewModal;

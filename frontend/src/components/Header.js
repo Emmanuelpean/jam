@@ -1,7 +1,7 @@
 import React from "react";
 import { Container, Nav, Navbar } from "react-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
-import ThemeToggle from "./ui/ThemeToggle";
+import ThemeToggle from "./theme/ThemeToggle";
 import { ReactComponent as JamLogo } from "../assets/Logo.svg";
 
 const Header = ({ user, onLogout }) => {

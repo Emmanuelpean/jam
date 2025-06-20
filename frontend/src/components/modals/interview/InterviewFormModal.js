@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import GenericModal from "../GenericModal";
-import useGenericAlert from "../../hooks/useGenericAlert";
-import { api } from "../../services/api";
-import { useAuth } from "../../contexts/AuthContext";
-import AlertModal from "../AlertModal";
+import useGenericAlert from "../../../hooks/useGenericAlert";
+import { api } from "../../../services/api";
+import { useAuth } from "../../../contexts/AuthContext";
+import AlertModal from "../alert/AlertModal";
 
 const InterviewFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobApplicationId }) => {
 	const { token } = useAuth();

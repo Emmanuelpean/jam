@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import GenericTable, { createGenericDeleteHandler, createTableActions } from "../components/tables/GenericTable";
-import PersonFormModal from "../components/modals/PersonFormModal";
-import PersonViewModal from "../components/modals/PersonViewModal";
+import PersonFormModal from "../components/modals/person/PersonFormModal";
+import PersonViewModal from "../components/modals/person/PersonViewModal";
 import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
 import useGenericAlert from "../hooks/useGenericAlert";
-import AlertModal from "../components/AlertModal";
+import AlertModal from "../components/modals/alert/AlertModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const PersonPage = () => {

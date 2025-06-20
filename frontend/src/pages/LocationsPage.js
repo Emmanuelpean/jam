@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from "react";
 import GenericTable, { createGenericDeleteHandler, createTableActions } from "../components/tables/GenericTable";
-import LocationFormModal from "../components/modals/LocationFormModal";
-import LocationViewModal from "../components/modals/LocationViewModal";
+import LocationFormModal from "../components/modals/location/LocationFormModal";
+import LocationViewModal from "../components/modals/location/LocationViewModal";
 import LocationMap from "../components/maps/LocationMap";
 import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
 import useGenericAlert from "../hooks/useGenericAlert";
-import AlertModal from "../components/AlertModal";
+import AlertModal from "../components/modals/alert/AlertModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const LocationsPage = () => {

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import GenericTable, { createGenericDeleteHandler, createTableActions } from "../components/tables/GenericTable";
-import CompanyFormModal from "../components/modals/CompanyFormModal";
-import CompanyViewModal from "../components/modals/CompanyViewModal";
+import CompanyFormModal from "../components/modals/company/CompanyFormModal";
+import CompanyViewModal from "../components/modals/company/CompanyViewModal";
 import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
 import useGenericAlert from "../hooks/useGenericAlert";
-import AlertModal from "../components/AlertModal";
+import AlertModal from "../components/modals/alert/AlertModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const CompaniesPage = () => {

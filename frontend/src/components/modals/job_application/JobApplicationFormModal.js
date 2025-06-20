@@ -1,11 +1,11 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import GenericModal from "../GenericModal";
-import useGenericAlert from "../../hooks/useGenericAlert";
-import { filesApi, api } from "../../services/api";
-import { useAuth } from "../../contexts/AuthContext";
-import AlertModal from "../AlertModal";
-import { fileToBase64 } from "../../utils/FileUtils";
-import InterviewsTable from "../tables/InterviewTable";
+import useGenericAlert from "../../../hooks/useGenericAlert";
+import { filesApi, api } from "../../../services/api";
+import { useAuth } from "../../../contexts/AuthContext";
+import AlertModal from "../alert/AlertModal";
+import { fileToBase64 } from "../../../utils/FileUtils";
+import InterviewsTable from "../../tables/InterviewTable";
 
 
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {

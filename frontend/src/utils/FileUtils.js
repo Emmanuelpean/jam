@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import useGenericAlert from "../hooks/useGenericAlert";
-import AlertModal from "../components/AlertModal";
+import AlertModal from "../components/modals/alert/AlertModal";
 import "./FileUtils.css";
 
 export const fileToBase64 = (file) => {

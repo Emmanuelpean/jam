@@ -1,5 +1,5 @@
 import React from "react";
-import GenericModal from "./GenericModal";
+import GenericModal from "../GenericModal";
 
 const AlertModal = ({ alertState, hideAlert }) => {
 	return (

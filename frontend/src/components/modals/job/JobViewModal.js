@@ -1,10 +1,10 @@
 import React from "react";
 import GenericModal from "../GenericModal";
-import { viewFields } from "../rendering/ViewRenders";
+import { viewFields } from "../../rendering/ViewRenders";
 
-const JobApplicationViewModal = ({ jobApplication, show, onHide, onEdit, size }) => {
-	if (!jobApplication) return null;
-
+const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
+	if (!job) return null;
+	console.log(job);
 	const fields = [
 		viewFields.title,
 		viewFields.company,
@@ -23,13 +23,13 @@ const JobApplicationViewModal = ({ jobApplication, show, onHide, onEdit, size })
 			show={show}
 			onHide={onHide}
 			mode="view"
-			title="Job Application"
+			title="Job"
 			size={size}
 			viewFields={fields}
-			data={jobApplication}
+			data={job}
 			onEdit={onEdit}
 		/>
 	);
 };
 
-export default JobApplicationViewModal;
+export default JobViewModal;
