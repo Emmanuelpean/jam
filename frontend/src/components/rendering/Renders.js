@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import LocationViewModal from "./modals/LocationViewModal";
-import CompanyViewModal from "./modals/CompanyViewModal";
-import PersonViewModal from "./modals/PersonViewModal";
-import KeywordViewModal from "./modals/KeywordViewModal";
-import JobApplicationViewModal from "./modals/JobApplicationViewModal";
+import LocationViewModal from "../modals/LocationViewModal";
+import CompanyViewModal from "../modals/CompanyViewModal";
+import PersonViewModal from "../modals/PersonViewModal";
+import KeywordViewModal from "../modals/KeywordViewModal";
+import JobApplicationViewModal from "../modals/JobApplicationViewModal";
 
 const createModalManager = (ModalComponent, modalProp) => {
 	return ({ children, onEdit }) => {
@@ -123,12 +123,18 @@ export const renderFunctions = {
 	},
 
 	datetime: (date) => {
-		return new Date(date).toLocaleDateString();
+		if (date) {
+			return new Date(date).toLocaleDateString();
+		}
 	},
 
 	createdDate: (item) => renderFunctions.datetime(item.created_at),
 
 	modifiedDate: (item) => renderFunctions.datetime(item.modified_at),
+
+	date: (item) => {
+		renderFunctions.datetime(item.date);
+	},
 
 	email: (item) => {
 		if (item.email)
@@ -269,10 +275,7 @@ export const renderFunctions = {
 						<span key={person.id || index} className="me-1">
 							<PersonModalManager>
 								{(handleClick) => (
-									<span
-										className="badge bg-info clickable-badge"
-										onClick={() => handleClick(person)}
-									>
+									<span className="badge bg-info clickable-badge" onClick={() => handleClick(person)}>
 										<i className="bi bi-file-person me-1"></i>
 										{person.name}
 									</span>

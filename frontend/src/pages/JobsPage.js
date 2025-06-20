@@ -6,7 +6,7 @@ import GenericTable, { createGenericDeleteHandler, createTableActions } from "..
 import JobFormModal from "../components/modals/JobFormModal";
 import JobViewModal from "../components/modals/JobViewModal";
 import AlertModal from "../components/AlertModal";
-import { columns } from "../components/tables/ColumnDefinitions";
+import { columns } from "../components/rendering/ColumnRenders";
 
 const JobsPage = () => {
 	const { token } = useAuth();

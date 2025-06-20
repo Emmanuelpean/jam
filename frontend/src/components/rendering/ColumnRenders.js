@@ -1,4 +1,4 @@
-import { renderFunctions } from "../Renders";
+import { renderFunctions } from "./Renders";
 
 export const columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
@@ -62,6 +62,15 @@ export const columns = {
 		searchable: true,
 		type: "text",
 		render: renderFunctions.note,
+	},
+
+	date: {
+		key: "date",
+		label: "Date",
+		sortable: true,
+		searchable: true,
+		type: "date",
+		render: renderFunctions.date,
 	},
 
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------

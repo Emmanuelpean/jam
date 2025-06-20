@@ -7,7 +7,7 @@ import { useTableData } from "../components/tables/Table";
 import { useAuth } from "../contexts/AuthContext";
 import useGenericAlert from "../hooks/useGenericAlert";
 import AlertModal from "../components/AlertModal";
-import { columns } from "../components/tables/ColumnDefinitions";
+import { columns } from "../components/rendering/ColumnRenders";
 
 const LocationsPage = () => {
 	const { token } = useAuth();

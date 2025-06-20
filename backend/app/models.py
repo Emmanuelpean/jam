@@ -335,11 +335,13 @@ class Interview(CommonBase, Base):
     - `date` (datetime): The date and time of the interview.
     - `location_id` (int): Identifier for the location of the interview.
     - `location` (Location): Location object related to the interview.
-    - `job_id` (int): Identifier for the job application associated with the interview.
+    - `jobapplication_id` (int): Identifier for the job application associated with the interview.
     - `job_application` (JobApplication): JobApplication object related to the interview.
+    - `type` (str): Type of the interview (HR, technical, management, ...)
     - `note` (str, optional): Additional notes or comments about the interview."""
 
     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+    type = Column(String, nullable=False)
     location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
     jobapplication_id = Column(Integer, ForeignKey("jobapplication.id", ondelete="CASCADE"), nullable=False, index=True)
     note = Column(String, nullable=True)

@@ -1,9 +1,9 @@
-import { getCurrentDateTime } from "../utils/TimeUtils";
-import { Button, Form, InputGroup } from "react-bootstrap";
+import { getCurrentDateTime } from "../../utils/TimeUtils";
+import { Form } from "react-bootstrap";
 import { React, useState } from "react";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
-import FileUploader from "../utils/FileUtils";
+import FileUploader from "../../utils/FileUtils";
 
 const animatedComponents = makeAnimated();
 
@@ -165,8 +165,6 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 			</>
 		);
 	}
-
-
 
 	// Handle datetime-local
 	if (field.type === "datetime-local") {

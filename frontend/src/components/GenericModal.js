@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { Alert, Button, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import "./GenericModal.css";
-import { renderFieldValue, renderFunctions } from "./Renders";
-import { renderInputField, renderInputFieldGroup } from "./FormFieldRender";
+import { renderFieldValue, renderFunctions } from "./rendering/Renders";
+import { renderInputField, renderInputFieldGroup } from "./rendering/FormRender";
 import { api } from "../services/api";
 
 const DEFAULT_ICONS = {

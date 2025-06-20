@@ -105,29 +105,22 @@ const FileUploader = ({
 	label,
 	value,
 	onChange,
+	onRemove,
 	error,
 	onOpenFile = null,
-	onRemoveFile,
+	onRemoveFile, // Keep this for backward compatibility
 	acceptedFileTypes = ".TXT, .PDF, .DOC, .DOCX",
 	maxSizeText = "10 MB",
 	required = false,
 }) => {
-	const [displayFile, setDisplayFile] = useState(null);
 	const [downloadUrl, setDownloadUrl] = useState("");
 	const { alertState, showError, hideAlert } = useGenericAlert();
 	const hiddenInputRef = useRef(null);
 
 	const maxSizeBytes = parseSizeText(maxSizeText);
 
-	useEffect(() => {
-		if (value && value instanceof File) {
-			setDisplayFile(value);
-		} else if (value && typeof value === "object" && value.filename) {
-			setDisplayFile(value);
-		} else {
-			setDisplayFile(null);
-		}
-	}, [value]);
+	// Use controlled value from parent
+	const displayFile = value;
 
 	useEffect(() => {
 		if (displayFile && displayFile instanceof File) {
@@ -161,24 +154,17 @@ const FileUploader = ({
 		(acceptedFiles) => {
 			if (acceptedFiles.length > 0) {
 				const selectedFile = acceptedFiles[0];
-				setDisplayFile(selectedFile);
 
-				// Update the hidden input for form submission
+				// Update the hidden input for form submission compatibility
 				updateHiddenInput([selectedFile]);
 
-				// Also trigger onChange if provided (for compatibility)
+				// Call parent onChange handler
 				if (onChange) {
-					const syntheticEvent = {
-						target: {
-							name: fieldName,
-							value: selectedFile,
-						},
-					};
-					onChange(syntheticEvent);
+					onChange(selectedFile);
 				}
 			}
 		},
-		[fieldName, onChange],
+		[onChange],
 	);
 
 	const onDropRejected = useCallback(
@@ -207,17 +193,20 @@ const FileUploader = ({
 	);
 
 	const removeFile = () => {
-		setDisplayFile(null);
-		setDownloadUrl("");
-
 		// Clear the hidden input
 		if (hiddenInputRef.current) {
 			hiddenInputRef.current.value = "";
 		}
 
-		if (onRemoveFile) {
+		// Call parent remove handler with proper signature
+		if (onRemove) {
+			// New controlled component API
+			onRemove();
+		} else if (onRemoveFile) {
+			// Legacy API for backward compatibility
 			onRemoveFile(fieldName, onChange);
 		} else if (onChange) {
+			// Fallback to direct onChange call
 			const syntheticEvent = {
 				target: {
 					name: fieldName,
@@ -256,8 +245,8 @@ const FileUploader = ({
 		multiple: false,
 		maxSize: maxSizeBytes,
 		accept: parseAcceptedFileTypes(acceptedFileTypes),
-		noClick: true, // We'll handle click ourselves
-		noKeyboard: true, // We'll handle keyboard ourselves
+		noClick: false, // Allow clicking the entire area
+		noKeyboard: false, // Allow keyboard interaction
 	});
 
 	const hasNewFile = displayFile && displayFile instanceof File;
@@ -273,8 +262,9 @@ const FileUploader = ({
 				<div
 					{...getRootProps()}
 					className={`file-dropzone ${isDragActive ? "drag-active" : ""} ${hasFile ? "has-file" : ""} ${error ? "is-invalid" : ""}`}
+					style={{ cursor: "pointer" }}
 				>
-					{/* Hidden file input for form submission */}
+					{/* Hidden file input for form submission compatibility */}
 					<input
 						type="file"
 						name={fieldName}
@@ -296,7 +286,7 @@ const FileUploader = ({
 							</div>
 						</div>
 					) : !hasFile ? (
-						<div className="dropzone-content" onClick={open} style={{ cursor: "pointer" }}>
+						<div className="dropzone-content">
 							<i className="bi bi-cloud-arrow-up dropzone-icon"></i>
 							<div className="dropzone-text">Drag & drop your file here</div>
 							<div className="dropzone-text">Or click to select a file</div>
@@ -330,18 +320,6 @@ const FileUploader = ({
 										<i className="bi bi-download"></i>
 									</button>
 								)}
-
-								<button
-									type="button"
-									className="btn-file-action btn-file-browse"
-									onClick={(e) => {
-										e.stopPropagation();
-										open();
-									}}
-									title="Browse files"
-								>
-									<i className="bi bi-folder2-open"></i>
-								</button>
 
 								<button
 									type="button"

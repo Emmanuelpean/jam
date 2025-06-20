@@ -442,6 +442,7 @@ JOB_APPLICATIONS_DATA = [
 INTERVIEWS_DATA = [
     {
         "date": "2024-01-20T09:30:00",
+        "type": "HR",
         "location_id": 1,
         "jobapplication_id": 1,
         "note": "First round technical interview",
@@ -449,6 +450,7 @@ INTERVIEWS_DATA = [
     },
     {
         "date": "2024-01-21T14:00:00",
+        "type": "Technical",
         "location_id": 2,
         "jobapplication_id": 2,
         "note": "HR screening call",
@@ -456,6 +458,7 @@ INTERVIEWS_DATA = [
     },
     {
         "date": "2024-01-22T10:15:00",
+        "type": "Management",
         "location_id": 4,  # Remote
         "jobapplication_id": 3,
         "note": "Remote technical assessment",
@@ -463,6 +466,7 @@ INTERVIEWS_DATA = [
     },
     {
         "date": "2024-01-23T16:30:00",
+        "type": "HR",
         "location_id": 1,
         "jobapplication_id": 4,
         "note": "Final round with team lead",
@@ -470,6 +474,7 @@ INTERVIEWS_DATA = [
     },
     {
         "date": "2024-01-24T11:45:00",
+        "type": "Other",
         "location_id": 3,
         "jobapplication_id": 5,
         "note": "Cultural fit interview",
@@ -477,6 +482,7 @@ INTERVIEWS_DATA = [
     },
     {
         "date": "2024-01-26T09:00:00",
+        "type": "HR",
         "location_id": 7,  # Canada location
         "jobapplication_id": 1,  # Same application, second interview
         "note": None,

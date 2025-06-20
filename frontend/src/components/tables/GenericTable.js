@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button, Form } from "react-bootstrap";
-import { renderFieldValue } from "../Renders";
+import { renderFieldValue } from "../rendering/Renders";
 import { api } from "../../services/api";
 
 export const createGenericDeleteHandler = ({

@@ -1,6 +1,6 @@
 import React from "react";
 import GenericModal from "../GenericModal";
-import { viewFields } from "../ViewRenders";
+import { viewFields } from "../rendering/ViewRenders";
 
 const JobApplicationViewModal = ({ jobApplication, show, onHide, onEdit, size }) => {
 	if (!jobApplication) return null;

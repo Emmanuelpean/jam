@@ -18,7 +18,7 @@ import {
 	locationsApi,
 	personsApi,
 } from "../../services/api";
-import { getApplicationStatusBadgeClass } from "../Renders";
+import { getApplicationStatusBadgeClass } from "../rendering/Renders";
 
 const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 	const { token } = useAuth();

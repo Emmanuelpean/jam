@@ -1,6 +1,6 @@
 import React from "react";
 import GenericModal from "../GenericModal";
-import { viewFields } from "../ViewRenders";
+import { viewFields } from "../rendering/ViewRenders";
 
 const KeywordViewModal = ({ show, onHide, keyword, onEdit }) => {
 	if (!keyword) return null;

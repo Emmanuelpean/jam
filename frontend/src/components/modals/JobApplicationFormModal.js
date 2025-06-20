@@ -1,15 +1,58 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import GenericModal from "../GenericModal";
 import useGenericAlert from "../../hooks/useGenericAlert";
-import { filesApi } from "../../services/api";
+import { filesApi, api } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import AlertModal from "../AlertModal";
 import { fileToBase64 } from "../../utils/FileUtils";
+import InterviewsTable from "../tables/InterviewTable";
+
 
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
 	const { token } = useAuth();
 	const { alertState, showError, hideAlert } = useGenericAlert();
 	const formRef = useRef();
+
+	// Track file states independently
+	const [fileStates, setFileStates] = useState({
+		cv: null,
+		cover_letter: null
+	});
+
+	// Track interview data
+	const [interviews, setInterviews] = useState([]);
+	const [refreshInterviews, setRefreshInterviews] = useState(0);
+
+	// Initialize file states when modal opens or initialData changes
+	useEffect(() => {
+		if (show) {
+			setFileStates({
+				cv: initialData?.cv || null,
+				cover_letter: initialData?.cover_letter || null
+			});
+			setInterviews(initialData?.interviews || []);
+		}
+	}, [show, initialData?.cv, initialData?.cover_letter, initialData?.interviews]);
+
+	// Refresh interviews when needed
+	useEffect(() => {
+		if (show && isEdit && initialData?.id && refreshInterviews > 0) {
+			refreshJobApplicationData();
+		}
+	}, [refreshInterviews, show, isEdit, initialData?.id, token]);
+
+	const refreshJobApplicationData = async () => {
+		try {
+			const updatedJobApplication = await api.get(`jobapplications/${initialData.id}`, token);
+			setInterviews(updatedJobApplication.interviews || []);
+		} catch (error) {
+			console.error("Error refreshing job application data:", error);
+		}
+	};
+
+	const handleInterviewChange = () => {
+		setRefreshInterviews(prev => prev + 1);
+	};
 
 	const handleFileDownload = async (fileObject) => {
 		try {
@@ -23,6 +66,24 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			});
 		}
 	};
+
+	// Custom file change handler that tracks file state
+	const handleFileChange = useCallback((fieldName, file) => {
+		console.log(`File changed for ${fieldName}:`, file);
+		setFileStates(prev => ({
+			...prev,
+			[fieldName]: file
+		}));
+	}, []);
+
+	// Custom file remove handler
+	const handleFileRemove = useCallback((fieldName) => {
+		console.log(`File removed for ${fieldName}`);
+		setFileStates(prev => ({
+			...prev,
+			[fieldName]: null
+		}));
+	}, []);
 
 	// Helper function to normalize content for comparison
 	const normalizeFileContent = (content) => {
@@ -109,7 +170,7 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 	};
 
 	// Transform initial data to match form field expectations
-	const transformInitialData = (data) => {
+	const transformInitialData = useCallback((data) => {
 		if (!data || Object.keys(data).length === 0) return data;
 
 		const transformed = { ...data };
@@ -135,7 +196,7 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		}
 
 		return transformed;
-	};
+	}, []);
 
 	// Define layout groups for job application fields
 	const layoutGroups = [
@@ -201,6 +262,9 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 					type: "drag-drop",
 					columnClass: "col-md-6",
 					handleFileDownload: handleFileDownload,
+					value: fileStates.cv,
+					onChange: (file) => handleFileChange("cv", file),
+					onRemove: () => handleFileRemove("cv"),
 				},
 				{
 					name: "cover_letter",
@@ -208,6 +272,9 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 					type: "drag-drop",
 					columnClass: "col-md-6",
 					handleFileDownload: handleFileDownload,
+					value: fileStates.cover_letter,
+					onChange: (file) => handleFileChange("cover_letter", file),
+					onRemove: () => handleFileRemove("cover_letter"),
 				},
 			],
 		},
@@ -216,39 +283,53 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 	// Custom submit handler to process files before form submission
 	const handleCustomSubmit = async (formElement, submitCallback) => {
 		console.log("Processing files from form submission...");
+		console.log("Current file states:", fileStates);
 
 		try {
 			// Get form data from the actual form element
 			const formData = new FormData(formElement);
 			const transformedData = {};
 
-			// Collect all files first
-			const filesToProcess = [];
+			// Process regular form fields first
 			for (const [key, value] of formData.entries()) {
-				if (value instanceof File && value.size > 0) {
-					filesToProcess.push({ key, file: value });
-				} else if (typeof value === "string") {
-					// Regular form field
+				if (typeof value === "string") {
 					transformedData[key] = value;
 				}
 			}
 
-			// Process files
-			if (filesToProcess.length > 0) {
-				for (let i = 0; i < filesToProcess.length; i++) {
-					const { key, file } = filesToProcess[i];
-					console.log(`Processing file field: ${key}`);
+			// Process file states instead of relying on form files
+			const fileFields = ['cv', 'cover_letter'];
 
+			for (const fieldName of fileFields) {
+				const currentFile = fileStates[fieldName];
+				const idFieldName = `${fieldName}_id`;
+
+				if (currentFile === null) {
+					// File was explicitly removed - send null to backend
+					transformedData[idFieldName] = null;
+					console.log(`${fieldName} was removed, setting ${idFieldName} to null`);
+				} else if (currentFile instanceof File) {
+					// New file uploaded
+					console.log(`Processing new file for ${fieldName}`);
 					try {
-						const fileId = await processFile(file, i, filesToProcess.length);
-
-						// Convert field name from 'cv' to 'cv_id', 'cover_letter' to 'cover_letter_id'
-						const idFieldName = `${key}_id`;
+						const fileId = await processFile(currentFile);
 						transformedData[idFieldName] = fileId;
+						console.log(`${fieldName} processed, setting ${idFieldName} to ${fileId}`);
 					} catch (fileError) {
-						console.error(`Error processing file ${key}:`, fileError);
-						throw new Error(`Failed to process ${key}: ${fileError.message}`);
+						console.error(`Error processing file ${fieldName}:`, fileError);
+						throw new Error(`Failed to process ${fieldName}: ${fileError.message}`);
 					}
+				} else if (currentFile && typeof currentFile === "object" && currentFile.id) {
+					// Existing file from database - keep the ID
+					transformedData[idFieldName] = currentFile.id;
+					console.log(`${fieldName} unchanged, keeping ${idFieldName} as ${currentFile.id}`);
+				} else {
+					// No file state for this field - explicitly set to null for updates
+					if (isEdit) {
+						transformedData[idFieldName] = null;
+						console.log(`${fieldName} has no state in edit mode, setting ${idFieldName} to null`);
+					}
+					// For new records, don't set the field at all
 				}
 			}
 
@@ -297,9 +378,11 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		delete transformed.job;
 		delete transformed.interviews;
 
-		// Clean up empty values but preserve legitimate empty strings
+		// Clean up empty values but preserve null file IDs
 		const cleanedData = Object.fromEntries(
 			Object.entries(transformed).filter(([key, value]) => {
+				// Always include file ID fields, even if null (indicates removal)
+				if (key.endsWith('_id')) return true;
 				if (value === null || value === undefined) return false;
 				// Allow empty strings for url and note fields
 				if (typeof value === "string" && value === "" && key !== "url" && key !== "note") return false;
@@ -310,6 +393,15 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		console.log("Final transformed data:", cleanedData);
 		return cleanedData;
 	};
+
+	// Custom content to include the interviews table for edit mode
+	const customContent = isEdit && initialData?.id ? (
+		<InterviewsTable
+			interviews={interviews}
+			jobApplicationId={initialData.id}
+			onInterviewChange={handleInterviewChange}
+		/>
+	) : null;
 
 	// Prepare initial data for the form
 	const preparedInitialData = transformInitialData(initialData);
@@ -331,6 +423,7 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				onSuccess={onSuccess}
 				isEdit={isEdit}
 				customSubmitHandler={handleCustomSubmit}
+				customContent={customContent}
 			/>
 
 			{/* Alert Modal for error messages */}

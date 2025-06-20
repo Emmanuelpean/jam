@@ -50,6 +50,19 @@ export const viewFields = {
 		render: (x) => renderFunctions.note(x, true),
 	},
 
+	date: {
+		key: "date",
+		label: "Date",
+		type: "date",
+		render: (x) => renderFunctions.date(x, true),
+	},
+
+	type: {
+		key: "type",
+		label: "Type",
+		type: "text"
+	},
+
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
 	location: {
