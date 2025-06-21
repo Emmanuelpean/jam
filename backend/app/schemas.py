@@ -271,6 +271,7 @@ class InterviewSimple(Interview, Out):
 class InterviewOut(Interview, Out):
     location: LocationOut | None = None
     interviewers: list["PersonSimple"] = []
+    job_application: JobApplicationOut | None = None
 
 
 class InterviewUpdate(Interview):
