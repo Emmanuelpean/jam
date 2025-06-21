@@ -96,9 +96,20 @@ const GenericModal = ({
 	// Form handling
 	const handleChange = (e) => {
 		const { name, value, type, checked } = e.target;
+
+		// Handle different input types
+		let newValue;
+		if (type === "checkbox") {
+			newValue = checked;
+		} else if (type === "file") {
+			newValue = value; // For file inputs, value is already the File object
+		} else {
+			newValue = value;
+		}
+
 		setFormData((prev) => ({
 			...prev,
-			[name]: type === "checkbox" ? checked : value,
+			[name]: newValue,
 		}));
 
 		if (errors[name]) {

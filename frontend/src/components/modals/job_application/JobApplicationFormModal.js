@@ -200,45 +200,37 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 
 	// Define job application fields using the new simplified structure
 	const jobApplicationFields = [
-		// Array of fields - date and status side by side
 		[formFields.applicationDate(), formFields.applicationStatus()],
-
-		// Individual field - application URL
 		formFields.applicationUrl(),
-
-		// Individual field - notes
 		formFields.note({
 			label: "Application Notes",
 			placeholder: "Add notes about your application process, interview details, etc...",
 		}),
-
-		// Array of fields - CV and cover letter side by side
 		[
 			{
 				name: "cv",
 				label: "CV/Resume",
 				type: "drag-drop",
-				handleFileDownload: handleFileDownload,
 				value: fileStates.cv,
 				onChange: (file) => handleFileChange("cv", file),
 				onRemove: () => handleFileRemove("cv"),
+				onOpenFile: handleFileDownload,
 			},
 			{
 				name: "cover_letter",
 				label: "Cover Letter",
 				type: "drag-drop",
-				handleFileDownload: handleFileDownload,
 				value: fileStates.cover_letter,
 				onChange: (file) => handleFileChange("cover_letter", file),
 				onRemove: () => handleFileRemove("cover_letter"),
+				onOpenFile: handleFileDownload,
 			},
 		],
 	];
 
+
 	// Custom submit handler to process files before form submission
 	const handleCustomSubmit = async (formElement, submitCallback) => {
-		console.log("Processing files from form submission...");
-		console.log("Current file states:", fileStates);
 
 		try {
 			// Get form data from the actual form element
@@ -262,14 +254,11 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				if (currentFile === null) {
 					// File was explicitly removed - send null to backend
 					transformedData[idFieldName] = null;
-					console.log(`${fieldName} was removed, setting ${idFieldName} to null`);
 				} else if (currentFile instanceof File) {
 					// New file uploaded
-					console.log(`Processing new file for ${fieldName}`);
 					try {
 						const fileId = await processFile(currentFile);
 						transformedData[idFieldName] = fileId;
-						console.log(`${fieldName} processed, setting ${idFieldName} to ${fileId}`);
 					} catch (fileError) {
 						console.error(`Error processing file ${fieldName}:`, fileError);
 						throw new Error(`Failed to process ${fieldName}: ${fileError.message}`);
@@ -277,18 +266,14 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				} else if (currentFile && typeof currentFile === "object" && currentFile.id) {
 					// Existing file from database - keep the ID
 					transformedData[idFieldName] = currentFile.id;
-					console.log(`${fieldName} unchanged, keeping ${idFieldName} as ${currentFile.id}`);
 				} else {
 					// No file state for this field - explicitly set to null for updates
 					if (isEdit) {
 						transformedData[idFieldName] = null;
-						console.log(`${fieldName} has no state in edit mode, setting ${idFieldName} to null`);
 					}
 					// For new records, don't set the field at all
 				}
 			}
-
-			console.log("Files processed successfully, submitting form...", transformedData);
 
 			// Now submit the form with file IDs
 			await submitCallback(transformedData);
@@ -312,7 +297,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 
 	// Data transformation function (synchronous - files already processed)
 	const transformFormData = (data) => {
-		console.log("Final form data transformation:", data);
 
 		const transformed = { ...data };
 
@@ -345,7 +329,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			}),
 		);
 
-		console.log("Final transformed data:", cleanedData);
 		return cleanedData;
 	};
 

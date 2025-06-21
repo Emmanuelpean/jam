@@ -33,8 +33,8 @@ def generate_crud_router(
                                        'remote_key': 'remote_foreign_key'
                                    }
                                }
-    :return: Configured APIRouter instance with CRUD endpoints.
-    """
+    :return: Configured APIRouter instance with CRUD endpoints."""
+
     router = APIRouter(prefix=f"/{endpoint}", tags=[endpoint])
 
     # Helper function to handle many-to-many relationships
@@ -215,7 +215,7 @@ def generate_crud_router(
             )
 
         # Extract the item data
-        item_dict = item.model_dump(exclude_defaults=True)
+        item_dict = item.model_dump(exclude_unset=True)
 
         if not item_dict:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided for update")

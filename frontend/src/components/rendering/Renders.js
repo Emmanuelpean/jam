@@ -343,7 +343,7 @@ export const renderFieldValue = (field, item) => {
 	} else {
 		rendered = item[field.key];
 	}
-	if (rendered) {
+	if (rendered !== null && rendered !== undefined) {
 		return rendered;
 	} else {
 		return noText;

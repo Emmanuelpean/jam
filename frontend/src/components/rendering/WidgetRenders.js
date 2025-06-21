@@ -216,21 +216,26 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 };
 
 // Render drag-drop widget
-const renderDragDrop = (field, value, handleChange, error) => {
+const renderDragDrop = (field, formData, handleChange, error) => {
 	return (
 		<FileUploader
-			fieldName={field.name}
+			name={field.name}
 			label={field.label}
-			value={value}
-			onChange={handleChange}
+			value={field.value} // Use field.value instead of formData[field.name]
+			onChange={field.onChange} // Use field.onChange instead of handleChange
+			onRemove={field.onRemove}
+			onOpenFile={field.onOpenFile}
 			error={error}
-			onOpenFile={field.handleFileDownload}
+			acceptedFileTypes={field.acceptedFileTypes || ".TXT,.PDF,.DOC,.DOCX"}
+			maxSizeText={field.maxSizeText || "10 MB"}
+			required={field.required}
 		/>
 	);
 };
 
+
 // Render default input widget
-const renderDefaultInput = (field, value, handleChange, error) => {
+export const renderDefaultInput = (field, value, handleChange, error) => {
 	return (
 		<>
 			<Form.Control
@@ -246,9 +251,9 @@ const renderDefaultInput = (field, value, handleChange, error) => {
 		</>
 	);
 };
-
 export const renderInputField = (field, formData, handleChange, errors, handleSelectChange) => {
-	const value = formData[field.name];
+	// For drag-drop fields, don't use formData value since they manage their own state
+	const value = field.type === "drag-drop" ? field.value : formData[field.name];
 	const error = errors[field.name];
 
 	// Handle custom render function
@@ -278,12 +283,13 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 			return renderDateTimeLocal(field, value, handleChange, error);
 
 		case "drag-drop":
-			return renderDragDrop(field, value, handleChange, error);
+			return renderDragDrop(field, formData, handleChange, error);
 
 		default:
 			return renderDefaultInput(field, value, handleChange, error);
 	}
 };
+
 
 export const renderInputFieldGroup = (group, formData, handleChange, errors, handleSelectChange, customFieldComponents = {}) => {
 	if (group.fields && group?.fields?.length > 0) {
