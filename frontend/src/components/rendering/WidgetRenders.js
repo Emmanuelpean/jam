@@ -299,9 +299,10 @@ export const renderInputFieldGroup = (group, formData, handleChange, errors, han
 		};
 
 		const columnClass = getColumnClass(group.fields.length);
+		const stableKey = group.id || group.fields.map(field => field.name).join('-');
 
 		return (
-			<div key={group.id || Math.random()} className={`row ${group.className || ""}`}>
+			<div key={stableKey} className={`row ${group.className || ""}`}>
 				{group.fields.map((field) => (
 					<div key={field.name} className={field.columnClass || columnClass}>
 						<Form.Group className="mb-3">
