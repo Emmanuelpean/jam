@@ -345,6 +345,9 @@ interview_router = generate_crud_router(
     out_schema=schemas.InterviewOut,
     endpoint="interviews",
     not_found_msg="Interview not found",
+    many_to_many_fields={
+        "interviewers": {"table": models.interview_interviewers, "local_key": "interview_id", "remote_key": "person_id"},
+    },
 )
 
 # JobApplication router
