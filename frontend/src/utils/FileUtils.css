@@ -30,22 +30,22 @@
 
 .dropzone-icon {
     font-size: 2rem;
-    color: var(--primary-end);
+    color: var(--primary-mid);
     margin-bottom: 0.5rem;
 }
 
 .file-dropzone.drag-active .dropzone-icon {
-    color: var(--primary-end);
+    color: var(--primary-mid);
 }
 
 .dropzone-text {
     font-weight: 600;
-    color: var(--primary-end);
+    color: var(--primary-mid);
     margin-bottom: 0.25rem;
 }
 
 .file-dropzone.drag-active .dropzone-text {
-    color: var(--primary-end);
+    color: var(--primary-mid);
 }
 
 .dropzone-info {
