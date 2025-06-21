@@ -1,30 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import GenericModal from "../GenericModal";
-import { fetchCountries, getCountryCodeSync, getCountryNameSync } from "../../../utils/CountryUtils";
-import { formFields } from "../../rendering/FormRenders";
+import { getCountryCodeSync, getCountryNameSync } from "../../../utils/CountryUtils";
+import { formFields, useCountries } from "../../rendering/FormRenders";
 
 const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
-	const [countries, setCountries] = useState([]);
-	const [loadingCountries, setLoadingCountries] = useState(false);
+	// Use the countries hook for automatic loading
+	const { countries, loading: loadingCountries } = useCountries();
 
-	// Load countries when component mounts
-	useEffect(() => {
-		const loadCountries = async () => {
-			setLoadingCountries(true);
-			try {
-				const countriesList = await fetchCountries();
-				setCountries(countriesList);
-			} catch (error) {
-				console.error("Failed to load countries:", error);
-			} finally {
-				setLoadingCountries(false);
-			}
-		};
-
-		loadCountries().then(() => null);
-	}, []);
-
-	const fields = [formFields.postcode(), formFields.city(), formFields.country()];
+	// Create fields with loaded countries
+	const locationFields = useMemo(() => [
+		formFields.postcode(),
+		formFields.city(),
+		formFields.country(countries, loadingCountries),
+	], [countries, loadingCountries]);
 
 	// Transform the initial data to work with react-select
 	const transformInitialData = (data) => {
@@ -68,8 +56,8 @@ const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, is
 		if (!hasAnyValue) {
 			errors.city =
 				errors.country =
-				errors.postcode =
-					"Please fill in at least one field (city, postcode, or country)";
+					errors.postcode =
+						"Please fill in at least one field (city, postcode, or country)";
 		}
 
 		return errors;
@@ -80,7 +68,7 @@ const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, is
 			show={show}
 			onHide={onHide}
 			title="Location"
-			fields={fields}
+			fields={locationFields}
 			endpoint="locations"
 			onSuccess={onSuccess}
 			initialData={transformInitialData(initialData)}

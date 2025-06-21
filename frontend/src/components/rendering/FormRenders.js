@@ -1,4 +1,32 @@
+import { useEffect, useState } from "react";
 import { fetchCountries } from "../../utils/CountryUtils";
+
+// Hook for country loading that can be used by components
+export const useCountries = () => {
+	const [countries, setCountries] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+
+	useEffect(() => {
+		const loadCountries = async () => {
+			try {
+				setLoading(true);
+				const countriesList = await fetchCountries();
+				setCountries(countriesList);
+				setError(null);
+			} catch (err) {
+				console.error("Failed to load countries:", err);
+				setError(err);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		loadCountries();
+	}, []);
+
+	return { countries, loading, error };
+};
 
 // Common form field definitions for reuse across modals
 // Each field is a function that accepts override attributes
@@ -133,26 +161,36 @@ export const formFields = {
 		...overrides,
 	}),
 
-	country: (overrides = {}) => ({
+	// Standard country field that requires countries to be passed in
+	country: (countries = [], loading = false, overrides = {}) => ({
 		name: "country",
 		label: "Country",
 		type: "select",
 		required: false,
-		options: [],
-		placeholder: "Loading countries...",
+		options: countries,
+		placeholder: loading ? "Loading countries..." : "Search and select a country...",
 		isSearchable: true,
 		isClearable: true,
-		isDisabled: true,
-		loadOptions: async () => {
-			try {
-				return await fetchCountries();
-			} catch (error) {
-				console.error("Failed to load countries:", error);
-				return [];
-			}
-		},
+		isDisabled: loading,
 		...overrides,
 	}),
+
+	// Auto-loading country field component
+	countryAuto: (overrides = {}) => {
+		// This creates a field definition that includes the hook for auto-loading
+		return {
+			name: "country",
+			label: "Country",
+			type: "select",
+			required: false,
+			placeholder: "Loading countries...",
+			isSearchable: true,
+			isClearable: true,
+			isDisabled: true,
+			autoLoad: true, // Flag to indicate this field auto-loads
+			...overrides,
+		};
+	},
 
 	// ------------------------------------------------- JOB FIELDS --------------------------------------------------
 
