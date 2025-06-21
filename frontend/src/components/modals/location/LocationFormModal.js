@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import GenericModal from "../GenericModal";
 import { fetchCountries, getCountryCodeSync, getCountryNameSync } from "../../../utils/CountryUtils";
+import { formFields } from "../../rendering/FormRenders";
 
 const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 	const [countries, setCountries] = useState([]);
@@ -23,33 +24,7 @@ const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, is
 		loadCountries().then(() => null);
 	}, []);
 
-	const formFields = [
-		{
-			name: "postcode",
-			label: "Post Code",
-			type: "text",
-			required: false,
-			placeholder: "Enter a post code",
-		},
-		{
-			name: "city",
-			label: "City",
-			type: "text",
-			required: false,
-			placeholder: "Enter a city name",
-		},
-		{
-			name: "country",
-			label: "Country",
-			type: "select",
-			required: false,
-			options: countries,
-			placeholder: loadingCountries ? "Loading countries..." : "Search and select a country...",
-			isSearchable: true,
-			isClearable: true,
-			isDisabled: loadingCountries,
-		},
-	];
+	const fields = [formFields.postcode(), formFields.city(), formFields.country()];
 
 	// Transform the initial data to work with react-select
 	const transformInitialData = (data) => {
@@ -105,7 +80,7 @@ const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, is
 			show={show}
 			onHide={onHide}
 			title="Location"
-			fields={formFields}
+			fields={fields}
 			endpoint="locations"
 			onSuccess={onSuccess}
 			initialData={transformInitialData(initialData)}

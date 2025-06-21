@@ -1,346 +1,362 @@
-import { getCurrentDateTime } from "../../utils/TimeUtils";
-import { Form } from "react-bootstrap";
-import { React, useState } from "react";
-import Select from "react-select";
-import makeAnimated from "react-select/animated";
-import FileUploader from "../../utils/FileUtils";
+import { fetchCountries } from "../../utils/CountryUtils";
 
-const animatedComponents = makeAnimated();
+// Common form field definitions for reuse across modals
+// Each field is a function that accepts override attributes
+export const formFields = {
+	// ------------------------------------------------- BASIC FIELDS -------------------------------------------------
 
-const CustomDropdownIndicator = (props) => {
-	const [hover, setHover] = useState(false);
-	const menuIsOpen = props.selectProps.menuIsOpen;
-	const isActive = hover || menuIsOpen;
+	title: (overrides = {}) => ({
+		name: "title",
+		label: "Title",
+		type: "text",
+		required: true,
+		placeholder: "Enter title",
+		...overrides,
+	}),
 
-	return (
-		<div
-			style={{
-				display: "flex",
-				alignItems: "center",
-				marginLeft: 11,
-				boxSizing: "border-box",
-				cursor: "pointer",
-				color: isActive ? "hsl(0, 0%, 60%)" : "hsl(0, 0%, 80%)",
-				transition: "color 150ms",
-			}}
-			onMouseDown={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				if (props.selectProps.onAddButtonClick) {
-					props.selectProps.onAddButtonClick(e);
-				}
-			}}
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-			}}
-			onMouseEnter={() => setHover(true)}
-			onMouseLeave={() => setHover(false)}
-			tabIndex={-1}
-			aria-label="Add new item"
-			role="button"
-			title="Add new item"
-		>
-			<i className="bi bi-plus-circle" style={{ fontSize: "21px" }}></i>
-		</div>
-	);
-};
+	name: (overrides = {}) => ({
+		name: "name",
+		label: "Name",
+		type: "text",
+		required: true,
+		placeholder: "Enter name",
+		...overrides,
+	}),
 
-const renderTextarea = (field, value, handleChange, error) => {
-	return (
-		<>
-			<Form.Control
-				as="textarea"
-				rows={field.rows || 3}
-				name={field.name}
-				value={value || ""}
-				onChange={handleChange}
-				placeholder={field.placeholder}
-				isInvalid={!!error}
-				className="optimized-textarea"
-			/>
-			{error && <div className="invalid-feedback">{error}</div>}
-		</>
-	);
-};
+	description: (overrides = {}) => ({
+		name: "description",
+		label: "Description",
+		type: "textarea",
+		rows: 4,
+		placeholder: "Enter description...",
+		...overrides,
+	}),
 
-const renderCheckbox = (field, value, handleChange) => {
-	return (
-		<Form.Check
-			type="checkbox"
-			name={field.name}
-			checked={value || false}
-			onChange={handleChange}
-			label={field.checkboxLabel || field.label}
-		/>
-	);
-};
+	note: (overrides = {}) => ({
+		name: "note",
+		label: "Notes",
+		type: "textarea",
+		rows: 3,
+		placeholder: "Add your notes...",
+		...overrides,
+	}),
 
-const renderSelect = (field, value, handleChange, handleSelectChange, error) => {
-	const isMulti = field.type === "multiselect";
-	let selectedValue = null;
+	url: (overrides = {}) => ({
+		name: "url",
+		label: "URL",
+		type: "text",
+		placeholder: "https://...",
+		...overrides,
+	}),
 
-	if (isMulti) {
-		if (Array.isArray(value) && field.options && field.options.length > 0) {
-			selectedValue = value
-				.map((id) =>
-					field.options.find(
-						(opt) => opt.value === id || opt.value === parseInt(id) || opt.value === String(id),
-					),
-				)
-				.filter(Boolean);
-		} else {
-			selectedValue = [];
-		}
-	} else {
-		if (value !== null && value !== undefined && value !== "" && field.options) {
-			selectedValue =
-				field.options.find(
-					(option) =>
-						option.value === value || option.value === parseInt(value) || option.value === String(value),
-				) || null;
-		}
-	}
+	date: (overrides = {}) => ({
+		name: "date",
+		label: "Date",
+		type: "date",
+		required: true,
+		...overrides,
+	}),
 
-	const selectComponents = { ...animatedComponents };
+	datetime: (overrides = {}) => ({
+		name: "date",
+		label: "Date & Time",
+		type: "datetime-local",
+		required: true,
+		placeholder: "Select date and time",
+		...overrides,
+	}),
 
-	if (field.addButton) {
-		selectComponents.DropdownIndicator = CustomDropdownIndicator;
-	} else {
-		selectComponents.DropdownIndicator = null;
-		selectComponents.IndicatorSeparator = null;
-	}
+	// ------------------------------------------------- PERSON FIELDS ------------------------------------------------
 
-	return (
-		<>
-			<Select
-				name={field.name}
-				value={selectedValue}
-				onChange={(selectedOptions, actionMeta) => {
-					if (isMulti) {
-						const ids = Array.isArray(selectedOptions) ? selectedOptions.map((option) => option.value) : [];
+	firstName: (overrides = {}) => ({
+		name: "first_name",
+		label: "First Name",
+		type: "text",
+		required: true,
+		placeholder: "Enter first name",
+		...overrides,
+	}),
 
-						const syntheticEvent = {
-							target: {
-								name: field.name,
-								value: ids,
-							},
-						};
-						handleChange(syntheticEvent);
-					} else {
-						handleSelectChange(selectedOptions, actionMeta);
-					}
-				}}
-				options={field.options || []}
-				closeMenuOnSelect={!isMulti}
-				placeholder={field.placeholder || `Select ${field.label}`}
-				isSearchable={field.isSearchable !== false}
-				isClearable={field.isClearable !== false}
-				isDisabled={field.isDisabled}
-				isMulti={isMulti}
-				menuPortalTarget={document.body}
-				className={`react-select-container ${error ? "is-invalid" : ""} ${field.required ? "required" : ""}`}
-				classNamePrefix="react-select"
-				components={selectComponents}
-				onAddButtonClick={field.addButton?.onClick}
-				hideSelectedOptions={false}
-				controlShouldRenderValue={true}
-			/>
-			{error && <div className="invalid-feedback d-block">{error}</div>}
-		</>
-	);
-};
+	lastName: (overrides = {}) => ({
+		name: "last_name",
+		label: "Last Name",
+		type: "text",
+		required: true,
+		placeholder: "Enter last name",
+		...overrides,
+	}),
 
-// Render datetime-local widget
-const renderDateTimeLocal = (field, value, handleChange, error) => {
-	const currentDateTime = getCurrentDateTime();
+	email: (overrides = {}) => ({
+		name: "email",
+		label: "Email",
+		type: "email",
+		required: false,
+		placeholder: "person@company.com",
+		...overrides,
+	}),
 
-	const formatDateTimeForInput = (dateTimeValue) => {
-		if (!dateTimeValue) return currentDateTime;
+	phone: (overrides = {}) => ({
+		name: "phone",
+		label: "Phone",
+		type: "tel",
+		required: false,
+		placeholder: "+1-555-0123",
+		...overrides,
+	}),
 
-		try {
-			const date = new Date(dateTimeValue);
-			if (isNaN(date.getTime())) {
-				return currentDateTime;
+	linkedinUrl: (overrides = {}) => ({
+		name: "linkedin_url",
+		label: "LinkedIn Profile",
+		type: "text",
+		required: false,
+		placeholder: "https://linkedin.com/in/username",
+		...overrides,
+	}),
+
+	// ------------------------------------------------- LOCATION FIELDS -----------------------------------------------
+
+	city: (overrides = {}) => ({
+		name: "city",
+		label: "City",
+		type: "text",
+		required: false,
+		placeholder: "Enter city name",
+		...overrides,
+	}),
+
+	postcode: (overrides = {}) => ({
+		name: "postcode",
+		label: "Post Code",
+		type: "text",
+		required: false,
+		placeholder: "Enter post code",
+		...overrides,
+	}),
+
+	country: (overrides = {}) => ({
+		name: "country",
+		label: "Country",
+		type: "select",
+		required: false,
+		options: [],
+		placeholder: "Loading countries...",
+		isSearchable: true,
+		isClearable: true,
+		isDisabled: true,
+		loadOptions: async () => {
+			try {
+				return await fetchCountries();
+			} catch (error) {
+				console.error("Failed to load countries:", error);
+				return [];
 			}
+		},
+		...overrides,
+	}),
 
-			const year = date.getFullYear();
-			const month = String(date.getMonth() + 1).padStart(2, "0");
-			const day = String(date.getDate()).padStart(2, "0");
-			const hours = String(date.getHours()).padStart(2, "0");
-			const minutes = String(date.getMinutes()).padStart(2, "0");
+	// ------------------------------------------------- JOB FIELDS --------------------------------------------------
 
-			return `${year}-${month}-${day}T${hours}:${minutes}`;
-		} catch (error) {
-			console.error("Error formatting datetime:", error);
-			return currentDateTime;
-		}
-	};
+	jobTitle: (overrides = {}) => ({
+		name: "title",
+		label: "Job Title",
+		type: "text",
+		required: true,
+		placeholder: "Enter job title",
+		...overrides,
+	}),
 
-	const setCurrentTime = (e) => {
-		e.preventDefault();
-		e.stopPropagation();
-		const newDateTime = getCurrentDateTime();
-		const syntheticEvent = {
-			target: {
-				name: field.name,
-				value: newDateTime,
+	salaryMin: (overrides = {}) => ({
+		name: "salary_min",
+		label: "Minimum Salary",
+		type: "number",
+		placeholder: "Enter minimum salary",
+		step: "1000",
+		...overrides,
+	}),
+
+	salaryMax: (overrides = {}) => ({
+		name: "salary_max",
+		label: "Maximum Salary",
+		type: "number",
+		placeholder: "Enter maximum salary",
+		step: "1000",
+		...overrides,
+	}),
+
+	personalRating: (overrides = {}) => ({
+		name: "personal_rating",
+		label: "Personal Rating (1-5)",
+		type: "select",
+		options: [
+			{ value: 1, label: "1 - Poor" },
+			{ value: 2, label: "2 - Fair" },
+			{ value: 3, label: "3 - Good" },
+			{ value: 4, label: "4 - Very Good" },
+			{ value: 5, label: "5 - Excellent" },
+		],
+		...overrides,
+	}),
+
+	// ------------------------------------------------- INTERVIEW FIELDS --------------------------------------------
+
+	interviewDate: (overrides = {}) => ({
+		name: "date",
+		label: "Interview Date & Time",
+		type: "datetime-local",
+		required: true,
+		placeholder: "Select interview date and time",
+		...overrides,
+	}),
+
+	interviewType: (overrides = {}) => ({
+		name: "type",
+		label: "Interview Type",
+		type: "select",
+		required: true,
+		options: [
+			{ value: "HR", label: "HR Interview" },
+			{ value: "Technical", label: "Technical Interview" },
+			{ value: "Management", label: "Management Interview" },
+			{ value: "Panel", label: "Panel Interview" },
+			{ value: "Phone", label: "Phone Interview" },
+			{ value: "Video", label: "Video Interview" },
+			{ value: "Assessment", label: "Assessment/Test" },
+			{ value: "Final", label: "Final Interview" },
+			{ value: "Other", label: "Other" },
+		],
+		placeholder: "Select interview type",
+		...overrides,
+	}),
+
+	interviewNotes: (overrides = {}) => ({
+		name: "note",
+		label: "Interview Notes",
+		type: "textarea",
+		placeholder: "Add notes about the interview, questions asked, impressions, etc...",
+		...overrides,
+	}),
+
+	// ------------------------------------------------- APPLICATION FIELDS -----------------------------------------
+
+	applicationDate: (overrides = {}) => ({
+		name: "date",
+		label: "Application Date",
+		type: "datetime-local",
+		required: true,
+		placeholder: "Select application date and time",
+		...overrides,
+	}),
+
+	applicationStatus: (overrides = {}) => ({
+		name: "status",
+		label: "Application Status",
+		type: "select",
+		options: [
+			{ value: "Applied", label: "Applied" },
+			{ value: "Interview", label: "Interview" },
+			{ value: "Rejected", label: "Rejected" },
+			{ value: "Offer", label: "Offer" },
+			{ value: "Withdrawn", label: "Withdrawn" },
+		],
+		required: true,
+		...overrides,
+	}),
+
+	applicationUrl: (overrides = {}) => ({
+		name: "url",
+		label: "Application URL",
+		type: "text",
+		placeholder: "https://... (link to your application submission)",
+		...overrides,
+	}),
+
+	// ------------------------------------------------- SELECT FIELDS WITH OPTIONS ---------------------------------
+
+	company: (options = [], onAdd = null, overrides = {}) => ({
+		name: "company_id",
+		label: "Company",
+		type: "select",
+		required: true,
+		placeholder: "Select or search company...",
+		isSearchable: true,
+		isClearable: true,
+		options: options,
+		...(onAdd && {
+			addButton: {
+				onClick: onAdd,
 			},
-		};
-		handleChange(syntheticEvent);
-	};
+		}),
+		...overrides,
+	}),
 
-	const formattedValue = formatDateTimeForInput(value);
+	location: (options = [], onAdd = null, overrides = {}) => ({
+		name: "location_id",
+		label: "Location",
+		type: "select",
+		placeholder: "Select or search location...",
+		isSearchable: true,
+		isClearable: true,
+		options: options,
+		...(onAdd && {
+			addButton: {
+				onClick: onAdd,
+			},
+		}),
+		...overrides,
+	}),
 
-	return (
-		<>
-			<div className="datetime-input-wrapper">
-				<Form.Control
-					type="datetime-local"
-					name={field.name}
-					value={formattedValue}
-					onChange={handleChange}
-					isInvalid={!!error}
-					placeholder={field.placeholder || "Select date and time"}
-					className="datetime-input-with-icon"
-				/>
-				<i
-					className="bi bi-clock datetime-embedded-icon"
-					onClick={setCurrentTime}
-					title="Set to current date and time"
-				></i>
-			</div>
-			{error && <div className="invalid-feedback d-block">{error}</div>}
-		</>
-	);
-};
+	keywords: (options = [], onAdd = null, overrides = {}) => ({
+		name: "keywords",
+		label: "Keywords/Tags",
+		type: "multiselect",
+		placeholder: "Select or search keywords...",
+		isSearchable: true,
+		options: options,
+		...(onAdd && {
+			addButton: {
+				onClick: onAdd,
+			},
+		}),
+		...overrides,
+	}),
 
-// Render drag-drop widget
-const renderDragDrop = (field, value, handleChange, error) => {
-	return (
-		<FileUploader
-			fieldName={field.name}
-			label={field.label}
-			value={value}
-			onChange={handleChange}
-			error={error}
-			onOpenFile={field.handleFileDownload}
-		/>
-	);
-};
+	contacts: (options = [], onAdd = null, overrides = {}) => ({
+		name: "contacts",
+		label: "Contacts",
+		type: "multiselect",
+		placeholder: "Select or search contacts...",
+		isSearchable: true,
+		options: options,
+		...(onAdd && {
+			addButton: {
+				onClick: onAdd,
+			},
+		}),
+		...overrides,
+	}),
 
-// Render default input widget
-const renderDefaultInput = (field, value, handleChange, error) => {
-	return (
-		<>
-			<Form.Control
-				type={field.type || "text"}
-				name={field.name}
-				value={value || ""}
-				onChange={handleChange}
-				placeholder={field.placeholder}
-				isInvalid={!!error}
-				step={field.step}
-			/>
-			{error && <div className="invalid-feedback">{error}</div>}
-		</>
-	);
-};
+	interviewers: (options = [], onAdd = null, overrides = {}) => ({
+		name: "interviewers",
+		label: "Interviewers",
+		type: "multiselect",
+		isSearchable: true,
+		options: options,
+		...(onAdd && {
+			addButton: {
+				onClick: onAdd,
+			},
+		}),
+		...overrides,
+	}),
 
-export const renderInputField = (field, formData, handleChange, errors, handleSelectChange) => {
-	const value = formData[field.name];
-	const error = errors[field.name];
-
-	// Handle custom render function
-	if (typeof field.render === "function") {
-		return field.render({
-			value: value || "",
-			onChange: handleChange,
-			formData,
-			errors,
-			handleSelectChange,
-		});
-	}
-
-	// Route to appropriate widget renderer based on field type
-	switch (field.type) {
-		case "textarea":
-			return renderTextarea(field, value, handleChange, error);
-
-		case "checkbox":
-			return renderCheckbox(field, value, handleChange);
-
-		case "select":
-		case "multiselect":
-			return renderSelect(field, value, handleChange, handleSelectChange, error);
-
-		case "datetime-local":
-			return renderDateTimeLocal(field, value, handleChange, error);
-
-		case "drag-drop":
-			return renderDragDrop(field, value, handleChange, error);
-
-		default:
-			return renderDefaultInput(field, value, handleChange, error);
-	}
-};
-
-export const renderInputFieldGroup = (
-	group,
-	formData,
-	handleChange,
-	errors,
-	handleSelectChange,
-	customFieldComponents = {},
-) => {
-	if (group.type === "row") {
-		return (
-			<div key={group.id || Math.random()} className={`row ${group.className || ""}`}>
-				{group.fields.map((field) => (
-					<div key={field.name} className={field.columnClass || "col-md-6"}>
-						<Form.Group className="mb-3">
-							{field.type !== "drag-drop" && (
-								<Form.Label>
-									{field.label}
-									{field.required && <span className="text-danger">*</span>}
-								</Form.Label>
-							)}
-							{renderInputField(
-								field,
-								formData,
-								handleChange,
-								errors,
-								handleSelectChange,
-								customFieldComponents,
-							)}
-						</Form.Group>
-					</div>
-				))}
-			</div>
-		);
-	}
-
-	if (group.type === "custom") {
-		return (
-			<div key={group.id || Math.random()} className={group.className || ""}>
-				{group.content}
-			</div>
-		);
-	}
-
-	return (
-		<div key={group.id || Math.random()}>
-			{group.fields.map((field) => (
-				<Form.Group key={field.name} className="mb-3">
-					{field.type !== "drag-drop" && (
-						<Form.Label>
-							{field.label}
-							{field.required && <span className="text-danger">*</span>}
-						</Form.Label>
-					)}
-					{renderInputField(field, formData, handleChange, errors, handleSelectChange, customFieldComponents)}
-				</Form.Group>
-			))}
-		</div>
-	);
+	jobApplication: (options = [], overrides = {}) => ({
+		name: "jobapplication_id",
+		label: "Job Application",
+		type: "select",
+		options: options,
+		required: true,
+		placeholder: "Select job application",
+		isSearchable: true,
+		...overrides,
+	}),
 };

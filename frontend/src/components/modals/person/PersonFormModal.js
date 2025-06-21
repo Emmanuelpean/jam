@@ -1,18 +1,11 @@
-import { companiesApi, apiHelpers } from '../../../services/api';
-import React, { useState, useEffect } from "react";
-import { Button } from "react-bootstrap";
+import { apiHelpers, companiesApi } from "../../../services/api";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
 import CompanyFormModal from "../company/CompanyFormModal";
+import { formFields } from "../../rendering/FormRenders";
 
-const PersonFormModal = ({
-							 show,
-							 onHide,
-							 onSuccess,
-							 size,
-							 initialData = {},
-							 isEdit = false,
-						 }) => {
+const PersonFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 	const { token } = useAuth();
 	const [showCompanyModal, setShowCompanyModal] = useState(false);
 	const [companyOptions, setCompanyOptions] = useState([]);
@@ -42,90 +35,13 @@ const PersonFormModal = ({
 		setShowCompanyModal(false);
 	};
 
-	// Define layout groups for custom form layout
-	const layoutGroups = [
-		// Name fields (side by side)
-		{
-			id: "name",
-			type: "row",
-			fields: [
-				{
-					name: "first_name",
-					label: "First Name",
-					type: "text",
-					required: true,
-					placeholder: "Enter first name",
-					columnClass: "col-md-6",
-				},
-				{
-					name: "last_name",
-					label: "Last Name",
-					type: "text",
-					required: true,
-					placeholder: "Enter last name",
-					columnClass: "col-md-6",
-				},
-			],
-		},
-		// Company (full width) - Fixed structure
-		{
-			id: "company",
-			type: "default",
-			className: "mb-2",
-			fields: [
-				{
-					name: "company_id",
-					label: "Company",
-					type: "select",
-					required: true,
-					placeholder: "Select or search company...",
-					isSearchable: true,
-					isClearable: true,
-					options: companyOptions,
-					addButton: {
-						onClick: () => setShowCompanyModal(true),
-					},
-				},
-			],
-		},
-		// Contact fields (side by side)
-		{
-			id: "contact",
-			type: "row",
-			fields: [
-				{
-					name: "email",
-					label: "Email",
-					type: "email",
-					required: false,
-					placeholder: "person@company.com",
-					columnClass: "col-md-6",
-				},
-				{
-					name: "phone",
-					label: "Phone",
-					type: "tel",
-					required: false,
-					placeholder: "+1-555-0123",
-					columnClass: "col-md-6",
-				},
-			],
-		},
-		// LinkedIn URL (full width)
-		{
-			id: "linkedin",
-			type: "default",
-			fields: [
-				{
-					name: "linkedin_url",
-					label: "LinkedIn Profile",
-					type: "text",
-					required: false,
-					placeholder: "https://linkedin.com/in/username",
-				},
-			],
-		},
+	const personFields = [
+		[formFields.firstName(), formFields.lastName()],
+		formFields.company(companyOptions, () => setShowCompanyModal(true)),
+		[formFields.email(), formFields.phone()],
+		[formFields.linkedinUrl()],
 	];
+
 
 	// Custom validation rules
 	const validationRules = {
@@ -169,9 +85,7 @@ const PersonFormModal = ({
 				mode="form"
 				title="Person"
 				size={size}
-				useCustomLayout={true}
-				backdrop={true}
-				layoutGroups={layoutGroups}
+				fields={personFields}
 				initialData={initialData}
 				endpoint="persons"
 				onSuccess={onSuccess}

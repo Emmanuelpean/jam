@@ -1,23 +1,17 @@
+
 import React from "react";
 import GenericModal from "../GenericModal";
+import { formFields } from "../../rendering/FormRenders";
 
 const AggregatorFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 
-	const formFields = [
-		{
-			name: "name",
-			label: "Aggregator Name",
-			type: "text",
+	const aggregatorFields = [
+		formFields.name({
 			required: true,
-			placeholder: "Enter aggregator name (e.g., LinkedIn, Indeed)",
-		},
-		{
-			name: "url",
-			label: "Website URL",
-			type: "text",
+		}),
+		formFields.url({
 			required: true,
-			placeholder: "https://example.com",
-		},
+		}),
 	];
 
 	// Transform form data before submission
@@ -33,8 +27,9 @@ const AggregatorFormModal = ({ show, onHide, onSuccess, size, initialData = {}, 
 		<GenericModal
 			show={show}
 			onHide={onHide}
+			mode="form"
 			title="Aggregator"
-			fields={formFields}
+			fields={aggregatorFields}
 			endpoint="aggregators"
 			onSuccess={onSuccess}
 			initialData={initialData}

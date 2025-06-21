@@ -3,7 +3,7 @@ import { Alert, Button, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue, renderFunctions } from "../rendering/Renders";
-import { renderInputField, renderInputFieldGroup } from "../rendering/FormRenders";
+import { renderInputField, renderInputFieldGroup } from "../rendering/WidgetRenders";
 import { api } from "../../services/api";
 
 const DEFAULT_ICONS = {
@@ -32,7 +32,7 @@ const GenericModal = ({
 	mode = "form", // String - Modal type: 'form', 'view', 'alert', 'confirmation', 'custom'
 
 	// Form mode props
-	fields = [], // Array - Field definitions for form mode
+	fields = [], // Array - Field definitions or field groups for form mode
 	initialData = {}, // Object - Initial form data
 	endpoint, // String - API endpoint for form submission
 	onSuccess, // Function - Called on successful form submission
@@ -42,10 +42,6 @@ const GenericModal = ({
 	isEdit = false, // Boolean - Whether form is in edit mode
 	customFieldComponents = {},
 	customSubmitHandler = null,
-
-	// Layout options
-	useCustomLayout = false, // Boolean - Enable custom field layouts
-	layoutGroups = [], // Array - Define groups of fields with custom layouts
 
 	// View mode props
 	data = null, // Object - Data to display in view mode
@@ -121,12 +117,24 @@ const GenericModal = ({
 		}
 	};
 
+	const extractAllFields = (fieldsArray) => {
+		const allFields = [];
+
+		fieldsArray.forEach((item) => {
+			if (Array.isArray(item)) {
+				allFields.push(...item);
+			} else if (item.name) {
+				allFields.push(item);
+			}
+		});
+
+		return allFields;
+	};
+
 	// Form validation
 	const validateForm = () => {
 		const newErrors = {};
-
-		// Get all fields from both regular fields and layout groups
-		const allFields = useCustomLayout ? layoutGroups.flatMap((group) => group.fields || []).concat(fields) : fields;
+		const allFields = extractAllFields(fields);
 
 		allFields.forEach((field) => {
 			if (field.required && !formData[field.name]) {
@@ -223,7 +231,7 @@ const GenericModal = ({
 		}
 	};
 
-	// Modal header (DONE)
+	// Modal header
 	const renderHeader = () => {
 		// Icon
 		let icon;
@@ -257,6 +265,7 @@ const GenericModal = ({
 		);
 	};
 
+	// Render individual field (for simple fields)
 	const renderFormGroup = (field) => (
 		<Form.Group key={field.name} className="mb-3">
 			<Form.Label>
@@ -274,25 +283,34 @@ const GenericModal = ({
 			return (
 				<div>
 					{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
+					<div>
+						{fields.map((item, index) => {
+							// Type 1: Array of fields (render as row)
+							if (Array.isArray(item)) {
+								return renderInputFieldGroup({ fields: item }, formData, handleChange, errors, handleSelectChange, customFieldComponents);
+							}
 
+							// Type 2: Single field (has name property)
+							if (item.name) {
+								return (
+									<Form.Group key={item.name} className="mb-3">
+										{item.type !== "drag-drop" && (
+											<Form.Label>
+												{item.label}
+												{item.required && <span className="text-danger">*</span>}
+											</Form.Label>
+										)}
+										{renderInputField(item, formData, handleChange, errors, handleSelectChange, customFieldComponents)}
+									</Form.Group>
+								);
+							}
+
+							// Type 3: Custom object or legacy object with fields
+							return renderInputFieldGroup(item, formData, handleChange, errors, handleSelectChange, customFieldComponents);
+						})
+						}
+					</div>
 					{customContent && <div className="mt-4">{customContent}</div>}
-					{useCustomLayout ? (
-						<div>
-							{layoutGroups.map((group, _index) =>
-								renderInputFieldGroup(
-									group,
-									formData,
-									handleChange,
-									errors,
-									handleSelectChange,
-									customFieldComponents,
-								),
-							)}
-							{fields.length > 0 && fields.map(renderFormGroup)}
-						</div>
-					) : (
-						<>{fields.map(renderFormGroup)}</>
-					)}
 				</div>
 			);
 		} else if (mode === "view") {
@@ -301,7 +319,7 @@ const GenericModal = ({
 					<div className="row">
 						{viewFields.map((field) => (
 							<div key={field.name} className={field.type === "textarea" ? "col-12" : "col-md-6"}>
-								<h6>{field.label}</h6>
+								<h6 className="mb-3 fw-bold">{field.label}</h6>
 								<div className="mb-3">{renderFieldValue(field, data)}</div>
 							</div>
 						))}

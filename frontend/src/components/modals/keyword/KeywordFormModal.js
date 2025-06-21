@@ -1,17 +1,10 @@
 import React from "react";
 import GenericModal from "../GenericModal";
+import { formFields } from "../../rendering/FormRenders";
 
 const KeywordFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 
-	const formFields = [
-		{
-			name: "name",
-			label: "Tag Name",
-			type: "text",
-			required: true,
-			placeholder: "Enter tag name (e.g., Python, React, AWS)",
-		},
-	];
+	const fields = [formFields.name()];
 
 	// Transform the form data before submission (trim whitespace)
 	const transformFormData = (formData) => {  // TODO create function that transforms the data based on the field type
@@ -27,7 +20,7 @@ const KeywordFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isE
 			onHide={onHide}
 			mode="form"
 			title="Tag"
-			fields={formFields}
+			fields={fields}
 			endpoint="keywords"
 			onSuccess={onSuccess}
 			initialData={initialData}

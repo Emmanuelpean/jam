@@ -4,11 +4,12 @@ import { useAuth } from "../../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
 import CompanyFormModal from "../company/CompanyFormModal";
 import LocationFormModal from "../location/LocationFormModal";
-import JobApplicationFormModal from "../job_application/JobApplicationFormModal";
 import KeywordFormModal from "../keyword/KeywordFormModal";
 import PersonFormModal from "../person/PersonFormModal";
+import JobApplicationFormModal from "../job_application/JobApplicationFormModal";
 import AlertModal from "../alert/AlertModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
+import { formFields } from "../../rendering/FormRenders";
 import {
 	apiHelpers,
 	companiesApi,
@@ -25,6 +26,9 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 	const [showCompanyModal, setShowCompanyModal] = useState(false);
 	const [showLocationModal, setShowLocationModal] = useState(false);
 	const [showApplicationModal, setShowApplicationModal] = useState(false);
+	const [showKeywordModal, setShowKeywordModal] = useState(false);
+	const [showPersonModal, setShowPersonModal] = useState(false);
+
 	const [companyOptions, setCompanyOptions] = useState([]);
 	const [locationOptions, setLocationOptions] = useState([]);
 	const [keywordOptions, setKeywordOptions] = useState([]);
@@ -32,8 +36,6 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 	const [currentJobId, setCurrentJobId] = useState(null);
 	const [existingApplication, setExistingApplication] = useState(null);
 	const [isLoadingApplication, setIsLoadingApplication] = useState(false);
-	const [showKeywordModal, setShowKeywordModal] = useState(false);
-	const [showPersonModal, setShowPersonModal] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 
 	// Transform initial data to work with multiselect (convert objects to IDs)
@@ -57,58 +59,6 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		}
 
 		return transformed;
-	};
-
-	// Handle delete job application
-	const handleDeleteApplication = async () => {
-		if (!existingApplication?.id) return;
-
-		try {
-			await showDelete({
-				title: "Delete Job Application",
-				message: "Are you sure you want to delete this job application? This action cannot be undone.",
-				confirmText: "Delete",
-				cancelText: "Cancel",
-			});
-
-			// If we reach here, user confirmed deletion
-			setIsDeleting(true);
-			try {
-				await jobApplicationsApi.delete(existingApplication.id, token);
-				setExistingApplication(null);
-				console.log("Job application deleted successfully");
-			} catch (error) {
-				console.error("Error deleting job application:", error);
-				showError({
-					title: "Delete Failed",
-					message: "Failed to delete job application. Please try again.",
-				});
-			} finally {
-				setIsDeleting(false);
-			}
-		} catch (error) {
-			// User cancelled deletion, do nothing
-			console.log("Job application deletion cancelled");
-		}
-	};
-
-	const handleKeywordSuccess = (newKeyword) => {
-		const newOption = {
-			value: newKeyword.id,
-			label: newKeyword.name,
-		};
-		setKeywordOptions((prev) => [...prev, newOption]);
-		setShowKeywordModal(false);
-	};
-
-	// Handle successful person creation
-	const handlePersonSuccess = (newPerson) => {
-		const newOption = {
-			value: newPerson.id,
-			label: newPerson.name,
-		};
-		setPersonOptions((prev) => [...prev, newOption]);
-		setShowPersonModal(false);
 	};
 
 	// Set current job ID when editing or after successful creation
@@ -146,7 +96,6 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 			if (!token || !show) return;
 
 			try {
-				// Use your existing API structure
 				const [companiesData, locationsData, keywordsData, personsData] = await Promise.all([
 					companiesApi.getAll(token),
 					locationsApi.getAll(token),
@@ -166,33 +115,36 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		fetchOptions();
 	}, [token, show]);
 
-	// Handle successful company creation
+	// Success handlers for modals
 	const handleCompanySuccess = (newCompany) => {
-		const newOption = {
-			value: newCompany.id,
-			label: newCompany.name,
-		};
+		const newOption = { value: newCompany.id, label: newCompany.name };
 		setCompanyOptions((prev) => [...prev, newOption]);
 		setShowCompanyModal(false);
 	};
 
-	// Handle successful location creation
 	const handleLocationSuccess = (newLocation) => {
-		const newOption = {
-			value: newLocation.id,
-			label: newLocation.name,
-		};
+		const newOption = { value: newLocation.id, label: newLocation.name };
 		setLocationOptions((prev) => [...prev, newOption]);
 		setShowLocationModal(false);
 	};
 
+	const handleKeywordSuccess = (newKeyword) => {
+		const newOption = { value: newKeyword.id, label: newKeyword.name };
+		setKeywordOptions((prev) => [...prev, newOption]);
+		setShowKeywordModal(false);
+	};
+
+	const handlePersonSuccess = (newPerson) => {
+		const newOption = { value: newPerson.id, label: newPerson.name };
+		setPersonOptions((prev) => [...prev, newOption]);
+		setShowPersonModal(false);
+	};
+
 	// Handle successful job creation/update
 	const handleJobSuccess = (jobData) => {
-		// Store the job ID for potential application creation
 		if (jobData && jobData.id) {
 			setCurrentJobId(jobData.id);
 		}
-		// Call the original onSuccess callback
 		if (onSuccess) {
 			onSuccess(jobData);
 		}
@@ -201,180 +153,71 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 	// Handle successful job application creation/update
 	const handleApplicationSuccess = (applicationData) => {
 		setShowApplicationModal(false);
-		// Refresh the existing application data
 		if (currentJobId) {
 			checkExistingApplication(currentJobId);
 		}
 	};
 
-	// Handle opening application modal (create or edit)
-	const handleOpenApplicationModal = () => {
-		setShowApplicationModal(true);
+	// Handle delete job application
+	const handleDeleteApplication = async () => {
+		if (!existingApplication?.id) return;
+
+		try {
+			await showDelete({
+				title: "Delete Job Application",
+				message: "Are you sure you want to delete this job application? This action cannot be undone.",
+				confirmText: "Delete",
+				cancelText: "Cancel",
+			});
+
+			setIsDeleting(true);
+			try {
+				await jobApplicationsApi.delete(existingApplication.id, token);
+				setExistingApplication(null);
+				console.log("Job application deleted successfully");
+			} catch (error) {
+				console.error("Error deleting job application:", error);
+				showError({
+					title: "Delete Failed",
+					message: "Failed to delete job application. Please try again.",
+				});
+			} finally {
+				setIsDeleting(false);
+			}
+		} catch (error) {
+			console.log("Job application deletion cancelled");
+		}
 	};
 
-	// Define layout groups for job information
-	const layoutGroups = [
-		{
-			id: "title",
-			type: "default",
-			fields: [
-				{
-					name: "title",
-					label: "Job Title",
-					type: "text",
-					required: true,
-					placeholder: "Enter job title",
-				},
-			],
-		},
-		{
-			id: "company-location",
-			type: "row",
-			className: "mb-0",
-			fields: [
-				{
-					name: "company_id",
-					label: "Company",
-					type: "select",
-					placeholder: "Select or search company...",
-					isSearchable: true,
-					isClearable: true,
-					options: companyOptions,
-					columnClass: "col-md-6",
-					addButton: {
-						onClick: () => setShowCompanyModal(true),
-					},
-				},
-				{
-					name: "location_id",
-					label: "Location",
-					type: "select",
-					placeholder: "Select or search location...",
-					isSearchable: true,
-					isClearable: true,
-					options: locationOptions,
-					columnClass: "col-md-6",
-					addButton: {
-						onClick: () => setShowLocationModal(true),
-					},
-				},
-			],
-		},
-		// Keywords and Contacts (side by side)
-		{
-			id: "keywords-contacts",
-			type: "row",
-			fields: [
-				{
-					name: "keywords",
-					label: "Keywords/Tags",
-					type: "multiselect",
-					placeholder: "Select or search keywords...",
-					isSearchable: true,
-					options: keywordOptions,
-					columnClass: "col-md-6",
-					addButton: {
-						onClick: () => setShowKeywordModal(true),
-					},
-				},
-				{
-					name: "contacts",
-					label: "Contacts",
-					type: "multiselect",
-					placeholder: "Select or search contacts...",
-					isSearchable: true,
-					options: personOptions,
-					columnClass: "col-md-6",
-					addButton: {
-						onClick: () => setShowPersonModal(true),
-					},
-				},
-			],
-		},
-		// Status and URL
-		{
-			id: "status-url",
-			type: "default",
-			fields: [
-				{
-					name: "url",
-					label: "Job URL",
-					type: "text",
-					placeholder: "https://...",
-				},
-			],
-		},
-		// Salary fields (side by side)
-		{
-			id: "salary",
-			type: "row",
-			fields: [
-				{
-					name: "salary_min",
-					label: "Minimum Salary",
-					type: "number",
-					placeholder: "Enter minimum salary",
-					step: "1000",
-					columnClass: "col-md-6",
-				},
-				{
-					name: "salary_max",
-					label: "Maximum Salary",
-					type: "number",
-					placeholder: "Enter maximum salary",
-					step: "1000",
-					columnClass: "col-md-6",
-				},
-			],
-		},
-		// Personal Rating (full width)
-		{
-			id: "rating",
-			type: "default",
-			fields: [
-				{
-					name: "personal_rating",
-					label: "Personal Rating (1-5)",
-					type: "select",
-					options: [
-						{ value: 1, label: "1 - Poor" },
-						{ value: 2, label: "2 - Fair" },
-						{ value: 3, label: "3 - Good" },
-						{ value: 4, label: "4 - Very Good" },
-						{ value: 5, label: "5 - Excellent" },
-					],
-				},
-			],
-		},
-		// Description and Notes (full width)
-		{
-			id: "text-fields",
-			type: "default",
-			fields: [
-				{
-					name: "description",
-					label: "Job Description",
-					type: "textarea",
-					rows: 4,
-					placeholder: "Enter job description...",
-				},
-				{
-					name: "note",
-					label: "Personal Notes",
-					type: "textarea",
-					rows: 3,
-					placeholder: "Add your notes about this job...",
-				},
-			],
-		},
 
-		// Job Application Section
+	// Define form fields using new simplified structure
+	const jobFields = [
+		// Individual field
+		formFields.jobTitle(),
+
+		[
+			formFields.company(companyOptions, () => setShowCompanyModal(true)),
+			formFields.location(locationOptions, () => setShowLocationModal(true)),
+		],
+
+		[
+			formFields.keywords(keywordOptions, () => setShowKeywordModal(true)),
+			formFields.contacts(personOptions, () => setShowPersonModal(true)),
+		],
+
+		formFields.url({ label: "Job URL" }),
+
+		[formFields.salaryMin(), formFields.salaryMax()],
+
+		formFields.personalRating(),
+
+		formFields.description(),
+		formFields.note(),
+
 		{
-			id: "application-section",
 			type: "custom",
-			className: "mt-4 mb-3",
 			content: (
-				<div className="border-top pt-4">
+				<div className="border-top pt-4 mt-4 mb-3">
 					<div className="text-center">
 						<div className="d-flex justify-content-center align-items-center mb-3">
 							<h5 className="mb-0 me-3">
@@ -403,7 +246,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 								</p>
 								<div className="d-grid gap-2 d-md-flex justify-content-md-center">
 									<Button
-										onClick={handleOpenApplicationModal}
+										onClick={() => setShowApplicationModal(true)}
 										className="px-4"
 										style={{ width: "auto" }}
 									>
@@ -446,7 +289,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 									<Button
 										variant="success"
 										size="lg"
-										onClick={handleOpenApplicationModal}
+										onClick={() => setShowApplicationModal(true)}
 										disabled={!currentJobId && !isEdit}
 										className="px-4"
 									>
@@ -508,10 +351,10 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 		}
 
 		// Clean up unnecessary fields that shouldn't be sent to backend
-		delete transformed.company; // Remove the company object, keep company_id
-		delete transformed.location; // Remove the location object, keep location_id
-		delete transformed.job_application; // Remove existing application data
-		delete transformed.name; // Remove computed name field
+		delete transformed.company;
+		delete transformed.location;
+		delete transformed.job_application;
+		delete transformed.name;
 
 		return transformed;
 	};
@@ -524,8 +367,7 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				mode="form"
 				title="Job"
 				size={size}
-				useCustomLayout={true}
-				layoutGroups={layoutGroups}
+				fields={jobFields}
 				initialData={transformInitialData(initialData)}
 				endpoint="jobs"
 				onSuccess={handleJobSuccess}
@@ -534,35 +376,31 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				isEdit={isEdit}
 			/>
 
-			{/* Company Form Modal */}
+			{/* Modals */}
 			<CompanyFormModal
 				show={showCompanyModal}
 				onHide={() => setShowCompanyModal(false)}
 				onSuccess={handleCompanySuccess}
 			/>
 
-			{/* Location Form Modal */}
 			<LocationFormModal
 				show={showLocationModal}
 				onHide={() => setShowLocationModal(false)}
 				onSuccess={handleLocationSuccess}
 			/>
 
-			{/* Keyword Form Modal */}
 			<KeywordFormModal
 				show={showKeywordModal}
 				onHide={() => setShowKeywordModal(false)}
 				onSuccess={handleKeywordSuccess}
 			/>
 
-			{/* Person Form Modal */}
 			<PersonFormModal
 				show={showPersonModal}
 				onHide={() => setShowPersonModal(false)}
 				onSuccess={handlePersonSuccess}
 			/>
 
-			{/* Job Application Form Modal */}
 			<JobApplicationFormModal
 				show={showApplicationModal}
 				onHide={() => setShowApplicationModal(false)}
@@ -573,7 +411,6 @@ const JobFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit 
 				size="lg"
 			/>
 
-			{/* Alert Modal */}
 			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</>
 	);

@@ -1,30 +1,16 @@
+
 import React from "react";
 import GenericModal from "../GenericModal";
+import { formFields } from "../../rendering/FormRenders";
 
 const CompanyFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
 
-	const formFields = [
-		{
-			name: "name",
-			label: "Company Name",
-			type: "text",
+	const companyFields = [
+		formFields.name({
 			required: true,
-			placeholder: "Enter company name",
-		},
-		{
-			name: "url",
-			label: "Website",
-			type: "text",
-			required: false,
-			placeholder: "https://example.com",
-		},
-		{
-			name: "description",
-			label: "Description",
-			type: "textarea",
-			required: false,
-			placeholder: "Enter company description",
-		},
+		}),
+		formFields.url({"label": "Website URL"}),
+		formFields.description(),
 	];
 
 	// Transform form data before submission
@@ -41,8 +27,9 @@ const CompanyFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isE
 		<GenericModal
 			show={show}
 			onHide={onHide}
+			mode="form"
 			title="Company"
-			fields={formFields}
+			fields={companyFields}
 			endpoint="companies"
 			onSuccess={onSuccess}
 			initialData={initialData}

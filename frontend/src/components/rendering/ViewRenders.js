@@ -165,5 +165,12 @@ export const viewFields = {
 		label: "Application Status",
 		type: "text",
 		render: (x) => renderFunctions.jobApplication(x, true),
+	},
+
+	interviewers: {
+		key: "person",
+		label: "Interviewers",
+		type: "text",
+		render: (x) => renderFunctions.contacts(x, true, "interviewers"),
 	}
 };
