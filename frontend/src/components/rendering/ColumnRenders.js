@@ -188,7 +188,7 @@ export const columns = {
 		type: "text",
 		sortField: "person.last_name",
 		searchFields: "person.name",
-		render: (item) => renderFunctions.contacts(item, "interviewers"),
+		render: (item) => renderFunctions.contacts(item, false, "interviewers"),
 	},
 
 
@@ -256,5 +256,16 @@ export const columns = {
 		sortField: "interview_count",  // TODO
 		searchable: false,
 		render: renderFunctions.interviewCount,
+	},
+
+	jobApplicationJob: {
+		key: "job",
+		accessKey: "job_application",
+		label: "Job",
+		sortable: true,
+		searchable: true,
+		searchFields: "job.title",
+		sortField: "job.title",
+		render: renderFunctions.job
 	}
 };

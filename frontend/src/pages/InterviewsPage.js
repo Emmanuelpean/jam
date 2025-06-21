@@ -20,7 +20,7 @@ const InterviewsPage = () => {
 		removeItem,
 	} = useTableData("interviews");
 
-	const tableColumns = [columns.interviewers, columns.date, columns.type, columns.location, columns.createdAt];
+	const tableColumns = [columns.jobApplicationJob, columns.interviewers, columns.date, columns.type, columns.location, columns.createdAt];
 
 	// Create wrapper component for ViewModal
 	const InterviewViewModalWithProps = (props) => (

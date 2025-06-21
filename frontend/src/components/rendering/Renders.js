@@ -334,6 +334,9 @@ export const renderFunctions = {
 
 export const renderFieldValue = (field, item) => {
 	const noText = <span className="text-muted">Not Provided</span>;
+	if (field.accessKey) {
+		item = accessAttribute(item, field.accessKey);
+	}
 	let rendered;
 	if (field.render) {
 		rendered = field.render(item);

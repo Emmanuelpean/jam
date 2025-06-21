@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { renderFieldValue } from "../rendering/Renders";
 import { api } from "../../services/api";
+import { accessAttribute } from "../../utils/Utils";
 
 export const createGenericDeleteHandler = ({
 	endpoint,
@@ -133,6 +134,27 @@ const GenericTable = ({
 	const [currentPage, setCurrentPage] = useState(0);
 	const [pageSize, setPageSize] = useState(10);
 
+	// Helper function to get the effective item for a column
+	const getEffectiveItem = (item, column) => {
+		if (column.accessKey) {
+			return accessAttribute(item, column.accessKey);
+		}
+		return item;
+	};
+
+	// Helper function to get value for searching/sorting
+	const getColumnValue = (item, column, field) => {
+		const effectiveItem = getEffectiveItem(item, column);
+
+		if (column.accessor) {
+			return column.accessor(effectiveItem);
+		} else if (field) {
+			return accessAttribute(effectiveItem, field);
+		} else {
+			return accessAttribute(effectiveItem, column.key);
+		}
+	};
+
 	// Handle sorting
 	const handleSort = (key) => {
 		let direction = "asc";
@@ -187,23 +209,16 @@ const GenericTable = ({
 					if (!column.searchable) return false;
 
 					let value;
-					if (column.accessor) {
-						value = column.accessor(item);
-					} else if (column.searchFields) {
+					if (column.searchFields) {
+						// Handle multiple search fields
 						const fields = Array.isArray(column.searchFields) ? column.searchFields : [column.searchFields];
 						value = fields
-							.map((field) => {
-								const parts = field.split(".");
-								let obj = item;
-								for (const part of parts) {
-									obj = obj?.[part];
-									if (obj === null || obj === undefined) break;
-								}
-								return obj;
-							})
+							.map((field) => getColumnValue(item, column, field))
+							.filter(val => val != null)
 							.join(" ");
 					} else {
-						value = item[column.key];
+						// Use the column key with accessKey support
+						value = getColumnValue(item, column);
 					}
 
 					return value?.toString().toLowerCase().includes(searchTermLower);
@@ -217,34 +232,25 @@ const GenericTable = ({
 				const column = columns.find((col) => col.key === sortConfig.key);
 				let aValue, bValue;
 
-				// Enhanced sorting: Check sortFunction first, then sortField, then accessor, then fallback to key
+				// Enhanced sorting: Check sortFunction first, then sortField, then use getColumnValue
 				if (column?.sortFunction && typeof column.sortFunction === "function") {
 					// Use custom sorting function
 					aValue = column.sortFunction(a);
 					bValue = column.sortFunction(b);
 				} else if (column?.sortField) {
-					// Handle nested field sorting using string path
-					if (typeof column.sortField === "string") {
-						const parts = column.sortField.split(".");
-						aValue = parts.reduce((obj, part) => obj?.[part], a);
-						bValue = parts.reduce((obj, part) => obj?.[part], b);
-					} else if (typeof column.sortField === "function") {
-						// sortField can also be a function
-						aValue = column.sortField(a);
-						bValue = column.sortField(b);
-					}
-				} else if (column?.accessor) {
-					aValue = column.accessor(a);
-					bValue = column.accessor(b);
+					// Handle nested field sorting using getColumnValue
+					aValue = getColumnValue(a, column, column.sortField);
+					bValue = getColumnValue(b, column, column.sortField);
 				} else {
-					aValue = a[sortConfig.key];
-					bValue = b[sortConfig.key];
+					// Use getColumnValue with the column key and accessKey support
+					aValue = getColumnValue(a, column);
+					bValue = getColumnValue(b, column);
 				}
 
 				// Handle null/undefined values - always place them at the bottom
 				if (aValue == null && bValue == null) return 0;
-				if (aValue == null) return 1; // Always place null values at the bottom
-				if (bValue == null) return -1; // Always place null values at the bottom
+				if (aValue == null) return 1;
+				if (bValue == null) return -1;
 
 				// Convert to strings for comparison if needed
 				if (typeof aValue === "string" && typeof bValue === "string") {
@@ -391,10 +397,7 @@ const GenericTable = ({
 					</thead>
 					<tbody>
 						{currentPageData.map((item, index) => (
-							<tr
-								key={item.id || index}
-								onClick={(event) => handleRowClick(event, item)}
-							>
+							<tr key={item.id || index} onClick={(event) => handleRowClick(event, item)}>
 								{tableColumns.map((column, columnIndex) => (
 									<td
 										key={column.key}
@@ -419,72 +422,72 @@ const GenericTable = ({
 
 			{/* Page controls - Hidden when showAllEntries is true */}
 			{!showAllEntries && (
-			<div className="d-flex justify-content-between align-items-center mt-0ds">
-				<div className="d-flex align-items-center gap-1">
-					<Button
-						variant="outline-secondary"
-						size="sm"
-						className="py-0 px-2"
-						onClick={goToFirstPage}
-						disabled={currentPage === 0}
-						hidden={currentPage <= 1}
-						aria-label="First page"
-					>
-						<i className="bi bi-chevron-double-left" aria-hidden="true"></i>
-					</Button>
-					<Button
-						variant="outline-secondary"
-						size="sm"
-						className="py-0 px-2"
-						onClick={goToPreviousPage}
-						disabled={currentPage === 0}
-						hidden={currentPage <= 1}
-						aria-label="Previous page"
-					>
-						<i className="bi bi-chevron-left" aria-hidden="true"></i>
-					</Button>
-					<Button
-						variant="outline-secondary"
-						size="sm"
-						className="py-0 px-2"
-						onClick={goToNextPage}
-						disabled={currentPage >= totalPages - 2}
-						hidden={totalPages <= 1}
-						aria-label="Next page"
-					>
-						<i className="bi bi-chevron-right" aria-hidden="true"></i>
-					</Button>
-					<Button
-						variant="outline-secondary"
-						size="sm"
-						className="py-0 px-2"
-						onClick={goToLastPage}
-						disabled={currentPage >= totalPages - 2}
-						hidden={totalPages <= 1}
-						aria-label="Last page"
-					>
-						<i className="bi bi-chevron-double-right" aria-hidden="true"></i>
-					</Button>
-				</div>
+				<div className="d-flex justify-content-between align-items-center mt-0ds">
+					<div className="d-flex align-items-center gap-1">
+						<Button
+							variant="outline-secondary"
+							size="sm"
+							className="py-0 px-2"
+							onClick={goToFirstPage}
+							disabled={currentPage === 0}
+							hidden={currentPage <= 1}
+							aria-label="First page"
+						>
+							<i className="bi bi-chevron-double-left" aria-hidden="true"></i>
+						</Button>
+						<Button
+							variant="outline-secondary"
+							size="sm"
+							className="py-0 px-2"
+							onClick={goToPreviousPage}
+							disabled={currentPage === 0}
+							hidden={currentPage <= 1}
+							aria-label="Previous page"
+						>
+							<i className="bi bi-chevron-left" aria-hidden="true"></i>
+						</Button>
+						<Button
+							variant="outline-secondary"
+							size="sm"
+							className="py-0 px-2"
+							onClick={goToNextPage}
+							disabled={currentPage >= totalPages - 2}
+							hidden={totalPages <= 1}
+							aria-label="Next page"
+						>
+							<i className="bi bi-chevron-right" aria-hidden="true"></i>
+						</Button>
+						<Button
+							variant="outline-secondary"
+							size="sm"
+							className="py-0 px-2"
+							onClick={goToLastPage}
+							disabled={currentPage >= totalPages - 2}
+							hidden={totalPages <= 1}
+							aria-label="Last page"
+						>
+							<i className="bi bi-chevron-double-right" aria-hidden="true"></i>
+						</Button>
+					</div>
 
-				<div className="d-flex align-items-center gap-2">
-					<span className="small text-muted">
-						Page {currentPage + 1} of {totalPages || 1}
-					</span>
-					<Form.Select
-						size="sm"
-						style={{ width: "auto", padding: "0.25rem 0.5rem", textAlign: "center" }}
-						value={pageSize}
-						onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-					>
-						{[10, 20, 30, 40, 50, 100].map((size) => (
-							<option key={size} value={size}>
-								Show {size} Entries
-							</option>
-						))}
-					</Form.Select>
+					<div className="d-flex align-items-center gap-2">
+						<span className="small text-muted">
+							Page {currentPage + 1} of {totalPages || 1}
+						</span>
+						<Form.Select
+							size="sm"
+							style={{ width: "auto", padding: "0.25rem 0.5rem", textAlign: "center" }}
+							value={pageSize}
+							onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+						>
+							{[10, 20, 30, 40, 50, 100].map((size) => (
+								<option key={size} value={size}>
+									Show {size} Entries
+								</option>
+							))}
+						</Form.Select>
+					</div>
 				</div>
-			</div>
 			)}
 		</div>
 	);
