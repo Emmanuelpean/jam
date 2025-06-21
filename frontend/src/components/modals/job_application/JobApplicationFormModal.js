@@ -2,11 +2,11 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import GenericModal from "../GenericModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import { api, filesApi } from "../../../services/api";
-import { useAuth } from "../../../contexts/AuthContext";
-import AlertModal from "../alert/AlertModal";
 import { fileToBase64 } from "../../../utils/FileUtils";
 import InterviewsTable from "../../tables/InterviewTable";
 import { formFields } from "../../rendering/FormRenders";
+import { useAuth } from "../../../contexts/AuthContext";
+import AlertModal from "../alert/AlertModal";
 
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
 	const { token } = useAuth();
@@ -228,10 +228,8 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		],
 	];
 
-
 	// Custom submit handler to process files before form submission
 	const handleCustomSubmit = async (formElement, submitCallback) => {
-
 		try {
 			// Get form data from the actual form element
 			const formData = new FormData(formElement);
@@ -297,7 +295,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 
 	// Data transformation function (synchronous - files already processed)
 	const transformFormData = (data) => {
-
 		const transformed = { ...data };
 
 		// Convert datetime-local back to ISO format

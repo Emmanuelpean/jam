@@ -1,5 +1,4 @@
-
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useDropzone } from "react-dropzone";
 import useGenericAlert from "../hooks/useGenericAlert";
 import AlertModal from "../components/modals/alert/AlertModal";
@@ -23,55 +22,67 @@ const parseSizeText = (sizeText) => {
 	const unit = match[2].toUpperCase();
 
 	switch (unit) {
-		case "KB": return value * 1024;
-		case "MB": return value * 1024 * 1024;
-		case "GB": return value * 1024 * 1024 * 1024;
-		default: return defaultSize;
+		case "KB":
+			return value * 1024;
+		case "MB":
+			return value * 1024 * 1024;
+		case "GB":
+			return value * 1024 * 1024 * 1024;
+		default:
+			return defaultSize;
 	}
 };
 
 const FileUploader = ({
-						  name,
-						  label,
-						  value,
-						  onChange,
-						  onRemove,
-						  error,
-						  onOpenFile,
-						  acceptedFileTypes = ".TXT,.PDF,.DOC,.DOCX",
-						  maxSizeText = "10 MB",
-						  required = false,
-					  }) => {
+	name,
+	label,
+	value,
+	onChange,
+	onRemove,
+	error,
+	onOpenFile,
+	acceptedFileTypes = ".TXT,.PDF,.DOC,.DOCX",
+	maxSizeText = "10 MB",
+	required = false,
+}) => {
 	const { alertState, showError, hideAlert } = useGenericAlert();
 	const maxSizeBytes = useMemo(() => parseSizeText(maxSizeText), [maxSizeText]);
 
 	// Convert acceptedFileTypes to proper MIME types for react-dropzone
 	const acceptTypes = useMemo(() => {
-		const extensions = acceptedFileTypes.split(",").map(ext => ext.trim().toLowerCase());
+		const extensions = acceptedFileTypes.split(",").map((ext) => ext.trim().toLowerCase());
 		const mimeTypes = {};
 
-		extensions.forEach(ext => {
+		extensions.forEach((ext) => {
 			switch (ext) {
-				case ".pdf": mimeTypes["application/pdf"] = [".pdf"]; break;
-				case ".doc": mimeTypes["application/msword"] = [".doc"]; break;
-				case ".docx": mimeTypes["application/vnd.openxmlformats-officedocument.wordprocessingml.document"] = [".docx"]; break;
-				case ".txt": mimeTypes["text/plain"] = [".txt"]; break;
+				case ".pdf":
+					mimeTypes["application/pdf"] = [".pdf"];
+					break;
+				case ".doc":
+					mimeTypes["application/msword"] = [".doc"];
+					break;
+				case ".docx":
+					mimeTypes["application/vnd.openxmlformats-officedocument.wordprocessingml.document"] = [".docx"];
+					break;
+				case ".txt":
+					mimeTypes["text/plain"] = [".txt"];
+					break;
 				case ".jpg":
-				case ".jpeg": mimeTypes["image/jpeg"] = [".jpg", ".jpeg"]; break;
-				case ".png": mimeTypes["image/png"] = [".png"]; break;
-				default: mimeTypes[`*/*`] = extensions; // Fallback
+				case ".jpeg":
+					mimeTypes["image/jpeg"] = [".jpg", ".jpeg"];
+					break;
+				case ".png":
+					mimeTypes["image/png"] = [".png"];
+					break;
+				default:
+					mimeTypes[`*/*`] = extensions; // Fallback
 			}
 		});
 
 		return mimeTypes;
 	}, [acceptedFileTypes]);
 
-	const {
-		getRootProps,
-		getInputProps,
-		isDragActive,
-		isDragReject
-	} = useDropzone({
+	const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
 		accept: acceptTypes,
 		maxSize: maxSizeBytes,
 		multiple: false,
@@ -111,7 +122,7 @@ const FileUploader = ({
 					});
 				}
 			}
-		}
+		},
 	});
 
 	const hasFile = value && (value instanceof File || (typeof value === "object" && value.filename));
@@ -128,7 +139,6 @@ const FileUploader = ({
 	const handleDownload = (e) => {
 		e.stopPropagation();
 		if (value instanceof File) {
-			// Create download link for new files
 			const url = URL.createObjectURL(value);
 			const link = document.createElement("a");
 			link.href = url;
@@ -204,11 +214,7 @@ const FileUploader = ({
 					)}
 				</div>
 
-				{error && (
-					<div className="invalid-feedback d-block mt-1">
-						{error}
-					</div>
-				)}
+				{error && <div className="invalid-feedback d-block mt-1">{error}</div>}
 			</div>
 
 			{/* Self-contained error modal */}
