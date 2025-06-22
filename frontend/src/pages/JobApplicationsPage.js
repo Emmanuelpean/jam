@@ -51,6 +51,8 @@ const JobApplicationsPage = () => {
 			updateItem={updateItem}
 			removeItem={removeItem}
 			setData={setJobApplications}
+			formModalSize="xl"
+			viewModalSize="xl"
 		/>
 	);
 };

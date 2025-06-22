@@ -28,8 +28,6 @@ export const useCountries = () => {
 	return { countries, loading, error };
 };
 
-// Common form field definitions for reuse across modals
-// Each field is a function that accepts override attributes
 export const formFields = {
 	// ------------------------------------------------- BASIC FIELDS -------------------------------------------------
 
@@ -175,23 +173,6 @@ export const formFields = {
 		...overrides,
 	}),
 
-	// Auto-loading country field component
-	countryAuto: (overrides = {}) => {
-		// This creates a field definition that includes the hook for auto-loading
-		return {
-			name: "country",
-			label: "Country",
-			type: "select",
-			required: false,
-			placeholder: "Loading countries...",
-			isSearchable: true,
-			isClearable: true,
-			isDisabled: true,
-			autoLoad: true, // Flag to indicate this field auto-loads
-			...overrides,
-		};
-	},
-
 	// ------------------------------------------------- JOB FIELDS --------------------------------------------------
 
 	jobTitle: (overrides = {}) => ({
@@ -237,15 +218,6 @@ export const formFields = {
 
 	// ------------------------------------------------- INTERVIEW FIELDS --------------------------------------------
 
-	interviewDate: (overrides = {}) => ({
-		name: "date",
-		label: "Interview Date & Time",
-		type: "datetime-local",
-		required: true,
-		placeholder: "Select interview date and time",
-		...overrides,
-	}),
-
 	interviewType: (overrides = {}) => ({
 		name: "type",
 		label: "Interview Type",
@@ -263,14 +235,6 @@ export const formFields = {
 			{ value: "Other", label: "Other" },
 		],
 		placeholder: "Select interview type",
-		...overrides,
-	}),
-
-	interviewNotes: (overrides = {}) => ({
-		name: "note",
-		label: "Interview Notes",
-		type: "textarea",
-		placeholder: "Add notes about the interview, questions asked, impressions, etc...",
 		...overrides,
 	}),
 
@@ -300,11 +264,16 @@ export const formFields = {
 		...overrides,
 	}),
 
-	applicationUrl: (overrides = {}) => ({
-		name: "url",
-		label: "Application URL",
-		type: "text",
-		placeholder: "https://... (link to your application submission)",
+	applicationVia: (overrides = {}) => ({
+		name: "applied_via",
+		label: "Application Via",
+		type: "select",
+		options: [
+			{ value: "Aggregator", label: "Aggregator" },
+			{ value: "Email", label: "Email" },
+			{ value: "Phone", label: "Phone" },
+			{ value: "Other", label: "Other" },
+		],
 		...overrides,
 	}),
 
@@ -415,4 +384,19 @@ export const formFields = {
 		...overrides,
 	}),
 
+	aggregator: (options = [], onAdd = null, overrides = {}) => ({
+		name: "aggregator_id",
+		label: "Aggregator",
+		type: "select",
+		placeholder: "Select an aggregator",
+		isSearchable: true,
+		isClearable: true,
+		options: options,
+		...(onAdd && {
+			addButton: {
+				onClick: onAdd,
+			},
+		}),
+		...overrides,
+	}),
 };

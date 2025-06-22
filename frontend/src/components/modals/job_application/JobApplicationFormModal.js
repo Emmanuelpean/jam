@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import GenericModal from "../GenericModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
-import { apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/api";
+import { apiHelpers, filesApi, jobApplicationsApi, jobsApi, aggregatorsApi } from "../../../services/api";
 import { fileToBase64 } from "../../../utils/FileUtils";
 import InterviewsTable from "../../tables/InterviewTable";
 import { formFields } from "../../rendering/FormRenders";
@@ -26,6 +26,10 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 
 	// Track job options for the dropdown
 	const [jobOptions, setJobOptions] = useState([]);
+	const [aggregatorOptions, setAggregatorOptions] = useState([]);
+
+	// Add state to track current form data for conditional fields
+	const [currentFormData, setCurrentFormData] = useState({});
 
 	// Initialize file states when modal opens or initialData changes
 	useEffect(() => {
@@ -35,6 +39,8 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				cover_letter: initialData?.cover_letter || null,
 			});
 			setInterviews(initialData?.interviews || []);
+			// Initialize form data state
+			setCurrentFormData(transformInitialData(initialData));
 		}
 	}, [show, initialData?.cv, initialData?.cover_letter, initialData?.interviews]);
 
@@ -43,24 +49,25 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			if (!token || !show) return;
 
 			try {
-				const [jobsData, jobApplicationsData] = await Promise.all([
+				const [jobsData, aggregatorsData] = await Promise.all([
 					jobsApi.getAll(token),
-					jobApplicationsApi.getAll(token),
+					aggregatorsApi.getAll(token),
 				]);
-
-				// Create a set of job IDs that already have applications
-				const appliedJobIds = new Set(jobApplicationsData.map((app) => app.job_id));
 
 				// Get the current job ID if editing
 				const currentJobId = isEdit && initialData?.job_id ? initialData.job_id : null;
 
-				// Filter jobs: show only those without applications + the current job (if editing)
-				const availableJobs = jobsData.filter((job) => !appliedJobIds.has(job.id) || job.id === currentJobId);
+				// Filter jobs: show only those without job_application + the current job (if editing)
+				const availableJobs = jobsData.filter((job) =>
+					!job.job_application || job.id === currentJobId
+				);
 
 				setJobOptions(apiHelpers.toSelectOptions(availableJobs));
+				setAggregatorOptions(apiHelpers.toSelectOptions(aggregatorsData));
 			} catch (error) {
-				console.error("Error fetching job options:", error);
+				console.error("Error fetching options:", error);
 			}
+
 		};
 		fetchOptions();
 	}, [token, show, isEdit, initialData?.job_id]);
@@ -191,11 +198,12 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		[jobId],
 	);
 
-	// Define job application fields using the new simplified structure
-	const jobApplicationFields = [
+	const jobApplicationFields = useMemo(() => [
 		[formFields.applicationDate(), formFields.applicationStatus()],
-		formFields.job(jobOptions),
-		formFields.applicationUrl(),
+		[formFields.job(jobOptions)],
+		[formFields.applicationVia(), ...(currentFormData?.applied_via === "Aggregator" ? [
+			formFields.aggregator(aggregatorOptions)] : [])],
+		formFields.url(),
 		formFields.note({
 			placeholder: "Add notes about your application process, interview details, etc...",
 		}),
@@ -219,7 +227,23 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				onOpenFile: handleFileDownload,
 			},
 		],
-	];
+	], [
+		jobOptions,
+		aggregatorOptions,
+		currentFormData?.applied_via,
+		fileStates.cv,
+		fileStates.cover_letter,
+		handleFileChange,
+		handleFileRemove
+	]);
+
+	// Add a handler to update currentFormData when form changes
+	const handleFormDataChange = useCallback((newFormData) => {
+		setCurrentFormData(prev => ({
+			...prev,
+			...newFormData
+		}));
+	}, []);
 
 	// Custom submit handler to process files before form submission
 	const handleCustomSubmit = async (formElement, submitCallback) => {
@@ -369,6 +393,7 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				isEdit={isEdit}
 				customSubmitHandler={handleCustomSubmit}
 				customContent={customContent}
+				onFormDataChange={handleFormDataChange} // Add this prop
 			/>
 
 			{/* Alert Modal for error messages */}

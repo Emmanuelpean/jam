@@ -1,10 +1,9 @@
 """Schemas for the JAM database"""
 
-import base64
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr
 
 
 class Out(BaseModel):
@@ -91,6 +90,8 @@ class KeywordUpdate(Keyword):
 class Aggregator(BaseModel):
     name: str
     url: str | None = None
+    # jobs: list[int] | None = None
+    # job_applications: list[int] | None = None
 
 
 class AggregatorOut(Aggregator, Out):
@@ -225,12 +226,15 @@ class JobApplication(BaseModel):
     job_id: int
     status: str
     note: str | None = None
+    applied_via: str | None = None
+    aggregator_id: int | None = None
     cv_id: int | None = None
     cover_letter_id: int | None = None
 
 
 class JobApplicationOut(JobApplication, Out):
     job: JobSimple | None = None
+    aggregator: AggregatorOut | None = None
     interviews: list["InterviewSimple"] = []
     cv: FileOut | None = None
     cover_letter: FileOut | None = None

@@ -14,7 +14,6 @@ from sqlalchemy import (
     text,
     CheckConstraint,
     Table,
-    LargeBinary,
     func,
 )
 from sqlalchemy.ext.declarative import declared_attr
@@ -130,6 +129,7 @@ class Aggregator(CommonBase, Base):
     url = Column(String, nullable=False)
 
     jobs = relationship("Job", back_populates="source")
+    job_applications = relationship("JobApplication", back_populates="aggregator")
 
 
 class File(CommonBase, Base):
@@ -323,6 +323,8 @@ class JobApplication(CommonBase, Base):
     url = Column(String, nullable=True)
     job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False, unique=True)
     status = Column(String, server_default="Applied", nullable=False)
+    applied_via = Column(String, nullable=True)
+    aggregator_id = Column(Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True, index=True)
     note = Column(String, nullable=True)
     cv_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
     cover_letter_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
@@ -330,6 +332,7 @@ class JobApplication(CommonBase, Base):
     # Relationships
     job = relationship("Job", back_populates="job_application")
     interviews = relationship("Interview", back_populates="job_application")
+    aggregator = relationship("Aggregator", back_populates="job_applications")
     cv = relationship("File", foreign_keys=[cv_id], lazy="select")
     cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
 

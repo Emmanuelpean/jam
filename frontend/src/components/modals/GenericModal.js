@@ -42,6 +42,7 @@ const GenericModal = ({
 	isEdit = false, // Boolean - Whether form is in edit mode
 	customFieldComponents = {},
 	customSubmitHandler = null,
+	onFormDataChange = null, // Function - Called when form data changes
 
 	// View mode props
 	data = null, // Object - Data to display in view mode
@@ -82,6 +83,13 @@ const GenericModal = ({
 		}
 		previousShow.current = show;
 	}, [show, initialData, mode]);
+
+	// Notify parent component when form data changes
+	useEffect(() => {
+		if (onFormDataChange && mode === "form") {
+			onFormDataChange(formData);
+		}
+	}, [formData, onFormDataChange, mode]);
 
 	// Handle modal hide
 	const handleHide = () => {
