@@ -216,23 +216,21 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 };
 
 // Render drag-drop widget
-const renderDragDrop = (field, formData, handleChange, error) => {
+const renderDragDrop = (field) => {
 	return (
 		<FileUploader
 			name={field.name}
 			label={field.label}
-			value={field.value} // Use field.value instead of formData[field.name]
-			onChange={field.onChange} // Use field.onChange instead of handleChange
+			value={field.value}
+			onChange={field.onChange}
 			onRemove={field.onRemove}
 			onOpenFile={field.onOpenFile}
-			error={error}
-			acceptedFileTypes={field.acceptedFileTypes || ".TXT,.PDF,.DOC,.DOCX"}
-			maxSizeText={field.maxSizeText || "10 MB"}
+			acceptedFileTypes={field.acceptedFileTypes}
+			maxSizeText={field.maxSizeText}
 			required={field.required}
 		/>
 	);
 };
-
 
 // Render default input widget
 export const renderDefaultInput = (field, value, handleChange, error) => {
@@ -283,29 +281,40 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 			return renderDateTimeLocal(field, value, handleChange, error);
 
 		case "drag-drop":
-			return renderDragDrop(field, formData, handleChange, error);
+			return renderDragDrop(field);
 
 		default:
 			return renderDefaultInput(field, value, handleChange, error);
 	}
 };
 
-
-export const renderInputFieldGroup = (group, formData, handleChange, errors, handleSelectChange, customFieldComponents = {}) => {
+export const renderInputFieldGroup = (
+	group,
+	formData,
+	handleChange,
+	errors,
+	handleSelectChange,
+	customFieldComponents = {},
+) => {
 	if (group.fields && group?.fields?.length > 0) {
 		// Calculate column class based on number of fields
 		const getColumnClass = (fieldCount) => {
 			switch (fieldCount) {
-				case 1: return "col-md-12";
-				case 2: return "col-md-6";
-				case 3: return "col-md-4";
-				case 4: return "col-md-3";
-				default: return "col-md-6";
+				case 1:
+					return "col-md-12";
+				case 2:
+					return "col-md-6";
+				case 3:
+					return "col-md-4";
+				case 4:
+					return "col-md-3";
+				default:
+					return "col-md-6";
 			}
 		};
 
 		const columnClass = getColumnClass(group.fields.length);
-		const stableKey = group.id || group.fields.map(field => field.name).join('-');
+		const stableKey = group.id || group.fields.map((field) => field.name).join("-");
 
 		return (
 			<div key={stableKey} className={`row ${group.className || ""}`}>

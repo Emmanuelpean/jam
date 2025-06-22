@@ -39,7 +39,6 @@ const FileUploader = ({
 	value,
 	onChange,
 	onRemove,
-	error,
 	onOpenFile,
 	acceptedFileTypes = ".TXT,.PDF,.DOC,.DOCX",
 	maxSizeText = "10 MB",
@@ -146,7 +145,6 @@ const FileUploader = ({
 			link.click();
 			URL.revokeObjectURL(url);
 		} else if (onOpenFile && value) {
-			// Handle database files through callback
 			onOpenFile(value);
 		}
 	};
@@ -163,7 +161,7 @@ const FileUploader = ({
 
 				<div
 					{...getRootProps()}
-					className={`file-dropzone ${isDragActive ? "drag-active" : ""} ${isDragReject ? "drag-reject" : ""} ${hasFile ? "has-file" : ""} ${error ? "is-invalid" : ""}`}
+					className={`file-dropzone ${isDragActive ? "drag-active" : ""} ${isDragReject ? "drag-reject" : ""} ${hasFile ? "has-file" : ""}`}
 				>
 					<input {...getInputProps({ name })} />
 
@@ -213,11 +211,8 @@ const FileUploader = ({
 						</div>
 					)}
 				</div>
-
-				{error && <div className="invalid-feedback d-block mt-1">{error}</div>}
 			</div>
 
-			{/* Self-contained error modal */}
 			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</>
 	);
