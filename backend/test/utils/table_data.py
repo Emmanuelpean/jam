@@ -60,13 +60,13 @@ COMPANIES_DATA = [
         "name": "WebSolutions Ltd",
         "description": "Full-service web development and digital marketing agency",
         "url": "https://websolutions.com",
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "name": "DataTech Industries",
         "description": "Big data analytics and business intelligence solutions",
         "url": "https://datatech.com",
-        "owner_id": 2,
+        "owner_id": 1,
     },
     # New entries with different parameter combinations
     {
@@ -119,7 +119,7 @@ LOCATIONS_DATA = [
         "city": "London",
         "country": "UK",
         "remote": False,
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "city": "San Francisco",
@@ -130,7 +130,7 @@ LOCATIONS_DATA = [
     {
         "country": "Germany",
         "remote": True,
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "postcode": "OX1 2JD",
@@ -142,7 +142,7 @@ LOCATIONS_DATA = [
     {
         "country": "Canada",
         "remote": True,
-        "owner_id": 2,
+        "owner_id": 1,
     },
     # New entries with different combinations
     {
@@ -209,12 +209,12 @@ AGGREGATORS_DATA = [
     {
         "name": "AngelList",
         "url": "https://angel.co",
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "name": "Stack Overflow Jobs",
         "url": "https://stackoverflow.com/jobs",
-        "owner_id": 2,
+        "owner_id": 1,
     },
     # New entries
     {
@@ -276,23 +276,23 @@ KEYWORDS_DATA = [
     },
     {
         "name": "Machine Learning",
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "name": "DevOps",
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "name": "Docker",
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "name": "Kubernetes",
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "name": "AWS",
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "name": "REST API",
@@ -400,20 +400,20 @@ PERSONS_DATA = [
         "email": "sarah.wilson@oxfordpv.com",
         "role": "Technical Recruiter",
         "company_id": 3,  # Oxford PV
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "first_name": "Anonymous",
         "last_name": "Recruiter",
         "company_id": None,
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "first_name": "Tech",
         "last_name": "Recruiter",
         "role": "Talent Acquisition",
         "company_id": 3,  # Oxford PV
-        "owner_id": 2,
+        "owner_id": 1,
     },
     # New entries with different combinations
     {
@@ -547,20 +547,20 @@ JOBS_DATA = [
         "title": "Backend Developer",
         "description": "Looking for a backend developer with Python experience. FastAPI knowledge preferred.",
         "location_id": 4,  # San Francisco (remote)
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "title": "Software Engineer Intern",
         "description": "Summer internship opportunity for computer science students. Great learning environment.",
         "personal_rating": 1,
         "company_id": 3,  # Oxford PV
-        "owner_id": 2,
+        "owner_id": 1,
     },
     {
         "title": "Developer Position",
         "company_id": 3,  # Oxford PV
         "location_id": 5,  # Berlin (remote)
-        "owner_id": 2,
+        "owner_id": 1,
     },
     # New entries with different parameter combinations
     {
@@ -675,7 +675,7 @@ FILES_DATA = [
     },
     {
         "filename": "junior_cloud_cv.docx",
-        "owner_id": 2,
+        "owner_id": 1,
         **RESOURCE_FILES["Cover Letter.docx"],
     },
     {
@@ -760,7 +760,7 @@ JOB_APPLICATIONS_DATA = [
         "job_id": 6,
         "status": "Applied",
         "note": "Quick application through company form",
-        "owner_id": 2,
+        "owner_id": 1,
     },
     # New entries with different combinations
     {
