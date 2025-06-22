@@ -1,4 +1,3 @@
-
 """Centralized test data for both conftest.py and seed_database.py"""
 
 from test.utils.files import load_all_resource_files
@@ -638,7 +637,7 @@ JOBS_DATA = [
     },
     {
         "title": "Minimum Required Job",
-        "owner_id": 1,  # Only required field
+        "owner_id": 1,
     },
     {
         "title": "High Salary Position",

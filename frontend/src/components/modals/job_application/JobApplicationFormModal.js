@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import GenericModal from "../GenericModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
-import { api, filesApi } from "../../../services/api";
+import { apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/api";
 import { fileToBase64 } from "../../../utils/FileUtils";
 import InterviewsTable from "../../tables/InterviewTable";
 import { formFields } from "../../rendering/FormRenders";
 import { useAuth } from "../../../contexts/AuthContext";
 import AlertModal from "../alert/AlertModal";
+import { formDateTime } from "../../../utils/TimeUtils";
 
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
 	const { token } = useAuth();
@@ -23,6 +24,9 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 	const [interviews, setInterviews] = useState([]);
 	const [refreshInterviews, setRefreshInterviews] = useState(0);
 
+	// Track job options for the dropdown
+	const [jobOptions, setJobOptions] = useState([]);
+
 	// Initialize file states when modal opens or initialData changes
 	useEffect(() => {
 		if (show) {
@@ -34,21 +38,32 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		}
 	}, [show, initialData?.cv, initialData?.cover_letter, initialData?.interviews]);
 
-	// Refresh interviews when needed
 	useEffect(() => {
-		if (show && isEdit && initialData?.id && refreshInterviews > 0) {
-			refreshJobApplicationData();
-		}
-	}, [refreshInterviews, show, isEdit, initialData?.id, token]);
+		const fetchOptions = async () => {
+			if (!token || !show) return;
 
-	const refreshJobApplicationData = async () => {
-		try {
-			const updatedJobApplication = await api.get(`jobapplications/${initialData.id}`, token);
-			setInterviews(updatedJobApplication.interviews || []);
-		} catch (error) {
-			console.error("Error refreshing job application data:", error);
-		}
-	};
+			try {
+				const [jobsData, jobApplicationsData] = await Promise.all([
+					jobsApi.getAll(token),
+					jobApplicationsApi.getAll(token),
+				]);
+
+				// Create a set of job IDs that already have applications
+				const appliedJobIds = new Set(jobApplicationsData.map((app) => app.job_id));
+
+				// Get the current job ID if editing
+				const currentJobId = isEdit && initialData?.job_id ? initialData.job_id : null;
+
+				// Filter jobs: show only those without applications + the current job (if editing)
+				const availableJobs = jobsData.filter((job) => !appliedJobIds.has(job.id) || job.id === currentJobId);
+
+				setJobOptions(apiHelpers.toSelectOptions(availableJobs));
+			} catch (error) {
+				console.error("Error fetching job options:", error);
+			}
+		};
+		fetchOptions();
+	}, [token, show, isEdit, initialData?.job_id]);
 
 	const handleInterviewChange = () => {
 		setRefreshInterviews((prev) => prev + 1);
@@ -121,7 +136,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				console.log(`File created with ID: ${newFile.id}`);
 				return newFile.id;
 			}
-
 		} catch (error) {
 			console.error(`Error processing file ${file.name}:`, error);
 
@@ -141,40 +155,48 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 	};
 
 	// Transform initial data to match form field expectations
-	const transformInitialData = useCallback((data) => {
-		if (!data || Object.keys(data).length === 0) return data;
+	const transformInitialData = useCallback(
+		(data) => {
+			if (!data || Object.keys(data).length === 0) {
+				// For new job applications, provide defaults
+				return {
+					date: formDateTime(), // Current time formatted
+					url: "",
+					note: "",
+					status: "Applied",
+					...(jobId && { job_id: jobId }), // Set job_id if provided
+				};
+			}
 
-		const transformed = { ...data };
+			const transformed = { ...data };
 
-		// Convert ISO datetime to datetime-local format for the input
-		if (transformed.date) {
-			const date = new Date(transformed.date);
-			// Convert to local datetime string format (YYYY-MM-DDTHH:MM)
-			const year = date.getFullYear();
-			const month = String(date.getMonth() + 1).padStart(2, "0");
-			const day = String(date.getDate()).padStart(2, "0");
-			const hours = String(date.getHours()).padStart(2, "0");
-			const minutes = String(date.getMinutes()).padStart(2, "0");
-			transformed.date = `${year}-${month}-${day}T${hours}:${minutes}`;
-		}
+			// Convert ISO datetime to datetime-local format
+			transformed.date = formDateTime(transformed.date);
 
-		// Ensure string fields are not null/undefined
-		if (transformed.url === null || transformed.url === undefined) {
-			transformed.url = "";
-		}
-		if (transformed.note === null || transformed.note === undefined) {
-			transformed.note = "";
-		}
+			// Ensure string fields are not null/undefined
+			if (transformed.url === null || transformed.url === undefined) {
+				transformed.url = "";
+			}
+			if (transformed.note === null || transformed.note === undefined) {
+				transformed.note = "";
+			}
 
-		return transformed;
-	}, []);
+			// Ensure job_id is set from the job relationship if editing
+			if (transformed.job && transformed.job.id) {
+				transformed.job_id = transformed.job.id;
+			}
+
+			return transformed;
+		},
+		[jobId],
+	);
 
 	// Define job application fields using the new simplified structure
 	const jobApplicationFields = [
 		[formFields.applicationDate(), formFields.applicationStatus()],
+		formFields.job(jobOptions),
 		formFields.applicationUrl(),
 		formFields.note({
-			label: "Application Notes",
 			placeholder: "Add notes about your application process, interview details, etc...",
 		}),
 		[
@@ -210,6 +232,26 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			for (const [key, value] of formData.entries()) {
 				if (typeof value === "string") {
 					transformedData[key] = value;
+				}
+			}
+
+			// Check for existing job application if creating new and job_id is provided
+			if (!isEdit && transformedData.job_id) {
+				try {
+					const { jobApplicationsApi } = await import("../../../services/api");
+					const existingApps = await jobApplicationsApi.getAll(token, { job_id: transformedData.job_id });
+
+					if (existingApps && existingApps.length > 0) {
+						showError({
+							title: "Job Application Already Exists",
+							message:
+								"You already have an application for this job. Please edit the existing application instead.",
+							size: "md",
+						});
+						return; // Stop submission
+					}
+				} catch (checkError) {
+					console.error("Error checking existing applications:", checkError);
 				}
 			}
 

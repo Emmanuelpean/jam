@@ -393,8 +393,26 @@ export const formFields = {
 		type: "select",
 		options: options,
 		required: true,
-		placeholder: "Select job application",
+		placeholder: "Select a job application",
 		isSearchable: true,
 		...overrides,
 	}),
+
+	job: (options = [], onAdd = null, overrides = {}) => ({
+		name: "job_id",
+		label: "Job",
+		type: "select",
+		required: true,
+		placeholder: "Select a job",
+		isSearchable: true,
+		isClearable: false,
+		options: options,
+		...(onAdd && {
+			addButton: {
+				onClick: onAdd,
+			},
+		}),
+		...overrides,
+	}),
+
 };

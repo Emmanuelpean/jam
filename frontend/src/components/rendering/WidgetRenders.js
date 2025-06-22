@@ -1,4 +1,4 @@
-import { getCurrentDateTime } from "../../utils/TimeUtils";
+import { formDateTime } from "../../utils/TimeUtils";
 import { Form } from "react-bootstrap";
 import { React, useState } from "react";
 import Select from "react-select";
@@ -153,34 +153,10 @@ const renderSelect = (field, value, handleChange, handleSelectChange, error) => 
 
 // Render datetime-local widget
 const renderDateTimeLocal = (field, value, handleChange, error) => {
-	const currentDateTime = getCurrentDateTime();
-
-	const formatDateTimeForInput = (dateTimeValue) => {
-		if (!dateTimeValue) return currentDateTime;
-
-		try {
-			const date = new Date(dateTimeValue);
-			if (isNaN(date.getTime())) {
-				return currentDateTime;
-			}
-
-			const year = date.getFullYear();
-			const month = String(date.getMonth() + 1).padStart(2, "0");
-			const day = String(date.getDate()).padStart(2, "0");
-			const hours = String(date.getHours()).padStart(2, "0");
-			const minutes = String(date.getMinutes()).padStart(2, "0");
-
-			return `${year}-${month}-${day}T${hours}:${minutes}`;
-		} catch (error) {
-			console.error("Error formatting datetime:", error);
-			return currentDateTime;
-		}
-	};
-
 	const setCurrentTime = (e) => {
 		e.preventDefault();
 		e.stopPropagation();
-		const newDateTime = getCurrentDateTime();
+		const newDateTime = formDateTime(); // Gets current time formatted
 		const syntheticEvent = {
 			target: {
 				name: field.name,
@@ -190,7 +166,8 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 		handleChange(syntheticEvent);
 	};
 
-	const formattedValue = formatDateTimeForInput(value);
+	// Use formDateTime for formatting, defaults to current time if value is null/undefined
+	const formattedValue = formDateTime(value);
 
 	return (
 		<>
@@ -214,6 +191,8 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 		</>
 	);
 };
+
+
 
 // Render drag-drop widget
 const renderDragDrop = (field) => {
