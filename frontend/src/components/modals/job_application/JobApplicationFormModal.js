@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GenericModal from "../GenericModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
-import { apiHelpers, filesApi, jobApplicationsApi, jobsApi, aggregatorsApi } from "../../../services/api";
+import { aggregatorsApi, apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/api";
 import { fileToBase64 } from "../../../utils/FileUtils";
 import InterviewsTable from "../../tables/InterviewTable";
 import { formFields } from "../../rendering/FormRenders";
@@ -58,16 +58,13 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				const currentJobId = isEdit && initialData?.job_id ? initialData.job_id : null;
 
 				// Filter jobs: show only those without job_application + the current job (if editing)
-				const availableJobs = jobsData.filter((job) =>
-					!job.job_application || job.id === currentJobId
-				);
+				const availableJobs = jobsData.filter((job) => !job.job_application || job.id === currentJobId);
 
 				setJobOptions(apiHelpers.toSelectOptions(availableJobs));
 				setAggregatorOptions(apiHelpers.toSelectOptions(aggregatorsData));
 			} catch (error) {
 				console.error("Error fetching options:", error);
 			}
-
 		};
 		fetchOptions();
 	}, [token, show, isEdit, initialData?.job_id]);
@@ -198,50 +195,55 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 		[jobId],
 	);
 
-	const jobApplicationFields = useMemo(() => [
-		[formFields.applicationDate(), formFields.applicationStatus()],
-		[formFields.job(jobOptions)],
-		[formFields.applicationVia(), ...(currentFormData?.applied_via === "Aggregator" ? [
-			formFields.aggregator(aggregatorOptions)] : [])],
-		formFields.url(),
-		formFields.note({
-			placeholder: "Add notes about your application process, interview details, etc...",
-		}),
-		[
-			{
-				name: "cv",
-				label: "CV/Resume",
-				type: "drag-drop",
-				value: fileStates.cv,
-				onChange: (file) => handleFileChange("cv", file),
-				onRemove: () => handleFileRemove("cv"),
-				onOpenFile: handleFileDownload,
-			},
-			{
-				name: "cover_letter",
-				label: "Cover Letter",
-				type: "drag-drop",
-				value: fileStates.cover_letter,
-				onChange: (file) => handleFileChange("cover_letter", file),
-				onRemove: () => handleFileRemove("cover_letter"),
-				onOpenFile: handleFileDownload,
-			},
+	const jobApplicationFields = useMemo(
+		() => [
+			[formFields.applicationDate(), formFields.applicationStatus()],
+			[formFields.job(jobOptions)],
+			[
+				formFields.applicationVia(),
+				...(currentFormData?.applied_via === "Aggregator" ? [formFields.aggregator(aggregatorOptions)] : []),
+			],
+			formFields.url(),
+			formFields.note({
+				placeholder: "Add notes about your application process, interview details, etc...",
+			}),
+			[
+				{
+					name: "cv",
+					label: "CV/Resume",
+					type: "drag-drop",
+					value: fileStates.cv,
+					onChange: (file) => handleFileChange("cv", file),
+					onRemove: () => handleFileRemove("cv"),
+					onOpenFile: handleFileDownload,
+				},
+				{
+					name: "cover_letter",
+					label: "Cover Letter",
+					type: "drag-drop",
+					value: fileStates.cover_letter,
+					onChange: (file) => handleFileChange("cover_letter", file),
+					onRemove: () => handleFileRemove("cover_letter"),
+					onOpenFile: handleFileDownload,
+				},
+			],
 		],
-	], [
-		jobOptions,
-		aggregatorOptions,
-		currentFormData?.applied_via,
-		fileStates.cv,
-		fileStates.cover_letter,
-		handleFileChange,
-		handleFileRemove
-	]);
+		[
+			jobOptions,
+			aggregatorOptions,
+			currentFormData?.applied_via,
+			fileStates.cv,
+			fileStates.cover_letter,
+			handleFileChange,
+			handleFileRemove,
+		],
+	);
 
 	// Add a handler to update currentFormData when form changes
 	const handleFormDataChange = useCallback((newFormData) => {
-		setCurrentFormData(prev => ({
+		setCurrentFormData((prev) => ({
 			...prev,
-			...newFormData
+			...newFormData,
 		}));
 	}, []);
 

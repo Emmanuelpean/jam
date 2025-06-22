@@ -87,11 +87,44 @@ const GenericTableWithModals = ({
 		itemType,
 	});
 
-	// Create standardized actions
+	// Wrap modal handlers to prevent event propagation when inside another modal
+	const handleViewClick = (item, event) => {
+		if (event) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		openViewModal(item);
+	};
+
+	const handleEditClick = (item, event) => {
+		if (event) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		openEditModal(item);
+	};
+
+	const handleDeleteClick = (item, event) => {
+		if (event) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		handleDelete(item);
+	};
+
+	const handleAddClick = (event) => {
+		if (event) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		openAddModal();
+	};
+
+	// Create standardized actions with event handling
 	const tableActions = createTableActions([
-		{ type: "view", onClick: openViewModal },
-		{ type: "edit", onClick: openEditModal },
-		{ type: "delete", onClick: handleDelete },
+		{ type: "view", onClick: handleViewClick },
+		{ type: "edit", onClick: handleEditClick },
+		{ type: "delete", onClick: handleDeleteClick },
 	]);
 
 	// Choose container class based on context
@@ -109,7 +142,7 @@ const GenericTableWithModals = ({
 				onSort={onSort}
 				searchTerm={searchTerm}
 				onSearchChange={onSearchChange}
-				onAddClick={openAddModal}
+				onAddClick={handleAddClick}
 				addButtonText={addButtonText}
 				loading={loading}
 				error={error}
@@ -151,7 +184,7 @@ const GenericTableWithModals = ({
 						[nameKey === "title" ? "job" : nameKey === "name" ? itemType.toLowerCase() : "item"]:
 							selectedItem,
 					}}
-					onEdit={openEditModal}
+					onEdit={handleEditClick}
 					size={viewModalSize}
 				/>
 			)}

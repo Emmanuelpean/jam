@@ -7,6 +7,7 @@ import AlertModal from "../alert/AlertModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import { formFields } from "../../rendering/FormRenders";
 import { apiHelpers, jobApplicationsApi, locationsApi, personsApi } from "../../../services/api";
+import { formDateTime } from "../../../utils/TimeUtils";
 
 const InterviewFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobApplicationId }) => {
 	const { token } = useAuth();
@@ -80,7 +81,7 @@ const InterviewFormModal = ({ show, onHide, onSuccess, size, initialData = {}, i
 	const transformInitialData = (data) => {
 		if (!data || Object.keys(data).length === 0) {
 			const defaultData = {
-				date: "",
+				date: formDateTime(),
 				type: "",
 				location_id: "",
 				note: "",
@@ -97,22 +98,7 @@ const InterviewFormModal = ({ show, onHide, onSuccess, size, initialData = {}, i
 
 		const transformed = { ...data };
 
-		// Convert ISO datetime to datetime-local format for the input
-		if (transformed.date) {  // TODO replace with function
-			const date = new Date(transformed.date);
-			if (!isNaN(date.getTime())) {
-				const year = date.getFullYear();
-				const month = String(date.getMonth() + 1).padStart(2, "0");
-				const day = String(date.getDate()).padStart(2, "0");
-				const hours = String(date.getHours()).padStart(2, "0");
-				const minutes = String(date.getMinutes()).padStart(2, "0");
-				transformed.date = `${year}-${month}-${day}T${hours}:${minutes}`;
-			} else {
-				transformed.date = "";
-			}
-		} else {
-			transformed.date = "";
-		}
+		transformed.date = formDateTime(transformed.date);
 
 		// Ensure required fields are not null/undefined
 		if (transformed.type === null || transformed.type === undefined) {
