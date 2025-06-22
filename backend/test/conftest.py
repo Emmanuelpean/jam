@@ -355,8 +355,6 @@ class CRUDTestBase:
 
         for create_data in self.create_data:
             create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
-            if isinstance(create_data.get("content"), bytes):
-                create_data["content"] = base64.b64encode(create_data["content"]).decode("utf-8")
             response = self.post(authorised_clients[0], create_data)
             assert response.status_code == status.HTTP_201_CREATED
             self.check_output(create_data, response.json())

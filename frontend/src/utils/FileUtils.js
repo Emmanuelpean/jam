@@ -40,8 +40,8 @@ const FileUploader = ({
 	onChange,
 	onRemove,
 	onOpenFile,
-	acceptedFileTypes = ".TXT,.PDF,.DOC,.DOCX",
-	maxSizeText = "10 MB",
+	acceptedFileTypes = ".TXT, .PDF, .DOC, .DOCX",
+	maxSizeText = "5 MB",
 	required = false,
 }) => {
 	const { alertState, showError, hideAlert } = useGenericAlert();
@@ -145,7 +145,16 @@ const FileUploader = ({
 			link.click();
 			URL.revokeObjectURL(url);
 		} else if (onOpenFile && value) {
-			onOpenFile(value);
+			try {
+				onOpenFile(value);
+			} catch (error) {
+				console.error("Error downloading file:", error);
+				showError({
+					title: "Download Error",
+					message: "Error downloading file. Please try again.",
+					size: "md",
+				});
+			}
 		}
 	};
 

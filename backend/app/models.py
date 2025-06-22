@@ -142,7 +142,7 @@ class File(CommonBase, Base):
     - size (int): Size of the file in bytes."""
 
     filename = Column(String, nullable=False)
-    content = Column(LargeBinary, nullable=False)
+    content = Column(String, nullable=False)
     type = Column(String, nullable=False)
     size = Column(Integer, nullable=False)
 

@@ -55,16 +55,7 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 	};
 
 	const handleFileDownload = async (fileObject) => {
-		try {
-			await filesApi.download(fileObject.id, fileObject.filename, token);
-		} catch (error) {
-			console.error("Error downloading file:", error);
-			showError({
-				title: "Download Error",
-				message: "Error downloading file. Please try again.",
-				size: "md",
-			});
-		}
+		await filesApi.download(fileObject.id, fileObject.filename, token);
 	};
 
 	// Custom file change handler that tracks file state
@@ -89,47 +80,29 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 	const normalizeFileContent = (content) => {
 		if (!content) return "";
 
-		// If it's a data URL, extract just the base64 part
 		if (content.startsWith("data:")) {
-			const base64Index = content.indexOf(",");
-			if (base64Index !== -1) {
-				return content.substring(base64Index + 1);
-			}
+			const commaIndex = content.indexOf(",");
+			return commaIndex !== -1 ? content.substring(commaIndex + 1) : content;
 		}
-
-		// If it's already base64 encoded data URL, decode it first
-		try {
-			const decoded = atob(content);
-			if (decoded.startsWith("data:")) {
-				const base64Index = decoded.indexOf(",");
-				if (base64Index !== -1) {
-					return decoded.substring(base64Index + 1);
-				}
-			}
-		} catch (e) {
-			// If decoding fails, it's probably already just base64
-		}
-
 		return content;
 	};
 
 	// Process a single file: check for existing or create new
 	const processFile = async (file) => {
+		console.log(`Processing file ${file.name}...`);
 		if (!file || !(file instanceof File)) {
 			return null;
 		}
 
 		try {
-			// Convert file to base64
 			const base64Content = await fileToBase64(file);
 			const normalizedNewContent = normalizeFileContent(base64Content);
 
 			// Check for existing files
 			const files = await filesApi.getAll(token);
-
 			const existingFile = files.find((f) => {
 				const normalizedExistingContent = normalizeFileContent(f.content);
-				return f.filename === file.name && normalizedExistingContent === normalizedNewContent;
+				return normalizedExistingContent === normalizedNewContent;
 			});
 
 			if (existingFile) {
@@ -140,21 +113,20 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				console.log(`Creating new file entry for: ${file.name}`);
 				const fileData = {
 					filename: file.name,
-					content: base64Content, // Store the full data URL
+					content: normalizedNewContent,
 					type: file.type,
 					size: file.size,
 				};
-
 				const newFile = await filesApi.create(fileData, token);
 				console.log(`File created with ID: ${newFile.id}`);
 				return newFile.id;
 			}
+
 		} catch (error) {
 			console.error(`Error processing file ${file.name}:`, error);
 
 			// Check if error has validation details
 			if (error.data && error.data.detail) {
-				// If it's a validation error, extract a meaningful message
 				if (Array.isArray(error.data.detail)) {
 					const messages = error.data.detail.map((err) => err.msg || JSON.stringify(err)).join(", ");
 					throw new Error(`File validation error: ${messages}`);
@@ -164,7 +136,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 					throw new Error(`File processing failed: ${JSON.stringify(error.data.detail)}`);
 				}
 			}
-
 			throw error;
 		}
 	};

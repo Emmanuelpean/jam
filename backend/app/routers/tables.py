@@ -395,34 +395,25 @@ def download_file(
     if not file_record:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
-    # Check if file has content stored in database
     if not file_record.content:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File content not found")
 
-    # The content is stored as Base64 data URL, we need to decode it
     try:
-        content_str = (
-            file_record.content.decode("utf-8") if isinstance(file_record.content, bytes) else file_record.content
-        )
-
-        # Check if it's a data URL (data:mime/type;base64,actual_data)
-        if content_str.startswith("data:"):
-            # Extract the base64 part after the comma
-            header, encoded_data = content_str.split(",", 1)
-            # Decode base64 to get original binary data
+        # Content is already a base64 string - just decode it
+        if file_record.content.startswith("data:"):
+            encoded_data = file_record.content.split(",", 1)[1]
             file_content = base64.b64decode(encoded_data)
         else:
-            file_content = base64.b64decode(content_str)
+            # Pure base64 string
+            file_content = base64.b64decode(file_record.content)
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error decoding file content: {str(e)}"
         )
 
-    # Use the type from database if available, otherwise determine from filename
     content_type = file_record.type if file_record.type else "application/octet-stream"
 
-    # Return file as response with the decoded binary content
     return Response(
         content=file_content,
         media_type=content_type,

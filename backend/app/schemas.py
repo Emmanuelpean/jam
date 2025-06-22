@@ -4,7 +4,7 @@ import base64
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, field_serializer
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class Out(BaseModel):
@@ -125,29 +125,19 @@ class LocationUpdate(Location):
 class File(BaseModel):
     filename: str
     type: str
-    content: bytes
+    content: str
     size: int
 
 
 class FileOut(File, Out):
-    @field_serializer("content")
-    def serialize_content(self, content: bytes) -> str:
-        """Convert bytes to base64 string for JSON serialization"""
-        return base64.b64encode(content).decode("utf-8")
+    pass
 
 
 class FileUpdate(File):
     filename: str | None = None
     type: str | None = None
-    content: bytes | None = None
+    content: str | None = None
     size: int | None = None
-
-    @field_serializer("content")
-    def serialize_content(self, content: bytes | None) -> str | None:
-        """Convert bytes to base64 string for JSON serialization"""
-        if content is None:
-            return None
-        return base64.b64encode(content).decode("utf-8")
 
 
 # ------------------------------------------------------- PERSON -------------------------------------------------------

@@ -7,30 +7,21 @@ import mimetypes
 from pathlib import Path
 
 
-def get_resources_path():
+def get_resources_path() -> Path:
     """Get the path to the resources folder"""
     current_dir = Path(__file__).parent
-    resources_dir = current_dir / "../resources"
-
-    # Create resources directory if it doesn't exist
-    resources_dir.mkdir(exist_ok=True)
-
-    return resources_dir
+    return current_dir / "../resources"
 
 
-def load_file_as_bytes(filename):
-    """Load a file from resources folder and return as bytes"""
+def load_file_as_base64(filename: str) -> str | None:
+    """Load a file from resources folder and return as base64 string"""
     resources_path = get_resources_path()
     file_path = resources_path / filename
-
-    if not file_path.exists():
-        print(f"⚠️  File not found: {file_path}")
-        return None
 
     try:
         with open(file_path, "rb") as file:
             file_content = file.read()
-            return file_content  # Return raw bytes, not base64
+            return base64.b64encode(file_content).decode('utf-8')
     except Exception as e:
         print(f"❌ Error reading file {filename}: {e}")
         return None
@@ -74,21 +65,16 @@ def load_all_resource_files():
 
     print(f"📁 Loading files from: {resources_path}")
 
-    if not resources_path.exists():
-        print(f"📂 Resources folder created at: {resources_path}")
-        return loaded_files
-
     for file_path in resources_path.iterdir():
         if file_path.is_file():
-            filename = file_path.name
-            file_content = load_file_as_bytes(filename)  # Get bytes, not base64
-            file_size, mime_type = get_file_info(filename)
+            file_content = load_file_as_base64(file_path.name)
+            file_size, mime_type = get_file_info(file_path.name)
 
             if file_content:
-                loaded_files[filename] = {"content": file_content, "size": file_size, "type": mime_type}
-                print(f"✅ Loaded: {filename} ({file_size} bytes, {mime_type})")
+                loaded_files[file_path.name] = {"content": file_content, "size": file_size, "type": mime_type}
+                print(f"✅ Loaded: {file_path.name} ({file_size} bytes, {mime_type})")
             else:
-                print(f"❌ Failed to load: {filename}")
+                print(f"❌ Failed to load: {file_path.name}")
 
     if not loaded_files:
         print("📂 No files found in resources folder")
@@ -96,20 +82,3 @@ def load_all_resource_files():
         print(f"📊 Total files loaded: {len(loaded_files)}")
 
     return loaded_files
-
-
-def create_placeholder_content(description):
-    """Create placeholder base64 content for missing files"""
-    placeholder_text = f"PLACEHOLDER FILE CONTENT\n\n{description}\n\nThis is a placeholder file created because the actual file was not found in the resources folder."
-    return base64.b64encode(placeholder_text.encode("utf-8")).decode("utf-8")
-
-
-if __name__ == "__main__":
-    # Test the file loader
-    files = load_all_resource_files()
-    if files:
-        print("\nLoaded files:")
-        for filename, info in files.items():
-            print(f"  {filename}: {len(info['content'])} chars base64, {info['size']} bytes, {info['type']}")
-    else:
-        print("\nNo files loaded. Check the resources folder.")

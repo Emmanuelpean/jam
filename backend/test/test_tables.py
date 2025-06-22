@@ -230,7 +230,7 @@ class TestFileCRUD(CRUDTestBase):
         # Create file with invalid base64 content
         file_data = {
             "filename": "corrupted_file.txt",
-            "content": "data:text/plain;base64,invalid-base64-content!!!",
+            "content": "invalid-base64-content!!!",
             "type": "text/plain",
             "size": 100,
         }
