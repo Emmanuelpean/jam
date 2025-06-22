@@ -100,6 +100,7 @@ thead.custom-header th {
 .table-container {
     max-width: 90%;
     margin: auto auto;
+    padding-bottom: 4rem;
 }
 
 

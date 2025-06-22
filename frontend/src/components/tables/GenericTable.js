@@ -430,7 +430,6 @@ const GenericTable = ({
 							className="py-0 px-2"
 							onClick={goToFirstPage}
 							disabled={currentPage === 0}
-							hidden={currentPage <= 1}
 							aria-label="First page"
 						>
 							<i className="bi bi-chevron-double-left" aria-hidden="true"></i>
@@ -441,7 +440,6 @@ const GenericTable = ({
 							className="py-0 px-2"
 							onClick={goToPreviousPage}
 							disabled={currentPage === 0}
-							hidden={currentPage <= 1}
 							aria-label="Previous page"
 						>
 							<i className="bi bi-chevron-left" aria-hidden="true"></i>
@@ -451,8 +449,7 @@ const GenericTable = ({
 							size="sm"
 							className="py-0 px-2"
 							onClick={goToNextPage}
-							disabled={currentPage >= totalPages - 2}
-							hidden={totalPages <= 1}
+							disabled={currentPage >= totalPages - 1}
 							aria-label="Next page"
 						>
 							<i className="bi bi-chevron-right" aria-hidden="true"></i>
@@ -462,8 +459,7 @@ const GenericTable = ({
 							size="sm"
 							className="py-0 px-2"
 							onClick={goToLastPage}
-							disabled={currentPage >= totalPages - 2}
-							hidden={totalPages <= 1}
+							disabled={currentPage >= totalPages - 1}
 							aria-label="Last page"
 						>
 							<i className="bi bi-chevron-double-right" aria-hidden="true"></i>
