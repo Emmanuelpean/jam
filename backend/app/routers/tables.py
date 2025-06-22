@@ -81,7 +81,7 @@ def generate_crud_router(
         request: Request,
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(oauth2.get_current_user),
-        limit: int = 10,
+        limit: int | None = None,
     ):
         """Retrieve all entries for the current user.
         :param request: FastAPI request object to access query parameters
