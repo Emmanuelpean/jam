@@ -5,7 +5,7 @@ import { viewFields } from "../../rendering/ViewRenders";
 const CompanyViewModal = ({ show, onHide, company, onEdit, onDelete, size }) => {
 	if (!company) return null;
 
-	const fields = [viewFields.name, viewFields.url, viewFields.description];
+	const fields = [viewFields.name(), viewFields.url(), viewFields.description()];
 
 	return (
 		<GenericModal

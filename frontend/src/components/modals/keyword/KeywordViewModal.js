@@ -5,7 +5,7 @@ import { viewFields } from "../../rendering/ViewRenders";
 const KeywordViewModal = ({ show, onHide, keyword, onEdit }) => {
 	if (!keyword) return null;
 
-	const fields = [viewFields.name];
+	const fields = [viewFields.name()];
 
 	return (
 		<GenericModal

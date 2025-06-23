@@ -6,11 +6,11 @@ const InterviewViewModal = ({ show, onHide, interview, onEdit, onDelete, size })
 	if (!interview) return null;
 
 	const fields = [
-		viewFields.date,
-		viewFields.type,
-		viewFields.location,
-		viewFields.interviewers,
-		viewFields.note,
+		viewFields.date(),
+		viewFields.type(),
+		viewFields.location(),
+		viewFields.interviewers(),
+		viewFields.note(),
 	];
 
 	return (

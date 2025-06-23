@@ -1,6 +1,7 @@
 import React from "react";
 import GenericModal from "../GenericModal";
 import { viewFields } from "../../rendering/ViewRenders";
+// import InterviewsTable from "../../tables/InterviewTable";
 
 const JobApplicationViewModal = ({ job, jobApplication, show, onHide, onEdit, size }) => {
 	// Accept both prop names for flexibility
@@ -18,6 +19,18 @@ const JobApplicationViewModal = ({ job, jobApplication, show, onHide, onEdit, si
 		viewFields.note(),
 		viewFields.files()
 	];
+	//
+	// // Custom content to include the interviews table
+	// const customContent = data?.id ? (
+	// 	<div className="mt-4">
+	// 		<InterviewsTable
+	// 			jobApplicationId={data.id}
+	// 			onInterviewChange={() => {
+	// 				// Optional: could add refresh logic here if needed
+	// 			}}
+	// 		/>
+	// 	</div>
+	// ) : null;
 
 	return (
 		<GenericModal
@@ -29,6 +42,8 @@ const JobApplicationViewModal = ({ job, jobApplication, show, onHide, onEdit, si
 			viewFields={fields}
 			data={data}
 			onEdit={onEdit}
+			// customContent={customContent}
+
 		/>
 	);
 };
