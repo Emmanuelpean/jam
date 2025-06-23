@@ -9,6 +9,14 @@ from app import utils, models, oauth2
 user_router = APIRouter(prefix="/users", tags=["users"])
 
 
+ALPHA_WHITELIST = ["emmanuel.pean@gmail.com",
+                   "jessicaaggood@live.co.uk"]
+
+
+def is_email_whitelisted(email: str) -> bool:
+    return email.lower() in ALPHA_WHITELIST
+
+
 @user_router.post("/", status_code=201, response_model=schemas.UserOut)
 def create_user(
     user: schemas.UserCreate,
@@ -23,6 +31,12 @@ def create_user(
     emails = [u.email for u in users]
     if user.email in emails:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
+    if not is_email_whitelisted(user.email):
+        raise HTTPException(
+            status_code=403,
+            detail="Email not authorized for alpha testing"
+        )
 
     # Hash the password and create the user
     user.password = utils.hash_password(user.password)
