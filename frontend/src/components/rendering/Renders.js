@@ -318,6 +318,22 @@ export const renderFunctions = {
 		}
 	},
 
+	jobName: (item, view = false, key = "job") => {
+		const job = accessAttribute(item, key);
+		if (job) {
+			return (
+				<JobModalManager>
+					{(handleClick) => (
+						<span className={`badge bg-info clickable-badge`} onClick={() => handleClick(job)}>
+							<i className="bi bi-briefcase me-1"></i>
+							{job.name}
+						</span>
+					)}
+				</JobModalManager>
+			);
+		}
+	},
+
 	keywords: (item, view = false, key = "keywords") => {
 		const keywords = accessAttribute(item, key);
 		if (keywords && keywords.length > 0) {

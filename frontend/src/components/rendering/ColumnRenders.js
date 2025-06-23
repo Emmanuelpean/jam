@@ -281,9 +281,9 @@ export const columns = {
 		label: "Job",
 		sortable: true,
 		searchable: true,
-		searchFields: "job.title",
+		searchFields: "job.name",
 		sortField: "job.title",
-		render: renderFunctions.job,
+		render: renderFunctions.jobName,
 		...overrides,
 	})
 };

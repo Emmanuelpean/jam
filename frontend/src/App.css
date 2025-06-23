@@ -741,9 +741,9 @@ textarea.form-control {
     transform: translateY(-1px);
 }
 
-.nav-link-custom.active:not(:active) {
-    font-weight: 600;
-}
+/*.nav-link-custom.active:not(:active) {*/
+/*    font-weight: 600;*/
+/*}*/
 
 .nav-link-custom.text-danger {
     border: 2px solid transparent;
