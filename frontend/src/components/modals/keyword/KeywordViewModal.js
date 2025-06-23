@@ -15,7 +15,7 @@ const KeywordViewModal = ({ show, onHide, keyword, onEdit }) => {
 			title="Keyword"
 			size="md"
 			data={keyword}
-			viewFields={fields}
+			fields={fields}
 			onEdit={onEdit}
 		/>
 	);

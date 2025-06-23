@@ -275,7 +275,9 @@ export const renderFunctions = {
 		return (
 			<div>
 				{cv && <FileBadge file={cv} icon="bi bi-file-text" label="CV" bgColor="bg-success" />}
-				{coverLetter && <FileBadge file={coverLetter} icon="bi bi-file-text" label="Cover Letter" bgColor="bg-info" />}
+				{coverLetter && (
+					<FileBadge file={coverLetter} icon="bi bi-file-text" label="Cover Letter" bgColor="bg-info" />
+				)}
 			</div>
 		);
 	},
@@ -394,6 +396,21 @@ export const renderFunctions = {
 		}
 	},
 
+	appliedVia: (item, view = false, key = "applied_via") => {
+		const appliedVia = accessAttribute(item, key);
+		if (appliedVia === "Aggregator") {
+			return renderFunctions.aggregator(item, view);
+		}
+		if (appliedVia) {
+			return (
+				<span className={"badge bg-info"}>
+					<i className="bi bi-linkedin me-1"></i>
+					{appliedVia}
+				</span>
+			);
+		}
+	},
+
 	aggregator: (item, view = false, key = "aggregator") => {
 		const aggregator = accessAttribute(item, key);
 		if (aggregator) {
@@ -408,7 +425,7 @@ export const renderFunctions = {
 				</AggregatorModalManager>
 			);
 		}
-	}
+	},
 };
 
 export const renderFieldValue = (field, item) => {
@@ -416,6 +433,7 @@ export const renderFieldValue = (field, item) => {
 	if (field.accessKey) {
 		item = accessAttribute(item, field.accessKey);
 	}
+
 	let rendered;
 	if (field.render) {
 		rendered = field.render(item);

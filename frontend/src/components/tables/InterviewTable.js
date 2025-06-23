@@ -43,7 +43,7 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 	};
 
 	// Define columns for interview table
-	const interviewColumns = [columns.date, columns.type, columns.location, columns.note];
+	const interviewColumns = [columns.date(), columns.type(), columns.location(), columns.note()];
 
 	// Create wrapper components that pass the jobApplicationId
 	const InterviewFormModalWithProps = (props) => (

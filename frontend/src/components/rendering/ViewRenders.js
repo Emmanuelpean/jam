@@ -156,7 +156,6 @@ export const viewFields = {
 	personalRating: (overrides = {}) => ({
 		key: "personal_rating",
 		label: "Personal Rating",
-
 		render: (x) => renderFunctions.personalRating(x, true),
 		...overrides,
 	}),
@@ -189,16 +188,10 @@ export const viewFields = {
 		...overrides,
 	}),
 
-	aggregator: (overrides = {}) => ({
-		key: "aggregator",
-		label: "Aggregator",
-		render: (x) => renderFunctions.aggregator(x, true),
-		...overrides,
-	}),
-
 	appliedVia: (overrides = {}) => ({
 		key: "applied_via",
 		label: "Applied Via",
+		render: (x) => renderFunctions.appliedVia(x, true),
 		...overrides,
 	}),
 

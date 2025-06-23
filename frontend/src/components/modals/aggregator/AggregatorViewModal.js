@@ -5,7 +5,7 @@ import { viewFields } from "../../rendering/ViewRenders";
 const AggregatorViewModal = ({ show, onHide, aggregator, onEdit, onDelete, size }) => {
 	if (!aggregator) return null;
 
-	const fields = [viewFields.name(), viewFields.url()];
+	const fields = [[viewFields.name(), viewFields.url()]];
 
 	return (
 		<GenericModal
@@ -15,7 +15,7 @@ const AggregatorViewModal = ({ show, onHide, aggregator, onEdit, onDelete, size 
 			title="Aggregator"
 			size={size}
 			data={aggregator}
-			viewFields={fields}
+			fields={fields}
 			onEdit={onEdit}
 			onDelete={onDelete}
 		/>

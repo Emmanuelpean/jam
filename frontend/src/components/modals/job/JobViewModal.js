@@ -6,16 +6,12 @@ const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 	if (!job) return null;
 	console.log(job);
 	const fields = [
-		viewFields.title(),
-		viewFields.company(),
-		viewFields.location(),
-		viewFields.jobApplication(),
+		[viewFields.title(), viewFields.company()],
+		[viewFields.location(), viewFields.jobApplication()],
 		viewFields.description(),
-		viewFields.salaryRange(),
-		viewFields.personalRating(),
-		viewFields.url(),
-		viewFields.keywords(),
-		viewFields.persons(),
+		[viewFields.salaryRange(), viewFields.personalRating()],
+		viewFields.url({"label": "Job URL"}),
+		[viewFields.keywords(), viewFields.persons()],
 	];
 
 	return (
@@ -25,7 +21,7 @@ const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 			mode="view"
 			title="Job"
 			size={size}
-			viewFields={fields}
+			fields={fields}
 			data={job}
 			onEdit={onEdit}
 		/>

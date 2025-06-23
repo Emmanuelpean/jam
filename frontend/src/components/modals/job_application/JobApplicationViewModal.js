@@ -10,14 +10,10 @@ const JobApplicationViewModal = ({ job, jobApplication, show, onHide, onEdit, si
 	if (!data) return null;
 
 	const fields = [
-		viewFields.date(),
-		viewFields.status(),
-		viewFields.job(),
-		viewFields.appliedVia(),
-		viewFields.aggregator(),
-		viewFields.url({label: "Application URL"}),
+		[viewFields.date(), viewFields.status()],
+		[viewFields.job(), viewFields.appliedVia()],
+		[viewFields.url({ label: "Application URL" }), viewFields.files()],
 		viewFields.note(),
-		viewFields.files()
 	];
 	//
 	// // Custom content to include the interviews table
@@ -39,11 +35,10 @@ const JobApplicationViewModal = ({ job, jobApplication, show, onHide, onEdit, si
 			mode="view"
 			title="Job Application"
 			size={size}
-			viewFields={fields}
+			fields={fields}
 			data={data}
 			onEdit={onEdit}
 			// customContent={customContent}
-
 		/>
 	);
 };

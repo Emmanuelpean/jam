@@ -9,7 +9,7 @@ const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
 	let customContent;
 	let fields = [];
 	if (!location.remote) {
-		fields = [viewFields.city(), viewFields.postcode(), viewFields.country()];
+		fields = [[viewFields.city(), viewFields.postcode(), viewFields.country()]];
 		customContent = (
 			<>
 				<div className="mb-4">
@@ -43,7 +43,7 @@ const LocationViewModal = ({ show, onHide, location, onEdit, size }) => {
 			mode="view"
 			title="Location"
 			data={location}
-			viewFields={fields}
+			fields={fields}
 			onEdit={onEdit}
 			size={size}
 			customContent={customContent}

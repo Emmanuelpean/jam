@@ -2,9 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { Alert, Button, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import "./GenericModal.css";
-import { renderFieldValue, renderFunctions } from "../rendering/Renders";
-import { renderInputField, renderInputFieldGroup } from "../rendering/WidgetRenders";
+import { renderFieldValue } from "../rendering/Renders";
+import { renderInputField } from "../rendering/WidgetRenders";
 import { api } from "../../services/api";
+import { viewFields } from "../rendering/ViewRenders";
 
 const DEFAULT_ICONS = {
 	form: "bi bi-pencil",
@@ -30,9 +31,9 @@ const GenericModal = ({
 
 	// Modal mode
 	mode = "form", // String - Modal type: 'form', 'view', 'alert', 'confirmation', 'custom'
+	fields = [], // Array - Field definitions or field groups for form/view mode
 
 	// Form mode props
-	fields = [], // Array - Field definitions or field groups for form mode
 	initialData = {}, // Object - Initial form data
 	endpoint, // String - API endpoint for form submission
 	onSuccess, // Function - Called on successful form submission
@@ -46,7 +47,6 @@ const GenericModal = ({
 
 	// View mode props
 	data = null, // Object - Data to display in view mode
-	viewFields = [], // Array - Field definitions for view mode display
 	showSystemFields = true, // Boolean - Whether to show created/modified dates
 
 	// Alert mode props
@@ -142,12 +142,172 @@ const GenericModal = ({
 		fieldsArray.forEach((item) => {
 			if (Array.isArray(item)) {
 				allFields.push(...item);
-			} else if (item.name) {
+			} else if (item.name || item.key) {
 				allFields.push(item);
 			}
 		});
 
 		return allFields;
+	};
+
+	// Shared field group rendering function
+	const renderFieldGroup = (item, index, isFormMode = true) => {
+		// Type 1: Array of fields (render as row)
+		if (Array.isArray(item)) {
+			// Calculate column class based on number of fields
+			const getColumnClass = (fieldCount) => {
+				switch (fieldCount) {
+					case 1:
+						return "col-md-12";
+					case 2:
+						return "col-md-6";
+					case 3:
+						return "col-md-4";
+					case 4:
+						return "col-md-3";
+					default:
+						return "col-md-6";
+				}
+			};
+
+			const columnClass = getColumnClass(item.length);
+
+			return (
+				<div key={index} className="row mb-3">
+					{item.map((field) => (
+						<div key={field.name || field.key} className={field.columnClass || columnClass}>
+							{isFormMode ? (
+								<Form.Group className="mb-3">
+									{field.type !== "drag-drop" && (
+										<Form.Label>
+											{field.label}
+											{field.required && <span className="text-danger">*</span>}
+										</Form.Label>
+									)}
+									{renderInputField(
+										field,
+										formData,
+										handleChange,
+										errors,
+										handleSelectChange,
+										customFieldComponents,
+									)}
+								</Form.Group>
+							) : (
+								<>
+									<h6 className="mb-2 fw-bold">{field.label}</h6>
+									<div className="mb-3">{renderFieldValue(field, data)}</div>
+								</>
+							)}
+						</div>
+					))}
+				</div>
+			);
+		}
+
+		// Type 2: Single field (has name/key property)
+		if (item.name || item.key) {
+			if (isFormMode) {
+				return (
+					<Form.Group key={item.name || item.key} className="row mb-3">
+						{item.type !== "drag-drop" && (
+							<Form.Label>
+								{item.label}
+								{item.required && <span className="text-danger">*</span>}
+							</Form.Label>
+						)}
+						{renderInputField(
+							item,
+							formData,
+							handleChange,
+							errors,
+							handleSelectChange,
+							customFieldComponents,
+						)}
+					</Form.Group>
+				);
+			} else {
+				return (
+					<div key={item.key || item.name} className="row mb-3">
+						<div>
+							<h6 className="mb-2 fw-bold">{item.label}</h6>
+							<div className="mb-3">{renderFieldValue(item, data)}</div>
+						</div>
+					</div>
+				);
+			}
+		}
+
+		// Type 3: Custom group or section (for view mode only currently)
+		if (!isFormMode) {
+			return (
+				<div key={index} className="mb-4">
+					{item.title && <h5 className="mb-3">{item.title}</h5>}
+					{item.fields && (
+						<div className="row">
+							{item.fields.map((field) => (
+								<div
+									key={field.key || field.name}
+									className={field.type === "textarea" ? "col-12" : "col-md-6"}
+								>
+									<h6 className="mb-2 fw-bold">{field.label}</h6>
+									<div className="mb-3">{renderFieldValue(field, data)}</div>
+								</div>
+							))}
+						</div>
+					)}
+				</div>
+			);
+		}
+
+		// Type 3: For form mode - custom object or legacy object with fields
+		if (isFormMode && item.fields) {
+			// This maintains backward compatibility with existing form field groups
+			const getColumnClass = (fieldCount) => {
+				switch (fieldCount) {
+					case 1:
+						return "col-md-12";
+					case 2:
+						return "col-md-6";
+					case 3:
+						return "col-md-4";
+					case 4:
+						return "col-md-3";
+					default:
+						return "col-md-6";
+				}
+			};
+
+			const columnClass = getColumnClass(item.fields.length);
+			const stableKey = item.id || item.fields.map((field) => field.name).join("-");
+
+			return (
+				<div key={stableKey} className={`row ${item.className || ""}`}>
+					{item.fields.map((field) => (
+						<div key={field.name} className={field.columnClass || columnClass}>
+							<Form.Group className="mb-3">
+								{field.type !== "drag-drop" && (
+									<Form.Label>
+										{field.label}
+										{field.required && <span className="text-danger">*</span>}
+									</Form.Label>
+								)}
+								{renderInputField(
+									field,
+									formData,
+									handleChange,
+									errors,
+									handleSelectChange,
+									customFieldComponents,
+								)}
+							</Form.Group>
+						</div>
+					))}
+				</div>
+			);
+		}
+
+		return null;
 	};
 
 	// Form validation
@@ -284,77 +444,28 @@ const GenericModal = ({
 		);
 	};
 
-	// Render individual field (for simple fields)
-	const renderFormGroup = (field) => (
-		<Form.Group key={field.name} className="mb-3">
-			<Form.Label>
-				{field.label}
-				{field.required && <span className="text-danger">*</span>}
-			</Form.Label>
-			{renderInputField(field, formData, handleChange, errors, handleSelectChange, customFieldComponents)}
-			{errors[field.name] && <div className="invalid-feedback d-block">{errors[field.name]}</div>}
-		</Form.Group>
-	);
-
 	// Render modal body
 	const renderBody = () => {
 		if (mode === "form") {
 			return (
 				<div>
 					{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
-					<div>
-						{fields.map((item, index) => {
-							// Type 1: Array of fields (render as row)
-							if (Array.isArray(item)) {
-								return renderInputFieldGroup({ fields: item }, formData, handleChange, errors, handleSelectChange, customFieldComponents);
-							}
-
-							// Type 2: Single field (has name property)
-							if (item.name) {
-								return (
-									<Form.Group key={item.name} className="mb-3">
-										{item.type !== "drag-drop" && (
-											<Form.Label>
-												{item.label}
-												{item.required && <span className="text-danger">*</span>}
-											</Form.Label>
-										)}
-										{renderInputField(item, formData, handleChange, errors, handleSelectChange, customFieldComponents)}
-									</Form.Group>
-								);
-							}
-
-							// Type 3: Custom object or legacy object with fields
-							return renderInputFieldGroup(item, formData, handleChange, errors, handleSelectChange, customFieldComponents);
-						})
-						}
-					</div>
+					<div>{fields.map((item, index) => renderFieldGroup(item, index, true))}</div>
 					{customContent && <div className="mt-4">{customContent}</div>}
 				</div>
 			);
 		} else if (mode === "view") {
 			return (
 				<div>
-					<div className="row">
-						{viewFields.map((field) => (
-							<div key={field.name} className={field.type === "textarea" ? "col-12" : "col-md-6"}>
-								<h6 className="mb-3 fw-bold">{field.label}</h6>
-								<div className="mb-3">{renderFieldValue(field, data)}</div>
-							</div>
-						))}
-					</div>
+					<div>{fields.map((item, index) => renderFieldGroup(item, index, false))}</div>
 					<div className="mt-4">{customContent}</div>
 					{showSystemFields && (
-						<div className="row mt-3 pt-3 border-top">
-							<div className="col-md-6">
-								<h6>Date Added</h6>
-								<div className="mb-3">{renderFunctions.createdDate(data, true)}</div>
-							</div>
-
-							<div className="col-md-6">
-								<h6>Last Updated</h6>
-								<div className="mb-3">{renderFunctions.modifiedDate(data, true)}</div>
-							</div>
+						<div className="mt-3 pt-3 border-top">
+							{renderFieldGroup(
+								[viewFields.createdAt(), viewFields.modifiedAt()],
+								"system-fields",
+								false,
+							)}
 						</div>
 					)}
 				</div>
