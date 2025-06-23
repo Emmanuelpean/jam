@@ -45,7 +45,7 @@ const JobApplicationsPage = () => {
 			FormModal={JobApplicationFormModal}
 			ViewModal={JobApplicationViewModal}
 			endpoint="jobapplications"
-			nameKey="job.title"
+			nameKey="title"
 			itemType="Job Application"
 			addItem={addItem}
 			updateItem={updateItem}

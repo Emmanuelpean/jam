@@ -4,8 +4,11 @@ import CompanyViewModal from "../modals/company/CompanyViewModal";
 import PersonViewModal from "../modals/person/PersonViewModal";
 import KeywordViewModal from "../modals/keyword/KeywordViewModal";
 import JobApplicationViewModal from "../modals/job_application/JobApplicationViewModal";
+import AggregatorViewModal from "../modals/aggregator/AggregatorViewModal";
 import JobViewModal from "../modals/job/JobViewModal";
 import { accessAttribute } from "../../utils/Utils";
+import { filesApi } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 const createModalManager = (ModalComponent, modalProp) => {
 	return ({ children, onEdit }) => {
@@ -55,6 +58,7 @@ const PersonModalManager = createModalManager(PersonViewModal, "person");
 const KeywordModalManager = createModalManager(KeywordViewModal, "keywords");
 const JobApplicationModalManager = createModalManager(JobApplicationViewModal, "jobApplication");
 const JobModalManager = createModalManager(JobViewModal, "job");
+const AggregatorModalManager = createModalManager(AggregatorViewModal, "aggregator");
 
 export const getApplicationStatusBadgeClass = (status) => {
 	switch (status?.toLowerCase()) {
@@ -77,6 +81,39 @@ const ensureHttpPrefix = (url) => {
 	if (!url) return url;
 	if (url.match(/^https?:\/\//)) return url;
 	return `https://${url}`;
+};
+
+// File badge component for downloadable files
+const FileBadge = ({ file, icon, label, bgColor = "bg-secondary" }) => {
+	const { token } = useAuth();
+
+	const handleDownload = async (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+
+		if (file && file.id && file.filename) {
+			try {
+				await filesApi.download(file.id, file.filename, token);
+			} catch (error) {
+				console.error("Error downloading file:", error);
+			}
+		}
+	};
+
+	if (!file || !file.id) return null;
+
+	return (
+		<span
+			className={`badge ${bgColor} clickable-badge me-1`}
+			onClick={handleDownload}
+			style={{ cursor: "pointer" }}
+			title={`Download ${file.filename}`}
+		>
+			<i className={`${icon} me-1`}></i>
+			{label}
+			<i className="bi bi-download ms-1"></i>
+		</span>
+	);
 };
 
 export const renderFunctions = {
@@ -102,7 +139,7 @@ export const renderFunctions = {
 		}
 	},
 
-	note: (item, view = false, key = "description") => {
+	note: (item, view = false, key = "note") => {
 		return renderFunctions._longText(item, view, key);
 	},
 
@@ -215,6 +252,32 @@ export const renderFunctions = {
 	interviewCount: (item, view = false, key = "interviews") => {
 		const interviews = accessAttribute(item, key);
 		return interviews?.length || 0;
+	},
+
+	// --------------------------------------------------- FILE BADGES -------------------------------------------------
+
+	cv: (item, view = false, key = "cv") => {
+		const cv = accessAttribute(item, key);
+		return <FileBadge file={cv} icon="bi bi-file-text" label="CV" bgColor="bg-success" />;
+	},
+
+	coverLetter: (item, view = false, key = "cover_letter") => {
+		const coverLetter = accessAttribute(item, key);
+		return <FileBadge file={coverLetter} icon="bi bi-file-text" label="Cover Letter" bgColor="bg-info" />;
+	},
+
+	files: (item) => {
+		const cv = accessAttribute(item, "cv");
+		const coverLetter = accessAttribute(item, "cover_letter");
+
+		if (!cv && !coverLetter) return null;
+
+		return (
+			<div>
+				{cv && <FileBadge file={cv} icon="bi bi-file-text" label="CV" bgColor="bg-success" />}
+				{coverLetter && <FileBadge file={coverLetter} icon="bi bi-file-text" label="Cover Letter" bgColor="bg-info" />}
+			</div>
+		);
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
@@ -330,6 +393,22 @@ export const renderFunctions = {
 			);
 		}
 	},
+
+	aggregator: (item, view = false, key = "aggregator") => {
+		const aggregator = accessAttribute(item, key);
+		if (aggregator) {
+			return (
+				<AggregatorModalManager>
+					{(handleClick) => (
+						<span className={"badge bg-info clickable-badge"} onClick={() => handleClick(aggregator)}>
+							<i className="bi bi-building me-1"></i>
+							{aggregator.name}
+						</span>
+					)}
+				</AggregatorModalManager>
+			);
+		}
+	}
 };
 
 export const renderFieldValue = (field, item) => {
