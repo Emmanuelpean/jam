@@ -134,8 +134,10 @@ const GenericTable = ({
 	const [currentPage, setCurrentPage] = useState(0);
 	const [pageSize, setPageSize] = useState(20);
 
-	// Helper function to get the effective item for a column
 	const getEffectiveItem = (item, column) => {
+		if (!column) {
+			return item; // Return the original item if column is undefined
+		}
 		if (column.accessKey) {
 			return accessAttribute(item, column.accessKey);
 		}
@@ -144,6 +146,10 @@ const GenericTable = ({
 
 	// Helper function to get value for searching/sorting
 	const getColumnValue = (item, column, field) => {
+		if (!column) {
+			return null; // Return null if column is undefined
+		}
+
 		const effectiveItem = getEffectiveItem(item, column);
 
 		if (column.accessor) {
@@ -214,7 +220,7 @@ const GenericTable = ({
 						const fields = Array.isArray(column.searchFields) ? column.searchFields : [column.searchFields];
 						value = fields
 							.map((field) => getColumnValue(item, column, field))
-							.filter(val => val != null)
+							.filter((val) => val != null)
 							.join(" ");
 					} else {
 						// Use the column key with accessKey support
