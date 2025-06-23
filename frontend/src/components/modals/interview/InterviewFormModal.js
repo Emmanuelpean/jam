@@ -217,7 +217,7 @@ const InterviewFormModal = ({ show, onHide, onSuccess, size, initialData = {}, i
 				show={show}
 				onHide={onHide}
 				mode="form"
-				title={isEdit ? "Edit Interview" : "Add Interview"}
+				title="Interview"
 				size={size}
 				fields={interviewFields}
 				initialData={transformInitialData(initialData)}
