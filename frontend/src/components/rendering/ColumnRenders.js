@@ -1,89 +1,89 @@
+
 import { renderFunctions } from "./Renders";
 
 export const columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
 
-	name: {
+	name: (overrides = {}) => ({
 		key: "name",
 		label: "Name",
 		sortable: true,
 		searchable: true,
 		type: "text",
-	},
+		...overrides,
+	}),
 
-	title: {
+	title: (overrides = {}) => ({
 		key: "title",
 		label: "Title",
 		sortable: true,
 		searchable: true,
 		type: "text",
-	},
+		...overrides,
+	}),
 
-	description: {
+	description: (overrides = {}) => ({
 		key: "description",
 		label: "Description",
 		sortable: true,
 		searchable: true,
 		type: "text",
 		render: renderFunctions.description,
-	},
+		...overrides,
+	}),
 
-	url: {
+	url: (overrides = {}) => ({
 		key: "url",
 		label: "Website",
 		sortable: true,
 		searchable: true,
 		type: "text",
 		render: renderFunctions.url,
-	},
+		...overrides,
+	}),
 
-	createdAt: {
+	createdAt: (overrides = {}) => ({
 		key: "created_at",
 		label: "Date Added",
 		type: "date",
 		sortable: true,
 		searchable: true,
 		render: renderFunctions.createdDate,
-	},
+		...overrides,
+	}),
 
-	modifiedAt: {
-		key: "modified_at",
-		label: "Modified On",
-		type: "date",
-		sortable: true,
-		searchable: true,
-		render: renderFunctions.createdDate,
-	},
-
-	note: {
+	note: (overrides = {}) => ({
 		key: "note",
 		label: "Notes",
 		sortable: false,
 		searchable: true,
 		type: "text",
 		render: renderFunctions.note,
-	},
+		...overrides,
+	}),
 
-	date: {
+	date: (overrides = {}) => ({
 		key: "date",
 		label: "Date",
 		sortable: true,
 		searchable: true,
 		type: "date",
 		render: renderFunctions.date,
-	},
+		...overrides,
+	}),
 
-	type: {
+	type: (overrides = {}) => ({
 		key: "type",
 		label: "Type",
 		sortable: true,
 		searchable: true,
 		type: "text",
-	},
+		...overrides,
+	}),
 
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
-	location: {
+	location: (overrides = {}) => ({
 		key: "location",
 		label: "Location",
 		sortable: true,
@@ -92,35 +92,39 @@ export const columns = {
 		sortField: "location.name",
 		searchFields: "location.name",
 		render: renderFunctions.location,
-	},
+		...overrides,
+	}),
 
-	city: {
+	city: (overrides = {}) => ({
 		key: "city",
 		label: "City",
 		sortable: true,
 		searchable: true,
 		type: "text",
-	},
+		...overrides,
+	}),
 
-	postcode: {
+	postcode: (overrides = {}) => ({
 		key: "postcode",
 		label: "Postcode",
 		sortable: true,
 		searchable: true,
 		type: "text",
-	},
+		...overrides,
+	}),
 
-	country: {
+	country: (overrides = {}) => ({
 		key: "country",
 		label: "Country",
 		sortable: true,
 		searchable: true,
 		type: "text",
-	},
+		...overrides,
+	}),
 
 	// --------------------------------------------------- COMPANIES ---------------------------------------------------
 
-	company: {
+	company: (overrides = {}) => ({
 		key: "company",
 		label: "Company",
 		sortable: true,
@@ -129,11 +133,12 @@ export const columns = {
 		sortField: "company.name",
 		searchFields: "company.name",
 		render: renderFunctions.company,
-	},
+		...overrides,
+	}),
 
 	// ---------------------------------------------------- PERSONS ----------------------------------------------------
 
-	persons: {
+	persons: (overrides = {}) => ({
 		key: "person",
 		label: "Contacts",
 		sortable: true,
@@ -142,45 +147,50 @@ export const columns = {
 		sortField: "person.last_name",
 		searchFields: "person.name",
 		render: renderFunctions.contacts,
-	},
+		...overrides,
+	}),
 
-	personName: {
+	personName: (overrides = {}) => ({
 		key: "name",
 		label: "Name",
 		sortable: true,
 		searchable: true,
 		type: "text",
 		sortField: "last_name",
-	},
+		...overrides,
+	}),
 
-	email: {
+	email: (overrides = {}) => ({
 		key: "email",
 		label: "Email",
 		sortable: true,
 		searchable: true,
 		type: "text",
 		render: renderFunctions.email,
-	},
+		...overrides,
+	}),
 
-	phone: {
+	phone: (overrides = {}) => ({
 		key: "phone",
 		label: "Phone",
 		sortable: false,
 		searchable: true,
 		type: "text",
 		render: renderFunctions.phone,
-	},
+		...overrides,
+	}),
 
-	linkedinUrl: {
+	linkedinUrl: (overrides = {}) => ({
 		key: "linkedin_url",
 		label: "LinkedIn",
 		sortable: false,
 		searchable: true,
 		type: "text",
 		render: renderFunctions.linkedinUrl,
-	},
+		...overrides,
+	}),
 
-	interviewers: {
+	interviewers: (overrides = {}) => ({
 		key: "person",
 		label: "Interviewers",
 		sortable: true,
@@ -189,12 +199,12 @@ export const columns = {
 		sortField: "person.last_name",
 		searchFields: "person.name",
 		render: (item) => renderFunctions.contacts(item, false, "interviewers"),
-	},
-
+		...overrides,
+	}),
 
 	// ------------------------------------------------------ JOBS -----------------------------------------------------
 
-	salaryRange: {
+	salaryRange: (overrides = {}) => ({
 		key: "salary_range",
 		label: "Salary",
 		sortable: true,
@@ -202,26 +212,29 @@ export const columns = {
 		type: "text",
 		sortField: "salary_min",
 		render: renderFunctions.salaryRange,
-	},
+		...overrides,
+	}),
 
-	personalRating: {
+	personalRating: (overrides = {}) => ({
 		key: "personal_rating",
 		label: "Rating",
 		sortable: true,
 		type: "number",
 		render: renderFunctions.personalRating,
-	},
+		...overrides,
+	}),
 
-	keywords: {
+	keywords: (overrides = {}) => ({
 		key: "keywords",
 		label: "Keywords",
 		sortable: false,
 		searchable: true,
 		type: "text",
 		render: renderFunctions.keywords,
-	},
+		...overrides,
+	}),
 
-	jobapplication: {
+	jobapplication: (overrides = {}) => ({
 		key: "jobapplication",
 		label: "Application Status",
 		sortable: true,
@@ -229,9 +242,10 @@ export const columns = {
 		sortField: "job_application.status",
 		searchFields: "job_application.status",
 		render: renderFunctions.jobApplication,
-	},
+		...overrides,
+	}),
 
-	job: {
+	job: (overrides = {}) => ({
 		key: "job",
 		label: "Job",
 		sortable: true,
@@ -239,26 +253,29 @@ export const columns = {
 		searchFields: "job.title",
 		sortField: "job.title",
 		render: renderFunctions.job,
-	},
+		...overrides,
+	}),
 
-	status: {
+	status: (overrides = {}) => ({
 		key: "status",
 		label: "Status",
 		sortable: true,
 		searchable: true,
 		render: renderFunctions.status,
-	},
+		...overrides,
+	}),
 
-	interviewCount: {
+	interviewCount: (overrides = {}) => ({
 		key: "interview_count",
 		label: "Interviews",
 		sortable: true,
-		sortField: "interview_count",  // TODO
+		sortField: "interview_count",
 		searchable: false,
 		render: renderFunctions.interviewCount,
-	},
+		...overrides,
+	}),
 
-	jobApplicationJob: {
+	jobApplicationJob: (overrides = {}) => ({
 		key: "job",
 		accessKey: "job_application",
 		label: "Job",
@@ -266,6 +283,7 @@ export const columns = {
 		searchable: true,
 		searchFields: "job.title",
 		sortField: "job.title",
-		render: renderFunctions.job
-	}
+		render: renderFunctions.job,
+		...overrides,
+	})
 };

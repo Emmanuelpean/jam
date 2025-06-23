@@ -22,9 +22,9 @@ const AggregatorsPage = () => {
 	} = useTableData("aggregators");
 
 	const tableColumns = [
-		columns.name,
-		columns.url,
-		columns.createdAt
+		columns.name(),
+		columns.url(),
+		columns.createdAt()
 	];
 
 	return (

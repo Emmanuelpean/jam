@@ -26,13 +26,7 @@ const LocationsPage = () => {
 		return allLocations?.filter((location) => !location.remote) || [];
 	}, [allLocations]);
 
-	const tableColumns = [
-		columns.name,
-		columns.city,
-		columns.postcode,
-		columns.country,
-		columns.createdAt
-	];
+	const tableColumns = [columns.name(), columns.city(), columns.postcode(), columns.country(), columns.createdAt()];
 
 	return (
 		<GenericTableWithModals

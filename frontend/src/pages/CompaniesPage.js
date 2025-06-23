@@ -21,10 +21,10 @@ const CompaniesPage = () => {
 	} = useTableData("companies");
 
 	const tableColumns = [
-		columns.name,
-		columns.description,
-		columns.url,
-		columns.createdAt
+		columns.name(),
+		columns.description(),
+		columns.url(),
+		columns.createdAt()
 	];
 
 	return (

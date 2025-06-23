@@ -21,12 +21,12 @@ const JobApplicationsPage = () => {
 	} = useTableData("jobapplications");
 
 	const tableColumns = [
-		columns.date,
-		columns.job,
-		columns.status,
-		columns.interviewCount,
-		columns.url,
-		columns.createdAt,
+		columns.date(),
+		columns.job(),
+		columns.status(),
+		columns.interviewCount(),
+		columns.url(),
+		columns.createdAt(),
 	];
 
 	return (

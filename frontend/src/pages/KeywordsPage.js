@@ -21,9 +21,9 @@ const KeywordsPage = () => {
 	} = useTableData("keywords");
 
 	const tableColumns = [
-		columns.name,
-		columns.description,
-		columns.createdAt,
+		columns.name(),
+		columns.description(),
+		columns.createdAt(),
 	];
 
 	return (

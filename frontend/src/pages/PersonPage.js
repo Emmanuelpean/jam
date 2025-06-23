@@ -21,12 +21,12 @@ const PersonsPage = () => {
 	} = useTableData("persons");
 
 	const tableColumns = [
-		columns.personName,
-		columns.company,
-		columns.email,
-		columns.phone,
-		columns.linkedinUrl,
-		columns.createdAt,
+		columns.personName(),
+		columns.company(),
+		columns.email(),
+		columns.phone(),
+		columns.linkedinUrl(),
+		columns.createdAt(),
 	];
 
 	return (
