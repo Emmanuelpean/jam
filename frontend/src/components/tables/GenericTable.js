@@ -132,7 +132,7 @@ const GenericTable = ({
 	showAllEntries = false,
 }) => {
 	const [currentPage, setCurrentPage] = useState(0);
-	const [pageSize, setPageSize] = useState(10);
+	const [pageSize, setPageSize] = useState(20);
 
 	// Helper function to get the effective item for a column
 	const getEffectiveItem = (item, column) => {
