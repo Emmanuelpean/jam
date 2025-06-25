@@ -13,18 +13,18 @@ export const PersonSwitchableModal = ({
 	submode = "view",
 	size = "lg",
 }) => {
-	// Use the new hook to get form options data
-	const { companies } = useFormOptions();
+	// Use the enhanced hook to get form options data and modal management
+	const { companies, openCompanyModal, renderCompanyModal } = useFormOptions();
 
 	// Don't render if we're in view mode but have no person data
 	if (submode === "view" && !person?.id) {
 		return null;
 	}
 
-	// Form fields for editing - using the static formFields with companies data
+	// Form fields for editing - using the static formFields with companies data and add button
 	const formFieldsArray = [
 		[formFields.firstName(), formFields.lastName()],
-		[formFields.company(companies), formFields.role()],
+		[formFields.company(companies, openCompanyModal), formFields.role()],
 		[formFields.email(), formFields.phone()],
 		[formFields.linkedinUrl()],
 	];
@@ -77,28 +77,31 @@ export const PersonSwitchableModal = ({
 	};
 
 	return (
-		<GenericModal
-			show={show}
-			onHide={onHide}
-			mode="formview"
-			submode={submode}
-			title="Person"
-			size={size}
-			data={person || {}}
-			fields={fields}
-			endpoint={endpoint}
-			onSuccess={onSuccess}
-			onDelete={onDelete}
-			validationRules={validationRules}
-			transformFormData={transformFormData}
-		/>
+		<>
+			<GenericModal
+				show={show}
+				onHide={onHide}
+				mode="formview"
+				submode={submode}
+				title="Person"
+				size={size}
+				data={person || {}}
+				fields={fields}
+				endpoint={endpoint}
+				onSuccess={onSuccess}
+				onDelete={onDelete}
+				validationRules={validationRules}
+				transformFormData={transformFormData}
+			/>
+
+			{renderCompanyModal()}
+		</>
 	);
 };
 
 export const PersonFormModal = (props) => {
 	// Determine the submode based on whether we have person data with an ID
 	const submode = props.isEdit || props.person?.id ? "edit" : "add";
-
 	return <PersonSwitchableModal {...props} submode={submode} />;
 };
 

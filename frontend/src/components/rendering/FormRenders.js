@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { apiHelpers, companiesApi, keywordsApi, locationsApi, personsApi } from "../../services/api";
 import { fetchCountries } from "../../utils/CountryUtils";
+import CompanyFormModal from "../modals/company/CompanyFormModal";
 
 // Hook for country loading that can be used by components
 export const useCountries = () => {
@@ -30,7 +31,7 @@ export const useCountries = () => {
 	return { countries, loading, error };
 };
 
-// Hook for fetching form options data
+// Enhanced hook for fetching form options data with modal management
 export const useFormOptions = () => {
 	const { token } = useAuth();
 	const [companies, setCompanies] = useState([]);
@@ -39,6 +40,9 @@ export const useFormOptions = () => {
 	const [persons, setPersons] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
+
+	// Modal states
+	const [showCompanyModal, setShowCompanyModal] = useState(false);
 
 	useEffect(() => {
 		const fetchOptions = async () => {
@@ -101,6 +105,29 @@ export const useFormOptions = () => {
 		}
 	};
 
+	// Modal handlers
+	const openCompanyModal = () => setShowCompanyModal(true);
+	const closeCompanyModal = () => setShowCompanyModal(false);
+
+	// Handle successful company creation
+	const handleCompanyAddSuccess = (newCompany) => {
+		const newOption = {
+			value: newCompany.id,
+			label: newCompany.name,
+		};
+		setCompanies((prev) => [...prev, newOption]);
+		closeCompanyModal();
+	};
+
+	// Render company modal
+	const renderCompanyModal = () => (
+		<CompanyFormModal
+			show={showCompanyModal}
+			onHide={closeCompanyModal}
+			onSuccess={handleCompanyAddSuccess}
+		/>
+	);
+
 	return {
 		companies,
 		locations,
@@ -109,6 +136,9 @@ export const useFormOptions = () => {
 		loading,
 		error,
 		refreshOptions,
+		// Company modal management
+		openCompanyModal,
+		renderCompanyModal,
 	};
 };
 
