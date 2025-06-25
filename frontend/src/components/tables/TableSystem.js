@@ -782,7 +782,6 @@ export const GenericTableWithModals = ({
 						onHide={closeEditModal}
 						onSuccess={handleEditSuccess}
 						{...{
-							// Dynamically set the prop name based on itemType
 							[itemType.toLowerCase()]: selectedItem || {},
 						}}
 						isEdit={true}

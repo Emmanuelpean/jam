@@ -291,7 +291,7 @@ export const formFields = {
 		name: "company_id",
 		label: "Company",
 		type: "select",
-		required: true,
+		required: false,
 		placeholder: "Select or search company...",
 		isSearchable: true,
 		isClearable: true,
