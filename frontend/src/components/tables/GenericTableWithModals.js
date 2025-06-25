@@ -1,5 +1,5 @@
-import React from "react";
-import GenericTable, { createGenericDeleteHandler, createTableActions } from "./GenericTable";
+import React, { useEffect, useState } from "react";
+import GenericTable, { createGenericDeleteHandler } from "./GenericTable";
 import AlertModal from "../modals/alert/AlertModal";
 import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
@@ -17,7 +17,6 @@ const GenericTableWithModals = ({
 	loading,
 	error,
 	emptyMessage,
-	onRowClick,
 	selectable,
 
 	// Modal configuration
@@ -49,6 +48,7 @@ const GenericTableWithModals = ({
 }) => {
 	const { token } = useAuth();
 	const { alertState, showConfirm, showError, hideAlert } = useGenericAlert();
+	const [contextMenu, setContextMenu] = useState(null);
 
 	const {
 		showModal,
@@ -62,6 +62,31 @@ const GenericTableWithModals = ({
 		openEditModal,
 		closeEditModal,
 	} = useModalState();
+
+	// Close context menu when clicking anywhere or pressing Escape
+	useEffect(() => {
+		const handleGlobalClick = () => {
+			if (contextMenu) {
+				setContextMenu(null);
+			}
+		};
+
+		const handleKeyPress = (e) => {
+			if (e.key === "Escape" && contextMenu) {
+				setContextMenu(null);
+			}
+		};
+
+		if (contextMenu) {
+			document.addEventListener("click", handleGlobalClick);
+			document.addEventListener("keydown", handleKeyPress);
+		}
+
+		return () => {
+			document.removeEventListener("click", handleGlobalClick);
+			document.removeEventListener("keydown", handleKeyPress);
+		};
+	}, [contextMenu]);
 
 	// Handle edit success
 	const handleEditSuccess = (updatedItem) => {
@@ -87,8 +112,13 @@ const GenericTableWithModals = ({
 		itemType,
 	});
 
-	// Wrap modal handlers to prevent event propagation when inside another modal
-	const handleViewClick = (item, event) => {
+	// Handle row click to open view modal (only if no context menu is open)
+	const handleRowClick = (item, event) => {
+		if (contextMenu) {
+			// If context menu is open, don't trigger row click
+			return;
+		}
+
 		if (event) {
 			event.preventDefault();
 			event.stopPropagation();
@@ -96,20 +126,42 @@ const GenericTableWithModals = ({
 		openViewModal(item);
 	};
 
-	const handleEditClick = (item, event) => {
-		if (event) {
-			event.preventDefault();
-			event.stopPropagation();
-		}
-		openEditModal(item);
+	// Handle right-click context menu
+	const handleRowRightClick = (item, event) => {
+		event.preventDefault();
+		event.stopPropagation();
+
+		setContextMenu({
+			item,
+			x: event.clientX,
+			y: event.clientY,
+			show: true,
+		});
 	};
 
-	const handleDeleteClick = (item, event) => {
-		if (event) {
-			event.preventDefault();
-			event.stopPropagation();
+	// Context menu actions
+	const handleContextView = (e) => {
+		e.stopPropagation();
+		if (contextMenu?.item) {
+			openViewModal(contextMenu.item);
 		}
-		handleDelete(item);
+		setContextMenu(null);
+	};
+
+	const handleContextEdit = (e) => {
+		e.stopPropagation();
+		if (contextMenu?.item) {
+			openEditModal(contextMenu.item);
+		}
+		setContextMenu(null);
+	};
+
+	const handleContextDelete = (e) => {
+		e.stopPropagation();
+		if (contextMenu?.item) {
+			handleDelete(contextMenu.item);
+		}
+		setContextMenu(null);
 	};
 
 	const handleAddClick = (event) => {
@@ -119,13 +171,6 @@ const GenericTableWithModals = ({
 		}
 		openAddModal();
 	};
-
-	// Create standardized actions with event handling
-	const tableActions = createTableActions([
-		{ type: "view", onClick: handleViewClick },
-		{ type: "edit", onClick: handleEditClick },
-		{ type: "delete", onClick: handleDeleteClick },
-	]);
 
 	// Choose container class based on context
 	const containerClass = isInModal ? "table-container-modal" : "table-container";
@@ -137,7 +182,7 @@ const GenericTableWithModals = ({
 			<GenericTable
 				data={data}
 				columns={columns}
-				actions={tableActions}
+				actions={null} // Completely remove actions
 				sortConfig={sortConfig}
 				onSort={onSort}
 				searchTerm={searchTerm}
@@ -147,10 +192,74 @@ const GenericTableWithModals = ({
 				loading={loading}
 				error={error}
 				emptyMessage={emptyMessage}
-				onRowClick={onRowClick}
+				onRowClick={handleRowClick}
+				onRowRightClick={handleRowRightClick}
 				selectable={selectable}
 				showAllEntries={showAllEntries}
 			/>
+
+			{/* Context Menu */}
+			{contextMenu && contextMenu.show && (
+				<div
+					className="context-menu"
+					style={{
+						position: "fixed",
+						top: contextMenu.y,
+						left: contextMenu.x,
+						zIndex: 9999,
+						backgroundColor: "white",
+						border: "1px solid #ccc",
+						borderRadius: "4px",
+						boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+						padding: "4px 0",
+						minWidth: "150px",
+					}}
+					onClick={(e) => e.stopPropagation()}
+				>
+					<div
+						className="context-menu-item"
+						style={{
+							padding: "8px 16px",
+							cursor: "pointer",
+							fontSize: "14px",
+							borderBottom: "1px solid #eee",
+						}}
+						onClick={handleContextView}
+						onMouseEnter={(e) => (e.target.style.backgroundColor = "#f8f9fa")}
+						onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
+					>
+						<i className="bi bi-eye me-2"></i>View
+					</div>
+					<div
+						className="context-menu-item"
+						style={{
+							padding: "8px 16px",
+							cursor: "pointer",
+							fontSize: "14px",
+							borderBottom: "1px solid #eee",
+						}}
+						onClick={handleContextEdit}
+						onMouseEnter={(e) => (e.target.style.backgroundColor = "#f8f9fa")}
+						onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
+					>
+						<i className="bi bi-pencil me-2"></i>Edit
+					</div>
+					<div
+						className="context-menu-item"
+						style={{
+							padding: "8px 16px",
+							cursor: "pointer",
+							fontSize: "14px",
+							color: "#dc3545",
+						}}
+						onClick={handleContextDelete}
+						onMouseEnter={(e) => (e.target.style.backgroundColor = "#f8f9fa")}
+						onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
+					>
+						<i className="bi bi-trash me-2"></i>Delete
+					</div>
+				</div>
+			)}
 
 			{/* Additional content (like maps) */}
 			{children}
@@ -184,7 +293,10 @@ const GenericTableWithModals = ({
 						[nameKey === "title" ? "job" : nameKey === "name" ? itemType.toLowerCase() : "item"]:
 							selectedItem,
 					}}
-					onEdit={handleEditClick}
+					onEdit={() => {
+						closeViewModal();
+						openEditModal(selectedItem);
+					}}
 					size={viewModalSize}
 				/>
 			)}

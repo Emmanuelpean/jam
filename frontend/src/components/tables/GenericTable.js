@@ -50,85 +50,21 @@ export const createGenericDeleteHandler = ({
 	};
 };
 
-// Utility function to create standardized action buttons
-export const createTableAction = (type, onClick) => {
-	const actionTypes = {
-		view: {
-			label: "View",
-			icon: "bi bi-eye",
-			className: "btn-action-view",
-		},
-		edit: {
-			label: "Edit",
-			icon: "bi bi-pencil",
-			className: "btn-action-edit",
-		},
-		delete: {
-			label: "Delete",
-			icon: "bi bi-trash",
-			className: "btn-action-delete",
-		},
-		duplicate: {
-			label: "Duplicate",
-			icon: "bi bi-copy",
-			className: "btn-action-duplicate",
-		},
-		download: {
-			label: "Download",
-			icon: "bi bi-download",
-			className: "btn-action-download",
-		},
-		archive: {
-			label: "Archive",
-			icon: "bi bi-archive",
-			className: "btn-action-archive",
-		},
-		restore: {
-			label: "Restore",
-			icon: "bi bi-arrow-counterclockwise",
-			className: "btn-action-restore",
-		},
-	};
-
-	const actionConfig = actionTypes[type];
-	if (!actionConfig) {
-		throw new Error(`Unknown action type: ${type}. Available types: ${Object.keys(actionTypes).join(", ")}`);
-	}
-
-	return {
-		...actionConfig,
-		onClick,
-	};
-};
-
-// Utility function to create multiple actions at once
-export const createTableActions = (actionConfigs) => {
-	return actionConfigs.map((config) => {
-		if (typeof config === "string") {
-			throw new Error(
-				'Action config must include onClick function. Use: { type: "view", onClick: yourFunction }',
-			);
-		}
-
-		const { type, onClick, title } = config;
-		return createTableAction(type, onClick, title);
-	});
-};
-
 const GenericTable = ({
-	data,
-	columns,
-	sortConfig,
-	onSort,
-	searchTerm,
-	onSearchChange,
-	onAddClick,
-	addButtonText = "Add Item",
+	data = [],
+	columns = [],
+	sortConfig = { key: null, direction: "asc" },
+	onSort = (p) => {},
+	searchTerm = "",
+	onSearchChange = () => {},
+	onAddClick = null,
+	addButtonText = "Add",
 	loading = false,
 	error = null,
-	emptyMessage = "No items found",
-	actions = null,
+	emptyMessage = "No data available",
 	onRowClick = null,
+	onRowRightClick = null, // Add this new prop
+	selectable = false,
 	showAllEntries = false,
 }) => {
 	const [currentPage, setCurrentPage] = useState(0);
@@ -279,32 +215,6 @@ const GenericTable = ({
 
 	// Create columns with actions if provided
 	const tableColumns = [...columns];
-	if (actions) {
-		tableColumns.push({
-			key: "actions",
-			label: "Actions",
-			sortable: false,
-			filterable: false,
-			render: (item) => (
-				<div className="d-flex gap-2">
-					{actions.map((action, index) => (
-						<button
-							key={index}
-							className={`btn btn-action ${action.className || ""}`}
-							onClick={(event) => {
-								event.stopPropagation(); // Add this line
-								action.onClick(item, event);
-							}}
-							title={action.title}
-						>
-							{action.icon && <i className={action.icon}></i>}
-							{action.label}
-						</button>
-					))}
-				</div>
-			),
-		});
-	}
 
 	const sortedData = getSortedData();
 
@@ -403,8 +313,16 @@ const GenericTable = ({
 					</thead>
 					<tbody>
 						{currentPageData.map((item, index) => (
-							<tr key={item.id || index} onClick={(event) => handleRowClick(event, item)}>
-								{tableColumns.map((column, columnIndex) => (
+							<tr
+								key={item.id || index}
+								className={`${selectable ? "table-row-selectable" : ""} ${onRowClick ? "table-row-clickable" : ""}`}
+								onClick={(e) => handleRowClick(e, item)}
+								onContextMenu={onRowRightClick ? (e) => onRowRightClick(item, e) : undefined}
+								style={{
+									cursor: onRowClick || onRowRightClick ? 'pointer' : 'default'
+								}}
+							>
+							{tableColumns.map((column, columnIndex) => (
 									<td
 										key={column.key}
 										className="align-middle"
