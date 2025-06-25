@@ -6,7 +6,7 @@ import { formFields } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
 import { apiHelpers, companiesApi } from "../../../services/api";
 
-const PersonSwitchableModal = ({
+export const PersonSwitchableModal = ({
 	show,
 	onHide,
 	person,
@@ -134,4 +134,20 @@ const PersonSwitchableModal = ({
 	);
 };
 
-export default PersonSwitchableModal;
+export const PersonFormModal = (props) => (
+	<PersonSwitchableModal
+		{...props}
+		submode={props.person ? "edit" : "add"}
+	/>
+);
+
+// Wrapper for view modal
+export const PersonViewModal = (props) => (
+	<PersonSwitchableModal
+		{...props}
+		submode="view"
+	/>
+);
+
+// Add default export
+export default PersonFormModal;

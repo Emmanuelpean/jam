@@ -1,24 +1,8 @@
 import React from "react";
 import GenericTableWithModals from "../components/tables/GenericTableWithModals";
-import PersonSwitchableModal from "../components/modals/person/PersonFormModal";
+import { PersonFormModal, PersonViewModal } from "../components/modals/person/PersonFormModal";
 import { useTableData } from "../components/tables/Table";
 import { columns } from "../components/rendering/ColumnRenders";
-
-// Wrapper for form modal (add/edit mode)
-const PersonFormModal = (props) => (
-	<PersonSwitchableModal
-		{...props}
-		submode={props.person ? "edit" : "add"}
-	/>
-);
-
-// Wrapper for view modal
-const PersonViewModal = (props) => (
-	<PersonSwitchableModal
-		{...props}
-		submode="view"
-	/>
-);
 
 const PersonsPage = () => {
 	const {

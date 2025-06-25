@@ -5,17 +5,16 @@ import { api } from "../../services/api";
 import { accessAttribute } from "../../utils/Utils";
 
 export const createGenericDeleteHandler = ({
-	endpoint,
-	token,
-	showConfirm,
-	showError,
-	removeItem,
-	setData,
-	nameKey,
-	itemType = "item",
+	endpoint, // String - API endpoint path (e.g., "users", "companies")
+	token, // String - Authentication token for API requests
+	showConfirm, // Function - Shows confirmation dialog before deletion
+	showError, // Function - Shows error messages to user
+	removeItem, // Function - Removes item from local state by ID
+	setData, // Function - Updates the entire data array (fallback method)
+	nameKey, // String - Object property to use as display name in confirmation dialog
+	itemType = "item", // String - Human-readable type name for confirmation messages
 }) => {
 	return async (item) => {
-		console.log(nameKey, item);
 		const itemName = item[nameKey];
 
 		try {
@@ -44,28 +43,26 @@ export const createGenericDeleteHandler = ({
 					message: `Failed to delete ${itemType}. Please check your connection and try again.`,
 				});
 			}
-		} catch (error) {
-			console.log(`${itemType} deletion cancelled`);
-		}
+		} catch (error) {}
 	};
 };
 
 const GenericTable = ({
-	data = [],
-	columns = [],
-	sortConfig = { key: null, direction: "asc" },
-	onSort = (p) => {},
-	searchTerm = "",
-	onSearchChange = () => {},
-	onAddClick = null,
-	addButtonText = "Add",
-	loading = false,
-	error = null,
-	emptyMessage = "No data available",
-	onRowClick = null,
-	onRowRightClick = null, // Add this new prop
-	selectable = false,
-	showAllEntries = false,
+	data = [], // Array - The dataset to display in the table
+	columns = [], // Array - Column definitions with keys, labels, and render functions
+	sortConfig = { key: null, direction: "asc" }, // Object - Current sort state (column key and direction)
+	onSort = (p) => {}, // Function - Called when user clicks sortable column headers
+	searchTerm = "", // String - Current search/filter term
+	onSearchChange = () => {}, // Function - Called when search input changes
+	onAddClick = null, // Function - Called when "Add" button is clicked
+	addButtonText = "Add", // String - Text to display on the add button
+	loading = false, // Boolean - Shows loading spinner when true
+	error = null, // String - Error message to display if data loading failed
+	emptyMessage = "No data available", // String - Message shown when no data exists
+	onRowClick = null, // Function - Called when a table row is clicked (receives item and event)
+	onRowRightClick = null, // Function - Called when a table row is right-clicked (for context menus)
+	selectable = false, // Boolean - Whether rows should have selection styling
+	showAllEntries = false, // Boolean - If true, disables pagination and shows all data
 }) => {
 	const [currentPage, setCurrentPage] = useState(0);
 	const [pageSize, setPageSize] = useState(20);
@@ -319,10 +316,10 @@ const GenericTable = ({
 								onClick={(e) => handleRowClick(e, item)}
 								onContextMenu={onRowRightClick ? (e) => onRowRightClick(item, e) : undefined}
 								style={{
-									cursor: onRowClick || onRowRightClick ? 'pointer' : 'default'
+									cursor: onRowClick || onRowRightClick ? "pointer" : "default",
 								}}
 							>
-							{tableColumns.map((column, columnIndex) => (
+								{tableColumns.map((column, columnIndex) => (
 									<td
 										key={column.key}
 										className="align-middle"
