@@ -31,7 +31,7 @@
 }
 
 .modal-body {
-    padding: 2rem;
+    padding: 1.5rem;
     background: linear-gradient(145deg, #fafbfc 0%, #f8f9fa 100%);
 }
 
@@ -154,4 +154,87 @@
 /* Hide additional backdrops from nested modals */
 .modal-backdrop + .modal-backdrop {
     display: none;
+}
+
+/* Enhanced modal size transition animations */
+.modal-dialog {
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Smooth modal body transitions with height animation */
+.modal-body {
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow: hidden;
+}
+
+/* Content container for smooth height transitions */
+.modal-content-container {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Visible content */
+.modal-content-visible {
+    transition: opacity 0.2s ease-in-out;
+}
+
+.modal-content-visible.transitioning {
+    opacity: 0.7;
+}
+
+/* Hidden content for height measurement - positioned off-screen but with same width */
+.modal-content-hidden {
+    position: absolute;
+    top: -9999px;
+    left: 0;
+    right: 0;
+    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
+}
+
+/* Ensure modal content animates smoothly */
+.modal-content {
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Button container animations */
+.modal-buttons-container {
+    display: flex;
+    gap: 0.75rem;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Footer button animations */
+.modal-footer .btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.modal-footer .d-grid {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Loading state for smooth transitions */
+.modal-transitioning {
+    pointer-events: none;
+}
+
+/* Ensure forms and inputs render at full width for accurate measurement */
+.form-control {
+    width: 100% !important;
+}
+
+.form-select {
+    width: 100% !important;
+}
+
+/* Ensure Bootstrap columns maintain consistent spacing */
+.row {
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+}
+
+.row > * {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
 }

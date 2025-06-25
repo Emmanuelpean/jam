@@ -5,12 +5,12 @@ import "./GenericModal.css";
 import { renderFieldValue } from "../rendering/Renders";
 import { renderInputField } from "../rendering/WidgetRenders";
 import { api } from "../../services/api";
-import { viewFields } from "../rendering/ViewRenders";
+import { viewFields as viewFieldsLib } from "../rendering/ViewRenders";
 
 const DEFAULT_ICONS = {
-	form: "bi bi-pencil",
-	view: "bi bi-eye",
+	formview: "bi bi-eye",
 	confirmation: "bi bi-exclamation-triangle",
+	alert: "bi bi-info-circle",
 	custom: "",
 };
 
@@ -22,83 +22,183 @@ const DEFAULT_ALERT_ICONS = {
 };
 
 const GenericModal = ({
-	// Basic modal props
-	show, // Boolean - Controls modal visibility
-	onHide, // Function - Called when modal should be closed
-	title, // String - Modal title text
-	size = "lg", // String - Modal size: "sm", "md", "lg", "xl"
-	centered = true, // Boolean - Whether to center modal vertically
+						  // Basic modal props
+						  show, // Boolean - Controls modal visibility
+						  onHide, // Function - Called when modal should be closed
+						  title, // String - Modal title text
+						  size = "lg", // String - Modal size: "sm", "md", "lg", "xl"
+						  centered = true, // Boolean - Whether to center modal vertically
 
-	// Modal mode
-	mode = "form", // String - Modal type: 'form', 'view', 'alert', 'confirmation', 'custom'
-	fields = [], // Array - Field definitions or field groups for form/view mode
+						  // Modal mode
+						  mode = "formview", // String - Modal type: 'formview', 'alert', 'confirmation', 'custom'
+						  submode = "view", // String - Submode for formview: 'view', 'edit', 'add'
+						  fields = {}, // Field definitions or field groups (or object with form/view keys for formview mode)
 
-	// Form mode props
-	initialData = {}, // Object - Initial form data
-	endpoint, // String - API endpoint for form submission
-	onSuccess, // Function - Called on successful form submission
-	validationRules = {}, // Object - Custom validation rules for fields
-	customValidation = null, // Function - Custom validation function
-	transformFormData = null, // Function - Transform form data before submission
-	isEdit = false, // Boolean - Whether form is in edit mode
-	customFieldComponents = {},
-	customSubmitHandler = null,
-	onFormDataChange = null, // Function - Called when form data changes
+						  // FormView mode props
+						  data = null, // Object - Data to display/edit
+						  endpoint, // String - API endpoint for form submission
+						  onSuccess, // Function - Called on successful form submission
+						  validationRules = {}, // Object - Custom validation rules for fields
+						  customValidation = null, // Function - Custom validation function
+						  transformFormData = null, // Function - Transform form data before submission
+						  customFieldComponents = {},
+						  customSubmitHandler = null,
+						  onFormDataChange = null, // Function - Called when form data changes
+						  showSystemFields = true, // Boolean - Whether to show created/modified dates
+						  onDelete = null, // Function - Called when delete is requested
 
-	// View mode props
-	data = null, // Object - Data to display in view mode
-	showSystemFields = true, // Boolean - Whether to show created/modified dates
+						  // Alert mode props
+						  alertType = "info", // String - Alert type: 'info', 'success', 'warning', 'error'
+						  alertMessage, // String|React.Node - Message to display in alert mode
+						  alertIcon = null, // String - Custom icon class for alert
+						  confirmText = "OK", // String - Text for confirm button
+						  cancelText = "Cancel", // String - Text for cancel button
+						  showCancel = false, // Boolean - Whether to show cancel button in alert mode
 
-	// Alert mode props
-	alertType = "info", // String - Alert type: 'info', 'success', 'warning', 'error'
-	alertMessage, // String|React.Node - Message to display in alert mode
-	alertIcon = null, // String - Custom icon class for alert
-	confirmText = "OK", // String - Text for confirm button
-	cancelText = "Cancel", // String - Text for cancel button
-	showCancel = false, // Boolean - Whether to show cancel button in alert mode
+						  // Confirmation mode props
+						  confirmationMessage = "Are you sure you want to proceed?", // String - Message for confirmation dialog
+						  onConfirm = null, // Function - Called when user confirms action
+						  confirmVariant = "danger", // String - Bootstrap variant for confirm button
 
-	// Confirmation mode props
-	confirmationMessage = "Are you sure you want to proceed?", // String - Message for confirmation dialog
-	onConfirm = null, // Function - Called when user confirms action
-	confirmVariant = "danger", // String - Bootstrap variant for confirm button
+						  // Custom mode props
+						  customContent = null, // React.Node - Custom content for modal body
 
-	// Custom mode props
-	customContent = null, // React.Node - Custom content for modal body
-
-	// Advanced customization
-	headerClassName = "", // String - Additional CSS classes for header
-	bodyClassName = "", // String - Additional CSS classes for body
-}) => {
+						  // Advanced customization
+						  headerClassName = "", // String - Additional CSS classes for header
+						  bodyClassName = "", // String - Additional CSS classes for body
+					  }) => {
 	const { token } = useAuth();
-	const [formData, setFormData] = useState(initialData);
+	const [formData, setFormData] = useState(data || {});
 	const [submitting, setSubmitting] = useState(false);
 	const [errors, setErrors] = useState({});
+	const [isEditing, setIsEditing] = useState(false); // State for formview mode
+	const [isTransitioning, setIsTransitioning] = useState(false); // Animation state
+	const [contentHeight, setContentHeight] = useState("auto"); // Height for smooth transitions
 	const previousShow = useRef(show);
+	const modalBodyRef = useRef(null);
+	const viewContentRef = useRef(null);
+	const formContentRef = useRef(null);
 
-	// Reset form data only when modal transitions from closed to open
+	// Reset form data and editing state when modal opens
 	useEffect(() => {
-		if (show && !previousShow.current && mode === "form") {
-			setFormData({ ...initialData });
-			setErrors({});
+		if (show && !previousShow.current) {
+			if (mode === "formview") {
+				// Handle different submodes
+				if (submode === "add") {
+					setFormData({});
+					setIsEditing(true);
+				} else if (submode === "edit") {
+					setFormData({ ...data });
+					setIsEditing(true);
+				} else {
+					// Default view submode
+					setFormData({ ...data });
+					setIsEditing(false);
+				}
+				setErrors({});
+				setIsTransitioning(false);
+				setContentHeight("auto");
+			}
 		}
 		previousShow.current = show;
-	}, [show, initialData, mode]);
+	}, [show, data, mode, submode]);
 
 	// Notify parent component when form data changes
 	useEffect(() => {
-		if (onFormDataChange && mode === "form") {
+		if (onFormDataChange && mode === "formview" && isEditing) {
 			onFormDataChange(formData);
 		}
-	}, [formData, onFormDataChange, mode]);
+	}, [formData, onFormDataChange, mode, isEditing]);
 
 	// Handle modal hide
 	const handleHide = () => {
-		if (mode === "form") {
-			setFormData({ ...initialData });
+		if (mode === "formview") {
+			if (submode === "add") {
+				setFormData({});
+			} else {
+				setFormData({ ...data });
+			}
 			setErrors({});
 			setSubmitting(false);
+			setIsEditing(submode === "add" || submode === "edit");
+			setIsTransitioning(false);
+			setContentHeight("auto");
 		}
 		onHide();
+	};
+
+	// Measure content height from the hidden content
+	const measureContentHeight = (targetMode) => {
+		const targetRef = targetMode === "form" ? formContentRef : viewContentRef;
+		if (targetRef.current) {
+			return targetRef.current.scrollHeight;
+		}
+		return "auto";
+	};
+
+	// Handle edit button click (for formview mode) with smooth height animation
+	const handleEdit = () => {
+		if (isTransitioning) return;
+
+		setIsTransitioning(true);
+
+		// Get current and target heights
+		const currentHeight = modalBodyRef.current?.scrollHeight || "auto";
+		const targetHeight = measureContentHeight("form");
+
+		// Set current height to prevent jumping
+		setContentHeight(currentHeight + "px");
+
+		// Small delay to allow height to be set
+		setTimeout(() => {
+			// Switch to edit mode
+			setIsEditing(true);
+			setFormData({ ...data });
+
+			// Animate to new height
+			setTimeout(() => {
+				setContentHeight(targetHeight + "px");
+
+				// Complete transition after animation
+				setTimeout(() => {
+					setIsTransitioning(false);
+					setContentHeight("auto");
+				}, 300);
+			}, 0);
+		}, 0);
+	};
+
+	// Handle cancel edit (for formview mode) with smooth height animation
+	const handleCancelEdit = () => {
+		if (isTransitioning) return;
+
+		setIsTransitioning(true);
+
+		// Get current and target heights
+		const currentHeight = modalBodyRef.current?.scrollHeight || "auto";
+		const targetHeight = measureContentHeight("view");
+
+		// Set current height to prevent jumping
+		setContentHeight(currentHeight + "px");
+
+		// Small delay to allow height to be set
+		setTimeout(() => {
+			// Switch to view mode
+			setIsEditing(false);
+			setFormData({ ...data });
+			setErrors({});
+
+			// Animate to new height
+			setTimeout(() => {
+				setContentHeight(targetHeight + "px");
+
+				// Complete transition after animation
+				setTimeout(() => {
+					setIsTransitioning(false);
+					setContentHeight("auto");
+				}, 300);
+			}, 0);
+		}, 0);
 	};
 
 	// Form handling
@@ -150,9 +250,24 @@ const GenericModal = ({
 		return allFields;
 	};
 
+	// Get current fields based on editing state
+	const getCurrentFields = () => {
+		if (mode === "formview") {
+			if (isEditing) {
+				return fields.form || fields;
+			} else {
+				return fields.view || fields;
+			}
+		}
+		return fields;
+	};
+
 	// Shared field group rendering function
 	const renderFieldGroup = (item, index, isFormMode = true) => {
-		// Type 1: Array of fields (render as row)
+		// Type 1: Array of fields or single field
+		if (item.name || item.key) {
+			item = [item];
+		}
 		if (Array.isArray(item)) {
 			// Calculate column class based on number of fields
 			const getColumnClass = (fieldCount) => {
@@ -173,7 +288,7 @@ const GenericModal = ({
 			const columnClass = getColumnClass(item.length);
 
 			return (
-				<div key={index} className="row mb-3">
+				<div key={index} className="row mb-3" style={{ "padding-right": "0.2rem", "padding-left": "0.2rem" }}>
 					{item.map((field) => (
 						<div key={field.name || field.key} className={field.columnClass || columnClass}>
 							{isFormMode ? (
@@ -194,48 +309,15 @@ const GenericModal = ({
 									)}
 								</Form.Group>
 							) : (
-								<>
+								<div className="view-field">
 									<h6 className="mb-2 fw-bold">{field.label}</h6>
 									<div className="mb-3">{renderFieldValue(field, data)}</div>
-								</>
+								</div>
 							)}
 						</div>
 					))}
 				</div>
 			);
-		}
-
-		// Type 2: Single field (has name/key property)
-		if (item.name || item.key) {
-			if (isFormMode) {
-				return (
-					<Form.Group key={item.name || item.key} className="row mb-3">
-						{item.type !== "drag-drop" && (
-							<Form.Label>
-								{item.label}
-								{item.required && <span className="text-danger">*</span>}
-							</Form.Label>
-						)}
-						{renderInputField(
-							item,
-							formData,
-							handleChange,
-							errors,
-							handleSelectChange,
-							customFieldComponents,
-						)}
-					</Form.Group>
-				);
-			} else {
-				return (
-					<div key={item.key || item.name} className="row mb-3">
-						<div>
-							<h6 className="mb-2 fw-bold">{item.label}</h6>
-							<div className="mb-3">{renderFieldValue(item, data)}</div>
-						</div>
-					</div>
-				);
-			}
 		}
 
 		// Type 3: Custom group or section (for view mode only currently)
@@ -250,8 +332,10 @@ const GenericModal = ({
 									key={field.key || field.name}
 									className={field.type === "textarea" ? "col-12" : "col-md-6"}
 								>
-									<h6 className="mb-2 fw-bold">{field.label}</h6>
-									<div className="mb-3">{renderFieldValue(field, data)}</div>
+									<div className="view-field">
+										<h6 className="mb-2 fw-bold">{field.label}</h6>
+										<div className="mb-3">{renderFieldValue(field, data)}</div>
+									</div>
 								</div>
 							))}
 						</div>
@@ -310,10 +394,66 @@ const GenericModal = ({
 		return null;
 	};
 
+	// Render both view and form content for formview mode
+	const renderFormViewContent = () => {
+		const viewF = fields.view || fields;
+		const formF = fields.form || fields;
+
+		return (
+			<>
+				{/* Visible content */}
+				<div className={`modal-content-visible ${isTransitioning ? "transitioning" : ""}`}>
+					{isEditing ? (
+						<div>
+							{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
+							<div>{formF.map((item, index) => renderFieldGroup(item, index, true))}</div>
+							{customContent && <div className="mt-4">{customContent}</div>}
+						</div>
+					) : (
+						<div>
+							<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
+							{customContent && <div className="mt-4">{customContent}</div>}
+							{showSystemFields && (
+								<div className="mt-3 pt-3 border-top">
+									{renderFieldGroup(
+										[viewFieldsLib.createdAt(), viewFieldsLib.modifiedAt()],
+										"system-fields",
+										false,
+									)}
+								</div>
+							)}
+						</div>
+					)}
+				</div>
+
+				{/* Hidden content for measurement */}
+				<div ref={viewContentRef} className="modal-content-hidden">
+					<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
+					{customContent && <div className="mt-4">{customContent}</div>}
+					{showSystemFields && (
+						<div className="mt-3 pt-3 border-top">
+							{renderFieldGroup(
+								[viewFieldsLib.createdAt(), viewFieldsLib.modifiedAt()],
+								"system-fields",
+								false,
+							)}
+						</div>
+					)}
+				</div>
+				<div ref={formContentRef} className="modal-content-hidden">
+					{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
+					<div>{formF.map((item, index) => renderFieldGroup(item, index, true))}</div>
+					{customContent && <div className="mt-4">{customContent}</div>}
+				</div>
+			</>
+		);
+	};
+
 	// Form validation
 	const validateForm = () => {
 		const newErrors = {};
-		const allFields = extractAllFields(fields);
+		const currentFields = getCurrentFields();
+		const allFields = extractAllFields(currentFields);
 
 		allFields.forEach((field) => {
 			if (field.required && !formData[field.name]) {
@@ -351,7 +491,8 @@ const GenericModal = ({
 			return;
 		}
 
-		if (mode !== "form") return;
+		if (mode === "formview" && !isEditing) return;
+		if (mode !== "formview") return;
 
 		const validationErrors = validateForm();
 		if (Object.keys(validationErrors).length > 0) {
@@ -366,41 +507,58 @@ const GenericModal = ({
 			// If custom submit handler is provided, use it
 			if (customSubmitHandler) {
 				await customSubmitHandler(e.target, async (processedData) => {
-					// This callback will be called by the custom handler with processed data
 					const dataToSubmit = transformFormData ? transformFormData(processedData) : processedData;
 
 					let result;
-					if (isEdit) {
-						result = await api.put(`${endpoint}/${initialData.id}`, dataToSubmit, token);
-					} else {
+					if (submode === "add") {
 						result = await api.post(`${endpoint}/`, dataToSubmit, token);
+					} else {
+						const itemId = data?.id;
+						result = await api.put(`${endpoint}/${itemId}`, dataToSubmit, token);
 					}
 
 					if (onSuccess) onSuccess(result);
-					handleHide();
+
+					// Handle different submodes after success
+					if (submode === "add" || submode === "edit") {
+						handleHide();
+					} else {
+						// Update data and return to view mode with smooth animation
+						Object.assign(data, result);
+						await handleCancelEdit();
+					}
 				});
 			} else {
-				// Default submission logic for forms without custom handling
+				// Default submission logic
 				const dataToSubmit = transformFormData ? transformFormData(formData) : formData;
 
 				let result;
-				if (isEdit) {
-					result = await api.put(`${endpoint}/${initialData.id}`, dataToSubmit, token);
-				} else {
+				if (submode === "add") {
 					result = await api.post(`${endpoint}/`, dataToSubmit, token);
+				} else {
+					const itemId = data?.id;
+					result = await api.put(`${endpoint}/${itemId}`, dataToSubmit, token);
 				}
 
 				if (onSuccess) onSuccess(result);
-				handleHide();
+
+				// Handle different submodes after success
+				if (submode === "add" || submode === "edit") {
+					handleHide();
+				} else {
+					// Update data and return to view mode with smooth animation
+					Object.assign(data, result);
+					await handleCancelEdit();
+				}
 			}
 		} catch (err) {
-			console.error(`Error ${isEdit ? "updating" : "creating"} ${title.toLowerCase()}:`, err);
+			console.error(`Error ${submode === "add" ? "creating" : "updating"} ${title.toLowerCase()}:`, err);
 
 			// Use the error message from the API response if available
 			const errorMessage =
 				err.data?.detail ||
 				err.message ||
-				`Failed to ${isEdit ? "update" : "create"} ${title.toLowerCase()}. Please try again.`;
+				`Failed to ${submode === "add" ? "create" : "update"} ${title.toLowerCase()}. Please try again.`;
 
 			setErrors({
 				submit: errorMessage,
@@ -418,19 +576,27 @@ const GenericModal = ({
 			icon = alertIcon;
 		} else if (mode === "alert") {
 			icon = DEFAULT_ALERT_ICONS[alertType];
+		} else if (mode === "formview") {
+			if (submode === "add") {
+				icon = "bi bi-plus-circle";
+			} else if (submode === "edit" || isEditing) {
+				icon = "bi bi-pencil";
+			} else {
+				icon = "bi bi-eye";
+			}
 		} else {
 			icon = DEFAULT_ICONS[mode];
 		}
 
 		// Title
 		let text = title;
-		if (mode === "view") {
-			text = `${title} Details`;
-		} else if (mode === "form") {
-			if (isEdit) {
+		if (mode === "formview") {
+			if (submode === "add") {
+				text = `Add New ${title}`;
+			} else if (submode === "edit" || isEditing) {
 				text = `Edit ${title}`;
 			} else {
-				text = `Add New ${title}`;
+				text = `${title} Details`;
 			}
 		}
 
@@ -446,28 +612,16 @@ const GenericModal = ({
 
 	// Render modal body
 	const renderBody = () => {
-		if (mode === "form") {
+		if (mode === "formview") {
 			return (
-				<div>
-					{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
-					<div>{fields.map((item, index) => renderFieldGroup(item, index, true))}</div>
-					{customContent && <div className="mt-4">{customContent}</div>}
-				</div>
-			);
-		} else if (mode === "view") {
-			return (
-				<div>
-					<div>{fields.map((item, index) => renderFieldGroup(item, index, false))}</div>
-					<div className="mt-4">{customContent}</div>
-					{showSystemFields && (
-						<div className="mt-3 pt-3 border-top">
-							{renderFieldGroup(
-								[viewFields.createdAt(), viewFields.modifiedAt()],
-								"system-fields",
-								false,
-							)}
-						</div>
-					)}
+				<div
+					className="modal-content-container"
+					style={{
+						height: contentHeight,
+						transition: contentHeight === "auto" ? "none" : "height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
+					}}
+				>
+					{renderFormViewContent()}
 				</div>
 			);
 		} else if (mode === "alert") {
@@ -493,36 +647,59 @@ const GenericModal = ({
 
 	// Render modal footer
 	const renderFooter = () => {
-		if (mode === "form") {
-			return (
-				<Modal.Footer>
-					<div className={"modal-buttons-container"}>
-						<Button variant="secondary" onClick={handleHide}>
-							Cancel
-						</Button>
-						<Button variant="primary" type="submit" disabled={submitting}>
-							{submitting ? (
-								<>
-									<Spinner animation="border" size="sm" className="me-2" />
-									{isEdit ? "Updating..." : "Saving..."}
-								</>
-							) : (
-								(isEdit ? "Update" : "Save") + ` ${title}`
-							)}
-						</Button>
-					</div>
-				</Modal.Footer>
-			);
-		} else if (mode === "view") {
-			return (
-				<Modal.Footer>
-					<div className="w-100">
-						<Button variant="primary" onClick={handleHide} className="w-100">
-							Close
-						</Button>
-					</div>
-				</Modal.Footer>
-			);
+		if (mode === "formview") {
+			if (isEditing) {
+				// Edit mode footer - different behavior based on submode
+				return (
+					<Modal.Footer>
+						<div className="modal-buttons-container">
+							<Button
+								variant="secondary"
+								onClick={submode === "view" ? handleCancelEdit : handleHide}
+								disabled={isTransitioning}
+							>
+								{submode === "view" ? "Cancel" : "Close"}
+							</Button>
+							<Button
+								variant="primary"
+								type="submit"
+								disabled={submitting || isTransitioning}
+							>
+								{submitting ? (
+									<>
+										<Spinner animation="border" size="sm" className="me-2" />
+										{submode === "add" ? "Creating..." : "Updating..."}
+									</>
+								) : (
+									"Confirm"
+								)}
+							</Button>
+						</div>
+					</Modal.Footer>
+				);
+			} else {
+				// View mode footer - only shown for view submode
+				return (
+					<Modal.Footer>
+						<div className="modal-buttons-container">
+							<Button
+								variant="secondary"
+								onClick={handleHide}
+								disabled={isTransitioning}
+							>
+								Close
+							</Button>
+							<Button
+								variant="primary"
+								onClick={handleEdit}
+								disabled={isTransitioning}
+							>
+								Edit
+							</Button>
+						</div>
+					</Modal.Footer>
+				);
+			}
 		} else if (mode === "alert") {
 			return (
 				<Modal.Footer className={"modal-buttons-container"}>
@@ -561,14 +738,21 @@ const GenericModal = ({
 	const modalContent = (
 		<>
 			{renderHeader()}
-			{<Modal.Body className={bodyClassName}>{renderBody()}</Modal.Body>}
+			{
+				<Modal.Body
+					ref={modalBodyRef}
+					className={`${bodyClassName} ${isTransitioning ? "modal-transitioning" : ""}`}
+				>
+					{renderBody()}
+				</Modal.Body>
+			}
 			{renderFooter()}
 		</>
 	);
 
 	return (
 		<Modal show={show} onHide={handleHide} size={size} centered={centered} backdrop={true} keyboard={true}>
-			{mode === "form" ? <Form onSubmit={handleSubmit}>{modalContent}</Form> : modalContent}
+			{mode === "formview" && isEditing ? <Form onSubmit={handleSubmit}>{modalContent}</Form> : modalContent}
 		</Modal>
 	);
 };

@@ -1,7 +1,7 @@
 import React from "react";
 import GenericTableWithModals from "../components/tables/GenericTableWithModals";
 import PersonFormModal from "../components/modals/person/PersonFormModal";
-import PersonViewModal from "../components/modals/person/PersonViewModal";
+import PersonSwitchableModal from "../components/modals/person/PersonFormModal";
 import { useTableData } from "../components/tables/Table";
 import { columns } from "../components/rendering/ColumnRenders";
 
@@ -43,7 +43,7 @@ const PersonsPage = () => {
 			error={error}
 			emptyMessage="No persons found"
 			FormModal={PersonFormModal}
-			ViewModal={PersonViewModal}
+			ViewModal={PersonSwitchableModal}
 			endpoint="persons"
 			nameKey="name"
 			itemType="Person"

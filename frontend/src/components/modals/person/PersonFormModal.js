@@ -1,11 +1,21 @@
-import { apiHelpers, companiesApi } from "../../../services/api";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
 import CompanyFormModal from "../company/CompanyFormModal";
 import { formFields } from "../../rendering/FormRenders";
+import { viewFields } from "../../rendering/ViewRenders";
+import { apiHelpers, companiesApi } from "../../../services/api";
 
-const PersonFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false }) => {
+const PersonSwitchableModal = ({
+	show,
+	onHide,
+	person,
+	onSuccess,
+	onDelete,
+	endpoint = "persons",
+	submode = "view",
+	size = "lg",
+}) => {
 	const { token } = useAuth();
 	const [showCompanyModal, setShowCompanyModal] = useState(false);
 	const [companyOptions, setCompanyOptions] = useState([]);
@@ -35,13 +45,31 @@ const PersonFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEd
 		setShowCompanyModal(false);
 	};
 
-	const personFields = [
+	// Don't render if we're in view mode but have no person data
+	if (submode === "view" && !person) {
+		return null;
+	}
+
+	// Form fields for editing
+	const formFieldsArray = [
 		[formFields.firstName(), formFields.lastName()],
 		[formFields.company(companyOptions, () => setShowCompanyModal(true)), formFields.role()],
 		[formFields.email(), formFields.phone()],
 		[formFields.linkedinUrl()],
 	];
 
+	// View fields for display
+	const viewFieldsArray = [
+		[viewFields.personName(), viewFields.linkedinUrl()],
+		[viewFields.company(), viewFields.role()],
+		[viewFields.email(), viewFields.phone()],
+	];
+
+	// Combine them in a way GenericModal can use based on mode
+	const fields = {
+		form: formFieldsArray,
+		view: viewFieldsArray,
+	};
 
 	// Custom validation rules
 	const validationRules = {
@@ -82,16 +110,17 @@ const PersonFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEd
 			<GenericModal
 				show={show}
 				onHide={onHide}
-				mode="form"
+				mode="formview"
+				submode={submode}
 				title="Person"
 				size={size}
-				fields={personFields}
-				initialData={initialData}
-				endpoint="persons"
+				data={person || {}} // Provide empty object instead of null
+				fields={fields}
+				endpoint={endpoint}
 				onSuccess={onSuccess}
+				onDelete={onDelete}
 				validationRules={validationRules}
 				transformFormData={transformFormData}
-				isEdit={isEdit}
 			/>
 
 			{/* Company Add Modal */}
@@ -105,4 +134,4 @@ const PersonFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEd
 	);
 };
 
-export default PersonFormModal;
+export default PersonSwitchableModal;
