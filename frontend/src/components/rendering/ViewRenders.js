@@ -144,6 +144,12 @@ export const viewFields = {
 		...overrides,
 	}),
 
+	role: (overrides = {}) => ({
+		key: "role",
+		label: "Role",
+		...overrides,
+	}),
+
 	// ------------------------------------------------------ JOBS -----------------------------------------------------
 
 	salaryRange: (overrides = {}) => ({

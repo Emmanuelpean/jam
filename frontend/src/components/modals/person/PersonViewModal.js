@@ -7,9 +7,9 @@ const PersonViewModal = ({ person, show, onHide, onEdit, size }) => {
 
 	// Define the fields to display in the view modal
 	const fields = [
-		[viewFields.personName(), viewFields.company()],
+		[viewFields.personName(), viewFields.linkedinUrl()],
+		[viewFields.company(), viewFields.role()],
 		[viewFields.email(), viewFields.phone()],
-		viewFields.linkedinUrl(),
 	];
 
 	return (

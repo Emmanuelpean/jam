@@ -139,6 +139,14 @@ export const formFields = {
 		...overrides,
 	}),
 
+	role: (overrides = {}) => ({
+		name: "role",
+		label: "Role",
+		type: "text",
+		required: false,
+		...overrides,
+	}),
+
 	// ------------------------------------------------- LOCATION FIELDS -----------------------------------------------
 
 	city: (overrides = {}) => ({

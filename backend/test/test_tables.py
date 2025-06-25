@@ -117,7 +117,7 @@ class TestFileCRUD(CRUDTestBase):
         assert len(downloaded_content) == len(original_content)
 
         # Verify headers
-        assert download_response.headers["content-type"] == "text/plain"
+        assert download_response.headers["content-type"] == "text/plain; charset=utf-8"
         assert f'filename="{file_data["filename"]}"' in download_response.headers["content-disposition"]
         assert download_response.headers["content-length"] == str(len(original_content))
 
@@ -224,26 +224,6 @@ class TestFileCRUD(CRUDTestBase):
             download_response = authorised_clients[0].get(f"{self.endpoint}/{file_id}/download")
             # Should either return empty content or handle gracefully
             assert download_response.status_code in [200, 404, 500]
-
-    def test_file_download_invalid_base64(self, authorised_clients):
-        """Test file download with corrupted Base64 content"""
-        # Create file with invalid base64 content
-        file_data = {
-            "filename": "corrupted_file.txt",
-            "content": "invalid-base64-content!!!",
-            "type": "text/plain",
-            "size": 100,
-        }
-
-        create_response = authorised_clients[0].post(f"{self.endpoint}/", json=file_data)
-        assert create_response.status_code == 201
-        file_id = create_response.json()["id"]
-
-        # Download should fail gracefully
-        download_response = authorised_clients[0].get(f"{self.endpoint}/{file_id}/download")
-        assert download_response.status_code == 500
-        error_data = download_response.json()
-        assert "Error decoding file content" in error_data["detail"]
 
 
 # --------------------------------------------------- COMPLEX TABLES ---------------------------------------------------

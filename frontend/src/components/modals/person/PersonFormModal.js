@@ -37,7 +37,7 @@ const PersonFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEd
 
 	const personFields = [
 		[formFields.firstName(), formFields.lastName()],
-		formFields.company(companyOptions, () => setShowCompanyModal(true)),
+		[formFields.company(companyOptions, () => setShowCompanyModal(true)), formFields.role()],
 		[formFields.email(), formFields.phone()],
 		[formFields.linkedinUrl()],
 	];

@@ -146,20 +146,6 @@ class File(CommonBase, Base):
     type = Column(String, nullable=False)
     size = Column(Integer, nullable=False)
 
-    # Add these back-references
-    # job_cv = relationship(
-    #     "JobApplication",
-    #     foreign_keys="JobApplication.cv_id",
-    #     back_populates="cv",
-    #     lazy="noload",
-    # )
-    # job_cover_letter = relationship(
-    #     "JobApplication",
-    #     foreign_keys="JobApplication.cover_letter_id",
-    #     back_populates="cover_letter",
-    #     lazy="noload",
-    # )
-
 
 class Location(CommonBase, Base):
     """Represents geographical locations.

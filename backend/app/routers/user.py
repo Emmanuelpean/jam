@@ -3,14 +3,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app import database, schemas
-from app import utils, models, oauth2
+from app import utils, models, oauth2, database, schemas, config
 
 user_router = APIRouter(prefix="/users", tags=["users"])
 
 
-ALPHA_WHITELIST = ["emmanuel.pean@gmail.com",
-                   "jessicaaggood@live.co.uk"]
+ALPHA_WHITELIST = [
+    "emmanuel.pean@gmail.com",
+    "jessicaaggood@live.co.uk",
+]
 
 
 def is_email_whitelisted(email: str) -> bool:
@@ -32,10 +33,10 @@ def create_user(
     if user.email in emails:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
-    if not is_email_whitelisted(user.email):
+    if config.Settings.signup.lower() == "restricted" and not is_email_whitelisted(user.email):
         raise HTTPException(
-            status_code=403,
-            detail="Email not authorized for alpha testing"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email not authorized for alpha testing",
         )
 
     # Hash the password and create the user
