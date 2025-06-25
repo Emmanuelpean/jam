@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { apiHelpers, companiesApi, keywordsApi, locationsApi, personsApi } from "../../services/api";
 import { fetchCountries } from "../../utils/CountryUtils";
 
 // Hook for country loading that can be used by components
@@ -26,6 +28,88 @@ export const useCountries = () => {
 	}, []);
 
 	return { countries, loading, error };
+};
+
+// Hook for fetching form options data
+export const useFormOptions = () => {
+	const { token } = useAuth();
+	const [companies, setCompanies] = useState([]);
+	const [locations, setLocations] = useState([]);
+	const [keywords, setKeywords] = useState([]);
+	const [persons, setPersons] = useState([]);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState(null);
+
+	useEffect(() => {
+		const fetchOptions = async () => {
+			if (!token) return;
+
+			setLoading(true);
+			setError(null);
+
+			try {
+				const [companiesData, locationsData, keywordsData, personsData] = await Promise.all([
+					companiesApi.getAll(token),
+					locationsApi.getAll(token),
+					keywordsApi.getAll(token),
+					personsApi.getAll(token),
+				]);
+
+				setCompanies(apiHelpers.toSelectOptions(companiesData));
+				setLocations(apiHelpers.toSelectOptions(locationsData));
+				setKeywords(apiHelpers.toSelectOptions(keywordsData));
+				setPersons(apiHelpers.toSelectOptions(personsData));
+			} catch (err) {
+				console.error("Error fetching form options:", err);
+				setError(err);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchOptions();
+	}, [token]);
+
+	// Helper function to refresh a specific option type
+	const refreshOptions = async (type) => {
+		if (!token) return;
+
+		try {
+			let data;
+			switch (type) {
+				case "companies":
+					data = await companiesApi.getAll(token);
+					setCompanies(apiHelpers.toSelectOptions(data));
+					break;
+				case "locations":
+					data = await locationsApi.getAll(token);
+					setLocations(apiHelpers.toSelectOptions(data));
+					break;
+				case "keywords":
+					data = await keywordsApi.getAll(token);
+					setKeywords(apiHelpers.toSelectOptions(data));
+					break;
+				case "persons":
+					data = await personsApi.getAll(token);
+					setPersons(apiHelpers.toSelectOptions(data));
+					break;
+				default:
+					console.warn(`Unknown option type: ${type}`);
+			}
+		} catch (err) {
+			console.error(`Error refreshing ${type}:`, err);
+		}
+	};
+
+	return {
+		companies,
+		locations,
+		keywords,
+		persons,
+		loading,
+		error,
+		refreshOptions,
+	};
 };
 
 export const formFields = {

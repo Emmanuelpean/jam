@@ -1,10 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../../../contexts/AuthContext";
+import React from "react";
 import GenericModal from "../GenericModal";
-import CompanyFormModal from "../company/CompanyFormModal";
-import { formFields } from "../../rendering/FormRenders";
+import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
-import { apiHelpers, companiesApi } from "../../../services/api";
 
 export const PersonSwitchableModal = ({
 	show,
@@ -16,44 +13,18 @@ export const PersonSwitchableModal = ({
 	submode = "view",
 	size = "lg",
 }) => {
-	const { token } = useAuth();
-	const [showCompanyModal, setShowCompanyModal] = useState(false);
-	const [companyOptions, setCompanyOptions] = useState([]);
-
-	useEffect(() => {
-		const fetchCompanies = async () => {
-			if (!token || !show) return;
-
-			try {
-				const companiesData = await companiesApi.getAll(token);
-				setCompanyOptions(apiHelpers.toSelectOptions(companiesData));
-			} catch (error) {
-				console.error("Error fetching companies:", error);
-			}
-		};
-
-		fetchCompanies();
-	}, [token, show]);
-
-	// Handle successful company creation
-	const handleCompanyAddSuccess = (newCompany) => {
-		const newOption = {
-			value: newCompany.id,
-			label: newCompany.name,
-		};
-		setCompanyOptions((prev) => [...prev, newOption]);
-		setShowCompanyModal(false);
-	};
+	// Use the new hook to get form options data
+	const { companies } = useFormOptions();
 
 	// Don't render if we're in view mode but have no person data
-	if (submode === "view" && !person) {
+	if (submode === "view" && !person?.id) {
 		return null;
 	}
 
-	// Form fields for editing
+	// Form fields for editing - using the static formFields with companies data
 	const formFieldsArray = [
 		[formFields.firstName(), formFields.lastName()],
-		[formFields.company(companyOptions, () => setShowCompanyModal(true)), formFields.role()],
+		[formFields.company(companies), formFields.role()],
 		[formFields.email(), formFields.phone()],
 		[formFields.linkedinUrl()],
 	];
@@ -106,48 +77,33 @@ export const PersonSwitchableModal = ({
 	};
 
 	return (
-		<>
-			<GenericModal
-				show={show}
-				onHide={onHide}
-				mode="formview"
-				submode={submode}
-				title="Person"
-				size={size}
-				data={person || {}} // Provide empty object instead of null
-				fields={fields}
-				endpoint={endpoint}
-				onSuccess={onSuccess}
-				onDelete={onDelete}
-				validationRules={validationRules}
-				transformFormData={transformFormData}
-			/>
-
-			{/* Company Add Modal */}
-			<CompanyFormModal
-				show={showCompanyModal}
-				onHide={() => setShowCompanyModal(false)}
-				onSuccess={handleCompanyAddSuccess}
-				size="md"
-			/>
-		</>
+		<GenericModal
+			show={show}
+			onHide={onHide}
+			mode="formview"
+			submode={submode}
+			title="Person"
+			size={size}
+			data={person || {}}
+			fields={fields}
+			endpoint={endpoint}
+			onSuccess={onSuccess}
+			onDelete={onDelete}
+			validationRules={validationRules}
+			transformFormData={transformFormData}
+		/>
 	);
 };
 
-export const PersonFormModal = (props) => (
-	<PersonSwitchableModal
-		{...props}
-		submode={props.person ? "edit" : "add"}
-	/>
-);
+export const PersonFormModal = (props) => {
+	// Determine the submode based on whether we have person data with an ID
+	const submode = props.isEdit || props.person?.id ? "edit" : "add";
+
+	return <PersonSwitchableModal {...props} submode={submode} />;
+};
 
 // Wrapper for view modal
-export const PersonViewModal = (props) => (
-	<PersonSwitchableModal
-		{...props}
-		submode="view"
-	/>
-);
+export const PersonViewModal = (props) => <PersonSwitchableModal {...props} submode="view" />;
 
 // Add default export
 export default PersonFormModal;
