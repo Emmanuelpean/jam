@@ -1,8 +1,6 @@
 import React from "react";
-import GenericTableWithModals from "../components/tables/GenericTableWithModals";
-import KeywordFormModal from "../components/modals/keyword/KeywordFormModal";
-import KeywordViewModal from "../components/modals/keyword/KeywordViewModal";
-import { useTableData } from "../components/tables/Table";
+import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
+import { KeywordFormModal, KeywordViewModal } from "../components/modals/keyword/KeywordModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const KeywordsPage = () => {
@@ -20,11 +18,7 @@ const KeywordsPage = () => {
 		removeItem,
 	} = useTableData("keywords");
 
-	const tableColumns = [
-		columns.name(),
-		columns.description(),
-		columns.createdAt(),
-	];
+	const tableColumns = [columns.name(), columns.createdAt()];
 
 	return (
 		<GenericTableWithModals

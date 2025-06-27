@@ -4,7 +4,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
 import CompanyFormModal from "../company/CompanyModal";
 import LocationFormModal from "../location/LocationFormModal";
-import KeywordFormModal from "../keyword/KeywordFormModal";
+import { KeywordFormModal } from "../keyword/KeywordModal";
 import PersonFormModal from "../person/PersonModal";
 import JobApplicationFormModal from "../job_application/JobApplicationFormModal";
 import AlertModal from "../alert/AlertModal";
