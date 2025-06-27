@@ -1,8 +1,6 @@
-
 import React from "react";
 import GenericTableWithModals from "../components/tables/GenericTableWithModals";
-import AggregatorFormModal from "../components/modals/aggregator/AggregatorFormModal";
-import AggregatorViewModal from "../components/modals/aggregator/AggregatorViewModal";
+import { AggregatorFormModal, AggregatorViewModal } from "../components/modals/aggregator/AggregatorModal";
 import { useTableData } from "../components/tables/Table";
 import { columns } from "../components/rendering/ColumnRenders";
 
@@ -18,14 +16,10 @@ const AggregatorsPage = () => {
 		setSearchTerm,
 		addItem,
 		updateItem,
-		deleteItem,
+		removeItem,
 	} = useTableData("aggregators");
 
-	const tableColumns = [
-		columns.name(),
-		columns.url(),
-		columns.createdAt()
-	];
+	const tableColumns = [columns.name(), columns.url(), columns.createdAt()];
 
 	return (
 		<GenericTableWithModals
@@ -47,9 +41,8 @@ const AggregatorsPage = () => {
 			itemType="Aggregator"
 			addItem={addItem}
 			updateItem={updateItem}
-			deleteItem={deleteItem}
+			removeItem={removeItem}
 			setData={setAggregators}
-			selectable={true}
 		/>
 	);
 };

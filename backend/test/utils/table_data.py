@@ -103,45 +103,45 @@ LOCATIONS_DATA = [
     {
         "postcode": "10001",
         "city": "New York",
-        "country": "USA",
+        "country": "United States",
         "remote": False,
         "owner_id": 1,
     },
     {
         "postcode": "90210",
         "city": "Beverly Hills",
-        "country": "USA",
+        "country": "United States",
         "remote": False,
         "owner_id": 1,
     },
     {
         "postcode": "SW1A 1AA",
         "city": "London",
-        "country": "UK",
+        "country": "United Kingdom",
         "remote": False,
         "owner_id": 1,
     },
     {
         "city": "San Francisco",
-        "country": "USA",
-        "remote": True,
+        "country": "United States",
+        "remote": False,
         "owner_id": 1,
     },
     {
         "country": "Germany",
-        "remote": True,
+        "remote": False,
         "owner_id": 1,
     },
     {
         "postcode": "OX1 2JD",
         "city": "Oxford",
-        "country": "UK",
+        "country": "United Kingdom",
         "remote": False,
         "owner_id": 1,
     },
     {
         "country": "Canada",
-        "remote": True,
+        "remote": False,
         "owner_id": 1,
     },
     # New entries with different combinations
@@ -166,25 +166,25 @@ LOCATIONS_DATA = [
     },
     {
         "country": "Australia",  # Only country, remote
-        "remote": True,
+        "remote": False,
         "owner_id": 1,
     },
     {
         "postcode": "M5V 3A8",
         "city": "Toronto",
         "country": "Canada",
-        "remote": True,  # Hybrid - has location but remote friendly
+        "remote": False,  # Hybrid - has location but remote friendly
         "owner_id": 1,
     },
     {
         "city": "Amsterdam",
         "country": "Netherlands",
-        "remote": True,
+        "remote": False,
         "owner_id": 1,
     },
     {
         "country": "Brazil",
-        "remote": True,
+        "remote": False,
         "owner_id": 1,
     },
 ]

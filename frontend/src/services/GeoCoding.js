@@ -28,6 +28,7 @@ export const geocodeLocation = async (location) => {
         if (location.postcode?.trim()) queryParts.push(location.postcode.trim());
         if (location.city?.trim()) queryParts.push(location.city.trim());
         if (location.country?.trim()) queryParts.push(location.country.trim());
+		console.log(queryParts);
 
         if (queryParts.length === 0) {
             return null;

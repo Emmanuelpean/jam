@@ -22,51 +22,50 @@ const DEFAULT_ALERT_ICONS = {
 };
 
 const GenericModal = ({
-						  // Basic modal props
-						  show, // Boolean - Controls modal visibility
-						  onHide, // Function - Called when modal should be closed
-						  title, // String - Modal title text
-						  size = "lg", // String - Modal size: "sm", "md", "lg", "xl"
-						  centered = true, // Boolean - Whether to center modal vertically
+	// Basic modal props
+	show, // Boolean - Controls modal visibility
+	onHide, // Function - Called when modal should be closed
+	title, // String - Modal title text
+	size = "lg", // String - Modal size: "sm", "md", "lg", "xl"
+	centered = true, // Boolean - Whether to center modal vertically
 
-						  // Modal mode
-						  mode = "formview", // String - Modal type: 'formview', 'alert', 'confirmation', 'custom'
-						  submode = "view", // String - Submode for formview: 'view', 'edit', 'add'
-						  fields = {}, // Field definitions or field groups (or object with form/view keys for formview mode)
+	// Modal mode
+	mode = "formview", // String - Modal type: 'formview', 'alert', 'confirmation', 'custom'
+	submode = "view", // String - Submode for formview: 'view', 'edit', 'add'
+	fields = {}, // Field definitions or field groups (or object with form/view keys for formview mode)
 
-						  // FormView mode props
-						  data = null, // Object - Data to display/edit
-						  endpoint, // String - API endpoint for form submission
-						  onSuccess, // Function - Called on successful form submission
-						  validationRules = {}, // Object - Custom validation rules for fields
-						  customValidation = null, // Function - Custom validation function
-						  transformFormData = null, // Function - Transform form data before submission
-						  customFieldComponents = {},
-						  customSubmitHandler = null,
-						  onFormDataChange = null, // Function - Called when form data changes
-						  showSystemFields = true, // Boolean - Whether to show created/modified dates
-						  onDelete = null, // Function - Called when delete is requested
+	// FormView mode props
+	data = null, // Object - Data to display/edit
+	endpoint, // String - API endpoint for form submission
+	onSuccess, // Function - Called on successful form submission
+	validationRules = {}, // Object - Custom validation rules for fields  // TODO to remove
+	customValidation = null, // Function - Custom validation function
+	transformFormData = null, // Function - Transform form data before submission
+	customFieldComponents = {},
+	customSubmitHandler = null,
+	onFormDataChange = null, // Function - Called when form data changes
+	showSystemFields = true, // Boolean - Whether to show created/modified dates
 
-						  // Alert mode props
-						  alertType = "info", // String - Alert type: 'info', 'success', 'warning', 'error'
-						  alertMessage, // String|React.Node - Message to display in alert mode
-						  alertIcon = null, // String - Custom icon class for alert
-						  confirmText = "OK", // String - Text for confirm button
-						  cancelText = "Cancel", // String - Text for cancel button
-						  showCancel = false, // Boolean - Whether to show cancel button in alert mode
+	// Alert mode props
+	alertType = "info", // String - Alert type: 'info', 'success', 'warning', 'error'
+	alertMessage, // String|React.Node - Message to display in alert mode
+	alertIcon = null, // String - Custom icon class for alert
+	confirmText = "OK", // String - Text for confirm button
+	cancelText = "Cancel", // String - Text for cancel button
+	showCancel = false, // Boolean - Whether to show cancel button in alert mode
 
-						  // Confirmation mode props
-						  confirmationMessage = "Are you sure you want to proceed?", // String - Message for confirmation dialog
-						  onConfirm = null, // Function - Called when user confirms action
-						  confirmVariant = "danger", // String - Bootstrap variant for confirm button
+	// Confirmation mode props
+	confirmationMessage = "Are you sure you want to proceed?", // String - Message for confirmation dialog
+	onConfirm = null, // Function - Called when user confirms action
+	confirmVariant = "danger", // String - Bootstrap variant for confirm button
 
-						  // Custom mode props
-						  customContent = null, // React.Node - Custom content for modal body
+	// Custom mode props
+	customContent = null, // React.Node - Custom content for modal body
 
-						  // Advanced customization
-						  headerClassName = "", // String - Additional CSS classes for header
-						  bodyClassName = "", // String - Additional CSS classes for body
-					  }) => {
+	// Advanced customization
+	headerClassName = "", // String - Additional CSS classes for header
+	bodyClassName = "", // String - Additional CSS classes for body
+}) => {
 	const { token } = useAuth();
 	const [formData, setFormData] = useState(data || {});
 	const [submitting, setSubmitting] = useState(false);
@@ -407,7 +406,6 @@ const GenericModal = ({
 						<div>
 							{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
 							<div>{formF.map((item, index) => renderFieldGroup(item, index, true))}</div>
-							{customContent && <div className="mt-4">{customContent}</div>}
 						</div>
 					) : (
 						<div>
@@ -443,7 +441,6 @@ const GenericModal = ({
 				<div ref={formContentRef} className="modal-content-hidden">
 					{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
 					<div>{formF.map((item, index) => renderFieldGroup(item, index, true))}</div>
-					{customContent && <div className="mt-4">{customContent}</div>}
 				</div>
 			</>
 		);
@@ -467,7 +464,6 @@ const GenericModal = ({
 				}
 			}
 		});
-
 		if (customValidation) {
 			const customErrors = customValidation(formData);
 			Object.assign(newErrors, customErrors);
@@ -660,11 +656,7 @@ const GenericModal = ({
 							>
 								{submode === "view" ? "Cancel" : "Close"}
 							</Button>
-							<Button
-								variant="primary"
-								type="submit"
-								disabled={submitting || isTransitioning}
-							>
+							<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
 								{submitting ? (
 									<>
 										<Spinner animation="border" size="sm" className="me-2" />
@@ -682,18 +674,10 @@ const GenericModal = ({
 				return (
 					<Modal.Footer>
 						<div className="modal-buttons-container">
-							<Button
-								variant="secondary"
-								onClick={handleHide}
-								disabled={isTransitioning}
-							>
+							<Button variant="secondary" onClick={handleHide} disabled={isTransitioning}>
 								Close
 							</Button>
-							<Button
-								variant="primary"
-								onClick={handleEdit}
-								disabled={isTransitioning}
-							>
+							<Button variant="primary" onClick={handleEdit} disabled={isTransitioning}>
 								Edit
 							</Button>
 						</div>
