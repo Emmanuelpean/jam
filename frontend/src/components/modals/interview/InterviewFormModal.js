@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import GenericModal from "../GenericModal";
 import LocationFormModal from "../location/LocationFormModal";
-import PersonFormModal from "../person/PersonFormModal";
+import PersonFormModal from "../person/PersonModal";
 import AlertModal from "../alert/AlertModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import { formFields } from "../../rendering/FormRenders";

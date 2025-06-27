@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { apiHelpers, companiesApi, keywordsApi, locationsApi, personsApi } from "../../services/api";
 import { fetchCountries } from "../../utils/CountryUtils";
-import CompanyFormModal from "../modals/company/CompanyFormModal";
+import CompanyFormModal from "../modals/company/CompanyModal";
 
 // Hook for country loading that can be used by components
 export const useCountries = () => {

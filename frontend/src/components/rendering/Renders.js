@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import LocationViewModal from "../modals/location/LocationViewModal";
-import CompanyViewModal from "../modals/company/CompanyViewModal";
-import PersonViewModal from "../modals/person/PersonViewModal";
+import { CompanyViewModal } from "../modals/company/CompanyModal";
+import { PersonViewModal } from "../modals/person/PersonModal";
 import KeywordViewModal from "../modals/keyword/KeywordViewModal";
 import JobApplicationViewModal from "../modals/job_application/JobApplicationViewModal";
 import AggregatorViewModal from "../modals/aggregator/AggregatorViewModal";

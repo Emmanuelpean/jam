@@ -3,7 +3,7 @@ import GenericModal from "../GenericModal";
 import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
 
-export const PersonSwitchableModal = ({
+export const PersonModal = ({
 	show,
 	onHide,
 	person,
@@ -102,11 +102,11 @@ export const PersonSwitchableModal = ({
 export const PersonFormModal = (props) => {
 	// Determine the submode based on whether we have person data with an ID
 	const submode = props.isEdit || props.person?.id ? "edit" : "add";
-	return <PersonSwitchableModal {...props} submode={submode} />;
+	return <PersonModal {...props} submode={submode} />;
 };
 
 // Wrapper for view modal
-export const PersonViewModal = (props) => <PersonSwitchableModal {...props} submode="view" />;
+export const PersonViewModal = (props) => <PersonModal {...props} submode="view" />;
 
 // Add default export
 export default PersonFormModal;

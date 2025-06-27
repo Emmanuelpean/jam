@@ -1,8 +1,6 @@
 import React from "react";
-import GenericTableWithModals from "../components/tables/GenericTableWithModals";
-import CompanyFormModal from "../components/modals/company/CompanyFormModal";
-import CompanyViewModal from "../components/modals/company/CompanyViewModal";
-import { useTableData } from "../components/tables/Table";
+import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
+import { CompanyFormModal, CompanyViewModal } from "../components/modals/company/CompanyModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const CompaniesPage = () => {
@@ -49,7 +47,6 @@ const CompaniesPage = () => {
 			updateItem={updateItem}
 			removeItem={removeItem}
 			setData={setCompanies}
-			selectable={true}
 		/>
 	);
 };
