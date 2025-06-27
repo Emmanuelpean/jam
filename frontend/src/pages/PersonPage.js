@@ -21,6 +21,7 @@ const PersonsPage = () => {
 	const tableColumns = [
 		columns.personName(),
 		columns.company(),
+		columns.role(),
 		columns.email(),
 		columns.phone(),
 		columns.linkedinUrl(),

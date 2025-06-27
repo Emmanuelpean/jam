@@ -1,4 +1,5 @@
 import { renderFunctions } from "./Renders";
+import LocationMap from "../maps/LocationMap";
 
 export const viewFields = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
@@ -87,6 +88,33 @@ export const viewFields = {
 	country: (overrides = {}) => ({
 		key: "country",
 		label: "Country",
+		...overrides,
+	}),
+
+	locationMap: (overrides = {}) => ({
+		key: "location_map",
+		label: "📍 Location on Map",
+		type: "custom",
+		columnClass: "col-12",
+		render: (data) => {
+			if (data?.remote) {
+				return (
+					<div className="p-3 bg-light rounded">
+						<div className="text-center">
+							<div className="mb-2" style={{ fontSize: "2rem" }}>
+								🏠
+							</div>
+							<h6 className="text-muted">Remote Location</h6>
+							<p className="text-muted mb-0 small">
+								This location allows remote work and doesn't have a physical address.
+							</p>
+						</div>
+					</div>
+				);
+			}
+
+			return <LocationMap locations={data ? [data] : []} height={overrides.height || "300px"} />;
+		},
 		...overrides,
 	}),
 

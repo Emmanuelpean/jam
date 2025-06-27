@@ -38,10 +38,8 @@ const GenericModal = ({
 	data = null, // Object - Data to display/edit
 	endpoint, // String - API endpoint for form submission
 	onSuccess, // Function - Called on successful form submission
-	validationRules = {}, // Object - Custom validation rules for fields  // TODO to remove
-	customValidation = null, // Function - Custom validation function
+	validation = null,
 	transformFormData = null, // Function - Transform form data before submission
-	customFieldComponents = {},
 	customSubmitHandler = null,
 	onFormDataChange = null, // Function - Called when form data changes
 	showSystemFields = true, // Boolean - Whether to show created/modified dates
@@ -58,13 +56,6 @@ const GenericModal = ({
 	confirmationMessage = "Are you sure you want to proceed?", // String - Message for confirmation dialog
 	onConfirm = null, // Function - Called when user confirms action
 	confirmVariant = "danger", // String - Bootstrap variant for confirm button
-
-	// Custom mode props
-	customContent = null, // React.Node - Custom content for modal body
-
-	// Advanced customization
-	headerClassName = "", // String - Additional CSS classes for header
-	bodyClassName = "", // String - Additional CSS classes for body
 }) => {
 	const { token } = useAuth();
 	const [formData, setFormData] = useState(data || {});
@@ -287,7 +278,7 @@ const GenericModal = ({
 			const columnClass = getColumnClass(item.length);
 
 			return (
-				<div key={index} className="row mb-3" style={{ "padding-right": "0.2rem", "padding-left": "0.2rem" }}>
+				<div key={index} className="row mb-3" style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
 					{item.map((field) => (
 						<div key={field.name || field.key} className={field.columnClass || columnClass}>
 							{isFormMode ? (
@@ -298,14 +289,7 @@ const GenericModal = ({
 											{field.required && <span className="text-danger">*</span>}
 										</Form.Label>
 									)}
-									{renderInputField(
-										field,
-										formData,
-										handleChange,
-										errors,
-										handleSelectChange,
-										customFieldComponents,
-									)}
+									{renderInputField(field, formData, handleChange, errors, handleSelectChange)}
 								</Form.Group>
 							) : (
 								<div className="view-field">
@@ -318,78 +302,6 @@ const GenericModal = ({
 				</div>
 			);
 		}
-
-		// Type 3: Custom group or section (for view mode only currently)
-		if (!isFormMode) {
-			return (
-				<div key={index} className="mb-4">
-					{item.title && <h5 className="mb-3">{item.title}</h5>}
-					{item.fields && (
-						<div className="row">
-							{item.fields.map((field) => (
-								<div
-									key={field.key || field.name}
-									className={field.type === "textarea" ? "col-12" : "col-md-6"}
-								>
-									<div className="view-field">
-										<h6 className="mb-2 fw-bold">{field.label}</h6>
-										<div className="mb-3">{renderFieldValue(field, data)}</div>
-									</div>
-								</div>
-							))}
-						</div>
-					)}
-				</div>
-			);
-		}
-
-		// Type 3: For form mode - custom object or legacy object with fields
-		if (isFormMode && item.fields) {
-			// This maintains backward compatibility with existing form field groups
-			const getColumnClass = (fieldCount) => {
-				switch (fieldCount) {
-					case 1:
-						return "col-md-12";
-					case 2:
-						return "col-md-6";
-					case 3:
-						return "col-md-4";
-					case 4:
-						return "col-md-3";
-					default:
-						return "col-md-6";
-				}
-			};
-
-			const columnClass = getColumnClass(item.fields.length);
-			const stableKey = item.id || item.fields.map((field) => field.name).join("-");
-
-			return (
-				<div key={stableKey} className={`row ${item.className || ""}`}>
-					{item.fields.map((field) => (
-						<div key={field.name} className={field.columnClass || columnClass}>
-							<Form.Group className="mb-3">
-								{field.type !== "drag-drop" && (
-									<Form.Label>
-										{field.label}
-										{field.required && <span className="text-danger">*</span>}
-									</Form.Label>
-								)}
-								{renderInputField(
-									field,
-									formData,
-									handleChange,
-									errors,
-									handleSelectChange,
-									customFieldComponents,
-								)}
-							</Form.Group>
-						</div>
-					))}
-				</div>
-			);
-		}
-
 		return null;
 	};
 
@@ -410,7 +322,6 @@ const GenericModal = ({
 					) : (
 						<div>
 							<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
-							{customContent && <div className="mt-4">{customContent}</div>}
 							{showSystemFields && (
 								<div className="mt-3 pt-3 border-top">
 									{renderFieldGroup(
@@ -427,7 +338,6 @@ const GenericModal = ({
 				{/* Hidden content for measurement */}
 				<div ref={viewContentRef} className="modal-content-hidden">
 					<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
-					{customContent && <div className="mt-4">{customContent}</div>}
 					{showSystemFields && (
 						<div className="mt-3 pt-3 border-top">
 							{renderFieldGroup(
@@ -452,21 +362,29 @@ const GenericModal = ({
 		const currentFields = getCurrentFields();
 		const allFields = extractAllFields(currentFields);
 
+		// Required field validation
 		allFields.forEach((field) => {
 			if (field.required && !formData[field.name]) {
 				newErrors[field.name] = `${field.label} is required`;
 			}
-
-			if (validationRules[field.name]) {
-				const validation = validationRules[field.name](formData[field.name], formData);
-				if (!validation.isValid) {
-					newErrors[field.name] = validation.message;
-				}
-			}
 		});
-		if (customValidation) {
-			const customErrors = customValidation(formData);
-			Object.assign(newErrors, customErrors);
+
+		// Custom validation - now handles both field-specific and cross-field validation
+		if (validation) {
+			if (typeof validation === "function") {
+				// Function-based validation (like current customValidation)
+				const customErrors = validation(formData);
+				Object.assign(newErrors, customErrors);
+			} else if (typeof validation === "object") {
+				// Object-based validation (like current validationRules)
+				Object.keys(validation).forEach((fieldName) => {
+					const rule = validation[fieldName];
+					const result = rule(formData[fieldName], formData);
+					if (!result.isValid) {
+						newErrors[fieldName] = result.message;
+					}
+				});
+			}
 		}
 
 		return newErrors;
@@ -513,6 +431,7 @@ const GenericModal = ({
 						result = await api.put(`${endpoint}/${itemId}`, dataToSubmit, token);
 					}
 
+					// Call onSuccess immediately after successful API call (BEFORE hiding modal or changing view)
 					if (onSuccess) onSuccess(result);
 
 					// Handle different submodes after success
@@ -597,7 +516,7 @@ const GenericModal = ({
 		}
 
 		return (
-			<Modal.Header closeButton className={headerClassName}>
+			<Modal.Header closeButton>
 				<Modal.Title>
 					{icon && <i className={`${icon} me-2`} style={{ fontSize: "1.05em" }} />}
 					{text}
@@ -626,18 +545,14 @@ const GenericModal = ({
 					<div className="text-center py-3">
 						{typeof alertMessage === "string" ? <p className="mb-0">{alertMessage}</p> : alertMessage}
 					</div>
-					<div className="mt-4">{customContent}</div>
 				</div>
 			);
 		} else if (mode === "confirmation") {
 			return (
 				<div>
 					<p className="mb-0">{confirmationMessage}</p>
-					<div className="mt-4">{customContent}</div>
 				</div>
 			);
-		} else {
-			return customContent;
 		}
 	};
 
@@ -723,10 +638,7 @@ const GenericModal = ({
 		<>
 			{renderHeader()}
 			{
-				<Modal.Body
-					ref={modalBodyRef}
-					className={`${bodyClassName} ${isTransitioning ? "modal-transitioning" : ""}`}
-				>
+				<Modal.Body ref={modalBodyRef} className={`${isTransitioning ? "modal-transitioning" : ""}`}>
 					{renderBody()}
 				</Modal.Body>
 			}

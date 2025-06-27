@@ -30,36 +30,10 @@ export const LocationModal = ({
 
 	// View fields for display
 	let viewFieldsArray = [];
-	let customContent;
-
 	if (!location?.remote) {
-		viewFieldsArray = [[viewFields.city(), viewFields.postcode(), viewFields.country()]];
-		customContent = (
-			<>
-				<div className="mb-4">
-					<h6 className="mb-3">📍 Location on Map</h6>
-					<LocationMap locations={location ? [location] : []} height="300px" />
-				</div>
-			</>
-		);
-	} else {
-		customContent = (
-			<>
-				<div className="mb-4 p-3 bg-light rounded">
-					<div className="text-center">
-						<div className="mb-2" style={{ fontSize: "2rem" }}>
-							🏠
-						</div>
-						<h6 className="text-muted">Remote Location</h6>
-						<p className="text-muted mb-0 small">
-							This location allows remote work and doesn't have a physical address.
-						</p>
-					</div>
-				</div>
-			</>
-		);
+		viewFieldsArray = [[viewFields.city(), viewFields.postcode(), viewFields.country()],
+			viewFields.locationMap()];
 	}
-
 	const fields = {
 		form: formFieldsArray,
 		view: viewFieldsArray,
@@ -113,9 +87,8 @@ export const LocationModal = ({
 			endpoint={endpoint}
 			onSuccess={onSuccess}
 			onDelete={onDelete}
-			customValidation={customValidation}
+			validation={customValidation}
 			transformFormData={transformFormData}
-			customContent={customContent}
 		/>
 	);
 };

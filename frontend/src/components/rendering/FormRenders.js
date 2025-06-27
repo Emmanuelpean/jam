@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { apiHelpers, companiesApi, keywordsApi, locationsApi, personsApi } from "../../services/api";
 import { fetchCountries } from "../../utils/CountryUtils";
-import CompanyFormModal from "../modals/company/CompanyModal";
+import { CompanyFormModal } from "../modals/company/CompanyModal";
+import { LocationFormModal } from "../modals/location/LocationModal";
+import { KeywordFormModal } from "../modals/keyword/KeywordModal";
+import { PersonFormModal } from "../modals/person/PersonModal";
 
 // Hook for country loading that can be used by components
 export const useCountries = () => {
@@ -25,7 +28,7 @@ export const useCountries = () => {
 			}
 		};
 
-		loadCountries();
+		loadCountries().then(() => null);
 	}, []);
 
 	return { countries, loading, error };
@@ -43,6 +46,9 @@ export const useFormOptions = () => {
 
 	// Modal states
 	const [showCompanyModal, setShowCompanyModal] = useState(false);
+	const [showLocationModal, setShowLocationModal] = useState(false);
+	const [showKeywordModal, setShowKeywordModal] = useState(false);
+	const [showPersonModal, setShowPersonModal] = useState(false);
 
 	useEffect(() => {
 		const fetchOptions = async () => {
@@ -71,7 +77,7 @@ export const useFormOptions = () => {
 			}
 		};
 
-		fetchOptions();
+		fetchOptions().then(() => null);
 	}, [token]);
 
 	// Helper function to refresh a specific option type
@@ -109,7 +115,16 @@ export const useFormOptions = () => {
 	const openCompanyModal = () => setShowCompanyModal(true);
 	const closeCompanyModal = () => setShowCompanyModal(false);
 
-	// Handle successful company creation
+	const openLocationModal = () => setShowLocationModal(true);
+	const closeLocationModal = () => setShowLocationModal(false);
+
+	const openKeywordModal = () => setShowKeywordModal(true);
+	const closeKeywordModal = () => setShowKeywordModal(false);
+
+	const openPersonModal = () => setShowPersonModal(true);
+	const closePersonModal = () => setShowPersonModal(false);
+
+	// Handle successful item creation
 	const handleCompanyAddSuccess = (newCompany) => {
 		const newOption = {
 			value: newCompany.id,
@@ -119,13 +134,48 @@ export const useFormOptions = () => {
 		closeCompanyModal();
 	};
 
-	// Render company modal
+	const handleLocationAddSuccess = (newLocation) => {
+		const newOption = {
+			value: newLocation.id,
+			label: newLocation.name,
+		};
+		setLocations((prev) => [...prev, newOption]);
+		closeLocationModal();
+	};
+
+	const handleKeywordAddSuccess = (newKeyword) => {
+		const newOption = {
+			value: newKeyword.id,
+			label: newKeyword.name,
+		};
+		setKeywords((prev) => [...prev, newOption]);
+		closeKeywordModal();
+	};
+
+	const handlePersonAddSuccess = (newPerson) => {
+		const newOption = {
+			value: newPerson.id,
+			label: newPerson.name,
+		};
+		setPersons((prev) => [...prev, newOption]);
+		closePersonModal();
+	};
+
+	// Render modal functions
 	const renderCompanyModal = () => (
-		<CompanyFormModal
-			show={showCompanyModal}
-			onHide={closeCompanyModal}
-			onSuccess={handleCompanyAddSuccess}
-		/>
+		<CompanyFormModal show={showCompanyModal} onHide={closeCompanyModal} onSuccess={handleCompanyAddSuccess} />
+	);
+
+	const renderLocationModal = () => (
+		<LocationFormModal show={showLocationModal} onHide={closeLocationModal} onSuccess={handleLocationAddSuccess} />
+	);
+
+	const renderKeywordModal = () => (
+		<KeywordFormModal show={showKeywordModal} onHide={closeKeywordModal} onSuccess={handleKeywordAddSuccess} />
+	);
+
+	const renderPersonModal = () => (
+		<PersonFormModal show={showPersonModal} onHide={closePersonModal} onSuccess={handlePersonAddSuccess} />
 	);
 
 	return {
@@ -139,6 +189,15 @@ export const useFormOptions = () => {
 		// Company modal management
 		openCompanyModal,
 		renderCompanyModal,
+		// Location modal management
+		openLocationModal,
+		renderLocationModal,
+		// Keyword modal management
+		openKeywordModal,
+		renderKeywordModal,
+		// Person modal management
+		openPersonModal,
+		renderPersonModal,
 	};
 };
 

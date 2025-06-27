@@ -450,6 +450,10 @@ export const renderFieldValue = (field, item) => {
 		item = accessAttribute(item, field.accessKey);
 	}
 
+	if (field.type === "custom" && field.render) {
+		return field.render(item);
+	}
+
 	let rendered;
 	if (field.render) {
 		rendered = field.render(item);

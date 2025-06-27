@@ -1,4 +1,3 @@
-
 import { renderFunctions } from "./Renders";
 
 export const columns = {
@@ -180,6 +179,15 @@ export const columns = {
 		...overrides,
 	}),
 
+	role: (overrides = {}) => ({
+		key: "role",
+		label: "Role",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		...overrides,
+	}),
+
 	linkedinUrl: (overrides = {}) => ({
 		key: "linkedin_url",
 		label: "LinkedIn",
@@ -285,5 +293,5 @@ export const columns = {
 		sortField: "job.title",
 		render: renderFunctions.jobName,
 		...overrides,
-	})
+	}),
 };

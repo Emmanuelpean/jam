@@ -72,6 +72,7 @@ export const PersonModal = ({
 			last_name: data.last_name?.trim(),
 			email: data.email?.trim() || null,
 			phone: data.phone?.trim() || null,
+			role: data.role?.trim() || null,
 			linkedin_url: data.linkedin_url?.trim() || null,
 		};
 	};
@@ -90,7 +91,7 @@ export const PersonModal = ({
 				endpoint={endpoint}
 				onSuccess={onSuccess}
 				onDelete={onDelete}
-				validationRules={validationRules}
+				validation={validationRules}
 				transformFormData={transformFormData}
 			/>
 

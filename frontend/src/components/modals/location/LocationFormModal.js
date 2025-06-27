@@ -73,7 +73,7 @@ const LocationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, is
 			onSuccess={onSuccess}
 			initialData={transformInitialData(initialData)}
 			isEdit={isEdit}
-			customValidation={customValidation}
+			validation={customValidation}
 			transformFormData={transformFormData}
 			size={size}
 		/>

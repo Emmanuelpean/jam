@@ -34,19 +34,6 @@ export const CompanyModal = ({
 		view: viewFieldsArray,
 	};
 
-	// Custom validation rules
-	const validationRules = {
-		url: (value) => {
-			if (value && !/^https?:\/\/.+/.test(value)) {
-				return {
-					isValid: false,
-					message: "Please enter a valid URL (starting with http:// or https://)",
-				};
-			}
-			return { isValid: true };
-		},
-	};
-
 	// Transform form data before submission
 	const transformFormData = (data) => {
 		return {
@@ -70,7 +57,6 @@ export const CompanyModal = ({
 			endpoint={endpoint}
 			onSuccess={onSuccess}
 			onDelete={onDelete}
-			validationRules={validationRules}
 			transformFormData={transformFormData}
 		/>
 	);
