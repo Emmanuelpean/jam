@@ -561,29 +561,60 @@ const GenericModal = ({
 		if (mode === "formview") {
 			if (isEditing) {
 				// Edit mode footer - different behavior based on submode
-				return (
-					<Modal.Footer>
-						<div className="modal-buttons-container">
-							<Button
-								variant="secondary"
-								onClick={submode === "view" ? handleCancelEdit : handleHide}
-								disabled={isTransitioning}
-							>
-								{submode === "view" ? "Cancel" : "Close"}
-							</Button>
-							<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
-								{submitting ? (
-									<>
-										<Spinner animation="border" size="sm" className="me-2" />
-										{submode === "add" ? "Creating..." : "Updating..."}
-									</>
-								) : (
-									"Confirm"
-								)}
-							</Button>
-						</div>
-					</Modal.Footer>
-				);
+				if (submode === "view") {
+					// View -> Edit mode: Show Delete & Confirm on top row, Cancel below
+					return (
+						<Modal.Footer>
+							<div className="d-flex flex-column w-100 gap-2">
+								{/* First row: Delete and Confirm */}
+								<div className="modal-buttons-container">
+									<Button variant="danger" disabled={isTransitioning}>
+										<i className="bi bi-trash me-2"></i>
+										Delete
+									</Button>
+
+									<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
+										{submitting ? (
+											<>
+												<Spinner animation="border" size="sm" className="me-2" />
+												Updating...
+											</>
+										) : (
+											"Confirm"
+										)}
+									</Button>
+								</div>
+								{/* Second row: Cancel */}
+								<div className="modal-buttons-container">
+									<Button variant="secondary" onClick={handleCancelEdit} disabled={isTransitioning}>
+										Cancel
+									</Button>
+								</div>
+							</div>
+						</Modal.Footer>
+					);
+				} else {
+					// Add/Edit submode: Show normal layout
+					return (
+						<Modal.Footer>
+							<div className="modal-buttons-container">
+								<Button variant="secondary" onClick={handleHide} disabled={isTransitioning}>
+									Cancel
+								</Button>
+								<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
+									{submitting ? (
+										<>
+											<Spinner animation="border" size="sm" className="me-2" />
+											{submode === "add" ? "Creating..." : "Updating..."}
+										</>
+									) : (
+										"Confirm"
+									)}
+								</Button>
+							</div>
+						</Modal.Footer>
+					);
+				}
 			} else {
 				// View mode footer - only shown for view submode
 				return (
