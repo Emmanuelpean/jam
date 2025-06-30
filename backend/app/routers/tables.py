@@ -102,6 +102,11 @@ def generate_crud_router(
             if hasattr(table_model, param_name):
                 column = getattr(table_model, param_name)
 
+                # Handle null values - convert string "null" to actual None/NULL
+                if param_value.lower() == "null":
+                    query = query.filter(column.is_(None))
+                    continue
+
                 # Handle different data types
                 try:
                     # Try to convert to appropriate type based on column type

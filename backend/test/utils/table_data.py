@@ -104,87 +104,73 @@ LOCATIONS_DATA = [
         "postcode": "10001",
         "city": "New York",
         "country": "United States",
-        "remote": False,
         "owner_id": 1,
     },
     {
         "postcode": "90210",
         "city": "Beverly Hills",
         "country": "United States",
-        "remote": False,
         "owner_id": 1,
     },
     {
         "postcode": "SW1A 1AA",
         "city": "London",
         "country": "United Kingdom",
-        "remote": False,
         "owner_id": 1,
     },
     {
         "city": "San Francisco",
         "country": "United States",
-        "remote": False,
         "owner_id": 1,
     },
     {
         "country": "Germany",
-        "remote": False,
         "owner_id": 1,
     },
     {
         "postcode": "OX1 2JD",
         "city": "Oxford",
         "country": "United Kingdom",
-        "remote": False,
         "owner_id": 1,
     },
     {
         "country": "Canada",
-        "remote": False,
         "owner_id": 1,
     },
-    # New entries with different combinations
+
     {
         "postcode": "75001",
         "city": "Paris",
         "country": "France",
-        "remote": False,
         "owner_id": 1,
     },
     {
         "postcode": "10115",
-        "country": "Germany",  # No city provided
-        "remote": False,
+        "country": "Germany",
         "owner_id": 1,
     },
     {
         "city": "Tokyo",
-        "country": "Japan",  # No postcode
-        "remote": False,
+        "country": "Japan",
         "owner_id": 1,
     },
     {
-        "country": "Australia",  # Only country, remote
-        "remote": False,
+        "remote": True,
         "owner_id": 1,
     },
     {
         "postcode": "M5V 3A8",
         "city": "Toronto",
         "country": "Canada",
-        "remote": False,  # Hybrid - has location but remote friendly
         "owner_id": 1,
     },
     {
         "city": "Amsterdam",
         "country": "Netherlands",
-        "remote": False,
         "owner_id": 1,
     },
     {
         "country": "Brazil",
-        "remote": False,
         "owner_id": 1,
     },
 ]

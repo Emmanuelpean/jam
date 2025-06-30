@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import React from "react";
 import GenericModal from "../GenericModal";
 import { formFields, useCountries } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
-import LocationMap from "../../maps/LocationMap";
+import { locationsApi } from "../../../services/api";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export const LocationModal = ({
 	show,
@@ -14,33 +15,30 @@ export const LocationModal = ({
 	submode = "view",
 	size = "lg",
 }) => {
-	// Use the countries hook for automatic loading - MUST be called before any conditional returns
+	const { token } = useAuth();
 	const { countries, loading: loadingCountries } = useCountries();
 
 	// Form fields for editing - MUST be called before any conditional returns
-	const formFieldsArray = useMemo(
-		() => [formFields.city(), formFields.postcode(), formFields.country(countries, loadingCountries)],
-		[countries, loadingCountries],
-	);
-
-	// Don't render if we're in view mode but have no location data
-	if (submode === "view" && !location?.id) {
-		return null;
+	let formFieldsArray = [];
+	if (!location?.remote) {
+		formFieldsArray = [formFields.city(), formFields.postcode(), formFields.country(countries, loadingCountries)];
 	}
 
 	// View fields for display
-	let viewFieldsArray = [];
+	let viewFieldsArray;
 	if (!location?.remote) {
-		viewFieldsArray = [[viewFields.city(), viewFields.postcode(), viewFields.country()],
-			viewFields.locationMap()];
+		viewFieldsArray = [[viewFields.city(), viewFields.postcode(), viewFields.country()], viewFields.locationMap()];
+	} else {
+		viewFieldsArray = [viewFields.locationMap({ label: "" })];
 	}
+
 	const fields = {
 		form: formFieldsArray,
 		view: viewFieldsArray,
 	};
 
 	// Custom validation to ensure at least one field is filled
-	const customValidation = (formData) => {
+	const customValidation = async (formData) => {
 		const errors = {};
 
 		const hasCity = formData.city && formData.city.trim();
@@ -56,13 +54,35 @@ export const LocationModal = ({
 					"Please fill in at least one field (city, postcode, or country)";
 		}
 
-		return errors;
-	};
+		if (Object.keys(errors).length === 0) {
 
-	const transformInitialData = (data) => {
-		return {
-			...data,
-		};
+			// Build query parameters for exact match
+			const queryParams = {};
+
+			// Only add non-empty fields to the query
+			queryParams.city = formData.city && formData.city.trim() || null;
+			queryParams.postcode = formData.postcode && formData.postcode.trim() || null;
+			queryParams.country = formData.country && formData.country.trim() || null;
+			console.log(queryParams);
+
+			// Query for locations with these exact parameters
+			const matchingLocations = await locationsApi.getAll(token, queryParams);
+
+			// Filter out the current location if we're editing
+			const duplicates = matchingLocations.filter((existingLocation) => {
+				return location?.id !== existingLocation.id;
+			});
+			console.log(duplicates);
+
+			if (duplicates.length > 0) {
+				const duplicateName = duplicates[0].name;
+				errors.city =
+					errors.postcode =
+					errors.country =
+						`A location with these details already exists: "${duplicateName}"`;
+			}
+		}
+		return errors;
 	};
 
 	const transformFormData = (data) => {
@@ -82,7 +102,7 @@ export const LocationModal = ({
 			submode={submode}
 			title="Location"
 			size={size}
-			data={transformInitialData(location || {})}
+			data={location || {}}
 			fields={fields}
 			endpoint={endpoint}
 			onSuccess={onSuccess}

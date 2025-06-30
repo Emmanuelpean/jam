@@ -10,3 +10,4 @@
 * [ ] Add password reset
 * [ ] Prevent people from creating same location, aggregator....
 * [ ] Automatically add a remote location to new users
+* [ ] Edited locations do not update the map

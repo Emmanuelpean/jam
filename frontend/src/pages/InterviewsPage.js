@@ -1,8 +1,6 @@
 import React from "react";
-import GenericTableWithModals from "../components/tables/GenericTableWithModals";
-import InterviewFormModal from "../components/modals/interview/InterviewFormModal";
-import InterviewViewModal from "../components/modals/interview/InterviewViewModal";
-import { useTableData } from "../components/tables/Table";
+import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
+import { InterviewFormModal, InterviewViewModal } from "../components/modals/interview/InterviewModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const InterviewsPage = () => {
@@ -29,14 +27,6 @@ const InterviewsPage = () => {
 		columns.createdAt(),
 	];
 
-	// Create wrapper component for ViewModal
-	const InterviewViewModalWithProps = (props) => (
-		<InterviewViewModal
-			{...props}
-			interview={props.item} // Map 'item' to 'interview'
-		/>
-	);
-
 	return (
 		<GenericTableWithModals
 			title="Interviews"
@@ -51,7 +41,7 @@ const InterviewsPage = () => {
 			error={error}
 			emptyMessage="No interviews found"
 			FormModal={InterviewFormModal}
-			ViewModal={InterviewViewModalWithProps}
+			ViewModal={InterviewViewModal}
 			endpoint="interviews"
 			nameKey="date"
 			itemType="Interview"

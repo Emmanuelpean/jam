@@ -23,6 +23,7 @@ const LocationsPage = () => {
 	const locations = useMemo(() => {
 		return allLocations?.filter((location) => !location.remote) || [];
 	}, [allLocations]);
+	console.log(locations);
 
 	const tableColumns = [columns.name(), columns.city(), columns.postcode(), columns.country(), columns.createdAt()];
 
@@ -49,7 +50,6 @@ const LocationsPage = () => {
 			removeItem={removeItem}
 			setData={setLocations}
 		>
-			{/* Map below table */}
 			<div className="mt-4">
 				<h5 className="mb-3">Location Map</h5>
 				<LocationMap locations={locations} height="500px" />

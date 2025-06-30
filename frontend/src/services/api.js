@@ -170,7 +170,7 @@ const createCrudApi = (endpoint) => ({
 		if (queryParams) {
 			const searchParams = new URLSearchParams();
 			Object.keys(queryParams).forEach(key => {
-				if (queryParams[key] !== null && queryParams[key] !== undefined) {
+				if (queryParams[key] !== undefined) {
 					searchParams.append(key, queryParams[key]);
 				}
 			});
@@ -178,6 +178,7 @@ const createCrudApi = (endpoint) => ({
 				url += `?${searchParams.toString()}`;
 			}
 		}
+		console.log(url);
 		return api.get(url, token);
 	},
 	get: (id, token) => api.get(`${endpoint}/${id}`, token),

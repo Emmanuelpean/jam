@@ -357,7 +357,7 @@ const GenericModal = ({
 	};
 
 	// Form validation
-	const validateForm = () => {
+	const validateForm = async () => {
 		const newErrors = {};
 		const currentFields = getCurrentFields();
 		const allFields = extractAllFields(currentFields);
@@ -369,19 +369,35 @@ const GenericModal = ({
 			}
 		});
 
-		// Custom validation - now handles both field-specific and cross-field validation
 		if (validation) {
 			if (typeof validation === "function") {
-				// Function-based validation (like current customValidation)
-				const customErrors = validation(formData);
+				// Check if validation function is async
+				const customErrorsResult = validation(formData);
+
+				// Handle both sync and async validation functions
+				const customErrors =
+					customErrorsResult instanceof Promise ? await customErrorsResult : customErrorsResult;
+
 				Object.assign(newErrors, customErrors);
 			} else if (typeof validation === "object") {
 				// Object-based validation (like current validationRules)
-				Object.keys(validation).forEach((fieldName) => {
+				const validationPromises = Object.keys(validation).map(async (fieldName) => {
 					const rule = validation[fieldName];
 					const result = rule(formData[fieldName], formData);
-					if (!result.isValid) {
-						newErrors[fieldName] = result.message;
+
+					// Handle both sync and async validation rules
+					const validationResult = result instanceof Promise ? await result : result;
+
+					if (!validationResult.isValid) {
+						return { fieldName, message: validationResult.message };
+					}
+					return null;
+				});
+
+				const validationResults = await Promise.all(validationPromises);
+				validationResults.forEach((result) => {
+					if (result) {
+						newErrors[result.fieldName] = result.message;
 					}
 				});
 			}
@@ -408,17 +424,20 @@ const GenericModal = ({
 		if (mode === "formview" && !isEditing) return;
 		if (mode !== "formview") return;
 
-		const validationErrors = validateForm();
-		if (Object.keys(validationErrors).length > 0) {
-			setErrors(validationErrors);
-			return;
-		}
-
+		// Add loading state for async validation
 		setSubmitting(true);
 		setErrors({});
 
 		try {
-			// Extract common submission logic
+			// Async validation
+			const validationErrors = await validateForm();
+			if (Object.keys(validationErrors).length > 0) {
+				setErrors(validationErrors);
+				setSubmitting(false);
+				return;
+			}
+
+			// Continue with submission logic...
 			const performSubmission = async (processedData) => {
 				const dataToSubmit = transformFormData ? transformFormData(processedData) : processedData;
 
@@ -543,36 +562,60 @@ const GenericModal = ({
 	const renderFooter = () => {
 		if (mode === "formview") {
 			if (isEditing) {
-				return (
-					<Modal.Footer>
-						<div className="d-flex flex-column w-100 gap-2">
-							{/* First row: Delete and Confirm */}
-							<div className="modal-buttons-container">
-								<Button variant="danger" disabled={isTransitioning}>
-									<i className="bi bi-trash me-2"></i>
-									Delete
-								</Button>
+				if (submode === "add") {
+					return (
+						<Modal.Footer>
+							<div className="d-flex flex-column w-100 gap-2">
+								<div className="modal-buttons-container">
+									<Button variant="secondary" onClick={handleHide} disabled={isTransitioning}>
+										Cancel
+									</Button>
+									<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
+										{submitting ? (
+											<>
+												<Spinner animation="border" size="sm" className="me-2" />
+												Submitting...
+											</>
+										) : (
+											"Confirm"
+										)}
+									</Button>
+								</div>
+							</div>
+						</Modal.Footer>
+					);
+				} else {
+					return (
+						<Modal.Footer>
+							<div className="d-flex flex-column w-100 gap-2">
+								{/* First row: Delete and Confirm */}
+								<div className="modal-buttons-container">
+									<Button variant="danger" disabled={isTransitioning}>
+										<i className="bi bi-trash me-2"></i>
+										Delete
+									</Button>
 
-								<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
-									{submitting ? (
-										<>
-											<Spinner animation="border" size="sm" className="me-2" />
-											Updating...
-										</>
-									) : (
-										"Confirm"
-									)}
-								</Button>
+									<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
+										{submitting ? (
+											<>
+												<Spinner animation="border" size="sm" className="me-2" />
+												Updating...
+											</>
+										) : (
+											"Confirm"
+										)}
+									</Button>
+								</div>
+								{/* Second row: Cancel */}
+								<div className="modal-buttons-container">
+									<Button variant="secondary" onClick={handleCancelEdit} disabled={isTransitioning}>
+										Cancel
+									</Button>
+								</div>
 							</div>
-							{/* Second row: Cancel */}
-							<div className="modal-buttons-container">
-								<Button variant="secondary" onClick={handleCancelEdit} disabled={isTransitioning}>
-									Cancel
-								</Button>
-							</div>
-						</div>
-					</Modal.Footer>
-				);
+						</Modal.Footer>
+					);
+				}
 			} else {
 				return (
 					<Modal.Footer>
