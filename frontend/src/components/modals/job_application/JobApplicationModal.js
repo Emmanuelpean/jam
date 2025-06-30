@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GenericModal from "../GenericModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
-import { apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/api";
+import { filesApi, jobApplicationsApi } from "../../../services/api";
 import { fileToBase64 } from "../../../utils/FileUtils";
 import InterviewsTable from "../../tables/InterviewTable";
 import { formFields, useFormOptions } from "../../rendering/FormRenders";
@@ -36,27 +36,23 @@ export const JobApplicationModal = ({
 	const [setRefreshInterviews] = useState(0);
 
 	// Track job options for the dropdown
-	const [jobOptions, setJobOptions] = useState([]);
-	const { aggregators, openAggregatorModal, renderAggregatorModal } = useFormOptions();
+	const { jobs, aggregators, openAggregatorModal, renderAggregatorModal } = useFormOptions();
 
 	// Add state to track current form data for conditional fields
 	const [currentFormData, setCurrentFormData] = useState({});
 
 	// Transform initial data to match form field expectations
-	const transformInitialData = useCallback(
-		(data) => {
-			if (!data || Object.keys(data).length === 0) {
-				// For new job applications, provide defaults
-				return {
-					date: formDateTime(), // Current time formatted
-					url: "",
-					note: "",
-					status: "Applied",
-					jobId: "",
-					...override
-				};
-			}
-
+	const transformInitialData = useCallback((data) => {
+		if (!data) {
+			return {
+				date: formDateTime(),
+				url: "",
+				note: "",
+				status: "Applied", // TODO not working
+				jobId: "",
+				...override,
+			};
+		} else {
 			const transformed = { ...data };
 
 			// Convert ISO datetime to datetime-local format
@@ -74,11 +70,9 @@ export const JobApplicationModal = ({
 			if (transformed.job && transformed.job.id) {
 				transformed.job_id = transformed.job.id;
 			}
-
 			return transformed;
-		},
-		[],
-	);
+		}
+	}, []);
 
 	// Initialize file states when modal opens or jobApplication changes
 	useEffect(() => {
@@ -99,27 +93,6 @@ export const JobApplicationModal = ({
 		transformInitialData,
 		jobApplication,
 	]);
-
-	useEffect(() => {
-		const fetchOptions = async () => {
-			if (!token || !show || submode === "view") return;
-
-			try {
-				const [jobsData] = await Promise.all([jobsApi.getAll(token)]);
-
-				// Get the current job ID if editing
-				const currentJobId = submode === "edit" && jobApplication?.job_id ? jobApplication.job_id : null;
-
-				// Filter jobs: show only those without job_application + the current job (if editing)
-				const availableJobs = jobsData.filter((job) => !job.job_application || job.id === currentJobId);
-
-				setJobOptions(apiHelpers.toSelectOptions(availableJobs));
-			} catch (error) {
-				console.error("Error fetching options:", error);
-			}
-		};
-		fetchOptions();
-	}, [token, show, submode, jobApplication?.job_id]);
 
 	const handleInterviewChange = () => {
 		setRefreshInterviews((prev) => prev + 1);
@@ -214,7 +187,7 @@ export const JobApplicationModal = ({
 	const formFieldsArray = useMemo(
 		() => [
 			[formFields.applicationDate(), formFields.applicationStatus()],
-			[formFields.job(jobOptions)],
+			[formFields.job(jobs)],
 			[
 				formFields.applicationVia(),
 				...(currentFormData?.applied_via === "Aggregator"
@@ -247,7 +220,6 @@ export const JobApplicationModal = ({
 			],
 		],
 		[
-			jobOptions,
 			currentFormData?.applied_via,
 			fileStates.cv,
 			fileStates.cover_letter,
@@ -259,10 +231,11 @@ export const JobApplicationModal = ({
 
 	// View fields for display
 	const viewFieldsArray = [
-			[viewFields.date(), viewFields.status()],
-			[viewFields.job(), viewFields.appliedVia()],
-			[viewFields.url({ label: "Application URL" }), viewFields.files()],
-			viewFields.note()]
+		[viewFields.date(), viewFields.status()],
+		[viewFields.job(), viewFields.appliedVia()],
+		[viewFields.url({ label: "Application URL" }), viewFields.files()],
+		viewFields.note(),
+	];
 
 	// Combine them in a way GenericModal can use based on mode
 	const fields = useMemo(
@@ -383,18 +356,15 @@ export const JobApplicationModal = ({
 		delete transformed.interviews;
 
 		// Clean up empty values but preserve null file IDs
-		const cleanedData = Object.fromEntries(
+		return Object.fromEntries(
 			Object.entries(transformed).filter(([key, value]) => {
 				// Always include file ID fields, even if null (indicates removal)
 				if (key.endsWith("_id")) return true;
 				if (value === null || value === undefined) return false;
 				// Allow empty strings for url and note fields
 				return !(typeof value === "string" && value === "" && key !== "url" && key !== "note");
-
 			}),
 		);
-
-		return cleanedData;
 	};
 
 	// Custom content to include the interviews table for edit/view mode
@@ -442,12 +412,10 @@ export const JobApplicationModal = ({
 };
 
 export const JobApplicationFormModal = (props) => {
-	// Determine the submode based on whether we have job application data with an ID
 	const submode = props.isEdit || props.jobApplication?.id ? "edit" : "add";
 	return <JobApplicationModal {...props} submode={submode} />;
 };
 
-// Replace the JobApplicationViewModal export with this:
 export const JobApplicationViewModal = (props) => {
 	return <JobApplicationModal {...props} jobApplication={props.job} submode="view" />;
 };

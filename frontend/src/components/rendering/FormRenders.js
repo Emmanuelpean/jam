@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { aggregatorsApi, apiHelpers, companiesApi, keywordsApi, locationsApi, personsApi } from "../../services/api";
+import {
+	aggregatorsApi,
+	apiHelpers,
+	companiesApi,
+	jobsApi,
+	keywordsApi,
+	locationsApi,
+	personsApi,
+} from "../../services/api";
 import { fetchCountries } from "../../utils/CountryUtils";
 import { CompanyFormModal } from "../modals/company/CompanyModal";
 import { LocationFormModal } from "../modals/location/LocationModal";
@@ -43,6 +51,7 @@ export const useFormOptions = () => {
 	const [keywords, setKeywords] = useState([]);
 	const [persons, setPersons] = useState([]);
 	const [aggregators, setAggregators] = useState([]);
+	const [jobs, setJobs] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 
@@ -61,19 +70,22 @@ export const useFormOptions = () => {
 			setError(null);
 
 			try {
-				const [companiesData, locationsData, keywordsData, personsData, aggregatorsData] = await Promise.all([
-					companiesApi.getAll(token),
-					locationsApi.getAll(token),
-					keywordsApi.getAll(token),
-					personsApi.getAll(token),
-					aggregatorsApi.getAll(token),
-				]);
+				const [companiesData, locationsData, keywordsData, personsData, aggregatorsData, jobsData] =
+					await Promise.all([
+						companiesApi.getAll(token),
+						locationsApi.getAll(token),
+						keywordsApi.getAll(token),
+						personsApi.getAll(token),
+						aggregatorsApi.getAll(token),
+						jobsApi.getAll(token),
+					]);
 
 				setCompanies(apiHelpers.toSelectOptions(companiesData));
 				setLocations(apiHelpers.toSelectOptions(locationsData));
 				setKeywords(apiHelpers.toSelectOptions(keywordsData));
 				setPersons(apiHelpers.toSelectOptions(personsData));
 				setAggregators(apiHelpers.toSelectOptions(aggregatorsData));
+				setJobs(apiHelpers.toSelectOptions(jobsData));
 			} catch (err) {
 				console.error("Error fetching form options:", err);
 				setError(err);
@@ -111,6 +123,10 @@ export const useFormOptions = () => {
 				case "aggregators":
 					data = await aggregatorsApi.getAll(token);
 					setAggregators(apiHelpers.toSelectOptions(data));
+					break;
+				case "jobs":
+					data = await jobsApi.getAll(token);
+					setJobs(apiHelpers.toSelectOptions(data));
 					break;
 				default:
 					console.warn(`Unknown option type: ${type}`);
@@ -213,6 +229,7 @@ export const useFormOptions = () => {
 		keywords,
 		persons,
 		aggregators,
+		jobs,
 		loading,
 		error,
 		refreshOptions,
