@@ -1,7 +1,6 @@
 import React from "react";
-import GenericTableWithModals from "../components/tables/GenericTableWithModals";
 import { AggregatorFormModal, AggregatorViewModal } from "../components/modals/aggregator/AggregatorModal";
-import { useTableData } from "../components/tables/Table";
+import {useTableData, GenericTableWithModals} from "../components/tables/TableSystem";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const AggregatorsPage = () => {
@@ -30,10 +29,8 @@ const AggregatorsPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			addButtonText="Add Aggregator"
 			loading={loading}
 			error={error}
-			emptyMessage="No job aggregators found"
 			FormModal={AggregatorFormModal}
 			ViewModal={AggregatorViewModal}
 			endpoint="aggregators"

@@ -23,7 +23,6 @@ const LocationsPage = () => {
 	const locations = useMemo(() => {
 		return allLocations?.filter((location) => !location.remote) || [];
 	}, [allLocations]);
-	console.log(locations);
 
 	const tableColumns = [columns.name(), columns.city(), columns.postcode(), columns.country(), columns.createdAt()];
 
@@ -36,10 +35,8 @@ const LocationsPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			addButtonText="Add Location"
 			loading={loading}
 			error={error}
-			emptyMessage="No locations found"
 			FormModal={LocationFormModal}
 			ViewModal={LocationViewModal}
 			endpoint="locations"

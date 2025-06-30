@@ -584,6 +584,28 @@ const GenericModal = ({
 							</div>
 						</Modal.Footer>
 					);
+				} else if (submode === "edit") {
+					return (
+						<Modal.Footer>
+							<div className="d-flex flex-column w-100 gap-2">
+								<div className="modal-buttons-container">
+									<Button variant="secondary" onClick={handleHide} disabled={isTransitioning}>
+										Cancel
+									</Button>
+									<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
+										{submitting ? (
+											<>
+												<Spinner animation="border" size="sm" className="me-2" />
+												Updating...
+											</>
+										) : (
+											"Update"
+										)}
+									</Button>
+								</div>
+							</div>
+						</Modal.Footer>
+					);
 				} else {
 					return (
 						<Modal.Footer>
@@ -602,7 +624,7 @@ const GenericModal = ({
 												Updating...
 											</>
 										) : (
-											"Confirm"
+											"Update"
 										)}
 									</Button>
 								</div>

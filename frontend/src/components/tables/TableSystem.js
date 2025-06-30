@@ -8,6 +8,7 @@ import { accessAttribute } from "../../utils/Utils";
 import AlertModal from "../modals/alert/AlertModal";
 import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
+import {pluralize} from "../../utils/StringUtils";
 
 // ================================================================================================
 // DATA MANAGEMENT HOOK
@@ -143,7 +144,7 @@ export const GenericTable = ({
 	data = [], // Array - The dataset to display in the table
 	columns = [], // Array - Column definitions with keys, labels, and render functions
 	sortConfig = { key: null, direction: "asc" }, // Object - Current sort state (column key and direction)
-	onSort = (p) => {}, // Function - Called when user clicks sortable column headers
+	onSort = null, // Function - Called when user clicks sortable column headers
 	searchTerm = "", // String - Current search/filter term
 	onSearchChange = () => {}, // Function - Called when search input changes
 	onAddClick = null, // Function - Called when "Add" button is clicked
@@ -516,7 +517,6 @@ export const GenericTableWithModals = ({
 	onSort,
 	searchTerm,
 	onSearchChange,
-	addButtonText,
 	loading,
 	error,
 	emptyMessage,
@@ -691,10 +691,10 @@ export const GenericTableWithModals = ({
 				searchTerm={searchTerm}
 				onSearchChange={onSearchChange}
 				onAddClick={handleAddClick}
-				addButtonText={addButtonText}
+				addButtonText={"Add " + itemType}
 				loading={loading}
 				error={error}
-				emptyMessage={emptyMessage}
+				emptyMessage={"No " + pluralize(itemType) + " found"}
 				onRowClick={handleRowClick}
 				onRowRightClick={handleRowRightClick}
 				selectable={selectable}

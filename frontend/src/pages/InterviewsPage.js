@@ -36,10 +36,8 @@ const InterviewsPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			addButtonText="Add Interview"
 			loading={loading}
 			error={error}
-			emptyMessage="No interviews found"
 			FormModal={InterviewFormModal}
 			ViewModal={InterviewViewModal}
 			endpoint="interviews"

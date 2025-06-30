@@ -37,10 +37,8 @@ const PersonsPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			addButtonText="Add Person"
 			loading={loading}
 			error={error}
-			emptyMessage="No persons found"
 			FormModal={PersonFormModal}
 			ViewModal={PersonViewModal}
 			endpoint="persons"

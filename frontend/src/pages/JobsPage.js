@@ -39,10 +39,8 @@ const JobsPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			addButtonText="Add Job"
 			loading={loading}
 			error={error}
-			emptyMessage="No job found"
 			FormModal={JobFormModal}
 			ViewModal={JobViewModal}
 			endpoint="jobs"

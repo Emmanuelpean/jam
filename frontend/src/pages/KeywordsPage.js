@@ -22,22 +22,20 @@ const KeywordsPage = () => {
 
 	return (
 		<GenericTableWithModals
-			title="Keywords"
+			title="Tags"
 			data={keywords}
 			columns={tableColumns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			addButtonText="Add Keyword"
 			loading={loading}
 			error={error}
-			emptyMessage="No keywords found"
 			FormModal={KeywordFormModal}
 			ViewModal={KeywordViewModal}
 			endpoint="keywords"
 			nameKey="name"
-			itemType="Keyword"
+			itemType="Tag"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}

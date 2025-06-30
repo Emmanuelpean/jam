@@ -73,10 +73,8 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 					onSort={setSortConfig}
 					searchTerm={searchTerm}
 					onSearchChange={setSearchTerm}
-					addButtonText="Add Interview"
 					loading={loading}
 					error={error}
-					emptyMessage="No interviews found"
 					FormModal={InterviewFormModalWithProps}
 					ViewModal={InterviewViewModalWithProps}
 					endpoint="interviews"

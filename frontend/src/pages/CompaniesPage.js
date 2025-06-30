@@ -34,10 +34,8 @@ const CompaniesPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			addButtonText="Add Company"
 			loading={loading}
 			error={error}
-			emptyMessage="No companies found"
 			FormModal={CompanyFormModal}
 			ViewModal={CompanyViewModal}
 			endpoint="companies"
