@@ -418,34 +418,9 @@ const GenericModal = ({
 		setErrors({});
 
 		try {
-			// If custom submit handler is provided, use it
-			if (customSubmitHandler) {
-				await customSubmitHandler(e.target, async (processedData) => {
-					const dataToSubmit = transformFormData ? transformFormData(processedData) : processedData;
-
-					let result;
-					if (submode === "add") {
-						result = await api.post(`${endpoint}/`, dataToSubmit, token);
-					} else {
-						const itemId = data?.id;
-						result = await api.put(`${endpoint}/${itemId}`, dataToSubmit, token);
-					}
-
-					// Call onSuccess immediately after successful API call (BEFORE hiding modal or changing view)
-					if (onSuccess) onSuccess(result);
-
-					// Handle different submodes after success
-					if (submode === "add" || submode === "edit") {
-						handleHide();
-					} else {
-						// Update data and return to view mode with smooth animation
-						Object.assign(data, result);
-						await handleCancelEdit();
-					}
-				});
-			} else {
-				// Default submission logic
-				const dataToSubmit = transformFormData ? transformFormData(formData) : formData;
+			// Extract common submission logic
+			const performSubmission = async (processedData) => {
+				const dataToSubmit = transformFormData ? transformFormData(processedData) : processedData;
 
 				let result;
 				if (submode === "add") {
@@ -455,16 +430,24 @@ const GenericModal = ({
 					result = await api.put(`${endpoint}/${itemId}`, dataToSubmit, token);
 				}
 
+				// Call success callback
 				if (onSuccess) onSuccess(result);
 
-				// Handle different submodes after success
+				// Handle post-submission behavior
 				if (submode === "add" || submode === "edit") {
 					handleHide();
 				} else {
-					// Update data and return to view mode with smooth animation
+					// Update data and return to view mode
 					Object.assign(data, result);
 					await handleCancelEdit();
 				}
+			};
+
+			// Use custom handler if provided, otherwise use default form data
+			if (customSubmitHandler) {
+				await customSubmitHandler(e.target, performSubmission);
+			} else {
+				await performSubmission(formData);
 			}
 		} catch (err) {
 			console.error(`Error ${submode === "add" ? "creating" : "updating"} ${title.toLowerCase()}:`, err);
@@ -560,72 +543,48 @@ const GenericModal = ({
 	const renderFooter = () => {
 		if (mode === "formview") {
 			if (isEditing) {
-				// Edit mode footer - different behavior based on submode
-				if (submode === "view") {
-					// View -> Edit mode: Show Delete & Confirm on top row, Cancel below
-					return (
-						<Modal.Footer>
-							<div className="d-flex flex-column w-100 gap-2">
-								{/* First row: Delete and Confirm */}
-								<div className="modal-buttons-container">
-									<Button variant="danger" disabled={isTransitioning}>
-										<i className="bi bi-trash me-2"></i>
-										Delete
-									</Button>
-
-									<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
-										{submitting ? (
-											<>
-												<Spinner animation="border" size="sm" className="me-2" />
-												Updating...
-											</>
-										) : (
-											"Confirm"
-										)}
-									</Button>
-								</div>
-								{/* Second row: Cancel */}
-								<div className="modal-buttons-container">
-									<Button variant="secondary" onClick={handleCancelEdit} disabled={isTransitioning}>
-										Cancel
-									</Button>
-								</div>
-							</div>
-						</Modal.Footer>
-					);
-				} else {
-					// Add/Edit submode: Show normal layout
-					return (
-						<Modal.Footer>
+				return (
+					<Modal.Footer>
+						<div className="d-flex flex-column w-100 gap-2">
+							{/* First row: Delete and Confirm */}
 							<div className="modal-buttons-container">
-								<Button variant="secondary" onClick={handleHide} disabled={isTransitioning}>
-									Cancel
+								<Button variant="danger" disabled={isTransitioning}>
+									<i className="bi bi-trash me-2"></i>
+									Delete
 								</Button>
+
 								<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
 									{submitting ? (
 										<>
 											<Spinner animation="border" size="sm" className="me-2" />
-											{submode === "add" ? "Creating..." : "Updating..."}
+											Updating...
 										</>
 									) : (
 										"Confirm"
 									)}
 								</Button>
 							</div>
-						</Modal.Footer>
-					);
-				}
+							{/* Second row: Cancel */}
+							<div className="modal-buttons-container">
+								<Button variant="secondary" onClick={handleCancelEdit} disabled={isTransitioning}>
+									Cancel
+								</Button>
+							</div>
+						</div>
+					</Modal.Footer>
+				);
 			} else {
-				// View mode footer - only shown for view submode
 				return (
 					<Modal.Footer>
 						<div className="modal-buttons-container">
 							<Button variant="secondary" onClick={handleHide} disabled={isTransitioning}>
 								Close
 							</Button>
-							<Button variant="primary" onClick={handleEdit} disabled={isTransitioning}>
-								Edit
-							</Button>
+							{fields.form && fields.form.length > 0 && (
+								<Button variant="primary" onClick={handleEdit} disabled={isTransitioning}>
+									Edit
+								</Button>
+							)}
 						</div>
 					</Modal.Footer>
 				);

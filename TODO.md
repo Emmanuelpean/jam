@@ -8,3 +8,5 @@
 * [ ] Add Update table with a follow up variable, note and date
 * [ ] Add pound sign in front of salary input
 * [ ] Add password reset
+* [ ] Prevent people from creating same location, aggregator....
+* [ ] Automatically add a remote location to new users
