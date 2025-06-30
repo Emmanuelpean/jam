@@ -84,7 +84,7 @@ const ensureHttpPrefix = (url) => {
 };
 
 // File badge component for downloadable files
-const FileBadge = ({ file, icon, label, bgColor = "bg-secondary" }) => {
+const FileBadge = ({ file, icon, label }) => {
 	const { token } = useAuth();
 
 	const handleDownload = async (e) => {
@@ -104,9 +104,9 @@ const FileBadge = ({ file, icon, label, bgColor = "bg-secondary" }) => {
 
 	return (
 		<span
-			className={`badge ${bgColor} clickable-badge me-1`}
+			className={`badge clickable-badge me-1`}
 			onClick={handleDownload}
-			style={{ cursor: "pointer" }}
+			style={{ cursor: "pointer", backgroundColor: "green" }}
 			title={`Download ${file.filename}`}
 		>
 			<i className={`${icon} me-1`}></i>
@@ -256,16 +256,6 @@ export const renderFunctions = {
 
 	// --------------------------------------------------- FILE BADGES -------------------------------------------------
 
-	cv: (item, view = false, key = "cv") => {
-		const cv = accessAttribute(item, key);
-		return <FileBadge file={cv} icon="bi bi-file-text" label="CV" bgColor="bg-success" />;
-	},
-
-	coverLetter: (item, view = false, key = "cover_letter") => {
-		const coverLetter = accessAttribute(item, key);
-		return <FileBadge file={coverLetter} icon="bi bi-file-text" label="Cover Letter" bgColor="bg-info" />;
-	},
-
 	files: (item) => {
 		const cv = accessAttribute(item, "cv");
 		const coverLetter = accessAttribute(item, "cover_letter");
@@ -274,10 +264,8 @@ export const renderFunctions = {
 
 		return (
 			<div>
-				{cv && <FileBadge file={cv} icon="bi bi-file-text" label="CV" bgColor="bg-success" />}
-				{coverLetter && (
-					<FileBadge file={coverLetter} icon="bi bi-file-text" label="Cover Letter" bgColor="bg-info" />
-				)}
+				{cv && <FileBadge file={cv} icon="bi bi-file-text" label="CV" />}
+				{coverLetter && <FileBadge file={coverLetter} icon="bi bi-file-text" label="Cover Letter" />}
 			</div>
 		);
 	},

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { apiHelpers, companiesApi, keywordsApi, locationsApi, personsApi } from "../../services/api";
+import { aggregatorsApi, apiHelpers, companiesApi, keywordsApi, locationsApi, personsApi } from "../../services/api";
 import { fetchCountries } from "../../utils/CountryUtils";
 import { CompanyFormModal } from "../modals/company/CompanyModal";
 import { LocationFormModal } from "../modals/location/LocationModal";
 import { KeywordFormModal } from "../modals/keyword/KeywordModal";
 import { PersonFormModal } from "../modals/person/PersonModal";
+import AggregatorFormModal from "../modals/aggregator/AggregatorModal";
 
 // Hook for country loading that can be used by components
 export const useCountries = () => {
@@ -41,6 +42,7 @@ export const useFormOptions = () => {
 	const [locations, setLocations] = useState([]);
 	const [keywords, setKeywords] = useState([]);
 	const [persons, setPersons] = useState([]);
+	const [aggregators, setAggregators] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 
@@ -49,6 +51,7 @@ export const useFormOptions = () => {
 	const [showLocationModal, setShowLocationModal] = useState(false);
 	const [showKeywordModal, setShowKeywordModal] = useState(false);
 	const [showPersonModal, setShowPersonModal] = useState(false);
+	const [showAggregatorModal, setShowAggregatorModal] = useState(false);
 
 	useEffect(() => {
 		const fetchOptions = async () => {
@@ -58,17 +61,19 @@ export const useFormOptions = () => {
 			setError(null);
 
 			try {
-				const [companiesData, locationsData, keywordsData, personsData] = await Promise.all([
+				const [companiesData, locationsData, keywordsData, personsData, aggregatorsData] = await Promise.all([
 					companiesApi.getAll(token),
 					locationsApi.getAll(token),
 					keywordsApi.getAll(token),
 					personsApi.getAll(token),
+					aggregatorsApi.getAll(token),
 				]);
 
 				setCompanies(apiHelpers.toSelectOptions(companiesData));
 				setLocations(apiHelpers.toSelectOptions(locationsData));
 				setKeywords(apiHelpers.toSelectOptions(keywordsData));
 				setPersons(apiHelpers.toSelectOptions(personsData));
+				setAggregators(apiHelpers.toSelectOptions(aggregatorsData));
 			} catch (err) {
 				console.error("Error fetching form options:", err);
 				setError(err);
@@ -103,6 +108,10 @@ export const useFormOptions = () => {
 					data = await personsApi.getAll(token);
 					setPersons(apiHelpers.toSelectOptions(data));
 					break;
+				case "aggregators":
+					data = await aggregatorsApi.getAll(token);
+					setAggregators(apiHelpers.toSelectOptions(data));
+					break;
 				default:
 					console.warn(`Unknown option type: ${type}`);
 			}
@@ -123,6 +132,9 @@ export const useFormOptions = () => {
 
 	const openPersonModal = () => setShowPersonModal(true);
 	const closePersonModal = () => setShowPersonModal(false);
+
+	const openAggregatorModal = () => setShowAggregatorModal(true);
+	const closeAggregatorModal = () => setShowAggregatorModal(false);
 
 	// Handle successful item creation
 	const handleCompanyAddSuccess = (newCompany) => {
@@ -161,6 +173,15 @@ export const useFormOptions = () => {
 		closePersonModal();
 	};
 
+	const handleAggregatorAddSuccess = (newAggregator) => {
+		const newOption = {
+			value: newAggregator.id,
+			label: newAggregator.name,
+		};
+		setAggregators((prev) => [...prev, newOption]);
+		closeAggregatorModal();
+	};
+
 	// Render modal functions
 	const renderCompanyModal = () => (
 		<CompanyFormModal show={showCompanyModal} onHide={closeCompanyModal} onSuccess={handleCompanyAddSuccess} />
@@ -178,11 +199,20 @@ export const useFormOptions = () => {
 		<PersonFormModal show={showPersonModal} onHide={closePersonModal} onSuccess={handlePersonAddSuccess} />
 	);
 
+	const renderAggregatorModal = () => (
+		<AggregatorFormModal
+			show={showAggregatorModal}
+			onHide={closeAggregatorModal}
+			onSuccess={handleAggregatorAddSuccess}
+		/>
+	);
+
 	return {
 		companies,
 		locations,
 		keywords,
 		persons,
+		aggregators,
 		loading,
 		error,
 		refreshOptions,
@@ -198,6 +228,9 @@ export const useFormOptions = () => {
 		// Person modal management
 		openPersonModal,
 		renderPersonModal,
+		// Aggregator modal management
+		openAggregatorModal,
+		renderAggregatorModal,
 	};
 };
 

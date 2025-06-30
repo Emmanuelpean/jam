@@ -1,26 +1,26 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GenericModal from "../GenericModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
-import { aggregatorsApi, apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/api";
+import { apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/api";
 import { fileToBase64 } from "../../../utils/FileUtils";
 import InterviewsTable from "../../tables/InterviewTable";
-import { formFields } from "../../rendering/FormRenders";
+import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
 import { useAuth } from "../../../contexts/AuthContext";
 import AlertModal from "../alert/AlertModal";
 import { formDateTime } from "../../../utils/TimeUtils";
 
 export const JobApplicationModal = ({
-										show,
-										onHide,
-										jobApplication,
-										onSuccess,
-										onDelete,
-										endpoint = "jobapplications",
-										submode = "view",
-										size = "lg",
-										jobId,
-									}) => {
+	show,
+	onHide,
+	jobApplication,
+	onSuccess,
+	onDelete,
+	endpoint = "jobapplications",
+	submode = "view",
+	size = "lg",
+	...override
+}) => {
 	const { token } = useAuth();
 	const { alertState, showError, hideAlert } = useGenericAlert();
 	const formRef = useRef();
@@ -33,11 +33,11 @@ export const JobApplicationModal = ({
 
 	// Track interview data
 	const [interviews, setInterviews] = useState([]);
-	const [refreshInterviews, setRefreshInterviews] = useState(0);
+	const [setRefreshInterviews] = useState(0);
 
 	// Track job options for the dropdown
 	const [jobOptions, setJobOptions] = useState([]);
-	const [aggregatorOptions, setAggregatorOptions] = useState([]);
+	const { aggregators, openAggregatorModal, renderAggregatorModal } = useFormOptions();
 
 	// Add state to track current form data for conditional fields
 	const [currentFormData, setCurrentFormData] = useState({});
@@ -52,7 +52,8 @@ export const JobApplicationModal = ({
 					url: "",
 					note: "",
 					status: "Applied",
-					...(jobId && { job_id: jobId }), // Set job_id if provided
+					jobId: "",
+					...override
 				};
 			}
 
@@ -76,7 +77,7 @@ export const JobApplicationModal = ({
 
 			return transformed;
 		},
-		[jobId],
+		[],
 	);
 
 	// Initialize file states when modal opens or jobApplication changes
@@ -90,17 +91,21 @@ export const JobApplicationModal = ({
 			// Initialize form data state
 			setCurrentFormData(transformInitialData(jobApplication));
 		}
-	}, [show, jobApplication?.cv, jobApplication?.cover_letter, jobApplication?.interviews, transformInitialData, jobApplication]);
+	}, [
+		show,
+		jobApplication?.cv,
+		jobApplication?.cover_letter,
+		jobApplication?.interviews,
+		transformInitialData,
+		jobApplication,
+	]);
 
 	useEffect(() => {
 		const fetchOptions = async () => {
 			if (!token || !show || submode === "view") return;
 
 			try {
-				const [jobsData, aggregatorsData] = await Promise.all([
-					jobsApi.getAll(token),
-					aggregatorsApi.getAll(token),
-				]);
+				const [jobsData] = await Promise.all([jobsApi.getAll(token)]);
 
 				// Get the current job ID if editing
 				const currentJobId = submode === "edit" && jobApplication?.job_id ? jobApplication.job_id : null;
@@ -109,7 +114,6 @@ export const JobApplicationModal = ({
 				const availableJobs = jobsData.filter((job) => !job.job_application || job.id === currentJobId);
 
 				setJobOptions(apiHelpers.toSelectOptions(availableJobs));
-				setAggregatorOptions(apiHelpers.toSelectOptions(aggregatorsData));
 			} catch (error) {
 				console.error("Error fetching options:", error);
 			}
@@ -213,7 +217,9 @@ export const JobApplicationModal = ({
 			[formFields.job(jobOptions)],
 			[
 				formFields.applicationVia(),
-				...(currentFormData?.applied_via === "Aggregator" ? [formFields.aggregator(aggregatorOptions)] : []),
+				...(currentFormData?.applied_via === "Aggregator"
+					? [formFields.aggregator(aggregators, openAggregatorModal)]
+					: []),
 			],
 			formFields.url(),
 			formFields.note({
@@ -242,25 +248,21 @@ export const JobApplicationModal = ({
 		],
 		[
 			jobOptions,
-			aggregatorOptions,
 			currentFormData?.applied_via,
 			fileStates.cv,
 			fileStates.cover_letter,
 			handleFileChange,
 			handleFileRemove,
+			openAggregatorModal,
 		],
 	);
 
 	// View fields for display
-	const viewFieldsArray = useMemo(
-		() => [
+	const viewFieldsArray = [
 			[viewFields.date(), viewFields.status()],
 			[viewFields.job(), viewFields.appliedVia()],
 			[viewFields.url({ label: "Application URL" }), viewFields.files()],
-			viewFields.note(),
-		],
-		[],
-	);
+			viewFields.note()]
 
 	// Combine them in a way GenericModal can use based on mode
 	const fields = useMemo(
@@ -373,11 +375,6 @@ export const JobApplicationModal = ({
 			transformed.date = new Date(transformed.date).toISOString();
 		}
 
-		// Add job_id for new applications
-		if (submode === "add" && jobId) {
-			transformed.job_id = jobId;
-		}
-
 		// Remove system fields that shouldn't be sent to backend
 		delete transformed.created_at;
 		delete transformed.modified_at;
@@ -392,8 +389,8 @@ export const JobApplicationModal = ({
 				if (key.endsWith("_id")) return true;
 				if (value === null || value === undefined) return false;
 				// Allow empty strings for url and note fields
-				if (typeof value === "string" && value === "" && key !== "url" && key !== "note") return false;
-				return true;
+				return !(typeof value === "string" && value === "" && key !== "url" && key !== "note");
+
 			}),
 		);
 
@@ -433,26 +430,27 @@ export const JobApplicationModal = ({
 				transformFormData={transformFormData}
 				customSubmitHandler={submode !== "view" ? handleCustomSubmit : undefined}
 				customContent={customContent}
-				onFormDataChange={submode !== "view" ? handleFormDataChange : undefined}
+				onFormDataChange={handleFormDataChange} // Remove the condition - always pass this
 			/>
 
 			{/* Alert Modal for error messages */}
 			<AlertModal alertState={alertState} hideAlert={hideAlert} />
+
+			{renderAggregatorModal()}
 		</>
 	);
 };
 
 export const JobApplicationFormModal = (props) => {
-	// Determine the submode based on whether we have jobApplication data with an ID
+	// Determine the submode based on whether we have job application data with an ID
 	const submode = props.isEdit || props.jobApplication?.id ? "edit" : "add";
 	return <JobApplicationModal {...props} submode={submode} />;
 };
 
+// Replace the JobApplicationViewModal export with this:
 export const JobApplicationViewModal = (props) => {
-	const jobApplication = props.jobApplication || props.item || props.data;
-	return <JobApplicationModal {...props} jobApplication={jobApplication} submode="view" />;
+	return <JobApplicationModal {...props} jobApplication={props.job} submode="view" />;
 };
-
 
 // Add default export
 export default JobApplicationFormModal;
