@@ -294,4 +294,13 @@ export const columns = {
 		render: renderFunctions.jobName,
 		...overrides,
 	}),
+
+	files: (overrides = {}) => ({
+		key: "files",
+		label: "Files",
+		sortable: false,
+		searchable: false,
+		render: renderFunctions.files,
+		...overrides
+	})
 };

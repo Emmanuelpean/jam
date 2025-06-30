@@ -1,7 +1,9 @@
 import React from "react";
-import JobApplicationFormModal from "../components/modals/job_application/JobApplicationFormModal";
-import JobApplicationViewModal from "../components/modals/job_application/JobApplicationViewModal";
-import {useTableData, GenericTableWithModals} from "../components/tables/TableSystem";
+import {
+	JobApplicationFormModal,
+	JobApplicationViewModal,
+} from "../components/modals/job_application/JobApplicationModal";
+import { GenericTableWithModals, useTableData } from "../components/tables/TableSystem";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const JobApplicationsPage = () => {
@@ -24,7 +26,8 @@ const JobApplicationsPage = () => {
 		columns.job(),
 		columns.status(),
 		columns.interviewCount(),
-		columns.url(),
+		columns.files(),
+		columns.url({"label": "URL"}),
 		columns.createdAt(),
 	];
 

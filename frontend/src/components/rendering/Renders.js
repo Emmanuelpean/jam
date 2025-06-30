@@ -3,7 +3,7 @@ import { LocationViewModal } from "../modals/location/LocationModal";
 import { CompanyViewModal } from "../modals/company/CompanyModal";
 import { PersonViewModal } from "../modals/person/PersonModal";
 import { KeywordViewModal } from "../modals/keyword/KeywordModal";
-import JobApplicationViewModal from "../modals/job_application/JobApplicationViewModal";
+import { JobApplicationViewModal } from "../modals/job_application/JobApplicationModal";
 import { AggregatorViewModal } from "../modals/aggregator/AggregatorModal";
 import JobViewModal from "../modals/job/JobViewModal";
 import { accessAttribute } from "../../utils/Utils";

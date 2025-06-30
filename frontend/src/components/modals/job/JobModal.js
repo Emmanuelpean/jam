@@ -1,23 +1,22 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import GenericModal from "../GenericModal";
 import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
 import { useAuth } from "../../../contexts/AuthContext";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import { jobApplicationsApi } from "../../../services/api";
-import { getApplicationStatusBadgeClass } from "../../rendering/Renders";
 import JobApplicationFormModal from "../job_application/JobApplicationFormModal";
 
 export const JobModal = ({
-							 show,
-							 onHide,
-							 job,
-							 onSuccess,
-							 onDelete,
-							 endpoint = "jobs",
-							 submode = "view",
-							 size = "lg",
-						 }) => {
+	show,
+	onHide,
+	job,
+	onSuccess,
+	onDelete,
+	endpoint = "jobs",
+	submode = "view",
+	size = "lg",
+}) => {
 	const { token } = useAuth();
 	const { showDelete, showError } = useGenericAlert();
 
@@ -108,32 +107,50 @@ export const JobModal = ({
 	};
 
 	// Form fields for editing
-	const formFieldsArray = useMemo(() => [
-		formFields.jobTitle(),
-		[formFields.company(companies, openCompanyModal), formFields.location(locations, openLocationModal)],
-		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
-		formFields.url({ label: "Job URL" }),
-		[formFields.salaryMin(), formFields.salaryMax()],
-		formFields.personalRating(),
-		formFields.description(),
-		formFields.note(),
-	], [companies, locations, keywords, persons, openCompanyModal, openLocationModal, openKeywordModal, openPersonModal]);
+	const formFieldsArray = useMemo(
+		() => [
+			formFields.jobTitle(),
+			[formFields.company(companies, openCompanyModal), formFields.location(locations, openLocationModal)],
+			[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
+			formFields.url({ label: "Job URL" }),
+			[formFields.salaryMin(), formFields.salaryMax()],
+			formFields.personalRating(),
+			formFields.description(),
+			formFields.note(),
+		],
+		[
+			companies,
+			locations,
+			keywords,
+			persons,
+			openCompanyModal,
+			openLocationModal,
+			openKeywordModal,
+			openPersonModal,
+		],
+	);
 
 	// View fields for display
-	const viewFieldsArray = useMemo(() => [
-		[viewFields.title(), viewFields.company()],
-		[viewFields.location(), viewFields.jobApplication()],
-		viewFields.description(),
-		[viewFields.salaryRange(), viewFields.personalRating()],
-		viewFields.url({ label: "Job URL" }),
-		[viewFields.keywords(), viewFields.persons()],
-	], []);
+	const viewFieldsArray = useMemo(
+		() => [
+			[viewFields.title(), viewFields.company()],
+			[viewFields.location(), viewFields.jobApplication()],
+			viewFields.description(),
+			[viewFields.salaryRange(), viewFields.personalRating()],
+			viewFields.url({ label: "Job URL" }),
+			[viewFields.keywords(), viewFields.persons()],
+		],
+		[],
+	);
 
 	// Combine them in a way GenericModal can use based on mode
-	const fields = useMemo(() => ({
-		form: formFieldsArray,
-		view: viewFieldsArray,
-	}), [formFieldsArray, viewFieldsArray]);
+	const fields = useMemo(
+		() => ({
+			form: formFieldsArray,
+			view: viewFieldsArray,
+		}),
+		[formFieldsArray, viewFieldsArray],
+	);
 
 	// Transform initial data to work with multiselect (convert objects to IDs)
 	const transformInitialData = (data) => {
