@@ -1,8 +1,7 @@
 import React from "react";
-import GenericTableWithModals from "../components/tables/GenericTableWithModals";
 import JobApplicationFormModal from "../components/modals/job_application/JobApplicationFormModal";
 import JobApplicationViewModal from "../components/modals/job_application/JobApplicationViewModal";
-import { useTableData } from "../components/tables/Table";
+import {useTableData, GenericTableWithModals} from "../components/tables/TableSystem";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const JobApplicationsPage = () => {

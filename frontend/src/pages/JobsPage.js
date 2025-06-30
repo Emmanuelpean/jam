@@ -1,6 +1,5 @@
 import React from "react";
-import { useTableData } from "../components/tables/Table";
-import GenericTableWithModals from "../components/tables/GenericTableWithModals";
+import {useTableData, GenericTableWithModals} from "../components/tables/TableSystem";
 import { JobFormModal, JobViewModal } from "../components/modals/job/JobModal";
 import { columns } from "../components/rendering/ColumnRenders";
 

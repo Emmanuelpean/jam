@@ -2,6 +2,8 @@ import React from "react";
 import GenericModal from "../GenericModal";
 import { formFields } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
+import { keywordsApi } from "../../../services/api";
+import {useAuth} from "../../../contexts/AuthContext";
 
 export const KeywordModal = ({
 	show,
@@ -13,18 +15,10 @@ export const KeywordModal = ({
 	submode = "view",
 	size = "md",
 }) => {
-	// Don't render if we're in view mode but have no keyword data
-	if (submode === "view" && !keyword?.id) {
-		return null;
-	}
+	const { token } = useAuth();
 
-	// Form fields for editing
-	const formFieldsArray = [[formFields.name({ required: true })]];
-
-	// View fields for display
-	const viewFieldsArray = [[viewFields.name()]];
-
-	// Combine them in a way GenericModal can use based on mode
+	const formFieldsArray = [formFields.name({ required: true })];
+	const viewFieldsArray = [viewFields.name()];
 	const fields = {
 		form: formFieldsArray,
 		view: viewFieldsArray,
@@ -36,6 +30,22 @@ export const KeywordModal = ({
 			...data,
 			name: data.name?.trim(),
 		};
+	};
+
+	// Custom validation to ensure at least one field is filled
+	const customValidation = async (formData) => {
+		const errors = {};
+		const queryParams = { name: formData.name.trim() };
+		const matches = await keywordsApi.getAll(token, queryParams);
+		const duplicates = matches.filter((existing) => {
+			return keyword?.id !== existing.id;
+		});
+
+		if (duplicates.length > 0) {
+			errors.name = `A tag with this name already exists`;
+		}
+
+		return errors;
 	};
 
 	return (
@@ -52,6 +62,7 @@ export const KeywordModal = ({
 			onSuccess={onSuccess}
 			onDelete={onDelete}
 			transformFormData={transformFormData}
+			validation={customValidation}
 		/>
 	);
 };
@@ -59,11 +70,11 @@ export const KeywordModal = ({
 export const KeywordFormModal = (props) => {
 	// Determine the submode based on whether we have keyword data with an ID
 	const submode = props.isEdit || props.keyword?.id ? "edit" : "add";
-	return <KeywordModal {...props} submode={submode} />;
+	return <KeywordModal {...props} keyword={props.tag} submode={submode} />;
 };
 
 // Wrapper for view modal
-export const KeywordViewModal = (props) => <KeywordModal {...props} submode="view" />;
+export const KeywordViewModal = (props) => <KeywordModal {...props} keyword={props.tag} submode="view" />;
 
 // Add default export
 export default KeywordFormModal;

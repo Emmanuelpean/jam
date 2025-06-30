@@ -480,7 +480,7 @@ export const GenericTable = ({
 					</div>
 
 					<div className="d-flex align-items-center gap-2">
-						<span className="small text-muted">
+						<span className="small text-muted text-nowrap">
 							Page {currentPage + 1} of {totalPages || 1}
 						</span>
 						<Form.Select

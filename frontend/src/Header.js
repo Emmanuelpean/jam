@@ -35,22 +35,6 @@ const Header = ({ user, onLogout }) => {
 						<i className="bi bi-briefcase me-2"></i>
 						<span>Jobs</span>
 					</Nav.Link>
-					<Nav.Link href="/persons" className={`nav-link-custom ${isActive("/persons") ? "active" : ""}`}>
-						<i className="bi bi-people me-2"></i>
-						<span>People</span>
-					</Nav.Link>
-					<Nav.Link href="/companies" className={`nav-link-custom ${isActive("/companies") ? "active" : ""}`}>
-						<i className="bi bi-building me-2"></i>
-						<span>Companies</span>
-					</Nav.Link>
-					<Nav.Link href="/keywords" className={`nav-link-custom ${isActive("/keywords") ? "active" : ""}`}>
-						<i className="bi bi-tags me-2"></i>
-						<span>Tags</span>
-					</Nav.Link>
-					<Nav.Link href="/locations" className={`nav-link-custom ${isActive("/locations") ? "active" : ""}`}>
-						<i className="bi bi-geo-alt me-2"></i>
-						<span>Locations</span>
-					</Nav.Link>
 					<Nav.Link href="/jobapplications" className={`nav-link-custom ${isActive("/jobapplications") ? "active" : ""}`}>
 						<i className="bi bi-person-workspace me-2"></i>
 						<span>Job Applications</span>
@@ -59,9 +43,25 @@ const Header = ({ user, onLogout }) => {
 						<i className="bi bi-people-fill me-2"></i>
 						<span>Interviews</span>
 					</Nav.Link>
+					<Nav.Link href="/persons" className={`nav-link-custom ${isActive("/persons") ? "active" : ""}`}>
+						<i className="bi bi-people me-2"></i>
+						<span>People</span>
+					</Nav.Link>
+					<Nav.Link href="/locations" className={`nav-link-custom ${isActive("/locations") ? "active" : ""}`}>
+						<i className="bi bi-geo-alt me-2"></i>
+						<span>Locations</span>
+					</Nav.Link>
+					<Nav.Link href="/companies" className={`nav-link-custom ${isActive("/companies") ? "active" : ""}`}>
+						<i className="bi bi-building me-2"></i>
+						<span>Companies</span>
+					</Nav.Link>
 					<Nav.Link href="/aggregators" className={`nav-link-custom ${isActive("/aggregators") ? "active" : ""}`}>
 						<i className="bi bi-linkedin me-2"></i>
 						<span>Aggregators</span>
+					</Nav.Link>
+					<Nav.Link href="/keywords" className={`nav-link-custom ${isActive("/keywords") ? "active" : ""}`}>
+						<i className="bi bi-tags me-2"></i>
+						<span>Tags</span>
 					</Nav.Link>
 					<Nav.Link onClick={onLogout} className="nav-link-custom text-danger">
 						<i className="bi bi-box-arrow-right me-2"></i>
