@@ -37,6 +37,7 @@ export const JobApplicationModal = ({
 
 	// Track job options for the dropdown
 	const { jobs, aggregators, openAggregatorModal, renderAggregatorModal } = useFormOptions();
+	const filteredJobs = jobs.filter((job) => !job.job_application || job.job_application.id === jobApplication?.id);
 
 	// Add state to track current form data for conditional fields
 	const [currentFormData, setCurrentFormData] = useState({});
@@ -187,7 +188,7 @@ export const JobApplicationModal = ({
 	const formFieldsArray = useMemo(
 		() => [
 			[formFields.applicationDate(), formFields.applicationStatus()],
-			[formFields.job(jobs)],
+			[formFields.job(filteredJobs)],
 			[
 				formFields.applicationVia(),
 				...(currentFormData?.applied_via === "Aggregator"

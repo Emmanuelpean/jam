@@ -206,6 +206,7 @@ export const apiHelpers = {
 		return data.map((item) => ({
 			value: item[valueKey],
 			label: item[labelKey],
+			job_application: item.job_application,
 		}));
 	},
 
