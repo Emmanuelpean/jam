@@ -1,6 +1,6 @@
 import React from "react";
 import { AggregatorFormModal, AggregatorViewModal } from "../components/modals/aggregator/AggregatorModal";
-import {useTableData, GenericTableWithModals} from "../components/tables/TableSystem";
+import { GenericTableWithModals, useTableData } from "../components/tables/TableSystem";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const AggregatorsPage = () => {
