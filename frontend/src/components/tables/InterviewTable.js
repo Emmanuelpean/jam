@@ -1,9 +1,8 @@
-
 import React from "react";
-import InterviewFormModal from "../modals/interview/InterviewFormModal";
-import InterviewViewModal from "../modals/interview/InterviewViewModal";
-import {useTableData, GenericTableWithModals} from "./TableSystem";
+import { GenericTableWithModals, useTableData } from "./TableSystem";
 import { columns } from "../rendering/ColumnRenders";
+import { InterviewFormModal, InterviewViewModal } from "../modals/interview/InterviewModal";
+import "./InterviewTable.css";
 
 const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 	const {
@@ -22,9 +21,9 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 	// Wrapper for success handlers to trigger parent refresh
 	const handleAddSuccess = (newInterview) => {
 		addItem(newInterview);
-		// if (onInterviewChange) {
-		// 	onInterviewChange();
-		// }
+		if (onInterviewChange) {
+			onInterviewChange();
+		}
 	};
 
 	const handleUpdateSuccess = (updatedInterview) => {
@@ -44,20 +43,18 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 	// Define columns for interview table
 	const interviewColumns = [columns.date(), columns.type(), columns.location(), columns.note()];
 
-	// Create wrapper components that pass the jobApplicationId
+	// Create wrapper components that pass the jobApplicationId and handle the new modal structure
 	const InterviewFormModalWithProps = (props) => (
 		<InterviewFormModal
 			{...props}
+			interview={props.item}
 			jobApplicationId={jobApplicationId}
 			onSuccess={props.isEdit ? handleUpdateSuccess : handleAddSuccess}
 		/>
 	);
 
 	const InterviewViewModalWithProps = (props) => (
-		<InterviewViewModal
-			{...props}
-			interview={props.item}
-		/>
+		<InterviewViewModal {...props} interview={props.item} jobApplicationId={jobApplicationId} />
 	);
 
 	return (
