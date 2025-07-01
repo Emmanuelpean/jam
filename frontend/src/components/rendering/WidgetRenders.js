@@ -192,8 +192,6 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 	);
 };
 
-
-
 // Render drag-drop widget
 const renderDragDrop = (field) => {
 	return (
@@ -209,6 +207,14 @@ const renderDragDrop = (field) => {
 			required={field.required}
 		/>
 	);
+};
+
+const renderTable = (field) => {
+	// For table fields, we expect the field to have a render function that returns the table component
+	if (field.render && typeof field.render === "function") {
+		return field.render();
+	}
+	return <div>Table component not provided</div>;
 };
 
 // Render default input widget
@@ -228,13 +234,14 @@ export const renderDefaultInput = (field, value, handleChange, error) => {
 		</>
 	);
 };
+
 export const renderInputField = (field, formData, handleChange, errors, handleSelectChange) => {
 	// For drag-drop fields, don't use formData value since they manage their own state
-	const value = field.type === "drag-drop" ? field.value : formData[field.name];
+	const value = field.type === "drag-drop" || field.type === "table" ? field.value : formData[field.name];
 	const error = errors[field.name];
 
 	// Handle custom render function
-	if (typeof field.render === "function") {
+	if (typeof field.render === "function" && field.type !== "table") {
 		return field.render({
 			value: value || "",
 			onChange: handleChange,
@@ -261,6 +268,9 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 
 		case "drag-drop":
 			return renderDragDrop(field);
+
+		case "table":
+			return renderTable(field);
 
 		default:
 			return renderDefaultInput(field, value, handleChange, error);

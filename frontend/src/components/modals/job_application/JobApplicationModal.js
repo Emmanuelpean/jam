@@ -3,12 +3,12 @@ import GenericModal from "../GenericModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import { filesApi, jobApplicationsApi } from "../../../services/api";
 import { fileToBase64 } from "../../../utils/FileUtils";
-import InterviewsTable from "../../tables/InterviewTable";
 import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
 import { useAuth } from "../../../contexts/AuthContext";
 import AlertModal from "../alert/AlertModal";
 import { formDateTime } from "../../../utils/TimeUtils";
+import InterviewsTable from "../../tables/InterviewTable";
 
 export const JobApplicationModal = ({
 	show,
@@ -184,42 +184,71 @@ export const JobApplicationModal = ({
 		}
 	};
 
+	const createInterviewsTableField = () => {
+		if (jobApplication?.id) {
+			return {
+				name: "interviews_table",
+				key: "interviews_table",
+				type: "table",
+				columnClass: "col-12", // Full width
+				render: () => (
+					<InterviewsTable
+						interviews={interviews}
+						jobApplicationId={jobApplication.id}
+						onInterviewChange={handleInterviewChange}
+					/>
+				),
+			};
+		}
+		return null;
+	};
+
 	// Form fields for editing
 	const formFieldsArray = useMemo(
-		() => [
-			[formFields.applicationDate(), formFields.applicationStatus()],
-			[formFields.job(filteredJobs)],
-			[
-				formFields.applicationVia(),
-				...(currentFormData?.applied_via === "Aggregator"
-					? [formFields.aggregator(aggregators, openAggregatorModal)]
-					: []),
-			],
-			formFields.url(),
-			formFields.note({
-				placeholder: "Add notes about your application process, interview details, etc...",
-			}),
-			[
-				{
-					name: "cv",
-					label: "CV/Resume",
-					type: "drag-drop",
-					value: fileStates.cv,
-					onChange: (file) => handleFileChange("cv", file),
-					onRemove: () => handleFileRemove("cv"),
-					onOpenFile: handleFileDownload,
-				},
-				{
-					name: "cover_letter",
-					label: "Cover Letter",
-					type: "drag-drop",
-					value: fileStates.cover_letter,
-					onChange: (file) => handleFileChange("cover_letter", file),
-					onRemove: () => handleFileRemove("cover_letter"),
-					onOpenFile: handleFileDownload,
-				},
-			],
-		],
+		() => {
+			const baseFields = [
+				[formFields.applicationDate(), formFields.applicationStatus()],
+				[formFields.job(filteredJobs)],
+				[
+					formFields.applicationVia(),
+					...(currentFormData?.applied_via === "Aggregator"
+						? [formFields.aggregator(aggregators, openAggregatorModal)]
+						: []),
+				],
+				formFields.url(),
+				formFields.note({
+					placeholder: "Add notes about your application process, interview details, etc...",
+				}),
+				[
+					{
+						name: "cv",
+						label: "CV/Resume",
+						type: "drag-drop",
+						value: fileStates.cv,
+						onChange: (file) => handleFileChange("cv", file),
+						onRemove: () => handleFileRemove("cv"),
+						onOpenFile: handleFileDownload,
+					},
+					{
+						name: "cover_letter",
+						label: "Cover Letter",
+						type: "drag-drop",
+						value: fileStates.cover_letter,
+						onChange: (file) => handleFileChange("cover_letter", file),
+						onRemove: () => handleFileRemove("cover_letter"),
+						onOpenFile: handleFileDownload,
+					},
+				],
+			];
+
+			// Add interviews table field if in edit mode and job application exists
+			const interviewsField = createInterviewsTableField();
+			if (interviewsField) {
+				baseFields.push(interviewsField);
+			}
+
+			return baseFields;
+		},
 		[
 			currentFormData?.applied_via,
 			fileStates.cv,
@@ -227,18 +256,32 @@ export const JobApplicationModal = ({
 			handleFileChange,
 			handleFileRemove,
 			openAggregatorModal,
+			submode,
+			jobApplication?.id,
+			interviews,
+			handleInterviewChange,
 		],
 	);
 
-	// View fields for display
-	const viewFieldsArray = [
-		[viewFields.date(), viewFields.status()],
-		[viewFields.job(), viewFields.appliedVia()],
-		[viewFields.url({ label: "Application URL" }), viewFields.files()],
-		viewFields.note(),
-	];
 
-	// Combine them in a way GenericModal can use based on mode
+	// View fields for display
+	const viewFieldsArray = useMemo(() => {
+		const baseFields = [
+			[viewFields.date(), viewFields.status()],
+			[viewFields.job(), viewFields.appliedVia()],
+			[viewFields.url({ label: "Application URL" }), viewFields.files()],
+			viewFields.note(),
+		];
+
+		// Add interviews table field if in view mode and job application exists
+		const interviewsField = createInterviewsTableField();
+		if (interviewsField) {
+			baseFields.push(interviewsField);
+		}
+
+		return baseFields;
+	}, [submode, jobApplication?.id, interviews, handleInterviewChange]);
+
 	const fields = useMemo(
 		() => ({
 			form: formFieldsArray,
@@ -368,20 +411,6 @@ export const JobApplicationModal = ({
 		);
 	};
 
-	// Custom content to include the interviews table for edit/view mode
-	const customContent =
-		(submode === "edit" || submode === "view") && jobApplication?.id ? (
-			<InterviewsTable
-				interviews={interviews}
-				jobApplicationId={jobApplication.id}
-				onInterviewChange={handleInterviewChange}
-			/>
-		) : null;
-
-	// Don't render if we're in view mode but have no jobApplication data
-	if (submode === "view" && !jobApplication?.id) {
-		return null;
-	}
 
 	return (
 		<>
@@ -400,7 +429,6 @@ export const JobApplicationModal = ({
 				onDelete={onDelete}
 				transformFormData={transformFormData}
 				customSubmitHandler={submode !== "view" ? handleCustomSubmit : undefined}
-				customContent={customContent}
 				onFormDataChange={handleFormDataChange} // Remove the condition - always pass this
 			/>
 

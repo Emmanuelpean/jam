@@ -442,6 +442,11 @@ export const renderFieldValue = (field, item) => {
 		return field.render(item);
 	}
 
+	// Handle table type fields - they should render their component in view mode too
+	if (field.type === "table" && field.render) {
+		return field.render();
+	}
+
 	let rendered;
 	if (field.render) {
 		rendered = field.render(item);

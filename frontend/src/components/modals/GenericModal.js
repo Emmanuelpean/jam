@@ -283,7 +283,7 @@ const GenericModal = ({
 						<div key={field.name || field.key} className={field.columnClass || columnClass}>
 							{isFormMode ? (
 								<Form.Group className="mb-3">
-									{field.type !== "drag-drop" && (
+									{field.type !== "drag-drop" && field.type !== "table" && (
 										<Form.Label>
 											{field.label}
 											{field.required && <span className="text-danger">*</span>}
