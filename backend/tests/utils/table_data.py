@@ -1,6 +1,6 @@
 """Centralized test data for both conftest.py and seed_database.py"""
 
-from test.utils.files import load_all_resource_files
+from tests.utils.files import load_all_resource_files
 
 RESOURCE_FILES = load_all_resource_files()
 
@@ -31,8 +31,8 @@ USERS_DATA = [
         "password": "password6",
     },
     {
-        "email": "recruiter@talent.com",
-        "password": "password7",
+        "email": "test_user@test.com",
+        "password": "test_password",
     },
 ]
 

@@ -1,7 +1,7 @@
 import copy
 
 from app import models, utils
-from test.utils.table_data import (
+from tests.utils.table_data import (
     USERS_DATA,
     COMPANIES_DATA,
     LOCATIONS_DATA,

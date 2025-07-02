@@ -21,7 +21,6 @@ This module is instrumental for efficiently executing unit and integration tests
 and providing the necessary utilities for seamless interactions with the application's data and APIs.
 """
 
-import base64
 import datetime as dt
 from typing import Any, Generator
 
@@ -34,7 +33,7 @@ from starlette.testclient import TestClient
 from app import models, database, schemas
 from app.main import app
 from app.oauth2 import create_access_token
-from test.utils.create_data import (
+from tests.utils.create_data import (
     create_users,
     create_companies,
     create_locations,
