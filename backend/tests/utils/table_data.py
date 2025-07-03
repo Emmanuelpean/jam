@@ -7,8 +7,8 @@ RESOURCE_FILES = load_all_resource_files()
 
 USERS_DATA = [
     {
-        "email": "emmanuel.pean@gmail.com",
-        "password": "password1",
+        "email": "test_user@test.com",
+        "password": "test_password",
     },
     {
         "email": "jane.smith@example.com",
@@ -29,11 +29,7 @@ USERS_DATA = [
     {
         "email": "developer@techstartup.com",
         "password": "password6",
-    },
-    {
-        "email": "test_user@test.com",
-        "password": "test_password",
-    },
+    }
 ]
 
 # Company test data - expanded with more variety

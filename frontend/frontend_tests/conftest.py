@@ -90,7 +90,7 @@ def test_backend_server():
     env = os.environ.copy()
     env["DATABASE_HOSTNAME"] = "localhost"
     env["DATABASE_PORT"] = "5432"
-    env["DATABASE_NAME"] = "jam_test"  # This is key!
+    env["DATABASE_NAME"] = "jam_test"
     env["DATABASE_USERNAME"] = "postgres"
     env["DATABASE_PASSWORD"] = "db_password"
     env["SQLALCHEMY_DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
@@ -336,6 +336,11 @@ def api_base_url(test_backend_server):
 def frontend_base_url(test_frontend_server):
     """Base URL for the frontend"""
     return test_frontend_server
+
+@pytest.fixture
+def frontend_test_keywords(test_keywords):
+
+    return test_keywords
 
 
 @pytest.fixture(scope="session")

@@ -5,6 +5,7 @@ from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -20,13 +21,37 @@ class TestKeywordsPage:
     - Deleting keyword entries
     """
 
-    test_keywords = []
-
     @pytest.fixture(autouse=True)
     def setup_method(self, test_keywords, frontend_base_url):
         """Set up the test environment before each test with test data"""
         try:
-            self.driver = webdriver.Chrome()
+            # Configure Chrome options to disable password prompts
+            chrome_options = Options()
+            chrome_options.add_argument("--disable-password-generation")
+            chrome_options.add_argument("--disable-password-manager-reauthentication")
+            chrome_options.add_argument("--disable-save-password-bubble")
+            chrome_options.add_argument("--disable-web-security")
+            chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+            chrome_options.add_argument("--disable-extensions")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+
+            # Set preferences to disable password manager
+            prefs = {
+                "credentials_enable_service": False,
+                "password_manager_enabled": False,
+                "profile.password_manager_enabled": False,
+                "profile.default_content_setting_values.notifications": 2,
+                "profile.default_content_settings.popups": 0
+            }
+            chrome_options.add_experimental_option("prefs", prefs)
+
+            # Additional option to disable password saving prompts
+            chrome_options.add_experimental_option("useAutomationExtension", False)
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+
+            self.driver = webdriver.Chrome(options=chrome_options)
+
             self.driver.maximize_window()
             self.wait = WebDriverWait(self.driver, 10)
             self.base_url = frontend_base_url
@@ -81,28 +106,41 @@ class TestKeywordsPage:
             print(f"Current URL: {self.driver.current_url}")
             raise
 
-    def wait_for_page_load(self):
-        """Wait for the Keywords page to load completely"""
+    def wait_for_page_load(self, timeout=10):
+        """Wait for loading spinner to disappear"""
         try:
-            self.wait.until(EC.presence_of_element_located((By.XPATH, "//h1[contains(text(), 'Tags')]")))
-        except TimeoutException as e:
-            print(f"Timeout waiting for page load: {e}")
-            print(f"Current URL: {self.driver.current_url}")
-            print(f"Page title: {self.driver.title}")
+            # Wait for spinner to disappear
+            WebDriverWait(self.driver, timeout).until(
+                EC.invisibility_of_element_located((By.CSS_SELECTOR, ".spinner-border"))
+            )
+        except TimeoutException:
+            # If spinner was never present, that's also okay
+            pass
 
-            # Debug: find h1 elements
-            try:
-                h1_elements = self.driver.find_elements(By.TAG_NAME, "h1")
-                print(f"Found {len(h1_elements)} h1 elements:")
-                for i, h1 in enumerate(h1_elements):
-                    print(f"  h1[{i}]: {h1.text}")
-            except Exception as inner_e:
-                print(f"Error getting h1 elements: {inner_e}")
+    def get_all_element_ids(self):
+        """Get all element IDs present on the current page"""
+        # Find all elements that have an ID attribute
+        elements_with_id = self.driver.find_elements(By.XPATH, "//*[@id]")
 
-            raise
+        # Extract the ID values
+        element_ids = []
+        for element in elements_with_id:
+            element_id = element.get_attribute("id")
+            if element_id:  # Only add non-empty IDs
+                element_ids.append(element_id)
 
-    def test_display_keywords_entries(self):
+        return element_ids
+
+    def get_element(self, element_id):
+
+        try:
+            return self.wait.until(EC.presence_of_element_located((By.ID, element_id)))
+        except:
+            raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
+
+    def test_display_keywords_entries(self, frontend_test_keywords):
         """Test that keywords entries are displayed correctly"""
+
         # Wait for the table to load
         table = self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "ag-root-wrapper")))
         assert table.is_displayed(), "Keywords table should be visible"
@@ -111,17 +149,21 @@ class TestKeywordsPage:
         rows = self.driver.find_elements(By.CSS_SELECTOR, ".ag-row")
         assert len(rows) > 0, "Should have at least one keyword entry"
 
+    def wait_for_modal(self):
+
+        modal = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".modal")))
+        assert modal.is_displayed(), "Add keyword modal should be visible"
+
     def test_add_keyword_with_valid_name(self):
         """Test adding a new keyword with a valid name"""
         test_keyword_name = f"TestKeyword_{int(time.time())}"
 
         # Click the Add button
-        add_button = self.wait.until(EC.element_to_be_clickable((By.ID, "add-entry-button")))
+        add_button = self.get_element("add-entity-button")
         add_button.click()
 
         # Wait for modal to appear
-        modal = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".modal")))
-        assert modal.is_displayed(), "Add keyword modal should be visible"
+        self.wait_for_modal()
 
         # Fill in the name field
         name_input = self.wait.until(EC.presence_of_element_located((By.NAME, "name")))

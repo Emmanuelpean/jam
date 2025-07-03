@@ -8,7 +8,7 @@ import { accessAttribute } from "../../utils/Utils";
 import AlertModal from "../modals/alert/AlertModal";
 import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
-import {pluralize} from "../../utils/StringUtils";
+import { pluralize } from "../../utils/StringUtils";
 
 // ================================================================================================
 // DATA MANAGEMENT HOOK
@@ -333,7 +333,7 @@ export const GenericTable = ({
 	if (loading) {
 		return (
 			<div className="d-flex justify-content-center mt-5">
-				<div className="spinner-border" role="status">
+				<div className="spinner-border" role="status" id="table-spinner">
 					<span className="visually-hidden">Loading...</span>
 				</div>
 			</div>
@@ -361,7 +361,7 @@ export const GenericTable = ({
 					</span>
 				</div>
 
-				<Button variant="primary" onClick={onAddClick} style={{ width: "60%" }}>
+				<Button variant="primary" onClick={onAddClick} style={{ width: "60%" }} id="add-entity-button">
 					{addButtonText}
 				</Button>
 			</div>
