@@ -236,4 +236,11 @@ export const viewFields = {
 		render: (x) => renderFunctions.files(x, true),
 		...overrides,
 	}),
+
+	interviews: (overrides = {}) => ({
+		key: "interviews",
+		label: "Interviews",
+		render: renderFunctions.interviewTable,
+		...overrides,
+	})
 };

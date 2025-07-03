@@ -241,10 +241,8 @@ export const JobApplicationModal = ({
 				],
 			];
 
-			// Add interviews table field if in edit mode and job application exists
-			const interviewsField = createInterviewsTableField();
-			if (interviewsField) {
-				baseFields.push(interviewsField);
+			if (jobApplication?.id) {
+				baseFields.push(viewFields.interviews());
 			}
 
 			return baseFields;
@@ -273,10 +271,8 @@ export const JobApplicationModal = ({
 			viewFields.note(),
 		];
 
-		// Add interviews table field if in view mode and job application exists
-		const interviewsField = createInterviewsTableField();
-		if (interviewsField) {
-			baseFields.push(interviewsField);
+		if (jobApplication?.id) {
+			baseFields.push(viewFields.interviews());
 		}
 
 		return baseFields;

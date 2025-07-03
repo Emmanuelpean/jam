@@ -58,34 +58,28 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 	);
 
 	return (
-		<div className="interviews-table-container">
-			<div className="mb-3">
-				<h6 className="mb-3">Interviews {interviews.length > 0 && `(${interviews.length})`}</h6>
-
-				<GenericTableWithModals
-					data={interviews}
-					columns={interviewColumns}
-					sortConfig={sortConfig}
-					onSort={setSortConfig}
-					searchTerm={searchTerm}
-					onSearchChange={setSearchTerm}
-					loading={loading}
-					error={error}
-					FormModal={InterviewFormModalWithProps}
-					ViewModal={InterviewViewModalWithProps}
-					endpoint="interviews"
-					nameKey="date"
-					itemType="Interview"
-					addItem={addItem}
-					updateItem={updateItem}
-					removeItem={handleDeleteSuccess}
-					formModalSize="xl"
-					viewModalSize="xl"
-					isInModal={true}
-					showAllEntries={true}
-				/>
-			</div>
-		</div>
+		<GenericTableWithModals
+			data={interviews}
+			columns={interviewColumns}
+			sortConfig={sortConfig}
+			onSort={setSortConfig}
+			searchTerm={searchTerm}
+			onSearchChange={setSearchTerm}
+			loading={loading}
+			error={error}
+			FormModal={InterviewFormModalWithProps}
+			ViewModal={InterviewViewModalWithProps}
+			endpoint="interviews"
+			nameKey="date"
+			itemType="Interview"
+			addItem={addItem}
+			updateItem={updateItem}
+			removeItem={handleDeleteSuccess}
+			formModalSize="xl"
+			viewModalSize="xl"
+			isInModal={true}
+			showAllEntries={true}
+		/>
 	);
 };
 

@@ -51,6 +51,7 @@ const renderTextarea = (field, value, handleChange, error) => {
 		<>
 			<Form.Control
 				as="textarea"
+				id={field.name}
 				rows={field.rows || 3}
 				name={field.name}
 				value={value || ""}
@@ -68,6 +69,7 @@ const renderCheckbox = (field, value, handleChange) => {
 	return (
 		<Form.Check
 			type="checkbox"
+			id={field.name}
 			name={field.name}
 			checked={value || false}
 			onChange={handleChange}
@@ -131,6 +133,7 @@ const renderSelect = (field, value, handleChange, handleSelectChange, error) => 
 						handleSelectChange(selectedOptions, actionMeta);
 					}
 				}}
+				id={field.name}
 				options={field.options || []}
 				closeMenuOnSelect={!isMulti}
 				placeholder={field.placeholder || `Select ${field.label}`}
@@ -173,6 +176,7 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 		<>
 			<div className="datetime-input-wrapper">
 				<Form.Control
+					id={field.name}
 					type="datetime-local"
 					name={field.name}
 					value={formattedValue}
@@ -196,6 +200,7 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 const renderDragDrop = (field) => {
 	return (
 		<FileUploader
+			id={field.name}
 			name={field.name}
 			label={field.label}
 			value={field.value}
@@ -222,6 +227,7 @@ export const renderDefaultInput = (field, value, handleChange, error) => {
 	return (
 		<>
 			<Form.Control
+				id={field.name}
 				type={field.type || "text"}
 				name={field.name}
 				value={value || ""}

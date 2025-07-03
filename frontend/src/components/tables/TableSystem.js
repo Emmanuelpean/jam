@@ -404,6 +404,7 @@ export const GenericTable = ({
 						{currentPageData.map((item, index) => (
 							<tr
 								key={item.id || index}
+								id={`table-row-${item.id}`}
 								className={`${selectable ? "table-row-selectable" : ""} ${onRowClick ? "table-row-clickable" : ""}`}
 								onClick={(e) => handleRowClick(e, item)}
 								onContextMenu={onRowRightClick ? (e) => onRowRightClick(item, e) : undefined}
@@ -485,11 +486,12 @@ export const GenericTable = ({
 						</span>
 						<Form.Select
 							size="sm"
+							id="page-items-select"
 							style={{ width: "auto", padding: "0.25rem 0.5rem", textAlign: "center" }}
 							value={pageSize}
 							onChange={(e) => handlePageSizeChange(Number(e.target.value))}
 						>
-							{[10, 20, 30, 40, 50, 100].map((size) => (
+							{[20, 30, 40, 50, 100].map((size) => (
 								<option key={size} value={size}>
 									Show {size} Entries
 								</option>
@@ -519,7 +521,6 @@ export const GenericTableWithModals = ({
 	onSearchChange,
 	loading,
 	error,
-	emptyMessage,
 	selectable,
 
 	// Modal configuration

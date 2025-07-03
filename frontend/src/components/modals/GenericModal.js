@@ -280,7 +280,7 @@ const GenericModal = ({
 			return (
 				<div key={index} className="row mb-3" style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
 					{item.map((field) => (
-						<div key={field.name || field.key} className={field.columnClass || columnClass}>
+						<div key={field.key + "_group"} className={columnClass}>
 							{isFormMode ? (
 								<Form.Group className="mb-3">
 									{field.type !== "drag-drop" && field.type !== "table" && (
@@ -570,7 +570,7 @@ const GenericModal = ({
 									<Button variant="secondary" onClick={handleHide} disabled={isTransitioning}>
 										Cancel
 									</Button>
-									<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
+									<Button variant="primary" type="submit" disabled={submitting || isTransitioning} id="confirm-button">
 										{submitting ? (
 											<>
 												<Spinner animation="border" size="sm" className="me-2" />

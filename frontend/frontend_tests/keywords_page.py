@@ -7,7 +7,9 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
 
@@ -35,20 +37,33 @@ class TestKeywordsPage:
             chrome_options.add_argument("--disable-extensions")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--disable-password-manager")
+            chrome_options.add_argument("--disable-password-generation")
+            chrome_options.add_argument("--disable-autofill")
+            chrome_options.add_argument("--disable-autofill-keyboard-accessory-view")
+            chrome_options.add_argument("--disable-full-form-autofill-ios")
 
             # Set preferences to disable password manager
             prefs = {
+                "profile.password_manager_leak_detection": False,
                 "credentials_enable_service": False,
                 "password_manager_enabled": False,
                 "profile.password_manager_enabled": False,
                 "profile.default_content_setting_values.notifications": 2,
-                "profile.default_content_settings.popups": 0
+                "profile.default_content_settings.popups": 0,
+                "autofill.profile_enabled": False,
+                "autofill.credit_card_enabled": False,
+                "profile.default_content_setting_values.auto_select_certificate": 1,
+                "profile.managed_default_content_settings.notifications": 2
             }
             chrome_options.add_experimental_option("prefs", prefs)
 
             # Additional option to disable password saving prompts
             chrome_options.add_experimental_option("useAutomationExtension", False)
             chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+
+            # Try this additional option
+            chrome_options.add_argument("--disable-features=TranslateUI,BlinkGenPropertyTrees,PasswordGeneration,AutofillPasswordGeneration")
 
             self.driver = webdriver.Chrome(options=chrome_options)
 
@@ -59,9 +74,8 @@ class TestKeywordsPage:
 
             # Login and navigate to Keywords page
             self.login()
-            keywords_url = f"{self.base_url}/keywords"
-            self.driver.get(keywords_url)
-            self.wait_for_page_load()
+            self.driver.get(f"{self.base_url}/keywords")
+            self.wait_for_table_load()
 
         except Exception:
             if hasattr(self, 'driver'):
@@ -80,21 +94,15 @@ class TestKeywordsPage:
         except Exception as e:
             print(f"Error during teardown: {e}")
 
-    def login(self):
+    def login(self) -> None:
         """Helper method to login to the application"""
         try:
             login_url = f"{self.base_url}/login"
             self.driver.get(login_url)
 
-            username_field = self.wait.until(EC.presence_of_element_located((By.ID, "email")))
-            password_field = self.driver.find_element(By.ID, "password")
-            login_button = self.driver.find_element(By.ID, "log-button")
-
-            username_field.send_keys("test_user@test.com")
-            password_field.send_keys("test_password")
-            login_button.click()
-
-            # Wait for successful login
+            self.get_element("email").send_keys("test_user@test.com")
+            self.get_element("password").send_keys("test_password")
+            self.get_element("log-button").click()
             self.wait.until(EC.url_contains("/dashboard"))
 
         except TimeoutException as e:
@@ -106,8 +114,9 @@ class TestKeywordsPage:
             print(f"Current URL: {self.driver.current_url}")
             raise
 
-    def wait_for_page_load(self, timeout=10):
+    def wait_for_table_load(self, timeout: int | float = 10) -> None:
         """Wait for loading spinner to disappear"""
+
         try:
             # Wait for spinner to disappear
             WebDriverWait(self.driver, timeout).until(
@@ -117,8 +126,9 @@ class TestKeywordsPage:
             # If spinner was never present, that's also okay
             pass
 
-    def get_all_element_ids(self):
+    def get_all_element_ids(self) -> list[str]:
         """Get all element IDs present on the current page"""
+
         # Find all elements that have an ID attribute
         elements_with_id = self.driver.find_elements(By.XPATH, "//*[@id]")
 
@@ -131,51 +141,54 @@ class TestKeywordsPage:
 
         return element_ids
 
-    def get_element(self, element_id):
+    def get_element(self, element_id: str, selector=By.ID, etype=None) -> WebElement | Select:
+        """Get an element by its ID
+        :param element_id: ID of the element to get
+        :param selector: Selector to use for finding the element"""
 
         try:
-            return self.wait.until(EC.presence_of_element_located((By.ID, element_id)))
+            element = self.wait.until(EC.presence_of_element_located((selector, element_id)))
+            if etype is None:
+                return element
+            elif etype == "select":
+                return Select(element)
         except:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
 
     def test_display_keywords_entries(self, frontend_test_keywords):
         """Test that keywords entries are displayed correctly"""
 
-        # Wait for the table to load
-        table = self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "ag-root-wrapper")))
-        assert table.is_displayed(), "Keywords table should be visible"
+        rows = self.driver.find_elements(By.CLASS_NAME, "table-row-clickable")
+        keywords = [keyword for keyword in frontend_test_keywords if keyword.owner_id == 1]
+        assert len(rows) == min([20, len(keywords)]), "The table rows should match the keyword entries"
 
-        # Check if we have any rows (test data should exist)
-        rows = self.driver.find_elements(By.CSS_SELECTOR, ".ag-row")
-        assert len(rows) > 0, "Should have at least one keyword entry"
+    def test_display_keywords_40max_entries(self, frontend_test_keywords):
+        """Test that keywords entries are displayed correctly after changing the max display to 40"""
+
+        self.get_element("page-items-select", etype="select").select_by_value("40")
+        self.wait_for_table_load()
+        rows = self.driver.find_elements(By.CLASS_NAME, "table-row-clickable")
+        keywords = [keyword for keyword in frontend_test_keywords if keyword.owner_id == 1]
+        assert len(rows) == min([40, len(keywords)]), "The table rows should match the keyword entries"
 
     def wait_for_modal(self):
 
-        modal = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".modal")))
+        modal = self.get_element(".modal", By.CSS_SELECTOR)
         assert modal.is_displayed(), "Add keyword modal should be visible"
+
+    def wait_for_modal_close(self):
+
+        self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
 
     def test_add_keyword_with_valid_name(self):
         """Test adding a new keyword with a valid name"""
+
         test_keyword_name = f"TestKeyword_{int(time.time())}"
-
-        # Click the Add button
-        add_button = self.get_element("add-entity-button")
-        add_button.click()
-
-        # Wait for modal to appear
+        self.get_element("add-entity-button").click()
         self.wait_for_modal()
-
-        # Fill in the name field
-        name_input = self.wait.until(EC.presence_of_element_located((By.NAME, "name")))
-        name_input.clear()
-        name_input.send_keys(test_keyword_name)
-
-        # Submit the form
-        save_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Save')]")
-        save_button.click()
-
-        # Wait for modal to close
-        self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
+        self.get_element("name").send_keys(test_keyword_name)
+        self.get_element("confirm-button").click()
+        self.wait_for_modal_close()
 
         # Verify the keyword was added to the table
         self.wait.until(EC.presence_of_element_located((By.XPATH, f"//td[contains(text(), '{test_keyword_name}')]")))

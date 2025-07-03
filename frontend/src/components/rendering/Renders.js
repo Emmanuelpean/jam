@@ -9,6 +9,7 @@ import JobViewModal from "../modals/job/JobViewModal";
 import { accessAttribute } from "../../utils/Utils";
 import { filesApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+import InterviewsTable from "../tables/InterviewTable";
 
 const createModalManager = (ModalComponent, modalProp) => {
 	return ({ children, onEdit }) => {
@@ -429,6 +430,16 @@ export const renderFunctions = {
 				</AggregatorModalManager>
 			);
 		}
+	},
+
+	interviewTable: (item, view = false, key = "interviews") => {
+		const interviews = accessAttribute(item, key);
+		return (
+			<InterviewsTable
+				interviews={interviews}
+				jobApplicationId={item.id}
+			/>
+		);
 	},
 };
 
