@@ -649,7 +649,12 @@ const GenericModal = ({
 								Close
 							</Button>
 							{fields.form && fields.form.length > 0 && (
-								<Button variant="primary" onClick={handleEdit} disabled={isTransitioning}>
+								<Button
+									variant="primary"
+									onClick={handleEdit}
+									disabled={isTransitioning}
+									id="edit-button"
+								>
 									Edit
 								</Button>
 							)}
@@ -667,11 +672,12 @@ const GenericModal = ({
 							size="lg"
 							style={{ minWidth: "100px" }}
 							className="me-2"
+							id="cancel-button"
 						>
 							{cancelText}
 						</Button>
 					)}
-					<Button onClick={handleSubmit} size="lg" style={{ minWidth: "100px" }}>
+					<Button onClick={handleSubmit} size="lg" style={{ minWidth: "100px" }} id="confirm-button">
 						{confirmText}
 					</Button>
 				</Modal.Footer>
@@ -679,10 +685,10 @@ const GenericModal = ({
 		} else if (mode === "confirmation") {
 			return (
 				<Modal.Footer className={"modal-buttons-container"}>
-					<Button variant="secondary" onClick={handleHide}>
+					<Button variant="secondary" onClick={handleHide} id="cancel-button">
 						{cancelText}
 					</Button>
-					<Button variant={confirmVariant} onClick={handleSubmit}>
+					<Button variant={confirmVariant} onClick={handleSubmit} id="confirm-button">
 						{confirmText}
 					</Button>
 				</Modal.Footer>

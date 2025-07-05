@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 
 import pytest
 from selenium import webdriver
@@ -161,18 +162,27 @@ class TestKeywordsPage:
 
         modal = self.get_element(".modal", By.CSS_SELECTOR)
         assert modal.is_displayed(), "Modal should be visible"
+        return modal
 
     def wait_for_modal_close(self):
         """Wait for the modal to close"""
 
         self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
 
+    @property
+    def table_rows(self) -> list[WebElement]:
+
+        return self.driver.find_elements(By.CLASS_NAME, "table-row-clickable")
+
+    def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
+
+        return self.get_element(f"table-row-{item_id}", *args, **kwargs)
+
     def test_display_keywords_entries(self, frontend_test_keywords):
         """Test that keywords entries are displayed correctly"""
 
-        rows = self.driver.find_elements(By.CLASS_NAME, "table-row-clickable")
         keywords = [keyword for keyword in frontend_test_keywords if keyword.owner_id == 1]
-        assert len(rows) == min([20, len(keywords)]), "The table rows should match the keyword entries"
+        assert len(self.table_rows) == min([20, len(keywords)]), "The table rows should match the keyword entries"
 
     def test_display_keywords_40max_entries(self, frontend_test_keywords):
         """Test that keywords entries are displayed correctly after changing the max display to 40"""
@@ -216,7 +226,7 @@ class TestKeywordsPage:
 
     def test_add_keyword_without_name_shows_error(self):
         """Test that adding a keyword without a name shows validation error"""
-        # Click the Add button
+
         self.add_entity_button.click()
         self.wait_for_modal()
         self.save_button.click()
@@ -228,20 +238,16 @@ class TestKeywordsPage:
 
     def test_view_keyword_entry(self):
         """Test viewing a keyword entry details"""
+
         # Use the first test keyword from conftest
         test_keyword = self.test_keywords[0]
-
-        # Find and click on the keyword row to view details
-        keyword_row = self.wait.until(EC.element_to_be_clickable((By.XPATH, f"//tr[td[contains(text(), '{test_keyword.name}')]]")))
-        keyword_row.click()
-
-        # Wait for view modal to appear
-        view_modal = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".modal")))
-        assert view_modal.is_displayed(), "View modal should be visible"
+        self.table_row(test_keyword.id).click()
+        modal = self.wait_for_modal()
 
         # Verify modal contains the keyword information
-        modal_content = view_modal.text
-        assert test_keyword.name in modal_content, "Modal should display the keyword name"
+        date = datetime.strftime(test_keyword.created_at, "%d/%m/%Y")
+        expected = f'Keyword Details\nName\n{test_keyword.name}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit'
+        assert modal.text == expected
 
         # Close modal
         close_button = self.driver.find_element(By.CSS_SELECTOR, ".modal .btn-close, .modal .close")
