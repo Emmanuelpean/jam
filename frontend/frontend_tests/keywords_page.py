@@ -139,12 +139,13 @@ class TestKeywordsPage:
             if element_id:  # Only add non-empty IDs
                 element_ids.append(element_id)
 
-        return element_ids
+        return sorted(element_ids)
 
-    def get_element(self, element_id: str, selector=By.ID, etype=None) -> WebElement | Select:
+    def get_element(self, element_id: str, selector: By = By.ID, etype: str | None = None) -> WebElement | Select:
         """Get an element by its ID
         :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element"""
+        :param selector: Selector to use for finding the element
+        :param etype: Type of element to return. If None, returns the WebElement. If "select", returns the Select object."""
 
         try:
             element = self.wait.until(EC.presence_of_element_located((selector, element_id)))
@@ -154,6 +155,17 @@ class TestKeywordsPage:
                 return Select(element)
         except:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
+
+    def wait_for_modal(self):
+        """Wait for the modal to appear"""
+
+        modal = self.get_element(".modal", By.CSS_SELECTOR)
+        assert modal.is_displayed(), "Modal should be visible"
+
+    def wait_for_modal_close(self):
+        """Wait for the modal to close"""
+
+        self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
 
     def test_display_keywords_entries(self, frontend_test_keywords):
         """Test that keywords entries are displayed correctly"""
@@ -171,23 +183,29 @@ class TestKeywordsPage:
         keywords = [keyword for keyword in frontend_test_keywords if keyword.owner_id == 1]
         assert len(rows) == min([40, len(keywords)]), "The table rows should match the keyword entries"
 
-    def wait_for_modal(self):
+    @property
+    def add_entity_button(self) -> WebElement:
 
-        modal = self.get_element(".modal", By.CSS_SELECTOR)
-        assert modal.is_displayed(), "Add keyword modal should be visible"
+        return self.get_element("add-entity-button")
 
-    def wait_for_modal_close(self):
+    @property
+    def save_button(self) -> WebElement:
 
-        self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
+        return self.get_element("confirm-button")
+
+    @property
+    def cancel_button(self) -> WebElement:
+
+        return self.get_element("cancel-button")
 
     def test_add_keyword_with_valid_name(self):
         """Test adding a new keyword with a valid name"""
 
         test_keyword_name = f"TestKeyword_{int(time.time())}"
-        self.get_element("add-entity-button").click()
+        self.add_entity_button.click()
         self.wait_for_modal()
         self.get_element("name").send_keys(test_keyword_name)
-        self.get_element("confirm-button").click()
+        self.save_button.click()
         self.wait_for_modal_close()
 
         # Verify the keyword was added to the table
@@ -199,29 +217,14 @@ class TestKeywordsPage:
     def test_add_keyword_without_name_shows_error(self):
         """Test that adding a keyword without a name shows validation error"""
         # Click the Add button
-        add_button = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Add')]")))
-        add_button.click()
-
-        # Wait for modal to appear
-        modal = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".modal")))
-
-        # Leave name field empty and try to submit
-        save_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Save')]")
-        save_button.click()
-
-        # Check for validation error or that modal is still visible
-        try:
-            # Look for validation error message
-            error_element = self.driver.find_element(By.CSS_SELECTOR, ".invalid-feedback, .error-message, .alert-danger")
-            assert error_element.is_displayed(), "Error message should be displayed for empty name"
-        except NoSuchElementException:
-            # Alternative: check that modal is still visible (form didn't submit)
-            assert modal.is_displayed(), "Modal should still be visible when validation fails"
+        self.add_entity_button.click()
+        self.wait_for_modal()
+        self.save_button.click()
+        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
 
         # Close modal
-        close_button = self.driver.find_element(By.CSS_SELECTOR, ".modal .btn-close, .modal .close")
-        close_button.click()
-        self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
+        self.cancel_button.click()
+        self.wait_for_modal_close()
 
     def test_view_keyword_entry(self):
         """Test viewing a keyword entry details"""

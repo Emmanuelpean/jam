@@ -567,10 +567,20 @@ const GenericModal = ({
 						<Modal.Footer>
 							<div className="d-flex flex-column w-100 gap-2">
 								<div className="modal-buttons-container">
-									<Button variant="secondary" onClick={handleHide} disabled={isTransitioning}>
+									<Button
+										variant="secondary"
+										onClick={handleHide}
+										disabled={isTransitioning}
+										id="cancel-button"
+									>
 										Cancel
 									</Button>
-									<Button variant="primary" type="submit" disabled={submitting || isTransitioning} id="confirm-button">
+									<Button
+										variant="primary"
+										type="submit"
+										disabled={submitting || isTransitioning}
+										id="confirm-button"
+									>
 										{submitting ? (
 											<>
 												<Spinner animation="border" size="sm" className="me-2" />
@@ -595,7 +605,12 @@ const GenericModal = ({
 										Delete
 									</Button>
 
-									<Button variant="primary" type="submit" disabled={submitting || isTransitioning}>
+									<Button
+										variant="primary"
+										type="submit"
+										disabled={submitting || isTransitioning}
+										id="confirm-button"
+									>
 										{submitting ? (
 											<>
 												<Spinner animation="border" size="sm" className="me-2" />
@@ -610,8 +625,9 @@ const GenericModal = ({
 								<div className="modal-buttons-container">
 									<Button
 										variant="secondary"
-										onClick={submode === "edit" ? handleHide: handleCancelEdit}
+										onClick={submode === "edit" ? handleHide : handleCancelEdit}
 										disabled={isTransitioning}
+										id="cancel-button"
 									>
 										{submode === "edit" ? "Close" : "Cancel"}
 									</Button>
@@ -624,7 +640,12 @@ const GenericModal = ({
 				return (
 					<Modal.Footer>
 						<div className="modal-buttons-container">
-							<Button variant="secondary" onClick={handleHide} disabled={isTransitioning}>
+							<Button
+								variant="secondary"
+								onClick={handleHide}
+								disabled={isTransitioning}
+								id="cancel-button"
+							>
 								Close
 							</Button>
 							{fields.form && fields.form.length > 0 && (

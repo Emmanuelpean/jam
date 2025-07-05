@@ -3,7 +3,7 @@ import GenericModal from "../GenericModal";
 import { formFields } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
 import { keywordsApi } from "../../../services/api";
-import {useAuth} from "../../../contexts/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export const KeywordModal = ({
 	show,
@@ -35,6 +35,12 @@ export const KeywordModal = ({
 	// Custom validation to ensure at least one field is filled
 	const customValidation = async (formData) => {
 		const errors = {};
+
+		// Check if formData and formData.name exist before calling trim()
+		if (!formData || !formData.name) {
+			return errors; // Return empty errors if no name to validate
+		}
+
 		const queryParams = { name: formData.name.trim() };
 		const matches = await keywordsApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing) => {
