@@ -731,6 +731,7 @@ export const GenericTableWithModals = ({
 						onClick={handleContextView}
 						onMouseEnter={(e) => (e.target.style.backgroundColor = "#f8f9fa")}
 						onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
+						id="context-nenu-view"
 					>
 						<i className="bi bi-eye me-2"></i>View
 					</div>
@@ -745,6 +746,7 @@ export const GenericTableWithModals = ({
 						onClick={handleContextEdit}
 						onMouseEnter={(e) => (e.target.style.backgroundColor = "#f8f9fa")}
 						onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
+						id="context-nenu-edit"
 					>
 						<i className="bi bi-pencil me-2"></i>Edit
 					</div>
@@ -759,6 +761,7 @@ export const GenericTableWithModals = ({
 						onClick={handleContextDelete}
 						onMouseEnter={(e) => (e.target.style.backgroundColor = "#f8f9fa")}
 						onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
+						id="context-nenu-delete"
 					>
 						<i className="bi bi-trash me-2"></i>Delete
 					</div>

@@ -149,7 +149,7 @@ class TestKeywordsPage:
         :param etype: Type of element to return. If None, returns the WebElement. If "select", returns the Select object."""
 
         try:
-            element = self.wait.until(EC.presence_of_element_located((selector, element_id)))
+            element = self.wait.until(EC.element_to_be_clickable((selector, element_id)))
             if etype is None:
                 return element
             elif etype == "select":
@@ -168,6 +168,14 @@ class TestKeywordsPage:
         """Wait for the modal to close"""
 
         self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
+
+    def wait_for_view_modal(self):
+
+        self.wait.until(EC.text_to_be_present_in_element((By.CSS_SELECTOR, ".modal-title"), "Details"))
+
+    def wait_for_edit_modal(self):
+
+        self.wait.until(EC.text_to_be_present_in_element((By.CSS_SELECTOR, ".modal-title"), "Edit"))
 
     @property
     def table_rows(self) -> list[WebElement]:
@@ -189,9 +197,8 @@ class TestKeywordsPage:
 
         self.get_element("page-items-select", etype="select").select_by_value("40")
         self.wait_for_table_load()
-        rows = self.driver.find_elements(By.CLASS_NAME, "table-row-clickable")
         keywords = [keyword for keyword in frontend_test_keywords if keyword.owner_id == 1]
-        assert len(rows) == min([40, len(keywords)]), "The table rows should match the keyword entries"
+        assert len(self.table_rows) == min([40, len(keywords)]), "The table rows should match the keyword entries"
 
     @property
     def add_entity_button(self) -> WebElement:
@@ -207,6 +214,11 @@ class TestKeywordsPage:
     def cancel_button(self) -> WebElement:
 
         return self.get_element("cancel-button")
+
+    @property
+    def edit_button(self) -> WebElement:
+
+        return self.get_element("edit-button")
 
     def test_add_keyword_with_valid_name(self):
         """Test adding a new keyword with a valid name"""
@@ -254,35 +266,38 @@ class TestKeywordsPage:
         close_button.click()
         self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
 
+    @staticmethod
+    def clear(element: WebElement) -> None:
+        """Clears the input element"""
+
+        element.send_keys(Keys.CONTROL, "a")
+        element.send_keys("a")
+        time.sleep(100)
+        element.send_keys(Keys.DELETE)
+
     def test_edit_keyword_through_view_modal(self):
         """Test editing a keyword through the view modal's edit button"""
+
         # Use the first test keyword from conftest
         test_keyword = self.test_keywords[0]
         original_name = test_keyword.name
         new_name = f"EditedKeyword_{int(time.time())}"
 
         # Click on keyword row to open view modal
-        keyword_row = self.wait.until(EC.element_to_be_clickable((By.XPATH, f"//tr[td[contains(text(), '{original_name}')]]")))
-        keyword_row.click()
-
-        # Wait for view modal and click edit button
-        self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".modal")))
-        edit_button = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Edit')]")))
-        edit_button.click()
-
-        # Wait for edit form to appear
-        name_input = self.wait.until(EC.presence_of_element_located((By.NAME, "name")))
-
-        # Modify the name
-        name_input.clear()
+        self.table_row(test_keyword.id).click()
+        self.wait_for_modal()
+        self.edit_button.click()
+        self.wait_for_edit_modal()
+        name_input = self.get_element("name")
+        self.clear(name_input)
         name_input.send_keys(new_name)
+        self.save_button.click()
+        self.wait_for_view_modal()
+        self.cancel_button.click()
+        self.wait_for_modal_close()
 
-        # Save changes
-        save_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Save')]")
-        save_button.click()
-
-        # Wait for modal to close
-        self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
+        # Verify the keyword was updated
+        self.wait_for_table_load()
 
         # Verify the keyword was updated
         self.wait.until(EC.presence_of_element_located((By.XPATH, f"//td[contains(text(), '{new_name}')]")))
@@ -291,14 +306,42 @@ class TestKeywordsPage:
         old_name_elements = self.driver.find_elements(By.XPATH, f"//td[contains(text(), '{original_name}')]")
         assert len(old_name_elements) == 0, "Old keyword name should not be present"
 
-        # Clean up - restore original name
-        self.delete_keyword_by_name(new_name)
+    def context_menu(self, entity_id: int, choice: str):
+        """Row context menu"""
+
+        # Click on keyword row to open view modal
+        actions = ActionChains(self.driver)
+        actions.context_click(self.table_row(entity_id)).perform()
+
+        edit_option = self.get_element("cobtext-nenu-edit")
+        edit_option.click()
 
     def test_edit_keyword_through_right_click_context_menu(self):
         """Test editing a keyword through right-click context menu"""
-        # Use the second test keyword from conftest if available
-        if len(self.test_keywords) < 2:
-            pytest.skip("Need at least 2 test keywords for this test")
+
+        # Use the first test keyword from conftest
+        test_keyword = self.test_keywords[0]
+        original_name = test_keyword.name
+        new_name = f"EditedKeyword_{int(time.time())}"
+
+        self.context_menu(test_keyword.id, "Edit")
+        self.wait_for_edit_modal()
+        name_input = self.get_element("name")
+        self.clear(name_input)
+        name_input.send_keys(new_name)
+        self.save_button.click()
+        self.wait_for_modal_close()
+
+        # Verify the keyword was updated
+        self.wait_for_table_load()
+
+        # Verify the keyword was updated
+        self.wait.until(EC.presence_of_element_located((By.XPATH, f"//td[contains(text(), '{new_name}')]")))
+
+        # Verify old name is no longer present
+        old_name_elements = self.driver.find_elements(By.XPATH, f"//td[contains(text(), '{original_name}')]")
+        assert len(old_name_elements) == 0, "Old keyword name should not be present"
+
 
         test_keyword = self.test_keywords[1]
         original_name = test_keyword.name
@@ -307,9 +350,6 @@ class TestKeywordsPage:
         # Find the keyword row and right-click
         keyword_row = self.wait.until(EC.presence_of_element_located((By.XPATH, f"//tr[td[contains(text(), '{original_name}')]]")))
 
-        # Perform right-click
-        actions = ActionChains(self.driver)
-        actions.context_click(keyword_row).perform()
 
         # Wait for context menu and click Edit option
         try:
