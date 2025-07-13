@@ -3,13 +3,13 @@ from datetime import datetime
 
 import pytest
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -55,7 +55,7 @@ class TestKeywordsPage:
                 "autofill.profile_enabled": False,
                 "autofill.credit_card_enabled": False,
                 "profile.default_content_setting_values.auto_select_certificate": 1,
-                "profile.managed_default_content_settings.notifications": 2
+                "profile.managed_default_content_settings.notifications": 2,
             }
             chrome_options.add_experimental_option("prefs", prefs)
 
@@ -64,7 +64,9 @@ class TestKeywordsPage:
             chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
             # Try this additional option
-            chrome_options.add_argument("--disable-features=TranslateUI,BlinkGenPropertyTrees,PasswordGeneration,AutofillPasswordGeneration")
+            chrome_options.add_argument(
+                "--disable-features=TranslateUI,BlinkGenPropertyTrees,PasswordGeneration,AutofillPasswordGeneration"
+            )
 
             self.driver = webdriver.Chrome(options=chrome_options)
 
@@ -79,7 +81,7 @@ class TestKeywordsPage:
             self.wait_for_table_load()
 
         except Exception:
-            if hasattr(self, 'driver'):
+            if hasattr(self, "driver"):
                 try:
                     self.driver.quit()
                 except:
@@ -90,7 +92,7 @@ class TestKeywordsPage:
 
         # Teardown
         try:
-            if hasattr(self, 'driver'):
+            if hasattr(self, "driver"):
                 self.driver.quit()
         except Exception as e:
             print(f"Error during teardown: {e}")
@@ -104,7 +106,7 @@ class TestKeywordsPage:
             self.get_element("email").send_keys("test_user@test.com")
             self.get_element("password").send_keys("test_password")
             self.get_element("log-button").click()
-            self.wait.until(EC.url_contains("/dashboard"))
+            self.wait.until(ec.url_contains("/dashboard"))
 
         except TimeoutException as e:
             print(f"Timeout during login: {e}")
@@ -121,7 +123,7 @@ class TestKeywordsPage:
         try:
             # Wait for spinner to disappear
             WebDriverWait(self.driver, timeout).until(
-                EC.invisibility_of_element_located((By.CSS_SELECTOR, ".spinner-border"))
+                ec.invisibility_of_element_located((By.CSS_SELECTOR, ".spinner-border"))
             )
         except TimeoutException:
             # If spinner was never present, that's also okay
@@ -142,14 +144,20 @@ class TestKeywordsPage:
 
         return sorted(element_ids)
 
-    def get_element(self, element_id: str, selector: By = By.ID, etype: str | None = None) -> WebElement | Select:
+    def get_element(
+        self,
+        element_id: str,
+        selector: By = By.ID,
+        etype: str | None = None,
+    ) -> WebElement | Select:
         """Get an element by its ID
         :param element_id: ID of the element to get
         :param selector: Selector to use for finding the element
-        :param etype: Type of element to return. If None, returns the WebElement. If "select", returns the Select object."""
+        :param etype: Type of element to return. If None, returns the WebElement. If "select", returns the Select object.
+        """
 
         try:
-            element = self.wait.until(EC.element_to_be_clickable((selector, element_id)))
+            element = self.wait.until(ec.element_to_be_clickable((selector, element_id)))
             if etype is None:
                 return element
             elif etype == "select":
@@ -157,25 +165,31 @@ class TestKeywordsPage:
         except:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
 
-    def wait_for_modal(self):
-        """Wait for the modal to appear"""
-
-        modal = self.get_element(".modal", By.CSS_SELECTOR)
-        assert modal.is_displayed(), "Modal should be visible"
-        return modal
-
     def wait_for_modal_close(self):
         """Wait for the modal to close"""
 
-        self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
+        self.wait.until(ec.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
 
-    def wait_for_view_modal(self):
+    def _wait_for_modal(self, string: str) -> WebElement:
 
-        self.wait.until(EC.text_to_be_present_in_element((By.CSS_SELECTOR, ".modal-title"), "Details"))
+        self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, ".modal-title"), string))
+        return self.get_element(".modal", By.CSS_SELECTOR)
 
-    def wait_for_edit_modal(self):
+    def wait_for_view_modal(self) -> WebElement:
 
-        self.wait.until(EC.text_to_be_present_in_element((By.CSS_SELECTOR, ".modal-title"), "Edit"))
+        return self._wait_for_modal("Details")
+
+    def wait_for_edit_modal(self) -> WebElement:
+
+        return self._wait_for_modal("Edit")
+
+    def wait_for_delete_modal(self) -> WebElement:
+
+        return self._wait_for_modal("Delete")
+
+    def wait_for_add_modal(self) -> WebElement:
+
+        return self._wait_for_modal("Add")
 
     @property
     def table_rows(self) -> list[WebElement]:
@@ -206,7 +220,7 @@ class TestKeywordsPage:
         return self.get_element("add-entity-button")
 
     @property
-    def save_button(self) -> WebElement:
+    def confirm_button(self) -> WebElement:
 
         return self.get_element("confirm-button")
 
@@ -225,23 +239,33 @@ class TestKeywordsPage:
 
         test_keyword_name = f"TestKeyword_{int(time.time())}"
         self.add_entity_button.click()
-        self.wait_for_modal()
+        self.wait_for_add_modal()
         self.get_element("name").send_keys(test_keyword_name)
-        self.save_button.click()
+        self.confirm_button.click()
         self.wait_for_modal_close()
 
         # Verify the keyword was added to the table
-        self.wait.until(EC.presence_of_element_located((By.XPATH, f"//td[contains(text(), '{test_keyword_name}')]")))
-
-        # Clean up - delete the test keyword
-        self.delete_keyword_by_name(test_keyword_name)
+        self.wait.until(ec.presence_of_element_located((By.XPATH, f"//td[contains(text(), '{test_keyword_name}')]")))
 
     def test_add_keyword_without_name_shows_error(self):
         """Test that adding a keyword without a name shows validation error"""
 
         self.add_entity_button.click()
-        self.wait_for_modal()
-        self.save_button.click()
+        self.wait_for_add_modal()
+        self.confirm_button.click()
+        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
+
+        # Close modal
+        self.cancel_button.click()
+        self.wait_for_modal_close()
+
+    def test_add_keyword_same_name_shows_error(self):
+        """Test that adding a keyword with an existing name shows validation error"""
+
+        self.add_entity_button.click()
+        self.wait_for_add_modal()
+        self.get_element("name").send_keys(self.test_keywords[0].name)
+        self.confirm_button.click()
         self.get_element(".invalid-feedback", By.CSS_SELECTOR)
 
         # Close modal
@@ -254,26 +278,29 @@ class TestKeywordsPage:
         # Use the first test keyword from conftest
         test_keyword = self.test_keywords[0]
         self.table_row(test_keyword.id).click()
-        modal = self.wait_for_modal()
+        modal = self.wait_for_view_modal()
 
         # Verify modal contains the keyword information
         date = datetime.strftime(test_keyword.created_at, "%d/%m/%Y")
-        expected = f'Keyword Details\nName\n{test_keyword.name}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit'
+        expected = f"Keyword Details\nName\n{test_keyword.name}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
         assert modal.text == expected
 
         # Close modal
         close_button = self.driver.find_element(By.CSS_SELECTOR, ".modal .btn-close, .modal .close")
         close_button.click()
-        self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
+        self.wait.until(ec.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
 
     @staticmethod
     def clear(element: WebElement) -> None:
         """Clears the input element"""
 
         element.send_keys(Keys.CONTROL, "a")
-        element.send_keys("a")
-        time.sleep(100)
         element.send_keys(Keys.DELETE)
+
+    def check_rows(self, name: str, expected_count: int = 1) -> None:
+
+        rows = self.driver.find_elements(By.XPATH, f"//td[contains(text(), '{name}')]")
+        assert len(rows) == expected_count, f"Expected {expected_count} rows with name '{name}', found {len(rows)}"
 
     def test_edit_keyword_through_view_modal(self):
         """Test editing a keyword through the view modal's edit button"""
@@ -285,26 +312,22 @@ class TestKeywordsPage:
 
         # Click on keyword row to open view modal
         self.table_row(test_keyword.id).click()
-        self.wait_for_modal()
+        self.wait_for_edit_modal()
         self.edit_button.click()
         self.wait_for_edit_modal()
         name_input = self.get_element("name")
         self.clear(name_input)
         name_input.send_keys(new_name)
-        self.save_button.click()
+        self.confirm_button.click()
         self.wait_for_view_modal()
         self.cancel_button.click()
         self.wait_for_modal_close()
 
         # Verify the keyword was updated
-        self.wait_for_table_load()
-
-        # Verify the keyword was updated
-        self.wait.until(EC.presence_of_element_located((By.XPATH, f"//td[contains(text(), '{new_name}')]")))
+        self.get_element(f"//td[contains(text(), '{new_name}')]", By.XPATH)
 
         # Verify old name is no longer present
-        old_name_elements = self.driver.find_elements(By.XPATH, f"//td[contains(text(), '{original_name}')]")
-        assert len(old_name_elements) == 0, "Old keyword name should not be present"
+        self.check_rows(original_name, 0)
 
     def context_menu(self, entity_id: int, choice: str):
         """Row context menu"""
@@ -313,7 +336,7 @@ class TestKeywordsPage:
         actions = ActionChains(self.driver)
         actions.context_click(self.table_row(entity_id)).perform()
 
-        edit_option = self.get_element("cobtext-nenu-edit")
+        edit_option = self.get_element(f"context-menu-{choice}")
         edit_option.click()
 
     def test_edit_keyword_through_right_click_context_menu(self):
@@ -324,172 +347,71 @@ class TestKeywordsPage:
         original_name = test_keyword.name
         new_name = f"EditedKeyword_{int(time.time())}"
 
-        self.context_menu(test_keyword.id, "Edit")
+        self.context_menu(test_keyword.id, "edit")
         self.wait_for_edit_modal()
         name_input = self.get_element("name")
         self.clear(name_input)
         name_input.send_keys(new_name)
-        self.save_button.click()
+        self.confirm_button.click()
         self.wait_for_modal_close()
 
         # Verify the keyword was updated
-        self.wait_for_table_load()
-
-        # Verify the keyword was updated
-        self.wait.until(EC.presence_of_element_located((By.XPATH, f"//td[contains(text(), '{new_name}')]")))
+        self.get_element(f"//td[contains(text(), '{new_name}')]", By.XPATH)
 
         # Verify old name is no longer present
-        old_name_elements = self.driver.find_elements(By.XPATH, f"//td[contains(text(), '{original_name}')]")
-        assert len(old_name_elements) == 0, "Old keyword name should not be present"
+        self.check_rows(original_name, 0)
 
-
-        test_keyword = self.test_keywords[1]
-        original_name = test_keyword.name
-        new_name = f"RightClickEditedKeyword_{int(time.time())}"
-
-        # Find the keyword row and right-click
-        keyword_row = self.wait.until(EC.presence_of_element_located((By.XPATH, f"//tr[td[contains(text(), '{original_name}')]]")))
-
-
-        # Wait for context menu and click Edit option
-        try:
-            edit_option = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'context-menu')]//span[contains(text(), 'Edit')]")))
-            edit_option.click()
-        except TimeoutException:
-            # If context menu doesn't appear, skip this test
-            pytest.skip("Context menu not implemented or not visible")
-
-        # Wait for edit modal
-        name_input = self.wait.until(EC.presence_of_element_located((By.NAME, "name")))
-
-        # Modify the name
-        name_input.clear()
-        name_input.send_keys(new_name)
-
-        # Save changes
-        save_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Save')]")
-        save_button.click()
-
-        # Wait for modal to close
-        self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
-
-        # Verify the keyword was updated
-        self.wait.until(EC.presence_of_element_located((By.XPATH, f"//td[contains(text(), '{new_name}')]")))
-
-        # Clean up
-        self.delete_keyword_by_name(new_name)
-
-    def test_delete_keyword_entry(self):
+    def test_delete_keyword_entry(self, test_keywords):
         """Test deleting a keyword entry - creates a new one to avoid affecting other tests"""
+
         # Create a test keyword for deletion
-        test_keyword_name = f"DeleteTestKeyword_{int(time.time())}"
-        self.create_test_keyword(test_keyword_name)
+        test_keyword = test_keywords[0]
 
         # Click on keyword row to open view modal
-        keyword_row = self.wait.until(EC.element_to_be_clickable((By.XPATH, f"//tr[td[contains(text(), '{test_keyword_name}')]]")))
-        keyword_row.click()
-
-        # Wait for view modal and click delete button
-        self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".modal")))
-        delete_button = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Delete')]")))
-        delete_button.click()
+        self.context_menu(test_keyword.id, "delete")
 
         # Handle confirmation dialog if present
-        try:
-            confirm_button = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Confirm') or contains(text(), 'Yes') or contains(text(), 'Delete')]")))
-            confirm_button.click()
-        except TimeoutException:
-            pass  # No confirmation dialog
-
-        # Wait for modal to close
-        self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
+        self.wait_for_delete_modal()
+        self.confirm_button.click()
+        self.wait_for_modal_close()
 
         # Verify the keyword was deleted
-        deleted_elements = self.driver.find_elements(By.XPATH, f"//td[contains(text(), '{test_keyword_name}')]")
-        assert len(deleted_elements) == 0, "Deleted keyword should not be present in the table"
+        rows = self.driver.find_elements(By.XPATH, f"//td[contains(text(), '{test_keyword.name}')]")
+        print(rows)
 
-    def test_search_functionality(self):
+        self.check_rows(test_keyword.name, 0)
+
+    def test_search_functionality(self, test_keywords):
         """Test the search functionality for keywords"""
-        # Use test keywords from conftest
-        if len(self.test_keywords) < 2:
-            pytest.skip("Need at least 2 test keywords for search test")
 
-        test_keyword1 = self.test_keywords[0]
-        test_keyword2 = self.test_keywords[1]
+        string = test_keywords[0].name[3:5]
+        print([f.name for f in test_keywords if string in f.name])
+        n = len([f for f in test_keywords if string in f.name])
 
         # Find search input
-        search_input = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[placeholder*='Search'], input[type='search']")))
-
-        # Search for first keyword
-        search_input.clear()
-        search_input.send_keys(test_keyword1.name[:5])  # Search with partial name
-
-        # Wait for search results
+        search_input = self.get_element("search-input")
+        self.clear(search_input)
+        search_input.send_keys(string)
         time.sleep(1)  # Allow time for search to filter
+        assert len(self.table_rows) == n, "Expected search to filter results"
 
-        # Verify matching keyword is shown
-        visible_rows = self.driver.find_elements(By.CSS_SELECTOR, "tbody tr:not([style*='display: none'])")
-        matching_rows = [row for row in visible_rows if test_keyword1.name in row.text]
-        assert len(matching_rows) > 0, "Search should return matching keyword"
+    def get_column_values(self, column_index: int) -> list[str]:
+        """Get values from a specific column in the table
+        :param column_index: Index of the column (0-based)
+        :return: List of values from that column
+        """
 
-        # Clear search
-        search_input.clear()
-        search_input.send_keys(Keys.ESCAPE)
+        return [row.find_elements(By.TAG_NAME, "td")[column_index].text for row in self.table_rows]
 
     def test_sort_functionality(self):
         """Test sorting functionality for the keyword table"""
-        # Find and click the Name column header to sort
-        name_header = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//th[contains(text(), 'Name')]")))
-        name_header.click()
 
-        # Wait for sort to complete
-        time.sleep(1)
+        # Find and click the Name column header to sort
+        self.get_element("table-header-name").click()
+        time.sleep(1)  # Wait for sort to complete
 
         # Get all visible keyword names
-        keyword_cells = self.driver.find_elements(By.CSS_SELECTOR, "tbody td:first-child")
-        visible_keywords = [cell.text for cell in keyword_cells if cell.text.strip()]
-
-        # Verify we have keywords to sort
-        assert len(visible_keywords) > 0, "Should have keywords to sort"
-
-        # Verify sorting (basic check that sorting occurred)
-        # Note: More specific sorting validation would depend on your test data
-        sorted_keywords = sorted(visible_keywords)
-        # This is a basic check - you might want to make it more specific based on your needs
-
-    # Helper methods
-    def create_test_keyword(self, name):
-        """Helper method to create a test keyword"""
-        add_button = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Add')]")))
-        add_button.click()
-
-        modal = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".modal")))
-        name_input = self.wait.until(EC.presence_of_element_located((By.NAME, "name")))
-        name_input.clear()
-        name_input.send_keys(name)
-
-        save_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Save')]")
-        save_button.click()
-
-        self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
-        self.wait.until(EC.presence_of_element_located((By.XPATH, f"//td[contains(text(), '{name}')]")))
-
-    def delete_keyword_by_name(self, name):
-        """Helper method to delete a keyword by name"""
-        try:
-            keyword_row = self.driver.find_element(By.XPATH, f"//tr[td[contains(text(), '{name}')]]")
-            keyword_row.click()
-
-            self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".modal")))
-            delete_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Delete')]")
-            delete_button.click()
-
-            try:
-                confirm_button = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Confirm') or contains(text(), 'Yes') or contains(text(), 'Delete')]")))
-                confirm_button.click()
-            except TimeoutException:
-                pass
-
-            self.wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
-        except NoSuchElementException:
-            pass  # Keyword not found, already deleted
+        values = self.get_column_values(0)
+        assert (
+            values == sorted([entity.name for entity in self.test_keywords], key=lambda x: x.lower())[:20]
+        ), "Expected sorted results"

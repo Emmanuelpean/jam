@@ -600,7 +600,7 @@ const GenericModal = ({
 							<div className="d-flex flex-column w-100 gap-2">
 								{/* First row: Delete and Confirm */}
 								<div className="modal-buttons-container">
-									<Button variant="danger" disabled={isTransitioning}>
+									<Button variant="danger" disabled={isTransitioning} id="delete-button">
 										<i className="bi bi-trash me-2"></i>
 										Delete
 									</Button>

@@ -355,6 +355,7 @@ export const GenericTable = ({
 						placeholder="Search..."
 						value={searchTerm}
 						onChange={(e) => onSearchChange(e.target.value)}
+						id="search-input"
 					/>
 					<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
 						Showing {sortedData.length} Entries
@@ -377,6 +378,7 @@ export const GenericTable = ({
 										<div
 											className={column.sortable ? "cursor-pointer user-select-none" : ""}
 											onClick={() => column.sortable && handleSort(column.key)}
+											id={`table-header-${column.key}`}
 										>
 											{column.label}
 											{column.sortable && (
@@ -731,7 +733,7 @@ export const GenericTableWithModals = ({
 						onClick={handleContextView}
 						onMouseEnter={(e) => (e.target.style.backgroundColor = "#f8f9fa")}
 						onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
-						id="context-nenu-view"
+						id="context-menu-view"
 					>
 						<i className="bi bi-eye me-2"></i>View
 					</div>
@@ -746,7 +748,7 @@ export const GenericTableWithModals = ({
 						onClick={handleContextEdit}
 						onMouseEnter={(e) => (e.target.style.backgroundColor = "#f8f9fa")}
 						onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
-						id="context-nenu-edit"
+						id="context-menu-edit"
 					>
 						<i className="bi bi-pencil me-2"></i>Edit
 					</div>
@@ -761,7 +763,7 @@ export const GenericTableWithModals = ({
 						onClick={handleContextDelete}
 						onMouseEnter={(e) => (e.target.style.backgroundColor = "#f8f9fa")}
 						onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
-						id="context-nenu-delete"
+						id="context-menu-delete"
 					>
 						<i className="bi bi-trash me-2"></i>Delete
 					</div>
