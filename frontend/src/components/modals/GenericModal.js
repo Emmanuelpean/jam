@@ -710,8 +710,27 @@ const GenericModal = ({
 		</>
 	);
 
+	const getModalId = () => {
+		if (mode === "formview") {
+			if (isEditing) {
+				return `modal-${mode}-edit-${title.toLowerCase()}`;
+			} else {
+				return `modal-${mode}-view-${title.toLowerCase()}`;
+			}
+		}
+		return `modal-${mode}`;
+	};
+
 	return (
-		<Modal show={show} onHide={handleHide} size={size} centered={centered} backdrop={true} keyboard={true}>
+		<Modal
+			show={show}
+			onHide={handleHide}
+			size={size}
+			centered={centered}
+			backdrop={true}
+			keyboard={true}
+			id={getModalId()}
+		>
 			{mode === "formview" && isEditing ? <Form onSubmit={handleSubmit}>{modalContent}</Form> : modalContent}
 		</Modal>
 	);

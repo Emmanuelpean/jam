@@ -14,18 +14,15 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-class TestKeywordsPage:
-    """
-    Test class for Keywords Page functionality including:
-    - Displaying keyword entries
-    - Adding new keywords (with and without name)
-    - Viewing keyword entries
-    - Editing keywords (through view mode and right-click)
-    - Deleting keyword entries
-    """
+class TestPage:
+
+    driver = None
+    wait = None
+    base_url = None
+    test_keywords = None
 
     @pytest.fixture(autouse=True)
-    def setup_method(self, test_keywords, frontend_base_url):
+    def setup_method(self, test_keywords, frontend_base_url) -> None:
         """Set up the test environment before each test with test data"""
         try:
             # Configure Chrome options to disable password prompts
@@ -170,26 +167,17 @@ class TestKeywordsPage:
 
         self.wait.until(ec.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
 
-    def _wait_for_modal(self, string: str) -> WebElement:
-
-        self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, ".modal-title"), string))
-        return self.get_element(".modal", By.CSS_SELECTOR)
-
     def wait_for_view_modal(self) -> WebElement:
 
-        return self._wait_for_modal("Details")
+        return self.get_element("modal-formview-view-keyword")
 
     def wait_for_edit_modal(self) -> WebElement:
 
-        return self._wait_for_modal("Edit")
+        return self.get_element("modal-formview-edit-keyword")
 
     def wait_for_delete_modal(self) -> WebElement:
 
-        return self._wait_for_modal("Delete")
-
-    def wait_for_add_modal(self) -> WebElement:
-
-        return self._wait_for_modal("Add")
+        return self.get_element("modal-confirmation")
 
     @property
     def table_rows(self) -> list[WebElement]:
@@ -199,20 +187,6 @@ class TestKeywordsPage:
     def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
 
         return self.get_element(f"table-row-{item_id}", *args, **kwargs)
-
-    def test_display_keywords_entries(self, frontend_test_keywords):
-        """Test that keywords entries are displayed correctly"""
-
-        keywords = [keyword for keyword in frontend_test_keywords if keyword.owner_id == 1]
-        assert len(self.table_rows) == min([20, len(keywords)]), "The table rows should match the keyword entries"
-
-    def test_display_keywords_40max_entries(self, frontend_test_keywords):
-        """Test that keywords entries are displayed correctly after changing the max display to 40"""
-
-        self.get_element("page-items-select", etype="select").select_by_value("40")
-        self.wait_for_table_load()
-        keywords = [keyword for keyword in frontend_test_keywords if keyword.owner_id == 1]
-        assert len(self.table_rows) == min([40, len(keywords)]), "The table rows should match the keyword entries"
 
     @property
     def add_entity_button(self) -> WebElement:
@@ -234,12 +208,64 @@ class TestKeywordsPage:
 
         return self.get_element("edit-button")
 
+    @staticmethod
+    def clear(element: WebElement) -> None:
+        """Clears the input element"""
+
+        element.send_keys(Keys.CONTROL, "a")
+        element.send_keys(Keys.DELETE)
+
+    def context_menu(self, entity_id: int, choice: str):
+        """Row context menu"""
+
+        # Click on keyword row to open view modal
+        actions = ActionChains(self.driver)
+        actions.context_click(self.table_row(entity_id)).perform()
+
+        edit_option = self.get_element(f"context-menu-{choice}")
+        edit_option.click()
+
+    def check_rows(self, name: str, expected_count: int = 1) -> None:
+
+        rows = self.driver.find_elements(By.XPATH, f"//td[contains(text(), '{name}')]")
+        assert len(rows) == expected_count, f"Expected {expected_count} rows with name '{name}', found {len(rows)}"
+
+    def get_column_values(self, column_index: int) -> list[str]:
+        """Get values from a specific column in the table
+        :param column_index: Index of the column (0-based)
+        :return: List of values from that column
+        """
+
+        return [row.find_elements(By.TAG_NAME, "td")[column_index].text for row in self.table_rows]
+
+
+class TestKeywordsPage(TestPage):
+    """
+    Test class for Keywords Page functionality including:
+    - Displaying keyword entries
+    - Adding new keywords (with and without name)
+    - Viewing keyword entries
+    - Editing keywords (through view mode and right-click)
+    - Deleting keyword entries
+    """
+
+    def test_display_keywords_entries(self):
+        """Test that keywords entries are displayed correctly"""
+
+        keywords = [keyword for keyword in self.test_keywords if keyword.owner_id == 1]
+        assert len(self.table_rows) == min([20, len(keywords)]), "The table rows should match the keyword entries"
+
+        self.get_element("page-items-select", etype="select").select_by_value("40")
+        self.wait_for_table_load()
+        keywords = [keyword for keyword in self.test_keywords if keyword.owner_id == 1]
+        assert len(self.table_rows) == min([40, len(keywords)]), "The table rows should match the keyword entries"
+
     def test_add_keyword_with_valid_name(self):
         """Test adding a new keyword with a valid name"""
 
         test_keyword_name = f"TestKeyword_{int(time.time())}"
         self.add_entity_button.click()
-        self.wait_for_add_modal()
+        self.wait_for_edit_modal()
         self.get_element("name").send_keys(test_keyword_name)
         self.confirm_button.click()
         self.wait_for_modal_close()
@@ -251,7 +277,7 @@ class TestKeywordsPage:
         """Test that adding a keyword without a name shows validation error"""
 
         self.add_entity_button.click()
-        self.wait_for_add_modal()
+        self.wait_for_edit_modal()
         self.confirm_button.click()
         self.get_element(".invalid-feedback", By.CSS_SELECTOR)
 
@@ -263,7 +289,7 @@ class TestKeywordsPage:
         """Test that adding a keyword with an existing name shows validation error"""
 
         self.add_entity_button.click()
-        self.wait_for_add_modal()
+        self.wait_for_edit_modal()
         self.get_element("name").send_keys(self.test_keywords[0].name)
         self.confirm_button.click()
         self.get_element(".invalid-feedback", By.CSS_SELECTOR)
@@ -290,18 +316,6 @@ class TestKeywordsPage:
         close_button.click()
         self.wait.until(ec.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
 
-    @staticmethod
-    def clear(element: WebElement) -> None:
-        """Clears the input element"""
-
-        element.send_keys(Keys.CONTROL, "a")
-        element.send_keys(Keys.DELETE)
-
-    def check_rows(self, name: str, expected_count: int = 1) -> None:
-
-        rows = self.driver.find_elements(By.XPATH, f"//td[contains(text(), '{name}')]")
-        assert len(rows) == expected_count, f"Expected {expected_count} rows with name '{name}', found {len(rows)}"
-
     def test_edit_keyword_through_view_modal(self):
         """Test editing a keyword through the view modal's edit button"""
 
@@ -312,7 +326,7 @@ class TestKeywordsPage:
 
         # Click on keyword row to open view modal
         self.table_row(test_keyword.id).click()
-        self.wait_for_edit_modal()
+        self.wait_for_view_modal()
         self.edit_button.click()
         self.wait_for_edit_modal()
         name_input = self.get_element("name")
@@ -328,16 +342,6 @@ class TestKeywordsPage:
 
         # Verify old name is no longer present
         self.check_rows(original_name, 0)
-
-    def context_menu(self, entity_id: int, choice: str):
-        """Row context menu"""
-
-        # Click on keyword row to open view modal
-        actions = ActionChains(self.driver)
-        actions.context_click(self.table_row(entity_id)).perform()
-
-        edit_option = self.get_element(f"context-menu-{choice}")
-        edit_option.click()
 
     def test_edit_keyword_through_right_click_context_menu(self):
         """Test editing a keyword through right-click context menu"""
@@ -394,14 +398,6 @@ class TestKeywordsPage:
         search_input.send_keys(string)
         time.sleep(1)  # Allow time for search to filter
         assert len(self.table_rows) == n, "Expected search to filter results"
-
-    def get_column_values(self, column_index: int) -> list[str]:
-        """Get values from a specific column in the table
-        :param column_index: Index of the column (0-based)
-        :return: List of values from that column
-        """
-
-        return [row.find_elements(By.TAG_NAME, "td")[column_index].text for row in self.table_rows]
 
     def test_sort_functionality(self):
         """Test sorting functionality for the keyword table"""

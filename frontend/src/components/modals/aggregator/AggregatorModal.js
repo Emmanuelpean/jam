@@ -74,8 +74,6 @@ export const AggregatorFormModal = (props) => {
 	return <AggregatorModal {...props} submode={submode} />;
 };
 
-// Wrapper for view modal
 export const AggregatorViewModal = (props) => <AggregatorModal {...props} submode="view" />;
 
-// Add default export
 export default AggregatorFormModal;
