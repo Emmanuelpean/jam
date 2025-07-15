@@ -19,9 +19,9 @@ def kill_process_on_port(port):
     """Kill any process using the specified port"""
     try:
         print(f"Checking for processes on port {port}...")
-        for proc in psutil.process_iter(['pid', 'name', 'connections']):
+        for proc in psutil.process_iter(["pid", "name", "connections"]):
             try:
-                connections = proc.info['connections']
+                connections = proc.info["connections"]
                 if connections:
                     for conn in connections:
                         if conn.laddr.port == port:
@@ -113,7 +113,7 @@ def test_backend_server():
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
     )
 
     print(f"Backend process started with PID: {process.pid}")
@@ -219,7 +219,7 @@ def test_frontend_server(test_backend_server):
         stderr=subprocess.STDOUT,  # Combine stderr into stdout
         shell=True,
         text=True,
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
     )
 
     print(f"Frontend process started with PID: {process.pid}")
@@ -234,7 +234,7 @@ def test_frontend_server(test_backend_server):
     import queue
 
     def read_output(this_process, this_output_queue):
-        for _line in iter(this_process.stdout.readline, ''):
+        for _line in iter(this_process.stdout.readline, ""):
             this_output_queue.put(_line.strip())
 
     output_queue = queue.Queue()
@@ -336,6 +336,7 @@ def api_base_url(test_backend_server):
 def frontend_base_url(test_frontend_server):
     """Base URL for the frontend"""
     return test_frontend_server
+
 
 @pytest.fixture
 def frontend_test_keywords(test_keywords):
