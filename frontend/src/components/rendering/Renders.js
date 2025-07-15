@@ -154,7 +154,7 @@ export const renderFunctions = {
 			const safeUrl = ensureHttpPrefix(url);
 			return (
 				<a href={safeUrl} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
-					Visit Website <i className="bi bi-box-arrow-up-right ms-1"></i>
+					{safeUrl.slice(8)} <i className="bi bi-box-arrow-up-right ms-1"></i>
 				</a>
 			);
 		}

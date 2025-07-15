@@ -12,6 +12,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
+
 from schemas import Keyword
 
 
@@ -22,6 +23,7 @@ class TestPage:
     base_url = None
     page_url = ""
     test_data = None
+    test_entry = None
     _test_data = None
 
     @pytest.fixture(autouse=True)
@@ -74,6 +76,7 @@ class TestPage:
             self.wait = WebDriverWait(self.driver, 10)
             self.base_url = frontend_base_url
             self.test_data = request.getfixturevalue(self._test_data)
+            self.test_entry = self.test_data[0]
 
             # Login and navigate to Keywords page
             self.login()
@@ -445,7 +448,7 @@ class TestAggregatorsPage(TestPage):
         self.check_rows(test_keyword_name, 1)
 
     def test_add_invalid_entry(self):
-        """Test that adding an entry without the required fields"""
+        """Test that adding an entry without the required fields shows validation error"""
 
         test_keyword_name = f"TestKeyword_{int(time.time())}"
         self.add_entity_button.click()
@@ -459,7 +462,6 @@ class TestAggregatorsPage(TestPage):
         self.get_element("name").send_keys(test_keyword_name)
         self.confirm_button.click()
         self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-        time.sleep(10)
 
         # With just the url
         self.clear(self.get_element("name"))
@@ -470,53 +472,50 @@ class TestAggregatorsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_modal_close()
 
-    def test_add_keyword_same_name_shows_error(self):
-        """Test that adding a keyword with an existing name shows validation error"""
+    def test_add_duplicate_entry(self):
+        """Test that adding an entry with a duplicate name shows validation error"""
 
         self.add_entity_button.click()
         self.wait_for_edit_modal()
-        self.get_element("name").send_keys(self.test_data[0].name)
+        self.get_element("name").send_keys(self.test_entry.name)
+        self.get_element("url").send_keys("https://www.google.com")
         self.confirm_button.click()
         self.get_element(".invalid-feedback", By.CSS_SELECTOR)
         self.cancel_button.click()
         self.wait_for_modal_close()
 
-    def _test_view_modal(self, test_keyword: Keyword):
-        """Helper method to test the view modal for a keyword entry
-        :param test_keyword: Keyword object to test"""
+    def _test_view_modal(self):
+        """Helper method to test the view modal for a keyword entry"""
 
         modal = self.wait_for_view_modal()
 
         # Verify modal contains the keyword information
-        date = datetime.strftime(test_keyword.created_at, "%d/%m/%Y")
-        expected = f"Keyword Details\nName\n{test_keyword.name}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
+        date = datetime.strftime(self.test_entry.created_at, "%d/%m/%Y")
+        expected = f"Aggregator Details\nName\n{self.test_entry.name}\nWebsite\n{self.test_entry.url.replace("https://", "")}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
         assert modal.text == expected
 
         # Close modal
         self.cancel_button.click()
         self.wait_for_modal_close()
 
-    def test_view_keyword_entry(self):
-        """Test viewing a keyword entry details by clicking on a table row"""
+    def test_view_entry(self):
+        """Test viewing an entry details by clicking on a table row"""
 
-        test_keyword = self.test_data[0]
-        self.table_row(test_keyword.id).click()
-        self._test_view_modal(test_keyword)
+        self.table_row(self.test_entry.id).click()
+        self._test_view_modal()
 
-    def test_view_keyword_entry_right_click(self):
+    def test_view_entry_right_click(self):
         """Test viewing a keyword entry details through the right-click context menu"""
 
-        test_keyword = self.test_data[0]
-        self.context_menu(test_keyword.id, "view")
-        self._test_view_modal(test_keyword)
+        self.context_menu(self.test_entry.id, "view")
+        self._test_view_modal()
 
-    def test_edit_keyword_through_view_modal(self):
-        """Test editing a keyword through the view modal's edit button"""
+    def test_edit_entry_through_view_modal(self):
+        """Test editing an entry through the view modal's edit button"""
 
-        test_keyword = self.test_data[0]
-        original_name = test_keyword.name
-        new_name = f"EditedKeyword_{int(time.time())}"
-        self.table_row(test_keyword.id).click()
+        original_name = self.test_entry.name
+        new_name = f"EditedEntry_{int(time.time())}"
+        self.table_row(self.test_entry.id).click()
         self.wait_for_view_modal()
         self.edit_button.click()
         self.wait_for_edit_modal()
@@ -528,37 +527,33 @@ class TestAggregatorsPage(TestPage):
         self.check_rows(new_name, 1)
         self.check_rows(original_name, 0)
 
-    def test_edit_keyword_through_right_click_context_menu(self):
-        """Test editing a keyword through right-click context menu"""
+    def test_edit_entry_through_right_click_context_menu(self):
+        """Test editing an entry through right-click context menu"""
 
-        test_keyword = self.test_data[0]
-        original_name = test_keyword.name
-        new_name = f"EditedKeyword_{int(time.time())}"
-        self.context_menu(test_keyword.id, "edit")
+        original_name = self.test_entry.name
+        new_name = f"EditedEntry_{int(time.time())}"
+        self.context_menu(self.test_entry.id, "edit")
         self.wait_for_edit_modal()
-        self.clear(self.get_element("name"), new_name)
+        self.clear(self.get_element("url"), new_name)
         self.confirm_button.click()
         self.wait_for_modal_close()
         self.check_rows(new_name, 1)
         self.check_rows(original_name, 0)
 
-    def test_delete_keyword_entry(self):
-        """Test deleting a keyword entry"""
+    def test_delete_entry(self):
+        """Test deleting an entry"""
 
-        test_keyword = self.test_data[0]
-        self.context_menu(test_keyword.id, "delete")
+        self.context_menu(self.test_entry.id, "delete")
         self.wait_for_delete_modal()
         self.confirm_button.click()
         self.wait_for_modal_close()
-        self.check_rows(test_keyword.name, 0)
+        self.check_rows(self.test_entry.name, 0)
 
     def test_search_functionality(self):
         """Test the search functionality for keywords"""
 
-        string = self.test_data[0].name[3:5]
+        string = self.test_entry.name[3:5]
         n = len([f for f in self.test_data if string in f.name])
-
-        # Find search input
         self.clear(self.get_element("search-input"), string)
         time.sleep(1)  # Allow time for search to filter
         assert len(self.table_rows) == n, "Expected search to filter results"
@@ -566,7 +561,6 @@ class TestAggregatorsPage(TestPage):
     def test_sort_functionality(self):
         """Test sorting functionality for the keyword table"""
 
-        # Find and click the Name column header to sort
         self.get_element("table-header-name").click()
         time.sleep(0.2)
         expected = sorted([entity.name for entity in self.test_data], key=lambda x: x.lower())[:20]
