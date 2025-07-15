@@ -7,6 +7,18 @@ import FileUploader from "../../utils/FileUtils";
 
 const animatedComponents = makeAnimated();
 
+// Error display function to handle multiple errors on separate lines
+const displayError = (errorMessage) => {
+	if (!errorMessage) return null;
+
+	// Split by newlines and render each error on a separate line
+	return errorMessage.split('\n').map((line, index) => (
+		<div key={index}>
+			{line}
+		</div>
+	));
+};
+
 const CustomDropdownIndicator = (props) => {
 	const [hover, setHover] = useState(false);
 	const menuIsOpen = props.selectProps.menuIsOpen;
@@ -60,7 +72,7 @@ const renderTextarea = (field, value, handleChange, error) => {
 				isInvalid={!!error}
 				className="optimized-textarea"
 			/>
-			{error && <div className="invalid-feedback">{error}</div>}
+			{error && <div className="invalid-feedback">{displayError(error)}</div>}
 		</>
 	);
 };
@@ -149,7 +161,7 @@ const renderSelect = (field, value, handleChange, handleSelectChange, error) => 
 				hideSelectedOptions={false}
 				controlShouldRenderValue={true}
 			/>
-			{error && <div className="invalid-feedback d-block">{error}</div>}
+			{error && <div className="invalid-feedback d-block">{displayError(error)}</div>}
 		</>
 	);
 };
@@ -191,7 +203,7 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 					title="Set to current date and time"
 				></i>
 			</div>
-			{error && <div className="invalid-feedback d-block">{error}</div>}
+			{error && <div className="invalid-feedback d-block">{displayError(error)}</div>}
 		</>
 	);
 };
@@ -236,7 +248,7 @@ export const renderDefaultInput = (field, value, handleChange, error) => {
 				isInvalid={!!error}
 				step={field.step}
 			/>
-			{error && <div className="invalid-feedback">{error}</div>}
+			{error && <div className="invalid-feedback">{displayError(error)}</div>}
 		</>
 	);
 };

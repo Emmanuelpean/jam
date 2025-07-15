@@ -188,7 +188,7 @@ class CRUDTestBase:
     - endpoint: str - base URL path for the resource (e.g. "/aggregators")
     - schema: Pydantic model class for input validation (e.g. schemas.Aggregator)
     - out_schema: Pydantic model class for output validation (e.g. schemas.AggregatorOut)
-    - test_data_fixture: str - name of pytest fixture providing list of test objects"""
+    - test_data: str - name of pytest fixture providing list of test objects"""
 
     endpoint: str = ""
     schema = None

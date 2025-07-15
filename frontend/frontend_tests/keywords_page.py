@@ -12,7 +12,6 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
-
 from schemas import Keyword
 
 
@@ -21,10 +20,12 @@ class TestPage:
     driver = None
     wait = None
     base_url = None
-    test_keywords = None
+    page_url = ""
+    test_data = None
+    _test_data = None
 
     @pytest.fixture(autouse=True)
-    def setup_method(self, test_keywords, frontend_base_url) -> None:
+    def setup_method(self, frontend_base_url, request) -> None:
         """Set up the test environment before each test with test data"""
         try:
             # Configure Chrome options to disable password prompts
@@ -72,11 +73,11 @@ class TestPage:
             self.driver.maximize_window()
             self.wait = WebDriverWait(self.driver, 10)
             self.base_url = frontend_base_url
-            self.test_keywords = test_keywords
+            self.test_data = request.getfixturevalue(self._test_data)
 
             # Login and navigate to Keywords page
             self.login()
-            self.driver.get(f"{self.base_url}/keywords")
+            self.driver.get(f"{self.base_url}/{self.page_url}")
             self.wait_for_table_load()
 
         except Exception:
@@ -237,12 +238,15 @@ class TestPage:
 class TestKeywordsPage(TestPage):
     """
     Test class for Keywords Page functionality including:
-    - Displaying keyword entries
-    - Adding new keywords (with and without name)
+    - Displaying keyword entries with different entries per page
+    - Adding new keywords
     - Viewing keyword entries
-    - Editing keywords (through view mode and right-click)
+    - Editing keywords
     - Deleting keyword entries
     """
+
+    page_url = "keywords"
+    _test_data = "test_keywords"
 
     def wait_for_view_modal(self) -> WebElement:
         """Wait for the view modal to appear"""
@@ -258,13 +262,13 @@ class TestKeywordsPage(TestPage):
         """Test that keywords entries are displayed correctly"""
 
         # Default 20 entries display
-        keywords = [keyword for keyword in self.test_keywords if keyword.owner_id == 1]
+        keywords = [keyword for keyword in self.test_data if keyword.owner_id == 1]
         assert len(self.table_rows) == min([20, len(keywords)]), "The table rows should match the keyword entries"
 
         # Increase to 40
         self.get_element("page-items-select", etype="select").select_by_value("40")
         self.wait_for_table_load()
-        keywords = [keyword for keyword in self.test_keywords if keyword.owner_id == 1]
+        keywords = [keyword for keyword in self.test_data if keyword.owner_id == 1]
         assert len(self.table_rows) == min([40, len(keywords)]), "The table rows should match the keyword entries"
 
     def test_add_keyword_with_valid_name(self):
@@ -293,7 +297,7 @@ class TestKeywordsPage(TestPage):
 
         self.add_entity_button.click()
         self.wait_for_edit_modal()
-        self.get_element("name").send_keys(self.test_keywords[0].name)
+        self.get_element("name").send_keys(self.test_data[0].name)
         self.confirm_button.click()
         self.get_element(".invalid-feedback", By.CSS_SELECTOR)
         self.cancel_button.click()
@@ -317,21 +321,21 @@ class TestKeywordsPage(TestPage):
     def test_view_keyword_entry(self):
         """Test viewing a keyword entry details by clicking on a table row"""
 
-        test_keyword = self.test_keywords[0]
+        test_keyword = self.test_data[0]
         self.table_row(test_keyword.id).click()
         self._test_view_modal(test_keyword)
 
     def test_view_keyword_entry_right_click(self):
         """Test viewing a keyword entry details through the right-click context menu"""
 
-        test_keyword = self.test_keywords[0]
+        test_keyword = self.test_data[0]
         self.context_menu(test_keyword.id, "view")
         self._test_view_modal(test_keyword)
 
     def test_edit_keyword_through_view_modal(self):
         """Test editing a keyword through the view modal's edit button"""
 
-        test_keyword = self.test_keywords[0]
+        test_keyword = self.test_data[0]
         original_name = test_keyword.name
         new_name = f"EditedKeyword_{int(time.time())}"
         self.table_row(test_keyword.id).click()
@@ -349,7 +353,7 @@ class TestKeywordsPage(TestPage):
     def test_edit_keyword_through_right_click_context_menu(self):
         """Test editing a keyword through right-click context menu"""
 
-        test_keyword = self.test_keywords[0]
+        test_keyword = self.test_data[0]
         original_name = test_keyword.name
         new_name = f"EditedKeyword_{int(time.time())}"
         self.context_menu(test_keyword.id, "edit")
@@ -363,7 +367,7 @@ class TestKeywordsPage(TestPage):
     def test_delete_keyword_entry(self):
         """Test deleting a keyword entry"""
 
-        test_keyword = self.test_keywords[0]
+        test_keyword = self.test_data[0]
         self.context_menu(test_keyword.id, "delete")
         self.wait_for_delete_modal()
         self.confirm_button.click()
@@ -373,8 +377,8 @@ class TestKeywordsPage(TestPage):
     def test_search_functionality(self):
         """Test the search functionality for keywords"""
 
-        string = self.test_keywords[0].name[3:5]
-        n = len([f for f in self.test_keywords if string in f.name])
+        string = self.test_data[0].name[3:5]
+        n = len([f for f in self.test_data if string in f.name])
 
         # Find search input
         self.clear(self.get_element("search-input"), string)
@@ -387,6 +391,184 @@ class TestKeywordsPage(TestPage):
         # Find and click the Name column header to sort
         self.get_element("table-header-name").click()
         time.sleep(0.2)
-        expected = sorted([entity.name for entity in self.test_keywords], key=lambda x: x.lower())[:20]
+        expected = sorted([entity.name for entity in self.test_data], key=lambda x: x.lower())[:20]
+        values = self.get_column_values(0)
+        assert values == expected, "Expected sorted results"
+
+
+class TestAggregatorsPage(TestPage):
+    """
+    Test class for Aggregators Page functionality including:
+    - Displaying entries with different entries per page
+    - Adding new entries
+    - Viewing entries
+    - Editing entries
+    - Deleting entries
+    """
+
+    page_url = "aggregators"
+    _test_data = "test_aggregators"
+
+    def wait_for_view_modal(self) -> WebElement:
+        """Wait for the view modal to appear"""
+
+        return self.get_element("modal-formview-view-aggregator")
+
+    def wait_for_edit_modal(self) -> WebElement:
+        """Wait for the edit modal to appear"""
+
+        return self.get_element("modal-formview-edit-aggregator")
+
+    def test_display_entries(self):
+        """Test that entries are displayed correctly"""
+
+        # Default 20 entries display
+        entries = [entry for entry in self.test_data if entry.owner_id == 1]
+        assert len(self.table_rows) == min([20, len(entries)]), "The table rows should match the number of entries"
+
+        # Increase to 40
+        self.get_element("page-items-select", etype="select").select_by_value("40")
+        self.wait_for_table_load()
+        entries = [entry for entry in self.test_data if entry.owner_id == 1]
+        assert len(self.table_rows) == min([40, len(entries)]), "The table rows should match the number of entries"
+
+    def test_add_valid_entry(self):
+        """Test adding a new entry with a valid name"""
+
+        test_keyword_name = f"TestKeyword_{int(time.time())}"
+        self.add_entity_button.click()
+        self.wait_for_edit_modal()
+        self.get_element("name").send_keys(test_keyword_name)
+        self.get_element("url").send_keys("https://www.google.com")
+        self.confirm_button.click()
+        self.wait_for_modal_close()
+        self.check_rows(test_keyword_name, 1)
+
+    def test_add_invalid_entry(self):
+        """Test that adding an entry without the required fields"""
+
+        test_keyword_name = f"TestKeyword_{int(time.time())}"
+        self.add_entity_button.click()
+        self.wait_for_edit_modal()
+
+        # With none
+        self.confirm_button.click()
+        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
+
+        # With just the name
+        self.get_element("name").send_keys(test_keyword_name)
+        self.confirm_button.click()
+        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
+        time.sleep(10)
+
+        # With just the url
+        self.clear(self.get_element("name"))
+        self.get_element("url").send_keys("https://www.google.com")
+        self.confirm_button.click()
+        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
+
+        self.cancel_button.click()
+        self.wait_for_modal_close()
+
+    def test_add_keyword_same_name_shows_error(self):
+        """Test that adding a keyword with an existing name shows validation error"""
+
+        self.add_entity_button.click()
+        self.wait_for_edit_modal()
+        self.get_element("name").send_keys(self.test_data[0].name)
+        self.confirm_button.click()
+        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
+        self.cancel_button.click()
+        self.wait_for_modal_close()
+
+    def _test_view_modal(self, test_keyword: Keyword):
+        """Helper method to test the view modal for a keyword entry
+        :param test_keyword: Keyword object to test"""
+
+        modal = self.wait_for_view_modal()
+
+        # Verify modal contains the keyword information
+        date = datetime.strftime(test_keyword.created_at, "%d/%m/%Y")
+        expected = f"Keyword Details\nName\n{test_keyword.name}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button.click()
+        self.wait_for_modal_close()
+
+    def test_view_keyword_entry(self):
+        """Test viewing a keyword entry details by clicking on a table row"""
+
+        test_keyword = self.test_data[0]
+        self.table_row(test_keyword.id).click()
+        self._test_view_modal(test_keyword)
+
+    def test_view_keyword_entry_right_click(self):
+        """Test viewing a keyword entry details through the right-click context menu"""
+
+        test_keyword = self.test_data[0]
+        self.context_menu(test_keyword.id, "view")
+        self._test_view_modal(test_keyword)
+
+    def test_edit_keyword_through_view_modal(self):
+        """Test editing a keyword through the view modal's edit button"""
+
+        test_keyword = self.test_data[0]
+        original_name = test_keyword.name
+        new_name = f"EditedKeyword_{int(time.time())}"
+        self.table_row(test_keyword.id).click()
+        self.wait_for_view_modal()
+        self.edit_button.click()
+        self.wait_for_edit_modal()
+        self.clear(self.get_element("name"), new_name)
+        self.confirm_button.click()
+        self.wait_for_view_modal()
+        self.cancel_button.click()
+        self.wait_for_modal_close()
+        self.check_rows(new_name, 1)
+        self.check_rows(original_name, 0)
+
+    def test_edit_keyword_through_right_click_context_menu(self):
+        """Test editing a keyword through right-click context menu"""
+
+        test_keyword = self.test_data[0]
+        original_name = test_keyword.name
+        new_name = f"EditedKeyword_{int(time.time())}"
+        self.context_menu(test_keyword.id, "edit")
+        self.wait_for_edit_modal()
+        self.clear(self.get_element("name"), new_name)
+        self.confirm_button.click()
+        self.wait_for_modal_close()
+        self.check_rows(new_name, 1)
+        self.check_rows(original_name, 0)
+
+    def test_delete_keyword_entry(self):
+        """Test deleting a keyword entry"""
+
+        test_keyword = self.test_data[0]
+        self.context_menu(test_keyword.id, "delete")
+        self.wait_for_delete_modal()
+        self.confirm_button.click()
+        self.wait_for_modal_close()
+        self.check_rows(test_keyword.name, 0)
+
+    def test_search_functionality(self):
+        """Test the search functionality for keywords"""
+
+        string = self.test_data[0].name[3:5]
+        n = len([f for f in self.test_data if string in f.name])
+
+        # Find search input
+        self.clear(self.get_element("search-input"), string)
+        time.sleep(1)  # Allow time for search to filter
+        assert len(self.table_rows) == n, "Expected search to filter results"
+
+    def test_sort_functionality(self):
+        """Test sorting functionality for the keyword table"""
+
+        # Find and click the Name column header to sort
+        self.get_element("table-header-name").click()
+        time.sleep(0.2)
+        expected = sorted([entity.name for entity in self.test_data], key=lambda x: x.lower())[:20]
         values = self.get_column_values(0)
         assert values == expected, "Expected sorted results"

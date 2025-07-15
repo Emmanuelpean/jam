@@ -28,7 +28,7 @@ export const AggregatorModal = ({
 	const transformFormData = (data) => {
 		return {
 			...data,
-			name: data.name?.trim(),
+			name: data.name?.trim() || null,
 			url: data.url?.trim() || null,
 		};
 	};
@@ -36,13 +36,13 @@ export const AggregatorModal = ({
 	// Custom validation to ensure at least one field is filled
 	const customValidation = async (formData) => {
 		const errors = {};
-		const queryParams = {name: formData.name.trim()};
+		const queryParams = {name: formData.name?.trim()};
 		const matches = await aggregatorsApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing) => {
 			return aggregator?.id !== existing.id;
 		});
 
-		if (duplicates.length > 0) {
+		if (duplicates.length > 0 && formData.name) {
 			errors.name = `An aggregator with this name already exists`;
 		}
 

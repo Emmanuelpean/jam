@@ -356,7 +356,7 @@ const GenericModal = ({
 		);
 	};
 
-	// Form validation
+// Form validation
 	const validateForm = async () => {
 		const newErrors = {};
 		const currentFields = getCurrentFields();
@@ -378,7 +378,16 @@ const GenericModal = ({
 				const customErrors =
 					customErrorsResult instanceof Promise ? await customErrorsResult : customErrorsResult;
 
-				Object.assign(newErrors, customErrors);
+				// Append custom errors to existing errors
+				Object.keys(customErrors).forEach((fieldName) => {
+					if (newErrors[fieldName]) {
+						// Append the custom error on a new line
+						newErrors[fieldName] = `${newErrors[fieldName]}\n${customErrors[fieldName]}`;
+					} else {
+						// No existing error, just set the custom error
+						newErrors[fieldName] = customErrors[fieldName];
+					}
+				});
 			} else if (typeof validation === "object") {
 				// Object-based validation (like current validationRules)
 				const validationPromises = Object.keys(validation).map(async (fieldName) => {
@@ -397,7 +406,13 @@ const GenericModal = ({
 				const validationResults = await Promise.all(validationPromises);
 				validationResults.forEach((result) => {
 					if (result) {
-						newErrors[result.fieldName] = result.message;
+						if (newErrors[result.fieldName]) {
+							// Append the validation error on a new line
+							newErrors[result.fieldName] = `${newErrors[result.fieldName]}\n${result.message}`;
+						} else {
+							// No existing error, just set the validation error
+							newErrors[result.fieldName] = result.message;
+						}
 					}
 				});
 			}
