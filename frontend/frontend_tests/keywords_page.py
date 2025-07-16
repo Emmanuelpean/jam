@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+import platform
 
 import pytest
 from selenium import webdriver
@@ -239,7 +240,8 @@ class TestPage:
     def clear(element: WebElement, text: str = "") -> None:
         """Clears the input element"""
 
-        element.send_keys(Keys.CONTROL, "a")
+        modifier_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
+        element.send_keys(modifier_key, "a")
         element.send_keys(Keys.DELETE)
         element.send_keys(text)
 
