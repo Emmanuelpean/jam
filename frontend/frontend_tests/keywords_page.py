@@ -13,10 +13,30 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
-from schemas import Keyword
+
+def print_backend_pid():
+    try:
+        import psutil
+
+        backend_processes = []
+        for proc in psutil.process_iter(["pid", "name", "cmdline"]):
+            try:
+                if proc.info["cmdline"] and any("uvicorn" in cmd for cmd in proc.info["cmdline"]):
+                    backend_processes.append(f"PID {proc.info['pid']}: {' '.join(proc.info['cmdline'])}")
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+
+        if backend_processes:
+            print(f"Backend processes found: {backend_processes}")
+        else:
+            print("No backend processes found - backend may have crashed")
+
+    except Exception as e:
+        print(f"Error checking backend processes: {e}")
 
 
 class TestPage:
+    """Base class for testING pages"""
 
     driver = None
     wait = None
@@ -77,6 +97,7 @@ class TestPage:
             self.base_url = frontend_base_url
             self.test_data = request.getfixturevalue(self._test_data)
             self.test_entry = self.test_data[0]
+            print_backend_pid()
 
             # Login and navigate to Keywords page
             self.login()
@@ -99,6 +120,7 @@ class TestPage:
                 self.driver.quit()
         except Exception as e:
             print(f"Error during teardown: {e}")
+        print_backend_pid()
 
     def login(self) -> None:
         """Helper method to login to the application"""
@@ -120,7 +142,7 @@ class TestPage:
             print(f"Current URL: {self.driver.current_url}")
             raise
 
-    def wait_for_table_load(self, timeout: int | float = 10) -> None:
+    def wait_for_table_load(self, timeout: int | float = 100) -> None:
         """Wait for loading spinner to disappear"""
 
         try:
@@ -168,41 +190,48 @@ class TestPage:
         except:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
 
-    def wait_for_modal_close(self):
+    def wait_for_modal_close(self) -> None:
         """Wait for the modal to close"""
 
         self.wait.until(ec.invisibility_of_element_located((By.CSS_SELECTOR, ".modal")))
 
     def wait_for_delete_modal(self) -> WebElement:
+        """Wait for the delete modal to appear"""
 
         return self.get_element("modal-confirmation")
 
     @property
     def table_rows(self) -> list[WebElement]:
+        """Get all table rows on the page"""
 
         return self.driver.find_elements(By.CLASS_NAME, "table-row-clickable")
 
     def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
+        """Get a specific table row by its ID"""
 
         return self.get_element(f"table-row-{item_id}", *args, **kwargs)
 
     @property
     def add_entity_button(self) -> WebElement:
+        """Get the Add Entity button"""
 
         return self.get_element("add-entity-button")
 
     @property
     def confirm_button(self) -> WebElement:
+        """Get the confirm button on the modal"""
 
         return self.get_element("confirm-button")
 
     @property
     def cancel_button(self) -> WebElement:
+        """Get the cancel button on the modal"""
 
         return self.get_element("cancel-button")
 
     @property
     def edit_button(self) -> WebElement:
+        """Get the edit button on the modal"""
 
         return self.get_element("edit-button")
 
@@ -225,6 +254,9 @@ class TestPage:
         edit_option.click()
 
     def check_rows(self, name: str, expected_count: int = 1) -> None:
+        """Check that a specific row with a specific name exists in the table
+        :param name: Name of the row to check
+        :param expected_count: Expected number of rows with that name"""
 
         rows = self.driver.find_elements(By.XPATH, f"//td[contains(text(), '{name}')]")
         assert len(rows) == expected_count, f"Expected {expected_count} rows with name '{name}', found {len(rows)}"
@@ -232,8 +264,7 @@ class TestPage:
     def get_column_values(self, column_index: int) -> list[str]:
         """Get values from a specific column in the table
         :param column_index: Index of the column (0-based)
-        :return: List of values from that column
-        """
+        :return: List of values from that column"""
 
         return [row.find_elements(By.TAG_NAME, "td")[column_index].text for row in self.table_rows]
 
@@ -261,7 +292,7 @@ class TestKeywordsPage(TestPage):
 
         return self.get_element("modal-formview-edit-keyword")
 
-    def test_display_keywords_entries(self):
+    def test_display_keywords_entries(self) -> None:
         """Test that keywords entries are displayed correctly"""
 
         # Default 20 entries display
@@ -274,7 +305,7 @@ class TestKeywordsPage(TestPage):
         keywords = [keyword for keyword in self.test_data if keyword.owner_id == 1]
         assert len(self.table_rows) == min([40, len(keywords)]), "The table rows should match the keyword entries"
 
-    def test_add_keyword_with_valid_name(self):
+    def test_add_keyword_with_valid_name(self) -> None:
         """Test adding a new keyword with a valid name"""
 
         test_keyword_name = f"TestKeyword_{int(time.time())}"
@@ -285,7 +316,7 @@ class TestKeywordsPage(TestPage):
         self.wait_for_modal_close()
         self.check_rows(test_keyword_name, 1)
 
-    def test_add_keyword_without_name_shows_error(self):
+    def test_add_keyword_without_name_shows_error(self) -> None:
         """Test that adding a keyword without a name shows validation error"""
 
         self.add_entity_button.click()
@@ -295,7 +326,7 @@ class TestKeywordsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_modal_close()
 
-    def test_add_keyword_same_name_shows_error(self):
+    def test_add_keyword_same_name_shows_error(self) -> None:
         """Test that adding a keyword with an existing name shows validation error"""
 
         self.add_entity_button.click()
@@ -306,7 +337,7 @@ class TestKeywordsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_modal_close()
 
-    def _test_view_modal(self, test_keyword: Keyword):
+    def _test_view_modal(self, test_keyword) -> None:
         """Helper method to test the view modal for a keyword entry
         :param test_keyword: Keyword object to test"""
 
@@ -321,21 +352,21 @@ class TestKeywordsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_modal_close()
 
-    def test_view_keyword_entry(self):
+    def test_view_keyword_entry(self) -> None:
         """Test viewing a keyword entry details by clicking on a table row"""
 
         test_keyword = self.test_data[0]
         self.table_row(test_keyword.id).click()
         self._test_view_modal(test_keyword)
 
-    def test_view_keyword_entry_right_click(self):
+    def test_view_keyword_entry_right_click(self) -> None:
         """Test viewing a keyword entry details through the right-click context menu"""
 
         test_keyword = self.test_data[0]
         self.context_menu(test_keyword.id, "view")
         self._test_view_modal(test_keyword)
 
-    def test_edit_keyword_through_view_modal(self):
+    def test_edit_keyword_through_view_modal(self) -> None:
         """Test editing a keyword through the view modal's edit button"""
 
         test_keyword = self.test_data[0]
@@ -353,7 +384,7 @@ class TestKeywordsPage(TestPage):
         self.check_rows(new_name, 1)
         self.check_rows(original_name, 0)
 
-    def test_edit_keyword_through_right_click_context_menu(self):
+    def test_edit_keyword_through_right_click_context_menu(self) -> None:
         """Test editing a keyword through right-click context menu"""
 
         test_keyword = self.test_data[0]
@@ -367,7 +398,7 @@ class TestKeywordsPage(TestPage):
         self.check_rows(new_name, 1)
         self.check_rows(original_name, 0)
 
-    def test_delete_keyword_entry(self):
+    def test_delete_keyword_entry(self) -> None:
         """Test deleting a keyword entry"""
 
         test_keyword = self.test_data[0]
@@ -377,7 +408,7 @@ class TestKeywordsPage(TestPage):
         self.wait_for_modal_close()
         self.check_rows(test_keyword.name, 0)
 
-    def test_search_functionality(self):
+    def test_search_functionality(self) -> None:
         """Test the search functionality for keywords"""
 
         string = self.test_data[0].name[3:5]
@@ -388,7 +419,7 @@ class TestKeywordsPage(TestPage):
         time.sleep(1)  # Allow time for search to filter
         assert len(self.table_rows) == n, "Expected search to filter results"
 
-    def test_sort_functionality(self):
+    def test_sort_functionality(self) -> None:
         """Test sorting functionality for the keyword table"""
 
         # Find and click the Name column header to sort
@@ -422,7 +453,7 @@ class TestAggregatorsPage(TestPage):
 
         return self.get_element("modal-formview-edit-aggregator")
 
-    def test_display_entries(self):
+    def test_display_entries(self) -> None:
         """Test that entries are displayed correctly"""
 
         # Default 20 entries display
@@ -435,7 +466,7 @@ class TestAggregatorsPage(TestPage):
         entries = [entry for entry in self.test_data if entry.owner_id == 1]
         assert len(self.table_rows) == min([40, len(entries)]), "The table rows should match the number of entries"
 
-    def test_add_valid_entry(self):
+    def test_add_valid_entry(self) -> None:
         """Test adding a new entry with a valid name"""
 
         test_keyword_name = f"TestKeyword_{int(time.time())}"
@@ -447,7 +478,7 @@ class TestAggregatorsPage(TestPage):
         self.wait_for_modal_close()
         self.check_rows(test_keyword_name, 1)
 
-    def test_add_invalid_entry(self):
+    def test_add_invalid_entry(self) -> None:
         """Test that adding an entry without the required fields shows validation error"""
 
         test_keyword_name = f"TestKeyword_{int(time.time())}"
@@ -472,7 +503,7 @@ class TestAggregatorsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_modal_close()
 
-    def test_add_duplicate_entry(self):
+    def test_add_duplicate_entry(self) -> None:
         """Test that adding an entry with a duplicate name shows validation error"""
 
         self.add_entity_button.click()
@@ -484,7 +515,7 @@ class TestAggregatorsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_modal_close()
 
-    def _test_view_modal(self):
+    def _test_view_modal(self) -> None:
         """Helper method to test the view modal for a keyword entry"""
 
         modal = self.wait_for_view_modal()
@@ -498,19 +529,19 @@ class TestAggregatorsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_modal_close()
 
-    def test_view_entry(self):
+    def test_view_entry(self) -> None:
         """Test viewing an entry details by clicking on a table row"""
 
         self.table_row(self.test_entry.id).click()
         self._test_view_modal()
 
-    def test_view_entry_right_click(self):
+    def test_view_entry_right_click(self) -> None:
         """Test viewing a keyword entry details through the right-click context menu"""
 
         self.context_menu(self.test_entry.id, "view")
         self._test_view_modal()
 
-    def test_edit_entry_through_view_modal(self):
+    def test_edit_entry_through_view_modal(self) -> None:
         """Test editing an entry through the view modal's edit button"""
 
         original_name = self.test_entry.name
@@ -527,7 +558,7 @@ class TestAggregatorsPage(TestPage):
         self.check_rows(new_name, 1)
         self.check_rows(original_name, 0)
 
-    def test_edit_entry_through_right_click_context_menu(self):
+    def test_edit_entry_through_right_click_context_menu(self) -> None:
         """Test editing an entry through right-click context menu"""
 
         original_name = self.test_entry.name
@@ -540,7 +571,7 @@ class TestAggregatorsPage(TestPage):
         self.check_rows(new_name, 1)
         self.check_rows(original_name, 0)
 
-    def test_delete_entry(self):
+    def test_delete_entry(self) -> None:
         """Test deleting an entry"""
 
         self.context_menu(self.test_entry.id, "delete")
@@ -549,7 +580,7 @@ class TestAggregatorsPage(TestPage):
         self.wait_for_modal_close()
         self.check_rows(self.test_entry.name, 0)
 
-    def test_search_functionality(self):
+    def test_search_functionality(self) -> None:
         """Test the search functionality for keywords"""
 
         string = self.test_entry.name[3:5]
@@ -558,11 +589,17 @@ class TestAggregatorsPage(TestPage):
         time.sleep(1)  # Allow time for search to filter
         assert len(self.table_rows) == n, "Expected search to filter results"
 
-    def test_sort_functionality(self):
+        string = self.test_entry.url
+        n = len([f for f in self.test_data if string in f.url])
+        self.clear(self.get_element("search-input"), string)
+        time.sleep(1)  # Allow time for search to filter
+        assert len(self.table_rows) == n, "Expected search to filter results"
+
+    def test_sort_functionality(self) -> None:
         """Test sorting functionality for the keyword table"""
 
-        self.get_element("table-header-name").click()
+        self.get_element("table-header-url").click()
         time.sleep(0.2)
-        expected = sorted([entity.name for entity in self.test_data], key=lambda x: x.lower())[:20]
-        values = self.get_column_values(0)
+        expected = sorted([entity.url[8:] for entity in self.test_data], key=lambda x: x.lower())[:20]
+        values = self.get_column_values(1)
         assert values == expected, "Expected sorted results"

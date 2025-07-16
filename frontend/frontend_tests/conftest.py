@@ -7,11 +7,9 @@ import time
 import psutil
 import requests
 
-# Add the backend directory to the Python path so we can import from it
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
 
-# Now we can import from the backend conftest
 from tests.conftest import *
 
 
@@ -77,11 +75,35 @@ def kill_process_tree(parent_pid):
         print(f"Error killing process tree {parent_pid}: {e}")
 
 
+def print_backend_pid():
+    try:
+        import psutil
+
+        backend_processes = []
+        for proc in psutil.process_iter(["pid", "name", "cmdline"]):
+            try:
+                if proc.info["cmdline"] and any("uvicorn" in cmd for cmd in proc.info["cmdline"]):
+                    backend_processes.append(f"PID {proc.info['pid']}: {' '.join(proc.info['cmdline'])}")
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+
+        if backend_processes:
+            print(f"Backend processes found: {backend_processes}")
+        else:
+            print("No backend processes found - backend may have crashed")
+
+    except Exception as e:
+        print(f"Error checking backend processes: {e}")
+
+
 @pytest.fixture(scope="session")
 def test_backend_server():
     """Start a test backend server for integration tests"""
+    print("=" * 60)
+    print("STARTING BACKEND SERVER")
+    print("=" * 60)
 
-    print("Starting test_backend_server fixture...")
+    print_backend_pid()
 
     # Kill any existing process on port 8000
     kill_process_on_port(8000)
@@ -163,6 +185,7 @@ def test_backend_server():
     print("Cleaning up backend server...")
     kill_process_tree(process.pid)
     print("✅ Backend server cleanup completed.")
+    print_backend_pid()
 
 
 @pytest.fixture(scope="session")
@@ -336,15 +359,3 @@ def api_base_url(test_backend_server):
 def frontend_base_url(test_frontend_server):
     """Base URL for the frontend"""
     return test_frontend_server
-
-
-@pytest.fixture
-def frontend_test_keywords(test_keywords):
-
-    return test_keywords
-
-
-@pytest.fixture(scope="session")
-def test_servers(test_backend_server, test_frontend_server):
-    """Ensure both servers are running before any tests"""
-    return {"backend": test_backend_server, "frontend": test_frontend_server}
