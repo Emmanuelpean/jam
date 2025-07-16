@@ -181,7 +181,6 @@ class TestPage:
         :param etype: Type of element to return. If None, returns the WebElement. If "select", returns the Select object.
         """
 
-        time.sleep(0.3)
         try:
             element = self.wait.until(ec.element_to_be_clickable((selector, element_id)))
             if etype is None:
