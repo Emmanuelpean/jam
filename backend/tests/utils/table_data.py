@@ -29,7 +29,7 @@ USERS_DATA = [
     {
         "email": "developer@techstartup.com",
         "password": "password6",
-    }
+    },
 ]
 
 # Company test data - expanded with more variety
@@ -133,7 +133,6 @@ LOCATIONS_DATA = [
         "country": "Canada",
         "owner_id": 1,
     },
-
     {
         "postcode": "75001",
         "city": "Paris",
@@ -148,10 +147,6 @@ LOCATIONS_DATA = [
     {
         "city": "Tokyo",
         "country": "Japan",
-        "owner_id": 1,
-    },
-    {
-        "remote": True,
         "owner_id": 1,
     },
     {

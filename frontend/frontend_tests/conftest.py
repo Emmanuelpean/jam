@@ -355,3 +355,37 @@ def api_base_url(test_backend_server):
 def frontend_base_url(test_frontend_server):
     """Base URL for the frontend"""
     return test_frontend_server
+
+
+def contiguous_subdicts(dictionary: dict) -> list[dict]:
+    """Return a list of all contiguous sub-dictionaries in the given dictionary.
+    :param dictionary: The dictionary to search."""
+
+    keys = list(dictionary.keys())
+    n = len(keys)
+    results = []
+    for size in range(1, n):
+        for start in range(n):
+            # Generate indices with wrap-around using modulo
+            subkeys = [keys[(start + i) % n] for i in range(size)]
+            subdict = {k: dictionary[k] for k in subkeys}
+            results.append(subdict)
+    return [dict()] + results
+
+
+def contiguous_subdicts_with_required(dictionary: dict, required_keys: list) -> list[dict]:
+    keys = list(dictionary.keys())
+    n = len(keys)
+    seen = set()
+    results = []
+    for size in range(1, n + 1):
+        for start in range(n):
+            subkeys = [keys[(start + i) % n] for i in range(size)]
+            if all(k in subkeys for k in required_keys):
+                subdict = {k: dictionary[k] for k in subkeys}
+                # Use sorted items as a hashable representation:
+                key_tuple = tuple(sorted(subdict.items()))
+                if key_tuple not in seen:
+                    seen.add(key_tuple)
+                    results.append(subdict)
+    return results

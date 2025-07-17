@@ -63,10 +63,10 @@ def create_locations(db):
     """Create sample locations"""
 
     print("Creating locations...")
-    locations = [models.Location(**location) for location in LOCATIONS_DATA]
+    locations = [models.Location(**location) for location in LOCATIONS_DATA + [{"remote": True, "owner_id": 1}]]
     db.add_all(locations)
     db.commit()
-    return locations
+    return locations[:-1]
 
 
 def create_aggregators(db):

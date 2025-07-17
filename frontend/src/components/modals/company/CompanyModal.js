@@ -2,6 +2,8 @@ import React from "react";
 import GenericModal from "../GenericModal";
 import { formFields } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
+import { companiesApi } from "../../../services/api";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export const CompanyModal = ({
 	show,
@@ -13,28 +15,19 @@ export const CompanyModal = ({
 	submode = "view",
 	size = "lg",
 }) => {
-	// Don't render if we're in view mode but have no company data
-	if (submode === "view" && !company?.id) {
-		return null;
-	}
+	const { token } = useAuth();
 
-	// Form fields for editing
 	const formFieldsArray = [
 		[formFields.name({ required: true })],
 		[formFields.url({ label: "Website URL" })],
 		[formFields.description()],
 	];
-
-	// View fields for display
 	const viewFieldsArray = [[viewFields.name(), viewFields.url()], [viewFields.description()]];
-
-	// Combine them in a way GenericModal can use based on mode
 	const fields = {
 		form: formFieldsArray,
 		view: viewFieldsArray,
 	};
 
-	// Transform form data before submission
 	const transformFormData = (data) => {
 		return {
 			...data,
@@ -43,6 +36,22 @@ export const CompanyModal = ({
 			description: data.description?.trim() || null,
 		};
 	};
+
+	const customValidation = async (formData) => {
+		const errors = {};
+		const queryParams = {name: formData.name?.trim()};
+		const matches = await companiesApi.getAll(token, queryParams);
+		const duplicates = matches.filter((existing) => {
+			return company?.id !== existing.id;
+		});
+
+		if (duplicates.length > 0 && formData.name) {
+			errors.name = `A company with this name already exists`;
+		}
+
+		return errors;
+	};
+
 
 	return (
 		<GenericModal
@@ -58,6 +67,7 @@ export const CompanyModal = ({
 			onSuccess={onSuccess}
 			onDelete={onDelete}
 			transformFormData={transformFormData}
+			validation={customValidation}
 		/>
 	);
 };

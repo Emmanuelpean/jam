@@ -12,7 +12,10 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.wait import WebDriverWait
+
+from react_select import ReactSelect
+from conftest import contiguous_subdicts, contiguous_subdicts_with_required
 
 
 class TestPage:
@@ -28,6 +31,9 @@ class TestPage:
     entry_name = ""
     page_url = ""
     test_fixture = ""
+    test_data = {}
+    required_fields = []
+    duplicate_fields = []
 
     @pytest.fixture(autouse=True)
     def setup_method(self, frontend_base_url, request) -> None:
@@ -84,7 +90,7 @@ class TestPage:
 
     # ------------------------------------------------ GET/WAIT ELEMENTS -----------------------------------------------
 
-    def wait_for_table_load(self, timeout: int | float = 5) -> None:
+    def wait_for_table_load(self, timeout: int | float = 0.1) -> None:
         """Wait for loading spinner to disappear"""
 
         try:
@@ -113,20 +119,13 @@ class TestPage:
         self,
         element_id: str,
         selector: By = By.ID,
-        etype: str | None = None,
-    ) -> WebElement | Select:
+    ) -> WebElement:
         """Get an element by its ID
         :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element
-        :param etype: Type of element to return. If None, returns the WebElement. If "select", returns the Select object.
-        """
+        :param selector: Selector to use for finding the element"""
 
         try:
-            element = self.wait.until(ec.element_to_be_clickable((selector, element_id)))
-            if etype is None:
-                return element
-            elif etype == "select":
-                return Select(element)
+            return self.wait.until(ec.element_to_be_clickable((selector, element_id)))
         except:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
 
@@ -262,6 +261,8 @@ class TestPage:
 
         return f"Test_{int(time.time())}"
 
+    # ----------------------------------------------- DISPLAY/VIEW TESTS -----------------------------------------------
+
     def test_display_entries(self) -> None:
         """Test that entries are displayed correctly"""
 
@@ -270,7 +271,7 @@ class TestPage:
         assert len(self.table_rows) == min([20, len(entries)]), "The table rows should match the entries"
 
         # Increase to 40
-        self.get_element("page-items-select", etype="select").select_by_value("40")
+        Select(self.get_element("page-items-select")).select_by_value("40")
         self.wait_for_table_load()
         entries = [entry for entry in self.test_entries if entry.owner_id == 1]
         assert len(self.table_rows) == min([40, len(entries)]), "The table rows should match the entries"
@@ -282,21 +283,137 @@ class TestPage:
         if display_function is None:
             display_function = lambda x: x
 
+        def convert(entity):
+            value = getattr(entity, key, None)
+            return display_function(value) if value is not None else ""
+
+        # Click to sort and give time for UI update
         self.get_element(f"table-header-{key}").click()
         time.sleep(0.2)
-        expected = sorted(
-            [display_function(getattr(entity, key)) for entity in self.test_entries], key=lambda x: x.lower()
-        )[:20]
-        values = self.get_column_values(key)
-        assert values == expected, "Expected sorted results"
 
-    def _test_search_functionality(self, key: str, text: str) -> None:
+        # Prepare sorted, displayable, lowercased values (non-empty first)
+        converted = [convert(entity) for entity in self.test_entries]
+        expected = sorted((v for v in converted if v), key=lambda x: x.lower())
+
+        # Pad 'Not Provided' for entries with empty values
+        missing_count = len(converted) - len(expected)
+        expected.extend(["Not Provided"] * missing_count)
+
+        # Fetch table column values and compare
+        values = self.get_column_values(key)
+        assert values == expected[:20], "Expected sorted results"
+
+    def _test_search_functionality(self, text: str, *keys) -> None:
         """Test the search functionality"""
 
-        n = len([f for f in self.test_entries if text in getattr(f, key)])
+        entries = []
+        for key in keys:
+            entries += [entry for entry in self.test_entries if text.lower() in (getattr(entry, key, "") or "").lower()]
+        entries = set(entries)
         self.clear(self.get_element("search-input"), text)
         time.sleep(1)  # Allow time for search to filter
-        assert len(self.table_rows) == n, "Expected search to filter results"
+        assert len(self.table_rows) == len(entries), "Expected search to filter results"
+
+    def _test_view_modal(self):
+        """Helper method to test the view modal for an entry"""
+
+        pass
+
+    def test_view_entry(self) -> None:
+        """Test viewing an entry details by clicking on a table row"""
+
+        self.table_row(self.test_entry.id).click()
+        self._test_view_modal()
+
+    def test_view_entry_right_click(self) -> None:
+        """Test viewing an entry details through the right-click context menu"""
+
+        self.context_menu(self.test_entry.id, "view")
+        self._test_view_modal()
+
+    # --------------------------------------------------- DELETE TEST --------------------------------------------------
+
+    def _test_delete_entry(self, key: str) -> None:
+        """Test deleting an entry entry
+        :param key: The key of the column to check."""
+
+        self.context_menu(self.test_entry.id, "delete")
+        self.wait_for_delete_modal()
+        self.confirm_button.click()
+        self.wait_for_delete_modal_close()
+        time.sleep(0.1)
+        self.check_rows(key, getattr(self.test_entry, key), 0)
+
+    # ---------------------------------------------------- EDIT TEST ---------------------------------------------------
+
+    def _fill_modal(self, **values):
+        """Fill the modal with the given values  (key: key of the input elements, value: value to set)."""
+
+        for key, value in values.items():
+            if key == "country":
+                select = ReactSelect(self.get_element("country"))
+                select.open_menu()
+                select.select_by_visible_text("United Kingdom")
+            else:
+                self.get_element(key).send_keys(value)
+
+    def _test_add_valid_entry(self, key_check: str, **values):
+        """Test adding a new entry with a valid name
+        :param key_check: The key of the column to check.
+        :param values: The values to set for the new entry"""
+
+        self.add_entity_button.click()
+        self.wait_for_edit_modal()
+        self._fill_modal(**values)
+        self.confirm_button.click()
+        self.wait_for_edit_modal_close()
+        self.check_rows(key_check, values[key_check], 1)
+
+    def test_add_valid_entry(self) -> None:
+        """Test adding a new entry"""
+
+        values = contiguous_subdicts_with_required(self.test_data, self.required_fields)
+        for d in values:
+            new_d = {}
+            for key, value in d.items():
+                if isinstance(value, str):
+                    new_d[key] = value + str(time.time())
+            print(new_d)
+            keys = list(d.keys())
+            self.add_entity_button.click()
+            self.wait_for_edit_modal()
+            self._fill_modal(**new_d)
+            self.confirm_button.click()
+            self.wait_for_edit_modal_close()
+            self.check_rows(keys[0], new_d[keys[0]], 1)
+
+    def test_add_duplicate_entry(self) -> None:
+        """Test that adding a new entry with an existing name shows validation error"""
+
+        self.add_entity_button.click()
+        self.wait_for_edit_modal()
+        self._fill_modal(**{key: getattr(self.test_entry, key) for key in self.duplicate_fields})
+        self.confirm_button.click()
+        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
+        self.cancel_button.click()
+        self.wait_for_edit_modal_close()
+
+    def test_add_incomplete_entry(self) -> None:
+        """Test that adding a new entry without all required information shows an error"""
+
+        if len(self.required_fields) > 1:
+            dictionaries = contiguous_subdicts({key: self.test_data[key] for key in self.required_fields})
+        else:
+            dictionaries = [dict()]
+
+        for d in dictionaries:
+            self.add_entity_button.click()
+            self.wait_for_edit_modal()
+            self._fill_modal(**d)
+            self.confirm_button.click()
+            self.get_element(".invalid-feedback", By.CSS_SELECTOR)
+            self.cancel_button.click()
+            self.wait_for_edit_modal_close()
 
 
 class TestKeywordsPage(TestPage):
@@ -310,38 +427,9 @@ class TestKeywordsPage(TestPage):
     page_url = "keywords"
     entry_name = "keyword"
     test_fixture = "test_keywords"
-
-    def test_add_entry_with_valid_name(self) -> None:
-        """Test adding a new entry with a valid name"""
-
-        test_name = self.test_name
-        self.add_entity_button.click()
-        self.wait_for_edit_modal()
-        self.get_element("name").send_keys(test_name)
-        self.confirm_button.click()
-        self.wait_for_edit_modal_close()
-        self.check_rows("name", test_name, 1)
-
-    def test_add_entry_without_name_shows_error(self) -> None:
-        """Test that adding a new entry without a name shows validation error"""
-
-        self.add_entity_button.click()
-        self.wait_for_edit_modal()
-        self.confirm_button.click()
-        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-        self.cancel_button.click()
-        self.wait_for_edit_modal_close()
-
-    def test_add_entry_same_name_shows_error(self) -> None:
-        """Test that adding a new entry with an existing name shows validation error"""
-
-        self.add_entity_button.click()
-        self.wait_for_edit_modal()
-        self.get_element("name").send_keys(self.test_entries[0].name)
-        self.confirm_button.click()
-        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-        self.cancel_button.click()
-        self.wait_for_edit_modal_close()
+    test_data = {"name": "Test_Name"}
+    required_fields = ["name"]
+    duplicate_fields = ["name"]
 
     def _test_view_modal(self) -> None:
         """Helper method to test the view modal for an entry"""
@@ -358,18 +446,6 @@ class TestKeywordsPage(TestPage):
         # Close modal
         self.cancel_button.click()
         self.wait_for_view_modal_close()
-
-    def test_view_entry(self) -> None:
-        """Test viewing an entry details by clicking on a table row"""
-
-        self.table_row(self.test_entry.id).click()
-        self._test_view_modal()
-
-    def test_view_entry_right_click(self) -> None:
-        """Test viewing an entry details through the right-click context menu"""
-
-        self.context_menu(self.test_entry.id, "view")
-        self._test_view_modal()
 
     def test_edit_entry_through_view_modal(self) -> None:
         """Test editing an entry through the view modal's edit button"""
@@ -404,17 +480,12 @@ class TestKeywordsPage(TestPage):
     def test_delete_entry(self) -> None:
         """Test deleting an entry entry"""
 
-        self.context_menu(self.test_entry.id, "delete")
-        self.wait_for_delete_modal()
-        self.confirm_button.click()
-        self.wait_for_delete_modal_close()
-        time.sleep(0.1)
-        self.check_rows("name", self.test_entry.name, 0)
+        self._test_delete_entry("name")
 
     def test_search_functionality(self) -> None:
         """Test the search functionality"""
 
-        self._test_search_functionality("name", self.test_entry.name[3:8])
+        self._test_search_functionality(self.test_entry.name[3:8], "name")
 
     def test_sort_functionality(self) -> None:
         """Test sorting functionality"""
@@ -433,55 +504,9 @@ class TestAggregatorsPage(TestPage):
     page_url = "aggregators"
     test_fixture = "test_aggregators"
     entry_name = "aggregator"
-
-    def test_add_valid_entry(self) -> None:
-        """Test adding a new entry with a valid name"""
-
-        name = self.test_name
-        self.add_entity_button.click()
-        self.wait_for_edit_modal()
-        self.get_element("name").send_keys(name)
-        self.get_element("url").send_keys("https://www.google.com")
-        self.confirm_button.click()
-        self.wait_for_edit_modal_close()
-        self.check_rows("name", name, 1)
-
-    def test_add_invalid_entry(self) -> None:
-        """Test that adding an entry without the required fields shows validation error"""
-
-        name = self.test_name
-        self.add_entity_button.click()
-        self.wait_for_edit_modal()
-
-        # With none
-        self.confirm_button.click()
-        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-
-        # With just the name
-        self.get_element("name").send_keys(name)
-        self.confirm_button.click()
-        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-
-        # With just the url
-        self.clear(self.get_element("name"))
-        self.get_element("url").send_keys("https://www.google.com")
-        self.confirm_button.click()
-        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-
-        self.cancel_button.click()
-        self.wait_for_edit_modal_close()
-
-    def test_add_duplicate_entry(self) -> None:
-        """Test that adding an entry with a duplicate name shows validation error"""
-
-        self.add_entity_button.click()
-        self.wait_for_edit_modal()
-        self.get_element("name").send_keys(self.test_entry.name)
-        self.get_element("url").send_keys("https://www.google.com")
-        self.confirm_button.click()
-        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-        self.cancel_button.click()
-        self.wait_for_edit_modal_close()
+    test_data = {"name": "Test_Name", "url": "https://www.google.com"}
+    required_fields = ["name", "url"]
+    duplicate_fields = ["name"]
 
     def _test_view_modal(self) -> None:
         """Helper method to test the view modal for an entry"""
@@ -496,18 +521,6 @@ class TestAggregatorsPage(TestPage):
         # Close modal
         self.cancel_button.click()
         self.wait_for_view_modal_close()
-
-    def test_view_entry(self) -> None:
-        """Test viewing an entry details by clicking on a table row"""
-
-        self.table_row(self.test_entry.id).click()
-        self._test_view_modal()
-
-    def test_view_entry_right_click(self) -> None:
-        """Test viewing an entry details through the right-click context menu"""
-
-        self.context_menu(self.test_entry.id, "view")
-        self._test_view_modal()
 
     def test_edit_entry_through_view_modal(self) -> None:
         """Test editing an entry through the view modal's edit button"""
@@ -542,18 +555,173 @@ class TestAggregatorsPage(TestPage):
     def test_delete_entry(self) -> None:
         """Test deleting an entry"""
 
-        self.context_menu(self.test_entry.id, "delete")
-        self.wait_for_delete_modal()
-        self.confirm_button.click()
-        self.wait_for_edit_modal_close()
-        time.sleep(0.1)
-        self.check_rows("name", self.test_entry.name, 0)
+        self._test_delete_entry("name")
 
     def test_search_functionality(self) -> None:
         """Test the search functionality"""
 
-        self._test_search_functionality("name", self.test_entry.name[3:6])
-        self._test_search_functionality("url", self.test_entry.url)
+        self._test_search_functionality(self.test_entry.name[3:6], "name", "url")
+        self._test_search_functionality(self.test_entry.url, "name", "url")
+
+    def test_sort_functionality(self) -> None:
+        """Test sorting functionality"""
+
+        self._test_sort_functionality("name")
+        self._test_sort_functionality("url", lambda x: x[8:])
+
+
+class TestCompaniesPage(TestPage):
+    """Test class for Aggregators Page functionality including:
+    - Displaying entries
+    - Adding new entries
+    - Viewing entries
+    - Editing entries
+    - Deleting entries"""
+
+    page_url = "companies"
+    test_fixture = "test_companies"
+    entry_name = "company"
+    test_data = {"name": "Test_Name", "url": "https://www.google.com", "description": "This is a test description"}
+    required_fields = ["name"]
+    duplicate_fields = ["name"]
+
+    def _test_view_modal(self) -> None:
+        """Helper method to test the view modal for an entry"""
+
+        modal = self.wait_for_view_modal()
+
+        # Verify modal contains the entry information
+        date = datetime.strftime(self.test_entry.created_at, "%d/%m/%Y")
+        expected = (
+            f"Company Details\nName\n{self.test_entry.name}\nWebsite\n{self.test_entry.url.replace("https://", "")}"
+            f"\nDescription\n{self.test_entry.description}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
+        )
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button.click()
+        self.wait_for_view_modal_close()
+
+    def test_edit_entry_through_view_modal(self) -> None:
+        """Test editing an entry through the view modal's edit button"""
+
+        original_name = self.test_entry.name
+        new_name = self.test_name
+        self.table_row(self.test_entry.id).click()
+        self.wait_for_view_modal()
+        self.edit_button.click()
+        self.wait_for_edit_modal()
+        self.clear(self.get_element("name"), new_name)
+        self.confirm_button.click()
+        self.wait_for_view_modal()
+        self.cancel_button.click()
+        self.wait_for_view_modal_close()
+        self.check_rows("name", new_name, 1)
+        self.check_rows("name", original_name, 0)
+
+    def test_edit_entry_through_right_click_context_menu(self) -> None:
+        """Test editing an entry through right-click context menu"""
+
+        original_name = self.test_entry.url
+        new_name = self.test_name
+        self.context_menu(self.test_entry.id, "edit")
+        self.wait_for_edit_modal()
+        self.clear(self.get_element("url"), new_name)
+        self.confirm_button.click()
+        self.wait_for_edit_modal_close()
+        self.check_rows("url", new_name, 1)
+        self.check_rows("url", original_name, 0)
+
+    def test_delete_entry(self) -> None:
+        """Test deleting an entry"""
+
+        self._test_delete_entry("name")
+
+    def test_search_functionality(self) -> None:
+        """Test the search functionality"""
+
+        self._test_search_functionality(self.test_entry.name[3:6], "name", "url", "description")
+        self._test_search_functionality(self.test_entry.url, "name", "url", "description")
+
+    def test_sort_functionality(self) -> None:
+        """Test sorting functionality"""
+
+        self._test_sort_functionality("name")
+        self._test_sort_functionality("url", lambda x: x[8:])
+
+
+class TestLocationsPage(TestPage):
+    """Test class for Aggregators Page functionality including:
+    - Displaying entries
+    - Adding new entries
+    - Viewing entries
+    - Editing entries
+    - Deleting entries"""
+
+    page_url = "locations"
+    test_fixture = "test_locations"
+    entry_name = "location"
+    test_data = {"city": "Test_City", "postcode": "OX", "country": "United Kingdom"}
+    required_fields = []
+
+    def _test_view_modal(self) -> None:
+        """Helper method to test the view modal for an entry"""
+
+        modal = self.wait_for_view_modal()
+
+        # Verify modal contains the entry information
+        date = datetime.strftime(self.test_entry.created_at, "%d/%m/%Y")
+        expected = (
+            f"Location Details\nCity\n{self.test_entry.city}\nPostcode\n{self.test_entry.postcode}"
+            f"\nCountry\n{self.test_entry.country}\n📍 Location on Map\n+\n−\nLeaflet | © OpenStreetMap contributors © CARTO\n"
+            f"📍 1 of 1 location shown\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
+        )
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button.click()
+        self.wait_for_view_modal_close()
+
+    def test_edit_entry_through_view_modal(self) -> None:
+        """Test editing an entry through the view modal's edit button"""
+
+        original_name = self.test_entry.name
+        new_name = self.test_name
+        self.table_row(self.test_entry.id).click()
+        self.wait_for_view_modal()
+        self.edit_button.click()
+        self.wait_for_edit_modal()
+        self.clear(self.get_element("country"), new_name)
+        self.confirm_button.click()
+        self.wait_for_view_modal()
+        self.cancel_button.click()
+        self.wait_for_view_modal_close()
+        self.check_rows("name", new_name, 1)
+        self.check_rows("name", original_name, 0)
+
+    def test_edit_entry_through_right_click_context_menu(self) -> None:
+        """Test editing an entry through right-click context menu"""
+
+        original_name = self.test_entry.url
+        new_name = self.test_name
+        self.context_menu(self.test_entry.id, "edit")
+        self.wait_for_edit_modal()
+        self.clear(self.get_element("url"), new_name)
+        self.confirm_button.click()
+        self.wait_for_edit_modal_close()
+        self.check_rows("url", new_name, 1)
+        self.check_rows("url", original_name, 0)
+
+    def test_delete_entry(self) -> None:
+        """Test deleting an entry"""
+
+        self._test_delete_entry("name")
+
+    def test_search_functionality(self) -> None:
+        """Test the search functionality"""
+
+        self._test_search_functionality(self.test_entry.name[3:6], "name", "url", "description")
+        self._test_search_functionality(self.test_entry.url, "name", "url", "description")
 
     def test_sort_functionality(self) -> None:
         """Test sorting functionality"""
