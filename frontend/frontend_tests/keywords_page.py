@@ -200,12 +200,12 @@ class TestPage:
             self.get_column_values(column).count(name) == expected_count
         ), f"Expected {expected_count} rows with name '{name}'"
 
-    def get_column_values(self, column_key: str) -> list[str]:
+    def get_column_values(self, column_key: str = None) -> list[str] | list[dict[str, str]]:
         """
         Get values from a specific table column via the column key
         (matched using id attributes starting with 'table-header-').
-        :param column_key: The key of the column.
-        :return: List of values from that column.
+        :param column_key: The key of the column. If None, returns all rows as list of dicts.
+        :return: List of values from that column, or list of row dicts if no key provided.
         """
         # Find all elements where id starts with 'table-header-'
         header_elements = self.driver.find_elements(By.XPATH, "//*[@id[starts-with(., 'table-header-')]]")
@@ -215,6 +215,18 @@ class TestPage:
             # Ensure only ids with "table-header-" are considered
             if th_id and th_id.startswith("table-header-"):
                 header_keys.append(th_id[len("table-header-") :])
+
+        # If no column_key provided, return all rows as list of dicts
+        if column_key is None:
+            rows_data = []
+            for row in self.table_rows:
+                row_dict = {}
+                cells = row.find_elements(By.TAG_NAME, "td")
+                for i, key in enumerate(header_keys):
+                    if i < len(cells):
+                        row_dict[key] = cells[i].text
+                rows_data.append(row_dict)
+            return rows_data
 
         if column_key not in header_keys:
             raise ValueError(f"Column key '{column_key}' not found. Available keys: {header_keys}")
@@ -346,13 +358,15 @@ class TestPage:
         self.confirm_button.click()
         self.wait_for_delete_modal_close()
         time.sleep(0.1)
+        print(self.get_column_values())
         self.check_rows(key, getattr(self.test_entry, key), 0)
 
-    # ---------------------------------------------------- EDIT TEST ---------------------------------------------------
+    # ----------------------------------------------------- ADD TEST ---------------------------------------------------
 
     def _fill_modal(self, **values):
         """Fill the modal with the given values  (key: key of the input elements, value: value to set)."""
 
+        self.wait_for_edit_modal()
         for key, value in values.items():
             if key == "country":
                 select = ReactSelect(self.get_element("country"))
@@ -399,12 +413,38 @@ class TestPage:
 
         for d in dictionaries:
             self.add_entity_button.click()
-            self.wait_for_edit_modal()
             self._fill_modal(**d)
             self.confirm_button.click()
             self.get_element(".invalid-feedback", By.CSS_SELECTOR)
             self.cancel_button.click()
             self.wait_for_edit_modal_close()
+
+    # ---------------------------------------------------- EDIT TEST ---------------------------------------------------
+
+    def test_edit_entry_through_view_modal(self) -> None:
+        """Test editing an entry through the view modal's edit button"""
+
+        keys = list(self.test_data.keys())
+        initial_count = self.get_column_values(keys[0]).count(self.test_data[keys[0]])
+        self.table_row(self.test_entry.id).click()
+        self.wait_for_view_modal()
+        self.edit_button.click()
+        self._fill_modal(**self.test_data)
+        self.confirm_button.click()
+        self.wait_for_edit_modal_close()
+        self.cancel_button.click()
+        self.check_rows(keys[0], self.test_data[keys[0]], initial_count + 1)
+
+    def test_edit_entry_through_right_click_context_menu(self) -> None:
+        """Test editing an entry through right-click context menu"""
+
+        keys = list(self.test_data.keys())
+        initial_count = self.get_column_values(keys[0]).count(self.test_data[keys[0]])
+        self.context_menu(self.test_entry.id, "edit")
+        self._fill_modal(**self.test_data)
+        self.confirm_button.click()
+        self.wait_for_edit_modal_close()
+        self.check_rows(keys[0], self.test_data[keys[0]], initial_count + 1)
 
 
 class TestKeywordsPage(TestPage):
@@ -437,36 +477,6 @@ class TestKeywordsPage(TestPage):
         # Close modal
         self.cancel_button.click()
         self.wait_for_view_modal_close()
-
-    def test_edit_entry_through_view_modal(self) -> None:
-        """Test editing an entry through the view modal's edit button"""
-
-        original_name = self.test_entry.name
-        new_name = self.test_name
-        self.table_row(self.test_entry.id).click()
-        self.wait_for_view_modal()
-        self.edit_button.click()
-        self.wait_for_edit_modal()
-        self.clear(self.get_element("name"), new_name)
-        self.confirm_button.click()
-        self.wait_for_view_modal()
-        self.cancel_button.click()
-        self.wait_for_view_modal_close()
-        self.check_rows("name", new_name, 1)
-        self.check_rows("name", original_name, 0)
-
-    def test_edit_entry_through_right_click_context_menu(self) -> None:
-        """Test editing an entry through right-click context menu"""
-
-        original_name = self.test_entry.name
-        new_name = self.test_name
-        self.context_menu(self.test_entry.id, "edit")
-        self.wait_for_edit_modal()
-        self.clear(self.get_element("name"), new_name)
-        self.confirm_button.click()
-        self.wait_for_edit_modal_close()
-        self.check_rows("name", new_name, 1)
-        self.check_rows("name", original_name, 0)
 
     def test_delete_entry(self) -> None:
         """Test deleting an entry entry"""
@@ -512,36 +522,6 @@ class TestAggregatorsPage(TestPage):
         # Close modal
         self.cancel_button.click()
         self.wait_for_view_modal_close()
-
-    def test_edit_entry_through_view_modal(self) -> None:
-        """Test editing an entry through the view modal's edit button"""
-
-        original_name = self.test_entry.name
-        new_name = self.test_name
-        self.table_row(self.test_entry.id).click()
-        self.wait_for_view_modal()
-        self.edit_button.click()
-        self.wait_for_edit_modal()
-        self.clear(self.get_element("name"), new_name)
-        self.confirm_button.click()
-        self.wait_for_view_modal()
-        self.cancel_button.click()
-        self.wait_for_view_modal_close()
-        self.check_rows("name", new_name, 1)
-        self.check_rows("name", original_name, 0)
-
-    def test_edit_entry_through_right_click_context_menu(self) -> None:
-        """Test editing an entry through right-click context menu"""
-
-        original_name = self.test_entry.url
-        new_name = self.test_name
-        self.context_menu(self.test_entry.id, "edit")
-        self.wait_for_edit_modal()
-        self.clear(self.get_element("url"), new_name)
-        self.confirm_button.click()
-        self.wait_for_edit_modal_close()
-        self.check_rows("url", new_name, 1)
-        self.check_rows("url", original_name, 0)
 
     def test_delete_entry(self) -> None:
         """Test deleting an entry"""
@@ -676,35 +656,6 @@ class TestLocationsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_view_modal_close()
 
-    def test_edit_entry_through_view_modal(self) -> None:
-        """Test editing an entry through the view modal's edit button"""
-
-        keys = list(self.test_data.keys())
-        initial_count = self.get_column_values(keys[0]).count(self.test_data[keys[0]])
-        self.table_row(self.test_entry.id).click()
-        self.wait_for_view_modal()
-        self.edit_button.click()
-        self._fill_modal(**self.test_data)
-        time.sleep(2)
-        self.confirm_button.click()
-        self.wait_for_edit_modal_close()
-        self.cancel_button.click()
-        time.sleep(4)
-        self.check_rows(keys[0], self.test_data[keys[0]], initial_count + 1)
-
-    def test_edit_entry_through_right_click_context_menu(self) -> None:
-        """Test editing an entry through right-click context menu"""
-
-        original_name = self.test_entry.url
-        new_name = self.test_name
-        self.context_menu(self.test_entry.id, "edit")
-        self.wait_for_edit_modal()
-        self.clear(self.get_element("url"), new_name)
-        self.confirm_button.click()
-        self.wait_for_edit_modal_close()
-        self.check_rows("url", new_name, 1)
-        self.check_rows("url", original_name, 0)
-
     def test_delete_entry(self) -> None:
         """Test deleting an entry"""
 
@@ -765,36 +716,6 @@ class TestPersonsPage(TestPage):
         # Close modal
         self.cancel_button.click()
         self.wait_for_view_modal_close()
-
-    def test_edit_entry_through_view_modal(self) -> None:
-        """Test editing an entry through the view modal's edit button"""
-
-        original_name = self.test_entry.name
-        new_name = self.test_name
-        self.table_row(self.test_entry.id).click()
-        self.wait_for_view_modal()
-        self.edit_button.click()
-        self.wait_for_edit_modal()
-        self.clear(self.get_element("name"), new_name)
-        self.confirm_button.click()
-        self.wait_for_view_modal()
-        self.cancel_button.click()
-        self.wait_for_view_modal_close()
-        self.check_rows("name", new_name, 1)
-        self.check_rows("name", original_name, 0)
-
-    def test_edit_entry_through_right_click_context_menu(self) -> None:
-        """Test editing an entry through right-click context menu"""
-
-        original_name = self.test_entry.url
-        new_name = self.test_name
-        self.context_menu(self.test_entry.id, "edit")
-        self.wait_for_edit_modal()
-        self.clear(self.get_element("url"), new_name)
-        self.confirm_button.click()
-        self.wait_for_edit_modal_close()
-        self.check_rows("url", new_name, 1)
-        self.check_rows("url", original_name, 0)
 
     def test_delete_entry(self) -> None:
         """Test deleting an entry"""
