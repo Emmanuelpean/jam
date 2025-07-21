@@ -381,7 +381,8 @@ def contiguous_subdicts_with_required(dictionary: dict, required_keys: list) -> 
     for size in range(1, n + 1):
         for start in range(n):
             subkeys = [keys[(start + i) % n] for i in range(size)]
-            if all(k in subkeys for k in required_keys):
+            # Only filter if required_keys is not empty
+            if not required_keys or all(k in subkeys for k in required_keys):
                 subdict = {k: dictionary[k] for k in subkeys}
                 # Use sorted items as a hashable representation:
                 key_tuple = tuple(sorted(subdict.items()))

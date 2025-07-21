@@ -175,5 +175,6 @@ class ReactSelect(object):
         selected_option.find_element(By.CLASS_NAME, self.select_value_icon).click()
 
     def _click_select_arrow_button(self):
+        time.sleep(0.2)
         self.select_menu.find_element(By.CLASS_NAME, self.select_control).click()
-        time.sleep(1)
+        time.sleep(0.2)

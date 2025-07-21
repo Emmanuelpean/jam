@@ -53,7 +53,11 @@ class TestPage:
             self.driver.maximize_window()
             self.wait = WebDriverWait(self.driver, 5)
             self.base_url = frontend_base_url
-            self.test_entries = request.getfixturevalue(self.test_fixture)
+            if isinstance(self.test_fixture, str):
+                self.test_fixture = [self.test_fixture]
+            self.test_entries, *self.add_test_entries = [
+                request.getfixturevalue(fixture) for fixture in self.test_fixture
+            ]
             self.test_entry = self.test_entries[0]
 
             # Login and navigate to the page page
@@ -355,37 +359,24 @@ class TestPage:
                 select.open_menu()
                 select.select_by_visible_text("United Kingdom")
             else:
-                self.get_element(key).send_keys(value)
-
-    def _test_add_valid_entry(self, key_check: str, **values):
-        """Test adding a new entry with a valid name
-        :param key_check: The key of the column to check.
-        :param values: The values to set for the new entry"""
-
-        self.add_entity_button.click()
-        self.wait_for_edit_modal()
-        self._fill_modal(**values)
-        self.confirm_button.click()
-        self.wait_for_edit_modal_close()
-        self.check_rows(key_check, values[key_check], 1)
+                self.clear(self.get_element(key), value)
 
     def test_add_valid_entry(self) -> None:
         """Test adding a new entry"""
 
         values = contiguous_subdicts_with_required(self.test_data, self.required_fields)
         for d in values:
-            new_d = {}
-            for key, value in d.items():
-                if isinstance(value, str):
-                    new_d[key] = value + str(time.time())
-            print(new_d)
-            keys = list(d.keys())
+            new_d = {
+                key: (value + str(time.time()) if key in self.duplicate_fields else value) for key, value in d.items()
+            }
+            keys = list(new_d.keys())
+            initial_count = self.get_column_values(keys[0]).count(new_d[keys[0]])
             self.add_entity_button.click()
             self.wait_for_edit_modal()
             self._fill_modal(**new_d)
             self.confirm_button.click()
             self.wait_for_edit_modal_close()
-            self.check_rows(keys[0], new_d[keys[0]], 1)
+            self.check_rows(keys[0], new_d[keys[0]], initial_count + 1)
 
     def test_add_duplicate_entry(self) -> None:
         """Test that adding a new entry with an existing name shows validation error"""
@@ -669,12 +660,105 @@ class TestLocationsPage(TestPage):
 
         modal = self.wait_for_view_modal()
 
+        self.wait.until(lambda d: "location shown" in modal.text, message="Waiting for map data to load in modal")
+
         # Verify modal contains the entry information
         date = datetime.strftime(self.test_entry.created_at, "%d/%m/%Y")
         expected = (
             f"Location Details\nCity\n{self.test_entry.city}\nPostcode\n{self.test_entry.postcode}"
-            f"\nCountry\n{self.test_entry.country}\n📍 Location on Map\n+\n−\nLeaflet | © OpenStreetMap contributors © CARTO\n"
+            f"\nCountry\n{self.test_entry.country}\n"
+            f"📍 Location on Map\n+\n−\nLeaflet | © OpenStreetMap contributors © CARTO\n"
             f"📍 1 of 1 location shown\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
+        )
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button.click()
+        self.wait_for_view_modal_close()
+
+    def test_edit_entry_through_view_modal(self) -> None:
+        """Test editing an entry through the view modal's edit button"""
+
+        keys = list(self.test_data.keys())
+        initial_count = self.get_column_values(keys[0]).count(self.test_data[keys[0]])
+        self.table_row(self.test_entry.id).click()
+        self.wait_for_view_modal()
+        self.edit_button.click()
+        self._fill_modal(**self.test_data)
+        time.sleep(2)
+        self.confirm_button.click()
+        self.wait_for_edit_modal_close()
+        self.cancel_button.click()
+        time.sleep(4)
+        self.check_rows(keys[0], self.test_data[keys[0]], initial_count + 1)
+
+    def test_edit_entry_through_right_click_context_menu(self) -> None:
+        """Test editing an entry through right-click context menu"""
+
+        original_name = self.test_entry.url
+        new_name = self.test_name
+        self.context_menu(self.test_entry.id, "edit")
+        self.wait_for_edit_modal()
+        self.clear(self.get_element("url"), new_name)
+        self.confirm_button.click()
+        self.wait_for_edit_modal_close()
+        self.check_rows("url", new_name, 1)
+        self.check_rows("url", original_name, 0)
+
+    def test_delete_entry(self) -> None:
+        """Test deleting an entry"""
+
+        self._test_delete_entry("name")
+
+    def test_search_functionality(self) -> None:
+        """Test the search functionality"""
+
+        self._test_search_functionality(self.test_entry.name[3:6], "name", "url", "description")
+        self._test_search_functionality(self.test_entry.url, "name", "url", "description")
+
+    def test_sort_functionality(self) -> None:
+        """Test sorting functionality"""
+
+        self._test_sort_functionality("name")
+        self._test_sort_functionality("url", lambda x: x[8:])
+
+
+class TestPersonsPage(TestPage):
+    """Test class for Aggregators Page functionality including:
+    - Displaying entries
+    - Adding new entries
+    - Viewing entries
+    - Editing entries
+    - Deleting entries"""
+
+    page_url = "persons"
+    test_fixture = ["test_persons", "test_companies"]
+    entry_name = "person"
+    test_data = {
+        "first_name": "Test_firstname",
+        "last_name": "Test_lastname",
+        "email": "Test_email@test.com",
+        "company": "WebSolutions Ltd",
+        "phone": "000000000",
+        "linkedin_url": "https://www.linkedin.com/company/websolutions-ltd/",
+        "role": "Test_role",
+    }
+    required_fields = ["first_name", "last_name"]
+    duplicate_fields = []
+
+    def _test_view_modal(self) -> None:
+        """Helper method to test the view modal for an entry"""
+
+        modal = self.wait_for_view_modal()
+
+        # Verify modal contains the entry information
+        date = datetime.strftime(self.test_entry.created_at, "%d/%m/%Y")
+        expected = (
+            f"Person Details\n"
+            f"Full Name\n{self.test_entry.name}\nLinkedIn Profile\nProfile"
+            f"Company\n{self.test_entry.company.name}\nRole\n{self.test_entry.role}\n"
+            f"Email\n{self.test_entry.email}\nPhone\n{self.test_entry.phone}\n"
+            f"Date Added\n{date}\nModified On\n{date}\nClose\nEdit"
         )
         assert modal.text == expected
 
@@ -691,7 +775,7 @@ class TestLocationsPage(TestPage):
         self.wait_for_view_modal()
         self.edit_button.click()
         self.wait_for_edit_modal()
-        self.clear(self.get_element("country"), new_name)
+        self.clear(self.get_element("name"), new_name)
         self.confirm_button.click()
         self.wait_for_view_modal()
         self.cancel_button.click()
