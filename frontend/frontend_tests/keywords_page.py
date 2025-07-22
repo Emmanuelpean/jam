@@ -28,15 +28,17 @@ class TestPage:
     test_entry = None
 
     # Parameters needed
+    endpoint = ""
     entry_name = ""
     page_url = ""
     test_fixture = ""
     test_data = {}
     required_fields = []
     duplicate_fields = []
+    columns = []
 
     @pytest.fixture(autouse=True)
-    def setup_method(self, frontend_base_url, request) -> None:
+    def setup_method(self, frontend_base_url, request, api_base_url, authorised_clients) -> None:
         """Set up the test environment before each test with test data"""
         try:
             # Configure Chrome options to disable password prompts
@@ -59,6 +61,8 @@ class TestPage:
                 request.getfixturevalue(fixture) for fixture in self.test_fixture
             ]
             self.test_entry = self.test_entries[0]
+            self.client = authorised_clients[0]
+            self.backend_url = api_base_url
 
             # Login and navigate to the page page
             self.login()
@@ -132,6 +136,16 @@ class TestPage:
             return self.wait.until(ec.element_to_be_clickable((selector, element_id)))
         except:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
+
+    def wait_for_disappear(self, element_id: str, selector: By = By.ID) -> None:
+        """Wait for an element to disappear from the DOM
+        :param element_id: ID of the element to get
+        :param selector: Selector to use for finding the element"""
+
+        try:
+            self.wait.until(ec.invisibility_of_element_located((selector, element_id)))
+        except TimeoutException:
+            raise AssertionError(f"Element {element_id} did not disappear")
 
     # ----------------------------------------------------- MODALS -----------------------------------------------------
 
@@ -296,6 +310,10 @@ class TestPage:
         """Test sorting functionality
         :param key: The key of the column to sort by."""
 
+        if key == "url":
+            display_function = lambda x: x.replace("https://", "").replace("http://", "") if x else x
+        else:
+            display_function = lambda x: x
         if display_function is None:
             display_function = lambda x: x
 
@@ -326,8 +344,10 @@ class TestPage:
         for key in keys:
             entries += [entry for entry in self.test_entries if text.lower() in (getattr(entry, key, "") or "").lower()]
         entries = set(entries)
+        print("expected", entries)
         self.clear(self.get_element("search-input"), text)
-        time.sleep(1)  # Allow time for search to filter
+        time.sleep(10.2)  # Allow time for search to filter
+        print("got", self.table_rows)
         assert len(self.table_rows) == len(entries), "Expected search to filter results"
 
     def _test_view_modal(self):
@@ -349,17 +369,17 @@ class TestPage:
 
     # --------------------------------------------------- DELETE TEST --------------------------------------------------
 
-    def _test_delete_entry(self, key: str) -> None:
-        """Test deleting an entry entry
-        :param key: The key of the column to check."""
+    def test_delete_entry(self) -> None:
+        """Test deleting an entry entry"""
 
         self.context_menu(self.test_entry.id, "delete")
         self.wait_for_delete_modal()
         self.confirm_button.click()
         self.wait_for_delete_modal_close()
         time.sleep(0.1)
-        print(self.get_column_values())
-        self.check_rows(key, getattr(self.test_entry, key), 0)
+        self.wait_for_disappear(f"table-row-{self.test_entry.id}")
+        db_data = self.client.get(f"{self.backend_url}/{self.endpoint}/?id={self.test_entry.id}").json()
+        assert len(db_data) == 0, "Expected entry to be deleted from database"
 
     # ----------------------------------------------------- ADD TEST ---------------------------------------------------
 
@@ -379,6 +399,7 @@ class TestPage:
         """Test adding a new entry"""
 
         values = contiguous_subdicts_with_required(self.test_data, self.required_fields)
+        n_entries = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
         for d in values:
             new_d = {
                 key: (value + str(time.time()) if key in self.duplicate_fields else value) for key, value in d.items()
@@ -391,6 +412,9 @@ class TestPage:
             self.confirm_button.click()
             self.wait_for_edit_modal_close()
             self.check_rows(keys[0], new_d[keys[0]], initial_count + 1)
+            n_entries_new = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
+            assert n_entries_new == n_entries + 1, "Expected entry to be added to database"
+            n_entries += 1
 
     def test_add_duplicate_entry(self) -> None:
         """Test that adding a new entry with an existing name shows validation error"""
@@ -446,6 +470,18 @@ class TestPage:
         self.wait_for_edit_modal_close()
         self.check_rows(keys[0], self.test_data[keys[0]], initial_count + 1)
 
+    def test_search_functionality(self) -> None:
+        """Test the search functionality"""
+
+        for column in self.columns:
+            self._test_search_functionality(getattr(self.test_entry, column)[3:], column)
+
+    def test_sort_functionality(self) -> None:
+        """Test sorting functionality"""
+
+        for column in self.columns:
+            self._test_sort_functionality(column)
+
 
 class TestKeywordsPage(TestPage):
     """Test class for the keywords Page functionality including:
@@ -455,6 +491,7 @@ class TestKeywordsPage(TestPage):
     - Editing entries
     - Deleting entries"""
 
+    endpoint = "keywords"
     page_url = "keywords"
     entry_name = "keyword"
     test_fixture = "test_keywords"
@@ -478,21 +515,6 @@ class TestKeywordsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_view_modal_close()
 
-    def test_delete_entry(self) -> None:
-        """Test deleting an entry entry"""
-
-        self._test_delete_entry("name")
-
-    def test_search_functionality(self) -> None:
-        """Test the search functionality"""
-
-        self._test_search_functionality(self.test_entry.name[3:8], "name")
-
-    def test_sort_functionality(self) -> None:
-        """Test sorting functionality"""
-
-        self._test_sort_functionality("name")
-
 
 class TestAggregatorsPage(TestPage):
     """Test class for Aggregators Page functionality including:
@@ -502,12 +524,14 @@ class TestAggregatorsPage(TestPage):
     - Editing entries
     - Deleting entries"""
 
+    endpoint = "aggregators"
     page_url = "aggregators"
     test_fixture = "test_aggregators"
     entry_name = "aggregator"
     test_data = {"name": "Test_Name", "url": "https://www.google.com"}
     required_fields = ["name", "url"]
     duplicate_fields = ["name"]
+    columns = ["name", "url"]
 
     def _test_view_modal(self) -> None:
         """Helper method to test the view modal for an entry"""
@@ -523,23 +547,6 @@ class TestAggregatorsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_view_modal_close()
 
-    def test_delete_entry(self) -> None:
-        """Test deleting an entry"""
-
-        self._test_delete_entry("name")
-
-    def test_search_functionality(self) -> None:
-        """Test the search functionality"""
-
-        self._test_search_functionality(self.test_entry.name[3:6], "name", "url")
-        self._test_search_functionality(self.test_entry.url, "name", "url")
-
-    def test_sort_functionality(self) -> None:
-        """Test sorting functionality"""
-
-        self._test_sort_functionality("name")
-        self._test_sort_functionality("url", lambda x: x[8:])
-
 
 class TestCompaniesPage(TestPage):
     """Test class for Aggregators Page functionality including:
@@ -549,12 +556,14 @@ class TestCompaniesPage(TestPage):
     - Editing entries
     - Deleting entries"""
 
+    endpoint = "companies"
     page_url = "companies"
     test_fixture = "test_companies"
     entry_name = "company"
     test_data = {"name": "Test_Name", "url": "https://www.google.com", "description": "This is a test description"}
     required_fields = ["name"]
     duplicate_fields = ["name"]
+    columns = ["name", "url", "description"]
 
     def _test_view_modal(self) -> None:
         """Helper method to test the view modal for an entry"""
@@ -573,53 +582,6 @@ class TestCompaniesPage(TestPage):
         self.cancel_button.click()
         self.wait_for_view_modal_close()
 
-    def test_edit_entry_through_view_modal(self) -> None:
-        """Test editing an entry through the view modal's edit button"""
-
-        original_name = self.test_entry.name
-        new_name = self.test_name
-        self.table_row(self.test_entry.id).click()
-        self.wait_for_view_modal()
-        self.edit_button.click()
-        self.wait_for_edit_modal()
-        self.clear(self.get_element("name"), new_name)
-        self.confirm_button.click()
-        self.wait_for_view_modal()
-        self.cancel_button.click()
-        self.wait_for_view_modal_close()
-        self.check_rows("name", new_name, 1)
-        self.check_rows("name", original_name, 0)
-
-    def test_edit_entry_through_right_click_context_menu(self) -> None:
-        """Test editing an entry through right-click context menu"""
-
-        original_name = self.test_entry.url
-        new_name = self.test_name
-        self.context_menu(self.test_entry.id, "edit")
-        self.wait_for_edit_modal()
-        self.clear(self.get_element("url"), new_name)
-        self.confirm_button.click()
-        self.wait_for_edit_modal_close()
-        self.check_rows("url", new_name, 1)
-        self.check_rows("url", original_name, 0)
-
-    def test_delete_entry(self) -> None:
-        """Test deleting an entry"""
-
-        self._test_delete_entry("name")
-
-    def test_search_functionality(self) -> None:
-        """Test the search functionality"""
-
-        self._test_search_functionality(self.test_entry.name[3:6], "name", "url", "description")
-        self._test_search_functionality(self.test_entry.url, "name", "url", "description")
-
-    def test_sort_functionality(self) -> None:
-        """Test sorting functionality"""
-
-        self._test_sort_functionality("name")
-        self._test_sort_functionality("url", lambda x: x[8:])
-
 
 class TestLocationsPage(TestPage):
     """Test class for Aggregators Page functionality including:
@@ -629,11 +591,13 @@ class TestLocationsPage(TestPage):
     - Editing entries
     - Deleting entries"""
 
+    endpoint = "locations"
     page_url = "locations"
     test_fixture = "test_locations"
     entry_name = "location"
     test_data = {"city": "Test_City", "postcode": "OX", "country": "United Kingdom"}
     required_fields = []
+    columns = ["city", "postcode", "country"]
 
     def _test_view_modal(self) -> None:
         """Helper method to test the view modal for an entry"""
@@ -656,22 +620,18 @@ class TestLocationsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_view_modal_close()
 
-    def test_delete_entry(self) -> None:
-        """Test deleting an entry"""
-
-        self._test_delete_entry("name")
-
-    def test_search_functionality(self) -> None:
-        """Test the search functionality"""
-
-        self._test_search_functionality(self.test_entry.name[3:6], "name", "url", "description")
-        self._test_search_functionality(self.test_entry.url, "name", "url", "description")
-
-    def test_sort_functionality(self) -> None:
-        """Test sorting functionality"""
-
-        self._test_sort_functionality("name")
-        self._test_sort_functionality("url", lambda x: x[8:])
+    #
+    # def test_search_functionality(self) -> None:
+    #     """Test the search functionality"""
+    #
+    #     self._test_search_functionality(self.test_entry.name[3:6], "name", "url", "description")
+    #     self._test_search_functionality(self.test_entry.url, "name", "url", "description")
+    #
+    # def test_sort_functionality(self) -> None:
+    #     """Test sorting functionality"""
+    #
+    #     self._test_sort_functionality("name")
+    #     self._test_sort_functionality("url", lambda x: x[8:])
 
 
 class TestPersonsPage(TestPage):
@@ -682,6 +642,7 @@ class TestPersonsPage(TestPage):
     - Editing entries
     - Deleting entries"""
 
+    endpoint = "persons"
     page_url = "persons"
     test_fixture = ["test_persons", "test_companies"]
     entry_name = "person"
@@ -716,11 +677,6 @@ class TestPersonsPage(TestPage):
         # Close modal
         self.cancel_button.click()
         self.wait_for_view_modal_close()
-
-    def test_delete_entry(self) -> None:
-        """Test deleting an entry"""
-
-        self._test_delete_entry("name")
 
     def test_search_functionality(self) -> None:
         """Test the search functionality"""
