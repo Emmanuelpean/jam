@@ -2,6 +2,8 @@ __pycache__
 .venv/
 backend/.env
 /.idea
+/backend/app/eis/eis_secrets.json
+/backend/app/eis/token.pickle
 
 # dependencies
 frontend/node_modules
