@@ -2,6 +2,7 @@ __pycache__
 .venv/
 backend/.env
 /.idea
+/.idea/misc.xml
 /backend/app/eis/eis_secrets.json
 /backend/app/eis/token.pickle
 
