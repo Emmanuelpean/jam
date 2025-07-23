@@ -7,6 +7,7 @@ import os
 import sys
 
 from app.database import engine, SessionLocal, Base
+import app.eis.models
 from create_data import (
     create_users,
     create_companies,

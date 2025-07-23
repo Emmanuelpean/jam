@@ -11,11 +11,11 @@ USERS_DATA = [
         "password": "test_password",
     },
     {
-        "email": "jane.smith@example.com",
+        "email": "emmanuelpean@gmail.com",
         "password": "password2",
     },
     {
-        "email": "mike.johnson@example.com",
+        "email": "jessicaaggood@live.co.uk",
         "password": "password3",
     },
     {
