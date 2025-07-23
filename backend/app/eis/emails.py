@@ -10,6 +10,7 @@ import json
 import os
 import pickle
 import re
+from datetime import datetime
 from email.utils import parseaddr
 
 from google.auth.transport.requests import Request
@@ -20,6 +21,9 @@ from googleapiclient.discovery import build
 from app.database import get_db, SessionLocal
 from app.eis.models import JobEmails, JobEmailJobs
 from app.models import User
+from app.utils import get_gmail_logger, AppLogger
+
+logger = get_gmail_logger()
 
 
 def extract_email_address(sender_field: str) -> str:
@@ -47,9 +51,9 @@ class GmailScraper(object):
     """Gmail Scrapper"""
 
     def __init__(
-        self,
-        token_file: str = "token.pickle",
-        secrets_file: str = "eis_secrets.json",
+            self,
+            token_file: str = "token.pickle",
+            secrets_file: str = "eis_secrets.json",
     ) -> None:
         """Object constructor
         :param token_file: Path to the token pickle file
@@ -108,10 +112,10 @@ class GmailScraper(object):
     # ------------------------------------------------- EMAIL READING -------------------------------------------------
 
     def search_messages(
-        self,
-        sender_email: str = "",
-        timedelta_days: int | float = 1,
-        max_results: int = 10,
+            self,
+            sender_email: str = "",
+            timedelta_days: int | float = 1,
+            max_results: int = 10,
     ) -> list[str]:
         """Search for messages matching a query"""
 
@@ -181,8 +185,8 @@ class GmailScraper(object):
 
     @staticmethod
     def save_email_to_db(
-        email_data: dict,
-        session: SessionLocal,
+            email_data: dict,
+            session: SessionLocal,
     ) -> tuple[JobEmails, bool]:
         """Save email and job IDs to database
         :param email_data: Dictionary containing email metadata
@@ -259,10 +263,10 @@ class GmailScraper(object):
 
     @staticmethod
     def save_job_ids_to_db(
-        email_record: JobEmails,
-        job_ids: list[str],
-        platform: str,
-        session: SessionLocal,
+            email_record: JobEmails,
+            job_ids: list[str],
+            platform: str,
+            session: SessionLocal,
     ) -> list[JobEmailJobs]:
         """Save extracted job IDs to the database and link them to the email"""
 
@@ -308,33 +312,102 @@ class GmailScraper(object):
 
         return job_records
 
-    def run(self) -> None:
-        """Run the email scraping workflow"""
+    def run(self, timedelta_days: int | float = 1) -> dict:
+        """Run the email scraping workflow
+        :param timedelta_days: Number of days to search for emails"""
 
-        db = next(get_db())
-        users = db.query(User).all()
-        for user in users:
-            # Search all emails over the past day
-            ids = self.search_messages(user.email, 1)
-            for email_id in ids:
-                print(f"Processing email with ID: {email_id}")
-                emails_data = self.get_message_data(email_id)
-                email_record1, new_email = self.save_email_to_db(emails_data, db)
-                job_ids1, platform1 = None, None
-                if new_email:
-                    if "linkedin" in emails_data["body"]:
-                        job_ids1 = self.extract_linkedin_job_ids(emails_data["body"])
-                        platform1 = "linkedin"
-                    elif "indeed" in emails_data["body"]:
-                        job_ids1 = self.extract_indeed_job_ids(emails_data["body"])
-                        platform1 = "indeed"
-                    if job_ids1:
-                        self.save_job_ids_to_db(email_record1, job_ids1, platform1, db)
-                        print(f"Extracted {len(job_ids1)} job IDs from {platform1}")
-                    else:
-                        print(f"No job IDs found in email: {emails_data['subject']}")
-                else:
-                    print("Email already exists in database")
+        start_time = datetime.now()
+        logger.info("Starting Gmail scraping workflow")
+
+        stats = {
+            "start_time": start_time.isoformat(),
+            "users_processed": 0,
+            "emails_found": 0,
+            "emails_processed": 0,
+            "emails_new": 0,
+            "emails_existing": 0,
+            "jobs_extracted": 0,
+            "linkedin_jobs": 0,
+            "indeed_jobs": 0,
+            "errors": [],
+            "duration_seconds": 0.
+        }
+
+        try:
+            db = next(get_db())
+            users = db.query(User).all()
+            logger.info(f"Found {len(users)} users to process")
+
+            for user in users:
+                logger.info(f"Processing user: {user.email} (ID: {user.id})")
+                stats["users_processed"] += 1
+
+                try:
+                    ids = self.search_messages(user.email, timedelta_days)
+                    stats["emails_found"] += len(ids)
+
+                    for email_id in ids:
+                        try:
+                            logger.info(f"Processing email with ID: {email_id}")
+                            emails_data = self.get_message_data(email_id)
+
+                            if not emails_data:
+                                logger.warning(f"No data retrieved for email ID: {email_id}")
+                                continue
+
+                            email_record, is_new = self.save_email_to_db(emails_data, db)
+                            stats["emails_processed"] += 1
+
+                            if is_new:
+                                stats["emails_new"] += 1
+                                job_ids, platform = None, None
+
+                                if "linkedin" in emails_data["body"].lower():
+                                    job_ids = self.extract_linkedin_job_ids(emails_data["body"])
+                                    platform = "linkedin"
+                                    stats["linkedin_jobs"] += len(job_ids)
+                                elif "indeed" in emails_data["body"].lower():
+                                    job_ids = self.extract_indeed_job_ids(emails_data["body"])
+                                    platform = "indeed"
+                                    stats["indeed_jobs"] += len(job_ids)
+
+                                if job_ids:
+                                    self.save_job_ids_to_db(email_record, job_ids, platform, db)
+                                    stats["jobs_extracted"] += len(job_ids)
+                                    logger.info(f"Extracted {len(job_ids)} job IDs from {platform}")
+                                else:
+                                    logger.info(f"No job IDs found in email: {emails_data['subject']}")
+                            else:
+                                stats["emails_existing"] += 1
+                                logger.info("Email already exists in database")
+
+                        except Exception as e:
+                            error_msg = f"Error processing email {email_id}: {e}"
+                            logger.error(error_msg)
+                            stats["errors"].append(error_msg)
+                            continue
+
+                except Exception as e:
+                    error_msg = f"Error processing user {user.email}: {e}"
+                    logger.error(error_msg)
+                    stats["errors"].append(error_msg)
+                    continue
+
+            # Log final statistics
+            stats["end_time"] = datetime.now().isoformat()
+            stats["duration_seconds"] = (datetime.now() - start_time).total_seconds()
+
+            AppLogger.log_execution_time(logger, start_time, "Gmail scraping workflow")
+            AppLogger.log_stats(logger, stats, "Gmail Scraping Results")
+
+            return stats
+
+        except Exception as e:
+            error_msg = f"Critical error in scraping workflow: {e}"
+            logger.error(error_msg)
+            stats["errors"].append(error_msg)
+            stats["end_time"] = datetime.now().isoformat()
+            return stats
 
 
 if __name__ == "__main__":
