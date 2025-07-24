@@ -51,9 +51,9 @@ class GmailScraper(object):
     """Gmail Scrapper"""
 
     def __init__(
-            self,
-            token_file: str = "token.pickle",
-            secrets_file: str = "eis_secrets.json",
+        self,
+        token_file: str = "token.pickle",
+        secrets_file: str = "eis_secrets.json",
     ) -> None:
         """Object constructor
         :param token_file: Path to the token pickle file
@@ -109,28 +109,42 @@ class GmailScraper(object):
 
         self.service = build("gmail", "v1", credentials=credentials)
 
+    def check_connection(self) -> bool:
+        """Check if the connection to Gmail inbox is working properly
+
+        Returns:
+            bool: True if connection is successful, False otherwise
+        """
+        try:
+            # Try to get the user's profile which is a lightweight operation
+            self.service.users().getProfile(userId="me").execute()
+            logger.info("Successfully connected to Gmail inbox")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to connect to Gmail inbox: {str(e)}")
+            return False
+
     # ------------------------------------------------- EMAIL READING -------------------------------------------------
 
     def search_messages(
-            self,
-            sender_email: str = "",
-            timedelta_days: int | float = 1,
-            max_results: int = 10,
+        self,
+        sender_email: str = "",
+        timedelta_days: int | float = 1,
+        max_results: int = 10,
     ) -> list[str]:
         """Search for messages matching a query"""
+
+        self.check_connection()
 
         query = ""
         query += f"from:{sender_email}" if sender_email else ""
         query += f" newer_than:{timedelta_days}d" if timedelta_days else ""
         query = query.strip()
 
-        try:
-            result = self.service.users().messages().list(userId="me", q=query, maxResults=max_results).execute()
-            messages = result.get("messages", [])
-            return [msg["id"] for msg in messages]
-        except Exception as error:
-            print(f"An error occurred: {error}")
-            return []
+        result = self.service.users().messages().list(userId="me", q=query, maxResults=max_results).execute()
+        print(result)
+        messages = result.get("messages", [])
+        return [msg["id"] for msg in messages]
 
     def _extract_body(self, payload: dict) -> str:
         """Extract email body from payload"""
@@ -179,14 +193,14 @@ class GmailScraper(object):
             "id": message_id,
             "subject": subject,
             "sender": extract_email_address(sender),
-            "date": date,
+            "date": date,  # TODO convert to dt
             "body": body,
         }
 
     @staticmethod
     def save_email_to_db(
-            email_data: dict,
-            session: SessionLocal,
+        email_data: dict,
+        session: SessionLocal,
     ) -> tuple[JobEmails, bool]:
         """Save email and job IDs to database
         :param email_data: Dictionary containing email metadata
@@ -263,10 +277,10 @@ class GmailScraper(object):
 
     @staticmethod
     def save_job_ids_to_db(
-            email_record: JobEmails,
-            job_ids: list[str],
-            platform: str,
-            session: SessionLocal,
+        email_record: JobEmails,
+        job_ids: list[str],
+        platform: str,
+        session: SessionLocal,
     ) -> list[JobEmailJobs]:
         """Save extracted job IDs to the database and link them to the email"""
 
@@ -312,7 +326,7 @@ class GmailScraper(object):
 
         return job_records
 
-    def run(self, timedelta_days: int | float = 1) -> dict:
+    def run(self, timedelta_days: int | float = 10) -> dict:
         """Run the email scraping workflow
         :param timedelta_days: Number of days to search for emails"""
 
@@ -330,11 +344,11 @@ class GmailScraper(object):
             "linkedin_jobs": 0,
             "indeed_jobs": 0,
             "errors": [],
-            "duration_seconds": 0.
+            "duration_seconds": 0.0,
         }
 
         try:
-            db = next(get_db())
+            db = next(get_db())  # TODO add failure log
             users = db.query(User).all()
             logger.info(f"Found {len(users)} users to process")
 
@@ -343,55 +357,59 @@ class GmailScraper(object):
                 stats["users_processed"] += 1
 
                 try:
-                    ids = self.search_messages(user.email, timedelta_days)
-                    stats["emails_found"] += len(ids)
-
-                    for email_id in ids:
-                        try:
-                            logger.info(f"Processing email with ID: {email_id}")
-                            emails_data = self.get_message_data(email_id)
-
-                            if not emails_data:
-                                logger.warning(f"No data retrieved for email ID: {email_id}")
-                                continue
-
-                            email_record, is_new = self.save_email_to_db(emails_data, db)
-                            stats["emails_processed"] += 1
-
-                            if is_new:
-                                stats["emails_new"] += 1
-                                job_ids, platform = None, None
-
-                                if "linkedin" in emails_data["body"].lower():
-                                    job_ids = self.extract_linkedin_job_ids(emails_data["body"])
-                                    platform = "linkedin"
-                                    stats["linkedin_jobs"] += len(job_ids)
-                                elif "indeed" in emails_data["body"].lower():
-                                    job_ids = self.extract_indeed_job_ids(emails_data["body"])
-                                    platform = "indeed"
-                                    stats["indeed_jobs"] += len(job_ids)
-
-                                if job_ids:
-                                    self.save_job_ids_to_db(email_record, job_ids, platform, db)
-                                    stats["jobs_extracted"] += len(job_ids)
-                                    logger.info(f"Extracted {len(job_ids)} job IDs from {platform}")
-                                else:
-                                    logger.info(f"No job IDs found in email: {emails_data['subject']}")
-                            else:
-                                stats["emails_existing"] += 1
-                                logger.info("Email already exists in database")
-
-                        except Exception as e:
-                            error_msg = f"Error processing email {email_id}: {e}"
-                            logger.error(error_msg)
-                            stats["errors"].append(error_msg)
-                            continue
-
-                except Exception as e:
-                    error_msg = f"Error processing user {user.email}: {e}"
-                    logger.error(error_msg)
-                    stats["errors"].append(error_msg)
+                    email_ids = self.search_messages(user.email, timedelta_days)
+                except Exception as exception:
+                    logger.error(f"Failed to search messages due to error: {exception}")
                     continue
+                stats["emails_found"] += len(email_ids)
+
+                for email_id in email_ids:
+                    logger.info(f"Processing email with ID: {email_id}")
+                    try:
+                        emails_data = self.get_message_data(email_id)
+                    except Exception as exception:
+                        logger.error(f"Failed to get email data for email ID {email_id} due to error: {exception}")
+                        continue  # next user
+
+                    try:
+                        email_record, is_new = self.save_email_to_db(emails_data, db)
+                        stats["emails_processed"] += 1
+                    except Exception as exception:
+                        logger.error(f"Failed to save email data for email ID {email_id} due to error: {exception}")
+                        continue  # next user
+
+                    # If the email is not already in the database...
+                    if is_new:
+                        stats["emails_new"] += 1
+                        job_ids, platform = None, None
+
+                        if "linkedin" in emails_data["body"].lower():
+                            logger.info(f"Scraping linkedin jobs")
+                            job_ids = self.extract_linkedin_job_ids(emails_data["body"])
+                            platform = "linkedin"
+                            stats["linkedin_jobs"] += len(job_ids)
+                        elif "indeed" in emails_data["body"].lower():
+                            logger.info(f"Scraping indeed jobs")
+                            job_ids = self.extract_indeed_job_ids(emails_data["body"])
+                            platform = "indeed"
+                            stats["indeed_jobs"] += len(job_ids)
+
+                        if job_ids:
+                            try:
+                                self.save_job_ids_to_db(email_record, job_ids, platform, db)
+                                stats["jobs_extracted"] += len(job_ids)
+                                logger.info(f"Extracted {len(job_ids)} job IDs from {platform}")
+                            except Exception as exception:
+                                logger.warning(
+                                    f"Failed to save job IDs for email ID {email_id} due to error: {exception}"
+                                )
+                                continue  # next email
+
+                        else:
+                            logger.info(f"No job IDs found in email: {emails_data['subject']}")
+                    else:
+                        stats["emails_existing"] += 1
+                        logger.info("Email already exists in database")
 
             # Log final statistics
             stats["end_time"] = datetime.now().isoformat()
@@ -402,8 +420,8 @@ class GmailScraper(object):
 
             return stats
 
-        except Exception as e:
-            error_msg = f"Critical error in scraping workflow: {e}"
+        except Exception as exception:
+            error_msg = f"Critical error in scraping workflow: {exception}"
             logger.error(error_msg)
             stats["errors"].append(error_msg)
             stats["end_time"] = datetime.now().isoformat()

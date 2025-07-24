@@ -13,7 +13,7 @@ def hash_password(password: str) -> str:
     """Hash a password for storing.
     :param password: password to hash"""
 
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(password: str, hashed: str) -> bool:
@@ -21,7 +21,7 @@ def verify_password(password: str, hashed: str) -> bool:
     :param password: password to check against
     :param hashed: hashed password from database
     :return: boolean indicating whether password matched"""
-    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+    return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
 
 class AppLogger:
@@ -31,14 +31,14 @@ class AppLogger:
 
     @classmethod
     def get_logger(
-            cls,
-            name: str,
-            log_dir: str = "logs",
-            log_file: Optional[str] = None,
-            level: int = logging.INFO,
-            max_file_size: int = 10 * 1024 * 1024,  # 10MB
-            backup_count: int = 5,
-            console_output: bool = True
+        cls,
+        name: str,
+        log_dir: str = "logs",
+        log_file: Optional[str] = None,
+        level: int = logging.INFO,
+        max_file_size: int = 10 * 1024 * 1024,  # 10MB
+        backup_count: int = 5,
+        console_output: bool = True,
     ) -> logging.Logger:
         """
         Get or create a logger with the specified configuration
@@ -79,21 +79,15 @@ class AppLogger:
 
         # Create formatters
         detailed_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
-        simple_formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
+        simple_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
         # File handler with rotation
         file_handler = RotatingFileHandler(
-            full_log_path,
-            maxBytes=max_file_size,
-            backupCount=backup_count,
-            encoding='utf-8'
+            full_log_path, maxBytes=max_file_size, backupCount=backup_count, encoding="utf-8"
         )
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(detailed_formatter)
@@ -112,11 +106,7 @@ class AppLogger:
         return logger
 
     @classmethod
-    def create_service_logger(
-            cls,
-            service_name: str,
-            log_level: str = "INFO"
-    ) -> logging.Logger:
+    def create_service_logger(cls, service_name: str, log_level: str = "INFO") -> logging.Logger:
         """
         Create a standardized logger for a service
 
@@ -130,7 +120,7 @@ class AppLogger:
             "INFO": logging.INFO,
             "WARNING": logging.WARNING,
             "ERROR": logging.ERROR,
-            "CRITICAL": logging.CRITICAL
+            "CRITICAL": logging.CRITICAL,
         }
 
         level = level_map.get(log_level.upper(), logging.INFO)
@@ -142,7 +132,7 @@ class AppLogger:
             level=level,
             max_file_size=10 * 1024 * 1024,  # 10MB
             backup_count=5,
-            console_output=True
+            console_output=True,
         )
 
     @classmethod

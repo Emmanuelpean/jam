@@ -65,7 +65,7 @@ export const columns = {
 		key: "date",
 		label: "Date",
 		sortable: true,
-		searchable: true,
+		searchable: true, // TODO
 		type: "date",
 		render: renderFunctions.date,
 		...overrides,
@@ -301,6 +301,6 @@ export const columns = {
 		sortable: false,
 		searchable: false,
 		render: renderFunctions.files,
-		...overrides
-	})
+		...overrides,
+	}),
 };
