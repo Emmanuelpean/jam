@@ -21,17 +21,16 @@ class JobScrapper(object):
 
     def __init__(
         self,
-        job_id: str,
-        secrets_file: str = "eis_secrets.json",
-        poll_interval: int | float = 10,
-        max_attempts: int = 30,
+        job_ids: str | list[str],
+        poll_interval: int | float = 2,
+        max_attempts: int = 60,
     ) -> None:
 
-        self.job_id = job_id
-        self.job_url = f"{self.base_url}{self.job_id}"
-        self.secrets_file = secrets_file
+        self.job_ids = [job_ids] if isinstance(job_ids, str) else job_ids
+        self.job_urls = [f"{self.base_url}{job_id}" for job_id in self.job_ids]
+        self.secrets_file = os.path.join(os.path.dirname(__file__), "eis_secrets.json")
         self.poll_interval = poll_interval
-        self.max_attempts = max_attempts
+        self.max_attempts = max_attempts * len(self.job_ids)
 
         # Load credentials from the secrets file
         credentials = self._load_credentials()
@@ -52,9 +51,7 @@ class JobScrapper(object):
                 secrets = json.load(f)
                 return secrets["brightdata"]
         except (json.JSONDecodeError, KeyError) as e:
-            raise ValueError(
-                f"Invalid secrets file format or missing 'brightdata' section: {e}"
-            )
+            raise ValueError(f"Invalid secrets file format or missing 'brightdata' section: {e}")
 
     def get_snapshot(self) -> str:
         """Get the snapshot id"""
@@ -70,12 +67,10 @@ class JobScrapper(object):
             "dataset_id": self.dataset_id,
             "include_errors": "true",
         }
-        data = [{"url": self.job_url}]
+        data = [{"url": job_url} for job_url in self.job_urls]
         response = requests.post(trigger_url, headers=headers, params=params, json=data)
         if response.status_code != 200:
-            raise Exception(
-                f"Failed to trigger dataset: {response.status_code} {response.text}"
-            )
+            raise Exception(f"Failed to trigger dataset: {response.status_code} {response.text}")
         snapshot_id = response.json().get("snapshot_id")
         if not snapshot_id:
             raise Exception(f"No snapshot_id returned: {response.text}")
@@ -92,9 +87,7 @@ class JobScrapper(object):
         for attempt in range(self.max_attempts):
             progress_resp = requests.get(progress_url, headers=headers)
             if progress_resp.status_code != 200:
-                raise Exception(
-                    f"Failed to get snapshot status: {progress_resp.status_code} {progress_resp.text}"
-                )
+                raise Exception(f"Failed to get snapshot status: {progress_resp.status_code} {progress_resp.text}")
 
             status = progress_resp.json().get("status")
             if status.lower() == "ready":
@@ -102,9 +95,7 @@ class JobScrapper(object):
             elif status.lower() == "failed":
                 raise Exception("Snapshot processing failed.")
 
-            print(
-                f"Attempt {attempt + 1}/{self.max_attempts}: Status is '{status}', waiting..."
-            )
+            print(f"Attempt {attempt + 1}/{self.max_attempts}: Status is '{status}', waiting...")
             time.sleep(self.poll_interval)
         else:
             raise TimeoutError("Snapshot data not ready after maximum attempts.")
@@ -118,14 +109,12 @@ class JobScrapper(object):
 
         data_resp = requests.get(snapshot_url, headers=headers, params=params)
         if data_resp.status_code != 200:
-            raise Exception(
-                f"Failed to get snapshot data: {data_resp.status_code} {data_resp.text}"
-            )
+            raise Exception(f"Failed to get snapshot data: {data_resp.status_code} {data_resp.text}")
         return data_resp.json()
 
     def scrape_job(self) -> dict:
         """Complete workflow to scrape a LinkedIn job"""
-        print(f"Starting to scrape job: {self.job_id}")
+        print(f"Starting to scrape job: {self.job_ids}")
 
         # Get snapshot
         snapshot_id = self.get_snapshot()
@@ -150,7 +139,6 @@ class IndeedScrapper(JobScrapper):
 
 
 class LinkedinJobScraper(JobScrapper):
-
     base_url = "https://www.linkedin.com/jobs/view/"
     name = "linkedin"
 
@@ -158,9 +146,10 @@ class LinkedinJobScraper(JobScrapper):
 # Usage example:
 if __name__ == "__main__":
     # Now the API key and dataset_id are loaded from secrets.json
-    scraper = LinkedinJobScraper("4267692478")
+    # scraper = LinkedinJobScraper(["4270743052"])
+    # job_data = scraper.scrape_job()
+    # print(job_data)
+    #
+    scraper = IndeedScrapper("ea2a9f9f1e8a0899", 10, 100)
     job_data = scraper.scrape_job()
     print(job_data)
-
-    scraper = IndeedScrapper("ea2a9f9f1e8a0899")
-    job_data = scraper.scrape_job()

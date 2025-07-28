@@ -67,6 +67,17 @@ class CommonBase(object):
     owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
 
+class Settings(Base):
+    """Represents settings for the jobscraper"""
+
+    __tablename__ = "settings"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    quantity = Column(String, nullable=False, unique=True)
+    value = Column(Float, nullable=False)
+    description = Column(String, nullable=False)
+
+
 class User(Base):
     """Represents the users of the application.
 
@@ -88,7 +99,15 @@ class User(Base):
     theme = Column(String, nullable=False, server_default="mixed-berry")
 
 
-class Company(CommonBase, Base):
+class CompanyMixin:
+    """Mixin class that defines company-related columns"""
+
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    url = Column(String, nullable=True)
+
+
+class Company(CommonBase, Base, CompanyMixin):
     """Represents a company or organisation.
 
     Attributes:
@@ -96,10 +115,6 @@ class Company(CommonBase, Base):
     - `name` (str): Name of the company.
     - `description` (str, optional): Description or details about the company.
     - `url` (str, optional): Web link to the company's website."""
-
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    url = Column(String, nullable=True)
 
     # Relationships
     jobs = relationship("Job", back_populates="company")
@@ -147,28 +162,26 @@ class File(CommonBase, Base):
     size = Column(Integer, nullable=False)
 
 
-class Location(CommonBase, Base):
-    """Represents geographical locations.
+def get_location_constraints(prefix="") -> tuple[CheckConstraint]:
+    """Helper function to generate location constraints with optional prefix"""
+    return (
+        CheckConstraint(
+            "(postcode IS NOT NULL OR city IS NOT NULL OR country IS NOT NULL) OR remote = true",
+            name=f"{prefix}location_data_required_unless_remote",
+        ),
+    )
 
-    Attributes:
-    -----------
-    - `postcode` (str, optional): Postcode of the location.
-    - `city` (str, optional): City of the location.
-    - `country` (str, optional): Country where the location resides.
-    - `remote` (bool, optional): Indicates if the location is remote
-    - `name` (str): Computed property combining city, country, and postcode"""
+
+class LocationMixin:
+    """Mixin class that defines location-related columns"""
 
     postcode = Column(String, nullable=True)
     city = Column(String, nullable=True)
     country = Column(String, nullable=True)
     remote = Column(Boolean, nullable=False, server_default=expression.false())
 
-    # Relationships
-    jobs = relationship("Job", back_populates="location")
-    interviews = relationship("Interview", back_populates="location")
-
     @hybrid_property
-    def name(self):
+    def name(self) -> str:
         """Computed property that combines city, country, and postcode into a readable location name"""
         if self.remote:
             return "Remote"
@@ -183,12 +196,23 @@ class Location(CommonBase, Base):
 
         return ", ".join(parts) if parts else "Unknown Location"
 
-    __table_args__ = (
-        CheckConstraint(
-            "(postcode IS NOT NULL OR city IS NOT NULL OR country IS NOT NULL) OR remote = true",
-            name="location_data_required_unless_remote",
-        ),
-    )
+
+class Location(CommonBase, Base, LocationMixin):
+    """Represents geographical locations.
+
+    Attributes:
+    -----------
+    - `postcode` (str, optional): Postcode of the location.
+    - `city` (str, optional): City of the location.
+    - `country` (str, optional): Country where the location resides.
+    - `remote` (bool, optional): Indicates if the location is remote
+    - `name` (str): Computed property combining city, country, and postcode"""
+
+    # Relationships
+    jobs = relationship("Job", back_populates="location")
+    interviews = relationship("Interview", back_populates="location")
+
+    __table_args__ = get_location_constraints()
 
 
 class Person(CommonBase, Base):
@@ -222,7 +246,7 @@ class Person(CommonBase, Base):
     jobs = relationship("Job", secondary=job_contacts, back_populates="contacts")
 
     @hybrid_property
-    def name(self):
+    def name(self) -> str:
         """Computed property that combines the first and last name"""
 
         if self.first_name and self.last_name:
@@ -231,7 +255,39 @@ class Person(CommonBase, Base):
             return "Unknown Person"
 
 
-class Job(CommonBase, Base):
+def get_job_constraints(prefix="") -> tuple[CheckConstraint, ...]:
+    """Helper function to generate job constraints with an optional prefix"""
+    return (
+        CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name=f"{prefix}valid_rating_range"),
+        CheckConstraint("salary_min <= salary_max", name=f"{prefix}valid_salary_range"),
+    )
+
+
+class JobMixin:
+    """Mixin class that defines job-related columns"""
+
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    salary_min = Column(Float, nullable=True)
+    salary_max = Column(Float, nullable=True)
+    url = Column(String, nullable=True)
+    personal_rating = Column(Integer, nullable=True)
+    note = Column(String, nullable=True)
+    deadline = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    @hybrid_property
+    def name(self) -> str | Column[str]:
+        """Computed property that combines the job title and company name"""
+
+        if hasattr(self, "company") and self.title and self.company and self.company.name:
+            return f"{self.title} - {self.company.name}"
+        elif self.title:
+            return self.title
+        else:
+            return "Unknown Job"
+
+
+class Job(CommonBase, Base, JobMixin):
     """Represents job postings within the application.
 
     Attributes:
@@ -255,17 +311,9 @@ class Job(CommonBase, Base):
     - `deadline` (datetime, optional): Deadline for the job application.
     - `source` (str, optional): Source of the job posting (e.g. LinkedIn, Indeed, etc.)."""
 
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    salary_min = Column(Float, nullable=True)
-    salary_max = Column(Float, nullable=True)
-    url = Column(String, nullable=True)
-    personal_rating = Column(Integer, nullable=True)
     company_id = Column(Integer, ForeignKey("company.id", ondelete="SET NULL"), nullable=True, index=True)
     location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
     duplicate_id = Column(Integer, ForeignKey("job.id", ondelete="SET NULL"), nullable=True)
-    note = Column(String, nullable=True)
-    deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     source_id = Column(Integer, ForeignKey("aggregator.id"), nullable=True)
 
     # Relationships
@@ -276,21 +324,7 @@ class Job(CommonBase, Base):
     contacts = relationship("Person", secondary=job_contacts, back_populates="jobs", lazy="selectin")
     source = relationship("Aggregator", back_populates="jobs")
 
-    @hybrid_property
-    def name(self):
-        """Computed property that combines the job title and company name"""
-
-        if self.title and self.company and self.company.name:
-            return f"{self.title} - {self.company.name}"
-        elif self.title:
-            return self.title
-        else:
-            return "Unknown Job"
-
-    __table_args__ = (
-        CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name="valid_rating_range"),
-        CheckConstraint("salary_min <= salary_max", name="valid_salary_range"),
-    )
+    __table_args__ = get_job_constraints()
 
 
 class JobApplication(CommonBase, Base):

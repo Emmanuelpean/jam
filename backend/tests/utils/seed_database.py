@@ -24,7 +24,7 @@ from create_data import (
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
-def reset_database():
+def reset_database() -> None:
     """Drop all tables and recreate them"""
     print("Dropping all tables...")
     Base.metadata.drop_all(bind=engine)
@@ -33,7 +33,7 @@ def reset_database():
     print("Database reset complete!")
 
 
-def seed_database():
+def seed_database() -> None:
     """Main function to seed the database"""
     print("Starting database seeding...")
 
