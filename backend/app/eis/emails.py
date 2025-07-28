@@ -327,7 +327,7 @@ class GmailScraper(object):
     # -------------------------------------------------- JOB SCRAPING --------------------------------------------------
 
     @staticmethod
-    def save_job_data_to_db(
+    def save_job_json_to_db(
         email_record: JobAlertEmail,
         job_data: list[dict],
         db: SessionLocal,
@@ -344,7 +344,10 @@ class GmailScraper(object):
             )
             if not company:
                 # noinspection PyArgumentList
-                company = CompanyScraped(name=job.get("company_name"), owner_id=email_record.owner_id,)
+                company = CompanyScraped(
+                    name=job.get("company_name"),
+                    owner_id=email_record.owner_id,
+                )
             db.add(company)
             db.commit()
             db.refresh(company)
@@ -461,7 +464,9 @@ class GmailScraper(object):
                             stats["jobs_extracted"] += len(job_ids)
                             logger.info(f"Extracted {len(job_ids)} job IDs from {email_record.platform}")
                         except Exception as exception:
-                            logger.warning(f"Failed to save job IDs for email ID {email_external_id} due to error: {exception}")
+                            logger.warning(
+                                f"Failed to save job IDs for email ID {email_external_id} due to error: {exception}"
+                            )
                             continue
 
                         # Scrape the job data
@@ -473,10 +478,12 @@ class GmailScraper(object):
                             try:
                                 job_data += scrapper.scrape_job()
                             except Exception as exception:
-                                logger.warning(f"Failed to scrape job data for job IDs {job_id_batch} due to error: {exception}")
+                                logger.warning(
+                                    f"Failed to scrape job data for job IDs {job_id_batch} due to error: {exception}"
+                                )
                                 continue
 
-                        self.save_job_data_to_db(email_record, job_data, db)
+                        self.save_job_json_to_db(email_record, job_data, db)
 
                     else:
                         stats["emails_existing"] += 1

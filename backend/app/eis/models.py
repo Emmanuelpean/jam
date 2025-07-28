@@ -1,12 +1,10 @@
+"""Email Ingestion System (EIS) Database Models
 
-from sqlalchemy import (
-    Column,
-    String,
-    Boolean,
-    ForeignKey,
-    Integer,
-    DateTime
-)
+Defines SQLAlchemy ORM models for email-based job scraping functionality.
+Includes models for job alert emails, extracted job IDs, and scraped job data
+with associated companies and locations from external sources."""
+
+from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 

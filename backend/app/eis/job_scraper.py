@@ -8,6 +8,7 @@ retrieve scraped job information.
 
 import json
 import os
+import re
 import time
 
 import requests
@@ -78,7 +79,8 @@ class JobScrapper(object):
         return snapshot_id
 
     def wait_for_data(self, snapshot_id: str) -> None:
-        """Wait for the job data associated with a specific snapshot id to be ready"""
+        """Wait for the job data associated with a specific snapshot id to be ready
+        :param snapshot_id: Snapshot ID"""
 
         # Step 2: Poll for status
         progress_url = f"https://api.brightdata.com/datasets/v3/progress/{snapshot_id}"
@@ -100,8 +102,10 @@ class JobScrapper(object):
         else:
             raise TimeoutError("Snapshot data not ready after maximum attempts.")
 
-    def retrieve_data(self, snapshot_id: str) -> dict:
-        """Retrieve the job data associated with the snapshot id"""
+    def retrieve_data(self, snapshot_id: str) -> list[dict]:
+        """Retrieve the job data associated with the snapshot id
+        :param snapshot_id: Snapshot ID
+        :return: Job data dictionary"""
 
         snapshot_url = f"https://api.brightdata.com/datasets/v3/snapshot/{snapshot_id}"
         params = {"format": "json"}
@@ -112,7 +116,14 @@ class JobScrapper(object):
             raise Exception(f"Failed to get snapshot data: {data_resp.status_code} {data_resp.text}")
         return data_resp.json()
 
-    def scrape_job(self) -> dict:
+    def process_job_data(self, job_data: dict) -> dict:
+        """Process job data to extract relevant information
+        :param job_data: Job data dictionary
+        :return: Dictionary containing job information"""
+
+        pass
+
+    def scrape_job(self) -> list[dict]:
         """Complete workflow to scrape a LinkedIn job"""
         print(f"Starting to scrape job: {self.job_ids}")
 
@@ -128,7 +139,7 @@ class JobScrapper(object):
         data = self.retrieve_data(snapshot_id)
         print("Data retrieved successfully!")
 
-        return data
+        return [self.process_job_data(d) for d in data]
 
 
 class IndeedScrapper(JobScrapper):
@@ -137,19 +148,61 @@ class IndeedScrapper(JobScrapper):
     base_url = "https://www.indeed.com/viewjob?jk="
     name = "indeed"
 
+    def process_job_data(self, job_data: dict) -> dict:
+        """Process job data to extract relevant information
+        :param job_data: Job data dictionary
+        :return: Dictionary containing job information"""
+
+        results = dict()
+        results["company"] = job_data.get("company_name")
+        results["location"] = job_data.get("location")
+        results["job"] = dict()
+        results["job"]["title"] = job_data.get("job_title")
+        results["job"]["description"] = job_data.get("description_text")
+        results["job"]["url"] = job_data.get("url")
+        results["job"]["salary"] = dict(min_amount=None, max_amount=None)
+        if salary_range := job_data.get("salary_formatted"):
+            pattern = r'£(\d+(?:,\d+)?(?:k|K)?(?:\.\d+)?)\s*[-–]\s*£(\d+(?:,\d+)?(?:k|K)?(?:\.\d+)?)\s+(?:a|per)\s+(?:year|annum)'
+            if match := re.search(pattern, salary_range):
+                min_amount = float(match.group(1).replace(',', ''))
+                max_amount = float(match.group(2).replace(',', ''))
+                results["job"]["salary"]["min_amount"] = min_amount
+                results["job"]["salary"]["max_amount"] = max_amount
+
+        return results
+
 
 class LinkedinJobScraper(JobScrapper):
     base_url = "https://www.linkedin.com/jobs/view/"
     name = "linkedin"
 
+    def process_job_data(self, job_data: dict) -> dict:
+        """Process job data to extract relevant information
+        :param job_data: Job data dictionary
+        :return: Dictionary containing job information"""
+
+        results = dict()
+        results["company"] = job_data.get("company_name")
+        results["location"] = job_data.get("job_location")
+        results["job"] = dict()
+        results["job"]["title"] = job_data.get("job_title")
+        results["job"]["description"] = job_data.get("job_summary")
+        results["job"]["url"] = job_data.get("url")
+        results["job"]["salary"] = dict(min_amount=None, max_amount=None)
+        if job_data.get("base_salary", {}).get("currency", "").lower() in ("£", "gbp") and job_data.get("base_salary", {}).get("payment_period", "").lower() == "yr":
+            results["job"]["salary"]["min_amount"] = job_data.get("base_salary", {}).get("min_amount")
+            results["job"]["salary"]["max_amount"] = job_data.get("base_salary", {}).get("max_amount")
+
+        return results
+
 
 # Usage example:
 if __name__ == "__main__":
     # Now the API key and dataset_id are loaded from secrets.json
-    # scraper = LinkedinJobScraper(["4270743052"])
-    # job_data = scraper.scrape_job()
-    # print(job_data)
+    scraper = LinkedinJobScraper(["4270743052"])
+    job_data1 = scraper.scrape_job()
+    print(job_data1)
     #
-    scraper = IndeedScrapper("ea2a9f9f1e8a0899", 10, 100)
-    job_data = scraper.scrape_job()
-    print(job_data)
+    # scraper = IndeedScrapper("1a10bc30a062452e", 10, 100)
+    # job_data1 = scraper.scrape_job()
+    # print(job_data1[0])
