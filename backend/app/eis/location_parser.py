@@ -1,5 +1,10 @@
+"""Location Parser Module
+
+Extracts and parses location components from job posting location strings.
+Handles postcodes, cities, countries, and remote work indicators across
+multiple international formats including UK, US, and Canadian postal codes."""
+
 import re
-from typing import Optional
 
 from app.schemas import Location
 
@@ -75,7 +80,7 @@ class LocationParser:
         # Common remote work indicators
         self.remote_indicators = {"remote", "work from home", "wfh", "hybrid", "anywhere", "global"}
 
-    def extract_postcode(self, location_str: str) -> Optional[str]:
+    def extract_postcode(self, location_str: str) -> str | None:
         """Extract postcode from location string"""
         location_upper = location_str.upper()
 
@@ -102,7 +107,7 @@ class LocationParser:
 
         return None
 
-    def extract_country(self, location_str: str) -> Optional[str]:
+    def extract_country(self, location_str: str) -> str | None:
         """Extract country from location string"""
         country, _ = self.extract_country_with_match(location_str)
         return country
@@ -112,7 +117,7 @@ class LocationParser:
         location_lower = location_str.lower()
         return any(indicator in location_lower for indicator in self.remote_indicators)
 
-    def extract_country_with_match(self, location_str: str) -> tuple[Optional[str], Optional[str]]:
+    def extract_country_with_match(self, location_str: str) -> tuple[str | None, str | None]:
         """
         Extract country from location string and return both the standardized name and the matched text
 
