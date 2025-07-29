@@ -10,10 +10,10 @@ import json
 import os
 import pickle
 import re
-import time
 from datetime import datetime
 from email.utils import parseaddr
 
+import cloudscraper
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -255,7 +255,16 @@ class GmailScraper(object):
         return list(dict.fromkeys(job_ids))
 
     @staticmethod
-    def extract_indeed_job_ids(body: str) -> list[str]:
+    def get_indeed_redirected_url(job_url: str) -> str:
+        """Get the redirected URL from the Indeed job URL
+        :param job_url: Indeed job URL
+        :return: Redirected URL"""
+
+        scraper = cloudscraper.create_scraper()
+        response = scraper.get(job_url, allow_redirects=True)
+        return response.url
+
+    def extract_indeed_job_ids(self, body: str) -> list[str]:
         """Extract Indeed job advertisement IDs from email body URLs
         :param body: Email body content as string
         :return: List of unique Indeed job IDs"""
@@ -267,10 +276,9 @@ class GmailScraper(object):
 
         for url in job_urls:
             # Try to extract 'ad' parameter first (for pagead URLs)
-            ad_match = re.search(r"[?&]ad=([^&>\s]+)", url, re.IGNORECASE)
+            ad_match = re.search(r"[?&]mo=([^&>\s]+)", url, re.IGNORECASE)
             if ad_match:
-                job_ids.append(ad_match.group(1))
-                continue
+                url = self.get_indeed_redirected_url(url)
 
             # Try to extract 'jk' parameter (for rc URLs)
             jk_match = re.search(r"[?&]jk=([^&>\s]+)", url, re.IGNORECASE)
@@ -331,26 +339,30 @@ class GmailScraper(object):
 
     @staticmethod
     def save_job_json_to_db(
-        email_record: JobAlertEmail,
         job_records: list[JobAlertEmailJob],
         job_data: list[dict],
         db: SessionLocal,
     ) -> None:
         """Save job data to the database"""
 
+        if not isinstance(job_records, list):
+            job_records = [job_records]
+        if not isinstance(job_data, list):
+            job_data = [job_data]
+
         for job, record in zip(job_data, job_records):
 
             # Save the company
             company = (
                 db.query(Company)
-                .filter(Company.owner_id == email_record.owner_id, Company.name == job.get("company_name"))
+                .filter(Company.owner_id == record.email.owner_id, Company.name == job.get("company_name"))
                 .first()
             )
             if not company:
                 # noinspection PyArgumentList
                 company = CompanyScraped(
                     name=job.get("company"),
-                    owner_id=email_record.owner_id,
+                    owner_id=record.email.owner_id,
                 )
             db.add(company)
             db.commit()
@@ -363,7 +375,7 @@ class GmailScraper(object):
             # noinspection PyArgumentList
             location = LocationScraped(
                 **parsed_location.model_dump(),
-                owner_id=email_record.owner_id,
+                owner_id=record.email.owner_id,
             )
             db.add(location)
             db.commit()
@@ -376,7 +388,7 @@ class GmailScraper(object):
                 url=job["job"]["url"],
                 salary_min=job["job"]["salary"]["min_amount"],
                 salary_max=job["job"]["salary"]["max_amount"],
-                owner_id=email_record.owner_id,
+                owner_id=record.email.owner_id,
                 location_id=location.id,
                 company_id=company.id,
                 jobalertemailjob_id=record.id,
@@ -450,12 +462,10 @@ class GmailScraper(object):
                         if email_record.platform == "linkedin":
                             logger.info(f"Scraping Linkedin jobs")
                             job_ids = self.extract_linkedin_job_ids(emails_record.body)
-                            scrapper_class = LinkedinJobScraper
                             stats["linkedin_jobs"] += len(job_ids)
                         elif email_record.platform == "indeed":
                             logger.info(f"Scraping Indeed jobs")
                             job_ids = self.extract_indeed_job_ids(emails_record.body)
-                            scrapper_class = IndeedScrapper
                             stats["indeed_jobs"] += len(job_ids)
                         else:
                             logger.info(f"No job IDs found in email: {emails_record.body}")
@@ -463,7 +473,7 @@ class GmailScraper(object):
 
                         # Save the retrieved job ids to the database
                         try:
-                            job_records = self.save_job_ids_to_db(email_record, job_ids, db)
+                            self.save_job_ids_to_db(email_record, job_ids, db)
                             stats["jobs_extracted"] += len(job_ids)
                             logger.info(f"Extracted {len(job_ids)} job IDs from {email_record.platform}")
                         except Exception as exception:
@@ -471,26 +481,34 @@ class GmailScraper(object):
                                 f"Failed to save job IDs for email ID {email_external_id} due to error: {exception}"
                             )
                             continue
-
-                        # Scrape the job data
-                        max_jobs = 1000
-                        job_ids = [job_ids[i : i + max_jobs] for i in range(0, len(job_ids), max_jobs)]
-                        job_data = []
-                        for job_id_batch in job_ids:
-                            scrapper = scrapper_class(job_id_batch)
-                            try:
-                                job_data += scrapper.scrape_job()
-                            except Exception as exception:
-                                logger.exception(
-                                    f"Failed to scrape job data for job IDs {job_id_batch} due to error: {exception}"
-                                )
-                                continue
-
-                        self.save_job_json_to_db(email_record, job_records, job_data, db)
-
                     else:
                         stats["emails_existing"] += 1
                         logger.info("Email already exists in database")
+
+            # Get all the job ids from the table and scrape them
+            job_records = db.query(JobAlertEmailJob).filter(JobAlertEmailJob.is_scraped.is_(False)).all()
+            linkedin_jobs_records = [job for job in job_records if job.email.platform == "linkedin"]
+            indeed_job_records = [job for job in job_records if job.email.platform == "indeed"]
+
+            for job_records, scrapper_class in zip([linkedin_jobs_records, indeed_job_records], [LinkedinJobScraper, IndeedScrapper]):
+                # job_ids = [job.external_job_id for job in job_records]
+                # max_batch_jobs = 1000
+                # job_ids = [job_ids[i : i + max_batch_jobs] for i in range(0, len(job_ids), max_batch_jobs)]
+                for job_record in job_records:
+                    scrapper = scrapper_class(job_record.external_job_id)
+                    print(f"Scraping job ID: {job_record}")
+                    try:
+                        job_data = scrapper.scrape_job()
+                        self.save_job_json_to_db(job_record, job_data, db)
+                        job_record.is_scraped = True
+                        db.commit()
+                    except Exception as exception:
+                        logger.exception(
+                            f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: {exception}"
+                        )
+                        job_record.error_msg = f"Failed to scrape job data: {str(exception)}"
+                        job_records.is_scraped = True
+                        continue
 
             # Log final statistics
             stats["end_time"] = datetime.now().isoformat()
@@ -506,11 +524,11 @@ class GmailScraper(object):
             stats["end_time"] = datetime.now().isoformat()
             return stats
 
-    def run1(self, period):
-
-        while True:
-            res = self.run(period)
-            time.sleep(max([0, period * 60 * 60 - res["duration_seconds"]]))
+    # def run1(self, period):
+    #
+    #     while True:
+    #         res = self.run(period)
+    #         time.sleep(max([0, period * 60 * 60 - res["duration_seconds"]]))
 
 
 if __name__ == "__main__":

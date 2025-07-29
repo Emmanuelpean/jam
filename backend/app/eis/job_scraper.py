@@ -88,7 +88,7 @@ class JobScrapper(object):
 
         for attempt in range(self.max_attempts):
             progress_resp = requests.get(progress_url, headers=headers)
-            if progress_resp.status_code != 200:
+            if progress_resp.status_code not in (200, 202):
                 raise Exception(f"Failed to get snapshot status: {progress_resp.status_code} {progress_resp.text}")
 
             status = progress_resp.json().get("status")
@@ -112,6 +112,10 @@ class JobScrapper(object):
         headers = {"Authorization": f"Bearer {self.api_key}"}
 
         data_resp = requests.get(snapshot_url, headers=headers, params=params)
+        attempted = 0
+        while data_resp.status_code == 202 and attempted < 10:
+            data_resp = requests.get(snapshot_url, headers=headers, params=params)
+            attempted += 1
         if data_resp.status_code != 200:
             raise Exception(f"Failed to get snapshot data: {data_resp.status_code} {data_resp.text}")
         return data_resp.json()
@@ -206,7 +210,7 @@ if __name__ == "__main__":
     scraper = LinkedinJobScraper(["4270743052"])
     job_data1 = scraper.scrape_job()
     print(job_data1)
-    #
-    # scraper = IndeedScrapper("1a10bc30a062452e", 10, 100)
-    # job_data1 = scraper.scrape_job()
-    # print(job_data1[0])
+
+    scraper = IndeedScrapper("1a10bc30a062452e", 10, 100)
+    job_data1 = scraper.scrape_job()
+    print(job_data1[0])
