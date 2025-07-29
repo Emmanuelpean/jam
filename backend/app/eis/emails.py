@@ -10,9 +10,9 @@ import json
 import os
 import pickle
 import re
+import time
 from datetime import datetime
 from email.utils import parseaddr
-import traceback
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -132,15 +132,18 @@ class GmailScraper(object):
     def search_messages(
         self,
         sender_email: str = "",
+        inbox_only: bool = True,
         timedelta_days: int | float = 1,
     ) -> list[str]:
         """Search for messages matching a query
         :param sender_email: Sender email address
+        :param inbox_only: Search only in the inbox
         :param timedelta_days: Number of days to search for emails
         :return: List of message IDs matching the query"""
 
         query = ""
         query += f"from:{sender_email}" if sender_email else ""
+        query += " in:inbox" if inbox_only else ""
         query += f" newer_than:{timedelta_days}d" if timedelta_days else ""
         query = query.strip()
 
@@ -329,12 +332,13 @@ class GmailScraper(object):
     @staticmethod
     def save_job_json_to_db(
         email_record: JobAlertEmail,
+        job_records: list[JobAlertEmailJob],
         job_data: list[dict],
         db: SessionLocal,
     ) -> None:
         """Save job data to the database"""
 
-        for job in job_data:
+        for job, record in zip(job_data, job_records):
 
             # Save the company
             company = (
@@ -345,7 +349,7 @@ class GmailScraper(object):
             if not company:
                 # noinspection PyArgumentList
                 company = CompanyScraped(
-                    name=job.get("company_name"),
+                    name=job.get("company"),
                     owner_id=email_record.owner_id,
                 )
             db.add(company)
@@ -354,7 +358,7 @@ class GmailScraper(object):
 
             # Save the location
             parser = LocationParser()
-            parsed_location = parser.parse_location(job.get("job_location"))
+            parsed_location = parser.parse_location(job.get("location"))
 
             # noinspection PyArgumentList
             location = LocationScraped(
@@ -364,18 +368,18 @@ class GmailScraper(object):
             db.add(location)
             db.commit()
             db.refresh(location)
-            print(location)
 
             # noinspection PyArgumentList
             job_record = JobScraped(
-                title=job.get("job_title"),
-                description=job.get("job_summary"),
-                salary_min=job.get("base_salary", {}).get("min_amount"),
-                salary_max=job.get("base_salary", {}).get("max_amount"),
+                title=job["job"]["title"],
+                description=job["job"]["description"],
+                url=job["job"]["url"],
+                salary_min=job["job"]["salary"]["min_amount"],
+                salary_max=job["job"]["salary"]["max_amount"],
                 owner_id=email_record.owner_id,
                 location_id=location.id,
                 company_id=company.id,
-                url=job.get("url"),
+                jobalertemailjob_id=record.id,
             )
             db.add(job_record)
             db.commit()
@@ -397,7 +401,6 @@ class GmailScraper(object):
             "jobs_extracted": 0,
             "linkedin_jobs": 0,
             "indeed_jobs": 0,
-            "errors": [],
             "duration_seconds": 0.0,
         }
 
@@ -413,9 +416,9 @@ class GmailScraper(object):
 
                 # Get the list of all emails
                 try:
-                    email_external_ids = self.search_messages(user.email, timedelta_days)
+                    email_external_ids = self.search_messages(user.email, True, timedelta_days)
                 except Exception as exception:
-                    logger.error(f"Failed to search messages due to error: {exception}")
+                    logger.exception(f"Failed to search messages due to error: {exception}")
                     continue
                 stats["emails_found"] += len(email_external_ids)
 
@@ -425,7 +428,7 @@ class GmailScraper(object):
                     try:
                         emails_record = self.get_message_data(email_external_id)
                     except Exception as exception:
-                        logger.error(
+                        logger.exception(
                             f"Failed to get email data for email ID {email_external_id} due to error: {exception}"
                         )
                         continue  # next user
@@ -435,7 +438,7 @@ class GmailScraper(object):
                         email_record, is_new = self.save_email_to_db(emails_record, db)
                         stats["emails_processed"] += 1
                     except Exception as exception:
-                        logger.error(
+                        logger.exception(
                             f"Failed to save email data for email ID {email_external_id} due to error: {exception}"
                         )
                         continue  # next user
@@ -460,11 +463,11 @@ class GmailScraper(object):
 
                         # Save the retrieved job ids to the database
                         try:
-                            self.save_job_ids_to_db(email_record, job_ids, db)
+                            job_records = self.save_job_ids_to_db(email_record, job_ids, db)
                             stats["jobs_extracted"] += len(job_ids)
                             logger.info(f"Extracted {len(job_ids)} job IDs from {email_record.platform}")
                         except Exception as exception:
-                            logger.warning(
+                            logger.exception(
                                 f"Failed to save job IDs for email ID {email_external_id} due to error: {exception}"
                             )
                             continue
@@ -478,12 +481,12 @@ class GmailScraper(object):
                             try:
                                 job_data += scrapper.scrape_job()
                             except Exception as exception:
-                                logger.warning(
+                                logger.exception(
                                     f"Failed to scrape job data for job IDs {job_id_batch} due to error: {exception}"
                                 )
                                 continue
 
-                        self.save_job_json_to_db(email_record, job_data, db)
+                        self.save_job_json_to_db(email_record, job_records, job_data, db)
 
                     else:
                         stats["emails_existing"] += 1
@@ -499,12 +502,15 @@ class GmailScraper(object):
             return stats
 
         except Exception as exception:
-            error_msg = f"Critical error in scraping workflow: {exception}"
-            logger.error(error_msg)
-            traceback.print_exc()
-            stats["errors"].append(error_msg)
+            logger.exception(f"Critical error in scraping workflow: {exception}")
             stats["end_time"] = datetime.now().isoformat()
             return stats
+
+    def run1(self, period):
+
+        while True:
+            res = self.run(period)
+            time.sleep(max([0, period * 60 * 60 - res["duration_seconds"]]))
 
 
 if __name__ == "__main__":

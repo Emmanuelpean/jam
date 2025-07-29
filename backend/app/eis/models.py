@@ -44,12 +44,15 @@ class JobAlertEmailJob(CommonBase, Base):
 
     # Relationships
     email = relationship("JobAlertEmail", back_populates="job_entries")
+    job_scraped = relationship("JobScraped", back_populates="jobalertemailjob")
 
 
 class JobScraped(CommonBase, Base, JobMixin):
     """Represents scraped job postings from external sources with additional metadata."""
 
     __table_args__ = get_job_constraints("scraped_")
+
+    jobalertemailjob_id = Column(Integer, ForeignKey("jobalertemailjob.id", ondelete="CASCADE"), nullable=False)
 
     # Foreign key relationships to scraped tables
     company_id = Column(Integer, ForeignKey("companyscraped.id", ondelete="SET NULL"), nullable=True, index=True)
@@ -58,6 +61,7 @@ class JobScraped(CommonBase, Base, JobMixin):
     # Relationships to scraped models only
     company = relationship("CompanyScraped", back_populates="jobscraped")
     location = relationship("LocationScraped", back_populates="jobscraped")
+    jobalertemailjob = relationship("JobAlertEmailJob", back_populates="job_scraped")
 
 
 class CompanyScraped(CommonBase, Base, CompanyMixin):

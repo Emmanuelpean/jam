@@ -189,9 +189,13 @@ class LinkedinJobScraper(JobScrapper):
         results["job"]["description"] = job_data.get("job_summary")
         results["job"]["url"] = job_data.get("url")
         results["job"]["salary"] = dict(min_amount=None, max_amount=None)
-        if job_data.get("base_salary", {}).get("currency", "").lower() in ("£", "gbp") and job_data.get("base_salary", {}).get("payment_period", "").lower() == "yr":
-            results["job"]["salary"]["min_amount"] = job_data.get("base_salary", {}).get("min_amount")
-            results["job"]["salary"]["max_amount"] = job_data.get("base_salary", {}).get("max_amount")
+        base_salary = job_data.get("base_salary", {}) or {}
+        currency = base_salary.get("currency") or ""
+        payment_period = base_salary.get("payment_period") or ""
+
+        if currency.lower() in ("£", "gbp") and payment_period.lower() == "yr":
+            results["job"]["salary"]["min_amount"] = base_salary.get("min_amount")
+            results["job"]["salary"]["max_amount"] = base_salary.get("max_amount")
 
         return results
 
