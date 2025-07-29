@@ -10,6 +10,7 @@ import json
 import os
 import pickle
 import re
+import threading
 from datetime import datetime
 from email.utils import parseaddr
 
@@ -23,7 +24,7 @@ from app import schemas
 from app.database import get_db, SessionLocal
 from app.eis.job_scraper import LinkedinJobScraper, IndeedScrapper
 from app.eis.location_parser import LocationParser
-from app.eis.models import JobAlertEmail, JobAlertEmailJob, JobScraped, CompanyScraped, LocationScraped
+from app.eis.models import JobAlertEmail, JobAlertEmailJob, JobScraped, CompanyScraped, LocationScraped, ServiceLog
 from app.models import Company, User
 from app.utils import get_gmail_logger, AppLogger
 
@@ -396,7 +397,15 @@ class GmailScraper(object):
             db.add(job_record)
             db.commit()
 
-    def run(self, timedelta_days: int | float = 10) -> dict:
+            job_record.is_scraped = True
+            same_records = (
+                db.query(JobAlertEmailJob).filter(JobAlertEmailJob.external_job_id == record.external_job_id).all()
+            )
+            for same_record in same_records:
+                same_record.is_scraped = True
+            db.commit()
+
+    def run_scraping(self, timedelta_days: int | float = 10) -> dict:
         """Run the email scraping workflow
         :param timedelta_days: Number of days to search for emails"""
 
@@ -411,6 +420,8 @@ class GmailScraper(object):
             "emails_new": 0,
             "emails_existing": 0,
             "jobs_extracted": 0,
+            "jobs_failed": 0,
+            "jobs_scraped": 0,
             "linkedin_jobs": 0,
             "indeed_jobs": 0,
             "duration_seconds": 0.0,
@@ -486,54 +497,154 @@ class GmailScraper(object):
                         logger.info("Email already exists in database")
 
             # Get all the job ids from the table and scrape them
-            job_records = db.query(JobAlertEmailJob).filter(JobAlertEmailJob.is_scraped.is_(False)).all()
+            job_records = (
+                db.query(JobAlertEmailJob)
+                .filter(JobAlertEmailJob.is_scraped.is_(False))
+                .distinct(JobAlertEmailJob.external_job_id)
+                .all()
+            )
             linkedin_jobs_records = [job for job in job_records if job.email.platform == "linkedin"]
             indeed_job_records = [job for job in job_records if job.email.platform == "indeed"]
 
-            for job_records, scrapper_class in zip([linkedin_jobs_records, indeed_job_records], [LinkedinJobScraper, IndeedScrapper]):
+            for job_records, scrapper_class in zip(
+                [linkedin_jobs_records, indeed_job_records], [LinkedinJobScraper, IndeedScrapper]
+            ):
                 # job_ids = [job.external_job_id for job in job_records]
                 # max_batch_jobs = 1000
                 # job_ids = [job_ids[i : i + max_batch_jobs] for i in range(0, len(job_ids), max_batch_jobs)]
                 for job_record in job_records:
                     scrapper = scrapper_class(job_record.external_job_id)
-                    print(f"Scraping job ID: {job_record}")
+                    logger.info(f"Scraping job ID: {job_record.external_job_id}")
                     try:
                         job_data = scrapper.scrape_job()
                         self.save_job_json_to_db(job_record, job_data, db)
                         job_record.is_scraped = True
                         db.commit()
+                        stats["jobs_scraped"] += 1
                     except Exception as exception:
                         logger.exception(
                             f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: {exception}"
                         )
                         job_record.error_msg = f"Failed to scrape job data: {str(exception)}"
-                        job_records.is_scraped = True
+                        db.commit()
+                        stats["jobs_failed"] += 1
                         continue
 
             # Log final statistics
             stats["end_time"] = datetime.now().isoformat()
             stats["duration_seconds"] = (datetime.now() - start_time).total_seconds()
-
+            success = True
+            error_message = None
             AppLogger.log_execution_time(logger, start_time, "Gmail scraping workflow")
             AppLogger.log_stats(logger, stats, "Gmail Scraping Results")
-
-            return stats
 
         except Exception as exception:
             logger.exception(f"Critical error in scraping workflow: {exception}")
             stats["end_time"] = datetime.now().isoformat()
-            return stats
+            success = False
+            error_message = str(exception)
 
-    # def run1(self, period):
-    #
-    #     while True:
-    #         res = self.run(period)
-    #         time.sleep(max([0, period * 60 * 60 - res["duration_seconds"]]))
+        entry = ServiceLog(
+            name="EIS",
+            run_duration=stats["duration_seconds"],
+            run_datetime=start_time,
+            is_success=success,
+            error_message=error_message,
+            job_success_n=stats["jobs_scraped"],
+            job_fail_n=stats["jobs_failed"],
+        )
+        db = next(get_db())
+        db.add(entry)
+        db.commit()
+
+        return stats
+
+
+class GmailScraperService:
+    """Service wrapper for GmailScraper with start/stop functionality"""
+
+    def __init__(self) -> None:
+        """Initialize the service with a GmailScraper instance."""
+
+        self.scraper = GmailScraper()
+        self.is_running = False
+        self.thread = None
+        self.stop_event = threading.Event()
+
+    def start(self, period_hours: float = 3.0) -> None:
+        """Start the scraping service
+        :param period_hours: Hours between each scraping run"""
+
+        if self.is_running:
+            print("Service is already running")
+            return
+
+        self.is_running = True
+        self.stop_event.clear()
+
+        # Start the service in a separate thread
+        self.thread = threading.Thread(target=self._run_service, args=(period_hours,))
+        self.thread.daemon = True
+        self.thread.start()
+
+        print(f"Gmail scraping service started with {period_hours}h interval")
+
+    def stop(self) -> None:
+        """Stop the scraping service"""
+
+        if not self.is_running:
+            print("Service is not running")
+            return
+
+        print("Stopping Gmail scraping service...")
+        self.is_running = False
+        self.stop_event.set()
+
+        if self.thread:
+            while self.thread.is_alive():
+                self.thread.join(timeout=5)  # Wait up to 5 seconds for clean shutdown
+
+        print("Gmail scraping service stopped")
+
+    def _run_service(self, period_hours: float) -> None:
+        """Internal method that runs the scraping loop
+        :param period_hours: Hours between each scraping run"""
+
+        while self.is_running and not self.stop_event.is_set():
+            try:
+                print(f"[{datetime.now()}] Starting scraping run...")
+
+                # Run the scraping
+                result = self.scraper.run_scraping(timedelta_days=2)
+
+                duration = result.get("duration_seconds", 0)
+                sleep_time = max([0, period_hours * 3600 - duration])
+                print(f"[{datetime.now()}] Scraping completed in {duration:.2f}s. Sleeping for {sleep_time:.2f}s")
+                if self.stop_event.wait(timeout=sleep_time):
+                    break
+
+            except Exception as e:
+                print(f"[{datetime.now()}] Error in scraping service: {e}")
+                # Sleep for a shorter time on error to retry sooner
+                if self.stop_event.wait(timeout=300):  # 5 minutes
+                    break
+
+    def status(self) -> dict:
+        """Get the current status of the service"""
+
+        return {
+            "is_running": self.is_running,
+            "thread_alive": self.thread.is_alive() if self.thread else False,
+            "thread_name": self.thread.name if self.thread else None,
+        }
 
 
 if __name__ == "__main__":
-    gmail = GmailScraper()
+    # gmail = GmailScraper()
     # emails = gmail.search_messages("emmanuelpean@gmail.com", 10)
     # email_d = gmail.get_message_data(emails[0])
     # gmail.save_email_to_db(email_d, next(get_db()))
-    gmail.run(10)
+    # gmail.run_scraping(10)
+
+    service = GmailScraperService()
+    service.start()

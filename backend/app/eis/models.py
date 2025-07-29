@@ -4,7 +4,7 @@ Defines SQLAlchemy ORM models for email-based job scraping functionality.
 Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
-from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime
+from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
@@ -78,3 +78,18 @@ class LocationScraped(CommonBase, Base, LocationMixin):
 
     # Relationships
     jobscraped = relationship("JobScraped", back_populates="location")
+
+
+class ServiceLog(Base):
+    """Represents logs of service operations and their status."""
+
+    __tablename__ = "servicelog"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    name = Column(String, nullable=False)
+    run_duration = Column(Float)
+    run_datetime = Column(DateTime)
+    is_success = Column(Boolean, nullable=False)
+    error_message = Column(String, nullable=True)
+    job_success_n = Column(Integer, nullable=True)
+    job_fail_n = Column(Integer, nullable=True)

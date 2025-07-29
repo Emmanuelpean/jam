@@ -11,7 +11,7 @@ USERS_DATA = [
         "password": "test_password",
     },
     {
-        "email": "emmanuelpean@gmail.com",
+        "email": "emmanuel.pean@gmail.com",
         "password": "password2",
     },
     {

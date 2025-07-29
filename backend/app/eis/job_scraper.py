@@ -129,20 +129,10 @@ class JobScrapper(object):
 
     def scrape_job(self) -> list[dict]:
         """Complete workflow to scrape a LinkedIn job"""
-        print(f"Starting to scrape job: {self.job_ids}")
 
-        # Get snapshot
         snapshot_id = self.get_snapshot()
-        print(f"Snapshot created: {snapshot_id}")
-
-        # Wait for data to be ready
         self.wait_for_data(snapshot_id)
-        print("Data is ready!")
-
-        # Retrieve the data
         data = self.retrieve_data(snapshot_id)
-        print("Data retrieved successfully!")
-
         return [self.process_job_data(d) for d in data]
 
 
@@ -166,10 +156,10 @@ class IndeedScrapper(JobScrapper):
         results["job"]["url"] = job_data.get("url")
         results["job"]["salary"] = dict(min_amount=None, max_amount=None)
         if salary_range := job_data.get("salary_formatted"):
-            pattern = r'£(\d+(?:,\d+)?(?:k|K)?(?:\.\d+)?)\s*[-–]\s*£(\d+(?:,\d+)?(?:k|K)?(?:\.\d+)?)\s+(?:a|per)\s+(?:year|annum)'
+            pattern = r"£(\d+(?:,\d+)?(?:k|K)?(?:\.\d+)?)\s*[-–]\s*£(\d+(?:,\d+)?(?:k|K)?(?:\.\d+)?)\s+(?:a|per)\s+(?:year|annum)"
             if match := re.search(pattern, salary_range):
-                min_amount = float(match.group(1).replace(',', ''))
-                max_amount = float(match.group(2).replace(',', ''))
+                min_amount = float(match.group(1).replace(",", ""))
+                max_amount = float(match.group(2).replace(",", ""))
                 results["job"]["salary"]["min_amount"] = min_amount
                 results["job"]["salary"]["max_amount"] = max_amount
 
