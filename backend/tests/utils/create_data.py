@@ -1,6 +1,7 @@
 import copy
 
 from app import models, utils
+from app.eis.models import JobAlertEmail, JobAlertEmailJob
 from tests.utils.table_data import (
     USERS_DATA,
     COMPANIES_DATA,
@@ -16,10 +17,12 @@ from tests.utils.table_data import (
     JOB_APPLICATIONS_DATA,
     INTERVIEWS_DATA,
     INTERVIEW_INTERVIEWER_MAPPINGS,
+    JOB_ALERT_EMAILS_DATA,
+    JOB_ALERT_EMAIL_JOBS_DATA,
 )
 
 
-def create_users(db):
+def create_users(db) -> list[models.User]:
     """Create sample users and return them with non-hashed passwords but with database IDs"""
 
     print("Creating users...")
@@ -49,60 +52,66 @@ def create_users(db):
     return result_users
 
 
-def create_companies(db):
+def create_companies(db) -> list[models.Company]:
     """Create sample companies"""
 
     print("Creating companies...")
+    # noinspection PyArgumentList
     companies = [models.Company(**company) for company in COMPANIES_DATA]
     db.add_all(companies)
     db.commit()
     return companies
 
 
-def create_locations(db):
+def create_locations(db) -> list[models.Location]:
     """Create sample locations"""
 
     print("Creating locations...")
+    # noinspection PyArgumentList
     locations = [models.Location(**location) for location in LOCATIONS_DATA + [{"remote": True, "owner_id": 1}]]
     db.add_all(locations)
     db.commit()
     return locations[:-1]
 
 
-def create_aggregators(db):
+def create_aggregators(db) -> list[models.Aggregator]:
     """Create sample aggregators"""
 
     print("Creating aggregators...")
+    # noinspection PyArgumentList
     aggregators = [models.Aggregator(**aggregator) for aggregator in AGGREGATORS_DATA]
     db.add_all(aggregators)
     db.commit()
     return aggregators
 
 
-def create_keywords(db):
+def create_keywords(db) -> list[models.Keyword]:
     """Create sample keywords"""
 
     print("Creating keywords...")
+    # noinspection PyArgumentList
     keywords = [models.Keyword(**keyword) for keyword in KEYWORDS_DATA]
     db.add_all(keywords)
     db.commit()
     return keywords
 
 
-def create_people(db):
+def create_people(db) -> list[models.Person]:
     """Create sample people"""
 
     print("Creating people...")
+    # noinspection PyArgumentList
     persons = [models.Person(**person) for person in PERSONS_DATA]
     db.add_all(persons)
     db.commit()
     return persons
 
 
-def create_jobs(db, keywords, persons):
+def create_jobs(db, keywords, persons) -> list[models.Job]:
     """Create sample jobs"""
 
     print("Creating jobs...")
+    # noinspection PyArgumentList
     jobs = [models.Job(**job) for job in JOBS_DATA]
 
     # Add keywords to jobs
@@ -130,30 +139,33 @@ def create_jobs(db, keywords, persons):
     return jobs
 
 
-def create_files(db):
+def create_files(db) -> list[models.File]:
     """Create sample files (CVs and cover letters)"""
 
     print("Creating files...")
+    # noinspection PyArgumentList
     files = [models.File(**file) for file in FILES_DATA]
     db.add_all(files)
     db.commit()
     return files
 
 
-def create_job_applications(db):
+def create_job_applications(db) -> list[models.JobApplication]:
     """Create sample job applications"""
 
     print("Creating job applications...")
+    # noinspection PyArgumentList
     job_applications = [models.JobApplication(**job_application) for job_application in JOB_APPLICATIONS_DATA]
     db.add_all(job_applications)
     db.commit()
     return job_applications
 
 
-def create_interviews(db, persons):
+def create_interviews(db, persons) -> list[models.Interview]:
     """Create sample interviews"""
 
     print("Creating interviews...")
+    # noinspection PyArgumentList
     interviews = [models.Interview(**interview) for interview in INTERVIEWS_DATA]
 
     # Add interviewers to interviews
@@ -169,3 +181,26 @@ def create_interviews(db, persons):
     db.add_all(interviews)
     db.commit()
     return interviews
+
+
+def create_job_alert_emails(db) -> list[JobAlertEmail]:
+    """Create sample job alert emails"""
+
+    print("Creating job alert emails...")
+    # noinspection PyArgumentList
+    emails = [JobAlertEmail(**email) for email in JOB_ALERT_EMAILS_DATA]
+    db.add_all(emails)
+    db.commit()
+    return emails
+
+
+def create_job_alert_email_jobs(db) -> list[JobAlertEmailJob]:
+    """Create sample job alert email jobs (extracted job IDs)"""
+
+    print("Creating job alert email jobs...")
+    # noinspection PyArgumentList
+    job_entries = [JobAlertEmailJob(**job_data) for job_data in JOB_ALERT_EMAIL_JOBS_DATA]
+    db.add_all(job_entries)
+    db.commit()
+
+    return job_entries

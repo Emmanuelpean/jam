@@ -21,7 +21,7 @@ def load_file_as_base64(filename: str) -> str | None:
     try:
         with open(file_path, "rb") as file:
             file_content = file.read()
-            return base64.b64encode(file_content).decode('utf-8')
+            return base64.b64encode(file_content).decode("utf-8")
     except Exception as e:
         print(f"❌ Error reading file {filename}: {e}")
         return None

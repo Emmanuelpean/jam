@@ -1,5 +1,7 @@
 """Centralized test data for both conftest.py and seed_database.py"""
 
+from datetime import datetime
+
 from tests.utils.files import load_all_resource_files
 
 RESOURCE_FILES = load_all_resource_files()
@@ -32,7 +34,7 @@ USERS_DATA = [
     },
 ]
 
-# Company test data - expanded with more variety
+
 COMPANIES_DATA = [
     {
         "name": "Tech Corp",
@@ -94,7 +96,7 @@ COMPANIES_DATA = [
     },
 ]
 
-# Location test data - expanded with more combinations
+
 LOCATIONS_DATA = [
     {
         "postcode": "10001",
@@ -166,7 +168,7 @@ LOCATIONS_DATA = [
     },
 ]
 
-# Aggregator test data - expanded
+
 AGGREGATORS_DATA = [
     {
         "name": "LinkedIn",
@@ -221,7 +223,7 @@ AGGREGATORS_DATA = [
     },
 ]
 
-# Keyword test data - expanded with more variety
+
 KEYWORDS_DATA = [
     {
         "name": "Python",
@@ -326,7 +328,7 @@ KEYWORDS_DATA = [
     },
 ]
 
-# Person test data - expanded with more combinations
+
 PERSONS_DATA = [
     {
         "first_name": "John",
@@ -461,7 +463,6 @@ PERSONS_DATA = [
     },
 ]
 
-# Job test data - expanded with more variety
 JOBS_DATA = [
     {
         "title": "Senior Python Developer",
@@ -628,7 +629,7 @@ JOBS_DATA = [
     },
 ]
 
-# File test data - expanded
+
 FILES_DATA = [
     {
         "filename": "john_doe_cv_2024.pdf",
@@ -693,7 +694,7 @@ FILES_DATA = [
     },
 ]
 
-# Job Application test data - expanded with more variety
+
 JOB_APPLICATIONS_DATA = [
     {
         "date": "2024-01-15T10:00:00",
@@ -810,7 +811,7 @@ JOB_APPLICATIONS_DATA = [
     },
 ]
 
-# Interview test data - expanded with more variety
+
 INTERVIEWS_DATA = [
     {
         "date": "2024-01-20T09:30:00",
@@ -910,7 +911,7 @@ INTERVIEWS_DATA = [
     },
 ]
 
-# Relationship mappings for many-to-many relationships - expanded
+
 JOB_KEYWORD_MAPPINGS = [
     {"job_id": 1, "keyword_ids": [1, 2, 6, 7]},  # Senior Python Developer - Python, JavaScript, PostgreSQL, FastAPI
     {"job_id": 2, "keyword_ids": [2, 3, 4, 13]},  # Full Stack JS Developer - JavaScript, React, Node.js, REST API
@@ -957,15 +958,206 @@ INTERVIEW_INTERVIEWER_MAPPINGS = [
 ]
 
 
-def add_mappings(primary_data, secondary_data, mapping_data, primary_key, secondary_key, relationship_attr):
+JOB_ALERT_EMAILS_DATA = [
+    {
+        "owner_id": 1,
+        "external_email_id": "linkedin_alert_001",
+        "subject": "10 new jobs matching Python Developer",
+        "sender": "jobs-noreply@linkedin.com",
+        "date_received": datetime(2024, 1, 15, 9, 30, 0),
+        "platform": "linkedin",
+        "body": """
+        Hi there,
+
+        We found 10 new jobs that match your preferences:
+
+        1. Senior Python Developer at TechCorp
+        https://www.linkedin.com/jobs/view/3789012345
+
+        2. Python Backend Engineer at StartupInc
+        https://www.linkedin.com/jobs/view/3789012346
+
+        3. Full Stack Python Developer at DataSoft
+        https://linkedin.com/comm/jobs/view/3789012347
+
+        Best regards,
+        LinkedIn Jobs Team
+        """,
+    },
+    {
+        "owner_id": 1,
+        "external_email_id": "indeed_alert_001",
+        "subject": "New job alerts for Software Engineer",
+        "sender": "noreply@indeed.com",
+        "date_received": datetime(2024, 1, 16, 14, 45, 0),
+        "platform": "indeed",
+        "body": """
+        New jobs matching your search criteria:
+
+        Software Engineer - Remote
+        Apply here: https://indeed.com/pagead/clk/dl?mo=r&ad=job123456789&source=email
+
+        Senior Software Engineer - London
+        View job: https://uk.indeed.com/rc/clk/dl?jk=job987654321&from=email
+
+        Python Developer - Manchester
+        https://indeed.com/viewjob?jk=job555666777
+
+        Don't miss out on these opportunities!
+        Indeed Team
+        """,
+    },
+    {
+        "owner_id": 2,
+        "external_email_id": "linkedin_alert_002",
+        "subject": "Data Scientist positions you might like",
+        "sender": "jobs-noreply@linkedin.com",
+        "date_received": datetime(2024, 1, 17, 11, 20, 0),
+        "platform": "linkedin",
+        "body": """
+        Hello,
+
+        Check out these Data Scientist roles:
+
+        Machine Learning Engineer
+        https://www.linkedin.com/jobs/view/3801234567
+
+        Senior Data Scientist at FinTech Ltd
+        https://linkedin.com/comm/jobs/view/3801234568
+
+        AI Research Scientist
+        https://www.linkedin.com/jobs/view/3801234569
+
+        Happy job hunting!
+        LinkedIn
+        """,
+    },
+    {
+        "owner_id": 2,
+        "external_email_id": "indeed_alert_002",
+        "subject": "Your weekly job digest - 5 new matches",
+        "sender": "alerts@indeed.com",
+        "date_received": datetime(2024, 1, 18, 8, 15, 0),
+        "platform": "indeed",
+        "body": """
+        Your weekly job digest is here!
+
+        Data Analyst - Birmingham
+        https://indeed.com/pagead/clk/dl?mo=r&ad=data123&ref=email
+
+        Business Intelligence Developer
+        https://uk.indeed.com/viewjob?jk=bi456789&utm_source=email
+
+        Senior Data Engineer
+        https://indeed.com/rc/clk/dl?jk=eng999888&campaign=weekly
+
+        Python Data Scientist - Edinburgh
+        https://uk.indeed.com/pagead/clk/dl?mo=r&ad=sci777666&source=digest
+
+        ML Engineer - Glasgow
+        https://indeed.com/viewjob?jk=ml444333&ref=weekly_digest
+
+        Best of luck with your job search!
+        Indeed
+        """,
+    },
+    {
+        "owner_id": 1,
+        "external_email_id": "linkedin_alert_003",
+        "subject": "3 jobs similar to ones you've viewed",
+        "sender": "jobs-noreply@linkedin.com",
+        "date_received": datetime(2024, 1, 19, 16, 10, 0),
+        "platform": "linkedin",
+        "body": """
+        Based on your recent activity, here are some similar opportunities:
+
+        DevOps Engineer at CloudTech
+        https://www.linkedin.com/jobs/view/3812345678
+
+        Site Reliability Engineer
+        https://linkedin.com/comm/jobs/view/3812345679
+
+        Infrastructure Engineer - Remote
+        https://www.linkedin.com/jobs/view/3812345680
+
+        View more jobs on LinkedIn
+        """,
+    },
+    {
+        "owner_id": 3,
+        "external_email_id": "indeed_alert_003",
+        "subject": "Frontend Developer jobs in your area",
+        "sender": "job-alerts@indeed.co.uk",
+        "date_received": datetime(2024, 1, 20, 12, 30, 0),
+        "platform": "indeed",
+        "body": """
+        New Frontend Developer opportunities:
+
+        React Developer - London
+        https://uk.indeed.com/pagead/clk/dl?mo=r&ad=react123&loc=london
+
+        Vue.js Developer - Manchester
+        https://indeed.com/viewjob?jk=vue456789&location=manchester
+
+        Angular Developer - Bristol
+        https://uk.indeed.com/rc/clk/dl?jk=ng789012&city=bristol
+
+        Full Stack JavaScript Developer
+        https://indeed.com/pagead/clk/dl?mo=r&ad=js345678&type=fullstack
+
+        Keep applying!
+        Indeed UK
+        """,
+    },
+]
+
+JOB_ALERT_EMAIL_JOBS_DATA = [
+    # LinkedIn Alert 001 jobs (email_id will be 1 assuming it's the first email)
+    {"email_id": 1, "external_job_id": "3789012345", "owner_id": 1},
+    {"email_id": 1, "external_job_id": "3789012346", "owner_id": 1},
+    {"email_id": 1, "external_job_id": "3789012347", "owner_id": 1},
+    # Indeed Alert 001 jobs (email_id will be 2)
+    {"email_id": 2, "external_job_id": "job123456789", "owner_id": 1},
+    {"email_id": 2, "external_job_id": "job987654321", "owner_id": 1},
+    {"email_id": 2, "external_job_id": "job555666777", "owner_id": 1},
+    # LinkedIn Alert 002 jobs (email_id will be 3)
+    {"email_id": 3, "external_job_id": "3801234567", "owner_id": 2},
+    {"email_id": 3, "external_job_id": "3801234568", "owner_id": 2},
+    {"email_id": 3, "external_job_id": "3801234569", "owner_id": 2},
+    # Indeed Alert 002 jobs (email_id will be 4)
+    {"email_id": 4, "external_job_id": "data123", "owner_id": 2},
+    {"email_id": 4, "external_job_id": "bi456789", "owner_id": 2},
+    {"email_id": 4, "external_job_id": "eng999888", "owner_id": 2},
+    {"email_id": 4, "external_job_id": "sci777666", "owner_id": 2},
+    {"email_id": 4, "external_job_id": "ml444333", "owner_id": 2},
+    # LinkedIn Alert 003 jobs (email_id will be 5)
+    {"email_id": 5, "external_job_id": "3812345678", "owner_id": 1},
+    {"email_id": 5, "external_job_id": "3812345679", "owner_id": 1},
+    {"email_id": 5, "external_job_id": "3812345680", "owner_id": 1},
+    # Indeed Alert 003 jobs (email_id will be 6)
+    {"email_id": 6, "external_job_id": "react123", "owner_id": 3},
+    {"email_id": 6, "external_job_id": "vue456789", "owner_id": 3},
+    {"email_id": 6, "external_job_id": "ng789012", "owner_id": 3},
+    {"email_id": 6, "external_job_id": "js345678", "owner_id": 3},
+]
+
+
+def add_mappings(
+    primary_data: list,
+    secondary_data: list,
+    mapping_data: list,
+    primary_key: str,
+    secondary_key: str,
+    relationship_attr: str,
+) -> None:
     """Generic function to add many-to-many relationships between data objects.
     :param primary_data: List of primary objects (e.g., jobs, interviews)
     :param secondary_data: List of secondary objects (e.g., keywords, persons)
     :param mapping_data: List of mapping dictionaries
     :param primary_key: Key name for primary object ID in mapping (e.g., "job_id", "interview_id")
     :param secondary_key: Key name for secondary object IDs in mapping (e.g., "keyword_ids", "person_ids")
-    :param relationship_attr: Attribute name on primary object for the relationship (e.g., "keywords", "contacts")
-    """
+    :param relationship_attr: Attribute name on primary object for the relationship (e.g., "keywords", "contacts")"""
+
     for mapping in mapping_data:
         primary_obj = primary_data[mapping[primary_key] - 1]  # Convert to 0-based index
         secondary_ids = mapping[secondary_key]

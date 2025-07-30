@@ -35,8 +35,8 @@ class TestJobScraperIntegration:
         assert scraper.job_ids == [self.LINKEDIN_JOB_IDS[0]]
         assert scraper.job_urls == [f"https://www.linkedin.com/jobs/view/{self.LINKEDIN_JOB_IDS[0]}"]
         assert scraper.name == "linkedin"
-        assert hasattr(scraper, 'api_key')
-        assert hasattr(scraper, 'dataset_id')
+        assert hasattr(scraper, "api_key")
+        assert hasattr(scraper, "dataset_id")
 
     def test_indeed_scraper_initialization(self) -> None:
         """Test Indeed scraper initializes correctly with fixed job ID"""
@@ -46,8 +46,8 @@ class TestJobScraperIntegration:
         assert scraper.job_ids == [self.INDEED_JOB_IDS[0]]
         assert scraper.job_urls == [f"https://www.indeed.com/viewjob?jk={self.INDEED_JOB_IDS[0]}"]
         assert scraper.name == "indeed"
-        assert hasattr(scraper, 'api_key')
-        assert hasattr(scraper, 'dataset_id')
+        assert hasattr(scraper, "api_key")
+        assert hasattr(scraper, "dataset_id")
 
     def test_linkedin_scraper_multiple_jobs(self) -> None:
         """Test LinkedIn scraper with multiple job IDs"""
@@ -103,7 +103,7 @@ class TestJobScraperIntegration:
             if isinstance(job_data, list) and len(job_data) > 0:
                 job_item = job_data[0]
                 # Check for common job fields
-                assert any(key in job_item for key in ['title', 'job_title', 'position', 'company', 'description'])
+                assert any(key in job_item for key in ["title", "job_title", "position", "company", "description"])
 
         except Exception as e:
             pytest.fail(f"Complete scraping workflow failed: {e}")
@@ -126,7 +126,7 @@ class TestJobScraperIntegration:
             if isinstance(job_data, list) and len(job_data) > 0:
                 job_item = job_data[0]
                 # Check for common job fields
-                assert any(key in job_item for key in ['title', 'job_title', 'position', 'company', 'description'])
+                assert any(key in job_item for key in ["title", "job_title", "position", "company", "description"])
 
         except Exception as e:
             pytest.fail(f"Complete scraping workflow failed: {e}")
@@ -147,11 +147,7 @@ class TestJobScraperIntegration:
     def test_custom_poll_settings(self) -> None:
         """Test scraper with custom polling settings"""
 
-        scraper = LinkedinJobScraper(
-            self.LINKEDIN_JOB_IDS[0],
-            poll_interval=0.5,
-            max_attempts=5
-        )
+        scraper = LinkedinJobScraper(self.LINKEDIN_JOB_IDS[0], poll_interval=0.5, max_attempts=5)
 
         assert scraper.poll_interval == 0.5
         assert scraper.max_attempts == 5
@@ -168,6 +164,7 @@ class TestJobScraperIntegration:
             # Wait a short time and check if we can retrieve data
             # (even if not ready, should return proper response structure)
             import time
+
             time.sleep(2)
 
             # Try to retrieve data (might not be ready yet, but should have proper error handling)

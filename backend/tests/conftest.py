@@ -31,6 +31,7 @@ from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
 from app import models, database, schemas
+from app.eis import models as eis_models
 from app.main import app
 from app.oauth2 import create_access_token
 from tests.utils.create_data import (
@@ -44,6 +45,8 @@ from tests.utils.create_data import (
     create_files,
     create_job_applications,
     create_interviews,
+    create_job_alert_emails,
+    create_job_alert_email_jobs,
 )
 
 SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
@@ -90,7 +93,7 @@ def client(session) -> Generator[TestClient, Any, None]:
 
 
 @pytest.fixture
-def test_users(session):
+def test_users(session) -> list[models.User]:
     """Create test user data"""
 
     return create_users(session)
@@ -119,66 +122,80 @@ def authorised_clients(
 
 
 @pytest.fixture
-def test_locations(session, test_users):
+def test_locations(session, test_users) -> list[models.Location]:
     """Create test location data"""
 
     return create_locations(session)
 
 
 @pytest.fixture
-def test_companies(session, test_users):
+def test_companies(session, test_users) -> list[models.Company]:
     """Create test company data"""
 
     return create_companies(session)
 
 
 @pytest.fixture
-def test_persons(session, test_users, test_companies):
+def test_persons(session, test_users, test_companies) -> list[models.Person]:
     """Create test person data"""
 
     return create_people(session)
 
 
 @pytest.fixture
-def test_aggregators(session, test_users):
+def test_aggregators(session, test_users) -> list[models.Aggregator]:
     """Create test aggregator data"""
 
     return create_aggregators(session)
 
 
 @pytest.fixture
-def test_keywords(session, test_users):
+def test_keywords(session, test_users) -> list[models.Keyword]:
     """Create test keyword data"""
 
     return create_keywords(session)
 
 
 @pytest.fixture
-def test_files(session, test_users):
+def test_files(session, test_users) -> list[models.File]:
     """Create test files for job applications"""
 
     return create_files(session)
 
 
 @pytest.fixture
-def test_jobs(session, test_users, test_companies, test_locations, test_keywords, test_persons):
+def test_jobs(session, test_users, test_companies, test_locations, test_keywords, test_persons) -> list[models.Job]:
     """Create test job data"""
 
     return create_jobs(session, test_keywords, test_persons)
 
 
 @pytest.fixture
-def test_job_applications(session, test_users, test_jobs, test_files):
+def test_job_applications(session, test_users, test_jobs, test_files) -> list[models.JobApplication]:
     """Create test job application data using File references"""
 
     return create_job_applications(session)
 
 
 @pytest.fixture
-def test_interviews(session, test_users, test_job_applications, test_locations, test_persons):
+def test_interviews(session, test_users, test_job_applications, test_locations, test_persons) -> list[models.Interview]:
     """Create test interview data"""
 
     return create_interviews(session, test_persons)
+
+
+@pytest.fixture
+def test_job_alert_emails(session, test_users) -> list[eis_models.JobAlertEmail]:
+    """Create test job alert emails"""
+
+    return create_job_alert_emails(session)
+
+
+@pytest.fixture
+def test_job_alert_email_jobs(session, test_job_alert_emails) -> list[eis_models.JobAlertEmailJob]:
+    """Create test job alert email jobs"""
+
+    return create_job_alert_email_jobs(session)
 
 
 class CRUDTestBase:

@@ -7,7 +7,6 @@ import os
 import sys
 
 from app.database import engine, SessionLocal, Base
-import app.eis.models
 from create_data import (
     create_users,
     create_companies,
@@ -19,6 +18,8 @@ from create_data import (
     create_files,
     create_job_applications,
     create_interviews,
+    create_job_alert_emails,
+    create_job_alert_email_jobs,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -55,6 +56,8 @@ def seed_database() -> None:
         files = create_files(db)
         applications = create_job_applications(db)
         interviews = create_interviews(db, people)
+        alert_emails = create_job_alert_emails(db)
+        alert_email_jobs = create_job_alert_email_jobs(db)
 
         print("\n" + "=" * 50)
         print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
@@ -69,6 +72,8 @@ def seed_database() -> None:
         print(f"Files: {len(files)}")
         print(f"Job Applications: {len(applications)}")
         print(f"Interviews: {len(interviews)}")
+        print(f"Job Alert Emails: {len(alert_emails)}")
+        print(f"Job Alert Email Jobs: {len(alert_email_jobs)}")
         print("=" * 50)
 
     except Exception as e:
