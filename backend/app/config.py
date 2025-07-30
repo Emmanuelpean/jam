@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     signup: str
 
     class Config:
+        """Configuration for settings"""
         env_file = Path(__file__).parent.parent / ".env"
 
 

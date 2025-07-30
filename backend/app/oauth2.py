@@ -53,6 +53,7 @@ def verify_access_token(
     :param credentials_exception: The exception to be raised if the token is invalid or the user ID is not found.
     :returns: object containing the user ID extracted from the token."""
 
+    # noinspection PyUnresolvedReferences
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = str(payload.get("user_id"))
