@@ -1,4 +1,3 @@
-
 import time
 
 import requests
@@ -22,14 +21,11 @@ def test_backend_login_api(api_base_url):
         openapi_response = requests.get(f"{api_base_url}/openapi.json")
         if openapi_response.status_code == 200:
             openapi_data = openapi_response.json()
-            paths = openapi_data.get('paths', {})
+            paths = openapi_data.get("paths", {})
             print(f"Available endpoints: {list(paths.keys())}")
 
         # Test login endpoint directly
-        login_data = {
-            "username": "test_user@test.com",  # Using your test credentials
-            "password": "test_password"
-        }
+        login_data = {"username": "test_user@test.com", "password": "test_password"}  # Using your test credentials
 
         # Try different login endpoint formats
         endpoints_to_try = ["/login/", "/login", "/auth/login", "/api/login"]
@@ -65,9 +61,9 @@ def test_cors_preflight(api_base_url):
 
     # Simulate preflight request
     headers = {
-        'Origin': 'http://localhost:3000',
-        'Access-Control-Request-Method': 'POST',
-        'Access-Control-Request-Headers': 'Content-Type'
+        "Origin": "http://localhost:3000",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "Content-Type",
     }
 
     try:
@@ -87,7 +83,7 @@ def test_frontend_network_debug(frontend_base_url):
     chrome_options = Options()
     chrome_options.add_argument("--enable-logging")
     chrome_options.add_argument("--log-level=0")
-    chrome_options.add_experimental_option('useAutomationExtension', False)
+    chrome_options.add_experimental_option("useAutomationExtension", False)
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
     driver = webdriver.Chrome(options=chrome_options)
@@ -112,7 +108,7 @@ def test_frontend_network_debug(frontend_base_url):
         print("Credentials entered")
 
         # Enable browser console log capture
-        logs_before = driver.get_log('browser')
+        logs_before = driver.get_log("browser")
 
         # Click login button
         login_button = driver.find_element(By.ID, "log-button")
@@ -124,8 +120,8 @@ def test_frontend_network_debug(frontend_base_url):
         time.sleep(3)
 
         # Check for errors in browser console
-        logs_after = driver.get_log('browser')
-        new_logs = logs_after[len(logs_before):]
+        logs_after = driver.get_log("browser")
+        new_logs = logs_after[len(logs_before) :]
 
         print(f"Browser console logs ({len(new_logs)} new entries):")
         for log_entry in new_logs:
@@ -171,7 +167,9 @@ def test_frontend_api_config(frontend_base_url):
         print("Checking frontend configuration...")
 
         # Execute JavaScript to check the API URL
-        api_url = driver.execute_script("return process?.env?.REACT_APP_API_URL || window.REACT_APP_API_URL || 'not found'")
+        api_url = driver.execute_script(
+            "return process?.env?.REACT_APP_API_URL || window.REACT_APP_API_URL || 'not found'"
+        )
         print(f"Frontend API URL: {api_url}")
 
         # Try to make a test API call from the browser console

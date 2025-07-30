@@ -1,6 +1,7 @@
 import platform
 import time
 from datetime import datetime
+from typing import Generator
 
 import pytest
 from selenium import webdriver
@@ -38,7 +39,7 @@ class TestPage:
     columns = []
 
     @pytest.fixture(autouse=True)
-    def setup_method(self, frontend_base_url, request, api_base_url, authorised_clients) -> None:
+    def setup_method(self, frontend_base_url, request, api_base_url, authorised_clients) -> Generator[None, None, None]:
         """Set up the test environment before each test with test data"""
         try:
             # Configure Chrome options to disable password prompts
@@ -126,7 +127,7 @@ class TestPage:
     def get_element(
         self,
         element_id: str,
-        selector: By = By.ID,
+        selector: str = By.ID,
     ) -> WebElement:
         """Get an element by its ID
         :param element_id: ID of the element to get
@@ -137,7 +138,11 @@ class TestPage:
         except:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
 
-    def wait_for_disappear(self, element_id: str, selector: By = By.ID) -> None:
+    def wait_for_disappear(
+        self,
+        element_id: str,
+        selector: str = By.ID,
+    ) -> None:
         """Wait for an element to disappear from the DOM
         :param element_id: ID of the element to get
         :param selector: Selector to use for finding the element"""
@@ -317,7 +322,8 @@ class TestPage:
         if display_function is None:
             display_function = lambda x: x
 
-        def convert(entity):
+        def convert(entity) -> str | None:
+            """Converts an attribute value of an entity using a display function."""
             value = getattr(entity, key, None)
             return display_function(value) if value is not None else ""
 
@@ -350,7 +356,7 @@ class TestPage:
         print("got", self.table_rows)
         assert len(self.table_rows) == len(entries), "Expected search to filter results"
 
-    def _test_view_modal(self):
+    def _test_view_modal(self) -> None:
         """Helper method to test the view modal for an entry"""
 
         pass
@@ -383,7 +389,7 @@ class TestPage:
 
     # ----------------------------------------------------- ADD TEST ---------------------------------------------------
 
-    def _fill_modal(self, **values):
+    def _fill_modal(self, **values) -> None:
         """Fill the modal with the given values  (key: key of the input elements, value: value to set)."""
 
         self.wait_for_edit_modal()

@@ -1,7 +1,9 @@
 import os
+import queue
 import shutil
 import subprocess
 import sys
+import threading
 import time
 
 import psutil
@@ -13,7 +15,7 @@ sys.path.insert(0, backend_path)
 from tests.conftest import *
 
 
-def kill_process_on_port(port):
+def kill_process_on_port(port) -> bool:
     """Kill any process using the specified port"""
     try:
         print(f"Checking for processes on port {port}...")
@@ -34,7 +36,7 @@ def kill_process_on_port(port):
     return False
 
 
-def kill_process_tree(parent_pid):
+def kill_process_tree(parent_pid) -> None:
     """Kill a process and all its children"""
     try:
         parent = psutil.Process(parent_pid)
@@ -75,10 +77,9 @@ def kill_process_tree(parent_pid):
         print(f"Error killing process tree {parent_pid}: {e}")
 
 
-def print_backend_pid():
+def print_backend_pid() -> None:
+    """Print the PID of any backend processes currently running"""
     try:
-        import psutil
-
         backend_processes = []
         for proc in psutil.process_iter(["pid", "name", "cmdline"]):
             try:
@@ -97,7 +98,7 @@ def print_backend_pid():
 
 
 @pytest.fixture(scope="session")
-def test_backend_server():
+def test_backend_server() -> Generator[str, None, None]:
     """Start a test backend server for integration tests"""
     print("=" * 60)
     print("STARTING BACKEND SERVER")
@@ -185,7 +186,7 @@ def test_backend_server():
 
 
 @pytest.fixture(scope="session")
-def test_frontend_server(test_backend_server):
+def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
     """Start a test frontend server for integration tests"""
     print("=" * 60)
     print("STARTING FRONTEND SERVER")
@@ -248,11 +249,8 @@ def test_frontend_server(test_backend_server):
     print(f"Waiting for frontend server at {frontend_url}...")
     print("This will take 30-60 seconds for React to compile...")
 
-    # Read output in real-time to see what's happening
-    import threading
-    import queue
-
-    def read_output(this_process, this_output_queue):
+    def read_output(this_process, this_output_queue) -> None:
+        """Read output from the frontend server subprocess and put it in a queue"""
         for _line in iter(this_process.stdout.readline, ""):
             this_output_queue.put(_line.strip())
 
@@ -346,13 +344,13 @@ def test_frontend_server(test_backend_server):
 
 
 @pytest.fixture
-def api_base_url(test_backend_server):
+def api_base_url(test_backend_server) -> str:
     """Base URL for the API"""
     return test_backend_server
 
 
 @pytest.fixture
-def frontend_base_url(test_frontend_server):
+def frontend_base_url(test_frontend_server) -> str:
     """Base URL for the frontend"""
     return test_frontend_server
 
@@ -374,6 +372,10 @@ def contiguous_subdicts(dictionary: dict) -> list[dict]:
 
 
 def contiguous_subdicts_with_required(dictionary: dict, required_keys: list) -> list[dict]:
+    """Return a list of all contiguous sub-dictionaries in the given dictionary,
+    :param dictionary: The dictionary to search.
+    :param required_keys: A list of required keys."""
+
     keys = list(dictionary.keys())
     n = len(keys)
     seen = set()
