@@ -1,4 +1,5 @@
 import { renderFunctions } from "./Renders";
+import {localeDateOnly} from "../../utils/TimeUtils";
 
 export const columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
@@ -47,6 +48,7 @@ export const columns = {
 		type: "date",
 		sortable: true,
 		searchable: true,
+		searchFields: localeDateOnly,
 		render: renderFunctions.createdDate,
 		...overrides,
 	}),
@@ -65,8 +67,9 @@ export const columns = {
 		key: "date",
 		label: "Date",
 		sortable: true,
-		searchable: true, // TODO
+		searchable: true,
 		type: "date",
+		searchFields: localeDateOnly,
 		render: renderFunctions.date,
 		...overrides,
 	}),

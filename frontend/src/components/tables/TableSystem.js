@@ -238,16 +238,26 @@ export const GenericTable = ({
 			const searchTermLower = searchTerm.toLowerCase();
 			filteredData = filteredData.filter((item) => {
 				return columns.some((column) => {
+					console.log(column);
 					if (!column.searchable) return false;
 
 					let value;
 					if (column.searchFields) {
-						// Handle multiple search fields
-						const fields = Array.isArray(column.searchFields) ? column.searchFields : [column.searchFields];
-						value = fields
-							.map((field) => getColumnValue(item, column, field))
-							.filter((val) => val != null)
-							.join(" ");
+						console.log(column.searchFields);
+						// Check if searchFields is a function
+						if (typeof column.searchFields === "function") {
+							const rawValue = getColumnValue(item, column);
+							value = column.searchFields(rawValue);
+						} else {
+							// Handle multiple search fields (existing functionality)
+							const fields = Array.isArray(column.searchFields)
+								? column.searchFields
+								: [column.searchFields];
+							value = fields
+								.map((field) => getColumnValue(item, column, field))
+								.filter((val) => val != null)
+								.join(" ");
+						}
 					} else {
 						// Use the column key with accessKey support
 						value = getColumnValue(item, column);

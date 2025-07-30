@@ -11,3 +11,10 @@ export const formDateTime = (datetime) => {
 	const minutes = String(datetime.getMinutes()).padStart(2, "0");
 	return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
+
+export const localeDateOnly = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+	console.log(date.toLocaleDateString())
+    return date.toLocaleDateString();
+}
