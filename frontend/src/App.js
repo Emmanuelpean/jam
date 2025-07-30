@@ -13,9 +13,10 @@ import PersonPage from "./pages/PersonPage";
 import KeywordsPage from "./pages/KeywordsPage";
 import InterviewsPage from "./pages/InterviewsPage";
 import JobApplicationPage from "./pages/JobApplicationsPage";
-import "./Themes.css"
+import "./Themes.css";
 import DashboardPage from "./pages/DashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 function AppLayout({ children }) {
 	const location = useLocation();
@@ -47,7 +48,7 @@ function App() {
 					<Routes>
 						<Route path="/login" element={<Login />} />
 						<Route path="/register" element={<Register />} />
-						<Route path="/" element={<Navigate to="/login" />} />
+						<Route path="/" element={<Navigate to="/dashboard" />} />
 						<Route
 							path="/locations"
 							element={
@@ -128,6 +129,8 @@ function App() {
 								</ProtectedRoute>
 							}
 						/>
+
+						<Route path="*" element={<NotFoundPage />} />
 					</Routes>
 				</AppLayout>
 			</AuthProvider>
