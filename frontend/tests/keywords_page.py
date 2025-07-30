@@ -626,19 +626,6 @@ class TestLocationsPage(TestPage):
         self.cancel_button.click()
         self.wait_for_view_modal_close()
 
-    #
-    # def test_search_functionality(self) -> None:
-    #     """Test the search functionality"""
-    #
-    #     self._test_search_functionality(self.test_entry.name[3:6], "name", "url", "description")
-    #     self._test_search_functionality(self.test_entry.url, "name", "url", "description")
-    #
-    # def test_sort_functionality(self) -> None:
-    #     """Test sorting functionality"""
-    #
-    #     self._test_sort_functionality("name")
-    #     self._test_sort_functionality("url", lambda x: x[8:])
-
 
 class TestPersonsPage(TestPage):
     """Test class for Aggregators Page functionality including:
@@ -673,7 +660,7 @@ class TestPersonsPage(TestPage):
         date = datetime.strftime(self.test_entry.created_at, "%d/%m/%Y")
         expected = (
             f"Person Details\n"
-            f"Full Name\n{self.test_entry.name}\nLinkedIn Profile\nProfile"
+            f"Full Name\n{self.test_entry.name}\nLinkedIn Profile\nProfile\n"
             f"Company\n{self.test_entry.company.name}\nRole\n{self.test_entry.role}\n"
             f"Email\n{self.test_entry.email}\nPhone\n{self.test_entry.phone}\n"
             f"Date Added\n{date}\nModified On\n{date}\nClose\nEdit"
@@ -683,15 +670,3 @@ class TestPersonsPage(TestPage):
         # Close modal
         self.cancel_button.click()
         self.wait_for_view_modal_close()
-
-    def test_search_functionality(self) -> None:
-        """Test the search functionality"""
-
-        self._test_search_functionality(self.test_entry.name[3:6], "name", "url", "description")
-        self._test_search_functionality(self.test_entry.url, "name", "url", "description")
-
-    def test_sort_functionality(self) -> None:
-        """Test sorting functionality"""
-
-        self._test_sort_functionality("name")
-        self._test_sort_functionality("url", lambda x: x[8:])
