@@ -13,6 +13,13 @@ backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
 
 from tests.conftest import *
+from tests.conftest import session
+from tests.conftest import models
+
+
+@pytest.fixture
+def db():
+    return session
 
 
 def kill_process_on_port(port) -> bool:

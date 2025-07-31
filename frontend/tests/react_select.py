@@ -5,25 +5,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
 
-def get_all_html_classes(driver):
-    """
-    Returns a set of all unique HTML class names present in the current view (DOM).
-
-    :param driver: Selenium WebDriver instance
-    :return: set of unique class names
-    """
-    class_names = set()
-    # Find all elements with a class attribute
-    elements = driver.find_elements("xpath", "//*[@class]")
-    for elem in elements:
-        # elem.get_attribute("class") may contain multiple classes, so split them
-        classes = elem.get_attribute("class")
-        if classes:
-            for cls in classes.split():
-                class_names.add(cls)
-    return class_names
-
-
 class ReactSelect(object):
 
     @staticmethod
@@ -58,22 +39,17 @@ class ReactSelect(object):
 
     @property
     def selected_options_on_line(self):
-        if self.is_multiple is False:
+        if not self.is_multiple:
             return self.select_menu.find_elements(By.CLASS_NAME, self.select_single_value)
 
         return self.select_menu.find_elements(By.CLASS_NAME, self.select_value)
 
     @property
     def options(self):
-        # wait for react menu to load
-        """
-        WebDriverWait(self.driver, 10).until(
-            lambda _: len(self.menu.find_elements_by_xpath(self.options_locator)) > 0)
-        """
         return self.menu.find_elements(By.XPATH, self.options_locator)
 
     @property
-    def all_selected_options(self):
+    def all_selected_options(self) -> list[str]:
         """Returns a list of all selected options belonging to this select tag"""
         ret = []
         for opt in self.options:
@@ -82,7 +58,7 @@ class ReactSelect(object):
         return ret
 
     @property
-    def first_selected_option(self):
+    def first_selected_option(self) -> None:
         """The first selected option in this select tag (or the currently selected option in a
         normal select)"""
         for opt in self.options:
@@ -90,8 +66,7 @@ class ReactSelect(object):
                 return opt
         raise NoSuchElementException("No options are selected")
 
-    # todo : cut index from id
-    def select_by_index(self, index):
+    def select_by_index(self, index) -> None:
         match = str(index)
         for opt in self.options:
             if self._get_option_index(opt) == match:
@@ -101,14 +76,14 @@ class ReactSelect(object):
 
         raise NoSuchElementException("Could not locate element with index %d" % index)
 
-    def deselect_all(self):
+    def deselect_all(self) -> None:
 
         if not self.is_multiple and len(self.select_menu.find_elements(By.CLASS_NAME, self.select_clear)) == 0:
             raise Exception("There is no deselect all button")
 
         self.select_menu.find_element(By.CLASS_NAME, self.select_clear).click()
 
-    def select_by_visible_text(self, text):
+    def select_by_visible_text(self, text) -> None:
         wanted_elements_indexes = [self._get_option_index(i) for i in self.options if i.text.strip() == text.strip()]
 
         if len(wanted_elements_indexes) == 0:
@@ -120,7 +95,7 @@ class ReactSelect(object):
             if not self.is_multiple:
                 return
 
-    def deselect_by_index(self, index):
+    def deselect_by_index(self, index) -> None:
         if not self.is_multiple:
             raise NotImplementedError("You may only deselect options of a multi-select")
 
@@ -130,7 +105,7 @@ class ReactSelect(object):
 
         self._unsetSelected(self.selected_options_on_line[index])
 
-    def deselect_by_visible_text(self, text):
+    def deselect_by_visible_text(self, text) -> None:
         if not self.is_multiple:
             raise NotImplementedError("You may only deselect options of a multi-select")
 
@@ -141,23 +116,25 @@ class ReactSelect(object):
                 self._unsetSelected(opt)
                 selected = True
 
-        if selected is False:
+        if not selected:
             raise NoSuchElementException("Could not locate element with text {0}".format(text))
 
-    def open_menu(self):
+    def open_menu(self) -> None:
         if self._is_menu_open():
             return
 
         self._click_select_arrow_button()
 
-    def _get_option_index(self, option):
+    @staticmethod
+    def _get_option_index(option) -> list[str]:
         return option.get_attribute("id").split("option-")[1]
 
-    def _setSelected(self, option):
+    @staticmethod
+    def _setSelected(option) -> None:
         if not option.is_selected():
             option.click()
 
-    def _is_menu_open(self):
+    def _is_menu_open(self) -> bool:
         children = self.select_menu.find_elements(By.CSS_SELECTOR, "*")
         for child in children:
             child_classy = child.get_attribute("class")
@@ -167,14 +144,14 @@ class ReactSelect(object):
 
         return False
 
-    def _close_menu(self):
+    def _close_menu(self) -> None:
         if self._is_menu_open():
             self._click_select_arrow_button()
 
-    def _unsetSelected(self, selected_option):
+    def _unsetSelected(self, selected_option) -> None:
         selected_option.find_element(By.CLASS_NAME, self.select_value_icon).click()
 
-    def _click_select_arrow_button(self):
+    def _click_select_arrow_button(self) -> None:
         time.sleep(0.2)
         self.select_menu.find_element(By.CLASS_NAME, self.select_control).click()
         time.sleep(0.2)
