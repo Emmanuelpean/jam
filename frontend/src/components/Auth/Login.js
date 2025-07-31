@@ -179,7 +179,6 @@ function AuthForm() {
 								Email Address
 							</Form.Label>
 							<Form.Control
-								type="email"
 								name="email"
 								placeholder="Enter your email"
 								value={email}
