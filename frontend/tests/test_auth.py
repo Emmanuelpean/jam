@@ -49,6 +49,7 @@ class TestAuthenticationPage(object):
     def verify_user_in_database(self, email: str) -> bool:
         """Helper method to verify user exists in database"""
 
+        # noinspection PyTypeChecker
         user = self.db.query(models.User).filter(models.User.email == email).first()
         return user
 
@@ -81,7 +82,7 @@ class TestAuthenticationPage(object):
         except:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
 
-    def test_valid_login(self, test_users):
+    def test_valid_login(self, test_users) -> None:
         """Test login with valid credentials"""
 
         self.driver.get(f"{self.base_url}/login")
@@ -96,16 +97,17 @@ class TestAuthenticationPage(object):
 
         # Verify redirect to dashboard
         self.wait.until(ec.url_contains("/dashboard"))
-        assert "/dashboard" in self.driver.current_url
 
         # Verify user exists in database
         assert self.verify_user_in_database(test_email)
 
-    def test_invalid_login(self):
+    def test_invalid_login(self) -> None:
         """Test login with invalid credentials"""
+
         self.driver.get(f"{self.base_url}/login")
 
         wrong_email = "wrong@email.com"
+        assert not self.verify_user_in_database(wrong_email)
 
         # Fill in login form with invalid credentials
         self.get_element("email").send_keys(wrong_email)
@@ -116,9 +118,6 @@ class TestAuthenticationPage(object):
         error_message = self.get_element("error-message")
         assert "Invalid credentials" in error_message.text
         assert "/login" in self.driver.current_url
-
-        # Verify user does not exist in database
-        assert not self.verify_user_in_database(wrong_email)
 
     def test_signup_valid(self):
         """Test signup with valid data"""

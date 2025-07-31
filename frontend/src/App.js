@@ -2,7 +2,6 @@ import React from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/Auth/Login";
-import Register from "./components/Auth/Register";
 import LocationsPage from "./pages/LocationsPage";
 import Header from "./Header";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -47,7 +46,7 @@ function App() {
 				<AppLayout>
 					<Routes>
 						<Route path="/login" element={<Login />} />
-						<Route path="/register" element={<Register />} />
+						<Route path="/register" element={<Login />} />
 						<Route path="/" element={<Navigate to="/dashboard" />} />
 						<Route
 							path="/locations"

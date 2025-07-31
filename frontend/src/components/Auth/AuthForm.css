@@ -10,107 +10,230 @@
 }
 
 .auth-card {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 32px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     width: 100%;
-    max-width: 400px;
-    padding: 2rem;
+    max-width: 420px;
+    padding: 2.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-h1 {
+.auth-card-animated {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.auth-card .card-body {
+    padding: 0;
+}
+
+.auth-card .card-title {
+    color: inherit !important;
     text-align: center;
-    margin-bottom: 1.5rem;
-    color: #4361ee;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
 }
 
-/* Form elements */
-.auth-form-group {
-    margin-bottom: 1.75rem;
+/* Enhanced animated field container for confirm password */
+.auth-field-container {
+    overflow: hidden;
+    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    will-change: max-height, opacity, transform;
 }
 
-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+.auth-field-hidden {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0 !important;
+    transform: translateY(-20px);
+    pointer-events: none;
 }
 
-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    font-size: 1rem;
-    transition: border-color 0.3s;
+.auth-field-visible {
+    max-height: 150px;
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
 }
 
-input:focus {
-    outline: none;
-    border-color: #4361ee;
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+/* Smooth transitions for form group inside container */
+.auth-field-container .form-group,
+.auth-field-container .mb-4 {
+    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    will-change: transform, opacity;
 }
 
-small {
-    display: block;
-    margin-top: 0.25rem;
-    color: #6c757d;
+.auth-field-hidden .form-group,
+.auth-field-hidden .mb-4 {
+    transform: translateY(-10px);
+    opacity: 0;
 }
 
-/* Buttons */
-.btn-primary {
-    background-color: #4361ee;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
+.auth-field-visible .form-group,
+.auth-field-visible .mb-4 {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Smooth transitions for individual form elements */
+.auth-field-container .form-control,
+.auth-field-container .form-label,
+.auth-field-container .invalid-feedback {
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.auth-field-hidden .form-control,
+.auth-field-hidden .form-label,
+.auth-field-hidden .invalid-feedback {
+    opacity: 0;
+    transform: translateY(-5px);
+}
+
+.auth-field-visible .form-control,
+.auth-field-visible .form-label,
+.auth-field-visible .invalid-feedback {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Button link styling */
+.btn-link {
+    background: none !important;
+    border: none !important;
+    text-decoration: none !important;
     cursor: pointer;
-    width: 100%;
-    transition: background-color 0.3s;
+    transition: all 0.2s ease;
 }
 
-.btn-primary:hover {
-    background-color: #3a56d4;
+.btn-link:hover {
+    transform: translateY(-1px);
 }
 
-.btn-primary:disabled {
-    background-color: #a8b8ff;
-    cursor: not-allowed;
+.btn-link:focus {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
 }
 
-/* Error messages */
-.error-message {
-    color: #e63946;
-    background-color: rgba(230, 57, 70, 0.1);
-    border-radius: 4px;
-    padding: 0.75rem;
+/* Error messages using existing invalid-feedback styling */
+.alert-danger {
+    border-radius: 12px;
+    border: none;
     margin-bottom: 1.5rem;
-    display: none;
 }
 
-.error-message.active {
-    display: block;
+.alert-success {
+    border-radius: 12px;
+    border: none;
+    margin-bottom: 1.5rem;
 }
 
-/* Auth footer */
-.auth-footer {
+/* Card footer */
+.card-footer {
     text-align: center;
-    margin-top: 1.5rem;
+    margin-top: 2rem;
     padding-top: 1.5rem;
     border-top: 1px solid #dee2e6;
+    background-color: transparent;
 }
 
-.auth-footer a {
-    color: #4361ee;
+.card-footer p {
+    margin: 0;
+}
+
+.card-footer a {
     text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
-.auth-footer a:hover {
+.card-footer a:hover {
     text-decoration: underline;
 }
 
+/* Form transition effects */
+.form-control {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-/* Better spacing for form groups */
-.auth-form-group:last-child {
-    margin-bottom: 0;
+/* Enhanced keyframe animations */
+@keyframes expandHeight {
+    0% {
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    50% {
+        max-height: 75px;
+        opacity: 0.5;
+        transform: translateY(-10px);
+    }
+    100% {
+        max-height: 150px;
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes collapseHeight {
+    0% {
+        max-height: 150px;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    50% {
+        max-height: 75px;
+        opacity: 0.5;
+        transform: translateY(-10px);
+    }
+    100% {
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* Staggered animation delays for child elements */
+.auth-field-container .form-label {
+    transition-delay: 0.1s;
+}
+
+.auth-field-container .form-control {
+    transition-delay: 0.2s;
+}
+
+.auth-field-container .invalid-feedback {
+    transition-delay: 0.3s;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 15px;
+    }
+
+    .auth-card {
+        max-width: 100%;
+        padding: 2rem 1.5rem;
+    }
+
+    .auth-card .card-title {
+        font-size: 1.75rem;
+    }
+
+    .auth-field-visible {
+        max-height: 140px;
+    }
+}
+
+/* Loading state improvements */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Performance optimizations */
+.auth-field-container * {
+    backface-visibility: hidden;
+    perspective: 1000px;
 }

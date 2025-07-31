@@ -5,21 +5,16 @@ import subprocess
 import sys
 import threading
 import time
+from typing import Generator
 
+import pytest
 import psutil
 import requests
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
 
-from tests.conftest import *
-from tests.conftest import session
-from tests.conftest import models
-
-
-@pytest.fixture
-def db():
-    return session
+from tests.conftest import session, models, test_users, SQLALCHEMY_DATABASE_URL
 
 
 def kill_process_on_port(port) -> bool:
