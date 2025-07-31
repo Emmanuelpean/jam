@@ -17,15 +17,21 @@ function AuthForm() {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [fieldErrors, setFieldErrors] = useState({});
-	const { login, register } = useAuth();
+    const { login, register, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
 
 	useEffect(() => {
+        // Redirect authenticated users to dashboard
+        if (isAuthenticated) {
+            navigate("/dashboard", { replace: true });
+            return;
+        }
+
 		document.documentElement.setAttribute("data-theme", "mixed-berry");
 		// Set form mode based on current path
 		setIsLogin(location.pathname === "/login");
-	}, [location.pathname]);
+    }, [location.pathname, isAuthenticated, navigate]);
 
 	const switchMode = () => {
 		setIsLogin(!isLogin);
@@ -129,6 +135,18 @@ function AuthForm() {
 		setLoading(false);
 	}
 
+    // Show loading state while checking authentication
+    if (isAuthenticated) {
+        return (
+            <div className="auth-container">
+                <div className="d-flex flex-column align-items-center">
+                    <Spinner animation="border" variant="primary" />
+                    <p className="mt-3 text-muted">Redirecting to dashboard...</p>
+                </div>
+            </div>
+        );
+    }
+
 	return (
 		<div className="auth-container">
 			<div className="auth-logo">
@@ -154,7 +172,7 @@ function AuthForm() {
 						</Alert>
 					)}
 
-					<Form onSubmit={handleSubmit}>
+					<Form onSubmit={handleSubmit} autoComplete="on">
 						<Form.Group className="mb-3" controlId="email">
 							<Form.Label>
 								<i className="bi bi-envelope-fill me-2 text-muted"></i>
@@ -162,11 +180,13 @@ function AuthForm() {
 							</Form.Label>
 							<Form.Control
 								type="email"
+								name="email"
 								placeholder="Enter your email"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
 								size="lg"
 								isInvalid={!!fieldErrors.email}
+								autoComplete="email"
 							/>
 							{fieldErrors.email && (
 								<div className="invalid-feedback">
@@ -182,11 +202,13 @@ function AuthForm() {
 							</Form.Label>
 							<Form.Control
 								type="password"
+								name={isLogin ? "current-password" : "new-password"}
 								placeholder="Enter your password"
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
 								size="lg"
 								isInvalid={!!fieldErrors.password}
+								autoComplete={isLogin ? "current-password" : "new-password"}
 							/>
 							{fieldErrors.password && (
 								<div className="invalid-feedback">
@@ -209,12 +231,14 @@ function AuthForm() {
 								</Form.Label>
 								<Form.Control
 									type="password"
+									name="confirm-password"
 									placeholder="Confirm your password"
 									value={confirmPassword}
 									onChange={(e) => setConfirmPassword(e.target.value)}
 									size="lg"
 									isInvalid={!!fieldErrors.confirmPassword}
 									tabIndex={isLogin ? -1 : 0} // Prevent tab focus when hidden
+									autoComplete="new-password"
 								/>
 								{fieldErrors.confirmPassword && (
 									<div className="invalid-feedback">
@@ -230,6 +254,7 @@ function AuthForm() {
 								<Form.Check
 									type="checkbox"
 									id="acceptTerms"
+									name="terms"
 									checked={acceptedTerms}
 									onChange={(e) => setAcceptedTerms(e.target.checked)}
 									isInvalid={!!fieldErrors.terms}
