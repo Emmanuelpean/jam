@@ -661,7 +661,7 @@ class TestPersonsPage(TestPage):
         expected = (
             f"Person Details\n"
             f"Full Name\n{self.test_entry.name}\nLinkedIn Profile\nProfile\n"
-            f"Company\n{self.test_entry.company.name}\nRole\n{self.test_entry.role}\n"
+            f"Company\n{self.test_entry.company.name.upper()}\nRole\n{self.test_entry.role}\n"
             f"Email\n{self.test_entry.email}\nPhone\n{self.test_entry.phone}\n"
             f"Date Added\n{date}\nModified On\n{date}\nClose\nEdit"
         )

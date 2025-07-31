@@ -96,16 +96,3 @@ const getFallbackCountries = () => [
 	{ value: "AR", label: "Argentina" },
 	{ value: "ZA", label: "South Africa" },
 ];
-
-// Synchronous versions for when you already have the countries loaded
-export const getCountryNameSync = (countryCode, countries) => {
-	if (!countryCode || !countries) return countryCode || "";
-	const country = countries.find((c) => c.value === countryCode);
-	return country ? country.label : countryCode;
-};
-
-export const getCountryCodeSync = (countryName, countries) => {
-	if (!countryName || !countries) return countryName || "";
-	const country = countries.find((c) => c.label.toLowerCase() === countryName.toLowerCase());
-	return country ? country.value : countryName;
-};
