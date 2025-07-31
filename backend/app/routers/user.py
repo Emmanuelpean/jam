@@ -33,10 +33,10 @@ def create_user(
     if user.email in emails:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
-    if config.Settings.signup.lower() == "restricted" and not is_email_whitelisted(user.email):
+    if config.settings.signup.lower() == "restricted" and not is_email_whitelisted(user.email):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Email not authorized for alpha testing",
+            detail="Email not authorised for alpha testing",
         )
 
     # Hash the password and create the user

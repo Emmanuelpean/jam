@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import "./AuthForm.css";
 import "../../Logo.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
-import { Button, Form, Alert, Card, Spinner } from "react-bootstrap";
+import { Alert, Button, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
 
 function AuthForm() {
@@ -17,21 +17,21 @@ function AuthForm() {
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [fieldErrors, setFieldErrors] = useState({});
-    const { login, register, isAuthenticated } = useAuth();
+	const { login, register, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
 
 	useEffect(() => {
-        // Redirect authenticated users to dashboard
-        if (isAuthenticated) {
-            navigate("/dashboard", { replace: true });
-            return;
-        }
+		// Redirect authenticated users to dashboard
+		if (isAuthenticated) {
+			navigate("/dashboard", { replace: true });
+			return;
+		}
 
 		document.documentElement.setAttribute("data-theme", "mixed-berry");
 		// Set form mode based on current path
 		setIsLogin(location.pathname === "/login");
-    }, [location.pathname, isAuthenticated, navigate]);
+	}, [location.pathname, isAuthenticated, navigate]);
 
 	const switchMode = () => {
 		setIsLogin(!isLogin);
@@ -120,32 +120,37 @@ function AuthForm() {
 					setIsLogin(true);
 					resetForm();
 					window.history.replaceState(null, "", "/login");
-					// Show success message briefly
-					setError("Account created successfully! Please log in.");
-					setTimeout(() => setError(""), 3000);
+					setError("Account created successfully! You can now log in.");
 				} else {
-					setError(typeof result.error === 'object' ?
-						JSON.stringify(result.error) : result.error || 'Registration failed');
+					setError(
+						typeof result.error === "object"
+							? JSON.stringify(result.error)
+							: result.error || "Registration failed",
+					);
 				}
 			}
 		} catch (error) {
-			setError(isLogin ? "Failed to login. An unknown error occurred" : "Failed to create an account");
+			setError(
+				isLogin
+					? "Failed to login. An unknown error occurred"
+					: "Failed to create an account. An unknown error occurred",
+			);
 		}
 
 		setLoading(false);
 	}
 
-    // Show loading state while checking authentication
-    if (isAuthenticated) {
-        return (
-            <div className="auth-container">
-                <div className="d-flex flex-column align-items-center">
-                    <Spinner animation="border" variant="primary" />
-                    <p className="mt-3 text-muted">Redirecting to dashboard...</p>
-                </div>
-            </div>
-        );
-    }
+	// Show loading state while checking authentication
+	if (isAuthenticated) {
+		return (
+			<div className="auth-container">
+				<div className="d-flex flex-column align-items-center">
+					<Spinner animation="border" variant="primary" />
+					<p className="mt-3 text-muted">Redirecting to dashboard...</p>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="auth-container">
@@ -158,28 +163,30 @@ function AuthForm() {
 
 			<Card className="auth-card border-0 auth-card-animated">
 				<Card.Body>
-					<Card.Title className="text-primary">
-						{isLogin ? "Login" : "Create Account"}
-					</Card.Title>
+					<Card.Title className="text-primary">{isLogin ? "Login" : "Create Account"}</Card.Title>
 
 					{error && (
 						<Alert
+							id="error-message"
 							variant={error.includes("successfully") ? "success" : "danger"}
 							className="d-flex align-items-center"
 						>
-							<i className={`bi ${error.includes("successfully") ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill"} me-2`}></i>
+							<i
+								className={`bi ${error.includes("successfully") ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill"} me-2`}
+							></i>
 							{error}
 						</Alert>
 					)}
 
 					<Form onSubmit={handleSubmit} autoComplete="on">
-						<Form.Group className="mb-3" controlId="email">
+						<Form.Group className="mb-3">
 							<Form.Label>
 								<i className="bi bi-envelope-fill me-2 text-muted"></i>
 								Email Address
 							</Form.Label>
 							<Form.Control
 								name="email"
+								id="email"
 								placeholder="Enter your email"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
@@ -188,19 +195,20 @@ function AuthForm() {
 								autoComplete="email"
 							/>
 							{fieldErrors.email && (
-								<div className="invalid-feedback">
+								<div id="email-error-message" className="invalid-feedback">
 									{fieldErrors.email}
 								</div>
 							)}
 						</Form.Group>
 
-						<Form.Group className="mb-3" controlId="password">
+						<Form.Group className="mb-3">
 							<Form.Label>
 								<i className="bi bi-lock-fill me-2 text-muted"></i>
 								Password
 							</Form.Label>
 							<Form.Control
 								type="password"
+								id="password"
 								name={isLogin ? "current-password" : "new-password"}
 								placeholder="Enter your password"
 								value={password}
@@ -210,7 +218,7 @@ function AuthForm() {
 								autoComplete={isLogin ? "current-password" : "new-password"}
 							/>
 							{fieldErrors.password && (
-								<div className="invalid-feedback">
+								<div id="password-error-message" className="invalid-feedback">
 									{fieldErrors.password}
 								</div>
 							)}
@@ -222,15 +230,17 @@ function AuthForm() {
 						</Form.Group>
 
 						{/* Always render confirm password field but control visibility with CSS */}
-						<div className={`auth-field-container ${!isLogin ? 'auth-field-visible' : 'auth-field-hidden'}`}>
-							<Form.Group className="mb-4" controlId="confirmPassword">
+						<div
+							className={`auth-field-container ${!isLogin ? "auth-field-visible" : "auth-field-hidden"}`}
+						>
+							<Form.Group className="mb-4">
 								<Form.Label>
 									<i className="bi bi-lock-check-fill me-2 text-muted"></i>
 									Confirm Password
 								</Form.Label>
 								<Form.Control
 									type="password"
-									name="confirm-password"
+									id="confirm-password"
 									placeholder="Confirm your password"
 									value={confirmPassword}
 									onChange={(e) => setConfirmPassword(e.target.value)}
@@ -240,7 +250,7 @@ function AuthForm() {
 									autoComplete="new-password"
 								/>
 								{fieldErrors.confirmPassword && (
-									<div className="invalid-feedback">
+									<div id="password-confirm-error-message" className="invalid-feedback">
 										{fieldErrors.confirmPassword}
 									</div>
 								)}
@@ -248,11 +258,13 @@ function AuthForm() {
 						</div>
 
 						{/* Terms and Conditions checkbox - only for registration */}
-						<div className={`auth-field-container ${!isLogin ? 'auth-field-visible' : 'auth-field-hidden'}`}>
-							<Form.Group className="mb-4" controlId="terms">
+						<div
+							className={`auth-field-container ${!isLogin ? "auth-field-visible" : "auth-field-hidden"}`}
+						>
+							<Form.Group className="mb-4">
 								<Form.Check
 									type="checkbox"
-									id="acceptTerms"
+									id="accept-terms"
 									name="terms"
 									checked={acceptedTerms}
 									onChange={(e) => setAcceptedTerms(e.target.checked)}
@@ -268,7 +280,7 @@ function AuthForm() {
 													setShowTerms(true);
 												}}
 												className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-												style={{ cursor: 'pointer' }}
+												style={{ cursor: "pointer" }}
 											>
 												Terms and Conditions
 											</button>
@@ -276,7 +288,7 @@ function AuthForm() {
 									}
 								/>
 								{fieldErrors.terms && (
-									<div className="invalid-feedback d-block">
+									<div id="terms-error-message" className="invalid-feedback d-block">
 										{fieldErrors.terms}
 									</div>
 								)}
@@ -285,6 +297,7 @@ function AuthForm() {
 
 						<div className="d-grid">
 							<Button
+								id="confirm-button"
 								variant="primary"
 								type="submit"
 								disabled={loading}
@@ -305,7 +318,9 @@ function AuthForm() {
 									</>
 								) : (
 									<>
-										<i className={`bi ${isLogin ? "bi-box-arrow-in-right" : "bi-person-plus"} me-2`}></i>
+										<i
+											className={`bi ${isLogin ? "bi-box-arrow-in-right" : "bi-person-plus"} me-2`}
+										></i>
 										{isLogin ? "Login" : "Create Account"}
 									</>
 								)}
@@ -318,9 +333,10 @@ function AuthForm() {
 							{isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
 							<button
 								type="button"
+								id="switch-mode-button"
 								onClick={switchMode}
 								className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-								style={{ cursor: 'pointer' }}
+								style={{ cursor: "pointer" }}
 							>
 								{isLogin ? "Create one here" : "Login here"}
 							</button>
@@ -330,10 +346,7 @@ function AuthForm() {
 			</Card>
 
 			{/* Terms and Conditions Modal */}
-			<TermsAndConditions
-				show={showTerms}
-				onHide={() => setShowTerms(false)}
-			/>
+			<TermsAndConditions show={showTerms} onHide={() => setShowTerms(false)} />
 		</div>
 	);
 }
