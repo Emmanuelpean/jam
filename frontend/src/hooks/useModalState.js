@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState } from "react";
 
 const useModalState = () => {
 	const [showModal, setShowModal] = useState(false);

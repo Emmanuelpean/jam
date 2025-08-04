@@ -1,0 +1,209 @@
+
+/* Terms and Conditions Modal Styling */
+.terms-modal .modal-dialog {
+    max-width: 800px;
+}
+
+.terms-header {
+    background: var(--primary-gradient);
+    color: white;
+    border-bottom: none;
+    padding: 1.5rem 2rem;
+}
+
+.terms-header .modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.terms-header .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+}
+
+.terms-body {
+    padding: 0;
+    background: var(--bs-light, #f8f9fa);
+}
+
+.terms-content {
+    padding: 2rem;
+    line-height: 1.6;
+    color: var(--bs-dark, #343a40);
+}
+
+.terms-updated-date {
+    background: var(--primary-light);
+    border: 1px solid var(--primary-start);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    color: var(--primary-dark);
+    font-size: 0.95rem;
+}
+
+.terms-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px var(--jam-glow);
+    border-left: 4px solid var(--primary-mid);
+}
+
+.terms-section.terms-highlight {
+    border-left-color: var(--primary-end);
+    background: linear-gradient(135deg, #ffffff, rgba(253, 121, 168, 0.05));
+}
+
+.terms-section.terms-warning {
+    border-left-color: #dc3545;
+    background: linear-gradient(135deg, #ffffff, #fff8f8);
+}
+
+.terms-section-title {
+    color: var(--primary-mid);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.terms-highlight .terms-section-title {
+    color: var(--primary-end);
+}
+
+.terms-warning .terms-section-title {
+    color: #dc3545;
+}
+
+.section-number {
+    background: var(--primary-gradient);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px var(--jam-glow);
+}
+
+.terms-highlight .section-number {
+    background: linear-gradient(135deg, var(--primary-end), var(--primary-mid));
+}
+
+.terms-warning .section-number {
+    background: #dc3545;
+}
+
+.terms-subsection {
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--primary-light);
+}
+
+.terms-subsection-title {
+    color: var(--primary-dark);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.terms-text {
+    margin-bottom: 1rem;
+    color: var(--bs-secondary, #6c757d);
+    font-size: 0.95rem;
+}
+
+.terms-list {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.terms-list li {
+    margin-bottom: 0.5rem;
+    color: var(--bs-secondary, #6c757d);
+    font-size: 0.95rem;
+    position: relative;
+}
+
+.terms-list li::marker {
+    color: var(--primary-mid);
+}
+
+.terms-prohibited li::marker {
+    color: #dc3545;
+}
+
+.terms-footer {
+    background: var(--bs-light, #f8f9fa);
+    border-top: 1px solid var(--bs-border-color, #dee2e6);
+    padding: 1.5rem 2rem;
+    justify-content: center;
+}
+
+.terms-footer .btn {
+    min-width: 180px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--primary-gradient);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+
+/* Smooth scrolling for the modal body */
+.terms-body {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for webkit browsers */
+.terms-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.terms-body::-webkit-scrollbar-track {
+    background: var(--bs-light, #f1f1f1);
+    border-radius: 4px;
+}
+
+.terms-body::-webkit-scrollbar-thumb {
+    background: var(--primary-start);
+    border-radius: 4px;
+}
+
+/* Theme-aware animations */
+.terms-section {
+    transition: all 0.3s ease;
+}
+
+.terms-section-title {
+    transition: color 0.3s ease;
+}
+
+/* JAM theme enhancement for the updated date */
+.terms-updated-date i {
+    color: var(--primary-mid);
+}
+
+/* Enhanced section numbering with JAM colors */
+.section-number {
+    position: relative;
+    overflow: hidden;
+}
+
+
+.section-number span {
+    position: relative;
+    z-index: 1;
+}

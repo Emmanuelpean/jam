@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi, apiHelpers } from "../services/api";
 
-const AuthContext = createContext();
+const AuthContext = createContext(undefined);
 
 export function useAuth() {
 	return useContext(AuthContext);

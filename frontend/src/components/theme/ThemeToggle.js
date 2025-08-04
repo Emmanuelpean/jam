@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Dropdown } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { authApi } from "../../services/api";
@@ -55,33 +55,23 @@ const ThemeToggle = () => {
 	};
 
 	const saveThemeToDatabase = async (themeKey) => {
-		// Always save to localStorage first
 		localStorage.setItem("theme", themeKey);
 
-		console.log("Saving theme to database:", themeKey);
-		console.log("Token available:", !!token);
-
 		if (!token) {
-			console.log("No token available, skipping database save");
 			return;
 		}
 
 		try {
-			console.log("Calling updateUserTheme API...");
-			const result = await authApi.updateUserTheme(themeKey, token);
-			console.log("Theme saved successfully:", result);
+			await authApi.updateUserTheme(themeKey, token);
 		} catch (error) {
 			console.error("Error saving theme:", error);
-			// Log more details about the error
-			console.error("Error details:", error.response?.data || error.message);
 		}
 	};
-
 
 	// Initialize theme on mount
 	useEffect(() => {
 		applyTheme(currentTheme);
-	}, []);
+	}, [currentTheme]);
 
 	// Sync with database when token changes
 	useEffect(() => {
@@ -96,9 +86,8 @@ const ThemeToggle = () => {
 			}
 		};
 
-		syncWithDatabase();
-	}, [token]);
-
+		syncWithDatabase().then(() => null);
+	}, [currentTheme, fetchUserTheme, token]);
 
 	// Apply theme when it changes
 	useEffect(() => {
