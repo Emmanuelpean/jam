@@ -362,14 +362,31 @@ const GenericModal = ({
 		const currentFields = getCurrentFields();
 		const allFields = extractAllFields(currentFields);
 
-		// Required field validation
+		// 1) Required field validation
 		allFields.forEach((field) => {
 			if (field.required && !formData[field.name]) {
 				newErrors[field.name] = `${field.label} is required`;
 			}
 		});
 
-		if (validation) {
+		// 2) Per‐field custom validation
+		for (const field of allFields) {
+			if (field.validation) {
+				// call the field's validator (sync or async)
+				let result = field.validation(formData[field.name], formData);
+				result = result instanceof Promise ? await result : result;
+
+				// assume isValid=true if validator returned nothing
+				const { isValid = true, message } = result || {};
+
+				if (!isValid) {
+					newErrors[field.name] = message;
+				}
+			}
+		}
+
+		// 3) Custom validation
+		if (validation && Object.keys(newErrors).length === 0) {
 			if (typeof validation === "function") {
 				// Check if validation function is async
 				const customErrorsResult = validation(formData);
@@ -389,6 +406,7 @@ const GenericModal = ({
 					}
 				});
 			} else if (typeof validation === "object") {
+				// TODO remove?
 				// Object-based validation (like current validationRules)
 				const validationPromises = Object.keys(validation).map(async (fieldName) => {
 					const rule = validation[fieldName];

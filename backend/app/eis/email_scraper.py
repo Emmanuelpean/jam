@@ -517,9 +517,6 @@ class GmailScraper(object):
                 for job_records, scrapper_class in zip(
                     [linkedin_jobs_records, indeed_job_records], [LinkedinJobScraper, IndeedScrapper]
                 ):
-                    # job_ids = [job.external_job_id for job in job_records]
-                    # max_batch_jobs = 1000
-                    # job_ids = [job_ids[i : i + max_batch_jobs] for i in range(0, len(job_ids), max_batch_jobs)]
                     for job_record in job_records:
                         scrapper = scrapper_class(job_record.external_job_id)
                         logger.info(f"Scraping job ID: {job_record.external_job_id}")

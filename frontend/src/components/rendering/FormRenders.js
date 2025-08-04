@@ -341,6 +341,11 @@ export const formFields = {
 		type: "text",
 		required: false,
 		placeholder: "person@company.com",
+		validation: (value) => {
+			if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+				return { isValid: false, message: "Please enter a valid email address" };
+			}
+		},
 		...overrides,
 	}),
 
@@ -359,6 +364,11 @@ export const formFields = {
 		type: "text",
 		required: false,
 		placeholder: "https://linkedin.com/in/username",
+		validation: (value) => {
+			if (value && !value.includes("linkedin.com")) {
+				return { isValid: false, message: "Please enter a valid LinkedIn URL" };
+			}
+		},
 		...overrides,
 	}),
 

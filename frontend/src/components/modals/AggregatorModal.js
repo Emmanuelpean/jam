@@ -31,9 +31,6 @@ export const AggregatorModal = ({
 
 	const customValidation = async (formData) => {
 		const errors = {};
-		if (!formData.name) {
-			return errors;
-		}
 		const queryParams = { name: formData.name.trim() };
 		const matches = await aggregatorsApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing) => {

@@ -2,6 +2,8 @@ import React from "react";
 import GenericModal from "./GenericModal";
 import { formFields, useFormOptions } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
+import { personsApi } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const PersonModal = ({
 	show,
@@ -14,6 +16,7 @@ export const PersonModal = ({
 	size = "lg",
 }) => {
 	const { companies, openCompanyModal, renderCompanyModal } = useFormOptions();
+	const { token } = useAuth();
 
 	const formFieldsArray = [
 		[formFields.firstName(), formFields.lastName()],
@@ -33,25 +36,26 @@ export const PersonModal = ({
 		view: viewFieldsArray,
 	};
 
-	const validationRules = {
-		email: (value) => {
-			if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-				return {
-					isValid: false,
-					message: "Please enter a valid email address",
-				};
-			}
-			return { isValid: true };
-		},
-		linkedin_url: (value) => {
-			if (value && !value.includes("linkedin.com")) {
-				return {
-					isValid: false,
-					message: "Please enter a valid LinkedIn URL",
-				};
-			}
-			return { isValid: true };
-		},
+	const customValidation = async (formData) => {
+		const errors = {};
+		const queryParams = {
+			first_name: formData.first_name.trim(),
+			last_name: formData.last_name.trim(),
+			company_id: formData.company_id,
+		};
+		const matches = await personsApi.getAll(token, queryParams);
+		console.log(matches);
+		const duplicates = matches.filter((existing) => {
+			return data?.id !== existing.id;
+		});
+
+		if (duplicates.length > 0) {
+			errors.first_name =
+				errors.last_name =
+				errors.company_id =
+					`A person with this name and company already exists`;
+		}
+		return errors;
 	};
 
 	const transformFormData = (data) => {
@@ -62,6 +66,7 @@ export const PersonModal = ({
 			phone: data.phone?.trim() || null,
 			role: data.role?.trim() || null,
 			linkedin_url: data.linkedin_url?.trim() || null,
+			company_id: data.company_id || null,
 		};
 	};
 
@@ -79,7 +84,7 @@ export const PersonModal = ({
 				endpoint={endpoint}
 				onSuccess={onSuccess}
 				onDelete={onDelete}
-				validation={validationRules}
+				validation={customValidation}
 				transformFormData={transformFormData}
 			/>
 
