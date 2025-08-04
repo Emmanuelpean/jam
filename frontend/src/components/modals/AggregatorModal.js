@@ -2,8 +2,8 @@ import React from "react";
 import GenericModal from "./GenericModal";
 import { formFields } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
-import {aggregatorsApi} from "../../services/api";
-import {useAuth} from "../../contexts/AuthContext";
+import { aggregatorsApi } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const AggregatorModal = ({
 	show,
@@ -24,14 +24,17 @@ export const AggregatorModal = ({
 
 	const transformFormData = (data) => {
 		return {
-			name: data?.name.trim(),
-			url: data?.url.trim(),
+			name: data?.name?.trim(),
+			url: data?.url?.trim(),
 		};
 	};
 
 	const customValidation = async (formData) => {
 		const errors = {};
-		const queryParams = {name: formData.name.trim()};
+		if (!formData.name) {
+			return errors;
+		}
+		const queryParams = { name: formData.name.trim() };
 		const matches = await aggregatorsApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing) => {
 			return data?.id !== existing.id;

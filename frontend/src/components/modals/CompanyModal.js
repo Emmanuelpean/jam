@@ -36,7 +36,10 @@ export const CompanyModal = ({
 
 	const customValidation = async (formData) => {
 		const errors = {};
-		const queryParams = { name: formData.name?.trim() };
+		if (!formData.name) {
+			return errors;
+		}
+		const queryParams = { name: formData.name.trim() };
 		const matches = await companiesApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing) => {
 			return data?.id !== existing.id;

@@ -16,7 +16,7 @@ export const KeywordModal = ({
 	size = "md",
 }) => {
 	const { token } = useAuth();
-	console.log('KeywordModal props:', { show, data, submode });
+	console.log("KeywordModal props:", { show, data, submode });
 
 	const fields = {
 		form: [formFields.name({ required: true })],
@@ -25,13 +25,16 @@ export const KeywordModal = ({
 
 	const transformFormData = (data) => {
 		return {
-			name: data?.name.trim(),
+			name: data?.name?.trim(),
 		};
 	};
 
 	const customValidation = async (formData) => {
 		const errors = {};
-		const queryParams = {name: formData.name.trim()};
+		if (!formData.name) {
+			return errors;
+		}
+		const queryParams = { name: formData.name.trim() };
 		const matches = await keywordsApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing) => {
 			return data?.id !== existing.id;
