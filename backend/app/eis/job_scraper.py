@@ -17,21 +17,23 @@ import requests
 class JobScrapper(object):
     """LinkedIn Scraper"""
 
-    base_url = ""
+    base_url: str = ""
     name: str = ""
+    poll_interval: int | float = 2
+    max_attempts: int = 60
 
     def __init__(
         self,
         job_ids: str | list[str],
-        poll_interval: int | float = 2,
-        max_attempts: int = 60,
     ) -> None:
+        """Object constructor
+        :param job_ids: List of job IDs to scrape"""
 
         self.job_ids = [job_ids] if isinstance(job_ids, str) else job_ids
         self.job_urls = [f"{self.base_url}{job_id}" for job_id in self.job_ids]
         self.secrets_file = os.path.join(os.path.dirname(__file__), "eis_secrets.json")
-        self.poll_interval = poll_interval
-        self.max_attempts = max_attempts * len(self.job_ids)
+        self.poll_interval = self.poll_interval
+        self.max_attempts *= len(self.job_ids)
 
         # Load credentials from the secrets file
         credentials = self._load_credentials()
@@ -141,6 +143,8 @@ class IndeedScrapper(JobScrapper):
 
     base_url = "https://www.indeed.com/viewjob?jk="
     name = "indeed"
+    poll_interval: int | float = 10
+    max_attempts: int = 100
 
     def process_job_data(self, job_data: dict) -> dict:
         """Process job data to extract relevant information
@@ -149,11 +153,13 @@ class IndeedScrapper(JobScrapper):
 
         results = dict()
         results["company"] = job_data.get("company_name")
+        results["company_id"] = job_data.get("company_url")
         results["location"] = job_data.get("location")
         results["job"] = dict()
         results["job"]["title"] = job_data.get("job_title")
-        results["job"]["description"] = job_data.get("description_text")
+        results["job"]["description"] = job_data.get("description_text").strip("Show more Show less")
         results["job"]["url"] = job_data.get("url")
+        results["raw"] = job_data
         results["job"]["salary"] = dict(min_amount=None, max_amount=None)
         if salary_range := job_data.get("salary_formatted"):
             pattern = r"£(\d+(?:,\d+)?(?:k|K)?(?:\.\d+)?)\s*[-–]\s*£(\d+(?:,\d+)?(?:k|K)?(?:\.\d+)?)\s+(?:a|per)\s+(?:year|annum)"
@@ -167,8 +173,12 @@ class IndeedScrapper(JobScrapper):
 
 
 class LinkedinJobScraper(JobScrapper):
+    """LinkedIn Scraper"""
+
     base_url = "https://www.linkedin.com/jobs/view/"
     name = "linkedin"
+    poll_interval: int | float = 2
+    max_attempts: int = 60
 
     def process_job_data(self, job_data: dict) -> dict:
         """Process job data to extract relevant information
@@ -177,12 +187,14 @@ class LinkedinJobScraper(JobScrapper):
 
         results = dict()
         results["company"] = job_data.get("company_name")
+        results["company_id"] = job_data.get("company_id")
         results["location"] = job_data.get("job_location")
         results["job"] = dict()
         results["job"]["title"] = job_data.get("job_title")
-        results["job"]["description"] = job_data.get("job_summary")
+        results["job"]["description"] = job_data.get("job_summary").strip("Show more Show less")
         results["job"]["url"] = job_data.get("url")
         results["job"]["salary"] = dict(min_amount=None, max_amount=None)
+        results["raw"] = job_data
         base_salary = job_data.get("base_salary", {}) or {}
         currency = base_salary.get("currency") or ""
         payment_period = base_salary.get("payment_period") or ""
@@ -201,6 +213,6 @@ if __name__ == "__main__":
     job_data1 = scraper.scrape_job()
     print(job_data1)
 
-    scraper = IndeedScrapper("1a10bc30a062452e", 10, 100)
+    scraper = IndeedScrapper("1a10bc30a062452e")
     job_data1 = scraper.scrape_job()
-    print(job_data1[0])
+    print(job_data1)

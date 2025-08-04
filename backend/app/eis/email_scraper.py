@@ -651,7 +651,7 @@ if __name__ == "__main__":
     # emails = gmail.search_messages("emmanuelpean@gmail.com", 10)
     # email_d = gmail.get_message_data(emails[0])
     # gmail.save_email_to_db(email_d, next(get_db()))
-    # gmail.run_scraping(10)
+    gmail.run_scraping(10)
 
     # service = GmailScraperService()
     # service.start()
