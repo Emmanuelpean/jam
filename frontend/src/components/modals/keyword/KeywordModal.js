@@ -76,11 +76,7 @@ export const KeywordModal = ({
 export const KeywordFormModal = (props) => {
 	// Determine the submode based on whether we have keyword data with an ID
 	const submode = props.isEdit || props.keyword?.id ? "edit" : "add";
-	return <KeywordModal {...props} keyword={props.tag} submode={submode} />;
+	return <KeywordModal {...props} submode={submode} />;
 };
 
-// Wrapper for view modal
-export const KeywordViewModal = (props) => <KeywordModal {...props} keyword={props.tag} submode="view" />;
-
-// Add default export
-export default KeywordFormModal;
+export const KeywordViewModal = (props) => <KeywordModal {...props} submode="view" />;

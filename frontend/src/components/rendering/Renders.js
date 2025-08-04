@@ -40,7 +40,6 @@ const createModalManager = (ModalComponent, modalProp) => {
 			show: showModal,
 			onHide: closeModal,
 			[modalProp]: selectedItem,
-			showEditButton: false, // Remove edit button from view modals
 			onEdit: handleEdit,
 		};
 
@@ -56,7 +55,7 @@ const createModalManager = (ModalComponent, modalProp) => {
 const LocationModalManager = createModalManager(LocationViewModal, "location");
 const CompanyModalManager = createModalManager(CompanyViewModal, "company");
 const PersonModalManager = createModalManager(PersonViewModal, "person");
-const KeywordModalManager = createModalManager(KeywordViewModal, "keywords");
+const KeywordModalManager = createModalManager(KeywordViewModal, "keyword");
 const JobApplicationModalManager = createModalManager(JobApplicationViewModal, "jobApplication");
 const JobModalManager = createModalManager(JobViewModal, "job");
 const AggregatorModalManager = createModalManager(AggregatorViewModal, "aggregator");
@@ -325,14 +324,15 @@ export const renderFunctions = {
 
 	keywords: (item, view = false, key = "keywords") => {
 		const keywords = accessAttribute(item, key);
+		console.log(keywords);
 		if (keywords && keywords.length > 0) {
 			return (
 				<div>
 					{keywords.map((keyword, index) => (
-						<KeywordModalManager key={keyword.id || index}>
+					<span key={keyword.id || index} className="me-1">
+						<KeywordModalManager>
 							{(handleClick) => (
-								<span
-									className="badge bg-info clickable-badge me-1"
+								<span className="badge bg-info clickable-badge"
 									onClick={() => handleClick(keyword)}
 								>
 									<i className="bi bi-tag me-1"></i>
@@ -340,6 +340,7 @@ export const renderFunctions = {
 								</span>
 							)}
 						</KeywordModalManager>
+						</span>
 					))}
 				</div>
 			);
@@ -363,7 +364,6 @@ export const renderFunctions = {
 	},
 
 	company: (item, view = false, key = "company") => {
-		console.log(key);
 		const company = accessAttribute(item, key);
 		if (company) {
 			return (
@@ -434,12 +434,7 @@ export const renderFunctions = {
 
 	interviewTable: (item, view = false, key = "interviews") => {
 		const interviews = accessAttribute(item, key);
-		return (
-			<InterviewsTable
-				interviews={interviews}
-				jobApplicationId={item.id}
-			/>
-		);
+		return <InterviewsTable interviews={interviews} jobApplicationId={item.id} />;
 	},
 };
 

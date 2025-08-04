@@ -97,7 +97,6 @@ export const viewFields = {
 		type: "custom",
 		columnClass: "col-12",
 		render: (data) => {
-			console.log(data);
 			if (data.remote) {
 				return (
 					<div className="p-3 bg-light rounded">

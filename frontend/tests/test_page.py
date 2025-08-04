@@ -1,3 +1,5 @@
+"""Test the main pages of JAM"""
+
 import platform
 import time
 from datetime import datetime
@@ -15,8 +17,9 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.wait import WebDriverWait
 
+from conftest import contiguous_subdicts, generate_entry_combinations
+from conftest import test_users, models
 from react_select import ReactSelect
-from conftest import contiguous_subdicts, contiguous_subdicts_with_required
 
 
 class TestPage:
@@ -37,9 +40,17 @@ class TestPage:
     required_fields = []
     duplicate_fields = []
     columns = []
+    columns_mapping = {}
 
     @pytest.fixture(autouse=True)
-    def setup_method(self, frontend_base_url, request, api_base_url, authorised_clients) -> Generator[None, None, None]:
+    def setup_method(
+        self,
+        frontend_base_url,
+        request,
+        api_base_url,
+        test_users,
+        authorised_clients,
+    ) -> Generator[None, None, None]:
         """Set up the test environment before each test with test data"""
         try:
             # Configure Chrome options to disable password prompts
@@ -64,6 +75,7 @@ class TestPage:
             self.test_entry = self.test_entries[0]
             self.client = authorised_clients[0]
             self.backend_url = api_base_url
+            self.users = test_users
 
             # Login and navigate to the page page
             self.login()
@@ -92,9 +104,9 @@ class TestPage:
 
         login_url = f"{self.base_url}/login"
         self.driver.get(login_url)
-        self.get_element("email").send_keys("test_user@test.com")
-        self.get_element("password").send_keys("test_password")
-        self.get_element("log-button").click()
+        self.get_element("email").send_keys(self.users[0].email)
+        self.get_element("password").send_keys(self.users[0].password)
+        self.get_element("confirm-button").click()
         self.wait.until(ec.url_contains("/dashboard"))
 
     # ------------------------------------------------ GET/WAIT ELEMENTS -----------------------------------------------
@@ -219,7 +231,7 @@ class TestPage:
             self.get_column_values(column).count(name) == expected_count
         ), f"Expected {expected_count} rows with name '{name}'"
 
-    def get_column_values(self, column_key: str = None) -> list[str] | list[dict[str, str]]:
+    def get_column_values(self, column_key: str | None = None) -> list[str] | list[dict[str, str]]:
         """
         Get values from a specific table column via the column key
         (matched using id attributes starting with 'table-header-').
@@ -282,7 +294,7 @@ class TestPage:
     # ---------------------------------------------------- UTILITIES ---------------------------------------------------
 
     @staticmethod
-    def clear(element: WebElement, text: str = "") -> None:
+    def set_text(element: WebElement, text: str = "") -> None:
         """Clears the input element"""
 
         modifier_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
@@ -302,13 +314,12 @@ class TestPage:
         """Test that entries are displayed correctly"""
 
         # Default 20 entries display
-        entries = [entry for entry in self.test_entries if entry.owner_id == 1]
+        entries = [entry for entry in self.test_entries if entry.owner_id == self.users[0].id]
         assert len(self.table_rows) == min([20, len(entries)]), "The table rows should match the entries"
 
         # Increase to 40
         Select(self.get_element("page-items-select")).select_by_value("40")
         self.wait_for_table_load()
-        entries = [entry for entry in self.test_entries if entry.owner_id == 1]
         assert len(self.table_rows) == min([40, len(entries)]), "The table rows should match the entries"
 
     def _test_sort_functionality(self, key: str, display_function=None) -> None:
@@ -348,11 +359,18 @@ class TestPage:
 
         entries = []
         for key in keys:
-            entries += [entry for entry in self.test_entries if text.lower() in (getattr(entry, key, "") or "").lower()]
+            for entry in self.test_entries:
+                element = getattr(entry, key)
+                if element:
+                    if key == "company_id":
+                        element_text = element.name.lower()
+                    else:
+                        element_text = element.lower()
+                    entries.append(element_text)
         entries = set(entries)
         print("expected", entries)
-        self.clear(self.get_element("search-input"), text)
-        time.sleep(10.2)  # Allow time for search to filter
+        self.set_text(self.get_element("search-input"), text)
+        time.sleep(0.2)  # Allow time for search to filter
         print("got", self.table_rows)
         assert len(self.table_rows) == len(entries), "Expected search to filter results"
 
@@ -394,33 +412,37 @@ class TestPage:
 
         self.wait_for_edit_modal()
         for key, value in values.items():
-            if key == "country":
-                select = ReactSelect(self.get_element("country"))
+            if key in ("country", "company_id", "location_id", "job_id", "aggregator_id", "jobapplication_id"):
+                select = ReactSelect(self.get_element(key))
                 select.open_menu()
-                select.select_by_visible_text("United Kingdom")
+                select.select_by_visible_text(value)
             else:
-                self.clear(self.get_element(key), value)
+                self.set_text(self.get_element(key), value)
 
     def test_add_valid_entry(self) -> None:
         """Test adding a new entry"""
 
-        values = contiguous_subdicts_with_required(self.test_data, self.required_fields)
-        n_entries = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
-        for d in values:
-            new_d = {
-                key: (value + str(time.time()) if key in self.duplicate_fields else value) for key, value in d.items()
-            }
-            keys = list(new_d.keys())
-            initial_count = self.get_column_values(keys[0]).count(new_d[keys[0]])
+        Select(self.get_element("page-items-select")).select_by_value("100")
+        values = generate_entry_combinations(self.test_data, self.required_fields)
+
+        for combination in values:
+            print(combination)
+            # Determine the number of entries in the db and in the table
+            n_entries = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
+            initial_table_count = len(self.table_rows)
+
+            # Add the new entry
             self.add_entity_button.click()
             self.wait_for_edit_modal()
-            self._fill_modal(**new_d)
+            self._fill_modal(**combination)
             self.confirm_button.click()
             self.wait_for_edit_modal_close()
-            self.check_rows(keys[0], new_d[keys[0]], initial_count + 1)
+
+            # Check that the new entry was properly added to the db and table
             n_entries_new = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
             assert n_entries_new == n_entries + 1, "Expected entry to be added to database"
-            n_entries += 1
+            new_table_count = len(self.table_rows)
+            assert new_table_count == initial_table_count + 1, "Expected entry to be added to table"
 
     def test_add_duplicate_entry(self) -> None:
         """Test that adding a new entry with an existing name shows validation error"""
@@ -454,8 +476,8 @@ class TestPage:
     def test_edit_entry_through_view_modal(self) -> None:
         """Test editing an entry through the view modal's edit button"""
 
-        keys = list(self.test_data.keys())
-        initial_count = self.get_column_values(keys[0]).count(self.test_data[keys[0]])
+        Select(self.get_element("page-items-select")).select_by_value("100")
+        initial_count = len(self.table_rows)
         self.table_row(self.test_entry.id).click()
         self.wait_for_view_modal()
         self.edit_button.click()
@@ -463,24 +485,29 @@ class TestPage:
         self.confirm_button.click()
         self.wait_for_edit_modal_close()
         self.cancel_button.click()
-        self.check_rows(keys[0], self.test_data[keys[0]], initial_count + 1)
+        assert len(self.table_rows) == initial_count, "Expected table to remain unchanged"
 
     def test_edit_entry_through_right_click_context_menu(self) -> None:
         """Test editing an entry through right-click context menu"""
 
-        keys = list(self.test_data.keys())
-        initial_count = self.get_column_values(keys[0]).count(self.test_data[keys[0]])
+        Select(self.get_element("page-items-select")).select_by_value("100")
+        initial_count = len(self.table_rows)
         self.context_menu(self.test_entry.id, "edit")
         self._fill_modal(**self.test_data)
         self.confirm_button.click()
         self.wait_for_edit_modal_close()
-        self.check_rows(keys[0], self.test_data[keys[0]], initial_count + 1)
+        assert len(self.table_rows) == initial_count, "Expected table to remain unchanged"
 
     def test_search_functionality(self) -> None:
         """Test the search functionality"""
 
         for column in self.columns:
-            self._test_search_functionality(getattr(self.test_entry, column)[3:], column)
+            search_element = getattr(self.test_entry, column)
+            if isinstance(search_element, str):
+                search_element = search_element[3:]
+            elif isinstance(search_element, models.Company):
+                search_element = search_element.name
+            self._test_search_functionality(search_element, column)
 
     def test_sort_functionality(self) -> None:
         """Test sorting functionality"""
@@ -643,13 +670,17 @@ class TestPersonsPage(TestPage):
         "first_name": "Test_firstname",
         "last_name": "Test_lastname",
         "email": "Test_email@test.com",
-        "company": "WebSolutions Ltd",
+        "company_id": "WebSolutions Ltd",
         "phone": "000000000",
         "linkedin_url": "https://www.linkedin.com/company/websolutions-ltd/",
         "role": "Test_role",
     }
-    required_fields = ["first_name", "last_name"]
+    required_fields = ["last_name", "first_name"]
     duplicate_fields = []
+    columns = ["last_name", "email", "company", "phone", "linkedin_url", "role"]
+    columns_mapping = {
+        "last_name": "name",
+    }
 
     def _test_view_modal(self) -> None:
         """Helper method to test the view modal for an entry"""

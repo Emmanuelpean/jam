@@ -153,27 +153,31 @@ export const JobModal = ({
 	);
 
 	// Transform initial data to work with multiselect (convert objects to IDs)
-	const transformInitialData = (data) => {
+	const transformInitialData = (data, forEditing = false) => {
 		if (!data) return data;
 
 		const transformed = { ...data };
 
-		// Convert keywords array to array of IDs
-		if (transformed.keywords && Array.isArray(transformed.keywords)) {
-			transformed.keywords = transformed.keywords.map((keyword) => {
-				return typeof keyword === "object" ? keyword.id : keyword;
-			});
-		}
+		// Only transform for editing mode, not for viewing
+		if (forEditing) {
+			// Convert keywords array to array of IDs
+			if (transformed.keywords && Array.isArray(transformed.keywords)) {
+				transformed.keywords = transformed.keywords.map((keyword) => {
+					return typeof keyword === "object" ? keyword.id : keyword;
+				});
+			}
 
-		// Convert contacts array to array of IDs
-		if (transformed.contacts && Array.isArray(transformed.contacts)) {
-			transformed.contacts = transformed.contacts.map((contact) => {
-				return typeof contact === "object" ? contact.id : contact;
-			});
+			// Convert contacts array to array of IDs
+			if (transformed.contacts && Array.isArray(transformed.contacts)) {
+				transformed.contacts = transformed.contacts.map((contact) => {
+					return typeof contact === "object" ? contact.id : contact;
+				});
+			}
 		}
 
 		return transformed;
 	};
+
 
 	// Transform form data before submission
 	const transformFormData = (data) => {

@@ -63,7 +63,6 @@ export const LocationModal = ({
 			queryParams.city = formData.city && formData.city.trim() || null;
 			queryParams.postcode = formData.postcode && formData.postcode.trim() || null;
 			queryParams.country = formData.country && formData.country.trim() || null;
-			console.log(queryParams);
 
 			// Query for locations with these exact parameters
 			const matchingLocations = await locationsApi.getAll(token, queryParams);
@@ -72,7 +71,6 @@ export const LocationModal = ({
 			const duplicates = matchingLocations.filter((existingLocation) => {
 				return location?.id !== existingLocation.id;
 			});
-			console.log(duplicates);
 
 			if (duplicates.length > 0) {
 				const duplicateName = duplicates[0].name;

@@ -4,7 +4,6 @@ import { viewFields } from "../../rendering/ViewRenders";
 
 const JobViewModal = ({ show, onHide, job, onEdit, size }) => {
 	if (!job) return null;
-	console.log(job);
 	const fields = [
 		[viewFields.title(), viewFields.company()],
 		[viewFields.location(), viewFields.jobApplication()],

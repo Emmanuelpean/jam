@@ -66,10 +66,9 @@ COMPANIES_DATA = [
         "url": "https://datatech.com",
         "owner_id": 1,
     },
-    # New entries with different parameter combinations
     {
         "name": "CloudFirst Inc",
-        "description": "",  # Empty description
+        "description": None,
         "url": "https://cloudfirst.io",
         "owner_id": 1,
     },

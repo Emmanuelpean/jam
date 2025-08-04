@@ -178,7 +178,6 @@ const createCrudApi = (endpoint) => ({
 				url += `?${searchParams.toString()}`;
 			}
 		}
-		console.log(url);
 		return api.get(url, token);
 	},
 	get: (id, token) => api.get(`${endpoint}/${id}`, token),

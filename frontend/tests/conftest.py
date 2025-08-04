@@ -1,3 +1,4 @@
+import itertools
 import os
 import queue
 import shutil
@@ -5,16 +6,16 @@ import subprocess
 import sys
 import threading
 import time
-from typing import Generator
 
-import pytest
 import psutil
 import requests
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
 
-from tests.conftest import session, models, test_users, SQLALCHEMY_DATABASE_URL
+# noinspection PyUnresolvedReferences
+from tests.conftest import session, models, test_users, SQLALCHEMY_DATABASE_URL, authorised_clients, client, tokens
+from tests.conftest import *
 
 
 def kill_process_on_port(port) -> bool:
@@ -394,3 +395,42 @@ def contiguous_subdicts_with_required(dictionary: dict, required_keys: list) -> 
                     seen.add(key_tuple)
                     results.append(subdict)
     return results
+
+
+def generate_entry_combinations(data_dict, required_keys: list[str]) -> list[dict]:
+    """Generate all possible combinations of entries in the given dictionary,
+    :param data_dict: The dictionary to search.
+    :param required_keys: A list of required keys."""
+
+    keys = list(data_dict.keys())
+    i = 0
+    result = []
+
+    # Loop over all possible combination lengths
+    for r in range(len(required_keys), len(keys) + 1):
+        for combo in itertools.combinations(keys, r):
+            # Only keep dicts that contain all keys in A
+            if all(a in combo for a in required_keys):
+                d = {}
+                for k in combo:
+                    if k in required_keys:
+                        d[k] = f"{data_dict[k]}_{i}"
+                        i += 1
+                    else:
+                        d[k] = data_dict[k]
+                result.append(d)
+    return result
+
+
+def test_generate_entry_combinations() -> None:
+
+    example_dict = {"a": "value1", "b": "value2", "c": "value3", "d": "value4"}
+    keys_A = ["a", "c"]
+    result = generate_entry_combinations(example_dict, keys_A)
+    assert len(result) == 4
+    assert result == [
+        {"a": "value1_0", "c": "value3_1"},
+        {"a": "value1_2", "b": "value2", "c": "value3_3"},
+        {"a": "value1_4", "c": "value3_5", "d": "value4"},
+        {"a": "value1_6", "b": "value2", "c": "value3_7", "d": "value4"},
+    ]

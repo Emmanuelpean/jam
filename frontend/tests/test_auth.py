@@ -1,3 +1,17 @@
+"""
+Authentication End-to-End Tests
+
+This module contains comprehensive Selenium-based tests for the authentication system,
+including login, registration, form validation, and mode switching functionality.
+
+Tests cover:
+- User login with valid/invalid credentials
+- User registration with validation
+- Form field validation and error handling
+- Mode switching between login and register forms
+- Database integration verification
+"""
+
 import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options

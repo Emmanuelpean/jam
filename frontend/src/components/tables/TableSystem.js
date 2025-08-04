@@ -31,11 +31,6 @@ export const useTableData = (endpoint, dependencies = [], queryParams = {}) => {
 
 	useEffect(() => {
 		const fetchData = async () => {
-			if (!token) {
-				navigate("/login");
-				return;
-			}
-
 			setLoading(true);
 			try {
 				// Build query string from queryParams
@@ -52,7 +47,7 @@ export const useTableData = (endpoint, dependencies = [], queryParams = {}) => {
 			}
 		};
 
-		fetchData();
+		fetchData().then(() => null);
 	}, [token, navigate, endpoint, ...dependencies]);
 
 	const addItem = (newItem) => {
@@ -238,7 +233,6 @@ export const GenericTable = ({
 			const searchTermLower = searchTerm.toLowerCase();
 			filteredData = filteredData.filter((item) => {
 				return columns.some((column) => {
-					console.log(column);
 					if (!column.searchable) return false;
 
 					let value;
