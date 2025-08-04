@@ -1,27 +1,20 @@
 import React from "react";
-import GenericModal from "../GenericModal";
-import { formFields, useFormOptions } from "../../rendering/FormRenders";
-import { viewFields } from "../../rendering/ViewRenders";
+import GenericModal from "./GenericModal";
+import { formFields, useFormOptions } from "../rendering/FormRenders";
+import { viewFields } from "../rendering/ViewRenders";
 
 export const PersonModal = ({
 	show,
 	onHide,
-	person,
+	data,
 	onSuccess,
 	onDelete,
 	endpoint = "persons",
 	submode = "view",
 	size = "lg",
 }) => {
-	// Use the enhanced hook to get form options data and modal management
 	const { companies, openCompanyModal, renderCompanyModal } = useFormOptions();
 
-	// Don't render if we're in view mode but have no person data
-	if (submode === "view" && !person?.id) {
-		return null;
-	}
-
-	// Form fields for editing - using the static formFields with companies data and add button
 	const formFieldsArray = [
 		[formFields.firstName(), formFields.lastName()],
 		[formFields.company(companies, openCompanyModal), formFields.role()],
@@ -29,20 +22,17 @@ export const PersonModal = ({
 		[formFields.linkedinUrl()],
 	];
 
-	// View fields for display
 	const viewFieldsArray = [
 		[viewFields.personName(), viewFields.linkedinUrl()],
 		[viewFields.company(), viewFields.role()],
 		[viewFields.email(), viewFields.phone()],
 	];
 
-	// Combine them in a way GenericModal can use based on mode
 	const fields = {
 		form: formFieldsArray,
 		view: viewFieldsArray,
 	};
 
-	// Custom validation rules
 	const validationRules = {
 		email: (value) => {
 			if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
@@ -64,10 +54,8 @@ export const PersonModal = ({
 		},
 	};
 
-	// Transform form data before submission
 	const transformFormData = (data) => {
 		return {
-			...data,
 			first_name: data.first_name?.trim(),
 			last_name: data.last_name?.trim(),
 			email: data.email?.trim() || null,
@@ -86,7 +74,7 @@ export const PersonModal = ({
 				submode={submode}
 				title="Person"
 				size={size}
-				data={person || {}}
+				data={data || {}}
 				fields={fields}
 				endpoint={endpoint}
 				onSuccess={onSuccess}
@@ -101,13 +89,8 @@ export const PersonModal = ({
 };
 
 export const PersonFormModal = (props) => {
-	// Determine the submode based on whether we have person data with an ID
 	const submode = props.isEdit || props.person?.id ? "edit" : "add";
 	return <PersonModal {...props} submode={submode} />;
 };
 
-// Wrapper for view modal
 export const PersonViewModal = (props) => <PersonModal {...props} submode="view" />;
-
-// Add default export
-export default PersonFormModal;

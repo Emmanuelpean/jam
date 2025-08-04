@@ -804,10 +804,7 @@ export const GenericTableWithModals = ({
 				<ViewModal
 					show={showViewModal}
 					onHide={closeViewModal}
-					{...{
-						[nameKey === "title" ? "job" : nameKey === "name" ? itemType.toLowerCase() : "item"]:
-							selectedItem,
-					}}
+					data={selectedItem}
 					onEdit={() => {
 						closeViewModal();
 						openEditModal(selectedItem);

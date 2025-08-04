@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { LocationViewModal } from "../modals/location/LocationModal";
-import { CompanyViewModal } from "../modals/company/CompanyModal";
-import { PersonViewModal } from "../modals/person/PersonModal";
-import { KeywordViewModal } from "../modals/keyword/KeywordModal";
+import { LocationViewModal } from "../modals/LocationModal";
+import { CompanyViewModal } from "../modals/CompanyModal";
+import { PersonViewModal } from "../modals/PersonModal";
+import { KeywordViewModal } from "../modals/KeywordModal";
 import { JobApplicationViewModal } from "../modals/job_application/JobApplicationModal";
-import { AggregatorViewModal } from "../modals/aggregator/AggregatorModal";
+import { AggregatorViewModal } from "../modals/AggregatorModal";
 import JobViewModal from "../modals/job/JobViewModal";
 import { accessAttribute } from "../../utils/Utils";
 import { filesApi } from "../../services/api";
@@ -65,15 +65,15 @@ export const getApplicationStatusBadgeClass = (status) => {
 		case "applied":
 			return "bg-primary";
 		case "interview":
-			return "bg-warning text-dark";
+			return "bg-warning";
 		case "offer":
 			return "bg-success";
 		case "rejected":
-			return "bg-danger";
-		case "withdrawn":
 			return "bg-secondary";
+		case "withdrawn":
+			return "bg-light";
 		default:
-			return "bg-light text-dark";
+			return "bg-primary";
 	}
 };
 
@@ -329,17 +329,18 @@ export const renderFunctions = {
 			return (
 				<div>
 					{keywords.map((keyword, index) => (
-					<span key={keyword.id || index} className="me-1">
-						<KeywordModalManager>
-							{(handleClick) => (
-								<span className="badge bg-info clickable-badge"
-									onClick={() => handleClick(keyword)}
-								>
-									<i className="bi bi-tag me-1"></i>
-									{keyword.name}
-								</span>
-							)}
-						</KeywordModalManager>
+						<span key={keyword.id || index} className="me-1">
+							<KeywordModalManager>
+								{(handleClick) => (
+									<span
+										className="badge bg-info clickable-badge"
+										onClick={() => handleClick(keyword)}
+									>
+										<i className="bi bi-tag me-1"></i>
+										{keyword.name}
+									</span>
+								)}
+							</KeywordModalManager>
 						</span>
 					))}
 				</div>

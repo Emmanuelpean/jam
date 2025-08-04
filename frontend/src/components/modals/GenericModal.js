@@ -279,8 +279,8 @@ const GenericModal = ({
 
 			return (
 				<div key={index} className="row mb-3" style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
-					{item.map((field) => (
-						<div key={field.key + "_group"} className={columnClass}>
+					{item.map((field, fieldIndex) => (
+						<div key={field.key || field.name || `field_${index}_${fieldIndex}`} className={columnClass}>
 							{isFormMode ? (
 								<Form.Group className="mb-3">
 									{field.type !== "drag-drop" && field.type !== "table" && (
@@ -356,7 +356,7 @@ const GenericModal = ({
 		);
 	};
 
-// Form validation
+	// Form validation
 	const validateForm = async () => {
 		const newErrors = {};
 		const currentFields = getCurrentFields();

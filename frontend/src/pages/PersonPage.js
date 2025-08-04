@@ -1,6 +1,6 @@
 import React from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
-import { PersonFormModal, PersonViewModal } from "../components/modals/person/PersonModal";
+import { PersonFormModal, PersonViewModal } from "../components/modals/PersonModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const PersonsPage = () => {

@@ -1,14 +1,14 @@
 import React from "react";
-import GenericModal from "../GenericModal";
-import { formFields } from "../../rendering/FormRenders";
-import { viewFields } from "../../rendering/ViewRenders";
-import { companiesApi } from "../../../services/api";
-import { useAuth } from "../../../contexts/AuthContext";
+import GenericModal from "./GenericModal";
+import { formFields } from "../rendering/FormRenders";
+import { viewFields } from "../rendering/ViewRenders";
+import { companiesApi } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const CompanyModal = ({
 	show,
 	onHide,
-	company,
+	data,
 	onSuccess,
 	onDelete,
 	endpoint = "companies",
@@ -17,20 +17,17 @@ export const CompanyModal = ({
 }) => {
 	const { token } = useAuth();
 
-	const formFieldsArray = [
-		[formFields.name({ required: true })],
-		[formFields.url({ label: "Website URL" })],
-		[formFields.description()],
-	];
-	const viewFieldsArray = [[viewFields.name(), viewFields.url()], [viewFields.description()]];
 	const fields = {
-		form: formFieldsArray,
-		view: viewFieldsArray,
+		form: [
+			[formFields.name({ required: true })],
+			[formFields.url({ label: "Website URL" })],
+			[formFields.description()],
+		],
+		view: [[viewFields.name(), viewFields.url()], [viewFields.description()]],
 	};
 
 	const transformFormData = (data) => {
 		return {
-			...data,
 			name: data.name?.trim(),
 			url: data.url?.trim() || null,
 			description: data.description?.trim() || null,
@@ -39,10 +36,10 @@ export const CompanyModal = ({
 
 	const customValidation = async (formData) => {
 		const errors = {};
-		const queryParams = {name: formData.name?.trim()};
+		const queryParams = { name: formData.name?.trim() };
 		const matches = await companiesApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing) => {
-			return company?.id !== existing.id;
+			return data?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0 && formData.name) {
@@ -52,7 +49,6 @@ export const CompanyModal = ({
 		return errors;
 	};
 
-
 	return (
 		<GenericModal
 			show={show}
@@ -61,7 +57,7 @@ export const CompanyModal = ({
 			submode={submode}
 			title="Company"
 			size={size}
-			data={company || {}}
+			data={data || {}}
 			fields={fields}
 			endpoint={endpoint}
 			onSuccess={onSuccess}
@@ -73,13 +69,8 @@ export const CompanyModal = ({
 };
 
 export const CompanyFormModal = (props) => {
-	// Determine the submode based on whether we have company data with an ID
 	const submode = props.isEdit || props.company?.id ? "edit" : "add";
 	return <CompanyModal {...props} submode={submode} />;
 };
 
-// Wrapper for view modal
 export const CompanyViewModal = (props) => <CompanyModal {...props} submode="view" />;
-
-// Add default export
-export default CompanyFormModal;

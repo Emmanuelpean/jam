@@ -1,6 +1,6 @@
 import React from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
-import { KeywordFormModal, KeywordViewModal } from "../components/modals/keyword/KeywordModal";
+import { KeywordFormModal, KeywordViewModal } from "../components/modals/KeywordModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const KeywordsPage = () => {

@@ -10,11 +10,11 @@ import {
 	personsApi,
 } from "../../services/api";
 import { fetchCountries } from "../../utils/CountryUtils";
-import { CompanyFormModal } from "../modals/company/CompanyModal";
-import { LocationFormModal } from "../modals/location/LocationModal";
-import { KeywordFormModal } from "../modals/keyword/KeywordModal";
-import { PersonFormModal } from "../modals/person/PersonModal";
-import AggregatorFormModal from "../modals/aggregator/AggregatorModal";
+import { CompanyFormModal } from "../modals/CompanyModal";
+import { LocationFormModal } from "../modals/LocationModal";
+import { KeywordFormModal } from "../modals/KeywordModal";
+import { PersonFormModal } from "../modals/PersonModal";
+import { AggregatorFormModal } from "../modals/AggregatorModal";
 
 // Hook for country loading that can be used by components
 export const useCountries = () => {
@@ -338,7 +338,7 @@ export const formFields = {
 	email: (overrides = {}) => ({
 		name: "email",
 		label: "Email",
-		type: "email",
+		type: "text",
 		required: false,
 		placeholder: "person@company.com",
 		...overrides,
@@ -545,7 +545,7 @@ export const formFields = {
 
 	keywords: (options = [], onAdd = null, overrides = {}) => ({
 		name: "keywords",
-		label: "Keywords/Tags",
+		label: "Tags",
 		type: "multiselect",
 		placeholder: "Select or search keywords...",
 		isSearchable: true,

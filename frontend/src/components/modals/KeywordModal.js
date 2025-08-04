@@ -1,14 +1,14 @@
 import React from "react";
-import GenericModal from "../GenericModal";
-import { formFields } from "../../rendering/FormRenders";
-import { viewFields } from "../../rendering/ViewRenders";
-import { keywordsApi } from "../../../services/api";
-import { useAuth } from "../../../contexts/AuthContext";
+import GenericModal from "./GenericModal";
+import { formFields } from "../rendering/FormRenders";
+import { viewFields } from "../rendering/ViewRenders";
+import { keywordsApi } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const KeywordModal = ({
 	show,
 	onHide,
-	keyword,
+	data,
 	onSuccess,
 	onDelete,
 	endpoint = "keywords",
@@ -16,41 +16,30 @@ export const KeywordModal = ({
 	size = "md",
 }) => {
 	const { token } = useAuth();
+	console.log('KeywordModal props:', { show, data, submode });
 
-	const formFieldsArray = [formFields.name({ required: true })];
-	const viewFieldsArray = [viewFields.name()];
 	const fields = {
-		form: formFieldsArray,
-		view: viewFieldsArray,
+		form: [formFields.name({ required: true })],
+		view: [viewFields.name()],
 	};
 
-	// Transform form data before submission
 	const transformFormData = (data) => {
 		return {
-			...data,
-			name: data.name?.trim(),
+			name: data?.name.trim(),
 		};
 	};
 
-	// Custom validation to ensure at least one field is filled
 	const customValidation = async (formData) => {
 		const errors = {};
-
-		// Check if formData and formData.name exist before calling trim()
-		if (!formData || !formData.name) {
-			return errors; // Return empty errors if no name to validate
-		}
-
-		const queryParams = { name: formData.name.trim() };
+		const queryParams = {name: formData.name.trim()};
 		const matches = await keywordsApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing) => {
-			return keyword?.id !== existing.id;
+			return data?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0) {
 			errors.name = `A tag with this name already exists`;
 		}
-
 		return errors;
 	};
 
@@ -62,7 +51,7 @@ export const KeywordModal = ({
 			submode={submode}
 			title="Keyword"
 			size={size}
-			data={keyword || {}}
+			data={data || {}}
 			fields={fields}
 			endpoint={endpoint}
 			onSuccess={onSuccess}
@@ -74,7 +63,6 @@ export const KeywordModal = ({
 };
 
 export const KeywordFormModal = (props) => {
-	// Determine the submode based on whether we have keyword data with an ID
 	const submode = props.isEdit || props.keyword?.id ? "edit" : "add";
 	return <KeywordModal {...props} submode={submode} />;
 };

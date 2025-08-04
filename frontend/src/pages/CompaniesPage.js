@@ -1,6 +1,6 @@
 import React from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
-import { CompanyFormModal, CompanyViewModal } from "../components/modals/company/CompanyModal";
+import { CompanyFormModal, CompanyViewModal } from "../components/modals/CompanyModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const CompaniesPage = () => {
@@ -18,12 +18,7 @@ const CompaniesPage = () => {
 		removeItem,
 	} = useTableData("companies");
 
-	const tableColumns = [
-		columns.name(),
-		columns.description(),
-		columns.url(),
-		columns.createdAt()
-	];
+	const tableColumns = [columns.name(), columns.description(), columns.url(), columns.createdAt()];
 
 	return (
 		<GenericTableWithModals

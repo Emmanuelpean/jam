@@ -1,5 +1,5 @@
 import React from "react";
-import { AggregatorFormModal, AggregatorViewModal } from "../components/modals/aggregator/AggregatorModal";
+import { AggregatorFormModal, AggregatorViewModal } from "../components/modals/AggregatorModal";
 import { GenericTableWithModals, useTableData } from "../components/tables/TableSystem";
 import { columns } from "../components/rendering/ColumnRenders";
 
