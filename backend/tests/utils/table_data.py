@@ -1110,34 +1110,89 @@ JOB_ALERT_EMAILS_DATA = [
     },
 ]
 
-JOB_ALERT_EMAIL_JOBS_DATA = [
-    # LinkedIn Alert 001 jobs (email_id will be 1 assuming it's the first email)
-    {"email_id": 1, "external_job_id": "3789012345", "owner_id": 1},
-    {"email_id": 1, "external_job_id": "3789012346", "owner_id": 1},
-    {"email_id": 1, "external_job_id": "3789012347", "owner_id": 1},
-    # Indeed Alert 001 jobs (email_id will be 2)
-    {"email_id": 2, "external_job_id": "job123456789", "owner_id": 1},
-    {"email_id": 2, "external_job_id": "job987654321", "owner_id": 1},
-    {"email_id": 2, "external_job_id": "job555666777", "owner_id": 1},
-    # LinkedIn Alert 002 jobs (email_id will be 3)
-    {"email_id": 3, "external_job_id": "3801234567", "owner_id": 2},
-    {"email_id": 3, "external_job_id": "3801234568", "owner_id": 2},
-    {"email_id": 3, "external_job_id": "3801234569", "owner_id": 2},
-    # Indeed Alert 002 jobs (email_id will be 4)
-    {"email_id": 4, "external_job_id": "data123", "owner_id": 2},
-    {"email_id": 4, "external_job_id": "bi456789", "owner_id": 2},
-    {"email_id": 4, "external_job_id": "eng999888", "owner_id": 2},
-    {"email_id": 4, "external_job_id": "sci777666", "owner_id": 2},
-    {"email_id": 4, "external_job_id": "ml444333", "owner_id": 2},
-    # LinkedIn Alert 003 jobs (email_id will be 5)
-    {"email_id": 5, "external_job_id": "3812345678", "owner_id": 1},
-    {"email_id": 5, "external_job_id": "3812345679", "owner_id": 1},
-    {"email_id": 5, "external_job_id": "3812345680", "owner_id": 1},
-    # Indeed Alert 003 jobs (email_id will be 6)
-    {"email_id": 6, "external_job_id": "react123", "owner_id": 3},
-    {"email_id": 6, "external_job_id": "vue456789", "owner_id": 3},
-    {"email_id": 6, "external_job_id": "ng789012", "owner_id": 3},
-    {"email_id": 6, "external_job_id": "js345678", "owner_id": 3},
+JOB_SCRAPED_DATA = [
+    # Jobs with scraped data (is_scraped=True)
+    {
+        "external_job_id": "linkedin_3789012345",
+        "owner_id": 1,
+        "is_scraped": True,
+        "is_failed": False,
+        "title": "Senior Python Developer",
+        "description": "We are looking for an experienced Python developer to join our team...",
+        "company": "TechCorp Inc",
+        "location": "San Francisco, CA",
+        "salary_min": 120000.0,
+        "salary_max": 160000.0,
+        "url": "https://linkedin.com/jobs/view/3789012345",
+    },
+    {
+        "external_job_id": "indeed_987654321",
+        "owner_id": 1,
+        "is_scraped": True,
+        "is_failed": False,
+        "title": "Full Stack Engineer",
+        "description": "Join our growing startup as a full stack engineer...",
+        "company": "StartupXYZ",
+        "location": "Remote",
+        "salary_min": 90000.0,
+        "salary_max": 130000.0,
+        "url": "https://indeed.com/viewjob?jk=987654321",
+    },
+    {
+        "external_job_id": "linkedin_1122334455",
+        "owner_id": 1,
+        "is_scraped": True,
+        "is_failed": False,
+        "title": "DevOps Engineer",
+        "description": "Looking for a DevOps engineer with AWS experience...",
+        "company": "CloudTech Solutions",
+        "location": "New York, NY",
+        "salary_min": 110000.0,
+        "salary_max": 150000.0,
+        "url": "https://linkedin.com/jobs/view/1122334455",
+    },
+    # Jobs without scraped data (is_scraped=False)
+    {
+        "external_job_id": "linkedin_5566778899",
+        "owner_id": 1,
+        "is_scraped": False,
+        "is_failed": False,
+        "title": "Software Engineer",  # Minimal data - just what's needed
+    },
+    {
+        "external_job_id": "indeed_1357924680",
+        "owner_id": 1,
+        "is_scraped": False,
+        "is_failed": False,
+        "title": "Backend Developer",
+    },
+    {
+        "external_job_id": "glassdoor_2468135790",
+        "owner_id": 1,
+        "is_scraped": False,
+        "is_failed": True,
+        "scrape_error": "Page not found - job posting may have been removed",
+        "title": "Data Engineer",
+    },
+    {
+        "external_job_id": "linkedin_9988776655",
+        "owner_id": 1,
+        "is_scraped": False,
+        "is_failed": True,
+        "scrape_error": "Scraping blocked - rate limit exceeded",
+        "title": "ML Engineer",
+    },
+]
+
+# Add this near your other mapping constants (after INTERVIEW_INTERVIEWER_MAPPINGS)
+
+EMAIL_SCRAPEDJOB_MAPPINGS = [
+    # Email 1 (LinkedIn Alert 001) has multiple scraped jobs
+    {"email_id": 1, "scraped_job_ids": [1, 2, 4]},  # Mix of scraped and unscraped jobs
+    # Email 2 (Indeed Alert 002) has some jobs
+    {"email_id": 2, "scraped_job_ids": [3, 5]},  # One scraped, one unscraped
+    # Email 3 (LinkedIn Alert 003) has failed jobs
+    {"email_id": 3, "scraped_job_ids": [6, 7]},  # Both failed scraping attempts
 ]
 
 

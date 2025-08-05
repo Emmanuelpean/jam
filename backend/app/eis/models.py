@@ -4,18 +4,19 @@ Defines SQLAlchemy ORM models for email-based job scraping functionality.
 Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
-from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float
+from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float, TIMESTAMP, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
+from app import schemas
+from datetime import datetime
 
-from app.models import (
-    CommonBase,
-    Base,
-    JobMixin,
-    CompanyMixin,
-    LocationMixin,
-    get_job_constraints,
-    get_location_constraints,
+from app.models import CommonBase, Base
+
+email_scrapedjob_mapping = Table(
+    "email_scrapedjob_mapping",
+    Base.metadata,
+    Column("email_id", Integer, ForeignKey("jobalertemail.id", ondelete="CASCADE"), primary_key=True),
+    Column("job_id", Integer, ForeignKey("jobscraped.id", ondelete="CASCADE"), primary_key=True),
 )
 
 
@@ -29,55 +30,47 @@ class JobAlertEmail(CommonBase, Base):
     platform = Column(String)
     body = Column(String)
 
-    # Many-to-many relationship with job entries
-    job_entries = relationship("JobAlertEmailJob", back_populates="email")
+    # Many-to-many relationship with scraped jobs
+    jobs = relationship("JobScraped", secondary=email_scrapedjob_mapping, back_populates="emails")
 
 
-class JobAlertEmailJob(CommonBase, Base):
-    """Represents individual job IDs extracted from emails with scraping status"""
+class Email(schemas.BaseModel):
+    """Email model"""
+
+    external_email_id: str
+    subject: str
+    sender: str
+    date_received: datetime
+    body: str
+    platform: str
+
+
+# class EmailOut(Email, schemas.Out):
+#     """Email model"""
+#
+#     jobs = list[schemas.JobOut]
+
+
+class JobScraped(CommonBase, Base):
+    """Represents scraped job postings from external sources with additional metadata."""
 
     external_job_id = Column(String, nullable=False)
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
     is_failed = Column(Boolean, nullable=False, server_default=expression.false())
     scrape_error = Column(String, nullable=True)
-    email_id = Column(Integer, ForeignKey("jobalertemail.id", ondelete="CASCADE"), nullable=False)
 
-    # Relationships
-    email = relationship("JobAlertEmail", back_populates="job_entries")
-    job_scraped = relationship("JobScraped", back_populates="jobalertemailjob")
+    # Job data
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    salary_min = Column(Float, nullable=True)
+    salary_max = Column(Float, nullable=True)
+    url = Column(String, nullable=True)
+    deadline = Column(TIMESTAMP(timezone=True), nullable=True)
+    company = Column(String, nullable=True)
+    location = Column(String, nullable=True)
 
-
-class JobScraped(CommonBase, Base, JobMixin):
-    """Represents scraped job postings from external sources with additional metadata."""
-
-    __table_args__ = get_job_constraints("scraped_")
-
-    jobalertemailjob_id = Column(Integer, ForeignKey("jobalertemailjob.id", ondelete="CASCADE"), nullable=False)
-
-    # Foreign key relationships to scraped tables
-    company_id = Column(Integer, ForeignKey("companyscraped.id", ondelete="SET NULL"), nullable=True, index=True)
-    location_id = Column(Integer, ForeignKey("locationscraped.id", ondelete="SET NULL"), nullable=True, index=True)
-
-    # Relationships to scraped models only
-    company = relationship("CompanyScraped", back_populates="jobscraped")
-    location = relationship("LocationScraped", back_populates="jobscraped")
-    jobalertemailjob = relationship("JobAlertEmailJob", back_populates="job_scraped")
-
-
-class CompanyScraped(CommonBase, Base, CompanyMixin):
-    """Represents scraped companies from external sources."""
-
-    # Relationships
-    jobscraped = relationship("JobScraped", back_populates="company")
-
-
-class LocationScraped(CommonBase, Base, LocationMixin):
-    """Represents scraped locations from external sources."""
-
-    __table_args__ = get_location_constraints("scraped_")
-
-    # Relationships
-    jobscraped = relationship("JobScraped", back_populates="location")
+    # Many-to-many relationship with scraped jobs
+    emails = relationship("JobAlertEmail", secondary=email_scrapedjob_mapping, back_populates="jobs")
 
 
 class ServiceLog(Base):

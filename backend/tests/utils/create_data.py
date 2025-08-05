@@ -1,7 +1,5 @@
-import copy
-
 from app import models, utils
-from app.eis.models import JobAlertEmail, JobAlertEmailJob
+from app.eis.models import JobAlertEmail, JobScraped
 from tests.utils.table_data import (
     USERS_DATA,
     COMPANIES_DATA,
@@ -18,7 +16,8 @@ from tests.utils.table_data import (
     INTERVIEWS_DATA,
     INTERVIEW_INTERVIEWER_MAPPINGS,
     JOB_ALERT_EMAILS_DATA,
-    JOB_ALERT_EMAIL_JOBS_DATA,
+    JOB_SCRAPED_DATA,
+    EMAIL_SCRAPEDJOB_MAPPINGS,
 )
 
 
@@ -194,13 +193,23 @@ def create_job_alert_emails(db) -> list[JobAlertEmail]:
     return emails
 
 
-def create_job_alert_email_jobs(db) -> list[JobAlertEmailJob]:
-    """Create sample job alert email jobs (extracted job IDs)"""
+def create_scraped_jobs(db, emails) -> list[JobScraped]:
+    """Create sample scraped jobs - some with scraped data, some without"""
 
-    print("Creating job alert email jobs...")
+    print("Creating scraped jobs...")
     # noinspection PyArgumentList
-    job_entries = [JobAlertEmailJob(**job_data) for job_data in JOB_ALERT_EMAIL_JOBS_DATA]
-    db.add_all(job_entries)
-    db.commit()
+    scraped_jobs = [JobScraped(**job_data) for job_data in JOB_SCRAPED_DATA]
 
-    return job_entries
+    # Add email mappings to scraped jobs
+    add_mappings(
+        primary_data=emails,
+        secondary_data=scraped_jobs,
+        mapping_data=EMAIL_SCRAPEDJOB_MAPPINGS,
+        primary_key="email_id",
+        secondary_key="scraped_job_ids",
+        relationship_attr="jobs",
+    )
+
+    db.add_all(scraped_jobs)
+    db.commit()
+    return scraped_jobs

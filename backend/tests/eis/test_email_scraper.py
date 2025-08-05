@@ -439,7 +439,7 @@ class TestGmailScraper:
 
         # Save job IDs
         job_ids = ["job123", "job456", "job789"]
-        job_records = GmailScraper.save_job_ids_to_db(email_record, job_ids, session)
+        job_records = GmailScraper.save_job_to_db(email_record, job_ids, session)
 
         assert len(job_records) == 3
 
@@ -467,11 +467,11 @@ class TestGmailScraper:
 
         # Save job IDs first time
         job_ids = ["job123", "job456"]
-        first_records = GmailScraper.save_job_ids_to_db(email_record, job_ids, session)
+        first_records = GmailScraper.save_job_to_db(email_record, job_ids, session)
         assert len(first_records) == 2
 
         # Try to save same job IDs again
-        second_records = GmailScraper.save_job_ids_to_db(email_record, job_ids, session)
+        second_records = GmailScraper.save_job_to_db(email_record, job_ids, session)
         assert len(second_records) == 0  # No new records created
 
         # Verify total count is still 2

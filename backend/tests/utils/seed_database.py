@@ -5,6 +5,7 @@ This script will drop all data and repopulate with hard-coded sample data.
 
 import os
 import sys
+from sqlalchemy import text, inspect
 
 from app.database import engine, SessionLocal, Base
 from create_data import (
@@ -19,19 +20,31 @@ from create_data import (
     create_job_applications,
     create_interviews,
     create_job_alert_emails,
-    create_job_alert_email_jobs,
+    create_scraped_jobs,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
 def reset_database() -> None:
-    """Drop all tables and recreate them"""
-    print("Dropping all tables...")
-    Base.metadata.drop_all(bind=engine)
-    print("Creating all tables...")
+    """Drop ALL tables in the database (including orphaned ones) and recreate from models"""
+    print("Dropping ALL tables in the database...")
+
+    with engine.connect() as conn:
+        # Get the database inspector to find all existing tables
+        inspector = inspect(engine)
+        table_names = inspector.get_table_names()
+
+        # For PostgreSQL: Drop tables with CASCADE to handle foreign key constraints
+        for table_name in table_names:
+            print(f"Dropping table: {table_name}")
+            conn.execute(text(f'DROP TABLE IF EXISTS "{table_name}" CASCADE'))
+
+        conn.commit()
+
+    print("Creating all tables from models...")
     Base.metadata.create_all(bind=engine)
-    print("Database reset complete!")
+    print("Database reset complete - all tables deleted and recreated from models!")
 
 
 def seed_database() -> None:
@@ -57,7 +70,7 @@ def seed_database() -> None:
         applications = create_job_applications(db)
         interviews = create_interviews(db, people)
         alert_emails = create_job_alert_emails(db)
-        alert_email_jobs = create_job_alert_email_jobs(db)
+        scraped_jobs = create_scraped_jobs(db, alert_emails)
 
         print("\n" + "=" * 50)
         print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
@@ -73,7 +86,7 @@ def seed_database() -> None:
         print(f"Job Applications: {len(applications)}")
         print(f"Interviews: {len(interviews)}")
         print(f"Job Alert Emails: {len(alert_emails)}")
-        print(f"Job Alert Email Jobs: {len(alert_email_jobs)}")
+        print(f"Scraped Jobs: {len(scraped_jobs)}")
         print("=" * 50)
 
     except Exception as e:
@@ -85,5 +98,4 @@ def seed_database() -> None:
 
 
 if __name__ == "__main__":
-
     seed_database()
