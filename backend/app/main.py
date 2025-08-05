@@ -33,14 +33,8 @@ app.include_router(tables.keyword_router)
 app.include_router(tables.file_router)
 app.include_router(eis_routers.scrapedjob_router)
 app.include_router(eis_routers.email_router)
+app.include_router(eis_routers.servicelog_router)
 
 # Authentification router
 app.include_router(user.user_router)
 app.include_router(auth.router)
-
-
-@app.get("/")
-def main() -> dict:
-    """main page"""
-
-    return {"message": "Welcome to the API. Hello World!!!"}

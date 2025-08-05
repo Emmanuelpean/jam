@@ -1183,14 +1183,94 @@ JOB_SCRAPED_DATA = [
     },
 ]
 
-# Add this near your other mapping constants (after INTERVIEW_INTERVIEWER_MAPPINGS)
+SERVICE_LOGS_DATA = [
+    {
+        "name": "Email Scraper Service",
+        "run_duration": 45.2,
+        "run_datetime": "2024-01-15 08:30:00",
+        "is_success": True,
+        "error_message": None,
+        "job_success_n": 25,
+        "job_fail_n": 2,
+    },
+    {
+        "name": "Job Data Processor",
+        "run_duration": 123.8,
+        "run_datetime": "2024-01-15 09:15:00",
+        "is_success": True,
+        "error_message": None,
+        "job_success_n": 89,
+        "job_fail_n": 5,
+    },
+    {
+        "name": "LinkedIn Job Scraper",
+        "run_duration": 67.4,
+        "run_datetime": "2024-01-15 10:00:00",
+        "is_success": False,
+        "error_message": "Rate limit exceeded after 30 requests",
+        "job_success_n": 15,
+        "job_fail_n": 45,
+    },
+    {
+        "name": "Indeed Job Scraper",
+        "run_duration": 89.1,
+        "run_datetime": "2024-01-15 11:30:00",
+        "is_success": True,
+        "error_message": None,
+        "job_success_n": 73,
+        "job_fail_n": 8,
+    },
+    {
+        "name": "Database Cleanup Service",
+        "run_duration": 12.3,
+        "run_datetime": "2024-01-15 12:00:00",
+        "is_success": True,
+        "error_message": None,
+        "job_success_n": None,
+        "job_fail_n": None,
+    },
+    {
+        "name": "Email Notification Service",
+        "run_duration": 3.7,
+        "run_datetime": "2024-01-15 13:45:00",
+        "is_success": False,
+        "error_message": "SMTP server connection timeout",
+        "job_success_n": 0,
+        "job_fail_n": 12,
+    },
+    {
+        "name": "Job Matching Algorithm",
+        "run_duration": 156.9,
+        "run_datetime": "2024-01-15 14:20:00",
+        "is_success": True,
+        "error_message": None,
+        "job_success_n": 234,
+        "job_fail_n": 18,
+    },
+    {
+        "name": "Resume Parser Service",
+        "run_duration": 78.5,
+        "run_datetime": "2024-01-15 15:30:00",
+        "is_success": False,
+        "error_message": "PDF parsing library crashed on corrupted file",
+        "job_success_n": 45,
+        "job_fail_n": 67,
+    },
+    {
+        "name": "Application Status Sync",
+        "run_duration": 34.2,
+        "run_datetime": "2024-01-16 08:00:00",
+        "is_success": True,
+        "error_message": None,
+        "job_success_n": 156,
+        "job_fail_n": 3,
+    },
+]
+
 
 EMAIL_SCRAPEDJOB_MAPPINGS = [
-    # Email 1 (LinkedIn Alert 001) has multiple scraped jobs
     {"email_id": 1, "scraped_job_ids": [1, 2, 4]},  # Mix of scraped and unscraped jobs
-    # Email 2 (Indeed Alert 002) has some jobs
     {"email_id": 2, "scraped_job_ids": [3, 5]},  # One scraped, one unscraped
-    # Email 3 (LinkedIn Alert 003) has failed jobs
     {"email_id": 3, "scraped_job_ids": [6, 7]},  # Both failed scraping attempts
 ]
 

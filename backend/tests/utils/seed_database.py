@@ -5,6 +5,7 @@ This script will drop all data and repopulate with hard-coded sample data.
 
 import os
 import sys
+
 from sqlalchemy import text, inspect
 
 from app.database import engine, session_local, Base
@@ -21,6 +22,7 @@ from create_data import (
     create_interviews,
     create_job_alert_emails,
     create_scraped_jobs,
+    create_service_logs,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -71,6 +73,7 @@ def seed_database() -> None:
         interviews = create_interviews(db, people)
         alert_emails = create_job_alert_emails(db)
         scraped_jobs = create_scraped_jobs(db, alert_emails)
+        service_logs = create_service_logs(db)
 
         print("\n" + "=" * 50)
         print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
@@ -87,6 +90,7 @@ def seed_database() -> None:
         print(f"Interviews: {len(interviews)}")
         print(f"Job Alert Emails: {len(alert_emails)}")
         print(f"Scraped Jobs: {len(scraped_jobs)}")
+        print(f"Service Logs: {len(service_logs)}")
         print("=" * 50)
 
     except Exception as e:

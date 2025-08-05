@@ -31,6 +31,7 @@ scrapedjob_router = generate_crud_router(
     not_found_msg="Scraped job not found",
 )
 
+
 servicelog_router = generate_crud_router(
     table_model=ServiceLog,
     create_schema=ServiceLog,

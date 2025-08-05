@@ -14,7 +14,7 @@ email_scrapedjob_mapping = Table(
     "email_scrapedjob_mapping",
     Base.metadata,
     Column("email_id", Integer, ForeignKey("jobalertemail.id", ondelete="CASCADE"), primary_key=True),
-    Column("job_id", Integer, ForeignKey("jobscraped.id", ondelete="CASCADE"), primary_key=True),
+    Column("job_id", Integer, ForeignKey("scrapedjob.id", ondelete="CASCADE"), primary_key=True),
 )
 
 
