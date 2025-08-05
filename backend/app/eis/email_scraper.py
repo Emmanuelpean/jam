@@ -20,7 +20,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from app.database import SessionLocal
+from app.database import session_local
 from app.eis.job_scraper import LinkedinJobScraper, IndeedScrapper
 from app.eis.models import JobAlertEmail, JobScraped, ServiceLog, Email
 from app.models import User
@@ -196,7 +196,7 @@ class GmailScraper(object):
     @staticmethod
     def save_email_to_db(
         email_data: Email,
-        db: SessionLocal,
+        db,
     ) -> tuple[JobAlertEmail, bool]:
         """Save email and job IDs to database
         :param email_data: Dictionary containing email metadata
@@ -280,7 +280,7 @@ class GmailScraper(object):
     def save_jobs_to_db(
         email_record: JobAlertEmail,
         job_ids: list[str],
-        db: SessionLocal,
+        db,
     ) -> list[JobScraped]:
         """Save extracted job IDs to the database and link them to the email
         :param email_record: JobAlertEmail record instance
@@ -334,7 +334,7 @@ class GmailScraper(object):
     def save_job_json_to_db(
         job_records: list[JobScraped] | JobScraped,
         job_data: list[dict] | dict,
-        db: SessionLocal,
+        db,
     ) -> None:
         """Save job data to the database"""
 
@@ -377,7 +377,7 @@ class GmailScraper(object):
             "duration_seconds": 0.0,
         }
 
-        with SessionLocal() as db:
+        with session_local() as db:
 
             try:
                 users = db.query(User).all()

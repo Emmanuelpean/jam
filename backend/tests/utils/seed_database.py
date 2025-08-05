@@ -7,7 +7,7 @@ import os
 import sys
 from sqlalchemy import text, inspect
 
-from app.database import engine, SessionLocal, Base
+from app.database import engine, session_local, Base
 from create_data import (
     create_users,
     create_companies,
@@ -55,7 +55,7 @@ def seed_database() -> None:
     reset_database()
 
     # Create a database session
-    db = SessionLocal()
+    db = session_local()
 
     try:
         # Create data in order of dependencies
