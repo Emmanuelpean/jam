@@ -45,22 +45,22 @@ class Email(schemas.BaseModel):
     platform: str
 
 
-# class EmailOut(Email, schemas.Out):
-#     """Email model"""
-#
-#     jobs = list[schemas.JobOut]
+class EmailOut(Email, schemas.Out):
+    """Email model"""
+
+    jobs: list[schemas.JobOut]
 
 
 class JobScraped(CommonBase, Base):
     """Represents scraped job postings from external sources with additional metadata."""
 
-    external_job_id = Column(String, nullable=False)
+    external_job_id = Column(String, nullable=False, unique=True)
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
     is_failed = Column(Boolean, nullable=False, server_default=expression.false())
     scrape_error = Column(String, nullable=True)
 
     # Job data
-    title = Column(String, nullable=False)
+    title = Column(String, nullable=True)
     description = Column(String, nullable=True)
     salary_min = Column(Float, nullable=True)
     salary_max = Column(Float, nullable=True)

@@ -268,18 +268,16 @@ class GmailScraper(object):
             ad_match = re.search(r"[?&]mo=([^&>\s]+)", url, re.IGNORECASE)
             if ad_match:
                 url = self.get_indeed_redirected_url(url)
-                print(url)
 
             # Try to extract 'jk' parameter (for rc URLs)
             jk_match = re.search(r"[?&]jk=([^&>\s]+)", url, re.IGNORECASE)
             if jk_match:
                 job_ids.append(jk_match.group(1))
 
-        print(len(job_ids))
         return list(dict.fromkeys(job_ids))
 
     @staticmethod
-    def save_job_to_db(
+    def save_jobs_to_db(
         email_record: JobAlertEmail,
         job_ids: list[str],
         db: SessionLocal,
@@ -300,7 +298,6 @@ class GmailScraper(object):
                 .filter(
                     JobScraped.external_job_id == job_id,
                     JobScraped.owner_id == email_record.owner_id,
-                    JobScraped.email_id == email_record.id,
                 )
                 .first()
             )
@@ -312,11 +309,16 @@ class GmailScraper(object):
                 new_job = JobScraped(
                     external_job_id=job_id,
                     owner_id=email_record.owner_id,
-                    email_id=email_record.id,
                 )
-
+                new_job.emails.append(email_record)
                 db.add(new_job)
                 job_records.append(new_job)
+
+            else:
+                # Check if this email is already linked to avoid duplicates
+                if email_record not in existing_entry.emails:
+                    existing_entry.emails.append(email_record)
+                job_records.append(existing_entry)
 
         db.commit()
 
@@ -330,8 +332,8 @@ class GmailScraper(object):
 
     @staticmethod
     def save_job_json_to_db(
-        job_records: list[JobScraped],
-        job_data: list[dict],
+        job_records: list[JobScraped] | JobScraped,
+        job_data: list[dict] | dict,
         db: SessionLocal,
     ) -> None:
         """Save job data to the database"""
@@ -343,13 +345,13 @@ class GmailScraper(object):
 
         for job, record in zip(job_data, job_records):
 
-            record.company_name = job_data["company"]
-            record.location = job_data["location"]
-            record.salary_min = job_data["salary"]["min_amount"]
-            record.salary_max = job_data["salary"]["max_amount"]
-            record.job_title = job_data["job"]["title"]
-            record.job_description = job_data["job"]["description"]
-            record.job_url = job_data["job"]["url"]
+            record.company = job["company"]
+            record.location = job["location"]
+            record.salary_min = job["job"]["salary"]["min_amount"]
+            record.salary_max = job["job"]["salary"]["max_amount"]
+            record.title = job["job"]["title"]
+            record.description = job["job"]["description"]
+            record.url = job["job"]["url"]
             record.is_scraped = True
             db.commit()
 
@@ -385,6 +387,8 @@ class GmailScraper(object):
                 for user in users:
                     logger.info(f"Processing user: {user.email} (ID: {user.id})")
 
+                    # --------------------------------------------- EMAILS ---------------------------------------------
+
                     # Get the list of all emails
                     try:
                         email_external_ids = self.search_messages(user.email, True, timedelta_days)
@@ -400,21 +404,20 @@ class GmailScraper(object):
                         try:
                             email_data = self.get_message_data(email_external_id)
                         except Exception as exception:
-                            logger.exception(
-                                f"Failed to get email data for email ID {email_external_id} due to error: {exception}. Skipping email."
-                            )
+                            message = f"Failed to get email data for email ID {email_external_id} due to error: {exception}. Skipping email."
+                            logger.exception(message)
                             continue  # next email
 
                         # Save the email data
                         try:
                             logger.info(f"Saving email: {email_data.subject}")
                             email_record, is_new = self.save_email_to_db(email_data, db)
-                            stats["emails_saved"] += 1
                         except Exception as exception:
-                            logger.exception(
-                                f"Failed to save email data for email ID {email_external_id} due to error: {exception}. Skipping email."
-                            )
+                            message = f"Failed to save email data for email ID {email_external_id} due to error: {exception}. Skipping email."
+                            logger.exception(message)
                             continue  # next email
+
+                        # -------------------------------------------- JOBS --------------------------------------------
 
                         # If the email is not already in the database...
                         if is_new:
@@ -432,25 +435,21 @@ class GmailScraper(object):
 
                             # Save the retrieved job ids to the database
                             try:
-                                self.save_job_to_db(email_record, job_ids, db)
+                                self.save_jobs_to_db(email_record, job_ids, db)
                                 stats["jobs_extracted"] += len(job_ids)
                                 logger.info(f"Extracted {len(job_ids)} job IDs from {email_record.platform}")
                             except Exception as exception:
-                                logger.exception(
-                                    f"Failed to save job IDs for email ID {email_external_id} due to error: {exception}. Skipping email."
-                                )
+                                message = f"Failed to save job IDs for email ID {email_external_id} due to error: {exception}. Skipping email."
+                                logger.exception(message)
                                 continue  # next email
                         else:
                             stats["emails_existing"] += 1
                             logger.info("Email already exists in database. Skipping email.")
 
+                # -------------------------------------------- JOB SCRAPPING -------------------------------------------
+
                 # Get all the job ids from the table and scrape them
-                job_records = (
-                    db.query(JobScraped)
-                    .filter(JobScraped.is_scraped.is_(False))
-                    .distinct(JobScraped.external_job_id)
-                    .all()
-                )
+                job_records = db.query(JobScraped).filter(JobScraped.is_scraped.is_(False)).all()
 
                 for job_record in job_records:
                     if job_record.emails[0].platform == "linkedin":
@@ -460,15 +459,17 @@ class GmailScraper(object):
                     else:
                         logger.info(f"Unknown platform for job {job_record.external_job_id}. Skipping job.")
                         continue  # next job record
+
+                    # Scrap the data and save them to the database
                     logger.info(f"Scraping job ID: {job_record.external_job_id}")
                     try:
                         job_data = scrapper.scrape_job()
                         self.save_job_json_to_db(job_record, job_data, db)
                         stats["jobs_scraped"] += 1
                     except Exception as exception:
-                        logger.exception(
-                            f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: {exception}. Skipping job."
-                        )
+                        message = f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: {exception}. Skipping job."
+                        logger.exception(message)
+                        job_record.is_scraped = True
                         job_record.error_msg = f"{str(exception)}"
                         db.commit()
                         stats["jobs_failed"] += 1
@@ -519,7 +520,7 @@ class GmailScraperService:
         :param period_hours: Hours between each scraping run"""
 
         if self.is_running:
-            print("Service is already running")
+            logger.info("Service is already running")
             return
 
         self.is_running = True
@@ -530,16 +531,16 @@ class GmailScraperService:
         self.thread.daemon = False
         self.thread.start()
 
-        print(f"Gmail scraping service started with {period_hours}h interval")
+        logger.info(f"Gmail scraping service started with {period_hours}h interval")
 
     def stop(self) -> None:
         """Stop the scraping service"""
 
         if not self.is_running:
-            print("Service is not running")
+            logger.info("Service is not running")
             return
 
-        print("Stopping Gmail scraping service...")
+        logger.info("Stopping Gmail scraping service...")
         self.is_running = False
         self.stop_event.set()
 
@@ -547,7 +548,7 @@ class GmailScraperService:
             while self.thread.is_alive():
                 self.thread.join(timeout=5)  # Wait up to 5 seconds for clean shutdown
 
-        print("Gmail scraping service stopped")
+        logger.info("Gmail scraping service stopped")
 
     def _run_service(self, period_hours: float) -> None:
         """Internal method that runs the scraping loop
@@ -555,19 +556,19 @@ class GmailScraperService:
 
         while self.is_running and not self.stop_event.is_set():
             try:
-                print(f"[{datetime.now()}] Starting scraping run...")
+                logger.info(f"[{datetime.now()}] Starting scraping run...")
 
                 # Run the scraping
                 result = self.scraper.run_scraping(timedelta_days=2)
 
                 duration = result.get("duration_seconds", 0)
                 sleep_time = max([0, period_hours * 3600 - duration])
-                print(f"[{datetime.now()}] Scraping completed in {duration:.2f}s. Sleeping for {sleep_time:.2f}s")
+                logger.info(f"[{datetime.now()}] Scraping completed in {duration:.2f}s. Sleeping for {sleep_time:.2f}s")
                 if self.stop_event.wait(timeout=sleep_time):
                     break
 
             except Exception as e:
-                print(f"[{datetime.now()}] Error in scraping service: {e}")
+                logger.info(f"[{datetime.now()}] Error in scraping service: {e}")
                 # Sleep for a shorter time on error to retry sooner
                 if self.stop_event.wait(timeout=300):  # 5 minutes
                     break

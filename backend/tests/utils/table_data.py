@@ -13,7 +13,7 @@ USERS_DATA = [
         "password": "test_password",
     },
     {
-        "email": "emmanuel.pean@gmail.com",
+        "email": "emmanuelpean@gmail.com",
         "password": "password2",
     },
     {
@@ -1113,7 +1113,7 @@ JOB_ALERT_EMAILS_DATA = [
 JOB_SCRAPED_DATA = [
     # Jobs with scraped data (is_scraped=True)
     {
-        "external_job_id": "linkedin_3789012345",
+        "external_job_id": "3789012345",
         "owner_id": 1,
         "is_scraped": True,
         "is_failed": False,
@@ -1126,7 +1126,7 @@ JOB_SCRAPED_DATA = [
         "url": "https://linkedin.com/jobs/view/3789012345",
     },
     {
-        "external_job_id": "indeed_987654321",
+        "external_job_id": "987654321",
         "owner_id": 1,
         "is_scraped": True,
         "is_failed": False,
@@ -1139,7 +1139,7 @@ JOB_SCRAPED_DATA = [
         "url": "https://indeed.com/viewjob?jk=987654321",
     },
     {
-        "external_job_id": "linkedin_1122334455",
+        "external_job_id": "1122334455",
         "owner_id": 1,
         "is_scraped": True,
         "is_failed": False,
@@ -1151,33 +1151,32 @@ JOB_SCRAPED_DATA = [
         "salary_max": 150000.0,
         "url": "https://linkedin.com/jobs/view/1122334455",
     },
-    # Jobs without scraped data (is_scraped=False)
     {
-        "external_job_id": "linkedin_5566778899",
+        "external_job_id": "5566778899",
         "owner_id": 1,
-        "is_scraped": False,
+        "is_scraped": True,
         "is_failed": False,
         "title": "Software Engineer",  # Minimal data - just what's needed
     },
     {
-        "external_job_id": "indeed_1357924680",
+        "external_job_id": "1357924680",
         "owner_id": 1,
-        "is_scraped": False,
+        "is_scraped": True,
         "is_failed": False,
         "title": "Backend Developer",
     },
     {
-        "external_job_id": "glassdoor_2468135790",
+        "external_job_id": "2468135790",
         "owner_id": 1,
-        "is_scraped": False,
+        "is_scraped": True,
         "is_failed": True,
         "scrape_error": "Page not found - job posting may have been removed",
         "title": "Data Engineer",
     },
     {
-        "external_job_id": "linkedin_9988776655",
+        "external_job_id": "9988776655",
         "owner_id": 1,
-        "is_scraped": False,
+        "is_scraped": True,
         "is_failed": True,
         "scrape_error": "Scraping blocked - rate limit exceeded",
         "title": "ML Engineer",
