@@ -396,6 +396,8 @@ def download_file(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
 ):
+    """Download a file by ID."""
+
     # Get file record from database
     file_record = (
         db.query(models.File).filter(models.File.id == file_id, models.File.owner_id == current_user.id).first()
