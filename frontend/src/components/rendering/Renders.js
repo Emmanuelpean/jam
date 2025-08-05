@@ -11,7 +11,7 @@ import { filesApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import InterviewsTable from "../tables/InterviewTable";
 
-const createModalManager = (ModalComponent, modalProp) => {
+const createModalManager = (ModalComponent) => {
 	return ({ children, onEdit }) => {
 		const [showModal, setShowModal] = useState(false);
 		const [selectedItem, setSelectedItem] = useState(null);
@@ -39,7 +39,7 @@ const createModalManager = (ModalComponent, modalProp) => {
 		const modalProps = {
 			show: showModal,
 			onHide: closeModal,
-			[modalProp]: selectedItem,
+			data: selectedItem,
 			onEdit: handleEdit,
 		};
 
@@ -52,13 +52,13 @@ const createModalManager = (ModalComponent, modalProp) => {
 	};
 };
 
-const LocationModalManager = createModalManager(LocationViewModal, "location");
-const CompanyModalManager = createModalManager(CompanyViewModal, "company");
-const PersonModalManager = createModalManager(PersonViewModal, "person");
-const KeywordModalManager = createModalManager(KeywordViewModal, "keyword");
-const JobApplicationModalManager = createModalManager(JobApplicationViewModal, "jobApplication");
-const JobModalManager = createModalManager(JobViewModal, "job");
-const AggregatorModalManager = createModalManager(AggregatorViewModal, "aggregator");
+const LocationModalManager = createModalManager(LocationViewModal);
+const CompanyModalManager = createModalManager(CompanyViewModal);
+const PersonModalManager = createModalManager(PersonViewModal);
+const KeywordModalManager = createModalManager(KeywordViewModal);
+const JobApplicationModalManager = createModalManager(JobApplicationViewModal);
+const JobModalManager = createModalManager(JobViewModal);
+const AggregatorModalManager = createModalManager(AggregatorViewModal);
 
 export const getApplicationStatusBadgeClass = (status) => {
 	switch (status?.toLowerCase()) {

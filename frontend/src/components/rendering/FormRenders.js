@@ -4,6 +4,7 @@ import {
 	aggregatorsApi,
 	apiHelpers,
 	companiesApi,
+	jobApplicationsApi,
 	jobsApi,
 	keywordsApi,
 	locationsApi,
@@ -15,6 +16,8 @@ import { LocationFormModal } from "../modals/LocationModal";
 import { KeywordFormModal } from "../modals/KeywordModal";
 import { PersonFormModal } from "../modals/PersonModal";
 import { AggregatorFormModal } from "../modals/AggregatorModal";
+import JobFormModal from "../modals/job/JobModal";
+import JobApplicationFormModal from "../modals/job_application/JobApplicationModal";
 
 // Hook for country loading that can be used by components
 export const useCountries = () => {
@@ -43,7 +46,6 @@ export const useCountries = () => {
 	return { countries, loading, error };
 };
 
-// Enhanced hook for fetching form options data with modal management
 export const useFormOptions = () => {
 	const { token } = useAuth();
 	const [companies, setCompanies] = useState([]);
@@ -52,6 +54,7 @@ export const useFormOptions = () => {
 	const [persons, setPersons] = useState([]);
 	const [aggregators, setAggregators] = useState([]);
 	const [jobs, setJobs] = useState([]);
+	const [jobApplications, setJobApplications] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 
@@ -61,6 +64,8 @@ export const useFormOptions = () => {
 	const [showKeywordModal, setShowKeywordModal] = useState(false);
 	const [showPersonModal, setShowPersonModal] = useState(false);
 	const [showAggregatorModal, setShowAggregatorModal] = useState(false);
+	const [showJobModal, setShowJobModal] = useState(false);
+	const [showJobApplicationModal, setShowJobApplicationModal] = useState(false);
 
 	useEffect(() => {
 		const fetchOptions = async () => {
@@ -70,15 +75,23 @@ export const useFormOptions = () => {
 			setError(null);
 
 			try {
-				const [companiesData, locationsData, keywordsData, personsData, aggregatorsData, jobsData] =
-					await Promise.all([
-						companiesApi.getAll(token),
-						locationsApi.getAll(token),
-						keywordsApi.getAll(token),
-						personsApi.getAll(token),
-						aggregatorsApi.getAll(token),
-						jobsApi.getAll(token),
-					]);
+				const [
+					companiesData,
+					locationsData,
+					keywordsData,
+					personsData,
+					aggregatorsData,
+					jobsData,
+					jobApplicationsData,
+				] = await Promise.all([
+					companiesApi.getAll(token),
+					locationsApi.getAll(token),
+					keywordsApi.getAll(token),
+					personsApi.getAll(token),
+					aggregatorsApi.getAll(token),
+					jobsApi.getAll(token),
+					jobApplicationsApi.getAll(token),
+				]);
 
 				setCompanies(apiHelpers.toSelectOptions(companiesData));
 				setLocations(apiHelpers.toSelectOptions(locationsData));
@@ -86,6 +99,7 @@ export const useFormOptions = () => {
 				setPersons(apiHelpers.toSelectOptions(personsData));
 				setAggregators(apiHelpers.toSelectOptions(aggregatorsData));
 				setJobs(apiHelpers.toSelectOptions(jobsData));
+				setJobApplications(apiHelpers.toSelectOptions(jobApplicationsData, "job"));
 			} catch (err) {
 				console.error("Error fetching form options:", err);
 				setError(err);
@@ -128,6 +142,10 @@ export const useFormOptions = () => {
 					data = await jobsApi.getAll(token);
 					setJobs(apiHelpers.toSelectOptions(data));
 					break;
+				case "jobApplications":
+					data = await jobApplicationsApi.getAll(token);
+					setJobApplications(apiHelpers.toSelectOptions(data));
+					break;
 				default:
 					console.warn(`Unknown option type: ${type}`);
 			}
@@ -151,6 +169,12 @@ export const useFormOptions = () => {
 
 	const openAggregatorModal = () => setShowAggregatorModal(true);
 	const closeAggregatorModal = () => setShowAggregatorModal(false);
+
+	const openJobModal = () => setShowJobModal(true);
+	const closeJobModal = () => setShowJobModal(false);
+
+	const openJobApplicationModal = () => setShowJobApplicationModal(true);
+	const closeJobApplicationModal = () => setShowJobApplicationModal(false);
 
 	// Handle successful item creation
 	const handleCompanyAddSuccess = (newCompany) => {
@@ -198,6 +222,24 @@ export const useFormOptions = () => {
 		closeAggregatorModal();
 	};
 
+	const handleJobAddSuccess = (newJob) => {
+		const newOption = {
+			value: newJob.id,
+			label: newJob.title,
+		};
+		setJobs((prev) => [...prev, newOption]);
+		closeJobModal();
+	};
+
+	const handleJobApplicationAddSuccess = (newJobApplication) => {
+		const newOption = {
+			value: newJobApplication.id,
+			label: newJobApplication.title,
+		};
+		setJobApplications((prev) => [...prev, newOption]);
+		closeJobApplicationModal();
+	};
+
 	// Render modal functions
 	const renderCompanyModal = () => (
 		<CompanyFormModal show={showCompanyModal} onHide={closeCompanyModal} onSuccess={handleCompanyAddSuccess} />
@@ -223,31 +265,50 @@ export const useFormOptions = () => {
 		/>
 	);
 
+	const renderJobModal = () => (
+		<JobFormModal show={showJobModal} onHide={closeJobModal} onSuccess={handleJobAddSuccess} />
+	);
+
+	const renderJobApplicationModal = () => (
+		<JobApplicationFormModal
+			show={showJobApplicationModal}
+			onHide={closeJobApplicationModal}
+			onSuccess={handleJobApplicationAddSuccess}
+		/>
+	);
+
 	return {
-		companies,
-		locations,
-		keywords,
-		persons,
-		aggregators,
-		jobs,
 		loading,
 		error,
 		refreshOptions,
 		// Company modal management
+		companies,
 		openCompanyModal,
 		renderCompanyModal,
 		// Location modal management
+		locations,
 		openLocationModal,
 		renderLocationModal,
 		// Keyword modal management
+		keywords,
 		openKeywordModal,
 		renderKeywordModal,
 		// Person modal management
+		persons,
 		openPersonModal,
 		renderPersonModal,
 		// Aggregator modal management
+		aggregators,
 		openAggregatorModal,
 		renderAggregatorModal,
+		// Job modal management
+		jobs,
+		openJobModal,
+		renderJobModal,
+		// JobApplication modal management
+		jobApplications,
+		openJobApplicationModal,
+		renderJobApplicationModal,
 	};
 };
 
