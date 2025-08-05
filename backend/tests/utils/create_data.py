@@ -1,5 +1,5 @@
 from app import models, utils
-from app.eis.models import JobAlertEmail, JobScraped
+from app.eis.models import JobAlertEmail, ScrapedJob
 from tests.utils.table_data import (
     USERS_DATA,
     COMPANIES_DATA,
@@ -193,12 +193,12 @@ def create_job_alert_emails(db) -> list[JobAlertEmail]:
     return emails
 
 
-def create_scraped_jobs(db, emails) -> list[JobScraped]:
+def create_scraped_jobs(db, emails) -> list[ScrapedJob]:
     """Create sample scraped jobs - some with scraped data, some without"""
 
     print("Creating scraped jobs...")
     # noinspection PyArgumentList
-    scraped_jobs = [JobScraped(**job_data) for job_data in JOB_SCRAPED_DATA]
+    scraped_jobs = [ScrapedJob(**job_data) for job_data in JOB_SCRAPED_DATA]
 
     # Add email mappings to scraped jobs
     add_mappings(

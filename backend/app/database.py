@@ -1,4 +1,5 @@
 """Database functions"""
+
 from typing import Generator, Any
 
 from sqlalchemy import create_engine

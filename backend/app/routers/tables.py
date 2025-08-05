@@ -1,7 +1,6 @@
 import base64
 
 from fastapi import APIRouter, Depends, status, Request, HTTPException, Response
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app import models, database, oauth2, schemas
@@ -9,16 +8,16 @@ from app import models, database, oauth2, schemas
 
 def generate_crud_router(
     *,
-    table_model: models.Base,  # SQLAlchemy model
-    create_schema: BaseModel,  # Pydantic schema for creation
-    update_schema: BaseModel,  # Pydantic schema for updates
-    out_schema: BaseModel,  # Pydantic schema for output
+    table_model,  # SQLAlchemy model
+    create_schema,  # Pydantic schema for creation
+    update_schema,  # Pydantic schema for updates
+    out_schema,  # Pydantic schema for output
     endpoint: str,  # e.g. "companies"
     not_found_msg: str = "Entry not found",
-    many_to_many_fields: dict = None,  # New parameter for M2M relationships
+    many_to_many_fields: dict = None,
+    admin_only: bool = False,
 ) -> APIRouter:
     """Generate a FastAPI router with standard CRUD endpoints for a given table.
-
     :param table_model: SQLAlchemy model class representing the database table.
     :param create_schema: Pydantic schema used for creating new entries.
     :param update_schema: Pydantic schema used for updating existing entries.
@@ -33,17 +32,26 @@ def generate_crud_router(
                                        'remote_key': 'remote_foreign_key'
                                    }
                                }
+    :param admin_only: If True, only authenticated users with admin role will be able to perform CRUD operations.
     :return: Configured APIRouter instance with CRUD endpoints."""
 
     router = APIRouter(prefix=f"/{endpoint}", tags=[endpoint])
 
-    # Helper function to handle many-to-many relationships
-    def handle_many_to_many_create(db: Session, entry_id: int, item_data: dict):
-        """Handle creation of many-to-many relationships."""
+    def handle_many_to_many_create(
+        db: Session,
+        entry_id: int,
+        item_data: dict,
+    ):
+        """Handle the creation of many-to-many relationships.
+        :param db: Database session
+        :param entry_id: ID of the entry to which the relationships are being added
+        :param item_data: Data containing the relationships to be added"""
+
         if not many_to_many_fields:
             return
 
         for field_name, m2m_config in many_to_many_fields.items():
+
             if field_name in item_data and item_data[field_name] is not None:
                 values = item_data[field_name]
                 if isinstance(values, list):
@@ -55,8 +63,16 @@ def generate_crud_router(
                     for value_id in values:
                         db.execute(association_table.insert().values(**{local_key: entry_id, remote_key: value_id}))
 
-    def handle_many_to_many_update(db: Session, entry_id: int, item_data: dict):
-        """Handle updating of many-to-many relationships."""
+    def handle_many_to_many_update(
+        db: Session,
+        entry_id: int,
+        item_data: dict,
+    ):
+        """Handle updating of many-to-many relationships.
+        :param db: Database session
+        :param entry_id: ID of the entry to which the relationships are being added
+        :param item_data: Data containing the relationships to be added"""
+
         if not many_to_many_fields:
             return
 
@@ -90,8 +106,10 @@ def generate_crud_router(
         :param limit: Maximum number of entries to return.
         :return: List of entries."""
 
-        # Start with base query
+        # noinspection PyTypeChecker
         query = db.query(table_model).filter(table_model.owner_id == current_user.id)
+        if admin_only:
+            query = query.filter(table_model.is_admin)
 
         # Get all query parameters except 'limit'
         filter_params = dict(request.query_params)
@@ -127,6 +145,7 @@ def generate_crud_router(
 
         return query.limit(limit).all()
 
+    # noinspection PyTypeHints
     @router.get("/{entry_id}", response_model=out_schema)
     def get_one(
         entry_id: int,
@@ -141,7 +160,11 @@ def generate_crud_router(
         :raises: HTTPException with a 404 status code if the entry is not found.
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-        entry = db.query(table_model).filter(table_model.id == entry_id).first()
+        # noinspection PyTypeChecker
+        query = db.query(table_model).filter(table_model.id == entry_id)
+        if admin_only:
+            query = query.filter(table_model.is_admin)
+        entry = query.first()
 
         if not entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
@@ -153,6 +176,7 @@ def generate_crud_router(
 
         return entry
 
+    # noinspection PyTypeHints
     @router.post("/", status_code=status.HTTP_201_CREATED, response_model=out_schema)
     def create(
         item: create_schema,
@@ -164,6 +188,12 @@ def generate_crud_router(
         :param db: Database session.
         :param current_user: Authenticated user.
         :return: The created entry."""
+
+        if admin_only:
+            if not current_user.is_admin:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
+                )
 
         # Extract the item data and exclude many-to-many fields from main creation
         item_dict = item.model_dump()
@@ -191,6 +221,7 @@ def generate_crud_router(
 
         return new_entry
 
+    # noinspection PyTypeHints
     @router.put("/{entry_id}", response_model=out_schema)
     def update(
         entry_id: int,
@@ -208,8 +239,11 @@ def generate_crud_router(
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action.
         :raises: HTTPException with a 400 status code if no field is provided for the update."""
 
-        entry_query = db.query(table_model).filter(table_model.id == entry_id)
-        entry = entry_query.first()
+        # noinspection PyTypeChecker
+        query = db.query(table_model).filter(table_model.id == entry_id)
+        if admin_only:
+            query = query.filter(table_model.is_admin)
+        entry = query.first()
 
         if not entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
@@ -236,7 +270,7 @@ def generate_crud_router(
 
         # Update main fields if any
         if main_data:
-            entry_query.update(main_data, synchronize_session=False)
+            query.update(main_data, synchronize_session=False)
 
         # Handle many-to-many relationships
         if m2m_data:
@@ -245,7 +279,7 @@ def generate_crud_router(
         db.commit()
 
         # Return the updated entry
-        return entry_query.first()
+        return query.first()
 
     @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
     def delete(
@@ -261,8 +295,11 @@ def generate_crud_router(
         :raises: HTTPException with a 404 status code if an entry is not found.
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-        entry_query = db.query(table_model).filter(table_model.id == entry_id)
-        entry = entry_query.first()
+        # noinspection PyTypeChecker
+        query = db.query(table_model).filter(table_model.id == entry_id)
+        if admin_only:
+            query = query.filter(table_model.is_admin)
+        entry = query.first()
 
         if not entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
@@ -280,10 +317,10 @@ def generate_crud_router(
 
                 db.execute(association_table.delete().where(getattr(association_table.c, local_key) == entry_id))
 
-        entry_query.delete(synchronize_session=False)
+        query.delete(synchronize_session=False)
         db.commit()
 
-        return entry_query
+        return query
 
     return router
 
@@ -399,6 +436,7 @@ def download_file(
     """Download a file by ID."""
 
     # Get file record from database
+    # noinspection PyTypeChecker
     file_record = (
         db.query(models.File).filter(models.File.id == file_id, models.File.owner_id == current_user.id).first()
     )

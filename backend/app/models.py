@@ -97,6 +97,7 @@ class User(Base):
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
     theme = Column(String, nullable=False, server_default="mixed-berry")
+    is_admin = Column(Boolean, nullable=False, server_default=expression.false())
 
 
 class Company(CommonBase, Base):

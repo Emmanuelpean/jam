@@ -4,12 +4,9 @@ Defines SQLAlchemy ORM models for email-based job scraping functionality.
 Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
-from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float, TIMESTAMP, Table
+from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float, TIMESTAMP, Table, text, func
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
-from app import schemas
-from datetime import datetime
-from app.routers.tables import generate_crud_router
 
 from app.models import CommonBase, Base
 
@@ -32,43 +29,10 @@ class JobAlertEmail(CommonBase, Base):
     body = Column(String)
 
     # Many-to-many relationship with scraped jobs
-    jobs = relationship("JobScraped", secondary=email_scrapedjob_mapping, back_populates="emails")
+    jobs = relationship("ScrapedJob", secondary=email_scrapedjob_mapping, back_populates="emails")
 
 
-class Email(schemas.BaseModel):
-    """Email model"""
-
-    external_email_id: str
-    subject: str | None = None
-    sender: str | None = None
-    date_received: datetime | None = None
-    platform: str | None = None
-    body: str | None = None
-
-
-class EmailUpdate(Email):
-    """Email model"""
-
-    external_email_id: str | None = None
-
-
-class EmailOut(Email, schemas.Out):
-    """Email model"""
-
-    jobs: list[schemas.JobOut]
-
-
-generate_crud_router(
-    table_model=JobAlertEmail,
-    create_schema=Email,
-    update_schema=EmailUpdate,
-    out_schema=EmailOut,
-    endpoint="jobalertemails",
-    not_found_msg="Job alert email not found",
-)
-
-
-class JobScraped(CommonBase, Base):
+class ScrapedJob(CommonBase, Base):
     """Represents scraped job postings from external sources with additional metadata."""
 
     external_job_id = Column(String, nullable=False, unique=True)
@@ -90,45 +54,6 @@ class JobScraped(CommonBase, Base):
     emails = relationship("JobAlertEmail", secondary=email_scrapedjob_mapping, back_populates="jobs")
 
 
-class JobScrape(schemas.BaseModel):
-
-    external_job_id: str
-    is_scraped: bool = False
-    is_failed: bool = False
-    scrape_error: str | None = None
-
-    title: str | None = None
-    description: str | None = None
-    salary_min: float | None = None
-    salary_max: float | None = None
-    url: str | None = None
-    deadline: datetime | None = None
-    company: str | None = None
-    location: str | None = None
-
-
-class JobScrapeUpdate(JobScrape):
-    """Represents scraped job postings from external sources with additional metadata."""
-
-    external_job_id: str | None = None
-
-
-class JobScrapeOut(JobScrape):
-    """Represents scraped job postings from external sources with additional metadata."""
-
-    emails: list[EmailOut]
-
-
-generate_crud_router(
-    table_model=JobScraped,
-    create_schema=JobScrape,
-    update_schema=JobScrapeUpdate,
-    out_schema=JobScrapeOut,
-    endpoint="scrapedjobs",
-    not_found_msg="Scraped job not found",
-)
-
-
 class ServiceLog(Base):
     """Represents logs of service operations and their status."""
 
@@ -142,3 +67,5 @@ class ServiceLog(Base):
     error_message = Column(String, nullable=True)
     job_success_n = Column(Integer, nullable=True)
     job_fail_n = Column(Integer, nullable=True)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+    modified_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

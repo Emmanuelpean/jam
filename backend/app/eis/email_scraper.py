@@ -22,7 +22,7 @@ from googleapiclient.discovery import build
 
 from app.database import session_local
 from app.eis.job_scraper import LinkedinJobScraper, IndeedScrapper
-from app.eis.models import JobAlertEmail, JobScraped, ServiceLog, Email
+from app.eis.models import JobAlertEmail, ScrapedJob, ServiceLog, Email
 from app.models import User
 from app.utils import get_gmail_logger, AppLogger
 
@@ -281,7 +281,7 @@ class GmailScraper(object):
         email_record: JobAlertEmail,
         job_ids: list[str],
         db,
-    ) -> list[JobScraped]:
+    ) -> list[ScrapedJob]:
         """Save extracted job IDs to the database and link them to the email
         :param email_record: JobAlertEmail record instance
         :param job_ids: List of job IDs to save
@@ -294,10 +294,10 @@ class GmailScraper(object):
 
             # Check if the job already exists for this owner
             existing_entry = (
-                db.query(JobScraped)
+                db.query(ScrapedJob)
                 .filter(
-                    JobScraped.external_job_id == job_id,
-                    JobScraped.owner_id == email_record.owner_id,
+                    ScrapedJob.external_job_id == job_id,
+                    ScrapedJob.owner_id == email_record.owner_id,
                 )
                 .first()
             )
@@ -306,7 +306,7 @@ class GmailScraper(object):
 
                 # Create new job record
                 # noinspection PyArgumentList
-                new_job = JobScraped(
+                new_job = ScrapedJob(
                     external_job_id=job_id,
                     owner_id=email_record.owner_id,
                 )
@@ -332,7 +332,7 @@ class GmailScraper(object):
 
     @staticmethod
     def save_job_json_to_db(
-        job_records: list[JobScraped] | JobScraped,
+        job_records: list[ScrapedJob] | ScrapedJob,
         job_data: list[dict] | dict,
         db,
     ) -> None:
@@ -449,7 +449,7 @@ class GmailScraper(object):
                 # -------------------------------------------- JOB SCRAPPING -------------------------------------------
 
                 # Get all the job ids from the table and scrape them
-                job_records = db.query(JobScraped).filter(JobScraped.is_scraped.is_(False)).all()
+                job_records = db.query(ScrapedJob).filter(ScrapedJob.is_scraped.is_(False)).all()
 
                 for job_record in job_records:
                     if job_record.emails[0].platform == "linkedin":
