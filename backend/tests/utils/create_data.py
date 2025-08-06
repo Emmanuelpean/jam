@@ -1,5 +1,5 @@
 from app import models, utils
-import app.eis.models as eis_models
+import app.eis.eis_models as eis_models
 from tests.utils.table_data import (
     USERS_DATA,
     COMPANIES_DATA,

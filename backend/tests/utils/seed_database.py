@@ -9,7 +9,7 @@ import sys
 from sqlalchemy import text, inspect
 
 from app.database import engine, session_local, Base
-from create_data import (
+from tests.utils.create_data import (
     create_users,
     create_companies,
     create_locations,
@@ -28,13 +28,13 @@ from create_data import (
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
-def reset_database() -> None:
+def reset_database(db_engine) -> None:
     """Drop ALL tables in the database (including orphaned ones) and recreate from models"""
     print("Dropping ALL tables in the database...")
 
-    with engine.connect() as conn:
+    with db_engine.connect() as conn:
         # Get the database inspector to find all existing tables
-        inspector = inspect(engine)
+        inspector = inspect(db_engine)
         table_names = inspector.get_table_names()
 
         # For PostgreSQL: Drop tables with CASCADE to handle foreign key constraints
@@ -45,7 +45,7 @@ def reset_database() -> None:
         conn.commit()
 
     print("Creating all tables from models...")
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=db_engine)
     print("Database reset complete - all tables deleted and recreated from models!")
 
 
@@ -54,7 +54,7 @@ def seed_database() -> None:
     print("Starting database seeding...")
 
     # Reset the database
-    reset_database()
+    reset_database(engine)
 
     # Create a database session
     db = session_local()

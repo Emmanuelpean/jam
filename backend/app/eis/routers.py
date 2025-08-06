@@ -1,43 +1,74 @@
-from app.eis.models import JobAlertEmail
-from app.eis.schemas import (
-    Email,
-    EmailUpdate,
-    EmailOut,
-    ScrapedJob,
-    ScrapedJobUpdate,
-    ScrapedJobOut,
-    ServiceLog,
-    ServiceLogUpdate,
-    ServiceLogOut,
-)
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+
+from app import models
+from app.eis import eis_models, schemas
 from app.routers.tables import generate_crud_router
+from app.database import get_db
+from app.oauth2 import get_current_user
 
 email_router = generate_crud_router(
-    table_model=JobAlertEmail,
-    create_schema=Email,
-    update_schema=EmailUpdate,
-    out_schema=EmailOut,
+    table_model=eis_models.JobAlertEmail,
+    create_schema=schemas.JobAlertEmail,
+    update_schema=schemas.EmailUpdate,
+    out_schema=schemas.JobAlertEmailOut,
     endpoint="jobalertemails",
     not_found_msg="Job alert email not found",
 )
 
 
 scrapedjob_router = generate_crud_router(
-    table_model=ScrapedJob,
-    create_schema=ScrapedJob,
-    update_schema=ScrapedJobUpdate,
-    out_schema=ScrapedJobOut,
+    table_model=eis_models.ScrapedJob,
+    create_schema=schemas.ScrapedJob,
+    update_schema=schemas.ScrapedJobUpdate,
+    out_schema=schemas.ScrapedJobOut,
     endpoint="scrapedjobs",
     not_found_msg="Scraped job not found",
 )
 
 
-servicelog_router = generate_crud_router(
-    table_model=ServiceLog,
-    create_schema=ServiceLog,
-    update_schema=ServiceLogUpdate,
-    out_schema=ServiceLogOut,
-    endpoint="servicelogs",
-    not_found_msg="Service log not found",
-    admin_only=True,
-)
+servicelog_router = APIRouter(prefix="/servicelogs", tags=["servicelogs"])
+
+
+def admin_required(current_user: models.User = Depends(get_current_user)) -> models.User:
+    """Dependency to ensure only admin users can access service logs"""
+
+    if not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return current_user
+
+
+@servicelog_router.get("/", response_model=list[schemas.ServiceLogOut])
+def get_service_logs_by_date_range(
+    start_date: datetime | None = Query(None, description="Start date for filtering (ISO format)"),
+    end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
+    limit: int | None = Query(None, description="Maximum number of logs to return"),
+    current_user: models.User = Depends(admin_required),
+    db: Session = Depends(get_db),
+) -> list[eis_models.ServiceLog]:
+    """Get service logs within a specified date range. Admin access required.
+    :param start_date: Optional start date filter (inclusive)
+    :param end_date: Optional end date filter (inclusive)
+    :param limit: Optional limit for number of logs to return
+    :param current_user: Current authenticated admin user
+    :param db: Database session
+    :return: list of service logs within the date range ordered by run_datetime descending"""
+
+    query = db.query(eis_models.ServiceLog)
+
+    # Apply date filters
+    if start_date:
+        query = query.filter(eis_models.ServiceLog.run_datetime >= start_date)
+    if end_date:
+        query = query.filter(eis_models.ServiceLog.run_datetime <= end_date)
+
+    # Order by run_datetime descending (most recent first)
+    query = query.order_by(eis_models.ServiceLog.run_datetime.desc())
+
+    # Apply limit if specified
+    if limit:
+        query = query.limit(limit)
+
+    return query.all()

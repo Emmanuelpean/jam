@@ -11,6 +11,7 @@ USERS_DATA = [
     {
         "email": "test_user@test.com",
         "password": "test_password",
+        "is_admin": True,
     },
     {
         "email": "emmanuelpean@gmail.com",
@@ -1194,7 +1195,7 @@ SERVICE_LOGS_DATA = [
         "job_fail_n": 2,
     },
     {
-        "name": "Job Data Processor",
+        "name": "Email Scraper Service",
         "run_duration": 123.8,
         "run_datetime": "2024-01-15 09:15:00",
         "is_success": True,
@@ -1203,7 +1204,7 @@ SERVICE_LOGS_DATA = [
         "job_fail_n": 5,
     },
     {
-        "name": "LinkedIn Job Scraper",
+        "name": "Email Scraper Service",
         "run_duration": 67.4,
         "run_datetime": "2024-01-15 10:00:00",
         "is_success": False,
@@ -1212,7 +1213,7 @@ SERVICE_LOGS_DATA = [
         "job_fail_n": 45,
     },
     {
-        "name": "Indeed Job Scraper",
+        "name": "Email Scraper Service",
         "run_duration": 89.1,
         "run_datetime": "2024-01-15 11:30:00",
         "is_success": True,
@@ -1221,7 +1222,7 @@ SERVICE_LOGS_DATA = [
         "job_fail_n": 8,
     },
     {
-        "name": "Database Cleanup Service",
+        "name": "Email Scraper Service",
         "run_duration": 12.3,
         "run_datetime": "2024-01-15 12:00:00",
         "is_success": True,
@@ -1230,7 +1231,7 @@ SERVICE_LOGS_DATA = [
         "job_fail_n": None,
     },
     {
-        "name": "Email Notification Service",
+        "name": "Email Scraper Service",
         "run_duration": 3.7,
         "run_datetime": "2024-01-15 13:45:00",
         "is_success": False,
@@ -1239,7 +1240,7 @@ SERVICE_LOGS_DATA = [
         "job_fail_n": 12,
     },
     {
-        "name": "Job Matching Algorithm",
+        "name": "Email Scraper Service",
         "run_duration": 156.9,
         "run_datetime": "2024-01-15 14:20:00",
         "is_success": True,
@@ -1248,7 +1249,7 @@ SERVICE_LOGS_DATA = [
         "job_fail_n": 18,
     },
     {
-        "name": "Resume Parser Service",
+        "name": "Email Scraper Service",
         "run_duration": 78.5,
         "run_datetime": "2024-01-15 15:30:00",
         "is_success": False,
@@ -1257,7 +1258,7 @@ SERVICE_LOGS_DATA = [
         "job_fail_n": 67,
     },
     {
-        "name": "Application Status Sync",
+        "name": "Email Scraper Service",
         "run_duration": 34.2,
         "run_datetime": "2024-01-16 08:00:00",
         "is_success": True,

@@ -3,7 +3,7 @@ from datetime import datetime
 from app.schemas import BaseModel, Out, JobOut
 
 
-class Email(BaseModel):
+class JobAlertEmail(BaseModel):
     """Email model"""
 
     external_email_id: str
@@ -14,13 +14,13 @@ class Email(BaseModel):
     body: str | None = None
 
 
-class EmailUpdate(Email):
+class EmailUpdate(JobAlertEmail):
     """Email model"""
 
     external_email_id: str | None = None
 
 
-class EmailOut(Email, Out):
+class JobAlertEmailOut(JobAlertEmail, Out):
     """Email model"""
 
     jobs: list[JobOut]
@@ -52,7 +52,7 @@ class ScrapedJobUpdate(ScrapedJob):
 class ScrapedJobOut(ScrapedJob):
     """Represents scraped job postings from external sources with additional metadata."""
 
-    emails: list[EmailOut]
+    emails: list[JobAlertEmailOut]
 
 
 class ServiceLog(BaseModel):
@@ -67,7 +67,7 @@ class ServiceLog(BaseModel):
     job_fail_n: int | None = None
 
 
-class ServiceLogOut(ServiceLog, Out):
+class ServiceLogOut(ServiceLog):
     """Represents a log of a service run."""
 
     pass

@@ -31,7 +31,7 @@ from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
 from app import models, database, schemas
-from app.eis import models as eis_models
+from app.eis import eis_models as eis_models
 from app.main import app
 from app.oauth2 import create_access_token
 from tests.utils.create_data import (
@@ -46,8 +46,10 @@ from tests.utils.create_data import (
     create_job_applications,
     create_interviews,
     create_job_alert_emails,
-    create_job_alert_email_jobs,
+    create_scraped_jobs,
+    create_service_logs,
 )
+from tests.utils.seed_database import reset_database
 
 SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
@@ -62,8 +64,7 @@ def session() -> Generator[orm.Session, Any, None]:
     function completes, the session is closed.
     :yield: A new SQLAlchemy session bound to the test database."""
 
-    models.Base.metadata.drop_all(bind=engine)
-    models.Base.metadata.create_all(bind=engine)
+    reset_database(engine)
     db = TestingSessionLocal()
     try:
         yield db
@@ -192,10 +193,17 @@ def test_job_alert_emails(session, test_users) -> list[eis_models.JobAlertEmail]
 
 
 @pytest.fixture
-def test_job_alert_email_jobs(session, test_job_alert_emails) -> list[eis_models.JobAlertEmailJob]:
+def test_scraped_jobs(session, test_job_alert_emails) -> list[eis_models.ScrapedJob]:
     """Create test job alert email jobs"""
 
-    return create_job_alert_email_jobs(session)
+    return create_scraped_jobs(session)
+
+
+@pytest.fixture
+def test_service_logs(session) -> list[eis_models.ServiceLog]:
+    """Create test service logs"""
+
+    return create_service_logs(session)
 
 
 class CRUDTestBase:

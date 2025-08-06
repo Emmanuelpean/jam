@@ -27,6 +27,7 @@ class UserOut(BaseModel):
     created_at: datetime
     modified_at: datetime
     theme: str
+    is_admin: bool | None = None
 
 
 class UserLogin(BaseModel):
@@ -38,6 +39,7 @@ class UserUpdate(BaseModel):
     email: EmailStr | None = None
     theme: str | None = None
     password: str | None = None
+    is_admin: bool | None = None
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------

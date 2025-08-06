@@ -15,7 +15,6 @@ def generate_crud_router(
     endpoint: str,  # e.g. "companies"
     not_found_msg: str = "Entry not found",
     many_to_many_fields: dict = None,
-    admin_only: bool = False,
 ) -> APIRouter:
     """Generate a FastAPI router with standard CRUD endpoints for a given table.
     :param table_model: SQLAlchemy model class representing the database table.
@@ -32,7 +31,6 @@ def generate_crud_router(
                                        'remote_key': 'remote_foreign_key'
                                    }
                                }
-    :param admin_only: If True, only authenticated users with admin role will be able to perform CRUD operations.
     :return: Configured APIRouter instance with CRUD endpoints."""
 
     router = APIRouter(prefix=f"/{endpoint}", tags=[endpoint])
@@ -106,10 +104,8 @@ def generate_crud_router(
         :param limit: Maximum number of entries to return.
         :return: List of entries."""
 
-        # noinspection PyTypeChecker
+        # Start with base query
         query = db.query(table_model).filter(table_model.owner_id == current_user.id)
-        if admin_only:
-            query = query.filter(table_model.is_admin)
 
         # Get all query parameters except 'limit'
         filter_params = dict(request.query_params)
@@ -160,18 +156,15 @@ def generate_crud_router(
         :raises: HTTPException with a 404 status code if the entry is not found.
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-        # noinspection PyTypeChecker
-        query = db.query(table_model).filter(table_model.id == entry_id)
-        if admin_only:
-            query = query.filter(table_model.is_admin)
-        entry = query.first()
+        entry = db.query(table_model).filter(table_model.id == entry_id).first()
 
         if not entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
 
         if entry.owner_id != current_user.id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to perform requested action",
             )
 
         return entry
@@ -188,12 +181,6 @@ def generate_crud_router(
         :param db: Database session.
         :param current_user: Authenticated user.
         :return: The created entry."""
-
-        if admin_only:
-            if not current_user.is_admin:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
-                )
 
         # Extract the item data and exclude many-to-many fields from main creation
         item_dict = item.model_dump()
@@ -239,11 +226,8 @@ def generate_crud_router(
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action.
         :raises: HTTPException with a 400 status code if no field is provided for the update."""
 
-        # noinspection PyTypeChecker
-        query = db.query(table_model).filter(table_model.id == entry_id)
-        if admin_only:
-            query = query.filter(table_model.is_admin)
-        entry = query.first()
+        entry_query = db.query(table_model).filter(table_model.id == entry_id)
+        entry = entry_query.first()
 
         if not entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
@@ -270,7 +254,7 @@ def generate_crud_router(
 
         # Update main fields if any
         if main_data:
-            query.update(main_data, synchronize_session=False)
+            entry_query.update(main_data, synchronize_session=False)
 
         # Handle many-to-many relationships
         if m2m_data:
@@ -279,7 +263,7 @@ def generate_crud_router(
         db.commit()
 
         # Return the updated entry
-        return query.first()
+        return entry_query.first()
 
     @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
     def delete(
@@ -295,11 +279,8 @@ def generate_crud_router(
         :raises: HTTPException with a 404 status code if an entry is not found.
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-        # noinspection PyTypeChecker
-        query = db.query(table_model).filter(table_model.id == entry_id)
-        if admin_only:
-            query = query.filter(table_model.is_admin)
-        entry = query.first()
+        entry_query = db.query(table_model).filter(table_model.id == entry_id)
+        entry = entry_query.first()
 
         if not entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
@@ -317,10 +298,10 @@ def generate_crud_router(
 
                 db.execute(association_table.delete().where(getattr(association_table.c, local_key) == entry_id))
 
-        query.delete(synchronize_session=False)
+        entry_query.delete(synchronize_session=False)
         db.commit()
 
-        return query
+        return entry_query
 
     return router
 

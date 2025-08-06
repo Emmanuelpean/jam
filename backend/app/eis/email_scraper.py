@@ -22,7 +22,7 @@ from googleapiclient.discovery import build
 
 from app.database import session_local
 from app.eis.job_scraper import LinkedinJobScraper, IndeedScrapper
-from app.eis.models import JobAlertEmail, ScrapedJob, ServiceLog, Email
+from app.eis.eis_models import JobAlertEmail, ScrapedJob, ServiceLog, Email
 from app.models import User
 from app.utils import get_gmail_logger, AppLogger
 
