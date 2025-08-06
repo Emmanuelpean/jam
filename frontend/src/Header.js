@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ThemeToggle from "./components/theme/ThemeToggle";
 import { ReactComponent as JamLogo } from "./assets/Logo.svg";
 
-const Header = ({ user, onLogout }) => {
+const Header = ({ onLogout }) => {
 	const navigate = useNavigate();
 	const location = useLocation();
 
@@ -15,7 +15,7 @@ const Header = ({ user, onLogout }) => {
 	const isActive = (path) => location.pathname === path;
 
 	return (
-		<Navbar bg="light" style={{ height: "100px" }}>
+		<Navbar bg="light" style={{ height: "100px", borderRadius: "0" }}>
 			<Container>
 				<div style={{ display: "flex", alignItems: "center" }}>
 					<Navbar.Brand onClick={handleLogoClick} className="header-logo">
@@ -35,11 +35,17 @@ const Header = ({ user, onLogout }) => {
 						<i className="bi bi-briefcase me-2"></i>
 						<span>Jobs</span>
 					</Nav.Link>
-					<Nav.Link href="/jobapplications" className={`nav-link-custom ${isActive("/jobapplications") ? "active" : ""}`}>
+					<Nav.Link
+						href="/jobapplications"
+						className={`nav-link-custom ${isActive("/jobapplications") ? "active" : ""}`}
+					>
 						<i className="bi bi-person-workspace me-2"></i>
 						<span>Job Applications</span>
 					</Nav.Link>
-					<Nav.Link href="/interviews" className={`nav-link-custom ${isActive("/interviews") ? "active" : ""}`}>
+					<Nav.Link
+						href="/interviews"
+						className={`nav-link-custom ${isActive("/interviews") ? "active" : ""}`}
+					>
 						<i className="bi bi-people-fill me-2"></i>
 						<span>Interviews</span>
 					</Nav.Link>
@@ -55,7 +61,10 @@ const Header = ({ user, onLogout }) => {
 						<i className="bi bi-building me-2"></i>
 						<span>Companies</span>
 					</Nav.Link>
-					<Nav.Link href="/aggregators" className={`nav-link-custom ${isActive("/aggregators") ? "active" : ""}`}>
+					<Nav.Link
+						href="/aggregators"
+						className={`nav-link-custom ${isActive("/aggregators") ? "active" : ""}`}
+					>
 						<i className="bi bi-linkedin me-2"></i>
 						<span>Aggregators</span>
 					</Nav.Link>
