@@ -99,7 +99,7 @@ export const useFormOptions = () => {
 				setPersons(apiHelpers.toSelectOptions(personsData));
 				setAggregators(apiHelpers.toSelectOptions(aggregatorsData));
 				setJobs(apiHelpers.toSelectOptions(jobsData));
-				setJobApplications(apiHelpers.toSelectOptions(jobApplicationsData, "job"));
+				setJobApplications(apiHelpers.toSelectOptions(jobApplicationsData, "id", "job.name"));
 			} catch (err) {
 				console.error("Error fetching form options:", err);
 				setError(err);
@@ -144,7 +144,7 @@ export const useFormOptions = () => {
 					break;
 				case "jobApplications":
 					data = await jobApplicationsApi.getAll(token);
-					setJobApplications(apiHelpers.toSelectOptions(data));
+					setJobApplications(apiHelpers.toSelectOptions(data, "job"));
 					break;
 				default:
 					console.warn(`Unknown option type: ${type}`);

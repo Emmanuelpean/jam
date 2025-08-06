@@ -307,7 +307,7 @@ export const GenericTableWithModals = ({
 				case "edit":
 					openEditModal(contextMenu.item);
 					break;
-				case "delete":
+				default:
 					handleDelete(contextMenu.item);
 					break;
 			}
@@ -371,10 +371,8 @@ export const GenericTableWithModals = ({
 		return <div className="alert alert-danger mt-3">{error}</div>;
 	}
 
-	const containerClass = isInModal ? "table-container-modal" : "table-container";
-
 	return (
-		<div className={containerClass}>
+		<div className="table-container">
 			{title && <h2 className="my-4">{title}</h2>}
 
 			{/* Header with search and add button */}

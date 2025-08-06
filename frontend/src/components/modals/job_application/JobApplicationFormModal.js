@@ -7,7 +7,7 @@ import InterviewsTable from "../../tables/InterviewTable";
 import { formFields } from "../../rendering/FormRenders";
 import { useAuth } from "../../../contexts/AuthContext";
 import AlertModal from "../alert/AlertModal";
-import { formDateTime } from "../../../utils/TimeUtils";
+import { formatDateTime } from "../../../utils/TimeUtils";
 
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
 	const { token } = useAuth();
@@ -164,7 +164,7 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			if (!data || Object.keys(data).length === 0) {
 				// For new job applications, provide defaults
 				return {
-					date: formDateTime(), // Current time formatted
+					date: formatDateTime(), // Current time formatted
 					url: "",
 					note: "",
 					status: "Applied",
@@ -175,7 +175,7 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			const transformed = { ...data };
 
 			// Convert ISO datetime to datetime-local format
-			transformed.date = formDateTime(transformed.date);
+			transformed.date = formatDateTime(transformed.date);
 
 			// Ensure string fields are not null/undefined
 			if (transformed.url === null || transformed.url === undefined) {

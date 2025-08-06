@@ -7,7 +7,7 @@ import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
 import { useAuth } from "../../../contexts/AuthContext";
 import AlertModal from "../alert/AlertModal";
-import { formDateTime } from "../../../utils/TimeUtils";
+import { formatDateTime } from "../../../utils/TimeUtils";
 import InterviewsTable from "../../tables/InterviewTable";
 
 export const JobApplicationModal = ({
@@ -46,7 +46,7 @@ export const JobApplicationModal = ({
 	const transformInitialData = useCallback((data) => {
 		if (!data) {
 			return {
-				date: formDateTime(),
+				date: formatDateTime(),
 				url: "",
 				note: "",
 				status: "Applied", // TODO not working
@@ -57,7 +57,7 @@ export const JobApplicationModal = ({
 			const transformed = { ...data };
 
 			// Convert ISO datetime to datetime-local format
-			transformed.date = formDateTime(transformed.date);
+			transformed.date = formatDateTime(transformed.date);
 
 			// Ensure string fields are not null/undefined
 			if (transformed.url === null || transformed.url === undefined) {
@@ -204,63 +204,59 @@ export const JobApplicationModal = ({
 	};
 
 	// Form fields for editing
-	const formFieldsArray = useMemo(
-		() => {
-			const baseFields = [
-				[formFields.applicationDate(), formFields.applicationStatus()],
-				[formFields.job(filteredJobs)],
-				[
-					formFields.applicationVia(),
-					...(currentFormData?.applied_via === "Aggregator"
-						? [formFields.aggregator(aggregators, openAggregatorModal)]
-						: []),
-				],
-				formFields.url(),
-				formFields.note({
-					placeholder: "Add notes about your application process, interview details, etc...",
-				}),
-				[
-					{
-						name: "cv",
-						label: "CV/Resume",
-						type: "drag-drop",
-						value: fileStates.cv,
-						onChange: (file) => handleFileChange("cv", file),
-						onRemove: () => handleFileRemove("cv"),
-						onOpenFile: handleFileDownload,
-					},
-					{
-						name: "cover_letter",
-						label: "Cover Letter",
-						type: "drag-drop",
-						value: fileStates.cover_letter,
-						onChange: (file) => handleFileChange("cover_letter", file),
-						onRemove: () => handleFileRemove("cover_letter"),
-						onOpenFile: handleFileDownload,
-					},
-				],
-			];
+	const formFieldsArray = useMemo(() => {
+		const baseFields = [
+			[formFields.applicationDate(), formFields.applicationStatus()],
+			[formFields.job(filteredJobs)],
+			[
+				formFields.applicationVia(),
+				...(currentFormData?.applied_via === "Aggregator"
+					? [formFields.aggregator(aggregators, openAggregatorModal)]
+					: []),
+			],
+			formFields.url(),
+			formFields.note({
+				placeholder: "Add notes about your application process, interview details, etc...",
+			}),
+			[
+				{
+					name: "cv",
+					label: "CV/Resume",
+					type: "drag-drop",
+					value: fileStates.cv,
+					onChange: (file) => handleFileChange("cv", file),
+					onRemove: () => handleFileRemove("cv"),
+					onOpenFile: handleFileDownload,
+				},
+				{
+					name: "cover_letter",
+					label: "Cover Letter",
+					type: "drag-drop",
+					value: fileStates.cover_letter,
+					onChange: (file) => handleFileChange("cover_letter", file),
+					onRemove: () => handleFileRemove("cover_letter"),
+					onOpenFile: handleFileDownload,
+				},
+			],
+		];
 
-			if (jobApplication?.id) {
-				baseFields.push(viewFields.interviews());
-			}
+		if (jobApplication?.id) {
+			baseFields.push(viewFields.interviews());
+		}
 
-			return baseFields;
-		},
-		[
-			currentFormData?.applied_via,
-			fileStates.cv,
-			fileStates.cover_letter,
-			handleFileChange,
-			handleFileRemove,
-			openAggregatorModal,
-			submode,
-			jobApplication?.id,
-			interviews,
-			handleInterviewChange,
-		],
-	);
-
+		return baseFields;
+	}, [
+		currentFormData?.applied_via,
+		fileStates.cv,
+		fileStates.cover_letter,
+		handleFileChange,
+		handleFileRemove,
+		openAggregatorModal,
+		submode,
+		jobApplication?.id,
+		interviews,
+		handleInterviewChange,
+	]);
 
 	// View fields for display
 	const viewFieldsArray = useMemo(() => {
@@ -406,7 +402,6 @@ export const JobApplicationModal = ({
 			}),
 		);
 	};
-
 
 	return (
 		<>

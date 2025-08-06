@@ -3,7 +3,7 @@ import { Container, Nav, Navbar } from "react-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
 import ThemeToggle from "./components/theme/ThemeToggle";
 import { ReactComponent as JamLogo } from "./assets/Logo.svg";
-
+// https://flowbite-react.com/docs/getting-started/contributing
 const Header = ({ onLogout }) => {
 	const navigate = useNavigate();
 	const location = useLocation();

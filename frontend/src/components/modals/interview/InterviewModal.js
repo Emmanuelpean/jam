@@ -1,17 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../../../contexts/AuthContext";
+import React from "react";
 import GenericModal from "../GenericModal";
-import AlertModal from "../alert/AlertModal";
-import useGenericAlert from "../../../hooks/useGenericAlert";
 import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
-import { jobApplicationsApi } from "../../../services/api";
-import { formDateTime } from "../../../utils/TimeUtils";
+import { formatDateTime } from "../../../utils/TimeUtils";
 
 export const InterviewModal = ({
 	show,
 	onHide,
-	interview,
+	data,
 	onSuccess,
 	onDelete,
 	endpoint = "interviews",
@@ -19,56 +15,22 @@ export const InterviewModal = ({
 	size = "lg",
 	jobApplicationId,
 }) => {
-	const { token } = useAuth();
-	const { alertState, showError, hideAlert } = useGenericAlert();
+	const {
+		locations,
+		persons,
+		jobApplications,
+		openLocationModal,
+		openPersonModal,
+		openJobApplicationModal,
+		renderLocationModal,
+		renderPersonModal,
+		renderJobApplicationModal,
+	} = useFormOptions();
 
-	// Use the existing useFormOptions hook
-	const { locations, persons, openLocationModal, openPersonModal, renderLocationModal, renderPersonModal } =
-		useFormOptions();
-
-	// State for job applications only (since it's specific to interviews)
-	const [jobApplicationOptions, setJobApplicationOptions] = useState([]);
-	const [loading, setLoading] = useState(false);
-
-	// Fetch job application options
-	useEffect(() => {
-		const fetchJobApplications = async () => {
-			if (!token || !show || submode === "view") return;
-
-			setLoading(true);
-			try {
-				const jobApplicationsData = await jobApplicationsApi.getAll(token);
-				setJobApplicationOptions(
-					jobApplicationsData.map((jobApp) => ({
-						value: jobApp.id,
-						label: `${jobApp.job.name}`,
-					})),
-				);
-			} catch (error) {
-				console.error("Error fetching job applications:", error);
-				showError({
-					title: "Data Loading Error",
-					message: "Error loading job applications. Please try again.",
-					size: "md",
-				});
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		fetchJobApplications();
-	}, [token, show, submode]);
-
-	// Don't render if we're in view mode but have no interview data
-	if (submode === "view" && !interview?.id) {
-		return null;
-	}
-
-	// Transform initial data to match form field expectations
 	const transformInitialData = (data) => {
 		if (!data || Object.keys(data).length === 0) {
 			const defaultData = {
-				date: formDateTime(),
+				date: formatDateTime(),
 				type: "",
 				location_id: "",
 				note: "",
@@ -85,7 +47,7 @@ export const InterviewModal = ({
 
 		const transformed = { ...data };
 
-		transformed.date = formDateTime(transformed.date);
+		transformed.date = formatDateTime(transformed.date);
 
 		// Ensure required fields are not null/undefined
 		if (transformed.type === null || transformed.type === undefined) {
@@ -120,7 +82,6 @@ export const InterviewModal = ({
 		return transformed;
 	};
 
-	// Form fields for editing
 	const formFieldsArray = [
 		[
 			formFields.datetime({
@@ -130,12 +91,15 @@ export const InterviewModal = ({
 			formFields.interviewType(),
 		],
 		formFields.location(locations, openLocationModal),
-		formFields.jobApplication(jobApplicationOptions),
+		formFields.jobApplication(jobApplications, openJobApplicationModal),
 		formFields.interviewers(persons, openPersonModal),
 		formFields.note({
 			placeholder: "Add notes about the interview, questions asked, impressions, etc...",
 		}),
 	];
+	console.log("jobs app", jobApplications);
+	console.log("persons", persons);
+	console.log("locations", locations);
 
 	// View fields for display
 	const viewFieldsArray = [
@@ -220,12 +184,12 @@ export const InterviewModal = ({
 				submode={submode}
 				title="Interview"
 				size={size}
-				data={interview || {}}
+				data={data || {}}
 				fields={fields}
 				endpoint={endpoint}
 				onSuccess={onSuccess}
 				onDelete={onDelete}
-				initialData={transformInitialData(interview)}
+				// initialData={transformInitialData(data)}
 				transformFormData={transformFormData}
 			/>
 
@@ -233,14 +197,12 @@ export const InterviewModal = ({
 
 			{renderPersonModal()}
 
-			{/* Alert Modal for error messages */}
-			<AlertModal alertState={alertState} hideAlert={hideAlert} />
+			{renderJobApplicationModal()}
 		</>
 	);
 };
 
 export const InterviewFormModal = (props) => {
-	// Determine the submode based on whether we have interview data with an ID
 	const submode = props.isEdit || props.interview?.id ? "edit" : "add";
 	return <InterviewModal {...props} submode={submode} />;
 };

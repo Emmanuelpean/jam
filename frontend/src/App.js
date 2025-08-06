@@ -13,7 +13,7 @@ import KeywordsPage from "./pages/KeywordsPage";
 import InterviewsPage from "./pages/InterviewsPage";
 import JobApplicationPage from "./pages/JobApplicationsPage";
 import "./Themes.css";
-import DashboardPage from "./pages/DashboardPage";
+import DashboardPage from "./pages/EISDashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -27,7 +27,18 @@ function AppLayout({ children }) {
 	return (
 		<>
 			{!isAuthPage && currentUser && <Header onLogout={logout} />}
-			{children}
+			<div className="main-content">
+				<div
+					className="content-wrapper"
+					style={{
+						maxWidth: "90%",
+						margin: "0 auto",
+						padding: "20px",
+					}}
+				>
+					{children}
+				</div>
+			</div>
 		</>
 	);
 }

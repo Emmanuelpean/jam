@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -44,6 +44,7 @@ def admin_required(current_user: models.User = Depends(get_current_user)) -> mod
 def get_service_logs_by_date_range(
     start_date: datetime | None = Query(None, description="Start date for filtering (ISO format)"),
     end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
+    delta_days: int | None = Query(None, description="Number of days to go back in time"),
     limit: int | None = Query(None, description="Maximum number of logs to return"),
     current_user: models.User = Depends(admin_required),
     db: Session = Depends(get_db),
@@ -52,6 +53,7 @@ def get_service_logs_by_date_range(
     :param start_date: Optional start date filter (inclusive)
     :param end_date: Optional end date filter (inclusive)
     :param limit: Optional limit for number of logs to return
+    :param delta_days: Optional number of days to go back in time
     :param current_user: Current authenticated admin user
     :param db: Database session
     :return: list of service logs within the date range ordered by run_datetime descending"""
@@ -63,6 +65,9 @@ def get_service_logs_by_date_range(
         query = query.filter(eis_models.ServiceLog.run_datetime >= start_date)
     if end_date:
         query = query.filter(eis_models.ServiceLog.run_datetime <= end_date)
+    if delta_days:
+        start_date = datetime.now() - timedelta(days=delta_days)
+        query = query.filter(eis_models.ServiceLog.run_datetime >= start_date)
 
     # Order by run_datetime descending (most recent first)
     query = query.order_by(eis_models.ServiceLog.run_datetime.desc())

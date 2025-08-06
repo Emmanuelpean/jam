@@ -1,6 +1,8 @@
 // Base configuration
 // noinspection JSUnusedGlobalSymbols
 
+import { accessAttribute } from "../utils/Utils";
+
 const API_BASE_URL = "http://localhost:8000";
 
 // Helper function to get auth headers
@@ -68,7 +70,7 @@ class ApiService {
 			headers: getAuthHeaders(token),
 		});
 
-		return this.handleResponseWithBlob(response, options.responseType === 'blob');
+		return this.handleResponseWithBlob(response, options.responseType === "blob");
 	}
 
 	// Generic POST request
@@ -124,11 +126,11 @@ class ApiService {
 	// Simplified download method using existing get method
 	async downloadFile(endpoint, filename, token = null) {
 		// Use the existing get method with blob response type
-		const blob = await this.get(endpoint, token, { responseType: 'blob' });
+		const blob = await this.get(endpoint, token, { responseType: "blob" });
 
 		// Create download link and trigger download
 		const url = window.URL.createObjectURL(blob);
-		const link = document.createElement('a');
+		const link = document.createElement("a");
 		link.href = url;
 		link.download = filename;
 		document.body.appendChild(link);
@@ -169,7 +171,7 @@ const createCrudApi = (endpoint) => ({
 		let url = `${endpoint}/`;
 		if (queryParams) {
 			const searchParams = new URLSearchParams();
-			Object.keys(queryParams).forEach(key => {
+			Object.keys(queryParams).forEach((key) => {
 				if (queryParams[key] !== undefined) {
 					searchParams.append(key, queryParams[key]);
 				}
@@ -195,6 +197,9 @@ export const personsApi = createCrudApi("persons");
 export const jobApplicationsApi = createCrudApi("jobapplications");
 export const interviewsApi = createCrudApi("interviews");
 export const aggregatorsApi = createCrudApi("aggregators");
+export const jobAlertEmailApi = createCrudApi("jobalertemails");
+export const scrapedJobApi = createCrudApi("scrapedjobs");
+export const serviceLogApi = createCrudApi("servicelogs");
 
 export { api, API_BASE_URL };
 
@@ -203,8 +208,8 @@ export const apiHelpers = {
 	// Convert data to select options
 	toSelectOptions: (data, valueKey = "id", labelKey = "name") => {
 		return data.map((item) => ({
-			value: item[valueKey],
-			label: item[labelKey],
+			value: accessAttribute(item, valueKey),
+			label: accessAttribute(item, labelKey),
 			job_application: item.job_application,
 		}));
 	},
@@ -241,13 +246,13 @@ export const apiHelpers = {
 };
 
 export const filesApi = {
-	...createCrudApi('files'),
+	...createCrudApi("files"),
 
 	// Method that returns blob for manual handling
-	downloadBlob: (id, token) => api.get(`files/${id}/download`, token, { responseType: 'blob' }),
+	downloadBlob: (id, token) => api.get(`files/${id}/download`, token, { responseType: "blob" }),
 
 	// Method that directly triggers browser download
-	download: (id, filename, token) => api.downloadFile(`files/${id}/download`, filename, token)
+	download: (id, filename, token) => api.downloadFile(`files/${id}/download`, filename, token),
 };
 
 export const themesApi = {
@@ -265,5 +270,5 @@ export const themesApi = {
 	getRandomTheme: async () => {
 		const themes = await themesApi.getAll();
 		return themes[Math.floor(Math.random() * themes.length)];
-	}
+	},
 };

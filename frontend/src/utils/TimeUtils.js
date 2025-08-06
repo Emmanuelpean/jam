@@ -1,4 +1,4 @@
-export const formDateTime = (datetime) => {
+export const formatDateTime = (datetime) => {
 	if (!datetime) {
 		datetime = new Date();
 	} else {
@@ -13,8 +13,21 @@ export const formDateTime = (datetime) => {
 };
 
 export const localeDateOnly = (value) => {
-    if (!value) return '';
-    const date = new Date(value);
-	console.log(date.toLocaleDateString())
-    return date.toLocaleDateString();
-}
+	if (!value) return "";
+	const date = new Date(value);
+	console.log(date.toLocaleDateString());
+	return date.toLocaleDateString();
+};
+
+export const formatTimeAgo = (dateString) => {
+	const now = new Date();
+	const date = new Date(dateString);
+	const diffTime = Math.abs(now - date);
+	const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+	const diffDays = Math.floor(diffHours / 24);
+
+	if (diffHours < 1) return "Just now";
+	if (diffHours < 24) return `${diffHours}h ago`;
+	if (diffDays === 1) return "1 day ago";
+	return `${diffDays} days ago`;
+};

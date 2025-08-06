@@ -1,4 +1,4 @@
-import { formDateTime } from "../../utils/TimeUtils";
+import { formatDateTime } from "../../utils/TimeUtils";
 import { Form } from "react-bootstrap";
 import { React, useState } from "react";
 import Select from "react-select";
@@ -12,11 +12,7 @@ const displayError = (errorMessage) => {
 	if (!errorMessage) return null;
 
 	// Split by newlines and render each error on a separate line
-	return errorMessage.split('\n').map((line, index) => (
-		<div key={index}>
-			{line}
-		</div>
-	));
+	return errorMessage.split("\n").map((line, index) => <div key={index}>{line}</div>);
 };
 
 const CustomDropdownIndicator = (props) => {
@@ -171,7 +167,7 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 	const setCurrentTime = (e) => {
 		e.preventDefault();
 		e.stopPropagation();
-		const newDateTime = formDateTime(); // Gets current time formatted
+		const newDateTime = formatDateTime(); // Gets current time formatted
 		const syntheticEvent = {
 			target: {
 				name: field.name,
@@ -181,8 +177,8 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 		handleChange(syntheticEvent);
 	};
 
-	// Use formDateTime for formatting, defaults to current time if value is null/undefined
-	const formattedValue = formDateTime(value);
+	// Use formatDateTime for formatting, defaults to current time if value is null/undefined
+	const formattedValue = formatDateTime(value);
 
 	return (
 		<>
