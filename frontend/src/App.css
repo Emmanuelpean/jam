@@ -334,6 +334,11 @@ textarea.form-control {
     opacity: 0.8;
 }
 
+.badge-group {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 5px;
+}
 
 /* ----------------------------------------------------- TOGGLE ----------------------------------------------------- */
 

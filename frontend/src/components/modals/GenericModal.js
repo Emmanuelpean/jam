@@ -364,6 +364,7 @@ const GenericModal = ({
 
 		// 1) Required field validation
 		allFields.forEach((field) => {
+			console.log(field.name, formData[field.name]);
 			if (field.required && !formData[field.name]) {
 				newErrors[field.name] = `${field.label} is required`;
 			}

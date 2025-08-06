@@ -1,5 +1,5 @@
 import { renderFunctions } from "./Renders";
-import {localeDateOnly} from "../../utils/TimeUtils";
+import { localeDateOnly } from "../../utils/TimeUtils";
 
 export const columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
@@ -204,7 +204,7 @@ export const columns = {
 	interviewers: (overrides = {}) => ({
 		key: "person",
 		label: "Interviewers",
-		sortable: true,
+		sortable: false,
 		searchable: true,
 		type: "text",
 		sortField: "person.last_name",

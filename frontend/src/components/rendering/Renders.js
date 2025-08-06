@@ -384,7 +384,7 @@ export const renderFunctions = {
 		const contacts = accessAttribute(item, key);
 		if (contacts && contacts.length > 0) {
 			return (
-				<div>
+				<div className="badge-group">
 					{contacts.map((person, index) => (
 						<span key={person.id || index} className="me-1">
 							<PersonModalManager>

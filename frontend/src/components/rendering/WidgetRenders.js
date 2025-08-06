@@ -91,24 +91,21 @@ const renderSelect = (field, value, handleChange, handleSelectChange, error) => 
 	let selectedValue = null;
 
 	if (isMulti) {
-		if (Array.isArray(value) && field.options && field.options.length > 0) {
+		if (Array.isArray(value) && value.length > 0 && field.options && field.options.length > 0) {
 			selectedValue = value
-				.map((id) =>
-					field.options.find(
-						(opt) => opt.value === id || opt.value === parseInt(id) || opt.value === String(id),
-					),
-				)
+				.map((item) => {
+					// Extract the ID from the item (handle both objects with id property and primitive values)
+					const id = typeof item === "object" && item !== null ? item.id : item;
+
+					return field.options.find((opt) => opt.value === id);
+				})
 				.filter(Boolean);
 		} else {
 			selectedValue = [];
 		}
 	} else {
 		if (value !== null && value !== undefined && value !== "" && field.options) {
-			selectedValue =
-				field.options.find(
-					(option) =>
-						option.value === value || option.value === parseInt(value) || option.value === String(value),
-				) || null;
+			selectedValue = field.options.find((option) => option.value === value) || null;
 		}
 	}
 
@@ -138,7 +135,13 @@ const renderSelect = (field, value, handleChange, handleSelectChange, error) => 
 						};
 						handleChange(syntheticEvent);
 					} else {
-						handleSelectChange(selectedOptions, actionMeta);
+						const syntheticEvent = {
+							target: {
+								name: field.name,
+								value: selectedOptions ? selectedOptions.value : null,
+							},
+						};
+						handleChange(syntheticEvent);
 					}
 				}}
 				id={field.name}
