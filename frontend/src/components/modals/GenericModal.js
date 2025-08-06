@@ -75,7 +75,7 @@ const GenericModal = ({
 			if (mode === "formview") {
 				// Handle different submodes
 				if (submode === "add") {
-					setFormData({});
+					setFormData({ ...data });
 					setIsEditing(true);
 				} else if (submode === "edit") {
 					setFormData({ ...data });

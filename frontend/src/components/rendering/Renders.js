@@ -175,6 +175,11 @@ export const renderFunctions = {
 		return renderFunctions._datetime(date);
 	},
 
+	datetime: (item, view = false, key = "date") => {
+		const date = accessAttribute(item, key);
+		return new Date(date).toLocaleDateString() + " " + new Date(date).toLocaleTimeString();
+	},
+
 	date: (item, view = false, key = "date") => {
 		const date = accessAttribute(item, key);
 		return renderFunctions._datetime(date);

@@ -123,7 +123,7 @@ const renderSelect = (field, value, handleChange, handleSelectChange, error) => 
 			<Select
 				name={field.name}
 				value={selectedValue}
-				onChange={(selectedOptions, actionMeta) => {
+				onChange={(selectedOptions, _actionMeta) => {
 					if (isMulti) {
 						const ids = Array.isArray(selectedOptions) ? selectedOptions.map((option) => option.value) : [];
 
@@ -170,7 +170,7 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 	const setCurrentTime = (e) => {
 		e.preventDefault();
 		e.stopPropagation();
-		const newDateTime = formatDateTime(); // Gets current time formatted
+		const newDateTime = formatDateTime();
 		const syntheticEvent = {
 			target: {
 				name: field.name,

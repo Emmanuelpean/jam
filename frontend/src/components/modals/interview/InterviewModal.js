@@ -2,6 +2,8 @@ import React from "react";
 import GenericModal from "../GenericModal";
 import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
+import { formatDateTime } from "../../../utils/TimeUtils";
+import { useMemo } from "react";
 
 export const InterviewModal = ({
 	show,
@@ -25,6 +27,13 @@ export const InterviewModal = ({
 		renderPersonModal,
 	} = useFormOptions();
 
+	const initialData = useMemo(() => {
+		if (submode === "add" && !data) {
+			return { date: formatDateTime() };
+		}
+		return data || {};
+	}, [data, submode]);
+
 	const formFieldsArray = [
 		formFields.jobApplication(jobApplications, openJobApplicationModal),
 		[
@@ -42,7 +51,7 @@ export const InterviewModal = ({
 
 	const viewFieldsArray = [
 		viewFields.jobApplication({ label: "Job Application" }),
-		[viewFields.date(), viewFields.type()],
+		[viewFields.datetime(), viewFields.type()],
 		[viewFields.location(), viewFields.interviewers()],
 		viewFields.note(),
 	];
@@ -54,18 +63,15 @@ export const InterviewModal = ({
 
 	const transformFormData = (data) => {
 		const transformed = {};
+		console.log("data", data);
 
 		transformed.date = new Date(data.date).toISOString();
 		transformed.type = data.type;
 		transformed.location_id = data.location_id;
 		transformed.jobapplication_id = data.jobapplication_id;
-		transformed.interviewers = data.interviewers;
+		transformed.interviewers = data.interviewers.map((interviewer) => interviewer.id || interviewer);
 		transformed.note = data.note || null;
 
-		// // Add jobapplication_id for new interviews if passed as prop
-		// if (submode === "add" && jobApplicationId) {
-		// 	transformed.jobapplication_id = jobApplicationId;
-		// }
 		return transformed;
 	};
 
@@ -78,7 +84,7 @@ export const InterviewModal = ({
 				submode={submode}
 				title="Interview"
 				size={size}
-				data={data || {}}
+				data={initialData}
 				fields={fields}
 				endpoint={endpoint}
 				onSuccess={onSuccess}

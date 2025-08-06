@@ -53,8 +53,15 @@ export const viewFields = {
 
 	date: (overrides = {}) => ({
 		key: "date",
-		label: "Date & Time",
+		label: "Date",
 		render: (x) => renderFunctions.date(x, true),
+		...overrides,
+	}),
+
+	datetime: (overrides = {}) => ({
+		key: "date",
+		label: "Date & Time",
+		render: (x) => renderFunctions.datetime(x, true),
 		...overrides,
 	}),
 

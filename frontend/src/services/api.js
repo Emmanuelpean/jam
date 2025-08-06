@@ -210,7 +210,6 @@ export const apiHelpers = {
 		return data.map((item) => ({
 			value: accessAttribute(item, valueKey),
 			label: accessAttribute(item, labelKey),
-			job_application: item.job_application,
 		}));
 	},
 
