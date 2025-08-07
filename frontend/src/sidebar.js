@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { CNavItem, CSidebar, CSidebarBrand, CSidebarHeader, CSidebarNav, CSidebarToggler } from "@coreui/react";
+import { CNavItem, CSidebar, CSidebarBrand, CSidebarHeader, CSidebarNav } from "@coreui/react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { ReactComponent as JamLogo } from "./assets/Logo.svg";
@@ -26,7 +26,21 @@ export const SidebarExample = () => {
 	);
 
 	useEffect(() => {
-		import("@coreui/coreui/dist/css/coreui.min.css");
+		import("@coreui/coreui/dist/css/coreui.min.css").then(() => {
+			// After CoreUI CSS loads, inject our override styles
+			const style = document.createElement("style");
+			style.innerHTML = `
+				.sidebar-container .sidebar-brand,
+				.sidebar-container .sidebar-brand a,
+				.sidebar-container .sidebar-brand:hover,
+				.sidebar-container .sidebar-brand a:hover,
+				.sidebar-container .logo-text {
+					text-decoration: none !important;
+					border-bottom: none !important;
+				}
+			`;
+			document.head.appendChild(style);
+		});
 
 		// Initialize theme
 		const savedTheme = localStorage.getItem("theme");
@@ -258,7 +272,7 @@ export const SidebarExample = () => {
 						className="text-danger d-flex align-items-center"
 						style={{ cursor: "pointer" }}
 					>
-						<i className="bi bi-box-arrow-right me-2"></i>
+						<i className="bi bi-box-arrow-right me-2 logout-icon"></i>
 						<span className="nav-text sidebar-brand-full">Logout</span>
 					</div>
 				</CSidebarHeader>

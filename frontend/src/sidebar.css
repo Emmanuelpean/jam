@@ -1,8 +1,8 @@
-
-/* Import CoreUI styles */
-@import '@coreui/coreui/dist/css/coreui.min.css';
-
 /* Scope all CoreUI styles to only affect elements within sidebar-container */
 .sidebar-container {
     font-family: "Poppins", sans-serif;
+}
+
+a {
+    text-decoration: none;
 }
