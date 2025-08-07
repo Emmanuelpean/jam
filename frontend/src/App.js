@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./components/Auth/Login";
 import LocationsPage from "./pages/LocationsPage";
-import Header from "./Header";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import CompaniesPage from "./pages/CompaniesPage";
@@ -16,19 +15,27 @@ import "./Themes.css";
 import DashboardPage from "./pages/EISDashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
 import NotFoundPage from "./pages/NotFoundPage";
-import { SidebarExample } from "./sidebar";
+import { Sidebar } from "./Sidebar";
 
 function AppLayout({ children }) {
 	const location = useLocation();
-	const { currentUser, logout } = useAuth();
+	const { currentUser } = useAuth();
+	const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
-	// Don't show header on auth pages
+	// Don't show sidebar on auth pages
 	const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
+	const handleSidebarHoverChange = (isHovering) => {
+		setSidebarExpanded(isHovering);
+	};
+
 	return (
-		<>
-			{!isAuthPage && currentUser && <Header onLogout={logout} />}
-			<div className="main-content">
+		<div style={{ display: "flex", height: "100vh" }}>
+			{!isAuthPage && currentUser && <Sidebar onHoverChange={handleSidebarHoverChange} />}
+			<div
+				className={`main-content ${sidebarExpanded ? "sidebar-expanded" : ""}`}
+				style={{ flex: 1, overflow: "auto" }}
+			>
 				<div
 					className="content-wrapper"
 					style={{
@@ -40,7 +47,7 @@ function AppLayout({ children }) {
 					{children}
 				</div>
 			</div>
-		</>
+		</div>
 	);
 }
 
@@ -101,14 +108,6 @@ function App() {
 							}
 						/>
 						<Route
-							path="/locations"
-							element={
-								<ProtectedRoute>
-									<LocationsPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
 							path="/interviews"
 							element={
 								<ProtectedRoute>
@@ -140,8 +139,6 @@ function App() {
 								</ProtectedRoute>
 							}
 						/>
-						<Route path="/sidebar" element={<SidebarExample />}></Route>
-
 						<Route path="*" element={<NotFoundPage />} />
 					</Routes>
 				</AppLayout>
