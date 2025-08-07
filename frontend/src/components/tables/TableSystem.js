@@ -141,6 +141,7 @@ export const GenericTableWithModals = ({
 	isInModal = false,
 	selectable = false,
 	emptyMessage,
+	compact = false, // New compact mode prop
 
 	// Additional content
 	children,
@@ -150,7 +151,7 @@ export const GenericTableWithModals = ({
 	const [contextMenu, setContextMenu] = useState(null);
 	const [currentPage, setCurrentPage] = useState(0);
 	const [pageSize, setPageSize] = useState(20);
-
+	console.log(data);
 	const {
 		showModal,
 		showViewModal,
@@ -372,46 +373,62 @@ export const GenericTableWithModals = ({
 	}
 
 	return (
-		<div className="table-container">
-			{title && <h2 className="my-4">{title}</h2>}
+		<div className={`${compact ? "table-compact" : "table-container"}`}>
+			{title && <h2 className={compact ? "h4 my-3" : "my-4"}>{title}</h2>}
 
-			{/* Header with search and add button */}
-			<div className="d-flex justify-content-between mb-3" style={{ gap: "1rem" }}>
-				<div className="d-flex align-items-center gap-3" style={{ width: "40%" }}>
-					<input
-						type="text"
-						className="form-control"
-						placeholder="Search..."
-						value={searchTerm}
-						onChange={(e) => onSearchChange(e.target.value)}
-						id="search-input"
-					/>
-					<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
-						Showing {sortedData.length} Entries
-					</span>
-				</div>
+			<div
+				className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
+				style={{ gap: compact ? "0.5rem" : "1rem" }}
+			>
+				{!compact && (
+					<div className="d-flex align-items-center gap-3" style={{ width: "40%" }}>
+						<input
+							type="text"
+							className="form-control"
+							placeholder="Search..."
+							value={searchTerm}
+							onChange={(e) => onSearchChange(e.target.value)}
+							id="search-input"
+						/>
+						<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
+							Showing {sortedData.length} Entries
+						</span>
+					</div>
+				)}
 				<Button
 					variant="primary"
+					size={compact ? "sm" : undefined}
 					onClick={() => openAddModal()}
-					style={{ width: "60%" }}
+					className="d-flex align-items-center justify-content-center"
+					style={{
+						width: compact ? "100%" : "60%",
+						fontSize: compact ? "0.875rem" : undefined,
+						padding: compact ? "0.25rem 0.5rem" : undefined,
+						height: compact ? "2rem" : undefined,
+					}}
 					id="add-entity-button"
 				>
+					<i className="bi bi-plus-circle me-2" style={{ fontSize: "1.1rem" }}></i>
 					Add {itemType}
 				</Button>
 			</div>
 
 			{/* Table */}
 			<div className="table-responsive">
-				<table className="table table-striped table-hover rounded-3 overflow-hidden">
+				<table
+					className={`table table-striped table-hover rounded-3 overflow-hidden ${compact ? "table-sm" : ""}`}
+					style={compact ? { fontSize: "0.875rem" } : {}}
+				>
 					<thead className="custom-header">
 						<tr>
 							{columns.map((column) => (
-								<th key={column.key}>
+								<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
 									<div className="d-flex align-items-center justify-content-between">
 										<div
 											className={column.sortable ? "cursor-pointer user-select-none" : ""}
 											onClick={() => column.sortable && handleSort(column.key)}
 											id={`table-header-${column.key}`}
+											style={compact ? { fontSize: "0.875rem" } : {}}
 										>
 											{column.label}
 											{column.sortable && (
@@ -424,6 +441,7 @@ export const GenericTableWithModals = ({
 																	: "down"
 																: "down-up"
 														}`}
+														style={compact ? { fontSize: "0.75rem" } : {}}
 													></i>
 												</span>
 											)}
@@ -447,7 +465,15 @@ export const GenericTableWithModals = ({
 									<td
 										key={column.key}
 										className="align-middle"
-										style={columnIndex === 0 ? { fontWeight: "bold" } : {}}
+										style={{
+											...(columnIndex === 0 ? { fontWeight: "bold" } : {}),
+											...(compact
+												? {
+														padding: "0.5rem",
+														fontSize: "0.875rem",
+													}
+												: {}),
+										}}
 									>
 										{renderFieldValue(column, item)}
 									</td>
@@ -456,7 +482,18 @@ export const GenericTableWithModals = ({
 						))}
 						{currentPageData.length === 0 && (
 							<tr>
-								<td colSpan={columns.length} className="text-center py-4 text-muted">
+								<td
+									colSpan={columns.length}
+									className="text-center py-4 text-muted"
+									style={
+										compact
+											? {
+													padding: "1rem",
+													fontSize: "0.875rem",
+												}
+											: {}
+									}
+								>
 									{emptyMessage || `No ${pluralize(itemType)} found`}
 								</td>
 							</tr>
@@ -467,7 +504,7 @@ export const GenericTableWithModals = ({
 
 			{/* Pagination */}
 			{!showAllEntries && (
-				<div className="d-flex justify-content-between align-items-center mt-3">
+				<div className={`d-flex justify-content-between align-items-center ${compact ? "mt-2" : "mt-3"}`}>
 					<div className="d-flex align-items-center gap-1">
 						{[
 							{
@@ -499,23 +536,29 @@ export const GenericTableWithModals = ({
 								key={label}
 								variant="outline-secondary"
 								size="sm"
-								className="py-0 px-2"
+								className={compact ? "py-0 px-1" : "py-0 px-2"}
 								onClick={action}
 								disabled={disabled}
 								aria-label={label}
+								style={compact ? { fontSize: "0.75rem" } : {}}
 							>
 								<i className={`bi bi-${icon}`} aria-hidden="true"></i>
 							</Button>
 						))}
 					</div>
 					<div className="d-flex align-items-center gap-2">
-						<span className="small text-muted text-nowrap">
+						<span className={`small text-muted text-nowrap`} style={compact ? { fontSize: "0.75rem" } : {}}>
 							Page {currentPage + 1} of {totalPages || 1}
 						</span>
 						<Form.Select
 							size="sm"
 							id="page-items-select"
-							style={{ width: "auto", padding: "0.25rem 0.5rem", textAlign: "center" }}
+							style={{
+								width: "auto",
+								padding: compact ? "0.125rem 0.25rem" : "0.25rem 0.5rem",
+								textAlign: "center",
+								fontSize: compact ? "0.75rem" : undefined,
+							}}
 							value={pageSize}
 							onChange={(e) => handlePageSizeChange(Number(e.target.value))}
 						>
@@ -543,7 +586,7 @@ export const GenericTableWithModals = ({
 						borderRadius: "4px",
 						boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
 						padding: "4px 0",
-						minWidth: "150px",
+						minWidth: compact ? "120px" : "150px",
 					}}
 					onClick={(e) => e.stopPropagation()}
 				>
@@ -562,9 +605,9 @@ export const GenericTableWithModals = ({
 							key={action}
 							className="context-menu-item"
 							style={{
-								padding: "8px 16px",
+								padding: compact ? "6px 12px" : "8px 16px",
 								cursor: "pointer",
-								fontSize: "14px",
+								fontSize: compact ? "13px" : "14px",
 								borderBottom: action !== "delete" ? "1px solid #eee" : "none",
 								color: color || "inherit",
 							}}

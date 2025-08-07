@@ -79,6 +79,7 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 			viewModalSize="xl"
 			isInModal={true}
 			showAllEntries={true}
+			compact={true}
 		/>
 	);
 };

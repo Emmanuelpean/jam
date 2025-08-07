@@ -17,7 +17,7 @@ import { KeywordFormModal } from "../modals/KeywordModal";
 import { PersonFormModal } from "../modals/PersonModal";
 import { AggregatorFormModal } from "../modals/AggregatorModal";
 import { JobFormModal } from "../modals/job/JobModal";
-import JobApplicationFormModal from "../modals/job_application/JobApplicationModal";
+import { JobApplicationFormModal } from "../modals/job_application/JobApplicationModal";
 
 // Hook for country loading that can be used by components
 export const useCountries = () => {

@@ -7,20 +7,20 @@ import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
 import { useAuth } from "../../../contexts/AuthContext";
 import AlertModal from "../alert/AlertModal";
-import { formatDateTime } from "../../../utils/TimeUtils";
 import InterviewsTable from "../../tables/InterviewTable";
+import { JobModal } from "../job/JobModal";
 
 export const JobApplicationModal = ({
 	show,
 	onHide,
-	jobApplication,
+	data,
 	onSuccess,
 	onDelete,
 	endpoint = "jobapplications",
 	submode = "view",
 	size = "lg",
-	...override
 }) => {
+	console.log(data);
 	const { token } = useAuth();
 	const { alertState, showError, hideAlert } = useGenericAlert();
 	const formRef = useRef();
@@ -37,63 +37,23 @@ export const JobApplicationModal = ({
 
 	// Track job options for the dropdown
 	const { jobs, aggregators, openAggregatorModal, renderAggregatorModal } = useFormOptions();
-	const filteredJobs = jobs.filter((job) => !job.job_application || job.job_application.id === jobApplication?.id);
+	const filteredJobs = jobs.filter((job) => !job.job_application || job.job_application.id === data?.id);
 
 	// Add state to track current form data for conditional fields
 	const [currentFormData, setCurrentFormData] = useState({});
 
-	// Transform initial data to match form field expectations
-	const transformInitialData = useCallback((data) => {
-		if (!data) {
-			return {
-				date: formatDateTime(),
-				url: "",
-				note: "",
-				status: "Applied", // TODO not working
-				jobId: "",
-				...override,
-			};
-		} else {
-			const transformed = { ...data };
-
-			// Convert ISO datetime to datetime-local format
-			transformed.date = formatDateTime(transformed.date);
-
-			// Ensure string fields are not null/undefined
-			if (transformed.url === null || transformed.url === undefined) {
-				transformed.url = "";
-			}
-			if (transformed.note === null || transformed.note === undefined) {
-				transformed.note = "";
-			}
-
-			// Ensure job_id is set from the job relationship if editing
-			if (transformed.job && transformed.job.id) {
-				transformed.job_id = transformed.job.id;
-			}
-			return transformed;
-		}
-	}, []);
-
-	// Initialize file states when modal opens or jobApplication changes
+	// Initialize file states when modal opens or data changes
 	useEffect(() => {
 		if (show) {
 			setFileStates({
-				cv: jobApplication?.cv || null,
-				cover_letter: jobApplication?.cover_letter || null,
+				cv: data?.cv || null,
+				cover_letter: data?.cover_letter || null,
 			});
-			setInterviews(jobApplication?.interviews || []);
+			setInterviews(data?.interviews || []);
 			// Initialize form data state
-			setCurrentFormData(transformInitialData(jobApplication));
+			setCurrentFormData(data);
 		}
-	}, [
-		show,
-		jobApplication?.cv,
-		jobApplication?.cover_letter,
-		jobApplication?.interviews,
-		transformInitialData,
-		jobApplication,
-	]);
+	}, [show, data?.cv, data?.cover_letter, data?.interviews, data]);
 
 	const handleInterviewChange = () => {
 		setRefreshInterviews((prev) => prev + 1);
@@ -185,7 +145,7 @@ export const JobApplicationModal = ({
 	};
 
 	const createInterviewsTableField = () => {
-		if (jobApplication?.id) {
+		if (data?.id) {
 			return {
 				name: "interviews_table",
 				key: "interviews_table",
@@ -194,7 +154,7 @@ export const JobApplicationModal = ({
 				render: () => (
 					<InterviewsTable
 						interviews={interviews}
-						jobApplicationId={jobApplication.id}
+						jobApplicationId={data.id}
 						onInterviewChange={handleInterviewChange}
 					/>
 				),
@@ -240,7 +200,7 @@ export const JobApplicationModal = ({
 			],
 		];
 
-		if (jobApplication?.id) {
+		if (data?.id) {
 			baseFields.push(viewFields.interviews());
 		}
 
@@ -253,7 +213,7 @@ export const JobApplicationModal = ({
 		handleFileRemove,
 		openAggregatorModal,
 		submode,
-		jobApplication?.id,
+		data?.id,
 		interviews,
 		handleInterviewChange,
 	]);
@@ -267,12 +227,12 @@ export const JobApplicationModal = ({
 			viewFields.note(),
 		];
 
-		if (jobApplication?.id) {
+		if (data?.id) {
 			baseFields.push(viewFields.interviews());
 		}
 
 		return baseFields;
-	}, [submode, jobApplication?.id, interviews, handleInterviewChange]);
+	}, [submode, data?.id, interviews, handleInterviewChange]);
 
 	const fields = useMemo(
 		() => ({
@@ -377,30 +337,17 @@ export const JobApplicationModal = ({
 
 	// Data transformation function (synchronous - files already processed)
 	const transformFormData = (data) => {
-		const transformed = { ...data };
-
-		// Convert datetime-local back to ISO format
-		if (transformed.date) {
-			transformed.date = new Date(transformed.date).toISOString();
-		}
-
-		// Remove system fields that shouldn't be sent to backend
-		delete transformed.created_at;
-		delete transformed.modified_at;
-		delete transformed.owner_id;
-		delete transformed.job;
-		delete transformed.interviews;
-
-		// Clean up empty values but preserve null file IDs
-		return Object.fromEntries(
-			Object.entries(transformed).filter(([key, value]) => {
-				// Always include file ID fields, even if null (indicates removal)
-				if (key.endsWith("_id")) return true;
-				if (value === null || value === undefined) return false;
-				// Allow empty strings for url and note fields
-				return !(typeof value === "string" && value === "" && key !== "url" && key !== "note");
-			}),
-		);
+		return {
+			date: new Date(data.date).toISOString(),
+			url: data.url?.trim() || null,
+			status: data.status,
+			job_id: data.job_id,
+			applied_via: data.applied_via,
+			aggregator_id: data.aggregator_id,
+			note: data.note?.trim() || null,
+			cv_id: data.cv_id,
+			cover_letter_id: data.cover_letter_id,
+		};
 	};
 
 	return (
@@ -413,7 +360,7 @@ export const JobApplicationModal = ({
 				submode={submode}
 				title="Job Application"
 				size={size}
-				data={transformInitialData(jobApplication || {})}
+				data={data || {}}
 				fields={fields}
 				endpoint={endpoint}
 				onSuccess={onSuccess}
@@ -432,13 +379,8 @@ export const JobApplicationModal = ({
 };
 
 export const JobApplicationFormModal = (props) => {
-	const submode = props.isEdit || props.jobApplication?.id ? "edit" : "add";
+	const submode = props.isEdit || props.job?.id ? "edit" : "add";
 	return <JobApplicationModal {...props} submode={submode} />;
 };
 
-export const JobApplicationViewModal = (props) => {
-	return <JobApplicationModal {...props} jobApplication={props.job} submode="view" />;
-};
-
-// Add default export
-export default JobApplicationFormModal;
+export const JobApplicationViewModal = (props) => <JobApplicationModal {...props} submode="view" />;

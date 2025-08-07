@@ -39,7 +39,7 @@ function AppLayout({ children }) {
 				<div
 					className="content-wrapper"
 					style={{
-						maxWidth: "90%",
+						maxWidth: "95%",
 						margin: "0 auto",
 						padding: "20px",
 					}}
