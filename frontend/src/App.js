@@ -16,6 +16,7 @@ import "./Themes.css";
 import DashboardPage from "./pages/EISDashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import { SidebarExample } from "./sidebar";
 
 function AppLayout({ children }) {
 	const location = useLocation();
@@ -139,6 +140,8 @@ function App() {
 								</ProtectedRoute>
 							}
 						/>
+						<Route path="/sidebar" element={<SidebarExample />}></Route>
+
 						<Route path="*" element={<NotFoundPage />} />
 					</Routes>
 				</AppLayout>

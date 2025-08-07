@@ -32,21 +32,13 @@ scrapedjob_router = generate_crud_router(
 servicelog_router = APIRouter(prefix="/servicelogs", tags=["servicelogs"])
 
 
-def admin_required(current_user: models.User = Depends(get_current_user)) -> models.User:
-    """Dependency to ensure only admin users can access service logs"""
-
-    if not current_user.is_admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
-    return current_user
-
-
 @servicelog_router.get("/", response_model=list[schemas.ServiceLogOut])
 def get_service_logs_by_date_range(
     start_date: datetime | None = Query(None, description="Start date for filtering (ISO format)"),
     end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
     delta_days: int | None = Query(None, description="Number of days to go back in time"),
     limit: int | None = Query(None, description="Maximum number of logs to return"),
-    current_user: models.User = Depends(admin_required),
+    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[eis_models.ServiceLog]:
     """Get service logs within a specified date range. Admin access required.
@@ -57,6 +49,9 @@ def get_service_logs_by_date_range(
     :param current_user: Current authenticated admin user
     :param db: Database session
     :return: list of service logs within the date range ordered by run_datetime descending"""
+
+    if not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
     query = db.query(eis_models.ServiceLog)
 
