@@ -21,8 +21,8 @@
 /* Text Positioning */
 .logo-text {
     font-weight: 600;
-    font-size: 40px;
-    color: var(--primary-mid);
+    font-size: 50px !important;
+    color: var(--primary-mid) !important;
 }
 
 .logo-text-below {
