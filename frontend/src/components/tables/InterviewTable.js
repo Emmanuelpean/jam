@@ -11,8 +11,6 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 		error,
 		sortConfig,
 		setSortConfig,
-		searchTerm,
-		setSearchTerm,
 		addItem,
 		updateItem,
 		deleteItem,
@@ -63,8 +61,6 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 			columns={interviewColumns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
-			searchTerm={searchTerm}
-			onSearchChange={setSearchTerm}
 			loading={loading}
 			error={error}
 			FormModal={InterviewFormModalWithProps}

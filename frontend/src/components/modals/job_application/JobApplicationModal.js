@@ -7,8 +7,6 @@ import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
 import { useAuth } from "../../../contexts/AuthContext";
 import AlertModal from "../alert/AlertModal";
-import InterviewsTable from "../../tables/InterviewTable";
-import { JobModal } from "../job/JobModal";
 
 export const JobApplicationModal = ({
 	show,
@@ -19,8 +17,8 @@ export const JobApplicationModal = ({
 	endpoint = "jobapplications",
 	submode = "view",
 	size = "lg",
+	jobId = null,
 }) => {
-	console.log(data);
 	const { token } = useAuth();
 	const { alertState, showError, hideAlert } = useGenericAlert();
 	const formRef = useRef();
@@ -144,30 +142,11 @@ export const JobApplicationModal = ({
 		}
 	};
 
-	const createInterviewsTableField = () => {
-		if (data?.id) {
-			return {
-				name: "interviews_table",
-				key: "interviews_table",
-				type: "table",
-				columnClass: "col-12", // Full width
-				render: () => (
-					<InterviewsTable
-						interviews={interviews}
-						jobApplicationId={data.id}
-						onInterviewChange={handleInterviewChange}
-					/>
-				),
-			};
-		}
-		return null;
-	};
-
 	// Form fields for editing
 	const formFieldsArray = useMemo(() => {
-		const baseFields = [
+		return [
 			[formFields.applicationDate(), formFields.applicationStatus()],
-			[formFields.job(filteredJobs)],
+			...(!jobId ? [formFields.job(filteredJobs)] : []),
 			[
 				formFields.applicationVia(),
 				...(currentFormData?.applied_via === "Aggregator"
@@ -199,12 +178,6 @@ export const JobApplicationModal = ({
 				},
 			],
 		];
-
-		if (data?.id) {
-			baseFields.push(viewFields.interviews());
-		}
-
-		return baseFields;
 	}, [
 		currentFormData?.applied_via,
 		fileStates.cv,

@@ -34,7 +34,7 @@ export const InterviewModal = ({
 	}, [data, submode]);
 
 	const formFieldsArray = [
-		formFields.jobApplication(jobApplications, openJobApplicationModal),
+		...(!jobApplicationId ? [formFields.jobApplication(jobApplications, openJobApplicationModal)] : []),
 		[
 			formFields.datetime({
 				required: true,
@@ -66,7 +66,7 @@ export const InterviewModal = ({
 			date: new Date(data.date).toISOString(),
 			type: data.type,
 			location_id: data.location_id,
-			jobapplication_id: data.jobapplication_id,
+			jobapplication_id: jobApplicationId || data.jobapplication_id,
 			interviewers: data.interviewers?.map((interviewer) => interviewer.id || interviewer) || [],
 			note: data.note?.trim() || null,
 		};
