@@ -1,40 +1,8 @@
+
 /* Import CoreUI styles */
 @import '@coreui/coreui/dist/css/coreui.min.css';
 
 /* Scope all CoreUI styles to only affect elements within sidebar-container */
 .sidebar-container {
-  /* This ensures CoreUI styles only apply within this container */
-}
-
-/* Additional sidebar-specific styles */
-.sidebar-container .sidebar-logout {
-  cursor: pointer;
-}
-
-.sidebar-container .sidebar-brand {
-  cursor: pointer;
-}
-
-/* Hide text when sidebar is minimized/collapsed */
-.sidebar-container .sidebar.sidebar-minimized .nav-text {
-  display: none !important;
-}
-
-.sidebar-container .sidebar.sidebar-minimized .nav-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-}
-
-/* Ensure icons are properly centered when collapsed */
-.sidebar-container .sidebar.sidebar-minimized .nav-link {
-  justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-/* Hide logo text when collapsed */
-.sidebar-container .sidebar.sidebar-minimized .sidebar-brand-full {
-  display: none;
+    font-family: "Poppins", sans-serif;
 }
