@@ -97,13 +97,8 @@ export const JobModal = ({
 };
 
 export const JobFormModal = (props) => {
-	// Determine the submode based on whether we have job data with an ID
 	const submode = props.isEdit || props.job?.id ? "edit" : "add";
 	return <JobModal {...props} submode={submode} />;
 };
 
-// Wrapper for view modal
 export const JobViewModal = (props) => <JobModal {...props} submode="view" />;
-
-// Add default export
-export default JobFormModal;

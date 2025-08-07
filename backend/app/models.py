@@ -16,6 +16,7 @@ from sqlalchemy import (
     Table,
     func,
 )
+import re
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
@@ -52,22 +53,27 @@ class CommonBase(object):
     -----------
     - `id` (int): Primary key of the record.
     - `created_at` (datetime): The timestamp of when the record was created.
-    - `owner_id` (int): Identifier for the owner of the record. Linked to the user table.
-    """
+    - `owner_id` (int): Identifier for the owner of the record. Linked to the user table."""
 
     # noinspection PyMethodParameters
     @declared_attr
     def __tablename__(cls) -> str:
         """Return the class name as table name"""
-        return cls.__name__.lower()
+        name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", cls.__name__)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
     id = Column(Integer, primary_key=True, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     modified_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class Owned(CommonBase):
+    """A base class that contains common attributes shared by multiple tables that are owned by a user."""
+
     owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
 
-class Settings(Base):
+class Settings(CommonBase, Base):
     """Represents settings for the jobscraper"""
 
     __tablename__ = "settings"
@@ -78,7 +84,7 @@ class Settings(Base):
     description = Column(String, nullable=False)
 
 
-class User(Base):
+class User(CommonBase, Base):
     """Represents the users of the application.
 
     Attributes:
@@ -91,16 +97,13 @@ class User(Base):
 
     __tablename__ = "user"
 
-    id = Column(Integer, primary_key=True, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
-    modified_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
     theme = Column(String, nullable=False, server_default="mixed-berry")
     is_admin = Column(Boolean, nullable=False, server_default=expression.false())
 
 
-class Company(CommonBase, Base):
+class Company(Owned, Base):
     """Represents a company or organisation.
 
     Attributes:
@@ -118,7 +121,7 @@ class Company(CommonBase, Base):
     persons = relationship("Person", back_populates="company")
 
 
-class Keyword(CommonBase, Base):
+class Keyword(Owned, Base):
     """Represents keywords associated with job postings.
 
     Attributes:
@@ -129,7 +132,7 @@ class Keyword(CommonBase, Base):
     jobs = relationship("Job", secondary=job_keywords, back_populates="keywords")
 
 
-class Aggregator(CommonBase, Base):
+class Aggregator(Owned, Base):
     """Represents a website associated with an aggregator company (e.g. LinkedIn, Indeed).
 
     Attributes:
@@ -144,7 +147,7 @@ class Aggregator(CommonBase, Base):
     job_applications = relationship("JobApplication", back_populates="aggregator")
 
 
-class File(CommonBase, Base):
+class File(Owned, Base):
     """Represents files uploaded by users.
 
     Attributes:
@@ -159,7 +162,7 @@ class File(CommonBase, Base):
     size = Column(Integer, nullable=False)
 
 
-class Location(CommonBase, Base):
+class Location(Owned, Base):
     """Represents geographical locations.
 
     Attributes:
@@ -203,7 +206,7 @@ class Location(CommonBase, Base):
     )
 
 
-class Person(CommonBase, Base):
+class Person(Owned, Base):
     """Represents an individual linked to a company.
 
     Attributes:
@@ -243,7 +246,7 @@ class Person(CommonBase, Base):
             return "Unknown Person"
 
 
-class Job(CommonBase, Base):
+class Job(Owned, Base):
     """Represents job postings within the application.
 
     Attributes:
@@ -306,7 +309,7 @@ class Job(CommonBase, Base):
     )
 
 
-class JobApplication(CommonBase, Base):
+class JobApplication(Owned, Base):
     """Represents job applications for a person.
 
     Attributes:
@@ -336,7 +339,7 @@ class JobApplication(CommonBase, Base):
     cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
 
 
-class Interview(CommonBase, Base):
+class Interview(Owned, Base):
     """Represents interviews for job applications.
 
     Attributes:
@@ -352,7 +355,9 @@ class Interview(CommonBase, Base):
     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     type = Column(String, nullable=False)
     location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
-    jobapplication_id = Column(Integer, ForeignKey("jobapplication.id", ondelete="CASCADE"), nullable=False, index=True)
+    jobapplication_id = Column(
+        Integer, ForeignKey("job_application.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     note = Column(String, nullable=True)
 
     # Relationships

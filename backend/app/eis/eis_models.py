@@ -4,21 +4,21 @@ Defines SQLAlchemy ORM models for email-based job scraping functionality.
 Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
-from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float, TIMESTAMP, Table, text, func
+from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float, TIMESTAMP, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.models import CommonBase, Base
+from app.models import Owned, CommonBase, Base
 
 email_scrapedjob_mapping = Table(
     "email_scrapedjob_mapping",
     Base.metadata,
-    Column("email_id", Integer, ForeignKey("jobalertemail.id", ondelete="CASCADE"), primary_key=True),
-    Column("job_id", Integer, ForeignKey("scrapedjob.id", ondelete="CASCADE"), primary_key=True),
+    Column("email_id", Integer, ForeignKey("job_alert_email.id", ondelete="CASCADE"), primary_key=True),
+    Column("job_id", Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), primary_key=True),
 )
 
 
-class JobAlertEmail(CommonBase, Base):
+class JobAlertEmail(Owned, Base):
     """Represents email messages containing job information like LinkedIn and Indeed job alerts"""
 
     external_email_id = Column(String, unique=True, nullable=False)
@@ -32,13 +32,14 @@ class JobAlertEmail(CommonBase, Base):
     jobs = relationship("ScrapedJob", secondary=email_scrapedjob_mapping, back_populates="emails")
 
 
-class ScrapedJob(CommonBase, Base):
+class ScrapedJob(Owned, Base):
     """Represents scraped job postings from external sources with additional metadata."""
 
     external_job_id = Column(String, nullable=False, unique=True)
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
     is_failed = Column(Boolean, nullable=False, server_default=expression.false())
     scrape_error = Column(String, nullable=True)
+    is_active = Column(Boolean, nullable=False, server_default=expression.true())
 
     # Job data
     title = Column(String, nullable=True)
@@ -54,12 +55,9 @@ class ScrapedJob(CommonBase, Base):
     emails = relationship("JobAlertEmail", secondary=email_scrapedjob_mapping, back_populates="jobs")
 
 
-class ServiceLog(Base):
+class ServiceLog(CommonBase, Base):
     """Represents logs of service operations and their status."""
 
-    __tablename__ = "servicelog"
-
-    id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String, nullable=False)
     run_duration = Column(Float)
     run_datetime = Column(DateTime)
@@ -67,5 +65,3 @@ class ServiceLog(Base):
     error_message = Column(String, nullable=True)
     job_success_n = Column(Integer, nullable=True)
     job_fail_n = Column(Integer, nullable=True)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
-    modified_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
