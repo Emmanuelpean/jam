@@ -1,6 +1,6 @@
 import React from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
-import { InterviewFormModal, InterviewViewModal } from "../components/modals/interview/InterviewModal";
+import { InterviewFormModal, InterviewViewModal } from "../components/modals/InterviewModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
 const InterviewsPage = () => {

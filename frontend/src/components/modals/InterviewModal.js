@@ -1,9 +1,8 @@
-import React from "react";
-import GenericModal from "../GenericModal";
-import { formFields, useFormOptions } from "../../rendering/FormRenders";
-import { viewFields } from "../../rendering/ViewRenders";
-import { formatDateTime } from "../../../utils/TimeUtils";
-import { useMemo } from "react";
+import React, { useMemo } from "react";
+import GenericModal from "./GenericModal";
+import { formFields, useFormOptions } from "../rendering/FormRenders";
+import { viewFields } from "../rendering/ViewRenders";
+import { formatDateTime } from "../../utils/TimeUtils";
 
 export const InterviewModal = ({
 	show,
@@ -62,17 +61,15 @@ export const InterviewModal = ({
 	};
 
 	const transformFormData = (data) => {
-		const transformed = {};
-		console.log("data", data);
-
-		transformed.date = new Date(data.date).toISOString();
-		transformed.type = data.type;
-		transformed.location_id = data.location_id;
-		transformed.jobapplication_id = data.jobapplication_id;
-		transformed.interviewers = data.interviewers.map((interviewer) => interviewer.id || interviewer);
-		transformed.note = data.note || null;
-
-		return transformed;
+		console.log(data);
+		return {
+			date: new Date(data.date).toISOString(),
+			type: data.type,
+			location_id: data.location_id,
+			jobapplication_id: data.jobapplication_id,
+			interviewers: data.interviewers?.map((interviewer) => interviewer.id || interviewer) || [],
+			note: data.note?.trim() || null,
+		};
 	};
 
 	return (

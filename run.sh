@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # Absolute paths to frontend and backend

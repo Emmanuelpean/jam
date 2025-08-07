@@ -1,7 +1,7 @@
 import React from "react";
 import { GenericTableWithModals, useTableData } from "./TableSystem";
 import { columns } from "../rendering/ColumnRenders";
-import { InterviewFormModal, InterviewViewModal } from "../modals/interview/InterviewModal";
+import { InterviewFormModal, InterviewViewModal } from "../modals/InterviewModal";
 import "./InterviewTable.css";
 
 const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
