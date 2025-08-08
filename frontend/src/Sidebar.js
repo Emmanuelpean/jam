@@ -7,13 +7,14 @@ import "./Sidebar.css";
 
 export const Sidebar = ({ onHoverChange }) => {
 	const location = useLocation();
-	const { logout, token } = useAuth();
+	const { logout, token, is_admin } = useAuth();
 	const [showDropdown, setShowDropdown] = useState(false);
 	const [currentTheme, setCurrentTheme] = useState("mixed-berry");
 	const [hoveredItem, setHoveredItem] = useState(null);
 	const [isHovering, setIsHovering] = useState(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState(null);
 	const dropdownRef = useRef(null);
+	const hoverTimeoutRef = useRef(null);
 
 	const themes = useMemo(
 		() => [
@@ -27,8 +28,9 @@ export const Sidebar = ({ onHoverChange }) => {
 		[],
 	);
 
-	const navigationItems = [
+	const allNavigationItems = [
 		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard" },
+		{ path: "/eis_dashboard", icon: "bi-house-door", text: "EIS Dashboard", adminOnly: true },
 		{ path: "/jobs", icon: "bi-briefcase", text: "Jobs" },
 		{ path: "/jobapplications", icon: "bi-person-workspace", text: "Job Applications" },
 		{ path: "/interviews", icon: "bi-people-fill", text: "Interviews" },
@@ -46,6 +48,14 @@ export const Sidebar = ({ onHoverChange }) => {
 		},
 	];
 
+	// Filter navigation items based on admin status
+	const navigationItems = useMemo(() => {
+		return allNavigationItems.filter((item) => {
+			// If item has adminOnly flag and user is not admin, exclude it
+			return !(item.adminOnly && !is_admin);
+		});
+	}, [is_admin]);
+
 	useEffect(() => {
 		// Initialize theme
 		const savedTheme = localStorage.getItem("theme");
@@ -61,7 +71,7 @@ export const Sidebar = ({ onHoverChange }) => {
 				setExpandedSubmenu(item.text);
 			}
 		});
-	}, [location.pathname]);
+	}, [location.pathname, navigationItems]);
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -83,6 +93,15 @@ export const Sidebar = ({ onHoverChange }) => {
 			onHoverChange(isHovering);
 		}
 	}, [isHovering, onHoverChange]);
+
+	// Cleanup timeout on unmount
+	useEffect(() => {
+		return () => {
+			if (hoverTimeoutRef.current) {
+				clearTimeout(hoverTimeoutRef.current);
+			}
+		};
+	}, []);
 
 	const handleLogoClick = (e) => {
 		e.preventDefault();
@@ -106,18 +125,26 @@ export const Sidebar = ({ onHoverChange }) => {
 	};
 
 	const handleMouseEnter = () => {
+		// Clear any existing timeout when mouse re-enters
+		if (hoverTimeoutRef.current) {
+			clearTimeout(hoverTimeoutRef.current);
+			hoverTimeoutRef.current = null;
+		}
 		setIsHovering(true);
 	};
 
 	const handleMouseLeave = () => {
-		setIsHovering(false);
-		setShowDropdown(false);
-		// Only collapse submenu if none of its items are active
-		navigationItems.forEach((item) => {
-			if (item.submenu && expandedSubmenu === item.text && !isSubmenuActive(item.submenu)) {
-				setExpandedSubmenu(null);
-			}
-		});
+		// Set a delay before collapsing the menu
+		hoverTimeoutRef.current = setTimeout(() => {
+			setIsHovering(false);
+			setShowDropdown(false);
+			// Only collapse submenu if none of its items are active
+			navigationItems.forEach((item) => {
+				if (item.submenu && expandedSubmenu === item.text && !isSubmenuActive(item.submenu)) {
+					setExpandedSubmenu(null);
+				}
+			});
+		}, 300);
 	};
 
 	const isActive = (path) => location.pathname === path;
@@ -134,9 +161,6 @@ export const Sidebar = ({ onHoverChange }) => {
 		const isExpanded = expandedSubmenu === item.text;
 		const hasActiveItem = isSubmenuActive(item.submenu);
 
-		// Show submenu if:
-		// 1. It's expanded and sidebar is hovering, OR
-		// 2. Any of its items is active (even when collapsed)
 		return (isHovering && isExpanded) || hasActiveItem;
 	};
 
@@ -220,7 +244,7 @@ export const Sidebar = ({ onHoverChange }) => {
 					<div className="sidebar-brand" onClick={handleLogoClick} style={{ cursor: "pointer" }}>
 						<div className="logo-container logo-container-horizontal d-flex align-items-center">
 							<JamLogo style={{ height: "57px", width: "auto" }} />
-							{isHovering && <span className="logo-text logo-text-right">JAM</span>}
+							{isHovering && <span className="logo-text">JAM</span>}
 						</div>
 					</div>
 

@@ -21,7 +21,7 @@
 .sidebar-header {
     padding: 1rem 0.5rem;
     border-bottom: 1px solid #dee2e6;
-    overflow: visible;
+    overflow: hidden;
     display: flex;
     justify-content: center;
     transition: padding 0.3s ease, justify-content 0.3s ease;
