@@ -297,3 +297,30 @@
         margin-left: 0;
     }
 }
+
+.nav-item:hover .submenu-arrow {
+    color: var(--primary-mid);
+}
+
+.submenu-arrow {
+    transition: transform 0.3s ease;
+}
+
+.submenu-arrow.expanded {
+    transform: rotate(90deg);
+}
+
+
+.submenu {
+    padding-left: 20px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.collapsed-submenu {
+    padding-left: 0;
+}
+
+.nav-item.active:hover .submenu-arrow {
+    color: white;
+}

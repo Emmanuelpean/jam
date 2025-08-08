@@ -12,6 +12,7 @@ export const Sidebar = ({ onHoverChange }) => {
 	const [currentTheme, setCurrentTheme] = useState("mixed-berry");
 	const [hoveredItem, setHoveredItem] = useState(null);
 	const [isHovering, setIsHovering] = useState(false);
+	const [expandedSubmenu, setExpandedSubmenu] = useState(null);
 	const dropdownRef = useRef(null);
 
 	const themes = useMemo(
@@ -34,9 +35,15 @@ export const Sidebar = ({ onHoverChange }) => {
 		{ path: "/jobapplicationupdates", icon: "bi-person-badge", text: "Job Application Updates" },
 		{ path: "/persons", icon: "bi-people", text: "People" },
 		{ path: "/locations", icon: "bi-geo-alt", text: "Locations" },
-		{ path: "/companies", icon: "bi-building", text: "Companies" },
-		{ path: "/aggregators", icon: "bi-linkedin", text: "Aggregators" },
-		{ path: "/keywords", icon: "bi-tags", text: "Tags" },
+		{
+			text: "Other",
+			icon: "bi-three-dots",
+			submenu: [
+				{ path: "/companies", icon: "bi-building", text: "Companies" },
+				{ path: "/aggregators", icon: "bi-linkedin", text: "Aggregators" },
+				{ path: "/keywords", icon: "bi-tags", text: "Tags" },
+			],
+		},
 	];
 
 	useEffect(() => {
@@ -46,6 +53,15 @@ export const Sidebar = ({ onHoverChange }) => {
 		setCurrentTheme(initTheme);
 		document.documentElement.setAttribute("data-theme", initTheme);
 	}, [themes]);
+
+	// Auto-expand submenu if any of its items is active
+	useEffect(() => {
+		navigationItems.forEach((item) => {
+			if (item.submenu && isSubmenuActive(item.submenu)) {
+				setExpandedSubmenu(item.text);
+			}
+		});
+	}, [location.pathname]);
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -96,9 +112,33 @@ export const Sidebar = ({ onHoverChange }) => {
 	const handleMouseLeave = () => {
 		setIsHovering(false);
 		setShowDropdown(false);
+		// Only collapse submenu if none of its items are active
+		navigationItems.forEach((item) => {
+			if (item.submenu && expandedSubmenu === item.text && !isSubmenuActive(item.submenu)) {
+				setExpandedSubmenu(null);
+			}
+		});
 	};
 
 	const isActive = (path) => location.pathname === path;
+
+	const isSubmenuActive = (submenu) => {
+		return submenu.some((item) => location.pathname === item.path);
+	};
+
+	const handleSubmenuToggle = (submenuText) => {
+		setExpandedSubmenu(expandedSubmenu === submenuText ? null : submenuText);
+	};
+
+	const shouldShowSubmenu = (item) => {
+		const isExpanded = expandedSubmenu === item.text;
+		const hasActiveItem = isSubmenuActive(item.submenu);
+
+		// Show submenu if:
+		// 1. It's expanded and sidebar is hovering, OR
+		// 2. Any of its items is active (even when collapsed)
+		return (isHovering && isExpanded) || hasActiveItem;
+	};
 
 	const handleLogout = () => {
 		logout();
@@ -211,19 +251,70 @@ export const Sidebar = ({ onHoverChange }) => {
 			</div>
 
 			<nav className="sidebar-nav">
-				{navigationItems.map((item) => (
-					<Link
-						key={item.path}
-						to={item.path}
-						className={`nav-item ${isActive(item.path) ? "active" : ""}`}
-						title={!isHovering ? item.text : ""}
-					>
-						<span className="nav-icon">
-							<i className={`bi ${item.icon}`}></i>
-						</span>
-						{isHovering && <span className="nav-text">{item.text}</span>}
-					</Link>
-				))}
+				{navigationItems.map((item, index) => {
+					// Handle submenu items
+					if (item.submenu) {
+						const isSubmenuItemActive = isSubmenuActive(item.submenu);
+						const isExpanded = expandedSubmenu === item.text;
+						const showSubmenu = shouldShowSubmenu(item);
+
+						return (
+							<div key={`submenu-${index}`}>
+								<div
+									className={`nav-item ${isSubmenuItemActive ? "active" : ""}`}
+									onClick={() => isHovering && handleSubmenuToggle(item.text)}
+									title={!isHovering ? item.text : ""}
+									style={{ cursor: isHovering ? "pointer" : "default" }}
+								>
+									<span className="nav-icon">
+										<i className={`bi ${item.icon}`}></i>
+									</span>
+									{isHovering && (
+										<>
+											<span className="nav-text">{item.text}</span>
+											<span className={`submenu-arrow ms-auto ${isExpanded ? "expanded" : ""}`}>
+												<i className="bi bi-chevron-right"></i>
+											</span>
+										</>
+									)}
+								</div>
+
+								{showSubmenu && (
+									<div className={`submenu ${!isHovering ? "collapsed-submenu" : ""}`}>
+										{item.submenu.map((subItem) => (
+											<Link
+												key={subItem.path}
+												to={subItem.path}
+												className={`nav-item submenu-item ${isActive(subItem.path) ? "active" : ""}`}
+												title={!isHovering ? subItem.text : subItem.text}
+											>
+												<span className="nav-icon">
+													<i className={`bi ${subItem.icon}`}></i>
+												</span>
+												{isHovering && <span className="nav-text">{subItem.text}</span>}
+											</Link>
+										))}
+									</div>
+								)}
+							</div>
+						);
+					}
+
+					// Handle regular nav items
+					return (
+						<Link
+							key={item.path}
+							to={item.path}
+							className={`nav-item ${isActive(item.path) ? "active" : ""}`}
+							title={!isHovering ? item.text : ""}
+						>
+							<span className="nav-icon">
+								<i className={`bi ${item.icon}`}></i>
+							</span>
+							{isHovering && <span className="nav-text">{item.text}</span>}
+						</Link>
+					);
+				})}
 			</nav>
 
 			<div className="sidebar-footer border-top">
