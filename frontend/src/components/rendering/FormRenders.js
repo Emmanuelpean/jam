@@ -376,6 +376,17 @@ export const formFields = {
 		...overrides,
 	}),
 
+	updateType: (overrides = {}) => ({
+		name: "received",
+		label: "Update Type",
+		type: "select",
+		options: [
+			{ value: true, label: "Received" },
+			{ value: false, label: "Sent" },
+		],
+		...overrides,
+	}),
+
 	// ------------------------------------------------- PERSON FIELDS ------------------------------------------------
 
 	firstName: (overrides = {}) => ({
@@ -659,7 +670,7 @@ export const formFields = {
 	}),
 
 	jobApplication: (options = [], overrides = {}) => ({
-		name: "jobapplication_id",
+		name: "job_application_id",
 		label: "Job Application",
 		type: "select",
 		options: options,

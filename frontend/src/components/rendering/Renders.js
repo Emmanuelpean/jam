@@ -220,6 +220,13 @@ export const renderFunctions = {
 		}
 	},
 
+	updateType: (item, view = false, key = "type") => {
+		const type = accessAttribute(item, key);
+		if (type) {
+			return type.charAt(0).toUpperCase() + type.slice(1);
+		}
+	},
+
 	salaryRange: (item) => {
 		if (!item.salary_min && !item.salary_max) {
 			return null;

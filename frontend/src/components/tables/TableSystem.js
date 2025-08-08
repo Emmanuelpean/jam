@@ -123,8 +123,7 @@ export const GenericTableWithModals = ({
 	// Modal configuration
 	FormModal,
 	ViewModal,
-	formModalSize,
-	viewModalSize,
+	ModalSize,
 
 	// Data management
 	endpoint,
@@ -138,10 +137,9 @@ export const GenericTableWithModals = ({
 	// Display options
 	title,
 	showAllEntries = false,
-	isInModal = false,
 	selectable = false,
 	emptyMessage,
-	compact = false, // New compact mode prop
+	compact = false,
 
 	// Additional content
 	children,
@@ -628,19 +626,14 @@ export const GenericTableWithModals = ({
 			{/* Modals */}
 			{FormModal && (
 				<>
-					<FormModal
-						show={showModal}
-						onHide={closeAddModal}
-						onSuccess={handleAddSuccess}
-						size={formModalSize}
-					/>
+					<FormModal show={showModal} onHide={closeAddModal} onSuccess={handleAddSuccess} size={ModalSize} />
 					<FormModal
 						show={showEditModal}
 						onHide={closeEditModal}
 						onSuccess={handleEditSuccess}
 						data={selectedItem || {}}
 						isEdit={true}
-						size={formModalSize}
+						size={ModalSize}
 					/>
 				</>
 			)}
@@ -654,7 +647,7 @@ export const GenericTableWithModals = ({
 						closeViewModal();
 						openEditModal(selectedItem);
 					}}
-					size={viewModalSize}
+					size={ModalSize}
 				/>
 			)}
 

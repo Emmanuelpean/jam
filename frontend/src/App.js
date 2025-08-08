@@ -16,6 +16,7 @@ import DashboardPage from "./pages/EISDashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { Sidebar } from "./Sidebar";
+import JobApplicationUpdatesPage from "./pages/JobApplicationUpdatesPage";
 
 function AppLayout({ children }) {
 	const location = useLocation();
@@ -136,6 +137,14 @@ function App() {
 							element={
 								<ProtectedRoute>
 									<AggregatorsPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/jobapplicationupdates"
+							element={
+								<ProtectedRoute>
+									<JobApplicationUpdatesPage />
 								</ProtectedRoute>
 							}
 						/>

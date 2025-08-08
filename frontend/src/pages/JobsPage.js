@@ -1,5 +1,5 @@
 import React from "react";
-import {useTableData, GenericTableWithModals} from "../components/tables/TableSystem";
+import { useTableData, GenericTableWithModals } from "../components/tables/TableSystem";
 import { JobFormModal, JobViewModal } from "../components/modals/job/JobModal";
 import { columns } from "../components/rendering/ColumnRenders";
 
@@ -49,8 +49,7 @@ const JobsPage = () => {
 			updateItem={updateItem}
 			removeItem={removeItem}
 			setData={setJobs}
-			formModalSize="xl"
-			viewModalSize="xl"
+			ModalSize="xl"
 		/>
 	);
 };

@@ -288,9 +288,9 @@ class InterviewUpdate(Interview):
 
 class JobApplicationUpdateIn(BaseModel):
     date: datetime
+    type: str
     job_application_id: int
     note: str | None = None
-    received: bool = False
 
 
 class JobApplicationUpdateOut(JobApplicationUpdateIn, Out):
@@ -299,4 +299,5 @@ class JobApplicationUpdateOut(JobApplicationUpdateIn, Out):
 
 class JobApplicationUpdateUpdate(JobApplicationUpdateIn):
     date: datetime | None = None
+    type: str | None = None
     job_application_id: int | None = None

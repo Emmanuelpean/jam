@@ -10,21 +10,12 @@ export const InterviewModal = ({
 	data,
 	onSuccess,
 	onDelete,
-	endpoint = "interviews",
+	endpoint = "jobapplicationupdates",
 	submode = "view",
-	size = "md",
+	size = "lg",
 	jobApplicationId,
 }) => {
-	const {
-		locations,
-		persons,
-		jobApplications,
-		openLocationModal,
-		openPersonModal,
-		openJobApplicationModal,
-		renderLocationModal,
-		renderPersonModal,
-	} = useFormOptions();
+	const { jobApplications, openJobApplicationModal } = useFormOptions();
 
 	const initialData = useMemo(() => {
 		if (submode === "add" && !data) {
@@ -39,19 +30,16 @@ export const InterviewModal = ({
 			formFields.datetime({
 				required: true,
 			}),
-			formFields.interviewType(),
+			formFields.updateType(),
 		],
-		formFields.location(locations, openLocationModal),
-		formFields.interviewers(persons, openPersonModal),
 		formFields.note({
 			placeholder: "Add notes about the interview, questions asked, impressions, etc...",
 		}),
 	];
 
 	const viewFieldsArray = [
-		viewFields.jobApplication({ label: "Job Application" }),
-		[viewFields.datetime(), viewFields.type()],
-		[viewFields.location(), viewFields.interviewers()],
+		...(!jobApplicationId ? [viewFields.jobApplication({ label: "Job Application" })] : []),
+		[viewFields.datetime(), viewFields.updateType()],
 		viewFields.note(),
 	];
 
@@ -61,13 +49,10 @@ export const InterviewModal = ({
 	};
 
 	const transformFormData = (data) => {
-		console.log(data);
 		return {
 			date: new Date(data.date).toISOString(),
 			type: data.type,
-			location_id: data.location_id,
 			job_application_id: jobApplicationId || data.job_application_id,
-			interviewers: data.interviewers?.map((interviewer) => interviewer.id || interviewer) || [],
 			note: data.note?.trim() || null,
 		};
 	};
@@ -88,17 +73,15 @@ export const InterviewModal = ({
 				onDelete={onDelete}
 				transformFormData={transformFormData}
 			/>
-
-			{renderLocationModal()}
-
-			{renderPersonModal()}
 		</>
 	);
 };
 
-export const InterviewFormModal = (props) => {
+export const JobApplicationUpdateFormModal = (props) => {
 	const submode = props.isEdit || props.interview?.id ? "edit" : "add";
 	return <InterviewModal {...props} submode={submode} />;
 };
 
-export const InterviewViewModal = (props) => <InterviewModal {...props} interview={props.item} submode="view" />;
+export const JobApplicationUpdateViewModal = (props) => (
+	<InterviewModal {...props} interview={props.item} submode="view" />
+);

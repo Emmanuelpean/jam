@@ -1,15 +1,15 @@
 import React from "react";
 import {
-	JobApplicationFormModal,
-	JobApplicationViewModal,
-} from "../components/modals/job_application/JobApplicationModal";
+	JobApplicationUpdateFormModal,
+	JobApplicationUpdateViewModal,
+} from "../components/modals/JobApplicationUpdateModal";
 import { GenericTableWithModals, useTableData } from "../components/tables/TableSystem";
 import { columns } from "../components/rendering/ColumnRenders";
 
-const JobApplicationsPage = () => {
+const JobApplicationUpdatesPage = () => {
 	const {
-		data: jobApplications,
-		setData: setJobApplications,
+		data: jobApplicationUpdates,
+		setData: setJobApplicationUpdates,
 		loading,
 		error,
 		sortConfig,
@@ -19,22 +19,20 @@ const JobApplicationsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("jobapplications");
+	} = useTableData("jobapplicationupdates");
 
 	const tableColumns = [
+		columns.jobApplicationJob(),
 		columns.date(),
-		columns.job(),
-		columns.status(),
-		columns.interviewCount(),
-		columns.files(),
-		columns.url({ label: "URL" }),
+		columns.updateType(),
+		columns.note(),
 		columns.createdAt(),
 	];
 
 	return (
 		<GenericTableWithModals
 			title="Job Applications"
-			data={jobApplications}
+			data={jobApplicationUpdates}
 			columns={tableColumns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
@@ -42,18 +40,18 @@ const JobApplicationsPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={loading}
 			error={error}
-			FormModal={JobApplicationFormModal}
-			ViewModal={JobApplicationViewModal}
+			FormModal={JobApplicationUpdateFormModal}
+			ViewModal={JobApplicationUpdateViewModal}
 			endpoint="jobapplications"
 			nameKey="title"
 			itemType="Job Application"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}
-			setData={setJobApplications}
+			setData={setJobApplicationUpdates}
 			ModalSize="xl"
 		/>
 	);
 };
 
-export default JobApplicationsPage;
+export default JobApplicationUpdatesPage;

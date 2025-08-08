@@ -83,6 +83,15 @@ export const columns = {
 		...overrides,
 	}),
 
+	updateType: (overrides = {}) => ({
+		key: "type",
+		label: "Type",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		...overrides,
+	}),
+
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
 	location: (overrides = {}) => ({

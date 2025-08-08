@@ -14,7 +14,7 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 		addItem,
 		updateItem,
 		deleteItem,
-	} = useTableData("interviews", [jobApplicationId], { jobapplication_id: jobApplicationId });
+	} = useTableData("interviews", [jobApplicationId], { job_application_id: jobApplicationId });
 
 	// Wrapper for success handlers to trigger parent refresh
 	const handleAddSuccess = (newInterview) => {
@@ -71,9 +71,7 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={handleDeleteSuccess}
-			formModalSize="xl"
-			viewModalSize="xl"
-			isInModal={true}
+			ModalSize="xl"
 			showAllEntries={true}
 			compact={true}
 		/>

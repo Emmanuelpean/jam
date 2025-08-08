@@ -379,6 +379,6 @@ class JobApplicationUpdate(Owned, Base):
     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     job_application_id = Column(Integer, ForeignKey("job_application.id", ondelete="CASCADE"), nullable=False)
     note = Column(String, nullable=True)
-    received = Column(Boolean, nullable=False, server_default=expression.false())
+    type = Column(String, nullable=False)
 
     job_application = relationship("JobApplication", back_populates="updates")

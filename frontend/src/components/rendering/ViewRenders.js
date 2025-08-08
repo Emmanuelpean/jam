@@ -71,6 +71,13 @@ export const viewFields = {
 		...overrides,
 	}),
 
+	updateType: (overrides = {}) => ({
+		key: "type",
+		label: "Type",
+		render: (x) => renderFunctions.updateType(x, true),
+		...overrides,
+	}),
+
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
 	location: (overrides = {}) => ({

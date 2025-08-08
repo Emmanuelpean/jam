@@ -412,7 +412,7 @@ class TestPage:
 
         self.wait_for_edit_modal()
         for key, value in values.items():
-            if key in ("country", "company_id", "location_id", "job_id", "aggregator_id", "jobapplication_id"):
+            if key in ("country", "company_id", "location_id", "job_id", "aggregator_id", "job_application_id"):
                 select = ReactSelect(self.get_element(key))
                 select.open_menu()
                 select.select_by_visible_text(value)

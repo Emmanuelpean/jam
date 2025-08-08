@@ -31,6 +31,7 @@ export const Sidebar = ({ onHoverChange }) => {
 		{ path: "/jobs", icon: "bi-briefcase", text: "Jobs" },
 		{ path: "/jobapplications", icon: "bi-person-workspace", text: "Job Applications" },
 		{ path: "/interviews", icon: "bi-people-fill", text: "Interviews" },
+		{ path: "/jobapplicationupdates", icon: "bi-person-badge", text: "Job Application Updates" },
 		{ path: "/persons", icon: "bi-people", text: "People" },
 		{ path: "/locations", icon: "bi-geo-alt", text: "Locations" },
 		{ path: "/companies", icon: "bi-building", text: "Companies" },
