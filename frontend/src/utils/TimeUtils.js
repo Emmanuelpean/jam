@@ -15,7 +15,6 @@ export const formatDateTime = (datetime) => {
 export const localeDateOnly = (value) => {
 	if (!value) return "";
 	const date = new Date(value);
-	console.log(date.toLocaleDateString());
 	return date.toLocaleDateString();
 };
 

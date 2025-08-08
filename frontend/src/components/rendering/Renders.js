@@ -5,7 +5,7 @@ import { PersonViewModal } from "../modals/PersonModal";
 import { KeywordViewModal } from "../modals/KeywordModal";
 import { JobApplicationViewModal } from "../modals/job_application/JobApplicationModal";
 import { AggregatorViewModal } from "../modals/AggregatorModal";
-import JobViewModal from "../modals/job/JobViewModal";
+import { JobViewModal } from "../modals/job/JobModal";
 import { accessAttribute } from "../../utils/Utils";
 import { filesApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
@@ -337,7 +337,6 @@ export const renderFunctions = {
 
 	keywords: (item, view = false, key = "keywords") => {
 		const keywords = accessAttribute(item, key);
-		console.log(keywords);
 		if (keywords && keywords.length > 0) {
 			return (
 				<div>

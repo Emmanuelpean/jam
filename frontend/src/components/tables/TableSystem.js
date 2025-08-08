@@ -117,7 +117,7 @@ export const GenericTableWithModals = ({
 	// Search and sort
 	searchTerm = "",
 	onSearchChange = () => {},
-	sortConfig = { key: null, direction: "asc" },
+	sortConfig = { key: "", direction: "asc" },
 	onSort = () => {},
 
 	// Modal configuration
@@ -149,7 +149,6 @@ export const GenericTableWithModals = ({
 	const [contextMenu, setContextMenu] = useState(null);
 	const [currentPage, setCurrentPage] = useState(0);
 	const [pageSize, setPageSize] = useState(20);
-	console.log(data);
 	const {
 		showModal,
 		showViewModal,

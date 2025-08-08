@@ -165,7 +165,6 @@ export const authApi = {
 	},
 };
 
-// Generic API factory function
 const createCrudApi = (endpoint) => ({
 	getAll: (token, queryParams = null) => {
 		let url = `${endpoint}/`;
@@ -210,6 +209,7 @@ export const apiHelpers = {
 		return data.map((item) => ({
 			value: accessAttribute(item, valueKey),
 			label: accessAttribute(item, labelKey),
+			data: item,
 		}));
 	},
 

@@ -2,15 +2,12 @@ import React from "react";
 import { GenericTableWithModals, useTableData } from "./TableSystem";
 import { columns } from "../rendering/ColumnRenders";
 import { InterviewFormModal, InterviewViewModal } from "../modals/InterviewModal";
-import "./InterviewTable.css";
 
 const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 	const {
 		data: interviews,
 		loading,
 		error,
-		sortConfig,
-		setSortConfig,
 		addItem,
 		updateItem,
 		deleteItem,
@@ -56,8 +53,7 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 		<GenericTableWithModals
 			data={interviews}
 			columns={interviewColumns}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
+			sortConfig={{ key: "date", direction: "desc" }}
 			loading={loading}
 			error={error}
 			FormModal={FormModalWithProps}

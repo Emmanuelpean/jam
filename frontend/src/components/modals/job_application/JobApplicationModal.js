@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GenericModal from "../GenericModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
-import { filesApi, jobApplicationsApi } from "../../../services/api";
+import { filesApi } from "../../../services/api";
 import { fileToBase64 } from "../../../utils/FileUtils";
 import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
@@ -22,8 +22,6 @@ export const JobApplicationModal = ({
 	const { token } = useAuth();
 	const { alertState, showError, hideAlert } = useGenericAlert();
 	const formRef = useRef();
-
-	// Track file states independently
 	const [fileStates, setFileStates] = useState({
 		cv: null,
 		cover_letter: null,
@@ -35,7 +33,7 @@ export const JobApplicationModal = ({
 
 	// Track job options for the dropdown
 	const { jobs, aggregators, openAggregatorModal, renderAggregatorModal } = useFormOptions();
-	const filteredJobs = jobs.filter((job) => !job.job_application || job.job_application.id === data?.id);
+	const filteredJobs = jobs.filter((job) => !job.data.job_application || job.data.job_application.id === data?.id);
 
 	// Add state to track current form data for conditional fields
 	const [currentFormData, setCurrentFormData] = useState({});
@@ -48,7 +46,6 @@ export const JobApplicationModal = ({
 				cover_letter: data?.cover_letter || null,
 			});
 			setInterviews(data?.interviews || []);
-			// Initialize form data state
 			setCurrentFormData(data);
 		}
 	}, [show, data?.cv, data?.cover_letter, data?.interviews, data]);
@@ -142,7 +139,6 @@ export const JobApplicationModal = ({
 		}
 	};
 
-	// Form fields for editing
 	const formFieldsArray = useMemo(() => {
 		return [
 			[formFields.applicationDate(), formFields.applicationStatus()],
@@ -191,7 +187,6 @@ export const JobApplicationModal = ({
 		handleInterviewChange,
 	]);
 
-	// View fields for display
 	const viewFieldsArray = useMemo(() => {
 		const baseFields = [
 			[viewFields.date(), viewFields.status()],
@@ -235,26 +230,6 @@ export const JobApplicationModal = ({
 			for (const [key, value] of formData.entries()) {
 				if (typeof value === "string") {
 					transformedData[key] = value;
-				}
-			}
-
-			// Check for existing job application if creating new and job_id is provided
-			if (submode === "add" && transformedData.job_id) {
-				try {
-					const { jobApplicationsApi } = await import("../../../services/api");
-					const existingApps = await jobApplicationsApi.getAll(token, { job_id: transformedData.job_id });
-
-					if (existingApps && existingApps.length > 0) {
-						showError({
-							title: "Job Application Already Exists",
-							message:
-								"You already have an application for this job. Please edit the existing application instead.",
-							size: "md",
-						});
-						return; // Stop submission
-					}
-				} catch (checkError) {
-					console.error("Error checking existing applications:", checkError);
 				}
 			}
 
@@ -340,7 +315,7 @@ export const JobApplicationModal = ({
 				onSuccess={onSuccess}
 				onDelete={onDelete}
 				transformFormData={transformFormData}
-				customSubmitHandler={submode !== "view" ? handleCustomSubmit : undefined}
+				customSubmitHandler={handleCustomSubmit}
 				onFormDataChange={handleFormDataChange} // Remove the condition - always pass this
 			/>
 

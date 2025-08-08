@@ -1,7 +1,6 @@
 import React from "react";
 import { GenericTableWithModals, useTableData } from "./TableSystem";
 import { columns } from "../rendering/ColumnRenders";
-import "./InterviewTable.css";
 import { JobApplicationUpdateFormModal, JobApplicationUpdateViewModal } from "../modals/JobApplicationUpdateModal";
 
 const JobApplicationUpdatesTable = ({ jobApplicationId, onChange }) => {
@@ -9,8 +8,6 @@ const JobApplicationUpdatesTable = ({ jobApplicationId, onChange }) => {
 		data: jobApplicationUpdates,
 		loading,
 		error,
-		sortConfig,
-		setSortConfig,
 		addItem,
 		updateItem,
 		deleteItem,
@@ -56,8 +53,7 @@ const JobApplicationUpdatesTable = ({ jobApplicationId, onChange }) => {
 		<GenericTableWithModals
 			data={jobApplicationUpdates}
 			columns={ViewColumns}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
+			sortConfig={{ key: "date", direction: "desc" }}
 			loading={loading}
 			error={error}
 			FormModal={FormModalWithProps}

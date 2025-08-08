@@ -44,7 +44,6 @@ export const PersonModal = ({
 			company_id: formData.company_id,
 		};
 		const matches = await personsApi.getAll(token, queryParams);
-		console.log(matches);
 		const duplicates = matches.filter((existing) => {
 			return data?.id !== existing.id;
 		});
