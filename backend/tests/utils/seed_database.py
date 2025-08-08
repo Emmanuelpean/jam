@@ -23,6 +23,7 @@ from tests.utils.create_data import (
     create_job_alert_emails,
     create_scraped_jobs,
     create_service_logs,
+    create_job_application_updates,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -74,6 +75,7 @@ def seed_database() -> None:
         alert_emails = create_job_alert_emails(db)
         scraped_jobs = create_scraped_jobs(db, alert_emails)
         service_logs = create_service_logs(db)
+        job_application_updates = create_job_application_updates(db)
 
         print("\n" + "=" * 50)
         print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
@@ -91,6 +93,7 @@ def seed_database() -> None:
         print(f"Job Alert Emails: {len(alert_emails)}")
         print(f"Scraped Jobs: {len(scraped_jobs)}")
         print(f"Service Logs: {len(service_logs)}")
+        print(f"Job Application Updates: {len(job_application_updates)}")
         print("=" * 50)
 
     except Exception as e:

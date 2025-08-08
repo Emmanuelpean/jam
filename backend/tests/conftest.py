@@ -4,19 +4,6 @@ fixtures, and configurations for setting up and managing the SQLAlchemy database
 clients for API testing. The provided components streamline testing by enabling convenient access to preconfigured
 resources.
 
-Key Components:
-----------------
-- **SQLALCHEMY_DATABASE_URL**: Configuration for the database connection URL.
-- **engine**: SQLAlchemy engine used to manage connections and interact with the database.
-- **TestingSessionLocal**: A SQLAlchemy session factory designed specifically for testing purposes.
-- **session**: A fixture to provide a database session for tests.
-- **client**: A fixture to provide an API test client.
-- **create_user**: Utility function for creating test users in the database.
-- **test_user1** and **test_user2**: Fixtures for pre-configured test users.
-- **token1** and **token2**: Fixtures for generating authentication tokens for the pre-configured test users.
-- **authorized_client** and **authorized_client2**: Fixtures to provide authenticated API clients for the test users.
-- **test_jobs**: Fixture for creating and managing test jobs in the application.
-
 This module is instrumental for efficiently executing unit and integration tests by establishing a robust test environment
 and providing the necessary utilities for seamless interactions with the application's data and APIs.
 """
@@ -48,6 +35,7 @@ from tests.utils.create_data import (
     create_job_alert_emails,
     create_scraped_jobs,
     create_service_logs,
+    create_job_application_updates,
 )
 from tests.utils.seed_database import reset_database
 
@@ -56,7 +44,7 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def session() -> Generator[orm.Session, Any, None]:
     """Fixture that sets up and tears down a new database session for each test function.
     This fixture creates a fresh database session by creating and dropping all tables in the
@@ -72,7 +60,7 @@ def session() -> Generator[orm.Session, Any, None]:
         db.close()
 
 
-@pytest.fixture()
+@pytest.fixture
 def client(session) -> Generator[TestClient, Any, None]:
     """Fixture that provides a test client with an overridden database dependency.
     This fixture creates a test client by overriding the default database dependency
@@ -108,10 +96,7 @@ def tokens(test_users) -> list[str]:
 
 
 @pytest.fixture
-def authorised_clients(
-    client: TestClient,
-    tokens: list[str],
-) -> list[TestClient]:
+def authorised_clients(client: TestClient, tokens: list[str]) -> list[TestClient]:
     """Fixture that provides a list of authenticated test clients."""
 
     clients = []
@@ -196,7 +181,7 @@ def test_job_alert_emails(session, test_users) -> list[eis_models.JobAlertEmail]
 def test_scraped_jobs(session, test_job_alert_emails) -> list[eis_models.ScrapedJob]:
     """Create test job alert email jobs"""
 
-    return create_scraped_jobs(session)
+    return create_scraped_jobs(session, test_job_alert_emails)
 
 
 @pytest.fixture
@@ -204,6 +189,13 @@ def test_service_logs(session) -> list[eis_models.ServiceLog]:
     """Create test service logs"""
 
     return create_service_logs(session)
+
+
+@pytest.fixture
+def test_job_application_updates(session, test_job_applications) -> list[models.JobApplicationUpdate]:
+    """Create test job application update data"""
+
+    return create_job_application_updates(session)
 
 
 class CRUDTestBase:
@@ -251,6 +243,7 @@ class CRUDTestBase:
 
         for key, value in items:
             if key[0] != "_":
+                print(key)
                 response_value = getattr(response_data, key)
                 if isinstance(value, models.Base) or isinstance(value, list):
                     self.check_output(value, response_value)
@@ -398,6 +391,7 @@ class CRUDTestBase:
         request,
     ) -> None:
         request.getfixturevalue(self.test_data)
+        # noinspection PyTypeChecker
         response = self.put(authorised_clients[0], self.update_data["id"], self.update_data)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(self.update_data, response.json())

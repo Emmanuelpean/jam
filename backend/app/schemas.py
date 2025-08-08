@@ -242,6 +242,13 @@ class JobApplicationOut(JobApplication, Out):
     cover_letter: FileOut | None = None
 
 
+class JobApplicationSimple(JobApplication, Out):
+    job: JobSimple | None = None
+    aggregator: AggregatorOut | None = None
+    cv: FileOut | None = None
+    cover_letter: FileOut | None = None
+
+
 class JobApplicationUpdate(JobApplication):
     date: datetime | None = None
     job_id: int | None = None
@@ -254,7 +261,7 @@ class JobApplicationUpdate(JobApplication):
 class Interview(BaseModel):
     date: datetime
     location_id: int | None = None
-    jobapplication_id: int
+    job_application_id: int
     note: str | None = None
     type: str | None = None
     interviewers: list[int] | None = None
@@ -268,9 +275,28 @@ class InterviewSimple(Interview, Out):
 class InterviewOut(Interview, Out):
     location: LocationOut | None = None
     interviewers: list["PersonSimple"] = []
-    job_application: JobApplicationOut | None = None
+    job_application: JobApplicationSimple | None = None
 
 
 class InterviewUpdate(Interview):
     date: datetime | None = None
-    jobapplication_id: int | None = None
+    job_application_id: int | None = None
+
+
+# ----------------------------------------------- JOB APPLICATION UPDATE -----------------------------------------------
+
+
+class JobApplicationUpdateIn(BaseModel):
+    date: datetime
+    job_application_id: int
+    note: str | None = None
+    received: bool = False
+
+
+class JobApplicationUpdateOut(JobApplicationUpdateIn, Out):
+    job_application: JobApplicationOut | None = None
+
+
+class JobApplicationUpdateUpdate(JobApplicationUpdateIn):
+    date: datetime | None = None
+    job_application_id: int | None = None

@@ -1,5 +1,5 @@
-from app import models, utils
 import app.eis.eis_models as eis_models
+from app import models, utils
 from tests.utils.table_data import (
     USERS_DATA,
     COMPANIES_DATA,
@@ -19,6 +19,7 @@ from tests.utils.table_data import (
     JOB_SCRAPED_DATA,
     EMAIL_SCRAPEDJOB_MAPPINGS,
     SERVICE_LOGS_DATA,
+    JOB_APPLICATION_UPDATES_DATA,
 )
 
 
@@ -33,6 +34,7 @@ def create_users(db) -> list[models.User]:
         user_dict = user_data.copy()
         original_passwords.append(user_dict["password"])  # Store original password
         user_dict["password"] = utils.hash_password(user_dict["password"])
+        # noinspection PyArgumentList
         users_hash.append(models.User(**user_dict))
 
     db.add_all(users_hash)
@@ -46,6 +48,7 @@ def create_users(db) -> list[models.User]:
     for i, user in enumerate(users_hash):
         user_dict = {key: value for key, value in user.__dict__.items() if key != "_sa_instance_state"}
         user_dict["password"] = original_passwords[i]
+        # noinspection PyArgumentList
         new_user = models.User(**user_dict)
         result_users.append(new_user)
 
@@ -220,7 +223,19 @@ def create_service_logs(db) -> list[eis_models.ServiceLog]:
     """Create sample service logs"""
 
     print("Creating service logs...")
+    # noinspection PyArgumentList
     logs = [eis_models.ServiceLog(**log) for log in SERVICE_LOGS_DATA]
     db.add_all(logs)
     db.commit()
     return logs
+
+
+def create_job_application_updates(db) -> list[models.JobApplicationUpdate]:
+    """Create sample job application updates"""
+
+    print("Creating job application updates...")
+    # noinspection PyArgumentList
+    updates = [models.JobApplicationUpdate(**update) for update in JOB_APPLICATION_UPDATES_DATA]
+    db.add_all(updates)
+    db.commit()
+    return updates

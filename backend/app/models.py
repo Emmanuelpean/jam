@@ -337,6 +337,7 @@ class JobApplication(Owned, Base):
     aggregator = relationship("Aggregator", back_populates="job_applications")
     cv = relationship("File", foreign_keys=[cv_id], lazy="select")
     cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
+    updates = relationship("JobApplicationUpdate", back_populates="job_application")
 
 
 class Interview(Owned, Base):
@@ -347,7 +348,7 @@ class Interview(Owned, Base):
     - `date` (datetime): The date and time of the interview.
     - `location_id` (int): Identifier for the location of the interview.
     - `location` (Location): Location object related to the interview.
-    - `jobapplication_id` (int): Identifier for the job application associated with the interview.
+    - `job_application_id` (int): Identifier for the job application associated with the interview.
     - `job_application` (JobApplication): JobApplication object related to the interview.
     - `type` (str): Type of the interview (HR, technical, management, ...)
     - `note` (str, optional): Additional notes or comments about the interview."""
@@ -355,7 +356,7 @@ class Interview(Owned, Base):
     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     type = Column(String, nullable=False)
     location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
-    jobapplication_id = Column(
+    job_application_id = Column(
         Integer, ForeignKey("job_application.id", ondelete="CASCADE"), nullable=False, index=True
     )
     note = Column(String, nullable=True)
@@ -364,3 +365,20 @@ class Interview(Owned, Base):
     location = relationship("Location", back_populates="interviews")
     job_application = relationship("JobApplication", back_populates="interviews")
     interviewers = relationship("Person", secondary=interview_interviewers, back_populates="interviews")
+
+
+class JobApplicationUpdate(Owned, Base):
+    """Represents an update to a job application.
+
+    Attributes
+    - date (datetime): The date and time of the update.
+    - job_application_id (int): Identifier for the job application associated with the update.
+    - note (str, optional): Additional notes or comments about the update.
+    - received (bool): Indicates whether the person received the update or sent it."""
+
+    date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+    job_application_id = Column(Integer, ForeignKey("job_application.id", ondelete="CASCADE"), nullable=False)
+    note = Column(String, nullable=True)
+    received = Column(Boolean, nullable=False, server_default=expression.false())
+
+    job_application = relationship("JobApplication", back_populates="updates")

@@ -817,7 +817,7 @@ INTERVIEWS_DATA = [
         "date": "2024-01-20T09:30:00",
         "type": "HR",
         "location_id": 1,
-        "jobapplication_id": 1,
+        "job_application_id": 1,
         "note": "First round technical interview",
         "owner_id": 1,
     },
@@ -825,7 +825,7 @@ INTERVIEWS_DATA = [
         "date": "2024-01-21T14:00:00",
         "type": "Technical",
         "location_id": 2,
-        "jobapplication_id": 2,
+        "job_application_id": 2,
         "note": "HR screening call",
         "owner_id": 1,
     },
@@ -833,7 +833,7 @@ INTERVIEWS_DATA = [
         "date": "2024-01-22T10:15:00",
         "type": "Management",
         "location_id": 4,  # Remote
-        "jobapplication_id": 3,
+        "job_application_id": 3,
         "note": "Remote technical assessment",
         "owner_id": 1,
     },
@@ -841,7 +841,7 @@ INTERVIEWS_DATA = [
         "date": "2024-01-23T16:30:00",
         "type": "HR",
         "location_id": 1,
-        "jobapplication_id": 4,
+        "job_application_id": 4,
         "note": "Final round with team lead",
         "owner_id": 1,
     },
@@ -849,7 +849,7 @@ INTERVIEWS_DATA = [
         "date": "2024-01-24T11:45:00",
         "type": "Other",
         "location_id": 3,
-        "jobapplication_id": 5,
+        "job_application_id": 5,
         "note": "Cultural fit interview",
         "owner_id": 1,
     },
@@ -857,7 +857,7 @@ INTERVIEWS_DATA = [
         "date": "2024-01-26T09:00:00",
         "type": "HR",
         "location_id": 7,  # Canada location
-        "jobapplication_id": 1,  # Same application, second interview
+        "job_application_id": 1,  # Same application, second interview
         "note": None,
         "owner_id": 1,
     },
@@ -866,7 +866,7 @@ INTERVIEWS_DATA = [
         "date": "2024-01-29T10:30:00",
         "type": "Technical",
         "location_id": 8,  # Paris
-        "jobapplication_id": 6,  # DevOps application
+        "job_application_id": 6,  # DevOps application
         "note": "Deep technical dive into infrastructure",
         "owner_id": 1,
     },
@@ -874,7 +874,7 @@ INTERVIEWS_DATA = [
         "date": "2024-01-30T15:00:00",
         "type": "Management",
         "location_id": 11,  # Australia (remote)
-        "jobapplication_id": 8,  # Remote Full Stack application
+        "job_application_id": 8,  # Remote Full Stack application
         "note": "Meeting with team leads",
         "owner_id": 1,
     },
@@ -882,7 +882,7 @@ INTERVIEWS_DATA = [
         "date": "2024-02-01T09:45:00",
         "type": "HR",
         "location_id": 12,  # Toronto
-        "jobapplication_id": 10,  # Junior Developer application
+        "job_application_id": 10,  # Junior Developer application
         "note": "Initial screening for junior position",
         "owner_id": 1,
     },
@@ -890,7 +890,7 @@ INTERVIEWS_DATA = [
         "date": "2024-02-02T11:00:00",
         "type": "Technical",
         "location_id": 14,  # Brazil (remote)
-        "jobapplication_id": 11,  # Mobile App Developer
+        "job_application_id": 11,  # Mobile App Developer
         "note": "Technical skills assessment for mobile development",
         "owner_id": 1,
     },
@@ -898,7 +898,7 @@ INTERVIEWS_DATA = [
         "date": "2024-02-03T14:15:00",
         "type": "Other",
         "location_id": 1,  # New York
-        "jobapplication_id": 13,  # High Salary Position
+        "job_application_id": 13,  # High Salary Position
         "note": "Panel interview with executives",
         "owner_id": 1,
     },
@@ -906,7 +906,7 @@ INTERVIEWS_DATA = [
         "date": "2024-02-04T16:30:00",
         "type": "Management",
         "location_id": 5,  # Germany (remote)
-        "jobapplication_id": 7,  # Data Scientist application
+        "job_application_id": 7,  # Data Scientist application
         "owner_id": 1,  # Minimal interview info
     },
 ]
@@ -1273,6 +1273,116 @@ EMAIL_SCRAPEDJOB_MAPPINGS = [
     {"email_id": 1, "scraped_job_ids": [1, 2, 4]},  # Mix of scraped and unscraped jobs
     {"email_id": 2, "scraped_job_ids": [3, 5]},  # One scraped, one unscraped
     {"email_id": 3, "scraped_job_ids": [6, 7]},  # Both failed scraping attempts
+]
+
+
+# Job Application Updates Data
+JOB_APPLICATION_UPDATES_DATA = [
+    {
+        "date": "2024-01-15 14:30:00",
+        "job_application_id": 1,  # Tech startup application
+        "note": "Received automated confirmation email",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-18 09:15:00",
+        "job_application_id": 1,
+        "note": "HR recruiter called to schedule phone screening",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-22 16:45:00",
+        "job_application_id": 2,  # Marketing agency application
+        "note": "Application status changed to 'Under Review'",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-25 11:20:00",
+        "job_application_id": 3,  # Finance corp application
+        "note": "Received rejection email - position filled internally",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-28 13:10:00",
+        "job_application_id": 4,  # Healthcare application
+        "note": "Invited to complete online assessment",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-01 08:30:00",
+        "job_application_id": 2,
+        "note": "Scheduled for first round interview next week",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-03 15:45:00",
+        "job_application_id": 5,  # Remote consulting application
+        "note": "Application acknowledgment received",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-05 10:15:00",
+        "job_application_id": 4,
+        "note": "Completed technical assessment - awaiting results",
+        "received": False,  # Waiting for their response
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-08 14:20:00",
+        "job_application_id": 6,  # Another application
+        "note": "Phone screening scheduled for tomorrow",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-12 11:45:00",
+        "job_application_id": 7,
+        "note": "Application moved to final review stage",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-15 09:30:00",
+        "job_application_id": 8,
+        "note": "Hiring manager wants to schedule video call",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-18 16:10:00",
+        "job_application_id": 9,
+        "note": "Received offer letter - salary negotiation in progress",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-20 13:25:00",
+        "job_application_id": 10,
+        "note": "Application automatically withdrawn due to inactivity",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-22 10:40:00",
+        "job_application_id": 2,
+        "note": "Second round interview scheduled - panel interview",
+        "received": True,
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-25 14:55:00",
+        "job_application_id": 11,
+        "note": "Reference check completed",
+        "received": False,
+        "owner_id": 1,
+    },
 ]
 
 
