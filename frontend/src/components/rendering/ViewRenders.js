@@ -256,4 +256,11 @@ export const viewFields = {
 		render: renderFunctions.interviewTable,
 		...overrides,
 	}),
+
+	updates: (overrides = {}) => ({
+		key: "updates",
+		label: "Updates",
+		render: renderFunctions.jobApplicationUpdateTable,
+		...overrides,
+	}),
 };

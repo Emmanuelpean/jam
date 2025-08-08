@@ -4,7 +4,7 @@ import { formFields, useFormOptions } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
 import { formatDateTime } from "../../utils/TimeUtils";
 
-export const InterviewModal = ({
+export const JobApplicationUpdateModal = ({
 	show,
 	onHide,
 	data,
@@ -32,9 +32,7 @@ export const InterviewModal = ({
 			}),
 			formFields.updateType(),
 		],
-		formFields.note({
-			placeholder: "Add notes about the interview, questions asked, impressions, etc...",
-		}),
+		formFields.note(),
 	];
 
 	const viewFieldsArray = [
@@ -64,7 +62,7 @@ export const InterviewModal = ({
 				onHide={onHide}
 				mode="formview"
 				submode={submode}
-				title="Interview"
+				title="Update"
 				size={size}
 				data={initialData}
 				fields={fields}
@@ -78,10 +76,10 @@ export const InterviewModal = ({
 };
 
 export const JobApplicationUpdateFormModal = (props) => {
-	const submode = props.isEdit || props.interview?.id ? "edit" : "add";
-	return <InterviewModal {...props} submode={submode} />;
+	const submode = props.isEdit || props.job_application_update?.id ? "edit" : "add";
+	return <JobApplicationUpdateModal {...props} submode={submode} />;
 };
 
 export const JobApplicationUpdateViewModal = (props) => (
-	<InterviewModal {...props} interview={props.item} submode="view" />
+	<JobApplicationUpdateModal {...props} data={props.data || props.item} submode="view" />
 );

@@ -10,6 +10,7 @@ import { accessAttribute } from "../../utils/Utils";
 import { filesApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import InterviewsTable from "../tables/InterviewTable";
+import JobApplicationUpdateTable from "../tables/JobApplicationUpdateTable";
 
 const createModalManager = (ModalComponent) => {
 	return ({ children, onEdit }) => {
@@ -448,6 +449,11 @@ export const renderFunctions = {
 	interviewTable: (item, view = false, key = "interviews") => {
 		const interviews = accessAttribute(item, key);
 		return <InterviewsTable interviews={interviews} jobApplicationId={item.id} />;
+	},
+
+	jobApplicationUpdateTable: (item, view = false, key = "updates") => {
+		const updates = accessAttribute(item, key);
+		return <JobApplicationUpdateTable jobApplicationUpdates={updates} jobApplicationId={item.id} />;
 	},
 };
 

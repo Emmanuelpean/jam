@@ -89,6 +89,7 @@ export const columns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
+		render: renderFunctions.updateType,
 		...overrides,
 	}),
 

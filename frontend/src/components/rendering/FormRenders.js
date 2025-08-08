@@ -377,12 +377,13 @@ export const formFields = {
 	}),
 
 	updateType: (overrides = {}) => ({
-		name: "received",
+		name: "type",
 		label: "Update Type",
 		type: "select",
+		required: true,
 		options: [
-			{ value: true, label: "Received" },
-			{ value: false, label: "Sent" },
+			{ value: "received", label: "Received" },
+			{ value: "sent", label: "Sent" },
 		],
 		...overrides,
 	}),

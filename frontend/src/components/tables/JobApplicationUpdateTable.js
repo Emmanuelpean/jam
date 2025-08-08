@@ -1,12 +1,12 @@
 import React from "react";
 import { GenericTableWithModals, useTableData } from "./TableSystem";
 import { columns } from "../rendering/ColumnRenders";
-import { InterviewFormModal, InterviewViewModal } from "../modals/InterviewModal";
 import "./InterviewTable.css";
+import { JobApplicationUpdateFormModal, JobApplicationUpdateViewModal } from "../modals/JobApplicationUpdateModal";
 
-const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
+const JobApplicationUpdatesTable = ({ jobApplicationId, onChange }) => {
 	const {
-		data: interviews,
+		data: jobApplicationUpdates,
 		loading,
 		error,
 		sortConfig,
@@ -14,33 +14,33 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 		addItem,
 		updateItem,
 		deleteItem,
-	} = useTableData("interviews", [jobApplicationId], { job_application_id: jobApplicationId });
+	} = useTableData("jobapplicationupdates", [jobApplicationId], { job_application_id: jobApplicationId });
 
-	const handleAddSuccess = (newInterview) => {
-		addItem(newInterview);
-		if (onInterviewChange) {
-			onInterviewChange();
+	const handleAddSuccess = (newEntry) => {
+		addItem(newEntry);
+		if (onChange) {
+			onChange();
 		}
 	};
 
-	const handleUpdateSuccess = (updatedInterview) => {
-		updateItem(updatedInterview);
-		if (onInterviewChange) {
-			onInterviewChange();
+	const handleUpdateSuccess = (updatedEntry) => {
+		updateItem(updatedEntry);
+		if (onChange) {
+			onChange();
 		}
 	};
 
 	const handleDeleteSuccess = (deletedId) => {
 		deleteItem(deletedId);
-		if (onInterviewChange) {
-			onInterviewChange();
+		if (onChange) {
+			onChange();
 		}
 	};
 
-	const interviewColumns = [columns.date(), columns.type(), columns.location(), columns.note()];
+	const ViewColumns = [columns.date(), columns.updateType(), columns.note()];
 
 	const FormModalWithProps = (props) => (
-		<InterviewFormModal
+		<JobApplicationUpdateFormModal
 			{...props}
 			interview={props.item}
 			jobApplicationId={jobApplicationId}
@@ -49,22 +49,22 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 	);
 
 	const ViewModalWithProps = (props) => (
-		<InterviewViewModal {...props} interview={props.item} jobApplicationId={jobApplicationId} />
+		<JobApplicationUpdateViewModal {...props} interview={props.item} jobApplicationId={jobApplicationId} />
 	);
 
 	return (
 		<GenericTableWithModals
-			data={interviews}
-			columns={interviewColumns}
+			data={jobApplicationUpdates}
+			columns={ViewColumns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
 			loading={loading}
 			error={error}
 			FormModal={FormModalWithProps}
 			ViewModal={ViewModalWithProps}
-			endpoint="interviews"
+			endpoint="jobapplicationupdates"
 			nameKey="date"
-			itemType="Interview"
+			itemType="Update"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={handleDeleteSuccess}
@@ -75,4 +75,4 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 	);
 };
 
-export default InterviewsTable;
+export default JobApplicationUpdatesTable;

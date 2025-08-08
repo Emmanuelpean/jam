@@ -202,6 +202,7 @@ export const JobApplicationModal = ({
 
 		if (data?.id) {
 			baseFields.push(viewFields.interviews());
+			baseFields.push(viewFields.updates());
 		}
 
 		return baseFields;
