@@ -17,6 +17,7 @@ import AggregatorsPage from "./pages/AggregatorsPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { Sidebar } from "./Sidebar";
 import JobApplicationUpdatesPage from "./pages/JobApplicationUpdatesPage";
+import JobSearchDashboard from "./pages/DashboardPage";
 
 function AppLayout({ children }) {
 	const location = useLocation();
@@ -34,7 +35,7 @@ function AppLayout({ children }) {
 		<div style={{ display: "flex", height: "100vh" }}>
 			{!isAuthPage && currentUser && <Sidebar onHoverChange={handleSidebarHoverChange} />}
 			<div
-				className={`main-content ${sidebarExpanded ? "sidebar-expanded" : ""}`}
+				className={!isAuthPage ? `main-content ${sidebarExpanded ? "sidebar-expanded" : ""}` : ""}
 				style={{ flex: 1, overflow: "auto" }}
 			>
 				<div
@@ -125,7 +126,7 @@ function App() {
 							}
 						/>
 						<Route
-							path="/dashboard"
+							path="/eis_dashboard"
 							element={
 								<ProtectedRoute>
 									<DashboardPage />
@@ -145,6 +146,14 @@ function App() {
 							element={
 								<ProtectedRoute>
 									<JobApplicationUpdatesPage />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
+							path="/dashboard"
+							element={
+								<ProtectedRoute>
+									<JobSearchDashboard />
 								</ProtectedRoute>
 							}
 						/>

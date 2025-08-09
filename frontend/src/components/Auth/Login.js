@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import "./AuthForm.css";
+import "./Login.css";
 import "../../Logo.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Alert, Button, Card, Form, Spinner } from "react-bootstrap";
@@ -157,7 +157,9 @@ function AuthForm() {
 			<div className="auth-logo">
 				<div className="logo-container logo-container-vertical">
 					<JamLogo style={{ height: "175px", width: "auto" }} alt="Logo" />
-					<div className="logo-text logo-text-below text-gradient-primary">Job Application Manager</div>
+					<div className="logo-text-below text-gradient-primary" style={{ fontSize: "50px" }}>
+						Job Application Manager
+					</div>
 				</div>
 			</div>
 
