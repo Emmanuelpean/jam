@@ -236,3 +236,33 @@
     backface-visibility: hidden;
     perspective: 1000px;
 }
+
+
+.password-toggle-btn {
+    opacity: 0.8;
+    position: relative;
+}
+
+.password-toggle-btn:hover {
+    color: var(--primary-mid) !important;
+}
+
+.password-toggle-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 2px;
+    background-color: currentColor;
+    transform: translate(-50%, -50%) rotate(45deg) scaleX(0);
+    transform-origin: center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+    border-radius: 1px;
+}
+
+/* Show slash when password is visible (eye-slash state) */
+.password-toggle-btn.show-slash::before {
+    transform: translate(-50%, -50%) rotate(45deg) scaleX(1);
+}

@@ -12,6 +12,8 @@ function AuthForm() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const [acceptedTerms, setAcceptedTerms] = useState(false);
 	const [showTerms, setShowTerms] = useState(false);
 	const [error, setError] = useState("");
@@ -42,6 +44,9 @@ function AuthForm() {
 			setConfirmPassword("");
 			setAcceptedTerms(false);
 		}
+		// Reset password visibility when switching modes
+		setShowPassword(false);
+		setShowConfirmPassword(false);
 		// Update URL without navigation
 		window.history.replaceState(null, "", isLogin ? "/register" : "/login");
 	};
@@ -53,6 +58,8 @@ function AuthForm() {
 		setAcceptedTerms(false);
 		setError("");
 		setFieldErrors({});
+		setShowPassword(false);
+		setShowConfirmPassword(false);
 	};
 
 	const validateForm = () => {
@@ -208,19 +215,48 @@ function AuthForm() {
 								<i className="bi bi-lock-fill me-2 text-muted"></i>
 								Password
 							</Form.Label>
-							<Form.Control
-								type="password"
-								id="password"
-								name={isLogin ? "current-password" : "new-password"}
-								placeholder="Enter your password"
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								size="lg"
-								isInvalid={!!fieldErrors.password}
-								autoComplete={isLogin ? "current-password" : "new-password"}
-							/>
+							<div className="position-relative">
+								<Form.Control
+									type={showPassword ? "text" : "password"}
+									id="password"
+									name={isLogin ? "current-password" : "new-password"}
+									placeholder="Enter your password"
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+									size="lg"
+									isInvalid={!!fieldErrors.password}
+									autoComplete={isLogin ? "current-password" : "new-password"}
+									style={{ paddingRight: "50px" }}
+								/>
+								<button
+									type="button"
+									className={`password-toggle-btn ${showPassword ? "" : "show-slash"}`}
+									onClick={() => setShowPassword(!showPassword)}
+									style={{
+										position: "absolute",
+										right: "15px",
+										top: "50%",
+										transform: "translateY(-50%)",
+										background: "none",
+										border: "none",
+										color: "#6c757d",
+										fontSize: "20px",
+										cursor: "pointer",
+										padding: "4px",
+										zIndex: 10,
+										width: "32px",
+										height: "32px",
+										borderRadius: "4px",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									<i className="bi bi-eye"></i>
+								</button>
+							</div>
 							{fieldErrors.password && (
-								<div id="password-error-message" className="invalid-feedback">
+								<div id="password-error-message" className="invalid-feedback d-block">
 									{fieldErrors.password}
 								</div>
 							)}
@@ -240,19 +276,49 @@ function AuthForm() {
 									<i className="bi bi-lock-check-fill me-2 text-muted"></i>
 									Confirm Password
 								</Form.Label>
-								<Form.Control
-									type="password"
-									id="confirm-password"
-									placeholder="Confirm your password"
-									value={confirmPassword}
-									onChange={(e) => setConfirmPassword(e.target.value)}
-									size="lg"
-									isInvalid={!!fieldErrors.confirmPassword}
-									tabIndex={isLogin ? -1 : 0} // Prevent tab focus when hidden
-									autoComplete="new-password"
-								/>
+								<div className="position-relative">
+									<Form.Control
+										type={showConfirmPassword ? "text" : "password"}
+										id="confirm-password"
+										placeholder="Confirm your password"
+										value={confirmPassword}
+										onChange={(e) => setConfirmPassword(e.target.value)}
+										size="lg"
+										isInvalid={!!fieldErrors.confirmPassword}
+										tabIndex={isLogin ? -1 : 0}
+										autoComplete="new-password"
+										style={{ paddingRight: "50px" }}
+									/>
+									<button
+										type="button"
+										className={`password-toggle-btn ${showConfirmPassword ? "" : "show-slash"}`}
+										onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+										tabIndex={isLogin ? -1 : 0}
+										style={{
+											position: "absolute",
+											right: "15px",
+											top: "50%",
+											transform: "translateY(-50%)",
+											background: "none",
+											border: "none",
+											color: "#6c757d",
+											fontSize: "20px",
+											cursor: "pointer",
+											padding: "4px",
+											zIndex: 10,
+											width: "32px",
+											height: "32px",
+											borderRadius: "4px",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+										}}
+									>
+										<i className="bi bi-eye"></i>
+									</button>
+								</div>
 								{fieldErrors.confirmPassword && (
-									<div id="password-confirm-error-message" className="invalid-feedback">
+									<div id="password-confirm-error-message" className="invalid-feedback d-block">
 										{fieldErrors.confirmPassword}
 									</div>
 								)}
