@@ -212,6 +212,160 @@ class TestJobApplicationCRUD(CRUDTestBase):
         "id": 1,
     }
 
+    def test_needs_chase_default_days(self, authorised_clients, test_recent_job_dataset) -> None:
+        """Test needs_chase endpoint with default 30 days parameter"""
+
+        print(test_recent_job_dataset)
+        a = f"{self.endpoint}/needs_chase"
+        print(a)
+        response = authorised_clients[0].get(a)
+        assert response.status_code == 200
+
+        applications_needing_chase = response.json()
+        assert isinstance(applications_needing_chase, list)
+
+        # Should return job applications that meet the criteria
+        for app in applications_needing_chase:
+            assert "id" in app
+            assert "status" in app
+            assert "date" in app
+            assert "job" in app
+            # Verify status is not "Rejected" or "Withdrawn"
+            assert app["status"] not in ["Rejected", "Withdrawn"]
+
+    def test_needs_chase_custom_days(self, authorised_clients, test_recent_job_dataset) -> None:
+        """Test needs_chase endpoint with custom days parameter"""
+        job_applications, job_application_updates = test_recent_job_dataset
+
+        # Test with 7 days - should return fewer results
+        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=7")
+        assert response.status_code == 200
+        applications_7_days = response.json()
+
+        # Test with 60 days - should return more results
+        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=60")
+        assert response.status_code == 200
+        applications_60_days = response.json()
+
+        # 60 days should return more or equal results than 7 days
+        assert len(applications_60_days) >= len(applications_7_days)
+
+    def test_needs_chase_excludes_rejected_withdrawn(
+        self, authorised_clients, test_recent_job_dataset, session
+    ) -> None:
+        """Test that rejected and withdrawn applications are excluded"""
+        job_applications, job_application_updates = test_recent_job_dataset
+
+        # Update one application to "Rejected" status
+        if job_applications:
+            job_applications[0].status = "Rejected"
+            session.commit()
+
+        # Update another to "Withdrawn" status if available
+        if len(job_applications) > 1:
+            job_applications[1].status = "Withdrawn"
+            session.commit()
+
+        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=365")  # Get all
+        assert response.status_code == 200
+
+        applications_needing_chase = response.json()
+
+        # Verify no rejected or withdrawn applications are returned
+        for app in applications_needing_chase:
+            assert app["status"] not in ["Rejected", "Withdrawn"]
+
+    def test_needs_chase_ordered_by_urgency(self, authorised_clients, test_recent_job_dataset) -> None:
+        """Test that results are ordered by urgency (oldest activity first)"""
+        job_applications, job_application_updates = test_recent_job_dataset
+
+        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=365")  # Get all
+        assert response.status_code == 200
+
+        applications_needing_chase = response.json()
+
+        if len(applications_needing_chase) > 1:
+            # Check that applications have dates for comparison
+            for app in applications_needing_chase:
+                assert "date" in app
+                assert "updates" in app
+
+    def test_needs_chase_no_results(self, authorised_clients, test_recent_job_dataset) -> None:
+        """Test needs_chase with very restrictive days parameter"""
+        job_applications, job_application_updates = test_recent_job_dataset
+
+        # Use 0 days - should return no results since all applications are old
+        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=0")
+        assert response.status_code == 200
+
+        applications_needing_chase = response.json()
+        assert len(applications_needing_chase) == 0
+
+    def test_needs_chase_with_updates(self, authorised_clients, test_recent_job_dataset) -> None:
+        """Test that applications with recent updates are handled correctly"""
+        job_applications, job_application_updates = test_recent_job_dataset
+
+        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=365")
+        assert response.status_code == 200
+
+        applications_needing_chase = response.json()
+
+        # Verify structure includes updates
+        for app in applications_needing_chase:
+            assert "updates" in app
+            assert isinstance(app["updates"], list)
+
+    def test_needs_chase_unauthorized(self, client):
+        """Test needs_chase endpoint without authentication"""
+        response = client.get(f"{self.endpoint}/needs_chase")
+        assert response.status_code == 401
+
+    def test_needs_chase_other_user(self, authorised_clients, test_recent_job_dataset) -> None:
+        """Test that users can only see their own job applications needing chase"""
+        job_applications, job_application_updates = test_recent_job_dataset
+
+        # First user should see results
+        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase")
+        assert response.status_code == 200
+        user1_applications = response.json()
+
+        # Second user should see no results (data belongs to first user)
+        response = authorised_clients[1].get(f"{self.endpoint}/needs_chase")
+        assert response.status_code == 200
+        user2_applications = response.json()
+
+        # User 2 should have no applications since test data belongs to user 1
+        assert len(user2_applications) == 0
+
+    def test_needs_chase_includes_job_data(self, authorised_clients, test_recent_job_dataset) -> None:
+        """Test that job application response includes related job data"""
+        job_applications, job_application_updates = test_recent_job_dataset
+
+        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=365")
+        assert response.status_code == 200
+
+        applications_needing_chase = response.json()
+
+        for app in applications_needing_chase:
+            # Verify job application structure
+            assert "id" in app
+            assert "status" in app
+            assert "date" in app
+            assert "job_id" in app
+
+            # Verify related job data is included
+            assert "job" in app
+            if app["job"] is not None:
+                assert "id" in app["job"]
+                assert "title" in app["job"]
+
+            # Verify other optional related data structure
+            assert "aggregator" in app
+            assert "cv" in app
+            assert "cover_letter" in app
+            assert "interviews" in app
+            assert "updates" in app
+
 
 class TestJobApplicationUpdateCRUD(CRUDTestBase):
     endpoint = "/jobapplicationupdates"
@@ -220,8 +374,10 @@ class TestJobApplicationUpdateCRUD(CRUDTestBase):
     test_data = "test_job_application_updates"
     add_fixture = ["test_job_applications"]
     create_data = JOB_APPLICATION_UPDATES_DATA
-    update_data = {"id": 1,
-                   "note": "Updated note",}
+    update_data = {
+        "id": 1,
+        "note": "Updated note",
+    }
 
 
 class TestInterviewCRUD(CRUDTestBase):

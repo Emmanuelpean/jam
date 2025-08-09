@@ -1,7 +1,10 @@
 import base64
+import datetime
 
 from fastapi import APIRouter, Depends, status, Request, HTTPException, Response
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 
 from app import models, database, oauth2, schemas
 
@@ -15,6 +18,7 @@ def generate_crud_router(
     endpoint: str,  # e.g. "companies"
     not_found_msg: str = "Entry not found",
     many_to_many_fields: dict = None,
+    router: APIRouter | None = None,
 ) -> APIRouter:
     """Generate a FastAPI router with standard CRUD endpoints for a given table.
     :param table_model: SQLAlchemy model class representing the database table.
@@ -31,9 +35,11 @@ def generate_crud_router(
                                        'remote_key': 'remote_foreign_key'
                                    }
                                }
+    :param router: Optional router to which the endpoints will be added.
     :return: Configured APIRouter instance with CRUD endpoints."""
 
-    router = APIRouter(prefix=f"/{endpoint}", tags=[endpoint])
+    if router is None:
+        router = APIRouter(prefix=f"/{endpoint}", tags=[endpoint])
 
     def handle_many_to_many_create(
         db: Session,
@@ -381,14 +387,83 @@ interview_router = generate_crud_router(
     },
 )
 
+
+job_application_router = APIRouter(prefix="/jobapplications", tags=["Job Applications"])
+
+
+@job_application_router.get("/needs_chase")
+def get_needs_chase_job_applications(
+    days: int = 30,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    """Get job applications that need to be chased (followed up on).
+    A job application needs to be chased if:
+    1. Either:
+       - No job application updates exist, and the application date is older than X days
+       - Job application updates exist, and the latest update is older than X days
+    :param days: Number of days to check for follow-up
+    :param db: Database session
+    :param current_user: Authenticated user
+    :return: List of job applications that need follow-up"""
+
+    # Calculate the cutoff date
+    cutoff_date = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=days)
+
+    # Subquery to get the latest update date for each job application
+    latest_update_subquery = (
+        db.query(
+            models.JobApplicationUpdate.job_application_id,
+            func.max(models.JobApplicationUpdate.date).label("latest_update_date"),
+        )
+        .group_by(models.JobApplicationUpdate.job_application_id)
+        .subquery()
+    )
+
+    # Main query to get job applications that need chasing
+    # noinspection PyTypeChecker
+    query = (
+        db.query(models.JobApplication)
+        .outerjoin(latest_update_subquery, models.JobApplication.id == latest_update_subquery.c.job_application_id)
+        .filter(models.JobApplication.owner_id == current_user.id)
+        .filter(models.JobApplication.status.notin_(["Rejected", "Withdrawn"]))
+        .filter(
+            # Job application needs chasing if:
+            # 1. No updates exist and application date is old enough, OR
+            # 2. Updates exist but latest update is old enough
+            ((latest_update_subquery.c.latest_update_date.is_(None)) & (models.JobApplication.date < cutoff_date))
+            | (
+                (latest_update_subquery.c.latest_update_date.is_not(None))
+                & (latest_update_subquery.c.latest_update_date < cutoff_date)
+            )
+        )
+        .options(
+            joinedload(models.JobApplication.job).joinedload(models.Job.company),
+            joinedload(models.JobApplication.job).joinedload(models.Job.location),
+            joinedload(models.JobApplication.updates),
+            joinedload(models.JobApplication.aggregator),
+            joinedload(models.JobApplication.cv),
+            joinedload(models.JobApplication.cover_letter),
+            joinedload(models.JobApplication.interviews),
+        )
+        .order_by(
+            # Order by oldest first (most urgent)
+            func.coalesce(latest_update_subquery.c.latest_update_date, models.JobApplication.date).asc()
+        )
+    )
+
+    return query.all()
+
+
 # JobApplication router
-job_application_router = generate_crud_router(
+generate_crud_router(
     table_model=models.JobApplication,
     create_schema=schemas.JobApplication,
     update_schema=schemas.JobApplicationUpdate,
     out_schema=schemas.JobApplicationOut,
     endpoint="jobapplications",
     not_found_msg="Job Application not found",
+    router=job_application_router,
 )
 
 job_application_update_router = generate_crud_router(
@@ -427,9 +502,12 @@ def download_file(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
 ):
-    """Download a file by ID."""
+    """Download a file by ID.
+    :param file_id: The file ID.
+    :param db: The database session.
+    :param current_user: The current user."""
 
-    # Get file record from database
+    # Get file record from the database
     # noinspection PyTypeChecker
     file_record = (
         db.query(models.File).filter(models.File.id == file_id, models.File.owner_id == current_user.id).first()

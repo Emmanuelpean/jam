@@ -44,7 +44,7 @@ const JobApplicationUpdatesPage = () => {
 			ViewModal={JobApplicationUpdateViewModal}
 			endpoint="jobapplications"
 			nameKey="title"
-			itemType="Job Application"
+			itemType="Job Application Update"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}
