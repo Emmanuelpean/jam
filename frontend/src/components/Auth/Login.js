@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import "./Login.css";
-import "../../Logo.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Alert, Button, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";

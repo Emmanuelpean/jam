@@ -811,3 +811,10 @@ textarea.form-control {
     border: none;
 }
 
+.logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+

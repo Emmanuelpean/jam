@@ -23,15 +23,19 @@
     border-bottom: 1px solid #dee2e6;
     overflow: hidden;
     display: flex;
-    height: 90px;
+    height: 120px; /* Increased to accommodate 60px text */
     justify-content: center;
+    align-items: center; /* Center vertically */
     transition: padding 0.3s ease, justify-content 0.3s ease;
 }
+
 
 .custom-sidebar.collapsed.hovering .sidebar-header {
     padding-left: 1rem;
     justify-content: flex-start;
+    align-items: center; /* Keep centered vertically */
 }
+
 
 .sidebar-brand {
     display: block;
@@ -58,9 +62,9 @@
 }
 
 .logo-text {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: inherit;
+    font-weight: 600;
+    font-size: 60px !important;
+    color: var(--primary-mid) !important;
     text-decoration: none !important;
     border-bottom: none !important;
     white-space: nowrap;
@@ -70,6 +74,7 @@
     transition: opacity 0.3s ease, width 0.3s ease;
 }
 
+
 .custom-sidebar.collapsed.hovering .logo-text {
     opacity: 1;
     width: auto;
@@ -77,9 +82,9 @@
 
 /* Theme dropdown with higher z-index */
 .theme-dropdown {
-    position: fixed; /* Changed from absolute to fixed */
-    top: 80px; /* Adjust based on your header height */
-    left: 70px; /* Position it next to the collapsed sidebar */
+    position: fixed;
+    top: 80px;
+    left: 70px;
     z-index: 1100;
     min-width: 200px;
     margin-top: 5px;
@@ -300,4 +305,3 @@
 .nav-item.active:hover .submenu-arrow {
     color: white;
 }
-

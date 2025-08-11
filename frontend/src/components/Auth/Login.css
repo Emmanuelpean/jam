@@ -266,3 +266,18 @@
 .password-toggle-btn.show-slash::before {
     transform: translate(-50%, -50%) rotate(45deg) scaleX(1);
 }
+
+/* Auth form logo */
+.auth-logo {
+    margin-bottom: 2rem;
+}
+
+
+.logo-text-below {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.logo-container-vertical {
+    flex-direction: column;
+}

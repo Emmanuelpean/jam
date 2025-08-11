@@ -242,7 +242,7 @@ export const Sidebar = ({ onHoverChange }) => {
 			<div className="sidebar-header border-bottom">
 				<div className="position-relative" ref={dropdownRef}>
 					<div className="sidebar-brand" onClick={handleLogoClick} style={{ cursor: "pointer" }}>
-						<div className="logo-container logo-container-horizontal d-flex align-items-center">
+						<div className="logo-container d-flex align-items-center">
 							<JamLogo style={{ height: "57px", width: "auto" }} />
 							{isHovering && <span className="logo-text">JAM</span>}
 						</div>
