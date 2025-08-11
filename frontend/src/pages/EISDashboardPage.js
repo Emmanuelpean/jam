@@ -6,6 +6,7 @@ import { serviceLogApi } from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { formatTimeAgo } from "../utils/TimeUtils";
 import { barChartProps, lineChartProps } from "../components/charts/Themes";
+import { useLoading } from "../contexts/LoadingContext";
 
 const TIME_RANGES = [
 	{ value: "7", label: "Last 7 Days" },
@@ -17,17 +18,16 @@ const TIME_RANGES = [
 
 const ServiceLogDashboard = () => {
 	const { token, is_admin } = useAuth();
+	const { showLoading, hideLoading } = useLoading();
 	const [serviceLogData, setServiceLogData] = useState([]);
 	const [chartType, setChartType] = useState("line");
 	const [timeRange, setTimeRange] = useState("7");
 	const [recentLogs, setRecentLogs] = useState([]);
-	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 
 	useEffect(() => {
 		if (!is_admin) {
 			setError("Access denied: Admin privileges required");
-			setLoading(false);
 			return;
 		}
 		fetchServiceLogData().then(() => null);
@@ -36,7 +36,7 @@ const ServiceLogDashboard = () => {
 
 	const fetchServiceLogData = async () => {
 		try {
-			setLoading(true);
+			showLoading("Loading service log data...");
 			setError(null);
 
 			// Use delta_days parameter for time range
@@ -50,12 +50,13 @@ const ServiceLogDashboard = () => {
 			console.error("Error fetching service log data:", err);
 			setError("Failed to load service log data");
 		} finally {
-			setLoading(false);
+			hideLoading();
 		}
 	};
 
 	const fetchRecentLogs = async () => {
 		try {
+			showLoading("Loading recent logs...");
 			const params = {
 				limit: 10,
 			};
@@ -65,7 +66,7 @@ const ServiceLogDashboard = () => {
 			console.error("Error fetching recent logs:", err);
 			setError("Failed to load recent service logs");
 		} finally {
-			setLoading(false);
+			hideLoading();
 		}
 	};
 
@@ -152,23 +153,6 @@ const ServiceLogDashboard = () => {
 				<div className="alert alert-danger border-0 shadow-sm" role="alert">
 					<i className="bi bi-shield-x me-2"></i>
 					Access denied: Admin privileges required to view service logs
-				</div>
-			</Container>
-		);
-	}
-
-	if (loading) {
-		return (
-			<Container className="mt-4">
-				<div className="text-center">
-					<div
-						className="spinner-border text-primary"
-						role="status"
-						style={{ width: "3rem", height: "3rem" }}
-					>
-						<span className="visually-hidden">Loading...</span>
-					</div>
-					<p className="mt-3 text-muted fs-5">Loading service logs...</p>
 				</div>
 			</Container>
 		);

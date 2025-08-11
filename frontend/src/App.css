@@ -567,14 +567,12 @@ textarea.form-control {
     left: 70px; /* Account for sidebar width */
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.9);
-    z-index: 9999;
-    backdrop-filter: blur(2px);
+    background: rgba(255, 255, 255, 1);
 }
 
 .content-hidden {
     pointer-events: none;
-    opacity: 0.3;
+    opacity: 0;
     transition: opacity 0.3s ease;
 }
 
