@@ -4,6 +4,7 @@ import { useAuth } from "./contexts/AuthContext";
 import { ReactComponent as JamLogo } from "./assets/Logo.svg";
 import { authApi } from "./services/api";
 import "./Sidebar.css";
+import { getTableIcon } from "./components/rendering/Renders";
 
 export const Sidebar = ({ onHoverChange }) => {
 	const location = useLocation();
@@ -31,19 +32,19 @@ export const Sidebar = ({ onHoverChange }) => {
 	const allNavigationItems = [
 		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard" },
 		{ path: "/eis_dashboard", icon: "bi-house-door", text: "EIS Dashboard", adminOnly: true },
-		{ path: "/jobs", icon: "bi-briefcase", text: "Jobs" },
-		{ path: "/jobapplications", icon: "bi-person-workspace", text: "Job Applications" },
-		{ path: "/interviews", icon: "bi-people-fill", text: "Interviews" },
-		{ path: "/jobapplicationupdates", icon: "bi-person-badge", text: "Job Application Updates" },
+		{ path: "/jobs", text: "Jobs" },
+		{ path: "/jobapplications", text: "Job Applications" },
+		{ path: "/interviews", text: "Interviews" },
+		{ path: "/jobapplicationupdates", text: "Job Application Updates" },
 		{
 			text: "Other",
 			icon: "bi-three-dots",
 			submenu: [
-				{ path: "/persons", icon: "bi-people", text: "People" },
-				{ path: "/locations", icon: "bi-geo-alt", text: "Locations" },
-				{ path: "/companies", icon: "bi-building", text: "Companies" },
-				{ path: "/aggregators", icon: "bi-linkedin", text: "Aggregators" },
-				{ path: "/keywords", icon: "bi-tags", text: "Tags" },
+				{ path: "/persons", text: "People" },
+				{ path: "/locations", text: "Locations" },
+				{ path: "/companies", text: "Companies" },
+				{ path: "/aggregators", text: "Aggregators" },
+				{ path: "/keywords", text: "Tags" },
 			],
 		},
 	];
@@ -281,6 +282,7 @@ export const Sidebar = ({ onHoverChange }) => {
 						const isSubmenuItemActive = isSubmenuActive(item.submenu);
 						const isExpanded = expandedSubmenu === item.text;
 						const showSubmenu = shouldShowSubmenu(item);
+						console.log(item);
 
 						return (
 							<div key={`submenu-${index}`}>
@@ -291,7 +293,7 @@ export const Sidebar = ({ onHoverChange }) => {
 									style={{ cursor: isHovering ? "pointer" : "default" }}
 								>
 									<span className="nav-icon">
-										<i className={`bi ${item.icon}`}></i>
+										<i className={`bi ${item?.icon || getTableIcon(item.text)}`}></i>
 									</span>
 									{isHovering && (
 										<>
@@ -313,7 +315,9 @@ export const Sidebar = ({ onHoverChange }) => {
 												title={!isHovering ? subItem.text : subItem.text}
 											>
 												<span className="nav-icon">
-													<i className={`bi ${subItem.icon}`}></i>
+													<i
+														className={`bi ${subItem?.icon || getTableIcon(subItem.text)}`}
+													></i>
 												</span>
 												{isHovering && <span className="nav-text">{subItem.text}</span>}
 											</Link>
@@ -333,7 +337,7 @@ export const Sidebar = ({ onHoverChange }) => {
 							title={!isHovering ? item.text : ""}
 						>
 							<span className="nav-icon">
-								<i className={`bi ${item.icon}`}></i>
+								<i className={`bi ${item?.icon || getTableIcon(item.text)}`}></i>
 							</span>
 							{isHovering && <span className="nav-text">{item.text}</span>}
 						</Link>

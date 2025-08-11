@@ -483,11 +483,11 @@ export const getTableIcon = (title) => {
 		Persons: "bi-people",
 		People: "bi-people",
 		Locations: "bi-geo-alt",
-		Keywords: "bi-tags",
+		Tags: "bi-tags",
 		Interviews: "bi-calendar-event",
-		"Job Applications": "bi-send",
+		"Job Applications": "bi-person-workspace",
 		"Job Application Updates": "bi-pencil-square",
-		Aggregators: "bi-collection",
+		"Job Aggregators": "bi-linkedin",
 	};
 	return iconMap[title] || "bi-table";
 };
