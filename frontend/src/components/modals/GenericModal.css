@@ -11,6 +11,7 @@
     border-bottom: none;
     border-radius: 16px 16px 0 0;
     padding: 1.5rem 2rem;
+    flex-shrink: 0;
 }
 
 .modal-header .modal-title {
@@ -31,9 +32,55 @@
     transform: scale(1.1);
 }
 
+/* Modal sizing and height constraints */
+.modal-dialog {
+    max-height: calc(100vh - 4rem);
+    margin: 1rem auto;
+    display: flex;
+    align-items: flex-start;
+}
+
+.modal-content {
+    max-height: calc(100vh - 2rem);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
 .modal-body {
     padding: 1.5rem;
     background: linear-gradient(145deg, #fafbfc 0%, #f8f9fa 100%);
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.modal-footer {
+    background: linear-gradient(145deg, #f8f9fa 0%, #f0f1f2 100%);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0 0 16px 16px;
+    padding: 1.25rem 2rem;
+    flex-shrink: 0;
+}
+
+/* Custom scrollbar for modal body */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: var(--primary-mid);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-end);
 }
 
 /* Clean Full-Width Underline Tabs */
@@ -48,6 +95,7 @@
     border-bottom: 2px solid #e9ecef;
     padding-bottom: 0;
     gap: 0;
+    flex-shrink: 0;
 }
 
 .modal-body .nav-tabs .nav-item {
@@ -82,6 +130,10 @@
     background: transparent;
     border: none;
     padding: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
 }
 
 .modal-body .tab-pane {
@@ -101,8 +153,25 @@
     }
 }
 
-/* Responsive tab adjustments */
+/* Modal content container for height animation */
+.modal-content-container {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
+    .modal-dialog {
+        max-height: calc(100vh - 1rem);
+        margin: 0.5rem;
+    }
+
+    .modal-content {
+        max-height: calc(100vh - 1rem);
+    }
+
     .modal-body .nav-tabs {
         margin-bottom: 1rem;
     }
@@ -114,6 +183,15 @@
 }
 
 @media (max-width: 576px) {
+    .modal-dialog {
+        margin: 0.25rem;
+        max-height: calc(100vh - 0.5rem);
+    }
+
+    .modal-content {
+        max-height: calc(100vh - 0.5rem);
+    }
+
     .modal-body .nav-tabs {
         flex-direction: row;
     }
@@ -123,44 +201,6 @@
         font-size: 0.85rem;
         white-space: normal;
         line-height: 1.2;
-    }
-}
-
-/* Extra small screens */
-@media (max-width: 400px) {
-    .modal-body .nav-tabs .nav-link {
-        padding: 0.625rem 0.75rem;
-        font-size: 0.8rem;
-    }
-}
-
-.modal-footer {
-    background: linear-gradient(145deg, #f8f9fa 0%, #f0f1f2 100%);
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 0 0 16px 16px;
-    padding: 1.25rem 2rem;
-}
-
-/* Centered button container with fixed width */
-.modal-buttons-container {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    width: 100%;
-    margin: 0 auto;
-
-}
-
-.modal-buttons-container .btn {
-    flex: 1;
-    min-width: 120px;
-}
-
-
-/* Responsive adjustments */
-@media (max-width: 576px) {
-    .modal-dialog {
-        margin: 1rem;
     }
 
     .modal-header,
@@ -177,6 +217,28 @@
     .modal-buttons-container {
         width: 280px;
     }
+}
+
+/* Extra small screens */
+@media (max-width: 400px) {
+    .modal-body .nav-tabs .nav-link {
+        padding: 0.625rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Centered button container with fixed width */
+.modal-buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.modal-buttons-container .btn {
+    flex: 1;
+    min-width: 120px;
 }
 
 /* Animation for modal appearance */
@@ -263,13 +325,11 @@
 /* Smooth modal body transitions with height animation */
 .modal-body {
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    overflow: hidden;
 }
 
 /* Content container for smooth height transitions */
 .modal-content-container {
     position: relative;
-    overflow: hidden;
 }
 
 /* Visible content */
@@ -336,4 +396,33 @@
 .row > * {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
+}
+
+/* Modal content container should also NOT scroll */
+.modal-content-container {
+    flex: 1 1 auto;
+    overflow: visible; /* Let parent handle scrolling */
+    min-height: 0;
+}
+
+
+.modal-body {
+    padding: 1.5rem;
+    background: linear-gradient(145deg, #fafbfc 0%, #f8f9fa 100%);
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 76vh;
+}
+
+
+/* Tab content styling - remove scrolling */
+.modal-body .tab-content {
+    background: transparent;
+    border: none;
+    padding: 0;
+    flex: 1 1 auto;
+    overflow: visible; /* Changed from auto to visible */
+    min-height: 0;
 }
