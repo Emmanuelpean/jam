@@ -9,12 +9,13 @@ from pathlib import Path
 
 def get_resources_path() -> Path:
     """Get the path to the resources folder"""
+
     current_dir = Path(__file__).parent
     return current_dir / "../resources"
 
 
 def load_file_as_base64(filename: str) -> str | None:
-    """Load a file from resources folder and return as base64 string"""
+    """Load a file from the resources folder and return as base64 string"""
     resources_path = get_resources_path()
     file_path = resources_path / filename
 
@@ -27,8 +28,9 @@ def load_file_as_base64(filename: str) -> str | None:
         return None
 
 
-def get_file_info(filename):
+def get_file_info(filename) -> tuple[int | None, str | None]:
     """Get file size and MIME type"""
+
     resources_path = get_resources_path()
     file_path = resources_path / filename
 
@@ -58,8 +60,9 @@ def get_file_info(filename):
         return None, None
 
 
-def load_all_resource_files():
+def load_all_resource_files() -> dict[str, dict[str, str | int]]:
     """Load all files from the resources folder"""
+
     resources_path = get_resources_path()
     loaded_files = {}
 

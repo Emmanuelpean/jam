@@ -1,6 +1,6 @@
 from app.eis import schemas
 from conftest import CRUDTestBase
-from tests.utils.table_data import SERVICE_LOGS_DATA, JOB_ALERT_EMAILS_DATA, JOB_SCRAPED_DATA
+from tests.utils.table_data import SERVICE_LOG_DATA, JOB_ALERT_EMAIL_DATA, JOB_SCRAPED_DATA
 
 
 class TestJobAlertEmailCRUD(CRUDTestBase):
@@ -8,7 +8,7 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
     schema = schemas.JobAlertEmail
     out_schema = schemas.JobAlertEmailOut
     test_data = "test_job_alert_emails"
-    create_data = JOB_ALERT_EMAILS_DATA
+    create_data = JOB_ALERT_EMAIL_DATA
     update_data = {
         "id": 1,
         "subject": "Updated Python",
@@ -32,7 +32,7 @@ class TestServiceLogCRUD(CRUDTestBase):
     schema = schemas.ServiceLog
     out_schema = schemas.ServiceLogOut
     test_data = "test_service_logs"
-    create_data = SERVICE_LOGS_DATA
+    create_data = SERVICE_LOG_DATA
     update_data = {
         "id": 1,
         "name": "Updated Python",

@@ -1,8 +1,11 @@
+
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Alert } from "react-bootstrap";
+import { Container, Row, Col, Card, Alert, Button } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../services/api";
 import JobsToChase from "../components/tables/JobsToChase";
+import { JobViewModal } from "../components/modals/job/JobModal";
+import "./DashboardPage.css";
 
 const JobSearchDashboard = () => {
 	const { token } = useAuth();
@@ -15,32 +18,34 @@ const JobSearchDashboard = () => {
 		recentActivity: [],
 		applicationsByStatus: {},
 	});
-	const [chaseJobsData, setChaseJobsData] = useState([]); // Store the actual jobs needing chase
+	const [chaseJobsData, setChaseJobsData] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const [selectedJob, setSelectedJob] = useState(null);
+	const [showJobModal, setShowJobModal] = useState(false);
 
 	useEffect(() => {
 		const fetchDashboardData = async () => {
 			try {
 				setLoading(true);
 
-				// Fetch various statistics using the new dedicated route
+				// Fetch various statistics using the new dedicated routes
 				const [
 					jobsResponse,
 					applicationsResponse,
 					interviewsResponse,
-					chaseJobsResponse,
+					chaseApplicationsResponse,
 					recentUpdatesResponse,
 				] = await Promise.all([
 					api.get("jobs/", token),
 					api.get("jobapplications/", token),
 					api.get("interviews/", token),
-					api.get("jobs/needs_chase", token), // Use the new dedicated route
-					api.get("jobapplicationupdates/?limit=5", token),
+					api.get("jobapplications/needs_chase", token),
+					api.get("latest_updates?limit=10", token),
 				]);
 
-				// Store the chase jobs data for passing to the table
-				setChaseJobsData(chaseJobsResponse || []);
+				// Store the chase applications data for passing to the table
+				setChaseJobsData(chaseApplicationsResponse || []);
 
 				// Calculate statistics
 				const applications = applicationsResponse || [];
@@ -65,7 +70,7 @@ const JobSearchDashboard = () => {
 					totalApplications: applications.length,
 					pendingApplications: pendingCount,
 					interviewsScheduled: upcomingInterviews.length,
-					jobsNeedingChase: chaseJobsResponse?.length || 0,
+					jobsNeedingChase: chaseApplicationsResponse?.length || 0,
 					recentActivity: recentUpdatesResponse || [],
 					applicationsByStatus: statusCounts,
 				});
@@ -80,13 +85,28 @@ const JobSearchDashboard = () => {
 		fetchDashboardData();
 	}, [token]);
 
+	// Function to handle job button click
+	const handleJobClick = async (jobTitle) => {
+		try {
+			// Find the job by title from the jobs data we already have
+			const jobsResponse = await api.get("jobs/", token);
+			const job = jobsResponse.find(j => j.title === jobTitle);
+
+			if (job) {
+				setSelectedJob(job);
+				setShowJobModal(true);
+			}
+		} catch (err) {
+			console.error("Error fetching job details:", err);
+		}
+	};
+
 	// Callback to handle updates from the JobsToChase table
-	const handleChaseJobsUpdate = (updatedJobs) => {
-		setChaseJobsData(updatedJobs);
-		// Also update the count in dashboard stats
+	const handleChaseJobsUpdate = (updatedApplications) => {
+		setChaseJobsData(updatedApplications);
 		setDashboardStats((prev) => ({
 			...prev,
-			jobsNeedingChase: updatedJobs.length,
+			jobsNeedingChase: updatedApplications.length,
 		}));
 	};
 
@@ -107,95 +127,167 @@ const JobSearchDashboard = () => {
 
 	const RecentActivityCard = () => (
 		<Card className="h-100 shadow-sm border-0">
-			<Card.Header className="bg-light">
-				<h5 className="mb-0 d-flex align-items-center">
-					<i className="bi bi-clock-history me-2"></i>
-					Recent Activity
-				</h5>
+			<Card.Header className="card-header border-0 p-0">
+				<div className="d-flex align-items-center justify-content-between p-4">
+					<div className="d-flex align-items-center">
+						<div className="header-icon-wrapper me-3">
+							<i className="bi bi-clock-history"></i>
+						</div>
+						<div>
+							<h5 className="mb-0 fw-bold text-dark">Recent Activity</h5>
+							<small className="text-muted">Latest updates across all activities</small>
+						</div>
+					</div>
+					{dashboardStats.recentActivity.length > 0 && (
+						<div className="activity-count-badge">{dashboardStats.recentActivity.length}</div>
+					)}
+				</div>
 			</Card.Header>
-			<Card.Body>
+			<Card.Body className="p-0">
 				{dashboardStats.recentActivity.length === 0 ? (
-					<div className="text-center text-muted py-3">
-						<i className="bi bi-inbox" style={{ fontSize: "2rem" }}></i>
-						<p className="mt-2 mb-0">No recent activity</p>
+					<div className="text-center py-5 px-4">
+						<div className="mb-3">
+							<i className="bi bi-inbox text-muted" style={{ fontSize: "3.5rem" }}></i>
+						</div>
+						<h6 className="text-muted fw-semibold">No recent activity</h6>
+						<p className="text-muted small mb-0">Your recent activity will appear here</p>
 					</div>
 				) : (
-					<div className="timeline">
-						{dashboardStats.recentActivity.slice(0, 5).map((activity, index) => (
-							<div key={activity.id || index} className="timeline-item mb-3">
-								<div className="d-flex">
-									<div className="flex-shrink-0 me-3">
-										<div className="bg-primary rounded-circle p-2">
-											<i className="bi bi-plus text-white"></i>
-										</div>
-									</div>
-									<div className="flex-grow-1">
-										<div className="fw-semibold">{activity.type}</div>
-										<div className="text-muted small">
-											{activity.note && activity.note.length > 100
-												? `${activity.note.substring(0, 100)}...`
-												: activity.note || "No details provided"}
-										</div>
-										<div className="text-muted small">
-											{new Date(activity.date).toLocaleDateString()}
-										</div>
-									</div>
-								</div>
-							</div>
-						))}
-					</div>
-				)}
-			</Card.Body>
-		</Card>
-	);
+					<div className="activity-timeline px-4" style={{ maxHeight: "400px", overflowY: "auto" }}>
+						{dashboardStats.recentActivity.slice(0, 8).map((activity, index) => {
+							const isLast = index === Math.min(dashboardStats.recentActivity.length - 1, 7);
 
-	const ApplicationStatusCard = () => (
-		<Card className="h-100 shadow-sm border-0">
-			<Card.Header className="bg-light">
-				<h5 className="mb-0 d-flex align-items-center">
-					<i className="bi bi-pie-chart me-2"></i>
-					Application Status Overview
-				</h5>
-			</Card.Header>
-			<Card.Body>
-				{Object.keys(dashboardStats.applicationsByStatus).length === 0 ? (
-					<div className="text-center text-muted py-3">
-						<i className="bi bi-clipboard-x" style={{ fontSize: "2rem" }}></i>
-						<p className="mt-2 mb-0">No applications yet</p>
-					</div>
-				) : (
-					<div>
-						{Object.entries(dashboardStats.applicationsByStatus).map(([status, count]) => {
-							const percentage = (count / dashboardStats.totalApplications) * 100;
-							const statusColors = {
-								Applied: "primary",
-								"Under Review": "warning",
-								"Interview Scheduled": "info",
-								Rejected: "danger",
-								Accepted: "success",
-								Withdrawn: "secondary",
+							// Activity type icon mapping - updated for new types
+							const getActivityIcon = (type) => {
+								const iconMap = {
+									Application: "bi-send-fill",
+									Interview: "bi-people-fill",
+									"Job Application Update": "bi-pencil-fill",
+									"Follow-up": "bi-telephone-fill",
+									Response: "bi-envelope-fill",
+									Rejection: "bi-x-circle-fill",
+									Offer: "bi-check-circle-fill",
+									Update: "bi-pencil-fill",
+									Note: "bi-chat-dots-fill",
+								};
+								return iconMap[type] || "bi-plus-circle-fill";
 							};
-							const color = statusColors[status] || "secondary";
+
+							// Activity type color mapping - updated for new types
+							const getActivityColor = (type) => {
+								const colorMap = {
+									Application: "#3b82f6",
+									Interview: "#8b5cf6",
+									"Job Application Update": "#6b7280",
+									"Follow-up": "#f59e0b",
+									Response: "#10b981",
+									Rejection: "#ef4444",
+									Offer: "#22c55e",
+									Update: "#6b7280",
+									Note: "#06b6d4",
+								};
+								return colorMap[type] || "#3b82f6";
+							};
+
+							const activityColor = getActivityColor(activity.type);
+							const activityIcon = getActivityIcon(activity.type);
 
 							return (
-								<div key={status} className="mb-3">
-									<div className="d-flex justify-content-between align-items-center mb-1">
-										<span className="fw-semibold">{status}</span>
-										<span className="badge bg-light text-dark">{count}</span>
-									</div>
-									<div className="progress" style={{ height: "8px" }}>
-										<div
-											className={`progress-bar bg-${color}`}
-											role="progressbar"
-											style={{ width: `${percentage}%` }}
-											aria-valuenow={percentage}
-											aria-valuemin="0"
-											aria-valuemax="100"
-										></div>
+								<div
+									key={`activity-${index}`}
+									className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}
+								>
+									<div className="d-flex position-relative">
+										{/* Timeline line */}
+										{!isLast && (
+											<div
+												className="position-absolute"
+												style={{
+													left: "15px",
+													top: "40px",
+													width: "2px",
+													height: "calc(100% + 8px)",
+													backgroundColor: "#e5e7eb",
+													zIndex: 0,
+												}}
+											></div>
+										)}
+
+										{/* Activity icon */}
+										<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
+											<div
+												className="rounded-circle d-flex align-items-center justify-content-center"
+												style={{
+													width: "32px",
+													height: "32px",
+													backgroundColor: activityColor,
+													boxShadow: `0 0 0 3px rgba(${parseInt(activityColor.slice(1, 3), 16)}, ${parseInt(activityColor.slice(3, 5), 16)}, ${parseInt(activityColor.slice(5, 7), 16)}, 0.1)`,
+												}}
+											>
+												<i
+													className={`bi ${activityIcon} text-white`}
+													style={{ fontSize: "0.9rem" }}
+												></i>
+											</div>
+										</div>
+
+										{/* Activity content */}
+										<div className="flex-grow-1 min-width-0">
+											<div className="d-flex align-items-start justify-content-between mb-1">
+												<div className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+													{activity.type}
+												</div>
+												<small className="text-muted flex-shrink-0 ms-2">
+													{new Date(activity.date).toLocaleDateString("en-US", {
+														month: "short",
+														day: "numeric",
+														...(new Date().getFullYear() !==
+															new Date(activity.date).getFullYear() && {
+															year: "numeric",
+														}),
+													})}
+												</small>
+											</div>
+
+											{/* Job title as clickable button */}
+											{activity.job_title && (
+												<div className="mt-1 mb-2">
+													<Button
+														variant="link"
+														size="sm"
+														className="p-0 text-primary fw-medium text-decoration-none"
+														style={{ fontSize: "0.85rem" }}
+														onClick={() => handleJobClick(activity.job_title)}
+													>
+														<i className="bi bi-briefcase me-1"></i>
+														{activity.job_title}
+													</Button>
+												</div>
+											)}
+
+											{/* Note/description if available */}
+											{activity.note && (
+												<div className="text-muted small lh-sm" style={{ fontSize: "0.85rem" }}>
+													{activity.note.length > 120
+														? `${activity.note.substring(0, 120)}...`
+														: activity.note}
+												</div>
+											)}
+										</div>
 									</div>
 								</div>
 							);
 						})}
+
+						{/* Show more indicator if there are additional activities */}
+						{dashboardStats.recentActivity.length > 8 && (
+							<div className="text-center py-3 border-top">
+								<small className="text-muted">
+									<i className="bi bi-three-dots me-1"></i>
+									{dashboardStats.recentActivity.length - 8} more activities
+								</small>
+							</div>
+						)}
 					</div>
 				)}
 			</Card.Body>
@@ -224,14 +316,6 @@ const JobSearchDashboard = () => {
 
 	return (
 		<Container fluid className="py-4">
-			{/* Page Header */}
-			<div className="d-flex justify-content-between align-items-center mb-4">
-				<div>
-					<h1 className="h3 mb-0">Job Search Dashboard</h1>
-					<p className="text-muted mb-0">Track your job search progress and follow-ups</p>
-				</div>
-			</div>
-
 			{/* Statistics Cards */}
 			<Row className="g-4 mb-4">
 				<Col md={6} lg={3}>
@@ -267,40 +351,34 @@ const JobSearchDashboard = () => {
 						value={dashboardStats.jobsNeedingChase}
 						icon="telephone"
 						variant="danger"
-						description="Jobs requiring action"
+						description="Applications requiring action"
 					/>
 				</Col>
 			</Row>
 
-			{/* Alert for jobs needing follow-up */}
-			{dashboardStats.jobsNeedingChase > 0 && (
-				<Alert variant="warning" className="mb-4">
-					<div className="d-flex align-items-center">
-						<i className="bi bi-exclamation-triangle me-2"></i>
-						<div>
-							<strong>Action Required:</strong> You have {dashboardStats.jobsNeedingChase} job application
-							{dashboardStats.jobsNeedingChase > 1 ? "s" : ""} that need follow-up. Check the table below
-							for details.
-						</div>
-					</div>
-				</Alert>
-			)}
-
-			{/* Secondary Statistics and Activity */}
-			<Row className="g-4 mb-4">
-				<Col lg={4}>
-					<ApplicationStatusCard />
-				</Col>
-				<Col lg={8}>
+			<Row className="g-4">
+				<Col lg={3}>
 					<RecentActivityCard />
 				</Col>
-			</Row>
-
-			{/* Jobs to Chase Table */}
-			<Row>
-				<Col>
+				<Col lg={9}>
 					<Card className="shadow-sm border-0">
-						<Card.Body className="p-0">
+						<Card.Header className="table-card-header border-0 p-0">
+							<div className="d-flex align-items-center justify-content-between p-4">
+								<div className="d-flex align-items-center">
+									<div className="header-icon-wrapper me-3">
+										<i className="bi bi-telephone-outbound"></i>
+									</div>
+									<div>
+										<h5 className="mb-0 fw-bold text-dark">Applications Requiring Follow-up</h5>
+										<small className="text-muted">Jobs that need your attention</small>
+									</div>
+								</div>
+								{dashboardStats.jobsNeedingChase > 0 && (
+									<div className="table-count-badge">{dashboardStats.jobsNeedingChase}</div>
+								)}
+							</div>
+						</Card.Header>
+						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
 							<JobsToChase
 								initialData={chaseJobsData}
 								onDataChange={handleChaseJobsUpdate}
@@ -310,6 +388,24 @@ const JobSearchDashboard = () => {
 					</Card>
 				</Col>
 			</Row>
+
+			{/* Job Modal */}
+			{selectedJob && (
+				<JobViewModal
+					show={showJobModal}
+					onHide={() => {
+						setShowJobModal(false);
+						setSelectedJob(null);
+					}}
+					data={selectedJob}
+					jobData={selectedJob}
+					jobSubmode="view"
+					onJobSuccess={(updatedJob) => {
+						// Handle job update if needed
+						console.log("Job updated:", updatedJob);
+					}}
+				/>
+			)}
 		</Container>
 	);
 };

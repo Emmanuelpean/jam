@@ -1,25 +1,25 @@
 import app.eis.eis_models as eis_models
 from app import models, utils
 from tests.utils.table_data import (
-    USERS_DATA,
-    COMPANIES_DATA,
-    LOCATIONS_DATA,
-    AGGREGATORS_DATA,
-    KEYWORDS_DATA,
-    PERSONS_DATA,
-    JOBS_DATA,
+    USER_DATA,
+    COMPANY_DATA,
+    LOCATION_DATA,
+    AGGREGATOR_DATA,
+    KEYWORD_DATA,
+    PERSON_DATA,
+    JOB_DATA,
     add_mappings,
     JOB_KEYWORD_MAPPINGS,
     JOB_CONTACT_MAPPINGS,
-    FILES_DATA,
-    JOB_APPLICATIONS_DATA,
-    INTERVIEWS_DATA,
+    FILE_DATA,
+    JOB_APPLICATION_DATA,
+    INTERVIEW_DATA,
     INTERVIEW_INTERVIEWER_MAPPINGS,
-    JOB_ALERT_EMAILS_DATA,
+    JOB_ALERT_EMAIL_DATA,
     JOB_SCRAPED_DATA,
     EMAIL_SCRAPEDJOB_MAPPINGS,
-    SERVICE_LOGS_DATA,
-    JOB_APPLICATION_UPDATES_DATA,
+    SERVICE_LOG_DATA,
+    JOB_APPLICATION_UPDATE_DATA,
 )
 
 
@@ -30,7 +30,7 @@ def create_users(db) -> list[models.User]:
     users_hash = []
     original_passwords = []
 
-    for user_data in USERS_DATA:
+    for user_data in USER_DATA:
         user_dict = user_data.copy()
         original_passwords.append(user_dict["password"])  # Store original password
         user_dict["password"] = utils.hash_password(user_dict["password"])
@@ -60,7 +60,7 @@ def create_companies(db) -> list[models.Company]:
 
     print("Creating companies...")
     # noinspection PyArgumentList
-    companies = [models.Company(**company) for company in COMPANIES_DATA]
+    companies = [models.Company(**company) for company in COMPANY_DATA]
     db.add_all(companies)
     db.commit()
     return companies
@@ -71,7 +71,7 @@ def create_locations(db) -> list[models.Location]:
 
     print("Creating locations...")
     # noinspection PyArgumentList
-    locations = [models.Location(**location) for location in LOCATIONS_DATA + [{"remote": True, "owner_id": 1}]]
+    locations = [models.Location(**location) for location in LOCATION_DATA + [{"remote": True, "owner_id": 1}]]
     db.add_all(locations)
     db.commit()
     return locations[:-1]
@@ -82,7 +82,7 @@ def create_aggregators(db) -> list[models.Aggregator]:
 
     print("Creating aggregators...")
     # noinspection PyArgumentList
-    aggregators = [models.Aggregator(**aggregator) for aggregator in AGGREGATORS_DATA]
+    aggregators = [models.Aggregator(**aggregator) for aggregator in AGGREGATOR_DATA]
     db.add_all(aggregators)
     db.commit()
     return aggregators
@@ -93,7 +93,7 @@ def create_keywords(db) -> list[models.Keyword]:
 
     print("Creating keywords...")
     # noinspection PyArgumentList
-    keywords = [models.Keyword(**keyword) for keyword in KEYWORDS_DATA]
+    keywords = [models.Keyword(**keyword) for keyword in KEYWORD_DATA]
     db.add_all(keywords)
     db.commit()
     return keywords
@@ -104,7 +104,7 @@ def create_people(db) -> list[models.Person]:
 
     print("Creating people...")
     # noinspection PyArgumentList
-    persons = [models.Person(**person) for person in PERSONS_DATA]
+    persons = [models.Person(**person) for person in PERSON_DATA]
     db.add_all(persons)
     db.commit()
     return persons
@@ -115,7 +115,7 @@ def create_jobs(db, keywords, persons) -> list[models.Job]:
 
     print("Creating jobs...")
     # noinspection PyArgumentList
-    jobs = [models.Job(**job) for job in JOBS_DATA]
+    jobs = [models.Job(**job) for job in JOB_DATA]
 
     # Add keywords to jobs
     add_mappings(
@@ -147,7 +147,7 @@ def create_files(db) -> list[models.File]:
 
     print("Creating files...")
     # noinspection PyArgumentList
-    files = [models.File(**file) for file in FILES_DATA]
+    files = [models.File(**file) for file in FILE_DATA]
     db.add_all(files)
     db.commit()
     return files
@@ -158,7 +158,7 @@ def create_job_applications(db) -> list[models.JobApplication]:
 
     print("Creating job applications...")
     # noinspection PyArgumentList
-    job_applications = [models.JobApplication(**job_application) for job_application in JOB_APPLICATIONS_DATA]
+    job_applications = [models.JobApplication(**job_application) for job_application in JOB_APPLICATION_DATA]
     db.add_all(job_applications)
     db.commit()
     return job_applications
@@ -169,7 +169,7 @@ def create_interviews(db, persons) -> list[models.Interview]:
 
     print("Creating interviews...")
     # noinspection PyArgumentList
-    interviews = [models.Interview(**interview) for interview in INTERVIEWS_DATA]
+    interviews = [models.Interview(**interview) for interview in INTERVIEW_DATA]
 
     # Add interviewers to interviews
     add_mappings(
@@ -191,7 +191,7 @@ def create_job_alert_emails(db) -> list[eis_models.JobAlertEmail]:
 
     print("Creating job alert emails...")
     # noinspection PyArgumentList
-    emails = [eis_models.JobAlertEmail(**email) for email in JOB_ALERT_EMAILS_DATA]
+    emails = [eis_models.JobAlertEmail(**email) for email in JOB_ALERT_EMAIL_DATA]
     db.add_all(emails)
     db.commit()
     return emails
@@ -224,7 +224,7 @@ def create_service_logs(db) -> list[eis_models.ServiceLog]:
 
     print("Creating service logs...")
     # noinspection PyArgumentList
-    logs = [eis_models.ServiceLog(**log) for log in SERVICE_LOGS_DATA]
+    logs = [eis_models.ServiceLog(**log) for log in SERVICE_LOG_DATA]
     db.add_all(logs)
     db.commit()
     return logs
@@ -235,7 +235,7 @@ def create_job_application_updates(db) -> list[models.JobApplicationUpdate]:
 
     print("Creating job application updates...")
     # noinspection PyArgumentList
-    updates = [models.JobApplicationUpdate(**update) for update in JOB_APPLICATION_UPDATES_DATA]
+    updates = [models.JobApplicationUpdate(**update) for update in JOB_APPLICATION_UPDATE_DATA]
     db.add_all(updates)
     db.commit()
     return updates

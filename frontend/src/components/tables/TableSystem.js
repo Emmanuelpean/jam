@@ -140,6 +140,8 @@ export const GenericTableWithModals = ({
 	selectable = false,
 	emptyMessage,
 	compact = false,
+	showSearch = true,
+	showAdd = true,
 
 	// Additional content
 	children,
@@ -370,14 +372,14 @@ export const GenericTableWithModals = ({
 	}
 
 	return (
-		<div className={`${compact ? "table-compact" : "table-container"}`}>
+		<div className={"table-container"}>
 			{title && <h2 className={compact ? "h4 my-3" : "my-4"}>{title}</h2>}
 
 			<div
 				className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
 				style={{ gap: compact ? "0.5rem" : "1rem" }}
 			>
-				{!compact && (
+				{showSearch && !compact && (
 					<div className="d-flex align-items-center gap-3" style={{ width: "40%" }}>
 						<input
 							type="text"
@@ -392,22 +394,24 @@ export const GenericTableWithModals = ({
 						</span>
 					</div>
 				)}
-				<Button
-					variant="primary"
-					size={compact ? "sm" : undefined}
-					onClick={() => openAddModal()}
-					className="d-flex align-items-center justify-content-center"
-					style={{
-						width: compact ? "100%" : "60%",
-						fontSize: compact ? "0.875rem" : undefined,
-						padding: compact ? "0.25rem 0.5rem" : undefined,
-						height: compact ? "2rem" : undefined,
-					}}
-					id="add-entity-button"
-				>
-					<i className="bi bi-plus-circle me-2" style={{ fontSize: "1.1rem" }}></i>
-					Add {itemType}
-				</Button>
+				{showAdd && (
+					<Button
+						variant="primary"
+						size={compact ? "sm" : undefined}
+						onClick={() => openAddModal()}
+						className="d-flex align-items-center justify-content-center"
+						style={{
+							width: compact ? "100%" : "60%",
+							fontSize: compact ? "0.875rem" : undefined,
+							padding: compact ? "0.25rem 0.5rem" : undefined,
+							height: compact ? "2rem" : undefined,
+						}}
+						id="add-entity-button"
+					>
+						<i className="bi bi-plus-circle me-2" style={{ fontSize: "1.1rem" }}></i>
+						Add {itemType}
+					</Button>
+				)}
 			</div>
 
 			{/* Table */}
@@ -622,7 +626,6 @@ export const GenericTableWithModals = ({
 
 			{children}
 
-			{/* Modals */}
 			{FormModal && (
 				<>
 					<FormModal show={showModal} onHide={closeAddModal} onSuccess={handleAddSuccess} size={ModalSize} />

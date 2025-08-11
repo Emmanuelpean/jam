@@ -1,13 +1,17 @@
-"""Centralized test data for both conftest.py and seed_database.py"""
+"""Centralised test data for both conftest.py and seed_database.py"""
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from itertools import groupby
 
 from tests.utils.files import load_all_resource_files
 
 RESOURCE_FILES = load_all_resource_files()
 
 
-USERS_DATA = [
+current_date = datetime.now()
+
+
+USER_DATA = [
     {
         "email": "test_user@test.com",
         "password": "test_password",
@@ -36,7 +40,7 @@ USERS_DATA = [
 ]
 
 
-COMPANIES_DATA = [
+COMPANY_DATA = [
     {
         "name": "Tech Corp",
         "description": "A leading technology company specializing in web applications",
@@ -97,7 +101,7 @@ COMPANIES_DATA = [
 ]
 
 
-LOCATIONS_DATA = [
+LOCATION_DATA = [
     {
         "postcode": "10001",
         "city": "New York",
@@ -169,7 +173,7 @@ LOCATIONS_DATA = [
 ]
 
 
-AGGREGATORS_DATA = [
+AGGREGATOR_DATA = [
     {
         "name": "LinkedIn",
         "url": "https://linkedin.com/jobs",
@@ -195,7 +199,6 @@ AGGREGATORS_DATA = [
         "url": "https://stackoverflow.com/jobs",
         "owner_id": 1,
     },
-    # New entries
     {
         "name": "RemoteOK",
         "url": "https://remoteok.io",
@@ -224,7 +227,7 @@ AGGREGATORS_DATA = [
 ]
 
 
-KEYWORDS_DATA = [
+KEYWORD_DATA = [
     {
         "name": "Python",
         "owner_id": 1,
@@ -285,7 +288,6 @@ KEYWORDS_DATA = [
         "name": "Agile",
         "owner_id": 1,
     },
-    # New keywords for better coverage
     {
         "name": "Vue.js",
         "owner_id": 1,
@@ -329,7 +331,7 @@ KEYWORDS_DATA = [
 ]
 
 
-PERSONS_DATA = [
+PERSON_DATA = [
     {
         "first_name": "John",
         "last_name": "Doe",
@@ -394,7 +396,6 @@ PERSONS_DATA = [
         "company_id": 3,  # Oxford PV
         "owner_id": 1,
     },
-    # New entries with different combinations
     {
         "first_name": "Alex",
         "last_name": "Johnson",
@@ -463,7 +464,8 @@ PERSONS_DATA = [
     },
 ]
 
-JOBS_DATA = [
+
+JOB_DATA = [
     {
         "title": "Senior Python Developer",
         "salary_min": 80000,
@@ -540,7 +542,6 @@ JOBS_DATA = [
         "location_id": 5,  # Berlin (remote)
         "owner_id": 1,
     },
-    # New entries with different parameter combinations
     {
         "title": "DevOps Engineer",
         "salary_min": 90000,
@@ -630,7 +631,7 @@ JOBS_DATA = [
 ]
 
 
-FILES_DATA = [
+FILE_DATA = [
     {
         "filename": "john_doe_cv_2024.pdf",
         "owner_id": 1,
@@ -666,7 +667,6 @@ FILES_DATA = [
         "owner_id": 1,
         **RESOURCE_FILES["Cover Letter.docx"],
     },
-    # New entries
     {
         "filename": "devops_engineer_cv.pdf",
         "owner_id": 1,
@@ -695,7 +695,7 @@ FILES_DATA = [
 ]
 
 
-JOB_APPLICATIONS_DATA = [
+JOB_APPLICATION_DATA = [
     {
         "date": "2024-01-15T10:00:00",
         "url": "https://techcorp.com/apply/senior-python",
@@ -740,7 +740,6 @@ JOB_APPLICATIONS_DATA = [
         "note": "Quick application through company form",
         "owner_id": 1,
     },
-    # New entries with different combinations
     {
         "date": "2024-01-21T09:00:00",
         "url": "https://cloudfirst.io/apply/devops",
@@ -810,9 +809,12 @@ JOB_APPLICATIONS_DATA = [
         "owner_id": 1,
     },
 ]
+JOB_APPLICATION_DATETIME = [current_date - timedelta(weeks=i) for i in range(len(JOB_APPLICATION_DATA))]
+for job_application, date in zip(JOB_APPLICATION_DATA, JOB_APPLICATION_DATETIME):
+    job_application["date"] = date.strftime("%Y-%m-%dT%H:%M:%S")
 
 
-INTERVIEWS_DATA = [
+INTERVIEW_DATA = [
     {
         "date": "2024-01-20T09:30:00",
         "type": "HR",
@@ -861,7 +863,6 @@ INTERVIEWS_DATA = [
         "note": None,
         "owner_id": 1,
     },
-    # New entries with different combinations
     {
         "date": "2024-01-29T10:30:00",
         "type": "Technical",
@@ -910,6 +911,125 @@ INTERVIEWS_DATA = [
         "owner_id": 1,  # Minimal interview info
     },
 ]
+interviews_sorted = sorted(INTERVIEW_DATA, key=lambda x: x["job_application_id"])
+grouped = {k: list(v) for k, v in groupby(interviews_sorted, key=lambda x: x["job_application_id"])}
+for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
+    for i, update in enumerate(grouped[update_key]):
+        update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime("%Y-%m-%dT%H:%M:%S")
+
+
+JOB_APPLICATION_UPDATE_DATA = [
+    {
+        "date": "2024-01-15 14:30:00",
+        "job_application_id": 1,  # Tech startup application
+        "note": "Received automated confirmation email",
+        "type": "received",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-18 09:15:00",
+        "job_application_id": 1,
+        "note": "HR recruiter called to schedule phone screening",
+        "type": "received",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-22 16:45:00",
+        "job_application_id": 2,  # Marketing agency application
+        "note": "Application status changed to 'Under Review'",
+        "type": "received",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-25 11:20:00",
+        "job_application_id": 3,  # Finance corp application
+        "note": "Received rejection email - position filled internally",
+        "type": "received",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-01-28 13:10:00",
+        "job_application_id": 4,  # Healthcare application
+        "note": "Invited to complete online assessment",
+        "type": "received",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-01 08:30:00",
+        "job_application_id": 2,
+        "note": "Scheduled for first round interview next week",
+        "type": "received",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-03 15:45:00",
+        "job_application_id": 5,  # Remote consulting application
+        "note": "Application acknowledgment received",
+        "type": "received",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-05 10:15:00",
+        "job_application_id": 4,
+        "note": "Completed technical assessment - awaiting results",
+        "type": "sent",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-08 14:20:00",
+        "job_application_id": 6,  # Another application
+        "note": "Phone screening scheduled for tomorrow",
+        "type": "sent",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-12 11:45:00",
+        "job_application_id": 7,
+        "note": "Application moved to final review stage",
+        "type": "sent",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-15 09:30:00",
+        "job_application_id": 8,
+        "note": "Hiring manager wants to schedule video call",
+        "type": "sent",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-18 16:10:00",
+        "job_application_id": 9,
+        "note": "Received offer letter - salary negotiation in progress",
+        "type": "sent",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-20 13:25:00",
+        "job_application_id": 10,
+        "note": "Application automatically withdrawn due to inactivity",
+        "type": "sent",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-22 10:40:00",
+        "job_application_id": 2,
+        "note": "Second round interview scheduled - panel interview",
+        "type": "sent",
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-25 14:55:00",
+        "job_application_id": 11,
+        "note": "Reference check completed",
+        "type": "sent",
+        "owner_id": 1,
+    },
+]
+job_application_updates_sorted = sorted(JOB_APPLICATION_UPDATE_DATA, key=lambda x: x["job_application_id"])
+grouped = {k: list(v) for k, v in groupby(job_application_updates_sorted, key=lambda x: x["job_application_id"])}
+for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
+    for i, update in enumerate(grouped[update_key]):
+        update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime("%Y-%m-%dT%H:%M:%S")
 
 
 JOB_KEYWORD_MAPPINGS = [
@@ -918,7 +1038,6 @@ JOB_KEYWORD_MAPPINGS = [
     {"job_id": 3, "keyword_ids": [3, 2, 14]},  # Remote React Developer - React, JavaScript, Git
     {"job_id": 4, "keyword_ids": [12, 10, 11, 9]},  # Cloud Engineer - AWS, Docker, Kubernetes, DevOps
     {"job_id": 5, "keyword_ids": [2, 3, 14, 15]},  # Frontend Developer - JavaScript, React, Git, Agile
-    # New mappings
     {"job_id": 9, "keyword_ids": [9, 10, 11, 22, 23]},  # DevOps Engineer - DevOps, Docker, Kubernetes, CI/CD, Terraform
     {"job_id": 10, "keyword_ids": [8, 1, 18]},  # Data Scientist - Machine Learning, Python, MongoDB
     {"job_id": 11, "keyword_ids": [16, 5, 2]},  # Vue.js Developer - Vue.js, TypeScript, JavaScript
@@ -927,13 +1046,13 @@ JOB_KEYWORD_MAPPINGS = [
     {"job_id": 15, "keyword_ids": [2, 3, 17]},  # Mobile App Developer - JavaScript, React, Angular
 ]
 
+
 JOB_CONTACT_MAPPINGS = [
     {"job_id": 1, "person_ids": [1, 3]},  # Senior Python Developer - John Doe, Mike Taylor
     {"job_id": 2, "person_ids": [2, 4]},  # Full Stack JS Developer - Jane Smith, Emily Davis
     {"job_id": 3, "person_ids": [1]},  # Remote React Developer - John Doe
     {"job_id": 4, "person_ids": [4]},  # Cloud Engineer - Emily Davis
     {"job_id": 5, "person_ids": [5]},  # Frontend Developer - Chris Brown
-    # New mappings
     {"job_id": 9, "person_ids": [9]},  # DevOps Engineer - Alex Johnson
     {"job_id": 10, "person_ids": [15]},  # Data Scientist - Michael Wilson
     {"job_id": 11, "person_ids": [10]},  # Vue.js Developer - Maria Garcia
@@ -942,13 +1061,13 @@ JOB_CONTACT_MAPPINGS = [
     {"job_id": 15, "person_ids": [11, 16]},  # Mobile App Developer - David Kim, Freelance Developer
 ]
 
+
 INTERVIEW_INTERVIEWER_MAPPINGS = [
     {"interview_id": 1, "person_ids": [1]},  # First round - John Doe
     {"interview_id": 2, "person_ids": [2]},  # HR screening - Jane Smith
     {"interview_id": 3, "person_ids": [3, 5]},  # Remote assessment - Mike Taylor, Chris Brown
     {"interview_id": 4, "person_ids": [1]},  # Final round - John Doe
     {"interview_id": 5, "person_ids": [4]},  # Cultural fit - Emily Davis
-    # New mappings
     {"interview_id": 7, "person_ids": [9]},  # DevOps technical - Alex Johnson
     {"interview_id": 8, "person_ids": [12, 11]},  # Remote Full Stack - Lisa Chen, David Kim
     {"interview_id": 9, "person_ids": [13]},  # Junior Developer - Robert Anderson
@@ -958,7 +1077,7 @@ INTERVIEW_INTERVIEWER_MAPPINGS = [
 ]
 
 
-JOB_ALERT_EMAILS_DATA = [
+JOB_ALERT_EMAIL_DATA = [
     {
         "owner_id": 1,
         "external_email_id": "linkedin_alert_001",
@@ -1111,8 +1230,8 @@ JOB_ALERT_EMAILS_DATA = [
     },
 ]
 
+
 JOB_SCRAPED_DATA = [
-    # Jobs with scraped data (is_scraped=True)
     {
         "external_job_id": "3789012345",
         "owner_id": 1,
@@ -1184,7 +1303,8 @@ JOB_SCRAPED_DATA = [
     },
 ]
 
-SERVICE_LOGS_DATA = [
+
+SERVICE_LOG_DATA = [
     {
         "name": "Email Scraper Service",
         "run_duration": 45.2,
@@ -1276,116 +1396,6 @@ EMAIL_SCRAPEDJOB_MAPPINGS = [
 ]
 
 
-# Job Application Updates Data
-JOB_APPLICATION_UPDATES_DATA = [
-    {
-        "date": "2024-01-15 14:30:00",
-        "job_application_id": 1,  # Tech startup application
-        "note": "Received automated confirmation email",
-        "type": "received",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-18 09:15:00",
-        "job_application_id": 1,
-        "note": "HR recruiter called to schedule phone screening",
-        "type": "received",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-22 16:45:00",
-        "job_application_id": 2,  # Marketing agency application
-        "note": "Application status changed to 'Under Review'",
-        "type": "received",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-25 11:20:00",
-        "job_application_id": 3,  # Finance corp application
-        "note": "Received rejection email - position filled internally",
-        "type": "received",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-28 13:10:00",
-        "job_application_id": 4,  # Healthcare application
-        "note": "Invited to complete online assessment",
-        "type": "received",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-02-01 08:30:00",
-        "job_application_id": 2,
-        "note": "Scheduled for first round interview next week",
-        "type": "received",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-02-03 15:45:00",
-        "job_application_id": 5,  # Remote consulting application
-        "note": "Application acknowledgment received",
-        "type": "received",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-02-05 10:15:00",
-        "job_application_id": 4,
-        "note": "Completed technical assessment - awaiting results",
-        "type": "sent",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-02-08 14:20:00",
-        "job_application_id": 6,  # Another application
-        "note": "Phone screening scheduled for tomorrow",
-        "type": "sent",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-02-12 11:45:00",
-        "job_application_id": 7,
-        "note": "Application moved to final review stage",
-        "type": "sent",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-02-15 09:30:00",
-        "job_application_id": 8,
-        "note": "Hiring manager wants to schedule video call",
-        "type": "sent",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-02-18 16:10:00",
-        "job_application_id": 9,
-        "note": "Received offer letter - salary negotiation in progress",
-        "type": "sent",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-02-20 13:25:00",
-        "job_application_id": 10,
-        "note": "Application automatically withdrawn due to inactivity",
-        "type": "sent",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-02-22 10:40:00",
-        "job_application_id": 2,
-        "note": "Second round interview scheduled - panel interview",
-        "type": "sent",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-02-25 14:55:00",
-        "job_application_id": 11,
-        "note": "Reference check completed",
-        "type": "sent",
-        "owner_id": 1,
-    },
-]
-
-
 def add_mappings(
     primary_data: list,
     secondary_data: list,
@@ -1395,12 +1405,12 @@ def add_mappings(
     relationship_attr: str,
 ) -> None:
     """Generic function to add many-to-many relationships between data objects.
-    :param primary_data: List of primary objects (e.g., jobs, interviews)
-    :param secondary_data: List of secondary objects (e.g., keywords, persons)
+    :param primary_data: List of primary objects (e.g. jobs, interviews)
+    :param secondary_data: List of secondary objects (e.g. keywords, persons)
     :param mapping_data: List of mapping dictionaries
-    :param primary_key: Key name for primary object ID in mapping (e.g., "job_id", "interview_id")
-    :param secondary_key: Key name for secondary object IDs in mapping (e.g., "keyword_ids", "person_ids")
-    :param relationship_attr: Attribute name on primary object for the relationship (e.g., "keywords", "contacts")"""
+    :param primary_key: Key name for primary object ID in mapping (e.g. "job_id", "interview_id")
+    :param secondary_key: Key name for secondary object IDs in mapping (e.g. "keyword_ids", "person_ids")
+    :param relationship_attr: Attribute name on a primary object for the relationship (e.g. "keywords", "contacts")"""
 
     for mapping in mapping_data:
         primary_obj = primary_data[mapping[primary_key] - 1]  # Convert to 0-based index

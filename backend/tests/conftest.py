@@ -41,7 +41,7 @@ from tests.utils.create_data import (
     create_job_application_updates,
 )
 from tests.utils.seed_database import reset_database
-from tests.utils.table_data import JOB_APPLICATIONS_DATA, JOB_APPLICATION_UPDATES_DATA
+from tests.utils.table_data import JOB_APPLICATION_DATA, JOB_APPLICATION_UPDATE_DATA
 
 SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
@@ -200,40 +200,6 @@ def test_job_application_updates(session, test_job_applications) -> list[models.
     """Create test job application update data"""
 
     return create_job_application_updates(session)
-
-
-@pytest.fixture
-def test_recent_job_dataset(
-    session, test_users, test_jobs, test_files
-) -> tuple[list[models.JobApplication], list[models.JobApplicationUpdate]]:
-    """Create recent test job application and update data"""
-
-    print("Creating job applications...")
-    # Add the job application data with application dates ranging from the current date to X weeks ago
-    job_applications = []
-    current_date = datetime.now()
-    job_application_dates = [current_date - timedelta(weeks=x) for x in range(len(JOB_APPLICATIONS_DATA))]
-    for job_application, date in zip(copy.deepcopy(JOB_APPLICATIONS_DATA), job_application_dates):
-        job_application["date"] = date.strftime("%Y-%m-%dT%H:%M:%S")
-        # noinspection PyArgumentList
-        job_applications.append(models.JobApplication(**job_application))
-    session.add_all(job_applications)
-
-    print("Creating job application updates...")
-    # Add the job application update data
-    update_sorted = copy.deepcopy(sorted(JOB_APPLICATION_UPDATES_DATA, key=lambda x: x["job_application_id"]))
-    grouped = {k: list(v) for k, v in groupby(update_sorted, key=lambda x: x["job_application_id"])}
-    job_applications_updates = []
-    for update_key, date in zip(grouped, job_application_dates):
-        for i, update in enumerate(grouped[update_key]):
-            update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime("%Y-%m-%dT%H:%M:%S")
-            # noinspection PyArgumentList
-            job_applications_updates.append(models.JobApplicationUpdate(**update))
-
-    session.add_all(job_applications_updates)
-    session.commit()
-
-    return job_applications, job_applications_updates
 
 
 class CRUDTestBase:

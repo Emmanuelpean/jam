@@ -215,6 +215,11 @@ class JobOut(Job, Out):
     source: AggregatorOut | None = None
 
 
+class JobToChaseOut(JobOut):
+    last_update_type: str = ""
+    days_since_last_update: int = 0
+
+
 class JobUpdate(Job):
     title: str | None = None
 

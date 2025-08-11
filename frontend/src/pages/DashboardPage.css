@@ -1,0 +1,82 @@
+.card-header {
+    background: var(--bs-card-color);
+    position: relative;
+}
+
+.card-header::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-gradient);
+    opacity: 0.8;
+}
+
+.header-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    background: var(--primary-gradient);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-icon-wrapper i {
+    font-size: 1.25rem;
+    color: white;
+}
+
+.table-count-badge {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.5rem 0.875rem;
+    border-radius: 42px;
+    min-width: 42px;
+    text-align: center;
+}
+
+.activity-count-badge {
+    background: linear-gradient(135deg, var(--primary-mid) 0%, var(--primary-end) 100%);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.5rem 0.875rem;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    min-width: 32px;
+    text-align: center;
+}
+
+/* Enhanced timeline styling */
+.activity-timeline {
+    padding-top: 0.5rem;
+    padding-bottom: 1rem;
+}
+
+.activity-item:first-child {
+    padding-top: 0.5rem;
+}
+
+/* Scrollbar styling for activity timeline */
+.activity-timeline::-webkit-scrollbar {
+    width: 6px;
+}
+
+.activity-timeline::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.activity-timeline::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-mid) 100%);
+    border-radius: 3px;
+}
+
+.activity-timeline::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, var(--primary-mid) 0%, var(--primary-end) 100%);
+}

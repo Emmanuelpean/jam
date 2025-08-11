@@ -318,41 +318,17 @@ export const columns = {
 		...overrides,
 	}),
 
-	// ---------------------------------------------- CHASE-SPECIFIC COLUMNS ----------------------------------------------
+	// -------------------------------------------- CHASE-SPECIFIC COLUMNS ---------------------------------------------
 
 	daysSinceLastUpdate: (overrides = {}) => ({
 		key: "days_since_last_update",
 		label: "Days Since Last Update",
 		sortable: true,
-		searchable: false,
 		type: "number",
 		render: (item) => {
-			const lastUpdateDate = item.job_application?.last_update_date;
-			const applicationDate = item.job_application?.date;
-
-			// Use the most recent date between last update and application date
-			const referenceDate = lastUpdateDate || applicationDate;
-
-			if (!referenceDate) {
-				return <span className="text-muted">No date available</span>;
-			}
-
-			const now = new Date();
-			const refDate = new Date(referenceDate);
-			const diffTime = Math.abs(now - refDate);
-			const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-			// Color coding based on urgency
-			let className = "text-success";
-			if (diffDays > 45) {
-				className = "text-danger fw-bold";
-			} else if (diffDays > 30) {
-				className = "text-warning";
-			}
-
 			return (
-				<span className={className} title={`Last update: ${formatTimeAgo(referenceDate)}`}>
-					{diffDays} days
+				<span className={"text-danger"}>
+					{item.days_since_last_update} days
 				</span>
 			);
 		},
@@ -363,26 +339,7 @@ export const columns = {
 		key: "last_update_type",
 		label: "Last Update",
 		sortable: true,
-		searchable: true,
 		type: "text",
-		render: (item) => {
-			const lastUpdate = item.job_application?.last_update;
-
-			if (!lastUpdate) {
-				return <span className="text-muted">Application only</span>;
-			}
-
-			return (
-				<div>
-					<div className="fw-bold">{lastUpdate.type}</div>
-					{lastUpdate.note && (
-						<small className="text-muted d-block" style={{ maxWidth: "200px" }}>
-							{lastUpdate.note.length > 50 ? `${lastUpdate.note.substring(0, 50)}...` : lastUpdate.note}
-						</small>
-					)}
-				</div>
-			);
-		},
 		...overrides,
 	}),
 };

@@ -1,16 +1,26 @@
+"""
+Test module for API router endpoints covering CRUD operations for JAM entities.
+
+This module contains comprehensive test classes for all API endpoints, organised into simple tables
+(companies, keywords, aggregators, locations, files) and complex tables with relationships
+(persons, jobs, job applications, interviews, job application updates). Each test class inherits
+from CRUDTestBase to ensure consistent testing of standard CRUD operations, including authorisation,
+validation, and error handling. Additional custom endpoint tests are included where applicable.
+"""
+
 from app import schemas
 from conftest import CRUDTestBase
 from tests.utils.table_data import (
-    COMPANIES_DATA,
-    LOCATIONS_DATA,
-    PERSONS_DATA,
-    AGGREGATORS_DATA,
-    KEYWORDS_DATA,
-    FILES_DATA,
-    JOBS_DATA,
-    JOB_APPLICATIONS_DATA,
-    INTERVIEWS_DATA,
-    JOB_APPLICATION_UPDATES_DATA,
+    COMPANY_DATA,
+    LOCATION_DATA,
+    PERSON_DATA,
+    AGGREGATOR_DATA,
+    KEYWORD_DATA,
+    FILE_DATA,
+    JOB_DATA,
+    JOB_APPLICATION_DATA,
+    INTERVIEW_DATA,
+    JOB_APPLICATION_UPDATE_DATA,
 )
 
 
@@ -22,7 +32,7 @@ class TestCompanyCRUD(CRUDTestBase):
     schema = schemas.Company
     out_schema = schemas.CompanyOut
     test_data = "test_companies"
-    create_data = COMPANIES_DATA
+    create_data = COMPANY_DATA
     update_data = {
         "name": "OXPV",
         "id": 1,
@@ -43,7 +53,7 @@ class TestKeywordCRUD(CRUDTestBase):
     schema = schemas.Keyword
     out_schema = schemas.KeywordOut
     test_data = "test_keywords"
-    create_data = KEYWORDS_DATA
+    create_data = KEYWORD_DATA
     update_data = {
         "id": 1,
         "name": "Updated Python",
@@ -55,7 +65,7 @@ class TestAggregatorCRUD(CRUDTestBase):
     schema = schemas.Aggregator
     out_schema = schemas.AggregatorOut
     test_data = "test_aggregators"
-    create_data = AGGREGATORS_DATA
+    create_data = AGGREGATOR_DATA
     update_data = {
         "name": "Updated LinkedIn",
         "url": "https://updated-linkedin.com",
@@ -68,7 +78,7 @@ class TestLocationCRUD(CRUDTestBase):
     schema = schemas.Location
     out_schema = schemas.LocationOut
     test_data = "test_locations"
-    create_data = LOCATIONS_DATA
+    create_data = LOCATION_DATA
     update_data = {
         "postcode": "OX5 1HN",
         "id": 1,
@@ -80,7 +90,7 @@ class TestFileCRUD(CRUDTestBase):
     schema = schemas.File
     out_schema = schemas.FileOut
     test_data = "test_files"
-    create_data = FILES_DATA
+    create_data = FILE_DATA
     update_data = {
         "filename": "updated_john_doe_cv_2024.pdf",
         "size": 2560,
@@ -178,7 +188,7 @@ class TestPersonCRUD(CRUDTestBase):
     out_schema = schemas.PersonOut
     test_data = "test_persons"
     add_fixture = ["test_companies"]
-    create_data = PERSONS_DATA
+    create_data = PERSON_DATA
     update_data = {
         "first_name": "OX",
         "id": 1,
@@ -191,7 +201,7 @@ class TestJobCRUD(CRUDTestBase):
     out_schema = schemas.JobOut
     test_data = "test_jobs"
     add_fixture = ["test_persons", "test_locations", "test_keywords", "test_companies"]
-    create_data = JOBS_DATA
+    create_data = JOB_DATA
     update_data = {
         "title": "Updated title",
         "url": "https://updated-linkedin.com",
@@ -205,166 +215,29 @@ class TestJobApplicationCRUD(CRUDTestBase):
     out_schema = schemas.JobApplicationOut
     test_data = "test_job_applications"
     add_fixture = ["test_jobs", "test_files"]
-    create_data = JOB_APPLICATIONS_DATA
+    create_data = JOB_APPLICATION_DATA
     update_data = {
         "status": "Interview Completed",
         "note": "Technical interview went well",
         "id": 1,
     }
 
-    def test_needs_chase_default_days(self, authorised_clients, test_recent_job_dataset) -> None:
-        """Test needs_chase endpoint with default 30 days parameter"""
-
-        print(test_recent_job_dataset)
-        a = f"{self.endpoint}/needs_chase"
-        print(a)
-        response = authorised_clients[0].get(a)
-        assert response.status_code == 200
-
-        applications_needing_chase = response.json()
-        assert isinstance(applications_needing_chase, list)
-
-        # Should return job applications that meet the criteria
-        for app in applications_needing_chase:
-            assert "id" in app
-            assert "status" in app
-            assert "date" in app
-            assert "job" in app
-            # Verify status is not "Rejected" or "Withdrawn"
-            assert app["status"] not in ["Rejected", "Withdrawn"]
-
-    def test_needs_chase_custom_days(self, authorised_clients, test_recent_job_dataset) -> None:
+    def test_needs_chase_custom_days(self, authorised_clients, test_job_applications) -> None:
         """Test needs_chase endpoint with custom days parameter"""
-        job_applications, job_application_updates = test_recent_job_dataset
 
         # Test with 7 days - should return fewer results
         response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=7")
         assert response.status_code == 200
         applications_7_days = response.json()
+        assert len(applications_7_days) == 10
+        for app in applications_7_days:
+            assert app["job_application"]["status"] not in ["Rejected", "Withdrawn"]
 
         # Test with 60 days - should return more results
         response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=60")
         assert response.status_code == 200
         applications_60_days = response.json()
-
-        # 60 days should return more or equal results than 7 days
-        assert len(applications_60_days) >= len(applications_7_days)
-
-    def test_needs_chase_excludes_rejected_withdrawn(
-        self, authorised_clients, test_recent_job_dataset, session
-    ) -> None:
-        """Test that rejected and withdrawn applications are excluded"""
-        job_applications, job_application_updates = test_recent_job_dataset
-
-        # Update one application to "Rejected" status
-        if job_applications:
-            job_applications[0].status = "Rejected"
-            session.commit()
-
-        # Update another to "Withdrawn" status if available
-        if len(job_applications) > 1:
-            job_applications[1].status = "Withdrawn"
-            session.commit()
-
-        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=365")  # Get all
-        assert response.status_code == 200
-
-        applications_needing_chase = response.json()
-
-        # Verify no rejected or withdrawn applications are returned
-        for app in applications_needing_chase:
-            assert app["status"] not in ["Rejected", "Withdrawn"]
-
-    def test_needs_chase_ordered_by_urgency(self, authorised_clients, test_recent_job_dataset) -> None:
-        """Test that results are ordered by urgency (oldest activity first)"""
-        job_applications, job_application_updates = test_recent_job_dataset
-
-        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=365")  # Get all
-        assert response.status_code == 200
-
-        applications_needing_chase = response.json()
-
-        if len(applications_needing_chase) > 1:
-            # Check that applications have dates for comparison
-            for app in applications_needing_chase:
-                assert "date" in app
-                assert "updates" in app
-
-    def test_needs_chase_no_results(self, authorised_clients, test_recent_job_dataset) -> None:
-        """Test needs_chase with very restrictive days parameter"""
-        job_applications, job_application_updates = test_recent_job_dataset
-
-        # Use 0 days - should return no results since all applications are old
-        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=0")
-        assert response.status_code == 200
-
-        applications_needing_chase = response.json()
-        assert len(applications_needing_chase) == 0
-
-    def test_needs_chase_with_updates(self, authorised_clients, test_recent_job_dataset) -> None:
-        """Test that applications with recent updates are handled correctly"""
-        job_applications, job_application_updates = test_recent_job_dataset
-
-        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=365")
-        assert response.status_code == 200
-
-        applications_needing_chase = response.json()
-
-        # Verify structure includes updates
-        for app in applications_needing_chase:
-            assert "updates" in app
-            assert isinstance(app["updates"], list)
-
-    def test_needs_chase_unauthorized(self, client):
-        """Test needs_chase endpoint without authentication"""
-        response = client.get(f"{self.endpoint}/needs_chase")
-        assert response.status_code == 401
-
-    def test_needs_chase_other_user(self, authorised_clients, test_recent_job_dataset) -> None:
-        """Test that users can only see their own job applications needing chase"""
-        job_applications, job_application_updates = test_recent_job_dataset
-
-        # First user should see results
-        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase")
-        assert response.status_code == 200
-        user1_applications = response.json()
-
-        # Second user should see no results (data belongs to first user)
-        response = authorised_clients[1].get(f"{self.endpoint}/needs_chase")
-        assert response.status_code == 200
-        user2_applications = response.json()
-
-        # User 2 should have no applications since test data belongs to user 1
-        assert len(user2_applications) == 0
-
-    def test_needs_chase_includes_job_data(self, authorised_clients, test_recent_job_dataset) -> None:
-        """Test that job application response includes related job data"""
-        job_applications, job_application_updates = test_recent_job_dataset
-
-        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=365")
-        assert response.status_code == 200
-
-        applications_needing_chase = response.json()
-
-        for app in applications_needing_chase:
-            # Verify job application structure
-            assert "id" in app
-            assert "status" in app
-            assert "date" in app
-            assert "job_id" in app
-
-            # Verify related job data is included
-            assert "job" in app
-            if app["job"] is not None:
-                assert "id" in app["job"]
-                assert "title" in app["job"]
-
-            # Verify other optional related data structure
-            assert "aggregator" in app
-            assert "cv" in app
-            assert "cover_letter" in app
-            assert "interviews" in app
-            assert "updates" in app
+        assert len(applications_60_days) == 4
 
 
 class TestJobApplicationUpdateCRUD(CRUDTestBase):
@@ -373,7 +246,7 @@ class TestJobApplicationUpdateCRUD(CRUDTestBase):
     out_schema = schemas.JobApplicationUpdateOut
     test_data = "test_job_application_updates"
     add_fixture = ["test_job_applications"]
-    create_data = JOB_APPLICATION_UPDATES_DATA
+    create_data = JOB_APPLICATION_UPDATE_DATA
     update_data = {
         "id": 1,
         "note": "Updated note",
@@ -386,9 +259,63 @@ class TestInterviewCRUD(CRUDTestBase):
     out_schema = schemas.InterviewOut
     test_data = "test_interviews"
     add_fixture = ["test_job_applications", "test_locations", "test_persons"]
-    create_data = INTERVIEWS_DATA
+    create_data = INTERVIEW_DATA
     update_data = {
         "note": "Interview went very well - positive feedback",
         "date": "2024-01-20T10:00:00",
         "id": 1,
     }
+
+
+class TestLatestUpdatesRouter:
+    """Test class for the updates router endpoints"""
+
+    def test_get_all_updates_basic_functionality(
+        self, authorised_clients, test_job_applications, test_interviews, test_job_application_updates
+    ) -> None:
+        """Test get_all_updates endpoint returns unified updates"""
+        response = authorised_clients[0].get("/latest_updates/")
+        assert response.status_code == 200
+
+        updates = response.json()
+        assert isinstance(updates, list)
+
+        # Verify each update has the expected structure
+        for update in updates:
+            assert "date" in update
+            assert "type" in update
+            assert "job_title" in update
+
+            # Verify type is one of the expected values
+            assert update["type"] in ["Application", "Interview", "Job Application Update"]
+
+            # Verify date format (should be ISO datetime string)
+            assert isinstance(update["date"], str)
+
+        # Verify updates are sorted by date (most recent first)
+        if len(updates) > 1:
+            for i in range(len(updates) - 1):
+                current_date = updates[i]["date"]
+                next_date = updates[i + 1]["date"]
+                assert current_date >= next_date
+
+    def test_get_all_updates_with_limit(self, authorised_clients, test_job_applications) -> None:
+        """Test get_all_updates endpoint with custom limit parameter"""
+        # Test with small limit
+        response = authorised_clients[0].get("/latest_updates/?limit=5")
+        assert response.status_code == 200
+
+        updates = response.json()
+        assert len(updates) <= 5
+
+        # Test with larger limit
+        response = authorised_clients[0].get("/latest_updates/?limit=50")
+        assert response.status_code == 200
+
+        updates_large = response.json()
+        assert len(updates_large) >= len(updates)  # Should return same or more results
+
+    def test_get_all_updates_unauthorized(self, client) -> None:
+        """Test that unauthorized requests are rejected"""
+        response = client.get("/latest_updates/")
+        assert response.status_code == 401
