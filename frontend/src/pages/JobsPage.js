@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useTableData, GenericTableWithModals } from "../components/tables/TableSystem";
-import { JobFormModal, JobViewModal } from "../components/modals/job/JobModal";
+import { JobAndApplicationFormModal, JobAndApplicationViewModal } from "../components/modals/SuperModal";
 import { columns } from "../components/rendering/ColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
@@ -19,6 +19,8 @@ const JobsPage = () => {
 		updateItem,
 		removeItem,
 	} = useTableData("jobs");
+
+	console.log("JobsPage jobs:", jobs);
 
 	// Use the global spinner instead of table spinner
 	useEffect(() => {
@@ -56,8 +58,8 @@ const JobsPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			FormModal={JobFormModal}
-			ViewModal={JobViewModal}
+			FormModal={JobAndApplicationFormModal}
+			ViewModal={JobAndApplicationViewModal}
 			endpoint="jobs"
 			nameKey="title"
 			itemType="Job"

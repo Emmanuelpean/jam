@@ -1,4 +1,5 @@
 
+
 .modal-content {
     border-radius: 16px;
     background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
@@ -33,6 +34,104 @@
 .modal-body {
     padding: 1.5rem;
     background: linear-gradient(145deg, #fafbfc 0%, #f8f9fa 100%);
+}
+
+/* Clean Full-Width Underline Tabs */
+.modal-body .nav-tabs {
+    border: none;
+    background: transparent;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0;
+    gap: 0;
+}
+
+.modal-body .nav-tabs .nav-item {
+    flex: 1;
+}
+
+.modal-body .nav-tabs .nav-link {
+    border: none;
+    border-radius: 0;
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    color: #6c757d;
+    background: transparent;
+    transition: border-bottom-color 0.3s ease;
+    text-align: center;
+    white-space: nowrap;
+    position: relative;
+    border-bottom: 3px solid #dee2e6;
+    margin-bottom: -2px;
+    width: 100%;
+}
+
+.modal-body .nav-tabs .nav-link.active {
+    color: var(--primary-mid);
+    font-weight: 600;
+    background: transparent;
+    border-bottom: 3px solid var(--primary-mid);
+}
+
+/* Tab content styling */
+.modal-body .tab-content {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.modal-body .tab-pane {
+    border: none;
+    animation: fadeInTab 0.3s ease-in-out;
+}
+
+/* Tab fade-in animation */
+@keyframes fadeInTab {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive tab adjustments */
+@media (max-width: 768px) {
+    .modal-body .nav-tabs {
+        margin-bottom: 1rem;
+    }
+
+    .modal-body .nav-tabs .nav-link {
+        padding: 0.875rem 1.25rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .modal-body .nav-tabs {
+        flex-direction: row;
+    }
+
+    .modal-body .nav-tabs .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+        white-space: normal;
+        line-height: 1.2;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 400px) {
+    .modal-body .nav-tabs .nav-link {
+        padding: 0.625rem 0.75rem;
+        font-size: 0.8rem;
+    }
 }
 
 .modal-footer {

@@ -49,7 +49,6 @@ export const JobModal = ({
 		[viewFields.keywords(), viewFields.persons()],
 	];
 
-	// Combine them in a way GenericModal can use based on mode
 	const fields = {
 		form: formFieldsArray,
 		view: viewFieldsArray,
