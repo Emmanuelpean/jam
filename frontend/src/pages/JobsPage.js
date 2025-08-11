@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useTableData, GenericTableWithModals } from "../components/tables/TableSystem";
 import { JobFormModal, JobViewModal } from "../components/modals/job/JobModal";
 import { columns } from "../components/rendering/ColumnRenders";
+import { useLoading } from "../contexts/LoadingContext";
 
 const JobsPage = () => {
+	const { showLoading, hideLoading } = useLoading();
 	const {
 		data: jobs,
 		setData: setJobs,
@@ -17,6 +19,20 @@ const JobsPage = () => {
 		updateItem,
 		removeItem,
 	} = useTableData("jobs");
+
+	// Use the global spinner instead of table spinner
+	useEffect(() => {
+		if (loading) {
+			showLoading("Loading jobs...");
+		} else {
+			hideLoading();
+		}
+
+		// Cleanup function to hide loading when component unmounts
+		return () => {
+			hideLoading();
+		};
+	}, [loading, showLoading, hideLoading]);
 
 	const tableColumns = [
 		columns.title(),
@@ -38,7 +54,7 @@ const JobsPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			loading={loading}
+			loading={false}
 			error={error}
 			FormModal={JobFormModal}
 			ViewModal={JobViewModal}

@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
 	JobApplicationFormModal,
 	JobApplicationViewModal,
 } from "../components/modals/job_application/JobApplicationModal";
 import { GenericTableWithModals, useTableData } from "../components/tables/TableSystem";
 import { columns } from "../components/rendering/ColumnRenders";
+import { useLoading } from "../contexts/LoadingContext";
 
 const JobApplicationsPage = () => {
+	const { showLoading, hideLoading } = useLoading();
 	const {
 		data: jobApplications,
 		setData: setJobApplications,
@@ -31,6 +33,17 @@ const JobApplicationsPage = () => {
 		columns.createdAt(),
 	];
 
+	useEffect(() => {
+		if (loading) {
+			showLoading("Loading Job Applications...");
+		} else {
+			hideLoading();
+		}
+		return () => {
+			hideLoading();
+		};
+	}, [loading, showLoading, hideLoading]);
+
 	return (
 		<GenericTableWithModals
 			title="Job Applications"
@@ -40,7 +53,7 @@ const JobApplicationsPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			loading={loading}
+			loading={false}
 			error={error}
 			FormModal={JobApplicationFormModal}
 			ViewModal={JobApplicationViewModal}

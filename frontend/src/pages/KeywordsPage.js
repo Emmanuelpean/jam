@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
 import { KeywordFormModal, KeywordViewModal } from "../components/modals/KeywordModal";
 import { columns } from "../components/rendering/ColumnRenders";
+import { useLoading } from "../contexts/LoadingContext";
 
 const KeywordsPage = () => {
+	const { showLoading, hideLoading } = useLoading();
 	const {
 		data: keywords,
 		setData: setKeywords,
@@ -20,6 +22,17 @@ const KeywordsPage = () => {
 
 	const tableColumns = [columns.name(), columns.createdAt()];
 
+	useEffect(() => {
+		if (loading) {
+			showLoading("Loading Tags...");
+		} else {
+			hideLoading();
+		}
+		return () => {
+			hideLoading();
+		};
+	}, [loading, showLoading, hideLoading]);
+
 	return (
 		<GenericTableWithModals
 			title="Tags"
@@ -29,7 +42,7 @@ const KeywordsPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			loading={loading}
+			loading={false}
 			error={error}
 			FormModal={KeywordFormModal}
 			ViewModal={KeywordViewModal}

@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
 import { CompanyFormModal, CompanyViewModal } from "../components/modals/CompanyModal";
 import { columns } from "../components/rendering/ColumnRenders";
+import { useLoading } from "../contexts/LoadingContext";
 
 const CompaniesPage = () => {
+	const { showLoading, hideLoading } = useLoading();
 	const {
 		data: companies,
 		setData: setCompanies,
@@ -20,6 +22,17 @@ const CompaniesPage = () => {
 
 	const tableColumns = [columns.name(), columns.description(), columns.url(), columns.createdAt()];
 
+	useEffect(() => {
+		if (loading) {
+			showLoading("Loading Companies...");
+		} else {
+			hideLoading();
+		}
+		return () => {
+			hideLoading();
+		};
+	}, [loading, showLoading, hideLoading]);
+
 	return (
 		<GenericTableWithModals
 			title="Companies"
@@ -29,7 +42,7 @@ const CompaniesPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			loading={loading}
+			loading={false}
 			error={error}
 			FormModal={CompanyFormModal}
 			ViewModal={CompanyViewModal}

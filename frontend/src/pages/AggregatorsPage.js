@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { AggregatorFormModal, AggregatorViewModal } from "../components/modals/AggregatorModal";
 import { GenericTableWithModals, useTableData } from "../components/tables/TableSystem";
 import { columns } from "../components/rendering/ColumnRenders";
+import { useLoading } from "../contexts/LoadingContext";
 
 const AggregatorsPage = () => {
+	const { showLoading, hideLoading } = useLoading();
 	const {
 		data: aggregators,
 		setData: setAggregators,
@@ -20,6 +22,17 @@ const AggregatorsPage = () => {
 
 	const tableColumns = [columns.name(), columns.url(), columns.createdAt()];
 
+	useEffect(() => {
+		if (loading) {
+			showLoading("Loading Aggregators...");
+		} else {
+			hideLoading();
+		}
+		return () => {
+			hideLoading();
+		};
+	}, [loading, showLoading, hideLoading]);
+
 	return (
 		<GenericTableWithModals
 			title="Job Aggregators"
@@ -29,7 +42,7 @@ const AggregatorsPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			loading={loading}
+			loading={false}
 			error={error}
 			FormModal={AggregatorFormModal}
 			ViewModal={AggregatorViewModal}

@@ -1,10 +1,12 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
 import { LocationFormModal, LocationViewModal } from "../components/modals/LocationModal";
 import LocationMap from "../components/maps/LocationMap";
 import { columns } from "../components/rendering/ColumnRenders";
+import { useLoading } from "../contexts/LoadingContext";
 
 const LocationsPage = () => {
+	const { showLoading, hideLoading } = useLoading();
 	const {
 		data: allLocations,
 		setData: setLocations,
@@ -26,6 +28,17 @@ const LocationsPage = () => {
 
 	const tableColumns = [columns.name(), columns.city(), columns.postcode(), columns.country(), columns.createdAt()];
 
+	useEffect(() => {
+		if (loading) {
+			showLoading("Loading Locations...");
+		} else {
+			hideLoading();
+		}
+		return () => {
+			hideLoading();
+		};
+	}, [loading, showLoading, hideLoading]);
+
 	return (
 		<GenericTableWithModals
 			title="Locations"
@@ -35,7 +48,7 @@ const LocationsPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			loading={loading}
+			loading={false}
 			error={error}
 			FormModal={LocationFormModal}
 			ViewModal={LocationViewModal}

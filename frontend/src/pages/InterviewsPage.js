@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
 import { InterviewFormModal, InterviewViewModal } from "../components/modals/InterviewModal";
 import { columns } from "../components/rendering/ColumnRenders";
+import { useLoading } from "../contexts/LoadingContext";
 
 const InterviewsPage = () => {
+	const { showLoading, hideLoading } = useLoading();
 	const {
 		data: interviews,
 		setData: setInterviews,
@@ -27,6 +29,17 @@ const InterviewsPage = () => {
 		columns.createdAt(),
 	];
 
+	useEffect(() => {
+		if (loading) {
+			showLoading("Loading Interviews...");
+		} else {
+			hideLoading();
+		}
+		return () => {
+			hideLoading();
+		};
+	}, [loading, showLoading, hideLoading]);
+
 	return (
 		<GenericTableWithModals
 			title="Interviews"
@@ -36,7 +49,7 @@ const InterviewsPage = () => {
 			onSort={setSortConfig}
 			searchTerm={searchTerm}
 			onSearchChange={setSearchTerm}
-			loading={loading}
+			loading={false}
 			error={error}
 			FormModal={InterviewFormModal}
 			ViewModal={InterviewViewModal}
