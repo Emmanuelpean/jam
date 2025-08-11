@@ -239,7 +239,7 @@ export const Sidebar = ({ onHoverChange }) => {
 			onMouseEnter={handleMouseEnter}
 			onMouseLeave={handleMouseLeave}
 		>
-			<div className="sidebar-header border-bottom">
+			<div className="sidebar-header border-bottom" style={{ paddingBottom: 0, paddingTop: 0, height: "100px" }}>
 				<div className="position-relative" ref={dropdownRef}>
 					<div className="sidebar-brand" onClick={handleLogoClick} style={{ cursor: "pointer" }}>
 						<div className="logo-container d-flex align-items-center">
