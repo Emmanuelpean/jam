@@ -1,4 +1,4 @@
-
+import { renderFunctions } from "../components/rendering/Renders";
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Alert, Button } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
@@ -90,7 +90,7 @@ const JobSearchDashboard = () => {
 		try {
 			// Find the job by title from the jobs data we already have
 			const jobsResponse = await api.get("jobs/", token);
-			const job = jobsResponse.find(j => j.title === jobTitle);
+			const job = jobsResponse.find((j) => j.title === jobTitle);
 
 			if (job) {
 				setSelectedJob(job);
@@ -193,10 +193,7 @@ const JobSearchDashboard = () => {
 							const activityIcon = getActivityIcon(activity.type);
 
 							return (
-								<div
-									key={`activity-${index}`}
-									className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}
-								>
+								<div key={`activity-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
 									<div className="d-flex position-relative">
 										{/* Timeline line */}
 										{!isLast && (

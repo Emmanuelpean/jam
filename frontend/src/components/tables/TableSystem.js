@@ -505,8 +505,8 @@ export const GenericTableWithModals = ({
 
 			{/* Pagination */}
 			{!showAllEntries && (
-				<div className={`d-flex justify-content-between align-items-center ${compact ? "mt-2" : "mt-3"}`}>
-					<div className="d-flex align-items-center gap-1">
+				<div className={`d-flex justify-content-between align-items-center mt-0`}>
+					<div className="d-flex align-items-center gap-0">
 						{[
 							{
 								action: () => goToPage(0),

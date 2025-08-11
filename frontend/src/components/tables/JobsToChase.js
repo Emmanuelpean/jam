@@ -7,7 +7,6 @@ const JobsToChase = ({ initialData = [], onDataChange, loading: externalLoading 
 	const [jobsToChase, setJobsToChase] = useState(initialData);
 	const [sortConfig, setSortConfig] = useState({ key: "created_at", direction: "desc" });
 	const [searchTerm, setSearchTerm] = useState("");
-	console.log(initialData);
 
 	// Update local data when initialData changes
 	useEffect(() => {
