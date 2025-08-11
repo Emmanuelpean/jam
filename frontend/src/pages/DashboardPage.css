@@ -80,3 +80,9 @@
 .activity-timeline::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, var(--primary-mid) 0%, var(--primary-end) 100%);
 }
+
+.center-container {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+}

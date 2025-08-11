@@ -560,6 +560,25 @@ textarea.form-control {
     border-color: var(--primary-end) transparent;
 }
 
+
+.global-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 70px; /* Account for sidebar width */
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 9999;
+    backdrop-filter: blur(2px);
+}
+
+.content-hidden {
+    pointer-events: none;
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
+}
+
+
 /* ---------------------------------------------------- DROPDOWN ---------------------------------------------------- */
 
 .dropdown-menu {
@@ -816,5 +835,3 @@ textarea.form-control {
     align-items: center;
     justify-content: center;
 }
-
-

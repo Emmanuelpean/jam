@@ -18,8 +18,10 @@ import NotFoundPage from "./pages/NotFoundPage";
 import { Sidebar } from "./Sidebar";
 import JobApplicationUpdatesPage from "./pages/JobApplicationUpdatesPage";
 import JobSearchDashboard from "./pages/DashboardPage";
+import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
 
 function AppLayout({ children }) {
+	const { isLoading, loadingMessage } = useLoading();
 	const location = useLocation();
 	const { currentUser } = useAuth();
 	const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -43,10 +45,21 @@ function AppLayout({ children }) {
 					style={{
 						maxWidth: "95%",
 						margin: "0 auto",
-						padding: "20px",
+						paddingBottom: "20px",
+						paddingTop: "10px",
 					}}
 				>
-					{children}
+					{isLoading && (
+						<div className="global-loading-overlay">
+							<div className="d-flex flex-column justify-content-center align-items-center h-100">
+								<div className="spinner-border mb-3" role="status">
+									<span className="visually-hidden">Loading...</span>
+								</div>
+								<p className="text-muted">{loadingMessage}</p>
+							</div>
+						</div>
+					)}
+					<div style={{ display: isLoading ? "none" : "block" }}>{children}</div>
 				</div>
 			</div>
 		</div>
@@ -64,102 +77,104 @@ function App() {
 	return (
 		<BrowserRouter>
 			<AuthProvider>
-				<AppLayout>
-					<Routes>
-						<Route path="/login" element={<Login />} />
-						<Route path="/register" element={<Login />} />
-						<Route path="/" element={<Navigate to="/dashboard" />} />
-						<Route
-							path="/locations"
-							element={
-								<ProtectedRoute>
-									<LocationsPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="/companies"
-							element={
-								<ProtectedRoute>
-									<CompaniesPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="/jobs"
-							element={
-								<ProtectedRoute>
-									<JobsPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="/persons"
-							element={
-								<ProtectedRoute>
-									<PersonPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="/keywords"
-							element={
-								<ProtectedRoute>
-									<KeywordsPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="/interviews"
-							element={
-								<ProtectedRoute>
-									<InterviewsPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="/jobapplications"
-							element={
-								<ProtectedRoute>
-									<JobApplicationPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="/eis_dashboard"
-							element={
-								<ProtectedRoute>
-									<DashboardPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="/aggregators"
-							element={
-								<ProtectedRoute>
-									<AggregatorsPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="/jobapplicationupdates"
-							element={
-								<ProtectedRoute>
-									<JobApplicationUpdatesPage />
-								</ProtectedRoute>
-							}
-						/>
-						<Route
-							path="/dashboard"
-							element={
-								<ProtectedRoute>
-									<JobSearchDashboard />
-								</ProtectedRoute>
-							}
-						/>
-						<Route path="*" element={<NotFoundPage />} />
-					</Routes>
-				</AppLayout>
+				<LoadingProvider>
+					<AppLayout>
+						<Routes>
+							<Route path="/login" element={<Login />} />
+							<Route path="/register" element={<Login />} />
+							<Route path="/" element={<Navigate to="/dashboard" />} />
+							<Route
+								path="/locations"
+								element={
+									<ProtectedRoute>
+										<LocationsPage />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/companies"
+								element={
+									<ProtectedRoute>
+										<CompaniesPage />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/jobs"
+								element={
+									<ProtectedRoute>
+										<JobsPage />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/persons"
+								element={
+									<ProtectedRoute>
+										<PersonPage />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/keywords"
+								element={
+									<ProtectedRoute>
+										<KeywordsPage />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/interviews"
+								element={
+									<ProtectedRoute>
+										<InterviewsPage />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/jobapplications"
+								element={
+									<ProtectedRoute>
+										<JobApplicationPage />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/eis_dashboard"
+								element={
+									<ProtectedRoute>
+										<DashboardPage />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/aggregators"
+								element={
+									<ProtectedRoute>
+										<AggregatorsPage />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/jobapplicationupdates"
+								element={
+									<ProtectedRoute>
+										<JobApplicationUpdatesPage />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/dashboard"
+								element={
+									<ProtectedRoute>
+										<JobSearchDashboard />
+									</ProtectedRoute>
+								}
+							/>
+							<Route path="*" element={<NotFoundPage />} />
+						</Routes>
+					</AppLayout>
+				</LoadingProvider>
 			</AuthProvider>
 		</BrowserRouter>
 	);

@@ -1,7 +1,7 @@
-import { renderFunctions } from "../components/rendering/Renders";
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Alert, Button } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
+import { useLoading } from "../contexts/LoadingContext";
 import { api } from "../services/api";
 import JobsToChase from "../components/tables/JobsToChase";
 import { JobViewModal } from "../components/modals/job/JobModal";
@@ -9,6 +9,7 @@ import "./DashboardPage.css";
 
 const JobSearchDashboard = () => {
 	const { token } = useAuth();
+	const { showLoading, hideLoading } = useLoading();
 	const [dashboardStats, setDashboardStats] = useState({
 		totalJobs: 0,
 		totalApplications: 0,
@@ -19,7 +20,6 @@ const JobSearchDashboard = () => {
 		applicationsByStatus: {},
 	});
 	const [chaseJobsData, setChaseJobsData] = useState([]);
-	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [selectedJob, setSelectedJob] = useState(null);
 	const [showJobModal, setShowJobModal] = useState(false);
@@ -27,7 +27,7 @@ const JobSearchDashboard = () => {
 	useEffect(() => {
 		const fetchDashboardData = async () => {
 			try {
-				setLoading(true);
+				showLoading("Loading dashboard data...");
 
 				// Fetch various statistics using the new dedicated routes
 				const [
@@ -41,7 +41,7 @@ const JobSearchDashboard = () => {
 					api.get("jobapplications/", token),
 					api.get("interviews/", token),
 					api.get("jobapplications/needs_chase", token),
-					api.get("latest_updates?limit=10", token),
+					api.get("latest_updates", token),
 				]);
 
 				// Store the chase applications data for passing to the table
@@ -78,16 +78,16 @@ const JobSearchDashboard = () => {
 				console.error("Error fetching dashboard data:", err);
 				setError("Failed to load dashboard data. Please try again later.");
 			} finally {
-				setLoading(false);
+				hideLoading();
 			}
 		};
 
 		fetchDashboardData();
-	}, [token]);
-
+	}, [token]); // Remove showLoading and hideLoading from dependencies
 	// Function to handle job button click
 	const handleJobClick = async (jobTitle) => {
 		try {
+			showLoading("Loading job details...");
 			// Find the job by title from the jobs data we already have
 			const jobsResponse = await api.get("jobs/", token);
 			const job = jobsResponse.find((j) => j.title === jobTitle);
@@ -98,6 +98,8 @@ const JobSearchDashboard = () => {
 			}
 		} catch (err) {
 			console.error("Error fetching job details:", err);
+		} finally {
+			hideLoading();
 		}
 	};
 
@@ -110,6 +112,7 @@ const JobSearchDashboard = () => {
 		}));
 	};
 
+	// Rest of your component remains the same...
 	const StatCard = ({ title, value, icon, variant, description }) => (
 		<Card className="h-100 shadow-sm border-0">
 			<Card.Body className="d-flex align-items-center">
@@ -154,8 +157,8 @@ const JobSearchDashboard = () => {
 					</div>
 				) : (
 					<div className="activity-timeline px-4" style={{ maxHeight: "400px", overflowY: "auto" }}>
-						{dashboardStats.recentActivity.slice(0, 8).map((activity, index) => {
-							const isLast = index === Math.min(dashboardStats.recentActivity.length - 1, 7);
+						{dashboardStats.recentActivity.map((activity, index) => {
+							const isLast = index === dashboardStats.recentActivity.length - 1;
 
 							// Activity type icon mapping - updated for new types
 							const getActivityIcon = (type) => {
@@ -164,11 +167,6 @@ const JobSearchDashboard = () => {
 									Interview: "bi-people-fill",
 									"Job Application Update": "bi-pencil-fill",
 									"Follow-up": "bi-telephone-fill",
-									Response: "bi-envelope-fill",
-									Rejection: "bi-x-circle-fill",
-									Offer: "bi-check-circle-fill",
-									Update: "bi-pencil-fill",
-									Note: "bi-chat-dots-fill",
 								};
 								return iconMap[type] || "bi-plus-circle-fill";
 							};
@@ -179,12 +177,6 @@ const JobSearchDashboard = () => {
 									Application: "#3b82f6",
 									Interview: "#8b5cf6",
 									"Job Application Update": "#6b7280",
-									"Follow-up": "#f59e0b",
-									Response: "#10b981",
-									Rejection: "#ef4444",
-									Offer: "#22c55e",
-									Update: "#6b7280",
-									Note: "#06b6d4",
 								};
 								return colorMap[type] || "#3b82f6";
 							};
@@ -275,33 +267,11 @@ const JobSearchDashboard = () => {
 								</div>
 							);
 						})}
-
-						{/* Show more indicator if there are additional activities */}
-						{dashboardStats.recentActivity.length > 8 && (
-							<div className="text-center py-3 border-top">
-								<small className="text-muted">
-									<i className="bi bi-three-dots me-1"></i>
-									{dashboardStats.recentActivity.length - 8} more activities
-								</small>
-							</div>
-						)}
 					</div>
 				)}
 			</Card.Body>
 		</Card>
 	);
-
-	if (loading) {
-		return (
-			<Container fluid className="py-4">
-				<div className="d-flex justify-content-center mt-5">
-					<div className="spinner-border" role="status">
-						<span className="visually-hidden">Loading...</span>
-					</div>
-				</div>
-			</Container>
-		);
-	}
 
 	if (error) {
 		return (
@@ -376,11 +346,7 @@ const JobSearchDashboard = () => {
 							</div>
 						</Card.Header>
 						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-							<JobsToChase
-								initialData={chaseJobsData}
-								onDataChange={handleChaseJobsUpdate}
-								loading={loading}
-							/>
+							<JobsToChase initialData={chaseJobsData} onDataChange={handleChaseJobsUpdate} />
 						</Card.Body>
 					</Card>
 				</Col>
