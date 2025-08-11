@@ -470,3 +470,19 @@ export const renderFieldValue = (field, item) => {
 		return noText;
 	}
 };
+
+export const getTableIcon = (title) => {
+	const iconMap = {
+		Jobs: "bi-briefcase",
+		Companies: "bi-building",
+		Persons: "bi-people",
+		People: "bi-people",
+		Locations: "bi-geo-alt",
+		Keywords: "bi-tags",
+		Interviews: "bi-calendar-event",
+		"Job Applications": "bi-send",
+		"Job Application Updates": "bi-pencil-square",
+		Aggregators: "bi-collection",
+	};
+	return iconMap[title] || "bi-table";
+};

@@ -38,13 +38,21 @@ export const JobApplicationModal = ({
 	// Add state to track current form data for conditional fields
 	const [currentFormData, setCurrentFormData] = useState({});
 
+	// Create a ref to store the original file states
+	const originalFileStatesRef = useRef({
+		cv: null,
+		cover_letter: null,
+	});
+
 	// Initialize file states when modal opens or data changes
 	useEffect(() => {
 		if (show) {
-			setFileStates({
+			const initialFileStates = {
 				cv: data?.cv || null,
 				cover_letter: data?.cover_letter || null,
-			});
+			};
+			setFileStates(initialFileStates);
+			originalFileStatesRef.current = { ...initialFileStates }; // Store in ref
 			setInterviews(data?.interviews || []);
 			setCurrentFormData(data);
 		}
@@ -75,6 +83,51 @@ export const JobApplicationModal = ({
 			[fieldName]: null,
 		}));
 	}, []);
+
+	// Handler for form data changes - this includes when the modal resets form data on cancel
+	const handleFormDataChange = useCallback(
+		(newFormData) => {
+			setCurrentFormData((prev) => ({
+				...prev,
+				...newFormData,
+			}));
+
+			// Check if the form data has been reset to original data (indicating a cancel operation)
+			if (data && newFormData) {
+				const formDataKeys = Object.keys(newFormData);
+				const isFormReset =
+					formDataKeys.length > 0 &&
+					formDataKeys.every((key) => {
+						const newValue = newFormData[key];
+						const originalValue = data[key];
+
+						// Handle different data types appropriately
+						if (newValue === originalValue) return true;
+						if (newValue === "" && (originalValue === null || originalValue === undefined)) return true;
+						if ((newValue === null || newValue === undefined) && originalValue === "") return true;
+
+						// For dates, convert to comparable format
+						if (key.includes("date") || key.includes("Date")) {
+							try {
+								const newDate = new Date(newValue).getTime();
+								const origDate = new Date(originalValue).getTime();
+								return newDate === origDate;
+							} catch {
+								return false;
+							}
+						}
+
+						return false;
+					});
+
+				if (isFormReset) {
+					console.log("Form reset detected - restoring original file states:", originalFileStatesRef.current);
+					setFileStates({ ...originalFileStatesRef.current });
+				}
+			}
+		},
+		[data],
+	);
 
 	// Helper function to normalize content for comparison
 	const normalizeFileContent = (content) => {
@@ -211,14 +264,6 @@ export const JobApplicationModal = ({
 		[formFieldsArray, viewFieldsArray],
 	);
 
-	// Add a handler to update currentFormData when form changes
-	const handleFormDataChange = useCallback((newFormData) => {
-		setCurrentFormData((prev) => ({
-			...prev,
-			...newFormData,
-		}));
-	}, []);
-
 	// Custom submit handler to process files before form submission
 	const handleCustomSubmit = async (formElement, submitCallback) => {
 		try {
@@ -316,7 +361,7 @@ export const JobApplicationModal = ({
 				onDelete={onDelete}
 				transformFormData={transformFormData}
 				customSubmitHandler={handleCustomSubmit}
-				onFormDataChange={handleFormDataChange} // Remove the condition - always pass this
+				onFormDataChange={handleFormDataChange}
 			/>
 
 			{/* Alert Modal for error messages */}

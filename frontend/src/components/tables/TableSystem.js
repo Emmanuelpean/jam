@@ -3,7 +3,7 @@ import { Button, Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../services/api";
-import { renderFieldValue } from "../rendering/Renders";
+import { renderFieldValue, getTableIcon } from "../rendering/Renders";
 import { accessAttribute } from "../../utils/Utils";
 import AlertModal from "../modals/alert/AlertModal";
 import useModalState from "../../hooks/useModalState";
@@ -380,7 +380,19 @@ export const GenericTableWithModals = ({
 
 	return (
 		<div className={"table-container"}>
-			{title && <h2 className={compact ? "h4 my-3" : "my-4"}>{title}</h2>}
+			{title && (
+				<div className="table-header-section mb-4">
+					<div className="d-flex align-items-center justify-content-between p-4 border-0 bg-white shadow-sm rounded-3">
+						<div className="d-flex align-items-center">
+							<div className="header-icon-wrapper me-3">
+								<i className={getTableIcon(title)}></i>
+							</div>
+							<h4 className="mb-0 fw-bold text-dark">{title}</h4>
+						</div>
+						{data.length > 0 && <div className="table-count-badge">{data.length}</div>}
+					</div>
+				</div>
+			)}
 
 			<div
 				className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
