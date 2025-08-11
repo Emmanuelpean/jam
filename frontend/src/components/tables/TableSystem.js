@@ -626,21 +626,22 @@ export const GenericTableWithModals = ({
 
 			{children}
 
-			{FormModal && (
-				<>
-					<FormModal show={showModal} onHide={closeAddModal} onSuccess={handleAddSuccess} size={ModalSize} />
-					<FormModal
-						show={showEditModal}
-						onHide={closeEditModal}
-						onSuccess={handleEditSuccess}
-						data={selectedItem || {}}
-						isEdit={true}
-						size={ModalSize}
-					/>
-				</>
+			{FormModal && showModal && (
+				<FormModal show={showModal} onHide={closeAddModal} onSuccess={handleAddSuccess} size={ModalSize} />
 			)}
 
-			{ViewModal && (
+			{FormModal && showEditModal && (
+				<FormModal
+					show={showEditModal}
+					onHide={closeEditModal}
+					onSuccess={handleEditSuccess}
+					data={selectedItem || {}}
+					isEdit={true}
+					size={ModalSize}
+				/>
+			)}
+
+			{ViewModal && showViewModal && (
 				<ViewModal
 					show={showViewModal}
 					onHide={closeViewModal}

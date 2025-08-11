@@ -46,7 +46,7 @@ export const useCountries = () => {
 	return { countries, loading, error };
 };
 
-export const useFormOptions = () => {
+export const useFormOptions = (requiredOptions = []) => {
 	const { token } = useAuth();
 	const [companies, setCompanies] = useState([]);
 	const [locations, setLocations] = useState([]);
@@ -69,37 +69,74 @@ export const useFormOptions = () => {
 
 	useEffect(() => {
 		const fetchOptions = async () => {
-			if (!token) return;
+			if (!token || requiredOptions.length === 0) return;
 
 			setLoading(true);
 			setError(null);
 
 			try {
-				const [
-					companiesData,
-					locationsData,
-					keywordsData,
-					personsData,
-					aggregatorsData,
-					jobsData,
-					jobApplicationsData,
-				] = await Promise.all([
-					companiesApi.getAll(token),
-					locationsApi.getAll(token),
-					keywordsApi.getAll(token),
-					personsApi.getAll(token),
-					aggregatorsApi.getAll(token),
-					jobsApi.getAll(token),
-					jobApplicationsApi.getAll(token),
-				]);
+				const apiCalls = [];
+				const optionTypes = [];
 
-				setCompanies(apiHelpers.toSelectOptions(companiesData));
-				setLocations(apiHelpers.toSelectOptions(locationsData));
-				setKeywords(apiHelpers.toSelectOptions(keywordsData));
-				setPersons(apiHelpers.toSelectOptions(personsData));
-				setAggregators(apiHelpers.toSelectOptions(aggregatorsData));
-				setJobs(apiHelpers.toSelectOptions(jobsData));
-				setJobApplications(apiHelpers.toSelectOptions(jobApplicationsData, "id", "job.name"));
+				// Only fetch what's needed
+				if (requiredOptions.includes("companies")) {
+					apiCalls.push(companiesApi.getAll(token));
+					optionTypes.push("companies");
+				}
+				if (requiredOptions.includes("locations")) {
+					apiCalls.push(locationsApi.getAll(token));
+					optionTypes.push("locations");
+				}
+				if (requiredOptions.includes("keywords")) {
+					apiCalls.push(keywordsApi.getAll(token));
+					optionTypes.push("keywords");
+				}
+				if (requiredOptions.includes("persons")) {
+					apiCalls.push(personsApi.getAll(token));
+					optionTypes.push("persons");
+				}
+				if (requiredOptions.includes("aggregators")) {
+					apiCalls.push(aggregatorsApi.getAll(token));
+					optionTypes.push("aggregators");
+				}
+				if (requiredOptions.includes("jobs")) {
+					apiCalls.push(jobsApi.getAll(token));
+					optionTypes.push("jobs");
+				}
+				if (requiredOptions.includes("jobApplications")) {
+					apiCalls.push(jobApplicationsApi.getAll(token));
+					optionTypes.push("jobApplications");
+				}
+
+				const results = await Promise.all(apiCalls);
+
+				// Set the data based on what was fetched
+				results.forEach((data, index) => {
+					const type = optionTypes[index];
+					switch (type) {
+						case "companies":
+							setCompanies(apiHelpers.toSelectOptions(data));
+							break;
+						case "locations":
+							setLocations(apiHelpers.toSelectOptions(data));
+							break;
+						case "keywords":
+							setKeywords(apiHelpers.toSelectOptions(data));
+							break;
+						case "persons":
+							setPersons(apiHelpers.toSelectOptions(data));
+							break;
+						case "aggregators":
+							setAggregators(apiHelpers.toSelectOptions(data));
+							break;
+						case "jobs":
+							setJobs(apiHelpers.toSelectOptions(data));
+							break;
+						case "jobApplications":
+							setJobApplications(apiHelpers.toSelectOptions(data, "id", "job.name"));
+							break;
+					}
+				});
 			} catch (err) {
 				console.error("Error fetching form options:", err);
 				setError(err);
@@ -108,8 +145,8 @@ export const useFormOptions = () => {
 			}
 		};
 
-		fetchOptions().then(() => null);
-	}, [token]);
+		fetchOptions();
+	}, [token, JSON.stringify(requiredOptions)]);
 
 	// Helper function to refresh a specific option type
 	const refreshOptions = async (type) => {
@@ -280,33 +317,27 @@ export const useFormOptions = () => {
 	return {
 		loading,
 		error,
-		refreshOptions,
-		// Company modal management
-		companies,
+		// Only return the data that was requested
+		companies: requiredOptions.includes("companies") ? companies : [],
+		locations: requiredOptions.includes("locations") ? locations : [],
+		keywords: requiredOptions.includes("keywords") ? keywords : [],
+		persons: requiredOptions.includes("persons") ? persons : [],
+		aggregators: requiredOptions.includes("aggregators") ? aggregators : [],
+		jobs: requiredOptions.includes("jobs") ? jobs : [],
+		jobApplications: requiredOptions.includes("jobApplications") ? jobApplications : [],
+		// All modal handlers (same as before)
 		openCompanyModal,
 		renderCompanyModal,
-		// Location modal management
-		locations,
 		openLocationModal,
 		renderLocationModal,
-		// Keyword modal management
-		keywords,
 		openKeywordModal,
 		renderKeywordModal,
-		// Person modal management
-		persons,
 		openPersonModal,
 		renderPersonModal,
-		// Aggregator modal management
-		aggregators,
 		openAggregatorModal,
 		renderAggregatorModal,
-		// Job modal management
-		jobs,
 		openJobModal,
 		renderJobModal,
-		// JobApplication modal management
-		jobApplications,
 		openJobApplicationModal,
 		renderJobApplicationModal,
 	};

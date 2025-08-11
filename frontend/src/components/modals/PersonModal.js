@@ -15,7 +15,7 @@ export const PersonModal = ({
 	submode = "view",
 	size = "lg",
 }) => {
-	const { companies, openCompanyModal, renderCompanyModal } = useFormOptions();
+	const { companies, openCompanyModal, renderCompanyModal } = useFormOptions(["companies"]);
 	const { token } = useAuth();
 
 	const formFieldsArray = [

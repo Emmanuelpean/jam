@@ -27,7 +27,7 @@ export const JobModal = ({
 		renderLocationModal,
 		renderKeywordModal,
 		renderPersonModal,
-	} = useFormOptions();
+	} = useFormOptions(["companies", "locations", "keywords", "persons", "jobApplications"]);
 
 	const formFieldsArray = [
 		formFields.jobTitle(),

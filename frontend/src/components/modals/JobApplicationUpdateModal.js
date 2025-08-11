@@ -15,7 +15,7 @@ export const JobApplicationUpdateModal = ({
 	size = "lg",
 	jobApplicationId,
 }) => {
-	const { jobApplications, openJobApplicationModal } = useFormOptions();
+	const { jobApplications, openJobApplicationModal } = useFormOptions(["jobApplications"]);
 
 	const initialData = useMemo(() => {
 		if (submode === "add" && !data) {

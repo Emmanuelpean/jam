@@ -24,7 +24,7 @@ export const InterviewModal = ({
 		openJobApplicationModal,
 		renderLocationModal,
 		renderPersonModal,
-	} = useFormOptions();
+	} = useFormOptions(["locations", "persons", "jobApplications"]);
 
 	const initialData = useMemo(() => {
 		if (submode === "add" && !data) {

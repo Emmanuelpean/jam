@@ -32,7 +32,7 @@ export const JobApplicationModal = ({
 	const [setRefreshInterviews] = useState(0);
 
 	// Track job options for the dropdown
-	const { jobs, aggregators, openAggregatorModal, renderAggregatorModal } = useFormOptions();
+	const { jobs, aggregators, openAggregatorModal, renderAggregatorModal } = useFormOptions(["jobs", "aggregators"]);
 	const filteredJobs = jobs.filter((job) => !job.data.job_application || job.data.job_application.id === data?.id);
 
 	// Add state to track current form data for conditional fields
