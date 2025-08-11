@@ -254,6 +254,11 @@ export const renderFunctions = {
 		return interviews?.length || 0;
 	},
 
+	updateCount: (item, view = false, key = "updates") => {
+		const updates = accessAttribute(item, key);
+		return updates?.length || 0;
+	},
+
 	// --------------------------------------------------- FILE BADGES -------------------------------------------------
 
 	files: (item) => {

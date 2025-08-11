@@ -15,7 +15,7 @@ import { pluralize } from "../../utils/StringUtils";
  */
 export const useTableData = (endpoint, dependencies = [], queryParams = {}) => {
 	const { token } = useAuth();
-	const navigate = useNavigate();
+
 	const [data, setData] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
@@ -130,7 +130,7 @@ export const GenericTableWithModals = ({
 	// Modal configuration
 	FormModal,
 	ViewModal,
-	ModalSize,
+	ModalSize = "lg",
 
 	// Data management
 	endpoint,
@@ -644,34 +644,34 @@ export const GenericTableWithModals = ({
 			)}
 
 			{children}
+			<FormModal
+				show={showModal}
+				onHide={closeAddModal}
+				onSuccess={handleAddSuccess}
+				size={ModalSize}
+				data={{}}
+				isEdit={false}
+			/>
 
-			{FormModal && showModal && (
-				<FormModal show={showModal} onHide={closeAddModal} onSuccess={handleAddSuccess} size={ModalSize} />
-			)}
+			<FormModal
+				show={showEditModal}
+				onHide={closeEditModal}
+				onSuccess={handleEditSuccess}
+				data={selectedItem || {}}
+				isEdit={true}
+				size={ModalSize}
+			/>
 
-			{FormModal && showEditModal && (
-				<FormModal
-					show={showEditModal}
-					onHide={closeEditModal}
-					onSuccess={handleEditSuccess}
-					data={selectedItem || {}}
-					isEdit={true}
-					size={ModalSize}
-				/>
-			)}
-
-			{ViewModal && showViewModal && (
-				<ViewModal
-					show={showViewModal}
-					onHide={closeViewModal}
-					data={selectedItem}
-					onEdit={() => {
-						closeViewModal();
-						openEditModal(selectedItem);
-					}}
-					size={ModalSize}
-				/>
-			)}
+			<ViewModal
+				show={showViewModal}
+				onHide={closeViewModal}
+				data={selectedItem}
+				onEdit={() => {
+					closeViewModal();
+					openEditModal(selectedItem);
+				}}
+				size={ModalSize}
+			/>
 
 			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</div>

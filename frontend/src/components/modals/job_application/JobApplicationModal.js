@@ -228,16 +228,15 @@ export const JobApplicationModal = ({
 			],
 		];
 	}, [
-		currentFormData?.applied_via,
+		currentFormData.applied_via,
 		fileStates.cv,
 		fileStates.cover_letter,
 		handleFileChange,
 		handleFileRemove,
 		openAggregatorModal,
-		submode,
-		data?.id,
-		interviews,
-		handleInterviewChange,
+		jobId,
+		filteredJobs,
+		aggregators,
 	]);
 
 	const viewFieldsArray = useMemo(() => {
@@ -254,7 +253,7 @@ export const JobApplicationModal = ({
 		}
 
 		return baseFields;
-	}, [submode, data?.id, interviews, handleInterviewChange]);
+	}, [data?.id]);
 
 	const fields = useMemo(
 		() => ({

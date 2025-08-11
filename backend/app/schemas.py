@@ -243,6 +243,7 @@ class JobApplicationOut(JobApplication, Out):
     job: JobSimple | None = None
     aggregator: AggregatorOut | None = None
     interviews: list["InterviewSimple"] = []
+    updates: list["JobApplicationUpdateSimpleOut"] = []
     cv: FileOut | None = None
     cover_letter: FileOut | None = None
 
@@ -300,6 +301,10 @@ class JobApplicationUpdateIn(BaseModel):
 
 class JobApplicationUpdateOut(JobApplicationUpdateIn, Out):
     job_application: JobApplicationOut | None = None
+
+
+class JobApplicationUpdateSimpleOut(JobApplicationUpdateIn, Out):
+    pass
 
 
 class JobApplicationUpdateUpdate(JobApplicationUpdateIn):

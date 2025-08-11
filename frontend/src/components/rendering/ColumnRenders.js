@@ -297,6 +297,16 @@ export const columns = {
 		...overrides,
 	}),
 
+	updateCount: (overrides = {}) => ({
+		key: "update_count",
+		label: "Updates",
+		sortable: true,
+		sortField: "update_count",
+		searchable: false,
+		render: renderFunctions.updateCount,
+		...overrides,
+	}),
+
 	jobApplicationJob: (overrides = {}) => ({
 		key: "job",
 		accessKey: "job_application",
@@ -326,11 +336,7 @@ export const columns = {
 		sortable: true,
 		type: "number",
 		render: (item) => {
-			return (
-				<span className={"text-danger"}>
-					{item.days_since_last_update} days
-				</span>
-			);
+			return <span className={"text-danger"}>{item.days_since_last_update} days</span>;
 		},
 		...overrides,
 	}),
