@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, { createContext, useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi, apiHelpers } from "../services/api";
 
@@ -13,35 +13,56 @@ export function AuthProvider({ children }) {
 	const [token, setToken] = useState(localStorage.getItem("token") || null);
 	const [is_admin, setIsAdmin] = useState(false);
 	const [loading, setLoading] = useState(true);
+	const [userFetched, setUserFetched] = useState(false); // Add this flag
 	const navigate = useNavigate();
+
+	// Memoize fetchUserInfo to prevent unnecessary re-creation
+	const fetchUserInfo = useCallback(
+		async (authToken) => {
+			// Don't fetch if we already have user data and the token hasn't changed
+			if (userFetched && currentUser && token === authToken) {
+				setLoading(false);
+				return;
+			}
+
+			try {
+				const userData = await authApi.getCurrentUser(authToken);
+				setCurrentUser({ isLoggedIn: true, ...userData });
+				setIsAdmin(userData.is_admin || false);
+				setUserFetched(true); // Mark as fetched
+			} catch (error) {
+				console.error("Failed to fetch user info:", error);
+
+				// If token is invalid, clear it
+				if (error.status === 401 || error.status === 403) {
+					localStorage.removeItem("token");
+					setToken(null);
+					setCurrentUser(null);
+					setIsAdmin(false);
+				} else {
+					// If it's a network error, set basic auth state without admin
+					setCurrentUser({ isLoggedIn: true });
+					setIsAdmin(false);
+					setUserFetched(true);
+				}
+			} finally {
+				setLoading(false);
+			}
+		},
+		[userFetched, currentUser, token],
+	);
 
 	// Check if token exists on load and fetch user info
 	useEffect(() => {
 		const storedToken = localStorage.getItem("token");
-		if (storedToken) {
+		if (storedToken && !userFetched) {
+			// Only fetch if not already fetched
 			setToken(storedToken);
 			fetchUserInfo(storedToken);
 		} else {
 			setLoading(false);
 		}
-	}, []);
-
-	// Fetch user information including admin status
-	const fetchUserInfo = async (authToken) => {
-		try {
-			// Assuming you have an endpoint to get current user info
-			const userData = await authApi.getCurrentUser(authToken);
-			setCurrentUser({ isLoggedIn: true, ...userData });
-			setIsAdmin(userData.is_admin || false);
-		} catch (error) {
-			console.error("Failed to fetch user info:", error);
-			// If fetching user info fails, still set as logged in but not admin
-			setCurrentUser({ isLoggedIn: true });
-			setIsAdmin(false);
-		} finally {
-			setLoading(false);
-		}
-	};
+	}, []); // Remove fetchUserInfo from dependencies to prevent re-runs
 
 	// Login function
 	const login = async (email, password) => {
@@ -49,6 +70,7 @@ export function AuthProvider({ children }) {
 			const data = await authApi.login(email, password);
 			localStorage.setItem("token", data.access_token);
 			setToken(data.access_token);
+			setUserFetched(false); // Reset the flag for new login
 
 			// Fetch user info after successful login
 			await fetchUserInfo(data.access_token);
@@ -75,6 +97,7 @@ export function AuthProvider({ children }) {
 		setToken(null);
 		setCurrentUser(null);
 		setIsAdmin(false);
+		setUserFetched(false); // Reset the flag
 		navigate("/login");
 	};
 

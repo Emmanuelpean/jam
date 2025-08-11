@@ -31,7 +31,7 @@ const JobApplicationUpdatesPage = () => {
 
 	return (
 		<GenericTableWithModals
-			title="Job Applications"
+			title="Job Application Updates"
 			data={jobApplicationUpdates}
 			columns={tableColumns}
 			sortConfig={sortConfig}
@@ -42,8 +42,8 @@ const JobApplicationUpdatesPage = () => {
 			error={error}
 			FormModal={JobApplicationUpdateFormModal}
 			ViewModal={JobApplicationUpdateViewModal}
-			endpoint="jobapplications"
-			nameKey="title"
+			endpoint="jobapplicationupdates"
+			nameKey="note"
 			itemType="Job Application Update"
 			addItem={addItem}
 			updateItem={updateItem}

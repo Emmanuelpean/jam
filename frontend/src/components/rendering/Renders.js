@@ -13,41 +13,28 @@ import InterviewsTable from "../tables/InterviewTable";
 import JobApplicationUpdateTable from "../tables/JobApplicationUpdateTable";
 
 const createModalManager = (ModalComponent) => {
-	return ({ children, onEdit }) => {
+	return ({ children }) => {
 		const [showModal, setShowModal] = useState(false);
 		const [selectedItem, setSelectedItem] = useState(null);
 
-		const handleItemClick = (item) => {
+		const handleClick = (item) => {
 			setSelectedItem(item);
 			setShowModal(true);
 		};
 
-		const closeModal = () => {
-			setShowModal(false);
-			// Delay clearing the selected item to allow closing animation
-			setTimeout(() => {
-				setSelectedItem(null);
-			}, 300); // Bootstrap modal animation duration is typically 300ms
-		};
-
-		const handleEdit = () => {
-			if (onEdit && selectedItem) {
-				onEdit(selectedItem);
-				closeModal();
-			}
-		};
-
-		const modalProps = {
-			show: showModal,
-			onHide: closeModal,
-			data: selectedItem,
-			onEdit: handleEdit,
-		};
-
 		return (
 			<>
-				{children(handleItemClick)}
-				<ModalComponent {...modalProps} />
+				{children(handleClick)}
+				{showModal && selectedItem && (
+					<ModalComponent
+						show={showModal}
+						onHide={() => {
+							setShowModal(false);
+							setSelectedItem(null);
+						}}
+						data={selectedItem}
+					/>
+				)}
 			</>
 		);
 	};

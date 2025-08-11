@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -22,29 +22,35 @@ export const useTableData = (endpoint, dependencies = [], queryParams = {}) => {
 	const [sortConfig, setSortConfig] = useState({ key: "created_at", direction: "desc" });
 	const [searchTerm, setSearchTerm] = useState("");
 
+	// Memoize the fetch function to prevent unnecessary re-renders
+	const fetchData = useCallback(async () => {
+		setLoading(true);
+		try {
+			const queryString =
+				Object.keys(queryParams).length > 0 ? "?" + new URLSearchParams(queryParams).toString() : "";
+			const result = await api.get(`${endpoint}/${queryString}`, token);
+			setData(result || []); // Ensure result is always an array
+		} catch (err) {
+			console.error(`Error fetching ${endpoint}:`, err);
+			setError(`Failed to load ${endpoint}. Please try again later.`);
+		} finally {
+			setLoading(false);
+		}
+	}, [endpoint, token, JSON.stringify(queryParams)]); // Only depend on serialized queryParams
+
 	useEffect(() => {
-		const fetchData = async () => {
-			setLoading(true);
-			try {
-				const queryString =
-					Object.keys(queryParams).length > 0 ? "?" + new URLSearchParams(queryParams).toString() : "";
-				const result = await api.get(`${endpoint}/${queryString}`, token);
-				setData(result);
-			} catch (err) {
-				console.error(`Error fetching ${endpoint}:`, err);
-				setError(`Failed to load ${endpoint}. Please try again later.`);
-			} finally {
-				setLoading(false);
-			}
-		};
+		if (token) {
+			// Only fetch if token exists
+			fetchData();
+		}
+	}, [token, fetchData, ...dependencies]);
 
-		fetchData().then(() => null);
-	}, [token, navigate, endpoint, ...dependencies]);
-
-	const addItem = (newItem) => setData((prev) => [newItem, ...prev]);
-	const updateItem = (updatedItem) =>
-		setData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
-	const deleteItem = (itemId) => setData((prev) => prev.filter((item) => item.id !== itemId));
+	const addItem = useCallback((newItem) => setData((prev) => [newItem, ...prev]), []);
+	const updateItem = useCallback(
+		(updatedItem) => setData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))),
+		[],
+	);
+	const deleteItem = useCallback((itemId) => setData((prev) => prev.filter((item) => item.id !== itemId)), []);
 
 	return {
 		data,
@@ -58,6 +64,7 @@ export const useTableData = (endpoint, dependencies = [], queryParams = {}) => {
 		addItem,
 		updateItem,
 		deleteItem,
+		refetch: fetchData, // Add refetch function
 	};
 };
 
