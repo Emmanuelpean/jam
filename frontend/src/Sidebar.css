@@ -305,3 +305,8 @@
 .nav-item.active:hover .submenu-arrow {
     color: white;
 }
+
+.nav-item.active .submenu-arrow {
+    transition: none !important;
+    transform: rotate(90deg) !important;
+}
