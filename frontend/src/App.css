@@ -2,11 +2,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
-}
-
 * {
     margin: 0;
     padding: 0;
@@ -131,12 +126,6 @@ thead.custom-header th {
 .form-select:focus {
     border-color: var(--primary-mid);
     box-shadow: 0 0 0 0.25rem var(--jam-glow), 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.form-control::placeholder {
-    color: rgb(173, 181, 189);
-    font-style: italic;
-    font-weight: 300;
 }
 
 textarea.form-control {
@@ -327,7 +316,6 @@ textarea.form-control {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Clickable badges */
 .clickable-badge {
     cursor: pointer !important;
     transition: opacity 0.2s ease;
@@ -346,7 +334,6 @@ textarea.form-control {
 /* ----------------------------------------------------- TOGGLE ----------------------------------------------------- */
 
 
-/* Improved Checkbox styling */
 .form-check {
     padding-left: 0;
     display: flex;
@@ -546,7 +533,6 @@ textarea.form-control {
 }
 
 
-/* Update spinner color to use primary-end */
 .spinner-border {
     border-color: var(--primary-end) transparent var(--primary-end) transparent;
 }
@@ -554,7 +540,6 @@ textarea.form-control {
 .text-primary .spinner-border {
     border-color: var(--primary-end) transparent var(--primary-end) transparent;
 }
-
 
 .spinner-border {
     border-color: var(--primary-end) transparent;
@@ -576,38 +561,8 @@ textarea.form-control {
     transition: opacity 0.3s ease;
 }
 
-
-/* ---------------------------------------------------- DROPDOWN ---------------------------------------------------- */
-
-.dropdown-menu {
-    border-radius: 12px;
-    border: none;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-    background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
-    padding: 0.75rem 0;
-}
-
-.dropdown-item {
-    padding: 0.75rem 1.5rem;
-    font-weight: 500;
-    color: #34495e;
-    transition: all 0.2s ease;
-}
-
-.dropdown-item:hover {
-    background: linear-gradient(135deg, var(--primary-light) 0%, rgba(255, 255, 255, 0.8) 100%);
-    color: var(--primary-dark);
-}
-
-.dropdown-item.active {
-    background: var(--primary-gradient);
-    color: white;
-}
-
-
 /* -------------------------------------------------- SELECT WIDGET ------------------------------------------------- */
 
-/* React Select Styling - Fixed for proper text display and height */
 .react-select__control,
 .react-select-container .react-select__control {
     border: 2px solid #e8eaed;
@@ -618,11 +573,13 @@ textarea.form-control {
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+.form-control:hover,
 .react-select__control:hover,
 .react-select-container .react-select__control:hover {
-    border-color: var(--primary-light);
+    border-color: var(--primary-mid);
 }
 
+.form-control--is-focused,
 .react-select__control--is-focused,
 .react-select-container .react-select__control--is-focused {
     border-color: var(--primary-mid);
@@ -638,53 +595,18 @@ textarea.form-control {
     align-items: center;
 }
 
+.form-control::placeholder,
 .react-select__placeholder,
 .react-select-container .react-select__placeholder {
-    color: #6b7280;
+    color: rgb(173, 181, 189);
     font-style: italic;
     font-weight: 300;
     line-height: 1.5;
 }
 
-.react-select-container .react-select__single-value {
-    color: #2c3e50;
-    font-weight: 500;
-    line-height: 1.5;
-}
-
-.react-select-container .react-select__input-container {
-    color: #2c3e50;
-}
-
-.react-select-container .react-select__input {
-    caret-color: #2c3e50;
-}
-
-.react-select__menu,
-.react-select-container .react-select__menu {
-    z-index: 9999;
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-    background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
-}
-
-.react-select-container .react-select__option {
-    color: #2c3e50;
-    font-weight: 500;
-    line-height: 1.5;
-    padding: 8px 16px;
-}
-
-.react-select__option--is-focused,
-.react-select-container .react-select__option--is-focused {
-    background: linear-gradient(135deg, var(--primary-light) 0%, rgba(255, 255, 255, 0.8) 100%);
-    color: var(--primary-dark);
-}
-
 .react-select__option--is-selected,
 .react-select-container .react-select__option--is-selected {
-    background: var(--primary-gradient);
+    background: var(--primary-mid) !important;
     color: white;
 }
 
@@ -694,20 +616,10 @@ textarea.form-control {
     align-items: center;
 }
 
-/* Remove focus outlines */
-.react-select-container .react-select__input:focus,
-.react-select-container .react-select__input:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
-}
-
-/* Modal z-index fixes */
 .react-select__menu-portal {
     z-index: 9999 !important;
 }
 
-/* Multi-select styling - with proper height for text */
 .react-select__multi-value {
     align-items: center !important;
     padding: 6px 8px !important;
@@ -746,54 +658,9 @@ textarea.form-control {
     align-items: center;
 }
 
-/* ------------------------------------------------------ MENU ------------------------------------------------------ */
-
-
-.nav-link-custom {
-    font-size: 1.1rem;
-    font-weight: 500;
-    padding: 0.75rem 1rem !important;
-    margin: 0 0.25rem;
-    border-radius: 8px;
-    transition: 0s ease-out;
-}
-
-.nav-link-custom.active,
-.nav-link-custom:hover {
-    color: white !important;
-    background: var(--primary-gradient);
-    transform: translateY(-1px);
-}
-
-/*.nav-link-custom.active:not(:active) {*/
-/*    font-weight: 600;*/
-/*}*/
-
-.nav-link-custom.text-danger {
-    border: 2px solid transparent;
-    transition: border-color 0.15s ease-out;
-}
-
-.nav-link-custom.text-danger:hover {
-    color: inherit !important;
-    background: transparent;
-    border-color: red;
-}
-
-.header-logo:hover {
-    transform: scale(1.05);
-}
-
 /* --------------------------------------------------- TEXT BOXES --------------------------------------------------- */
 
 
-.form-control[as="textarea"] {
-    will-change: height;
-    transition: none !important;
-    resize: vertical;
-}
-
-/* Or create a specific class */
 .optimized-textarea {
     will-change: height;
     transition: none !important;
@@ -834,3 +701,22 @@ textarea.form-control {
     justify-content: center;
 }
 
+/* ---------------------------------------------------- SCROLLBAR --------------------------------------------------- */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-mid);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-end);
+}

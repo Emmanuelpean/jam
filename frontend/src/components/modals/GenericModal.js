@@ -238,8 +238,45 @@ const GenericModal = ({
 		onHide();
 	};
 
-	// Measure content height from the hidden content
 	const measureContentHeight = (targetMode) => {
+		// For tabbed modals, measure the actual visible tab content
+		if (tabs && tabs.length > 0) {
+			const activeTabPane = modalBodyRef.current?.querySelector(".tab-pane.active");
+			if (activeTabPane) {
+				// Create a temporary clone to measure the target mode content
+				const clone = activeTabPane.cloneNode(true);
+				clone.style.position = "absolute";
+				clone.style.top = "-9999px";
+				clone.style.left = "0";
+				clone.style.right = "0";
+				clone.style.visibility = "hidden";
+				clone.style.height = "auto";
+
+				// Show/hide the appropriate content in the clone based on target mode
+				const visibleContent = clone.querySelector(".modal-content-visible");
+				const hiddenFormContent = clone.querySelector(".modal-content-hidden:last-child");
+				const hiddenViewContent = clone.querySelector(".modal-content-hidden:first-child");
+
+				if (visibleContent && hiddenFormContent && hiddenViewContent) {
+					if (targetMode === "form") {
+						// Replace visible content with form content
+						visibleContent.innerHTML = hiddenFormContent.innerHTML;
+					} else {
+						// Replace visible content with view content
+						visibleContent.innerHTML = hiddenViewContent.innerHTML;
+					}
+				}
+
+				// Add clone to DOM, measure, then remove
+				modalBodyRef.current.appendChild(clone);
+				const height = clone.scrollHeight;
+				modalBodyRef.current.removeChild(clone);
+
+				return height;
+			}
+		}
+
+		// Original logic for non-tabbed modals
 		const targetRef = targetMode === "form" ? formContentRef : viewContentRef;
 		if (targetRef.current) {
 			return targetRef.current.scrollHeight;
@@ -468,8 +505,14 @@ const GenericModal = ({
 					)}
 				</div>
 
-				{/* Hidden content for measurement */}
-				<div ref={viewContentRef} className="modal-content-hidden">
+				{/* Hidden content for measurement - ensure full width for tabs */}
+				<div
+					ref={viewContentRef}
+					className="modal-content-hidden"
+					style={{
+						width: tabs && tabs.length > 0 ? "100%" : "auto",
+					}}
+				>
 					<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
 					{effectiveProps.showSystemFields && (
 						<div className="mt-3 pt-3 border-top">
@@ -481,7 +524,13 @@ const GenericModal = ({
 						</div>
 					)}
 				</div>
-				<div ref={formContentRef} className="modal-content-hidden">
+				<div
+					ref={formContentRef}
+					className="modal-content-hidden"
+					style={{
+						width: tabs && tabs.length > 0 ? "100%" : "auto",
+					}}
+				>
 					{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
 					<div>{formF.map((item, index) => renderFieldGroup(item, index, true))}</div>
 				</div>

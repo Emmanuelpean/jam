@@ -486,7 +486,7 @@ export const getTableIcon = (title) => {
 		Tags: "bi-tags",
 		Interviews: "bi-calendar-event",
 		"Job Applications": "bi-person-workspace",
-		"Job Application Updates": "bi-pencil-square",
+		"Job Application Updates": "bi-bell",
 		"Job Aggregators": "bi-linkedin",
 	};
 	return iconMap[title] || "bi-table";
