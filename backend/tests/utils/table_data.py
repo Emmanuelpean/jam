@@ -1,6 +1,6 @@
 """Centralised test data for both conftest.py and seed_database.py"""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from itertools import groupby
 
 from tests.utils.files import load_all_resource_files
@@ -8,7 +8,8 @@ from tests.utils.files import load_all_resource_files
 RESOURCE_FILES = load_all_resource_files()
 
 
-current_date = datetime.now()
+current_date = datetime.now(timezone.utc)
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
 
 USER_DATA = [
@@ -811,7 +812,7 @@ JOB_APPLICATION_DATA = [
 ]
 JOB_APPLICATION_DATETIME = [current_date - timedelta(weeks=i) for i in range(len(JOB_APPLICATION_DATA))]
 for job_application, date in zip(JOB_APPLICATION_DATA, JOB_APPLICATION_DATETIME):
-    job_application["date"] = date.strftime("%Y-%m-%dT%H:%M:%S")
+    job_application["date"] = date.strftime(DATE_FORMAT)
 
 
 INTERVIEW_DATA = [
@@ -915,7 +916,7 @@ interviews_sorted = sorted(INTERVIEW_DATA, key=lambda x: x["job_application_id"]
 grouped = {k: list(v) for k, v in groupby(interviews_sorted, key=lambda x: x["job_application_id"])}
 for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
     for i, update in enumerate(grouped[update_key]):
-        update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime("%Y-%m-%dT%H:%M:%S")
+        update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime(DATE_FORMAT)
 
 
 JOB_APPLICATION_UPDATE_DATA = [
@@ -1029,7 +1030,7 @@ job_application_updates_sorted = sorted(JOB_APPLICATION_UPDATE_DATA, key=lambda 
 grouped = {k: list(v) for k, v in groupby(job_application_updates_sorted, key=lambda x: x["job_application_id"])}
 for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
     for i, update in enumerate(grouped[update_key]):
-        update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime("%Y-%m-%dT%H:%M:%S")
+        update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime(DATE_FORMAT)
 
 
 JOB_KEYWORD_MAPPINGS = [

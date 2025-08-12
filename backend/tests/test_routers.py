@@ -319,3 +319,40 @@ class TestLatestUpdatesRouter:
         """Test that unauthorized requests are rejected"""
         response = client.get("/latest_updates/")
         assert response.status_code == 401
+
+
+class TestGeneralRouter:
+    """Test class for general router endpoints"""
+
+    def test_get_all_updates_with_job_applications(self, test_users, authorised_clients, test_job_applications) -> None:
+        """Test get_all_updates returns job applications with attached job application data"""
+
+        response = authorised_clients[0].get("/latest_updates")
+        data = response.json()
+        assert all(d["type"] == "Application" for d in data)
+        assert len(data) == len(test_job_applications)
+        assert all({d["data"]["owner_id"] == test_users[0].id for d in data})
+
+    def test_get_all_updates_with_interviews(self, test_users, authorised_clients, test_interviews) -> None:
+        """Test get_all_updates returns interviews with attached job application data"""
+
+        response = authorised_clients[0].get("/latest_updates")
+        data = response.json()
+        job_applications = [d for d in data if d["type"] == "Application"]
+        interviews = [d for d in data if d["type"] == "Interview"]
+        assert len(job_applications) == 8
+        assert len(interviews) == 12
+        assert all({d["data"]["owner_id"] == test_users[0].id for d in data})
+
+    def test_get_all_updates_with_interviews_updates(self, test_users, authorised_clients, test_interviews, test_job_application_updates) -> None:
+        """Test get_all_updates returns interviews with attached job application data"""
+
+        response = authorised_clients[0].get("/latest_updates")
+        data = response.json()
+        job_applications = [d for d in data if d["type"] == "Application"]
+        interviews = [d for d in data if d["type"] == "Interview"]
+        updates = [d for d in data if d["type"] == "Job Application Update"]
+        assert len(updates) == 10
+        assert len(job_applications) == 3
+        assert len(interviews) == 7
+        assert all({d["data"]["owner_id"] == test_users[0].id for d in data})

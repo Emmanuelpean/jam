@@ -1,3 +1,5 @@
+"""Module for generating CRUD routers for the JAM data tables"""
+
 import base64
 import datetime
 
@@ -660,6 +662,9 @@ def get_all_updates(
         .options(
             joinedload(models.JobApplication.job).joinedload(models.Job.company),
             joinedload(models.JobApplication.job).joinedload(models.Job.location),
+            joinedload(models.JobApplication.aggregator),
+            joinedload(models.JobApplication.cv),
+            joinedload(models.JobApplication.cover_letter),
         )
         .limit(limit)
         .all()
@@ -675,6 +680,9 @@ def get_all_updates(
             joinedload(models.Interview.job_application)
             .joinedload(models.JobApplication.job)
             .joinedload(models.Job.company),
+            joinedload(models.Interview.job_application).joinedload(models.JobApplication.aggregator),
+            joinedload(models.Interview.job_application).joinedload(models.JobApplication.cv),
+            joinedload(models.Interview.job_application).joinedload(models.JobApplication.cover_letter),
             joinedload(models.Interview.location),
         )
         .limit(limit)
@@ -691,6 +699,9 @@ def get_all_updates(
             joinedload(models.JobApplicationUpdate.job_application)
             .joinedload(models.JobApplication.job)
             .joinedload(models.Job.company),
+            joinedload(models.JobApplicationUpdate.job_application).joinedload(models.JobApplication.aggregator),
+            joinedload(models.JobApplicationUpdate.job_application).joinedload(models.JobApplication.cv),
+            joinedload(models.JobApplicationUpdate.job_application).joinedload(models.JobApplication.cover_letter),
         )
         .limit(limit)
         .all()
@@ -700,29 +711,35 @@ def get_all_updates(
     all_updates = []
 
     # Add job applications as "Application" updates
-    for app in job_applications:
+    for job_application in job_applications:
         update_item = {
-            "date": app.date,
+            "data": job_application,
+            "date": job_application.date,
             "type": "Application",
-            "job_title": app.job.title if app.job else None,
+            "job_title": job_application.job.title,
+            "job_application": job_application,
         }
         all_updates.append(update_item)
 
     # Add interviews as "Interview" updates
     for interview in interviews:
         update_item = {
+            "data": interview,
             "date": interview.date,
             "type": "Interview",
             "job_title": interview.job_application.job.title,
+            "job_application": interview.job_application,
         }
         all_updates.append(update_item)
 
     # Add job application updates
     for update in job_app_updates:
         update_item = {
+            "data": update,
             "date": update.date,
             "type": "Job Application Update",
             "job_title": update.job_application.job.title,
+            "job_application": update.job_application,
         }
         all_updates.append(update_item)
 

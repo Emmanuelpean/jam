@@ -247,7 +247,6 @@ class CRUDTestBase:
 
         for key, value in items:
             if key[0] != "_":
-                print(key)
                 response_value = getattr(response_data, key)
                 if isinstance(value, models.Base) or isinstance(value, list):
                     self.check_output(value, response_value)
