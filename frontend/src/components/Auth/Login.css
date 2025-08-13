@@ -239,8 +239,26 @@
 
 
 .password-toggle-btn {
+    /* Merge the inline styles here */
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     opacity: 0.8;
-    position: relative;
+    transition: all 0.2s ease;
 }
 
 .password-toggle-btn:hover {
@@ -252,7 +270,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 20px;
+    width: 18px;
     height: 2px;
     background-color: currentColor;
     transform: translate(-50%, -50%) rotate(45deg) scaleX(0);
@@ -260,12 +278,14 @@
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1;
     border-radius: 1px;
+    margin-top: -1px; /* Adjust vertical position */
 }
 
-/* Show slash when password is visible (eye-slash state) */
 .password-toggle-btn.show-slash::before {
-    transform: translate(-50%, -50%) rotate(45deg) scaleX(1);
+    transform: translate(-50%, -60%) rotate(45deg) scaleX(1);
 }
+
+
 
 /* Auth form logo */
 .auth-logo {

@@ -231,25 +231,6 @@ function AuthForm() {
 									type="button"
 									className={`password-toggle-btn ${showPassword ? "" : "show-slash"}`}
 									onClick={() => setShowPassword(!showPassword)}
-									style={{
-										position: "absolute",
-										right: "15px",
-										top: "50%",
-										transform: "translateY(-50%)",
-										background: "none",
-										border: "none",
-										color: "#6c757d",
-										fontSize: "20px",
-										cursor: "pointer",
-										padding: "4px",
-										zIndex: 10,
-										width: "32px",
-										height: "32px",
-										borderRadius: "4px",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-									}}
 								>
 									<i className="bi bi-eye"></i>
 								</button>
@@ -293,25 +274,6 @@ function AuthForm() {
 										className={`password-toggle-btn ${showConfirmPassword ? "" : "show-slash"}`}
 										onClick={() => setShowConfirmPassword(!showConfirmPassword)}
 										tabIndex={isLogin ? -1 : 0}
-										style={{
-											position: "absolute",
-											right: "15px",
-											top: "50%",
-											transform: "translateY(-50%)",
-											background: "none",
-											border: "none",
-											color: "#6c757d",
-											fontSize: "20px",
-											cursor: "pointer",
-											padding: "4px",
-											zIndex: 10,
-											width: "32px",
-											height: "32px",
-											borderRadius: "4px",
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-										}}
 									>
 										<i className="bi bi-eye"></i>
 									</button>

@@ -74,13 +74,14 @@ export const viewFields = {
 	updateType: (overrides = {}) => ({
 		key: "type",
 		label: "Type",
-		render: (x) => renderFunctions.updateType(x, true),
+		render: renderFunctions.updateType,
 		...overrides,
 	}),
 
 	appTheme: (overrides = {}) => ({
 		key: "theme",
 		label: "Theme",
+		render: renderFunctions.appTheme,
 		...overrides,
 	}),
 

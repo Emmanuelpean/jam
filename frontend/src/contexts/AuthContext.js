@@ -30,6 +30,7 @@ export function AuthProvider({ children }) {
 				setCurrentUser({ isLoggedIn: true, ...userData });
 				setIsAdmin(userData.is_admin || false);
 				setUserFetched(true); // Mark as fetched
+				console.log("User data fetched:", userData);
 			} catch (error) {
 				console.error("Failed to fetch user info:", error);
 

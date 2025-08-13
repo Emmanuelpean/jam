@@ -5,29 +5,18 @@ import { ReactComponent as JamLogo } from "./assets/Logo.svg";
 import { authApi } from "./services/api";
 import "./Sidebar.css";
 import { getTableIcon } from "./components/rendering/Renders";
+import { THEMES, DEFAULT_THEME, isValidTheme } from "./utils/Theme";
 
 export const Sidebar = ({ onHoverChange }) => {
 	const location = useLocation();
 	const { logout, token, is_admin } = useAuth();
 	const [showDropdown, setShowDropdown] = useState(false);
-	const [currentTheme, setCurrentTheme] = useState("mixed-berry");
+	const [currentTheme, setCurrentTheme] = useState(DEFAULT_THEME);
 	const [hoveredItem, setHoveredItem] = useState(null);
 	const [isHovering, setIsHovering] = useState(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState(null);
 	const dropdownRef = useRef(null);
 	const hoverTimeoutRef = useRef(null);
-
-	const themes = useMemo(
-		() => [
-			{ key: "strawberry", name: "Strawberry" },
-			{ key: "blueberry", name: "Blueberry" },
-			{ key: "raspberry", name: "Raspberry" },
-			{ key: "mixed-berry", name: "Mixed Berry" },
-			{ key: "forest-berry", name: "Forest Berry" },
-			{ key: "blackberry", name: "Blackberry" },
-		],
-		[],
-	);
 
 	const allNavigationItems = [
 		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard" },
@@ -68,10 +57,10 @@ export const Sidebar = ({ onHoverChange }) => {
 	useEffect(() => {
 		// Initialize theme
 		const savedTheme = localStorage.getItem("theme");
-		const initTheme = savedTheme && themes.some((theme) => theme.key === savedTheme) ? savedTheme : "mixed-berry";
+		const initTheme = savedTheme && isValidTheme(savedTheme) ? savedTheme : DEFAULT_THEME;
 		setCurrentTheme(initTheme);
 		document.documentElement.setAttribute("data-theme", initTheme);
-	}, [themes]);
+	}, []); // Remove themes dependency
 
 	// Auto-expand submenu if any of its items is active
 	useEffect(() => {
@@ -260,7 +249,7 @@ export const Sidebar = ({ onHoverChange }) => {
 					{showDropdown && isHovering && (
 						<div className="theme-dropdown">
 							<div className="fw-medium text-muted small mb-2 px-2">Themes</div>
-							{themes.map((theme) => {
+							{THEMES.map((theme) => {
 								const previewColors = getThemeColors(theme.key);
 								const isCurrentTheme = currentTheme === theme.key;
 								return (
@@ -290,7 +279,6 @@ export const Sidebar = ({ onHoverChange }) => {
 						const isSubmenuItemActive = isSubmenuActive(item.submenu);
 						const isExpanded = expandedSubmenu === item.text;
 						const showSubmenu = shouldShowSubmenu(item);
-						console.log(item);
 
 						return (
 							<div key={`submenu-${index}`}>

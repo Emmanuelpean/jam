@@ -2,7 +2,7 @@ import React from "react";
 import GenericModal from "./GenericModal";
 import { formFields } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
-import { authApi, userApi } from "../../services/api";
+import { authApi, keywordsApi, userApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import "../Auth/Login.css";
 
@@ -19,8 +19,8 @@ export const UserModal = ({
 	const { token } = useAuth();
 
 	const formFieldsArray = [
-		[formFields.email({ required: submode === "add" }), formFields.password({ required: submode === "add" })],
-		[formFields.appTheme(), formFields.isAdmin()],
+		[formFields.email({ required: submode === "add" }), formFields.appTheme()],
+		formFields.isAdmin(),
 	];
 
 	const viewFieldsArray = [[viewFields.email(), viewFields.appTheme()], viewFields.isAdmin()];
@@ -32,22 +32,16 @@ export const UserModal = ({
 
 	const customValidation = async (formData) => {
 		const errors = {};
+		const queryParams = { email: formData.email.trim() };
+		const matches = await userApi.getAll(token, queryParams);
+		const duplicates = matches.filter((existing) => {
+			return data?.id !== existing.id;
+		});
+		console.log(duplicates);
 
-		try {
-			const queryParams = { email: formData.email.trim() };
-			const matches = (await userApi.getAll?.(token, queryParams)) || [];
-			const duplicates = matches.filter((existing) => {
-				return data?.id !== existing.id;
-			});
-
-			if (duplicates.length > 0) {
-				errors.email = "A user with this email already exists";
-			}
-		} catch (error) {
-			// If the API call fails, we'll let the backend handle validation
-			console.warn("Could not validate email uniqueness:", error);
+		if (duplicates.length > 0) {
+			errors.email = `A tag with this name already exists`;
 		}
-
 		return errors;
 	};
 

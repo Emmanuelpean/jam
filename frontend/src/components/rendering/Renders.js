@@ -11,6 +11,7 @@ import { filesApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import InterviewsTable from "../tables/InterviewTable";
 import JobApplicationUpdateTable from "../tables/JobApplicationUpdateTable";
+import { THEMES } from "../../utils/Theme";
 
 const createModalManager = (ModalComponent) => {
 	return ({ children }) => {
@@ -144,6 +145,13 @@ export const renderFunctions = {
 					{safeUrl.slice(8)} <i className="bi bi-box-arrow-up-right ms-1"></i>
 				</a>
 			);
+		}
+	},
+
+	appTheme: (item, view = false, key = "theme") => {
+		const themeKey = accessAttribute(item, key);
+		if (themeKey) {
+			return THEMES.find((theme) => theme.key === themeKey).name;
 		}
 	},
 

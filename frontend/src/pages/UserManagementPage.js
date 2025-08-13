@@ -20,7 +20,7 @@ export const UserManagementPage = () => {
 		removeItem,
 	} = useTableData("users");
 
-	const tableColumns = [columns.email(), columns.theme(), columns.isAdmin(), columns.createdAt()];
+	const tableColumns = [columns.id(), columns.email(), columns.appTheme(), columns.isAdmin(), columns.createdAt()];
 
 	useEffect(() => {
 		if (loading) {

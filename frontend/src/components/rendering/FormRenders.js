@@ -18,6 +18,7 @@ import { PersonFormModal } from "../modals/PersonModal";
 import { AggregatorFormModal } from "../modals/AggregatorModal";
 import { JobFormModal } from "../modals/job/JobModal";
 import { JobApplicationFormModal } from "../modals/job_application/JobApplicationModal";
+import { THEMES } from "../../utils/Theme";
 
 // Hook for country loading that can be used by components
 export const useCountries = () => {
@@ -426,14 +427,7 @@ export const formFields = {
 		label: "App Theme",
 		type: "select",
 		required: false,
-		options: [
-			{ value: "strawberry", label: "Strawberry" },
-			{ value: "blueberry", label: "Blueberry" },
-			{ value: "raspberry", label: "Raspberry" },
-			{ value: "mixed-berry", label: "Mixed Berry" },
-			{ value: "forest-berry", label: "Forest Berry" },
-			{ value: "blackberry", label: "Blackberry" },
-		],
+		options: THEMES.map((theme) => ({ value: theme.key, label: theme.name })),
 		...overrides,
 	}),
 
@@ -441,14 +435,6 @@ export const formFields = {
 		name: "is_admin",
 		label: "Admin",
 		type: "checkbox",
-		...overrides,
-	}),
-
-	password: (overrides = {}) => ({
-		name: "password",
-		label: "Password",
-		type: "password",
-		required: true,
 		...overrides,
 	}),
 

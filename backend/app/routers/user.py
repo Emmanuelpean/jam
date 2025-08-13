@@ -1,6 +1,6 @@
 """User route"""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from app import utils, models, oauth2, database, schemas, config
@@ -8,30 +8,122 @@ from app import utils, models, oauth2, database, schemas, config
 user_router = APIRouter(prefix="/users", tags=["users"])
 
 
-ALPHA_WHITELIST = [
-    "emmanuel.pean@gmail.com",
-    "jessicaaggood@live.co.uk",
-]
-
-
-def is_email_whitelisted(email: str) -> bool:
-    return email.lower() in ALPHA_WHITELIST
-
-
-@user_router.get("/", response_model=list[schemas.User])
+@user_router.get("/", response_model=list[schemas.UserOut])
 def get_all_users(
-        current_user: models.User = Depends(oauth2.get_current_user),
-        db: Session = Depends(database.get_db),
+    request: Request,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
 ):
-    """Get all users with all their information.
-    :param current_user: The current authenticated user.
-    :param db: The database session."""
+    """Retrieve all users.
+    :param request: FastAPI request object to access query parameters
+    :param db: Database session.
+    :param current_user: Authenticated user.
+    :return: List of entries."""
 
     if not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
 
-    users = db.query(models.User).all()
-    return users
+    # Start with base query
+    # noinspection PyTypeChecker
+    query = db.query(models.User)
+
+    # Get all query parameters except 'limit'
+    filter_params = dict(request.query_params)
+    filter_params.pop("limit", None)  # Remove limit from filters
+
+    # Apply filters for each parameter that matches a table column
+    for param_name, param_value in filter_params.items():
+        if hasattr(models.User, param_name):
+            column = getattr(models.User, param_name)
+
+            # Handle null values - convert string "null" to actual None/NULL
+            if param_value.lower() == "null":
+                query = query.filter(column.is_(None))
+                continue
+
+            # Handle different data types
+            try:
+                # Try to convert to appropriate type based on column type
+                if hasattr(column.type, "python_type"):
+                    if column.type.python_type == int:
+                        param_value = int(param_value)
+                    elif column.type.python_type == float:
+                        param_value = float(param_value)
+                    elif column.type.python_type == bool:
+                        param_value = param_value.lower() in ("true", "1", "yes", "on")
+
+                # Add filter to query
+                query = query.filter(column == param_value)
+
+            except (ValueError, TypeError):
+                # If conversion fails, treat as string comparison
+                query = query.filter(column == param_value)
+
+    return query.all()
+
+
+@user_router.get("/me", response_model=schemas.UserOut)
+def get_current_user_profile(
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    """Get the current user's profile.
+    :param current_user: The current authenticated user."""
+
+    return current_user
+
+
+@user_router.get("/{entry_id}", response_model=schemas.UserOut)
+def get_one_user(
+    entry_id: int | None,
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
+):
+
+    if not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
+
+    return db.query(models.User).filter(models.User.id == entry_id).first()
+
+
+@user_router.put("/{entry_id}", response_model=schemas.UserOut)
+def update_user(
+    entry_id: int | None,
+    user_update: schemas.UserUpdate,
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
+):
+
+    # Allow only admins or the matching user to update the data
+    if not current_user.is_admin and current_user.id != user_update.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
+
+    user_update = user_update.model_dump(exclude_defaults=True)
+
+    # Validate theme if provided
+    if "theme" in user_update:
+        valid_themes = ["strawberry", "blueberry", "raspberry", "mixed-berry", "forest-berry", "blackberry"]
+        if user_update["theme"] not in valid_themes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid theme. Must be one of: {', '.join(valid_themes)}",
+            )
+
+    # Hash password if it's being updated
+    if "password" in user_update:
+        user_update["password"] = utils.hash_password(user_update["password"])
+
+    # Apply updates
+    if entry_id is not None:
+        user = db.query(models.User).filter(models.User.id == entry_id).first()
+    else:
+        user = current_user
+
+    for field, value in user_update.items():
+        setattr(user, field, value)
+
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 @user_router.post("/", status_code=201, response_model=schemas.UserOut)
@@ -49,13 +141,6 @@ def create_user(
     if user.email in emails:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
-    # noinspection PyTypeChecker
-    if config.settings.signup.lower() == "restricted" and not is_email_whitelisted(user.email):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Email not authorised for alpha testing",
-        )
-
     # Hash the password and create the user
     user.password = utils.hash_password(user.password)
     # noinspection PyArgumentList
@@ -67,16 +152,6 @@ def create_user(
     db.refresh(new_user)
 
     return new_user
-
-
-@user_router.get("/me", response_model=schemas.UserOut)
-def get_current_user_profile(
-    current_user: models.User = Depends(oauth2.get_current_user),
-):
-    """Get the current user's profile.
-    :param current_user: The current authenticated user."""
-
-    return current_user
 
 
 @user_router.put("/me", response_model=schemas.UserOut)

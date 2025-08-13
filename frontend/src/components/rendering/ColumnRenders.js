@@ -4,6 +4,15 @@ import { localeDateOnly } from "../../utils/TimeUtils";
 export const columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
 
+	id: (overrides = {}) => ({
+		key: "id",
+		label: "ID",
+		sortable: true,
+		searchable: true,
+		type: "number",
+		...overrides,
+	}),
+
 	name: (overrides = {}) => ({
 		key: "name",
 		label: "Name",
@@ -192,12 +201,13 @@ export const columns = {
 		...overrides,
 	}),
 
-	theme: (overrides = {}) => ({
+	appTheme: (overrides = {}) => ({
 		key: "theme",
 		label: "Theme",
 		sortable: true,
 		searchable: true,
 		type: "text",
+		render: renderFunctions.appTheme,
 		...overrides,
 	}),
 

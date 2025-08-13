@@ -42,9 +42,6 @@ class UserUpdate(BaseModel):
     is_admin: bool | None = None
 
 
-class User(UserCreate, UserOut):
-    pass
-
 # -------------------------------------------------------- TOKEN -------------------------------------------------------
 
 
