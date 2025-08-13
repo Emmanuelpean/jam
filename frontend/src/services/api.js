@@ -199,6 +199,7 @@ export const aggregatorsApi = createCrudApi("aggregators");
 export const jobAlertEmailApi = createCrudApi("jobalertemails");
 export const scrapedJobApi = createCrudApi("scrapedjobs");
 export const serviceLogApi = createCrudApi("servicelogs");
+export const userApi = createCrudApi("users");
 
 export { api, API_BASE_URL };
 

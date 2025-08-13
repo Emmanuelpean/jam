@@ -419,6 +419,39 @@ export const formFields = {
 		...overrides,
 	}),
 
+	// ------------------------------------------------- USERS ------------------------------------------------
+
+	appTheme: (overrides = {}) => ({
+		name: "theme",
+		label: "App Theme",
+		type: "select",
+		required: false,
+		options: [
+			{ value: "strawberry", label: "Strawberry" },
+			{ value: "blueberry", label: "Blueberry" },
+			{ value: "raspberry", label: "Raspberry" },
+			{ value: "mixed-berry", label: "Mixed Berry" },
+			{ value: "forest-berry", label: "Forest Berry" },
+			{ value: "blackberry", label: "Blackberry" },
+		],
+		...overrides,
+	}),
+
+	isAdmin: (overrides = {}) => ({
+		name: "is_admin",
+		label: "Admin",
+		type: "checkbox",
+		...overrides,
+	}),
+
+	password: (overrides = {}) => ({
+		name: "password",
+		label: "Password",
+		type: "password",
+		required: true,
+		...overrides,
+	}),
+
 	// ------------------------------------------------- PERSON FIELDS ------------------------------------------------
 
 	firstName: (overrides = {}) => ({

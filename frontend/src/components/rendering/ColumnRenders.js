@@ -1,6 +1,5 @@
 import { renderFunctions } from "./Renders";
 import { localeDateOnly } from "../../utils/TimeUtils";
-import { formatTimeAgo } from "../../utils/TimeUtils";
 
 export const columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
@@ -180,6 +179,25 @@ export const columns = {
 		searchable: true,
 		type: "text",
 		render: renderFunctions.email,
+		...overrides,
+	}),
+
+	isAdmin: (overrides = {}) => ({
+		key: "is_admin",
+		label: "Admin",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.isAdmin,
+		...overrides,
+	}),
+
+	theme: (overrides = {}) => ({
+		key: "theme",
+		label: "Theme",
+		sortable: true,
+		searchable: true,
+		type: "text",
 		...overrides,
 	}),
 

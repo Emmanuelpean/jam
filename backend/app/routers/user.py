@@ -18,6 +18,22 @@ def is_email_whitelisted(email: str) -> bool:
     return email.lower() in ALPHA_WHITELIST
 
 
+@user_router.get("/", response_model=list[schemas.User])
+def get_all_users(
+        current_user: models.User = Depends(oauth2.get_current_user),
+        db: Session = Depends(database.get_db),
+):
+    """Get all users with all their information.
+    :param current_user: The current authenticated user.
+    :param db: The database session."""
+
+    if not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
+
+    users = db.query(models.User).all()
+    return users
+
+
 @user_router.post("/", status_code=201, response_model=schemas.UserOut)
 def create_user(
     user: schemas.UserCreate,
@@ -33,6 +49,7 @@ def create_user(
     if user.email in emails:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
+    # noinspection PyTypeChecker
     if config.settings.signup.lower() == "restricted" and not is_email_whitelisted(user.email):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -41,6 +58,7 @@ def create_user(
 
     # Hash the password and create the user
     user.password = utils.hash_password(user.password)
+    # noinspection PyArgumentList
     new_user = models.User(**user.model_dump())
 
     # Add the user to the database, commit it and refresh to get the user ID
@@ -76,6 +94,7 @@ def update_current_user_profile(
 
     # Check if email is being updated and if it's already taken
     if "email" in user_update and user_update["email"] != current_user.email:
+        # noinspection PyTypeChecker
         existing_user = db.query(models.User).filter(models.User.email == user_update["email"]).first()
         if existing_user:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")

@@ -27,6 +27,25 @@ from app.config import settings
 
 class TestUser:
 
+    def test_get_all_users_admin(self, authorised_clients, test_users) -> None:
+        """Test getting all users."""
+
+        response = authorised_clients[0].get("/users")
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.json()) == len(test_users)
+
+    def test_get_all_users_non_admin(self, authorised_clients, test_users) -> None:
+        """Test getting all users."""
+
+        response = authorised_clients[1].get("/users")
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_get_all_users_unauthorised(self, client, test_users) -> None:
+        """Test getting all users."""
+
+        response = client.get("/users")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
     def test_create_user(self, client) -> None:
         """Test creating a new user."""
 

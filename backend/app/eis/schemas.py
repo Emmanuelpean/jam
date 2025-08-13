@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.schemas import BaseModel, Out, JobOut
+from app.schemas import BaseModel, OwnedOut, Out, JobOut
 
 
 class JobAlertEmail(BaseModel):
@@ -20,7 +20,7 @@ class EmailUpdate(JobAlertEmail):
     external_email_id: str | None = None
 
 
-class JobAlertEmailOut(JobAlertEmail, Out):
+class JobAlertEmailOut(JobAlertEmail, OwnedOut):
     """Email model"""
 
     jobs: list[JobOut]
@@ -49,7 +49,7 @@ class ScrapedJobUpdate(ScrapedJob):
     external_job_id: str | None = None
 
 
-class ScrapedJobOut(ScrapedJob):
+class ScrapedJobOut(ScrapedJob, OwnedOut):
     """Represents scraped job postings from external sources with additional metadata."""
 
     emails: list[JobAlertEmailOut]
@@ -67,7 +67,7 @@ class ServiceLog(BaseModel):
     job_fail_n: int | None = None
 
 
-class ServiceLogOut(ServiceLog):
+class ServiceLogOut(ServiceLog, Out):
     """Represents a log of a service run."""
 
     pass

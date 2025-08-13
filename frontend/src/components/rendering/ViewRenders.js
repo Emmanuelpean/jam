@@ -78,6 +78,19 @@ export const viewFields = {
 		...overrides,
 	}),
 
+	appTheme: (overrides = {}) => ({
+		key: "theme",
+		label: "Theme",
+		...overrides,
+	}),
+
+	isAdmin: (overrides = {}) => ({
+		key: "is_admin",
+		label: "Admin",
+		render: (x) => renderFunctions.isAdmin(x, true),
+		...overrides,
+	}),
+
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
 	location: (overrides = {}) => ({

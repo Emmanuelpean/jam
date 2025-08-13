@@ -208,6 +208,15 @@ export const renderFunctions = {
 		}
 	},
 
+	isAdmin: (item, view = false, key = "is_admin") => {
+		const isAdmin = accessAttribute(item, key);
+		return isAdmin ? (
+			<i className="bi bi-check-circle-fill text-success"></i>
+		) : (
+			<i className="bi bi-x-circle-fill text-danger"></i>
+		);
+	},
+
 	updateType: (item, view = false, key = "type") => {
 		const type = accessAttribute(item, key);
 		if (type) {

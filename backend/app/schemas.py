@@ -10,6 +10,9 @@ class Out(BaseModel):
     id: int
     created_at: datetime
     modified_at: datetime
+
+
+class OwnedOut(Out):
     owner_id: int
 
 
@@ -21,11 +24,8 @@ class UserCreate(BaseModel):
     email: EmailStr
 
 
-class UserOut(BaseModel):
-    id: int
+class UserOut(Out):
     email: EmailStr
-    created_at: datetime
-    modified_at: datetime
     theme: str
     is_admin: bool | None = None
 
@@ -41,6 +41,9 @@ class UserUpdate(BaseModel):
     password: str | None = None
     is_admin: bool | None = None
 
+
+class User(UserCreate, UserOut):
+    pass
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------
 
@@ -63,7 +66,7 @@ class Company(BaseModel):
     url: str | None = None
 
 
-class CompanyOut(Company, Out):
+class CompanyOut(Company, OwnedOut):
     pass
 
 
@@ -78,7 +81,7 @@ class Keyword(BaseModel):
     name: str
 
 
-class KeywordOut(Keyword, Out):
+class KeywordOut(Keyword, OwnedOut):
     pass
 
 
@@ -96,7 +99,7 @@ class Aggregator(BaseModel):
     # job_applications: list[int] | None = None
 
 
-class AggregatorOut(Aggregator, Out):
+class AggregatorOut(Aggregator, OwnedOut):
     pass
 
 
@@ -114,7 +117,7 @@ class Location(BaseModel):
     remote: bool = False
 
 
-class LocationOut(Location, Out):
+class LocationOut(Location, OwnedOut):
     name: str | None = None
 
 
@@ -132,7 +135,7 @@ class File(BaseModel):
     size: int
 
 
-class FileOut(File, Out):
+class FileOut(File, OwnedOut):
     pass
 
 
@@ -157,12 +160,12 @@ class Person(BaseModel):
 
 
 # Simple person schema without interviews/jobs to avoid circular reference
-class PersonSimple(Person, Out):
+class PersonSimple(Person, OwnedOut):
     company: CompanyOut | None = None
     name: str | None = None
 
 
-class PersonOut(Person, Out):
+class PersonOut(Person, OwnedOut):
     company: CompanyOut | None = None
     interviews: list["InterviewSimple"] = []
     jobs: list["JobSimple"] = []
@@ -196,7 +199,7 @@ class Job(BaseModel):
 
 
 # Simple job schema without job_application/contacts to avoid circular reference
-class JobSimple(Job, Out):
+class JobSimple(Job, OwnedOut):
     company: CompanyOut | None = None
     location: LocationOut | None = None
     keywords: list[KeywordOut] = []
@@ -205,7 +208,7 @@ class JobSimple(Job, Out):
     source: AggregatorOut | None = None
 
 
-class JobOut(Job, Out):
+class JobOut(Job, OwnedOut):
     company: CompanyOut | None = None
     location: LocationOut | None = None
     keywords: list[KeywordOut] = []
@@ -239,7 +242,7 @@ class JobApplication(BaseModel):
     cover_letter_id: int | None = None
 
 
-class JobApplicationOut(JobApplication, Out):
+class JobApplicationOut(JobApplication, OwnedOut):
     job: JobSimple | None = None
     aggregator: AggregatorOut | None = None
     interviews: list["InterviewSimple"] = []
@@ -248,7 +251,7 @@ class JobApplicationOut(JobApplication, Out):
     cover_letter: FileOut | None = None
 
 
-class JobApplicationSimple(JobApplication, Out):
+class JobApplicationSimple(JobApplication, OwnedOut):
     job: JobSimple | None = None
     aggregator: AggregatorOut | None = None
     cv: FileOut | None = None
@@ -273,12 +276,12 @@ class Interview(BaseModel):
     interviewers: list[int] | None = None
 
 
-class InterviewSimple(Interview, Out):
+class InterviewSimple(Interview, OwnedOut):
     location: LocationOut | None = None
     interviewers: list["PersonSimple"] = []
 
 
-class InterviewOut(Interview, Out):
+class InterviewOut(Interview, OwnedOut):
     location: LocationOut | None = None
     interviewers: list["PersonSimple"] = []
     job_application: JobApplicationSimple | None = None
@@ -299,11 +302,11 @@ class JobApplicationUpdateIn(BaseModel):
     note: str | None = None
 
 
-class JobApplicationUpdateOut(JobApplicationUpdateIn, Out):
+class JobApplicationUpdateOut(JobApplicationUpdateIn, OwnedOut):
     job_application: JobApplicationOut | None = None
 
 
-class JobApplicationUpdateSimpleOut(JobApplicationUpdateIn, Out):
+class JobApplicationUpdateSimpleOut(JobApplicationUpdateIn, OwnedOut):
     pass
 
 

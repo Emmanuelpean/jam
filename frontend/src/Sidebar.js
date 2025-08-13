@@ -31,7 +31,6 @@ export const Sidebar = ({ onHoverChange }) => {
 
 	const allNavigationItems = [
 		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard" },
-		{ path: "/eis_dashboard", icon: "bi-house-door", text: "EIS Dashboard", adminOnly: true },
 		{ path: "/jobs", text: "Jobs" },
 		{ path: "/jobapplications", text: "Job Applications" },
 		{ path: "/interviews", text: "Interviews" },
@@ -45,6 +44,15 @@ export const Sidebar = ({ onHoverChange }) => {
 				{ path: "/companies", text: "Companies" },
 				{ path: "/aggregators", text: "Aggregators" },
 				{ path: "/keywords", text: "Tags" },
+			],
+		},
+		{
+			text: "Admin",
+			icon: "bi-person-gear",
+			adminOnly: true,
+			submenu: [
+				{ path: "/eis_dashboard", icon: "bi-envelope-arrow-down", text: "EIS Dashboard" },
+				{ path: "/users", icon: "bi-people", text: "Users" },
 			],
 		},
 	];

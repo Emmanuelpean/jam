@@ -132,9 +132,7 @@
 
 .nav-item:hover {
     background-color: #e9ecef;
-    color: #212529;
     text-decoration: none;
-    transform: translateX(2px);
 }
 
 .nav-item.active {
