@@ -29,8 +29,7 @@ export function AuthProvider({ children }) {
 				const userData = await authApi.getCurrentUser(authToken);
 				setCurrentUser({ isLoggedIn: true, ...userData });
 				setIsAdmin(userData.is_admin || false);
-				setUserFetched(true); // Mark as fetched
-				console.log("User data fetched:", userData);
+				setUserFetched(true);
 			} catch (error) {
 				console.error("Failed to fetch user info:", error);
 

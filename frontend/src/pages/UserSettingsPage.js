@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Badge, Button, Card, Col, Container, Form, Row } from "react-bootstrap";
+import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { useLoading } from "../contexts/LoadingContext";
-import { userApi, api } from "../services/Api";
+import { api } from "../services/Api";
 import { isValidTheme, THEMES } from "../utils/Theme";
-import { renderFunctions } from "../components/rendering/Renders";
+import { renderInputField } from "../components/rendering/WidgetRenders";
+import "./UserSettingsPage.css";
+import { getTableIcon } from "../components/rendering/Renders";
 
 const UserSettingsPage = () => {
 	const { currentUser, token } = useAuth();
@@ -16,7 +18,6 @@ const UserSettingsPage = () => {
 		confirmPassword: "",
 		theme: "",
 	});
-	const [message, setMessage] = useState({ type: "", content: "" });
 	const [errors, setErrors] = useState({});
 
 	useEffect(() => {
@@ -45,8 +46,43 @@ const UserSettingsPage = () => {
 		}
 	};
 
+	// Handle immediate theme change
+	const handleThemeChange = async (e) => {
+		const { value: themeKey } = e.target;
+
+		// Update form data
+		setFormData((prev) => ({
+			...prev,
+			theme: themeKey,
+		}));
+
+		document.documentElement.setAttribute("data-theme", themeKey);
+		localStorage.setItem("theme", themeKey);
+
+		try {
+			await api.put("users/me", { theme: themeKey }, token);
+		} catch (error) {}
+	};
+
 	const validateForm = () => {
 		const newErrors = {};
+
+		// Check if user is trying to update anything that requires current password
+		const isUpdatingEmail = formData.email !== currentUser?.email;
+		const isUpdatingPassword = formData.newPassword || formData.confirmPassword;
+
+		// Current password is required if updating email or password
+		if (isUpdatingEmail || isUpdatingPassword) {
+			if (!formData.currentPassword) {
+				if (isUpdatingEmail && isUpdatingPassword) {
+					newErrors.currentPassword = "Current password is required to update email and password";
+				} else if (isUpdatingEmail) {
+					newErrors.currentPassword = "Current password is required to update email address";
+				} else {
+					newErrors.currentPassword = "Current password is required to change password";
+				}
+			}
+		}
 
 		// Email validation
 		if (!formData.email.trim()) {
@@ -56,10 +92,7 @@ const UserSettingsPage = () => {
 		}
 
 		// Password validation (only if changing password)
-		if (formData.newPassword || formData.confirmPassword || formData.currentPassword) {
-			if (!formData.currentPassword) {
-				newErrors.currentPassword = "Current password is required to change password";
-			}
+		if (isUpdatingPassword) {
 			if (!formData.newPassword) {
 				newErrors.newPassword = "New password is required";
 			} else if (formData.newPassword.length < 6) {
@@ -87,30 +120,19 @@ const UserSettingsPage = () => {
 		}
 
 		showLoading("Updating settings...");
-		setMessage({ type: "", content: "" });
 
 		try {
 			const updateData = {
 				email: formData.email,
-				theme: formData.theme,
+				current_password: formData.currentPassword, // Send current password for verification
 			};
 
-			// Only include password if it's being changed
+			// Only include new password if it's being changed
 			if (formData.newPassword) {
 				updateData.password = formData.newPassword;
 			}
 
-			// Use the new API structure - calling the /users/me endpoint directly
-			const updatedUser = await api.put("users/me", updateData, token);
-
-			// Update theme in document
-			document.documentElement.setAttribute("data-theme", formData.theme);
-			localStorage.setItem("theme", formData.theme);
-
-			setMessage({
-				type: "success",
-				content: "Settings updated successfully!",
-			});
+			await api.put("users/me", updateData, token);
 
 			// Clear password fields
 			setFormData((prev) => ({
@@ -119,247 +141,164 @@ const UserSettingsPage = () => {
 				newPassword: "",
 				confirmPassword: "",
 			}));
-
-			// Refresh user data to get the updated information
-			window.location.reload(); // Simple way to refresh user context
 		} catch (error) {
-			console.error("Error updating settings:", error);
-			setMessage({
-				type: "danger",
-				content: error.message || "Failed to update settings. Please try again.",
-			});
 		} finally {
 			hideLoading();
 		}
 	};
 
-	const getThemeDisplay = (themeKey) => {
-		const theme = THEMES[themeKey];
-		return theme ? theme.name : themeKey;
+	const themeField = {
+		name: "theme",
+		type: "select",
+		label: "Application Theme",
+		options: THEMES.map((theme) => ({
+			value: theme.key,
+			label: theme.name,
+		})),
+		placeholder: "Select a theme",
+		isSearchable: true,
 	};
-
-	const getCurrentCSSColors = (themeKey) => {
-		// Temporarily set theme to get colors
-		const originalTheme = document.documentElement.getAttribute("data-theme");
-		document.documentElement.setAttribute("data-theme", themeKey);
-
-		const computedStyle = getComputedStyle(document.documentElement);
-		const colors = {
-			start: computedStyle.getPropertyValue("--primary-start").trim(),
-			mid: computedStyle.getPropertyValue("--primary-mid").trim(),
-			end: computedStyle.getPropertyValue("--primary-end").trim(),
-		};
-
-		// Restore original theme
-		if (originalTheme) {
-			document.documentElement.setAttribute("data-theme", originalTheme);
-		}
-
-		return colors;
-	};
-
-	const renderColorPreview = (themeKey) => {
-		const colors = getCurrentCSSColors(themeKey);
-		return (
-			<div style={{ display: "flex", alignItems: "center", marginRight: "8px" }}>
-				{Object.values(colors).map((color, index) => (
-					<div
-						key={index}
-						style={{
-							backgroundColor: color,
-							width: "12px",
-							height: "12px",
-							borderRadius: "50%",
-							marginRight: index < 2 ? "3px" : "0",
-						}}
-					/>
-				))}
-			</div>
-		);
-	};
-
-	if (!currentUser) {
-		return (
-			<Container className="mt-4">
-				<Alert variant="info">Loading user information...</Alert>
-			</Container>
-		);
-	}
 
 	return (
-		<Container className="mt-4">
+		<div className="settings-wrapper">
 			<Row className="justify-content-center">
-				<Col md={8} lg={6}>
-					<Card>
-						<Card.Header>
-							<h4 className="mb-0">
-								<i className="bi bi-gear me-2"></i>
-								User Settings
-							</h4>
-						</Card.Header>
-						<Card.Body>
-							{message.content && (
-								<Alert
-									variant={message.type}
-									dismissible
-									onClose={() => setMessage({ type: "", content: "" })}
-								>
-									{message.content}
-								</Alert>
-							)}
-
-							{/* Account Information */}
-							<div className="mb-4">
-								<h5 className="text-muted mb-3">
-									<i className="bi bi-person-circle me-2"></i>
-									Account Information
-								</h5>
-								<div className="bg-light p-3 rounded">
-									<Row>
-										<Col sm={4}>
-											<strong>Account Created:</strong>
-										</Col>
-										<Col sm={8}>
-											<Badge bg="secondary">{renderFunctions.createdDate(currentUser)}</Badge>
-										</Col>
-									</Row>
-									<Row className="mt-2">
-										<Col sm={4}>
-											<strong>User ID:</strong>
-										</Col>
-										<Col sm={8}>
-											<Badge bg="info">#{currentUser.id}</Badge>
-										</Col>
-									</Row>
-									{currentUser.is_admin && (
-										<Row className="mt-2">
-											<Col sm={4}>
-												<strong>Role:</strong>
-											</Col>
-											<Col sm={8}>
-												<Badge bg="warning">Administrator</Badge>
-											</Col>
-										</Row>
-									)}
+				<Col xl={6} lg={8} md={10}>
+					<Card className="settings-card border-0 shadow-sm">
+						<Card.Header className="settings-header border-0 p-0">
+							<div className="d-flex align-items-center p-4">
+								<div className="header-icon-wrapper me-3">
+									<i className={`bi ${getTableIcon("user")}`}></i>
+								</div>
+								<div>
+									<h4 className="mb-0 fw-bold text-dark">User Settings</h4>
+									<small className="text-muted">Manage your account preferences</small>
 								</div>
 							</div>
+						</Card.Header>
 
-							<Form onSubmit={handleSubmit}>
-								{/* Email Settings */}
-								<div className="mb-4">
-									<h5 className="text-muted mb-3">
-										<i className="bi bi-envelope me-2"></i>
-										Email Settings
-									</h5>
-									<Form.Group className="mb-3">
-										<Form.Label>Email Address</Form.Label>
-										<Form.Control
-											type="email"
-											name="email"
-											value={formData.email}
-											onChange={handleInputChange}
-											isInvalid={!!errors.email}
-											placeholder="Enter your email"
-										/>
-										<Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
-									</Form.Group>
-								</div>
-
-								{/* Password Settings */}
-								<div className="mb-4">
-									<h5 className="text-muted mb-3">
-										<i className="bi bi-shield-lock me-2"></i>
-										Password Settings
-									</h5>
-									<div className="text-muted small mb-3">
-										<i className="bi bi-info-circle me-1"></i>
-										Leave password fields empty if you don't want to change your password.
-									</div>
-
-									<Form.Group className="mb-3">
-										<Form.Label>Current Password</Form.Label>
+						<Card.Body className="p-0">
+							<Form onSubmit={handleSubmit} className="p-4">
+								<Col md={12} className="mb-3">
+									<Form.Group className="form-group-enhanced">
+										<Form.Label className="form-label-enhanced">Current Password</Form.Label>
 										<Form.Control
 											type="password"
 											name="currentPassword"
 											value={formData.currentPassword}
 											onChange={handleInputChange}
 											isInvalid={!!errors.currentPassword}
-											placeholder="Enter current password to change"
+											placeholder="Enter your current password"
+											className="form-control-enhanced"
 										/>
 										<Form.Control.Feedback type="invalid">
 											{errors.currentPassword}
 										</Form.Control.Feedback>
+										<Form.Text className="text-muted">
+											Required to change your email or password
+										</Form.Text>
 									</Form.Group>
+								</Col>
+								{/* Account Settings Section */}
+								<div className="settings-section">
+									<div className="section-header mb-4">
+										<h5 className="section-title">
+											<i className="bi bi-envelope me-2 text-primary"></i>
+											Account Settings
+										</h5>
+									</div>
 
-									<Form.Group className="mb-3">
-										<Form.Label>New Password</Form.Label>
+									<Form.Group className="form-group-enhanced">
+										<Form.Label className="form-label-enhanced">Email Address</Form.Label>
 										<Form.Control
-											type="password"
-											name="newPassword"
-											value={formData.newPassword}
+											type="email"
+											name="email"
+											value={formData.email}
 											onChange={handleInputChange}
-											isInvalid={!!errors.newPassword}
-											placeholder="Enter new password (min. 6 characters)"
+											isInvalid={!!errors.email}
+											placeholder="Enter your email address"
+											className="form-control-enhanced"
 										/>
-										<Form.Control.Feedback type="invalid">
-											{errors.newPassword}
-										</Form.Control.Feedback>
-									</Form.Group>
-
-									<Form.Group className="mb-3">
-										<Form.Label>Confirm New Password</Form.Label>
-										<Form.Control
-											type="password"
-											name="confirmPassword"
-											value={formData.confirmPassword}
-											onChange={handleInputChange}
-											isInvalid={!!errors.confirmPassword}
-											placeholder="Confirm your new password"
-										/>
-										<Form.Control.Feedback type="invalid">
-											{errors.confirmPassword}
-										</Form.Control.Feedback>
+										<Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
 									</Form.Group>
 								</div>
 
-								{/* Theme Settings */}
-								<div className="mb-4">
-									<h5 className="text-muted mb-3">
-										<i className="bi bi-palette me-2"></i>
-										Theme Settings
-									</h5>
-									<Form.Group className="mb-3">
-										<Form.Label>Application Theme</Form.Label>
-										<Form.Select
-											name="theme"
-											value={formData.theme}
-											onChange={handleInputChange}
-											isInvalid={!!errors.theme}
-										>
-											{Object.entries(THEMES).map(([key, theme]) => (
-												<option key={key} value={key}>
-													{theme.name} - {theme.description}
-												</option>
-											))}
-										</Form.Select>
-										<Form.Control.Feedback type="invalid">{errors.theme}</Form.Control.Feedback>
-									</Form.Group>
+								{/* Security Section */}
+								<div className="settings-section">
+									<div className="section-header mb-4">
+										<h5 className="section-title">
+											<i className="bi bi-shield-lock me-2 text-primary"></i>
+											Security
+										</h5>
+									</div>
 
-									{/* Theme Preview */}
-									<div className="mt-2">
-										<small className="text-muted">Preview:</small>
-										<div className="d-flex align-items-center mt-1">
-											{renderColorPreview(formData.theme)}
-											<span className="text-muted">{getThemeDisplay(formData.theme)}</span>
-										</div>
+									<div className="password-hint mb-4"></div>
+
+									<Row>
+										<Col md={6} className="mb-3">
+											<Form.Group className="form-group-enhanced">
+												<Form.Label className="form-label-enhanced">New Password</Form.Label>
+												<Form.Control
+													type="password"
+													name="newPassword"
+													value={formData.newPassword}
+													onChange={handleInputChange}
+													isInvalid={!!errors.newPassword}
+													placeholder="Enter new password (optional)"
+													className="form-control-enhanced"
+												/>
+												<Form.Control.Feedback type="invalid">
+													{errors.newPassword}
+												</Form.Control.Feedback>
+											</Form.Group>
+										</Col>
+										<Col md={6} className="mb-3">
+											<Form.Group className="form-group-enhanced">
+												<Form.Label className="form-label-enhanced">
+													Confirm New Password
+												</Form.Label>
+												<Form.Control
+													type="password"
+													name="confirmPassword"
+													value={formData.confirmPassword}
+													onChange={handleInputChange}
+													isInvalid={!!errors.confirmPassword}
+													placeholder="Confirm new password"
+													className="form-control-enhanced"
+													disabled={!formData.newPassword}
+												/>
+												<Form.Control.Feedback type="invalid">
+													{errors.confirmPassword}
+												</Form.Control.Feedback>
+											</Form.Group>
+										</Col>
+									</Row>
+								</div>
+
+								{/* Appearance Section */}
+								<div className="settings-section">
+									<div className="section-header mb-4">
+										<h5 className="section-title">
+											<i className="bi bi-palette me-2 text-primary"></i>
+											Appearance
+										</h5>
+									</div>
+
+									<div className="form-group-enhanced">
+										<Form.Label className="form-label-enhanced">Application Theme</Form.Label>
+										{renderInputField(
+											themeField,
+											formData,
+											handleThemeChange, // Use the custom theme handler
+											errors,
+										)}
 									</div>
 								</div>
 
 								{/* Submit Button */}
-								<div className="d-grid">
-									<Button variant="primary" type="submit">
+								<div className="settings-actions">
+									<Button variant="primary" type="submit" size="lg" className="save-button w-100">
 										<i className="bi bi-check-circle me-2"></i>
-										Save Settings
+										Save Account Changes
 									</Button>
 								</div>
 							</Form>
@@ -367,7 +306,7 @@ const UserSettingsPage = () => {
 					</Card>
 				</Col>
 			</Row>
-		</Container>
+		</div>
 	);
 };
 

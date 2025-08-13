@@ -114,7 +114,7 @@ export const Sidebar = ({ onHoverChange }) => {
 
 		if (token) {
 			try {
-				await authApi.updateUserTheme(themeKey, token);
+				await authApi.updateCurrentUser({ theme: themeKey }, token);
 			} catch (error) {
 				console.error("Error saving theme:", error);
 			}

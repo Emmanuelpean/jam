@@ -192,10 +192,6 @@ export const authApi = {
 	updateCurrentUser: async (data, token) => {
 		return api.put("users/me", data, token);
 	},
-
-	updateUserTheme: async (theme, token) => {
-		return api.put("users/me", { theme }, token);
-	},
 };
 
 export { api };
