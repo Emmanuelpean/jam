@@ -18,7 +18,7 @@ export const UserManagementPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("users");
+	} = useTableData("users", [], {}, { key: "id", direction: "asc" });
 
 	const tableColumns = [columns.id(), columns.email(), columns.appTheme(), columns.isAdmin(), columns.createdAt()];
 

@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { ReactComponent as JamLogo } from "./assets/Logo.svg";
 import { authApi } from "./services/api";
 import "./Sidebar.css";
 import { getTableIcon } from "./components/rendering/Renders";
-import { THEMES, DEFAULT_THEME, isValidTheme } from "./utils/Theme";
+import { DEFAULT_THEME, isValidTheme, THEMES } from "./utils/Theme";
 
 export const Sidebar = ({ onHoverChange }) => {
 	const location = useLocation();
@@ -41,7 +41,7 @@ export const Sidebar = ({ onHoverChange }) => {
 			adminOnly: true,
 			submenu: [
 				{ path: "/eis_dashboard", icon: "bi-envelope-arrow-down", text: "EIS Dashboard" },
-				{ path: "/users", icon: "bi-people", text: "Users" },
+				{ path: "/users", text: "Users" },
 			],
 		},
 	];

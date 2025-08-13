@@ -1,6 +1,3 @@
-// Base configuration
-// noinspection JSUnusedGlobalSymbols
-
 import { accessAttribute } from "../utils/Utils";
 
 const API_BASE_URL = "http://localhost:8000";

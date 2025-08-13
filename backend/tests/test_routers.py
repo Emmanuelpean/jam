@@ -344,7 +344,9 @@ class TestGeneralRouter:
         assert len(interviews) == 12
         assert all({d["data"]["owner_id"] == test_users[0].id for d in data})
 
-    def test_get_all_updates_with_interviews_updates(self, test_users, authorised_clients, test_interviews, test_job_application_updates) -> None:
+    def test_get_all_updates_with_interviews_updates(
+        self, test_users, authorised_clients, test_interviews, test_job_application_updates
+    ) -> None:
         """Test get_all_updates returns interviews with attached job application data"""
 
         response = authorised_clients[0].get("/latest_updates")

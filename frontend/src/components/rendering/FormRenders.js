@@ -149,49 +149,6 @@ export const useFormOptions = (requiredOptions = []) => {
 		fetchOptions();
 	}, [token, JSON.stringify(requiredOptions)]);
 
-	// Helper function to refresh a specific option type
-	const refreshOptions = async (type) => {
-		if (!token) return;
-
-		try {
-			let data;
-			switch (type) {
-				case "companies":
-					data = await companiesApi.getAll(token);
-					setCompanies(apiHelpers.toSelectOptions(data));
-					break;
-				case "locations":
-					data = await locationsApi.getAll(token);
-					setLocations(apiHelpers.toSelectOptions(data));
-					break;
-				case "keywords":
-					data = await keywordsApi.getAll(token);
-					setKeywords(apiHelpers.toSelectOptions(data));
-					break;
-				case "persons":
-					data = await personsApi.getAll(token);
-					setPersons(apiHelpers.toSelectOptions(data));
-					break;
-				case "aggregators":
-					data = await aggregatorsApi.getAll(token);
-					setAggregators(apiHelpers.toSelectOptions(data));
-					break;
-				case "jobs":
-					data = await jobsApi.getAll(token);
-					setJobs(apiHelpers.toSelectOptions(data));
-					break;
-				case "jobApplications":
-					data = await jobApplicationsApi.getAll(token);
-					setJobApplications(apiHelpers.toSelectOptions(data, "job"));
-					break;
-				default:
-					console.warn(`Unknown option type: ${type}`);
-			}
-		} catch (err) {
-			console.error(`Error refreshing ${type}:`, err);
-		}
-	};
-
 	// Modal handlers
 	const openCompanyModal = () => setShowCompanyModal(true);
 	const closeCompanyModal = () => setShowCompanyModal(false);
@@ -435,6 +392,14 @@ export const formFields = {
 		name: "is_admin",
 		label: "Admin",
 		type: "checkbox",
+		...overrides,
+	}),
+
+	password: (overrides = {}) => ({
+		name: "password",
+		label: "Password",
+		type: "password",
+		required: true,
 		...overrides,
 	}),
 

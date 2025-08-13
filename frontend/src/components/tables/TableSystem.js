@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Button, Form } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../services/api";
 import { renderFieldValue, getTableIcon } from "../rendering/Renders";
@@ -13,13 +12,13 @@ import { pluralize } from "../../utils/StringUtils";
 /**
  * Custom hook for managing table data with CRUD operations
  */
-export const useTableData = (endpoint, dependencies = [], queryParams = {}) => {
+export const useTableData = (endpoint, dependencies = [], queryParams = {}, customSortConfig = {}) => {
 	const { token } = useAuth();
 
 	const [data, setData] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
-	const [sortConfig, setSortConfig] = useState({ key: "created_at", direction: "desc" });
+	const [sortConfig, setSortConfig] = useState(customSortConfig || { key: "created_at", direction: "desc" });
 	const [searchTerm, setSearchTerm] = useState("");
 
 	// Memoize the fetch function to prevent unnecessary re-renders

@@ -2,7 +2,7 @@ import React from "react";
 import GenericModal from "./GenericModal";
 import { formFields } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
-import { authApi, keywordsApi, userApi } from "../../services/api";
+import { userApi } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import "../Auth/Login.css";
 
@@ -19,10 +19,14 @@ export const UserModal = ({
 	const { token } = useAuth();
 
 	const formFieldsArray = [
-		[formFields.email({ required: submode === "add" }), formFields.appTheme()],
+		[
+			...(submode === "add"
+				? [formFields.email({ required: true }), formFields.password({ required: true })]
+				: [formFields.email({ required: submode === "add" })]),
+		],
+		formFields.appTheme(),
 		formFields.isAdmin(),
 	];
-
 	const viewFieldsArray = [[viewFields.email(), viewFields.appTheme()], viewFields.isAdmin()];
 
 	const fields = {
@@ -52,7 +56,6 @@ export const UserModal = ({
 			is_admin: data.is_admin || false,
 		};
 
-		// Only include password if it's provided (for new users or updates)
 		if (data.password) {
 			transformed.password = data.password;
 		}
