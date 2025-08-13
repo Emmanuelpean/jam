@@ -20,6 +20,7 @@ import JobApplicationUpdatesPage from "./pages/JobApplicationUpdatesPage";
 import JobSearchDashboard from "./pages/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
 import { UserManagementPage } from "./pages/UserManagementPage";
+import UserSettingsPage from "./pages/UserSettingsPage";
 
 function AppLayout({ children }) {
 	const { isLoading, loadingMessage } = useLoading();
@@ -177,6 +178,14 @@ function App() {
 								element={
 									<ProtectedRoute>
 										<UserManagementPage />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/settings"
+								element={
+									<ProtectedRoute>
+										<UserSettingsPage />
 									</ProtectedRoute>
 								}
 							/>

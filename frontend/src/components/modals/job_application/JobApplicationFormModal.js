@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GenericModal from "../GenericModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
-import { aggregatorsApi, apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/api";
+import { aggregatorsApi, apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/Api";
 import { fileToBase64 } from "../../../utils/FileUtils";
 import InterviewsTable from "../../tables/InterviewTable";
 import { formFields } from "../../rendering/FormRenders";
@@ -264,7 +264,7 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			// Check for existing job application if creating new and job_id is provided
 			if (!isEdit && transformedData.job_id) {
 				try {
-					const { jobApplicationsApi } = await import("../../../services/api");
+					const { jobApplicationsApi } = await import("../../../services/Api");
 					const existingApps = await jobApplicationsApi.getAll(token, { job_id: transformedData.job_id });
 
 					if (existingApps && existingApps.length > 0) {

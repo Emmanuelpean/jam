@@ -2,7 +2,7 @@ import React from "react";
 import GenericModal from "./GenericModal";
 import { formFields, useFormOptions } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
-import { personsApi } from "../../services/api";
+import { personsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 
 export const PersonModal = ({

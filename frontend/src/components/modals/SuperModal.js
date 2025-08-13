@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GenericModal from "./GenericModal";
 import useGenericAlert from "../../hooks/useGenericAlert";
-import { filesApi } from "../../services/api";
+import { filesApi } from "../../services/Api";
 import { fileToBase64 } from "../../utils/FileUtils";
 import { formFields, useFormOptions } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";

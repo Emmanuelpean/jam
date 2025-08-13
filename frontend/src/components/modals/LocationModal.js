@@ -2,7 +2,7 @@ import React from "react";
 import GenericModal from "./GenericModal";
 import { formFields, useCountries } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
-import { locationsApi } from "../../services/api";
+import { locationsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 
 export const LocationModal = ({

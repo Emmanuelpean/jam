@@ -2,7 +2,7 @@ import React from "react";
 import GenericModal from "./GenericModal";
 import { formFields } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
-import { userApi } from "../../services/api";
+import { userApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import "../Auth/Login.css";
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Badge, Button, ButtonGroup, Card, Col, Container, Form, Row, Table } from "react-bootstrap";
 import { ResponsiveBar } from "@nivo/bar";
 import { ResponsiveLine } from "@nivo/line";
-import { serviceLogApi } from "../services/api";
+import { serviceLogApi } from "../services/Api";
 import { useAuth } from "../contexts/AuthContext";
 import { formatTimeAgo } from "../utils/TimeUtils";
 import { barChartProps, lineChartProps } from "../components/charts/Themes";

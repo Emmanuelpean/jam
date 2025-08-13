@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue } from "../rendering/Renders";
 import { renderInputField } from "../rendering/WidgetRenders";
-import { api } from "../../services/api";
+import { api } from "../../services/Api";
 import { viewFields as viewFieldsLib } from "../rendering/ViewRenders";
 
 const DEFAULT_ICONS = {

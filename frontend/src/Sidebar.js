@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { ReactComponent as JamLogo } from "./assets/Logo.svg";
-import { authApi } from "./services/api";
+import { authApi } from "./services/Api";
 import "./Sidebar.css";
 import { getTableIcon } from "./components/rendering/Renders";
 import { DEFAULT_THEME, isValidTheme, THEMES } from "./utils/Theme";
@@ -342,9 +342,9 @@ export const Sidebar = ({ onHoverChange }) => {
 			</nav>
 			<nav className="sidebar-nav" style={{ flex: "none", paddingTop: "0", paddingBottom: "0.2rem" }}>
 				<Link
-					key="/user"
-					to="/user"
-					className={`nav-item submenu-item ${isActive("/user") ? "active" : ""}`}
+					key="/settings"
+					to="/settings"
+					className={`nav-item submenu-item ${isActive("/settings") ? "active" : ""}`}
 					title="User Settings"
 				>
 					<span className="nav-icon">

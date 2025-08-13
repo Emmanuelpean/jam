@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { api } from "../../services/api";
+import { api } from "../../services/Api";
 import { renderFieldValue, getTableIcon } from "../rendering/Renders";
 import { accessAttribute } from "../../utils/Utils";
 import AlertModal from "../modals/alert/AlertModal";

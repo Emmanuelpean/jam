@@ -9,7 +9,7 @@ import {
 	keywordsApi,
 	locationsApi,
 	personsApi,
-} from "../../services/api";
+} from "../../services/Api";
 import { fetchCountries } from "../../utils/CountryUtils";
 import { CompanyFormModal } from "../modals/CompanyModal";
 import { LocationFormModal } from "../modals/LocationModal";

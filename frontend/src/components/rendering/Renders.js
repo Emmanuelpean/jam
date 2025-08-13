@@ -7,7 +7,7 @@ import { JobApplicationViewModal } from "../modals/job_application/JobApplicatio
 import { AggregatorViewModal } from "../modals/AggregatorModal";
 import { JobViewModal } from "../modals/job/JobModal";
 import { accessAttribute } from "../../utils/Utils";
-import { filesApi } from "../../services/api";
+import { filesApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import InterviewsTable from "../tables/InterviewTable";
 import JobApplicationUpdateTable from "../tables/JobApplicationUpdateTable";

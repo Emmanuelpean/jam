@@ -2,7 +2,7 @@ import React from "react";
 import GenericModal from "./GenericModal";
 import { formFields } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
-import { keywordsApi } from "../../services/api";
+import { keywordsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 
 export const KeywordModal = ({

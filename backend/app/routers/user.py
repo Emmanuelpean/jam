@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
-from app import utils, models, oauth2, database, schemas, config
+from app import utils, models, oauth2, database, schemas
 
 user_router = APIRouter(prefix="/users", tags=["users"])
 
@@ -23,13 +23,11 @@ def get_all_users(
     if not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
 
-    # Start with base query
     # noinspection PyTypeChecker
     query = db.query(models.User)
 
-    # Get all query parameters except 'limit'
+    # Get all query parameters
     filter_params = dict(request.query_params)
-    filter_params.pop("limit", None)  # Remove limit from filters
 
     # Apply filters for each parameter that matches a table column
     for param_name, param_value in filter_params.items():
@@ -64,7 +62,7 @@ def get_all_users(
 
 @user_router.get("/me", response_model=schemas.UserOut)
 def get_current_user_profile(
-    current_user: models.User = Depends(oauth2.get_current_user),
+    current_user: models.User = Depends(oauth2.get_current_user)
 ):
     """Get the current user's profile.
     :param current_user: The current authenticated user."""
@@ -82,7 +80,24 @@ def get_one_user(
     if not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
 
-    return db.query(models.User).filter(models.User.id == entry_id).first()
+    user = db.query(models.User).filter(models.User.id == entry_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@user_router.put("/me", response_model=schemas.UserOut)
+def update_current_user_profile(
+        user_update: schemas.UserUpdate,
+        current_user: models.User = Depends(oauth2.get_current_user),
+        db: Session = Depends(database.get_db),
+):
+    """Update the current user's profile.
+    :param user_update: The user update data.
+    :param current_user: The current authenticated user.
+    :param db: The database session."""
+
+    return update_user(current_user.id, user_update, current_user, db)
 
 
 @user_router.put("/{entry_id}", response_model=schemas.UserOut)
@@ -152,60 +167,3 @@ def create_user(
     db.refresh(new_user)
 
     return new_user
-
-
-@user_router.put("/me", response_model=schemas.UserOut)
-def update_current_user_profile(
-    user_update: schemas.UserUpdate,
-    current_user: models.User = Depends(oauth2.get_current_user),
-    db: Session = Depends(database.get_db),
-):
-    """Update the current user's profile.
-    :param user_update: The user update data.
-    :param current_user: The current authenticated user.
-    :param db: The database session."""
-
-    user_update = user_update.model_dump(exclude_defaults=True)
-
-    # Check if email is being updated and if it's already taken
-    if "email" in user_update and user_update["email"] != current_user.email:
-        # noinspection PyTypeChecker
-        existing_user = db.query(models.User).filter(models.User.email == user_update["email"]).first()
-        if existing_user:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-
-    # Validate theme if provided
-    if "theme" in user_update:
-        valid_themes = ["strawberry", "blueberry", "raspberry", "mixed-berry", "forest-berry", "blackberry"]
-        if user_update["theme"] not in valid_themes:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid theme. Must be one of: {', '.join(valid_themes)}",
-            )
-
-    # Hash password if it's being updated
-    if "password" in user_update:
-        user_update["password"] = utils.hash_password(user_update["password"])
-
-    # Apply updates
-    for field, value in user_update.items():
-        setattr(current_user, field, value)
-
-    db.commit()
-    db.refresh(current_user)
-    return current_user
-
-
-@user_router.get("/{id}", response_model=schemas.UserOut)
-def get_user(
-    user_id: int,
-    db: Session = Depends(database.get_db),
-):
-    """Get a user by ID.
-    :param user_id: The user ID.
-    :param db: The database session."""
-
-    user = db.query(models.User).filter(user_id == models.User.id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user

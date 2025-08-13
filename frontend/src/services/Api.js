@@ -137,30 +137,7 @@ class ApiService {
 	}
 }
 
-// Create API service instance
 const api = new ApiService();
-
-// Authentication API
-export const authApi = {
-	login: async (email, password) => {
-		const formData = new FormData();
-		formData.append("username", email);
-		formData.append("password", password);
-		return api.postFormData("login", formData);
-	},
-
-	register: async (email, password) => {
-		return api.post("users/", { email, password });
-	},
-
-	getCurrentUser: async (token) => {
-		return api.get("users/me", token);
-	},
-
-	updateUserTheme: async (theme, token) => {
-		return api.put("users/me", { theme }, token);
-	},
-};
 
 const createCrudApi = (endpoint) => ({
 	getAll: (token, queryParams = null) => {
@@ -197,6 +174,35 @@ export const jobAlertEmailApi = createCrudApi("jobalertemails");
 export const scrapedJobApi = createCrudApi("scrapedjobs");
 export const serviceLogApi = createCrudApi("servicelogs");
 export const userApi = createCrudApi("users");
+export const filesApi = {
+	...createCrudApi("files"),
+
+	download: (id, filename, token) => api.downloadFile(`files/${id}/download`, filename, token),
+};
+export const authApi = {
+	login: async (email, password) => {
+		const formData = new FormData();
+		formData.append("username", email);
+		formData.append("password", password);
+		return api.postFormData("login", formData);
+	},
+
+	register: async (email, password) => {
+		return api.post("users/", { email, password });
+	},
+
+	getCurrentUser: async (token) => {
+		return api.get("users/me", token);
+	},
+
+	updateCurrentUser: async (data, token) => {
+		return api.put("users/me", data, token);
+	},
+
+	updateUserTheme: async (theme, token) => {
+		return api.put("users/me", { theme }, token);
+	},
+};
 
 export { api, API_BASE_URL };
 
@@ -239,33 +245,5 @@ export const apiHelpers = {
 		} catch (error) {
 			return apiHelpers.handleError(error);
 		}
-	},
-};
-
-export const filesApi = {
-	...createCrudApi("files"),
-
-	// Method that returns blob for manual handling
-	downloadBlob: (id, token) => api.get(`files/${id}/download`, token, { responseType: "blob" }),
-
-	// Method that directly triggers browser download
-	download: (id, filename, token) => api.downloadFile(`files/${id}/download`, filename, token),
-};
-
-export const themesApi = {
-	getAll: () => {
-		// This could be a static API endpoint or just return the themes
-		return Promise.resolve([
-			{ key: "strawberry", name: "Strawberry", description: "Sweet and vibrant" },
-			{ key: "blueberry", name: "Blueberry", description: "Deep and rich" },
-			{ key: "raspberry", name: "Raspberry", description: "Tart and bold" },
-			{ key: "mixed-berry", name: "Mixed Berry", description: "Complex and layered" },
-			{ key: "forest-berry", name: "Forest Berry", description: "Natural and earthy" },
-			{ key: "blackberry", name: "Blackberry", description: "Deep and sophisticated" },
-		]);
-	},
-	getRandomTheme: async () => {
-		const themes = await themesApi.getAll();
-		return themes[Math.floor(Math.random() * themes.length)];
 	},
 };
