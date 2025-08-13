@@ -7,3 +7,11 @@ export const accessAttribute = (item, key) => {
 	}
 	return obj;
 };
+
+export const toSelectOptions = (data, valueKey = "id", labelKey = "name") => {
+	return data.map((item) => ({
+		value: accessAttribute(item, valueKey),
+		label: accessAttribute(item, labelKey),
+		data: item,
+	}));
+};

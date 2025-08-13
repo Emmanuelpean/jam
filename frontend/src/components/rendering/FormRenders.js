@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import {
 	aggregatorsApi,
-	apiHelpers,
 	companiesApi,
 	jobApplicationsApi,
 	jobsApi,
@@ -19,6 +18,7 @@ import { AggregatorFormModal } from "../modals/AggregatorModal";
 import { JobFormModal } from "../modals/job/JobModal";
 import { JobApplicationFormModal } from "../modals/job_application/JobApplicationModal";
 import { THEMES } from "../../utils/Theme";
+import { toSelectOptions } from "../../utils/Utils";
 
 // Hook for country loading that can be used by components
 export const useCountries = () => {
@@ -116,25 +116,25 @@ export const useFormOptions = (requiredOptions = []) => {
 					const type = optionTypes[index];
 					switch (type) {
 						case "companies":
-							setCompanies(apiHelpers.toSelectOptions(data));
+							setCompanies(toSelectOptions(data));
 							break;
 						case "locations":
-							setLocations(apiHelpers.toSelectOptions(data));
+							setLocations(toSelectOptions(data));
 							break;
 						case "keywords":
-							setKeywords(apiHelpers.toSelectOptions(data));
+							setKeywords(toSelectOptions(data));
 							break;
 						case "persons":
-							setPersons(apiHelpers.toSelectOptions(data));
+							setPersons(toSelectOptions(data));
 							break;
 						case "aggregators":
-							setAggregators(apiHelpers.toSelectOptions(data));
+							setAggregators(toSelectOptions(data));
 							break;
 						case "jobs":
-							setJobs(apiHelpers.toSelectOptions(data));
+							setJobs(toSelectOptions(data));
 							break;
 						case "jobApplications":
-							setJobApplications(apiHelpers.toSelectOptions(data, "id", "job.name"));
+							setJobApplications(toSelectOptions(data, "id", "job.name"));
 							break;
 					}
 				});

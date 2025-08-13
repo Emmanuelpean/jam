@@ -1,14 +1,10 @@
-import { accessAttribute } from "../utils/Utils";
-
 const API_BASE_URL = "http://localhost:8000";
 
-// Helper function to get auth headers
 const getAuthHeaders = (token) => ({
 	"Content-Type": "application/json",
 	...(token && { Authorization: `Bearer ${token}` }),
 });
 
-// Helper function to handle API responses
 const handleResponse = async (response) => {
 	if (!response.ok) {
 		const errorData = await response.json().catch(() => ({}));
@@ -38,7 +34,6 @@ const handleResponse = async (response) => {
 	}
 };
 
-// Generic API service class
 class ApiService {
 	constructor(baseUrl = API_BASE_URL) {
 		this.baseUrl = baseUrl;
@@ -161,7 +156,6 @@ const createCrudApi = (endpoint) => ({
 	delete: (id, token) => api.delete(`${endpoint}/${id}`, token),
 });
 
-// Create all your APIs with the factory
 export const jobsApi = createCrudApi("jobs");
 export const companiesApi = createCrudApi("companies");
 export const locationsApi = createCrudApi("locations");
@@ -204,46 +198,4 @@ export const authApi = {
 	},
 };
 
-export { api, API_BASE_URL };
-
-// Helper functions for common patterns
-export const apiHelpers = {
-	// Convert data to select options
-	toSelectOptions: (data, valueKey = "id", labelKey = "name") => {
-		return data.map((item) => ({
-			value: accessAttribute(item, valueKey),
-			label: accessAttribute(item, labelKey),
-			data: item,
-		}));
-	},
-
-	// Handle API errors consistently
-	handleError: (error, defaultMessage = "An error occurred") => {
-		console.error("API Error:", error);
-		return {
-			success: false,
-			error: error.message || defaultMessage,
-			status: error.status,
-		};
-	},
-
-	// Handle API success consistently
-	handleSuccess: (data, message = "Operation successful") => {
-		return {
-			success: true,
-			data,
-			message,
-		};
-	},
-
-	// Batch API calls
-	batchGet: async (endpoints, token) => {
-		try {
-			const promises = endpoints.map((endpoint) => api.get(endpoint, token));
-			const results = await Promise.all(promises);
-			return apiHelpers.handleSuccess(results);
-		} catch (error) {
-			return apiHelpers.handleError(error);
-		}
-	},
-};
+export { api };

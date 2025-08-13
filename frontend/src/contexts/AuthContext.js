@@ -65,20 +65,23 @@ export function AuthProvider({ children }) {
 		}
 	}, []); // Remove fetchUserInfo from dependencies to prevent re-runs
 
-	// Login function
 	const login = async (email, password) => {
 		try {
 			const data = await authApi.login(email, password);
 			localStorage.setItem("token", data.access_token);
 			setToken(data.access_token);
-			setUserFetched(false); // Reset the flag for new login
+			setUserFetched(false);
 
 			// Fetch user info after successful login
 			await fetchUserInfo(data.access_token);
 
 			return { success: true };
 		} catch (error) {
-			return apiHelpers.handleError(error, "Login failed");
+			return {
+				success: false,
+				error: "Login failed. Please check your credentials and try again.",
+				status: error.status,
+			};
 		}
 	};
 
@@ -88,7 +91,11 @@ export function AuthProvider({ children }) {
 			await authApi.register(email, password);
 			return { success: true };
 		} catch (error) {
-			return apiHelpers.handleError(error, "Registration failed");
+			return {
+				success: false,
+				error: "Registration failed. Please try again later.",
+				status: error.status,
+			};
 		}
 	};
 

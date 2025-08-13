@@ -8,6 +8,7 @@ import { formFields } from "../../rendering/FormRenders";
 import { useAuth } from "../../../contexts/AuthContext";
 import AlertModal from "../alert/AlertModal";
 import { formatDateTime } from "../../../utils/TimeUtils";
+import { toSelectOptions } from "../../../utils/Utils";
 
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
 	const { token } = useAuth();
@@ -60,8 +61,8 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 				// Filter jobs: show only those without job_application + the current job (if editing)
 				const availableJobs = jobsData.filter((job) => !job.job_application || job.id === currentJobId);
 
-				setJobOptions(apiHelpers.toSelectOptions(availableJobs));
-				setAggregatorOptions(apiHelpers.toSelectOptions(aggregatorsData));
+				setJobOptions(toSelectOptions(availableJobs));
+				setAggregatorOptions(toSelectOptions(aggregatorsData));
 			} catch (error) {
 				console.error("Error fetching options:", error);
 			}
