@@ -54,6 +54,40 @@ const CustomDropdownIndicator = (props) => {
 	);
 };
 
+// Password Input Component
+const PasswordInput = ({ field, value, handleChange, error }) => {
+	const [showPassword, setShowPassword] = useState(false);
+
+	return (
+		<>
+			<div className="position-relative">
+				<Form.Control
+					type={showPassword ? "text" : "password"}
+					id={field.name}
+					name={field.name}
+					placeholder={field.placeholder || "Enter your password"}
+					value={value || ""}
+					onChange={handleChange}
+					size={field.size || "lg"}
+					isInvalid={!!error}
+					autoComplete={field.autoComplete || "current-password"}
+					style={{ paddingRight: "50px" }}
+				/>
+				<button
+					type="button"
+					className={`password-toggle-btn ${showPassword ? "" : "show-slash"}`}
+					onClick={() => setShowPassword(!showPassword)}
+					tabIndex={field.tabIndex || 0}
+				>
+					<i className="bi bi-eye"></i>
+				</button>
+			</div>
+			{error && <div className="invalid-feedback d-block">{displayError(error)}</div>}
+			{field.helpText && !error && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+		</>
+	);
+};
+
 const renderTextarea = (field, value, handleChange, error) => {
 	return (
 		<>
@@ -207,6 +241,11 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 	);
 };
 
+// Render password input widget with visibility toggle
+const renderPasswordInput = (field, value, handleChange, error) => {
+	return <PasswordInput field={field} value={value} handleChange={handleChange} error={error} />;
+};
+
 // Render drag-drop widget
 const renderDragDrop = (field) => {
 	return (
@@ -282,6 +321,9 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 
 		case "datetime-local":
 			return renderDateTimeLocal(field, value, handleChange, error);
+
+		case "password":
+			return renderPasswordInput(field, value, handleChange, error);
 
 		case "drag-drop":
 			return renderDragDrop(field);

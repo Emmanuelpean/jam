@@ -278,7 +278,7 @@
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1;
     border-radius: 1px;
-    margin-top: -1px; /* Adjust vertical position */
+    margin-top: -0.5px;
 }
 
 .password-toggle-btn.show-slash::before {

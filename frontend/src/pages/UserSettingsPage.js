@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
-import { useLoading } from "../contexts/LoadingContext";
 import { api } from "../services/Api";
-import { isValidTheme, THEMES } from "../utils/Theme";
+import { isValidTheme, getThemeByKey } from "../utils/Theme";
 import { renderInputField } from "../components/rendering/WidgetRenders";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../components/rendering/Renders";
 
 const UserSettingsPage = () => {
 	const { currentUser, token } = useAuth();
-	const { showLoading, hideLoading } = useLoading();
 	const [formData, setFormData] = useState({
 		email: "",
 		currentPassword: "",
@@ -61,7 +59,13 @@ const UserSettingsPage = () => {
 
 		try {
 			await api.put("users/me", { theme: themeKey }, token);
-		} catch (error) {}
+		} catch (error) {
+			error.theme = "Could not save the theme. Please try again later.";
+			setErrors((prev) => ({
+				...prev,
+				theme: error.theme,
+			}));
+		}
 	};
 
 	const validateForm = () => {
@@ -119,8 +123,6 @@ const UserSettingsPage = () => {
 			return;
 		}
 
-		showLoading("Updating settings...");
-
 		try {
 			const updateData = {
 				email: formData.email,
@@ -141,22 +143,36 @@ const UserSettingsPage = () => {
 				newPassword: "",
 				confirmPassword: "",
 			}));
-		} catch (error) {
-		} finally {
-			hideLoading();
-		}
+		} catch (error) {}
 	};
 
-	const themeField = {
-		name: "theme",
-		type: "select",
-		label: "Application Theme",
-		options: THEMES.map((theme) => ({
-			value: theme.key,
-			label: theme.name,
-		})),
-		placeholder: "Select a theme",
-		isSearchable: true,
+	// Define field configurations
+	const emailField = {
+		name: "email",
+		type: "email",
+		placeholder: "Enter your email address",
+	};
+
+	const currentPasswordField = {
+		name: "currentPassword",
+		type: "password",
+		placeholder: "Enter your current password",
+		helpText: "Required to change your email or password",
+		autoComplete: "current-password",
+	};
+
+	const newPasswordField = {
+		name: "newPassword",
+		type: "password",
+		placeholder: "Enter new password",
+		autoComplete: "new-password",
+	};
+
+	const confirmPasswordField = {
+		name: "confirmPassword",
+		type: "password",
+		placeholder: "Confirm new password",
+		autoComplete: "new-password",
 	};
 
 	return (
@@ -181,23 +197,10 @@ const UserSettingsPage = () => {
 								<Col md={12} className="mb-3">
 									<Form.Group className="form-group-enhanced">
 										<Form.Label className="form-label-enhanced">Current Password</Form.Label>
-										<Form.Control
-											type="password"
-											name="currentPassword"
-											value={formData.currentPassword}
-											onChange={handleInputChange}
-											isInvalid={!!errors.currentPassword}
-											placeholder="Enter your current password"
-											className="form-control-enhanced"
-										/>
-										<Form.Control.Feedback type="invalid">
-											{errors.currentPassword}
-										</Form.Control.Feedback>
-										<Form.Text className="text-muted">
-											Required to change your email or password
-										</Form.Text>
+										{renderInputField(currentPasswordField, formData, handleInputChange, errors)}
 									</Form.Group>
 								</Col>
+
 								{/* Account Settings Section */}
 								<div className="settings-section">
 									<div className="section-header mb-4">
@@ -209,16 +212,7 @@ const UserSettingsPage = () => {
 
 									<Form.Group className="form-group-enhanced">
 										<Form.Label className="form-label-enhanced">Email Address</Form.Label>
-										<Form.Control
-											type="email"
-											name="email"
-											value={formData.email}
-											onChange={handleInputChange}
-											isInvalid={!!errors.email}
-											placeholder="Enter your email address"
-											className="form-control-enhanced"
-										/>
-										<Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
+										{renderInputField(emailField, formData, handleInputChange, errors)}
 									</Form.Group>
 								</div>
 
@@ -237,18 +231,12 @@ const UserSettingsPage = () => {
 										<Col md={6} className="mb-3">
 											<Form.Group className="form-group-enhanced">
 												<Form.Label className="form-label-enhanced">New Password</Form.Label>
-												<Form.Control
-													type="password"
-													name="newPassword"
-													value={formData.newPassword}
-													onChange={handleInputChange}
-													isInvalid={!!errors.newPassword}
-													placeholder="Enter new password (optional)"
-													className="form-control-enhanced"
-												/>
-												<Form.Control.Feedback type="invalid">
-													{errors.newPassword}
-												</Form.Control.Feedback>
+												{renderInputField(
+													newPasswordField,
+													formData,
+													handleInputChange,
+													errors,
+												)}
 											</Form.Group>
 										</Col>
 										<Col md={6} className="mb-3">
@@ -256,19 +244,12 @@ const UserSettingsPage = () => {
 												<Form.Label className="form-label-enhanced">
 													Confirm New Password
 												</Form.Label>
-												<Form.Control
-													type="password"
-													name="confirmPassword"
-													value={formData.confirmPassword}
-													onChange={handleInputChange}
-													isInvalid={!!errors.confirmPassword}
-													placeholder="Confirm new password"
-													className="form-control-enhanced"
-													disabled={!formData.newPassword}
-												/>
-												<Form.Control.Feedback type="invalid">
-													{errors.confirmPassword}
-												</Form.Control.Feedback>
+												{renderInputField(
+													confirmPasswordField,
+													formData,
+													handleInputChange,
+													errors,
+												)}
 											</Form.Group>
 										</Col>
 									</Row>
@@ -284,13 +265,11 @@ const UserSettingsPage = () => {
 									</div>
 
 									<div className="form-group-enhanced">
-										<Form.Label className="form-label-enhanced">Application Theme</Form.Label>
-										{renderInputField(
-											themeField,
-											formData,
-											handleThemeChange, // Use the custom theme handler
-											errors,
-										)}
+										<Form.Label className="form-label-enhanced">
+											{getThemeByKey(formData.theme)?.name} is not your favourite flavour of JAM?!
+											You can easily pick another flavour by clicking on the JAM logo in the
+											sidebar.
+										</Form.Label>
 									</div>
 								</div>
 

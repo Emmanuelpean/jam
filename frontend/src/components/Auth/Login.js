@@ -5,14 +5,15 @@ import "./Login.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Alert, Button, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
+import { renderInputField } from "../../components/rendering/WidgetRenders";
 
 function AuthForm() {
 	const [isLogin, setIsLogin] = useState(true);
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
-	const [confirmPassword, setConfirmPassword] = useState("");
-	const [showPassword, setShowPassword] = useState(false);
-	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const [formData, setFormData] = useState({
+		email: "",
+		password: "",
+		confirmPassword: "",
+	});
 	const [acceptedTerms, setAcceptedTerms] = useState(false);
 	const [showTerms, setShowTerms] = useState(false);
 	const [error, setError] = useState("");
@@ -34,53 +35,69 @@ function AuthForm() {
 		setIsLogin(location.pathname === "/login");
 	}, [location.pathname, isAuthenticated, navigate]);
 
+	const handleInputChange = (e) => {
+		const { name, value } = e.target;
+		setFormData((prev) => ({
+			...prev,
+			[name]: value,
+		}));
+
+		// Clear field errors when user starts typing
+		if (fieldErrors[name]) {
+			setFieldErrors((prev) => ({
+				...prev,
+				[name]: "",
+			}));
+		}
+	};
+
 	const switchMode = () => {
 		setIsLogin(!isLogin);
 		setError("");
 		setFieldErrors({});
 		// Clear confirm password and terms when switching to login
 		if (!isLogin) {
-			setConfirmPassword("");
+			setFormData((prev) => ({
+				...prev,
+				confirmPassword: "",
+			}));
 			setAcceptedTerms(false);
 		}
-		// Reset password visibility when switching modes
-		setShowPassword(false);
-		setShowConfirmPassword(false);
 		// Update URL without navigation
 		window.history.replaceState(null, "", isLogin ? "/register" : "/login");
 	};
 
 	const resetForm = () => {
-		setEmail("");
-		setPassword("");
-		setConfirmPassword("");
+		setFormData({
+			email: "",
+			password: "",
+			confirmPassword: "",
+		});
 		setAcceptedTerms(false);
 		setError("");
 		setFieldErrors({});
-		setShowPassword(false);
-		setShowConfirmPassword(false);
 	};
 
 	const validateForm = () => {
 		const errors = {};
 
 		// Email validation
-		if (!email || !email.includes("@")) {
+		if (!formData.email || !formData.email.includes("@")) {
 			errors.email = "Please provide a valid email address.";
 		}
 
 		// Password validation
-		if (!password) {
+		if (!formData.password) {
 			errors.password = "Password is required.";
-		} else if (!isLogin && password.length < 8) {
+		} else if (!isLogin && formData.password.length < 8) {
 			errors.password = "Password must be at least 8 characters long.";
 		}
 
 		// Confirm password validation (only for register)
 		if (!isLogin) {
-			if (!confirmPassword) {
+			if (!formData.confirmPassword) {
 				errors.confirmPassword = "Please confirm your password.";
-			} else if (password !== confirmPassword) {
+			} else if (formData.password !== formData.confirmPassword) {
 				errors.confirmPassword = "Passwords do not match.";
 			}
 
@@ -109,7 +126,7 @@ function AuthForm() {
 
 		try {
 			if (isLogin) {
-				const result = await login(email, password);
+				const result = await login(formData.email, formData.password);
 				if (result.success) {
 					navigate("/dashboard");
 				} else {
@@ -120,7 +137,7 @@ function AuthForm() {
 					}
 				}
 			} else {
-				const result = await register(email, password);
+				const result = await register(formData.email, formData.password);
 				if (result.success) {
 					setError("");
 					setIsLogin(true);
@@ -145,6 +162,29 @@ function AuthForm() {
 
 		setLoading(false);
 	}
+
+	// Define field configurations
+	const emailField = {
+		name: "email",
+		type: "email",
+		placeholder: "Enter your email",
+	};
+
+	const passwordField = {
+		name: "password",
+		type: "password",
+		placeholder: "Enter your password",
+		autoComplete: isLogin ? "current-password" : "new-password",
+		helpText: !isLogin ? "Password must be at least 8 characters long" : null,
+	};
+
+	const confirmPasswordField = {
+		name: "confirmPassword",
+		type: "password",
+		placeholder: "Confirm your password",
+		autoComplete: "new-password",
+		tabIndex: isLogin ? -1 : 0,
+	};
 
 	// Show loading state while checking authentication
 	if (isAuthenticated) {
@@ -192,21 +232,7 @@ function AuthForm() {
 								<i className="bi bi-envelope-fill me-2 text-muted"></i>
 								Email Address
 							</Form.Label>
-							<Form.Control
-								name="email"
-								id="email"
-								placeholder="Enter your email"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								size="lg"
-								isInvalid={!!fieldErrors.email}
-								autoComplete="email"
-							/>
-							{fieldErrors.email && (
-								<div id="email-error-message" className="invalid-feedback">
-									{fieldErrors.email}
-								</div>
-							)}
+							{renderInputField(emailField, formData, handleInputChange, fieldErrors)}
 						</Form.Group>
 
 						<Form.Group className="mb-3">
@@ -214,37 +240,7 @@ function AuthForm() {
 								<i className="bi bi-lock-fill me-2 text-muted"></i>
 								Password
 							</Form.Label>
-							<div className="position-relative">
-								<Form.Control
-									type={showPassword ? "text" : "password"}
-									id="password"
-									name={isLogin ? "current-password" : "new-password"}
-									placeholder="Enter your password"
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
-									size="lg"
-									isInvalid={!!fieldErrors.password}
-									autoComplete={isLogin ? "current-password" : "new-password"}
-									style={{ paddingRight: "50px" }}
-								/>
-								<button
-									type="button"
-									className={`password-toggle-btn ${showPassword ? "" : "show-slash"}`}
-									onClick={() => setShowPassword(!showPassword)}
-								>
-									<i className="bi bi-eye"></i>
-								</button>
-							</div>
-							{fieldErrors.password && (
-								<div id="password-error-message" className="invalid-feedback d-block">
-									{fieldErrors.password}
-								</div>
-							)}
-							{!isLogin && !fieldErrors.password && (
-								<Form.Text className="text-muted">
-									Password must be at least 8 characters long
-								</Form.Text>
-							)}
+							{renderInputField(passwordField, formData, handleInputChange, fieldErrors)}
 						</Form.Group>
 
 						{/* Always render confirm password field but control visibility with CSS */}
@@ -256,33 +252,7 @@ function AuthForm() {
 									<i className="bi bi-lock-check-fill me-2 text-muted"></i>
 									Confirm Password
 								</Form.Label>
-								<div className="position-relative">
-									<Form.Control
-										type={showConfirmPassword ? "text" : "password"}
-										id="confirm-password"
-										placeholder="Confirm your password"
-										value={confirmPassword}
-										onChange={(e) => setConfirmPassword(e.target.value)}
-										size="lg"
-										isInvalid={!!fieldErrors.confirmPassword}
-										tabIndex={isLogin ? -1 : 0}
-										autoComplete="new-password"
-										style={{ paddingRight: "50px" }}
-									/>
-									<button
-										type="button"
-										className={`password-toggle-btn ${showConfirmPassword ? "" : "show-slash"}`}
-										onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-										tabIndex={isLogin ? -1 : 0}
-									>
-										<i className="bi bi-eye"></i>
-									</button>
-								</div>
-								{fieldErrors.confirmPassword && (
-									<div id="password-confirm-error-message" className="invalid-feedback d-block">
-										{fieldErrors.confirmPassword}
-									</div>
-								)}
+								{renderInputField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
 							</Form.Group>
 						</div>
 
