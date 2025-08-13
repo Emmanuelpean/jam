@@ -340,7 +340,19 @@ export const Sidebar = ({ onHoverChange }) => {
 					);
 				})}
 			</nav>
-
+			<nav className="sidebar-nav" style={{ flex: "none", paddingTop: "0", paddingBottom: "0.2rem" }}>
+				<Link
+					key="/user"
+					to="/user"
+					className={`nav-item submenu-item ${isActive("/user") ? "active" : ""}`}
+					title="User Settings"
+				>
+					<span className="nav-icon">
+						<i className={`bi bi-gear`}></i>
+					</span>
+					{isHovering && <span className="nav-text">User Settings</span>}
+				</Link>
+			</nav>
 			<div className="sidebar-footer border-top">
 				<div
 					onClick={handleLogout}
