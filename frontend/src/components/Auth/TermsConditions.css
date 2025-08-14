@@ -161,26 +161,6 @@
 }
 
 
-/* Smooth scrolling for the modal body */
-.terms-body {
-    scroll-behavior: smooth;
-}
-
-/* Custom scrollbar for webkit browsers */
-.terms-body::-webkit-scrollbar {
-    width: 8px;
-}
-
-.terms-body::-webkit-scrollbar-track {
-    background: var(--bs-light, #f1f1f1);
-    border-radius: 4px;
-}
-
-.terms-body::-webkit-scrollbar-thumb {
-    background: var(--primary-start);
-    border-radius: 4px;
-}
-
 /* Theme-aware animations */
 .terms-section {
     transition: all 0.3s ease;

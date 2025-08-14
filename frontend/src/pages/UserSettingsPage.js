@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, Col, Form, Row } from "react-bootstrap";
+import { Alert, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../services/Api";
-import { isValidTheme, getThemeByKey } from "../utils/Theme";
-import { renderInputField } from "../components/rendering/WidgetRenders";
+import { getThemeByKey, isValidTheme } from "../utils/Theme";
+import { ActionButton, renderInputField } from "../components/rendering/WidgetRenders";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../components/rendering/Renders";
 
@@ -16,7 +16,12 @@ const UserSettingsPage = () => {
 		confirmPassword: "",
 		theme: "",
 	});
+	const [error, setError] = useState("");
 	const [errors, setErrors] = useState({});
+	const [loading, setLoading] = useState(false);
+
+	// Get minimum password length from environment variables
+	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH);
 
 	useEffect(() => {
 		if (currentUser) {
@@ -79,7 +84,7 @@ const UserSettingsPage = () => {
 		if (isUpdatingEmail || isUpdatingPassword) {
 			if (!formData.currentPassword) {
 				if (isUpdatingEmail && isUpdatingPassword) {
-					newErrors.currentPassword = "Current password is required to update email and password";
+					newErrors.currentPassword = "Current password is required to update email or password";
 				} else if (isUpdatingEmail) {
 					newErrors.currentPassword = "Current password is required to update email address";
 				} else {
@@ -99,8 +104,8 @@ const UserSettingsPage = () => {
 		if (isUpdatingPassword) {
 			if (!formData.newPassword) {
 				newErrors.newPassword = "New password is required";
-			} else if (formData.newPassword.length < 6) {
-				newErrors.newPassword = "New password must be at least 6 characters long";
+			} else if (formData.newPassword.length < MIN_PASSWORD_LENGTH) {
+				newErrors.newPassword = `New password must be at least ${MIN_PASSWORD_LENGTH} characters long`;
 			}
 			if (formData.newPassword !== formData.confirmPassword) {
 				newErrors.confirmPassword = "Passwords do not match";
@@ -123,10 +128,13 @@ const UserSettingsPage = () => {
 			return;
 		}
 
+		setLoading(true);
+		setError("");
+
 		try {
 			const updateData = {
 				email: formData.email,
-				current_password: formData.currentPassword, // Send current password for verification
+				current_password: formData.currentPassword,
 			};
 
 			// Only include new password if it's being changed
@@ -134,19 +142,36 @@ const UserSettingsPage = () => {
 				updateData.password = formData.newPassword;
 			}
 
-			await api.put("users/me", updateData, token);
+			console.log(updateData);
+			const result = await api.put("users/me", updateData, token);
+			console.log("result", result);
 
-			// Clear password fields
-			setFormData((prev) => ({
-				...prev,
-				currentPassword: "",
-				newPassword: "",
-				confirmPassword: "",
-			}));
-		} catch (error) {}
+			// Success case - the request completed successfully
+			if (formData.newPassword) {
+				setFormData({
+					currentPassword: "",
+					newPassword: "",
+					confirmPassword: "",
+					email: formData.email,
+					theme: formData.theme,
+				});
+			}
+			setError("User data updated successfully.");
+		} catch (error) {
+			// Handle different error status codes
+			if (error.status === 400) {
+				setError("Email is already in use. Please try a different email.");
+			} else if (error.status === 401) {
+				setError("Current password is incorrect. Please try again.");
+			} else if (error.status === 422) {
+				setError("Email format is incorrect. Please enter a valid email address.");
+			} else {
+				setError("An unknown error occurred. Please try again later.");
+			}
+		}
+		setLoading(false);
 	};
 
-	// Define field configurations
 	const emailField = {
 		name: "email",
 		type: "email",
@@ -183,7 +208,7 @@ const UserSettingsPage = () => {
 						<Card.Header className="settings-header border-0 p-0">
 							<div className="d-flex align-items-center p-4">
 								<div className="header-icon-wrapper me-3">
-									<i className={`bi ${getTableIcon("user")}`}></i>
+									<i className={`bi ${getTableIcon("Users")}`}></i>
 								</div>
 								<div>
 									<h4 className="mb-0 fw-bold text-dark">User Settings</h4>
@@ -191,6 +216,19 @@ const UserSettingsPage = () => {
 								</div>
 							</div>
 						</Card.Header>
+
+						{error && (
+							<Alert
+								id="error-message"
+								variant={error.includes("successfully") ? "success" : "danger"}
+								className="d-flex align-items-center"
+							>
+								<i
+									className={`bi ${error.includes("successfully") ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill"} me-2`}
+								></i>
+								{error}
+							</Alert>
+						)}
 
 						<Card.Body className="p-0">
 							<Form onSubmit={handleSubmit} className="p-4">
@@ -273,12 +311,17 @@ const UserSettingsPage = () => {
 									</div>
 								</div>
 
-								{/* Submit Button */}
 								<div className="settings-actions">
-									<Button variant="primary" type="submit" size="lg" className="save-button w-100">
-										<i className="bi bi-check-circle me-2"></i>
-										Save Account Changes
-									</Button>
+									<ActionButton
+										id="confirm-button"
+										type="submit"
+										disabled={loading}
+										loading={loading}
+										className="save-button"
+										loadingText="Saving Changes..."
+										defaultText="Save Account Changes"
+										defaultIcon="bi bi-check-circle"
+									/>
 								</div>
 							</Form>
 						</Card.Body>

@@ -36,6 +36,7 @@ class UserLogin(BaseModel):
 
 
 class UserUpdate(BaseModel):
+    current_password: str | None = None
     email: EmailStr | None = None
     theme: str | None = None
     password: str | None = None

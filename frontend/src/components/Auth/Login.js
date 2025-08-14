@@ -5,7 +5,7 @@ import "./Login.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Alert, Button, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
-import { renderInputField } from "../../components/rendering/WidgetRenders";
+import { ActionButton, renderInputField } from "../rendering/WidgetRenders";
 
 function AuthForm() {
 	const [isLogin, setIsLogin] = useState(true);
@@ -22,6 +22,7 @@ function AuthForm() {
 	const { login, register, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
+	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH);
 
 	useEffect(() => {
 		// Redirect authenticated users to dashboard
@@ -89,8 +90,8 @@ function AuthForm() {
 		// Password validation
 		if (!formData.password) {
 			errors.password = "Password is required.";
-		} else if (!isLogin && formData.password.length < 8) {
-			errors.password = "Password must be at least 8 characters long.";
+		} else if (!isLogin && formData.password.length < MIN_PASSWORD_LENGTH) {
+			errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
 		}
 
 		// Confirm password validation (only for register)
@@ -144,6 +145,8 @@ function AuthForm() {
 					resetForm();
 					window.history.replaceState(null, "", "/login");
 					setError("Account created successfully! You can now log in.");
+				} else if (result.status === 400) {
+					setError("An account with this email address already exist");
 				} else {
 					setError(
 						typeof result.error === "object"
@@ -295,35 +298,16 @@ function AuthForm() {
 						</div>
 
 						<div className="d-grid">
-							<Button
+							<ActionButton
 								id="confirm-button"
-								variant="primary"
 								type="submit"
 								disabled={loading}
-								size="lg"
+								loading={loading}
 								className="fw-semibold"
-							>
-								{loading ? (
-									<>
-										<Spinner
-											as="span"
-											animation="border"
-											size="sm"
-											role="status"
-											aria-hidden="true"
-											className="me-2"
-										/>
-										{isLogin ? "Logging in..." : "Creating Account..."}
-									</>
-								) : (
-									<>
-										<i
-											className={`bi ${isLogin ? "bi-box-arrow-in-right" : "bi-person-plus"} me-2`}
-										></i>
-										{isLogin ? "Login" : "Create Account"}
-									</>
-								)}
-							</Button>
+								loadingText={isLogin ? "Logging in..." : "Creating Account..."}
+								defaultText={isLogin ? "Login" : "Create Account"}
+								defaultIcon={isLogin ? "bi bi-box-arrow-in-right" : "bi bi-person-plus"}
+							/>
 						</div>
 					</Form>
 

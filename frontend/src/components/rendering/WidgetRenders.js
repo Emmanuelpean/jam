@@ -4,16 +4,93 @@ import { React, useState } from "react";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
 import FileUploader from "../../utils/FileUtils";
+import { Button, Spinner } from "react-bootstrap";
 
 const animatedComponents = makeAnimated();
 
-// Error display function to handle multiple errors on separate lines
 const displayError = (errorMessage) => {
 	if (!errorMessage) return null;
-
-	// Split by newlines and render each error on a separate line
 	return errorMessage.split("\n").map((line, index) => <div key={index}>{line}</div>);
 };
+
+export const ActionButton = ({
+	id,
+	variant = "primary",
+	type = "button",
+	size = "lg",
+	className = "",
+	disabled = false,
+	loading = false,
+	loadingText,
+	defaultText,
+	loadingIcon,
+	defaultIcon,
+	fullWidth = true,
+	onClick,
+	customContent,
+	customLoadingContent,
+	...otherProps
+}) => {
+	const buttonClasses = `${className} ${fullWidth ? "w-100" : ""}`.trim();
+
+	const renderContent = () => {
+		if (loading) {
+			// Use custom loading content if provided
+			if (customLoadingContent) {
+				return customLoadingContent;
+			}
+
+			// Default loading content
+			return (
+				<>
+					{loadingIcon ? (
+						<i className={`${loadingIcon} me-2`}></i>
+					) : (
+						<Spinner
+							as="span"
+							animation="border"
+							size="sm"
+							role="status"
+							aria-hidden="true"
+							className="me-2"
+						/>
+					)}
+					{loadingText}
+				</>
+			);
+		}
+
+		// Use custom content if provided
+		if (customContent) {
+			return customContent;
+		}
+
+		// Default content
+		return (
+			<>
+				{defaultIcon && <i className={`${defaultIcon} me-2`}></i>}
+				{defaultText}
+			</>
+		);
+	};
+
+	return (
+		<Button
+			id={id}
+			variant={variant}
+			type={type}
+			size={size}
+			disabled={disabled || loading}
+			className={buttonClasses}
+			onClick={onClick}
+			{...otherProps}
+		>
+			{renderContent()}
+		</Button>
+	);
+};
+
+export default ActionButton;
 
 const CustomDropdownIndicator = (props) => {
 	const [hover, setHover] = useState(false);
