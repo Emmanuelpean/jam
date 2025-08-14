@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from app import utils, models, oauth2, database, schemas
+from utils import hash_password
 
 user_router = APIRouter(prefix="/users", tags=["users"])
 
@@ -51,10 +52,12 @@ def get_all_users(
                         param_value = param_value.lower() in ("true", "1", "yes", "on")
 
                 # Add filter to query
+                # noinspection PyTypeChecker
                 query = query.filter(column == param_value)
 
             except (ValueError, TypeError):
                 # If conversion fails, treat as string comparison
+                # noinspection PyTypeChecker
                 query = query.filter(column == param_value)
 
     return query.all()
@@ -76,10 +79,12 @@ def get_one_user(
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
 ):
+    """Get a user by ID."""
 
     if not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
 
+    # noinspection PyTypeChecker
     user = db.query(models.User).filter(models.User.id == entry_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -107,12 +112,14 @@ def update_user(
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
 ):
+    """Update a user by ID."""
 
     # Allow only admins or the matching user to update the data
-    if not current_user.is_admin and current_user.id != user_update.id:
+    if not (current_user.is_admin or current_user.id == entry_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
 
     user_update = user_update.model_dump(exclude_defaults=True)
+    print(user_update)
 
     # Validate theme if provided
     if "theme" in user_update:
@@ -127,18 +134,21 @@ def update_user(
     if "password" in user_update:
         user_update["password"] = utils.hash_password(user_update["password"])
 
-    # Apply updates
-    if entry_id is not None:
-        user = db.query(models.User).filter(models.User.id == entry_id).first()
-    else:
-        user = current_user
+    # Get the user record to update
+    # noinspection PyTypeChecker
+    user_db = db.query(models.User).filter(models.User.id == entry_id).first()
+    print(hash_password(user_update.get("current_password", "")))
+    print(user_db.password)
+    if not current_user.is_admin and not utils.verify_password(user_update.get("current_password", ""), user_db.password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
 
+    # Update the user record
     for field, value in user_update.items():
-        setattr(user, field, value)
+        setattr(user_db, field, value)
 
     db.commit()
-    db.refresh(user)
-    return user
+    db.refresh(user_db)
+    return user_db
 
 
 @user_router.post("/", status_code=201, response_model=schemas.UserOut)

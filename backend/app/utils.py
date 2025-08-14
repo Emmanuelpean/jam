@@ -21,6 +21,7 @@ def verify_password(password: str, hashed: str) -> bool:
     :param password: password to check against
     :param hashed: hashed password from database
     :return: boolean indicating whether password matched"""
+
     return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
 

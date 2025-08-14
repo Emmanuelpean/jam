@@ -31,7 +31,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 def reset_database(db_engine) -> None:
     """Drop ALL tables in the database (including orphaned ones) and recreate from models"""
-    print("Dropping ALL tables in the database...")
+    print("Dropping all tables in the database...")
 
     with db_engine.connect() as conn:
         # Get the database inspector to find all existing tables
@@ -40,14 +40,12 @@ def reset_database(db_engine) -> None:
 
         # For PostgreSQL: Drop tables with CASCADE to handle foreign key constraints
         for table_name in table_names:
-            print(f"Dropping table: {table_name}")
             conn.execute(text(f'DROP TABLE IF EXISTS "{table_name}" CASCADE'))
 
         conn.commit()
 
     print("Creating all tables from models...")
     Base.metadata.create_all(bind=db_engine)
-    print("Database reset complete - all tables deleted and recreated from models!")
 
 
 def seed_database() -> None:
