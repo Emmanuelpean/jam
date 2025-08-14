@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Card, Col, Form, Row } from "react-bootstrap";
+import { Card, Col, Form, Row, Toast, ToastContainer } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../services/Api";
 import { getThemeByKey, isValidTheme } from "../utils/Theme";
 import { ActionButton, renderInputField } from "../components/rendering/WidgetRenders";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../components/rendering/Renders";
+import NotificationToast from "../components/Toasts/Toast";
+import useToast from "../hooks/useNotificationToast";
 
 const UserSettingsPage = () => {
 	const { currentUser, token } = useAuth();
@@ -16,7 +18,7 @@ const UserSettingsPage = () => {
 		confirmPassword: "",
 		theme: "",
 	});
-	const [error, setError] = useState("");
+	const { toast, showSuccess, showError, hideToast } = useToast();
 	const [errors, setErrors] = useState({});
 	const [loading, setLoading] = useState(false);
 
@@ -129,7 +131,6 @@ const UserSettingsPage = () => {
 		}
 
 		setLoading(true);
-		setError("");
 
 		try {
 			const updateData = {
@@ -142,9 +143,7 @@ const UserSettingsPage = () => {
 				updateData.password = formData.newPassword;
 			}
 
-			console.log(updateData);
-			const result = await api.put("users/me", updateData, token);
-			console.log("result", result);
+			await api.put("users/me", updateData, token);
 
 			// Success case - the request completed successfully
 			if (formData.newPassword) {
@@ -156,17 +155,17 @@ const UserSettingsPage = () => {
 					theme: formData.theme,
 				});
 			}
-			setError("User data updated successfully.");
+			showSuccess("User data updated successfully.");
 		} catch (error) {
 			// Handle different error status codes
 			if (error.status === 400) {
-				setError("Email is already in use. Please try a different email.");
+				showError("Email is already in use. Please try a different email.");
 			} else if (error.status === 401) {
-				setError("Current password is incorrect. Please try again.");
+				showError("Current password is incorrect. Please try again.");
 			} else if (error.status === 422) {
-				setError("Email format is incorrect. Please enter a valid email address.");
+				showError("Email format is incorrect. Please enter a valid email address.");
 			} else {
-				setError("An unknown error occurred. Please try again later.");
+				showError("An unknown error occurred. Please try again later.");
 			}
 		}
 		setLoading(false);
@@ -216,19 +215,6 @@ const UserSettingsPage = () => {
 								</div>
 							</div>
 						</Card.Header>
-
-						{error && (
-							<Alert
-								id="error-message"
-								variant={error.includes("successfully") ? "success" : "danger"}
-								className="d-flex align-items-center"
-							>
-								<i
-									className={`bi ${error.includes("successfully") ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill"} me-2`}
-								></i>
-								{error}
-							</Alert>
-						)}
 
 						<Card.Body className="p-0">
 							<Form onSubmit={handleSubmit} className="p-4">
@@ -328,6 +314,7 @@ const UserSettingsPage = () => {
 					</Card>
 				</Col>
 			</Row>
+			<NotificationToast show={toast.show} variant={toast.variant} message={toast.message} onClose={hideToast} />
 		</div>
 	);
 };

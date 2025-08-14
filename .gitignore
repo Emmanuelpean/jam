@@ -6,6 +6,7 @@ backend/.env
 /backend/app/eis/eis_secrets.json
 /backend/app/eis/token.pickle
 /backend/app/eis/logs
+frontend/.env
 
 # dependencies
 frontend/node_modules
