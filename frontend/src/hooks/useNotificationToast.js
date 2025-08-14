@@ -1,49 +1,56 @@
 import { useState } from "react";
 
 const useToast = () => {
-	const [toast, setToast] = useState({
-		show: false,
-		message: "",
-		variant: "danger",
-		title: null,
-	});
+	const [toasts, setToasts] = useState([]);
 
-	const showToast = (message, variant = "danger", title = null) => {
-		setToast({
+	const showToast = (message, variant = "danger", title = null, delay = 5000) => {
+		const id = Date.now() + Math.random(); // Generate unique ID
+		const newToast = {
+			id,
 			show: true,
 			message,
 			variant,
 			title,
-		});
+			delay,
+		};
+
+		setToasts((prev) => [...prev, newToast]);
+
+		// Auto-hide after delay
+		setTimeout(() => {
+			hideToast(id);
+		}, delay);
 	};
 
-	const hideToast = () => {
-		setToast((prev) => ({
-			...prev,
-			show: false,
-		}));
+	const hideToast = (id) => {
+		setToasts((prev) => prev.filter((toast) => toast.id !== id));
 	};
 
-	const showSuccess = (message, title = null) => {
-		showToast(message, "success", title);
+	const hideAllToasts = () => {
+		setToasts([]);
 	};
 
-	const showError = (message, title = null) => {
-		showToast(message, "danger", title);
+	const showSuccess = (message, title = null, delay = 5000) => {
+		showToast(message, "success", title, delay);
 	};
 
-	const showWarning = (message, title = null) => {
-		showToast(message, "warning", title);
+	const showError = (message, title = null, delay = 5000) => {
+		showToast(message, "danger", title, delay);
 	};
 
-	const showInfo = (message, title = null) => {
-		showToast(message, "info", title);
+	const showWarning = (message, title = null, delay = 5000) => {
+		showToast(message, "warning", title, delay);
+	};
+
+	const showInfo = (message, title = null, delay = 5000) => {
+		showToast(message, "info", title, delay);
 	};
 
 	return {
-		toast,
+		toasts,
 		showToast,
 		hideToast,
+		hideAllToasts,
 		showSuccess,
 		showError,
 		showWarning,

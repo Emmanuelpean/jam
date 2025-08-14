@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Form, Row, Toast, ToastContainer } from "react-bootstrap";
+import { Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../services/Api";
 import { getThemeByKey, isValidTheme } from "../utils/Theme";
 import { ActionButton, renderInputField } from "../components/rendering/WidgetRenders";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../components/rendering/Renders";
-import NotificationToast from "../components/Toasts/Toast";
+import { ToastStack } from "../components/Toasts/Toast";
 import useToast from "../hooks/useNotificationToast";
 
 const UserSettingsPage = () => {
@@ -18,7 +18,7 @@ const UserSettingsPage = () => {
 		confirmPassword: "",
 		theme: "",
 	});
-	const { toast, showSuccess, showError, hideToast } = useToast();
+	const { toasts, showSuccess, showError, hideToast } = useToast();
 	const [errors, setErrors] = useState({});
 	const [loading, setLoading] = useState(false);
 
@@ -314,7 +314,7 @@ const UserSettingsPage = () => {
 					</Card>
 				</Col>
 			</Row>
-			<NotificationToast show={toast.show} variant={toast.variant} message={toast.message} onClose={hideToast} />
+			<ToastStack toasts={toasts} onClose={hideToast} />
 		</div>
 	);
 };
