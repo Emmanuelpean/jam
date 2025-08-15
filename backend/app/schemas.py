@@ -28,6 +28,7 @@ class UserOut(Out):
     email: EmailStr
     theme: str
     is_admin: bool | None = None
+    last_login: datetime | None = None
 
 
 class UserLogin(BaseModel):
@@ -41,6 +42,7 @@ class UserUpdate(BaseModel):
     theme: str | None = None
     password: str | None = None
     is_admin: bool | None = None
+    last_login: datetime | None = None
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------
@@ -301,7 +303,7 @@ class JobApplicationUpdateIn(BaseModel):
 
 
 class JobApplicationUpdateOut(JobApplicationUpdateIn, OwnedOut):
-    job_application: JobApplicationOut | None = None
+    job_application: JobApplicationSimple | None = None
 
 
 class JobApplicationUpdateSimpleOut(JobApplicationUpdateIn, OwnedOut):

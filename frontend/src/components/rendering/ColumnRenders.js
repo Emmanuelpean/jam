@@ -102,6 +102,17 @@ export const columns = {
 		...overrides,
 	}),
 
+	last_login: (overrides = {}) => ({
+		key: "last_login",
+		label: "Last Login",
+		sortable: true,
+		searchable: true,
+		type: "date",
+		searchFields: localeDateOnly,
+		render: renderFunctions.lastLogin,
+		...overrides,
+	}),
+
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
 	location: (overrides = {}) => ({

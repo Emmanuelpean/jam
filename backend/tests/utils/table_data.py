@@ -1388,6 +1388,9 @@ SERVICE_LOG_DATA = [
         "job_fail_n": 3,
     },
 ]
+SERVICE_LOG_DATETIME = [current_date - timedelta(weeks=i) for i in range(len(SERVICE_LOG_DATA))]
+for service_log, date in zip(SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
+    service_log["run_datetime"] = date.strftime(DATE_FORMAT)
 
 
 EMAIL_SCRAPEDJOB_MAPPINGS = [

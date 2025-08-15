@@ -125,6 +125,7 @@ const GenericModal = ({
 					currentTab.onFormDataChange !== undefined ? currentTab.onFormDataChange : onFormDataChange,
 				showSystemFields:
 					currentTab.showSystemFields !== undefined ? currentTab.showSystemFields : showSystemFields,
+				onDelete: currentTab.onDelete !== undefined ? currentTab.onDelete : onDelete,
 			};
 		}
 

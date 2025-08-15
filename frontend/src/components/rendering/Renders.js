@@ -161,6 +161,11 @@ export const renderFunctions = {
 		}
 	},
 
+	lastLogin: (item, view = false, key = "last_login") => {
+		const date = accessAttribute(item, key);
+		return renderFunctions._datetime(date);
+	},
+
 	createdDate: (item, view = false, key = "created_at") => {
 		const date = accessAttribute(item, key);
 		return renderFunctions._datetime(date);

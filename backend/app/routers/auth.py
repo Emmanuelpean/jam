@@ -1,5 +1,6 @@
 """Authentication route"""
 
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -27,6 +28,10 @@ def login(
     # Check that the password correspond to that user
     if not utils.verify_password(user_credentials.password, user.password):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Incorrect password")
+
+    # Update the user last login
+    user.last_login = datetime.now(timezone.utc)
+    db.commit()
 
     # Create an access token and return it
     access_token = oauth2.create_access_token(data={"user_id": user.id})

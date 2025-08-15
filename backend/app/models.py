@@ -101,6 +101,7 @@ class User(CommonBase, Base):
     email = Column(String, nullable=False, unique=True)
     theme = Column(String, nullable=False, server_default="mixed-berry")
     is_admin = Column(Boolean, nullable=False, server_default=expression.false())
+    last_login = Column(TIMESTAMP(timezone=True), nullable=True)
 
 
 class Company(Owned, Base):
