@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../services/Api";
-import { getThemeByKey, isValidTheme } from "../utils/Theme";
+import { getThemeByKey } from "../utils/Theme";
 import { ActionButton, renderInputField } from "../components/rendering/WidgetRenders";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../components/rendering/Renders";
@@ -16,7 +16,6 @@ const UserSettingsPage = () => {
 		currentPassword: "",
 		newPassword: "",
 		confirmPassword: "",
-		theme: "",
 	});
 	const { toasts, showSuccess, showError, hideToast } = useToast();
 	const [errors, setErrors] = useState({});
@@ -24,16 +23,6 @@ const UserSettingsPage = () => {
 
 	// Get minimum password length from environment variables
 	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH);
-
-	useEffect(() => {
-		if (currentUser) {
-			setFormData((prevData) => ({
-				...prevData,
-				email: currentUser.email || "",
-				theme: currentUser.theme || "mixed-berry",
-			}));
-		}
-	}, [currentUser]);
 
 	const handleInputChange = (e) => {
 		const { name, value } = e.target;
@@ -51,62 +40,22 @@ const UserSettingsPage = () => {
 		}
 	};
 
-	// Handle immediate theme change
-	const handleThemeChange = async (e) => {
-		const { value: themeKey } = e.target;
-
-		// Update form data
-		setFormData((prev) => ({
-			...prev,
-			theme: themeKey,
-		}));
-
-		document.documentElement.setAttribute("data-theme", themeKey);
-		localStorage.setItem("theme", themeKey);
-
-		try {
-			await api.put("users/me", { theme: themeKey }, token);
-		} catch (error) {
-			error.theme = "Could not save the theme. Please try again later.";
-			setErrors((prev) => ({
-				...prev,
-				theme: error.theme,
-			}));
-		}
-	};
-
 	const validateForm = () => {
 		const newErrors = {};
 
-		// Check if user is trying to update anything that requires current password
-		const isUpdatingEmail = formData.email !== currentUser?.email;
-		const isUpdatingPassword = formData.newPassword || formData.confirmPassword;
-
-		// Current password is required if updating email or password
-		if (isUpdatingEmail || isUpdatingPassword) {
-			if (!formData.currentPassword) {
-				if (isUpdatingEmail && isUpdatingPassword) {
-					newErrors.currentPassword = "Current password is required to update email or password";
-				} else if (isUpdatingEmail) {
-					newErrors.currentPassword = "Current password is required to update email address";
-				} else {
-					newErrors.currentPassword = "Current password is required to change password";
-				}
-			}
+		// Current password validation
+		if (!formData.currentPassword) {
+			newErrors.currentPassword = "Current password is required to update email or password";
 		}
 
 		// Email validation
-		if (!formData.email.trim()) {
-			newErrors.email = "Email is required";
-		} else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+		if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
 			newErrors.email = "Email format is invalid";
 		}
 
-		// Password validation (only if changing password)
-		if (isUpdatingPassword) {
-			if (!formData.newPassword) {
-				newErrors.newPassword = "New password is required";
-			} else if (formData.newPassword.length < MIN_PASSWORD_LENGTH) {
+		// New password validation (only if changing password)
+		if (formData.newPassword || formData.confirmPassword) {
+			if (formData.newPassword.length < MIN_PASSWORD_LENGTH) {
 				newErrors.newPassword = `New password must be at least ${MIN_PASSWORD_LENGTH} characters long`;
 			}
 			if (formData.newPassword !== formData.confirmPassword) {
@@ -114,9 +63,8 @@ const UserSettingsPage = () => {
 			}
 		}
 
-		// Theme validation
-		if (!isValidTheme(formData.theme)) {
-			newErrors.theme = "Invalid theme selected";
+		if (!formData.email && !formData.newPassword && !formData.confirmPassword) {
+			newErrors.email = "Please enter ";
 		}
 
 		setErrors(newErrors);
@@ -134,11 +82,13 @@ const UserSettingsPage = () => {
 
 		try {
 			const updateData = {
-				email: formData.email,
 				current_password: formData.currentPassword,
 			};
 
-			// Only include new password if it's being changed
+			if (formData.email) {
+				updateData.email = formData.email;
+			}
+
 			if (formData.newPassword) {
 				updateData.password = formData.newPassword;
 			}
@@ -152,18 +102,14 @@ const UserSettingsPage = () => {
 					newPassword: "",
 					confirmPassword: "",
 					email: formData.email,
-					theme: formData.theme,
 				});
 			}
 			showSuccess("User data updated successfully.");
 		} catch (error) {
-			// Handle different error status codes
 			if (error.status === 400) {
 				showError("Email is already in use. Please try a different email.");
 			} else if (error.status === 401) {
 				showError("Current password is incorrect. Please try again.");
-			} else if (error.status === 422) {
-				showError("Email format is incorrect. Please enter a valid email address.");
 			} else {
 				showError("An unknown error occurred. Please try again later.");
 			}
@@ -173,8 +119,9 @@ const UserSettingsPage = () => {
 
 	const emailField = {
 		name: "email",
-		type: "email",
+		type: "text",
 		placeholder: "Enter your email address",
+		autoComplete: "off",
 	};
 
 	const currentPasswordField = {
@@ -182,21 +129,18 @@ const UserSettingsPage = () => {
 		type: "password",
 		placeholder: "Enter your current password",
 		helpText: "Required to change your email or password",
-		autoComplete: "current-password",
 	};
 
 	const newPasswordField = {
 		name: "newPassword",
 		type: "password",
 		placeholder: "Enter new password",
-		autoComplete: "new-password",
 	};
 
 	const confirmPasswordField = {
 		name: "confirmPassword",
 		type: "password",
 		placeholder: "Confirm new password",
-		autoComplete: "new-password",
 	};
 
 	return (
@@ -301,7 +245,10 @@ const UserSettingsPage = () => {
 									<ActionButton
 										id="confirm-button"
 										type="submit"
-										disabled={loading}
+										disabled={
+											loading ||
+											(!formData.email && !formData.newPassword && !formData.confirmPassword)
+										}
 										loading={loading}
 										className="save-button"
 										loadingText="Saving Changes..."

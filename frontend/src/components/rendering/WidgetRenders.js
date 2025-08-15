@@ -90,8 +90,6 @@ export const ActionButton = ({
 	);
 };
 
-export default ActionButton;
-
 const CustomDropdownIndicator = (props) => {
 	const [hover, setHover] = useState(false);
 	const menuIsOpen = props.selectProps.menuIsOpen;
@@ -159,7 +157,11 @@ const PasswordInput = ({ field, value, handleChange, error }) => {
 					<i className="bi bi-eye"></i>
 				</button>
 			</div>
-			{error && <div className="invalid-feedback d-block">{displayError(error)}</div>}
+			{error && (
+				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
+					{displayError(error)}
+				</div>
+			)}
 			{field.helpText && !error && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
 		</>
 	);
@@ -179,7 +181,11 @@ const renderTextarea = (field, value, handleChange, error) => {
 				isInvalid={!!error}
 				className="optimized-textarea"
 			/>
-			{error && <div className="invalid-feedback">{displayError(error)}</div>}
+			{error && (
+				<div className="invalid-feedback" id={`${field.name}-error-message`}>
+					{displayError(error)}
+				</div>
+			)}
 		</>
 	);
 };
@@ -271,7 +277,11 @@ const renderSelect = (field, value, handleChange, handleSelectChange, error) => 
 				hideSelectedOptions={false}
 				controlShouldRenderValue={true}
 			/>
-			{error && <div className="invalid-feedback d-block">{displayError(error)}</div>}
+			{error && (
+				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
+					{displayError(error)}
+				</div>
+			)}
 		</>
 	);
 };
@@ -313,7 +323,11 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 					title="Set to current date and time"
 				></i>
 			</div>
-			{error && <div className="invalid-feedback d-block">{displayError(error)}</div>}
+			{error && (
+				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
+					{displayError(error)}
+				</div>
+			)}
 		</>
 	);
 };
@@ -362,8 +376,13 @@ export const renderDefaultInput = (field, value, handleChange, error) => {
 				placeholder={field.placeholder}
 				isInvalid={!!error}
 				step={field.step}
+				autoComplete={field.autoComplete}
 			/>
-			{error && <div className="invalid-feedback">{displayError(error)}</div>}
+			{error && (
+				<div className="invalid-feedback" id={`${field.name}-error-message`}>
+					{displayError(error)}
+				</div>
+			)}
 		</>
 	);
 };

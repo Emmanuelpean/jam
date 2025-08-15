@@ -129,6 +129,8 @@ class TestUser:
         response = authorised_clients[0].put(f"/users/{test_users[0].id}", json=update_data)
         assert response.status_code == 422
 
+    # ------------------------------------------------- PUT (NON ADMIN) ------------------------------------------------
+
     def test_update_same_user_non_admin(self, authorised_clients, test_users, session) -> None:
         """Test updating a different user profile without admin privileges.
         Require password"""
@@ -185,6 +187,17 @@ class TestUser:
         update_data = {"email": "ff", "current_password": test_user.password}
         response = authorised_clients[1].put(f"/users/{test_user.id}", json=update_data)
         assert response.status_code == 422
+
+    def test_update_user_noemail(self, authorised_clients, test_users, session) -> None:
+        """Test updating a different user profile without admin privileges.
+        Require password"""
+
+        test_user = test_users[1]
+        update_data = {"current_password": test_user.password, "new_password": "newpassword1"}
+        response = authorised_clients[1].put(f"/users/{test_user.id}", json=update_data)
+        assert response.status_code == 200
+
+    # ----------------------------------------------- PUT (UNAUTHORISED) -----------------------------------------------
 
     def test_update_user_unauthorised(self, client) -> None:
         """Test updating current user profile without authentication."""

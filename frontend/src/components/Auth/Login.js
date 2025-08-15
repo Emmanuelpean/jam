@@ -3,9 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import "./Login.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
-import { Alert, Button, Card, Form, Spinner } from "react-bootstrap";
+import { Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
 import { ActionButton, renderInputField } from "../rendering/WidgetRenders";
+import useToast from "../../hooks/useNotificationToast";
+import { ToastStack } from "../Toasts/Toast";
 
 function AuthForm() {
 	const [isLogin, setIsLogin] = useState(true);
@@ -16,12 +18,12 @@ function AuthForm() {
 	});
 	const [acceptedTerms, setAcceptedTerms] = useState(false);
 	const [showTerms, setShowTerms] = useState(false);
-	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [fieldErrors, setFieldErrors] = useState({});
 	const { login, register, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { toasts, showSuccess, showError, hideToast } = useToast();
 	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH);
 
 	useEffect(() => {
@@ -54,7 +56,6 @@ function AuthForm() {
 
 	const switchMode = () => {
 		setIsLogin(!isLogin);
-		setError("");
 		setFieldErrors({});
 		// Clear confirm password and terms when switching to login
 		if (!isLogin) {
@@ -75,7 +76,6 @@ function AuthForm() {
 			confirmPassword: "",
 		});
 		setAcceptedTerms(false);
-		setError("");
 		setFieldErrors({});
 	};
 
@@ -122,7 +122,6 @@ function AuthForm() {
 			return;
 		}
 
-		setError("");
 		setLoading(true);
 
 		try {
@@ -132,34 +131,35 @@ function AuthForm() {
 					navigate("/dashboard");
 				} else {
 					if ([404, 403].includes(result.status)) {
-						setError("Incorrect email or password");
+						showError("Incorrect email or password", "Login Failed");
 					} else {
-						setError("Failed to login. An unknown error occurred");
+						showError("Failed to login. An unknown error occurred", "Login Failed");
 					}
 				}
 			} else {
 				const result = await register(formData.email, formData.password);
+				console.log(result);
 				if (result.success) {
-					setError("");
 					setIsLogin(true);
 					resetForm();
 					window.history.replaceState(null, "", "/login");
-					setError("Account created successfully! You can now log in.");
+					showSuccess("Account created successfully! You can now log in.", "Registration Successful");
 				} else if (result.status === 400) {
-					setError("An account with this email address already exist");
+					showError("Email already registered", "Registration Failed");
 				} else {
-					setError(
+					const errorMessage =
 						typeof result.error === "object"
 							? JSON.stringify(result.error)
-							: result.error || "Registration failed",
-					);
+							: result.error || "Registration failed";
+					showError(errorMessage, "Registration Error");
 				}
 			}
 		} catch (error) {
-			setError(
+			showError(
 				isLogin
 					? "Failed to login. An unknown error occurred"
 					: "Failed to create an account. An unknown error occurred",
+				isLogin ? "Login Error" : "Registration Error",
 			);
 		}
 
@@ -169,7 +169,7 @@ function AuthForm() {
 	// Define field configurations
 	const emailField = {
 		name: "email",
-		type: "email",
+		type: "text",
 		placeholder: "Enter your email",
 	};
 
@@ -215,19 +215,6 @@ function AuthForm() {
 			<Card className="auth-card border-0 auth-card-animated">
 				<Card.Body>
 					<Card.Title className="text-primary">{isLogin ? "Login" : "Create Account"}</Card.Title>
-
-					{error && (
-						<Alert
-							id="error-message"
-							variant={error.includes("successfully") ? "success" : "danger"}
-							className="d-flex align-items-center"
-						>
-							<i
-								className={`bi ${error.includes("successfully") ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill"} me-2`}
-							></i>
-							{error}
-						</Alert>
-					)}
 
 					<Form onSubmit={handleSubmit} autoComplete="on">
 						<Form.Group className="mb-3">
@@ -328,8 +315,8 @@ function AuthForm() {
 				</Card.Body>
 			</Card>
 
-			{/* Terms and Conditions Modal */}
 			<TermsAndConditions show={showTerms} onHide={() => setShowTerms(false)} />
+			<ToastStack toasts={toasts} onClose={hideToast} />
 		</div>
 	);
 }

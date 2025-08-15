@@ -78,7 +78,9 @@ const NotificationToast = ({ show, message, variant = "danger", delay = 5000, on
 					<i className="bi bi-x"></i>
 				</button>
 			</div>
-			<div className="custom-toast-body">{message}</div>
+			<div className="custom-toast-body" id="toast">
+				{message}
+			</div>
 			<div className="custom-toast-progress" style={{ width: `${progress}%` }}></div>
 		</div>
 	);

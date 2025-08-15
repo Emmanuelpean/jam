@@ -1,15 +1,7 @@
 """
 Authentication End-to-End Tests
-
 This module contains comprehensive Selenium-based tests for the authentication system,
 including login, registration, form validation, and mode switching functionality.
-
-Tests cover:
-- User login with valid/invalid credentials
-- User registration with validation
-- Form field validation and error handling
-- Mode switching between login and register forms
-- Database integration verification
 """
 
 import pytest
@@ -127,7 +119,7 @@ class TestAuthenticationPage(object):
     def set_confirm_password(self, password: str) -> None:
         """Set the confirm password field to the given value"""
 
-        self.get_element("confirm-password").send_keys(password)
+        self.get_element("confirmPassword").send_keys(password)
 
     def confirm(self) -> None:
         """Confirm the form submission"""
@@ -149,7 +141,7 @@ class TestAuthenticationPage(object):
     def assert_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("", error_message)
+        assert error_message in self.get_element("toast").text, f"Message not found: {error_message}"
 
     def assert_email_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
@@ -164,7 +156,7 @@ class TestAuthenticationPage(object):
     def assert_confirm_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("password-confirm-", error_message)
+        self._assert_message("confirmPassword-", error_message)
 
     def assert_accept_terms_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
@@ -377,6 +369,23 @@ class TestAuthenticationPage(object):
 
         # Verify error message and database
         self.assert_confirm_password_error_message("Passwords do not match")
+        assert not self.verify_user_in_database(test_email)
+
+    def test_signup_password_requirement(self) -> None:
+        """Test signup with mismatched passwords"""
+
+        self.go_to_register()
+        test_email = f"test@test.com"
+
+        # Fill in signup form with non matching passwords
+        self.set_email(test_email)
+        self.set_password("Passw")
+        self.set_confirm_password("Passw")
+        self.set_terms()
+        self.confirm()
+
+        # Verify error message and database
+        self.assert_password_error_message("Password must be at least 8 characters long.")
         assert not self.verify_user_in_database(test_email)
 
     def test_signup_no_tc(self):
