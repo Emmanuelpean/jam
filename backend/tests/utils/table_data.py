@@ -1086,6 +1086,7 @@ JOB_ALERT_EMAIL_DATA = [
         "sender": "jobs-noreply@linkedin.com",
         "date_received": datetime(2024, 1, 15, 9, 30, 0),
         "platform": "linkedin",
+        "service_log_id": 1,
         "body": """
         Hi there,
 
@@ -1111,6 +1112,7 @@ JOB_ALERT_EMAIL_DATA = [
         "sender": "noreply@indeed.com",
         "date_received": datetime(2024, 1, 16, 14, 45, 0),
         "platform": "indeed",
+        "service_log_id": 2,
         "body": """
         New jobs matching your search criteria:
 
@@ -1134,6 +1136,7 @@ JOB_ALERT_EMAIL_DATA = [
         "sender": "jobs-noreply@linkedin.com",
         "date_received": datetime(2024, 1, 17, 11, 20, 0),
         "platform": "linkedin",
+        "service_log_id": 3,
         "body": """
         Hello,
 
@@ -1159,6 +1162,7 @@ JOB_ALERT_EMAIL_DATA = [
         "sender": "alerts@indeed.com",
         "date_received": datetime(2024, 1, 18, 8, 15, 0),
         "platform": "indeed",
+        "service_log_id": 4,
         "body": """
         Your weekly job digest is here!
 
@@ -1188,6 +1192,7 @@ JOB_ALERT_EMAIL_DATA = [
         "sender": "jobs-noreply@linkedin.com",
         "date_received": datetime(2024, 1, 19, 16, 10, 0),
         "platform": "linkedin",
+        "service_log_id": 5,
         "body": """
         Based on your recent activity, here are some similar opportunities:
 
@@ -1210,6 +1215,7 @@ JOB_ALERT_EMAIL_DATA = [
         "sender": "job-alerts@indeed.co.uk",
         "date_received": datetime(2024, 1, 20, 12, 30, 0),
         "platform": "indeed",
+        "service_log_id": 4,
         "body": """
         New Frontend Developer opportunities:
 
@@ -1388,7 +1394,7 @@ SERVICE_LOG_DATA = [
         "job_fail_n": 3,
     },
 ]
-SERVICE_LOG_DATETIME = [current_date - timedelta(weeks=i) for i in range(len(SERVICE_LOG_DATA))]
+SERVICE_LOG_DATETIME = [current_date - timedelta(days=i) for i in range(len(SERVICE_LOG_DATA))]
 for service_log, date in zip(SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
     service_log["run_datetime"] = date.strftime(DATE_FORMAT)
 

@@ -8,10 +8,7 @@ This module is instrumental for efficiently executing unit and integration tests
 and providing the necessary utilities for seamless interactions with the application's data and APIs.
 """
 
-import copy
 import datetime as dt
-from datetime import datetime, timedelta
-from itertools import groupby
 from typing import Any, Generator
 
 import pytest
@@ -41,7 +38,6 @@ from tests.utils.create_data import (
     create_job_application_updates,
 )
 from tests.utils.seed_database import reset_database
-from tests.utils.table_data import JOB_APPLICATION_DATA, JOB_APPLICATION_UPDATE_DATA
 
 SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
@@ -175,7 +171,7 @@ def test_interviews(session, test_users, test_job_applications, test_locations, 
 
 
 @pytest.fixture
-def test_job_alert_emails(session, test_users) -> list[eis_models.JobAlertEmail]:
+def test_job_alert_emails(session, test_users, test_service_logs) -> list[eis_models.JobAlertEmail]:
     """Create test job alert emails"""
 
     return create_job_alert_emails(session)

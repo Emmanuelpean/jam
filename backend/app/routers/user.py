@@ -63,9 +63,7 @@ def get_all_users(
 
 
 @user_router.get("/me", response_model=schemas.UserOut)
-def get_current_user_profile(
-    current_user: models.User = Depends(oauth2.get_current_user)
-):
+def get_current_user_profile(current_user: models.User = Depends(oauth2.get_current_user)):
     """Get the current user's profile.
     :param current_user: The current authenticated user."""
 
@@ -92,9 +90,9 @@ def get_one_user(
 
 @user_router.put("/me", response_model=schemas.UserOut)
 def update_current_user_profile(
-        user_update: schemas.UserUpdate,
-        current_user: models.User = Depends(oauth2.get_current_user),
-        db: Session = Depends(database.get_db),
+    user_update: schemas.UserUpdate,
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
 ):
     """Update the current user's profile.
     :param user_update: The user update data.
@@ -135,7 +133,9 @@ def update_user(
     # Get the user record to update
     # noinspection PyTypeChecker
     user_db = db.query(models.User).filter(models.User.id == entry_id).first()
-    if not current_user.is_admin and not utils.verify_password(user_update.get("current_password", ""), user_db.password):
+    if not current_user.is_admin and not utils.verify_password(
+        user_update.get("current_password", ""), user_db.password
+    ):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
 
     # Validate email

@@ -200,7 +200,7 @@ class TestGmailScraper:
             scraper = GmailScraper()
             scraper.service = mock_service
 
-            result = scraper.search_messages("test@example.com", True, 1)
+            result = scraper.get_email_ids("test@example.com", True, 1)
 
         assert result == ["msg1", "msg2"]
         # Check that the list method was called with correct parameters
@@ -218,7 +218,7 @@ class TestGmailScraper:
             scraper = GmailScraper()
             scraper.service = mock_service
 
-            result = scraper.search_messages("test@example.com")
+            result = scraper.get_email_ids("test@example.com")
 
         assert result == []
 
@@ -239,7 +239,7 @@ class TestGmailScraper:
 
         with patch.object(GmailScraper, "_load_credentials"), patch.object(GmailScraper, "authenticate"):
             scraper = GmailScraper()
-            result = scraper._extract_body(payload)
+            result = scraper._extract_email_body(payload)
 
         assert result == "Hello World"
 
@@ -252,7 +252,7 @@ class TestGmailScraper:
 
         with patch.object(GmailScraper, "_load_credentials"), patch.object(GmailScraper, "authenticate"):
             scraper = GmailScraper()
-            result = scraper._extract_body(payload)
+            result = scraper._extract_email_body(payload)
 
         assert result == "Hello World"
 
@@ -316,7 +316,7 @@ class TestGmailScraper:
             scraper = GmailScraper()
             scraper.service = mock_service
 
-            result = scraper.get_message_data("test_message_id")
+            result = scraper.get_email_data("test_message_id")
 
         assert isinstance(result, Email)
         assert result.subject == "Job Alert"
@@ -346,7 +346,7 @@ class TestGmailScraper:
             scraper.service = mock_service
 
             with pytest.raises(ValueError, match="Email body does not contain a valid platform identifier"):
-                scraper.get_message_data("test_message_id")
+                scraper.get_email_data("test_message_id")
 
     def test_save_email_to_db_new_email(self, session, test_users, test_job_alert_emails) -> None:
         """Test saving new email to database"""

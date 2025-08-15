@@ -27,9 +27,11 @@ class JobAlertEmail(Owned, Base):
     date_received = Column(DateTime)
     platform = Column(String)
     body = Column(String)
+    service_log_id = Column(Integer, ForeignKey("service_log.id", ondelete="SET NULL"), nullable=True)
 
     # Many-to-many relationship with scraped jobs
     jobs = relationship("ScrapedJob", secondary=email_scrapedjob_mapping, back_populates="emails")
+    service_log = relationship("ServiceLog", back_populates="emails")
 
 
 class ScrapedJob(Owned, Base):
@@ -59,9 +61,10 @@ class ServiceLog(CommonBase, Base):
     """Represents logs of service operations and their status."""
 
     name = Column(String, nullable=False)
-    run_duration = Column(Float)
+    run_duration = Column(Float, nullable=True)
     run_datetime = Column(DateTime)
-    is_success = Column(Boolean, nullable=False)
+    is_success = Column(Boolean, nullable=True)
     error_message = Column(String, nullable=True)
     job_success_n = Column(Integer, nullable=True)
     job_fail_n = Column(Integer, nullable=True)
+    emails = relationship("JobAlertEmail", back_populates="service_log")

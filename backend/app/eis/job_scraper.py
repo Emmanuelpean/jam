@@ -209,7 +209,7 @@ class LinkedinJobScraper(JobScrapper):
 # Usage example:
 if __name__ == "__main__":
     # Now the API key and dataset_id are loaded from secrets.json
-    scraper = LinkedinJobScraper(["4270743052"])
+    scraper = LinkedinJobScraper(["4280160167"])
     job_data1 = scraper.scrape_job()
     print(job_data1)
 

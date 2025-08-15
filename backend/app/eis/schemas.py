@@ -3,7 +3,7 @@ from datetime import datetime
 from app.schemas import BaseModel, OwnedOut, Out, JobOut
 
 
-class JobAlertEmail(BaseModel):
+class JobAlertEmailIn(BaseModel):
     """Email model"""
 
     external_email_id: str
@@ -12,18 +12,20 @@ class JobAlertEmail(BaseModel):
     date_received: datetime | None = None
     platform: str | None = None
     body: str | None = None
+    service_log_id: int | None = None
 
 
-class EmailUpdate(JobAlertEmail):
+class EmailUpdate(JobAlertEmailIn):
     """Email model"""
 
     external_email_id: str | None = None
 
 
-class JobAlertEmailOut(JobAlertEmail, OwnedOut):
+class JobAlertEmailOut(JobAlertEmailIn, OwnedOut):
     """Email model"""
 
     jobs: list[JobOut]
+    service_log: "ServiceLogOut"
 
 
 class ScrapedJob(BaseModel):

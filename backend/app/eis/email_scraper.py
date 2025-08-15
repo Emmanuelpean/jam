@@ -21,8 +21,9 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 from app.database import session_local
+from app.eis import schemas
+from app.eis.eis_models import JobAlertEmail, ScrapedJob, ServiceLog
 from app.eis.job_scraper import LinkedinJobScraper, IndeedScrapper
-from app.eis.eis_models import JobAlertEmail, ScrapedJob, ServiceLog, Email
 from app.models import User
 from app.utils import get_gmail_logger, AppLogger
 
@@ -110,7 +111,7 @@ class GmailScraper(object):
 
     # ------------------------------------------------- EMAIL READING -------------------------------------------------
 
-    def search_messages(
+    def get_email_ids(
         self,
         sender_email: str = "",
         inbox_only: bool = True,
@@ -123,7 +124,8 @@ class GmailScraper(object):
         :return: List of message IDs matching the query"""
 
         query = ""
-        query += f"from:{sender_email}" if sender_email else ""
+        # query += f" from:{sender_email}" if sender_email else ""
+        query += f" deliveredto:{sender_email}" if sender_email else ""
         query += " in:inbox" if inbox_only else ""
         query += f" newer_than:{timedelta_days}d" if timedelta_days else ""
         query = query.strip()
@@ -132,7 +134,7 @@ class GmailScraper(object):
         messages = result.get("messages", [])
         return [msg["id"] for msg in messages]
 
-    def _extract_body(self, payload: dict) -> str:
+    def _extract_email_body(self, payload: dict) -> str:
         """Extract email body from payload
         :param payload: Email payload dictionary
         :return: Email body content as a string"""
@@ -161,10 +163,11 @@ class GmailScraper(object):
 
         return base64.urlsafe_b64decode(data).decode("utf-8")
 
-    def get_message_data(self, message_id: str) -> Email:
+    def get_email_data(self, message_id: str, sender: str,) -> schemas.JobAlertEmailIn:
         """Extract readable content from an email
         :param message_id: Message ID
-        :return: Dictionary containing email metadata and body content"""
+        :param sender: Sender email address
+        :return: JobAlertEmailIn object containing email metadata and body content"""
 
         message = self.service.users().messages().get(userId="me", id=message_id, format="full").execute()
 
@@ -173,9 +176,8 @@ class GmailScraper(object):
 
         # Extract data
         subject = next((h["value"] for h in headers if h["name"] == "Subject"), "No Subject")
-        sender = next((h["value"] for h in headers if h["name"] == "From"), "Unknown Sender")
         date = next((h["value"] for h in headers if h["name"] == "Date"), "Unknown Date")
-        body = self._extract_body(payload)
+        body = self._extract_email_body(payload)
 
         if "linkedin" in body.lower():
             platform = "linkedin"
@@ -184,22 +186,42 @@ class GmailScraper(object):
         else:
             raise ValueError("Email body does not contain a valid platform identifier.")
 
-        return Email(
+        # Common email date formats to try
+        date_formats = [
+            "%a, %d %b %Y %H:%M:%S %z",  # Standard RFC 2822: "Thu, 14 Aug 2025 02:25:53 +0000"
+            "%a, %d %b %Y %H:%M:%S %z (UTC)",  # Original format with (UTC)
+            "%a, %d %b %Y %H:%M:%S",  # Without timezone
+            "%d %b %Y %H:%M:%S %z",  # Without day name
+            "%a, %d %b %Y %H:%M:%S GMT",  # GMT timezone
+            "%a, %d %b %Y %H:%M:%S UTC",  # UTC timezone
+        ]
+
+        date_received = None
+        for date_format in date_formats:
+            try:
+                date_received = datetime.strptime(date, date_format)
+                break
+            except ValueError:
+                continue
+
+        return schemas.JobAlertEmailIn(
             external_email_id=message_id,
             subject=subject,
             sender=clean_email_address(sender),
-            date_received=datetime.strptime(date, "%a, %d %b %Y %H:%M:%S %z"),
+            date_received=date_received,
             body=body,
             platform=platform,
         )
 
     @staticmethod
     def save_email_to_db(
-        email_data: Email,
+        email_data: schemas.JobAlertEmailIn,
+        service_log_id: int,
         db,
     ) -> tuple[JobAlertEmail, bool]:
         """Save email and job IDs to database
         :param email_data: Dictionary containing email metadata
+        :param service_log_id: ID of the ServiceLog instance associated with this email
         :param db: SQLAlchemy database session
         :return: JobEmails instance and whether the record was created or already existing"""
 
@@ -215,7 +237,8 @@ class GmailScraper(object):
         # noinspection PyArgumentList
         email_record = JobAlertEmail(
             owner_id=get_user_id_from_email(email_data.sender, db),
-            **email_data.model_dump(),
+            service_log_id=service_log_id,
+            **email_data.model_dump(exclude_unset=True),
         )
         db.add(email_record)
         db.commit()
@@ -331,7 +354,7 @@ class GmailScraper(object):
     # -------------------------------------------------- JOB SCRAPING --------------------------------------------------
 
     @staticmethod
-    def save_job_json_to_db(
+    def save_job_data_to_db(
         job_records: list[ScrapedJob] | ScrapedJob,
         job_data: list[dict] | dict,
         db,
@@ -379,6 +402,15 @@ class GmailScraper(object):
 
         with session_local() as db:
 
+            # noinspection PyArgumentList
+            service_log_entry = ServiceLog(
+                name="Email Scraper Service",
+                run_datetime=start_time,
+            )
+            db.add(service_log_entry)
+            db.commit()
+            db.refresh(service_log_entry)
+
             try:
                 users = db.query(User).all()
                 logger.info(f"Found {len(users)} users to process")
@@ -391,7 +423,7 @@ class GmailScraper(object):
 
                     # Get the list of all emails
                     try:
-                        email_external_ids = self.search_messages(user.email, True, timedelta_days)
+                        email_external_ids = self.get_email_ids(user.email, True, timedelta_days)
                         stats["users_processed"] += 1
                     except Exception as exception:
                         logger.exception(f"Failed to search messages due to error: {exception}. Skipping user.")
@@ -402,18 +434,10 @@ class GmailScraper(object):
                     for email_external_id in email_external_ids:
                         logger.info(f"Processing email with ID: {email_external_id}")
                         try:
-                            email_data = self.get_message_data(email_external_id)
+                            email_data = self.get_email_data(email_external_id, user.email)
+                            email_record, is_new = self.save_email_to_db(email_data, service_log_entry.id, db)
                         except Exception as exception:
-                            message = f"Failed to get email data for email ID {email_external_id} due to error: {exception}. Skipping email."
-                            logger.exception(message)
-                            continue  # next email
-
-                        # Save the email data
-                        try:
-                            logger.info(f"Saving email: {email_data.subject}")
-                            email_record, is_new = self.save_email_to_db(email_data, db)
-                        except Exception as exception:
-                            message = f"Failed to save email data for email ID {email_external_id} due to error: {exception}. Skipping email."
+                            message = f"Failed to get and save email data for email ID {email_external_id} due to error: {exception}. Skipping email."
                             logger.exception(message)
                             continue  # next email
 
@@ -464,7 +488,7 @@ class GmailScraper(object):
                     logger.info(f"Scraping job ID: {job_record.external_job_id}")
                     try:
                         job_data = scrapper.scrape_job()
-                        self.save_job_json_to_db(job_record, job_data, db)
+                        self.save_job_data_to_db(job_record, job_data, db)
                         stats["jobs_scraped"] += 1
                     except Exception as exception:
                         message = f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: {exception}. Skipping job."
@@ -489,16 +513,10 @@ class GmailScraper(object):
                 success = False
                 error_message = str(exception)
 
-            entry = ServiceLog(
-                name="EIS",
-                run_duration=stats["duration_seconds"],
-                run_datetime=start_time,
-                is_success=success,
-                error_message=error_message,
-                job_success_n=stats["jobs_scraped"],
-                job_fail_n=stats["jobs_failed"],
-            )
-            db.add(entry)
+            service_log_entry.is_success = success
+            service_log_entry.error_message = error_message
+            service_log_entry.job_success_n = stats["jobs_scraped"]
+            service_log_entry.job_fail_n = stats["jobs_failed"]
             db.commit()
 
             return stats
@@ -585,10 +603,12 @@ class GmailScraperService:
 
 if __name__ == "__main__":
     gmail = GmailScraper()
-    # emails = gmail.search_messages("emmanuelpean@gmail.com", 10)
-    # email_d = gmail.get_message_data(emails[0])
+    # emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=100)
+    # print(emails)
+    # email_d = gmail.get_email_data(emails[40])
+    # print(email_d)
     # gmail.save_email_to_db(email_d, next(get_db()))
-    gmail.run_scraping(10)
+    gmail.run_scraping(2)
 
     # service = GmailScraperService()
     # service.start()

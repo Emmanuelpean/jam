@@ -70,9 +70,9 @@ def seed_database() -> None:
         files = create_files(db)
         applications = create_job_applications(db)
         interviews = create_interviews(db, people)
+        service_logs = create_service_logs(db)
         alert_emails = create_job_alert_emails(db)
         scraped_jobs = create_scraped_jobs(db, alert_emails)
-        service_logs = create_service_logs(db)
         job_application_updates = create_job_application_updates(db)
 
         print("\n" + "=" * 50)
@@ -88,9 +88,9 @@ def seed_database() -> None:
         print(f"Files: {len(files)}")
         print(f"Job Applications: {len(applications)}")
         print(f"Interviews: {len(interviews)}")
+        print(f"Service Logs: {len(service_logs)}")
         print(f"Job Alert Emails: {len(alert_emails)}")
         print(f"Scraped Jobs: {len(scraped_jobs)}")
-        print(f"Service Logs: {len(service_logs)}")
         print(f"Job Application Updates: {len(job_application_updates)}")
         print("=" * 50)
 
