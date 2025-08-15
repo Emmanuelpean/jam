@@ -99,7 +99,7 @@ const ToastStack = ({ toasts, onClose, position = "top-end" }) => {
 					show={toast.show}
 					message={toast.message}
 					variant={toast.variant}
-					title={toast.title}
+					title={toast.itemName}
 					delay={toast.delay}
 					onClose={() => onClose(toast.id)}
 				/>

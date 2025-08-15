@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useDropzone } from "react-dropzone";
 import useGenericAlert from "../hooks/useGenericAlert";
-import AlertModal from "../components/modals/alert/AlertModal";
+import AlertModal from "../components/modals/AlertModal";
 import "./FileUtils.css";
 
 const formatFileSize = (bytes) => {

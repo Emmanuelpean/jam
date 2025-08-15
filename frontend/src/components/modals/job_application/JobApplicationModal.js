@@ -6,7 +6,7 @@ import { fileToBase64 } from "../../../utils/FileUtils";
 import { formFields, useFormOptions } from "../../rendering/FormRenders";
 import { viewFields } from "../../rendering/ViewRenders";
 import { useAuth } from "../../../contexts/AuthContext";
-import AlertModal from "../alert/AlertModal";
+import AlertModal from "../AlertModal";
 
 export const JobApplicationModal = ({
 	show,

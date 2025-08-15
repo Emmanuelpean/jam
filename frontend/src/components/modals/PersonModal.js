@@ -4,6 +4,8 @@ import { formFields, useFormOptions } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
 import { personsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
+import AlertModal from "./AlertModal";
+import useGenericAlert from "../../hooks/useGenericAlert";
 
 export const PersonModal = ({
 	show,
@@ -16,6 +18,7 @@ export const PersonModal = ({
 	size = "lg",
 }) => {
 	const { companies, openCompanyModal, renderCompanyModal } = useFormOptions(["companies"]);
+	const { alertState, hideAlert } = useGenericAlert();
 	const { token } = useAuth();
 
 	const formFieldsArray = [
@@ -74,9 +77,8 @@ export const PersonModal = ({
 			<GenericModal
 				show={show}
 				onHide={onHide}
-				mode="formview"
 				submode={submode}
-				title="Person"
+				itemName="Person"
 				size={size}
 				data={data || {}}
 				fields={fields}
@@ -88,6 +90,7 @@ export const PersonModal = ({
 			/>
 
 			{renderCompanyModal()}
+			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</>
 	);
 };

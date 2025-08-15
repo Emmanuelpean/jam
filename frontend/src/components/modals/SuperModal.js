@@ -6,7 +6,7 @@ import { fileToBase64 } from "../../utils/FileUtils";
 import { formFields, useFormOptions } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
 import { useAuth } from "../../contexts/AuthContext";
-import AlertModal from "./alert/AlertModal";
+import AlertModal from "./AlertModal";
 import { InterviewModal } from "./InterviewModal";
 
 export const JobAndApplicationModal = ({
@@ -440,7 +440,7 @@ export const JobAndApplicationModal = ({
 			<GenericModal
 				show={show}
 				onHide={onHide}
-				title="Job & Application"
+				itemName="Job & Application"
 				size={size}
 				tabs={tabs}
 				defaultActiveTab="job"

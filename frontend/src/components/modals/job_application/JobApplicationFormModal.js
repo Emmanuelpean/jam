@@ -6,7 +6,7 @@ import { fileToBase64 } from "../../../utils/FileUtils";
 import InterviewsTable from "../../tables/InterviewTable";
 import { formFields } from "../../rendering/FormRenders";
 import { useAuth } from "../../../contexts/AuthContext";
-import AlertModal from "../alert/AlertModal";
+import AlertModal from "../AlertModal";
 import { formatDateTime } from "../../../utils/TimeUtils";
 import { toSelectOptions } from "../../../utils/Utils";
 

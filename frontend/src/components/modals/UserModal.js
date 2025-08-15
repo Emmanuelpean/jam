@@ -4,7 +4,7 @@ import { formFields } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
 import { userApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import "../Auth/Login.css";
+import "../../pages/Auth/Login.css";
 
 export const UserModal = ({
 	show,
@@ -69,7 +69,7 @@ export const UserModal = ({
 			onHide={onHide}
 			mode="formview"
 			submode={submode}
-			title="User"
+			itemName="User"
 			size={size}
 			data={data || {}}
 			fields={fields}

@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../services/Api";
-import { renderFieldValue, getTableIcon } from "../rendering/Renders";
+import { getTableIcon, renderFieldValue } from "../rendering/Renders";
 import { accessAttribute } from "../../utils/Utils";
-import AlertModal from "../modals/alert/AlertModal";
+import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { pluralize } from "../../utils/StringUtils";
@@ -73,7 +73,7 @@ export const useTableData = (endpoint, dependencies = [], queryParams = {}, cust
 export const createGenericDeleteHandler = ({
 	endpoint,
 	token,
-	showConfirm,
+	showDelete,
 	showError,
 	removeItem,
 	setData,
@@ -83,7 +83,7 @@ export const createGenericDeleteHandler = ({
 	return async (item) => {
 		const itemName = item[nameKey];
 		try {
-			await showConfirm({
+			await showDelete({
 				title: `Delete ${itemType}`,
 				message: `Are you sure you want to delete "${itemName}"? This action cannot be undone.`,
 				confirmText: "Delete",
@@ -100,8 +100,7 @@ export const createGenericDeleteHandler = ({
 				window.location.reload();
 			}
 		} catch (error) {
-			if (error.message !== "User cancelled") {
-				console.error(`Error deleting ${itemType}:`, error);
+			if (error !== false) {
 				await showError({
 					message: `Failed to delete ${itemType}. Please check your connection and try again.`,
 				});
@@ -109,7 +108,6 @@ export const createGenericDeleteHandler = ({
 		}
 	};
 };
-
 /**
  * Comprehensive table component with modals, sorting, searching, and CRUD operations
  */
@@ -153,7 +151,7 @@ export const GenericTableWithModals = ({
 	children,
 }) => {
 	const { token } = useAuth();
-	const { alertState, showConfirm, showError, hideAlert } = useGenericAlert();
+	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
 	const [contextMenu, setContextMenu] = useState(null);
 	const [currentPage, setCurrentPage] = useState(0);
 	const [pageSize, setPageSize] = useState(20);
@@ -294,7 +292,7 @@ export const GenericTableWithModals = ({
 	const handleDelete = createGenericDeleteHandler({
 		endpoint,
 		token,
-		showConfirm,
+		showDelete,
 		showError,
 		removeItem,
 		setData,

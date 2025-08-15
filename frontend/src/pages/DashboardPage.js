@@ -90,7 +90,7 @@ const JobSearchDashboard = () => {
 			showLoading("Loading job details...");
 			// Find the job by title from the jobs data we already have
 			const jobsResponse = await api.get("jobs/", token);
-			const job = jobsResponse.find((j) => j.title === jobTitle);
+			const job = jobsResponse.find((j) => j.itemName === jobTitle);
 
 			if (job) {
 				setSelectedJob(job);
@@ -113,13 +113,13 @@ const JobSearchDashboard = () => {
 	};
 
 	// Rest of your component remains the same...
-	const StatCard = ({ title, value, icon, variant, description }) => (
+	const StatCard = ({ itemName, value, icon, variant, description }) => (
 		<Card className="h-100 shadow-sm border-0">
 			<Card.Body className="d-flex align-items-center">
 				<div className="flex-grow-1">
 					<div className="d-flex align-items-center mb-2">
 						<i className={`bi bi-${icon} text-${variant} me-2`} style={{ fontSize: "1.5rem" }}></i>
-						<h5 className="card-title mb-0">{title}</h5>
+						<h5 className="card-itemName mb-0">{itemName}</h5>
 					</div>
 					<div className={`display-6 fw-bold text-${variant}`}>{value}</div>
 					{description && <small className="text-muted">{description}</small>}

@@ -7,35 +7,20 @@ import { renderInputField } from "../rendering/WidgetRenders";
 import { api } from "../../services/Api";
 import { viewFields as viewFieldsLib } from "../rendering/ViewRenders";
 
-const DEFAULT_ICONS = {
-	formview: "bi bi-eye",
-	confirmation: "bi bi-exclamation-triangle",
-	alert: "bi bi-info-circle",
-	custom: "",
-};
-
-const DEFAULT_ALERT_ICONS = {
-	success: "bi-check-circle-fill",
-	warning: "bi-exclamation-triangle-fill",
-	error: "bi-x-circle-fill",
-	info: "bi-info-circle-fill",
-};
-
 const GenericModal = ({
 	// Basic modal props
 	show, // Boolean - Controls modal visibility
 	onHide, // Function - Called when modal should be closed
-	title, // String - Modal title text
+	itemName = "Entry", // String - Modal title text
 	size = "lg", // String - Modal size: "sm", "md", "lg", "xl"
 	centered = true, // Boolean - Whether to center modal vertically
 
-	// NEW: Tab props (optional - for backward compatibility)
+	// Tab props
 	tabs = null, // Array of tab objects: [{ key: "tab1", title: "Tab 1", mode, submode, fields, data, etc. }]
 	defaultActiveTab = null, // String - Default active tab key
 	onTabChange = null, // Function - Called when tab changes
 
 	// Modal mode
-	mode = "formview", // String - Modal type: 'formview', 'alert', 'confirmation', 'custom'
 	submode = "view", // String - Submode for formview: 'view', 'edit', 'add'
 	fields = {}, // Field definitions or field groups (or object with form/view keys for formview mode)
 
@@ -48,19 +33,6 @@ const GenericModal = ({
 	customSubmitHandler = null,
 	onFormDataChange = null, // Function - Called when form data changes
 	showSystemFields = true, // Boolean - Whether to show created/modified dates
-
-	// Alert mode props
-	alertType = "info", // String - Alert type: 'info', 'success', 'warning', 'error'
-	alertMessage, // String|React.Node - Message to display in alert mode
-	alertIcon = null, // String - Custom icon class for alert
-	confirmText = "OK", // String - Text for confirm button
-	cancelText = "Cancel", // String - Text for cancel button
-	showCancel = false, // Boolean - Whether to show cancel button in alert mode
-
-	// Confirmation mode props
-	confirmationMessage = "Are you sure you want to proceed?", // String - Message for confirmation dialog
-	onConfirm = null, // Function - Called when user confirms action
-	confirmVariant = "danger", // String - Bootstrap variant for confirm button
 }) => {
 	const { token } = useAuth();
 	const [formData, setFormData] = useState(data || {});
@@ -70,7 +42,6 @@ const GenericModal = ({
 	const [isTransitioning, setIsTransitioning] = useState(false); // Animation state
 	const [contentHeight, setContentHeight] = useState("auto"); // Height for smooth transitions
 
-	// NEW: Tab state (only used when tabs are provided)
 	const [activeTab, setActiveTab] = useState(() => {
 		if (tabs && tabs.length > 0) {
 			return defaultActiveTab || tabs[0].key;
@@ -95,7 +66,6 @@ const GenericModal = ({
 		if (currentTab) {
 			// Use tab-specific props, falling back to main props
 			return {
-				mode: currentTab.mode !== undefined ? currentTab.mode : mode,
 				submode: currentTab.submode !== undefined ? currentTab.submode : submode,
 				fields: currentTab.fields !== undefined ? currentTab.fields : fields,
 				data: currentTab.data !== undefined ? currentTab.data : data,
@@ -110,19 +80,11 @@ const GenericModal = ({
 					currentTab.onFormDataChange !== undefined ? currentTab.onFormDataChange : onFormDataChange,
 				showSystemFields:
 					currentTab.showSystemFields !== undefined ? currentTab.showSystemFields : showSystemFields,
-				alertType: currentTab.alertType !== undefined ? currentTab.alertType : alertType,
-				alertMessage: currentTab.alertMessage !== undefined ? currentTab.alertMessage : alertMessage,
-				alertIcon: currentTab.alertIcon !== undefined ? currentTab.alertIcon : alertIcon,
-				confirmationMessage:
-					currentTab.confirmationMessage !== undefined ? currentTab.confirmationMessage : confirmationMessage,
-				onConfirm: currentTab.onConfirm !== undefined ? currentTab.onConfirm : onConfirm,
-				confirmVariant: currentTab.confirmVariant !== undefined ? currentTab.confirmVariant : confirmVariant,
 			};
 		}
 
 		// No tabs - return original props (backward compatibility)
 		return {
-			mode,
 			submode,
 			fields,
 			data,
@@ -133,12 +95,6 @@ const GenericModal = ({
 			customSubmitHandler,
 			onFormDataChange,
 			showSystemFields,
-			alertType,
-			alertMessage,
-			alertIcon,
-			confirmationMessage,
-			onConfirm,
-			confirmVariant,
 		};
 	};
 
@@ -147,23 +103,23 @@ const GenericModal = ({
 		if (show && !previousShow.current) {
 			const effectiveProps = getEffectiveProps();
 
-			if (effectiveProps.mode === "formview") {
-				// Handle different submodes
-				if (effectiveProps.submode === "add") {
-					setFormData({ ...effectiveProps.data });
-					setIsEditing(true);
-				} else if (effectiveProps.submode === "edit") {
-					setFormData({ ...effectiveProps.data });
-					setIsEditing(true);
-				} else {
-					// Default view submode
-					setFormData({ ...effectiveProps.data });
-					setIsEditing(false);
-				}
-				setErrors({});
-				setIsTransitioning(false);
-				setContentHeight("auto");
+			// Handle different submodes
+			if (effectiveProps.submode === "add") {
+				// Add submode
+				setFormData({ ...effectiveProps.data });
+				setIsEditing(true);
+			} else if (effectiveProps.submode === "edit") {
+				// Edit submode
+				setFormData({ ...effectiveProps.data });
+				setIsEditing(true);
+			} else {
+				// Default view submode
+				setFormData({ ...effectiveProps.data });
+				setIsEditing(false);
 			}
+			setErrors({});
+			setIsTransitioning(false);
+			setContentHeight("auto");
 
 			// Reset active tab when modal opens (only if tabs are provided)
 			if (tabs && tabs.length > 0) {
@@ -171,15 +127,15 @@ const GenericModal = ({
 			}
 		}
 		previousShow.current = show;
-	}, [show, data, mode, submode, tabs, defaultActiveTab]);
+	}, [show, data, submode, tabs, defaultActiveTab]);
 
 	// Notify parent component when form data changes
 	useEffect(() => {
 		const effectiveProps = getEffectiveProps();
-		if (effectiveProps.onFormDataChange && effectiveProps.mode === "formview" && isEditing) {
+		if (effectiveProps.onFormDataChange && isEditing) {
 			effectiveProps.onFormDataChange(formData);
 		}
-	}, [formData, mode, isEditing, activeTab]);
+	}, [formData, isEditing, activeTab]);
 
 	// Handle tab change (only used when tabs are provided)
 	const handleTabChange = (tabKey) => {
@@ -191,18 +147,18 @@ const GenericModal = ({
 		const newTab = tabs.find((tab) => tab.key === tabKey);
 		if (newTab) {
 			const newData = newTab.data || data;
-			if (newTab.mode === "formview") {
-				if (newTab.submode === "add") {
-					setFormData({ ...newData });
-					setIsEditing(true);
-				} else if (newTab.submode === "edit") {
-					setFormData({ ...newData });
-					setIsEditing(true);
-				} else {
-					setFormData({ ...newData });
-					setIsEditing(false);
-				}
+
+			if (newTab.submode === "add") {
+				setFormData({ ...newData });
+				setIsEditing(true);
+			} else if (newTab.submode === "edit") {
+				setFormData({ ...newData });
+				setIsEditing(true);
+			} else {
+				setFormData({ ...newData });
+				setIsEditing(false);
 			}
+
 			setErrors({});
 			setIsTransitioning(false);
 			setContentHeight("auto");
@@ -217,18 +173,16 @@ const GenericModal = ({
 	const handleHide = () => {
 		const effectiveProps = getEffectiveProps();
 
-		if (effectiveProps.mode === "formview") {
-			if (effectiveProps.submode === "add") {
-				setFormData({});
-			} else {
-				setFormData({ ...effectiveProps.data });
-			}
-			setErrors({});
-			setSubmitting(false);
-			setIsEditing(effectiveProps.submode === "add" || effectiveProps.submode === "edit");
-			setIsTransitioning(false);
-			setContentHeight("auto");
+		if (effectiveProps.submode === "add") {
+			setFormData({});
+		} else {
+			setFormData({ ...effectiveProps.data });
 		}
+		setErrors({});
+		setSubmitting(false);
+		setIsEditing(effectiveProps.submode === "add" || effectiveProps.submode === "edit");
+		setIsTransitioning(false);
+		setContentHeight("auto");
 
 		// Reset active tab (only if tabs are provided)
 		if (tabs && tabs.length > 0) {
@@ -276,7 +230,6 @@ const GenericModal = ({
 			}
 		}
 
-		// Original logic for non-tabbed modals
 		const targetRef = targetMode === "form" ? formContentRef : viewContentRef;
 		if (targetRef.current) {
 			return targetRef.current.scrollHeight;
@@ -284,7 +237,6 @@ const GenericModal = ({
 		return "auto";
 	};
 
-	// Handle edit button click (for formview mode) with smooth height animation
 	const handleEdit = () => {
 		if (isTransitioning) return;
 
@@ -317,7 +269,6 @@ const GenericModal = ({
 		}, 0);
 	};
 
-	// Handle cancel edit (for formview mode) with smooth height animation
 	const handleCancelEdit = () => {
 		if (isTransitioning) return;
 
@@ -404,14 +355,11 @@ const GenericModal = ({
 	const getCurrentFields = () => {
 		const effectiveProps = getEffectiveProps();
 
-		if (effectiveProps.mode === "formview") {
-			if (isEditing) {
-				return effectiveProps.fields.form || effectiveProps.fields;
-			} else {
-				return effectiveProps.fields.view || effectiveProps.fields;
-			}
+		if (isEditing) {
+			return effectiveProps.fields.form || effectiveProps.fields;
+		} else {
+			return effectiveProps.fields.view || effectiveProps.fields;
 		}
-		return effectiveProps.fields;
 	};
 
 	// Shared field group rendering function
@@ -473,12 +421,10 @@ const GenericModal = ({
 		return effectiveProps.data;
 	};
 
-	// Render both view and form content for formview mode
 	const renderFormViewContent = () => {
 		const effectiveProps = getEffectiveProps();
 		const viewF = effectiveProps.fields.view || effectiveProps.fields;
 		const formF = effectiveProps.fields.form || effectiveProps.fields;
-		const currentData = getCurrentData();
 
 		return (
 			<>
@@ -634,21 +580,6 @@ const GenericModal = ({
 		e.preventDefault();
 		const effectiveProps = getEffectiveProps();
 
-		if (effectiveProps.mode === "alert") {
-			if (effectiveProps.onSuccess) effectiveProps.onSuccess();
-			handleHide();
-			return;
-		}
-
-		if (effectiveProps.mode === "confirmation") {
-			if (effectiveProps.onConfirm) effectiveProps.onConfirm();
-			handleHide();
-			return;
-		}
-
-		if (effectiveProps.mode === "formview" && !isEditing) return;
-		if (effectiveProps.mode !== "formview") return;
-
 		// Add loading state for async validation
 		setSubmitting(true);
 		setErrors({});
@@ -697,7 +628,7 @@ const GenericModal = ({
 			}
 		} catch (err) {
 			console.error(
-				`Error ${effectiveProps.submode === "add" ? "creating" : "updating"} ${title.toLowerCase()}:`,
+				`Error ${effectiveProps.submode === "add" ? "creating" : "updating"} ${itemName.toLowerCase()}:`,
 				err,
 			);
 
@@ -705,7 +636,7 @@ const GenericModal = ({
 			const errorMessage =
 				err.data?.detail ||
 				err.message ||
-				`Failed to ${effectiveProps.submode === "add" ? "create" : "update"} ${title.toLowerCase()}. Please try again.`;
+				`Failed to ${effectiveProps.submode === "add" ? "create" : "update"} ${itemName.toLowerCase()}. Please try again.`;
 
 			setErrors({
 				submit: errorMessage,
@@ -719,34 +650,18 @@ const GenericModal = ({
 	const renderHeader = () => {
 		const effectiveProps = getEffectiveProps();
 
-		// Icon
+		// Icon & Title
 		let icon;
-		if (effectiveProps.alertIcon) {
-			icon = effectiveProps.alertIcon;
-		} else if (effectiveProps.mode === "alert") {
-			icon = DEFAULT_ALERT_ICONS[effectiveProps.alertType];
-		} else if (effectiveProps.mode === "formview") {
-			if (effectiveProps.submode === "add") {
-				icon = "bi bi-plus-circle";
-			} else if (effectiveProps.submode === "edit" || isEditing) {
-				icon = "bi bi-pencil";
-			} else {
-				icon = "bi bi-eye";
-			}
+		let text;
+		if (effectiveProps.submode === "add") {
+			icon = "bi bi-plus-circle";
+			text = `Add New ${itemName}`;
+		} else if (effectiveProps.submode === "edit" || isEditing) {
+			icon = "bi bi-pencil";
+			text = `Edit ${itemName}`;
 		} else {
-			icon = DEFAULT_ICONS[effectiveProps.mode];
-		}
-
-		// Title
-		let text = title;
-		if (effectiveProps.mode === "formview") {
-			if (effectiveProps.submode === "add") {
-				text = `Add New ${title}`;
-			} else if (effectiveProps.submode === "edit" || isEditing) {
-				text = `Edit ${title}`;
-			} else {
-				text = `${title} Details`;
-			}
+			icon = "bi bi-eye";
+			text = `${itemName} Details`;
 		}
 
 		return (
@@ -761,7 +676,6 @@ const GenericModal = ({
 
 	// Render modal body content based on current tab or main content
 	const renderBodyContent = () => {
-		const effectiveProps = getEffectiveProps();
 		const currentTab = getCurrentTab();
 
 		// Handle custom tab content
@@ -769,40 +683,17 @@ const GenericModal = ({
 			return renderCustomTabContent(currentTab);
 		}
 
-		// Handle different modes
-		if (effectiveProps.mode === "formview") {
-			return (
-				<div
-					className="modal-content-container"
-					style={{
-						height: contentHeight,
-						transition: contentHeight === "auto" ? "none" : "height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
-					}}
-				>
-					{renderFormViewContent()}
-				</div>
-			);
-		} else if (effectiveProps.mode === "alert") {
-			return (
-				<div>
-					<div className="text-center py-3">
-						{typeof effectiveProps.alertMessage === "string" ? (
-							<p className="mb-0">{effectiveProps.alertMessage}</p>
-						) : (
-							effectiveProps.alertMessage
-						)}
-					</div>
-				</div>
-			);
-		} else if (effectiveProps.mode === "confirmation") {
-			return (
-				<div>
-					<p className="mb-0">{effectiveProps.confirmationMessage}</p>
-				</div>
-			);
-		}
-
-		return null;
+		return (
+			<div
+				className="modal-content-container"
+				style={{
+					height: contentHeight,
+					transition: contentHeight === "auto" ? "none" : "height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
+				}}
+			>
+				{renderFormViewContent()}
+			</div>
+		);
 	};
 
 	// Render modal body
@@ -820,7 +711,6 @@ const GenericModal = ({
 			);
 		}
 
-		// No tabs - render content directly (backward compatibility)
 		return renderBodyContent();
 	};
 
@@ -828,141 +718,96 @@ const GenericModal = ({
 	const renderFooter = () => {
 		const effectiveProps = getEffectiveProps();
 
-		if (effectiveProps.mode === "formview") {
-			if (isEditing) {
-				if (effectiveProps.submode === "add") {
-					return (
-						<Modal.Footer>
-							<div className="d-flex flex-column w-100 gap-2">
-								<div className="modal-buttons-container">
-									<Button
-										variant="secondary"
-										onClick={handleHide}
-										disabled={isTransitioning}
-										id="cancel-button"
-									>
-										Cancel
-									</Button>
-									<Button
-										variant="primary"
-										type="submit"
-										disabled={submitting || isTransitioning}
-										id="confirm-button"
-									>
-										{submitting ? (
-											<>
-												<Spinner animation="border" size="sm" className="me-2" />
-												Submitting...
-											</>
-										) : (
-											"Confirm"
-										)}
-									</Button>
-								</div>
+		if (isEditing) {
+			if (effectiveProps.submode === "add") {
+				return (
+					<Modal.Footer>
+						<div className="d-flex flex-column w-100 gap-2">
+							<div className="modal-buttons-container">
+								<Button
+									variant="secondary"
+									onClick={handleHide}
+									disabled={isTransitioning}
+									id="cancel-button"
+								>
+									Cancel
+								</Button>
+								<Button
+									variant="primary"
+									type="submit"
+									disabled={submitting || isTransitioning}
+									id="confirm-button"
+								>
+									{submitting ? (
+										<>
+											<Spinner animation="border" size="sm" className="me-2" />
+											Submitting...
+										</>
+									) : (
+										"Confirm"
+									)}
+								</Button>
 							</div>
-						</Modal.Footer>
-					);
-				} else {
-					return (
-						<Modal.Footer>
-							<div className="d-flex flex-column w-100 gap-2">
-								{/* First row: Delete and Confirm */}
-								<div className="modal-buttons-container">
-									<Button variant="danger" disabled={isTransitioning} id="delete-button">
-										<i className="bi bi-trash me-2"></i>
-										Delete
-									</Button>
-
-									<Button
-										variant="primary"
-										type="submit"
-										disabled={submitting || isTransitioning}
-										id="confirm-button"
-									>
-										{submitting ? (
-											<>
-												<Spinner animation="border" size="sm" className="me-2" />
-												Updating...
-											</>
-										) : (
-											"Update"
-										)}
-									</Button>
-								</div>
-								{/* Second row: Cancel */}
-								<div className="modal-buttons-container">
-									<Button
-										variant="secondary"
-										onClick={effectiveProps.submode === "edit" ? handleHide : handleCancelEdit}
-										disabled={isTransitioning}
-										id="cancel-button"
-									>
-										{effectiveProps.submode === "edit" ? "Close" : "Cancel"}
-									</Button>
-								</div>
-							</div>
-						</Modal.Footer>
-					);
-				}
+						</div>
+					</Modal.Footer>
+				);
 			} else {
 				return (
 					<Modal.Footer>
-						<div className="modal-buttons-container">
-							<Button
-								variant="secondary"
-								onClick={handleHide}
-								disabled={isTransitioning}
-								id="cancel-button"
-							>
-								Close
-							</Button>
-							{effectiveProps.fields.form && effectiveProps.fields.form.length > 0 && (
+						<div className="d-flex flex-column w-100 gap-2">
+							{/* First row: Delete and Confirm */}
+							<div className="modal-buttons-container">
+								<Button variant="danger" disabled={isTransitioning} id="delete-button">
+									<i className="bi bi-trash me-2"></i>
+									Delete
+								</Button>
+
 								<Button
 									variant="primary"
-									onClick={handleEdit}
-									disabled={isTransitioning}
-									id="edit-button"
+									type="submit"
+									disabled={submitting || isTransitioning}
+									id="confirm-button"
 								>
-									Edit
+									{submitting ? (
+										<>
+											<Spinner animation="border" size="sm" className="me-2" />
+											Updating...
+										</>
+									) : (
+										"Update"
+									)}
 								</Button>
-							)}
+							</div>
+							{/* Second row: Cancel */}
+							<div className="modal-buttons-container">
+								<Button
+									variant="secondary"
+									onClick={effectiveProps.submode === "edit" ? handleHide : handleCancelEdit}
+									disabled={isTransitioning}
+									id="cancel-button"
+								>
+									{effectiveProps.submode === "edit" ? "Close" : "Cancel"}
+								</Button>
+							</div>
 						</div>
 					</Modal.Footer>
 				);
 			}
-		} else if (effectiveProps.mode === "alert") {
-			return (
-				<Modal.Footer className={"modal-buttons-container"}>
-					{showCancel && (
-						<Button
-							variant="secondary"
-							onClick={handleHide}
-							size="lg"
-							style={{ minWidth: "100px" }}
-							className="me-2"
-							id="cancel-button"
-						>
-							{cancelText}
-						</Button>
-					)}
-					<Button onClick={handleSubmit} size="lg" style={{ minWidth: "100px" }} id="confirm-button">
-						{confirmText}
-					</Button>
-				</Modal.Footer>
-			);
-		} else if (effectiveProps.mode === "confirmation") {
-			return (
-				<Modal.Footer className={"modal-buttons-container"}>
-					<Button variant="secondary" onClick={handleHide} id="cancel-button">
-						{cancelText}
-					</Button>
-					<Button variant={effectiveProps.confirmVariant} onClick={handleSubmit} id="confirm-button">
-						{confirmText}
-					</Button>
-				</Modal.Footer>
-			);
 		} else {
-			return null;
+			return (
+				<Modal.Footer>
+					<div className="modal-buttons-container">
+						<Button variant="secondary" onClick={handleHide} disabled={isTransitioning} id="cancel-button">
+							Close
+						</Button>
+						{effectiveProps.fields.form && effectiveProps.fields.form.length > 0 && (
+							<Button variant="primary" onClick={handleEdit} disabled={isTransitioning} id="edit-button">
+								Edit
+							</Button>
+						)}
+					</div>
+				</Modal.Footer>
+			);
 		}
 	};
 
@@ -979,15 +824,11 @@ const GenericModal = ({
 	);
 
 	const getModalId = () => {
-		const effectiveProps = getEffectiveProps();
-		if (effectiveProps.mode === "formview") {
-			if (isEditing) {
-				return `modal-${effectiveProps.mode}-edit-${title.toLowerCase()}`;
-			} else {
-				return `modal-${effectiveProps.mode}-view-${title.toLowerCase()}`;
-			}
+		if (isEditing) {
+			return `modal-edit-${itemName.toLowerCase()}`;
+		} else {
+			return `modal-view-${itemName.toLowerCase()}`;
 		}
-		return `modal-${effectiveProps.mode}`;
 	};
 
 	return (
@@ -1001,12 +842,7 @@ const GenericModal = ({
 			id={getModalId()}
 		>
 			{(() => {
-				const effectiveProps = getEffectiveProps();
-				return effectiveProps.mode === "formview" && isEditing ? (
-					<Form onSubmit={handleSubmit}>{modalContent}</Form>
-				) : (
-					modalContent
-				);
+				return isEditing ? <Form onSubmit={handleSubmit}>{modalContent}</Form> : modalContent;
 			})()}
 		</Modal>
 	);
