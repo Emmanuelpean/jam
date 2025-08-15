@@ -108,6 +108,7 @@ export const createGenericDeleteHandler = ({
 		}
 	};
 };
+
 /**
  * Comprehensive table component with modals, sorting, searching, and CRUD operations
  */
@@ -290,14 +291,14 @@ export const GenericTableWithModals = ({
 	};
 
 	const handleDelete = createGenericDeleteHandler({
-		endpoint,
-		token,
-		showDelete,
-		showError,
-		removeItem,
-		setData,
-		nameKey,
-		itemType,
+		endpoint: endpoint,
+		token: token,
+		showDelete: showDelete,
+		showError: showError,
+		removeItem: removeItem,
+		setData: setData,
+		nameKey: nameKey,
+		itemType: itemType,
 	});
 
 	// Context menu handlers

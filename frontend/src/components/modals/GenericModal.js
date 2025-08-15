@@ -6,7 +6,49 @@ import { renderFieldValue } from "../rendering/Renders";
 import { renderInputField } from "../rendering/WidgetRenders";
 import { api } from "../../services/Api";
 import { viewFields as viewFieldsLib } from "../rendering/ViewRenders";
+import useGenericAlert from "../../hooks/useGenericAlert";
+import AlertModal from "./AlertModal";
 
+/**
+ * Creates a reusable delete handler for table items
+ */
+export const createGenericDeleteHandler = ({
+	endpoint,
+	token,
+	showDelete,
+	showError,
+	removeItem,
+	setData,
+	itemType = "item",
+}) => {
+	return async (item) => {
+		try {
+			await showDelete({
+				title: `Delete ${itemType}`,
+				message: `Are you sure you want to delete this entry? This action cannot be undone.`,
+				confirmText: "Delete",
+				cancelText: "Cancel",
+			});
+
+			await api.delete(`${endpoint}/${item.id}`, token);
+
+			if (typeof removeItem === "function") {
+				removeItem(item.id);
+			} else if (typeof setData === "function") {
+				setData((prevData) => prevData.filter((dataItem) => dataItem.id !== item.id));
+			} else {
+				window.location.reload();
+			}
+		} catch (error) {
+			if (error !== false) {
+				await showError({
+					message: `Failed to delete ${itemType}. Please check your connection and try again.`,
+				});
+			}
+			throw error;
+		}
+	};
+};
 const GenericModal = ({
 	// Basic modal props
 	show, // Boolean - Controls modal visibility
@@ -33,6 +75,8 @@ const GenericModal = ({
 	customSubmitHandler = null,
 	onFormDataChange = null, // Function - Called when form data changes
 	showSystemFields = true, // Boolean - Whether to show created/modified dates
+
+	onDelete = null, // Function - Called after successful deletion
 }) => {
 	const { token } = useAuth();
 	const [formData, setFormData] = useState(data || {});
@@ -41,6 +85,7 @@ const GenericModal = ({
 	const [isEditing, setIsEditing] = useState(false); // State for formview mode
 	const [isTransitioning, setIsTransitioning] = useState(false); // Animation state
 	const [contentHeight, setContentHeight] = useState("auto"); // Height for smooth transitions
+	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
 
 	const [activeTab, setActiveTab] = useState(() => {
 		if (tabs && tabs.length > 0) {
@@ -300,6 +345,31 @@ const GenericModal = ({
 				}, 300);
 			}, 0);
 		}, 0);
+	};
+
+	const handleDelete = createGenericDeleteHandler({
+		endpoint: endpoint,
+		token: token,
+		showDelete: showDelete,
+		showError: showError,
+		removeItem: null,
+		setData: null,
+		itemType: itemName,
+	});
+
+	const handleDeleteClick = async () => {
+		const effectiveProps = getEffectiveProps();
+		const currentData = effectiveProps.data;
+
+		try {
+			await handleDelete(currentData);
+
+			if (onDelete) {
+				onDelete(currentData);
+			}
+
+			handleHide();
+		} catch (error) {}
 	};
 
 	// Form handling
@@ -757,7 +827,7 @@ const GenericModal = ({
 						<div className="d-flex flex-column w-100 gap-2">
 							{/* First row: Delete and Confirm */}
 							<div className="modal-buttons-container">
-								<Button variant="danger" disabled={isTransitioning} id="delete-button">
+								<Button variant="danger" onClick={handleDeleteClick} className="me-auto">
 									<i className="bi bi-trash me-2"></i>
 									Delete
 								</Button>
@@ -832,19 +902,22 @@ const GenericModal = ({
 	};
 
 	return (
-		<Modal
-			show={show}
-			onHide={handleHide}
-			size={size}
-			centered={centered}
-			backdrop={true}
-			keyboard={true}
-			id={getModalId()}
-		>
-			{(() => {
-				return isEditing ? <Form onSubmit={handleSubmit}>{modalContent}</Form> : modalContent;
-			})()}
-		</Modal>
+		<>
+			<Modal
+				show={show}
+				onHide={handleHide}
+				size={size}
+				centered={centered}
+				backdrop={true}
+				keyboard={true}
+				id={getModalId()}
+			>
+				{(() => {
+					return isEditing ? <Form onSubmit={handleSubmit}>{modalContent}</Form> : modalContent;
+				})()}
+			</Modal>
+			<AlertModal alertState={alertState} hideAlert={hideAlert} />
+		</>
 	);
 };
 
