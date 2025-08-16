@@ -75,9 +75,6 @@ def load_all_resource_files() -> dict[str, dict[str, str | int]]:
 
             if file_content:
                 loaded_files[file_path.name] = {"content": file_content, "size": file_size, "type": mime_type}
-                print(f"✅ Loaded: {file_path.name} ({file_size} bytes, {mime_type})")
-            else:
-                print(f"❌ Failed to load: {file_path.name}")
 
     if not loaded_files:
         print("📂 No files found in resources folder")

@@ -163,7 +163,11 @@ class GmailScraper(object):
 
         return base64.urlsafe_b64decode(data).decode("utf-8")
 
-    def get_email_data(self, message_id: str, sender: str,) -> schemas.JobAlertEmailIn:
+    def get_email_data(
+        self,
+        message_id: str,
+        sender: str,
+    ) -> schemas.JobAlertEmail:
         """Extract readable content from an email
         :param message_id: Message ID
         :param sender: Sender email address
@@ -204,7 +208,7 @@ class GmailScraper(object):
             except ValueError:
                 continue
 
-        return schemas.JobAlertEmailIn(
+        return schemas.JobAlertEmail(
             external_email_id=message_id,
             subject=subject,
             sender=clean_email_address(sender),
@@ -215,7 +219,7 @@ class GmailScraper(object):
 
     @staticmethod
     def save_email_to_db(
-        email_data: schemas.JobAlertEmailIn,
+        email_data: schemas.JobAlertEmail,
         service_log_id: int,
         db,
     ) -> tuple[JobAlertEmail, bool]:

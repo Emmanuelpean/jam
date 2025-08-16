@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Badge, Button, ButtonGroup, Card, Col, Container, Form, Row, Table, Modal, Spinner } from "react-bootstrap";
-import { ResponsiveBar } from "@nivo/bar";
+import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner, Table } from "react-bootstrap";
 import { ResponsiveLine } from "@nivo/line";
-import { serviceLogApi, scrapedJobApi } from "../services/Api";
+import { scrapedJobApi, serviceLogApi } from "../services/Api";
 import { useAuth } from "../contexts/AuthContext";
 import { formatTimeAgo } from "../utils/TimeUtils";
-import { barChartProps, lineChartProps } from "../components/charts/Themes";
+import { lineChartProps } from "../components/charts/Themes";
 import { useLoading } from "../contexts/LoadingContext";
 
 const TIME_RANGES = [
@@ -24,7 +23,7 @@ const ServiceLogDashboard = () => {
 	const [timeRange, setTimeRange] = useState("7");
 	const [recentLogs, setRecentLogs] = useState([]);
 	const [error, setError] = useState(null);
-	
+
 	// Modal state
 	const [showModal, setShowModal] = useState(false);
 	const [selectedLog, setSelectedLog] = useState(null);
@@ -67,6 +66,7 @@ const ServiceLogDashboard = () => {
 				limit: 10,
 			};
 			const data = await serviceLogApi.getAll(token, params);
+			console.log(data);
 			setRecentLogs(data);
 		} catch (err) {
 			console.error("Error fetching recent logs:", err);
@@ -91,7 +91,7 @@ const ServiceLogDashboard = () => {
 			const scrapedJobsData = await scrapedJobApi.getAll(token, {
 				created_after: startDate.toISOString(),
 				created_before: endDate.toISOString(),
-				limit: 100
+				limit: 100,
 			});
 
 			setScrapedJobs(scrapedJobsData || []);
@@ -147,9 +147,9 @@ const ServiceLogDashboard = () => {
 			else group.failed++;
 			group.totalDuration += log.run_duration || 0;
 			group.count++;
-			
+
 			// Add job scraping metrics
-			group.jobsScraped += (log.job_success_n || 0);
+			group.jobsScraped += log.job_success_n || 0;
 			group.jobsFound += (log.job_success_n || 0) + (log.job_fail_n || 0);
 		});
 
@@ -285,17 +285,19 @@ const ServiceLogDashboard = () => {
 								<div className="text-center py-5">
 									<i className="bi bi-graph-up text-muted" style={{ fontSize: "4rem" }}></i>
 									<h4 className="mt-4 text-muted fw-semibold">No Duration Data</h4>
-									<p className="text-muted fs-6">Service run durations will appear here when available.</p>
+									<p className="text-muted fs-6">
+										Service run durations will appear here when available.
+									</p>
 								</div>
 							) : (
 								<div style={{ height: "300px" }}>
-									<ResponsiveLine 
-										data={durationData} 
+									<ResponsiveLine
+										data={durationData}
 										{...lineChartProps}
 										axisLeft={{
 											...lineChartProps.axisLeft,
-											legend: 'Duration (seconds)',
-											legendPosition: 'middle',
+											legend: "Duration (seconds)",
+											legendPosition: "middle",
 											legendOffset: -40,
 										}}
 									/>
@@ -319,35 +321,37 @@ const ServiceLogDashboard = () => {
 								<div className="text-center py-5">
 									<i className="bi bi-collection text-muted" style={{ fontSize: "4rem" }}></i>
 									<h4 className="mt-4 text-muted fw-semibold">No Scraping Data</h4>
-									<p className="text-muted fs-6">Job scraping metrics will appear here when available.</p>
+									<p className="text-muted fs-6">
+										Job scraping metrics will appear here when available.
+									</p>
 								</div>
 							) : (
 								<div style={{ height: "300px" }}>
-									<ResponsiveLine 
-										data={scrapingData} 
+									<ResponsiveLine
+										data={scrapingData}
 										{...lineChartProps}
 										axisLeft={{
 											...lineChartProps.axisLeft,
-											legend: 'Count / Percentage',
-											legendPosition: 'middle',
+											legend: "Count / Percentage",
+											legendPosition: "middle",
 											legendOffset: -50,
 										}}
 										legends={[
 											{
-												anchor: 'bottom-right',
-												direction: 'column',
+												anchor: "bottom-right",
+												direction: "column",
 												justify: false,
 												translateX: 100,
 												translateY: 0,
 												itemsSpacing: 0,
-												itemDirection: 'left-to-right',
+												itemDirection: "left-to-right",
 												itemWidth: 80,
 												itemHeight: 20,
 												itemOpacity: 0.75,
 												symbolSize: 12,
-												symbolShape: 'circle',
-												symbolBorderColor: 'rgba(0, 0, 0, .5)',
-											}
+												symbolShape: "circle",
+												symbolBorderColor: "rgba(0, 0, 0, .5)",
+											},
 										]}
 									/>
 								</div>
@@ -391,13 +395,14 @@ const ServiceLogDashboard = () => {
 										{recentLogs.map((log, index) => {
 											const jobsFound = (log.job_success_n || 0) + (log.job_fail_n || 0);
 											const jobsScraped = log.job_success_n || 0;
-											const successRate = jobsFound > 0 ? ((jobsScraped / jobsFound) * 100).toFixed(1) : '0.0';
-											
+											const successRate =
+												jobsFound > 0 ? ((jobsScraped / jobsFound) * 100).toFixed(1) : "0.0";
+
 											return (
-												<tr 
+												<tr
 													key={log.id || index}
 													className="table-row-clickable"
-													style={{ cursor: 'pointer' }}
+													style={{ cursor: "pointer" }}
 													onClick={() => fetchScrapedJobsForLog(log)}
 													title="Click to view scraped jobs"
 												>
@@ -408,7 +413,9 @@ const ServiceLogDashboard = () => {
 																style={{
 																	width: "32px",
 																	height: "32px",
-																	backgroundColor: log.is_success ? "#d4edda" : "#f8d7da",
+																	backgroundColor: log.is_success
+																		? "#d4edda"
+																		: "#f8d7da",
 																	color: log.is_success ? "#155724" : "#721c24",
 																}}
 															>
@@ -429,21 +436,21 @@ const ServiceLogDashboard = () => {
 													</td>
 													<td className="px-3 py-2">
 														<span className="badge bg-info">
-															{log.run_duration ? `${log.run_duration.toFixed(2)}s` : "N/A"}
+															{log.run_duration
+																? `${log.run_duration.toFixed(2)}s`
+																: "N/A"}
 														</span>
 													</td>
 													<td className="px-3 py-2">
-														<span className="badge bg-warning text-dark">
-															{jobsFound}
-														</span>
+														<span className="badge bg-warning text-dark">{jobsFound}</span>
 													</td>
 													<td className="px-3 py-2">
-														<span className="badge bg-success">
-															{jobsScraped}
-														</span>
+														<span className="badge bg-success">{jobsScraped}</span>
 													</td>
 													<td className="px-3 py-2">
-														<span className={`badge ${successRate >= 80 ? 'bg-success' : successRate >= 50 ? 'bg-warning text-dark' : 'bg-danger'}`}>
+														<span
+															className={`badge ${successRate >= 80 ? "bg-success" : successRate >= 50 ? "bg-warning text-dark" : "bg-danger"}`}
+														>
 															{successRate}%
 														</span>
 													</td>
@@ -488,9 +495,13 @@ const ServiceLogDashboard = () => {
 								<p className="text-muted mb-0">
 									{selectedLog && (
 										<>
-											Run Date: <strong>{new Date(selectedLog.run_datetime).toLocaleString()}</strong>
+											Run Date:{" "}
+											<strong>{new Date(selectedLog.run_datetime).toLocaleString()}</strong>
 											{selectedLog.run_duration && (
-												<> • Duration: <strong>{selectedLog.run_duration.toFixed(2)}s</strong></>
+												<>
+													{" "}
+													• Duration: <strong>{selectedLog.run_duration.toFixed(2)}s</strong>
+												</>
 											)}
 										</>
 									)}
@@ -521,9 +532,7 @@ const ServiceLogDashboard = () => {
 											{scrapedJobs.map((job, index) => (
 												<tr key={job.id || index}>
 													<td>
-														<div className="fw-semibold">
-															{job.title || "Untitled"}
-														</div>
+														<div className="fw-semibold">{job.title || "Untitled"}</div>
 														{job.scrape_error && (
 															<small className="text-danger">
 																<i className="bi bi-exclamation-triangle me-1"></i>
@@ -534,15 +543,17 @@ const ServiceLogDashboard = () => {
 													<td>{job.company || "N/A"}</td>
 													<td>{job.location || "N/A"}</td>
 													<td>
-														<Badge bg={getScrapingStatusColor(job.is_scraped, job.is_failed)}>
+														<Badge
+															bg={getScrapingStatusColor(job.is_scraped, job.is_failed)}
+														>
 															{getScrapingStatusText(job.is_scraped, job.is_failed)}
 														</Badge>
 													</td>
 													<td>
 														{job.url ? (
-															<a 
-																href={job.url} 
-																target="_blank" 
+															<a
+																href={job.url}
+																target="_blank"
 																rel="noopener noreferrer"
 																className="btn btn-sm btn-outline-primary"
 															>

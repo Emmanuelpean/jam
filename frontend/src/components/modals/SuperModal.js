@@ -8,6 +8,7 @@ import { viewFields } from "../rendering/ViewRenders";
 import { useAuth } from "../../contexts/AuthContext";
 import AlertModal from "./AlertModal";
 import { InterviewModal } from "./InterviewModal";
+import { getApplicationStatusBadgeClass } from "../rendering/Renders";
 
 export const JobAndApplicationModal = ({
 	show,
@@ -216,7 +217,7 @@ export const JobAndApplicationModal = ({
 
 	const jobViewFieldsArray = [
 		[viewFields.title(), viewFields.company()],
-		[viewFields.location(), viewFields.jobApplication()],
+		[viewFields.location()],
 		viewFields.description(),
 		[viewFields.salaryRange(), viewFields.personalRating()],
 		viewFields.url({ label: "Job URL" }),
@@ -282,8 +283,8 @@ export const JobAndApplicationModal = ({
 	const applicationViewFieldsArray = useMemo(() => {
 		const baseFields = [
 			[viewFields.date(), viewFields.status()],
-			[viewFields.job(), viewFields.appliedVia()],
-			[viewFields.url({ label: "Application URL" }), viewFields.files()],
+			[viewFields.appliedVia(), viewFields.files()],
+			[viewFields.url({ label: "Application URL" })],
 			viewFields.note(),
 		];
 
@@ -396,7 +397,16 @@ export const JobAndApplicationModal = ({
 	};
 
 	// Determine application tab title and submode
-	const applicationTabTitle = data?.job_application ? "Job Application" : "Create Job Application";
+	const applicationTabTitle = data?.job_application ? (
+		<>
+			Job Application{" "}
+			<span className={`badge ${getApplicationStatusBadgeClass(data.job_application.status)} badge`}>
+				{data.job_application.status}
+			</span>
+		</>
+	) : (
+		"Create Job Application"
+	);
 	const applicationSubmode = data?.job_application ? submode : "add";
 
 	// Define tabs

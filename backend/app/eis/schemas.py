@@ -3,8 +3,11 @@ from datetime import datetime
 from app.schemas import BaseModel, OwnedOut, Out, JobOut
 
 
-class JobAlertEmailIn(BaseModel):
-    """Email model"""
+# --------------------------------------------------- JOB ALERT EMAIL --------------------------------------------------
+
+
+class JobAlertEmail(BaseModel):
+    """Job Alert Email input model"""
 
     external_email_id: str
     subject: str | None = None
@@ -15,17 +18,19 @@ class JobAlertEmailIn(BaseModel):
     service_log_id: int | None = None
 
 
-class EmailUpdate(JobAlertEmailIn):
-    """Email model"""
+class JobAlertEmailUpdate(JobAlertEmail):
+    """Job Alert Email output model"""
 
     external_email_id: str | None = None
 
 
-class JobAlertEmailOut(JobAlertEmailIn, OwnedOut):
+class JobAlertEmailOut(JobAlertEmail, OwnedOut):
     """Email model"""
 
-    jobs: list[JobOut]
-    service_log: "ServiceLogOut"
+    jobs: list["ScrapedJobOut"]
+
+
+# ----------------------------------------------------- SCRAPED JOB ----------------------------------------------------
 
 
 class ScrapedJob(BaseModel):
@@ -34,7 +39,9 @@ class ScrapedJob(BaseModel):
     is_scraped: bool = False
     is_failed: bool = False
     scrape_error: str | None = None
+    is_active: bool = True
 
+    # Job data
     title: str | None = None
     description: str | None = None
     salary_min: float | None = None
@@ -54,28 +61,32 @@ class ScrapedJobUpdate(ScrapedJob):
 class ScrapedJobOut(ScrapedJob, OwnedOut):
     """Represents scraped job postings from external sources with additional metadata."""
 
-    emails: list[JobAlertEmailOut]
+    pass
+    # emails: list[JobAlertEmailOut]
+
+
+# ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
 
 
 class ServiceLog(BaseModel):
     """Represents a log of a service run."""
 
     name: str
-    run_duration: float
     run_datetime: datetime
-    is_success: bool
+    run_duration: float | None = None
+    is_success: bool | None = None
     error_message: str | None = None
     job_success_n: int | None = None
     job_fail_n: int | None = None
 
 
-class ServiceLogOut(ServiceLog, Out):
-    """Represents a log of a service run."""
-
-    pass
-
-
 class ServiceLogUpdate(ServiceLog):
     """Represents a log of a service run."""
 
-    id: int | None = None
+    name: str | None = None
+
+
+class ServiceLogOut(ServiceLog, Out):
+    """Represents a log of a service run."""
+
+    emails: list[JobAlertEmailOut]

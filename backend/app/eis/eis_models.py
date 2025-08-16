@@ -22,11 +22,11 @@ class JobAlertEmail(Owned, Base):
     """Represents email messages containing job information like LinkedIn and Indeed job alerts"""
 
     external_email_id = Column(String, unique=True, nullable=False)
-    subject = Column(String)
-    sender = Column(String)
-    date_received = Column(DateTime)
-    platform = Column(String)
-    body = Column(String)
+    subject = Column(String, nullable=True)
+    sender = Column(String, nullable=True)
+    date_received = Column(TIMESTAMP(timezone=True), nullable=True)
+    platform = Column(String, nullable=True)
+    body = Column(String, nullable=True)
     service_log_id = Column(Integer, ForeignKey("service_log.id", ondelete="SET NULL"), nullable=True)
 
     # Many-to-many relationship with scraped jobs
@@ -62,9 +62,10 @@ class ServiceLog(CommonBase, Base):
 
     name = Column(String, nullable=False)
     run_duration = Column(Float, nullable=True)
-    run_datetime = Column(DateTime)
+    run_datetime = Column(DateTime, nullable=False)
     is_success = Column(Boolean, nullable=True)
     error_message = Column(String, nullable=True)
     job_success_n = Column(Integer, nullable=True)
     job_fail_n = Column(Integer, nullable=True)
+
     emails = relationship("JobAlertEmail", back_populates="service_log")

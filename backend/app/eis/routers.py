@@ -5,14 +5,14 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.eis import eis_models, schemas
-from app.routers.tables import generate_crud_router
+from app.routers.data_tables import generate_crud_router
 from app.database import get_db
 from app.oauth2 import get_current_user
 
 email_router = generate_crud_router(
     table_model=eis_models.JobAlertEmail,
     create_schema=schemas.JobAlertEmail,
-    update_schema=schemas.EmailUpdate,
+    update_schema=schemas.JobAlertEmailUpdate,
     out_schema=schemas.JobAlertEmailOut,
     endpoint="jobalertemails",
     not_found_msg="Job alert email not found",
@@ -40,7 +40,7 @@ def get_service_logs_by_date_range(
     limit: int | None = Query(None, description="Maximum number of logs to return"),
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> list[eis_models.ServiceLog]:
+):
     """Get service logs within a specified date range. Admin access required.
     :param start_date: Optional start date filter (inclusive)
     :param end_date: Optional end date filter (inclusive)
