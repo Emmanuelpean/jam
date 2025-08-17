@@ -514,7 +514,6 @@ const GenericModal = ({
 		const effectiveProps = getEffectiveProps();
 		return effectiveProps.data;
 	};
-
 	const renderContent = () => {
 		const effectiveProps = getEffectiveProps();
 		const viewF = effectiveProps.fields.view || effectiveProps.fields;
@@ -549,7 +548,6 @@ const GenericModal = ({
 				</div>
 
 				{/* Hidden content for measurement - ensure full width for tabs */}
-
 				<div
 					ref={viewContentRef}
 					className="modal-content-hidden"
@@ -557,21 +555,22 @@ const GenericModal = ({
 						width: tabs && tabs.length > 0 ? "100%" : "auto",
 					}}
 				>
-					<Card>
-						<Card.Body>
-							<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
-						</Card.Body>
-					</Card>
-
-					{effectiveProps.showSystemFields && (
-						<div className="mt-3 pt-3 border-top">
-							{renderFieldGroup(
-								[viewFieldsLib.createdAt(), viewFieldsLib.modifiedAt()],
-								"system-fields",
-								false,
-							)}
-						</div>
-					)}
+					<div>
+						<Card>
+							<Card.Body>
+								<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
+							</Card.Body>
+						</Card>
+						{effectiveProps.showSystemFields && (
+							<div className="mt-3 pt-3 border-top">
+								{renderFieldGroup(
+									[viewFieldsLib.createdAt(), viewFieldsLib.modifiedAt()],
+									"system-fields",
+									false,
+								)}
+							</div>
+						)}
+					</div>
 				</div>
 				<div
 					ref={formContentRef}
