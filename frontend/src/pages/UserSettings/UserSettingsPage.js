@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Card, Col, Form, Row } from "react-bootstrap";
-import { useAuth } from "../contexts/AuthContext";
-import { api } from "../services/Api";
-import { getThemeByKey } from "../utils/Theme";
-import { ActionButton, renderInputField } from "../components/rendering/WidgetRenders";
+import { useAuth } from "../../contexts/AuthContext";
+import { api } from "../../services/Api";
+import { getThemeByKey } from "../../utils/Theme";
+import { ActionButton, renderInputField } from "../../components/rendering/WidgetRenders";
 import "./UserSettingsPage.css";
-import { getTableIcon } from "../components/rendering/Renders";
-import { ToastStack } from "../components/Toasts/Toast";
-import useToast from "../hooks/useNotificationToast";
+import { getTableIcon } from "../../components/rendering/Renders";
+import { ToastStack } from "../../components/Toasts/Toast";
+import useToast from "../../hooks/useNotificationToast";
 
 const UserSettingsPage = () => {
 	const { currentUser, token } = useAuth();

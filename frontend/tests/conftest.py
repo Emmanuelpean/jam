@@ -1,17 +1,28 @@
 import itertools
 import os
+import platform
 import queue
 import shutil
 import subprocess
 import sys
 import threading
-import time
 
 import psutil
 import requests
+from selenium.webdriver import Keys
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
+
+import time
+
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait
 
 # noinspection PyUnresolvedReferences
 from tests.conftest import session, models, test_users, SQLALCHEMY_DATABASE_URL, authorised_clients, client, tokens
@@ -20,6 +31,7 @@ from tests.conftest import *
 
 def kill_process_on_port(port) -> bool:
     """Kill any process using the specified port"""
+
     try:
         print(f"Checking for processes on port {port}...")
         for proc in psutil.process_iter(["pid", "name", "connections"]):
@@ -41,6 +53,7 @@ def kill_process_on_port(port) -> bool:
 
 def kill_process_tree(parent_pid) -> None:
     """Kill a process and all its children"""
+
     try:
         parent = psutil.Process(parent_pid)
         children = parent.children(recursive=True)
@@ -82,6 +95,7 @@ def kill_process_tree(parent_pid) -> None:
 
 def print_backend_pid() -> None:
     """Print the PID of any backend processes currently running"""
+
     try:
         backend_processes = []
         for proc in psutil.process_iter(["pid", "name", "cmdline"]):
@@ -103,6 +117,7 @@ def print_backend_pid() -> None:
 @pytest.fixture(scope="session")
 def test_backend_server() -> Generator[str, None, None]:
     """Start a test backend server for integration tests"""
+
     print("=" * 60)
     print("STARTING BACKEND SERVER")
     print("=" * 60)
@@ -191,6 +206,7 @@ def test_backend_server() -> Generator[str, None, None]:
 @pytest.fixture(scope="session")
 def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
     """Start a test frontend server for integration tests"""
+
     print("=" * 60)
     print("STARTING FRONTEND SERVER")
     print("=" * 60)
@@ -349,12 +365,14 @@ def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
 @pytest.fixture
 def api_base_url(test_backend_server) -> str:
     """Base URL for the API"""
+
     return test_backend_server
 
 
 @pytest.fixture
 def frontend_base_url(test_frontend_server) -> str:
     """Base URL for the frontend"""
+
     return test_frontend_server
 
 
@@ -418,7 +436,8 @@ def generate_entry_combinations(data_dict, required_keys: list[str]) -> list[dic
                         i += 1
                     else:
                         d[k] = data_dict[k]
-                result.append(d)
+                if d:
+                    result.append(d)
     return result
 
 
@@ -434,3 +453,156 @@ def test_generate_entry_combinations() -> None:
         {"a": "value1_4", "c": "value3_5", "d": "value4"},
         {"a": "value1_6", "b": "value2", "c": "value3_7", "d": "value4"},
     ]
+
+
+class BaseTest:
+    """Base class for selenium tests"""
+
+    driver = None  # chrome driver
+    wait = None  # chrome driver wait
+    frontend_base_url = ""  # frontend base url
+    backend_url = ""  # backend url
+    user = None  # user to use
+    client = None  # client for the current user
+    db = None  # database session
+
+    # Parameters needed
+    page_url = ""  # url of the page to test (not including the base url)
+    user_index = 1  # index of the user to use for the test
+
+    @pytest.fixture(autouse=True)
+    def setup_method(
+        self,
+        frontend_base_url,
+        api_base_url,
+        request,
+        test_users,
+        authorised_clients,
+        session,
+    ) -> Generator[None, None, None]:
+        """Set up the test environment before each test with test data"""
+        try:
+            # Configure Chrome options to disable password prompts
+            chrome_options = Options()
+            prefs = {
+                "profile.password_manager_leak_detection": False,
+                "credentials_enable_service": False,
+                "password_manager_enabled": False,
+                "profile.password_manager_enabled": False,
+            }
+            chrome_options.add_experimental_option("prefs", prefs)
+
+            self.driver = webdriver.Chrome(options=chrome_options)
+            self.driver.maximize_window()
+            self.wait = WebDriverWait(self.driver, 5)
+
+            # Frontend/Backend
+            self.frontend_base_url = frontend_base_url
+            self.backend_url = api_base_url
+
+            # Client/User
+            self.client = authorised_clients[self.user_index]
+            self.user = test_users[self.user_index]
+            self.db = session
+
+            self.setup_function(request)
+
+        except Exception:
+            if hasattr(self, "driver"):
+                try:
+                    self.driver.quit()
+                except:
+                    pass
+            raise
+
+        yield  # This allows the test to run
+
+        # Teardown
+        try:
+            if hasattr(self, "driver"):
+                self.driver.quit()
+        except Exception as e:
+            print(f"Error during teardown: {e}")
+
+    def setup_function(self, request):
+        pass
+
+    def login(self) -> None:
+        """Helper method to login to the application"""
+
+        login_url = f"{self.frontend_base_url}/login"
+        self.driver.get(login_url)
+        self.get_element("email").send_keys(self.user.email)
+        self.get_element("password").send_keys(self.user.password)
+        self.get_element("confirm-button").click()
+        self.wait_for_page("dashboard")
+        self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
+
+    # ------------------------------------------------ GET/WAIT ELEMENTS -----------------------------------------------
+
+    def wait_for_page(self, page_url: str) -> None:
+        """Wait for the dashboard to load"""
+
+        self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
+
+    def wait_for_table_load(self, timeout: int | float = 0.1) -> None:
+        """Wait for loading spinner to disappear"""
+
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                ec.invisibility_of_element_located((By.CSS_SELECTOR, ".spinner-border"))
+            )
+        except TimeoutException:
+            pass
+
+    def get_all_element_ids(self) -> list[str]:
+        """Get all element IDs present on the current page"""
+
+        # Find all elements that have an ID attribute
+        elements_with_id = self.driver.find_elements(By.XPATH, "//*[@id]")
+
+        # Extract the ID values
+        element_ids = []
+        for element in elements_with_id:
+            element_id = element.get_attribute("id")
+            if element_id:
+                element_ids.append(element_id)
+
+        return sorted(element_ids)
+
+    def get_element(
+        self,
+        element_id: str,
+        selector: str = By.ID,
+    ) -> WebElement:
+        """Get an element by its ID
+        :param element_id: ID of the element to get
+        :param selector: Selector to use for finding the element"""
+
+        try:
+            return self.wait.until(ec.element_to_be_clickable((selector, element_id)))
+        except:
+            raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
+
+    def wait_for_disappear(
+        self,
+        element_id: str,
+        selector: str = By.ID,
+    ) -> None:
+        """Wait for an element to disappear from the DOM
+        :param element_id: ID of the element to get
+        :param selector: Selector to use for finding the element"""
+
+        try:
+            self.wait.until(ec.invisibility_of_element_located((selector, element_id)))
+        except TimeoutException:
+            raise AssertionError(f"Element {element_id} did not disappear")
+
+    @staticmethod
+    def set_text(element: WebElement, text: str = "") -> None:
+        """Clears the input element"""
+
+        modifier_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
+        element.send_keys(modifier_key, "a")
+        element.send_keys(Keys.DELETE)
+        element.send_keys(text)

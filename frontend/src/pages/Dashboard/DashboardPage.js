@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Alert, Button } from "react-bootstrap";
-import { useAuth } from "../contexts/AuthContext";
-import { useLoading } from "../contexts/LoadingContext";
-import { api } from "../services/Api";
-import JobsToChase from "../components/tables/JobsToChase";
-import { JobViewModal } from "../components/modals/job/JobModal";
+import { useAuth } from "../../contexts/AuthContext";
+import { useLoading } from "../../contexts/LoadingContext";
+import { api } from "../../services/Api";
+import JobsToChase from "../../components/tables/JobsToChase";
+import { JobViewModal } from "../../components/modals/job/JobModal";
 import "./DashboardPage.css";
 
 const JobSearchDashboard = () => {

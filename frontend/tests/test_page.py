@@ -1,168 +1,44 @@
 """Test the main pages of JAM"""
 
-import platform
 import time
 from datetime import datetime
-from typing import Generator
 
-import pytest
-from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
-from selenium.webdriver.support.wait import WebDriverWait
 
-from conftest import contiguous_subdicts, generate_entry_combinations
-from conftest import test_users, models
+from conftest import contiguous_subdicts, generate_entry_combinations, models, BaseTest
 from react_select import ReactSelect
 
 
-class TestPage:
-    """Base class for testING pages"""
+class TestTablePage(BaseTest):
+    """Base class for testing pages"""
 
-    driver = None
-    wait = None
-    base_url = ""
     test_entries = None
     test_entry = None
+    user_index = 0
 
     # Parameters needed
-    endpoint = ""
-    entry_name = ""
-    page_url = ""
-    test_fixture = ""
-    test_data = {}
-    required_fields = []
-    duplicate_fields = []
-    columns = []
-    columns_mapping = {}
+    endpoint = ""  # endpoint of the table, used to query the data
+    entry_name = ""  # name of the table entries (e.g. aggregator)
+    test_fixture = ""  # test fixture to load the test date
+    test_data = {}  # test data used to fill the modal (adding entries, adding incorrect entries, editing entries)
+    required_fields = []  # required fields for adding entries. if empty, assume that any field is required (at least one)
+    duplicate_fields = []  # fields which are required to be unique
+    columns = []  # table column keys user for search and sorting
+    columns_mapping = {}  # mapping between the field names and the column keys
 
-    @pytest.fixture(autouse=True)
-    def setup_method(
-        self,
-        frontend_base_url,
-        request,
-        api_base_url,
-        test_users,
-        authorised_clients,
-    ) -> Generator[None, None, None]:
-        """Set up the test environment before each test with test data"""
-        try:
-            # Configure Chrome options to disable password prompts
-            chrome_options = Options()
-            prefs = {
-                "profile.password_manager_leak_detection": False,
-                "credentials_enable_service": False,
-                "password_manager_enabled": False,
-                "profile.password_manager_enabled": False,
-            }
-            chrome_options.add_experimental_option("prefs", prefs)
+    def setup_function(self, request):
+        """Function called during the setup"""
 
-            self.driver = webdriver.Chrome(options=chrome_options)
-            self.driver.maximize_window()
-            self.wait = WebDriverWait(self.driver, 5)
-            self.base_url = frontend_base_url
-            if isinstance(self.test_fixture, str):
-                self.test_fixture = [self.test_fixture]
-            self.test_entries, *self.add_test_entries = [
-                request.getfixturevalue(fixture) for fixture in self.test_fixture
-            ]
-            self.test_entry = self.test_entries[0]
-            self.client = authorised_clients[0]
-            self.backend_url = api_base_url
-            self.users = test_users
-
-            # Login and navigate to the page page
-            self.login()
-            self.driver.get(f"{self.base_url}/{self.page_url}")
-            self.wait_for_table_load()
-
-        except Exception:
-            if hasattr(self, "driver"):
-                try:
-                    self.driver.quit()
-                except:
-                    pass
-            raise
-
-        yield  # This allows the test to run
-
-        # Teardown
-        try:
-            if hasattr(self, "driver"):
-                self.driver.quit()
-        except Exception as e:
-            print(f"Error during teardown: {e}")
-
-    def login(self) -> None:
-        """Helper method to login to the application"""
-
-        login_url = f"{self.base_url}/login"
-        self.driver.get(login_url)
-        self.get_element("email").send_keys(self.users[0].email)
-        self.get_element("password").send_keys(self.users[0].password)
-        self.get_element("confirm-button").click()
-        self.wait.until(ec.url_contains("/dashboard"))
-
-    # ------------------------------------------------ GET/WAIT ELEMENTS -----------------------------------------------
-
-    def wait_for_table_load(self, timeout: int | float = 0.1) -> None:
-        """Wait for loading spinner to disappear"""
-
-        try:
-            WebDriverWait(self.driver, timeout).until(
-                ec.invisibility_of_element_located((By.CSS_SELECTOR, ".spinner-border"))
-            )
-        except TimeoutException:
-            pass
-
-    def get_all_element_ids(self) -> list[str]:
-        """Get all element IDs present on the current page"""
-
-        # Find all elements that have an ID attribute
-        elements_with_id = self.driver.find_elements(By.XPATH, "//*[@id]")
-
-        # Extract the ID values
-        element_ids = []
-        for element in elements_with_id:
-            element_id = element.get_attribute("id")
-            if element_id:
-                element_ids.append(element_id)
-
-        return sorted(element_ids)
-
-    def get_element(
-        self,
-        element_id: str,
-        selector: str = By.ID,
-    ) -> WebElement:
-        """Get an element by its ID
-        :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element"""
-
-        try:
-            return self.wait.until(ec.element_to_be_clickable((selector, element_id)))
-        except:
-            raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
-
-    def wait_for_disappear(
-        self,
-        element_id: str,
-        selector: str = By.ID,
-    ) -> None:
-        """Wait for an element to disappear from the DOM
-        :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element"""
-
-        try:
-            self.wait.until(ec.invisibility_of_element_located((selector, element_id)))
-        except TimeoutException:
-            raise AssertionError(f"Element {element_id} did not disappear")
+        if isinstance(self.test_fixture, str):
+            self.test_fixture = [self.test_fixture]
+        self.test_entries, *self.add_test_entries = [request.getfixturevalue(fixture) for fixture in self.test_fixture]
+        self.test_entry = self.test_entries[0]
+        self.login()
+        self.wait_for_table_load()
 
     # ----------------------------------------------------- MODALS -----------------------------------------------------
 
@@ -174,32 +50,32 @@ class TestPage:
     def wait_for_view_modal_close(self) -> None:
         """Wait for the view modal to close"""
 
-        self._wait_for_modal_close(f"modal-formview-view-{self.entry_name}")
+        self._wait_for_modal_close(f"modal-view-{self.entry_name}")
 
     def wait_for_edit_modal_close(self) -> None:
         """Wait for the view modal to close"""
 
-        self._wait_for_modal_close(f"modal-formview-edit-{self.entry_name}")
+        self._wait_for_modal_close(f"modal-edit-{self.entry_name}")
 
     def wait_for_delete_modal_close(self) -> None:
         """Wait for the delete modal to close"""
 
-        self._wait_for_modal_close("modal-confirmation")
+        self._wait_for_modal_close("delete-alert-modal")
 
     def wait_for_view_modal(self) -> WebElement:
         """Wait for the view modal to appear"""
 
-        return self.get_element(f"modal-formview-view-{self.entry_name}")
+        return self.get_element(f"modal-view-{self.entry_name}")
 
     def wait_for_edit_modal(self) -> WebElement:
         """Wait for the edit modal to appear"""
 
-        return self.get_element(f"modal-formview-edit-{self.entry_name}")
+        return self.get_element(f"modal-edit-{self.entry_name}")
 
     def wait_for_delete_modal(self) -> WebElement:
         """Wait for the delete modal to appear"""
 
-        return self.get_element("modal-confirmation")
+        return self.get_element("delete-alert-modal")
 
     # ----------------------------------------------------- TABLES -----------------------------------------------------
 
@@ -221,7 +97,7 @@ class TestPage:
         actions.context_click(self.table_row(entity_id)).perform()
         self.get_element(f"context-menu-{choice}").click()
 
-    def check_rows(self, column: str, name: str, expected_count: int = 1) -> None:
+    def check_row_exist(self, column: str, name: str, expected_count: int = 1) -> None:
         """Check that a specific row with a specific name exists in the table
         :param column: Name of the column to check
         :param name: Name of the column
@@ -232,8 +108,7 @@ class TestPage:
         ), f"Expected {expected_count} rows with name '{name}'"
 
     def get_column_values(self, column_key: str | None = None) -> list[str] | list[dict[str, str]]:
-        """
-        Get values from a specific table column via the column key
+        """Get values from a specific table column via the column key
         (matched using id attributes starting with 'table-header-').
         :param column_key: The key of the column. If None, returns all rows as list of dicts.
         :return: List of values from that column, or list of row dicts if no key provided.
@@ -274,6 +149,12 @@ class TestPage:
         return self.get_element("add-entity-button")
 
     @property
+    def delete_confirm_button(self):
+        """Get the delete confirm button on the modal"""
+
+        return self.get_element("delete-alert-modal-confirm-button")
+
+    @property
     def confirm_button(self) -> WebElement:
         """Get the confirm button on the modal"""
 
@@ -293,15 +174,6 @@ class TestPage:
 
     # ---------------------------------------------------- UTILITIES ---------------------------------------------------
 
-    @staticmethod
-    def set_text(element: WebElement, text: str = "") -> None:
-        """Clears the input element"""
-
-        modifier_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
-        element.send_keys(modifier_key, "a")
-        element.send_keys(Keys.DELETE)
-        element.send_keys(text)
-
     @property
     def test_name(self) -> str:
         """Get the name of the test entity"""
@@ -314,7 +186,7 @@ class TestPage:
         """Test that entries are displayed correctly"""
 
         # Default 20 entries display
-        entries = [entry for entry in self.test_entries if entry.owner_id == self.users[0].id]
+        entries = [entry for entry in self.test_entries if entry.owner_id == self.user.id]
         assert len(self.table_rows) == min([20, len(entries)]), "The table rows should match the entries"
 
         # Increase to 40
@@ -358,6 +230,7 @@ class TestPage:
         """Test the search functionality"""
 
         entries = []
+        print(text)
         for key in keys:
             for entry in self.test_entries:
                 element = getattr(entry, key)
@@ -398,7 +271,7 @@ class TestPage:
 
         self.context_menu(self.test_entry.id, "delete")
         self.wait_for_delete_modal()
-        self.confirm_button.click()
+        self.delete_confirm_button.click()
         self.wait_for_delete_modal_close()
         time.sleep(0.1)
         self.wait_for_disappear(f"table-row-{self.test_entry.id}")
@@ -516,7 +389,7 @@ class TestPage:
             self._test_sort_functionality(column)
 
 
-class TestKeywordsPage(TestPage):
+class TestKeywordsPage(TestTablePage):
     """Test class for the keywords Page functionality including:
     - Displaying entries
     - Adding entries
@@ -549,7 +422,7 @@ class TestKeywordsPage(TestPage):
         self.wait_for_view_modal_close()
 
 
-class TestAggregatorsPage(TestPage):
+class TestAggregatorsPage(TestTablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries
@@ -581,7 +454,7 @@ class TestAggregatorsPage(TestPage):
         self.wait_for_view_modal_close()
 
 
-class TestCompaniesPage(TestPage):
+class TestCompaniesPage(TestTablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries
@@ -616,7 +489,7 @@ class TestCompaniesPage(TestPage):
         self.wait_for_view_modal_close()
 
 
-class TestLocationsPage(TestPage):
+class TestLocationsPage(TestTablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries
@@ -654,7 +527,7 @@ class TestLocationsPage(TestPage):
         self.wait_for_view_modal_close()
 
 
-class TestPersonsPage(TestPage):
+class TestPersonsPage(TestTablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries

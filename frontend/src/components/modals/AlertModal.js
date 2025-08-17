@@ -24,8 +24,12 @@ const AlertModal = ({ alertState, hideAlert }) => {
 	const variant = buttonVariants[alertState.type] || "primary";
 	const isConfirmation = !!alertState.cancelText;
 
+	// Generate a fallback ID if none is provided
+	const modalId = alertState.id || `alert-modal-${alertState.type || "default"}`;
+
 	return (
 		<Modal
+			id={modalId}
 			show={alertState.show}
 			onHide={alertState.onCancel || hideAlert}
 			size={alertState.size ? alertState.size : "md"}
@@ -34,13 +38,13 @@ const AlertModal = ({ alertState, hideAlert }) => {
 			keyboard={true}
 		>
 			<Modal.Header closeButton>
-				<Modal.Title>
+				<Modal.Title id={`${modalId}-title`}>
 					{iconClass && <i className={`${iconClass} me-2`} />}
 					{alertState.title}
 				</Modal.Title>
 			</Modal.Header>
 
-			<Modal.Body>
+			<Modal.Body id={`${modalId}-body`}>
 				<div className={isConfirmation ? "py-2" : "text-center py-3"}>
 					{typeof alertState.message === "string" ? (
 						<p className="mb-0">{alertState.message}</p>
@@ -50,14 +54,24 @@ const AlertModal = ({ alertState, hideAlert }) => {
 				</div>
 			</Modal.Body>
 
-			<Modal.Footer className="d-flex gap-1">
+			<Modal.Footer className="d-flex gap-1" id={`${modalId}-footer`}>
 				{alertState.cancelText && (
-					<Button variant="secondary" onClick={alertState.onCancel || hideAlert} className="flex-fill">
+					<Button
+						id={`${modalId}-cancel-button`}
+						variant="secondary"
+						onClick={alertState.onCancel || hideAlert}
+						className="flex-fill"
+					>
 						{alertState.cancelText}
 					</Button>
 				)}
 				{alertState.confirmText && (
-					<Button variant={variant} onClick={alertState.onSuccess || hideAlert} className="flex-fill">
+					<Button
+						id={`${modalId}-confirm-button`}
+						variant={variant}
+						onClick={alertState.onSuccess || hideAlert}
+						className="flex-fill"
+					>
 						{alertState.confirmText}
 					</Button>
 				)}

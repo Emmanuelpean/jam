@@ -10,6 +10,7 @@ const useGenericAlert = () => {
 		cancelText: null,
 		icon: null,
 		size: "md",
+		id: null,
 		onSuccess: null,
 		onCancel: null,
 	});
@@ -22,6 +23,7 @@ const useGenericAlert = () => {
 		cancelText = null,
 		icon = null,
 		size = "md",
+		id = null,
 		onSuccess = null,
 		onCancel = null,
 	}) => {
@@ -35,6 +37,7 @@ const useGenericAlert = () => {
 				cancelText,
 				icon,
 				size,
+				id,
 				onSuccess: () => {
 					if (onSuccess) onSuccess();
 					resolve(true);
@@ -56,7 +59,14 @@ const useGenericAlert = () => {
 		}));
 	};
 
-	const showSuccess = ({ title = "Success", message, confirmText = "OK", size = "md", onSuccess = null } = {}) => {
+	const showSuccess = ({
+		title = "Success",
+		message,
+		confirmText = "OK",
+		size = "md",
+		id = null,
+		onSuccess = null,
+	} = {}) => {
 		return showAlert({
 			title: title,
 			message: message,
@@ -64,11 +74,19 @@ const useGenericAlert = () => {
 			confirmText: confirmText,
 			icon: "bi bi-check-circle-fill",
 			size: size,
+			id: id || "success-alert-modal",
 			onSuccess: onSuccess,
 		});
 	};
 
-	const showError = ({ title = "Error", message, confirmText = "OK", size = "md", onSuccess = null } = {}) => {
+	const showError = ({
+		title = "Error",
+		message,
+		confirmText = "OK",
+		size = "md",
+		id = null,
+		onSuccess = null,
+	} = {}) => {
 		return showAlert({
 			title: title,
 			message: message,
@@ -76,11 +94,19 @@ const useGenericAlert = () => {
 			confirmText: confirmText,
 			icon: "bi bi-exclamation-triangle-fill",
 			size: size,
+			id: id || "error-alert-modal",
 			onSuccess: onSuccess,
 		});
 	};
 
-	const showWarning = ({ title = "Warning", message, confirmText = "OK", size = "md", onSuccess = null } = {}) => {
+	const showWarning = ({
+		title = "Warning",
+		message,
+		confirmText = "OK",
+		size = "md",
+		id = null,
+		onSuccess = null,
+	} = {}) => {
 		return showAlert({
 			title: title,
 			message: message,
@@ -88,11 +114,19 @@ const useGenericAlert = () => {
 			confirmText: confirmText,
 			icon: "bi bi-exclamation-triangle-fill",
 			size: size,
+			id: id || "warning-alert-modal",
 			onSuccess: onSuccess,
 		});
 	};
 
-	const showInfo = ({ title = "Information", message, confirmText = "OK", size = "md", onSuccess = null } = {}) => {
+	const showInfo = ({
+		title = "Information",
+		message,
+		confirmText = "OK",
+		size = "md",
+		id = null,
+		onSuccess = null,
+	} = {}) => {
 		return showAlert({
 			title: title,
 			message: message,
@@ -100,6 +134,7 @@ const useGenericAlert = () => {
 			confirmText: confirmText,
 			icon: "bi bi-info-circle-fill",
 			size: size,
+			id: id || "info-alert-modal",
 			onSuccess: onSuccess,
 		});
 	};
@@ -110,6 +145,7 @@ const useGenericAlert = () => {
 		confirmText = "Yes",
 		cancelText = "No",
 		size = "md",
+		id = null,
 		onSuccess = null,
 		onCancel = null,
 	} = {}) => {
@@ -121,6 +157,7 @@ const useGenericAlert = () => {
 			cancelText: cancelText,
 			icon: "bi bi-question-circle-fill",
 			size: size,
+			id: id || "confirm-alert-modal",
 			onSuccess: onSuccess,
 			onCancel: onCancel,
 		});
@@ -132,6 +169,7 @@ const useGenericAlert = () => {
 		confirmText = "Delete",
 		cancelText = "Cancel",
 		size = "md",
+		id = null,
 		onSuccess = null,
 		onCancel = null,
 	} = {}) => {
@@ -143,6 +181,7 @@ const useGenericAlert = () => {
 			cancelText: cancelText,
 			icon: "bi bi-trash-fill",
 			size: size,
+			id: id || "delete-alert-modal",
 			onSuccess: onSuccess,
 			onCancel: onCancel,
 		});
@@ -154,6 +193,7 @@ const useGenericAlert = () => {
 		confirmText = "Logout",
 		cancelText = "Cancel",
 		size = "md",
+		id = null,
 		onSuccess = null,
 		onCancel = null,
 	} = {}) => {
@@ -165,6 +205,7 @@ const useGenericAlert = () => {
 			cancelText: cancelText,
 			icon: "bi bi-box-arrow-right",
 			size: size,
+			id: id || "logout-alert-modal",
 			onSuccess: onSuccess,
 			onCancel: onCancel,
 		});

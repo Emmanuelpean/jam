@@ -1,117 +1,20 @@
-import platform
-
-import pytest
-from selenium import webdriver
-from selenium.webdriver import Keys
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.support.wait import WebDriverWait
-from sqlalchemy.orm import Session
 from app.utils import verify_password
-from conftest import models
+from conftest import models, BaseTest
 
 
-class TestAuthenticationPage(object):
-    """Test class for Authentication functionality including:
-    - Login with valid credentials
-    - Login with invalid credentials
-    - Signup with valid data
-    - Signup with invalid data
-    - Form validation"""
+class TestUserSettingsPage(BaseTest):
+    """Test class for the User Settings Page"""
 
-    @pytest.fixture(autouse=True)
-    def setup_method(self, frontend_base_url, session: Session, test_users):
-        """Override setup_method to avoid auto-login and add db session"""
-        try:
-            chrome_options = Options()
-            prefs = {
-                "profile.password_manager_leak_detection": False,
-                "credentials_enable_service": False,
-                "password_manager_enabled": False,
-                "profile.password_manager_enabled": False,
-            }
-            chrome_options.add_experimental_option("prefs", prefs)
+    page_url = "settings"
 
-            self.driver = webdriver.Chrome(options=chrome_options)
-            self.driver.maximize_window()
-            self.wait = WebDriverWait(self.driver, 5)
-            self.base_url = frontend_base_url
-            self.db = session
-            self.user = test_users[1]
-            assert not self.user.is_admin
-            self.login()
+    def setup_function(self, request):
 
-        except Exception:
-            if hasattr(self, "driver"):
-                try:
-                    self.driver.quit()
-                except:
-                    pass
-            raise
-
-        yield
-
-        # Teardown
-        try:
-            if hasattr(self, "driver"):
-                self.driver.quit()
-        except Exception as e:
-            print(f"Error during teardown: {e}")
+        self.login()
 
     def verify_user_in_database(self, email: str) -> bool:
         """Helper method to verify user exists in database"""
 
         return self.db.query(models.User).filter(models.User.email == email).all()
-
-    def get_all_element_ids(self) -> list[str]:
-        """Get all element IDs present on the current page"""
-
-        # Find all elements that have an ID attribute
-        elements_with_id = self.driver.find_elements(By.XPATH, "//*[@id]")
-
-        # Extract the ID values
-        element_ids = []
-        for element in elements_with_id:
-            element_id = element.get_attribute("id")
-            if element_id:
-                element_ids.append(element_id)
-
-        return sorted(element_ids)
-
-    def get_element(
-            self,
-            element_id: str,
-            selector: str = By.ID,
-    ) -> WebElement:
-        """Get an element by its ID
-        :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element"""
-
-        try:
-            return self.wait.until(ec.element_to_be_clickable((selector, element_id)))
-        except:
-            raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
-
-    def login(self) -> None:
-        """Helper method to login to the application"""
-
-        self.driver.get(f"{self.base_url}/login")
-        self.get_element("email").send_keys(self.user.email)
-        self.get_element("password").send_keys(self.user.password)
-        self.get_element("confirm-button").click()
-        self.wait.until(ec.url_contains("/dashboard"))
-        self.driver.get(f"{self.base_url}/settings")
-
-    @staticmethod
-    def set_text(element: WebElement, text: str = "") -> None:
-        """Clears the input element"""
-
-        modifier_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
-        element.send_keys(modifier_key, "a")
-        element.send_keys(Keys.DELETE)
-        element.send_keys(text)
 
     @property
     def current_password(self):

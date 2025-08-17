@@ -499,7 +499,7 @@ JOB_DATA = [
         "personal_rating": 3,
         "url": "https://techcorp.com/jobs/remote_react_developer",
         "company_id": 1,  # Tech Corp
-        "location_id": 4,  # San Francisco (remote)
+        "location_id": 4,  # San Francisco
         "owner_id": 1,
     },
     {
@@ -521,13 +521,13 @@ JOB_DATA = [
         "personal_rating": 2,
         "url": "https://techcorp.com/jobs/frontend_developer",
         "company_id": 1,  # Tech Corp
-        "location_id": 5,  # Berlin (remote)
+        "location_id": 5,  # Berlin
         "owner_id": 1,
     },
     {
         "title": "Backend Developer",
         "description": "Looking for a backend developer with Python experience. FastAPI knowledge preferred.",
-        "location_id": 4,  # San Francisco (remote)
+        "location_id": 4,  # San Francisco
         "owner_id": 1,
     },
     {
@@ -540,7 +540,7 @@ JOB_DATA = [
     {
         "title": "Developer Position",
         "company_id": 3,  # Oxford PV
-        "location_id": 5,  # Berlin (remote)
+        "location_id": 5,  # Berlin
         "owner_id": 1,
     },
     {
@@ -583,7 +583,7 @@ JOB_DATA = [
         "personal_rating": 3,
         "url": "https://localbiz.com/jobs/fullstack",
         "company_id": 10,  # LocalBiz
-        "location_id": 11,  # Australia (remote)
+        "location_id": 11,  # Australia
         "note": "Small team, lots of autonomy",
         "owner_id": 1,
     },
@@ -600,7 +600,7 @@ JOB_DATA = [
     {
         "title": "Freelance Web Developer",
         "description": "Contract position for web development projects",
-        "location_id": 13,  # Amsterdam (remote)
+        "location_id": 13,  # Amsterdam
         "note": "Flexible hours, project-based",
         "owner_id": 1,
     },
@@ -612,7 +612,7 @@ JOB_DATA = [
         "personal_rating": 4,
         "url": "https://websolutions.com/jobs/mobile-dev",
         "company_id": 4,  # WebSolutions Ltd
-        "location_id": 14,  # Brazil (remote)
+        "location_id": 14,  # Brazil
         "owner_id": 1,
     },
     {

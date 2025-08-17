@@ -17,10 +17,10 @@ import AggregatorsPage from "./pages/AggregatorsPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { Sidebar } from "./Sidebar";
 import JobApplicationUpdatesPage from "./pages/JobApplicationUpdatesPage";
-import JobSearchDashboard from "./pages/DashboardPage";
+import JobSearchDashboard from "./pages/Dashboard/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
 import { UserManagementPage } from "./pages/UserManagementPage";
-import UserSettingsPage from "./pages/UserSettingsPage";
+import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 
 function AppLayout({ children }) {
 	const { isLoading, loadingMessage } = useLoading();

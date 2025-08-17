@@ -172,10 +172,14 @@ def create_user(
     user.password = utils.hash_password(user.password)
     # noinspection PyArgumentList
     new_user = models.User(**user.model_dump())
-
-    # Add the user to the database, commit it and refresh to get the user ID
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    # Add the remote location
+    # noinspection PyArgumentList
+    remote_location = models.Location(owner_id=new_user.id, remote=True)
+    db.add(remote_location)
+    # db.commit()
 
     return new_user

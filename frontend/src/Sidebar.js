@@ -31,7 +31,7 @@ export const Sidebar = ({ onHoverChange }) => {
 				{ path: "/persons", text: "People" },
 				{ path: "/locations", text: "Locations" },
 				{ path: "/companies", text: "Companies" },
-				{ path: "/aggregators", text: "Aggregators" },
+				{ path: "/aggregators", text: "Job Aggregators" },
 				{ path: "/keywords", text: "Tags" },
 			],
 		},
