@@ -493,7 +493,7 @@ export const GenericTableWithModals = ({
 												: {}),
 										}}
 									>
-										{renderFieldValue(column, item)}
+										{renderFieldValue(column, item, `table-row-${item.id}`)}
 									</td>
 								))}
 							</tr>

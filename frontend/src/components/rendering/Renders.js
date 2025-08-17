@@ -299,7 +299,7 @@ export const renderFunctions = {
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
-	jobApplication: (item, view = false, key = "job_application") => {
+	jobApplication: (item, view = false, key = "job_application", id) => {
 		const job_application = accessAttribute(item, key);
 		if (job_application) {
 			return (
@@ -308,6 +308,7 @@ export const renderFunctions = {
 						<span
 							className={`badge ${getApplicationStatusBadgeClass(job_application.status)} clickable-badge`}
 							onClick={() => handleClick(job_application)}
+							id={id}
 						>
 							{job_application.status}
 						</span>
@@ -317,13 +318,13 @@ export const renderFunctions = {
 		}
 	},
 
-	job: (item, view = false, key = "job") => {
+	job: (item, view = false, key = "job", id) => {
 		const job = accessAttribute(item, key);
 		if (job) {
 			return (
 				<JobModalManager>
 					{(handleClick) => (
-						<span className={`badge bg-info clickable-badge`} onClick={() => handleClick(job)}>
+						<span className={`badge bg-info clickable-badge`} onClick={() => handleClick(job)} id={id}>
 							<i className="bi bi-briefcase me-1"></i>
 							{job.title}
 						</span>
@@ -333,13 +334,13 @@ export const renderFunctions = {
 		}
 	},
 
-	jobName: (item, view = false, key = "job") => {
+	jobName: (item, view = false, key = "job", id) => {
 		const job = accessAttribute(item, key);
 		if (job) {
 			return (
 				<JobModalManager>
 					{(handleClick) => (
-						<span className={`badge bg-info clickable-badge`} onClick={() => handleClick(job)}>
+						<span className={`badge bg-info clickable-badge`} onClick={() => handleClick(job)} id={id}>
 							<i className="bi bi-briefcase me-1"></i>
 							{job.name}
 						</span>
@@ -349,7 +350,7 @@ export const renderFunctions = {
 		}
 	},
 
-	keywords: (item, view = false, key = "keywords") => {
+	keywords: (item, view = false, key = "keywords", id) => {
 		const keywords = accessAttribute(item, key);
 		if (keywords && keywords.length > 0) {
 			return (
@@ -361,6 +362,7 @@ export const renderFunctions = {
 									<span
 										className="badge bg-info clickable-badge"
 										onClick={() => handleClick(keyword)}
+										id={id + "-" + index}
 									>
 										<i className="bi bi-tag me-1"></i>
 										{keyword.name}
@@ -374,13 +376,17 @@ export const renderFunctions = {
 		}
 	},
 
-	location: (item, view = false, key = "location") => {
+	location: (item, view = false, key = "location", id) => {
 		const location = accessAttribute(item, key);
 		if (location) {
 			return (
 				<LocationModalManager>
 					{(handleClick) => (
-						<span className={`badge bg-warning clickable-badge`} onClick={() => handleClick(location)}>
+						<span
+							className={`badge bg-warning clickable-badge`}
+							onClick={() => handleClick(location)}
+							id={id}
+						>
 							<i className="bi bi-geo-alt me-1"></i>
 							{location.name}
 						</span>
@@ -390,13 +396,13 @@ export const renderFunctions = {
 		}
 	},
 
-	company: (item, view = false, key = "company") => {
+	company: (item, view = false, key = "company", id) => {
 		const company = accessAttribute(item, key);
 		if (company) {
 			return (
 				<CompanyModalManager>
 					{(handleClick) => (
-						<span className={"badge bg-info clickable-badge"} onClick={() => handleClick(company)}>
+						<span className={"badge bg-info clickable-badge"} onClick={() => handleClick(company)} id={id}>
 							<i className="bi bi-building me-1"></i>
 							{company.name}
 						</span>
@@ -406,7 +412,7 @@ export const renderFunctions = {
 		}
 	},
 
-	contacts: (item, view = false, key = "contacts") => {
+	contacts: (item, view = false, key = "contacts", id) => {
 		const contacts = accessAttribute(item, key);
 		if (contacts && contacts.length > 0) {
 			return (
@@ -415,7 +421,11 @@ export const renderFunctions = {
 						<span key={person.id || index} className="me-1">
 							<PersonModalManager>
 								{(handleClick) => (
-									<span className="badge bg-info clickable-badge" onClick={() => handleClick(person)}>
+									<span
+										className="badge bg-info clickable-badge"
+										onClick={() => handleClick(person)}
+										id={id + "-" + index}
+									>
 										<i className="bi bi-file-person me-1"></i>
 										{person.name}
 									</span>
@@ -428,28 +438,31 @@ export const renderFunctions = {
 		}
 	},
 
-	appliedVia: (item, view = false, key = "applied_via") => {
+	appliedVia: (item, view = false, key = "applied_via", id) => {
 		const appliedVia = accessAttribute(item, key);
 		if (appliedVia === "Aggregator") {
-			return renderFunctions.aggregator(item, view);
+			return renderFunctions.aggregator(item, view, "aggregator", id);
 		}
 		if (appliedVia) {
 			return (
-				<span className={"badge bg-info"}>
-					<i className="bi bi-linkedin me-1"></i>
+				<span className={"badge bg-info"} id={id}>
 					{appliedVia}
 				</span>
 			);
 		}
 	},
 
-	aggregator: (item, view = false, key = "aggregator") => {
+	aggregator: (item, view = false, key = "aggregator", id) => {
 		const aggregator = accessAttribute(item, key);
 		if (aggregator) {
 			return (
 				<AggregatorModalManager>
 					{(handleClick) => (
-						<span className={"badge bg-info clickable-badge"} onClick={() => handleClick(aggregator)}>
+						<span
+							className={"badge bg-info clickable-badge"}
+							onClick={() => handleClick(aggregator)}
+							id={id}
+						>
 							<i className="bi bi-building me-1"></i>
 							{aggregator.name}
 						</span>
@@ -470,8 +483,9 @@ export const renderFunctions = {
 	},
 };
 
-export const renderFieldValue = (field, item) => {
+export const renderFieldValue = (field, item, id) => {
 	const noText = <span className="text-muted">Not Provided</span>;
+
 	if (field.accessKey) {
 		item = accessAttribute(item, field.accessKey);
 	}
@@ -480,14 +494,13 @@ export const renderFieldValue = (field, item) => {
 		return field.render(item);
 	}
 
-	// Handle table type fields - they should render their component in view mode too
 	if (field.type === "table" && field.render) {
 		return field.render();
 	}
 
 	let rendered;
 	if (field.render) {
-		rendered = field.render(item);
+		rendered = field.render(item, false, field.key, id + "-" + field.key);
 	} else {
 		rendered = item[field.key];
 	}

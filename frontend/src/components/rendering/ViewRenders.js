@@ -151,7 +151,7 @@ export const viewFields = {
 	company: (overrides = {}) => ({
 		key: "company",
 		label: "Company",
-		render: (x) => renderFunctions.company(x, true),
+		render: renderFunctions.company,
 		...overrides,
 	}),
 

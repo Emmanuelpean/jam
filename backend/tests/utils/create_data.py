@@ -71,7 +71,7 @@ def create_locations(db) -> list[models.Location]:
     locations = [models.Location(**location) for location in LOCATION_DATA]
     db.add_all(locations)
     db.commit()
-    return locations[:-1]
+    return locations
 
 
 def create_aggregators(db) -> list[models.Aggregator]:

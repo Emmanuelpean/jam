@@ -175,6 +175,14 @@ const GenericModal = ({
 		previousShow.current = show;
 	}, [show, data, submode, tabs, defaultActiveTab]);
 
+	const getModalId = () => {
+		if (isEditing) {
+			return `modal-edit-${itemName.toLowerCase()}`;
+		} else {
+			return `modal-view-${itemName.toLowerCase()}`;
+		}
+	};
+
 	// Notify parent component when form data changes
 	useEffect(() => {
 		const effectiveProps = getEffectiveProps();
@@ -475,7 +483,9 @@ const GenericModal = ({
 							) : (
 								<div className="view-field">
 									<h6 className="mb-2 fw-bold">{field.label}</h6>
-									<div className="mb-3">{renderFieldValue(field, getCurrentData())}</div>
+									<div className="mb-3">
+										{renderFieldValue(field, getCurrentData(), getModalId())}
+									</div>
 								</div>
 							)}
 						</div>
@@ -893,14 +903,6 @@ const GenericModal = ({
 			{renderFooter()}
 		</>
 	);
-
-	const getModalId = () => {
-		if (isEditing) {
-			return `modal-edit-${itemName.toLowerCase()}`;
-		} else {
-			return `modal-view-${itemName.toLowerCase()}`;
-		}
-	};
 
 	return (
 		<>

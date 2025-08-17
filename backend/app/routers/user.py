@@ -180,6 +180,5 @@ def create_user(
     # noinspection PyArgumentList
     remote_location = models.Location(owner_id=new_user.id, remote=True)
     db.add(remote_location)
-    # db.commit()
 
     return new_user

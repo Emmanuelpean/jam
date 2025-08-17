@@ -25,7 +25,9 @@ class TestTablePage(BaseTest):
     entry_name = ""  # name of the table entries (e.g. aggregator)
     test_fixture = ""  # test fixture to load the test date
     test_data = {}  # test data used to fill the modal (adding entries, adding incorrect entries, editing entries)
-    required_fields = []  # required fields for adding entries. if empty, assume that any field is required (at least one)
+    required_fields = (
+        []
+    )  # required fields for adding entries. if empty, assume that any field is required (at least one)
     duplicate_fields = []  # fields which are required to be unique
     columns = []  # table column keys user for search and sorting
     columns_mapping = {}  # mapping between the field names and the column keys
@@ -194,59 +196,6 @@ class TestTablePage(BaseTest):
         self.wait_for_table_load()
         assert len(self.table_rows) == min([40, len(entries)]), "The table rows should match the entries"
 
-    def _test_sort_functionality(self, key: str, display_function=None) -> None:
-        """Test sorting functionality
-        :param key: The key of the column to sort by."""
-
-        if key == "url":
-            display_function = lambda x: x.replace("https://", "").replace("http://", "") if x else x
-        else:
-            display_function = lambda x: x
-        if display_function is None:
-            display_function = lambda x: x
-
-        def convert(entity) -> str | None:
-            """Converts an attribute value of an entity using a display function."""
-            value = getattr(entity, key, None)
-            return display_function(value) if value is not None else ""
-
-        # Click to sort and give time for UI update
-        self.get_element(f"table-header-{key}").click()
-        time.sleep(0.2)
-
-        # Prepare sorted, displayable, lowercased values (non-empty first)
-        converted = [convert(entity) for entity in self.test_entries]
-        expected = sorted((v for v in converted if v), key=lambda x: x.lower())
-
-        # Pad 'Not Provided' for entries with empty values
-        missing_count = len(converted) - len(expected)
-        expected.extend(["Not Provided"] * missing_count)
-
-        # Fetch table column values and compare
-        values = self.get_column_values(key)
-        assert values == expected[:20], "Expected sorted results"
-
-    def _test_search_functionality(self, text: str, *keys) -> None:
-        """Test the search functionality"""
-
-        entries = []
-        print(text)
-        for key in keys:
-            for entry in self.test_entries:
-                element = getattr(entry, key)
-                if element:
-                    if key == "company_id":
-                        element_text = element.name.lower()
-                    else:
-                        element_text = element.lower()
-                    entries.append(element_text)
-        entries = set(entries)
-        print("expected", entries)
-        self.set_text(self.get_element("search-input"), text)
-        time.sleep(0.2)  # Allow time for search to filter
-        print("got", self.table_rows)
-        assert len(self.table_rows) == len(entries), "Expected search to filter results"
-
     def _test_view_modal(self) -> None:
         """Helper method to test the view modal for an entry"""
 
@@ -344,6 +293,14 @@ class TestTablePage(BaseTest):
             self.cancel_button.click()
             self.wait_for_edit_modal_close()
 
+    def test_add_entry_cancel(self) -> None:
+        """Test cancelling a new entry creation."""
+
+        self.add_entity_button.click()
+        self.wait_for_edit_modal()
+        self.cancel_button.click()
+        self.wait_for_edit_modal_close()
+
     # ---------------------------------------------------- EDIT TEST ---------------------------------------------------
 
     def test_edit_entry_through_view_modal(self) -> None:
@@ -371,22 +328,86 @@ class TestTablePage(BaseTest):
         self.wait_for_edit_modal_close()
         assert len(self.table_rows) == initial_count, "Expected table to remain unchanged"
 
+    def test_cancel_edit_view(self) -> None:
+        """Test cancelling an entry edit opened via the view modal"""
+
+        self.table_row(self.test_entry.id).click()
+        self.wait_for_view_modal()
+        self.edit_button.click()
+        self.cancel_button.click()
+        self.wait_for_edit_modal_close()
+        self.wait_for_view_modal()
+
+    def test_cancel_edit(self) -> None:
+        """Test cancelling an entry edit opened via the edit modal"""
+
+        self.context_menu(self.test_entry.id, "edit")
+        self.cancel_button.click()
+        self.wait_for_edit_modal_close()
+
     def test_search_functionality(self) -> None:
         """Test the search functionality"""
 
-        for column in self.columns:
-            search_element = getattr(self.test_entry, column)
-            if isinstance(search_element, str):
-                search_element = search_element[3:]
-            elif isinstance(search_element, models.Company):
-                search_element = search_element.name
-            self._test_search_functionality(search_element, column)
+        for key in self.columns:
+            print("Testing column:", key)
+            search_text = self.get_search_value(self.test_entry, key).lower()[3:]
+            print("Search text:", search_text)
+
+            # Get the expected list of entries
+            expected_entries = []
+            for entry in self.test_entries:
+                value = self.get_search_value(entry, key).lower()
+                if search_text in value:
+                    expected_entries.append(value)
+
+            # entries = set(entries)
+            print("expected", expected_entries)
+            self.set_text(self.get_element("search-input"), search_text)
+            time.sleep(0.2)  # Allow time for search to filter
+            print("got", self.table_rows)
+            assert len(self.table_rows) == len(expected_entries), "Expected search to filter results"
 
     def test_sort_functionality(self) -> None:
         """Test sorting functionality"""
 
-        for column in self.columns:
-            self._test_sort_functionality(column)
+        for key in self.columns:
+            if key == "url":
+                display_function = lambda x: x.replace("https://", "").replace("http://", "") if x else x
+            else:
+                display_function = lambda x: x
+
+            def convert(entity) -> str | None:
+                """Converts an attribute value of an entity using a display function."""
+                value = getattr(entity, key, None)
+                return display_function(value) if value is not None else ""
+
+            # Click to sort and give time for UI update
+            self.get_element(f"table-header-{key}").click()
+            time.sleep(0.2)
+
+            # Prepare sorted, displayable, lowercased values (non-empty first)
+            converted = [convert(entity) for entity in self.test_entries]
+            expected = sorted((v for v in converted if v), key=lambda x: x.lower())
+
+            # Pad 'Not Provided' for entries with empty values
+            missing_count = len(converted) - len(expected)
+            expected.extend(["Not Provided"] * missing_count)
+
+            # Fetch table column values and compare
+            values = self.get_column_values(key)
+            assert values == expected[:20], "Expected sorted results"
+
+    @staticmethod
+    def get_search_value(value, key: str) -> str:
+        """Get the search value for a given column key"""
+
+        result = getattr(value, key)
+        if isinstance(result, str):
+            return result
+        elif isinstance(result, models.Company):
+            return result.name
+        else:
+            return ""
 
 
 class TestKeywordsPage(TestTablePage):
@@ -446,7 +467,8 @@ class TestAggregatorsPage(TestTablePage):
 
         # Verify modal contains the entry information
         date = datetime.strftime(self.test_entry.created_at, "%d/%m/%Y")
-        expected = f"Aggregator Details\nName\n{self.test_entry.name}\nWebsite\n{self.test_entry.url.replace("https://", "")}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
+        expected = (f"Aggregator Details\nName\n{self.test_entry.name}\nWebsite\n{self.test_entry.url.replace("https://", "")}"
+                    f"\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit")
         assert modal.text == expected
 
         # Close modal
