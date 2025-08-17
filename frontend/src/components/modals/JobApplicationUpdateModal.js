@@ -12,13 +12,13 @@ export const JobApplicationUpdateModal = ({
 	onDelete,
 	endpoint = "jobapplicationupdates",
 	submode = "view",
-	size = "lg",
+	size = "md",
 	jobApplicationId,
 }) => {
 	const { jobApplications, openJobApplicationModal } = useFormOptions(["jobApplications"]);
 
 	const initialData = useMemo(() => {
-		if (submode === "add" && !data) {
+		if (submode === "add" && !data?.id) {
 			return { date: formatDateTime() };
 		}
 		return data || {};
@@ -36,8 +36,11 @@ export const JobApplicationUpdateModal = ({
 	];
 
 	const viewFieldsArray = [
-		...(!jobApplicationId ? [viewFields.jobApplication({ label: "Job Application" })] : []),
-		[viewFields.datetime(), viewFields.updateType()],
+		[
+			...(jobApplicationId ? [] : [viewFields.jobApplication({ label: "Job Application" })]),
+			viewFields.datetime(),
+			viewFields.updateType(),
+		],
 		viewFields.note(),
 	];
 

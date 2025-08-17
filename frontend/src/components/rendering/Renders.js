@@ -12,6 +12,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import InterviewsTable from "../tables/InterviewTable";
 import JobApplicationUpdateTable from "../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../utils/Theme";
+import { type } from "@testing-library/user-event/dist/type";
 
 const createModalManager = (ModalComponent) => {
 	return ({ children }) => {
@@ -63,6 +64,15 @@ export const getApplicationStatusBadgeClass = (status) => {
 			return "bg-light";
 		default:
 			return "bg-primary";
+	}
+};
+
+const getUpdateTypeIcon = (type) => {
+	switch (type?.toLowerCase()) {
+		case "received":
+			return "bi-download";
+		case "sent":
+			return "bi-upload";
 	}
 };
 
@@ -178,7 +188,14 @@ export const renderFunctions = {
 
 	datetime: (item, view = false, key = "date") => {
 		const date = accessAttribute(item, key);
-		return new Date(date).toLocaleDateString() + " " + new Date(date).toLocaleTimeString();
+		return (
+			new Date(date).toLocaleDateString() +
+			" " +
+			new Date(date).toLocaleTimeString([], {
+				hour: "2-digit",
+				minute: "2-digit",
+			})
+		);
 	},
 
 	date: (item, view = false, key = "date") => {
@@ -233,7 +250,15 @@ export const renderFunctions = {
 	updateType: (item, view = false, key = "type") => {
 		const type = accessAttribute(item, key);
 		if (type) {
-			return type.charAt(0).toUpperCase() + type.slice(1);
+			const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
+			let icon = getUpdateTypeIcon(type);
+
+			return (
+				<span>
+					{icon && <i className={`${icon} me-1`}></i>}
+					{capitalizedType}
+				</span>
+			);
 		}
 	},
 
