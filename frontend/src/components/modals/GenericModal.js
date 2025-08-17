@@ -82,7 +82,7 @@ const GenericModal = ({
 	const [formData, setFormData] = useState(data || {});
 	const [submitting, setSubmitting] = useState(false);
 	const [errors, setErrors] = useState({});
-	const [isEditing, setIsEditing] = useState(false); // State for formview mode
+	const [isEditing, setIsEditing] = useState(false);
 	const [isTransitioning, setIsTransitioning] = useState(false); // Animation state
 	const [contentHeight, setContentHeight] = useState("auto"); // Height for smooth transitions
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
@@ -149,17 +149,13 @@ const GenericModal = ({
 		if (show && !previousShow.current) {
 			const effectiveProps = getEffectiveProps();
 
-			// Handle different submodes
 			if (effectiveProps.submode === "add") {
-				// Add submode
 				setFormData({ ...effectiveProps.data });
 				setIsEditing(true);
 			} else if (effectiveProps.submode === "edit") {
-				// Edit submode
 				setFormData({ ...effectiveProps.data });
 				setIsEditing(true);
 			} else {
-				// Default view submode
 				setFormData({ ...effectiveProps.data });
 				setIsEditing(false);
 			}

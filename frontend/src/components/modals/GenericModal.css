@@ -247,6 +247,11 @@
     pointer-events: none;
 }
 
+.modal-transitioning::-webkit-scrollbar {
+    display: none;
+}
+
+
 /* Ensure forms and inputs render at full width for accurate measurement */
 .form-control {
     width: 100% !important;

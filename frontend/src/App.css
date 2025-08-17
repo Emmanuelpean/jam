@@ -720,3 +720,7 @@ textarea.form-control {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--primary-end);
 }
+
+.modal-body.resizing::-webkit-scrollbar {
+    display: none;
+}
