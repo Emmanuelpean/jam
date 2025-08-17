@@ -411,7 +411,7 @@ class TestTablePage(BaseTest):
 
         # Verify modal contains the entry information
         date = datetime.strftime(entry.created_at, "%d/%m/%Y")
-        expected = f"Keyword Details\nName\n{entry.name}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
+        expected = f"Tag Details\nName\n{entry.name}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
         assert modal.text == expected
 
         # Close modal
