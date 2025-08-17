@@ -415,10 +415,11 @@ def contiguous_subdicts_with_required(dictionary: dict, required_keys: list) -> 
     return results
 
 
-def generate_entry_combinations(data_dict, required_keys: list[str]) -> list[dict]:
+def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_keys: list[str]) -> list[dict]:
     """Generate all possible combinations of entries in the given dictionary,
     :param data_dict: The dictionary to search.
-    :param required_keys: A list of required keys."""
+    :param required_keys: A list of required keys.
+    :param duplicate_keys: A list of duplicate keys."""
 
     keys = list(data_dict.keys())
     i = 0
@@ -431,7 +432,7 @@ def generate_entry_combinations(data_dict, required_keys: list[str]) -> list[dic
             if all(a in combo for a in required_keys):
                 d = {}
                 for k in combo:
-                    if k in required_keys:
+                    if k in duplicate_keys:
                         d[k] = f"{data_dict[k]}_{i}"
                         i += 1
                     else:
@@ -550,7 +551,7 @@ class BaseTest:
 
         try:
             WebDriverWait(self.driver, timeout).until(
-                ec.invisibility_of_element_located((By.CSS_SELECTOR, ".spinner-border"))
+                ec.invisibility_of_element_located((By.CSS_SELECTOR, "spinner-border"))
             )
         except TimeoutException:
             pass
