@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Alert, Button, Form, Modal, Spinner, Tab, Tabs } from "react-bootstrap";
+import { Alert, Button, Form, Modal, Spinner, Tab, Tabs, Card } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue } from "../rendering/Renders";
@@ -443,6 +443,23 @@ const GenericModal = ({
 		if (item.name || item.key) {
 			item = [item];
 		}
+
+		const renderTitleField = (field) => {
+			return (
+				<div className=" text-center p-1">
+					<h2 className="display-6 fw-bold mb-4">
+						{renderFieldValue(field, getCurrentData(), getModalId())}
+					</h2>
+				</div>
+			);
+		};
+
+		if (!isEditing) {
+			if (item[0].isTitle && item.length === 1) {
+				return renderTitleField(item[0], index);
+			}
+		}
+
 		if (Array.isArray(item)) {
 			// Calculate column class based on number of fields
 			const getColumnClass = (fieldCount) => {
@@ -498,14 +515,13 @@ const GenericModal = ({
 		return effectiveProps.data;
 	};
 
-	const renderFormViewContent = () => {
+	const renderContent = () => {
 		const effectiveProps = getEffectiveProps();
 		const viewF = effectiveProps.fields.view || effectiveProps.fields;
 		const formF = effectiveProps.fields.form || effectiveProps.fields;
 
 		return (
 			<>
-				{/* Visible content */}
 				<div className={`modal-content-visible ${isTransitioning ? "transitioning" : ""}`}>
 					{isEditing ? (
 						<div>
@@ -514,7 +530,11 @@ const GenericModal = ({
 						</div>
 					) : (
 						<div>
-							<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
+							<Card>
+								<Card.Body>
+									<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
+								</Card.Body>
+							</Card>
 							{effectiveProps.showSystemFields && (
 								<div className="mt-3 pt-3 border-top">
 									{renderFieldGroup(
@@ -529,6 +549,7 @@ const GenericModal = ({
 				</div>
 
 				{/* Hidden content for measurement - ensure full width for tabs */}
+
 				<div
 					ref={viewContentRef}
 					className="modal-content-hidden"
@@ -536,7 +557,12 @@ const GenericModal = ({
 						width: tabs && tabs.length > 0 ? "100%" : "auto",
 					}}
 				>
-					<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
+					<Card>
+						<Card.Body>
+							<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
+						</Card.Body>
+					</Card>
+
 					{effectiveProps.showSystemFields && (
 						<div className="mt-3 pt-3 border-top">
 							{renderFieldGroup(
@@ -768,7 +794,7 @@ const GenericModal = ({
 					transition: contentHeight === "auto" ? "none" : "height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
 				}}
 			>
-				{renderFormViewContent()}
+				{renderContent()}
 			</div>
 		);
 	};

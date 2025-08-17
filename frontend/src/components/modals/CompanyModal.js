@@ -19,11 +19,11 @@ export const CompanyModal = ({
 
 	const fields = {
 		form: [
-			[formFields.name({ required: true })],
+			formFields.name({ required: true }),
 			[formFields.url({ label: "Website URL" })],
 			[formFields.description()],
 		],
-		view: [[viewFields.name(), viewFields.url()], [viewFields.description()]],
+		view: [viewFields.name({ isTitle: true }), viewFields.url(), [viewFields.description()]],
 	};
 
 	const transformFormData = (data) => {

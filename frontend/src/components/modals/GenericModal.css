@@ -290,3 +290,22 @@
     overflow: visible; /* Changed from auto to visible */
     min-height: 0;
 }
+
+
+
+.modal-body .card {
+    border: 2px solid #e8eaed;
+    border-radius: 12px;
+    background: #ffffff;
+    transition: box-shadow 0.2s ease;
+}
+
+.modal-body .text-center h2.display-6 {
+    color: var(--bs-primary-text-emphasis);
+    font-weight: 700;
+    margin-bottom: 2rem !important;
+    padding: 1.5rem;
+    background: #f3f3f3;
+    border-radius: 16px;
+    border: 1px solid var(--primary-mid);
+}

@@ -216,8 +216,8 @@ export const JobAndApplicationModal = ({
 	];
 
 	const jobViewFieldsArray = [
-		[viewFields.title(), viewFields.company()],
-		[viewFields.location()],
+		[viewFields.title({ isTitle: true })],
+		[viewFields.company(), viewFields.location()],
 		viewFields.description(),
 		[viewFields.salaryRange(), viewFields.personalRating()],
 		viewFields.url({ label: "Job URL" }),

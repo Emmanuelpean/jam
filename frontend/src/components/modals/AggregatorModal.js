@@ -19,7 +19,7 @@ export const AggregatorModal = ({
 
 	const fields = {
 		form: [formFields.name({ required: true }), formFields.url({ required: true })],
-		view: [[viewFields.name(), viewFields.url()]],
+		view: [viewFields.name({ isTitle: true }), viewFields.url()],
 	};
 
 	const transformFormData = (data) => {

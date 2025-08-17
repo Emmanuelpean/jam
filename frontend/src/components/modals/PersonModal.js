@@ -29,9 +29,10 @@ export const PersonModal = ({
 	];
 
 	const viewFieldsArray = [
-		[viewFields.personName(), viewFields.linkedinUrl()],
+		[viewFields.personName({ isTitle: true })],
 		[viewFields.company(), viewFields.role()],
 		[viewFields.email(), viewFields.phone()],
+		viewFields.linkedinUrl(),
 	];
 
 	const fields = {
