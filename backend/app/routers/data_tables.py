@@ -347,8 +347,8 @@ job_router = generate_crud_router(
     endpoint="jobs",
     not_found_msg="Job not found",
     many_to_many_fields={
-        "keywords": {"table": models.job_keywords, "local_key": "job_id", "remote_key": "keyword_id"},
-        "contacts": {"table": models.job_contacts, "local_key": "job_id", "remote_key": "person_id"},
+        "keywords": {"table": models.job_keyword_mapping, "local_key": "job_id", "remote_key": "keyword_id"},
+        "contacts": {"table": models.job_contact_mapping, "local_key": "job_id", "remote_key": "person_id"},
     },
 )
 
@@ -382,7 +382,7 @@ interview_router = generate_crud_router(
     not_found_msg="Interview not found",
     many_to_many_fields={
         "interviewers": {
-            "table": models.interview_interviewers,
+            "table": models.interview_interviewer_mapping,
             "local_key": "interview_id",
             "remote_key": "person_id",
         },

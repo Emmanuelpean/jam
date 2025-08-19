@@ -1,18 +1,5 @@
-"""
-This module handles authentication and authorization functionality for the application, including the creation, verification,
-and usage of JWT access tokens.
-
-Key Features:
--------------
-1. **Token Creation**:
-   - Generates JSON Web Tokens (JWT) with an expiration time using a secret key and algorithm defined in the application's configuration.
-
-2. **Token Verification**:
-   - Decodes and verifies JWTs by checking their validity and extracting user information (e.g., user ID).
-
-3. **Current User Retrieval**:
-   - Extracts the current authenticated user based on the token included in requests and validates against the database.
-"""
+"""This module handles authentication and authorisation functionality for the application, including the creation,
+verification, and usage of JWT access tokens."""
 
 from datetime import datetime, timedelta, timezone
 
@@ -23,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app import models, database, schemas
 from app.config import settings
-from app.schemas import TokenData
+
 
 SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm
@@ -47,7 +34,7 @@ def create_access_token(data: dict) -> str:
 def verify_access_token(
     token: str,
     credentials_exception: Exception,
-) -> TokenData:
+) -> schemas.TokenData:
     """Verify the JWT access token.
     :param token: JWT access token to be verified.
     :param credentials_exception: The exception to be raised if the token is invalid or the user ID is not found.
