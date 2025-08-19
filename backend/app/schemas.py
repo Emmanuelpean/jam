@@ -7,12 +7,16 @@ from pydantic import BaseModel, EmailStr
 
 
 class Out(BaseModel):
+    """Base model for all output schemas"""
+
     id: int
     created_at: datetime
     modified_at: datetime
 
 
 class OwnedOut(Out):
+    """Base model for all output schemas owned by a user"""
+
     owner_id: int
 
 
@@ -60,86 +64,86 @@ class TokenData(BaseModel):
 # ------------------------------------------------------- COMPANY ------------------------------------------------------
 
 
-class Company(BaseModel):
+class CompanyCreate(BaseModel):
     name: str
     description: str | None = None
     url: str | None = None
 
 
-class CompanyOut(Company, OwnedOut):
+class CompanyOut(CompanyCreate, OwnedOut):
     pass
 
 
-class CompanyUpdate(Company):
+class CompanyUpdate(CompanyCreate):
     name: str | None = None
 
 
 # ------------------------------------------------------- KEYWORD ------------------------------------------------------
 
 
-class Keyword(BaseModel):
+class KeywordCreate(BaseModel):
     name: str
 
 
-class KeywordOut(Keyword, OwnedOut):
+class KeywordOut(KeywordCreate, OwnedOut):
     pass
 
 
-class KeywordUpdate(Keyword):
+class KeywordUpdate(KeywordCreate):
     name: str | None = None
 
 
 # ----------------------------------------------------- AGGREGATOR -----------------------------------------------------
 
 
-class Aggregator(BaseModel):
+class AggregatorCreate(BaseModel):
     name: str
     url: str | None = None
     # jobs: list[int] | None = None
     # job_applications: list[int] | None = None
 
 
-class AggregatorOut(Aggregator, OwnedOut):
+class AggregatorOut(AggregatorCreate, OwnedOut):
     pass
 
 
-class AggregatorUpdate(Aggregator):
+class AggregatorUpdate(AggregatorCreate):
     name: str | None = None
 
 
 # ------------------------------------------------------ LOCATION ------------------------------------------------------
 
 
-class Location(BaseModel):
+class LocationCreate(BaseModel):
     postcode: str | None = None
     city: str | None = None
     country: str | None = None
     remote: bool = False
 
 
-class LocationOut(Location, OwnedOut):
+class LocationOut(LocationCreate, OwnedOut):
     name: str | None = None
 
 
-class LocationUpdate(Location):
+class LocationUpdate(LocationCreate):
     pass
 
 
 # -------------------------------------------------------- FILES -------------------------------------------------------
 
 
-class File(BaseModel):
+class FileCreate(BaseModel):
     filename: str
     type: str
     content: str
     size: int
 
 
-class FileOut(File, OwnedOut):
+class FileOut(FileCreate, OwnedOut):
     pass
 
 
-class FileUpdate(File):
+class FileUpdate(FileCreate):
     filename: str | None = None
     type: str | None = None
     content: str | None = None
@@ -149,7 +153,7 @@ class FileUpdate(File):
 # ------------------------------------------------------- PERSON -------------------------------------------------------
 
 
-class Person(BaseModel):
+class PersonCreate(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr | None = None
@@ -160,19 +164,19 @@ class Person(BaseModel):
 
 
 # Simple person schema without interviews/jobs to avoid circular reference
-class PersonSimple(Person, OwnedOut):
+class PersonSimple(PersonCreate, OwnedOut):
     company: CompanyOut | None = None
     name: str | None = None
 
 
-class PersonOut(Person, OwnedOut):
+class PersonOut(PersonCreate, OwnedOut):
     company: CompanyOut | None = None
     interviews: list["InterviewSimple"] = []
     jobs: list["JobSimple"] = []
     name: str | None = None
 
 
-class PersonUpdate(Person):
+class PersonUpdate(PersonCreate):
     first_name: str | None = None
     last_name: str | None = None
     company_id: int | None = None
@@ -181,7 +185,7 @@ class PersonUpdate(Person):
 # --------------------------------------------------------- JOB --------------------------------------------------------
 
 
-class Job(BaseModel):
+class JobCreate(BaseModel):
     title: str
     description: str | None = None
     salary_min: float | None = None
@@ -199,7 +203,7 @@ class Job(BaseModel):
 
 
 # Simple job schema without job_application/contacts to avoid circular reference
-class JobSimple(Job, OwnedOut):
+class JobSimple(JobCreate, OwnedOut):
     company: CompanyOut | None = None
     location: LocationOut | None = None
     keywords: list[KeywordOut] = []
@@ -208,7 +212,7 @@ class JobSimple(Job, OwnedOut):
     source: AggregatorOut | None = None
 
 
-class JobOut(Job, OwnedOut):
+class JobOut(JobCreate, OwnedOut):
     company: CompanyOut | None = None
     location: LocationOut | None = None
     keywords: list[KeywordOut] = []
@@ -223,14 +227,14 @@ class JobToChaseOut(JobOut):
     days_since_last_update: int = 0
 
 
-class JobUpdate(Job):
+class JobUpdate(JobCreate):
     title: str | None = None
 
 
 # --------------------------------------------------- JOB APPLICATION --------------------------------------------------
 
 
-class JobApplication(BaseModel):
+class JobApplicationCreate(BaseModel):
     date: datetime
     url: str | None = None
     job_id: int
@@ -242,7 +246,7 @@ class JobApplication(BaseModel):
     cover_letter_id: int | None = None
 
 
-class JobApplicationOut(JobApplication, OwnedOut):
+class JobApplicationOut(JobApplicationCreate, OwnedOut):
     job: JobSimple | None = None
     aggregator: AggregatorOut | None = None
     interviews: list["InterviewSimple"] = []
@@ -251,14 +255,14 @@ class JobApplicationOut(JobApplication, OwnedOut):
     cover_letter: FileOut | None = None
 
 
-class JobApplicationSimple(JobApplication, OwnedOut):
+class JobApplicationSimple(JobApplicationCreate, OwnedOut):
     job: JobSimple | None = None
     aggregator: AggregatorOut | None = None
     cv: FileOut | None = None
     cover_letter: FileOut | None = None
 
 
-class JobApplicationUpdate(JobApplication):
+class JobApplicationUpdate(JobApplicationCreate):
     date: datetime | None = None
     job_id: int | None = None
     status: str | None = None
@@ -267,7 +271,7 @@ class JobApplicationUpdate(JobApplication):
 # ------------------------------------------------------ INTERVIEW -----------------------------------------------------
 
 
-class Interview(BaseModel):
+class InterviewCreate(BaseModel):
     date: datetime
     location_id: int | None = None
     job_application_id: int
@@ -276,18 +280,18 @@ class Interview(BaseModel):
     interviewers: list[int] | None = None
 
 
-class InterviewSimple(Interview, OwnedOut):
+class InterviewSimple(InterviewCreate, OwnedOut):
     location: LocationOut | None = None
     interviewers: list["PersonSimple"] = []
 
 
-class InterviewOut(Interview, OwnedOut):
+class InterviewOut(InterviewCreate, OwnedOut):
     location: LocationOut | None = None
     interviewers: list["PersonSimple"] = []
     job_application: JobApplicationSimple | None = None
 
 
-class InterviewUpdate(Interview):
+class InterviewUpdate(InterviewCreate):
     date: datetime | None = None
     job_application_id: int | None = None
 
@@ -295,22 +299,22 @@ class InterviewUpdate(Interview):
 # ----------------------------------------------- JOB APPLICATION UPDATE -----------------------------------------------
 
 
-class JobApplicationUpdateIn(BaseModel):
+class JobApplicationUpdateCreate(BaseModel):
     date: datetime
     type: str
     job_application_id: int
     note: str | None = None
 
 
-class JobApplicationUpdateOut(JobApplicationUpdateIn, OwnedOut):
+class JobApplicationUpdateOut(JobApplicationUpdateCreate, OwnedOut):
     job_application: JobApplicationSimple | None = None
 
 
-class JobApplicationUpdateSimpleOut(JobApplicationUpdateIn, OwnedOut):
+class JobApplicationUpdateSimpleOut(JobApplicationUpdateCreate, OwnedOut):
     pass
 
 
-class JobApplicationUpdateUpdate(JobApplicationUpdateIn):
+class JobApplicationUpdateUpdate(JobApplicationUpdateCreate):
     date: datetime | None = None
     type: str | None = None
     job_application_id: int | None = None

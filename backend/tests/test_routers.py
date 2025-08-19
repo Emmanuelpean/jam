@@ -29,7 +29,7 @@ from tests.utils.table_data import (
 
 class TestCompanyCRUD(CRUDTestBase):
     endpoint = "/companies"
-    schema = schemas.Company
+    schema = schemas.CompanyCreate
     out_schema = schemas.CompanyOut
     test_data = "test_companies"
     create_data = COMPANY_DATA
@@ -55,7 +55,7 @@ class TestCompanyCRUD(CRUDTestBase):
 
 class TestKeywordCRUD(CRUDTestBase):
     endpoint = "/keywords"
-    schema = schemas.Keyword
+    schema = schemas.KeywordCreate
     out_schema = schemas.KeywordOut
     test_data = "test_keywords"
     create_data = KEYWORD_DATA
@@ -67,7 +67,7 @@ class TestKeywordCRUD(CRUDTestBase):
 
 class TestAggregatorCRUD(CRUDTestBase):
     endpoint = "/aggregators"
-    schema = schemas.Aggregator
+    schema = schemas.AggregatorCreate
     out_schema = schemas.AggregatorOut
     test_data = "test_aggregators"
     create_data = AGGREGATOR_DATA
@@ -80,7 +80,7 @@ class TestAggregatorCRUD(CRUDTestBase):
 
 class TestLocationCRUD(CRUDTestBase):
     endpoint = "/locations"
-    schema = schemas.Location
+    schema = schemas.LocationCreate
     out_schema = schemas.LocationOut
     test_data = "test_locations"
     create_data = LOCATION_DATA
@@ -92,7 +92,7 @@ class TestLocationCRUD(CRUDTestBase):
 
 class TestFileCRUD(CRUDTestBase):
     endpoint = "/files"
-    schema = schemas.File
+    schema = schemas.FileCreate
     out_schema = schemas.FileOut
     test_data = "test_files"
     create_data = FILE_DATA
@@ -189,7 +189,7 @@ class TestFileCRUD(CRUDTestBase):
 
 class TestPersonCRUD(CRUDTestBase):
     endpoint = "/persons"
-    schema = schemas.Person
+    schema = schemas.PersonCreate
     out_schema = schemas.PersonOut
     test_data = "test_persons"
     add_fixture = ["test_companies"]
@@ -202,7 +202,7 @@ class TestPersonCRUD(CRUDTestBase):
 
 class TestJobCRUD(CRUDTestBase):
     endpoint = "/jobs"
-    schema = schemas.Job
+    schema = schemas.JobCreate
     out_schema = schemas.JobOut
     test_data = "test_jobs"
     add_fixture = ["test_persons", "test_locations", "test_keywords", "test_companies"]
@@ -216,7 +216,7 @@ class TestJobCRUD(CRUDTestBase):
 
 class TestJobApplicationCRUD(CRUDTestBase):
     endpoint = "/jobapplications"
-    schema = schemas.JobApplication
+    schema = schemas.JobApplicationCreate
     out_schema = schemas.JobApplicationOut
     test_data = "test_job_applications"
     add_fixture = ["test_jobs", "test_files"]
@@ -247,7 +247,7 @@ class TestJobApplicationCRUD(CRUDTestBase):
 
 class TestJobApplicationUpdateCRUD(CRUDTestBase):
     endpoint = "/jobapplicationupdates"
-    schema = schemas.JobApplicationUpdateIn
+    schema = schemas.JobApplicationUpdateCreate
     out_schema = schemas.JobApplicationUpdateOut
     test_data = "test_job_application_updates"
     add_fixture = ["test_job_applications"]
@@ -260,7 +260,7 @@ class TestJobApplicationUpdateCRUD(CRUDTestBase):
 
 class TestInterviewCRUD(CRUDTestBase):
     endpoint = "/interviews"
-    schema = schemas.Interview
+    schema = schemas.InterviewCreate
     out_schema = schemas.InterviewOut
     test_data = "test_interviews"
     add_fixture = ["test_job_applications", "test_locations", "test_persons"]

@@ -7,7 +7,7 @@ and full location string parsing with various real-world scenarios."""
 import pytest
 
 from app.eis.location_parser import LocationParser
-from app.schemas import Location
+from app.schemas import LocationCreate
 
 
 class TestLocationParser:
@@ -147,14 +147,14 @@ class TestLocationParser:
 
     def test_location_info_dataclass(self) -> None:
         """Test LocationInfo dataclass creation and defaults"""
-        location_info = Location()
+        location_info = LocationCreate()
         assert location_info.country is None
         assert location_info.city is None
         assert location_info.postcode is None
         assert location_info.remote is False
 
         # Test with values
-        location_info = Location(
+        location_info = LocationCreate(
             country="United Kingdom",
             city="London",
             postcode="SW1A 1AA",
@@ -383,12 +383,12 @@ class TestLocationParser:
 
     @staticmethod
     def _assert_location_result(
-        result: Location,
+        result: LocationCreate,
         expected: dict,
         original_input: str,
     ) -> None:
         """Helper method to assert location parsing results"""
-        assert isinstance(result, Location), f"Result should be LocationInfo instance for input: {original_input}"
+        assert isinstance(result, LocationCreate), f"Result should be LocationInfo instance for input: {original_input}"
         assert (
             result.country == expected["country"]
         ), f"Country mismatch for '{original_input}': got {result.country}, expected {expected['country']}"
@@ -407,7 +407,7 @@ class TestLocationParser:
     def test_parser_handles_empty_string(self, parser) -> None:
         """Test parser handles empty string input"""
         result = parser.parse_location("")
-        assert isinstance(result, Location)
+        assert isinstance(result, LocationCreate)
         assert result.country is None
         assert result.city is None
         assert result.remote is False
@@ -415,7 +415,7 @@ class TestLocationParser:
     def test_parser_handles_whitespace_only(self, parser) -> None:
         """Test parser handles whitespace-only input"""
         result = parser.parse_location("   \t\n   ")
-        assert isinstance(result, Location)
+        assert isinstance(result, LocationCreate)
         assert result.country is None
         assert result.city is None
         assert result.remote is False
@@ -431,7 +431,7 @@ class TestLocationParser:
 
         for location in special_locations:
             result = parser.parse_location(location)
-            assert isinstance(result, Location)
+            assert isinstance(result, LocationCreate)
 
     @pytest.mark.performance
     def test_parser_performance(self, parser) -> None:

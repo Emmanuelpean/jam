@@ -321,7 +321,7 @@ def generate_crud_router(
 # Person router
 person_router = generate_crud_router(
     table_model=models.Person,
-    create_schema=schemas.Person,
+    create_schema=schemas.PersonCreate,
     update_schema=schemas.PersonUpdate,
     out_schema=schemas.PersonOut,
     endpoint="persons",
@@ -331,7 +331,7 @@ person_router = generate_crud_router(
 # Company router
 company_router = generate_crud_router(
     table_model=models.Company,
-    create_schema=schemas.Company,
+    create_schema=schemas.CompanyCreate,
     update_schema=schemas.CompanyUpdate,
     out_schema=schemas.CompanyOut,
     endpoint="companies",
@@ -341,7 +341,7 @@ company_router = generate_crud_router(
 # Job router
 job_router = generate_crud_router(
     table_model=models.Job,
-    create_schema=schemas.Job,
+    create_schema=schemas.JobCreate,
     update_schema=schemas.JobUpdate,
     out_schema=schemas.JobOut,
     endpoint="jobs",
@@ -355,7 +355,7 @@ job_router = generate_crud_router(
 # Location router
 location_router = generate_crud_router(
     table_model=models.Location,
-    create_schema=schemas.Location,
+    create_schema=schemas.LocationCreate,
     update_schema=schemas.LocationUpdate,
     out_schema=schemas.LocationOut,
     endpoint="locations",
@@ -365,7 +365,7 @@ location_router = generate_crud_router(
 # Aggregator router
 aggregator_router = generate_crud_router(
     table_model=models.Aggregator,
-    create_schema=schemas.Aggregator,
+    create_schema=schemas.AggregatorCreate,
     update_schema=schemas.AggregatorUpdate,
     out_schema=schemas.AggregatorOut,
     endpoint="aggregators",
@@ -375,7 +375,7 @@ aggregator_router = generate_crud_router(
 # Interview router
 interview_router = generate_crud_router(
     table_model=models.Interview,
-    create_schema=schemas.Interview,
+    create_schema=schemas.InterviewCreate,
     update_schema=schemas.InterviewUpdate,
     out_schema=schemas.InterviewOut,
     endpoint="interviews",
@@ -552,7 +552,7 @@ def get_needs_chase_job_applications(
 # JobApplication router
 generate_crud_router(
     table_model=models.JobApplication,
-    create_schema=schemas.JobApplication,
+    create_schema=schemas.JobApplicationCreate,
     update_schema=schemas.JobApplicationUpdate,
     out_schema=schemas.JobApplicationOut,
     endpoint="jobapplications",
@@ -562,7 +562,7 @@ generate_crud_router(
 
 job_application_update_router = generate_crud_router(
     table_model=models.JobApplicationUpdate,
-    create_schema=schemas.JobApplicationUpdateIn,
+    create_schema=schemas.JobApplicationUpdateCreate,
     update_schema=schemas.JobApplicationUpdateUpdate,
     out_schema=schemas.JobApplicationUpdateOut,
     endpoint="jobapplicationupdates",
@@ -572,7 +572,7 @@ job_application_update_router = generate_crud_router(
 # Keyword router
 keyword_router = generate_crud_router(
     table_model=models.Keyword,
-    create_schema=schemas.Keyword,
+    create_schema=schemas.KeywordCreate,
     update_schema=schemas.KeywordUpdate,
     out_schema=schemas.KeywordOut,
     endpoint="keywords",
@@ -582,7 +582,7 @@ keyword_router = generate_crud_router(
 # File router
 file_router = generate_crud_router(
     table_model=models.File,
-    create_schema=schemas.File,
+    create_schema=schemas.FileCreate,
     update_schema=schemas.FileUpdate,
     out_schema=schemas.FileOut,
     endpoint="files",

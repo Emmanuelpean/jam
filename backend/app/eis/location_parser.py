@@ -6,7 +6,7 @@ multiple international formats including UK, US, and Canadian postal codes."""
 
 import re
 
-from app.schemas import Location
+from app.schemas import LocationCreate
 
 
 class LocationParser:
@@ -145,7 +145,7 @@ class LocationParser:
 
         return None, None
 
-    def parse_location(self, location_str: str) -> Location:
+    def parse_location(self, location_str: str) -> LocationCreate:
         """
         Parse a location string and extract country, city, postcode, and remote status
 
@@ -156,7 +156,7 @@ class LocationParser:
             Location schema object with parsed components
         """
         if not location_str or not location_str.strip():
-            return Location()
+            return LocationCreate()
 
         original_location = location_str.strip()
         location_str = original_location
@@ -167,7 +167,7 @@ class LocationParser:
         if is_remote:
             # For remote positions, still try to extract country (e.g., "Remote from the UK")
             country, _ = self.extract_country_with_match(location_str)
-            return Location(country=country, city=None, postcode=None, remote=True)
+            return LocationCreate(country=country, city=None, postcode=None, remote=True)
 
         # Extract postcode first (as it's most specific)
         postcode = self.extract_postcode(location_str)
@@ -188,7 +188,7 @@ class LocationParser:
 
                 # If the entire string was just the country name, we're done
                 if not location_str:
-                    return Location(country=country, city=None, postcode=postcode, remote=False)
+                    return LocationCreate(country=country, city=None, postcode=postcode, remote=False)
 
         # Clean up remaining string (remove common separators)
         location_str = re.sub(r"[,;|\-]+", ",", location_str).strip(" ,")
@@ -201,4 +201,4 @@ class LocationParser:
         if len(parts) >= 1 and parts[0]:
             city = parts[0].title()
 
-        return Location(country=country, city=city, postcode=postcode, remote=is_remote)
+        return LocationCreate(country=country, city=city, postcode=postcode, remote=is_remote)
