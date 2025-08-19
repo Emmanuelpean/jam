@@ -18,7 +18,7 @@ from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
 from app import models, database, schemas
-from app.eis import eis_models as eis_models
+from app.eis import models as eis_models
 from app.main import app
 from app.oauth2 import create_access_token
 from tests.utils.create_data import (
@@ -185,7 +185,7 @@ def test_scraped_jobs(session, test_job_alert_emails) -> list[eis_models.Scraped
 
 
 @pytest.fixture
-def test_service_logs(session) -> list[eis_models.ServiceLog]:
+def test_service_logs(session) -> list[eis_models.EisServiceLog]:
     """Create test service logs"""
 
     return create_service_logs(session)

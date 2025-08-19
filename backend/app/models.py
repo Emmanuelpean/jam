@@ -24,6 +24,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
 from app.database import Base
+from app.config import settings
 
 # ------------------------------------------------------ MAPPINGS ------------------------------------------------------
 
@@ -65,7 +66,7 @@ class CommonBase(object):
     # noinspection PyMethodParameters
     @declared_attr
     def __tablename__(cls) -> str:
-        """Return the class name as table name"""
+        """Return the class name as table name e.g. JobApplication -> job_application"""
 
         name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", cls.__name__)
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
@@ -118,6 +119,10 @@ class User(CommonBase, Base):
     theme = Column(String, nullable=False, server_default="mixed-berry")
     is_admin = Column(Boolean, nullable=False, server_default=expression.false())
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    __table_args__ = (
+        CheckConstraint(f"length(password) >= {settings.min_password_length}", name="minimum_password_length"),
+    )
 
 
 # -------------------------------------------------------- DATA --------------------------------------------------------
@@ -422,13 +427,6 @@ class JobApplication(Owned, Base):
     cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
     updates = relationship("JobApplicationUpdate", back_populates="job_application")
 
-    __table_args__ = (
-        CheckConstraint(
-            "status IN ('Applied', 'Interview', 'Rejected', 'Offer', 'Accepted', 'Withdrawn')",
-            name="valid_application_status"
-        ),
-    )
-
 
 class Interview(Owned, Base):
     """Represents interviews for job applications.
@@ -464,13 +462,6 @@ class Interview(Owned, Base):
     location = relationship("Location", back_populates="interviews")
     job_application = relationship("JobApplication", back_populates="interviews")
     interviewers = relationship("Person", secondary=interview_interviewer_mapping, back_populates="interviews")
-
-    __table_args__ = (
-        CheckConstraint(
-            "type IN ('sent', 'received')",
-            name="valid_update_type"
-        ),
-    )
 
 
 class JobApplicationUpdate(Owned, Base):

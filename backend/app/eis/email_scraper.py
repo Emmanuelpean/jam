@@ -22,7 +22,7 @@ from googleapiclient.discovery import build
 
 from app.database import session_local
 from app.eis import schemas
-from app.eis.eis_models import JobAlertEmail, ScrapedJob, ServiceLog
+from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
 from app.eis.job_scraper import LinkedinJobScraper, IndeedScrapper
 from app.models import User
 from app.utils import get_gmail_logger, AppLogger
@@ -225,7 +225,7 @@ class GmailScraper(object):
     ) -> tuple[JobAlertEmail, bool]:
         """Save email and job IDs to database
         :param email_data: Dictionary containing email metadata
-        :param service_log_id: ID of the ServiceLog instance associated with this email
+        :param service_log_id: ID of the EisServiceLog instance associated with this email
         :param db: SQLAlchemy database session
         :return: JobEmails instance and whether the record was created or already existing"""
 
@@ -407,7 +407,7 @@ class GmailScraper(object):
         with session_local() as db:
 
             # noinspection PyArgumentList
-            service_log_entry = ServiceLog(
+            service_log_entry = EisServiceLog(
                 name="Email Scraper Service",
                 run_datetime=start_time,
             )

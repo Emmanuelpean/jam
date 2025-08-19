@@ -701,7 +701,7 @@ JOB_APPLICATION_DATA = [
         "date": "2024-01-15T10:00:00",
         "url": "https://techcorp.com/apply/senior-python",
         "job_id": 1,
-        "status": "Applied",
+        "status": "applied",
         "note": "Submitted application with cover letter",
         "cv_id": 3,
         "cover_letter_id": 3,
@@ -711,7 +711,7 @@ JOB_APPLICATION_DATA = [
         "date": "2024-01-16T14:30:00",
         "url": "https://startupxyz.com/apply/fullstack-js",
         "job_id": 2,
-        "status": "Interview",
+        "status": "interview",
         "note": "Phone screening scheduled for next week",
         "cv_id": 1,
         "owner_id": 1,
@@ -719,7 +719,7 @@ JOB_APPLICATION_DATA = [
     {
         "date": "2024-01-17T09:15:00",
         "job_id": 3,
-        "status": "Applied",
+        "status": "applied",
         "note": "Applied through LinkedIn",
         "cover_letter_id": 2,
         "owner_id": 1,
@@ -728,7 +728,7 @@ JOB_APPLICATION_DATA = [
         "date": "2024-01-18T16:45:00",
         "url": "https://startupxyz.com/careers/cloud-engineer",
         "job_id": 4,
-        "status": "Rejected",
+        "status": "rejected",
         "note": "Not enough cloud experience",
         "cv_id": 4,
         "cover_letter_id": 4,
@@ -737,7 +737,7 @@ JOB_APPLICATION_DATA = [
     {
         "date": "2024-01-20T13:30:00",
         "job_id": 6,
-        "status": "Applied",
+        "status": "applied",
         "note": "Quick application through company form",
         "owner_id": 1,
     },
@@ -745,7 +745,7 @@ JOB_APPLICATION_DATA = [
         "date": "2024-01-21T09:00:00",
         "url": "https://cloudfirst.io/apply/devops",
         "job_id": 9,  # DevOps Engineer
-        "status": "Interview",
+        "status": "interview",
         "note": "Technical interview scheduled",
         "cv_id": 8,  # devops_engineer_cv.pdf
         "cover_letter_id": 10,  # vue_developer_cover_letter.txt
@@ -754,7 +754,7 @@ JOB_APPLICATION_DATA = [
     {
         "date": "2024-01-22T11:15:00",
         "job_id": 10,  # Data Scientist
-        "status": "Applied",
+        "status": "applied",
         "cv_id": 9,  # data_scientist_resume.pdf
         "owner_id": 1,
     },
@@ -762,7 +762,7 @@ JOB_APPLICATION_DATA = [
         "date": "2024-01-23T15:45:00",
         "url": "https://enterprise-solutions.com/apply/vue-dev",
         "job_id": 11,  # Vue.js Frontend Developer
-        "status": "Rejected",
+        "status": "rejected",
         "note": "Position filled internally",
         "cv_id": 6,
         "cover_letter_id": 12,  # generic_cover_letter.docx
@@ -771,7 +771,7 @@ JOB_APPLICATION_DATA = [
     {
         "date": "2024-01-24T08:30:00",
         "job_id": 12,  # Remote Full Stack Engineer
-        "status": "Applied",
+        "status": "applied",
         "note": "Applied directly through website",
         "cv_id": 3,
         "owner_id": 1,
@@ -779,7 +779,7 @@ JOB_APPLICATION_DATA = [
     {
         "date": "2024-01-25T10:00:00",
         "job_id": 13,  # Junior Developer
-        "status": "Interview",
+        "status": "interview",
         "cv_id": 1,
         "cover_letter_id": 7,
         "owner_id": 1,
@@ -788,7 +788,7 @@ JOB_APPLICATION_DATA = [
         "date": "2024-01-26T16:00:00",
         "url": "https://websolutions.com/apply/mobile-dev",
         "job_id": 15,  # Mobile App Developer
-        "status": "Applied",
+        "status": "applied",
         "note": "Excited about mobile development opportunity",
         "cv_id": 11,  # mobile_dev_portfolio.pdf
         "owner_id": 1,
@@ -796,14 +796,14 @@ JOB_APPLICATION_DATA = [
     {
         "date": "2024-01-27T12:00:00",
         "job_id": 16,  # Minimum Required Job
-        "status": "Applied",
+        "status": "applied",
         "owner_id": 1,  # Minimal application
     },
     {
         "date": "2024-01-28T14:20:00",
         "url": "https://enterprise-solutions.com/apply/high-salary",
         "job_id": 17,  # High Salary Position
-        "status": "Interview",
+        "status": "interview",
         "note": "Executive-level interview process",
         "cv_id": 8,
         "cover_letter_id": 2,

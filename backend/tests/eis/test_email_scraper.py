@@ -9,7 +9,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import Resource
 
 from app.eis.email_scraper import clean_email_address, get_user_id_from_email, GmailScraper, Email
-from app.eis.eis_models import JobAlertEmail, JobAlertEmailJob
+from app.eis.models import JobAlertEmail, JobAlertEmailJob
 
 
 class TestCleanEmailAddress:

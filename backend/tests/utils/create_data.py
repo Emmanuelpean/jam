@@ -1,4 +1,4 @@
-import app.eis.eis_models as eis_models
+import app.eis.models as eis_models
 from app import models
 from tests.utils.table_data import (
     USER_DATA,
@@ -216,12 +216,12 @@ def create_scraped_jobs(db, emails) -> list[eis_models.ScrapedJob]:
     return scraped_jobs
 
 
-def create_service_logs(db) -> list[eis_models.ServiceLog]:
+def create_service_logs(db) -> list[eis_models.EisServiceLog]:
     """Create sample service logs"""
 
     print("Creating service logs...")
     # noinspection PyArgumentList
-    logs = [eis_models.ServiceLog(**log) for log in SERVICE_LOG_DATA]
+    logs = [eis_models.EisServiceLog(**log) for log in SERVICE_LOG_DATA]
     db.add_all(logs)
     db.commit()
     return logs

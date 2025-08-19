@@ -3,14 +3,14 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app import models
-from app.eis import eis_models, schemas
+from app.models import User
+from app.eis import models, schemas
 from app.routers.data_tables import generate_crud_router
 from app.database import get_db
 from app.oauth2 import get_current_user
 
 email_router = generate_crud_router(
-    table_model=eis_models.JobAlertEmail,
+    table_model=models.JobAlertEmail,
     create_schema=schemas.JobAlertEmail,
     update_schema=schemas.JobAlertEmailUpdate,
     out_schema=schemas.JobAlertEmailOut,
@@ -20,7 +20,7 @@ email_router = generate_crud_router(
 
 
 scrapedjob_router = generate_crud_router(
-    table_model=eis_models.ScrapedJob,
+    table_model=models.ScrapedJob,
     create_schema=schemas.ScrapedJob,
     update_schema=schemas.ScrapedJobUpdate,
     out_schema=schemas.ScrapedJobOut,
@@ -38,7 +38,7 @@ def get_service_logs_by_date_range(
     end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
     delta_days: int | None = Query(None, description="Number of days to go back in time"),
     limit: int | None = Query(None, description="Maximum number of logs to return"),
-    current_user: models.User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get service logs within a specified date range. Admin access required.
@@ -53,19 +53,19 @@ def get_service_logs_by_date_range(
     if not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
 
-    query = db.query(eis_models.ServiceLog)
+    query = db.query(models.EisServiceLog)
 
     # Apply date filters
     if start_date:
-        query = query.filter(eis_models.ServiceLog.run_datetime >= start_date)
+        query = query.filter(models.EisServiceLog.run_datetime >= start_date)
     if end_date:
-        query = query.filter(eis_models.ServiceLog.run_datetime <= end_date)
+        query = query.filter(models.EisServiceLog.run_datetime <= end_date)
     if delta_days:
         start_date = datetime.now() - timedelta(days=delta_days)
-        query = query.filter(eis_models.ServiceLog.run_datetime >= start_date)
+        query = query.filter(models.EisServiceLog.run_datetime >= start_date)
 
     # Order by run_datetime descending (most recent first)
-    query = query.order_by(eis_models.ServiceLog.run_datetime.desc())
+    query = query.order_by(models.EisServiceLog.run_datetime.desc())
 
     # Apply limit if specified
     if limit:
