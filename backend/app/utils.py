@@ -11,22 +11,23 @@ import bcrypt
 
 def hash_password(password: str) -> str:
     """Hash a password for storing.
-    :param password: password to hash"""
+    :param password: password to hash
+    :return: hashed password"""
 
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    """Verify a stored password against one provided by user.
-    :param password: password to check against
-    :param hashed: hashed password from database
-    :return: boolean indicating whether password matched"""
+    """Verify a stored password against one provided by the user.
+    :param password: raw password to check
+    :param hashed: hashed password from the database
+    :return: boolean indicating whether the passwords matched"""
 
     return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
 
 
 class AppLogger:
-    """Centralized logging utility for the application"""
+    """Centralised logging utility"""
 
     _loggers = {}  # Cache for created loggers
 
@@ -41,9 +42,7 @@ class AppLogger:
         backup_count: int = 5,
         console_output: bool = True,
     ) -> logging.Logger:
-        """
-        Get or create a logger with the specified configuration
-
+        """Get or create a logger with the specified configuration
         :param name: Logger name (usually module name)
         :param log_dir: Directory for log files
         :param log_file: Specific log file name (defaults to {name}.log)
@@ -51,8 +50,7 @@ class AppLogger:
         :param max_file_size: Maximum size of log file before rotation
         :param backup_count: Number of backup files to keep
         :param console_output: Whether to output logs to console
-        :return: Configured logger instance
-        """
+        :return: Configured logger instance"""
 
         # Return cached logger if it exists
         cache_key = f"{name}_{log_dir}_{log_file}"
@@ -108,13 +106,10 @@ class AppLogger:
 
     @classmethod
     def create_service_logger(cls, service_name: str, log_level: str = "INFO") -> logging.Logger:
-        """
-        Create a standardized logger for a service
-
+        """Create a standardised logger for a service
         :param service_name: Name of the service (e.g., 'gmail_scraper', 'job_scraper')
         :param log_level: String representation of log level
-        :return: Configured logger
-        """
+        :return: Configured logger"""
 
         level_map = {
             "DEBUG": logging.DEBUG,
@@ -176,29 +171,35 @@ class AppLogger:
 
 def get_gmail_logger() -> logging.Logger:
     """Get logger for Gmail scraping service"""
+
     return AppLogger.create_service_logger("gmail_scraper", "INFO")
 
 
 def get_job_scraper_logger() -> logging.Logger:
     """Get logger for job scraping service"""
+
     return AppLogger.create_service_logger("job_scraper", "INFO")
 
 
 def get_scheduler_logger() -> logging.Logger:
     """Get logger for scheduler service"""
+
     return AppLogger.create_service_logger("scheduler", "INFO")
 
 
 def get_api_logger() -> logging.Logger:
     """Get logger for API operations"""
+
     return AppLogger.create_service_logger("api", "INFO")
 
 
 def get_database_logger() -> logging.Logger:
     """Get logger for database operations"""
-    return AppLogger.create_service_logger("database", "WARNING")  # Less verbose for DB
+
+    return AppLogger.create_service_logger("database", "WARNING")
 
 
 def get_auth_logger() -> logging.Logger:
     """Get logger for authentication operations"""
+
     return AppLogger.create_service_logger("auth", "INFO")
