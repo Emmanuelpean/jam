@@ -11,7 +11,7 @@ from app.oauth2 import get_current_user
 
 email_router = generate_crud_router(
     table_model=models.JobAlertEmail,
-    create_schema=schemas.JobAlertEmail,
+    create_schema=schemas.JobAlertEmailCreate,
     update_schema=schemas.JobAlertEmailUpdate,
     out_schema=schemas.JobAlertEmailOut,
     endpoint="jobalertemails",
@@ -21,7 +21,7 @@ email_router = generate_crud_router(
 
 scrapedjob_router = generate_crud_router(
     table_model=models.ScrapedJob,
-    create_schema=schemas.ScrapedJob,
+    create_schema=schemas.ScrapedJobCreate,
     update_schema=schemas.ScrapedJobUpdate,
     out_schema=schemas.ScrapedJobOut,
     endpoint="scrapedjobs",
@@ -32,7 +32,7 @@ scrapedjob_router = generate_crud_router(
 servicelog_router = APIRouter(prefix="/servicelogs", tags=["servicelogs"])
 
 
-@servicelog_router.get("/", response_model=list[schemas.ServiceLogOut])
+@servicelog_router.get("/", response_model=list[schemas.EisServiceLogOut])
 def get_service_logs_by_date_range(
     start_date: datetime | None = Query(None, description="Start date for filtering (ISO format)"),
     end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),

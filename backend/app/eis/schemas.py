@@ -1,14 +1,12 @@
 from datetime import datetime
 
-from app.schemas import BaseModel, OwnedOut, Out, JobOut
+from app.schemas import BaseModel, OwnedOut, Out
 
 
 # --------------------------------------------------- JOB ALERT EMAIL --------------------------------------------------
 
 
-class JobAlertEmail(BaseModel):
-    """Job Alert Email input model"""
-
+class JobAlertEmailCreate(BaseModel):
     external_email_id: str
     subject: str | None = None
     sender: str | None = None
@@ -18,23 +16,18 @@ class JobAlertEmail(BaseModel):
     service_log_id: int | None = None
 
 
-class JobAlertEmailUpdate(JobAlertEmail):
-    """Job Alert Email output model"""
-
+class JobAlertEmailUpdate(JobAlertEmailCreate):
     external_email_id: str | None = None
 
 
-class JobAlertEmailOut(JobAlertEmail, OwnedOut):
-    """Email model"""
-
+class JobAlertEmailOut(JobAlertEmailCreate, OwnedOut):
     jobs: list["ScrapedJobOut"]
 
 
 # ----------------------------------------------------- SCRAPED JOB ----------------------------------------------------
 
 
-class ScrapedJob(BaseModel):
-
+class ScrapedJobCreate(BaseModel):
     external_job_id: str
     is_scraped: bool = False
     is_failed: bool = False
@@ -52,13 +45,13 @@ class ScrapedJob(BaseModel):
     location: str | None = None
 
 
-class ScrapedJobUpdate(ScrapedJob):
+class ScrapedJobUpdate(ScrapedJobCreate):
     """Represents scraped job postings from external sources with additional metadata."""
 
     external_job_id: str | None = None
 
 
-class ScrapedJobOut(ScrapedJob, OwnedOut):
+class ScrapedJobOut(ScrapedJobCreate, OwnedOut):
     """Represents scraped job postings from external sources with additional metadata."""
 
     pass
@@ -68,7 +61,7 @@ class ScrapedJobOut(ScrapedJob, OwnedOut):
 # ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
 
 
-class ServiceLog(BaseModel):
+class EisServiceLogCreate(BaseModel):
     """Represents a log of a service run."""
 
     name: str
@@ -80,13 +73,13 @@ class ServiceLog(BaseModel):
     job_fail_n: int | None = None
 
 
-class ServiceLogUpdate(ServiceLog):
+class EisServiceLogUpdate(EisServiceLogCreate):
     """Represents a log of a service run."""
 
     name: str | None = None
 
 
-class ServiceLogOut(ServiceLog, Out):
+class EisServiceLogOut(EisServiceLogCreate, Out):
     """Represents a log of a service run."""
 
     emails: list[JobAlertEmailOut]

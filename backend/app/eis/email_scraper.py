@@ -167,7 +167,7 @@ class GmailScraper(object):
         self,
         message_id: str,
         sender: str,
-    ) -> schemas.JobAlertEmail:
+    ) -> schemas.JobAlertEmailCreate:
         """Extract readable content from an email
         :param message_id: Message ID
         :param sender: Sender email address
@@ -208,7 +208,7 @@ class GmailScraper(object):
             except ValueError:
                 continue
 
-        return schemas.JobAlertEmail(
+        return schemas.JobAlertEmailCreate(
             external_email_id=message_id,
             subject=subject,
             sender=clean_email_address(sender),
@@ -219,7 +219,7 @@ class GmailScraper(object):
 
     @staticmethod
     def save_email_to_db(
-        email_data: schemas.JobAlertEmail,
+        email_data: schemas.JobAlertEmailCreate,
         service_log_id: int,
         db,
     ) -> tuple[JobAlertEmail, bool]:
