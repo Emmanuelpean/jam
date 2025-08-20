@@ -12,15 +12,15 @@ from app import database, models, oauth2
 
 
 def generate_data_table_crud_router(
-        *,
-        table_model,  # SQLAlchemy model
-        create_schema,  # Pydantic schema for creation
-        update_schema,  # Pydantic schema for updates
-        out_schema,  # Pydantic schema for output
-        endpoint: str,  # e.g. "companies"
-        not_found_msg: str = "Entry not found",
-        many_to_many_fields: dict = None,
-        router: APIRouter | None = None,
+    *,
+    table_model,  # SQLAlchemy model
+    create_schema,  # Pydantic schema for creation
+    update_schema,  # Pydantic schema for updates
+    out_schema,  # Pydantic schema for output
+    endpoint: str,  # e.g. "companies"
+    not_found_msg: str = "Entry not found",
+    many_to_many_fields: dict = None,
+    router: APIRouter | None = None,
 ) -> APIRouter:
     """Generate a FastAPI router with standard CRUD endpoints for a given table.
     :param table_model: SQLAlchemy model class representing the database table.
@@ -44,9 +44,9 @@ def generate_data_table_crud_router(
         router = APIRouter(prefix=f"/{endpoint}", tags=[endpoint])
 
     def handle_many_to_many_create(
-            db: Session,
-            entry_id: int,
-            item_data: dict,
+        db: Session,
+        entry_id: int,
+        item_data: dict,
     ):
         """Handle the creation of many-to-many relationships.
         :param db: Database session
@@ -70,9 +70,9 @@ def generate_data_table_crud_router(
                         db.execute(association_table.insert().values(**{local_key: entry_id, remote_key: value_id}))
 
     def handle_many_to_many_update(
-            db: Session,
-            entry_id: int,
-            item_data: dict,
+        db: Session,
+        entry_id: int,
+        item_data: dict,
     ):
         """Handle updating of many-to-many relationships.
         :param db: Database session
@@ -100,10 +100,10 @@ def generate_data_table_crud_router(
     # noinspection PyTypeHints
     @router.get("/", response_model=list[out_schema])
     def get_all(
-            request: Request,
-            db: Session = Depends(database.get_db),
-            current_user: models.User = Depends(oauth2.get_current_user),
-            limit: int | None = None,
+        request: Request,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(oauth2.get_current_user),
+        limit: int | None = None,
     ):
         """Retrieve all entries for the current user.
         :param request: FastAPI request object to access query parameters
@@ -153,9 +153,9 @@ def generate_data_table_crud_router(
     # noinspection PyTypeHints
     @router.get("/{entry_id}", response_model=out_schema)
     def get_one(
-            entry_id: int,
-            db: Session = Depends(database.get_db),
-            current_user: models.User = Depends(oauth2.get_current_user),
+        entry_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(oauth2.get_current_user),
     ):
         """Get an entry by ID.
         :param entry_id: The entry ID.
@@ -182,9 +182,9 @@ def generate_data_table_crud_router(
     # noinspection PyTypeHints
     @router.post("/", status_code=status.HTTP_201_CREATED, response_model=out_schema)
     def create(
-            item: create_schema,
-            db: Session = Depends(database.get_db),
-            current_user: models.User = Depends(oauth2.get_current_user),
+        item: create_schema,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(oauth2.get_current_user),
     ):
         """Create a new entry.
         :param item: Data for the new entry.
@@ -221,10 +221,10 @@ def generate_data_table_crud_router(
     # noinspection PyTypeHints
     @router.put("/{entry_id}", response_model=out_schema)
     def update(
-            entry_id: int,
-            item: update_schema,
-            db: Session = Depends(database.get_db),
-            current_user: models.User = Depends(oauth2.get_current_user),
+        entry_id: int,
+        item: update_schema,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(oauth2.get_current_user),
     ):
         """Update an entry by ID.
         :param entry_id: The entry ID.
@@ -278,9 +278,9 @@ def generate_data_table_crud_router(
 
     @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
     def delete(
-            entry_id: int,
-            db: Session = Depends(database.get_db),
-            current_user: models.User = Depends(oauth2.get_current_user),
+        entry_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(oauth2.get_current_user),
     ):
         """Delete an entry by ID.
         :param entry_id: The entry ID.

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 
 from app import models, database, oauth2, schemas
-from routers import generate_data_table_crud_router
+from app.routers import generate_data_table_crud_router
 
 
 # Person router

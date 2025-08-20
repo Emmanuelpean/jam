@@ -374,10 +374,7 @@ class Job(Owned, Base):
     __table_args__ = (
         CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name=f"valid_rating_range"),
         CheckConstraint("salary_min <= salary_max", name=f"valid_salary_range"),
-        CheckConstraint(
-            "attendance_type IN ('on-site', 'remote', 'hybrid')",
-            name="valid_attendance_type_values"
-        ),
+        CheckConstraint("attendance_type IN ('on-site', 'remote', 'hybrid')", name="valid_attendance_type_values"),
     )
 
 
@@ -465,12 +462,7 @@ class Interview(Owned, Base):
     job_application = relationship("JobApplication", back_populates="interviews")
     interviewers = relationship("Person", secondary=interview_interviewer_mapping, back_populates="interviews")
 
-    __table_args__ = (
-        CheckConstraint(
-            "attendance_type IN ('on-site', 'remote')",
-            name="valid_attendance_type_values"
-        ),
-    )
+    __table_args__ = (CheckConstraint("attendance_type IN ('on-site', 'remote')", name="valid_attendance_type_values"),)
 
 
 class JobApplicationUpdate(Owned, Base):

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models import User
 from app.eis import models, schemas
-from routers import generate_data_table_crud_router
+from app.routers import generate_data_table_crud_router
 from app.database import get_db
 from app.oauth2 import get_current_user
 

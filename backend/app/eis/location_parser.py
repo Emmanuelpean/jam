@@ -82,7 +82,7 @@ class LocationParser:
         self.attendance_indicators = {
             "remote": ["remote", "work from home", "wfh", "anywhere", "global", "fully remote"],
             "hybrid": ["hybrid", "flexible"],
-            "on-site": ["on-site", "office", "in-person", "on site", "onsite"]
+            "on-site": ["on-site", "office", "in-person", "on site", "onsite"],
         }
 
     def extract_postcode(self, location_str: str) -> str | None:
@@ -159,8 +159,16 @@ class LocationParser:
             pattern = r"\b" + re.escape(country) + r"\b"
             if re.search(pattern, location_lower):
                 # Return the standardised country name and the matched variant
-                if country in ["uk", "united kingdom", "britain", "great britain", "england", "scotland", "wales",
-                               "northern ireland"]:
+                if country in [
+                    "uk",
+                    "united kingdom",
+                    "britain",
+                    "great britain",
+                    "england",
+                    "scotland",
+                    "wales",
+                    "northern ireland",
+                ]:
                     return "United Kingdom", country
                 elif country in ["usa", "united states", "united states of america", "america", "us"]:
                     return "United States", country
@@ -190,15 +198,15 @@ class LocationParser:
             for indicator_list in self.attendance_indicators.values():
                 for indicator in indicator_list:
                     # Remove the indicator and clean up whitespace/punctuation
-                    pattern = r'\b' + re.escape(indicator) + r'\b'
-                    working_str = re.sub(pattern, '', working_str, flags=re.IGNORECASE)
+                    pattern = r"\b" + re.escape(indicator) + r"\b"
+                    working_str = re.sub(pattern, "", working_str, flags=re.IGNORECASE)
 
         # Clean up the working string
-        working_str = re.sub(r'\s*[-,;|]\s*', ' ', working_str).strip()
-        working_str = re.sub(r'\s+', ' ', working_str)  # Normalize whitespace
+        working_str = re.sub(r"\s*[-,;|]\s*", " ", working_str).strip()
+        working_str = re.sub(r"\s+", " ", working_str)  # Normalize whitespace
 
         # If the string is now empty or just punctuation, we only have attendance type info
-        if not working_str or re.match(r'^\W*$', working_str):
+        if not working_str or re.match(r"^\W*$", working_str):
             return LocationCreate(), attendance_type
 
         # Extract postcode first (as it's most specific)
@@ -217,17 +225,29 @@ class LocationParser:
 
         # Remove common prepositions and articles that shouldn't be city names
         prepositions_and_articles = [
-            'from', 'in', 'at', 'to', 'for', 'with', 'by', 'of',
-            'the', 'a', 'an', 'and', 'or', 'but'
+            "from",
+            "in",
+            "at",
+            "to",
+            "for",
+            "with",
+            "by",
+            "of",
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
         ]
 
         for word in prepositions_and_articles:
-            pattern = r'\b' + re.escape(word) + r'\b'
-            working_str = re.sub(pattern, '', working_str, flags=re.IGNORECASE)
+            pattern = r"\b" + re.escape(word) + r"\b"
+            working_str = re.sub(pattern, "", working_str, flags=re.IGNORECASE)
 
         # Clean up whitespace and separators again after removing prepositions
-        working_str = re.sub(r'\s*[-,;|]\s*', ',', working_str).strip(' ,')
-        working_str = re.sub(r'\s+', ' ', working_str).strip()
+        working_str = re.sub(r"\s*[-,;|]\s*", ",", working_str).strip(" ,")
+        working_str = re.sub(r"\s+", " ", working_str).strip()
 
         # Split remaining parts by comma
         parts = [part.strip() for part in working_str.split(",") if part.strip()]

@@ -29,7 +29,7 @@ class TestLocationParser:
             ("B33 8TH", "B33 8TH"),
             ("W1A 0AX", "W1A 0AX"),
             ("London SW1A1AA", "SW1A1AA"),  # Without space
-        ]
+        ],
     )
     def test_extract_postcode_uk(self, parser, location_str, expected) -> None:
         """Test UK postcode extraction"""
@@ -44,7 +44,7 @@ class TestLocationParser:
             ("90210", "90210"),
             ("12345-6789", "12345-6789"),
             ("New York 10001", "10001"),
-        ]
+        ],
     )
     def test_extract_postcode_us(self, parser, location_str, expected) -> None:
         """Test US zip code extraction"""
@@ -58,7 +58,7 @@ class TestLocationParser:
             ("M5V 3A8", "M5V 3A8"),
             ("K1A 0A6", "K1A 0A6"),
             ("Toronto M5V3A8", "M5V3A8"),  # Without space
-        ]
+        ],
     )
     def test_extract_postcode_canada(self, parser, location_str, expected) -> None:
         """Test Canadian postal code extraction"""
@@ -74,7 +74,7 @@ class TestLocationParser:
             ("123456", "123456"),  # Generic 6-digit
             ("Berlin 12345", "12345"),  # 5-digit in context (will match US pattern)
             ("Paris 75001", "75001"),  # French postcode in context
-        ]
+        ],
     )
     def test_extract_postcode_general(self, parser, location_str, expected) -> None:
         """Test general postcode patterns"""
@@ -86,7 +86,7 @@ class TestLocationParser:
         [
             ("Some City AB-12345", None),  # This will likely match the "12345" part with US pattern
             ("Location DE12345", None),  # This might not match any pattern depending on implementation
-        ]
+        ],
     )
     def test_extract_postcode_letter_number_combinations_parametrized(self, parser, location_str, expected) -> None:
         """Test letter-number postcode combinations that should be handled specially"""
@@ -102,7 +102,7 @@ class TestLocationParser:
             ("London", None),
             ("Berlin, Germany", None),
             ("", None),
-        ]
+        ],
     )
     def test_extract_postcode_none_cases(self, parser, location_str, expected) -> None:
         """Test cases where no postcode should be found"""
@@ -123,7 +123,7 @@ class TestLocationParser:
             ("Global", "remote"),
             ("Remote from the UK", "remote"),
             ("Work from home - United States", "remote"),
-        ]
+        ],
     )
     def test_extract_attendance_type_remote(self, parser, location_str, expected) -> None:
         """Test remote attendance type extraction"""
@@ -139,7 +139,7 @@ class TestLocationParser:
             ("Mix of office and remote", "hybrid"),
             ("Office/remote", "hybrid"),
             ("Hybrid - London, UK", "hybrid"),
-        ]
+        ],
     )
     def test_extract_attendance_type_hybrid(self, parser, location_str, expected) -> None:
         """Test hybrid attendance type extraction"""
@@ -155,7 +155,7 @@ class TestLocationParser:
             ("In-person", "on-site"),
             ("On site", "on-site"),
             ("Onsite", "on-site"),
-        ]
+        ],
     )
     def test_extract_attendance_type_onsite(self, parser, location_str, expected) -> None:
         """Test on-site attendance type extraction"""
@@ -171,7 +171,7 @@ class TestLocationParser:
             ("Berlin, Germany", None),
             ("Manchester, UK", None),
             ("123 Main Street", None),
-        ]
+        ],
     )
     def test_extract_attendance_type_none_cases(self, parser, location_str, expected) -> None:
         """Test cases where no attendance type should be found"""
@@ -307,31 +307,35 @@ class TestLocationParser:
                 {"country": None, "city": None, "postcode": None},
                 None,
             ),
-        ]
+        ],
     )
     def test_parse_location_parametrized(self, parser, location_str, expected_location, expected_attendance) -> None:
         """Test parsing locations with various formats"""
 
         location, attendance_type = parser.parse_location(location_str)
         self._assert_location_result(location, expected_location, location_str)
-        assert attendance_type == expected_attendance, f"Attendance type mismatch for '{location_str}': got {attendance_type}, expected {expected_attendance}"
+        assert (
+            attendance_type == expected_attendance
+        ), f"Attendance type mismatch for '{location_str}': got {attendance_type}, expected {expected_attendance}"
 
     @staticmethod
     def _assert_location_result(
-            result: LocationCreate,
-            expected: dict,
-            original_input: str,
+        result: LocationCreate,
+        expected: dict,
+        original_input: str,
     ) -> None:
         """Helper method to assert location parsing results"""
-        assert isinstance(result, LocationCreate), f"Result should be LocationCreate instance for input: {original_input}"
+        assert isinstance(
+            result, LocationCreate
+        ), f"Result should be LocationCreate instance for input: {original_input}"
         assert (
-                result.country == expected["country"]
+            result.country == expected["country"]
         ), f"Country mismatch for '{original_input}': got {result.country}, expected {expected['country']}"
         assert (
-                result.city == expected["city"]
+            result.city == expected["city"]
         ), f"City mismatch for '{original_input}': got {result.city}, expected {expected['city']}"
         assert (
-                result.postcode == expected["postcode"]
+            result.postcode == expected["postcode"]
         ), f"Postcode mismatch for '{original_input}': got {result.postcode}, expected {expected['postcode']}"
 
     # ---------------------------------------- Legacy Method Tests ----------------------------------------
@@ -374,7 +378,7 @@ class TestLocationParser:
             "México City, Mexico",
             "Zürich, Switzerland",
             "København, Denmark",
-        ]
+        ],
     )
     def test_parser_handles_special_characters(self, parser, location_str) -> None:
         """Test parser handles special characters"""
@@ -389,14 +393,14 @@ class TestLocationParser:
         import time
 
         locations = [
-                        "London, UK",
-                        "New York, USA",
-                        "Berlin, Germany",
-                        "Remote from anywhere",
-                        "Sydney, Australia",
-                        "Hybrid - Paris, France",
-                        "On-site - Tokyo, Japan",
-                    ] * 100  # 700 locations
+            "London, UK",
+            "New York, USA",
+            "Berlin, Germany",
+            "Remote from anywhere",
+            "Sydney, Australia",
+            "Hybrid - Paris, France",
+            "On-site - Tokyo, Japan",
+        ] * 100  # 700 locations
 
         start_time = time.time()
         for location in locations:
