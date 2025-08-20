@@ -1,9 +1,6 @@
-"""
-Test module for job_scraper.py
-
+"""Test module for job_scraper.py
 Integration tests that use real job IDs and make actual API calls to test the scraping functionality.
-These tests require valid BrightData credentials in the eis_secrets.json file.
-"""
+These tests require valid BrightData credentials in the eis_secrets.json file."""
 
 import os
 

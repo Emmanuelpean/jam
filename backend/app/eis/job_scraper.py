@@ -15,7 +15,7 @@ import requests
 
 
 class JobScrapper(object):
-    """LinkedIn Scraper"""
+    """Job Scraper"""
 
     base_url: str = ""
     name: str = ""
@@ -213,6 +213,6 @@ if __name__ == "__main__":
     job_data1 = scraper.scrape_job()
     print(job_data1)
 
-    scraper = IndeedScrapper("1a10bc30a062452e")
+    scraper = IndeedScrapper("7b9119575c72cb5c")
     job_data1 = scraper.scrape_job()
     print(job_data1)
