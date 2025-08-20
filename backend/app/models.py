@@ -227,8 +227,8 @@ class Location(Owned, Base):
 
     __table_args__ = (
         CheckConstraint(
-            "(postcode IS NOT NULL OR city IS NOT NULL OR country IS NOT NULL) OR remote = true",
-            name=f"location_data_required_unless_remote",
+            "postcode IS NOT NULL OR city IS NOT NULL OR country IS NOT NULL",
+            name=f"location_data_required",
         ),
     )
 

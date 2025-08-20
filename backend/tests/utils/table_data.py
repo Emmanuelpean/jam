@@ -626,7 +626,7 @@ JOB_DATA = [
         "personal_rating": 4,
         "url": "https://websolutions.com/jobs/mobile-dev",
         "company_id": 4,  # WebSolutions Ltd
-        "location_id": 14,  # Brazil
+        "location_id": 12,  # Brazil
         "attendance_type": "hybrid",
         "owner_id": 1,
     },
@@ -916,7 +916,7 @@ INTERVIEW_DATA = [
     {
         "date": "2024-02-02T11:00:00",
         "type": "Technical",
-        "location_id": 14,  # Brazil (remote)
+        "location_id": 12,  # Brazil (remote)
         "job_application_id": 11,  # Mobile App Developer
         "note": "Technical skills assessment for mobile development",
         "attendance_type": "remote",

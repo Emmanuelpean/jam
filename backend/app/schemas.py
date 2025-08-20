@@ -118,7 +118,6 @@ class LocationCreate(BaseModel):
     postcode: str | None = None
     city: str | None = None
     country: str | None = None
-    remote: bool = False
 
 
 class LocationOut(LocationCreate, OwnedOut):
@@ -199,6 +198,7 @@ class JobCreate(BaseModel):
     keywords: list[int] = []
     contacts: list[int] = []
     deadline: datetime | None = None
+    attendance_type: str | None = None
     source_id: int | None = None
 
 
@@ -278,6 +278,7 @@ class InterviewCreate(BaseModel):
     note: str | None = None
     type: str | None = None
     interviewers: list[int] | None = None
+    attendance_type: str | None = None
 
 
 class InterviewSimple(InterviewCreate, OwnedOut):
