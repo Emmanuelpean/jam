@@ -139,6 +139,7 @@ def update_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
 
     # Validate email
+    # noinspection PyTypeChecker
     users = db.query(models.User).filter(models.User.id != entry_id).all()
     emails = [u.email for u in users]
     if "email" in user_update and user_update["email"] in emails:
@@ -174,11 +175,5 @@ def create_user(
     new_user = models.User(**user.model_dump())
     db.add(new_user)
     db.commit()
-    db.refresh(new_user)
-
-    # Add the remote location
-    # noinspection PyArgumentList
-    remote_location = models.Location(owner_id=new_user.id, remote=True)
-    db.add(remote_location)
 
     return new_user

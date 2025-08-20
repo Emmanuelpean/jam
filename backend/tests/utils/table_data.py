@@ -477,6 +477,7 @@ JOB_DATA = [
         "company_id": 1,  # Tech Corp
         "location_id": 2,  # Beverly Hills
         "note": "Excellent opportunity for senior developer",
+        "attendance_type": "hybrid",
         "owner_id": 1,
     },
     {
@@ -489,6 +490,7 @@ JOB_DATA = [
         "company_id": 2,  # StartupXYZ
         "location_id": 1,  # New York
         "note": "Great team culture mentioned in reviews",
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
@@ -500,6 +502,7 @@ JOB_DATA = [
         "url": "https://techcorp.com/jobs/remote_react_developer",
         "company_id": 1,  # Tech Corp
         "location_id": 4,  # San Francisco
+        "attendance_type": "remote",
         "owner_id": 1,
     },
     {
@@ -511,6 +514,7 @@ JOB_DATA = [
         "url": "https://startupxyz.com/jobs/cloud_engineer",
         "company_id": 2,  # StartupXYZ
         "location_id": 3,  # London
+        "attendance_type": "hybrid",
         "owner_id": 1,
     },
     {
@@ -522,12 +526,14 @@ JOB_DATA = [
         "url": "https://techcorp.com/jobs/frontend_developer",
         "company_id": 1,  # Tech Corp
         "location_id": 5,  # Berlin
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
         "title": "Backend Developer",
         "description": "Looking for a backend developer with Python experience. FastAPI knowledge preferred.",
         "location_id": 4,  # San Francisco
+        "attendance_type": "hybrid",
         "owner_id": 1,
     },
     {
@@ -535,12 +541,14 @@ JOB_DATA = [
         "description": "Summer internship opportunity for computer science students. Great learning environment.",
         "personal_rating": 1,
         "company_id": 3,  # Oxford PV
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
         "title": "Developer Position",
         "company_id": 3,  # Oxford PV
         "location_id": 5,  # Berlin
+        "attendance_type": "hybrid",
         "owner_id": 1,
     },
     {
@@ -553,6 +561,7 @@ JOB_DATA = [
         "company_id": 6,  # CloudFirst Inc
         "location_id": 8,  # Paris
         "note": "Strong DevOps culture, great tools",
+        "attendance_type": "hybrid",
         "owner_id": 1,
     },
     {
@@ -563,6 +572,7 @@ JOB_DATA = [
         "personal_rating": 4,
         "company_id": 5,  # DataTech Industries
         "location_id": 9,  # Germany (no city)
+        "attendance_type": "remote",
         "owner_id": 1,
     },
     {
@@ -573,6 +583,7 @@ JOB_DATA = [
         "url": "https://enterprise-solutions.com/jobs/vue-dev",
         "company_id": 9,  # Enterprise Solutions
         "location_id": 10,  # Tokyo
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
@@ -585,6 +596,7 @@ JOB_DATA = [
         "company_id": 10,  # LocalBiz
         "location_id": 11,  # Australia
         "note": "Small team, lots of autonomy",
+        "attendance_type": "remote",
         "owner_id": 1,
     },
     {
@@ -595,6 +607,7 @@ JOB_DATA = [
         "personal_rating": 2,
         "company_id": 7,  # Minimal Corp
         "location_id": 12,  # Toronto
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
@@ -602,6 +615,7 @@ JOB_DATA = [
         "description": "Contract position for web development projects",
         "location_id": 13,  # Amsterdam
         "note": "Flexible hours, project-based",
+        "attendance_type": "remote",
         "owner_id": 1,
     },
     {
@@ -613,10 +627,12 @@ JOB_DATA = [
         "url": "https://websolutions.com/jobs/mobile-dev",
         "company_id": 4,  # WebSolutions Ltd
         "location_id": 14,  # Brazil
+        "attendance_type": "hybrid",
         "owner_id": 1,
     },
     {
         "title": "Minimum Required Job",
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
@@ -627,10 +643,10 @@ JOB_DATA = [
         "personal_rating": 5,
         "company_id": 9,  # Enterprise Solutions
         "location_id": 1,  # New York
+        "attendance_type": "hybrid",
         "owner_id": 1,
     },
 ]
-
 
 FILE_DATA = [
     {
@@ -822,6 +838,7 @@ INTERVIEW_DATA = [
         "location_id": 1,
         "job_application_id": 1,
         "note": "First round technical interview",
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
@@ -830,6 +847,7 @@ INTERVIEW_DATA = [
         "location_id": 2,
         "job_application_id": 2,
         "note": "HR screening call",
+        "attendance_type": "remote",
         "owner_id": 1,
     },
     {
@@ -838,6 +856,7 @@ INTERVIEW_DATA = [
         "location_id": 4,  # Remote
         "job_application_id": 3,
         "note": "Remote technical assessment",
+        "attendance_type": "remote",
         "owner_id": 1,
     },
     {
@@ -846,6 +865,7 @@ INTERVIEW_DATA = [
         "location_id": 1,
         "job_application_id": 4,
         "note": "Final round with team lead",
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
@@ -854,6 +874,7 @@ INTERVIEW_DATA = [
         "location_id": 3,
         "job_application_id": 5,
         "note": "Cultural fit interview",
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
@@ -862,6 +883,7 @@ INTERVIEW_DATA = [
         "location_id": 7,  # Canada location
         "job_application_id": 1,  # Same application, second interview
         "note": None,
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
@@ -870,6 +892,7 @@ INTERVIEW_DATA = [
         "location_id": 8,  # Paris
         "job_application_id": 6,  # DevOps application
         "note": "Deep technical dive into infrastructure",
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
@@ -878,6 +901,7 @@ INTERVIEW_DATA = [
         "location_id": 11,  # Australia (remote)
         "job_application_id": 8,  # Remote Full Stack application
         "note": "Meeting with team leads",
+        "attendance_type": "remote",
         "owner_id": 1,
     },
     {
@@ -886,6 +910,7 @@ INTERVIEW_DATA = [
         "location_id": 12,  # Toronto
         "job_application_id": 10,  # Junior Developer application
         "note": "Initial screening for junior position",
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
@@ -894,6 +919,7 @@ INTERVIEW_DATA = [
         "location_id": 14,  # Brazil (remote)
         "job_application_id": 11,  # Mobile App Developer
         "note": "Technical skills assessment for mobile development",
+        "attendance_type": "remote",
         "owner_id": 1,
     },
     {
@@ -902,6 +928,7 @@ INTERVIEW_DATA = [
         "location_id": 1,  # New York
         "job_application_id": 13,  # High Salary Position
         "note": "Panel interview with executives",
+        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {
@@ -909,6 +936,7 @@ INTERVIEW_DATA = [
         "type": "Management",
         "location_id": 5,  # Germany (remote)
         "job_application_id": 7,  # Data Scientist application
+        "attendance_type": "remote",
         "owner_id": 1,  # Minimal interview info
     },
 ]

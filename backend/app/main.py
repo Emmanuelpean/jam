@@ -14,14 +14,14 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Table routers
+# Data table routers
 app.include_router(data_tables.company_router)
 app.include_router(data_tables.person_router)
 app.include_router(data_tables.location_router)
@@ -31,11 +31,13 @@ app.include_router(data_tables.aggregator_router)
 app.include_router(data_tables.interview_router)
 app.include_router(data_tables.keyword_router)
 app.include_router(data_tables.file_router)
-app.include_router(eis_routers.scrapedjob_router)
-app.include_router(eis_routers.email_router)
-app.include_router(eis_routers.servicelog_router)
 app.include_router(data_tables.job_application_update_router)
 app.include_router(data_tables.general_router)
+
+# EIS routers
+app.include_router(eis_routers.scrapedjob_router)
+app.include_router(eis_routers.email_router)
+app.include_router(eis_routers.eis_servicelog_router)
 
 # Authentification router
 app.include_router(user.user_router)

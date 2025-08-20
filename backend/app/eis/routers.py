@@ -1,3 +1,8 @@
+"""FastAPI routers for the email ingestion service (EIS) endpoints.
+
+Provides REST API endpoints for managing job alert emails, scraped job postings,
+and service execution logs with CRUD operations and admin access controls."""
+
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -5,11 +10,13 @@ from sqlalchemy.orm import Session
 
 from app.models import User
 from app.eis import models, schemas
-from app.routers.data_tables import generate_crud_router
+from routers import generate_data_table_crud_router
 from app.database import get_db
 from app.oauth2 import get_current_user
 
-email_router = generate_crud_router(
+
+# Job Alert Email router
+email_router = generate_data_table_crud_router(
     table_model=models.JobAlertEmail,
     create_schema=schemas.JobAlertEmailCreate,
     update_schema=schemas.JobAlertEmailUpdate,
@@ -19,7 +26,8 @@ email_router = generate_crud_router(
 )
 
 
-scrapedjob_router = generate_crud_router(
+# Scraped Job router
+scrapedjob_router = generate_data_table_crud_router(
     table_model=models.ScrapedJob,
     create_schema=schemas.ScrapedJobCreate,
     update_schema=schemas.ScrapedJobUpdate,
@@ -29,10 +37,11 @@ scrapedjob_router = generate_crud_router(
 )
 
 
-servicelog_router = APIRouter(prefix="/servicelogs", tags=["servicelogs"])
+# Email Ingestion Service Log router
+eis_servicelog_router = APIRouter(prefix="/servicelogs", tags=["servicelogs"])
 
 
-@servicelog_router.get("/", response_model=list[schemas.EisServiceLogOut])
+@eis_servicelog_router.get("/", response_model=list[schemas.EisServiceLogOut])
 def get_service_logs_by_date_range(
     start_date: datetime | None = Query(None, description="Start date for filtering (ISO format)"),
     end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),

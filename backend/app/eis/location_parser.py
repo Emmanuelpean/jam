@@ -1,7 +1,7 @@
 """Location Parser Module
 
 Extracts and parses location components from job posting location strings.
-Handles postcodes, cities, countries, and remote work indicators across
+Handles postcodes, cities, countries, and attendance type indicators across
 multiple international formats including UK, US, and Canadian postal codes."""
 
 import re
@@ -13,6 +13,7 @@ class LocationParser:
     """Parser for extracting location components from job location strings"""
 
     def __init__(self) -> None:
+
         # Common country names and variations
         self.countries = {
             "uk",
@@ -77,11 +78,18 @@ class LocationParser:
             r"\b[A-Z]{2}-?\d{3,5}\b",  # Letter-number combinations
         ]
 
-        # Common remote work indicators
-        self.remote_indicators = {"remote", "work from home", "wfh", "hybrid", "anywhere", "global"}
+        # Attendance type indicators
+        self.attendance_indicators = {
+            "remote": ["remote", "work from home", "wfh", "anywhere", "global", "fully remote"],
+            "hybrid": ["hybrid", "flexible"],
+            "on-site": ["on-site", "office", "in-person", "on site", "onsite"]
+        }
 
     def extract_postcode(self, location_str: str) -> str | None:
-        """Extract postcode from location string"""
+        """Extract postcode from the location string
+        :param location_str: Raw location string from the job posting
+        :return: Postcode string if found, else None"""
+
         location_upper = location_str.upper()
 
         # Try UK postcode first
@@ -107,23 +115,40 @@ class LocationParser:
 
         return None
 
-    def extract_country(self, location_str: str) -> str | None:
-        """Extract country from location string"""
-        country, _ = self.extract_country_with_match(location_str)
-        return country
+    def extract_attendance_type(self, location_str: str) -> str | None:
+        """Extract attendance type from the location string
+        :param location_str: Raw location string from the job posting
+        :return: Attendance type ("remote", "hybrid", "on-site") if found, else None"""
 
-    def is_remote_location(self, location_str: str) -> bool:
-        """Check if location indicates remote work"""
         location_lower = location_str.lower()
-        return any(indicator in location_lower for indicator in self.remote_indicators)
+
+        # Check if both remote and office/on-site indicators are present -> hybrid
+        has_remote = any(indicator in location_lower for indicator in self.attendance_indicators["remote"])
+        has_office = any(indicator in location_lower for indicator in self.attendance_indicators["on-site"])
+
+        if has_remote and has_office:
+            return "hybrid"
+
+        # Check for explicit hybrid indicators
+        for indicator in self.attendance_indicators["hybrid"]:
+            if indicator in location_lower:
+                return "hybrid"
+
+        # Check remote indicators
+        if has_remote:
+            return "remote"
+
+        # Check on-site indicators
+        if has_office:
+            return "on-site"
+
+        return None
 
     def extract_country_with_match(self, location_str: str) -> tuple[str | None, str | None]:
-        """
-        Extract country from location string and return both the standardized name and the matched text
+        """Extract country from the location string and return both the standardised name and the matched text
+        :param location_str: Raw location string from the job posting
+        :return: Standardised country name and the original name or (None, None) if not found"""
 
-        Returns:
-            Tuple of (standardized_country_name, matched_text)
-        """
         location_lower = location_str.lower().strip()
 
         # Sort countries by length (descending) to match longer names first
@@ -133,72 +158,92 @@ class LocationParser:
         for country in sorted_countries:
             pattern = r"\b" + re.escape(country) + r"\b"
             if re.search(pattern, location_lower):
-                # Return standardized country name and the matched variant
-                if country in ["uk", "united kingdom", "britain", "great britain"]:
+                # Return the standardised country name and the matched variant
+                if country in ["uk", "united kingdom", "britain", "great britain", "england", "scotland", "wales",
+                               "northern ireland"]:
                     return "United Kingdom", country
                 elif country in ["usa", "united states", "united states of america", "america", "us"]:
                     return "United States", country
-                elif country in ["england", "scotland", "wales", "northern ireland"]:
-                    return "United Kingdom", country
                 else:
                     return country.title(), country
 
         return None, None
 
-    def parse_location(self, location_str: str) -> LocationCreate:
-        """
-        Parse a location string and extract country, city, postcode, and remote status
+    def parse_location(self, location_str: str) -> tuple[LocationCreate, str | None]:
+        """Parse a location string and extract country, city, postcode, and attendance type
+        :param location_str: Raw location string from the job posting
+        :return: Tuple of (LocationCreate object, attendance_type string or None)"""
 
-        Args:
-            location_str: Raw location string from job posting
+        location_str = location_str.strip()
 
-        Returns:
-            Location schema object with parsed components
-        """
-        if not location_str or not location_str.strip():
-            return LocationCreate()
+        if not location_str:
+            return LocationCreate(), None
 
-        original_location = location_str.strip()
-        location_str = original_location
+        # Extract attendance type first
+        attendance_type = self.extract_attendance_type(location_str)
 
-        # Check if it's a remote position
-        is_remote = self.is_remote_location(location_str)
+        # Create a working copy of the string for location parsing
+        working_str = location_str
 
-        if is_remote:
-            # For remote positions, still try to extract country (e.g., "Remote from the UK")
-            country, _ = self.extract_country_with_match(location_str)
-            return LocationCreate(country=country, city=None, postcode=None, remote=True)
+        # Remove attendance type indicators from the working string for cleaner location parsing
+        if attendance_type:
+            for indicator_list in self.attendance_indicators.values():
+                for indicator in indicator_list:
+                    # Remove the indicator and clean up whitespace/punctuation
+                    pattern = r'\b' + re.escape(indicator) + r'\b'
+                    working_str = re.sub(pattern, '', working_str, flags=re.IGNORECASE)
+
+        # Clean up the working string
+        working_str = re.sub(r'\s*[-,;|]\s*', ' ', working_str).strip()
+        working_str = re.sub(r'\s+', ' ', working_str)  # Normalize whitespace
+
+        # If the string is now empty or just punctuation, we only have attendance type info
+        if not working_str or re.match(r'^\W*$', working_str):
+            return LocationCreate(), attendance_type
 
         # Extract postcode first (as it's most specific)
-        postcode = self.extract_postcode(location_str)
+        postcode = self.extract_postcode(working_str)
         if postcode:
-            # Remove postcode from string for further processing
-            location_str = re.sub(re.escape(postcode), "", location_str, flags=re.IGNORECASE).strip()
+            working_str = re.sub(re.escape(postcode), "", working_str, flags=re.IGNORECASE).strip()
 
         # Extract country and handle the matched country text
-        country, matched_country = self.extract_country_with_match(location_str)
-        if country and matched_country:
-            # For UK subdivisions, we want to keep them as potential regions
-            uk_subdivisions = ["england", "scotland", "wales", "northern ireland"]
+        country, original = self.extract_country_with_match(working_str)
+        if country and original:
+            pattern = r"\b" + re.escape(original) + r"\b"
+            working_str = re.sub(pattern, "", working_str, flags=re.IGNORECASE).strip()
 
-            if matched_country.lower() not in uk_subdivisions:
-                # Remove non-UK subdivision countries from the string
-                pattern = r"\b" + re.escape(matched_country) + r"\b"
-                location_str = re.sub(pattern, "", location_str, flags=re.IGNORECASE).strip()
+        # Clean up the remaining string (remove common separators)
+        working_str = re.sub(r"[,;|\-]+", ",", working_str).strip(" ,")
 
-                # If the entire string was just the country name, we're done
-                if not location_str:
-                    return LocationCreate(country=country, city=None, postcode=postcode, remote=False)
+        # Remove common prepositions and articles that shouldn't be city names
+        prepositions_and_articles = [
+            'from', 'in', 'at', 'to', 'for', 'with', 'by', 'of',
+            'the', 'a', 'an', 'and', 'or', 'but'
+        ]
 
-        # Clean up remaining string (remove common separators)
-        location_str = re.sub(r"[,;|\-]+", ",", location_str).strip(" ,")
+        for word in prepositions_and_articles:
+            pattern = r'\b' + re.escape(word) + r'\b'
+            working_str = re.sub(pattern, '', working_str, flags=re.IGNORECASE)
+
+        # Clean up whitespace and separators again after removing prepositions
+        working_str = re.sub(r'\s*[-,;|]\s*', ',', working_str).strip(' ,')
+        working_str = re.sub(r'\s+', ' ', working_str).strip()
 
         # Split remaining parts by comma
-        parts = [part.strip() for part in location_str.split(",") if part.strip()]
+        parts = [part.strip() for part in working_str.split(",") if part.strip()]
 
-        # Assign remaining parts as city (we'll ignore region since it's not in the schema)
+        # Assign remaining parts as city
         city = None
         if len(parts) >= 1 and parts[0]:
             city = parts[0].title()
 
-        return LocationCreate(country=country, city=city, postcode=postcode, remote=is_remote)
+        location = LocationCreate(country=country, city=city, postcode=postcode)
+        return location, attendance_type
+
+    def parse_location_only(self, location_str: str) -> LocationCreate:
+        """Parse a location string and return only the location data (for backward compatibility)
+        :param location_str: Raw location string from the job posting
+        :return: Location schema object with parsed components"""
+
+        location, _ = self.parse_location(location_str)
+        return location

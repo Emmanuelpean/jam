@@ -1,3 +1,7 @@
+"""Pydantic schemas for the email ingestion service.
+Contains data models for job alert emails, scraped job postings, and service logs
+used in the external job scraping and notification system."""
+
 from datetime import datetime
 
 from app.schemas import BaseModel, OwnedOut, Out

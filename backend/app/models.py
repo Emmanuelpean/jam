@@ -196,7 +196,6 @@ class Location(Owned, Base):
     - `postcode` (str, optional): Postcode of the location.
     - `city` (str, optional): City of the location.
     - `country` (str, optional): Country where the location resides.
-    - `remote` (bool, optional): Indicates if the location is remote
     - `name` (str): Computed property combining city, country, and postcode
 
     Relationships:
@@ -207,7 +206,6 @@ class Location(Owned, Base):
     postcode = Column(String, nullable=True)
     city = Column(String, nullable=True)
     country = Column(String, nullable=True)
-    remote = Column(Boolean, nullable=False, server_default=expression.false())
 
     # Relationships
     jobs = relationship("Job", back_populates="location")
@@ -217,9 +215,6 @@ class Location(Owned, Base):
     def name(self) -> str:
         """Computed property that combines city, country, and postcode into a readable location name"""
 
-        if self.remote:
-            return "Remote"
-
         parts = []
         if self.city:
             parts.append(self.city)
@@ -228,7 +223,7 @@ class Location(Owned, Base):
         if self.postcode:
             parts.append(self.postcode)
 
-        return ", ".join(parts) if parts else "Unknown Location"
+        return ", ".join(parts) + " - (" + str(self.type) + ")"
 
     __table_args__ = (
         CheckConstraint(
@@ -322,6 +317,7 @@ class Job(Owned, Base):
     - `personal_rating` (int, optional): Personalised rating given to the job.
     - `note` (str, optional): Additional note about the job posting.
     - `deadline` (datetime, optional): Deadline for the job application.
+    - `attendance_type` (str, optional): Type of attendance offered for the job (on-site, remote, hybrid).
     - `name` (str): Computed property combining the job title and company name.
 
     Foreign keys:
@@ -348,6 +344,7 @@ class Job(Owned, Base):
     personal_rating = Column(Integer, nullable=True)
     note = Column(String, nullable=True)
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
+    attendance_type = Column(String, nullable=True)
 
     # Foreign keys
     company_id = Column(Integer, ForeignKey("company.id", ondelete="SET NULL"), nullable=True, index=True)
@@ -377,6 +374,10 @@ class Job(Owned, Base):
     __table_args__ = (
         CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name=f"valid_rating_range"),
         CheckConstraint("salary_min <= salary_max", name=f"valid_salary_range"),
+        CheckConstraint(
+            "attendance_type IN ('on-site', 'remote', 'hybrid')",
+            name="valid_attendance_type_values"
+        ),
     )
 
 
@@ -451,6 +452,7 @@ class Interview(Owned, Base):
     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     type = Column(String, nullable=False)
     note = Column(String, nullable=True)
+    attendance_type = Column(String, nullable=True)
 
     # Foreign keys
     location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
@@ -462,6 +464,13 @@ class Interview(Owned, Base):
     location = relationship("Location", back_populates="interviews")
     job_application = relationship("JobApplication", back_populates="interviews")
     interviewers = relationship("Person", secondary=interview_interviewer_mapping, back_populates="interviews")
+
+    __table_args__ = (
+        CheckConstraint(
+            "attendance_type IN ('on-site', 'remote')",
+            name="valid_attendance_type_values"
+        ),
+    )
 
 
 class JobApplicationUpdate(Owned, Base):
