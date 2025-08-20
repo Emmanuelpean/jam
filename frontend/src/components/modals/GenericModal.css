@@ -1,9 +1,9 @@
+
 .modal-dialog {
     margin: 5vh auto;
     display: flex;
     align-items: flex-start;
 }
-
 
 .modal-content {
     display: flex;
@@ -22,14 +22,6 @@
     padding: 1.5rem;
 }
 
-
-/* Keep header and footer fixed (no scrolling) */
-/*.modal-header,*/
-/*.modal-footer {*/
-/*    flex-shrink: 0;*/
-/*    overflow: visible;*/
-/*}*/
-
 .modal-header .modal-title {
     font-weight: 600;
     font-size: 1.3rem;
@@ -37,7 +29,6 @@
     max-height: 80vh;
     overflow-y: auto;
 }
-
 
 .modal-header {
     background: var(--primary-gradient);
@@ -61,7 +52,6 @@
     transform: scale(1.1);
 }
 
-
 /* Handle form wrapper in edit mode */
 .modal-content form {
     display: flex;
@@ -71,35 +61,11 @@
 }
 
 /* Ensure content containers don't interfere */
-/*.modal-content-animated,*/
 .modal-content-visible {
     height: auto !important;
     overflow: visible;
     flex: 1 1 auto;
 }
-
-/* Handle tabs properly */
-.modal-body .nav-tabs {
-    flex-shrink: 0;
-    margin-bottom: 1.5rem;
-}
-
-.modal-body .tab-content {
-    flex: 1 1 auto;
-    overflow: visible;
-    min-height: 0;
-}
-
-.modal-body .tab-pane {
-    overflow: visible;
-}
-
-/*!* Make sure cards don't create their own scroll *!*/
-/*.modal-body .card,*/
-/*.modal-body .card-body {*/
-/*    overflow: visible;*/
-/*}*/
-
 
 .modal-footer {
     background: linear-gradient(145deg, #f8f9fa 0%, #f0f1f2 100%);
@@ -109,44 +75,6 @@
     flex-shrink: 0;
 }
 
-
-.modal-body .nav-tabs {
-    border: none;
-    background: transparent;
-    margin-bottom: 1.5rem;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: center;
-    border-bottom: 2px solid #e9ecef;
-    padding-bottom: 0;
-    gap: 0;
-    flex-shrink: 0;
-}
-
-.modal-body .nav-tabs .nav-link {
-    border: none;
-    border-radius: 0;
-    padding: 1rem 1.5rem;
-    font-weight: 500;
-    color: #6c757d;
-    background: transparent;
-    transition: border-bottom-color 0.3s ease;
-    text-align: center;
-    white-space: nowrap;
-    position: relative;
-    border-bottom: 3px solid #dee2e6;
-    margin-bottom: -2px;
-    width: 100%;
-}
-
-.modal-body .nav-tabs .nav-link.active {
-    color: var(--primary-mid);
-    font-weight: 600;
-    background: transparent;
-    border-bottom: 3px solid var(--primary-mid);
-}
-
 .modal-buttons-container {
     display: flex;
     justify-content: center;
@@ -154,10 +82,10 @@
     width: 100%;
     margin: 0 auto;
 }
+
 .modal-buttons-container .btn {
     flex: 1;
 }
-
 
 .modal:not(:last-of-type) .modal-content::after {
     content: "";
@@ -178,7 +106,66 @@
     background: #ffffff;
 }
 
+/* Specific fixes for tabbed modals */
+.modal-body .tab-content .modal-content-animated {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+}
+
+.custom-tab-nav {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    gap: 25px;
+    flex-shrink: 0;
+}
+
+.custom-tab-button {
+    border: none;
+    border-radius: 0;
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    color: #6c757d;
+    background: transparent;
+    transition: all 0.3s ease;
+    text-align: center;
+    white-space: nowrap;
+    position: relative;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    width: 100%;
+    cursor: pointer;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.custom-tab-button:hover {
+    color: var(--primary-mid);
+    background: rgba(var(--primary-mid), 0.05);
+}
+
+.custom-tab-button.active {
+    color: var(--primary-mid);
+    font-weight: 600;
+    background: transparent;
+    border-bottom: 3px solid var(--primary-mid);
+}
+
+.custom-tab-content {
+    flex: 1 1 auto;
+    overflow: visible;
+    min-height: 0;
+}
+
+/* Remove the problematic Bootstrap tab overrides */
 .modal-content-animated {
-    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     overflow: hidden !important;
+}
+
+.custom-tab-button:hover {
+    color: var(--primary-mid);
+    border-bottom-color: rgba(var(--primary-mid), 0.3);
 }

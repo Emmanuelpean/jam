@@ -578,18 +578,28 @@ const GenericModal = ({
 		);
 	};
 
-	// Render modal body
 	const renderBody = () => {
-		// If we have tabs, render the tabs container
+		// If we have tabs, render custom tab buttons instead of Bootstrap Tabs
 		if (tabs && tabs.length > 0) {
 			return (
-				<Tabs activeKey={activeTab} onSelect={handleTabChange} className="mb-3">
-					{tabs.map((tab) => (
-						<Tab key={tab.key} eventKey={tab.key} title={tab.title}>
-							{renderBodyContent()}
-						</Tab>
-					))}
-				</Tabs>
+				<>
+					{/* Custom Tab Navigation */}
+					<div className="custom-tab-nav">
+						{tabs.map((tab) => (
+							<button
+								key={tab.key}
+								type="button"
+								className={`custom-tab-button ${activeTab === tab.key ? "active" : ""}`}
+								onClick={() => handleTabChange(tab.key)}
+							>
+								{tab.title}
+							</button>
+						))}
+					</div>
+
+					{/* Tab Content */}
+					<div className="custom-tab-content">{renderBodyContent()}</div>
+				</>
 			);
 		}
 		return renderBodyContent();
