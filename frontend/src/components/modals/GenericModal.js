@@ -438,7 +438,7 @@ const GenericModal = ({
 	};
 
 	// Shared field group rendering function
-	const renderFieldGroup = (item, index, isFormMode = true) => {
+	const renderFieldGroup = (item, index, isFormMode = true, className = "mb-3") => {
 		// Type 1: Array of fields or single field
 		if (item.name || item.key) {
 			item = [item];
@@ -447,7 +447,7 @@ const GenericModal = ({
 		const renderTitleField = (field) => {
 			return (
 				<div className=" text-center p-1">
-					<h2 className="display-6 fw-bold mb-4">
+					<h2 className="display-6 fw-bold mt-4 mb-4" style={{ color: "var(--primary-mid)" }}>
 						{renderFieldValue(field, getCurrentData(), getModalId())}
 					</h2>
 				</div>
@@ -480,7 +480,11 @@ const GenericModal = ({
 			const columnClass = getColumnClass(item.length);
 
 			return (
-				<div key={index} className="row mb-3" style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
+				<div
+					key={index}
+					className={`row ${className ? ` ${className}` : ""}`}
+					style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}
+				>
 					{item.map((field, fieldIndex) => (
 						<div key={field.key || field.name || `field_${index}_${fieldIndex}`} className={columnClass}>
 							{isFormMode ? (
