@@ -1,287 +1,184 @@
-.modal-content {
-	border-radius: 16px;
-	background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
+.modal-dialog {
+    margin: 5vh auto;
+    display: flex;
+    align-items: flex-start;
 }
 
-.modal-header {
-	background: var(--primary-gradient);
-	color: white;
-	border-bottom: none;
-	border-radius: 16px 16px 0 0;
-	padding: 1.5rem 2rem;
-	flex-shrink: 0;
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    height: 100%;
+    overflow: hidden;
+    background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
 }
+
+.modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    padding: 1.5rem;
+}
+
+
+/* Keep header and footer fixed (no scrolling) */
+/*.modal-header,*/
+/*.modal-footer {*/
+/*    flex-shrink: 0;*/
+/*    overflow: visible;*/
+/*}*/
 
 .modal-header .modal-title {
-	font-weight: 600;
-	font-size: 1.3rem;
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    font-weight: 600;
+    font-size: 1.3rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
+
+.modal-header {
+    background: var(--primary-gradient);
+    color: white;
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    padding: 1.5rem 2rem;
+    flex-shrink: 0;
+}
+
+/* Close button */
 .modal-header .btn-close {
-	filter: invert(1);
-	opacity: 0.8;
-	background-size: 1.2em;
-	transition: all 0.2s ease;
+    filter: invert(1);
+    opacity: 0.8;
+    background-size: 1.2em;
+    transition: all 0.2s ease;
 }
 
 .modal-header .btn-close:hover {
-	opacity: 1;
-	transform: scale(1.1);
+    opacity: 1;
+    transform: scale(1.1);
 }
 
-.modal-dialog {
-	height: calc(100vh - 4rem);
-	margin: 1rem auto;
-	display: flex;
-	align-items: flex-start;
+
+/* Handle form wrapper in edit mode */
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
 }
 
-.modal-body {
-	padding: 1.5rem;
-	background: linear-gradient(145deg, #fafbfc 0%, #f8f9fa 100%);
-	overflow-y: auto;
-	overflow-x: hidden;
-	flex: 1 1 auto;
-	min-height: 0;
+/* Ensure content containers don't interfere */
+/*.modal-content-animated,*/
+.modal-content-visible {
+    height: auto !important;
+    overflow: visible;
+    flex: 1 1 auto;
 }
 
-.modal-body {
-	padding: 1.5rem;
-	background: linear-gradient(145deg, #fafbfc 0%, #f8f9fa 100%);
-	flex: 1 1 auto;
-	min-height: 0;
-	overflow-y: auto;
-	overflow-x: hidden;
-	max-height: 76vh;
-}
-
-.modal-footer {
-	background: linear-gradient(145deg, #f8f9fa 0%, #f0f1f2 100%);
-	border-top: 1px solid rgba(0, 0, 0, 0.08);
-	border-radius: 0 0 16px 16px;
-	padding: 1.25rem 2rem;
-	flex-shrink: 0;
-}
-
-/* Clean Full-Width Underline Tabs */
+/* Handle tabs properly */
 .modal-body .nav-tabs {
-	border: none;
-	background: transparent;
-	margin-bottom: 1.5rem;
-	display: flex;
-	flex-direction: row;
-	flex-wrap: nowrap;
-	justify-content: center;
-	border-bottom: 2px solid #e9ecef;
-	padding-bottom: 0;
-	gap: 0;
-	flex-shrink: 0;
+    flex-shrink: 0;
+    margin-bottom: 1.5rem;
 }
 
-.modal-body .nav-tabs .nav-item {
-	flex: 1;
-}
-
-.modal-body .nav-tabs .nav-link {
-	border: none;
-	border-radius: 0;
-	padding: 1rem 1.5rem;
-	font-weight: 500;
-	color: #6c757d;
-	background: transparent;
-	transition: border-bottom-color 0.3s ease;
-	text-align: center;
-	white-space: nowrap;
-	position: relative;
-	border-bottom: 3px solid #dee2e6;
-	margin-bottom: -2px;
-	width: 100%;
-}
-
-.modal-body .nav-tabs .nav-link.active {
-	color: var(--primary-mid);
-	font-weight: 600;
-	background: transparent;
-	border-bottom: 3px solid var(--primary-mid);
-}
-
-/* Tab content styling */
 .modal-body .tab-content {
-	background: transparent;
-	border: none;
-	padding: 0;
-	flex: 1 1 auto;
-	overflow-y: auto;
-	overflow-x: hidden;
-	min-height: 0;
+    flex: 1 1 auto;
+    overflow: visible;
+    min-height: 0;
 }
 
 .modal-body .tab-pane {
-	border: none;
-	animation: fadeInTab 0.3s ease-in-out;
+    overflow: visible;
 }
 
-/* Centered button container with fixed width */
+/*!* Make sure cards don't create their own scroll *!*/
+/*.modal-body .card,*/
+/*.modal-body .card-body {*/
+/*    overflow: visible;*/
+/*}*/
+
+
+.modal-footer {
+    background: linear-gradient(145deg, #f8f9fa 0%, #f0f1f2 100%);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0 0 16px 16px;
+    padding: 1.25rem 2rem;
+    flex-shrink: 0;
+}
+
+
+.modal-body .nav-tabs {
+    border: none;
+    background: transparent;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 0;
+    gap: 0;
+    flex-shrink: 0;
+}
+
+.modal-body .nav-tabs .nav-link {
+    border: none;
+    border-radius: 0;
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    color: #6c757d;
+    background: transparent;
+    transition: border-bottom-color 0.3s ease;
+    text-align: center;
+    white-space: nowrap;
+    position: relative;
+    border-bottom: 3px solid #dee2e6;
+    margin-bottom: -2px;
+    width: 100%;
+}
+
+.modal-body .nav-tabs .nav-link.active {
+    color: var(--primary-mid);
+    font-weight: 600;
+    background: transparent;
+    border-bottom: 3px solid var(--primary-mid);
+}
+
 .modal-buttons-container {
-	display: flex;
-	justify-content: center;
-	gap: 15px;
-	width: 100%;
-	margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
+    margin: 0 auto;
 }
-
 .modal-buttons-container .btn {
-	flex: 1;
-	min-width: 120px;
+    flex: 1;
 }
 
-.modal.fade .modal-dialog {
-	transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-	transform: translate(0, -50px);
-}
-
-.modal.show .modal-dialog {
-	transform: none;
-}
-
-/* Focus management */
-.modal-content:focus {
-	outline: none;
-}
-
-.modal-buttons-container {
-	display: flex;
-	gap: 15px;
-}
 
 .modal:not(:last-of-type) .modal-content::after {
-	content: "";
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background-color: rgba(0, 0, 0, 0.5);
-	z-index: 10;
-	pointer-events: none;
-	border-radius: inherit;
-	transition: background-color 0.3s ease;
-}
-
-.modal:last-of-type .modal-content::after {
-	display: none;
-}
-
-.modal-backdrop {
-	z-index: 1040;
-}
-
-.modal-backdrop + .modal-backdrop {
-	display: none;
-}
-
-/*.modal-dialog {*/
-/*    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);*/
-/*}*/
-
-/* Smooth modal body transitions with height animation */
-/*.modal-body {*/
-/*    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);*/
-/*}*/
-
-/* Content container for smooth height transitions */
-/*.modal-content-container {*/
-/*    position: relative;*/
-/*}*/
-
-/* Visible content */
-/*.modal-content-visible {*/
-/*    transition: opacity 0.2s ease-in-out;*/
-/*}*/
-
-.modal-content-visible.transitioning {
-	opacity: 0.7;
-}
-
-.modal-content-hidden {
+    content: "";
     position: absolute;
-    top: -9999px;
+    top: 0;
     left: 0;
     right: 0;
-    visibility: hidden;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 10;
     pointer-events: none;
-    opacity: 0;
-}
-
-/* Ensure modal content animates smoothly */
-/*.modal-content {*/
-/*    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);*/
-/*}*/
-
-/* Button container animations */
-/*.modal-buttons-container {*/
-/*    display: flex;*/
-/*    gap: 0.75rem;*/
-/*    transition: all 0.3s ease-in-out;*/
-/*}*/
-
-/*!* Footer button animations *!*/
-/*.modal-footer .btn {*/
-/*    transition: all 0.2s ease-in-out;*/
-/*}*/
-
-/*.modal-footer .d-grid {*/
-/*    transition: all 0.3s ease-in-out;*/
-/*}*/
-
-/* Loading state for smooth transitions */
-.modal-transitioning {
-	pointer-events: none;
-}
-
-.modal-transitioning::-webkit-scrollbar {
-	display: none;
-}
-
-/*!* Ensure forms and inputs render at full width for accurate measurement *!*/
-/*.form-control {*/
-/*    width: 100% !important;*/
-/*}*/
-
-/*.form-select {*/
-/*    width: 100% !important;*/
-/*}*/
-
-/* Ensure Bootstrap columns maintain consistent spacing */
-/*.row {*/
-/*    margin-left: -0.75rem;*/
-/*    margin-right: -0.75rem;*/
-/*}*/
-
-/*.row > * {*/
-/*    padding-left: 0.75rem;*/
-/*    padding-right: 0.75rem;*/
-/*}*/
-
-/* Modal content container should also NOT scroll */
-.modal-content-container {
-	flex: 1 1 auto;
-	overflow: visible; /* Let parent handle scrolling */
-	min-height: 0;
-}
-
-/* Tab content styling - remove scrolling */
-.modal-body .tab-content {
-	background: transparent;
-	border: none;
-	padding: 0;
-	flex: 1 1 auto;
-	overflow: visible; /* Changed from auto to visible */
-	min-height: 0;
+    border-radius: inherit;
+    transition: background-color 0.3s ease;
 }
 
 .modal-body .card {
-	border-radius: 12px;
-	background: #ffffff;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.modal-content-animated {
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow: hidden !important;
 }

@@ -223,7 +223,7 @@ class Location(Owned, Base):
         if self.postcode:
             parts.append(self.postcode)
 
-        return ", ".join(parts) + " - (" + str(self.type) + ")"
+        return ", ".join(parts)
 
     __table_args__ = (
         CheckConstraint(

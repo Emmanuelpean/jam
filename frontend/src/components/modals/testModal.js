@@ -1,10 +1,11 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Alert, Button, Card, Form, Modal, Spinner, Tab, Tabs } from "react-bootstrap";
+import React, { useLayoutEffect, useRef, useState, useEffect } from "react";
+import { Alert, Button, Form, Modal, Spinner, Tab, Tabs, Card, Accordion } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue } from "../rendering/Renders";
 import { renderInputField } from "../rendering/WidgetRenders";
 import { api } from "../../services/Api";
+import { viewFields as viewFieldsLib } from "../rendering/ViewRenders";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import AlertModal from "./AlertModal";
 
@@ -197,45 +198,12 @@ const GenericModal = ({
 	};
 
 	useLayoutEffect(() => {
-		if (contentRef.current?.scrollHeight) {
+		if (contentRef.current) {
 			setContainerHeight(contentRef.current);
 			requestAnimationFrame(() => {
 				setContainerHeight(contentRef.current.scrollHeight + "px");
 			});
 		}
-	}, [isEditing, activeTab, fields, data]);
-
-	useLayoutEffect(() => {
-		if (!contentRef.current) return;
-
-		const updateHeight = () => {
-			if (contentRef.current?.scrollHeight) {
-				setContainerHeight(contentRef.current.scrollHeight + "px");
-			}
-		};
-
-		// Initial height calculation
-		updateHeight();
-
-		// Create ResizeObserver to watch for content size changes
-		const resizeObserver = new ResizeObserver(() => {
-			// Remove requestAnimationFrame for immediate updates
-			updateHeight();
-		});
-
-		// Observe the content element
-		resizeObserver.observe(contentRef.current);
-
-		// Also observe all child elements that might change size
-		const childElements = contentRef.current.querySelectorAll("*");
-		childElements.forEach((el) => {
-			resizeObserver.observe(el);
-		});
-
-		// Cleanup
-		return () => {
-			resizeObserver.disconnect();
-		};
 	}, [isEditing, activeTab, fields, data]);
 
 	// Helpers for fields, rendering, data
@@ -272,9 +240,7 @@ const GenericModal = ({
 
 		const renderTitleField = (field) => (
 			<div className="text-center p-1">
-				<h2 className="display-6 fw-bold mt-4 mb-4" style={{ color: "var(--primary-mid)" }}>
-					{renderFieldValue(field, getCurrentData(), getModalId())}
-				</h2>
+				<h2 className="display-6 fw-bold mb-4">{renderFieldValue(field, getCurrentData(), getModalId())}</h2>
 			</div>
 		);
 
@@ -351,6 +317,20 @@ const GenericModal = ({
 									<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
 								</Card.Body>
 							</Card>
+							{effectiveProps.showSystemFields && (
+								<Accordion className="mt-3">
+									<Accordion.Item eventKey="0">
+										<Accordion.Header>System Information</Accordion.Header>
+										<Accordion.Body>
+											{renderFieldGroup(
+												[viewFieldsLib.createdAt(), viewFieldsLib.modifiedAt()],
+												"system-fields",
+												false,
+											)}
+										</Accordion.Body>
+									</Accordion.Item>
+								</Accordion>
+							)}
 						</div>
 					)}
 				</div>
@@ -578,9 +558,7 @@ const GenericModal = ({
 		);
 	};
 
-	// Render modal body
 	const renderBody = () => {
-		// If we have tabs, render the tabs container
 		if (tabs && tabs.length > 0) {
 			return (
 				<Tabs activeKey={activeTab} onSelect={handleTabChange} className="mb-3">
@@ -624,7 +602,6 @@ const GenericModal = ({
 				return (
 					<Modal.Footer>
 						<div className="d-flex flex-column w-100 gap-2">
-							{/* First row: Delete and Confirm */}
 							<div className="modal-buttons-container">
 								<Button variant="danger" onClick={handleDeleteClick} className="me-auto">
 									<i className="bi bi-trash me-2"></i>
@@ -642,7 +619,7 @@ const GenericModal = ({
 									)}
 								</Button>
 							</div>
-							{/* Second row: Cancel */}
+
 							<div className="modal-buttons-container">
 								<Button
 									variant="secondary"

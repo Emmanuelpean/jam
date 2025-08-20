@@ -724,3 +724,25 @@ textarea.form-control {
 .modal-body.resizing::-webkit-scrollbar {
     display: none;
 }
+
+/* ---------------------------------------------------- ACCORDION --------------------------------------------------- */
+
+.accordion-button {
+    background: #f8f9fa;
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-shadow: none;
+}
+
+.accordion-button:not(.collapsed) {
+    border-radius: 12px 12px 0 0;
+}
+
+.accordion-button:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 0.25rem var(--jam-glow);
+}
