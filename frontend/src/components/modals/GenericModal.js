@@ -276,21 +276,21 @@ const GenericModal = ({
 	// Cancel/Close button handler - no confirmation, always direct action
 	const handleCancelClose = () => handleCloseWithConfirmation(false);
 
-	useLayoutEffect(() => {
-		if (contentRef.current?.scrollHeight) {
-			setContainerHeight(contentRef.current);
-			requestAnimationFrame(() => {
-				setContainerHeight(contentRef.current.scrollHeight + "px");
-			});
-		}
-	}, [isEditing, activeTab, fields, data]);
+	// useLayoutEffect(() => {
+	// 	if (contentRef.current?.scrollHeight) {
+	// 		setContainerHeight(contentRef.current);
+	// 		requestAnimationFrame(() => {
+	// 			setContainerHeight(contentRef.current.scrollHeight + "px");
+	// 		});
+	// 	}
+	// }, [isEditing, activeTab, fields, data]);
 
 	useLayoutEffect(() => {
 		if (!contentRef.current) return;
 
 		const updateHeight = () => {
 			if (contentRef.current?.scrollHeight) {
-				setContainerHeight(contentRef.current.scrollHeight + "px");
+				setContainerHeight(String(Number(contentRef.current.scrollHeight) + 1) + "px");
 			}
 		};
 

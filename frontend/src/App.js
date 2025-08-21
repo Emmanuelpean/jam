@@ -21,7 +21,6 @@ import JobSearchDashboard from "./pages/Dashboard/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
-import ModalDemoPage from "./components/modals/testModal";
 
 function AppLayout({ children }) {
 	const { isLoading, loadingMessage } = useLoading();
@@ -187,14 +186,6 @@ function App() {
 								element={
 									<ProtectedRoute>
 										<UserSettingsPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/test"
-								element={
-									<ProtectedRoute>
-										<ModalDemoPage />
 									</ProtectedRoute>
 								}
 							/>
