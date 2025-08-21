@@ -27,7 +27,7 @@ export const InterviewModal = ({
 	} = useFormOptions(["locations", "persons", "jobApplications"]);
 
 	const initialData = useMemo(() => {
-		if (submode === "add" && !data) {
+		if (submode === "add" && !data?.id) {
 			return { date: formatDateTime() };
 		}
 		return data || {};
