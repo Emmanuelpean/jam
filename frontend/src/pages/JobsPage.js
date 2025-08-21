@@ -18,7 +18,7 @@ const JobsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("jobs");
+	} = useTableData("jobs", [], {}, { key: "created_at", direction: "desc" });
 
 	console.log("JobsPage jobs:", jobs);
 

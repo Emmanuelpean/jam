@@ -18,7 +18,7 @@ const AggregatorsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("aggregators");
+	} = useTableData("aggregators", [], {}, { key: "name", direction: "asc" });
 
 	const tableColumns = [columns.name(), columns.url(), columns.createdAt()];
 

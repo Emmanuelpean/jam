@@ -21,7 +21,7 @@ const JobApplicationUpdatesPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("jobapplicationupdates");
+	} = useTableData("jobapplicationupdates", [], {}, { key: "date", direction: "desc" });
 
 	const tableColumns = [
 		columns.jobApplicationJob(),

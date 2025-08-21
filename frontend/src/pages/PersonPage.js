@@ -18,7 +18,7 @@ const PersonsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("persons");
+	} = useTableData("persons", [], {}, { key: "created_at", direction: "desc" });
 
 	const tableColumns = [
 		columns.personName(),

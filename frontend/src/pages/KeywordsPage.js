@@ -18,7 +18,7 @@ const KeywordsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("keywords");
+	} = useTableData("keywords", [], {}, { key: "name", direction: "asc" });
 
 	const tableColumns = [columns.name(), columns.createdAt()];
 

@@ -19,7 +19,7 @@ const LocationsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("locations");
+	} = useTableData("locations", [], {}, { key: "created_at", direction: "desc" });
 
 	// Filter out remote locations
 	const locations = useMemo(() => {

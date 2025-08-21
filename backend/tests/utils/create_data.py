@@ -1,5 +1,5 @@
 import app.eis.models as eis_models
-from app import models
+from app import models, utils
 from tests.utils.table_data import (
     USER_DATA,
     COMPANY_DATA,
@@ -27,27 +27,30 @@ def create_users(db) -> list[models.User]:
     """Create sample users and return them with non-hashed passwords but with database IDs"""
 
     print("Creating users...")
-
-    # Import the required modules
-    from app.routers.user import create_user
-    from app import schemas
-
-    result_users = []
+    users_hash = []
+    original_passwords = []
 
     for user_data in USER_DATA:
-        # Create a UserCreate schema object
-        user_create = schemas.UserCreate(**user_data)
-
-        # Use the router function to create the user
-        created_user = create_user(user=user_create, db=db)
-
-        # Convert back to User model with original password for testing purposes
-        user_dict = {key: value for key, value in created_user.__dict__.items() if key != "_sa_instance_state"}
-        user_dict["password"] = user_data["password"]  # Keep original password for test purposes
-
+        user_dict = user_data.copy()
+        original_passwords.append(user_dict["password"])  # Store original password
+        user_dict["password"] = utils.hash_password(user_dict["password"])
         # noinspection PyArgumentList
-        result_user = models.User(**user_dict)
-        result_users.append(result_user)
+        users_hash.append(models.User(**user_dict))
+
+    db.add_all(users_hash)
+    db.commit()
+
+    for user in users_hash:
+        db.refresh(user)
+
+    # Create new user objects that won't become detached with the original passwords and database attributes
+    result_users = []
+    for i, user in enumerate(users_hash):
+        user_dict = {key: value for key, value in user.__dict__.items() if key != "_sa_instance_state"}
+        user_dict["password"] = original_passwords[i]
+        # noinspection PyArgumentList
+        new_user = models.User(**user_dict)
+        result_users.append(new_user)
 
     return result_users
 

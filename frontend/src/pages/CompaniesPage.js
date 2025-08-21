@@ -18,7 +18,7 @@ const CompaniesPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("companies");
+	} = useTableData("companies", [], {}, { key: "name", direction: "asc" });
 
 	const tableColumns = [columns.name(), columns.description(), columns.url(), columns.createdAt()];
 

@@ -18,7 +18,7 @@ const InterviewsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("interviews");
+	} = useTableData("interviews", [], {}, { key: "date", direction: "desc" });
 
 	const tableColumns = [
 		columns.jobApplicationJob(),
