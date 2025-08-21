@@ -12,17 +12,30 @@ import { pluralize } from "../../utils/StringUtils";
 /**
  * Custom hook for managing table data with CRUD operations
  */
-export const useTableData = (endpoint, dependencies = [], queryParams = {}, customSortConfig = {}) => {
+export const useTableData = (
+	endpoint,
+	dependencies = [],
+	queryParams = {},
+	customSortConfig = {},
+	providedData = null,
+) => {
 	const { token } = useAuth();
 
-	const [data, setData] = useState([]);
-	const [loading, setLoading] = useState(true);
+	const [data, setData] = useState(providedData || []);
+	const [loading, setLoading] = useState(!providedData);
 	const [error, setError] = useState(null);
 	const [sortConfig, setSortConfig] = useState(customSortConfig || { key: "created_at", direction: "desc" });
 	const [searchTerm, setSearchTerm] = useState("");
 
 	// Memoize the fetch function to prevent unnecessary re-renders
 	const fetchData = useCallback(async () => {
+		// If data is provided, don't fetch from API
+		if (providedData !== null) {
+			setData(providedData);
+			setLoading(false);
+			return;
+		}
+
 		setLoading(true);
 		try {
 			const queryString =
@@ -35,14 +48,21 @@ export const useTableData = (endpoint, dependencies = [], queryParams = {}, cust
 		} finally {
 			setLoading(false);
 		}
-	}, [endpoint, token, JSON.stringify(queryParams)]); // Only depend on serialized queryParams
+	}, [endpoint, token, JSON.stringify(queryParams), providedData]); // Include providedData in dependencies
 
 	useEffect(() => {
+		// If data is provided, use it directly
+		if (providedData !== null) {
+			setData(providedData);
+			setLoading(false);
+			return;
+		}
+
 		if (token) {
-			// Only fetch if token exists
+			// Only fetch if token exists and no data is provided
 			fetchData();
 		}
-	}, [token, fetchData, ...dependencies]);
+	}, [token, fetchData, providedData, ...dependencies]);
 
 	const addItem = useCallback((newItem) => setData((prev) => [newItem, ...prev]), []);
 	const updateItem = useCallback(

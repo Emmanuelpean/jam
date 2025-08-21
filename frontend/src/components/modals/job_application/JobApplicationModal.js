@@ -290,8 +290,7 @@ export const JobApplicationModal = ({
 				} else if (currentFile instanceof File) {
 					// New file uploaded
 					try {
-						const fileId = await processFile(currentFile);
-						transformedData[idFieldName] = fileId;
+						transformedData[idFieldName] = await processFile(currentFile);
 					} catch (fileError) {
 						console.error(`Error processing file ${fieldName}:`, fileError);
 						throw new Error(`Failed to process ${fieldName}: ${fileError.message}`);

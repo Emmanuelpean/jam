@@ -3,15 +3,21 @@ import { GenericTableWithModals, useTableData } from "./TableSystem";
 import { columns } from "../rendering/ColumnRenders";
 import { InterviewFormModal, InterviewViewModal } from "../modals/InterviewModal";
 
-const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
+const InterviewsTable = ({ jobApplicationId, onInterviewChange, interviews = null }) => {
 	const {
-		data: interviews,
+		data: interviewData,
 		loading,
 		error,
 		addItem,
 		updateItem,
 		deleteItem,
-	} = useTableData("interviews", [jobApplicationId], { job_application_id: jobApplicationId });
+	} = useTableData(
+		"interviews",
+		[jobApplicationId, interviews],
+		{ job_application_id: jobApplicationId },
+		{ key: "date", direction: "desc" },
+		interviews, // Pass interviews data directly
+	);
 
 	const handleAddSuccess = (newInterview) => {
 		addItem(newInterview);
@@ -51,7 +57,7 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange }) => {
 
 	return (
 		<GenericTableWithModals
-			data={interviews}
+			data={interviewData}
 			columns={interviewColumns}
 			sortConfig={{ key: "date", direction: "desc" }}
 			loading={loading}
