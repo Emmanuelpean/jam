@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Alert, Button, Card, Form, Modal, Spinner, Tab, Tabs } from "react-bootstrap";
+import { Alert, Button, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue } from "../rendering/Renders";
@@ -69,6 +69,7 @@ const GenericModal = ({
 }) => {
 	const { token } = useAuth();
 	const [formData, setFormData] = useState(data || {});
+	const [originalFormData, setOriginalFormData] = useState(data || {}); // Track original data
 	const [submitting, setSubmitting] = useState(false);
 	const [errors, setErrors] = useState({});
 	const [isEditing, setIsEditing] = useState(false);
@@ -83,6 +84,81 @@ const GenericModal = ({
 	const contentRef = useRef(null);
 	const previousShow = useRef(show);
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
+
+	// Helper to check if form data has been modified
+	const hasUnsavedChanges = () => {
+		if (!isEditing) return false;
+
+		// Compare current form data with original
+		const currentKeys = Object.keys(formData);
+		const originalKeys = Object.keys(originalFormData);
+
+		// Check if different number of keys
+		if (currentKeys.length !== originalKeys.length) return true;
+
+		// Check if any values are different
+		return currentKeys.some((key) => {
+			const currentValue = formData[key];
+			const originalValue = originalFormData[key];
+
+			// Handle null/undefined/empty string equivalence
+			if (
+				(currentValue === null || currentValue === undefined || currentValue === "") &&
+				(originalValue === null || originalValue === undefined || originalValue === "")
+			) {
+				return false;
+			}
+
+			// Handle arrays (for multi-select fields)
+			if (Array.isArray(currentValue) && Array.isArray(originalValue)) {
+				if (currentValue.length !== originalValue.length) return true;
+				return currentValue.some((val, index) => val !== originalValue[index]);
+			}
+
+			return currentValue !== originalValue;
+		});
+	};
+
+	// Confirmation handler for closing with unsaved changes
+	const handleCloseWithConfirmation = async (showConfirmation = true) => {
+		if (showConfirmation && hasUnsavedChanges()) {
+			try {
+				await showDelete({
+					title: "Unsaved Changes",
+					message: "You have unsaved changes. Are you sure you want to close without saving?",
+					confirmText: "Close without saving",
+					cancelText: "Cancel",
+				});
+				// If confirmed, proceed with normal close
+				handleHideImmediate();
+			} catch (error) {
+				// User cancelled, do nothing
+			}
+		} else {
+			// No unsaved changes or confirmation disabled, close normally
+			handleHideImmediate();
+		}
+	};
+
+	// Immediate hide without confirmation (used internally)
+	const handleHideImmediate = () => {
+		const effectiveProps = getEffectiveProps();
+
+		if (effectiveProps.submode === "add") {
+			setFormData({});
+			setOriginalFormData({});
+		} else {
+			setFormData({ ...effectiveProps.data });
+			setOriginalFormData({ ...effectiveProps.data });
+		}
+		setErrors({});
+		setSubmitting(false);
+		setIsEditing(effectiveProps.submode === "add" || effectiveProps.submode === "edit");
+		if (tabs && tabs.length > 0) {
+			setActiveTab(defaultActiveTab || tabs[0].key);
+		}
+		onHide();
+	};
 
 	// Helper to get current tab config
 	const getCurrentTab = () => {
@@ -132,12 +208,15 @@ const GenericModal = ({
 
 			if (effectiveProps.submode === "add") {
 				setFormData({ ...effectiveProps.data });
+				setOriginalFormData({ ...effectiveProps.data });
 				setIsEditing(true);
 			} else if (effectiveProps.submode === "edit") {
 				setFormData({ ...effectiveProps.data });
+				setOriginalFormData({ ...effectiveProps.data });
 				setIsEditing(true);
 			} else {
 				setFormData({ ...effectiveProps.data });
+				setOriginalFormData({ ...effectiveProps.data });
 				setIsEditing(false);
 			}
 			setErrors({});
@@ -164,12 +243,15 @@ const GenericModal = ({
 
 			if (newTab.submode === "add") {
 				setFormData({ ...newData });
+				setOriginalFormData({ ...newData });
 				setIsEditing(true);
 			} else if (newTab.submode === "edit") {
 				setFormData({ ...newData });
+				setOriginalFormData({ ...newData });
 				setIsEditing(true);
 			} else {
 				setFormData({ ...newData });
+				setOriginalFormData({ ...newData });
 				setIsEditing(false);
 			}
 			setErrors({});
@@ -179,22 +261,20 @@ const GenericModal = ({
 		}
 	};
 
-	const handleHide = () => {
-		const effectiveProps = getEffectiveProps();
+	// Main hide handler - shows confirmation for ESC/backdrop, not for button clicks
+	const handleHide = () => handleCloseWithConfirmation(true);
 
-		if (effectiveProps.submode === "add") {
-			setFormData({});
-		} else {
-			setFormData({ ...effectiveProps.data });
-		}
+	// Cancel edit handler - no confirmation, always direct action
+	const handleCancelEdit = () => {
+		setIsEditing(false);
+		const effectiveProps = getEffectiveProps();
+		setFormData({ ...effectiveProps.data });
+		setOriginalFormData({ ...effectiveProps.data });
 		setErrors({});
-		setSubmitting(false);
-		setIsEditing(effectiveProps.submode === "add" || effectiveProps.submode === "edit");
-		if (tabs && tabs.length > 0) {
-			setActiveTab(defaultActiveTab || tabs[0].key);
-		}
-		onHide();
 	};
+
+	// Cancel/Close button handler - no confirmation, always direct action
+	const handleCancelClose = () => handleCloseWithConfirmation(false);
 
 	useLayoutEffect(() => {
 		if (contentRef.current?.scrollHeight) {
@@ -363,14 +443,9 @@ const GenericModal = ({
 
 	const handleEdit = () => {
 		setIsEditing(true);
-		setFormData({ ...getEffectiveProps().data });
-	};
-
-	const handleCancelEdit = () => {
-		setIsEditing(false);
 		const effectiveProps = getEffectiveProps();
 		setFormData({ ...effectiveProps.data });
-		setErrors({});
+		setOriginalFormData({ ...effectiveProps.data });
 	};
 
 	const handleDelete = createGenericDeleteHandler({
@@ -390,7 +465,7 @@ const GenericModal = ({
 			if (onDelete) {
 				onDelete(effectiveProps.data);
 			}
-			handleHide();
+			handleHideImmediate();
 		} catch (error) {}
 	};
 
@@ -514,7 +589,7 @@ const GenericModal = ({
 				}
 				if (effectiveProps.onSuccess) effectiveProps.onSuccess(result);
 				if (effectiveProps.submode === "add" || effectiveProps.submode === "edit") {
-					handleHide();
+					handleHideImmediate();
 				} else {
 					Object.assign(getCurrentData(), result);
 					await handleCancelEdit();
@@ -616,7 +691,7 @@ const GenericModal = ({
 					<Modal.Footer>
 						<div className="d-flex flex-column w-100 gap-2">
 							<div className="modal-buttons-container">
-								<Button variant="secondary" onClick={handleHide} id="cancel-button">
+								<Button variant="secondary" onClick={handleCancelClose} id="cancel-button">
 									Cancel
 								</Button>
 								<Button variant="primary" type="submit" disabled={submitting} id="confirm-button">
@@ -659,7 +734,7 @@ const GenericModal = ({
 							<div className="modal-buttons-container">
 								<Button
 									variant="secondary"
-									onClick={effectiveProps.submode === "edit" ? handleHide : handleCancelEdit}
+									onClick={effectiveProps.submode === "edit" ? handleCancelClose : handleCancelEdit}
 									id="cancel-button"
 								>
 									{effectiveProps.submode === "edit" ? "Close" : "Cancel"}
@@ -673,7 +748,7 @@ const GenericModal = ({
 			return (
 				<Modal.Footer>
 					<div className="modal-buttons-container">
-						<Button variant="secondary" onClick={handleHide} id="cancel-button">
+						<Button variant="secondary" onClick={handleCancelClose} id="cancel-button">
 							Close
 						</Button>
 						{effectiveProps.fields.form && effectiveProps.fields.form.length > 0 && (
