@@ -280,7 +280,10 @@ const GenericModal = ({
 
 		if (!isEditing) {
 			if (item[0].isTitle && item.length === 1) {
-				return renderTitleField(item[0], index);
+				const currentFields = getCurrentFields();
+				const hasElementsUnderneath = index < currentFields.length - 1;
+
+				return <div className={hasElementsUnderneath ? "mb-3" : ""}>{renderTitleField(item[0])}</div>;
 			}
 		}
 
