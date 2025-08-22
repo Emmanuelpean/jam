@@ -8,7 +8,6 @@ class TestUserSettingsPage(BaseTest):
     page_url = "settings"
 
     def setup_function(self, request):
-
         self.login()
 
     def verify_user_in_database(self, email: str) -> bool:
@@ -18,7 +17,6 @@ class TestUserSettingsPage(BaseTest):
 
     @property
     def current_password(self):
-
         return self.get_element("currentPassword")
 
     @property
@@ -39,13 +37,18 @@ class TestUserSettingsPage(BaseTest):
 
         return self.get_element("confirmPassword")
 
+    @property
+    def theme_hint(self):
+        """Get the theme hint text"""
+
+        return self.get_element("theme-hint")
+
     def confirm(self):
         """Confirm the form submission"""
 
         return self.get_element("confirm-button").click()
 
     def assert_toast(self, message):
-
         assert message in self.get_element("toast").text, f"Message not found: {message}"
 
     def _assert_message(self, key: str, message: str) -> None:
@@ -157,3 +160,11 @@ class TestUserSettingsPage(BaseTest):
         self.confirm()
         self.assert_confirm_password_error_message("Passwords do not match")
         assert verify_password(self.user.password, self.db_user.password)
+
+    # ------------------------------------------------------ THEME -----------------------------------------------------
+
+    def test_theme_hint(self) -> None:
+        """Test theme hint"""
+
+        assert self.theme_hint.text == ('Mixed Berry is not your favourite flavour of JAM?! You can easily pick '
+                                        'another flavour by clicking on the JAM logo in the sidebar.')

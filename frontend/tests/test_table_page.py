@@ -31,6 +31,7 @@ class TestTablePage(BaseTest):
     duplicate_fields = []  # fields which are required to be unique
     columns = []  # table column keys user for search and sorting
     sorting_columns = []
+    test_entry_index = 0
 
     def setup_function(self, request):
         """Function called during the setup"""
@@ -38,7 +39,7 @@ class TestTablePage(BaseTest):
         if isinstance(self.test_fixture, str):
             self.test_fixture = [self.test_fixture]
         self.test_entries, *self.add_test_entries = [request.getfixturevalue(fixture) for fixture in self.test_fixture]
-        self.test_entry = self.test_entries[0]
+        self.test_entry = self.test_entries[self.test_entry_index]
         if not self.sorting_columns:
             self.sorting_columns = self.columns
         self.login()
@@ -407,11 +408,10 @@ class TestTablePage(BaseTest):
     def check_keyword_view_modal(self, entry: models.Keyword) -> None:
         """Helper method to test the view modal for a keyword entry"""
 
-        modal = self.wait_for_view_modal("keyword")
+        modal = self.wait_for_view_modal("tag")
 
         # Verify modal contains the entry information
-        date = datetime.strftime(entry.created_at, "%d/%m/%Y")
-        expected = f"Tag Details\nName\n{entry.name}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
+        expected = f'Tag Details\n{entry.name}\nClose\nEdit'
         assert modal.text == expected
 
         # Close modal
@@ -424,11 +424,7 @@ class TestTablePage(BaseTest):
         modal = self.wait_for_view_modal("aggregator")
 
         # Verify modal contains the entry information
-        date = datetime.strftime(entry.created_at, "%d/%m/%Y")
-        expected = (
-            f"Aggregator Details\nName\n{entry.name}\nWebsite\n{entry.url.replace("https://", "")}"
-            f"\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
-        )
+        expected = f'Aggregator Details\n{entry.name}\nWebsite\nlinkedin.com/jobs\nClose\nEdit'
         assert modal.text == expected
 
         # Close modal
@@ -448,7 +444,7 @@ class TestTablePage(BaseTest):
             f"Location Details\nCity\n{entry.city}\nPostcode\n{entry.postcode}"
             f"\nCountry\n{entry.country}\n"
             f"📍 Location on Map\n+\n−\nLeaflet | © OpenStreetMap contributors © CARTO\n"
-            f"📍 1 of 1 location shown\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
+            f"📍 1 of 1 location shown\nClose\nEdit"
         )
         assert modal.text == expected
 
@@ -464,8 +460,8 @@ class TestTablePage(BaseTest):
         # Verify modal contains the entry information
         date = datetime.strftime(entry.created_at, "%d/%m/%Y")
         expected = (
-            f"Company Details\nName\n{entry.name}\nWebsite\n{entry.url.replace("https://", "")}"
-            f"\nDescription\n{entry.description}\nDate Added\n{date}\nModified On\n{date}\nClose\nEdit"
+            f"Company Details\n{entry.name}\nWebsite\n{entry.url.replace("https://", "")}"
+            f"\nDescription\n{entry.description}\nClose\nEdit"
         )
         assert modal.text == expected
 
@@ -480,10 +476,9 @@ class TestTablePage(BaseTest):
         date = datetime.strftime(entry.created_at, "%d/%m/%Y")
         expected = (
             f"Person Details\n"
-            f"Full Name\n{entry.name}\nLinkedIn Profile\nProfile\n"
+            f"{entry.name}\n"
             f"Company\n{entry.company.name.upper()}\nRole\n{entry.role}\n"
-            f"Email\n{entry.email}\nPhone\n{entry.phone}\n"
-            f"Date Added\n{date}\nModified On\n{date}\nClose\nEdit"
+            f"Email\n{entry.email}\nPhone{entry.phone}\nLinkedIn Profile\nProfile\nClose\nEdit"
         )
         assert modal.text == expected
 
@@ -502,11 +497,12 @@ class TestKeywordsPage(TestTablePage):
 
     endpoint = "keywords"
     page_url = "keywords"
-    entry_name = "keyword"
+    entry_name = "tag"
     test_fixture = "test_keywords"
     test_data = {"name": "Test_Name"}
     required_fields = ["name"]
     duplicate_fields = ["name"]
+    test_entry_index = 14
 
     def _test_view_modal(self) -> None:
         """Helper method to test the view modal for an entry"""

@@ -232,7 +232,7 @@ const UserSettingsPage = () => {
 									</div>
 
 									<div className="form-group-enhanced">
-										<p className="form-label-enhanced">
+										<p className="form-label-enhanced" id="theme-hint">
 											{getThemeByKey(currentUser.theme)?.name} is not your favourite flavour of
 											JAM?! You can easily pick another flavour by clicking on the JAM logo in the
 											sidebar.
