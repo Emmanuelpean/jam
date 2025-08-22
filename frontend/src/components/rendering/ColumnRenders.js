@@ -327,20 +327,18 @@ export const columns = {
 	}),
 
 	interviewCount: (overrides = {}) => ({
-		key: "interview_count",
+		key: "interviews",
 		label: "Interviews",
 		sortable: true,
-		sortField: "interview_count",
 		searchable: false,
 		render: renderFunctions.interviewCount,
 		...overrides,
 	}),
 
 	updateCount: (overrides = {}) => ({
-		key: "update_count",
+		key: "updates",
 		label: "Updates",
 		sortable: true,
-		sortField: "update_count",
 		searchable: false,
 		render: renderFunctions.updateCount,
 		...overrides,

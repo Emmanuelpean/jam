@@ -298,12 +298,12 @@ export const renderFunctions = {
 
 	interviewCount: (item, view = false, key = "interviews") => {
 		const interviews = accessAttribute(item, key);
-		return interviews?.length || 0;
+		return interviews.length;
 	},
 
 	updateCount: (item, view = false, key = "updates") => {
 		const updates = accessAttribute(item, key);
-		return updates?.length || 0;
+		return updates.length;
 	},
 
 	// --------------------------------------------------- FILE BADGES -------------------------------------------------
