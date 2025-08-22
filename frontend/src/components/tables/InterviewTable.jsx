@@ -1,5 +1,5 @@
 import React from "react";
-import { GenericTableWithModals, useTableData } from "./TableSystem";
+import { GenericTableWithModals, useTableData } from "./GenericTable";
 import { columns } from "../rendering/view/TableColumnRenders";
 import { InterviewFormModal, InterviewViewModal } from "../modals/InterviewModal";
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { GenericTableWithModals } from "./TableSystem";
+import { GenericTableWithModals } from "./GenericTable";
 import { columns } from "../rendering/view/TableColumnRenders";
 import { JobViewModal } from "../modals/_JobModal";
 

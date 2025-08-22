@@ -232,11 +232,11 @@ const UserSettingsPage = () => {
 									</div>
 
 									<div className="form-group-enhanced">
-										<Form.Label className="form-label-enhanced">
-											{getThemeByKey(formData.theme)?.name} is not your favourite flavour of JAM?!
-											You can easily pick another flavour by clicking on the JAM logo in the
+										<p className="form-label-enhanced">
+											{getThemeByKey(currentUser.theme)?.name} is not your favourite flavour of
+											JAM?! You can easily pick another flavour by clicking on the JAM logo in the
 											sidebar.
-										</Form.Label>
+										</p>
 									</div>
 								</div>
 

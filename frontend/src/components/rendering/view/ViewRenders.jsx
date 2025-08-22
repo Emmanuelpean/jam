@@ -278,7 +278,6 @@ export const renderFunctions = {
 		const personal_rating = accessAttribute(item, key);
 		if (personal_rating) {
 			const rating = Math.max(0, Math.min(5, personal_rating));
-			const filledStars = Math.floor(rating);
 
 			return (
 				<div className="star-rating-container" style={{ height: "auto" }}>

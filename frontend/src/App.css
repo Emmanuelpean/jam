@@ -771,7 +771,7 @@ textarea.form-control {
 }
 
 .star-rating-star.bi-star-fill {
-    background: var(--primary-gradient);
+    background: var(--primary-mid);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

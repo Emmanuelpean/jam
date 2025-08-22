@@ -1,14 +1,14 @@
 import React, { useEffect } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
-import { PersonFormModal, PersonViewModal } from "../components/modals/PersonModal";
+import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
+import { CompanyFormModal, CompanyViewModal } from "../components/modals/CompanyModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
-const PersonsPage = () => {
+const CompaniesPage = () => {
 	const { showLoading, hideLoading } = useLoading();
 	const {
-		data: persons,
-		setData: setPersons,
+		data: companies,
+		setData: setCompanies,
 		loading,
 		error,
 		sortConfig,
@@ -18,21 +18,13 @@ const PersonsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("persons", [], {}, { key: "created_at", direction: "desc" });
+	} = useTableData("companies", [], {}, { key: "name", direction: "asc" });
 
-	const tableColumns = [
-		columns.personName(),
-		columns.company(),
-		columns.role(),
-		columns.email(),
-		columns.phone(),
-		columns.linkedinUrl(),
-		columns.createdAt(),
-	];
+	const tableColumns = [columns.name(), columns.description(), columns.url(), columns.createdAt()];
 
 	useEffect(() => {
 		if (loading) {
-			showLoading("Loading Persons...");
+			showLoading("Loading Companies...");
 		} else {
 			hideLoading();
 		}
@@ -43,8 +35,8 @@ const PersonsPage = () => {
 
 	return (
 		<GenericTableWithModals
-			title="Persons"
-			data={persons}
+			title="Companies"
+			data={companies}
 			columns={tableColumns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
@@ -52,17 +44,17 @@ const PersonsPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			FormModal={PersonFormModal}
-			ViewModal={PersonViewModal}
-			endpoint="persons"
+			FormModal={CompanyFormModal}
+			ViewModal={CompanyViewModal}
+			endpoint="companies"
 			nameKey="name"
-			itemType="Person"
+			itemType="Company"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}
-			setData={setPersons}
+			setData={setCompanies}
 		/>
 	);
 };
 
-export default PersonsPage;
+export default CompaniesPage;

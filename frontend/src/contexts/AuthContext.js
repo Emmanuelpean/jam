@@ -1,6 +1,6 @@
-import React, { createContext, useState, useEffect, useContext, useCallback } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi, apiHelpers } from "../services/Api";
+import { authApi } from "../services/Api";
 
 const AuthContext = createContext(undefined);
 
@@ -58,7 +58,7 @@ export function AuthProvider({ children }) {
 		if (storedToken && !userFetched) {
 			// Only fetch if not already fetched
 			setToken(storedToken);
-			fetchUserInfo(storedToken);
+			fetchUserInfo(storedToken).then(() => null);
 		} else {
 			setLoading(false);
 		}

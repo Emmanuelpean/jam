@@ -1,7 +1,6 @@
-// contexts/LoadingContext.js
 import React, { createContext, useContext, useState } from "react";
 
-const LoadingContext = createContext();
+const LoadingContext = createContext(false);
 
 export const useLoading = () => {
 	const context = useContext(LoadingContext);
@@ -24,6 +23,7 @@ export const LoadingProvider = ({ children }) => {
 		setIsLoading(false);
 	};
 
+	// noinspection JSValidateTypes
 	return (
 		<LoadingContext.Provider
 			value={{

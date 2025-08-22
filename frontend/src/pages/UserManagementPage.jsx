@@ -1,14 +1,14 @@
 import React, { useEffect } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
-import { KeywordFormModal, KeywordViewModal } from "../components/modals/KeywordModal";
+import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
+import { UserFormModal, UserViewModal } from "../components/modals/UserModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
-const KeywordsPage = () => {
+export const UserManagementPage = () => {
 	const { showLoading, hideLoading } = useLoading();
 	const {
-		data: keywords,
-		setData: setKeywords,
+		data: users,
+		setData: setUsers,
 		loading,
 		error,
 		sortConfig,
@@ -18,13 +18,20 @@ const KeywordsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("keywords", [], {}, { key: "name", direction: "asc" });
+	} = useTableData("users", [], {}, { key: "id", direction: "asc" });
 
-	const tableColumns = [columns.name(), columns.createdAt()];
+	const tableColumns = [
+		columns.id(),
+		columns.email(),
+		columns.appTheme(),
+		columns.last_login(),
+		columns.isAdmin(),
+		columns.createdAt(),
+	];
 
 	useEffect(() => {
 		if (loading) {
-			showLoading("Loading Tags...");
+			showLoading("Loading Users...");
 		} else {
 			hideLoading();
 		}
@@ -35,8 +42,8 @@ const KeywordsPage = () => {
 
 	return (
 		<GenericTableWithModals
-			title="Tags"
-			data={keywords}
+			title="Users"
+			data={users}
 			columns={tableColumns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
@@ -44,17 +51,15 @@ const KeywordsPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			FormModal={KeywordFormModal}
-			ViewModal={KeywordViewModal}
-			endpoint="keywords"
-			nameKey="name"
-			itemType="Tag"
+			FormModal={UserFormModal}
+			ViewModal={UserViewModal}
+			endpoint="users"
+			nameKey="email"
+			itemType="User"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}
-			setData={setKeywords}
+			setData={setUsers}
 		/>
 	);
 };
-
-export default KeywordsPage;

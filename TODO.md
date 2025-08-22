@@ -21,3 +21,4 @@
 * [ ] Add pound sign in front of salary input
 * [ ] Hide system fields in dropdown
 * [X] Fix bug where the location map loading is flashing
+* [ ] The theme shown in the user setting page is not updated when changed in the sidebar.

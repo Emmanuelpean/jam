@@ -1,14 +1,14 @@
 import React, { useEffect } from "react";
-import { JobApplicationFormModal, JobApplicationViewModal } from "../components/modals/JobApplicationModal";
-import { GenericTableWithModals, useTableData } from "../components/tables/TableSystem";
+import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
+import { InterviewFormModal, InterviewViewModal } from "../components/modals/InterviewModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
-const JobApplicationsPage = () => {
+const InterviewsPage = () => {
 	const { showLoading, hideLoading } = useLoading();
 	const {
-		data: jobApplications,
-		setData: setJobApplications,
+		data: interviews,
+		setData: setInterviews,
 		loading,
 		error,
 		sortConfig,
@@ -18,22 +18,20 @@ const JobApplicationsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("jobapplications", [], {}, { key: "date", direction: "desc" });
+	} = useTableData("interviews", [], {}, { key: "date", direction: "desc" });
 
 	const tableColumns = [
+		columns.jobApplicationJob(),
+		columns.interviewers(),
 		columns.date(),
-		columns.job(),
-		columns.status(),
-		columns.interviewCount(),
-		columns.updateCount(),
-		columns.files(),
-		columns.url({ label: "URL" }),
+		columns.type(),
+		columns.location(),
 		columns.createdAt(),
 	];
 
 	useEffect(() => {
 		if (loading) {
-			showLoading("Loading Job Applications...");
+			showLoading("Loading Interviews...");
 		} else {
 			hideLoading();
 		}
@@ -44,8 +42,8 @@ const JobApplicationsPage = () => {
 
 	return (
 		<GenericTableWithModals
-			title="Job Applications"
-			data={jobApplications}
+			title="Interviews"
+			data={interviews}
 			columns={tableColumns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
@@ -53,18 +51,17 @@ const JobApplicationsPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			FormModal={JobApplicationFormModal}
-			ViewModal={JobApplicationViewModal}
-			endpoint="jobapplications"
-			nameKey="title"
-			itemType="Job Application"
+			FormModal={InterviewFormModal}
+			ViewModal={InterviewViewModal}
+			endpoint="interviews"
+			nameKey="date"
+			itemType="Interview"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}
-			setData={setJobApplications}
-			ModalSize="xl"
+			setData={setInterviews}
 		/>
 	);
 };
 
-export default JobApplicationsPage;
+export default InterviewsPage;

@@ -3,7 +3,7 @@ import {
 	JobApplicationUpdateFormModal,
 	JobApplicationUpdateViewModal,
 } from "../components/modals/JobApplicationUpdateModal";
-import { GenericTableWithModals, useTableData } from "../components/tables/TableSystem";
+import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 

@@ -1,14 +1,14 @@
 import React, { useEffect } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
-import { CompanyFormModal, CompanyViewModal } from "../components/modals/CompanyModal";
+import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
+import { KeywordFormModal, KeywordViewModal } from "../components/modals/KeywordModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
-const CompaniesPage = () => {
+const KeywordsPage = () => {
 	const { showLoading, hideLoading } = useLoading();
 	const {
-		data: companies,
-		setData: setCompanies,
+		data: keywords,
+		setData: setKeywords,
 		loading,
 		error,
 		sortConfig,
@@ -18,13 +18,13 @@ const CompaniesPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("companies", [], {}, { key: "name", direction: "asc" });
+	} = useTableData("keywords", [], {}, { key: "name", direction: "asc" });
 
-	const tableColumns = [columns.name(), columns.description(), columns.url(), columns.createdAt()];
+	const tableColumns = [columns.name(), columns.createdAt()];
 
 	useEffect(() => {
 		if (loading) {
-			showLoading("Loading Companies...");
+			showLoading("Loading Tags...");
 		} else {
 			hideLoading();
 		}
@@ -35,8 +35,8 @@ const CompaniesPage = () => {
 
 	return (
 		<GenericTableWithModals
-			title="Companies"
-			data={companies}
+			title="Tags"
+			data={keywords}
 			columns={tableColumns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
@@ -44,17 +44,17 @@ const CompaniesPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			FormModal={CompanyFormModal}
-			ViewModal={CompanyViewModal}
-			endpoint="companies"
+			FormModal={KeywordFormModal}
+			ViewModal={KeywordViewModal}
+			endpoint="keywords"
 			nameKey="name"
-			itemType="Company"
+			itemType="Tag"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}
-			setData={setCompanies}
+			setData={setKeywords}
 		/>
 	);
 };
 
-export default CompaniesPage;
+export default KeywordsPage;

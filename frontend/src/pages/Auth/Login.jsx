@@ -58,6 +58,7 @@ function AuthForm() {
 		setFieldErrors({});
 		// Clear confirm password and terms when switching to login
 		if (!isLogin) {
+			// noinspection JSCheckFunctionSignatures
 			setFormData((prev) => ({
 				...prev,
 				confirmPassword: "",

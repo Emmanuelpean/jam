@@ -28,14 +28,8 @@ export const useTableData = (
 	const [searchTerm, setSearchTerm] = useState("");
 
 	// Memoize the fetch function to prevent unnecessary re-renders
+	// noinspection com.intellij.reactbuddy.ExhaustiveDepsInspection
 	const fetchData = useCallback(async () => {
-		// If data is provided, don't fetch from API
-		if (providedData !== null) {
-			setData(providedData);
-			setLoading(false);
-			return;
-		}
-
 		setLoading(true);
 		try {
 			const queryString =
@@ -48,19 +42,15 @@ export const useTableData = (
 		} finally {
 			setLoading(false);
 		}
-	}, [endpoint, token, JSON.stringify(queryParams), providedData]); // Include providedData in dependencies
+	}, [endpoint, token, JSON.stringify(queryParams)]);
 
 	useEffect(() => {
 		// If data is provided, use it directly
 		if (providedData !== null) {
 			setData(providedData);
 			setLoading(false);
-			return;
-		}
-
-		if (token) {
-			// Only fetch if token exists and no data is provided
-			fetchData();
+		} else if (token) {
+			fetchData().then(() => null);
 		}
 	}, [token, fetchData, providedData, ...dependencies]);
 
@@ -83,7 +73,7 @@ export const useTableData = (
 		addItem,
 		updateItem,
 		deleteItem,
-		refetch: fetchData, // Add refetch function
+		refetch: fetchData,
 	};
 };
 
@@ -333,7 +323,7 @@ export const GenericTableWithModals = ({
 					openEditModal(contextMenu.item);
 					break;
 				default:
-					handleDelete(contextMenu.item);
+					handleDelete(contextMenu.item).then(() => null);
 					break;
 			}
 		}
@@ -396,6 +386,7 @@ export const GenericTableWithModals = ({
 		return <div className="alert alert-danger mt-3">{error}</div>;
 	}
 
+	// noinspection JSValidateTypes
 	return (
 		<div className={"table-container"}>
 			{title && (

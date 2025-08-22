@@ -1,14 +1,14 @@
 import React, { useEffect } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
-import { InterviewFormModal, InterviewViewModal } from "../components/modals/InterviewModal";
+import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
+import { PersonFormModal, PersonViewModal } from "../components/modals/PersonModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
-const InterviewsPage = () => {
+const PersonsPage = () => {
 	const { showLoading, hideLoading } = useLoading();
 	const {
-		data: interviews,
-		setData: setInterviews,
+		data: persons,
+		setData: setPersons,
 		loading,
 		error,
 		sortConfig,
@@ -18,20 +18,21 @@ const InterviewsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("interviews", [], {}, { key: "date", direction: "desc" });
+	} = useTableData("persons", [], {}, { key: "created_at", direction: "desc" });
 
 	const tableColumns = [
-		columns.jobApplicationJob(),
-		columns.interviewers(),
-		columns.date(),
-		columns.type(),
-		columns.location(),
+		columns.personName(),
+		columns.company(),
+		columns.role(),
+		columns.email(),
+		columns.phone(),
+		columns.linkedinUrl(),
 		columns.createdAt(),
 	];
 
 	useEffect(() => {
 		if (loading) {
-			showLoading("Loading Interviews...");
+			showLoading("Loading Persons...");
 		} else {
 			hideLoading();
 		}
@@ -42,8 +43,8 @@ const InterviewsPage = () => {
 
 	return (
 		<GenericTableWithModals
-			title="Interviews"
-			data={interviews}
+			title="Persons"
+			data={persons}
 			columns={tableColumns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
@@ -51,17 +52,17 @@ const InterviewsPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			FormModal={InterviewFormModal}
-			ViewModal={InterviewViewModal}
-			endpoint="interviews"
-			nameKey="date"
-			itemType="Interview"
+			FormModal={PersonFormModal}
+			ViewModal={PersonViewModal}
+			endpoint="persons"
+			nameKey="name"
+			itemType="Person"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}
-			setData={setInterviews}
+			setData={setPersons}
 		/>
 	);
 };
 
-export default InterviewsPage;
+export default PersonsPage;
