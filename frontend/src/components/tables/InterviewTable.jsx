@@ -3,7 +3,7 @@ import { GenericTableWithModals, useTableData } from "./GenericTable";
 import { columns } from "../rendering/view/TableColumnRenders";
 import { InterviewFormModal, InterviewViewModal } from "../modals/InterviewModal";
 
-const InterviewsTable = ({ jobApplicationId, onInterviewChange, interviews = null }) => {
+const InterviewsTable = ({ jobApplicationId, onChange, interviews = null }) => {
 	const {
 		data: interviewData,
 		loading,
@@ -16,49 +16,46 @@ const InterviewsTable = ({ jobApplicationId, onInterviewChange, interviews = nul
 		[jobApplicationId, interviews],
 		{ job_application_id: jobApplicationId },
 		{ key: "date", direction: "desc" },
-		interviews, // Pass interviews data directly
+		interviews,
 	);
 
-	const handleAddSuccess = (newInterview) => {
-		addItem(newInterview);
-		if (onInterviewChange) {
-			onInterviewChange();
+	const handleAddSuccess = (newEntry) => {
+		addItem(newEntry);
+		if (onChange) {
+			onChange();
 		}
 	};
 
-	const handleUpdateSuccess = (updatedInterview) => {
-		updateItem(updatedInterview);
-		if (onInterviewChange) {
-			onInterviewChange();
+	const handleUpdateSuccess = (updatedEntry) => {
+		updateItem(updatedEntry);
+		if (onChange) {
+			onChange();
 		}
 	};
 
 	const handleDeleteSuccess = (deletedId) => {
 		deleteItem(deletedId);
-		if (onInterviewChange) {
-			onInterviewChange();
+		if (onChange) {
+			onChange();
 		}
 	};
 
-	const interviewColumns = [columns.date(), columns.type(), columns.location(), columns.note()];
+	const ViewColumns = [columns.date(), columns.type(), columns.location(), columns.note()];
 
 	const FormModalWithProps = (props) => (
 		<InterviewFormModal
 			{...props}
-			interview={props.item}
 			jobApplicationId={jobApplicationId}
 			onSuccess={props.isEdit ? handleUpdateSuccess : handleAddSuccess}
 		/>
 	);
 
-	const ViewModalWithProps = (props) => (
-		<InterviewViewModal {...props} interview={props.item} jobApplicationId={jobApplicationId} />
-	);
+	const ViewModalWithProps = (props) => <InterviewViewModal {...props} jobApplicationId={jobApplicationId} />;
 
 	return (
 		<GenericTableWithModals
 			data={interviewData}
-			columns={interviewColumns}
+			columns={ViewColumns}
 			sortConfig={{ key: "date", direction: "desc" }}
 			loading={loading}
 			error={error}

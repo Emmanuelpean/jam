@@ -541,7 +541,7 @@ export const renderFunctions = {
 
 	jobApplicationUpdateTable: (item, view = false, key = "updates") => {
 		const updates = accessAttribute(item, key);
-		return <JobApplicationUpdateTable jobApplicationUpdates={updates} jobApplicationId={item.id} />;
+		return <JobApplicationUpdateTable updates={updates} jobApplicationId={item.id} />;
 	},
 
 	locationMap: (item) => {

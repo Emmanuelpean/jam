@@ -45,14 +45,13 @@ const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, updates = null
 	const FormModalWithProps = (props) => (
 		<JobApplicationUpdateFormModal
 			{...props}
-			interview={props.item}
 			jobApplicationId={jobApplicationId}
 			onSuccess={props.isEdit ? handleUpdateSuccess : handleAddSuccess}
 		/>
 	);
 
 	const ViewModalWithProps = (props) => (
-		<JobApplicationUpdateViewModal {...props} interview={props.item} jobApplicationId={jobApplicationId} />
+		<JobApplicationUpdateViewModal {...props} jobApplicationId={jobApplicationId} />
 	);
 
 	return (

@@ -41,7 +41,7 @@ export const InterviewModal = ({
 			}),
 			formFields.interviewType(),
 		],
-		formFields.location(locations, openLocationModal),
+		[formFields.attendanceType(), formFields.location(locations, openLocationModal)],
 		formFields.interviewers(persons, openPersonModal),
 		formFields.note({
 			placeholder: "Add notes about the interview, questions asked, impressions, etc...",
@@ -49,7 +49,7 @@ export const InterviewModal = ({
 	];
 
 	const viewFieldsArray = [
-		viewFields.jobApplication({ label: "Job Application" }),
+		...(!jobApplicationId ? [viewFields.jobApplication({ label: "Job Application" })] : []),
 		[viewFields.datetime(), viewFields.type()],
 		[viewFields.location(), viewFields.interviewers()],
 		viewFields.note(),
