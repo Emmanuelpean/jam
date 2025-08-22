@@ -5,7 +5,7 @@ import { PersonViewModal } from "../modals/PersonModal";
 import { KeywordViewModal } from "../modals/KeywordModal";
 import { JobApplicationViewModal } from "../modals/JobApplicationModal";
 import { AggregatorViewModal } from "../modals/AggregatorModal";
-import { JobViewModal } from "../modals/JobModal";
+import { JobViewModal } from "../modals/_JobModal";
 import { accessAttribute } from "../../utils/Utils";
 import { filesApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";

@@ -3,7 +3,7 @@ import { Alert, Button, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue } from "../../rendering/Renders";
-import { renderInputField } from "../../rendering/WidgetRenders";
+import { ActionButton, renderInputField } from "../../rendering/WidgetRenders";
 import { api } from "../../../services/Api";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import AlertModal from "../AlertModal";
@@ -693,6 +693,7 @@ const GenericModal = ({
 		return renderBodyContent();
 	};
 
+
 	const renderFooter = () => {
 		const effectiveProps = getEffectiveProps();
 		if (isEditing) {
@@ -701,19 +702,22 @@ const GenericModal = ({
 					<Modal.Footer>
 						<div className="d-flex flex-column w-100 gap-2">
 							<div className="modal-buttons-container">
-								<Button variant="secondary" onClick={handleCancelClose} id="cancel-button">
-									Cancel
-								</Button>
-								<Button variant="primary" type="submit" disabled={submitting} id="confirm-button">
-									{submitting ? (
-										<>
-											<Spinner animation="border" size="sm" className="me-2" />
-											Submitting...
-										</>
-									) : (
-										"Confirm"
-									)}
-								</Button>
+								<ActionButton
+									id="cancel-button"
+									variant="secondary"
+									onClick={handleCancelClose}
+									defaultText="Cancel"
+									fullWidth={false}
+								/>
+								<ActionButton
+									id="confirm-button"
+									type="submit"
+									disabled={submitting}
+									loading={submitting}
+									loadingText="Submitting..."
+									defaultText="Confirm"
+									fullWidth={false}
+								/>
 							</div>
 						</div>
 					</Modal.Footer>
@@ -724,31 +728,34 @@ const GenericModal = ({
 						<div className="d-flex flex-column w-100 gap-2">
 							{/* First row: Delete and Confirm */}
 							<div className="modal-buttons-container">
-								<Button variant="danger" onClick={handleDeleteClick} className="me-auto">
-									<i className="bi bi-trash me-2"></i>
-									Delete
-								</Button>
+								<ActionButton
+									variant="danger"
+									onClick={handleDeleteClick}
+									className="me-auto"
+									defaultText="Delete"
+									defaultIcon="bi bi-trash"
+									fullWidth={false}
+								/>
 
-								<Button variant="primary" type="submit" disabled={submitting} id="confirm-button">
-									{submitting ? (
-										<>
-											<Spinner animation="border" size="sm" className="me-2" />
-											Updating...
-										</>
-									) : (
-										"Update"
-									)}
-								</Button>
+								<ActionButton
+									id="confirm-button"
+									type="submit"
+									disabled={submitting}
+									loading={submitting}
+									loadingText="Updating..."
+									defaultText="Update"
+									fullWidth={false}
+								/>
 							</div>
 							{/* Second row: Cancel */}
 							<div className="modal-buttons-container">
-								<Button
+								<ActionButton
+									id="cancel-button"
 									variant="secondary"
 									onClick={effectiveProps.submode === "edit" ? handleCancelClose : handleCancelEdit}
-									id="cancel-button"
-								>
-									{effectiveProps.submode === "edit" ? "Close" : "Cancel"}
-								</Button>
+									defaultText={effectiveProps.submode === "edit" ? "Close" : "Cancel"}
+									fullWidth={false}
+								/>
 							</div>
 						</div>
 					</Modal.Footer>
@@ -758,13 +765,21 @@ const GenericModal = ({
 			return (
 				<Modal.Footer>
 					<div className="modal-buttons-container">
-						<Button variant="secondary" onClick={handleCancelClose} id="cancel-button">
-							Close
-						</Button>
+						<ActionButton
+							id="cancel-button"
+							variant="secondary"
+							onClick={handleCancelClose}
+							defaultText="Close"
+							fullWidth={false}
+						/>
 						{effectiveProps.fields.form && effectiveProps.fields.form.length > 0 && (
-							<Button variant="primary" onClick={handleEdit} id="edit-button">
-								Edit
-							</Button>
+							<ActionButton
+								id="edit-button"
+								variant="primary"
+								onClick={handleEdit}
+								defaultText="Edit"
+								fullWidth={false}
+							/>
 						)}
 					</div>
 				</Modal.Footer>

@@ -13,6 +13,8 @@ const displayError = (errorMessage) => {
 	return errorMessage.split("\n").map((line, index) => <div key={index}>{line}</div>);
 };
 
+// ---------------------------------------------------- STAR RATING ----------------------------------------------------
+
 const StarRating = ({ field, value, handleChange, error }) => {
 	const [hoverRating, setHoverRating] = useState(0);
 	const maxRating = field.maxRating || 5;
@@ -22,7 +24,7 @@ const StarRating = ({ field, value, handleChange, error }) => {
 		const syntheticEvent = {
 			target: {
 				name: field.name,
-				value: rating === currentRating ? 0 : rating, // Toggle off if clicking same star
+				value: rating === currentRating ? 0 : rating,
 			},
 		};
 		handleChange(syntheticEvent);
@@ -74,6 +76,8 @@ const renderStarRating = (field, value, handleChange, error) => {
 	return <StarRating field={field} value={value} handleChange={handleChange} error={error} />;
 };
 
+// ---------------------------------------------------- SALARY INPUT ---------------------------------------------------
+
 const renderSalaryInput = (field, value, handleChange, error) => {
 	return (
 		<>
@@ -91,7 +95,7 @@ const renderSalaryInput = (field, value, handleChange, error) => {
 					min="0"
 					className={error ? "is-invalid" : ""}
 				/>
-				<InputGroup.Text>/year</InputGroup.Text>
+				<InputGroup.Text>/Year</InputGroup.Text>
 			</InputGroup>
 			{error && (
 				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
@@ -101,6 +105,8 @@ const renderSalaryInput = (field, value, handleChange, error) => {
 		</>
 	);
 };
+
+// --------------------------------------------------- ACTION BUTTON ---------------------------------------------------
 
 export const ActionButton = ({
 	id,
@@ -179,6 +185,8 @@ export const ActionButton = ({
 	);
 };
 
+// ------------------------------------------------------- SELECT ------------------------------------------------------
+
 const CustomDropdownIndicator = (props) => {
 	const [hover, setHover] = useState(false);
 	const menuIsOpen = props.selectProps.menuIsOpen;
@@ -215,80 +223,6 @@ const CustomDropdownIndicator = (props) => {
 		>
 			<i className="bi bi-plus-circle" style={{ fontSize: "21px" }}></i>
 		</div>
-	);
-};
-
-// Password Input Component
-const PasswordInput = ({ field, value, handleChange, error }) => {
-	const [showPassword, setShowPassword] = useState(false);
-
-	return (
-		<>
-			<div className="position-relative">
-				<Form.Control
-					type={showPassword ? "text" : "password"}
-					id={field.name}
-					name={field.name}
-					placeholder={field.placeholder || "Enter your password"}
-					value={value || ""}
-					onChange={handleChange}
-					size={field.size || "lg"}
-					isInvalid={!!error}
-					autoComplete={field.autoComplete || "current-password"}
-					style={{ paddingRight: "50px" }}
-				/>
-				<button
-					type="button"
-					className={`password-toggle-btn ${showPassword ? "" : "show-slash"}`}
-					onClick={() => setShowPassword(!showPassword)}
-					tabIndex={field.tabIndex || 0}
-				>
-					<i className="bi bi-eye"></i>
-				</button>
-			</div>
-			{error && (
-				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
-					{displayError(error)}
-				</div>
-			)}
-			{field.helpText && !error && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
-		</>
-	);
-};
-
-const renderTextarea = (field, value, handleChange, error) => {
-	return (
-		<>
-			<Form.Control
-				as="textarea"
-				id={field.name}
-				rows={field.rows || 3}
-				name={field.name}
-				value={value || ""}
-				onChange={handleChange}
-				placeholder={field.placeholder}
-				isInvalid={!!error}
-				className="optimized-textarea"
-			/>
-			{error && (
-				<div className="invalid-feedback" id={`${field.name}-error-message`}>
-					{displayError(error)}
-				</div>
-			)}
-		</>
-	);
-};
-
-const renderCheckbox = (field, value, handleChange) => {
-	return (
-		<Form.Check
-			type="checkbox"
-			id={field.name}
-			name={field.name}
-			checked={value || false}
-			onChange={handleChange}
-			label={field.checkboxLabel || field.label}
-		/>
 	);
 };
 
@@ -375,7 +309,91 @@ const renderSelect = (field, value, handleChange, handleSelectChange, error) => 
 	);
 };
 
-// Render datetime-local widget
+// --------------------------------------------------- PASSWORD INPUT --------------------------------------------------
+
+const PasswordInput = ({ field, value, handleChange, error }) => {
+	const [showPassword, setShowPassword] = useState(false);
+
+	return (
+		<>
+			<div className="position-relative">
+				<Form.Control
+					type={showPassword ? "text" : "password"}
+					id={field.name}
+					name={field.name}
+					placeholder={field.placeholder || "Enter your password"}
+					value={value || ""}
+					onChange={handleChange}
+					size={field.size || "lg"}
+					isInvalid={!!error}
+					autoComplete={field.autoComplete || "current-password"}
+					style={{ paddingRight: "50px" }}
+				/>
+				<button
+					type="button"
+					className={`password-toggle-btn ${showPassword ? "" : "show-slash"}`}
+					onClick={() => setShowPassword(!showPassword)}
+					tabIndex={field.tabIndex || 0}
+				>
+					<i className="bi bi-eye"></i>
+				</button>
+			</div>
+			{error && (
+				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
+					{displayError(error)}
+				</div>
+			)}
+			{field.helpText && !error && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+		</>
+	);
+};
+
+const renderPasswordInput = (field, value, handleChange, error) => {
+	return <PasswordInput field={field} value={value} handleChange={handleChange} error={error} />;
+};
+
+// ----------------------------------------------------- TEXT AREA -----------------------------------------------------
+
+const renderTextarea = (field, value, handleChange, error) => {
+	return (
+		<>
+			<Form.Control
+				as="textarea"
+				id={field.name}
+				rows={field.rows || 3}
+				name={field.name}
+				value={value || ""}
+				onChange={handleChange}
+				placeholder={field.placeholder}
+				isInvalid={!!error}
+				className="optimized-textarea"
+			/>
+			{error && (
+				<div className="invalid-feedback" id={`${field.name}-error-message`}>
+					{displayError(error)}
+				</div>
+			)}
+		</>
+	);
+};
+
+// ------------------------------------------------------ CHECKBOX -----------------------------------------------------
+
+const renderCheckbox = (field, value, handleChange) => {
+	return (
+		<Form.Check
+			type="checkbox"
+			id={field.name}
+			name={field.name}
+			checked={value || false}
+			onChange={handleChange}
+			label={field.checkboxLabel || field.label}
+		/>
+	);
+};
+
+// ------------------------------------------------------ DATETIME -----------------------------------------------------
+
 const renderDateTimeLocal = (field, value, handleChange, error) => {
 	const setCurrentTime = (e) => {
 		e.preventDefault();
@@ -421,12 +439,8 @@ const renderDateTimeLocal = (field, value, handleChange, error) => {
 	);
 };
 
-// Render password input widget with visibility toggle
-const renderPasswordInput = (field, value, handleChange, error) => {
-	return <PasswordInput field={field} value={value} handleChange={handleChange} error={error} />;
-};
+// ---------------------------------------------------- DRAG & DROP ----------------------------------------------------
 
-// Render drag-drop widget
 const renderDragDrop = (field) => {
 	return (
 		<FileUploader
@@ -444,15 +458,17 @@ const renderDragDrop = (field) => {
 	);
 };
 
+// ------------------------------------------------------- TABLE -------------------------------------------------------
+
 const renderTable = (field) => {
-	// For table fields, we expect the field to have a render function that returns the table component
 	if (field.render && typeof field.render === "function") {
 		return field.render();
 	}
 	return <div>Table component not provided</div>;
 };
 
-// Render default input widget
+// --------------------------------------------------- DEFAULT INPUT ---------------------------------------------------
+
 export const renderDefaultInput = (field, value, handleChange, error) => {
 	return (
 		<>
@@ -477,7 +493,6 @@ export const renderDefaultInput = (field, value, handleChange, error) => {
 };
 
 export const renderInputField = (field, formData, handleChange, errors, handleSelectChange) => {
-	// For drag-drop fields, don't use formData value since they manage their own state
 	const value = field.type === "drag-drop" || field.type === "table" ? field.value : formData[field.name];
 	const error = errors[field.name];
 
