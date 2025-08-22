@@ -1,4 +1,4 @@
-import { renderFunctions } from "./Renders";
+import { renderFunctions } from "./ViewRenders";
 import { localeDateOnly } from "../../../utils/TimeUtils";
 
 export const columns = {

@@ -1,6 +1,6 @@
 import React from "react";
 import { GenericTableWithModals, useTableData } from "./TableSystem";
-import { columns } from "../rendering/view/ColumnRenders";
+import { columns } from "../rendering/view/TableColumnRenders";
 import { JobApplicationUpdateFormModal, JobApplicationUpdateViewModal } from "../modals/JobApplicationUpdateModal";
 
 const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, updates = null }) => {

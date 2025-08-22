@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
 import { PersonFormModal, PersonViewModal } from "../components/modals/PersonModal";
-import { columns } from "../components/rendering/view/ColumnRenders";
+import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
 const PersonsPage = () => {

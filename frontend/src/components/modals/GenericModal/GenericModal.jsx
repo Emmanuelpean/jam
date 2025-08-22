@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Alert, Button, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
 import "./GenericModal.css";
-import { renderFieldValue } from "../../rendering/view/Renders";
+import { renderFieldValue } from "../../rendering/view/ViewRenders";
 import { ActionButton, renderInputField } from "../../rendering/form/WidgetRenders";
 import { api } from "../../../services/Api";
 import useGenericAlert from "../../../hooks/useGenericAlert";

@@ -1,4 +1,4 @@
-import { renderFunctions } from "./Renders";
+import { renderFunctions } from "./ViewRenders";
 
 export const viewFields = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
@@ -29,20 +29,6 @@ export const viewFields = {
 		...overrides,
 	}),
 
-	createdAt: (overrides = {}) => ({
-		key: "created_at",
-		label: "Date Added",
-		render: (x) => renderFunctions.createdDate(x, true),
-		...overrides,
-	}),
-
-	modifiedAt: (overrides = {}) => ({
-		key: "modified_at",
-		label: "Modified On",
-		render: (x) => renderFunctions.modifiedDate(x, true),
-		...overrides,
-	}),
-
 	note: (overrides = {}) => ({
 		key: "note",
 		label: "Notes",
@@ -70,12 +56,7 @@ export const viewFields = {
 		...overrides,
 	}),
 
-	updateType: (overrides = {}) => ({
-		key: "type",
-		label: "Type",
-		render: renderFunctions.updateType,
-		...overrides,
-	}),
+	// ------------------------------------------------------ USER -----------------------------------------------------
 
 	appTheme: (overrides = {}) => ({
 		key: "theme",
@@ -203,6 +184,15 @@ export const viewFields = {
 		...overrides,
 	}),
 
+	job: (overrides = {}) => ({
+		key: "job",
+		label: "Job",
+		render: (x) => renderFunctions.job(x, true),
+		...overrides,
+	}),
+
+	// ------------------------------------------------ JOB APPLICATION ------------------------------------------------
+
 	jobApplication: (overrides = {}) => ({
 		key: "job_application",
 		label: "Application Status",
@@ -224,13 +214,6 @@ export const viewFields = {
 		...overrides,
 	}),
 
-	job: (overrides = {}) => ({
-		key: "job",
-		label: "Job",
-		render: (x) => renderFunctions.job(x, true),
-		...overrides,
-	}),
-
 	appliedVia: (overrides = {}) => ({
 		key: "applied_via",
 		label: "Applied Via",
@@ -245,6 +228,8 @@ export const viewFields = {
 		...overrides,
 	}),
 
+	// --------------------------------------------------- INTERVIEW ---------------------------------------------------
+
 	interviews: (overrides = {}) => ({
 		key: "interviews",
 		label: "Interviews",
@@ -252,10 +237,19 @@ export const viewFields = {
 		...overrides,
 	}),
 
+	// --------------------------------------------- JOB APPLICATION UPDATE --------------------------------------------
+
 	updates: (overrides = {}) => ({
 		key: "updates",
 		label: "Updates",
 		render: renderFunctions.jobApplicationUpdateTable,
+		...overrides,
+	}),
+
+	updateType: (overrides = {}) => ({
+		key: "type",
+		label: "Type",
+		render: renderFunctions.updateType,
 		...overrides,
 	}),
 };

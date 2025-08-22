@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
 import { UserFormModal, UserViewModal } from "../components/modals/UserModal";
-import { columns } from "../components/rendering/view/ColumnRenders";
+import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
 export const UserManagementPage = () => {

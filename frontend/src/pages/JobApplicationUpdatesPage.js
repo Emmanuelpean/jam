@@ -4,7 +4,7 @@ import {
 	JobApplicationUpdateViewModal,
 } from "../components/modals/JobApplicationUpdateModal";
 import { GenericTableWithModals, useTableData } from "../components/tables/TableSystem";
-import { columns } from "../components/rendering/view/ColumnRenders";
+import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
 const JobApplicationUpdatesPage = () => {

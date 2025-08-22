@@ -5,7 +5,7 @@ import { api } from "../../services/Api";
 import { getThemeByKey } from "../../utils/Theme";
 import { ActionButton, renderInputField } from "../../components/rendering/form/WidgetRenders";
 import "./UserSettingsPage.css";
-import { getTableIcon } from "../../components/rendering/view/Renders";
+import { getTableIcon } from "../../components/rendering/view/ViewRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 
 const UserSettingsPage = () => {
