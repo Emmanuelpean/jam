@@ -289,7 +289,7 @@ export const renderFunctions = {
 							<i
 								key={starNumber}
 								className={`star-rating-star ${starClass}`}
-								style={{ fontSize: "1rem" }}
+								style={{ fontSize: "1rem", cursor: "auto" }}
 							/>
 						);
 					})}
@@ -536,12 +536,12 @@ export const renderFunctions = {
 
 	interviewTable: (item, view = false, key = "interviews") => {
 		const interviews = accessAttribute(item, key);
-		return <InterviewsTable interviews={interviews} jobApplicationId={item.id} />;
+		return <InterviewsTable data={interviews} jobApplicationId={item.id} />;
 	},
 
 	jobApplicationUpdateTable: (item, view = false, key = "updates") => {
 		const updates = accessAttribute(item, key);
-		return <JobApplicationUpdateTable updates={updates} jobApplicationId={item.id} />;
+		return <JobApplicationUpdateTable data={updates} jobApplicationId={item.id} />;
 	},
 
 	locationMap: (item) => {

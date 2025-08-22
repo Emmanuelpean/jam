@@ -3,7 +3,7 @@ import { GenericTableWithModals, useTableData } from "./GenericTable";
 import { columns } from "../rendering/view/TableColumnRenders";
 import { InterviewFormModal, InterviewViewModal } from "../modals/InterviewModal";
 
-const InterviewsTable = ({ jobApplicationId, onChange, interviews = null }) => {
+const InterviewsTable = ({ jobApplicationId, onChange, data = null }) => {
 	const {
 		data: interviewData,
 		loading,
@@ -13,10 +13,10 @@ const InterviewsTable = ({ jobApplicationId, onChange, interviews = null }) => {
 		deleteItem,
 	} = useTableData(
 		"interviews",
-		[jobApplicationId, interviews],
+		[jobApplicationId, data],
 		{ job_application_id: jobApplicationId },
 		{ key: "date", direction: "desc" },
-		interviews,
+		data,
 	);
 
 	const handleAddSuccess = (newEntry) => {

@@ -3,7 +3,7 @@ import { GenericTableWithModals, useTableData } from "./GenericTable";
 import { columns } from "../rendering/view/TableColumnRenders";
 import { JobApplicationUpdateFormModal, JobApplicationUpdateViewModal } from "../modals/JobApplicationUpdateModal";
 
-const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, updates = null }) => {
+const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, data = null }) => {
 	const {
 		data: updatesData,
 		loading,
@@ -13,10 +13,10 @@ const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, updates = null
 		deleteItem,
 	} = useTableData(
 		"jobapplicationupdates",
-		[jobApplicationId, updates],
+		[jobApplicationId, data],
 		{ job_application_id: jobApplicationId },
 		{ key: "date", direction: "desc" },
-		updates,
+		data,
 	);
 
 	const handleAddSuccess = (newEntry) => {
