@@ -119,9 +119,9 @@ const LocationMap = ({ locations = [], height = "400px" }) => {
 			>
 				<Spinner animation="border" className="mb-3" />
 				<div className="text-center">
-					<p className="mb-2">Finding locations on map...</p>
-					{progress.total > 0 && (
+					{progress.total > 1 ? (
 						<>
+							<p className="mb-2">Finding locations on map...</p>
 							<ProgressBar
 								now={(progress.current / progress.total) * 100}
 								style={{ width: "200px" }}
@@ -131,6 +131,8 @@ const LocationMap = ({ locations = [], height = "400px" }) => {
 								{progress.current} of {progress.total} locations processed
 							</small>
 						</>
+					) : (
+						<p className="mb-2">Finding location on map...</p>
 					)}
 				</div>
 			</div>
