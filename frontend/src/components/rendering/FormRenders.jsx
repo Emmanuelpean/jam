@@ -15,8 +15,8 @@ import { LocationFormModal } from "../modals/LocationModal";
 import { KeywordFormModal } from "../modals/KeywordModal";
 import { PersonFormModal } from "../modals/PersonModal";
 import { AggregatorFormModal } from "../modals/AggregatorModal";
-import { JobFormModal } from "../modals/job/JobModal";
-import { JobApplicationFormModal } from "../modals/job_application/JobApplicationModal";
+import { JobFormModal } from "../modals/JobModal";
+import { JobApplicationFormModal } from "../modals/JobApplicationModal";
 import { THEMES } from "../../utils/Theme";
 import { toSelectOptions } from "../../utils/Utils";
 

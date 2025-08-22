@@ -21,11 +21,6 @@ const LocationsPage = () => {
 		removeItem,
 	} = useTableData("locations", [], {}, { key: "created_at", direction: "desc" });
 
-	// Filter out remote locations
-	const locations = useMemo(() => {
-		return allLocations?.filter((location) => !location.remote) || [];
-	}, [allLocations]);
-
 	const tableColumns = [columns.name(), columns.city(), columns.postcode(), columns.country(), columns.createdAt()];
 
 	useEffect(() => {
@@ -42,7 +37,7 @@ const LocationsPage = () => {
 	return (
 		<GenericTableWithModals
 			title="Locations"
-			data={locations}
+			data={allLocations}
 			columns={tableColumns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
@@ -62,7 +57,7 @@ const LocationsPage = () => {
 		>
 			<div className="mt-4">
 				<h5 className="mb-3">Location Map</h5>
-				<LocationMap locations={locations} height="500px" />
+				<LocationMap locations={allLocations} height="500px" />
 			</div>
 		</GenericTableWithModals>
 	);

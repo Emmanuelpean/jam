@@ -22,20 +22,19 @@ const LocationMap = ({ locations = [], height = "400px" }) => {
 
 	const defaultCenter = [51.505, -0.09]; // London
 	const defaultZoom = 6;
-	const locationsToGeocode = locations.filter((location) => !location.remote);
 
 	useEffect(() => {
 		const geocodeLocations = async () => {
-			if (locationsToGeocode.length === 0) {
+			if (locations.length === 0) {
 				setGeocodedLocations([]);
 				return;
 			}
 
 			setLoading(true);
-			setProgress({ current: 0, total: locationsToGeocode.length });
+			setProgress({ current: 0, total: locations.length });
 
 			try {
-				const results = await geocodeLocationsBatch(locationsToGeocode, (current, total) => {
+				const results = await geocodeLocationsBatch(locations, (current, total) => {
 					setProgress({ current, total });
 				});
 
@@ -49,16 +48,15 @@ const LocationMap = ({ locations = [], height = "400px" }) => {
 			}
 		};
 
-		geocodeLocations();
+		geocodeLocations().then(() => null);
 	}, [
 		// Create a more stable dependency by stringifying the relevant location data
 		JSON.stringify(
-			locationsToGeocode.map((loc) => ({
+			locations.map((loc) => ({
 				id: loc.id,
 				city: loc.city,
 				postcode: loc.postcode,
 				country: loc.country,
-				remote: loc.remote,
 			})),
 		),
 	]);
@@ -151,7 +149,7 @@ const LocationMap = ({ locations = [], height = "400px" }) => {
 					</div>
 					<h6 className="text-muted">No mappable locations found</h6>
 					<p className="text-muted mb-0 small">
-						{locationsToGeocode.length === 0
+						{locations.length === 0
 							? "Add some non-remote locations to see them on the map."
 							: "Could not find coordinates for any locations."}
 					</p>
@@ -210,8 +208,8 @@ const LocationMap = ({ locations = [], height = "400px" }) => {
 
 			<div className="mt-2 d-flex justify-content-between align-items-center">
 				<small className="text-muted">
-					📍 {geocodedLocations.length} of {locationsToGeocode.length} location
-					{locationsToGeocode.length !== 1 ? "s" : ""} shown
+					📍 {geocodedLocations.length} of {locations.length} location
+					{locations.length !== 1 ? "s" : ""} shown
 				</small>
 			</div>
 		</div>

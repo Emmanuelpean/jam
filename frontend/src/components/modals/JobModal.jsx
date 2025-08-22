@@ -1,7 +1,7 @@
 import React from "react";
-import GenericModal from "../GenericModal";
-import { formFields, useFormOptions } from "../../rendering/FormRenders";
-import { viewFields } from "../../rendering/ViewRenders";
+import GenericModal from "./GenericModal";
+import { formFields, useFormOptions } from "../rendering/FormRenders";
+import { viewFields } from "../rendering/ViewRenders";
 
 export const JobModal = ({
 	show,

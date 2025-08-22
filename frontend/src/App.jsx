@@ -15,14 +15,14 @@ import "./Themes.css";
 import DashboardPage from "./pages/EISDashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
 import NotFoundPage from "./pages/NotFoundPage";
-import { Sidebar } from "./Sidebar";
+import { Sidebar } from "./components/sidebar/Sidebar";
 import JobApplicationUpdatesPage from "./pages/JobApplicationUpdatesPage";
 import JobSearchDashboard from "./pages/Dashboard/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast } from "./hooks/useNotificationToast";
-import { ToastStack } from "./components/Toasts/Toast";
+import { ToastStack } from "./components/toasts/Toast";
 
 export const ToastContext = React.createContext();
 

@@ -1,8 +1,5 @@
 import React, { useEffect } from "react";
-import {
-	JobApplicationFormModal,
-	JobApplicationViewModal,
-} from "../components/modals/job_application/JobApplicationModal";
+import { JobApplicationFormModal, JobApplicationViewModal } from "../components/modals/JobApplicationModal";
 import { GenericTableWithModals, useTableData } from "../components/tables/TableSystem";
 import { columns } from "../components/rendering/ColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
