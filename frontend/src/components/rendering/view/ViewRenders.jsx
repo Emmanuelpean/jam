@@ -84,7 +84,6 @@ const ensureHttpPrefix = (url) => {
 	return `https://${url}`;
 };
 
-// File badge component for downloadable files
 const FileBadge = ({ file, icon, label }) => {
 	const { token } = useAuth();
 	const { showSuccess, showError } = useGlobalToast();
@@ -181,11 +180,6 @@ export const renderFunctions = {
 	},
 
 	createdDate: (item, view = false, key = "created_at") => {
-		const date = accessAttribute(item, key);
-		return renderFunctions._datetime(date);
-	},
-
-	modifiedDate: (item, view = false, key = "modified_at") => {
 		const date = accessAttribute(item, key);
 		return renderFunctions._datetime(date);
 	},
@@ -414,7 +408,25 @@ export const renderFunctions = {
 
 	location: (item, view = false, key = "location", id) => {
 		const location = accessAttribute(item, key);
+		const attendanceType = accessAttribute(item, "attendance_type");
+
+		if (attendanceType === "remote") {
+			return (
+				<span className="badge bg-warning" id={id}>
+					<i className="bi bi-house me-1"></i>
+					Remote
+				</span>
+			);
+		}
+
 		if (location) {
+			let displayText = location.name;
+			if (attendanceType === "on-site") {
+				displayText = `${location.name} (On-site)`;
+			} else if (attendanceType === "hybrid") {
+				displayText = `${location.name} (Hybrid)`;
+			}
+
 			return (
 				<LocationModalManager>
 					{(handleClick) => (
@@ -424,12 +436,23 @@ export const renderFunctions = {
 							id={id}
 						>
 							<i className="bi bi-geo-alt me-1"></i>
-							{location.name}
+							{displayText}
 						</span>
 					)}
 				</LocationModalManager>
 			);
 		}
+
+		if (attendanceType && attendanceType !== "remote") {
+			return (
+				<span className="badge bg-warning" id={id}>
+					<i className="bi bi-building me-1"></i>
+					{attendanceType.charAt(0).toUpperCase() + attendanceType.slice(1)}
+				</span>
+			);
+		}
+
+		return null;
 	},
 
 	company: (item, view = false, key = "company", id) => {

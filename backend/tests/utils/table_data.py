@@ -502,7 +502,6 @@ JOB_DATA = [
         "url": "https://techcorp.com/jobs/remote_react_developer",
         "company_id": 1,  # Tech Corp
         "location_id": 4,  # San Francisco
-        "attendance_type": "remote",
         "owner_id": 1,
     },
     {
@@ -541,7 +540,6 @@ JOB_DATA = [
         "description": "Summer internship opportunity for computer science students. Great learning environment.",
         "personal_rating": 1,
         "company_id": 3,  # Oxford PV
-        "attendance_type": "on-site",
         "owner_id": 1,
     },
     {

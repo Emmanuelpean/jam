@@ -121,8 +121,8 @@ export const columns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		sortField: "location.name",
-		searchFields: "location.name",
+		sortField: "location.name", // TODO search by attendance_type too
+		searchFields: "location.name", // TODO filter by attendance_type too
 		render: renderFunctions.location,
 		...overrides,
 	}),
