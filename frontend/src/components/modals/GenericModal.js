@@ -425,13 +425,23 @@ const GenericModal = ({
 					{isEditing ? (
 						<div>
 							{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
-							<div>{formF.map((item, index) => renderFieldGroup(item, index, true))}</div>
+							<div>
+								{formF.map((item, index) => (
+									<div key={`form-field-${index}`}>{renderFieldGroup(item, index, true)}</div>
+								))}
+							</div>
 						</div>
 					) : (
 						<div>
 							<Card>
 								<Card.Body>
-									<div>{viewF.map((item, index) => renderFieldGroup(item, index, false))}</div>
+									<div>
+										{viewF.map((item, index) => (
+											<div key={`view-field-${index}`}>
+												{renderFieldGroup(item, index, false)}
+											</div>
+										))}
+									</div>
 								</Card.Body>
 							</Card>
 						</div>
