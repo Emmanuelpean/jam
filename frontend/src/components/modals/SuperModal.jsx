@@ -208,7 +208,7 @@ export const JobAndApplicationModal = ({
 		formFields.jobTitle(),
 		[formFields.company(companies, openCompanyModal), formFields.location(locations, openLocationModal)],
 		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
-		formFields.url({ label: "Job URL" }),
+		[formFields.attendanceType(), formFields.url({ label: "Job URL" })],
 		[formFields.salaryMin(), formFields.salaryMax()],
 		formFields.personalRating(),
 		formFields.description(),
@@ -239,7 +239,7 @@ export const JobAndApplicationModal = ({
 			...(data ? [] : [formFields.job(filteredJobs)]),
 			[
 				formFields.applicationVia(),
-				...(currentApplicationFormData?.applied_via === "Aggregator"
+				...(currentApplicationFormData?.applied_via === "aggregator"
 					? [formFields.aggregator(aggregators, openAggregatorModal)]
 					: []),
 			],

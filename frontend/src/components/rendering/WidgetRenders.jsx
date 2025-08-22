@@ -1,5 +1,5 @@
 import { formatDateTime } from "../../utils/TimeUtils";
-import { Form } from "react-bootstrap";
+import { Form, InputGroup } from "react-bootstrap";
 import { React, useState } from "react";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
@@ -11,6 +11,34 @@ const animatedComponents = makeAnimated();
 const displayError = (errorMessage) => {
 	if (!errorMessage) return null;
 	return errorMessage.split("\n").map((line, index) => <div key={index}>{line}</div>);
+};
+
+const renderSalaryInput = (field, value, handleChange, error) => {
+	return (
+		<>
+			<InputGroup>
+				<InputGroup.Text>£</InputGroup.Text>
+				<Form.Control
+					id={field.name}
+					type="number"
+					name={field.name}
+					value={value || ""}
+					onChange={handleChange}
+					placeholder={field.placeholder}
+					isInvalid={!!error}
+					step={field.step}
+					min="0"
+					className={error ? "is-invalid" : ""}
+				/>
+				<InputGroup.Text>/year</InputGroup.Text>
+			</InputGroup>
+			{error && (
+				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
+					{displayError(error)}
+				</div>
+			)}
+		</>
+	);
 };
 
 export const ActionButton = ({
@@ -426,6 +454,9 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 
 		case "table":
 			return renderTable(field);
+
+		case "salary":
+			return renderSalaryInput(field, value, handleChange, error);
 
 		default:
 			return renderDefaultInput(field, value, handleChange, error);

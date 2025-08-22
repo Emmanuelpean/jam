@@ -516,7 +516,7 @@ export const formFields = {
 	salaryMin: (overrides = {}) => ({
 		name: "salary_min",
 		label: "Minimum Salary",
-		type: "number",
+		type: "salary",
 		placeholder: "Enter minimum salary",
 		step: "1000",
 		...overrides,
@@ -525,7 +525,7 @@ export const formFields = {
 	salaryMax: (overrides = {}) => ({
 		name: "salary_max",
 		label: "Maximum Salary",
-		type: "number",
+		type: "salary",
 		placeholder: "Enter maximum salary",
 		step: "1000",
 		...overrides,
@@ -541,6 +541,18 @@ export const formFields = {
 			{ value: 3, label: "3 - Good" },
 			{ value: 4, label: "4 - Very Good" },
 			{ value: 5, label: "5 - Excellent" },
+		],
+		...overrides,
+	}),
+
+	attendanceType: (overrides = {}) => ({
+		name: "attendance_type",
+		label: "Attendance Type",
+		type: "select",
+		options: [
+			{ value: "on-site", label: "On-site" },
+			{ value: "hybrid", label: "Hybrid" },
+			{ value: "remote", label: "Remote" },
 		],
 		...overrides,
 	}),
@@ -598,10 +610,10 @@ export const formFields = {
 		label: "Application Via",
 		type: "select",
 		options: [
-			{ value: "Aggregator", label: "Aggregator" },
-			{ value: "Email", label: "Email" },
-			{ value: "Phone", label: "Phone" },
-			{ value: "Other", label: "Other" },
+			{ value: "aggregator", label: "Aggregator" },
+			{ value: "email", label: "Email" },
+			{ value: "phone", label: "Phone" },
+			{ value: "other", label: "Other" },
 		],
 		...overrides,
 	}),

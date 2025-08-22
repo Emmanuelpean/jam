@@ -14,6 +14,7 @@ import JobApplicationUpdateTable from "../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../utils/Theme";
 import { type } from "@testing-library/user-event/dist/type";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
+import LocationMap from "../maps/LocationMap";
 
 const createModalManager = (ModalComponent) => {
 	return ({ children }) => {
@@ -294,6 +295,13 @@ export const renderFunctions = {
 		}
 	},
 
+	attendanceType: (item, view = false, key = "attendance_type") => {
+		const attendance_type = accessAttribute(item, key);
+		if (attendance_type) {
+			return attendance_type.charAt(0).toUpperCase() + attendance_type.slice(1);
+		}
+	},
+
 	status: (item, view = false, key = "status") => {
 		const status = accessAttribute(item, key);
 		return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
@@ -508,6 +516,10 @@ export const renderFunctions = {
 	jobApplicationUpdateTable: (item, view = false, key = "updates") => {
 		const updates = accessAttribute(item, key);
 		return <JobApplicationUpdateTable jobApplicationUpdates={updates} jobApplicationId={item.id} />;
+	},
+
+	locationMap: (item) => {
+		return <LocationMap locations={item ? [item] : []} />;
 	},
 };
 
