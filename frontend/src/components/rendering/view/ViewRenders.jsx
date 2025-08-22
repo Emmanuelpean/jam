@@ -279,21 +279,25 @@ export const renderFunctions = {
 		if (personal_rating) {
 			const rating = Math.max(0, Math.min(5, personal_rating));
 			const filledStars = Math.floor(rating);
-			const emptyStars = 5 - filledStars;
+
 			return (
-				<div>
-					{"★".repeat(filledStars)}
-					{"☆".repeat(emptyStars)}
+				<div className="star-rating-container" style={{ height: "auto" }}>
+					{[...Array(5)].map((_, index) => {
+						const starNumber = index + 1;
+						const starClass = starNumber <= rating ? "bi-star-fill" : "bi-star";
+
+						return (
+							<i
+								key={starNumber}
+								className={`star-rating-star ${starClass}`}
+								style={{ fontSize: "1rem" }}
+							/>
+						);
+					})}
 				</div>
 			);
 		}
-	},
-
-	attendanceType: (item, view = false, key = "attendance_type") => {
-		const attendance_type = accessAttribute(item, key);
-		if (attendance_type) {
-			return attendance_type.charAt(0).toUpperCase() + attendance_type.slice(1);
-		}
+		return null;
 	},
 
 	status: (item, view = false, key = "status") => {
