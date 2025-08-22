@@ -118,16 +118,23 @@ const FileBadge = ({ file, icon, label }) => {
 	);
 };
 
+const accessSubAttribute = (item, accessKey, key) => {
+	if (accessKey) {
+		item = accessAttribute(item, accessKey);
+	}
+	return item?.[key];
+};
+
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
-	_longText: (item, view = false, key = "description") => {
-		const description = accessAttribute(item, key);
-		if (description) {
+	_longText: (item, view = false, accessKey, key) => {
+		const text = accessSubAttribute(item, accessKey, key);
+		if (text) {
 			if (view) {
-				return description;
+				return text;
 			} else {
-				const words = description.split(" ");
+				const words = text.split(" ");
 				const truncated = words.slice(0, 12).join(" ");
 				const needsEllipsis = words.length > 12;
 
@@ -141,16 +148,16 @@ export const renderFunctions = {
 		}
 	},
 
-	note: (item, view = false, key = "note") => {
-		return renderFunctions._longText(item, view, key);
+	note: (item, view = false, accessKey) => {
+		return renderFunctions._longText(item, view, accessKey, "note");
 	},
 
-	description: (item, view = false, key = "description") => {
-		return renderFunctions._longText(item, view, key);
+	description: (item, view = false, accessKey) => {
+		return renderFunctions._longText(item, view, accessKey, "description");
 	},
 
-	url: (item, view = false, key = "url") => {
-		const url = accessAttribute(item, key);
+	url: (item, view = false, accessKey) => {
+		const url = accessSubAttribute(item, accessKey, "url");
 		if (url) {
 			const safeUrl = ensureHttpPrefix(url);
 			return (
@@ -161,8 +168,8 @@ export const renderFunctions = {
 		}
 	},
 
-	appTheme: (item, view = false, key = "theme") => {
-		const themeKey = accessAttribute(item, key);
+	appTheme: (item, view = false, accessKey) => {
+		const themeKey = accessSubAttribute(item, accessKey, "theme");
 		if (themeKey) {
 			return THEMES.find((theme) => theme.key === themeKey).name;
 		}
@@ -174,26 +181,28 @@ export const renderFunctions = {
 		}
 	},
 
-	lastLogin: (item, view = false, key = "last_login") => {
-		const date = accessAttribute(item, key);
+	lastLogin: (item, view = false, accessKey) => {
+		const date = accessSubAttribute(item, accessKey, "last_login");
 		return renderFunctions._datetime(date);
 	},
 
-	createdDate: (item, view = false, key = "created_at") => {
-		const date = accessAttribute(item, key);
+	createdDate: (item, view = false, accessKey) => {
+		const date = accessSubAttribute(item, accessKey, "created_at");
 		return renderFunctions._datetime(date);
 	},
 
-	datetime: (item, view = false, key = "date") => {
-		const date = accessAttribute(item, key);
-		return (
-			new Date(date).toLocaleDateString() +
-			" " +
-			new Date(date).toLocaleTimeString([], {
-				hour: "2-digit",
-				minute: "2-digit",
-			})
-		);
+	datetime: (item, view = false, accessKey) => {
+		const date = accessSubAttribute(item, accessKey, "date");
+		if (date) {
+			return (
+				new Date(date).toLocaleDateString() +
+				" " +
+				new Date(date).toLocaleTimeString([], {
+					hour: "2-digit",
+					minute: "2-digit",
+				})
+			);
+		}
 	},
 
 	date: (item, view = false, key = "date") => {
@@ -201,8 +210,8 @@ export const renderFunctions = {
 		return renderFunctions._datetime(date);
 	},
 
-	email: (item, view = false, key = "email") => {
-		const email = accessAttribute(item, key);
+	email: (item, view = false, accessKey) => {
+		const email = accessSubAttribute(item, accessKey, "email");
 		if (email)
 			return (
 				<a href={`mailto:${email}`} className="text-decoration-none">
@@ -212,8 +221,8 @@ export const renderFunctions = {
 			);
 	},
 
-	phone: (item, view = false, key = "phone") => {
-		const phone = accessAttribute(item, key);
+	phone: (item, view = false, accessKey) => {
+		const phone = accessSubAttribute(item, accessKey, "phone");
 		if (phone) {
 			return (
 				<a href={`tel:${phone}`} className="text-decoration-none">
@@ -224,8 +233,8 @@ export const renderFunctions = {
 		}
 	},
 
-	linkedinUrl: (item, view = false, key = "linkedin_url") => {
-		const url = accessAttribute(item, key);
+	linkedinUrl: (item, view = false, accessKey) => {
+		const url = accessSubAttribute(item, accessKey, "linkedin_url");
 		if (url) {
 			return (
 				<a href={url} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
@@ -236,8 +245,8 @@ export const renderFunctions = {
 		}
 	},
 
-	isAdmin: (item, view = false, key = "is_admin") => {
-		const isAdmin = accessAttribute(item, key);
+	isAdmin: (item, view = false, accessKey) => {
+		const isAdmin = accessSubAttribute(item, accessKey, "is_admin");
 		return isAdmin ? (
 			<i className="bi bi-check-circle-fill text-success"></i>
 		) : (
@@ -245,8 +254,8 @@ export const renderFunctions = {
 		);
 	},
 
-	updateType: (item, view = false, key = "type") => {
-		const type = accessAttribute(item, key);
+	updateType: (item, view = false, accessKey) => {
+		const type = accessSubAttribute(item, accessKey, "type");
 		if (type) {
 			const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
 			let icon = getUpdateTypeIcon(type);
@@ -260,22 +269,24 @@ export const renderFunctions = {
 		}
 	},
 
-	salaryRange: (item) => {
-		if (!item.salary_min && !item.salary_max) {
+	salaryRange: (item, view = false, accessKey) => {
+		const salary_min = accessSubAttribute(item, accessKey, "salary_min");
+		const salary_max = accessSubAttribute(item, accessKey, "salary_max");
+		if (!salary_min && !salary_max) {
 			return null;
 		}
-		if (item.salary_min === item.salary_max) {
-			return `£${item.salary_min.toLocaleString()}`;
+		if (salary_min === salary_max) {
+			return `£${salary_min.toLocaleString()}`;
 		}
-		if (item.salary_min && item.salary_max) {
-			return `£${item.salary_min.toLocaleString()} - £${item.salary_max.toLocaleString()}`;
+		if (salary_min && salary_max) {
+			return `£${salary_min.toLocaleString()} - £${salary_max.toLocaleString()}`;
 		}
-		if (item.salary_min) return `From £${item.salary_min.toLocaleString()}`;
-		if (item.salary_max) return `Up to £${item.salary_max.toLocaleString()}`;
+		if (salary_min) return `From £${salary_min.toLocaleString()}`;
+		if (salary_max) return `Up to £${salary_max.toLocaleString()}`;
 	},
 
-	personalRating: (item, view = false, key = "personal_rating") => {
-		const personal_rating = accessAttribute(item, key);
+	personalRating: (item, view = false, acccessKey) => {
+		const personal_rating = accessSubAttribute(item, acccessKey, "personal_rating");
 		if (personal_rating) {
 			const rating = Math.max(0, Math.min(5, personal_rating));
 
@@ -299,27 +310,26 @@ export const renderFunctions = {
 		return null;
 	},
 
-	status: (item, view = false, key = "status") => {
-		const status = accessAttribute(item, key);
+	status: (item, view = false, acccessKey) => {
+		const status = accessSubAttribute(item, acccessKey, "status");
 		return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
 	},
 
-	interviewCount: (item, view = false, key = "interviews") => {
-		const interviews = accessAttribute(item, key);
+	interviewCount: (item, view = false, acccessKey) => {
+		const interviews = accessSubAttribute(item, acccessKey, "interviews");
 		return interviews.length;
 	},
 
-	updateCount: (item, view = false, key = "updates") => {
-		const updates = accessAttribute(item, key);
+	updateCount: (item, view = false, acccessKey) => {
+		const updates = accessSubAttribute(item, acccessKey, "updates");
 		return updates.length;
 	},
 
 	// --------------------------------------------------- FILE BADGES -------------------------------------------------
 
-	files: (item) => {
-		const cv = accessAttribute(item, "cv");
-		const coverLetter = accessAttribute(item, "cover_letter");
-
+	files: (item, view = false, accessKey) => {
+		const cv = accessSubAttribute(item, accessKey, "cv");
+		const coverLetter = accessSubAttribute(item, accessKey, "cover_letter");
 		if (!cv && !coverLetter) return null;
 
 		return (
@@ -332,8 +342,8 @@ export const renderFunctions = {
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
-	jobApplication: (item, view = false, key = "job_application", id) => {
-		const job_application = accessAttribute(item, key);
+	jobApplication: (item, view = false, accessKey, id) => {
+		const job_application = accessSubAttribute(item, accessKey, "job_application");
 		if (job_application) {
 			return (
 				<JobApplicationModalManager>
@@ -351,8 +361,8 @@ export const renderFunctions = {
 		}
 	},
 
-	job: (item, view = false, key = "job", id) => {
-		const job = accessAttribute(item, key);
+	job: (item, view = false, accessKey, id) => {
+		const job = accessSubAttribute(item, accessKey, "job");
 		if (job) {
 			return (
 				<JobModalManager>
@@ -367,8 +377,8 @@ export const renderFunctions = {
 		}
 	},
 
-	jobName: (item, view = false, key = "job", id) => {
-		const job = accessAttribute(item, key);
+	jobName: (item, view = false, accessKey, id) => {
+		const job = accessSubAttribute(item, accessKey, "job");
 		if (job) {
 			return (
 				<JobModalManager>
@@ -383,8 +393,8 @@ export const renderFunctions = {
 		}
 	},
 
-	keywords: (item, view = false, key = "keywords", id) => {
-		const keywords = accessAttribute(item, key);
+	keywords: (item, view = false, accessKey, id) => {
+		const keywords = accessSubAttribute(item, accessKey, "keywords");
 		if (keywords && keywords.length > 0) {
 			return (
 				<div>
@@ -409,10 +419,9 @@ export const renderFunctions = {
 		}
 	},
 
-	location: (item, view = false, key = "location", id) => {
-		const location = accessAttribute(item, key);
+	location: (item, view = false, accessKey, id) => {
+		const location = accessSubAttribute(item, accessKey, "location");
 		const attendanceType = accessAttribute(item, "attendance_type");
-
 		if (attendanceType === "remote") {
 			return (
 				<span className="badge bg-warning" id={id}>
@@ -458,8 +467,8 @@ export const renderFunctions = {
 		return null;
 	},
 
-	company: (item, view = false, key = "company", id) => {
-		const company = accessAttribute(item, key);
+	company: (item, view = false, accessKey, id) => {
+		const company = accessSubAttribute(item, accessKey, "company");
 		if (company) {
 			return (
 				<CompanyModalManager>
@@ -474,12 +483,12 @@ export const renderFunctions = {
 		}
 	},
 
-	contacts: (item, view = false, key = "contacts", id) => {
-		const contacts = accessAttribute(item, key);
-		if (contacts && contacts.length > 0) {
+	_persons: (item, view = false, accessKey, id, key) => {
+		const persons = accessSubAttribute(item, accessKey, key);
+		if (persons && persons.length > 0) {
 			return (
 				<div className="badge-group">
-					{contacts.map((person, index) => (
+					{persons.map((person, index) => (
 						<span key={person.id || index} className="me-1">
 							<PersonModalManager>
 								{(handleClick) => (
@@ -500,8 +509,16 @@ export const renderFunctions = {
 		}
 	},
 
-	appliedVia: (item, view = false, key = "applied_via", id) => {
-		const appliedVia = accessAttribute(item, key);
+	contacts: (item, view = false, accessKey, id) => {
+		return renderFunctions._persons(item, view, accessKey, id, "contacts");
+	},
+
+	interviewers: (item, view = false, accessKey, id) => {
+		return renderFunctions._persons(item, view, accessKey, id, "interviewers");
+	},
+
+	appliedVia: (item, view = false, accessKey, id) => {
+		const appliedVia = accessSubAttribute(item, accessKey, "applied_via");
 		if (appliedVia === "Aggregator") {
 			return renderFunctions.aggregator(item, view, "aggregator", id);
 		}
@@ -514,8 +531,8 @@ export const renderFunctions = {
 		}
 	},
 
-	aggregator: (item, view = false, key = "aggregator", id) => {
-		const aggregator = accessAttribute(item, key);
+	aggregator: (item, view = false, accessKey, id) => {
+		const aggregator = accessSubAttribute(item, accessKey, "aggregator");
 		if (aggregator) {
 			return (
 				<AggregatorModalManager>
@@ -534,13 +551,13 @@ export const renderFunctions = {
 		}
 	},
 
-	interviewTable: (item, view = false, key = "interviews") => {
-		const interviews = accessAttribute(item, key);
+	interviewTable: (item, view = false, accessKey) => {
+		const interviews = accessSubAttribute(item, accessKey, "interviews");
 		return <InterviewsTable data={interviews} jobApplicationId={item.id} />;
 	},
 
-	jobApplicationUpdateTable: (item, view = false, key = "updates") => {
-		const updates = accessAttribute(item, key);
+	jobApplicationUpdateTable: (item, view = false, accessKey) => {
+		const updates = accessSubAttribute(item, accessKey, "updates");
 		return <JobApplicationUpdateTable data={updates} jobApplicationId={item.id} />;
 	},
 
@@ -552,25 +569,14 @@ export const renderFunctions = {
 export const renderFieldValue = (field, item, id) => {
 	const noText = <span className="text-muted">Not Provided</span>;
 
-	if (field.accessKey) {
-		item = accessAttribute(item, field.accessKey);
-	}
-
-	if (field.type === "custom" && field.render) {
-		return field.render(item);
-	}
-
-	if (field.type === "table" && field.render) {
-		return field.render();
-	}
-
 	let rendered;
 	if (field.render) {
-		rendered = field.render(item, false, field.key, id + "-" + field.key);
+		rendered = field.render(item, false, field.accessKey, id + "-" + field.key);
 	} else {
 		rendered = item[field.key];
 	}
 	if (rendered !== null && rendered !== undefined) {
+		// allow for 0
 		return rendered;
 	} else {
 		return noText;

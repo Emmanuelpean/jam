@@ -210,7 +210,7 @@ export const viewFields = {
 	interviewers: (overrides = {}) => ({
 		key: "person",
 		label: "Interviewers",
-		render: (x) => renderFunctions.contacts(x, true, "interviewers"),
+		render: (x) => renderFunctions.interviewers(x, true),
 		...overrides,
 	}),
 

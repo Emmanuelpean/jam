@@ -259,7 +259,7 @@ export const columns = {
 		type: "text",
 		sortField: "person.last_name",
 		searchFields: "person.name",
-		render: (item) => renderFunctions.contacts(item, false, "interviewers"),
+		render: (item) => renderFunctions.interviewers(item, false),
 		...overrides,
 	}),
 
