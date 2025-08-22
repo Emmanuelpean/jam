@@ -746,3 +746,34 @@ textarea.form-control {
     border-color: var(--primary-light);
     box-shadow: 0 0 0 0.25rem var(--jam-glow);
 }
+
+/* ---------------------------------------------------- STAR RATING ------------------------------------------------- */
+
+.star-rating-container {
+    display: flex;
+    align-items: center;
+    height: 51px;
+}
+
+.star-rating-stars {
+    display: flex;
+    gap: 0.125rem;
+    align-items: center;
+}
+
+.star-rating-star {
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0.25rem;
+    user-select: none;
+    color: #cfcfcf;
+}
+
+.star-rating-star.bi-star-fill {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px var(--jam-glow));
+}

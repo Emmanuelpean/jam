@@ -209,8 +209,7 @@ export const JobAndApplicationModal = ({
 		[formFields.company(companies, openCompanyModal), formFields.location(locations, openLocationModal)],
 		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
 		[formFields.attendanceType(), formFields.url({ label: "Job URL" })],
-		[formFields.salaryMin(), formFields.salaryMax()],
-		formFields.personalRating(),
+		[formFields.salaryMin(), formFields.salaryMax(), formFields.personalRating()],
 		formFields.description(),
 		formFields.note(),
 	];

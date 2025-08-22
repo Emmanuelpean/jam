@@ -13,6 +13,67 @@ const displayError = (errorMessage) => {
 	return errorMessage.split("\n").map((line, index) => <div key={index}>{line}</div>);
 };
 
+const StarRating = ({ field, value, handleChange, error }) => {
+	const [hoverRating, setHoverRating] = useState(0);
+	const maxRating = field.maxRating || 5;
+	const currentRating = parseInt(value) || 0;
+
+	const handleStarClick = (rating) => {
+		const syntheticEvent = {
+			target: {
+				name: field.name,
+				value: rating === currentRating ? 0 : rating, // Toggle off if clicking same star
+			},
+		};
+		handleChange(syntheticEvent);
+	};
+
+	const handleStarHover = (rating) => {
+		setHoverRating(rating);
+	};
+
+	const handleMouseLeave = () => {
+		setHoverRating(0);
+	};
+
+	const getStarClass = (starNumber) => {
+		const rating = hoverRating || currentRating;
+		if (starNumber <= rating) {
+			return "bi-star-fill";
+		}
+		return "bi-star";
+	};
+
+	return (
+		<>
+			<div className="star-rating-container">
+				<div className="star-rating-stars" onMouseLeave={handleMouseLeave}>
+					{[...Array(maxRating)].map((_, index) => {
+						const starNumber = index + 1;
+						return (
+							<i
+								key={starNumber}
+								className={`star-rating-star ${getStarClass(starNumber)}`}
+								onMouseEnter={() => handleStarHover(starNumber)}
+								onClick={() => handleStarClick(starNumber)}
+							/>
+						);
+					})}
+				</div>
+			</div>
+			{error && (
+				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
+					{displayError(error)}
+				</div>
+			)}
+		</>
+	);
+};
+
+const renderStarRating = (field, value, handleChange, error) => {
+	return <StarRating field={field} value={value} handleChange={handleChange} error={error} />;
+};
+
 const renderSalaryInput = (field, value, handleChange, error) => {
 	return (
 		<>
@@ -457,6 +518,9 @@ export const renderInputField = (field, formData, handleChange, errors, handleSe
 
 		case "salary":
 			return renderSalaryInput(field, value, handleChange, error);
+
+		case "rating":
+			return renderStarRating(field, value, handleChange, error);
 
 		default:
 			return renderDefaultInput(field, value, handleChange, error);

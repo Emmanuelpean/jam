@@ -533,15 +533,10 @@ export const formFields = {
 
 	personalRating: (overrides = {}) => ({
 		name: "personal_rating",
-		label: "Personal Rating (1-5)",
-		type: "select",
-		options: [
-			{ value: 1, label: "1 - Poor" },
-			{ value: 2, label: "2 - Fair" },
-			{ value: 3, label: "3 - Good" },
-			{ value: 4, label: "4 - Very Good" },
-			{ value: 5, label: "5 - Excellent" },
-		],
+		label: "Personal Rating",
+		type: "rating",
+		required: false,
+		maxRating: 5,
 		...overrides,
 	}),
 
