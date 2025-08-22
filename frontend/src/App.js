@@ -21,6 +21,10 @@ import JobSearchDashboard from "./pages/Dashboard/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
+import { useToast } from "./hooks/useNotificationToast";
+import { ToastStack } from "./components/Toasts/Toast";
+
+export const ToastContext = React.createContext();
 
 function AppLayout({ children }) {
 	const { isLoading, loadingMessage } = useLoading();
@@ -76,122 +80,127 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
+	const { toasts, showSuccess, showError, showWarning, showInfo, hideToast } = useToast();
+
 	return (
 		<BrowserRouter>
 			<AuthProvider>
 				<LoadingProvider>
-					<AppLayout>
-						<Routes>
-							<Route path="/login" element={<Login />} />
-							<Route path="/register" element={<Login />} />
-							<Route path="/" element={<Navigate to="/dashboard" />} />
-							<Route
-								path="/locations"
-								element={
-									<ProtectedRoute>
-										<LocationsPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/companies"
-								element={
-									<ProtectedRoute>
-										<CompaniesPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/jobs"
-								element={
-									<ProtectedRoute>
-										<JobsPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/persons"
-								element={
-									<ProtectedRoute>
-										<PersonPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/keywords"
-								element={
-									<ProtectedRoute>
-										<KeywordsPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/interviews"
-								element={
-									<ProtectedRoute>
-										<InterviewsPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/jobapplications"
-								element={
-									<ProtectedRoute>
-										<JobApplicationPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/eis_dashboard"
-								element={
-									<ProtectedRoute>
-										<DashboardPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/aggregators"
-								element={
-									<ProtectedRoute>
-										<AggregatorsPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/jobapplicationupdates"
-								element={
-									<ProtectedRoute>
-										<JobApplicationUpdatesPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/dashboard"
-								element={
-									<ProtectedRoute>
-										<JobSearchDashboard />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/users"
-								element={
-									<ProtectedRoute>
-										<UserManagementPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/settings"
-								element={
-									<ProtectedRoute>
-										<UserSettingsPage />
-									</ProtectedRoute>
-								}
-							/>
-							<Route path="*" element={<NotFoundPage />} />
-						</Routes>
-					</AppLayout>
+					<ToastContext.Provider value={{ showSuccess, showError, showWarning, showInfo }}>
+						<AppLayout>
+							<Routes>
+								<Route path="/login" element={<Login />} />
+								<Route path="/register" element={<Login />} />
+								<Route path="/" element={<Navigate to="/dashboard" />} />
+								<Route
+									path="/locations"
+									element={
+										<ProtectedRoute>
+											<LocationsPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/companies"
+									element={
+										<ProtectedRoute>
+											<CompaniesPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/jobs"
+									element={
+										<ProtectedRoute>
+											<JobsPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/persons"
+									element={
+										<ProtectedRoute>
+											<PersonPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/keywords"
+									element={
+										<ProtectedRoute>
+											<KeywordsPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/interviews"
+									element={
+										<ProtectedRoute>
+											<InterviewsPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/jobapplications"
+									element={
+										<ProtectedRoute>
+											<JobApplicationPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/eis_dashboard"
+									element={
+										<ProtectedRoute>
+											<DashboardPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/aggregators"
+									element={
+										<ProtectedRoute>
+											<AggregatorsPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/jobapplicationupdates"
+									element={
+										<ProtectedRoute>
+											<JobApplicationUpdatesPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/dashboard"
+									element={
+										<ProtectedRoute>
+											<JobSearchDashboard />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/users"
+									element={
+										<ProtectedRoute>
+											<UserManagementPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/settings"
+									element={
+										<ProtectedRoute>
+											<UserSettingsPage />
+										</ProtectedRoute>
+									}
+								/>
+								<Route path="*" element={<NotFoundPage />} />
+							</Routes>
+						</AppLayout>
+						<ToastStack toasts={toasts} onClose={hideToast} position="top-end" />
+					</ToastContext.Provider>
 				</LoadingProvider>
 			</AuthProvider>
 		</BrowserRouter>

@@ -13,6 +13,7 @@ import InterviewsTable from "../tables/InterviewTable";
 import JobApplicationUpdateTable from "../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../utils/Theme";
 import { type } from "@testing-library/user-event/dist/type";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
 
 const createModalManager = (ModalComponent) => {
 	return ({ children }) => {
@@ -85,6 +86,7 @@ const ensureHttpPrefix = (url) => {
 // File badge component for downloadable files
 const FileBadge = ({ file, icon, label }) => {
 	const { token } = useAuth();
+	const { showSuccess, showError } = useGlobalToast();
 
 	const handleDownload = async (e) => {
 		e.stopPropagation();
@@ -93,8 +95,9 @@ const FileBadge = ({ file, icon, label }) => {
 		if (file && file.id && file.filename) {
 			try {
 				await filesApi.download(file.id, file.filename, token);
+				showSuccess(`File ${file.filename} downloaded successfully.`);
 			} catch (error) {
-				console.error("Error downloading file:", error);
+				showError("Error downloading file. Please try again later.");
 			}
 		}
 	};

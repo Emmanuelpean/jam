@@ -6,8 +6,7 @@ import { getThemeByKey } from "../../utils/Theme";
 import { ActionButton, renderInputField } from "../../components/rendering/WidgetRenders";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../../components/rendering/Renders";
-import { ToastStack } from "../../components/Toasts/Toast";
-import useToast from "../../hooks/useNotificationToast";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
 
 const UserSettingsPage = () => {
 	const { currentUser, token } = useAuth();
@@ -17,7 +16,7 @@ const UserSettingsPage = () => {
 		newPassword: "",
 		confirmPassword: "",
 	});
-	const { toasts, showSuccess, showError, hideToast } = useToast();
+	const { showSuccess, showError } = useGlobalToast();
 	const [errors, setErrors] = useState({});
 	const [loading, setLoading] = useState(false);
 
@@ -261,7 +260,6 @@ const UserSettingsPage = () => {
 					</Card>
 				</Col>
 			</Row>
-			<ToastStack toasts={toasts} onClose={hideToast} />
 		</div>
 	);
 };

@@ -199,7 +199,7 @@ export const JobApplicationModal = ({
 			[
 				formFields.applicationVia(),
 				...(currentFormData?.applied_via === "Aggregator"
-					? [formFields.aggregator(aggregators, openAggregatorModal)]
+					? [formFields.aggregator(aggregators, openAggregatorModal, { required: true })]
 					: []),
 			],
 			formFields.url(),

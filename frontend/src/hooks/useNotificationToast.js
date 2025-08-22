@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { ToastContext } from "../App";
 
-const useToast = () => {
+export const useToast = () => {
 	const [toasts, setToasts] = useState([]);
 
 	const showToast = (message, variant = "danger", title = null, delay = 5000) => {
@@ -58,4 +59,12 @@ const useToast = () => {
 	};
 };
 
-export default useToast;
+export const useGlobalToast = () => {
+	const context = useContext(ToastContext);
+
+	if (!context) {
+		throw new Error("useGlobalToast must be used within a ToastContext provider");
+	}
+
+	return context;
+};

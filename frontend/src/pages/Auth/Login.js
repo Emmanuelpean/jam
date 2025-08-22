@@ -6,8 +6,7 @@ import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
 import { ActionButton, renderInputField } from "../../components/rendering/WidgetRenders";
-import useToast from "../../hooks/useNotificationToast";
-import { ToastStack } from "../../components/Toasts/Toast";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
 
 function AuthForm() {
 	const [isLogin, setIsLogin] = useState(true);
@@ -23,7 +22,7 @@ function AuthForm() {
 	const { login, register, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { toasts, showSuccess, showError, hideToast } = useToast();
+	const { showSuccess, showError } = useGlobalToast();
 	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH);
 
 	useEffect(() => {
@@ -316,7 +315,6 @@ function AuthForm() {
 			</Card>
 
 			<TermsAndConditions show={showTerms} onHide={() => setShowTerms(false)} />
-			<ToastStack toasts={toasts} onClose={hideToast} />
 		</div>
 	);
 }
