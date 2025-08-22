@@ -62,25 +62,6 @@
     padding-top: 0.5rem;
 }
 
-/* Scrollbar styling for activity timeline */
-.activity-timeline::-webkit-scrollbar {
-    width: 6px;
-}
-
-.activity-timeline::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 3px;
-}
-
-.activity-timeline::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-mid) 100%);
-    border-radius: 3px;
-}
-
-.activity-timeline::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, var(--primary-mid) 0%, var(--primary-end) 100%);
-}
-
 .center-container {
     display: grid;
     place-items: center;
