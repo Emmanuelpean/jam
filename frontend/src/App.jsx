@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import Login from "./pages/Auth/Login";
+import Login from "./pages/Auth/Auth";
 import LocationsPage from "./pages/LocationsPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";

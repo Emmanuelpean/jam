@@ -4,7 +4,7 @@ import { formFields } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { userApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import "../../pages/Auth/Login.css";
+import "../../pages/Auth/Auth.css";
 
 export const UserModal = ({
 	show,
