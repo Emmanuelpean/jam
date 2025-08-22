@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { authApi } from "../../services/Api";
 import "./Sidebar.css";
-import { getTableIcon } from "../rendering/Renders";
+import { getTableIcon } from "../rendering/view/Renders";
 import { DEFAULT_THEME, isValidTheme, THEMES } from "../../utils/Theme";
 
 export const Sidebar = ({ onHoverChange }) => {

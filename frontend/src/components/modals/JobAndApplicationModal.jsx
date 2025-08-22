@@ -3,12 +3,12 @@ import GenericModal from "./GenericModal/GenericModal";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { filesApi } from "../../services/Api";
 import { fileToBase64 } from "../../utils/FileUtils";
-import { formFields, useFormOptions } from "../rendering/FormRenders";
-import { viewFields } from "../rendering/ViewRenders";
+import { formFields, useFormOptions } from "../rendering/form/FormRenders";
+import { viewFields } from "../rendering/view/ViewRenders";
 import { useAuth } from "../../contexts/AuthContext";
 import AlertModal from "./AlertModal";
 import { InterviewModal } from "./InterviewModal";
-import { getApplicationStatusBadgeClass } from "../rendering/Renders";
+import { getApplicationStatusBadgeClass } from "../rendering/view/Renders";
 
 export const JobAndApplicationModal = ({
 	show,

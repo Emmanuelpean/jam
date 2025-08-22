@@ -1,7 +1,7 @@
 import React from "react";
 import GenericModal from "./GenericModal/GenericModal";
-import { formFields, useFormOptions } from "../rendering/FormRenders";
-import { viewFields } from "../rendering/ViewRenders";
+import { formFields, useFormOptions } from "../rendering/form/FormRenders";
+import { viewFields } from "../rendering/view/ViewRenders";
 import { personsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import AlertModal from "./AlertModal";

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { AggregatorFormModal, AggregatorViewModal } from "../components/modals/AggregatorModal";
 import { GenericTableWithModals, useTableData } from "../components/tables/TableSystem";
-import { columns } from "../components/rendering/ColumnRenders";
+import { columns } from "../components/rendering/view/ColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
 const AggregatorsPage = () => {

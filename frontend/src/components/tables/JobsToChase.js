@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { GenericTableWithModals } from "./TableSystem";
-import { columns } from "../rendering/ColumnRenders";
+import { columns } from "../rendering/view/ColumnRenders";
 import { JobViewModal } from "../modals/_JobModal";
 
 const JobsToChase = ({ initialData = [], onDataChange, loading: externalLoading = false }) => {

@@ -3,9 +3,9 @@ import { Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../services/Api";
 import { getThemeByKey } from "../../utils/Theme";
-import { ActionButton, renderInputField } from "../../components/rendering/WidgetRenders";
+import { ActionButton, renderInputField } from "../../components/rendering/form/WidgetRenders";
 import "./UserSettingsPage.css";
-import { getTableIcon } from "../../components/rendering/Renders";
+import { getTableIcon } from "../../components/rendering/view/Renders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 
 const UserSettingsPage = () => {

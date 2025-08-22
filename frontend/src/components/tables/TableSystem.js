@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../services/Api";
-import { getTableIcon, renderFieldValue } from "../rendering/Renders";
+import { getTableIcon, renderFieldValue } from "../rendering/view/Renders";
 import { accessAttribute } from "../../utils/Utils";
 import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";

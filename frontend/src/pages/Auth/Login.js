@@ -5,7 +5,7 @@ import "./Login.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
-import { ActionButton, renderInputField } from "../../components/rendering/WidgetRenders";
+import { ActionButton, renderInputField } from "../../components/rendering/form/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 
 function AuthForm() {

@@ -4,7 +4,7 @@ import useGenericAlert from "../../../hooks/useGenericAlert";
 import { aggregatorsApi, apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/Api";
 import { fileToBase64 } from "../../../utils/FileUtils";
 import InterviewsTable from "../../tables/InterviewTable";
-import { formFields } from "../../rendering/FormRenders";
+import { formFields } from "../../rendering/form/FormRenders";
 import { useAuth } from "../../../contexts/AuthContext";
 import AlertModal from "../AlertModal";
 import { formatDateTime } from "../../../utils/TimeUtils";

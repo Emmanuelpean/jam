@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useTableData, GenericTableWithModals } from "../components/tables/TableSystem";
 import { JobAndApplicationFormModal, JobAndApplicationViewModal } from "../components/modals/JobAndApplicationModal";
-import { columns } from "../components/rendering/ColumnRenders";
+import { columns } from "../components/rendering/view/ColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
 const JobsPage = () => {

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
 import { UserFormModal, UserViewModal } from "../components/modals/UserModal";
-import { columns } from "../components/rendering/ColumnRenders";
+import { columns } from "../components/rendering/view/ColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
 export const UserManagementPage = () => {
@@ -20,7 +20,14 @@ export const UserManagementPage = () => {
 		removeItem,
 	} = useTableData("users", [], {}, { key: "id", direction: "asc" });
 
-	const tableColumns = [columns.id(), columns.email(), columns.appTheme(), columns.last_login(), columns.isAdmin(), columns.createdAt()];
+	const tableColumns = [
+		columns.id(),
+		columns.email(),
+		columns.appTheme(),
+		columns.last_login(),
+		columns.isAdmin(),
+		columns.createdAt(),
+	];
 
 	useEffect(() => {
 		if (loading) {

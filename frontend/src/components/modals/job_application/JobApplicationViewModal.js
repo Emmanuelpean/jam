@@ -1,6 +1,6 @@
 import React from "react";
 import GenericModal from "../GenericModal/GenericModal";
-import { viewFields } from "../../rendering/ViewRenders";
+import { viewFields } from "../../rendering/view/ViewRenders";
 // import InterviewsTable from "../../tables/InterviewTable";
 
 const JobApplicationViewModal = ({ job, jobApplication, show, onHide, onEdit, size }) => {

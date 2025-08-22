@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/TableSystem";
 import { LocationFormModal, LocationViewModal } from "../components/modals/LocationModal";
 import LocationMap from "../components/maps/LocationMap";
-import { columns } from "../components/rendering/ColumnRenders";
+import { columns } from "../components/rendering/view/ColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
 const LocationsPage = () => {

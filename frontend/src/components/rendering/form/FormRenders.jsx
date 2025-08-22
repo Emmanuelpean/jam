@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import {
 	aggregatorsApi,
 	companiesApi,
@@ -8,19 +8,18 @@ import {
 	keywordsApi,
 	locationsApi,
 	personsApi,
-} from "../../services/Api";
-import { fetchCountries } from "../../utils/CountryUtils";
-import { CompanyFormModal } from "../modals/CompanyModal";
-import { LocationFormModal } from "../modals/LocationModal";
-import { KeywordFormModal } from "../modals/KeywordModal";
-import { PersonFormModal } from "../modals/PersonModal";
-import { AggregatorFormModal } from "../modals/AggregatorModal";
-import { JobFormModal } from "../modals/_JobModal";
-import { JobApplicationFormModal } from "../modals/JobApplicationModal";
-import { THEMES } from "../../utils/Theme";
-import { toSelectOptions } from "../../utils/Utils";
+} from "../../../services/Api";
+import { fetchCountries } from "../../../utils/CountryUtils";
+import { CompanyFormModal } from "../../modals/CompanyModal";
+import { LocationFormModal } from "../../modals/LocationModal";
+import { KeywordFormModal } from "../../modals/KeywordModal";
+import { PersonFormModal } from "../../modals/PersonModal";
+import { AggregatorFormModal } from "../../modals/AggregatorModal";
+import { JobFormModal } from "../../modals/_JobModal";
+import { JobApplicationFormModal } from "../../modals/JobApplicationModal";
+import { THEMES } from "../../../utils/Theme";
+import { toSelectOptions } from "../../../utils/Utils";
 
-// Hook for country loading that can be used by components
 export const useCountries = () => {
 	const [countries, setCountries] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -348,14 +347,6 @@ export const formFields = {
 		...overrides,
 	}),
 
-	date: (overrides = {}) => ({
-		name: "date",
-		label: "Date",
-		type: "date",
-		required: true,
-		...overrides,
-	}),
-
 	datetime: (overrides = {}) => ({
 		name: "date",
 		label: "Date & Time",
@@ -488,7 +479,6 @@ export const formFields = {
 		...overrides,
 	}),
 
-	// Standard country field that requires countries to be passed in
 	country: (countries = [], loading = false, overrides = {}) => ({
 		name: "country",
 		label: "Country",
@@ -577,11 +567,10 @@ export const formFields = {
 	// ------------------------------------------------- APPLICATION FIELDS -----------------------------------------
 
 	applicationDate: (overrides = {}) => ({
+		...formFields.datetime(),
 		name: "date",
 		label: "Application Date",
-		type: "datetime-local",
 		required: true,
-		placeholder: "Select application date and time",
 		...overrides,
 	}),
 
@@ -613,7 +602,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	// ------------------------------------------------- SELECT FIELDS WITH OPTIONS ---------------------------------
+	// ------------------------------------------- SELECT FIELDS WITH OPTIONS ------------------------------------------
 
 	company: (options = [], onAdd = null, overrides = {}) => ({
 		name: "company_id",
