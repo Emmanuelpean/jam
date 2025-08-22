@@ -1,5 +1,5 @@
 import React from "react";
-import GenericModal from "../GenericModal";
+import GenericModal from "../GenericModal/GenericModal";
 import { viewFields } from "../../rendering/ViewRenders";
 // import InterviewsTable from "../../tables/InterviewTable";
 

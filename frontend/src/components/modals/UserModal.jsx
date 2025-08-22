@@ -1,5 +1,5 @@
 import React from "react";
-import GenericModal from "./GenericModal";
+import GenericModal from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
 import { userApi } from "../../services/Api";

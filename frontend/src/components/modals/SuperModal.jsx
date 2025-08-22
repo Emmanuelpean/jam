@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import GenericModal from "./GenericModal";
+import GenericModal from "./GenericModal/GenericModal";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { filesApi } from "../../services/Api";
 import { fileToBase64 } from "../../utils/FileUtils";

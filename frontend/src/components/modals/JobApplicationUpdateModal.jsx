@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import GenericModal from "./GenericModal";
+import GenericModal from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/FormRenders";
 import { viewFields } from "../rendering/ViewRenders";
 import { formatDateTime } from "../../utils/TimeUtils";

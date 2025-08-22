@@ -146,7 +146,7 @@ export const useFormOptions = (requiredOptions = []) => {
 			}
 		};
 
-		fetchOptions();
+		fetchOptions().then(() => null);
 	}, [token, JSON.stringify(requiredOptions)]);
 
 	// Modal handlers
