@@ -67,7 +67,7 @@ const InterviewsTable = ({ jobApplicationId, onChange, data = null }) => {
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={handleDeleteSuccess}
-			ModalSize="xl"
+			ModalSize="lg"
 			showAllEntries={true}
 			compact={true}
 		/>

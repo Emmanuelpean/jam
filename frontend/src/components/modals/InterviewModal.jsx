@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
@@ -26,12 +26,29 @@ export const InterviewModal = ({
 		renderPersonModal,
 	} = useFormOptions(["locations", "persons", "jobApplications"]);
 
+	const [currentFormData, setCurrentFormData] = useState({});
+
 	const initialData = useMemo(() => {
 		if (submode === "add" && !data?.id) {
 			return { date: formatDateTime() };
 		}
 		return data || {};
 	}, [data, submode]);
+
+	// Initialize current form data when modal opens or data changes
+	useEffect(() => {
+		if (show) {
+			setCurrentFormData(initialData);
+		}
+	}, [show, initialData]);
+
+	// Handler for form data changes
+	const handleFormDataChange = (newFormData) => {
+		setCurrentFormData((prev) => ({
+			...prev,
+			...newFormData,
+		}));
+	};
 
 	const formFieldsArray = [
 		...(!jobApplicationId ? [formFields.jobApplication(jobApplications, openJobApplicationModal)] : []),
@@ -41,7 +58,12 @@ export const InterviewModal = ({
 			}),
 			formFields.interviewType(),
 		],
-		[formFields.attendanceType(), formFields.location(locations, openLocationModal)],
+		[
+			formFields.interviewAttendanceType(),
+			...(currentFormData?.attendance_type !== "remote"
+				? [formFields.location(locations, openLocationModal)]
+				: []),
+		],
 		formFields.interviewers(persons, openPersonModal),
 		formFields.note({
 			placeholder: "Add notes about the interview, questions asked, impressions, etc...",
@@ -87,6 +109,7 @@ export const InterviewModal = ({
 				onSuccess={onSuccess}
 				onDelete={onDelete}
 				transformFormData={transformFormData}
+				onFormDataChange={handleFormDataChange}
 			/>
 
 			{renderLocationModal()}

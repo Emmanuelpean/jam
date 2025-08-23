@@ -542,6 +542,17 @@ export const formFields = {
 		...overrides,
 	}),
 
+	interviewAttendanceType: (overrides = {}) => ({
+		name: "attendance_type",
+		label: "Attendance Type",
+		type: "select",
+		options: [
+			{ value: "on-site", label: "On-site" },
+			{ value: "remote", label: "Remote" },
+		],
+		...overrides,
+	}),
+
 	// ------------------------------------------------- INTERVIEW FIELDS --------------------------------------------
 
 	interviewType: (overrides = {}) => ({
