@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 import { api } from "../../services/Api.ts";
 import { getTableIcon, renderFieldValue } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils.ts";
 import AlertModal from "../modals/AlertModal";
-import useModalState from "../../hooks/useModalState";
-import useGenericAlert from "../../hooks/useGenericAlert";
+import useModalState from "../../hooks/useModalState.ts";
+import useGenericAlert from "../../hooks/useGenericAlert.ts";
 import { pluralize } from "../../utils/StringUtils.ts";
 
 /**

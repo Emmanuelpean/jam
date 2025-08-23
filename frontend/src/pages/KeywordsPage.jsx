@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
 import { KeywordFormModal, KeywordViewModal } from "../components/modals/KeywordModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext";
+import { useLoading } from "../contexts/LoadingContext.tsx";
 
 const KeywordsPage = () => {
 	const { showLoading, hideLoading } = useLoading();

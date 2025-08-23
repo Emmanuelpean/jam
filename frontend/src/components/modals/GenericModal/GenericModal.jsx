@@ -1,11 +1,11 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Alert, Button, Card, Form, Modal, Spinner } from "react-bootstrap";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext.tsx";
 import "./GenericModal.css";
 import { renderFieldValue } from "../../rendering/view/ViewRenders";
 import { ActionButton, renderInputField } from "../../rendering/form/WidgetRenders";
 import { api } from "../../../services/Api.ts";
-import useGenericAlert from "../../../hooks/useGenericAlert";
+import useGenericAlert from "../../../hooks/useGenericAlert.ts";
 import AlertModal from "../AlertModal";
 
 export const createGenericDeleteHandler = ({

@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GenericModal from "../GenericModal/GenericModal";
-import useGenericAlert from "../../../hooks/useGenericAlert";
+import useGenericAlert from "../../../hooks/useGenericAlert.ts";
 import { aggregatorsApi, apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/Api.ts";
 import { fileToBase64 } from "../../../utils/FileUtils";
 import InterviewsTable from "../../tables/InterviewTable";
 import { formFields } from "../../rendering/form/FormRenders";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext.tsx";
 import AlertModal from "../AlertModal";
 import { formatDateTime } from "../../../utils/TimeUtils.ts";
 import { toSelectOptions } from "../../../utils/Utils.ts";

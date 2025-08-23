@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { authApi } from "../../services/Api.ts";
 import "./Sidebar.css";

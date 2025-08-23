@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 import "./Auth.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
 import { ActionButton, renderInputField } from "../../components/rendering/form/WidgetRenders";
-import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { useGlobalToast } from "../../hooks/useNotificationToast.ts";
 
 function AuthForm() {
 	const [isLogin, setIsLogin] = useState(true);

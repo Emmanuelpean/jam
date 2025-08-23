@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useTableData, GenericTableWithModals } from "../components/tables/GenericTable";
 import { JobAndApplicationFormModal, JobAndApplicationViewModal } from "../components/modals/JobAndApplicationModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext";
+import { useLoading } from "../contexts/LoadingContext.tsx";
 
 const JobsPage = () => {
 	const { showLoading, hideLoading } = useLoading();

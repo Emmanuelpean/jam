@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
 import { CompanyFormModal, CompanyViewModal } from "../components/modals/CompanyModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext";
+import { useLoading } from "../contexts/LoadingContext.tsx";
 
 const CompaniesPage = () => {
 	const { showLoading, hideLoading } = useLoading();

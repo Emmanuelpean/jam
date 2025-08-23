@@ -3,7 +3,7 @@ import GenericTableWithModals, { useTableData } from "../components/tables/Gener
 import { LocationFormModal, LocationViewModal } from "../components/modals/LocationModal";
 import LocationMap from "../components/maps/LocationMap";
 import { columns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext";
+import { useLoading } from "../contexts/LoadingContext.tsx";
 
 const LocationsPage = () => {
 	const { showLoading, hideLoading } = useLoading();

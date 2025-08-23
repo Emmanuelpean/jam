@@ -5,7 +5,7 @@ import {
 } from "../components/modals/JobApplicationUpdateModal";
 import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable";
 import { columns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext";
+import { useLoading } from "../contexts/LoadingContext.tsx";
 
 const JobApplicationUpdatesPage = () => {
 	const { showLoading, hideLoading } = useLoading();

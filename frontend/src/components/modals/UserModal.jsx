@@ -3,7 +3,7 @@ import GenericModal from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { userApi } from "../../services/Api.ts";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 import "../../pages/Auth/Auth.css";
 
 export const UserModal = ({

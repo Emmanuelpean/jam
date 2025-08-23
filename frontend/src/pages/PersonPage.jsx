@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
 import { PersonFormModal, PersonViewModal } from "../components/modals/PersonModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext";
+import { useLoading } from "../contexts/LoadingContext.tsx";
 
 const PersonsPage = () => {
 	const { showLoading, hideLoading } = useLoading();

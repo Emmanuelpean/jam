@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
 import { UserFormModal, UserViewModal } from "../components/modals/UserModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext";
+import { useLoading } from "../contexts/LoadingContext.tsx";
 
 export const UserManagementPage = () => {
 	const { showLoading, hideLoading } = useLoading();

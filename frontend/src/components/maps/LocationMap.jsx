@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { ProgressBar, Spinner } from "react-bootstrap";
 import L from "leaflet";
-import { geocodeLocationsBatch } from "../../services/GeoCoding";
+import { geocodeLocationsBatch } from "../../services/GeoCoding.ts";
 import "leaflet/dist/leaflet.css";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";

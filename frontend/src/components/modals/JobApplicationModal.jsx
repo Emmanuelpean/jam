@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GenericModal from "./GenericModal/GenericModal";
-import useGenericAlert from "../../hooks/useGenericAlert";
+import useGenericAlert from "../../hooks/useGenericAlert.ts";
 import { filesApi } from "../../services/Api.ts";
 import { fileToBase64 } from "../../utils/FileUtils.ts";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 import AlertModal from "./AlertModal";
 
 export const JobApplicationModal = ({

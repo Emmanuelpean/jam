@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Card, Col, Form, Row } from "react-bootstrap";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 import { api } from "../../services/Api.ts";
 import { getThemeByKey } from "../../utils/Theme.ts";
 import { ActionButton, renderInputField } from "../../components/rendering/form/WidgetRenders";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../../components/rendering/view/ViewRenders";
-import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { useGlobalToast } from "../../hooks/useNotificationToast.ts";
 
 const UserSettingsPage = () => {
 	const { currentUser, token } = useAuth();

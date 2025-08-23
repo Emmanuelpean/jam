@@ -8,12 +8,12 @@ import { AggregatorViewModal } from "../../modals/AggregatorModal";
 import { JobViewModal } from "../../modals/_JobModal";
 import { accessAttribute } from "../../../utils/Utils.ts";
 import { filesApi } from "../../../services/Api.ts";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext.tsx";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme.ts";
 import { type } from "@testing-library/user-event/dist/type";
-import { useGlobalToast } from "../../../hooks/useNotificationToast";
+import { useGlobalToast } from "../../../hooks/useNotificationToast.ts";
 import LocationMap from "../../maps/LocationMap";
 
 const createModalManager = (ModalComponent) => {

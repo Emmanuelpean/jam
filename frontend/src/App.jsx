@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext.tsx";
 import Login from "./pages/Auth/Auth";
 import LocationsPage from "./pages/LocationsPage";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -18,10 +18,10 @@ import NotFoundPage from "./pages/NotFoundPage";
 import { Sidebar } from "./components/sidebar/Sidebar";
 import JobApplicationUpdatesPage from "./pages/JobApplicationUpdatesPage";
 import JobSearchDashboard from "./pages/Dashboard/DashboardPage";
-import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
+import { LoadingProvider, useLoading } from "./contexts/LoadingContext.tsx";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
-import { useToast } from "./hooks/useNotificationToast";
+import { useToast } from "./hooks/useNotificationToast.ts";
 import { ToastStack } from "./components/toasts/Toast";
 
 export const ToastContext = React.createContext();

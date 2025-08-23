@@ -3,9 +3,9 @@ import GenericModal from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { personsApi } from "../../services/Api.ts";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 import AlertModal from "./AlertModal";
-import useGenericAlert from "../../hooks/useGenericAlert";
+import useGenericAlert from "../../hooks/useGenericAlert.ts";
 
 export const PersonModal = ({
 	show,

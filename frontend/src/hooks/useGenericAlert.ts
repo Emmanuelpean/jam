@@ -1,7 +1,34 @@
 import { useState } from "react";
 
+interface AlertConfig {
+	title?: string;
+	message: string;
+	type?: "info" | "success" | "danger" | "warning";
+	confirmText?: string;
+	cancelText?: string | null;
+	icon?: string | null;
+	size?: "sm" | "md" | "lg" | "xl";
+	id?: string | null;
+	onSuccess?: (() => void) | null;
+	onCancel?: (() => void) | null;
+}
+
+interface AlertState {
+	show: boolean;
+	title: string;
+	message: string;
+	type: "info" | "success" | "danger" | "warning";
+	confirmText: string;
+	cancelText: string | null;
+	icon: string | null;
+	size: "sm" | "md" | "lg" | "xl";
+	id: string | null;
+	onSuccess: (() => void) | null;
+	onCancel: (() => void) | null;
+}
+
 const useGenericAlert = () => {
-	const [alertState, setAlertState] = useState({
+	const [alertState, setAlertState] = useState<AlertState>({
 		show: false,
 		title: "Alert",
 		message: "",
@@ -26,7 +53,7 @@ const useGenericAlert = () => {
 		id = null,
 		onSuccess = null,
 		onCancel = null,
-	}) => {
+	}: AlertConfig): Promise<boolean> => {
 		return new Promise((resolve, reject) => {
 			setAlertState({
 				show: true,
@@ -52,7 +79,7 @@ const useGenericAlert = () => {
 		});
 	};
 
-	const hideAlert = () => {
+	const hideAlert = (): void => {
 		setAlertState((prev) => ({
 			...prev,
 			show: false,
@@ -66,10 +93,10 @@ const useGenericAlert = () => {
 		size = "md",
 		id = null,
 		onSuccess = null,
-	} = {}) => {
+	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title: title,
-			message: message,
+			message: message!,
 			type: "success",
 			confirmText: confirmText,
 			icon: "bi bi-check-circle-fill",
@@ -86,10 +113,10 @@ const useGenericAlert = () => {
 		size = "md",
 		id = null,
 		onSuccess = null,
-	} = {}) => {
+	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title: title,
-			message: message,
+			message: message!,
 			type: "danger",
 			confirmText: confirmText,
 			icon: "bi bi-exclamation-triangle-fill",
@@ -106,10 +133,10 @@ const useGenericAlert = () => {
 		size = "md",
 		id = null,
 		onSuccess = null,
-	} = {}) => {
+	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title: title,
-			message: message,
+			message: message!,
 			type: "warning",
 			confirmText: confirmText,
 			icon: "bi bi-exclamation-triangle-fill",
@@ -126,10 +153,10 @@ const useGenericAlert = () => {
 		size = "md",
 		id = null,
 		onSuccess = null,
-	} = {}) => {
+	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title: title,
-			message: message,
+			message: message!,
 			type: "info",
 			confirmText: confirmText,
 			icon: "bi bi-info-circle-fill",
@@ -148,11 +175,11 @@ const useGenericAlert = () => {
 		id = null,
 		onSuccess = null,
 		onCancel = null,
-	} = {}) => {
+	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title: title,
-			message: message,
-			type: "danged",
+			message: message!,
+			type: "danger", // Fixed typo: was "danged"
 			confirmText: confirmText,
 			cancelText: cancelText,
 			icon: "bi bi-question-circle-fill",
@@ -172,10 +199,10 @@ const useGenericAlert = () => {
 		id = null,
 		onSuccess = null,
 		onCancel = null,
-	} = {}) => {
+	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title: title,
-			message: message,
+			message: message!,
 			type: "danger",
 			confirmText: confirmText,
 			cancelText: cancelText,
@@ -196,10 +223,10 @@ const useGenericAlert = () => {
 		id = null,
 		onSuccess = null,
 		onCancel = null,
-	} = {}) => {
+	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title: title,
-			message: message,
+			message: message!,
 			type: "warning",
 			confirmText: confirmText,
 			cancelText: cancelText,

@@ -1,8 +1,9 @@
+import type { Location } from "./Api";
+
 // Cache to avoid repeated API calls for the same location
 const geocodeCache = new Map();
 
-export const geocodeLocation = async (location) => {
-	// Build cache key from location data
+export const geocodeLocation = async (location: Location) => {
 	const cacheKey = [location.postcode, location.city, location.country]
 		.filter(Boolean)
 		.map((s) => s.trim().toLowerCase())
@@ -18,7 +19,6 @@ export const geocodeLocation = async (location) => {
 	}
 
 	try {
-		// Build query string
 		const queryParts = [];
 		if (location.postcode?.trim()) queryParts.push(location.postcode.trim());
 		if (location.city?.trim()) queryParts.push(location.city.trim());
@@ -70,7 +70,7 @@ export const geocodeLocation = async (location) => {
 };
 
 // Batch geocode multiple locations with rate limiting
-export const geocodeLocationsBatch = async (locations, onProgress = null) => {
+export const geocodeLocationsBatch = async (locations: Location[], onProgress = null) => {
 	const results = [];
 	const batchSize = 5; // Process 5 at a time to be respectful to the API
 	const delay = 200; // 200ms delay between requests
