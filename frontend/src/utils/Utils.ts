@@ -1,3 +1,8 @@
+export type SelectOption = {
+	value: string;
+	label: string;
+};
+
 export const accessAttribute = (item, key) => {
 	const parts = key.split(".");
 	let obj = item;

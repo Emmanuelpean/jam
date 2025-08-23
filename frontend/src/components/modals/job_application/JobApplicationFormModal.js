@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GenericModal from "../GenericModal/GenericModal";
 import useGenericAlert from "../../../hooks/useGenericAlert";
-import { aggregatorsApi, apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/Api";
+import { aggregatorsApi, apiHelpers, filesApi, jobApplicationsApi, jobsApi } from "../../../services/Api.ts";
 import { fileToBase64 } from "../../../utils/FileUtils";
 import InterviewsTable from "../../tables/InterviewTable";
 import { formFields } from "../../rendering/form/FormRenders";
 import { useAuth } from "../../../contexts/AuthContext";
 import AlertModal from "../AlertModal";
-import { formatDateTime } from "../../../utils/TimeUtils";
-import { toSelectOptions } from "../../../utils/Utils";
+import { formatDateTime } from "../../../utils/TimeUtils.ts";
+import { toSelectOptions } from "../../../utils/Utils.ts";
 
 const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = {}, isEdit = false, jobId }) => {
 	const { token } = useAuth();
@@ -259,26 +259,6 @@ const JobApplicationFormModal = ({ show, onHide, onSuccess, size, initialData = 
 			for (const [key, value] of formData.entries()) {
 				if (typeof value === "string") {
 					transformedData[key] = value;
-				}
-			}
-
-			// Check for existing job application if creating new and job_id is provided
-			if (!isEdit && transformedData.job_id) {
-				try {
-					const { jobApplicationsApi } = await import("../../../services/Api");
-					const existingApps = await jobApplicationsApi.getAll(token, { job_id: transformedData.job_id });
-
-					if (existingApps && existingApps.length > 0) {
-						showError({
-							title: "Job Application Already Exists",
-							message:
-								"You already have an application for this job. Please edit the existing application instead.",
-							size: "md",
-						});
-						return; // Stop submission
-					}
-				} catch (checkError) {
-					console.error("Error checking existing applications:", checkError);
 				}
 			}
 

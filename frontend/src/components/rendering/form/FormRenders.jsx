@@ -8,8 +8,8 @@ import {
 	keywordsApi,
 	locationsApi,
 	personsApi,
-} from "../../../services/Api";
-import { fetchCountries } from "../../../utils/CountryUtils";
+} from "../../../services/Api.ts";
+import { fetchCountries } from "../../../utils/CountryUtils.ts";
 import { CompanyFormModal } from "../../modals/CompanyModal";
 import { LocationFormModal } from "../../modals/LocationModal";
 import { KeywordFormModal } from "../../modals/KeywordModal";
@@ -17,8 +17,8 @@ import { PersonFormModal } from "../../modals/PersonModal";
 import { AggregatorFormModal } from "../../modals/AggregatorModal";
 import { JobFormModal } from "../../modals/_JobModal";
 import { JobApplicationFormModal } from "../../modals/JobApplicationModal";
-import { THEMES } from "../../../utils/Theme";
-import { toSelectOptions } from "../../../utils/Utils";
+import { THEMES } from "../../../utils/Theme.ts";
+import { toSelectOptions } from "../../../utils/Utils.ts";
 
 export const useCountries = () => {
 	const [countries, setCountries] = useState([]);

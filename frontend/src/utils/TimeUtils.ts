@@ -1,4 +1,4 @@
-export const formatDateTime = (datetime) => {
+export const formatDateTime = (datetime: string | Date) => {
 	if (!datetime) {
 		datetime = new Date();
 	} else {
@@ -12,16 +12,16 @@ export const formatDateTime = (datetime) => {
 	return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-export const localeDateOnly = (value) => {
-	if (!value) return "";
-	const date = new Date(value);
+export const localeDateOnly = (dateString: string) => {
+	if (!dateString) return "";
+	const date = new Date(dateString);
 	return date.toLocaleDateString();
 };
 
-export const formatTimeAgo = (dateString) => {
+export const formatTimeAgo = (dateString: string) => {
 	const now = new Date();
 	const date = new Date(dateString);
-	const diffTime = Math.abs(now - date);
+	const diffTime = Math.abs(now.getTime() - date.getTime());
 	const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
 	const diffDays = Math.floor(diffHours / 24);
 

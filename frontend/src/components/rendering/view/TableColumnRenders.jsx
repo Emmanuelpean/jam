@@ -1,5 +1,5 @@
 import { renderFunctions } from "./ViewRenders";
-import { localeDateOnly } from "../../../utils/TimeUtils";
+import { localeDateOnly } from "../../../utils/TimeUtils.ts";
 
 export const columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------

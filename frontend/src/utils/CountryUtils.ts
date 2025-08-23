@@ -1,55 +1,19 @@
-// Cache for countries to avoid repeated API calls
-let countriesCache = null;
-let countriesCachePromise = null;
+import type { SelectOption } from "./Utils";
 
-export const fetchCountries = async () => {
-	// Return cached data if available
-	if (countriesCache) {
-		return countriesCache;
-	}
-
-	// Return existing promise if already fetching
-	if (countriesCachePromise) {
-		return countriesCachePromise;
-	}
-
-	// Create new fetch promise
-	countriesCachePromise = (async () => {
-		try {
-			const response = await fetch("https://restcountries.com/v3.1/all?fields=name,cca2");
-
-			if (!response.ok) {
-				throw new Error("Failed to fetch countries");
-			}
-
-			const data = await response.json();
-
-			// Transform the data to match our format
-			const countries = data
-				.map((country) => ({
-					value: country.name.common, // 2-letter country code
-					label: country.name.common, // Common country name
-				}))
-				.sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically
-
-			// Cache the result
-			countriesCache = countries;
-			countriesCachePromise = null;
-
-			return countries;
-		} catch (error) {
-			console.error("Error fetching countries:", error);
-			countriesCachePromise = null;
-
-			// Fallback to a basic list if API fails
-			return getFallbackCountries();
-		}
-	})();
-
-	return countriesCachePromise;
+export type Country = {
+	name: string;
+	cca2: string;
+	cca3: string;
+	cioc: string;
+	capital: string;
+	region: string;
+	subregion: string;
+	demonym: string;
+	area: number;
 };
 
-// Fallback list of major countries in case API fails
+let countriesCache: SelectOption[] | null = null;
+let countriesCachePromise: Promise<SelectOption[]> | null = null;
 const getFallbackCountries = () => [
 	{ value: "US", label: "United States" },
 	{ value: "GB", label: "United Kingdom" },
@@ -96,3 +60,55 @@ const getFallbackCountries = () => [
 	{ value: "AR", label: "Argentina" },
 	{ value: "ZA", label: "South Africa" },
 ];
+
+const fetchCountries = async (): Promise<SelectOption[]> => {
+	// Return cached data if available
+	if (countriesCache) {
+		return countriesCache;
+	}
+
+	// Return existing promise if already fetching
+	if (countriesCachePromise) {
+		return countriesCachePromise;
+	}
+
+	// Create new fetch promise
+	countriesCachePromise = (async () => {
+		try {
+			const response = await fetch("https://restcountries.com/v3.1/all?fields=name,cca2");
+
+			if (!response.ok) {
+				throw new Error("Failed to fetch countries");
+			}
+
+			type APIResponse = {
+				name: { common: string };
+				cca2: string;
+			}[];
+
+			const data: APIResponse = await response.json();
+
+			// Transform the data to match our format
+			const countries: SelectOption[] = data
+				.map((country) => ({
+					value: country.cca2, // Use 2-letter country code
+					label: country.name.common, // Common country name
+				}))
+				.sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically
+
+			// Cache the result
+			countriesCache = countries;
+			countriesCachePromise = null;
+
+			return countries;
+		} catch (error) {
+			console.error("Error fetching countries:", error);
+			countriesCachePromise = null;
+			return getFallbackCountries();
+		}
+	})();
+
+	return countriesCachePromise;
+};
+
+export { fetchCountries };

@@ -1,4 +1,4 @@
-import { formatDateTime } from "../../../utils/TimeUtils";
+import { formatDateTime } from "../../../utils/TimeUtils.ts";
 import { Button, Form, InputGroup, Spinner } from "react-bootstrap";
 import { React, useMemo, useState } from "react";
 import Select from "react-select";
@@ -6,7 +6,7 @@ import makeAnimated from "react-select/animated";
 import { useDropzone } from "react-dropzone";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import AlertModal from "../../../components/modals/AlertModal";
-import { parseSizeText, formatFileSize } from "../../../utils/FileUtils";
+import { parseSizeText, formatFileSize } from "../../../utils/FileUtils.ts";
 import "./WidgetRender.css";
 
 const animatedComponents = makeAnimated();

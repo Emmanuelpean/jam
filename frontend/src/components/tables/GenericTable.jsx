@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { api } from "../../services/Api";
+import { api } from "../../services/Api.ts";
 import { getTableIcon, renderFieldValue } from "../rendering/view/ViewRenders";
-import { accessAttribute } from "../../utils/Utils";
+import { accessAttribute } from "../../utils/Utils.ts";
 import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
-import { pluralize } from "../../utils/StringUtils";
+import { pluralize } from "../../utils/StringUtils.ts";
 
 /**
  * Custom hook for managing table data with CRUD operations

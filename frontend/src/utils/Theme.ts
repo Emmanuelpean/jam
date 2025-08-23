@@ -1,4 +1,9 @@
-export const THEMES = [
+interface Theme {
+	key: string;
+	name: string;
+}
+
+export const THEMES: Theme[] = [
 	{ key: "strawberry", name: "Strawberry" },
 	{ key: "blueberry", name: "Blueberry" },
 	{ key: "raspberry", name: "Raspberry" },
@@ -7,12 +12,12 @@ export const THEMES = [
 	{ key: "blackberry", name: "Blackberry" },
 ];
 
-export const DEFAULT_THEME = "mixed-berry";
+export const DEFAULT_THEME: string = "mixed-berry";
 
-export const isValidTheme = (themeKey) => {
-	return THEMES.some((theme) => theme.key === themeKey);
+export const isValidTheme = (themeKey: string) => {
+	return THEMES.some((theme: Theme): boolean => theme.key === themeKey);
 };
 
-export const getThemeByKey = (themeKey) => {
+export const getThemeByKey = (themeKey: string): Theme => {
 	return THEMES.find((theme) => theme.key === themeKey);
 };

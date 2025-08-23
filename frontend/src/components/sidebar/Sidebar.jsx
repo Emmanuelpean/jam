@@ -2,10 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
-import { authApi } from "../../services/Api";
+import { authApi } from "../../services/Api.ts";
 import "./Sidebar.css";
 import { getTableIcon } from "../rendering/view/ViewRenders";
-import { DEFAULT_THEME, isValidTheme, THEMES } from "../../utils/Theme";
+import { DEFAULT_THEME, isValidTheme, THEMES } from "../../utils/Theme.ts";
 
 export const Sidebar = ({ onHoverChange }) => {
 	const location = useLocation();

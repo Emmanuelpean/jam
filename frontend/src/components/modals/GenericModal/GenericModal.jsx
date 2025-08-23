@@ -4,7 +4,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderFieldValue } from "../../rendering/view/ViewRenders";
 import { ActionButton, renderInputField } from "../../rendering/form/WidgetRenders";
-import { api } from "../../../services/Api";
+import { api } from "../../../services/Api.ts";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import AlertModal from "../AlertModal";
 

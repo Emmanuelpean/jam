@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { formatDateTime } from "../../utils/TimeUtils";
+import { formatDateTime } from "../../utils/TimeUtils.ts";
 
 export const InterviewModal = ({
 	show,

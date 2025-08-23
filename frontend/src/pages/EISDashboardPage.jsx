@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner, Table } from "react-bootstrap";
 import { ResponsiveLine } from "@nivo/line";
-import { scrapedJobApi, serviceLogApi } from "../services/Api";
+import { scrapedJobApi, serviceLogApi } from "../services/Api.ts";
 import { useAuth } from "../contexts/AuthContext";
-import { formatTimeAgo } from "../utils/TimeUtils";
+import { formatTimeAgo } from "../utils/TimeUtils.ts";
 import { lineChartProps } from "../components/charts/Themes";
 import { useLoading } from "../contexts/LoadingContext";
 
