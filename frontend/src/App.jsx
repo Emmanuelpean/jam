@@ -22,7 +22,7 @@ import { LoadingProvider, useLoading } from "./contexts/LoadingContext.tsx";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast } from "./hooks/useNotificationToast.ts";
-import { ToastStack } from "./components/toasts/Toast";
+import { ToastStack } from "./components/toasts/Toast.tsx";
 
 export const ToastContext = React.createContext();
 

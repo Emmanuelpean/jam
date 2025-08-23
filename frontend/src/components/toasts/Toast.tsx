@@ -1,10 +1,59 @@
 import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types";
 import "./Toast.css";
 
-const NotificationToast = ({ show, message, variant = "danger", delay = 5000, onClose, title = null }) => {
-	const [isHiding, setIsHiding] = useState(false);
-	const [progress, setProgress] = useState(100);
+// Define the toast variant types
+type ToastVariant = "success" | "danger" | "warning" | "info";
+
+// Define the position types for ToastStack
+type ToastPosition =
+	| "top-start"
+	| "top-center"
+	| "top-end"
+	| "middle-start"
+	| "middle-center"
+	| "middle-end"
+	| "bottom-start"
+	| "bottom-center"
+	| "bottom-end";
+
+// Define the toast object structure
+interface Toast {
+	id: string | number;
+	show: boolean;
+	message: string;
+	variant?: ToastVariant;
+	title?: string;
+	delay?: number;
+	itemName?: string;
+}
+
+// Props for NotificationToast component
+interface NotificationToastProps {
+	show: boolean;
+	message: string;
+	variant?: ToastVariant;
+	delay?: number;
+	onClose: () => void;
+	title?: string | null;
+}
+
+// Props for ToastStack component
+interface ToastStackProps {
+	toasts: Toast[];
+	onClose: (id: string | number) => void;
+	position?: ToastPosition;
+}
+
+const NotificationToast: React.FC<NotificationToastProps> = ({
+	show,
+	message,
+	variant = "danger",
+	delay = 5000,
+	onClose,
+	title = null,
+}) => {
+	const [isHiding, setIsHiding] = useState<boolean>(false);
+	const [progress, setProgress] = useState<number>(100);
 
 	useEffect(() => {
 		if (!show) return;
@@ -28,14 +77,14 @@ const NotificationToast = ({ show, message, variant = "danger", delay = 5000, on
 		};
 	}, [show, delay]);
 
-	const handleClose = () => {
+	const handleClose = (): void => {
 		setIsHiding(true);
 		setTimeout(() => {
 			onClose();
 		}, 300); // Match animation duration
 	};
 
-	const getIcon = () => {
+	const getIcon = (): string => {
 		switch (variant) {
 			case "success":
 				return "bi-check-circle-fill";
@@ -49,7 +98,7 @@ const NotificationToast = ({ show, message, variant = "danger", delay = 5000, on
 		}
 	};
 
-	const getTitle = () => {
+	const getTitle = (): string => {
 		if (title) return title;
 
 		switch (variant) {
@@ -86,7 +135,7 @@ const NotificationToast = ({ show, message, variant = "danger", delay = 5000, on
 	);
 };
 
-const ToastStack = ({ toasts, onClose, position = "top-end" }) => {
+const ToastStack: React.FC<ToastStackProps> = ({ toasts, onClose, position = "top-end" }) => {
 	if (!toasts || toasts.length === 0) {
 		return null;
 	}
@@ -106,40 +155,6 @@ const ToastStack = ({ toasts, onClose, position = "top-end" }) => {
 			))}
 		</div>
 	);
-};
-
-NotificationToast.propTypes = {
-	show: PropTypes.bool.isRequired,
-	message: PropTypes.string.isRequired,
-	variant: PropTypes.oneOf(["success", "danger", "warning", "info"]),
-	delay: PropTypes.number,
-	onClose: PropTypes.func.isRequired,
-	title: PropTypes.string,
-};
-
-ToastStack.propTypes = {
-	toasts: PropTypes.arrayOf(
-		PropTypes.shape({
-			id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-			show: PropTypes.bool.isRequired,
-			message: PropTypes.string.isRequired,
-			variant: PropTypes.oneOf(["success", "danger", "warning", "info"]),
-			title: PropTypes.string,
-			delay: PropTypes.number,
-		}),
-	).isRequired,
-	onClose: PropTypes.func.isRequired,
-	position: PropTypes.oneOf([
-		"top-start",
-		"top-center",
-		"top-end",
-		"middle-start",
-		"middle-center",
-		"middle-end",
-		"bottom-start",
-		"bottom-center",
-		"bottom-end",
-	]),
 };
 
 export { ToastStack };
