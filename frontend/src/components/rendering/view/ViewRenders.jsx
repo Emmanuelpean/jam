@@ -519,8 +519,8 @@ export const renderFunctions = {
 
 	appliedVia: (item, view = false, accessKey, id) => {
 		const appliedVia = accessSubAttribute(item, accessKey, "applied_via");
-		if (appliedVia === "Aggregator") {
-			return renderFunctions.aggregator(item, view, "aggregator", id);
+		if (appliedVia === "aggregator") {
+			return renderFunctions.aggregator(item, view, accessKey, id);
 		}
 		if (appliedVia) {
 			return (

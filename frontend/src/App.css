@@ -569,7 +569,6 @@ textarea.form-control {
     border-radius: 12px;
     min-height: 52px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-    background: linear-gradient(145deg, #ffffff 0%, #fafafa 100%);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
