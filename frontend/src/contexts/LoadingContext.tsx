@@ -23,7 +23,7 @@ export const useLoading = (): LoadingContextType => {
 	return context;
 };
 
-export const LoadingProvider = ({ children }: LoadingProviderProps): JSX.Element => {
+export const LoadingProvider = ({ children }: LoadingProviderProps) => {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [loadingMessage, setLoadingMessage] = useState<string>("Loading...");
 

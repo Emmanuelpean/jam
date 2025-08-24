@@ -16,42 +16,34 @@ type ToastPosition =
 	| "bottom-center"
 	| "bottom-end";
 
-// Define the toast object structure
+// Define the toast object structure - match useNotificationToast.ts
 interface Toast {
-	id: string | number;
+	id: number;
 	show: boolean;
 	message: string;
-	variant?: ToastVariant;
-	title?: string;
-	delay?: number;
-	itemName?: string;
+	variant: ToastVariant;
+	title: string | null;
+	delay: number;
 }
 
 // Props for NotificationToast component
 interface NotificationToastProps {
 	show: boolean;
 	message: string;
-	variant?: ToastVariant;
-	delay?: number;
+	variant: ToastVariant;
+	delay: number;
 	onClose: () => void;
-	title?: string | null;
+	title: string | null;
 }
 
 // Props for ToastStack component
 interface ToastStackProps {
 	toasts: Toast[];
-	onClose: (id: string | number) => void;
+	onClose: (id: number) => void;
 	position?: ToastPosition;
 }
 
-const NotificationToast: React.FC<NotificationToastProps> = ({
-	show,
-	message,
-	variant = "danger",
-	delay = 5000,
-	onClose,
-	title = null,
-}) => {
+const NotificationToast: React.FC<NotificationToastProps> = ({ show, message, variant, delay, onClose, title }) => {
 	const [isHiding, setIsHiding] = useState<boolean>(false);
 	const [progress, setProgress] = useState<number>(100);
 
@@ -148,7 +140,7 @@ const ToastStack: React.FC<ToastStackProps> = ({ toasts, onClose, position = "to
 					show={toast.show}
 					message={toast.message}
 					variant={toast.variant}
-					title={toast.itemName}
+					title={toast.title}
 					delay={toast.delay}
 					onClose={() => onClose(toast.id)}
 				/>

@@ -12,12 +12,6 @@ interface RequestOptions {
 	responseType?: "blob" | "json";
 }
 
-interface AuthHeaders {
-	"Content-Type": string;
-	Authorization?: string;
-	[key: string]: string | undefined; // Add index signature for HeadersInit compatibility
-}
-
 interface CrudApi {
 	getAll: (token: string, queryParams?: QueryParams | null) => Promise<any>;
 	get: (id: string | number, token: string) => Promise<any>;
@@ -39,7 +33,7 @@ interface AuthApi {
 
 const API_BASE_URL = "http://localhost:8000";
 
-const getAuthHeaders = (token: string): AuthHeaders => ({
+const getAuthHeaders = (token: string): HeadersInit => ({
 	"Content-Type": "application/json",
 	...(token && { Authorization: `Bearer ${token}` }),
 });

@@ -10,7 +10,7 @@ export const parseSizeText = (sizeText: string | null): number => {
 	if (!sizeText) return defaultSize;
 
 	const match = sizeText.match(/^(\d+(?:\.\d+)?)\s*(KB|MB|GB)$/i);
-	if (!match) return defaultSize;
+	if (!match || !match[1] || !match[2]) return defaultSize;
 
 	const value = parseFloat(match[1]);
 	const unit = match[2].toUpperCase() as "KB" | "MB" | "GB";

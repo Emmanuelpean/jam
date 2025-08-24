@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../services/Api.ts";
+import { authApi } from "../services/Api";
 
 // Define the user data structure
 interface UserData {
@@ -22,7 +22,7 @@ interface CurrentUser extends UserData {
 interface AuthResponse {
 	success: boolean;
 	error?: string;
-	status?: number;
+	status?: number | undefined;
 }
 
 interface LoginResponse extends AuthResponse {
@@ -61,7 +61,7 @@ export function useAuth(): AuthContextType {
 	return context;
 }
 
-export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
+export function AuthProvider({ children }: AuthProviderProps) {
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 	const [token, setToken] = useState<string | null>(localStorage.getItem("token") || null);
 	const [is_admin, setIsAdmin] = useState<boolean>(false);

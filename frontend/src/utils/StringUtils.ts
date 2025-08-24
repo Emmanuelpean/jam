@@ -1,6 +1,6 @@
-export function pluralize(word: string) {
+export function pluralize(word: string): string {
 	// Handle common irregular nouns
-	const irregulars = {
+	const irregulars: { [key: string]: string } = {
 		child: "children",
 		man: "men",
 		woman: "women",
@@ -12,8 +12,9 @@ export function pluralize(word: string) {
 		ox: "oxen",
 	};
 
-	if (irregulars[word.toLowerCase()]) {
-		return irregulars[word.toLowerCase()];
+	const lowerWord = word.toLowerCase();
+	if (irregulars[lowerWord]) {
+		return irregulars[lowerWord];
 	}
 
 	// Handle basic rules

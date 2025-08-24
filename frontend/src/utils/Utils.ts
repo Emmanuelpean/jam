@@ -3,7 +3,7 @@ export type SelectOption = {
 	label: string;
 };
 
-export const accessAttribute = (item, key) => {
+export const accessAttribute = (item: any, key: string) => {
 	const parts = key.split(".");
 	let obj = item;
 	for (const part of parts) {
@@ -13,8 +13,8 @@ export const accessAttribute = (item, key) => {
 	return obj;
 };
 
-export const toSelectOptions = (data, valueKey = "id", labelKey = "name") => {
-	return data.map((item) => ({
+export const toSelectOptions = (data: [], valueKey = "id", labelKey = "name"): SelectOption[] => {
+	return data.map((item: any) => ({
 		value: accessAttribute(item, valueKey),
 		label: accessAttribute(item, labelKey),
 		data: item,

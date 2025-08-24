@@ -1,5 +1,7 @@
 import type { Location } from "./Api";
 
+type ProgressCallback = (current: number, total: number) => void;
+
 // Cache to avoid repeated API calls for the same location
 const geocodeCache = new Map();
 
@@ -70,7 +72,7 @@ export const geocodeLocation = async (location: Location) => {
 };
 
 // Batch geocode multiple locations with rate limiting
-export const geocodeLocationsBatch = async (locations: Location[], onProgress = null) => {
+export const geocodeLocationsBatch = async (locations: Location[], onProgress?: ProgressCallback) => {
 	const results = [];
 	const batchSize = 5; // Process 5 at a time to be respectful to the API
 	const delay = 200; // 200ms delay between requests

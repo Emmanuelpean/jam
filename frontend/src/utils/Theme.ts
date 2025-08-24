@@ -18,6 +18,6 @@ export const isValidTheme = (themeKey: string) => {
 	return THEMES.some((theme: Theme): boolean => theme.key === themeKey);
 };
 
-export const getThemeByKey = (themeKey: string): Theme => {
+export const getThemeByKey = (themeKey: string): Theme | undefined => {
 	return THEMES.find((theme) => theme.key === themeKey);
 };

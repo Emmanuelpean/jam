@@ -1,24 +1,48 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext.tsx";
+import { useAuth } from "../../contexts/AuthContext";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
-import { authApi } from "../../services/Api.ts";
+import { authApi } from "../../services/Api";
 import "./Sidebar.css";
 import { getTableIcon } from "../rendering/view/ViewRenders";
-import { DEFAULT_THEME, isValidTheme, THEMES } from "../../utils/Theme.ts";
+import { DEFAULT_THEME, isValidTheme, THEMES } from "../../utils/Theme";
 
-export const Sidebar = ({ onHoverChange }) => {
+interface NavigationItem {
+	path?: string;
+	icon?: string;
+	text: string;
+	submenu?: NavigationSubItem[];
+	adminOnly?: boolean;
+}
+
+interface NavigationSubItem {
+	path: string;
+	icon?: string;
+	text: string;
+}
+
+interface SidebarProps {
+	onHoverChange?: (isHovering: boolean) => void;
+}
+
+interface CSSColors {
+	start: string;
+	mid: string;
+	end: string;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ onHoverChange }) => {
 	const location = useLocation();
 	const { logout, token, is_admin } = useAuth();
-	const [showDropdown, setShowDropdown] = useState(false);
-	const [currentTheme, setCurrentTheme] = useState(DEFAULT_THEME);
-	const [hoveredItem, setHoveredItem] = useState(null);
-	const [isHovering, setIsHovering] = useState(false);
-	const [expandedSubmenu, setExpandedSubmenu] = useState(null);
-	const dropdownRef = useRef(null);
-	const hoverTimeoutRef = useRef(null);
+	const [showDropdown, setShowDropdown] = useState<boolean>(false);
+	const [currentTheme, setCurrentTheme] = useState<string>(DEFAULT_THEME);
+	const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+	const [isHovering, setIsHovering] = useState<boolean>(false);
+	const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
+	const dropdownRef = useRef<HTMLDivElement>(null);
+	const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-	const allNavigationItems = [
+	const allNavigationItems: NavigationItem[] = [
 		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard" },
 		{ path: "/jobs", text: "Jobs" },
 		{ path: "/jobapplications", text: "Job Applications" },
@@ -73,8 +97,8 @@ export const Sidebar = ({ onHoverChange }) => {
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
-		const handleClickOutside = (event) => {
-			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
 				setShowDropdown(false);
 			}
 		};
@@ -101,13 +125,13 @@ export const Sidebar = ({ onHoverChange }) => {
 		};
 	}, []);
 
-	const handleLogoClick = (e) => {
+	const handleLogoClick = (e: React.MouseEvent<HTMLDivElement>) => {
 		e.preventDefault();
 		e.stopPropagation();
 		setShowDropdown(!showDropdown);
 	};
 
-	const handleThemeChange = async (themeKey) => {
+	const handleThemeChange = async (themeKey: string) => {
 		setCurrentTheme(themeKey);
 		document.documentElement.setAttribute("data-theme", themeKey);
 		localStorage.setItem("theme", themeKey);
@@ -145,17 +169,18 @@ export const Sidebar = ({ onHoverChange }) => {
 		}, 300);
 	};
 
-	const isActive = (path) => location.pathname === path;
+	const isActive = (path: string) => location.pathname === path;
 
-	const isSubmenuActive = (submenu) => {
+	const isSubmenuActive = (submenu: NavigationSubItem[]) => {
 		return submenu.some((item) => location.pathname === item.path);
 	};
 
-	const handleSubmenuToggle = (submenuText) => {
+	const handleSubmenuToggle = (submenuText: string) => {
 		setExpandedSubmenu(expandedSubmenu === submenuText ? null : submenuText);
 	};
 
-	const shouldShowSubmenu = (item) => {
+	const shouldShowSubmenu = (item: NavigationItem) => {
+		if (!item.submenu) return false;
 		const isExpanded = expandedSubmenu === item.text;
 		const hasActiveItem = isSubmenuActive(item.submenu);
 
@@ -166,7 +191,7 @@ export const Sidebar = ({ onHoverChange }) => {
 		logout();
 	};
 
-	const getCurrentCSSColors = () => {
+	const getCurrentCSSColors = (): CSSColors => {
 		const computedStyle = getComputedStyle(document.documentElement);
 		return {
 			start: computedStyle.getPropertyValue("--primary-start").trim(),
@@ -175,7 +200,7 @@ export const Sidebar = ({ onHoverChange }) => {
 		};
 	};
 
-	const getThemeColors = (themeKey) => {
+	const getThemeColors = (themeKey: string): CSSColors => {
 		const originalTheme = document.documentElement.getAttribute("data-theme");
 		document.documentElement.setAttribute("data-theme", themeKey);
 		const colors = getCurrentCSSColors();
@@ -185,7 +210,7 @@ export const Sidebar = ({ onHoverChange }) => {
 		return colors;
 	};
 
-	const renderColorPreview = (colors) => (
+	const renderColorPreview = (colors: CSSColors) => (
 		<div style={{ display: "flex", alignItems: "center", marginRight: "8px" }}>
 			{Object.values(colors).map((color, index) => (
 				<div
@@ -202,8 +227,8 @@ export const Sidebar = ({ onHoverChange }) => {
 		</div>
 	);
 
-	const getDropdownItemStyle = (itemKey, isActive) => {
-		const baseStyle = {
+	const getDropdownItemStyle = (itemKey: string, isActive: boolean): React.CSSProperties => {
+		const baseStyle: React.CSSProperties = {
 			display: "flex",
 			alignItems: "center",
 			padding: "8px 12px",
@@ -328,8 +353,8 @@ export const Sidebar = ({ onHoverChange }) => {
 					return (
 						<Link
 							key={item.path}
-							to={item.path}
-							className={`nav-item ${isActive(item.path) ? "active" : ""}`}
+							to={item.path!}
+							className={`nav-item ${isActive(item.path!) ? "active" : ""}`}
 							title={!isHovering ? item.text : ""}
 						>
 							<span className="nav-icon">
