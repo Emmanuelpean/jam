@@ -69,7 +69,7 @@ const GenericModal = ({
 	onDelete = null,
 }) => {
 	const { token } = useAuth();
-	const [loadedData, setLoadedData] = useState(null);
+	const [effectiveData, setEffectiveData] = useState(data);
 	const [formData, setFormData] = useState({});
 	const [originalFormData, setOriginalFormData] = useState({});
 	const [submitting, setSubmitting] = useState(false);
@@ -95,7 +95,7 @@ const GenericModal = ({
 				try {
 					const response = await api.get(`${endpoint}/${id}`, token);
 					if (response) {
-						setLoadedData(response);
+						setEffectiveData(response);
 					}
 				} catch (error) {
 					console.error(`Failed to load ${itemName}:`, error);
@@ -105,54 +105,13 @@ const GenericModal = ({
 				} finally {
 					setLoading(false);
 				}
+			} else {
+				setEffectiveData(data);
 			}
 		};
 
 		loadDataFromBackend();
-	}, [show, id, endpoint, token, itemName]);
-
-	// Helper to get effective props - use loadedData if available, otherwise original data
-	const getEffectiveProps = () => {
-		const currentTab = getCurrentTab();
-		const effectiveData = loadedData || data;
-
-		if (currentTab) {
-			return {
-				submode: currentTab.submode !== undefined ? currentTab.submode : submode,
-				fields: currentTab.fields !== undefined ? currentTab.fields : fields,
-				data: currentTab.data !== undefined ? currentTab.data : effectiveData,
-				endpoint: currentTab.endpoint !== undefined ? currentTab.endpoint : endpoint,
-				onSuccess: currentTab.onSuccess !== undefined ? currentTab.onSuccess : onSuccess,
-				validation: currentTab.validation !== undefined ? currentTab.validation : validation,
-				transformFormData:
-					currentTab.transformFormData !== undefined ? currentTab.transformFormData : transformFormData,
-				customSubmitHandler:
-					currentTab.customSubmitHandler !== undefined ? currentTab.customSubmitHandler : customSubmitHandler,
-				onFormDataChange:
-					currentTab.onFormDataChange !== undefined ? currentTab.onFormDataChange : onFormDataChange,
-				showSystemFields:
-					currentTab.showSystemFields !== undefined ? currentTab.showSystemFields : showSystemFields,
-				onDelete: currentTab.onDelete !== undefined ? currentTab.onDelete : onDelete,
-			};
-		}
-		return {
-			submode,
-			fields,
-			data: effectiveData,
-			endpoint,
-			onSuccess,
-			validation,
-			transformFormData,
-			customSubmitHandler,
-			onFormDataChange,
-			showSystemFields,
-		};
-	};
-
-	const getCurrentData = () => {
-		const effectiveProps = getEffectiveProps();
-		return Object.keys(formData).length > 0 ? formData : effectiveProps.data || {};
-	};
+	}, [show, id, endpoint, token, itemName, data]);
 
 	// Helper to check if form data has been modified
 	const hasUnsavedChanges = () => {
@@ -233,6 +192,41 @@ const GenericModal = ({
 	const getCurrentTab = () => {
 		if (!tabs || tabs.length === 0) return null;
 		return tabs.find((tab) => tab.key === activeTab) || tabs[0];
+	};
+
+	const getEffectiveProps = () => {
+		const currentTab = getCurrentTab();
+		if (currentTab) {
+			return {
+				submode: currentTab.submode !== undefined ? currentTab.submode : submode,
+				fields: currentTab.fields !== undefined ? currentTab.fields : fields,
+				data: currentTab.data !== undefined ? currentTab.data : effectiveData,
+				endpoint: currentTab.endpoint !== undefined ? currentTab.endpoint : endpoint,
+				onSuccess: currentTab.onSuccess !== undefined ? currentTab.onSuccess : onSuccess,
+				validation: currentTab.validation !== undefined ? currentTab.validation : validation,
+				transformFormData:
+					currentTab.transformFormData !== undefined ? currentTab.transformFormData : transformFormData,
+				customSubmitHandler:
+					currentTab.customSubmitHandler !== undefined ? currentTab.customSubmitHandler : customSubmitHandler,
+				onFormDataChange:
+					currentTab.onFormDataChange !== undefined ? currentTab.onFormDataChange : onFormDataChange,
+				showSystemFields:
+					currentTab.showSystemFields !== undefined ? currentTab.showSystemFields : showSystemFields,
+				onDelete: currentTab.onDelete !== undefined ? currentTab.onDelete : onDelete,
+			};
+		}
+		return {
+			submode,
+			fields,
+			data: effectiveData,
+			endpoint,
+			onSuccess,
+			validation,
+			transformFormData,
+			customSubmitHandler,
+			onFormDataChange,
+			showSystemFields,
+		};
 	};
 
 	useEffect(() => {
@@ -371,6 +365,11 @@ const GenericModal = ({
 		} else {
 			return effectiveProps.fields.view || effectiveProps.fields;
 		}
+	};
+
+	const getCurrentData = () => {
+		const effectiveProps = getEffectiveProps();
+		return effectiveProps.data;
 	};
 
 	const renderFieldGroup = (item, index, isFormMode = true) => {
