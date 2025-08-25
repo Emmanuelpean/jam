@@ -1,13 +1,13 @@
-import type { Location } from "./Api";
+import { LocationCreate } from "./Schemas";
 
 type ProgressCallback = (current: number, total: number) => void;
 
 // Cache to avoid repeated API calls for the same location
 const geocodeCache = new Map();
 
-export const geocodeLocation = async (location: Location) => {
+export const geocodeLocation = async (location: LocationCreate) => {
 	const cacheKey = [location.postcode, location.city, location.country]
-		.filter(Boolean)
+		.filter((s): s is string => Boolean(s))
 		.map((s) => s.trim().toLowerCase())
 		.join("|");
 
@@ -72,7 +72,7 @@ export const geocodeLocation = async (location: Location) => {
 };
 
 // Batch geocode multiple locations with rate limiting
-export const geocodeLocationsBatch = async (locations: Location[], onProgress?: ProgressCallback) => {
+export const geocodeLocationsBatch = async (locations: LocationCreate[], onProgress?: ProgressCallback) => {
 	const results = [];
 	const batchSize = 5; // Process 5 at a time to be respectful to the API
 	const delay = 200; // 200ms delay between requests

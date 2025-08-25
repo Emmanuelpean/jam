@@ -12,7 +12,7 @@ const JobApplicationViewModal = ({ job, jobApplication, show, onHide, onEdit, si
 	const fields = [
 		[viewFields.date(), viewFields.status()],
 		[viewFields.job(), viewFields.appliedVia()],
-		[viewFields.url({ label: "Application URL" }), viewFields.files()],
+		[viewFields.url({ label: "Application URL" })],
 		viewFields.note(),
 	];
 	//

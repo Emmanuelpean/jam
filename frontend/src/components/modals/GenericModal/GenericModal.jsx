@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Alert, Button, Card, Form, Modal, Spinner } from "react-bootstrap";
+import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext.tsx";
 import "./GenericModal.css";
 import { renderFieldValue } from "../../rendering/view/ViewRenders";
@@ -58,6 +58,7 @@ const GenericModal = ({
 	submode = "view",
 	fields = {},
 	data = null,
+	id = null,
 	endpoint,
 	onSuccess,
 	validation = null,
@@ -68,22 +69,90 @@ const GenericModal = ({
 	onDelete = null,
 }) => {
 	const { token } = useAuth();
-	const [formData, setFormData] = useState(data || {});
-	const [originalFormData, setOriginalFormData] = useState(data || {}); // Track original data
+	const [loadedData, setLoadedData] = useState(null);
+	const [formData, setFormData] = useState({});
+	const [originalFormData, setOriginalFormData] = useState({});
 	const [submitting, setSubmitting] = useState(false);
 	const [errors, setErrors] = useState({});
 	const [isEditing, setIsEditing] = useState(false);
+	const [loading, setLoading] = useState(false);
 	const [activeTab, setActiveTab] = useState(() => {
 		if (tabs && tabs.length > 0) {
 			return defaultActiveTab || tabs[0].key;
 		}
 		return null;
 	});
-
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef(null);
 	const previousShow = useRef(show);
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
+
+	useEffect(() => {
+		const loadDataFromBackend = async () => {
+			if (show && id && endpoint && token) {
+				setLoading(true);
+				setErrors({});
+				try {
+					const response = await api.get(`${endpoint}/${id}`, token);
+					if (response) {
+						setLoadedData(response);
+					}
+				} catch (error) {
+					console.error(`Failed to load ${itemName}:`, error);
+					await showError({
+						message: `Failed to load ${itemName}. Please check your connection and try again.`,
+					});
+				} finally {
+					setLoading(false);
+				}
+			}
+		};
+
+		loadDataFromBackend();
+	}, [show, id, endpoint, token, itemName]);
+
+	// Helper to get effective props - use loadedData if available, otherwise original data
+	const getEffectiveProps = () => {
+		const currentTab = getCurrentTab();
+		const effectiveData = loadedData || data;
+
+		if (currentTab) {
+			return {
+				submode: currentTab.submode !== undefined ? currentTab.submode : submode,
+				fields: currentTab.fields !== undefined ? currentTab.fields : fields,
+				data: currentTab.data !== undefined ? currentTab.data : effectiveData,
+				endpoint: currentTab.endpoint !== undefined ? currentTab.endpoint : endpoint,
+				onSuccess: currentTab.onSuccess !== undefined ? currentTab.onSuccess : onSuccess,
+				validation: currentTab.validation !== undefined ? currentTab.validation : validation,
+				transformFormData:
+					currentTab.transformFormData !== undefined ? currentTab.transformFormData : transformFormData,
+				customSubmitHandler:
+					currentTab.customSubmitHandler !== undefined ? currentTab.customSubmitHandler : customSubmitHandler,
+				onFormDataChange:
+					currentTab.onFormDataChange !== undefined ? currentTab.onFormDataChange : onFormDataChange,
+				showSystemFields:
+					currentTab.showSystemFields !== undefined ? currentTab.showSystemFields : showSystemFields,
+				onDelete: currentTab.onDelete !== undefined ? currentTab.onDelete : onDelete,
+			};
+		}
+		return {
+			submode,
+			fields,
+			data: effectiveData,
+			endpoint,
+			onSuccess,
+			validation,
+			transformFormData,
+			customSubmitHandler,
+			onFormDataChange,
+			showSystemFields,
+		};
+	};
+
+	const getCurrentData = () => {
+		const effectiveProps = getEffectiveProps();
+		return Object.keys(formData).length > 0 ? formData : effectiveProps.data || {};
+	};
 
 	// Helper to check if form data has been modified
 	const hasUnsavedChanges = () => {
@@ -164,42 +233,6 @@ const GenericModal = ({
 	const getCurrentTab = () => {
 		if (!tabs || tabs.length === 0) return null;
 		return tabs.find((tab) => tab.key === activeTab) || tabs[0];
-	};
-
-	// Helper to get effective props either from tab or main props
-	const getEffectiveProps = () => {
-		const currentTab = getCurrentTab();
-		if (currentTab) {
-			return {
-				submode: currentTab.submode !== undefined ? currentTab.submode : submode,
-				fields: currentTab.fields !== undefined ? currentTab.fields : fields,
-				data: currentTab.data !== undefined ? currentTab.data : data,
-				endpoint: currentTab.endpoint !== undefined ? currentTab.endpoint : endpoint,
-				onSuccess: currentTab.onSuccess !== undefined ? currentTab.onSuccess : onSuccess,
-				validation: currentTab.validation !== undefined ? currentTab.validation : validation,
-				transformFormData:
-					currentTab.transformFormData !== undefined ? currentTab.transformFormData : transformFormData,
-				customSubmitHandler:
-					currentTab.customSubmitHandler !== undefined ? currentTab.customSubmitHandler : customSubmitHandler,
-				onFormDataChange:
-					currentTab.onFormDataChange !== undefined ? currentTab.onFormDataChange : onFormDataChange,
-				showSystemFields:
-					currentTab.showSystemFields !== undefined ? currentTab.showSystemFields : showSystemFields,
-				onDelete: currentTab.onDelete !== undefined ? currentTab.onDelete : onDelete,
-			};
-		}
-		return {
-			submode,
-			fields,
-			data,
-			endpoint,
-			onSuccess,
-			validation,
-			transformFormData,
-			customSubmitHandler,
-			onFormDataChange,
-			showSystemFields,
-		};
 	};
 
 	useEffect(() => {
@@ -338,11 +371,6 @@ const GenericModal = ({
 		} else {
 			return effectiveProps.fields.view || effectiveProps.fields;
 		}
-	};
-
-	const getCurrentData = () => {
-		const effectiveProps = getEffectiveProps();
-		return effectiveProps.data;
 	};
 
 	const renderFieldGroup = (item, index, isFormMode = true) => {
@@ -659,6 +687,19 @@ const GenericModal = ({
 		if (currentTab && currentTab.content) {
 			return currentTab.content;
 		}
+
+		if (loading) {
+			return (
+				<div
+					className="d-flex justify-content-center align-items-center py-5 modal-content-animated"
+					style={{ height: containerHeight }}
+				>
+					<Spinner animation="border" variant="primary" />
+					<span className="ms-3">Loading {itemName}...</span>
+				</div>
+			);
+		}
+
 		return (
 			<div className="modal-content-animated" style={{ height: containerHeight }}>
 				<div ref={contentRef}>{renderContent()}</div>
@@ -711,7 +752,7 @@ const GenericModal = ({
 								<ActionButton
 									id="confirm-button"
 									type="submit"
-									disabled={submitting}
+									disabled={submitting || loading}
 									loading={submitting}
 									loadingText="Submitting..."
 									defaultText="Confirm"
@@ -778,6 +819,7 @@ const GenericModal = ({
 								onClick={handleEdit}
 								defaultText="Edit"
 								fullWidth={false}
+								disabled={loading}
 							/>
 						)}
 					</div>

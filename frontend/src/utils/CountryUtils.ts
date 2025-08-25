@@ -1,64 +1,52 @@
 import type { SelectOption } from "./Utils";
 
-export type Country = {
-	name: string;
-	cca2: string;
-	cca3: string;
-	cioc: string;
-	capital: string;
-	region: string;
-	subregion: string;
-	demonym: string;
-	area: number;
-};
-
 let countriesCache: SelectOption[] | null = null;
 let countriesCachePromise: Promise<SelectOption[]> | null = null;
-const getFallbackCountries = () => [
-	{ value: "US", label: "United States" },
-	{ value: "GB", label: "United Kingdom" },
-	{ value: "CA", label: "Canada" },
-	{ value: "AU", label: "Australia" },
-	{ value: "DE", label: "Germany" },
-	{ value: "FR", label: "France" },
-	{ value: "IT", label: "Italy" },
-	{ value: "ES", label: "Spain" },
-	{ value: "NL", label: "Netherlands" },
-	{ value: "SE", label: "Sweden" },
-	{ value: "NO", label: "Norway" },
-	{ value: "DK", label: "Denmark" },
-	{ value: "FI", label: "Finland" },
-	{ value: "CH", label: "Switzerland" },
-	{ value: "AT", label: "Austria" },
-	{ value: "BE", label: "Belgium" },
-	{ value: "IE", label: "Ireland" },
-	{ value: "PT", label: "Portugal" },
-	{ value: "GR", label: "Greece" },
-	{ value: "PL", label: "Poland" },
-	{ value: "CZ", label: "Czech Republic" },
-	{ value: "HU", label: "Hungary" },
-	{ value: "SK", label: "Slovakia" },
-	{ value: "SI", label: "Slovenia" },
-	{ value: "HR", label: "Croatia" },
-	{ value: "RO", label: "Romania" },
-	{ value: "BG", label: "Bulgaria" },
-	{ value: "LT", label: "Lithuania" },
-	{ value: "LV", label: "Latvia" },
-	{ value: "EE", label: "Estonia" },
-	{ value: "MT", label: "Malta" },
-	{ value: "CY", label: "Cyprus" },
-	{ value: "LU", label: "Luxembourg" },
-	{ value: "JP", label: "Japan" },
-	{ value: "KR", label: "South Korea" },
-	{ value: "CN", label: "China" },
-	{ value: "IN", label: "India" },
-	{ value: "SG", label: "Singapore" },
-	{ value: "HK", label: "Hong Kong" },
-	{ value: "NZ", label: "New Zealand" },
-	{ value: "BR", label: "Brazil" },
-	{ value: "MX", label: "Mexico" },
-	{ value: "AR", label: "Argentina" },
-	{ value: "ZA", label: "South Africa" },
+const getFallbackCountries = (): SelectOption[] => [
+	{ value: "United States", label: "United States" },
+	{ value: "United Kingdom", label: "United Kingdom" },
+	{ value: "Canada", label: "Canada" },
+	{ value: "Australia", label: "Australia" },
+	{ value: "Germany", label: "Germany" },
+	{ value: "France", label: "France" },
+	{ value: "Italy", label: "Italy" },
+	{ value: "Spain", label: "Spain" },
+	{ value: "Netherlands", label: "Netherlands" },
+	{ value: "Sweden", label: "Sweden" },
+	{ value: "Norway", label: "Norway" },
+	{ value: "Denmark", label: "Denmark" },
+	{ value: "Finland", label: "Finland" },
+	{ value: "Switzerland", label: "Switzerland" },
+	{ value: "Austria", label: "Austria" },
+	{ value: "Belgium", label: "Belgium" },
+	{ value: "Ireland", label: "Ireland" },
+	{ value: "Portugal", label: "Portugal" },
+	{ value: "Greece", label: "Greece" },
+	{ value: "Poland", label: "Poland" },
+	{ value: "Czech Republic", label: "Czech Republic" },
+	{ value: "Hungary", label: "Hungary" },
+	{ value: "Slovakia", label: "Slovakia" },
+	{ value: "Slovenia", label: "Slovenia" },
+	{ value: "Croatia", label: "Croatia" },
+	{ value: "Romania", label: "Romania" },
+	{ value: "Bulgaria", label: "Bulgaria" },
+	{ value: "Lithuania", label: "Lithuania" },
+	{ value: "Latvia", label: "Latvia" },
+	{ value: "Estonia", label: "Estonia" },
+	{ value: "Malta", label: "Malta" },
+	{ value: "Cyprus", label: "Cyprus" },
+	{ value: "Luxembourg", label: "Luxembourg" },
+	{ value: "Japan", label: "Japan" },
+	{ value: "South Korea", label: "South Korea" },
+	{ value: "China", label: "China" },
+	{ value: "India", label: "India" },
+	{ value: "Singapore", label: "Singapore" },
+	{ value: "Hong Kong", label: "Hong Kong" },
+	{ value: "New Zealand", label: "New Zealand" },
+	{ value: "Brazil", label: "Brazil" },
+	{ value: "Mexico", label: "Mexico" },
+	{ value: "Argentina", label: "Argentina" },
+	{ value: "South Africa", label: "South Africa" },
 ];
 
 const fetchCountries = async (): Promise<SelectOption[]> => {
@@ -91,7 +79,7 @@ const fetchCountries = async (): Promise<SelectOption[]> => {
 			// Transform the data to match our format
 			const countries: SelectOption[] = data
 				.map((country) => ({
-					value: country.cca2, // Use 2-letter country code
+					value: country.name.common, // Use 2-letter country code
 					label: country.name.common, // Common country name
 				}))
 				.sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically

@@ -10,6 +10,7 @@ export const UserModal = ({
 	show,
 	onHide,
 	data,
+	id,
 	onSuccess,
 	onDelete,
 	endpoint = "users",
@@ -72,6 +73,7 @@ export const UserModal = ({
 			itemName="User"
 			size={size}
 			data={data || {}}
+			id={id}
 			fields={fields}
 			endpoint={endpoint}
 			onSuccess={onSuccess}

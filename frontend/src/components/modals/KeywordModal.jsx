@@ -9,6 +9,7 @@ export const KeywordModal = ({
 	show,
 	onHide,
 	data,
+	id,
 	onSuccess,
 	onDelete,
 	endpoint = "keywords",
@@ -51,6 +52,7 @@ export const KeywordModal = ({
 			itemName="Tag"
 			size={size}
 			data={data || {}}
+			id={id}
 			fields={fields}
 			endpoint={endpoint}
 			onSuccess={onSuccess}

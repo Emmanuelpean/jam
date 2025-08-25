@@ -8,6 +8,7 @@ export const JobAndApplicationModal = ({
 	show,
 	onHide,
 	data,
+	id,
 	onJobSuccess,
 	onApplicationSuccess,
 	onJobDelete,
@@ -179,6 +180,7 @@ export const JobAndApplicationModal = ({
 				itemName="Job & Application"
 				size={size}
 				tabs={tabs}
+				id={id}
 				defaultActiveTab="job"
 			/>
 

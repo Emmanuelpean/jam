@@ -7,6 +7,7 @@ export const JobApplicationModal = ({
 	show,
 	onHide,
 	data,
+	id,
 	onSuccess,
 	onDelete,
 	endpoint = "jobapplications",
@@ -88,6 +89,7 @@ export const JobApplicationModal = ({
 				itemName="Job Application"
 				size={size}
 				data={data || {}}
+				id={id}
 				fields={fields}
 				endpoint={endpoint}
 				onSuccess={onSuccess}

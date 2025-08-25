@@ -9,6 +9,7 @@ export const CompanyModal = ({
 	show,
 	onHide,
 	data,
+	id,
 	onSuccess,
 	onDelete,
 	endpoint = "companies",
@@ -61,6 +62,7 @@ export const CompanyModal = ({
 			itemName="Company"
 			size={size}
 			data={data || {}}
+			id={id}
 			fields={fields}
 			endpoint={endpoint}
 			onSuccess={onSuccess}

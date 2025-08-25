@@ -9,6 +9,7 @@ export const AggregatorModal = ({
 	show,
 	onHide,
 	data,
+	id,
 	onSuccess,
 	onDelete,
 	endpoint = "aggregators",
@@ -52,6 +53,7 @@ export const AggregatorModal = ({
 			itemName="Aggregator"
 			size={size}
 			data={data || {}}
+			id={id}
 			fields={fields}
 			endpoint={endpoint}
 			onSuccess={onSuccess}

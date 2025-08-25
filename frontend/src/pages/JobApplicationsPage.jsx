@@ -26,7 +26,6 @@ const JobApplicationsPage = () => {
 		columns.status(),
 		columns.interviewCount(),
 		columns.updateCount(),
-		columns.files(),
 		columns.url({ label: "URL" }),
 		columns.createdAt(),
 	];

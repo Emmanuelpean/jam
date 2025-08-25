@@ -8,6 +8,7 @@ export const InterviewModal = ({
 	show,
 	onHide,
 	data,
+	id,
 	onSuccess,
 	onDelete,
 	endpoint = "interviews",
@@ -104,6 +105,7 @@ export const InterviewModal = ({
 				itemName="Interview"
 				size={size}
 				data={initialData}
+				id={id}
 				fields={fields}
 				endpoint={endpoint}
 				onSuccess={onSuccess}

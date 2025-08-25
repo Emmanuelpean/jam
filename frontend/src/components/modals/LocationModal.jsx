@@ -9,6 +9,7 @@ export const LocationModal = ({
 	show,
 	onHide,
 	data,
+	id,
 	onSuccess,
 	onDelete,
 	endpoint = "locations",
@@ -89,7 +90,8 @@ export const LocationModal = ({
 			submode={submode}
 			itemName="Location"
 			size={size}
-			data={data || {}}
+			data={data}
+			id={id}
 			fields={fields}
 			endpoint={endpoint}
 			onSuccess={onSuccess}

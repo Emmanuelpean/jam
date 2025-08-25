@@ -1,10 +1,43 @@
-import { renderFunctions } from "./ViewRenders";
-import { localeDateOnly } from "../../../utils/TimeUtils.ts";
+import React, { ReactNode } from "react";
+import { renderFunctions, RenderParams } from "./ViewRenders";
+import { localeDateOnly } from "../../../utils/TimeUtils";
 
-export const columns = {
+interface TableColumnOverrides {
+	key?: string;
+	label?: string;
+	sortable?: boolean;
+	searchable?: boolean | ((item: any) => string);
+	type?: string;
+	render?: (params: RenderParams) => ReactNode;
+	sortField?: string;
+	searchFields?: string | ((item: any) => string);
+	columnClass?: string;
+	accessKey?: string | undefined;
+}
+
+interface TableColumn {
+	key: string;
+	label: string;
+	sortable?: boolean;
+	searchable?: boolean | ((item: any) => string);
+	type?: string;
+	render?: (params: RenderParams) => ReactNode;
+	sortField?: string;
+	searchFields?: string | ((item: any) => string);
+	columnClass?: string;
+	accessKey?: string | undefined;
+}
+
+type TableColumnFactory = (overrides?: TableColumnOverrides) => TableColumn;
+
+interface Columns {
+	[key: string]: TableColumnFactory;
+}
+
+export const columns: Columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
 
-	id: (overrides = {}) => ({
+	id: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "id",
 		label: "ID",
 		sortable: true,
@@ -13,7 +46,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	name: (overrides = {}) => ({
+	name: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "name",
 		label: "Name",
 		sortable: true,
@@ -22,7 +55,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	title: (overrides = {}) => ({
+	title: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "title",
 		label: "Title",
 		sortable: true,
@@ -31,7 +64,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	description: (overrides = {}) => ({
+	description: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "description",
 		label: "Description",
 		sortable: true,
@@ -41,7 +74,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	url: (overrides = {}) => ({
+	url: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "url",
 		label: "Website",
 		sortable: true,
@@ -51,18 +84,18 @@ export const columns = {
 		...overrides,
 	}),
 
-	createdAt: (overrides = {}) => ({
+	createdAt: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "created_at",
 		label: "Date Added",
 		type: "date",
 		sortable: true,
 		searchable: true,
-		searchFields: localeDateOnly,
+		searchFields: (item: any) => localeDateOnly(item.created_at),
 		render: renderFunctions.createdDate,
 		...overrides,
 	}),
 
-	note: (overrides = {}) => ({
+	note: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "note",
 		label: "Notes",
 		sortable: false,
@@ -72,18 +105,18 @@ export const columns = {
 		...overrides,
 	}),
 
-	date: (overrides = {}) => ({
+	date: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "date",
 		label: "Date",
 		sortable: true,
 		searchable: true,
 		type: "date",
-		searchFields: localeDateOnly,
+		searchFields: (item: any) => localeDateOnly(item.date),
 		render: renderFunctions.date,
 		...overrides,
 	}),
 
-	type: (overrides = {}) => ({
+	type: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "type",
 		label: "Type",
 		sortable: true,
@@ -92,7 +125,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	updateType: (overrides = {}) => ({
+	updateType: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "type",
 		label: "Type",
 		sortable: true,
@@ -102,20 +135,20 @@ export const columns = {
 		...overrides,
 	}),
 
-	last_login: (overrides = {}) => ({
+	last_login: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "last_login",
 		label: "Last Login",
 		sortable: true,
 		searchable: true,
 		type: "date",
-		searchFields: localeDateOnly,
+		searchFields: (item: any) => localeDateOnly(item.last_login),
 		render: renderFunctions.lastLogin,
 		...overrides,
 	}),
 
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
-	location: (overrides = {}) => ({
+	location: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "location",
 		label: "Location",
 		sortable: true,
@@ -127,7 +160,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	city: (overrides = {}) => ({
+	city: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "city",
 		label: "City",
 		sortable: true,
@@ -136,7 +169,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	postcode: (overrides = {}) => ({
+	postcode: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "postcode",
 		label: "Postcode",
 		sortable: true,
@@ -145,7 +178,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	country: (overrides = {}) => ({
+	country: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "country",
 		label: "Country",
 		sortable: true,
@@ -156,7 +189,7 @@ export const columns = {
 
 	// --------------------------------------------------- COMPANIES ---------------------------------------------------
 
-	company: (overrides = {}) => ({
+	company: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "company",
 		label: "Company",
 		sortable: true,
@@ -170,7 +203,7 @@ export const columns = {
 
 	// ---------------------------------------------------- PERSONS ----------------------------------------------------
 
-	persons: (overrides = {}) => ({
+	persons: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "person",
 		label: "Contacts",
 		sortable: true,
@@ -182,7 +215,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	personName: (overrides = {}) => ({
+	personName: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "name",
 		label: "Name",
 		sortable: true,
@@ -192,7 +225,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	email: (overrides = {}) => ({
+	email: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "email",
 		label: "Email",
 		sortable: true,
@@ -202,7 +235,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	isAdmin: (overrides = {}) => ({
+	isAdmin: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "is_admin",
 		label: "Admin",
 		sortable: true,
@@ -212,7 +245,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	appTheme: (overrides = {}) => ({
+	appTheme: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "theme",
 		label: "Theme",
 		sortable: true,
@@ -222,7 +255,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	phone: (overrides = {}) => ({
+	phone: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "phone",
 		label: "Phone",
 		sortable: false,
@@ -232,7 +265,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	role: (overrides = {}) => ({
+	role: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "role",
 		label: "Role",
 		sortable: true,
@@ -241,7 +274,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	linkedinUrl: (overrides = {}) => ({
+	linkedinUrl: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "linkedin_url",
 		label: "LinkedIn",
 		sortable: false,
@@ -251,7 +284,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	interviewers: (overrides = {}) => ({
+	interviewers: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "person",
 		label: "Interviewers",
 		sortable: false,
@@ -259,13 +292,13 @@ export const columns = {
 		type: "text",
 		sortField: "person.last_name",
 		searchFields: "person.name",
-		render: (item) => renderFunctions.interviewers(item, false),
+		render: (params: RenderParams) => renderFunctions.interviewers({ ...params, view: false }),
 		...overrides,
 	}),
 
 	// ------------------------------------------------------ JOBS -----------------------------------------------------
 
-	salaryRange: (overrides = {}) => ({
+	salaryRange: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "salary_range",
 		label: "Salary",
 		sortable: true,
@@ -276,7 +309,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	personalRating: (overrides = {}) => ({
+	personalRating: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "personal_rating",
 		label: "Rating",
 		sortable: true,
@@ -285,7 +318,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	keywords: (overrides = {}) => ({
+	keywords: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "keywords",
 		label: "Keywords",
 		sortable: false,
@@ -295,7 +328,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	jobapplication: (overrides = {}) => ({
+	jobapplication: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "jobapplication",
 		label: "Application Status",
 		sortable: true,
@@ -306,7 +339,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	job: (overrides = {}) => ({
+	job: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "job",
 		label: "Job",
 		sortable: true,
@@ -317,7 +350,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	status: (overrides = {}) => ({
+	status: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "status",
 		label: "Status",
 		sortable: true,
@@ -326,7 +359,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	interviewCount: (overrides = {}) => ({
+	interviewCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "interviews",
 		label: "Interviews",
 		sortable: true,
@@ -335,7 +368,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	updateCount: (overrides = {}) => ({
+	updateCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "updates",
 		label: "Updates",
 		sortable: true,
@@ -344,7 +377,7 @@ export const columns = {
 		...overrides,
 	}),
 
-	jobApplicationJob: (overrides = {}) => ({
+	jobApplicationJob: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "job",
 		accessKey: "job_application",
 		label: "Job",
@@ -356,29 +389,20 @@ export const columns = {
 		...overrides,
 	}),
 
-	files: (overrides = {}) => ({
-		key: "files",
-		label: "Files",
-		sortable: false,
-		searchable: false,
-		render: renderFunctions.files,
-		...overrides,
-	}),
-
 	// -------------------------------------------- CHASE-SPECIFIC COLUMNS ---------------------------------------------
 
-	daysSinceLastUpdate: (overrides = {}) => ({
+	daysSinceLastUpdate: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "days_since_last_update",
 		label: "Days Since Last Update",
 		sortable: true,
 		type: "number",
-		render: (item) => {
-			return <span className={"text-danger"}>{item.days_since_last_update} days</span>;
+		render: (params: RenderParams) => {
+			return <span className={"text-danger"}>{params.item.days_since_last_update} days</span>;
 		},
 		...overrides,
 	}),
 
-	lastUpdateType: (overrides = {}) => ({
+	lastUpdateType: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "last_update_type",
 		label: "Last Update",
 		sortable: true,

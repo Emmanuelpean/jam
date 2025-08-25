@@ -11,6 +11,7 @@ export const PersonModal = ({
 	show,
 	onHide,
 	data,
+	id = null,
 	onSuccess,
 	onDelete,
 	endpoint = "persons",
@@ -81,6 +82,7 @@ export const PersonModal = ({
 				submode={submode}
 				itemName="Person"
 				size={size}
+				id={id}
 				data={data || {}}
 				fields={fields}
 				endpoint={endpoint}
