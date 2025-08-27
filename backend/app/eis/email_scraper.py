@@ -22,7 +22,7 @@ from googleapiclient.discovery import build
 
 from app.database import session_local
 from app.eis import schemas
-from app.eis.job_scraper import LinkedinJobScraper, extract_indeed_jobs_from_email
+from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScrapper, extract_indeed_jobs_from_email
 from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
 from app.models import User
 from app.utils import get_gmail_logger, AppLogger
@@ -58,13 +58,16 @@ class GmailScraper(object):
         self,
         token_file: str = "token.pickle",
         secrets_file: str = "eis_secrets.json",
+        skip_indeed_scraping: bool = True,
     ) -> None:
         """Object constructor
         :param token_file: Path to the token pickle file
-        :param secrets_file: Path to the secrets JSON file containing OAuth credentials"""
+        :param secrets_file: Path to the secrets JSON file containing OAuth credentials
+        :param skip_indeed_scraping: if True, use the email content to extract the indeed job data."""
 
         self.token_file = token_file
         self.secrets_file = secrets_file
+        self.skip_indeed_scraping = skip_indeed_scraping
         self.SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
         self.service = None
 
@@ -456,16 +459,20 @@ class GmailScraper(object):
                                 stats["linkedin_jobs"] += len(job_ids)
 
                             elif email_record.platform == "indeed":
-                                jobs = extract_indeed_jobs_from_email(email_record.body)
-                                for job in jobs:
-                                    try:
-                                        job["id"] = self.extract_indeed_job_ids(job["job"]["url"])[0]
-                                    except Exception as exception:
-                                        message = f"Failed to extract job ID for job URL {job['job']['url']} due to error: {exception}. Skipping job."
-                                        logger.exception(message)
-                                        continue
-                                job_ids = [job["id"] for job in jobs]
-                                stats["indeed_jobs"] += len(jobs)
+                                if self.skip_indeed_scraping:
+                                    jobs_ = extract_indeed_jobs_from_email(email_record.body)
+                                    jobs = {}
+                                    for job in jobs_:
+                                        try:
+                                            jobs[self.extract_indeed_job_ids(job["job"]["url"])[0]] = job
+                                        except Exception as exception:
+                                            message = f"Failed to extract job ID for job URL {job['job']['url']} due to error: {exception}. Skipping job."
+                                            logger.exception(message)
+                                            continue
+                                    job_ids = list(jobs.keys())
+                                else:
+                                    job_ids = self.extract_indeed_job_ids(email_record.body)
+                                stats["indeed_jobs"] += len(job_ids)
 
                             else:
                                 logger.info(f"No job IDs found in email: {email_external_id}. Skipping email.")
@@ -481,11 +488,13 @@ class GmailScraper(object):
                                 logger.exception(message)
                                 continue  # next email
 
+
                             # For indeed jobs, immediately save the extracted content
-                            if email_record.platform == "indeed":
-                                for job, job_record in zip(jobs, job_records):
+                            if email_record.platform == "indeed" and self.skip_indeed_scraping:
+                                print(jobs)
+                                for job_record in job_records:
                                     try:
-                                        self.save_job_data_to_db(job_record, job, db)
+                                        self.save_job_data_to_db(job_record, jobs[job_record.external_job_id], db)
                                         stats["jobs_scraped"] += 1
                                     except Exception as exception:
                                         message = f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: {exception}. Skipping job."
@@ -507,6 +516,8 @@ class GmailScraper(object):
                 for job_record in job_records:
                     if job_record.emails[0].platform == "linkedin":
                         scrapper = LinkedinJobScraper(job_record.external_job_id)
+                    elif job_record.emails[0].platform == "indeed" and not self.skip_indeed_scraping:
+                        scrapper = IndeedJobScrapper(job_record.external_job_id)
                     else:
                         logger.info(f"Unknown platform for job {job_record.external_job_id}. Skipping job.")
                         continue  # next job record

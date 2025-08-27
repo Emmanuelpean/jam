@@ -6,7 +6,7 @@ import os
 
 import pytest
 
-from app.eis.job_scraper import LinkedinJobScraper, IndeedScrapper
+from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScrapper
 
 
 class TestJobScraperIntegration:
@@ -38,7 +38,7 @@ class TestJobScraperIntegration:
     def test_indeed_scraper_initialization(self) -> None:
         """Test Indeed scraper initializes correctly with fixed job ID"""
 
-        scraper = IndeedScrapper(self.INDEED_JOB_IDS[0])
+        scraper = IndeedJobScrapper(self.INDEED_JOB_IDS[0])
 
         assert scraper.job_ids == [self.INDEED_JOB_IDS[0]]
         assert scraper.job_urls == [f"https://www.indeed.com/viewjob?jk={self.INDEED_JOB_IDS[0]}"]
@@ -72,7 +72,7 @@ class TestJobScraperIntegration:
     def test_indeed_get_snapshot(self) -> None:
         """Test Indeed scraper can get a snapshot ID"""
 
-        scraper = IndeedScrapper(self.INDEED_JOB_IDS[0])
+        scraper = IndeedJobScrapper(self.INDEED_JOB_IDS[0])
 
         try:
             snapshot_id = scraper.get_snapshot()
@@ -109,7 +109,7 @@ class TestJobScraperIntegration:
     def test_indeed_complete_scraping_workflow(self) -> None:
         """Test complete Indeed scraping workflow (marked as slow)"""
 
-        scraper = IndeedScrapper(self.INDEED_JOB_IDS[0])
+        scraper = IndeedJobScrapper(self.INDEED_JOB_IDS[0])
 
         try:
             # This will take some time as it waits for data to be ready
