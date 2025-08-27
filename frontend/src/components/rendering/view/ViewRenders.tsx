@@ -625,6 +625,7 @@ export const renderFieldValue = (field: Field, item: any, id: string): ReactNode
 			id: `${id}-${field.key}`,
 		});
 	} else {
+		console.log("no render function for field", item, field);
 		rendered = item[field.key];
 	}
 

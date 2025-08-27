@@ -1,4 +1,9 @@
-"""Schemas for the JAM database"""
+"""Schemas for the JAM database
+Create schemas should be used to create entries in the database.
+Out schemas should be used to return data to the user.
+Min schemas should be used to return minimal data to the user (enough to display the entry as a badge) and should not
+contain reference to other tables.
+Update schemas should be used to update existing entries in the database."""
 
 from datetime import datetime
 from typing import Optional
@@ -61,23 +66,6 @@ class TokenData(BaseModel):
     id: str | None = None
 
 
-# ------------------------------------------------------- COMPANY ------------------------------------------------------
-
-
-class CompanyCreate(BaseModel):
-    name: str
-    description: str | None = None
-    url: str | None = None
-
-
-class CompanyOut(CompanyCreate, OwnedOut):
-    pass
-
-
-class CompanyUpdate(CompanyCreate):
-    name: str | None = None
-
-
 # ------------------------------------------------------- KEYWORD ------------------------------------------------------
 
 
@@ -86,6 +74,12 @@ class KeywordCreate(BaseModel):
 
 
 class KeywordOut(KeywordCreate, OwnedOut):
+    jobs: list["JobMinOut"] = (
+        []
+    )  # should return the min job data (including including application, updates and interviews)
+
+
+class KeywordMinOut(KeywordCreate, OwnedOut):
     pass
 
 
@@ -99,15 +93,44 @@ class KeywordUpdate(KeywordCreate):
 class AggregatorCreate(BaseModel):
     name: str
     url: str | None = None
-    # jobs: list[int] | None = None
-    # job_applications: list[int] | None = None
 
 
 class AggregatorOut(AggregatorCreate, OwnedOut):
+    jobs: list["JobMinOut"] = (
+        []
+    )  # should return the min job data (including including application, updates and interviews)
+    job_applications: list["JobApplicationOut"] = (
+        []
+    )  # should return the min job application data (including updates and interviews)
+
+
+class AggregatorMinOut(AggregatorCreate, OwnedOut):
     pass
 
 
 class AggregatorUpdate(AggregatorCreate):
+    name: str | None = None
+
+
+# ------------------------------------------------------- COMPANY ------------------------------------------------------
+
+
+class CompanyCreate(BaseModel):
+    name: str
+    description: str | None = None
+    url: str | None = None
+
+
+class CompanyOut(CompanyCreate, OwnedOut):
+    jobs: list["JobMinOut"] = []
+    persons: list["PersonMinOut"] = []
+
+
+class CompanyMinOut(CompanyCreate, OwnedOut):
+    pass
+
+
+class CompanyUpdate(CompanyCreate):
     name: str | None = None
 
 
@@ -121,6 +144,12 @@ class LocationCreate(BaseModel):
 
 
 class LocationOut(LocationCreate, OwnedOut):
+    name: str | None = None
+    jobs: list["JobMinOut"] = []
+    interviews: list["InterviewMinOut"] = []
+
+
+class LocationMinOut(LocationCreate, OwnedOut):
     name: str | None = None
 
 
@@ -159,26 +188,27 @@ class PersonCreate(BaseModel):
     phone: str | None = None
     linkedin_url: str | None = None
     role: str | None = None
+
+    # Foreign keys
     company_id: int | None = None
 
 
-# Simple person schema without interviews/jobs to avoid circular reference
-class PersonSimple(PersonCreate, OwnedOut):
-    company: CompanyOut | None = None
-    name: str | None = None
-
-
 class PersonOut(PersonCreate, OwnedOut):
-    company: CompanyOut | None = None
-    interviews: list["InterviewSimple"] = []
-    jobs: list["JobSimple"] = []
+    company: CompanyMinOut | None = None
+    interviews: list["InterviewMinOut"] = []
+    jobs: list["JobMinOut"] = []
     name: str | None = None
+    name_company: str | None = None
+
+
+class PersonMinOut(PersonCreate, OwnedOut):
+    name: str | None = None
+    name_company: str | None = None
 
 
 class PersonUpdate(PersonCreate):
     first_name: str | None = None
     last_name: str | None = None
-    company_id: int | None = None
 
 
 # --------------------------------------------------------- JOB --------------------------------------------------------
@@ -191,35 +221,31 @@ class JobCreate(BaseModel):
     salary_max: float | None = None
     personal_rating: int | None = None
     url: str | None = None
+    deadline: datetime | None = None
+    note: str | None = None
+    attendance_type: str | None = None
+
+    # Foreign keys
     company_id: int | None = None
     location_id: int | None = None
     duplicate_id: int | None = None
-    note: str | None = None
+    source_id: int | None = None
     keywords: list[int] = []
     contacts: list[int] = []
-    deadline: datetime | None = None
-    attendance_type: str | None = None
-    source_id: int | None = None
-
-
-# Simple job schema without job_application/contacts to avoid circular reference
-class JobSimple(JobCreate, OwnedOut):
-    company: CompanyOut | None = None
-    location: LocationOut | None = None
-    keywords: list[KeywordOut] = []
-    contacts: list[PersonSimple] = []
-    name: str | None = None
-    source: AggregatorOut | None = None
 
 
 class JobOut(JobCreate, OwnedOut):
-    company: CompanyOut | None = None
-    location: LocationOut | None = None
-    keywords: list[KeywordOut] = []
-    job_application: Optional["JobApplicationOut"] = None
-    contacts: list[PersonSimple] = []
+    company: CompanyMinOut | None = None
+    location: LocationMinOut | None = None
+    source: AggregatorMinOut | None = None
+    keywords: list[KeywordMinOut] = []
+    contacts: list[PersonMinOut] = []
+    job_application: Optional["JobApplicationOut"] = None  # call the full entry
     name: str | None = None
-    source: AggregatorOut | None = None
+
+
+class JobMinOut(JobCreate, OwnedOut):
+    name: str | None = None
 
 
 class JobToChaseOut(JobOut):
@@ -237,29 +263,20 @@ class JobUpdate(JobCreate):
 class JobApplicationCreate(BaseModel):
     date: datetime
     url: str | None = None
-    job_id: int
     status: str
     note: str | None = None
     applied_via: str | None = None
+
+    # Foreign keys
+    job_id: int
     aggregator_id: int | None = None
-    cv_id: int | None = None
-    cover_letter_id: int | None = None
 
 
 class JobApplicationOut(JobApplicationCreate, OwnedOut):
-    job: JobSimple | None = None
-    aggregator: AggregatorOut | None = None
-    interviews: list["InterviewSimple"] = []
-    updates: list["JobApplicationUpdateSimpleOut"] = []
-    cv: FileOut | None = None
-    cover_letter: FileOut | None = None
-
-
-class JobApplicationSimple(JobApplicationCreate, OwnedOut):
-    job: JobSimple | None = None
-    aggregator: AggregatorOut | None = None
-    cv: FileOut | None = None
-    cover_letter: FileOut | None = None
+    job: JobMinOut | None = None
+    aggregator: AggregatorMinOut | None = None
+    interviews: list["InterviewOut"] = []  # get the full interviews
+    updates: list["JobApplicationUpdateOut"] = []  # get the full updates
 
 
 class JobApplicationUpdate(JobApplicationCreate):
@@ -281,15 +298,13 @@ class InterviewCreate(BaseModel):
     attendance_type: str | None = None
 
 
-class InterviewSimple(InterviewCreate, OwnedOut):
-    location: LocationOut | None = None
-    interviewers: list["PersonSimple"] = []
-
-
 class InterviewOut(InterviewCreate, OwnedOut):
-    location: LocationOut | None = None
-    interviewers: list["PersonSimple"] = []
-    job_application: JobApplicationSimple | None = None
+    location: LocationMinOut | None = None
+    interviewers: list["PersonMinOut"] = []
+
+
+class InterviewMinOut(InterviewCreate, OwnedOut):
+    pass
 
 
 class InterviewUpdate(InterviewCreate):
@@ -308,10 +323,6 @@ class JobApplicationUpdateCreate(BaseModel):
 
 
 class JobApplicationUpdateOut(JobApplicationUpdateCreate, OwnedOut):
-    job_application: JobApplicationSimple | None = None
-
-
-class JobApplicationUpdateSimpleOut(JobApplicationUpdateCreate, OwnedOut):
     pass
 
 

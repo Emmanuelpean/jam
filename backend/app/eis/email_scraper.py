@@ -22,8 +22,8 @@ from googleapiclient.discovery import build
 
 from app.database import session_local
 from app.eis import schemas
+from app.eis.job_scraper import LinkedinJobScraper, IndeedScrapper, extract_indeed_jobs_from_email
 from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
-from app.eis.job_scraper import LinkedinJobScraper, IndeedScrapper
 from app.models import User
 from app.utils import get_gmail_logger, AppLogger
 
@@ -371,7 +371,6 @@ class GmailScraper(object):
             job_data = [job_data]
 
         for job, record in zip(job_data, job_records):
-
             record.company = job["company"]
             record.location = job["location"]
             record.salary_min = job["job"]["salary"]["min_amount"]
@@ -452,24 +451,38 @@ class GmailScraper(object):
                             stats["emails_new"] += 1
 
                             if email_record.platform == "linkedin":
+                                # Get the job ids
                                 job_ids = self.extract_linkedin_job_ids(email_record.body)
                                 stats["linkedin_jobs"] += len(job_ids)
+
                             elif email_record.platform == "indeed":
-                                job_ids = self.extract_indeed_job_ids(email_record.body)
-                                stats["indeed_jobs"] += len(job_ids)
+                                jobs = extract_indeed_jobs_from_email(email_record.body)
+                                for job in jobs:
+                                    job["id"] = self.extract_indeed_job_ids(job["raw"])[0]
+                                job_ids = [job["id"] for job in jobs]
+                                stats["indeed_jobs"] += len(jobs)
                             else:
                                 logger.info(f"No job IDs found in email: {email_external_id}. Skipping email.")
                                 continue  # next email
 
-                            # Save the retrieved job ids to the database
+                            # Save the extracted job ids to the database
                             try:
-                                self.save_jobs_to_db(email_record, job_ids, db)
+                                job_records = self.save_jobs_to_db(email_record, job_ids, db)
                                 stats["jobs_extracted"] += len(job_ids)
                                 logger.info(f"Extracted {len(job_ids)} job IDs from {email_record.platform}")
                             except Exception as exception:
                                 message = f"Failed to save job IDs for email ID {email_external_id} due to error: {exception}. Skipping email."
                                 logger.exception(message)
                                 continue  # next email
+
+                            # For indeed jobs, immediately save the extracted content
+                            if email_record.platform == "indeed":
+                                for job, job_record in zip(jobs, job_records):
+                                    try:
+                                        self.save_job_data_to_db(job_record, job, db)
+                                    except Exception as exception:
+                                        message = f"Failed to save job data for job ID {job['id']} due to error: {exception}. Skipping job."
+                                        logger.exception(message)
                         else:
                             stats["emails_existing"] += 1
                             logger.info("Email already exists in database. Skipping email.")
@@ -482,8 +495,6 @@ class GmailScraper(object):
                 for job_record in job_records:
                     if job_record.emails[0].platform == "linkedin":
                         scrapper = LinkedinJobScraper(job_record.external_job_id)
-                    elif job_record.emails[0].platform == "indeed":
-                        scrapper = IndeedScrapper(job_record.external_job_id)
                     else:
                         logger.info(f"Unknown platform for job {job_record.external_job_id}. Skipping job.")
                         continue  # next job record
@@ -607,12 +618,12 @@ class GmailScraperService:
 
 if __name__ == "__main__":
     gmail = GmailScraper()
-    # emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=100)
-    # print(emails)
-    # email_d = gmail.get_email_data(emails[40])
+    emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=2)
+    email_d = gmail.get_email_data(emails[0], "")
+    print(email_d.body)
     # print(email_d)
     # gmail.save_email_to_db(email_d, next(get_db()))
-    gmail.run_scraping(2)
+    # gmail.run_scraping(2)
 
     # service = GmailScraperService()
     # service.start()

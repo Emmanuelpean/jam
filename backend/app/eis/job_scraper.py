@@ -23,8 +23,8 @@ class JobScrapper(object):
     max_attempts: int = 60
 
     def __init__(
-        self,
-        job_ids: str | list[str],
+            self,
+            job_ids: str | list[str],
     ) -> None:
         """Object constructor
         :param job_ids: List of job IDs to scrape"""
@@ -206,12 +206,149 @@ class LinkedinJobScraper(JobScrapper):
         return results
 
 
+def extract_indeed_jobs_from_email(body: str) -> list[dict[str, str]]:
+    """Extract job information directly from an Indeed email body
+    :param body: Email body content as string
+    :return: List of dictionaries containing job information"""
+
+    jobs = []
+
+    # Split the email body by job entries
+    # Look for patterns that indicate job separations
+    job_sections = re.split(
+        r"\n\n(?=[A-Z][^:\n]*\n[A-Z][^:\n]*(?:\s*-\s*[A-Za-z]+)?(?:\s*£[\d,]+ - £[\d,]+ a year)?)", body
+    )
+
+    for section in job_sections:
+        if not section.strip():
+            continue
+
+        job_info = parse_indeed_job_section(section)
+        if job_info:
+            jobs.append(job_info)
+
+    return jobs
+
+
+def parse_indeed_job_section(section: str) -> dict[str, str] | None:
+    """Parse a single job section from Indeed email
+    :param section: Job section text
+    :return: Dictionary with job information or None if parsing fails"""
+
+    lines = [line.strip() for line in section.strip().split("\n") if line.strip()]
+
+    if len(lines) < 2:
+        return None
+
+    # Initialize job info with flat structure first
+    job_info = {
+        "title": lines[0],
+        "company": "",
+        "location": "",
+        "salary": "",
+        "description": "",
+        "url": "",
+    }
+
+    # First line is typically the job title
+    # Second line is typically company - location or just company
+    if len(lines) > 1:
+        company_location_line = lines[1]
+
+        # Try to split company and location
+        # Pattern: "Company Name - Location"
+        if " - " in company_location_line:
+            parts = company_location_line.split(" - ", 1)
+            job_info["company"] = parts[0].strip()
+            job_info["location"] = parts[1].strip()
+        else:
+            job_info["company"] = company_location_line.strip()
+
+    # Look for salary information
+    salary_pattern = r"£([\d,]+(?:\.\d{2})?)\s*-\s*£([\d,]+(?:\.\d{2})?)\s*a\s*year"
+    salary_min = None
+    salary_max = None
+
+    for line in lines:
+        salary_match = re.search(salary_pattern, line, re.IGNORECASE)
+        if salary_match:
+            job_info["salary"] = f"£{salary_match.group(1)} - £{salary_match.group(2)} a year"
+            # Parse numeric values for min/max
+            try:
+                salary_min = float(salary_match.group(1).replace(",", ""))
+                salary_max = float(salary_match.group(2).replace(",", ""))
+            except ValueError:
+                pass
+            break
+
+    # Look for job description (usually starts after company/location and salary)
+    description_lines = []
+    found_description_start = False
+
+    for i, line in enumerate(lines[2:], 2):  # Start from third line
+        # Skip salary lines
+        if re.search(salary_pattern, line, re.IGNORECASE):
+            continue
+        # Skip time indicators
+        if re.search(r"(just posted|(\d+\s+(day|hour)s?\s+ago))", line, re.IGNORECASE):
+            continue
+        # Skip URLs
+        if line.startswith("http"):
+            job_info["url"] = line
+            continue
+        # Skip "Easily apply" type lines
+        if re.search(r"easily apply|apply now", line, re.IGNORECASE):
+            continue
+
+        # This should be description content
+        if line and not found_description_start:
+            found_description_start = True
+
+        if found_description_start:
+            description_lines.append(line)
+
+    job_info["description"] = " ".join(description_lines).strip()
+
+    # Clean up description - remove common email artifacts
+    job_info["description"] = re.sub(r"\s+", " ", job_info["description"])
+    job_info["description"] = (
+        job_info["description"][:500] + "..." if len(job_info["description"]) > 500 else job_info["description"]
+    )
+
+    # Try to find URL if not already found
+    if not job_info["url"]:
+        url_matches = re.findall(r"https?://(?:uk\.)?indeed\.com/(?:pagead|rc)/clk/dl\?[^>\s]+", section, re.IGNORECASE)
+        if url_matches:
+            job_info["url"] = url_matches[0]
+
+    # Only return if we have at least title and company
+    if not job_info["title"]:
+        return None
+
+    # Transform to match the structure of other scraper functions
+    results = {
+        "company": job_info["company"],
+        "location": job_info["location"],
+        "job": {
+            "title": job_info["title"],
+            "description": job_info["description"],
+            "url": job_info["url"],
+            "salary": {
+                "min_amount": salary_min,
+                "max_amount": salary_max
+            }
+        },
+        "raw": job_info  # Keep original flat structure for reference
+    }
+
+    return results
+
+
 # Usage example:
 if __name__ == "__main__":
-    # Now the API key and dataset_id are loaded from secrets.json
-    scraper = LinkedinJobScraper(["4280160167"])
-    job_data1 = scraper.scrape_job()
-    print(job_data1)
+    # scraper = LinkedinJobScraper(["4280160167"])
+    # job_data1 = scraper.scrape_job()
+    # print(job_data1)
 
     scraper = IndeedScrapper("7b9119575c72cb5c")
     job_data1 = scraper.scrape_job()

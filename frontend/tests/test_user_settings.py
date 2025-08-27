@@ -166,5 +166,7 @@ class TestUserSettingsPage(BaseTest):
     def test_theme_hint(self) -> None:
         """Test theme hint"""
 
-        assert self.theme_hint.text == ('Mixed Berry is not your favourite flavour of JAM?! You can easily pick '
-                                        'another flavour by clicking on the JAM logo in the sidebar.')
+        assert self.theme_hint.text == (
+            "Mixed Berry is not your favourite flavour of JAM?! You can easily pick "
+            "another flavour by clicking on the JAM logo in the sidebar."
+        )

@@ -411,7 +411,7 @@ class TestTablePage(BaseTest):
         modal = self.wait_for_view_modal("tag")
 
         # Verify modal contains the entry information
-        expected = f'Tag Details\n{entry.name}\nClose\nEdit'
+        expected = f"Tag Details\n{entry.name}\nClose\nEdit"
         assert modal.text == expected
 
         # Close modal
@@ -424,7 +424,7 @@ class TestTablePage(BaseTest):
         modal = self.wait_for_view_modal("aggregator")
 
         # Verify modal contains the entry information
-        expected = f'Aggregator Details\n{entry.name}\nWebsite\nlinkedin.com/jobs\nClose\nEdit'
+        expected = f"Aggregator Details\n{entry.name}\nWebsite\nlinkedin.com/jobs\nClose\nEdit"
         assert modal.text == expected
 
         # Close modal

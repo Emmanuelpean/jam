@@ -48,7 +48,7 @@ class TestCompanyCRUD(CRUDTestBase):
         assert companies[0]["name"] == "Tech Corp"
 
     def test_get_all_specific_id_not_owned(self, authorised_clients, test_companies) -> None:
-        response = authorised_clients[0].get(f"{self.endpoint}/?id=1")
+        response = authorised_clients[1].get(f"{self.endpoint}/?id=1")
         assert response.status_code == 200
         assert len(response.json()) == 0
 
