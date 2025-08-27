@@ -22,7 +22,7 @@ from googleapiclient.discovery import build
 
 from app.database import session_local
 from app.eis import schemas
-from app.eis.job_scraper import LinkedinJobScraper, IndeedScrapper, extract_indeed_jobs_from_email
+from app.eis.job_scraper import LinkedinJobScraper, extract_indeed_jobs_from_email
 from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
 from app.models import User
 from app.utils import get_gmail_logger, AppLogger
@@ -458,9 +458,15 @@ class GmailScraper(object):
                             elif email_record.platform == "indeed":
                                 jobs = extract_indeed_jobs_from_email(email_record.body)
                                 for job in jobs:
-                                    job["id"] = self.extract_indeed_job_ids(job["raw"])[0]
+                                    try:
+                                        job["id"] = self.extract_indeed_job_ids(job["job"]["url"])[0]
+                                    except Exception as exception:
+                                        message = f"Failed to extract job ID for job URL {job['job']['url']} due to error: {exception}. Skipping job."
+                                        logger.exception(message)
+                                        continue
                                 job_ids = [job["id"] for job in jobs]
                                 stats["indeed_jobs"] += len(jobs)
+
                             else:
                                 logger.info(f"No job IDs found in email: {email_external_id}. Skipping email.")
                                 continue  # next email
@@ -480,9 +486,15 @@ class GmailScraper(object):
                                 for job, job_record in zip(jobs, job_records):
                                     try:
                                         self.save_job_data_to_db(job_record, job, db)
+                                        stats["jobs_scraped"] += 1
                                     except Exception as exception:
-                                        message = f"Failed to save job data for job ID {job['id']} due to error: {exception}. Skipping job."
+                                        message = f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: {exception}. Skipping job."
                                         logger.exception(message)
+                                        job_record.is_scraped = True
+                                        job_record.error_msg = f"{str(exception)}"
+                                        db.commit()
+                                        stats["jobs_failed"] += 1
+                                        continue  # next job
                         else:
                             stats["emails_existing"] += 1
                             logger.info("Email already exists in database. Skipping email.")
@@ -618,12 +630,12 @@ class GmailScraperService:
 
 if __name__ == "__main__":
     gmail = GmailScraper()
-    emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=2)
-    email_d = gmail.get_email_data(emails[0], "")
-    print(email_d.body)
+    # emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=2)
+    # email_d = gmail.get_email_data(emails[0], "")
+    # print(email_d.body)
     # print(email_d)
     # gmail.save_email_to_db(email_d, next(get_db()))
-    # gmail.run_scraping(2)
+    gmail.run_scraping(2)
 
     # service = GmailScraperService()
     # service.start()

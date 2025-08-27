@@ -23,6 +23,7 @@ dependencies = [
     "google-auth-httplib2==0.2.0",
     "google-auth-oauthlib==1.2.2",
     "cloudscraper==1.2.71",
+    "tqdm==4.67.1",
 ]
 
 [project.optional-dependencies]

@@ -12,6 +12,7 @@ import re
 import time
 
 import requests
+from tqdm import tqdm
 
 
 class JobScrapper(object):
@@ -23,8 +24,8 @@ class JobScrapper(object):
     max_attempts: int = 60
 
     def __init__(
-            self,
-            job_ids: str | list[str],
+        self,
+        job_ids: str | list[str],
     ) -> None:
         """Object constructor
         :param job_ids: List of job IDs to scrape"""
@@ -88,21 +89,28 @@ class JobScrapper(object):
         progress_url = f"https://api.brightdata.com/datasets/v3/progress/{snapshot_id}"
         headers = {"Authorization": f"Bearer {self.api_key}"}
 
-        for attempt in range(self.max_attempts):
-            progress_resp = requests.get(progress_url, headers=headers)
-            if progress_resp.status_code not in (200, 202):
-                raise Exception(f"Failed to get snapshot status: {progress_resp.status_code} {progress_resp.text}")
+        # Create progress bar for polling attempts
+        with tqdm(total=self.max_attempts, desc="Waiting for data", unit="attempt") as pbar:
+            for attempt in range(self.max_attempts):
+                progress_resp = requests.get(progress_url, headers=headers)
+                if progress_resp.status_code not in (200, 202):
+                    raise Exception(f"Failed to get snapshot status: {progress_resp.status_code} {progress_resp.text}")
 
-            status = progress_resp.json().get("status")
-            if status.lower() == "ready":
-                break
-            elif status.lower() == "failed":
-                raise Exception("Snapshot processing failed.")
+                status = progress_resp.json().get("status")
 
-            print(f"Attempt {attempt + 1}/{self.max_attempts}: Status is '{status}', waiting...")
-            time.sleep(self.poll_interval)
-        else:
-            raise TimeoutError("Snapshot data not ready after maximum attempts.")
+                # Update progress bar description with current status
+                pbar.set_description(f"Status: {status}")
+
+                if status.lower() == "ready":
+                    pbar.update(self.max_attempts - attempt)  # Complete the bar
+                    break
+                elif status.lower() == "failed":
+                    raise Exception("Snapshot processing failed.")
+
+                pbar.update(1)
+                time.sleep(self.poll_interval)
+            else:
+                raise TimeoutError("Snapshot data not ready after maximum attempts.")
 
     def retrieve_data(self, snapshot_id: str) -> list[dict]:
         """Retrieve the job data associated with the snapshot id
@@ -227,7 +235,7 @@ def extract_indeed_jobs_from_email(body: str) -> list[dict[str, str]]:
         if job_info:
             jobs.append(job_info)
 
-    return jobs
+    return jobs[2:-1]
 
 
 def parse_indeed_job_section(section: str) -> dict[str, str] | None:
@@ -333,12 +341,9 @@ def parse_indeed_job_section(section: str) -> dict[str, str] | None:
             "title": job_info["title"],
             "description": job_info["description"],
             "url": job_info["url"],
-            "salary": {
-                "min_amount": salary_min,
-                "max_amount": salary_max
-            }
+            "salary": {"min_amount": salary_min, "max_amount": salary_max},
         },
-        "raw": job_info  # Keep original flat structure for reference
+        "raw": section,
     }
 
     return results
