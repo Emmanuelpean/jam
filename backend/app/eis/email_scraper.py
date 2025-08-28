@@ -641,12 +641,12 @@ class GmailScraperService:
 
 if __name__ == "__main__":
     gmail = GmailScraper()
-    # emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=2)
-    # email_d = gmail.get_email_data(emails[0], "")
-    # print(email_d.body)
+    emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=2)
+    email_d = gmail.get_email_data(emails[0], "")
+    print(email_d.body)
     # print(email_d)
     # gmail.save_email_to_db(email_d, next(get_db()))
-    gmail.run_scraping(2)
+    # gmail.run_scraping(2)
 
     # service = GmailScraperService()
     # service.start()

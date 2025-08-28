@@ -1,10 +1,8 @@
-"""
-LinkedIn Job Scraper Module
+"""LinkedIn and Indeed Job Scraper Module
 
 This module provides functionality to scrape LinkedIn job postings using the BrightData API.
 It offers a complete workflow to trigger data collection, monitor processing status, and
-retrieve scraped job information.
-"""
+retrieve scraped job information."""
 
 import json
 import os
@@ -223,9 +221,7 @@ def extract_indeed_jobs_from_email(body: str) -> list[dict[str, str | dict]]:
 
     # Split the email body by job entries
     # Look for patterns that indicate job separations
-    job_sections = re.split(
-        r"\n\n(?=[A-Z][^:\n]*\n[A-Z][^:\n]*(?:\s*-\s*[A-Za-z]+)?(?:\s*£[\d,]+ - £[\d,]+ a year)?)", body
-    )
+    job_sections = body.split("\n\n")[2:-4]
 
     for section in job_sections:
         if not section.strip():
@@ -235,7 +231,7 @@ def extract_indeed_jobs_from_email(body: str) -> list[dict[str, str | dict]]:
         if job_info:
             jobs.append(job_info)
 
-    return jobs[2:-1]
+    return jobs
 
 
 def parse_indeed_job_section(section: str) -> dict[str, str] | None:
@@ -351,9 +347,9 @@ def parse_indeed_job_section(section: str) -> dict[str, str] | None:
 
 # Usage example:
 if __name__ == "__main__":
-    # scraper = LinkedinJobScraper(["4280160167"])
-    # job_data1 = scraper.scrape_job()
-    # print(job_data1)
+    scraper = LinkedinJobScraper(["4280160167"])
+    job_data1 = scraper.scrape_job()
+    print(job_data1)
 
     scraper = IndeedJobScrapper("7b9119575c72cb5c")
     job_data1 = scraper.scrape_job()
