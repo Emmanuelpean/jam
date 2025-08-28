@@ -5,8 +5,8 @@ backend/.env
 /.idea/misc.xml
 /backend/app/eis/eis_secrets.json
 /backend/app/eis/token.pickle
-/backend/app/eis/logs
 frontend/.env
+logs/
 
 # dependencies
 frontend/node_modules

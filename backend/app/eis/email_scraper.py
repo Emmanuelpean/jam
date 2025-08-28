@@ -283,7 +283,8 @@ class GmailScraper(object):
                 break
         return response.url
 
-    def extract_indeed_job_ids(self, body: str) -> list[str]:
+    @staticmethod
+    def extract_indeed_job_ids(body: str) -> list[str]:
         """Extract Indeed job advertisement IDs from email body URLs
         :param body: Email body content as string
         :return: List of unique Indeed job IDs"""
@@ -297,7 +298,7 @@ class GmailScraper(object):
             # Try to extract 'ad' parameter first (for pagead URLs)
             ad_match = re.search(r"[?&]mo=([^&>\s]+)", url, re.IGNORECASE)
             if ad_match:
-                url = self.get_indeed_redirected_url(url)
+                url = GmailScraper.get_indeed_redirected_url(url)
 
             # Try to extract 'jk' parameter (for rc URLs)
             jk_match = re.search(r"[?&]jk=([^&>\s]+)", url, re.IGNORECASE)
@@ -488,7 +489,6 @@ class GmailScraper(object):
                                 logger.exception(message)
                                 continue  # next email
 
-
                             # For indeed jobs, immediately save the extracted content
                             if email_record.platform == "indeed" and self.skip_indeed_scraping:
                                 print(jobs)
@@ -642,7 +642,7 @@ class GmailScraperService:
 if __name__ == "__main__":
     gmail = GmailScraper()
     emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=2)
-    email_d = gmail.get_email_data(emails[0], "")
+    email_d = gmail.get_email_data(emails[2], "")
     print(email_d.body)
     # print(email_d)
     # gmail.save_email_to_db(email_d, next(get_db()))
