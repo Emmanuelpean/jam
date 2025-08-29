@@ -121,6 +121,12 @@ class EisServiceLog(CommonBase, Base):
     - `error_message` (str, optional): Error message if the service run failed.
     - `job_success_n` (int, optional): Number of successful jobs scraped.
     - `job_fail_n` (int, optional): Number of failed jobs scraped.
+    - `users_processed_n` (int, optional): Number of users processed.
+    - `emails_found_n` (int, optional): Number of email messages found.
+    - `emails_saved_n` (int, optional): Number of email messages saved.
+    - `jobs_extracted_n` (int, optional): Number of jobs extracted.
+    - `linkedin_job_n` (int, optional): Number of LinkedIn jobs extracted.
+    - `indeed_job_n` (int, optional): Number of Indeed jobs extracted.
 
     Relationships:
     --------------
@@ -133,5 +139,11 @@ class EisServiceLog(CommonBase, Base):
     error_message = Column(String, nullable=True)
     job_success_n = Column(Integer, nullable=True)
     job_fail_n = Column(Integer, nullable=True)
+    users_processed_n = Column(Integer, nullable=True)
+    emails_found_n = Column(Integer, nullable=True)
+    emails_saved_n = Column(Integer, nullable=True)
+    jobs_extracted_n = Column(Integer, nullable=True)
+    linkedin_job_n = Column(Integer, nullable=True)
+    indeed_job_n = Column(Integer, nullable=True)
 
     emails = relationship("JobAlertEmail", back_populates="service_log")
