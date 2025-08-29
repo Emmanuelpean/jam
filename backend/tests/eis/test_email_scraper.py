@@ -6,7 +6,7 @@ import pytest
 
 from app.eis import schemas
 from app.eis.email_scraper import clean_email_address, get_user_id_from_email, GmailScraper
-from app.eis.models import JobAlertEmail, EisServiceLog
+from app.eis.models import JobAlertEmail, ScrapedJob
 
 
 class TestCleanEmailAddress:
@@ -79,25 +79,10 @@ class TestSaveEmailToDb:
             body="Test email body content",
         )
 
-    @pytest.fixture
-    def service_log(self, session) -> EisServiceLog:
-        """Create a test service log"""
-
-        # noinspection PyArgumentList
-        service_log = EisServiceLog(
-            name="test_service",
-            run_datetime=datetime.datetime.now(),
-            is_success=True,
-        )
-        session.add(service_log)
-        session.commit()
-        session.refresh(service_log)
-        return service_log
-
-    def test_save_new_email_success(self, email_data, service_log, session, test_users) -> None:
+    def test_save_new_email_success(self, email_data, test_service_logs, session, test_users) -> None:
         """Test saving a new email successfully"""
 
-        result_email, is_created = GmailScraper.save_email_to_db(email_data, service_log.id, session)
+        result_email, is_created = GmailScraper.save_email_to_db(email_data, test_service_logs[0].id, session)
 
         assert is_created is True
         assert result_email.external_email_id == email_data.external_email_id
@@ -106,7 +91,7 @@ class TestSaveEmailToDb:
         assert result_email.platform == email_data.platform
         assert result_email.body == email_data.body
         assert result_email.owner_id == test_users[0].id
-        assert result_email.service_log_id == service_log.id
+        assert result_email.service_log_id == test_service_logs[0].id
 
         # Verify it's actually in the database
         # noinspection PyTypeChecker
@@ -116,7 +101,7 @@ class TestSaveEmailToDb:
         assert db_email is not None
         assert db_email.id == result_email.id
 
-    def test_save_existing_email_returns_existing(self, email_data, service_log, session, test_users) -> None:
+    def test_save_existing_email_returns_existing(self, email_data, test_service_logs, session, test_users) -> None:
         """Test that existing email is returned without creating a new record"""
 
         # noinspection PyArgumentList
@@ -125,12 +110,12 @@ class TestSaveEmailToDb:
             subject="Different Subject",
             sender="different@example.com",
             owner_id=test_users[0].id,
-            service_log_id=service_log.id,
+            service_log_id=test_service_logs[0].id,
         )
         session.add(existing_email)
         session.commit()
 
-        result_email, is_created = GmailScraper.save_email_to_db(email_data, service_log.id, session)
+        result_email, is_created = GmailScraper.save_email_to_db(email_data, test_service_logs[0].id, session)
 
         assert is_created is False
         assert result_email.id == existing_email.id
@@ -353,3 +338,211 @@ class TestExtractIndeedJobIds:
 
         assert len(job_ids) == 2
         assert job_ids == ["1111111111aaa", "2222222222bbb"]
+
+
+class TestSaveJobsToDb:
+    """Test class for GmailScraper.save_jobs_to_db method"""
+
+    def test_save_new_jobs_success(self, test_job_alert_emails, session, test_users) -> None:
+        """Test saving new job IDs successfully"""
+
+        job_ids = ["job_123", "job_456", "job_789"]
+
+        result = GmailScraper.save_jobs_to_db(
+            email_record=test_job_alert_emails[0],
+            job_ids=job_ids,
+            db=session
+        )
+
+        # Verify returned list has correct length
+        assert len(result) == 3
+
+        # Verify all jobs are ScrapedJob instances
+        for job_record in result:
+            assert job_record.owner_id == test_users[0].id
+            assert job_record.external_job_id in job_ids
+            assert test_job_alert_emails[0] in job_record.emails
+
+    def test_save_existing_jobs_returns_existing(self, test_job_alert_emails, session, test_users) -> None:
+        """Test that existing jobs are returned without creating duplicates"""
+
+        # Create existing jobs
+        # noinspection PyArgumentList
+        existing_job = ScrapedJob(
+            external_job_id="existing_job_123",
+            owner_id=test_users[0].id
+        )
+        session.add(existing_job)
+        session.commit()
+        session.refresh(existing_job)
+
+        job_ids = ["existing_job_123", "new_job_456"]
+
+        result = GmailScraper.save_jobs_to_db(
+            email_record=test_job_alert_emails[0],
+            job_ids=job_ids,
+            db=session
+        )
+
+        # Verify returned list has correct length
+        assert len(result) == 2
+
+    def test_save_jobs_different_owners(self, test_job_alert_emails, session, test_users) -> None:
+        """Test that jobs with same external_job_id but different owners are created separately"""
+
+        assert test_job_alert_emails[0].owner_id != test_job_alert_emails[-1].owner_id
+
+        # Save same job ID for both users
+        job_ids = ["same_job_123"]
+
+        result_1 = GmailScraper.save_jobs_to_db(
+            email_record=test_job_alert_emails[0],
+            job_ids=job_ids,
+            db=session
+        )
+
+        result_2 = GmailScraper.save_jobs_to_db(
+            email_record=test_job_alert_emails[-1],
+            job_ids=job_ids,
+            db=session
+        )
+
+        # Verify separate job records were created for each owner
+        assert len(result_1) == 1
+        assert len(result_2) == 1
+        assert result_1[0].id != result_2[0].id
+        assert result_1[0].owner_id == test_users[0].id
+        assert result_2[0].owner_id == test_users[1].id
+
+        # Verify both have the same external job ID
+        assert result_1[0].external_job_id == "same_job_123"
+        assert result_2[0].external_job_id == "same_job_123"
+
+        # Verify total count in the database
+        total_jobs = session.query(ScrapedJob).count()
+        assert total_jobs == 2
+
+
+class TestSaveJobDataToDb:
+    """Test class for GmailScraper.save_job_data_to_db method"""
+
+    @pytest.fixture
+    def sample_job_data(self) -> dict:
+        """Sample job data in the expected format"""
+
+        return {
+            "company": "Test Company Ltd",
+            "location": "London, UK",
+            "job": {
+                "title": "Senior Software Engineer",
+                "description": "We are looking for a senior software engineer to join our team...",
+                "url": "https://example.com/job/123",
+                "salary": {
+                    "min_amount": 50000.0,
+                    "max_amount": 70000.0
+                }
+            }
+        }
+
+    @pytest.fixture
+    def sample_scraped_job(self, session, test_users) -> ScrapedJob:
+        """Create a sample scraped job record"""
+
+        # noinspection PyArgumentList
+        job = ScrapedJob(
+            external_job_id="test_job_123",
+            owner_id=test_users[0].id,
+        )
+        session.add(job)
+        session.commit()
+        session.refresh(job)
+        return job
+
+    def test_save_job_data_single_job_and_data(self, sample_scraped_job, sample_job_data, session) -> None:
+        """Test saving job data to a single job record"""
+
+        # Verify initial state
+        assert sample_scraped_job.is_scraped is False
+        assert sample_scraped_job.title is None
+        assert sample_scraped_job.company is None
+
+        # Save job data
+        GmailScraper.save_job_data_to_db(
+            job_records=sample_scraped_job,
+            job_data=sample_job_data,
+            db=session
+        )
+
+        # Refresh the record from database
+        session.refresh(sample_scraped_job)
+
+        # Verify the data was saved correctly
+        assert sample_scraped_job.is_scraped is True
+        assert sample_scraped_job.company == sample_job_data["company"]
+        assert sample_scraped_job.location == sample_job_data["location"]
+        assert sample_scraped_job.title == sample_job_data["job"]["title"]
+        assert sample_scraped_job.description == sample_job_data["job"]["description"]
+        assert sample_scraped_job.url == sample_job_data["job"]["url"]
+        assert sample_scraped_job.salary_min == sample_job_data["job"]["salary"]["min_amount"]
+        assert sample_scraped_job.salary_max == sample_job_data["job"]["salary"]["max_amount"]
+
+    def test_save_job_data_multiple_jobs_and_data(self, session, test_users) -> None:
+        """Test saving job data to multiple job records"""
+
+        # Create multiple job records
+        # noinspection PyArgumentList
+        job_1 = ScrapedJob(external_job_id="job_1", owner_id=test_users[0].id, is_scraped=False,)
+        # noinspection PyArgumentList
+        job_2 = ScrapedJob(external_job_id="job_2", owner_id=test_users[0].id, is_scraped=False,)
+        session.add_all([job_1, job_2])
+        session.commit()
+        session.refresh(job_1)
+        session.refresh(job_2)
+
+        # Create multiple job data entries
+        job_data_1 = {
+            "company": "Company A",
+            "location": "London, UK",
+            "job": {
+                "title": "Developer A",
+                "description": "Description A",
+                "url": "https://example.com/job/a",
+                "salary": {"min_amount": 40000.0, "max_amount": 60000.0}
+            }
+        }
+
+        job_data_2 = {
+            "company": "Company B",
+            "location": "Manchester, UK",
+            "job": {
+                "title": "Developer B",
+                "description": "Description B",
+                "url": "https://example.com/job/b",
+                "salary": {"min_amount": 45000.0, "max_amount": 65000.0}
+            }
+        }
+
+        # Save job data
+        GmailScraper.save_job_data_to_db(
+            job_records=[job_1, job_2],
+            job_data=[job_data_1, job_data_2],
+            db=session
+        )
+
+        # Refresh records
+        session.refresh(job_1)
+        session.refresh(job_2)
+
+        # Verify first job
+        assert job_1.is_scraped is True
+        assert job_1.company == "Company A"
+        assert job_1.title == "Developer A"
+        assert job_1.salary_min == 40000.0
+        assert job_1.salary_max == 60000.0
+
+        # Verify second job
+        assert job_2.is_scraped is True
+        assert job_2.company == "Company B"
+        assert job_2.title == "Developer B"
+        assert job_2.salary_min == 45000.0
+        assert job_2.salary_max == 65000.0

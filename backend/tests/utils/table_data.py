@@ -1235,7 +1235,7 @@ JOB_ALERT_EMAIL_DATA = [
         """,
     },
     {
-        "owner_id": 3,
+        "owner_id": 2,
         "external_email_id": "indeed_alert_003",
         "subject": "Frontend Developer jobs in your area",
         "sender": "job-alerts@indeed.co.uk",

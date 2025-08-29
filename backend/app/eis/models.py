@@ -4,7 +4,7 @@ Defines SQLAlchemy ORM models for email-based job scraping functionality.
 Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
-from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float, TIMESTAMP, Table
+from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float, TIMESTAMP, Table, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
@@ -84,7 +84,7 @@ class ScrapedJob(Owned, Base):
     --------------
     - `emails` (list of JobAlertEmail): List of email messages associated with the job."""
 
-    external_job_id = Column(String, nullable=False, unique=True)
+    external_job_id = Column(String, nullable=False)
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
     is_failed = Column(Boolean, nullable=False, server_default=expression.false())
     scrape_error = Column(String, nullable=True)
@@ -102,6 +102,11 @@ class ScrapedJob(Owned, Base):
 
     # Relationships
     emails = relationship("JobAlertEmail", secondary=email_scrapedjob_mapping, back_populates="jobs")
+
+    # Constraints
+    __table_args__ = (
+        UniqueConstraint('external_job_id', 'owner_id', name='unique_job_per_owner'),
+    )
 
 
 class EisServiceLog(CommonBase, Base):

@@ -255,8 +255,8 @@ class GmailScraper(object):
 
     # -------------------------------------------------- JOB SCRAPING --------------------------------------------------
 
-    @staticmethod
-    def extract_linkedin_job_ids(body: str) -> list[str]:
+    @classmethod
+    def extract_linkedin_job_ids(cls, body: str) -> list[str]:
         """Extract LinkedIn job IDs from the email body
         :param body: Email body content as string
         :return: List of unique LinkedIn job IDs"""
@@ -265,8 +265,8 @@ class GmailScraper(object):
         job_ids = re.findall(pattern, body, re.IGNORECASE)
         return list(dict.fromkeys(job_ids))
 
-    @staticmethod
-    def get_indeed_redirected_url(job_url: str) -> str:
+    @classmethod
+    def get_indeed_redirected_url(cls, job_url: str) -> str:
         """Get the redirected URL from the Indeed job URL
         :param job_url: Indeed job URL
         :return: Redirected URL"""
@@ -283,8 +283,8 @@ class GmailScraper(object):
                 break
         return response.url
 
-    @staticmethod
-    def extract_indeed_job_ids(body: str) -> list[str]:
+    @classmethod
+    def extract_indeed_job_ids(cls, body: str) -> list[str]:
         """Extract Indeed job advertisement IDs from email body URLs
         :param body: Email body content as string
         :return: List of unique Indeed job IDs"""
@@ -298,7 +298,7 @@ class GmailScraper(object):
             # Try to extract 'ad' parameter first (for pagead URLs)
             ad_match = re.search(r"[?&]mo=([^&>\s]+)", url, re.IGNORECASE)
             if ad_match:
-                url = GmailScraper.get_indeed_redirected_url(url)
+                url = cls.get_indeed_redirected_url(url)
 
             # Try to extract 'jk' parameter (for rc URLs)
             jk_match = re.search(r"[?&]jk=([^&>\s]+)", url, re.IGNORECASE)
