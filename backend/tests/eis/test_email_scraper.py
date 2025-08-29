@@ -1,6 +1,7 @@
 """Test module for email_parser.py functions and GmailScraper class"""
 
 import datetime
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -144,14 +145,7 @@ class TestExtractLinkedinJobIds:
 
         job_ids = GmailScraper.extract_linkedin_job_ids(self.linkedin_email_body)
 
-        expected_job_ids = [
-            "4289870503",
-            "4291891707",
-            "4291383265",
-            "4280354992",
-            "4255584864",
-            "4265877117"
-        ]
+        expected_job_ids = ["4289870503", "4291891707", "4291383265", "4280354992", "4255584864", "4265877117"]
 
         assert len(job_ids) == 6
         assert job_ids == expected_job_ids
@@ -181,13 +175,16 @@ class TestExtractLinkedinJobIds:
         job_ids = GmailScraper.extract_linkedin_job_ids(body)
         assert job_ids == []
 
-    @pytest.mark.parametrize("url_pattern,expected_id", [
-        ("https://www.linkedin.com/jobs/view/1234567890", "1234567890"),
-        ("https://www.linkedin.com/comm/jobs/view/9876543210", "9876543210"),
-        ("HTTPS://WWW.LINKEDIN.COM/JOBS/VIEW/5555555555", "5555555555"),
-        ("https://linkedin.com/jobs/view/1111111111", "1111111111"),
-        ("http://www.linkedin.com/jobs/view/2222222222", "2222222222"),
-    ])
+    @pytest.mark.parametrize(
+        "url_pattern,expected_id",
+        [
+            ("https://www.linkedin.com/jobs/view/1234567890", "1234567890"),
+            ("https://www.linkedin.com/comm/jobs/view/9876543210", "9876543210"),
+            ("HTTPS://WWW.LINKEDIN.COM/JOBS/VIEW/5555555555", "5555555555"),
+            ("https://linkedin.com/jobs/view/1111111111", "1111111111"),
+            ("http://www.linkedin.com/jobs/view/2222222222", "2222222222"),
+        ],
+    )
     def test_extract_linkedin_job_ids_url_variations(self, url_pattern, expected_id) -> None:
         """Test extracting job IDs from various URL patterns"""
 
@@ -259,12 +256,31 @@ class TestExtractIndeedJobIds:
 
         job_ids = GmailScraper.extract_indeed_job_ids(self.indeed_email_body)
 
-        expected_job_ids = ['8799a57d87058103', 'd489097ca0fb185f', '7f9c701ebf265b69', '0537336f99ba1650',
-                            '312725e138947a4b', '06498cad9de95b12', 'bd60005166216639', '42b107e214095d56',
-                            'd30493c008b601e3', 'da413431a0c55ec7', '2ed37852402643ab', '14a9001ba6ebb965',
-                            'eafb032fabcd77bc', '6838e604ddffd5ac', '227d4ccd0823fc96', '804b940d2d96b30b',
-                            'f9aafc9ba4c31c6d', 'e034f0b761e410ea', '37cdb0ba59e12295', '7b272f46e4e46a14',
-                            'd6110bfb54bdeddb', '5aa22054e7a8b76e', 'ae47862d410bbd39']
+        expected_job_ids = [
+            "8799a57d87058103",
+            "d489097ca0fb185f",
+            "7f9c701ebf265b69",
+            "0537336f99ba1650",
+            "312725e138947a4b",
+            "06498cad9de95b12",
+            "bd60005166216639",
+            "42b107e214095d56",
+            "d30493c008b601e3",
+            "da413431a0c55ec7",
+            "2ed37852402643ab",
+            "14a9001ba6ebb965",
+            "eafb032fabcd77bc",
+            "6838e604ddffd5ac",
+            "227d4ccd0823fc96",
+            "804b940d2d96b30b",
+            "f9aafc9ba4c31c6d",
+            "e034f0b761e410ea",
+            "37cdb0ba59e12295",
+            "7b272f46e4e46a14",
+            "d6110bfb54bdeddb",
+            "5aa22054e7a8b76e",
+            "ae47862d410bbd39",
+        ]
 
         assert job_ids == expected_job_ids
 
@@ -293,11 +309,14 @@ class TestExtractIndeedJobIds:
         job_ids = GmailScraper.extract_indeed_job_ids(body)
         assert job_ids == []
 
-    @pytest.mark.parametrize("url_pattern,expected_id", [
-        ("https://uk.indeed.com/rc/clk/dl?jk=1234567890abcdef&from=ja", "1234567890abcdef"),
-        ("HTTPS://UK.INDEED.COM/RC/CLK/DL?JK=5555555555AAAA&FROM=JA", "5555555555AAAA"),
-        ("http://indeed.com/rc/clk/dl?jk=1111111111bbbb&other=param", "1111111111bbbb"),
-    ])
+    @pytest.mark.parametrize(
+        "url_pattern,expected_id",
+        [
+            ("https://uk.indeed.com/rc/clk/dl?jk=1234567890abcdef&from=ja", "1234567890abcdef"),
+            ("HTTPS://UK.INDEED.COM/RC/CLK/DL?JK=5555555555AAAA&FROM=JA", "5555555555AAAA"),
+            ("http://indeed.com/rc/clk/dl?jk=1111111111bbbb&other=param", "1111111111bbbb"),
+        ],
+    )
     def test_extract_indeed_job_ids_url_variations(self, url_pattern, expected_id) -> None:
         """Test extracting job IDs from various URL patterns"""
 
@@ -348,11 +367,7 @@ class TestSaveJobsToDb:
 
         job_ids = ["job_123", "job_456", "job_789"]
 
-        result = GmailScraper.save_jobs_to_db(
-            email_record=test_job_alert_emails[0],
-            job_ids=job_ids,
-            db=session
-        )
+        result = GmailScraper.save_jobs_to_db(email_record=test_job_alert_emails[0], job_ids=job_ids, db=session)
 
         # Verify returned list has correct length
         assert len(result) == 3
@@ -368,21 +383,14 @@ class TestSaveJobsToDb:
 
         # Create existing jobs
         # noinspection PyArgumentList
-        existing_job = ScrapedJob(
-            external_job_id="existing_job_123",
-            owner_id=test_users[0].id
-        )
+        existing_job = ScrapedJob(external_job_id="existing_job_123", owner_id=test_users[0].id)
         session.add(existing_job)
         session.commit()
         session.refresh(existing_job)
 
         job_ids = ["existing_job_123", "new_job_456"]
 
-        result = GmailScraper.save_jobs_to_db(
-            email_record=test_job_alert_emails[0],
-            job_ids=job_ids,
-            db=session
-        )
+        result = GmailScraper.save_jobs_to_db(email_record=test_job_alert_emails[0], job_ids=job_ids, db=session)
 
         # Verify returned list has correct length
         assert len(result) == 2
@@ -395,17 +403,9 @@ class TestSaveJobsToDb:
         # Save same job ID for both users
         job_ids = ["same_job_123"]
 
-        result_1 = GmailScraper.save_jobs_to_db(
-            email_record=test_job_alert_emails[0],
-            job_ids=job_ids,
-            db=session
-        )
+        result_1 = GmailScraper.save_jobs_to_db(email_record=test_job_alert_emails[0], job_ids=job_ids, db=session)
 
-        result_2 = GmailScraper.save_jobs_to_db(
-            email_record=test_job_alert_emails[-1],
-            job_ids=job_ids,
-            db=session
-        )
+        result_2 = GmailScraper.save_jobs_to_db(email_record=test_job_alert_emails[-1], job_ids=job_ids, db=session)
 
         # Verify separate job records were created for each owner
         assert len(result_1) == 1
@@ -437,11 +437,8 @@ class TestSaveJobDataToDb:
                 "title": "Senior Software Engineer",
                 "description": "We are looking for a senior software engineer to join our team...",
                 "url": "https://example.com/job/123",
-                "salary": {
-                    "min_amount": 50000.0,
-                    "max_amount": 70000.0
-                }
-            }
+                "salary": {"min_amount": 50000.0, "max_amount": 70000.0},
+            },
         }
 
     @pytest.fixture
@@ -467,11 +464,7 @@ class TestSaveJobDataToDb:
         assert sample_scraped_job.company is None
 
         # Save job data
-        GmailScraper.save_job_data_to_db(
-            job_records=sample_scraped_job,
-            job_data=sample_job_data,
-            db=session
-        )
+        GmailScraper.save_job_data_to_db(job_records=sample_scraped_job, job_data=sample_job_data, db=session)
 
         # Refresh the record from database
         session.refresh(sample_scraped_job)
@@ -491,9 +484,17 @@ class TestSaveJobDataToDb:
 
         # Create multiple job records
         # noinspection PyArgumentList
-        job_1 = ScrapedJob(external_job_id="job_1", owner_id=test_users[0].id, is_scraped=False,)
+        job_1 = ScrapedJob(
+            external_job_id="job_1",
+            owner_id=test_users[0].id,
+            is_scraped=False,
+        )
         # noinspection PyArgumentList
-        job_2 = ScrapedJob(external_job_id="job_2", owner_id=test_users[0].id, is_scraped=False,)
+        job_2 = ScrapedJob(
+            external_job_id="job_2",
+            owner_id=test_users[0].id,
+            is_scraped=False,
+        )
         session.add_all([job_1, job_2])
         session.commit()
         session.refresh(job_1)
@@ -507,8 +508,8 @@ class TestSaveJobDataToDb:
                 "title": "Developer A",
                 "description": "Description A",
                 "url": "https://example.com/job/a",
-                "salary": {"min_amount": 40000.0, "max_amount": 60000.0}
-            }
+                "salary": {"min_amount": 40000.0, "max_amount": 60000.0},
+            },
         }
 
         job_data_2 = {
@@ -518,16 +519,12 @@ class TestSaveJobDataToDb:
                 "title": "Developer B",
                 "description": "Description B",
                 "url": "https://example.com/job/b",
-                "salary": {"min_amount": 45000.0, "max_amount": 65000.0}
-            }
+                "salary": {"min_amount": 45000.0, "max_amount": 65000.0},
+            },
         }
 
         # Save job data
-        GmailScraper.save_job_data_to_db(
-            job_records=[job_1, job_2],
-            job_data=[job_data_1, job_data_2],
-            db=session
-        )
+        GmailScraper.save_job_data_to_db(job_records=[job_1, job_2], job_data=[job_data_1, job_data_2], db=session)
 
         # Refresh records
         session.refresh(job_1)
@@ -546,3 +543,154 @@ class TestSaveJobDataToDb:
         assert job_2.title == "Developer B"
         assert job_2.salary_min == 45000.0
         assert job_2.salary_max == 65000.0
+
+
+class TestProcessEmailJobs:
+    """Test suite for the _process_email_jobs method."""
+
+    @pytest.fixture
+    def mock_secrets_file_content(self) -> dict:
+        """Mock contents of the secrets JSON file."""
+
+        return {
+            "google_auth": {
+                "installed": {
+                    "client_id": "test_client_id.apps.googleusercontent.com",
+                    "project_id": "test-project",
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                    "client_secret": "test_client_secret",
+                    "redirect_uris": ["http://localhost"],
+                }
+            }
+        }
+
+    @staticmethod
+    def _gmail_scraper(mock_secrets_file_content, **kwargs) -> GmailScraper:
+        """Create a GmailScraper instance for testing with mocked file dependencies."""
+
+        with patch("builtins.open", create=True) as mock_open, patch("json.load") as mock_json_load, patch(
+                "os.path.exists"
+        ) as mock_exists, patch("pickle.load") as mock_pickle_load, patch(
+            "pickle.dump"
+        ) as mock_pickle_dump, patch("app.eis.email_scraper.build") as mock_build:
+
+            # Mock the secrets file reading
+            mock_json_load.return_value = mock_secrets_file_content
+
+            # Mock token file doesn't exist (fresh authentication)
+            mock_exists.return_value = False
+
+            # Mock Gmail service
+            mock_service = MagicMock()
+            mock_build.return_value = mock_service
+
+            # Mock the OAuth flow
+            with patch("google_auth_oauthlib.flow.InstalledAppFlow.from_client_config") as mock_flow:
+                mock_credentials = MagicMock()
+                mock_credentials.valid = True
+                mock_flow_instance = MagicMock()
+                mock_flow_instance.run_local_server.return_value = mock_credentials
+                mock_flow.return_value = mock_flow_instance
+
+                # Create scraper with mocked dependencies
+                scraper = GmailScraper(secrets_file="test_secrets.json", token_file="test_token.json", **kwargs)
+
+                return scraper
+
+    @pytest.fixture
+    def gmail_scraper(self, mock_secrets_file_content) -> GmailScraper:
+        """Create a GmailScraper instance for testing with mocked file dependencies."""
+
+        return self._gmail_scraper(mock_secrets_file_content, skip_indeed_brightapi_scraping=False)
+
+    @pytest.fixture
+    def gmail_scraper_with_brightapi_skip(self, mock_secrets_file_content) -> GmailScraper:
+        """Create a GmailScraper instance with BrightAPI skip enabled."""
+
+        return self._gmail_scraper(mock_secrets_file_content, skip_indeed_brightapi_scraping=True)
+
+    def _email_record(self, session, test_users, filename: str, platform: str, user_index: int) -> JobAlertEmail:
+        """Create a LinkedIn job alert email record for testing."""
+
+        with open(f"resources/{filename}.txt") as ofile:
+            body = ofile.read()
+        email_record = JobAlertEmail(
+            external_email_id=f"{filename}_{platform}_{user_index}",
+            subject="Subject",
+            sender=test_users[user_index].email,
+            date_received=datetime.datetime.now(),
+            platform=platform,
+            body=body,
+            owner_id=test_users[user_index].id,
+        )
+        session.add(email_record)
+        session.commit()
+        return email_record
+
+    @pytest.fixture
+    def linkedin_email_record(self, session, test_users):
+        """Create a LinkedIn job alert email record for testing."""
+
+        return self._email_record(session, test_users, "linkedin_email", "linkedin", 0)
+
+    def linkedin_email_record_user2(self, session, test_users):
+        """Create a LinkedIn job alert email record for testing."""
+
+        return self._email_record(session, test_users, "linkedin_email", "linkedin", 1)
+
+    @pytest.fixture
+    def indeed_email_record(self, session, test_users):
+        """Create an Indeed job alert email record for testing."""
+
+        return self._email_record(session, test_users, "indeed_email", "indeed", 0)
+
+    @pytest.fixture
+    def indeed_email_record_user2(self, session, test_users):
+        """Create an Indeed job alert email record for testing."""
+
+        return self._email_record(session, test_users, "indeed_email", "indeed", 1)
+
+    def test_process_linkedin_email_jobs_success(
+        self,
+        gmail_scraper,
+        session,
+        linkedin_email_record,
+        test_service_logs,
+    ) -> None:
+        """Test successful processing of LinkedIn email job ids"""
+
+        gmail_scraper._process_email_jobs(
+            db=session,
+            email_record=linkedin_email_record,
+            service_log_entry=test_service_logs[0],
+        )
+
+        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record.owner_id).all()
+        assert len(scraped_jobs) == 6
+
+    def test_process_indeed_email_jobs_success(self, gmail_scraper, session, indeed_email_record, test_service_logs):
+        """Test successful processing of Indeed email jobs."""
+
+        result = gmail_scraper._process_email_jobs(
+            db=session,
+            email_record=indeed_email_record,
+            service_log_entry=test_service_logs[0],
+        )
+
+        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == indeed_email_record.owner_id).all()
+        assert len(scraped_jobs) == 23
+
+    def test_process_indeed_email_jobs_success_no_brightapi(self, gmail_scraper_with_brightapi_skip, session, indeed_email_record, test_service_logs):
+        """Test successful processing of Indeed email jobs."""
+
+        result = gmail_scraper_with_brightapi_skip._process_email_jobs(
+            db=session,
+            email_record=indeed_email_record,
+            service_log_entry=test_service_logs[0],
+        )
+
+        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == indeed_email_record.owner_id).all()
+        assert len(scraped_jobs) == 23
+        assert len(result) == 23

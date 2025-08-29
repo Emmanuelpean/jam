@@ -104,9 +104,7 @@ class ScrapedJob(Owned, Base):
     emails = relationship("JobAlertEmail", secondary=email_scrapedjob_mapping, back_populates="jobs")
 
     # Constraints
-    __table_args__ = (
-        UniqueConstraint('external_job_id', 'owner_id', name='unique_job_per_owner'),
-    )
+    __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
 
 
 class EisServiceLog(CommonBase, Base):
@@ -136,14 +134,14 @@ class EisServiceLog(CommonBase, Base):
     run_duration = Column(Float, nullable=True)
     run_datetime = Column(DateTime, nullable=False)
     is_success = Column(Boolean, nullable=True)
-    error_message = Column(String, nullable=True)
-    job_success_n = Column(Integer, nullable=True)
-    job_fail_n = Column(Integer, nullable=True)
-    users_processed_n = Column(Integer, nullable=True)
-    emails_found_n = Column(Integer, nullable=True)
-    emails_saved_n = Column(Integer, nullable=True)
-    jobs_extracted_n = Column(Integer, nullable=True)
-    linkedin_job_n = Column(Integer, nullable=True)
-    indeed_job_n = Column(Integer, nullable=True)
+    error_message = Column(String, default=0, nullable=False)
+    job_success_n = Column(Integer, default=0, nullable=False)
+    job_fail_n = Column(Integer, default=0, nullable=False)
+    users_processed_n = Column(Integer, default=0, nullable=False)
+    emails_found_n = Column(Integer, default=0, nullable=False)
+    emails_saved_n = Column(Integer, default=0, nullable=False)
+    jobs_extracted_n = Column(Integer, default=0, nullable=False)
+    linkedin_job_n = Column(Integer, default=0, nullable=False)
+    indeed_job_n = Column(Integer, default=0, nullable=False)
 
     emails = relationship("JobAlertEmail", back_populates="service_log")

@@ -25,7 +25,7 @@ from app.eis import schemas
 from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScrapper, extract_indeed_jobs_from_email
 from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
 from app.models import User
-from app.utils import get_gmail_logger, AppLogger
+from app.utils import get_gmail_logger
 
 logger = get_gmail_logger()
 
@@ -359,8 +359,6 @@ class GmailScraper(object):
 
         return job_records
 
-    # -------------------------------------------------- JOB SCRAPING --------------------------------------------------
-
     @staticmethod
     def save_job_data_to_db(
         job_records: list[ScrapedJob] | ScrapedJob,
@@ -385,180 +383,7 @@ class GmailScraper(object):
             record.is_scraped = True
             db.commit()
 
-    #
-    # def run_scraping(self, timedelta_days: int | float = 10) -> dict:
-    #     """Run the email scraping workflow
-    #     :param timedelta_days: Number of days to search for emails"""
-    #
-    #     start_time = datetime.now()
-    #     logger.info("Starting email scraping workflow")
-    #
-    #     stats = {
-    #         "start_time": start_time.isoformat(),
-    #         "users_processed": 0,
-    #         "emails_found": 0,
-    #         "emails_saved": 0,
-    #         "emails_new": 0,
-    #         "emails_existing": 0,
-    #         "jobs_extracted": 0,
-    #         "jobs_failed": 0,
-    #         "jobs_scraped": 0,
-    #         "linkedin_jobs": 0,
-    #         "indeed_jobs": 0,
-    #         "duration_seconds": 0.0,
-    #     }
-    #
-    #     with session_local() as db:
-    #
-    #         # noinspection PyArgumentList
-    #         service_log_entry = EisServiceLog(
-    #             name="Email Scraper Service",
-    #             run_datetime=start_time,
-    #         )
-    #         db.add(service_log_entry)
-    #         db.commit()
-    #         db.refresh(service_log_entry)
-    #
-    #         try:
-    #             users = db.query(User).all()
-    #             logger.info(f"Found {len(users)} users to process")
-    #
-    #             # For each user...
-    #             for user in users:
-    #                 logger.info(f"Processing user: {user.email} (ID: {user.id})")
-    #
-    #                 # --------------------------------------------- EMAILS ---------------------------------------------
-    #
-    #                 # Get the list of all emails
-    #                 try:
-    #                     email_external_ids = self.get_email_ids(user.email, True, timedelta_days)
-    #                     stats["users_processed"] += 1
-    #                 except Exception as exception:
-    #                     logger.exception(f"Failed to search messages due to error: {exception}. Skipping user.")
-    #                     continue
-    #                 stats["emails_found"] += len(email_external_ids)
-    #
-    #                 # For each email...
-    #                 for email_external_id in email_external_ids:
-    #                     logger.info(f"Processing email with ID: {email_external_id}")
-    #                     try:
-    #                         email_data = self.get_email_data(email_external_id, user.email)
-    #                         email_record, is_new = self.save_email_to_db(email_data, service_log_entry.id, db)
-    #                     except Exception as exception:
-    #                         message = f"Failed to get and save email data for email ID {email_external_id} due to error: {exception}. Skipping email."
-    #                         logger.exception(message)
-    #                         continue  # next email
-    #
-    #                     # -------------------------------------------- JOBS --------------------------------------------
-    #
-    #                     # If the email is not already in the database...
-    #                     if is_new:
-    #                         stats["emails_new"] += 1
-    #
-    #                         if email_record.platform == "linkedin":
-    #                             # Get the job ids
-    #                             job_ids = self.extract_linkedin_job_ids(email_record.body)
-    #                             stats["linkedin_jobs"] += len(job_ids)
-    #
-    #                         elif email_record.platform == "indeed":
-    #                             if self.skip_indeed_brightapi_scraping:
-    #                                 jobs_ = extract_indeed_jobs_from_email(email_record.body)
-    #                                 jobs = {}
-    #                                 for job in jobs_:
-    #                                     try:
-    #                                         jobs[self.extract_indeed_job_ids(job["job"]["url"])[0]] = job
-    #                                     except Exception as exception:
-    #                                         message = f"Failed to extract job ID for job URL {job['job']['url']} due to error: {exception}. Skipping job."
-    #                                         logger.exception(message)
-    #                                         continue
-    #                                 job_ids = list(jobs.keys())
-    #                             else:
-    #                                 job_ids = self.extract_indeed_job_ids(email_record.body)
-    #                             stats["indeed_jobs"] += len(job_ids)
-    #
-    #                         else:
-    #                             logger.info(f"No job IDs found in email: {email_external_id}. Skipping email.")
-    #                             continue  # next email
-    #
-    #                         # Save the extracted job ids to the database
-    #                         try:
-    #                             job_records = self.save_jobs_to_db(email_record, job_ids, db)
-    #                             stats["jobs_extracted"] += len(job_ids)
-    #                             logger.info(f"Extracted {len(job_ids)} job IDs from {email_record.platform}")
-    #                         except Exception as exception:
-    #                             message = f"Failed to save job IDs for email ID {email_external_id} due to error: {exception}. Skipping email."
-    #                             logger.exception(message)
-    #                             continue  # next email
-    #
-    #                         # For indeed jobs, immediately save the extracted content
-    #                         if email_record.platform == "indeed" and self.skip_indeed_brightapi_scraping:
-    #                             print(jobs)
-    #                             for job_record in job_records:
-    #                                 try:
-    #                                     self.save_job_data_to_db(job_record, jobs[job_record.external_job_id], db)
-    #                                     stats["jobs_scraped"] += 1
-    #                                 except Exception as exception:
-    #                                     message = f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: {exception}. Skipping job."
-    #                                     logger.exception(message)
-    #                                     job_record.is_scraped = True
-    #                                     job_record.error_msg = f"{str(exception)}"
-    #                                     db.commit()
-    #                                     stats["jobs_failed"] += 1
-    #                                     continue  # next job
-    #                     else:
-    #                         stats["emails_existing"] += 1
-    #                         logger.info("Email already exists in database. Skipping email.")
-    #
-    #             # -------------------------------------------- JOB SCRAPPING -------------------------------------------
-    #
-    #             # Get all the job ids from the table and scrape them
-    #             job_records = db.query(ScrapedJob).filter(ScrapedJob.is_scraped.is_(False)).all()
-    #
-    #             for job_record in job_records:
-    #                 if job_record.emails[0].platform == "linkedin":
-    #                     scrapper = LinkedinJobScraper(job_record.external_job_id)
-    #                 elif job_record.emails[0].platform == "indeed" and not self.skip_indeed_brightapi_scraping:
-    #                     scrapper = IndeedJobScrapper(job_record.external_job_id)
-    #                 else:
-    #                     logger.info(f"Unknown platform for job {job_record.external_job_id}. Skipping job.")
-    #                     continue  # next job record
-    #
-    #                 # Scrap the data and save them to the database
-    #                 logger.info(f"Scraping job ID: {job_record.external_job_id}")
-    #                 try:
-    #                     job_data = scrapper.scrape_job()
-    #                     self.save_job_data_to_db(job_record, job_data, db)
-    #                     stats["jobs_scraped"] += 1
-    #                 except Exception as exception:
-    #                     message = f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: {exception}. Skipping job."
-    #                     logger.exception(message)
-    #                     job_record.is_scraped = True
-    #                     job_record.error_msg = f"{str(exception)}"
-    #                     db.commit()
-    #                     stats["jobs_failed"] += 1
-    #                     continue  # next job
-    #
-    #             # Log final statistics
-    #             stats["end_time"] = datetime.now().isoformat()
-    #             stats["duration_seconds"] = (datetime.now() - start_time).total_seconds()
-    #             success = True
-    #             error_message = None
-    #             AppLogger.log_execution_time(logger, start_time, "Gmail scraping workflow")
-    #             AppLogger.log_stats(logger, stats, "Gmail Scraping Results")
-    #
-    #         except Exception as exception:
-    #             logger.exception(f"Critical error in scraping workflow: {exception}")
-    #             stats["end_time"] = datetime.now().isoformat()
-    #             success = False
-    #             error_message = str(exception)
-    #
-    #         service_log_entry.is_success = success
-    #         service_log_entry.error_message = error_message
-    #         service_log_entry.job_success_n = stats["jobs_scraped"]
-    #         service_log_entry.job_fail_n = stats["jobs_failed"]
-    #         db.commit()
-    #
-    #         return stats
+    # ----------------------------------------------------- RUNNER -----------------------------------------------------
 
     def run_scraping(self, timedelta_days: int | float = 10) -> EisServiceLog:
         """Run the email scraping workflow
@@ -590,8 +415,8 @@ class GmailScraper(object):
                 service_log_entry.run_duration = (datetime.now() - start_time).total_seconds()
                 success = True
                 error_message = None
-                AppLogger.log_execution_time(logger, start_time, "Gmail scraping workflow")
-                AppLogger.log_stats(logger, service_log_entry, "Gmail Scraping Results")
+                # AppLogger.log_execution_time(logger, start_time, "Gmail scraping workflow")
+                # AppLogger.log_stats(logger, service_log_entry, "Gmail Scraping Results")
 
             except Exception as exception:
                 logger.exception(f"Critical error in scraping workflow: {exception}")
@@ -642,9 +467,7 @@ class GmailScraper(object):
                     # Process jobs if this is a new email
                     if is_new:
                         service_log_entry.emails_saved_n += 1
-                        jobs_data.update(
-                            self._process_email_jobs(db, email_record, email_external_id, service_log_entry)
-                        )
+                        jobs_data.update(self._process_email_jobs(db, email_record, service_log_entry))
                     else:
                         logger.info("Email already exists in database. Skipping email.")
 
@@ -659,10 +482,9 @@ class GmailScraper(object):
         self,
         db,
         email_record: JobAlertEmail,
-        email_external_id: str,
         service_log_entry: EisServiceLog,
     ) -> dict:
-        """Extract and process jobs from a new email
+        """Extract job ids from an email
         :param db: Database session
         :param email_record: JobAlertEmail record
         :param email_external_id: External ID of the email
@@ -673,7 +495,7 @@ class GmailScraper(object):
         # LinkedIn jobs
         if email_record.platform == "linkedin":
             job_ids = self.extract_linkedin_job_ids(email_record.body)
-            service_log_entry.linkedin_jobs_n += len(job_ids)
+            service_log_entry.linkedin_job_n += len(job_ids)
 
         # Indeed
         elif email_record.platform == "indeed":
@@ -692,10 +514,10 @@ class GmailScraper(object):
                 job_ids = list(jobs_data.keys())
             else:
                 job_ids = self.extract_indeed_job_ids(email_record.body)
-            service_log_entry.indeed_jobs_n += len(job_ids)
+            service_log_entry.indeed_job_n += len(job_ids)
 
         else:
-            logger.info(f"No job IDs found in email: {email_external_id}. Skipping email.")
+            logger.info(f"No job IDs found in email: {email_record.email_external_id}. Skipping email.")
             return jobs_data
 
         # Save the extracted job ids to the database
@@ -705,7 +527,7 @@ class GmailScraper(object):
             logger.info(f"Extracted {len(job_ids)} job IDs from {email_record.platform}")
         except Exception as exception:
             logger.exception(
-                f"Failed to save job IDs for email ID {email_external_id} due to error: {exception}. Skipping email."
+                f"Failed to save job IDs for email ID {email_record.email_external_id} due to error: {exception}. Skipping email."
             )
             return jobs_data
 
@@ -749,7 +571,7 @@ class GmailScraper(object):
                 same_jobs = (
                     db.query(ScrapedJob)
                     .filter(ScrapedJob.is_scraped.is_(False))
-                    .filter(ScrapedJob.external_job_id.is_(job_record.external_job_id))
+                    .filter(ScrapedJob.external_job_id == job_record.external_job_id)
                     .all()
                 )
                 for same_job in same_jobs:
@@ -846,12 +668,12 @@ class GmailScraperService:
 
 if __name__ == "__main__":
     gmail = GmailScraper()
-    emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=2)
-    email_d = gmail.get_email_data(emails[2], "")
-    print(email_d.body)
+    # emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=2)
+    # email_d = gmail.get_email_data(emails[2], "")
+    # print(email_d.body)
     # print(email_d)
     # gmail.save_email_to_db(email_d, next(get_db()))
-    # gmail.run_scraping(2)
+    gmail.run_scraping(2)
 
     # service = GmailScraperService()
     # service.start()
