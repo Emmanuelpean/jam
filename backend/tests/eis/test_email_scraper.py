@@ -1,13 +1,15 @@
 """Test module for email_parser.py functions and GmailScraper class"""
 
 import datetime
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from app.eis import schemas
 from app.eis.email_scraper import clean_email_address, get_user_id_from_email, GmailScraper
+from app.eis.job_scraper import extract_indeed_jobs_from_email
 from app.eis.models import JobAlertEmail, ScrapedJob
+from tests.eis.test_job_scraper import MockLinkedinJobScraper, MockIndeedJobScraper
 
 
 # ------------------------------------------------------ FIXTURES ------------------------------------------------------
@@ -339,14 +341,8 @@ class TestExtractLinkedinJobIds:
 
         job_ids = GmailScraper.extract_linkedin_job_ids(linkedin_email_data[0].body)
 
-        expected_job_ids = ["4289870503", "4291891707", "4291383265", "4280354992", "4255584864", "4265877117"]
-
         assert len(job_ids) == 6
-        assert job_ids == expected_job_ids
-
-        # Verify all expected job IDs are present
-        for expected_id in expected_job_ids:
-            assert expected_id in job_ids
+        assert job_ids == LINKEDIN_JOB_IDS
 
     def test_extract_linkedin_job_ids_empty_body(self) -> None:
         """Test extracting job IDs from empty body"""
@@ -442,38 +438,7 @@ class TestExtractIndeedJobIds:
         """Test extracting Indeed job IDs from real Indeed email content"""
 
         job_ids = GmailScraper.extract_indeed_job_ids(indeed_email_data[0].body)
-
-        expected_job_ids = [
-            "8799a57d87058103",
-            "d489097ca0fb185f",
-            "7f9c701ebf265b69",
-            "0537336f99ba1650",
-            "312725e138947a4b",
-            "06498cad9de95b12",
-            "bd60005166216639",
-            "42b107e214095d56",
-            "d30493c008b601e3",
-            "da413431a0c55ec7",
-            "2ed37852402643ab",
-            "14a9001ba6ebb965",
-            "eafb032fabcd77bc",
-            "6838e604ddffd5ac",
-            "227d4ccd0823fc96",
-            "804b940d2d96b30b",
-            "f9aafc9ba4c31c6d",
-            "e034f0b761e410ea",
-            "37cdb0ba59e12295",
-            "7b272f46e4e46a14",
-            "d6110bfb54bdeddb",
-            "5aa22054e7a8b76e",
-            "ae47862d410bbd39",
-        ]
-
-        assert job_ids == expected_job_ids
-
-        # Verify all expected job IDs are present
-        for expected_id in expected_job_ids:
-            assert expected_id in job_ids
+        assert job_ids == INDEED_JOB_IDS
 
     def test_extract_indeed_job_ids_empty_body(self) -> None:
         """Test extracting job IDs from empty body"""
@@ -1065,3 +1030,172 @@ class TestProcessUserEmails:
             )
 
             assert len(result) == 23
+
+
+class TestScrapeRemainingJobs:
+    """Test cases for the _scrape_remaining_jobs method"""
+
+    @staticmethod
+    def _scraped_jobs(session, email_record) -> list[ScrapedJob]:
+        """Fixture to create Indeed scraped jobs for multiple users"""
+
+        scraped_jobs = []
+        owner_id = email_record[0].owner_id
+        for job_id in email_record[1]:
+            scraped_job = ScrapedJob(external_job_id=job_id, owner_id=owner_id)
+            scraped_job.emails.append(email_record[0])
+            session.add(scraped_job)
+            scraped_jobs.append(scraped_job)
+        session.commit()
+        return scraped_jobs
+
+    @pytest.fixture
+    def indeed_scraped_jobs(self, test_users, session, indeed_email_record):
+        """Fixture to create Indeed scraped jobs for multiple users"""
+
+        return self._scraped_jobs(session, indeed_email_record)
+
+    @pytest.fixture
+    def indeed_scraped_jobs_user2(self, test_users, session, indeed_email_record_user2):
+        """Fixture to create Indeed scraped jobs for multiple users"""
+
+        return self._scraped_jobs(session, indeed_email_record_user2)
+
+    @pytest.fixture
+    def linkedin_scraped_jobs(self, test_users, session, linkedin_email_record):
+        """Fixture to create Indeed scraped jobs for multiple users"""
+
+        return self._scraped_jobs(session, linkedin_email_record)
+
+    def test_indeed_success(
+        self,
+        indeed_scraped_jobs,
+        test_service_logs,
+        gmail_scraper,
+        session,
+    ):
+        """Test successful processing of Indeed email jobs"""
+
+        with patch("app.eis.email_scraper.IndeedJobScraper") as mock_scraper_class:
+            # Create mock instance
+            mock_scraper_instance = MockIndeedJobScraper(INDEED_JOB_IDS)
+            mock_scraper_class.return_value = mock_scraper_instance
+
+            # Call the method we're testing
+            gmail_scraper._scrape_remaining_jobs(session, test_service_logs[0], {})
+
+            # Verify all jobs are now scraped
+            unscraped_jobs_after = session.query(ScrapedJob).filter().all()
+            for job in unscraped_jobs_after:
+                assert job.is_scraped
+                assert job.scrape_error is None
+
+    def test_indeed_nobrightapi_success(
+        self,
+        indeed_scraped_jobs,
+        test_service_logs,
+        gmail_scraper_with_brightapi_skip,
+        session,
+    ):
+        """Test successful processing of Indeed email jobs"""
+
+        with patch("app.eis.email_scraper.IndeedJobScraper") as mock_scraper_class:
+            # Create mock instance
+            mock_scraper_instance = MockIndeedJobScraper(INDEED_JOB_IDS)
+            mock_scraper_class.return_value = mock_scraper_instance
+
+            # Call the method we're testing
+            jobs = extract_indeed_jobs_from_email(indeed_scraped_jobs[0].emails[0].body)
+            job_data = {}
+            for job in jobs:
+                job_ids = gmail_scraper_with_brightapi_skip.extract_indeed_job_ids(job["job"]["url"])
+                if job_ids:  # Make sure we have at least one job ID
+                    job_data[job_ids[0]] = job
+            gmail_scraper_with_brightapi_skip._scrape_remaining_jobs(session, test_service_logs[0], job_data)
+
+            # Verify all jobs are now scraped
+            jobs_after = session.query(ScrapedJob).filter().all()
+            for job in jobs_after:
+                assert job.is_scraped
+                assert not job.is_failed
+
+    def test_indeed_nobrightapi_fail(
+        self,
+        indeed_scraped_jobs,
+        test_service_logs,
+        gmail_scraper_with_brightapi_skip,
+        session,
+    ):
+        """Test successful processing of Indeed email jobs"""
+
+        with patch("app.eis.email_scraper.IndeedJobScraper") as mock_scraper_class:
+            # Create mock instance
+            mock_scraper_instance = MockIndeedJobScraper(INDEED_JOB_IDS)
+            mock_scraper_class.return_value = mock_scraper_instance
+
+            # Call the method we're testing
+            gmail_scraper_with_brightapi_skip._scrape_remaining_jobs(session, test_service_logs[0], {})
+
+            # Verify all jobs are now scraped
+            jobs_after = session.query(ScrapedJob).filter().all()
+            for job in jobs_after:
+                assert job.is_scraped
+                assert job.is_failed
+
+    def test_linkedin_success(
+        self,
+        linkedin_scraped_jobs,
+        test_service_logs,
+        gmail_scraper,
+        session,
+    ):
+        """Test successful processing of Indeed email jobs"""
+
+        with patch("app.eis.email_scraper.LinkedinJobScraper") as mock_scraper_class:
+            # Create mock instance
+            mock_scraper_instance = MockLinkedinJobScraper(INDEED_JOB_IDS)
+            mock_scraper_class.return_value = mock_scraper_instance
+
+            # Call the method we're testing
+            gmail_scraper._scrape_remaining_jobs(session, test_service_logs[0], {})
+
+            # Verify all jobs are now scraped
+            jobs_after = session.query(ScrapedJob).filter().all()
+            for job in jobs_after:
+                assert job.is_scraped
+                assert not job.is_failed
+
+    def test_indeed_multiple_users_shared_jobs_success(
+        self,
+        indeed_scraped_jobs,
+        indeed_scraped_jobs_user2,
+        test_service_logs,
+        gmail_scraper,
+        session,
+    ):
+        """Test successful processing of Indeed email jobs"""
+        from unittest.mock import patch, MagicMock
+
+        with patch("app.eis.email_scraper.IndeedJobScraper") as mock_scraper_class:
+            # Create mock instance
+            mock_scraper_instance = MockIndeedJobScraper(INDEED_JOB_IDS)
+
+            # Wrap the scrape_job method with a MagicMock to track calls
+            original_scrape_job = mock_scraper_instance.scrape_job
+            mock_scraper_instance.scrape_job = MagicMock(side_effect=original_scrape_job)
+
+            mock_scraper_class.return_value = mock_scraper_instance
+
+            # Call the method we're testing
+            gmail_scraper._scrape_remaining_jobs(session, test_service_logs[0], {})
+
+            # Verify all jobs are now scraped
+            jobs_after = session.query(ScrapedJob).filter().all()
+            assert len(jobs_after) == len(indeed_scraped_jobs) + len(indeed_scraped_jobs_user2)
+            for job in jobs_after:
+                assert job.is_scraped
+                assert not job.is_failed
+
+            # Count how many times scrape_job() was called
+            scrape_job_call_count = mock_scraper_instance.scrape_job.call_count
+            assert scrape_job_call_count == len(indeed_scraped_jobs)

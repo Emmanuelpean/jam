@@ -144,7 +144,7 @@ class JobScrapper(object):
         return [self.process_job_data(d) for d in data]
 
 
-class IndeedJobScrapper(JobScrapper):
+class IndeedJobScraper(JobScrapper):
     """LinkedIn Scraper"""
 
     base_url = "https://www.indeed.com/viewjob?jk="
@@ -351,6 +351,6 @@ if __name__ == "__main__":
     job_data1 = scraper.scrape_job()
     print(job_data1)
 
-    scraper = IndeedJobScrapper("7b9119575c72cb5c")
+    scraper = IndeedJobScraper("7b9119575c72cb5c")
     job_data1 = scraper.scrape_job()
     print(job_data1)

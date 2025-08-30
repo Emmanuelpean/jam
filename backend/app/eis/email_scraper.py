@@ -11,6 +11,7 @@ import os
 import pickle
 import re
 import threading
+import traceback
 from datetime import datetime
 from email.utils import parseaddr
 
@@ -22,7 +23,7 @@ from googleapiclient.discovery import build
 
 from app.database import session_local
 from app.eis import schemas
-from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScrapper, extract_indeed_jobs_from_email
+from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScraper, extract_indeed_jobs_from_email
 from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
 from app.models import User
 from app.utils import get_gmail_logger
@@ -544,7 +545,11 @@ class GmailScraper(object):
         :param jobs_data: Dictionary of jobs data"""
 
         job_records = (
-            db.query(ScrapedJob).filter(ScrapedJob.is_scraped.is_(False)).distinct(ScrapedJob.external_job_id).all()
+            db.query(ScrapedJob)
+            .filter(ScrapedJob.is_scraped.is_(False))
+            .filter(ScrapedJob.is_failed.is_(False))
+            .distinct(ScrapedJob.external_job_id)
+            .all()
         )
 
         for job_record in job_records:
@@ -552,7 +557,7 @@ class GmailScraper(object):
                 scrapper = LinkedinJobScraper(job_record.external_job_id)
             elif job_record.emails[0].platform == "indeed":
                 if not self.skip_indeed_brightapi_scraping:
-                    scrapper = IndeedJobScrapper(job_record.external_job_id)
+                    scrapper = IndeedJobScraper(job_record.external_job_id)
                 else:
                     scrapper = None
             else:
@@ -570,6 +575,7 @@ class GmailScraper(object):
                 same_jobs = (
                     db.query(ScrapedJob)
                     .filter(ScrapedJob.is_scraped.is_(False))
+                    .filter(ScrapedJob.is_failed.is_(False))
                     .filter(ScrapedJob.external_job_id == job_record.external_job_id)
                     .all()
                 )
@@ -577,11 +583,12 @@ class GmailScraper(object):
                     self.save_job_data_to_db(same_job, job_data, db)
 
                 service_log_entry.job_success_n += 1
-            except Exception as exception:
-                message = f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: {exception}. Skipping job."
+            except:
+                message = f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: {traceback.format_exc()}. Skipping job."
                 logger.exception(message)
                 job_record.is_scraped = True
-                job_record.error_msg = f"{str(exception)}"
+                job_record.is_failed = True
+                job_record.scrape_error = f"{traceback.format_exc()}"
                 db.commit()
                 service_log_entry.job_fail_n += 1
 

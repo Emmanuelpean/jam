@@ -205,7 +205,7 @@ def test_extract_indeed_jobs_from_email() -> None:
     assert len(result) == 23
 
 
-job_expected = [
+INDEED_JOB_EXPECTED = [
     {
         "company": "Thermulon",
         "location": "London",
@@ -464,7 +464,7 @@ job_expected = [
 job_sections = body_content.split("\n\n")[2:-4]
 
 
-@pytest.mark.parametrize("job_section, expected", zip(job_sections, job_expected))
+@pytest.mark.parametrize("job_section, expected", zip(job_sections, INDEED_JOB_EXPECTED))
 def test_parse_indeed_job_section(job_section, expected) -> None:
     result = parse_indeed_job_section(job_section)
     assert result == expected
@@ -522,7 +522,7 @@ class MockLinkedinJobScraper(JobScrapper):
         return mock_jobs
 
 
-class MockIndeedJobScrapper(JobScrapper):
+class MockIndeedJobScraper(JobScrapper):
     """Mock Indeed Scraper that returns fake data"""
 
     base_url = "https://www.indeed.com/viewjob?jk="
