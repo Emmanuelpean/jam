@@ -467,7 +467,7 @@ class GmailScraper(object):
                     # Process jobs if this is a new email
                     if is_new:
                         service_log_entry.emails_saved_n += 1
-                        jobs_data.update(self._process_email_jobs(db, email_record, service_log_entry))
+                        jobs_data.update(self._process_email(db, email_record, service_log_entry))
                     else:
                         logger.info("Email already exists in database. Skipping email.")
 
@@ -478,7 +478,7 @@ class GmailScraper(object):
 
         return jobs_data
 
-    def _process_email_jobs(
+    def _process_email(
         self,
         db,
         email_record: JobAlertEmail,
@@ -487,7 +487,6 @@ class GmailScraper(object):
         """Extract job ids from an email
         :param db: Database session
         :param email_record: JobAlertEmail record
-        :param email_external_id: External ID of the email
         :param service_log_entry: Service log entry"""
 
         jobs_data = {}

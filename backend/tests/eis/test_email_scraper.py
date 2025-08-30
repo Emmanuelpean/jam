@@ -570,11 +570,11 @@ class TestProcessEmailJobs:
     def _gmail_scraper(mock_secrets_file_content, **kwargs) -> GmailScraper:
         """Create a GmailScraper instance for testing with mocked file dependencies."""
 
-        with patch("builtins.open", create=True) as mock_open, patch("json.load") as mock_json_load, patch(
-                "os.path.exists"
-        ) as mock_exists, patch("pickle.load") as mock_pickle_load, patch(
-            "pickle.dump"
-        ) as mock_pickle_dump, patch("app.eis.email_scraper.build") as mock_build:
+        with patch("builtins.open", create=True), patch("json.load") as mock_json_load, patch(
+            "os.path.exists"
+        ) as mock_exists, patch("pickle.load"), patch("pickle.dump"), patch(
+            "app.eis.email_scraper.build"
+        ) as mock_build:
 
             # Mock the secrets file reading
             mock_json_load.return_value = mock_secrets_file_content
@@ -611,7 +611,8 @@ class TestProcessEmailJobs:
 
         return self._gmail_scraper(mock_secrets_file_content, skip_indeed_brightapi_scraping=True)
 
-    def _email_record(self, session, test_users, filename: str, platform: str, user_index: int) -> JobAlertEmail:
+    @staticmethod
+    def _email_record(session, test_users, filename: str, platform: str, user_index: int) -> JobAlertEmail:
         """Create a LinkedIn job alert email record for testing."""
 
         with open(f"resources/{filename}.txt") as ofile:
@@ -635,6 +636,7 @@ class TestProcessEmailJobs:
 
         return self._email_record(session, test_users, "linkedin_email", "linkedin", 0)
 
+    @pytest.fixture
     def linkedin_email_record_user2(self, session, test_users):
         """Create a LinkedIn job alert email record for testing."""
 
@@ -661,7 +663,7 @@ class TestProcessEmailJobs:
     ) -> None:
         """Test successful processing of LinkedIn email job ids"""
 
-        gmail_scraper._process_email_jobs(
+        gmail_scraper._process_email(
             db=session,
             email_record=linkedin_email_record,
             service_log_entry=test_service_logs[0],
@@ -673,7 +675,7 @@ class TestProcessEmailJobs:
     def test_process_indeed_email_jobs_success(self, gmail_scraper, session, indeed_email_record, test_service_logs):
         """Test successful processing of Indeed email jobs."""
 
-        result = gmail_scraper._process_email_jobs(
+        gmail_scraper._process_email(
             db=session,
             email_record=indeed_email_record,
             service_log_entry=test_service_logs[0],
@@ -682,10 +684,12 @@ class TestProcessEmailJobs:
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == indeed_email_record.owner_id).all()
         assert len(scraped_jobs) == 23
 
-    def test_process_indeed_email_jobs_success_no_brightapi(self, gmail_scraper_with_brightapi_skip, session, indeed_email_record, test_service_logs):
+    def test_process_indeed_email_jobs_success_no_brightapi(
+        self, gmail_scraper_with_brightapi_skip, session, indeed_email_record, test_service_logs
+    ):
         """Test successful processing of Indeed email jobs."""
 
-        result = gmail_scraper_with_brightapi_skip._process_email_jobs(
+        result = gmail_scraper_with_brightapi_skip._process_email(
             db=session,
             email_record=indeed_email_record,
             service_log_entry=test_service_logs[0],
@@ -694,3 +698,55 @@ class TestProcessEmailJobs:
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == indeed_email_record.owner_id).all()
         assert len(scraped_jobs) == 23
         assert len(result) == 23
+
+    def test_process_linkedin_email_jobs_success_duplicates_different_owners(
+            self,
+            gmail_scraper,
+            session,
+            linkedin_email_record,
+            linkedin_email_record_user2,
+            test_service_logs,
+    ) -> None:
+        """Test successful processing of LinkedIn email job ids"""
+
+        gmail_scraper._process_email(
+            db=session,
+            email_record=linkedin_email_record,
+            service_log_entry=test_service_logs[0],
+        )
+
+        gmail_scraper._process_email(
+            db=session,
+            email_record=linkedin_email_record_user2,
+            service_log_entry=test_service_logs[0],
+        )
+
+        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record.owner_id).all()
+        assert len(scraped_jobs) == 6
+        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record_user2.owner_id).all()
+        assert len(scraped_jobs) == 6
+
+    def test_process_linkedin_email_jobs_success_duplicates_same_owner(
+            self,
+            gmail_scraper,
+            session,
+            linkedin_email_record,
+            test_service_logs,
+    ) -> None:
+        """Test successful processing of LinkedIn email job ids"""
+
+        gmail_scraper._process_email(
+            db=session,
+            email_record=linkedin_email_record,
+            service_log_entry=test_service_logs[0],
+        )
+
+        gmail_scraper._process_email(
+            db=session,
+            email_record=linkedin_email_record,
+            service_log_entry=test_service_logs[0],
+        )
+
+        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record.owner_id).all()
+        assert len(scraped_jobs) == 6
+
