@@ -88,6 +88,7 @@ class ScrapedJob(Owned, Base):
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
     is_failed = Column(Boolean, nullable=False, server_default=expression.false())
     scrape_error = Column(String, nullable=True)
+    scrape_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
 
     # Job data

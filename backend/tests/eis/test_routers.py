@@ -1,6 +1,6 @@
 from app.eis import schemas
 from conftest import CRUDTestBase
-from tests.utils.table_data import SERVICE_LOG_DATA, JOB_ALERT_EMAIL_DATA, JOB_SCRAPED_DATA
+from tests.utils.table_data import JOB_ALERT_EMAIL_DATA, JOB_SCRAPED_DATA
 
 
 class TestJobAlertEmailCRUD(CRUDTestBase):
@@ -13,6 +13,7 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
         "id": 1,
         "subject": "Updated Python",
     }
+    add_fixture = ["test_service_logs"]
 
 
 class TestScrapedJobCRUD(CRUDTestBase):
@@ -24,16 +25,4 @@ class TestScrapedJobCRUD(CRUDTestBase):
     update_data = {
         "id": 1,
         "title": "Updated Python",
-    }
-
-
-class TestServiceLogCRUD(CRUDTestBase):
-    endpoint = "/servicelogs"
-    schema = schemas.EisServiceLogCreate
-    out_schema = schemas.EisServiceLogOut
-    test_data = "test_service_logs"
-    create_data = SERVICE_LOG_DATA
-    update_data = {
-        "id": 1,
-        "name": "Updated Python",
     }

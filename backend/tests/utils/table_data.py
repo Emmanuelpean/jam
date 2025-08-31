@@ -1110,7 +1110,7 @@ JOB_ALERT_EMAIL_DATA = [
         "external_email_id": "linkedin_alert_001",
         "subject": "10 new jobs matching Python Developer",
         "sender": "jobs-noreply@linkedin.com",
-        "date_received": datetime(2024, 1, 15, 9, 30, 0),
+        "date_received": "2024-01-15 09:30:00",
         "platform": "linkedin",
         "service_log_id": 1,
         "body": """
@@ -1136,7 +1136,7 @@ JOB_ALERT_EMAIL_DATA = [
         "external_email_id": "indeed_alert_001",
         "subject": "New job alerts for Software Engineer",
         "sender": "noreply@indeed.com",
-        "date_received": datetime(2024, 1, 16, 14, 45, 0),
+        "date_received": "2024-01-16 14:45:00",
         "platform": "indeed",
         "service_log_id": 2,
         "body": """
@@ -1160,7 +1160,7 @@ JOB_ALERT_EMAIL_DATA = [
         "external_email_id": "linkedin_alert_002",
         "subject": "Data Scientist positions you might like",
         "sender": "jobs-noreply@linkedin.com",
-        "date_received": datetime(2024, 1, 17, 11, 20, 0),
+        "date_received": "2024-01-17 11:20:00",
         "platform": "linkedin",
         "service_log_id": 3,
         "body": """
@@ -1186,7 +1186,7 @@ JOB_ALERT_EMAIL_DATA = [
         "external_email_id": "indeed_alert_002",
         "subject": "Your weekly job digest - 5 new matches",
         "sender": "alerts@indeed.com",
-        "date_received": datetime(2024, 1, 18, 8, 15, 0),
+        "date_received": "2024-01-18 08:15:00",
         "platform": "indeed",
         "service_log_id": 4,
         "body": """
@@ -1216,7 +1216,7 @@ JOB_ALERT_EMAIL_DATA = [
         "external_email_id": "linkedin_alert_003",
         "subject": "3 jobs similar to ones you've viewed",
         "sender": "jobs-noreply@linkedin.com",
-        "date_received": datetime(2024, 1, 19, 16, 10, 0),
+        "date_received": "2024-01-19 16:10:00",
         "platform": "linkedin",
         "service_log_id": 5,
         "body": """
@@ -1239,7 +1239,7 @@ JOB_ALERT_EMAIL_DATA = [
         "external_email_id": "indeed_alert_003",
         "subject": "Frontend Developer jobs in your area",
         "sender": "job-alerts@indeed.co.uk",
-        "date_received": datetime(2024, 1, 20, 12, 30, 0),
+        "date_received": "2024-01-20 12:30:00",
         "platform": "indeed",
         "service_log_id": 4,
         "body": """
@@ -1277,6 +1277,7 @@ JOB_SCRAPED_DATA = [
         "salary_min": 120000.0,
         "salary_max": 160000.0,
         "url": "https://linkedin.com/jobs/view/3789012345",
+        "scrape_datetime": "2025-08-15T14:32:18.123456+00:00",
     },
     {
         "external_job_id": "987654321",
@@ -1290,6 +1291,7 @@ JOB_SCRAPED_DATA = [
         "salary_min": 90000.0,
         "salary_max": 130000.0,
         "url": "https://indeed.com/viewjob?jk=987654321",
+        "scrape_datetime": "2025-08-22T09:45:32.789012+00:00",
     },
     {
         "external_job_id": "1122334455",
@@ -1303,13 +1305,15 @@ JOB_SCRAPED_DATA = [
         "salary_min": 110000.0,
         "salary_max": 150000.0,
         "url": "https://linkedin.com/jobs/view/1122334455",
+        "scrape_datetime": "2025-08-28T16:20:45.456789+00:00",
     },
     {
         "external_job_id": "5566778899",
         "owner_id": 1,
         "is_scraped": True,
         "is_failed": False,
-        "title": "Software Engineer",  # Minimal data - just what's needed
+        "title": "Software Engineer",
+        "scrape_datetime": "2025-08-30T11:15:22.234567+00:00",
     },
     {
         "external_job_id": "1357924680",
@@ -1317,6 +1321,7 @@ JOB_SCRAPED_DATA = [
         "is_scraped": True,
         "is_failed": False,
         "title": "Backend Developer",
+        "scrape_datetime": "2025-08-25T13:42:17.345678+00:00",
     },
     {
         "external_job_id": "2468135790",
@@ -1325,6 +1330,7 @@ JOB_SCRAPED_DATA = [
         "is_failed": True,
         "scrape_error": "Page not found - job posting may have been removed",
         "title": "Data Engineer",
+        "scrape_datetime": "2025-08-18T08:30:55.567890+00:00",
     },
     {
         "external_job_id": "9988776655",
@@ -1333,6 +1339,7 @@ JOB_SCRAPED_DATA = [
         "is_failed": True,
         "scrape_error": "Scraping blocked - rate limit exceeded",
         "title": "ML Engineer",
+        "scrape_datetime": "2025-08-20T19:25:08.678901+00:00",
     },
 ]
 

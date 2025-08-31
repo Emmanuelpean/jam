@@ -381,6 +381,7 @@ class GmailScraper(object):
             record.title = job["job"]["title"]
             record.description = job["job"]["description"]
             record.url = job["job"]["url"]
+            record.scrape_datetime = datetime.now()
             record.is_scraped = True
             db.commit()
 
