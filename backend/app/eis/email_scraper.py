@@ -364,6 +364,7 @@ class GmailScraper(object):
     def save_job_data_to_db(
         job_records: list[ScrapedJob] | ScrapedJob,
         job_data: list[dict] | dict,
+        scraped_date: datetime,
         db,
     ) -> None:
         """Save job data to the database"""
@@ -381,7 +382,7 @@ class GmailScraper(object):
             record.title = job["job"]["title"]
             record.description = job["job"]["description"]
             record.url = job["job"]["url"]
-            record.scrape_datetime = datetime.now()
+            record.scrape_datetime = scraped_date
             record.is_scraped = True
             db.commit()
 
@@ -572,7 +573,8 @@ class GmailScraper(object):
                     job_data = scrapper.scrape_job()
                 else:
                     job_data = jobs_data[job_record.external_job_id]
-                self.save_job_data_to_db(job_record, job_data, db)
+                scrape_datetime = datetime.now()
+                self.save_job_data_to_db(job_record, job_data, scrape_datetime, db)
                 same_jobs = (
                     db.query(ScrapedJob)
                     .filter(ScrapedJob.is_scraped.is_(False))
@@ -581,7 +583,7 @@ class GmailScraper(object):
                     .all()
                 )
                 for same_job in same_jobs:
-                    self.save_job_data_to_db(same_job, job_data, db)
+                    self.save_job_data_to_db(same_job, job_data, scrape_datetime, db)
 
                 service_log_entry.job_success_n += 1
             except:
