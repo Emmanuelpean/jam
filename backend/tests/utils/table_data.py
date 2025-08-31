@@ -479,6 +479,7 @@ JOB_DATA = [
         "note": "Excellent opportunity for senior developer",
         "attendance_type": "hybrid",
         "owner_id": 1,
+        "source_id": 1,
     },
     {
         "title": "Full Stack JavaScript Developer",
@@ -492,6 +493,7 @@ JOB_DATA = [
         "note": "Great team culture mentioned in reviews",
         "attendance_type": "on-site",
         "owner_id": 1,
+        "source_id": 2,
     },
     {
         "title": "Remote React Developer",
@@ -503,6 +505,7 @@ JOB_DATA = [
         "company_id": 1,  # Tech Corp
         "location_id": 4,  # San Francisco
         "owner_id": 1,
+        "source_id": 2,
     },
     {
         "title": "Cloud Engineer",
@@ -515,6 +518,7 @@ JOB_DATA = [
         "location_id": 3,  # London
         "attendance_type": "hybrid",
         "owner_id": 1,
+        "source_id": 2,
     },
     {
         "title": "Frontend Developer",
@@ -527,6 +531,7 @@ JOB_DATA = [
         "location_id": 5,  # Berlin
         "attendance_type": "on-site",
         "owner_id": 1,
+        "source_id": 4,
     },
     {
         "title": "Backend Developer",
@@ -534,6 +539,7 @@ JOB_DATA = [
         "location_id": 4,  # San Francisco
         "attendance_type": "hybrid",
         "owner_id": 1,
+        "source_id": 1,
     },
     {
         "title": "Software Engineer Intern",
@@ -541,6 +547,7 @@ JOB_DATA = [
         "personal_rating": 1,
         "company_id": 3,  # Oxford PV
         "owner_id": 1,
+        "source_id": 7,
     },
     {
         "title": "Developer Position",
@@ -548,6 +555,7 @@ JOB_DATA = [
         "location_id": 5,  # Berlin
         "attendance_type": "hybrid",
         "owner_id": 1,
+        "source_id": 9,
     },
     {
         "title": "DevOps Engineer",
@@ -561,6 +569,7 @@ JOB_DATA = [
         "note": "Strong DevOps culture, great tools",
         "attendance_type": "hybrid",
         "owner_id": 1,
+        "source_id": 9,
     },
     {
         "title": "Data Scientist",
@@ -572,6 +581,7 @@ JOB_DATA = [
         "location_id": 9,  # Germany (no city)
         "attendance_type": "remote",
         "owner_id": 1,
+        "source_id": 1,
     },
     {
         "title": "Vue.js Frontend Developer",
@@ -583,6 +593,7 @@ JOB_DATA = [
         "location_id": 10,  # Tokyo
         "attendance_type": "on-site",
         "owner_id": 1,
+        "source_id": 5,
     },
     {
         "title": "Remote Full Stack Engineer",
@@ -596,6 +607,7 @@ JOB_DATA = [
         "note": "Small team, lots of autonomy",
         "attendance_type": "remote",
         "owner_id": 1,
+        "source_id": 7,
     },
     {
         "title": "Junior Developer",
@@ -607,6 +619,7 @@ JOB_DATA = [
         "location_id": 12,  # Toronto
         "attendance_type": "on-site",
         "owner_id": 1,
+        "source_id": 8,
     },
     {
         "title": "Freelance Web Developer",
@@ -720,6 +733,8 @@ JOB_APPLICATION_DATA = [
         "cv_id": 3,
         "cover_letter_id": 3,
         "owner_id": 1,
+        "applied_via": "aggregator",
+        "aggregator_id": 1,
     },
     {
         "date": "2024-01-16T14:30:00",
@@ -729,6 +744,8 @@ JOB_APPLICATION_DATA = [
         "note": "Phone screening scheduled for next week",
         "cv_id": 1,
         "owner_id": 1,
+        "applied_via": "aggregator",
+        "aggregator_id": 5,
     },
     {
         "date": "2024-01-17T09:15:00",
@@ -737,6 +754,8 @@ JOB_APPLICATION_DATA = [
         "note": "Applied through LinkedIn",
         "cover_letter_id": 2,
         "owner_id": 1,
+        "applied_via": "aggregator",
+        "aggregator_id": 4,
     },
     {
         "date": "2024-01-18T16:45:00",
@@ -747,6 +766,8 @@ JOB_APPLICATION_DATA = [
         "cv_id": 4,
         "cover_letter_id": 4,
         "owner_id": 1,
+        "applied_via": "aggregator",
+        "aggregator_id": 7,
     },
     {
         "date": "2024-01-20T13:30:00",

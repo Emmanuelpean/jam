@@ -20,7 +20,13 @@ const AggregatorsPage = () => {
 		removeItem,
 	} = useTableData("aggregators", [], {}, { key: "name", direction: "asc" });
 
-	const tableColumns = [columns.name(), columns.url(), columns.createdAt()];
+	const tableColumns = [
+		columns.name(),
+		columns.url(),
+		columns.jobCount(),
+		columns.jobApplicationCount(),
+		columns.createdAt(),
+	];
 
 	useEffect(() => {
 		if (loading) {

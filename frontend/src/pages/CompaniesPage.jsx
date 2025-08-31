@@ -20,7 +20,13 @@ const CompaniesPage = () => {
 		removeItem,
 	} = useTableData("companies", [], {}, { key: "name", direction: "asc" });
 
-	const tableColumns = [columns.name(), columns.description(), columns.url(), columns.createdAt()];
+	const tableColumns = [
+		columns.name(),
+		columns.description(),
+		columns.url(),
+		columns.jobCount(),
+		columns.createdAt(),
+	];
 
 	useEffect(() => {
 		if (loading) {

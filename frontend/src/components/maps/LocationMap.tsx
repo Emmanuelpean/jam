@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { ProgressBar, Spinner } from "react-bootstrap";
 import L from "leaflet";
@@ -64,9 +64,26 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 	const [geocodedLocations, setGeocodedLocations] = useState<GeocodedLocation[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [progress, setProgress] = useState<Progress>({ current: 0, total: 0 });
+	const mapRef = useRef<L.Map | null>(null);
+	const containerRef = useRef<HTMLDivElement | null>(null);
 
 	const defaultCenter: [number, number] = [51.505, -0.09]; // London
 	const defaultZoom = 6;
+
+	// Cleanup function to properly destroy the map
+	useEffect(() => {
+		return () => {
+			// Cleanup when component unmounts
+			if (mapRef.current) {
+				try {
+					mapRef.current.remove();
+				} catch (error) {
+					console.warn("Map cleanup error:", error);
+				}
+				mapRef.current = null;
+			}
+		};
+	}, []);
 
 	useEffect(() => {
 		const geocodeLocations = async (): Promise<void> => {
@@ -183,7 +200,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 	const mapZoom = calculateOptimalZoom();
 
 	return (
-		<div style={{ height }} className="border rounded overflow-hidden">
+		<div ref={containerRef} style={{ height }} className="border rounded overflow-hidden">
 			<MapContainer
 				center={mapCenter}
 				zoom={mapZoom}
@@ -192,8 +209,8 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 			>
 				<MapViewUpdater center={mapCenter} zoom={mapZoom} locations={geocodedLocations} />
 				<TileLayer
-					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-					url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+					attribution='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+					url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"
 				/>
 				{geocodedLocations.map((location) => (
 					<Marker key={location.id} position={[location.geocoded!.latitude, location.geocoded!.longitude]}>
