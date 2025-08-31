@@ -20,7 +20,7 @@ const KeywordsPage = () => {
 		removeItem,
 	} = useTableData("keywords", [], {}, { key: "name", direction: "asc" });
 
-	const tableColumns = [columns.name(), columns.createdAt()];
+	const tableColumns = [columns.name(), columns.jobCount(), columns.createdAt()];
 
 	useEffect(() => {
 		if (loading) {

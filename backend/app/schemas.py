@@ -195,7 +195,7 @@ class PersonCreate(BaseModel):
 
 class PersonOut(PersonCreate, OwnedOut):
     company: CompanyMinOut | None = None
-    interviews: list["InterviewMinOut"] = []
+    interviews: list["JobApplicationMinOut"] = []
     jobs: list["JobMinOut"] = []
     name: str | None = None
     name_company: str | None = None
@@ -241,11 +241,26 @@ class JobOut(JobCreate, OwnedOut):
     keywords: list[KeywordMinOut] = []
     contacts: list[PersonMinOut] = []
     job_application: Optional["JobApplicationOut"] = None  # call the full entry
-    name: str | None = None
+    name: str
 
 
-class JobMinOut(JobCreate, OwnedOut):
-    name: str | None = None
+class JobMinOut(OwnedOut):
+    title: str
+    description: str | None
+    salary_min: float | None
+    salary_max: float | None
+    personal_rating: int | None
+    url: str | None
+    deadline: datetime | None
+    note: str | None
+    attendance_type: str | None
+    name: str
+
+    # Foreign keys
+    company_id: int | None = None
+    location_id: int | None = None
+    duplicate_id: int | None = None
+    source_id: int | None = None
 
 
 class JobToChaseOut(JobOut):
@@ -279,6 +294,13 @@ class JobApplicationOut(JobApplicationCreate, OwnedOut):
     updates: list["JobApplicationUpdateOut"] = []  # get the full updates
 
 
+class JobApplicationMinOut(JobApplicationCreate, OwnedOut):
+    job: JobMinOut | None = None
+    aggregator: AggregatorMinOut | None = None
+    interviews: list["InterviewMinOut"] = []  # get the full interviews
+    updates: list["JobApplicationUpdateOut"] = []  # get the full updates
+
+
 class JobApplicationUpdate(JobApplicationCreate):
     date: datetime | None = None
     job_id: int | None = None
@@ -303,8 +325,13 @@ class InterviewOut(InterviewCreate, OwnedOut):
     interviewers: list["PersonMinOut"] = []
 
 
-class InterviewMinOut(InterviewCreate, OwnedOut):
-    pass
+class InterviewMinOut(OwnedOut):
+    date: datetime
+    location_id: int | None
+    job_application_id: int
+    note: str | None
+    type: str | None
+    attendance_type: str | None
 
 
 class InterviewUpdate(InterviewCreate):

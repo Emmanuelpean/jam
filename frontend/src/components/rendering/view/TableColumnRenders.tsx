@@ -389,6 +389,24 @@ export const columns: Columns = {
 		...overrides,
 	}),
 
+	jobCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "jobs",
+		label: "Jobs",
+		sortable: true,
+		searchable: false,
+		render: renderFunctions.jobCount,
+		...overrides,
+	}),
+
+	jobApplicationCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "job_applications",
+		label: "Job Applications",
+		sortable: true,
+		searchable: false,
+		render: renderFunctions.jobApplicationCount,
+		...overrides,
+	}),
+
 	// -------------------------------------------- CHASE-SPECIFIC COLUMNS ---------------------------------------------
 
 	daysSinceLastUpdate: (overrides: TableColumnOverrides = {}): TableColumn => ({

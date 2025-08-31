@@ -363,6 +363,16 @@ export const renderFunctions = {
 		return updates?.length || 0;
 	},
 
+	jobCount: (param: RenderParams): number => {
+		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
+		return jobs?.length || 0;
+	},
+
+	jobApplicationCount: (param: RenderParams): number => {
+		const job_applications = accessSubAttribute(param.item, param.accessKey, "job_applications");
+		return job_applications?.length || 0;
+	},
+
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
 	jobApplication: (param: RenderParams): ReactNode => {
@@ -626,7 +636,7 @@ export const renderFieldValue = (field: Field, item: any, id: string): ReactNode
 		});
 	} else {
 		console.log("no render function for field", item, field);
-		rendered = item[field.key];
+		rendered = item?.[field.key];
 	}
 
 	if (rendered !== null && rendered !== undefined) {
