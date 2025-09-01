@@ -110,7 +110,7 @@ const GenericModal = ({
 			}
 		};
 
-		loadDataFromBackend();
+		loadDataFromBackend().then(() => {});
 	}, [show, id, endpoint, token, itemName, data]);
 
 	// Helper to check if form data has been modified
@@ -579,29 +579,30 @@ const GenericModal = ({
 						newErrors[fieldName] = customErrors[fieldName];
 					}
 				});
-			} else if (typeof effectiveProps.validation === "object") {
-				// TODO remove?
-				// Object-based validation (like current validationRules)
-				const validationPromises = Object.keys(effectiveProps.validation).map(async (fieldName) => {
-					const rule = effectiveProps.validation[fieldName];
-					const result = rule(formData[fieldName], formData);
-					const validationResult = result instanceof Promise ? await result : result;
-					if (!validationResult.isValid) {
-						return { fieldName, message: validationResult.message };
-					}
-					return null;
-				});
-				const validationResults = await Promise.all(validationPromises);
-				validationResults.forEach((result) => {
-					if (result) {
-						if (newErrors[result.fieldName]) {
-							newErrors[result.fieldName] = `${newErrors[result.fieldName]}\n${result.message}`;
-						} else {
-							newErrors[result.fieldName] = result.message;
-						}
-					}
-				});
 			}
+			// } else if (typeof effectiveProps.validation === "object") {
+			// 	// TODO remove?
+			// 	// Object-based validation (like current validationRules)
+			// 	const validationPromises = Object.keys(effectiveProps.validation).map(async (fieldName) => {
+			// 		const rule = effectiveProps.validation[fieldName];
+			// 		const result = rule(formData[fieldName], formData);
+			// 		const validationResult = result instanceof Promise ? await result : result;
+			// 		if (!validationResult.isValid) {
+			// 			return { fieldName, message: validationResult.message };
+			// 		}
+			// 		return null;
+			// 	});
+			// 	const validationResults = await Promise.all(validationPromises);
+			// 	validationResults.forEach((result) => {
+			// 		if (result) {
+			// 			if (newErrors[result.fieldName]) {
+			// 				newErrors[result.fieldName] = `${newErrors[result.fieldName]}\n${result.message}`;
+			// 			} else {
+			// 				newErrors[result.fieldName] = result.message;
+			// 			}
+			// 		}
+			// 	});
+			// }
 		}
 
 		return newErrors;
@@ -772,36 +773,64 @@ const GenericModal = ({
 					<Modal.Footer>
 						<div className="d-flex flex-column w-100 gap-2">
 							{/* First row: Delete and Confirm */}
-							<div className="modal-buttons-container">
-								<ActionButton
-									variant="danger"
-									onClick={handleDeleteClick}
-									className="me-auto"
-									defaultText="Delete"
-									defaultIcon="bi bi-trash"
-									fullWidth={false}
-								/>
+							{id ? (
+								<div className="modal-buttons-container">
+									<ActionButton
+										id="cancel-button"
+										variant="secondary"
+										onClick={
+											effectiveProps.submode === "edit" ? handleCancelClose : handleCancelEdit
+										}
+										defaultText={effectiveProps.submode === "edit" ? "Close" : "Cancel"}
+										fullWidth={false}
+									/>
+									<ActionButton
+										id="confirm-button"
+										type="submit"
+										disabled={submitting}
+										loading={submitting}
+										loadingText="Updating..."
+										defaultText="Update"
+										fullWidth={false}
+									/>
+								</div>
+							) : (
+								<>
+									<div className="modal-buttons-container">
+										<ActionButton
+											variant="danger"
+											onClick={handleDeleteClick}
+											className="me-auto"
+											defaultText="Delete"
+											defaultIcon="bi bi-trash"
+											fullWidth={false}
+											disabled={id}
+										/>
 
-								<ActionButton
-									id="confirm-button"
-									type="submit"
-									disabled={submitting}
-									loading={submitting}
-									loadingText="Updating..."
-									defaultText="Update"
-									fullWidth={false}
-								/>
-							</div>
-							{/* Second row: Cancel */}
-							<div className="modal-buttons-container">
-								<ActionButton
-									id="cancel-button"
-									variant="secondary"
-									onClick={effectiveProps.submode === "edit" ? handleCancelClose : handleCancelEdit}
-									defaultText={effectiveProps.submode === "edit" ? "Close" : "Cancel"}
-									fullWidth={false}
-								/>
-							</div>
+										<ActionButton
+											id="confirm-button"
+											type="submit"
+											disabled={submitting}
+											loading={submitting}
+											loadingText="Updating..."
+											defaultText="Update"
+											fullWidth={false}
+										/>
+									</div>
+									{/* Second row: Cancel */}
+									<div className="modal-buttons-container">
+										<ActionButton
+											id="cancel-button"
+											variant="secondary"
+											onClick={
+												effectiveProps.submode === "edit" ? handleCancelClose : handleCancelEdit
+											}
+											defaultText={effectiveProps.submode === "edit" ? "Close" : "Cancel"}
+											fullWidth={false}
+										/>
+									</div>
+								</>
+							)}
 						</div>
 					</Modal.Footer>
 				);
