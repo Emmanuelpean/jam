@@ -1,8 +1,13 @@
-import React from "react";
+import React, { JSX } from "react";
 import { Modal, Button } from "react-bootstrap";
 import "./TermsConditions.css";
 
-function TermsAndConditions({ show, onHide }) {
+interface TermsAndConditionsProps {
+	show: boolean;
+	onHide: () => void;
+}
+
+function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Element {
 	return (
 		<Modal show={show} onHide={onHide} scrollable className="terms-modal">
 			<Modal.Header closeButton className="terms-header">
@@ -302,7 +307,7 @@ function TermsAndConditions({ show, onHide }) {
 				</div>
 			</Modal.Body>
 			<Modal.Footer className="terms-footer">
-				<Button variant="primary" onClick={onHide} size="lg">
+				<Button variant="primary" onClick={onHide} style={{ width: "100%" }}>
 					<i className="bi bi-check-circle me-2"></i>I Understand
 				</Button>
 			</Modal.Footer>

@@ -1,6 +1,5 @@
-/* Terms and Conditions Modal Styling */
 .terms-modal .modal-dialog {
-    max-width: 800px;
+    max-width: 1000px;
 }
 
 .terms-header {
@@ -49,7 +48,6 @@
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     box-shadow: 0 2px 8px var(--jam-glow);
-    border-left: 4px solid var(--primary-mid);
 }
 
 .terms-section.terms-highlight {
@@ -92,7 +90,6 @@
     font-size: 0.9rem;
     font-weight: 600;
     flex-shrink: 0;
-    box-shadow: 0 2px 4px var(--jam-glow);
 }
 
 .terms-highlight .section-number {
@@ -106,7 +103,6 @@
 .terms-subsection {
     margin: 1.5rem 0;
     padding-left: 1rem;
-    border-left: 2px solid var(--primary-light);
 }
 
 .terms-subsection-title {
