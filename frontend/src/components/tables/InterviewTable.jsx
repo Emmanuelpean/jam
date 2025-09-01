@@ -1,7 +1,7 @@
 import React from "react";
 import { GenericTableWithModals, useTableData } from "./GenericTable.tsx";
 import { columns } from "../rendering/view/TableColumnRenders";
-import { InterviewFormModal, InterviewViewModal } from "../modals/InterviewModal";
+import { InterviewModal } from "../modals/InterviewModal";
 
 const InterviewsTable = ({ jobApplicationId, onChange, data = null }) => {
 	const {
@@ -42,15 +42,19 @@ const InterviewsTable = ({ jobApplicationId, onChange, data = null }) => {
 
 	const ViewColumns = [columns.date(), columns.type(), columns.location(), columns.note()];
 
-	const FormModalWithProps = (props) => (
-		<InterviewFormModal
+	const ModalWithProps = (props) => (
+		<InterviewModal
 			{...props}
 			jobApplicationId={jobApplicationId}
-			onSuccess={props.isEdit ? handleUpdateSuccess : handleAddSuccess}
+			onSuccess={
+				props.submode === "add"
+					? handleAddSuccess
+					: props.submode === "edit"
+						? handleUpdateSuccess
+						: props.onSuccess
+			}
 		/>
 	);
-
-	const ViewModalWithProps = (props) => <InterviewViewModal {...props} jobApplicationId={jobApplicationId} />;
 
 	return (
 		<GenericTableWithModals
@@ -59,8 +63,7 @@ const InterviewsTable = ({ jobApplicationId, onChange, data = null }) => {
 			sortConfig={{ key: "date", direction: "desc" }}
 			loading={loading}
 			error={error}
-			FormModal={FormModalWithProps}
-			ViewModal={ViewModalWithProps}
+			Modal={ModalWithProps}
 			endpoint="interviews"
 			nameKey="date"
 			itemType="Interview"

@@ -62,10 +62,3 @@ export const KeywordModal = ({
 		/>
 	);
 };
-
-export const KeywordFormModal = (props) => {
-	const submode = props.isEdit || props.keyword?.id ? "edit" : "add";
-	return <KeywordModal {...props} submode={submode} />;
-};
-
-export const KeywordViewModal = (props) => <KeywordModal {...props} submode="view" />;

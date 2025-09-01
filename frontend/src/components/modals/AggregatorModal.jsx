@@ -63,10 +63,3 @@ export const AggregatorModal = ({
 		/>
 	);
 };
-
-export const AggregatorFormModal = (props) => {
-	const submode = props.isEdit || props.aggregator?.id ? "edit" : "add";
-	return <AggregatorModal {...props} submode={submode} />;
-};
-
-export const AggregatorViewModal = (props) => <AggregatorModal {...props} submode="view" />;

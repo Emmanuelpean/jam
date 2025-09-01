@@ -10,12 +10,12 @@ import {
 	personsApi,
 } from "../../../services/Api.ts";
 import { fetchCountries } from "../../../utils/CountryUtils.ts";
-import { CompanyFormModal } from "../../modals/CompanyModal";
-import { LocationFormModal } from "../../modals/LocationModal";
-import { KeywordFormModal } from "../../modals/KeywordModal";
-import { PersonFormModal } from "../../modals/PersonModal";
-import { AggregatorFormModal } from "../../modals/AggregatorModal";
-import { JobApplicationFormModal } from "../../modals/JobApplicationModal";
+import { CompanyModal } from "../../modals/CompanyModal";
+import { LocationModal } from "../../modals/LocationModal";
+import { KeywordModal } from "../../modals/KeywordModal";
+import { PersonModal } from "../../modals/PersonModal";
+import { AggregatorModal } from "../../modals/AggregatorModal";
+import { JobApplicationModal } from "../../modals/JobApplicationModal";
 import { THEMES } from "../../../utils/Theme.ts";
 import { toSelectOptions } from "../../../utils/Utils.ts";
 import { JobAndApplicationModal } from "../../modals/JobAndApplicationModal";
@@ -236,38 +236,65 @@ export const useFormOptions = (requiredOptions = []) => {
 
 	// Render modal functions
 	const renderCompanyModal = () => (
-		<CompanyFormModal show={showCompanyModal} onHide={closeCompanyModal} onSuccess={handleCompanyAddSuccess} />
+		<CompanyModal
+			show={showCompanyModal}
+			onHide={closeCompanyModal}
+			onSuccess={handleCompanyAddSuccess}
+			submode="add"
+		/>
 	);
 
 	const renderLocationModal = () => (
-		<LocationFormModal show={showLocationModal} onHide={closeLocationModal} onSuccess={handleLocationAddSuccess} />
+		<LocationModal
+			show={showLocationModal}
+			onHide={closeLocationModal}
+			onSuccess={handleLocationAddSuccess}
+			submode="add"
+		/>
 	);
 
 	const renderKeywordModal = () => (
-		<KeywordFormModal show={showKeywordModal} onHide={closeKeywordModal} onSuccess={handleKeywordAddSuccess} />
+		<KeywordModal
+			show={showKeywordModal}
+			onHide={closeKeywordModal}
+			onSuccess={handleKeywordAddSuccess}
+			submode="add"
+		/>
 	);
 
 	const renderPersonModal = () => (
-		<PersonFormModal show={showPersonModal} onHide={closePersonModal} onSuccess={handlePersonAddSuccess} />
+		<PersonModal
+			show={showPersonModal}
+			onHide={closePersonModal}
+			onSuccess={handlePersonAddSuccess}
+			submode="add"
+		/>
 	);
 
 	const renderAggregatorModal = () => (
-		<AggregatorFormModal
+		<AggregatorModal
 			show={showAggregatorModal}
 			onHide={closeAggregatorModal}
 			onSuccess={handleAggregatorAddSuccess}
+			submode="add"
 		/>
 	);
 
 	const renderJobModal = () => (
-		<JobAndApplicationModal show={showJobModal} onHide={closeJobModal} onSuccess={handleJobAddSuccess} />
+		<JobAndApplicationModal
+			show={showJobModal}
+			onHide={closeJobModal}
+			onSuccess={handleJobAddSuccess}
+			submode="add"
+		/>
 	);
 
 	const renderJobApplicationModal = () => (
-		<JobApplicationFormModal
+		<JobApplicationModal
 			show={showJobApplicationModal}
 			onHide={closeJobApplicationModal}
 			onSuccess={handleJobApplicationAddSuccess}
+			submode="add"
 		/>
 	);
 

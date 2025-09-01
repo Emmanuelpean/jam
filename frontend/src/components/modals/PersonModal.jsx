@@ -97,10 +97,3 @@ export const PersonModal = ({
 		</>
 	);
 };
-
-export const PersonFormModal = (props) => {
-	const submode = props.isEdit || props.person?.id ? "edit" : "add";
-	return <PersonModal {...props} submode={submode} />;
-};
-
-export const PersonViewModal = (props) => <PersonModal {...props} submode="view" />;

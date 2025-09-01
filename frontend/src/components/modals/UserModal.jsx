@@ -83,10 +83,3 @@ export const UserModal = ({
 		/>
 	);
 };
-
-export const UserFormModal = (props) => {
-	const submode = props.isEdit || props.user?.id ? "edit" : "add";
-	return <UserModal {...props} submode={submode} />;
-};
-
-export const UserViewModal = (props) => <UserModal {...props} submode="view" />;

@@ -120,10 +120,3 @@ export const InterviewModal = ({
 		</>
 	);
 };
-
-export const InterviewFormModal = (props) => {
-	const submode = props.isEdit || props.interview?.id ? "edit" : "add";
-	return <InterviewModal {...props} submode={submode} />;
-};
-
-export const InterviewViewModal = (props) => <InterviewModal {...props} interview={props.item} submode="view" />;

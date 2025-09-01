@@ -1,14 +1,14 @@
 import React, { ReactElement, ReactNode, useState } from "react";
-import { LocationViewModal } from "../../modals/LocationModal";
-import { CompanyViewModal } from "../../modals/CompanyModal";
-import { PersonViewModal } from "../../modals/PersonModal";
-import { KeywordViewModal } from "../../modals/KeywordModal";
-import { JobApplicationViewModal } from "../../modals/JobApplicationModal";
-import { AggregatorViewModal } from "../../modals/AggregatorModal";
+import { LocationModal } from "../../modals/LocationModal";
+import { CompanyModal } from "../../modals/CompanyModal";
+import { PersonModal } from "../../modals/PersonModal";
+import { KeywordModal } from "../../modals/KeywordModal";
+import { JobApplicationModal } from "../../modals/JobApplicationModal";
+import { AggregatorModal } from "../../modals/AggregatorModal";
 import { accessAttribute } from "../../../utils/Utils";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
-import { JobAndApplicationViewModal } from "../../modals/JobAndApplicationModal";
+import { JobAndApplicationModal } from "../../modals/JobAndApplicationModal";
 import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../maps/LocationMap";
 import {
@@ -24,10 +24,18 @@ interface ModalComponentProps {
 	show: boolean;
 	onHide: () => void;
 	data: any;
-	id?: string | number | null;
+	id: string | number | null;
+	submode?: string;
+	size?: string;
+	endpoint?: string;
+	jobId?: string | number | null;
+	onSuccess: (item: any) => void;
+	onDelete: (item: any) => void;
+	onJobSuccess?: (item: any) => void;
+	onApplicationSuccess?: (item: any) => void;
+	onJobDelete?: (item: any) => void;
+	onApplicationDelete?: (item: any) => void;
 }
-
-type ModalComponent = React.ComponentType<ModalComponentProps>;
 
 interface ModalManagerProps {
 	children: (handleClick: (item: any) => void) => ReactNode;
@@ -58,10 +66,12 @@ interface Field {
 }
 
 interface ModalManagerProps {
-	children: (handleClick: (itemOrId: any) => void) => ReactNode;
+	children: (handleClick: (item: any) => void) => ReactNode;
 }
 
-const createModalManager = (ModalComponent: ModalComponent) => {
+type FlexibleModalComponent = React.ComponentType<any>;
+
+const createModalManager = (ModalComponent: FlexibleModalComponent) => {
 	return ({ children }: ModalManagerProps): ReactElement => {
 		const [showModal, setShowModal] = useState<boolean>(false);
 		const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -81,22 +91,38 @@ const createModalManager = (ModalComponent: ModalComponent) => {
 			}, 300);
 		};
 
+		// Empty handlers for modal callbacks since we're just viewing
+		const handleSuccess = () => {};
+		const handleDelete = () => {};
+
 		return (
 			<>
 				{children(handleClick)}
-				<ModalComponent show={showModal} onHide={handleHide} data={selectedItem} id={selectedId} />
+				<ModalComponent
+					show={showModal}
+					onHide={handleHide}
+					data={selectedItem}
+					id={selectedId}
+					submode="view"
+					onSuccess={handleSuccess}
+					onDelete={handleDelete}
+					onJobSuccess={handleSuccess}
+					onApplicationSuccess={handleSuccess}
+					onJobDelete={handleDelete}
+					onApplicationDelete={handleDelete}
+				/>
 			</>
 		);
 	};
 };
 
-const LocationModalManager = createModalManager(LocationViewModal);
-const CompanyModalManager = createModalManager(CompanyViewModal);
-const PersonModalManager = createModalManager(PersonViewModal);
-const KeywordModalManager = createModalManager(KeywordViewModal);
-const JobApplicationModalManager = createModalManager(JobApplicationViewModal);
-const JobAndApplicationModalManager = createModalManager(JobAndApplicationViewModal);
-const AggregatorModalManager = createModalManager(AggregatorViewModal);
+const LocationModalManager = createModalManager(LocationModal);
+const CompanyModalManager = createModalManager(CompanyModal);
+const PersonModalManager = createModalManager(PersonModal);
+const KeywordModalManager = createModalManager(KeywordModal);
+const JobApplicationModalManager = createModalManager(JobApplicationModal);
+const JobAndApplicationModalManager = createModalManager(JobAndApplicationModal);
+const AggregatorModalManager = createModalManager(AggregatorModal);
 
 export const getApplicationStatusBadgeClass = (status: string | undefined): string => {
 	switch (status?.toLowerCase()) {

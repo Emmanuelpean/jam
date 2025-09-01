@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
-import { LocationFormModal, LocationViewModal } from "../components/modals/LocationModal";
+import { LocationModal } from "../components/modals/LocationModal";
 import LocationMap from "../components/maps/LocationMap.tsx";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
@@ -45,8 +45,7 @@ const LocationsPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			FormModal={LocationFormModal}
-			ViewModal={LocationViewModal}
+			Modal={LocationModal}
 			endpoint="locations"
 			nameKey="name"
 			itemType="Location"

@@ -102,10 +102,3 @@ export const JobApplicationModal = ({
 		</>
 	);
 };
-
-export const JobApplicationFormModal = (props) => {
-	const submode = props.isEdit || props.job?.id ? "edit" : "add";
-	return <JobApplicationModal {...props} submode={submode} />;
-};
-
-export const JobApplicationViewModal = (props) => <JobApplicationModal {...props} submode="view" />;

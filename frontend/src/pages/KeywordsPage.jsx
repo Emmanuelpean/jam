@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
-import { KeywordFormModal, KeywordViewModal } from "../components/modals/KeywordModal";
+import { KeywordModal } from "../components/modals/KeywordModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
 
@@ -44,8 +44,7 @@ const KeywordsPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			FormModal={KeywordFormModal}
-			ViewModal={KeywordViewModal}
+			Modal={KeywordModal}
 			endpoint="keywords"
 			nameKey="name"
 			itemType="Tag"

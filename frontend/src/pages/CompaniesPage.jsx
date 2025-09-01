@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
-import { CompanyFormModal, CompanyViewModal } from "../components/modals/CompanyModal";
+import { CompanyModal } from "../components/modals/CompanyModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
 
@@ -50,8 +50,7 @@ const CompaniesPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			FormModal={CompanyFormModal}
-			ViewModal={CompanyViewModal}
+			Modal={CompanyModal}
 			endpoint="companies"
 			nameKey="name"
 			itemType="Company"

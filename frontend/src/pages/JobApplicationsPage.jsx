@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { JobApplicationFormModal, JobApplicationViewModal } from "../components/modals/JobApplicationModal";
+import { JobApplicationModal } from "../components/modals/JobApplicationModal";
 import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable.tsx";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
@@ -52,8 +52,7 @@ const JobApplicationsPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			FormModal={JobApplicationFormModal}
-			ViewModal={JobApplicationViewModal}
+			Modal={JobApplicationModal}
 			endpoint="jobapplications"
 			nameKey="title"
 			itemType="Job Application"

@@ -1,7 +1,7 @@
 import React from "react";
 import { GenericTableWithModals, useTableData } from "./GenericTable.tsx";
 import { columns } from "../rendering/view/TableColumnRenders";
-import { JobApplicationUpdateFormModal, JobApplicationUpdateViewModal } from "../modals/JobApplicationUpdateModal";
+import { JobApplicationUpdateModal } from "../modals/JobApplicationUpdateModal";
 
 const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, data = null }) => {
 	const {
@@ -42,16 +42,18 @@ const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, data = null })
 
 	const ViewColumns = [columns.date(), columns.updateType(), columns.note()];
 
-	const FormModalWithProps = (props) => (
-		<JobApplicationUpdateFormModal
+	const ModalWithProps = (props) => (
+		<JobApplicationUpdateModal
 			{...props}
 			jobApplicationId={jobApplicationId}
-			onSuccess={props.isEdit ? handleUpdateSuccess : handleAddSuccess}
+			onSuccess={
+				props.submode === "add"
+					? handleAddSuccess
+					: props.submode === "edit"
+						? handleUpdateSuccess
+						: props.onSuccess
+			}
 		/>
-	);
-
-	const ViewModalWithProps = (props) => (
-		<JobApplicationUpdateViewModal {...props} jobApplicationId={jobApplicationId} />
 	);
 
 	return (
@@ -61,8 +63,7 @@ const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, data = null })
 			sortConfig={{ key: "date", direction: "desc" }}
 			loading={loading}
 			error={error}
-			FormModal={FormModalWithProps}
-			ViewModal={ViewModalWithProps}
+			Modal={ModalWithProps}
 			endpoint="jobapplicationupdates"
 			nameKey="date"
 			itemType="Update"

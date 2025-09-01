@@ -192,12 +192,3 @@ export const JobAndApplicationModal = ({
 		</>
 	);
 };
-
-export const JobAndApplicationFormModal = (props) => {
-	const submode = props.isEdit || props.interview?.id ? "edit" : "add";
-	return <JobAndApplicationModal {...props} submode={submode} />;
-};
-
-export const JobAndApplicationViewModal = (props) => (
-	<JobAndApplicationModal {...props} interview={props.item} submode="view" />
-);

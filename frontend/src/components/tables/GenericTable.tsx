@@ -62,8 +62,7 @@ export interface GenericTableWithModalsProps {
 	onSort?: (config: SortConfig) => void;
 
 	// Modal configuration
-	FormModal: React.ComponentType<any>;
-	ViewModal: React.ComponentType<any>;
+	Modal: React.ComponentType<any>;
 	ModalSize?: string;
 
 	// Data management
@@ -206,6 +205,7 @@ export const createGenericDeleteHandler = ({
 /**
  * Comprehensive table component with modals, sorting, searching, and CRUD operations
  */
+
 export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 	// Table data
 	data = [],
@@ -220,8 +220,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 	onSort = () => {},
 
 	// Modal configuration
-	FormModal,
-	ViewModal,
+	Modal,
 	ModalSize = "lg",
 
 	// Data management
@@ -740,29 +739,30 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 			)}
 
 			{children}
-			<FormModal
+			<Modal
 				show={showModal}
 				onHide={closeAddModal}
 				onSuccess={handleAddSuccess}
 				size={ModalSize}
 				data={{}}
-				isEdit={false}
+				submode="add"
 			/>
 
-			<FormModal
+			<Modal
 				show={showEditModal}
 				onHide={closeEditModal}
 				onSuccess={handleEditSuccess}
 				data={selectedItem || {}}
-				isEdit={true}
+				submode="edit"
 				size={ModalSize}
 			/>
 
-			<ViewModal
+			<Modal
 				show={showViewModal}
 				onHide={closeViewModal}
 				onSuccess={handleAddSuccess}
 				data={selectedItem}
+				submode="view"
 				onEdit={() => {
 					closeViewModal();
 					openEditModal(selectedItem);

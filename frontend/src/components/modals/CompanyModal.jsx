@@ -72,10 +72,3 @@ export const CompanyModal = ({
 		/>
 	);
 };
-
-export const CompanyFormModal = (props) => {
-	const submode = props.isEdit || props.company?.id ? "edit" : "add";
-	return <CompanyModal {...props} submode={submode} />;
-};
-
-export const CompanyViewModal = (props) => <CompanyModal {...props} submode="view" />;

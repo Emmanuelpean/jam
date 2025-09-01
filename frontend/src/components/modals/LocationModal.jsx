@@ -101,10 +101,3 @@ export const LocationModal = ({
 		/>
 	);
 };
-
-export const LocationFormModal = (props) => {
-	const submode = props.isEdit || props.location?.id ? "edit" : "add";
-	return <LocationModal {...props} submode={submode} />;
-};
-
-export const LocationViewModal = (props) => <LocationModal {...props} submode="view" />;
