@@ -21,7 +21,15 @@ const LocationsPage = () => {
 		removeItem,
 	} = useTableData("locations", [], {}, { key: "created_at", direction: "desc" });
 
-	const tableColumns = [columns.name(), columns.city(), columns.postcode(), columns.country(), columns.createdAt()];
+	const tableColumns = [
+		columns.name(),
+		columns.city(),
+		columns.postcode(),
+		columns.country(),
+		columns.jobCount(),
+		columns.interviewCount(),
+		columns.createdAt(),
+	];
 
 	useEffect(() => {
 		if (loading) {

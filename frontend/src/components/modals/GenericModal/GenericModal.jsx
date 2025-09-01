@@ -88,7 +88,6 @@ const GenericModal = ({
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
 
 	useEffect(() => {
-		console.log("GenericModal useEffect");
 		const loadDataFromBackend = async () => {
 			if (show && id && endpoint && token) {
 				setLoading(true);
@@ -239,7 +238,6 @@ const GenericModal = ({
 	useEffect(() => {
 		if (show && !previousShow.current) {
 			const effectiveProps = getEffectiveProps();
-			console.log("effectiveProps:", effectiveProps);
 
 			if (effectiveProps.submode === "add") {
 				setFormData({ ...effectiveProps.data });

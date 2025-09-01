@@ -195,7 +195,7 @@ class PersonCreate(BaseModel):
 
 class PersonOut(PersonCreate, OwnedOut):
     company: CompanyMinOut | None = None
-    interviews: list["JobApplicationMinOut"] = []
+    interviews: list["InterviewMinOut"] = []
     jobs: list["JobMinOut"] = []
     name: str | None = None
     name_company: str | None = None
@@ -312,10 +312,10 @@ class JobApplicationUpdate(JobApplicationCreate):
 
 class InterviewCreate(BaseModel):
     date: datetime
+    type: str
     location_id: int | None = None
     job_application_id: int
     note: str | None = None
-    type: str | None = None
     interviewers: list[int] | None = None
     attendance_type: str | None = None
 
@@ -327,10 +327,10 @@ class InterviewOut(InterviewCreate, OwnedOut):
 
 class InterviewMinOut(OwnedOut):
     date: datetime
+    type: str
     location_id: int | None
     job_application_id: int
     note: str | None
-    type: str | None
     attendance_type: str | None
 
 
