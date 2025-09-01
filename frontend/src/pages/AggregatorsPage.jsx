@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { AggregatorFormModal, AggregatorViewModal } from "../components/modals/AggregatorModal";
-import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable";
+import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable.tsx";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
 

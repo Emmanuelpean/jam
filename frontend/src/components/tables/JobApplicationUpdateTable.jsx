@@ -1,5 +1,5 @@
 import React from "react";
-import { GenericTableWithModals, useTableData } from "./GenericTable";
+import { GenericTableWithModals, useTableData } from "./GenericTable.tsx";
 import { columns } from "../rendering/view/TableColumnRenders";
 import { JobApplicationUpdateFormModal, JobApplicationUpdateViewModal } from "../modals/JobApplicationUpdateModal";
 

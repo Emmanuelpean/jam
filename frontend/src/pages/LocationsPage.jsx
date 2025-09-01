@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
+import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
 import { LocationFormModal, LocationViewModal } from "../components/modals/LocationModal";
 import LocationMap from "../components/maps/LocationMap.tsx";
 import { columns } from "../components/rendering/view/TableColumnRenders";

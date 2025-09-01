@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useTableData, GenericTableWithModals } from "../components/tables/GenericTable";
+import { useTableData, GenericTableWithModals } from "../components/tables/GenericTable.tsx";
 import { JobAndApplicationFormModal, JobAndApplicationViewModal } from "../components/modals/JobAndApplicationModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";

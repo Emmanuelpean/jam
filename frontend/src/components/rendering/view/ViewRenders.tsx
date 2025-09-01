@@ -5,19 +5,19 @@ import { PersonViewModal } from "../../modals/PersonModal";
 import { KeywordViewModal } from "../../modals/KeywordModal";
 import { JobApplicationViewModal } from "../../modals/JobApplicationModal";
 import { AggregatorViewModal } from "../../modals/AggregatorModal";
-import { JobViewModal } from "../../modals/_JobModal";
 import { accessAttribute } from "../../../utils/Utils";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
+import { JobAndApplicationViewModal } from "../../modals/JobAndApplicationModal";
 import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../maps/LocationMap";
 import {
+	AggregatorOut,
 	CompanyOut,
 	KeywordOut,
 	LocationCreate,
 	LocationOut,
 	PersonOut,
-	AggregatorOut,
 } from "../../../services/Schemas";
 
 interface ModalComponentProps {
@@ -95,7 +95,7 @@ const CompanyModalManager = createModalManager(CompanyViewModal);
 const PersonModalManager = createModalManager(PersonViewModal);
 const KeywordModalManager = createModalManager(KeywordViewModal);
 const JobApplicationModalManager = createModalManager(JobApplicationViewModal);
-const JobModalManager = createModalManager(JobViewModal);
+const JobAndApplicationModalManager = createModalManager(JobAndApplicationViewModal);
 const AggregatorModalManager = createModalManager(AggregatorViewModal);
 
 export const getApplicationStatusBadgeClass = (status: string | undefined): string => {
@@ -399,7 +399,7 @@ export const renderFunctions = {
 		const job: Job = accessSubAttribute(param.item, param.accessKey, "job");
 		if (job) {
 			return (
-				<JobModalManager>
+				<JobAndApplicationModalManager>
 					{(handleClick) => (
 						<span
 							className={`badge bg-info clickable-badge`}
@@ -410,7 +410,7 @@ export const renderFunctions = {
 							{job.title}
 						</span>
 					)}
-				</JobModalManager>
+				</JobAndApplicationModalManager>
 			);
 		}
 		return null;
@@ -420,7 +420,7 @@ export const renderFunctions = {
 		const job: Job = accessSubAttribute(param.item, param.accessKey, "job");
 		if (job) {
 			return (
-				<JobModalManager>
+				<JobAndApplicationModalManager>
 					{(handleClick) => (
 						<span
 							className={`badge bg-info clickable-badge`}
@@ -431,7 +431,7 @@ export const renderFunctions = {
 							{job.name}
 						</span>
 					)}
-				</JobModalManager>
+				</JobAndApplicationModalManager>
 			);
 		}
 		return null;

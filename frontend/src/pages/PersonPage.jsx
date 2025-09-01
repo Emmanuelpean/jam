@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
+import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
 import { PersonFormModal, PersonViewModal } from "../components/modals/PersonModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";

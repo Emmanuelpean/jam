@@ -1,35 +1,116 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { MouseEvent, ReactNode, useCallback, useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
-import { useAuth } from "../../contexts/AuthContext.tsx";
-import { api } from "../../services/Api.ts";
+import { useAuth } from "../../contexts/AuthContext";
+import { api } from "../../services/Api";
 import { getTableIcon, renderFieldValue } from "../rendering/view/ViewRenders";
-import { accessAttribute } from "../../utils/Utils.ts";
+import { accessAttribute } from "../../utils/Utils";
 import AlertModal from "../modals/AlertModal";
-import useModalState from "../../hooks/useModalState.ts";
-import useGenericAlert from "../../hooks/useGenericAlert.ts";
-import { pluralize } from "../../utils/StringUtils.ts";
+import useModalState from "../../hooks/useModalState";
+import useGenericAlert from "../../hooks/useGenericAlert";
+import { pluralize } from "../../utils/StringUtils";
+import { TableColumn } from "../rendering/view/TableColumnRenders";
+
+export interface SortConfig {
+	key: string;
+	direction: "asc" | "desc";
+}
+
+export interface ContextMenuState {
+	item: any;
+	x: number;
+	y: number;
+	show: boolean;
+}
+
+export interface UseTableDataResult {
+	data: any[];
+	setData: React.Dispatch<React.SetStateAction<any[]>>;
+	loading: boolean;
+	error: string | null;
+	sortConfig: SortConfig;
+	setSortConfig: React.Dispatch<React.SetStateAction<SortConfig>>;
+	searchTerm: string;
+	setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
+	addItem: (newItem: any) => void;
+	updateItem: (updatedItem: any) => void;
+	deleteItem: (itemId: string | number) => void;
+	refetch: () => Promise<void>;
+}
+
+export interface CreateGenericDeleteHandlerProps {
+	endpoint: string;
+	token: string | null;
+	showDelete: (config: any) => Promise<boolean>;
+	showError: (config: any) => Promise<boolean>;
+	removeItem?: (itemId: string | number) => void;
+	setData?: React.Dispatch<React.SetStateAction<any[]>>;
+	nameKey: string;
+	itemType?: string;
+}
+
+export interface GenericTableWithModalsProps {
+	// Table data
+	data?: any[];
+	columns?: TableColumn[];
+	loading?: boolean;
+	error?: string | null;
+
+	// Search and sort
+	searchTerm?: string;
+	onSearchChange?: (searchTerm: string) => void;
+	sortConfig?: SortConfig;
+	onSort?: (config: SortConfig) => void;
+
+	// Modal configuration
+	FormModal: React.ComponentType<any>;
+	ViewModal: React.ComponentType<any>;
+	ModalSize?: string;
+
+	// Data management
+	endpoint: string;
+	nameKey: string;
+	itemType: string;
+	addItem: (newItem: any) => void;
+	updateItem: (updatedItem: any) => void;
+	removeItem: (itemId: string | number) => void;
+	setData: React.Dispatch<React.SetStateAction<any[]>>;
+
+	// Display options
+	title?: string;
+	showAllEntries?: boolean;
+	selectable?: boolean;
+	emptyMessage?: string;
+	compact?: boolean;
+	showSearch?: boolean;
+	showAdd?: boolean;
+
+	// Additional content
+	children?: ReactNode;
+}
 
 /**
  * Custom hook for managing table data with CRUD operations
  */
 export const useTableData = (
-	endpoint,
-	dependencies = [],
-	queryParams = {},
-	customSortConfig = {},
-	providedData = null,
-) => {
+	endpoint: string,
+	dependencies: any[] = [],
+	queryParams: Record<string, any> = {},
+	customSortConfig: Partial<SortConfig> = {},
+	providedData: any[] | null = null,
+): UseTableDataResult => {
 	const { token } = useAuth();
 
-	const [data, setData] = useState(providedData || []);
-	const [loading, setLoading] = useState(!providedData);
-	const [error, setError] = useState(null);
-	const [sortConfig, setSortConfig] = useState(customSortConfig || { key: "created_at", direction: "desc" });
-	const [searchTerm, setSearchTerm] = useState("");
+	const [data, setData] = useState<any[]>(providedData || []);
+	const [loading, setLoading] = useState<boolean>(!providedData);
+	const [error, setError] = useState<string | null>(null);
+	const [sortConfig, setSortConfig] = useState<SortConfig>(
+		(customSortConfig as SortConfig) || { key: "created_at", direction: "desc" },
+	);
+	const [searchTerm, setSearchTerm] = useState<string>("");
 
 	// Memoize the fetch function to prevent unnecessary re-renders
 	// noinspection com.intellij.reactbuddy.ExhaustiveDepsInspection
-	const fetchData = useCallback(async () => {
+	const fetchData = useCallback(async (): Promise<void> => {
 		setLoading(true);
 		try {
 			const queryString =
@@ -54,12 +135,15 @@ export const useTableData = (
 		}
 	}, [token, fetchData, providedData, ...dependencies]);
 
-	const addItem = useCallback((newItem) => setData((prev) => [newItem, ...prev]), []);
+	const addItem = useCallback((newItem: any) => setData((prev) => [newItem, ...prev]), []);
 	const updateItem = useCallback(
-		(updatedItem) => setData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))),
+		(updatedItem: any) => setData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))),
 		[],
 	);
-	const deleteItem = useCallback((itemId) => setData((prev) => prev.filter((item) => item.id !== itemId)), []);
+	const deleteItem = useCallback(
+		(itemId: string | number) => setData((prev) => prev.filter((item) => item.id !== itemId)),
+		[],
+	);
 
 	return {
 		data,
@@ -89,8 +173,8 @@ export const createGenericDeleteHandler = ({
 	setData,
 	nameKey,
 	itemType = "item",
-}) => {
-	return async (item) => {
+}: CreateGenericDeleteHandlerProps) => {
+	return async (item: any): Promise<void> => {
 		const itemName = item[nameKey];
 		try {
 			await showDelete({
@@ -122,7 +206,7 @@ export const createGenericDeleteHandler = ({
 /**
  * Comprehensive table component with modals, sorting, searching, and CRUD operations
  */
-export const GenericTableWithModals = ({
+export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 	// Table data
 	data = [],
 	columns = [],
@@ -163,9 +247,9 @@ export const GenericTableWithModals = ({
 }) => {
 	const { token } = useAuth();
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
-	const [contextMenu, setContextMenu] = useState(null);
-	const [currentPage, setCurrentPage] = useState(0);
-	const [pageSize, setPageSize] = useState(20);
+	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+	const [currentPage, setCurrentPage] = useState<number>(0);
+	const [pageSize, setPageSize] = useState<number>(20);
 	const {
 		showModal,
 		showViewModal,
@@ -180,21 +264,20 @@ export const GenericTableWithModals = ({
 	} = useModalState();
 
 	// Utility functions
-	const getEffectiveItem = (item, column) => {
+	const getEffectiveItem = (item: any, column: TableColumn): any => {
 		if (!column || !column.accessKey) return item;
 		return accessAttribute(item, column.accessKey);
 	};
 
-	const getColumnValue = (item, column, field) => {
+	const getColumnValue = (item: any, column: TableColumn, field?: string): any => {
 		if (!column) return null;
 		const effectiveItem = getEffectiveItem(item, column);
-		if (column.accessor) return column.accessor(effectiveItem);
 		if (field) return accessAttribute(effectiveItem, field);
 		return accessAttribute(effectiveItem, column.key);
 	};
 
 	// Data processing
-	const getSortedData = () => {
+	const getSortedData = (): any[] => {
 		let filteredData = [...data];
 
 		// Filter by search term
@@ -203,7 +286,7 @@ export const GenericTableWithModals = ({
 			filteredData = filteredData.filter((item) => {
 				return columns.some((column) => {
 					if (!column.searchable) return false;
-					let value;
+					let value: string;
 					if (column.searchFields) {
 						if (typeof column.searchFields === "function") {
 							const rawValue = getColumnValue(item, column);
@@ -229,17 +312,14 @@ export const GenericTableWithModals = ({
 		if (sortConfig.key) {
 			filteredData.sort((a, b) => {
 				const column = columns.find((col) => col.key === sortConfig.key);
-				let aValue, bValue;
+				let aValue: any, bValue: any;
 
-				if (column?.sortFunction && typeof column.sortFunction === "function") {
-					aValue = column.sortFunction(a);
-					bValue = column.sortFunction(b);
-				} else if (column?.sortField) {
+				if (column?.sortField) {
 					aValue = getColumnValue(a, column, column.sortField);
 					bValue = getColumnValue(b, column, column.sortField);
 				} else {
-					aValue = getColumnValue(a, column);
-					bValue = getColumnValue(b, column);
+					aValue = getColumnValue(a, column!);
+					bValue = getColumnValue(b, column!);
 				}
 
 				if (aValue == null && bValue == null) return 0;
@@ -261,31 +341,31 @@ export const GenericTableWithModals = ({
 	};
 
 	// Event handlers
-	const handleSort = (key) => {
-		let direction = "asc";
+	const handleSort = (key: string): void => {
+		let direction: "asc" | "desc" = "asc";
 		if (sortConfig.key === key && sortConfig.direction === "asc") {
 			direction = "desc";
 		}
 		onSort({ key, direction });
 	};
 
-	const handleRowClick = (event, item) => {
+	const handleRowClick = (event: MouseEvent<HTMLTableRowElement>, item: any): void => {
 		if (contextMenu) return;
 
-		const isInteractiveElement = (element) => {
+		const isInteractiveElement = (element: Element | null): boolean => {
 			if (!element) return false;
 			const tagName = element.tagName?.toLowerCase();
 			return (
 				["button", "a", "input", "select", "textarea"].includes(tagName) ||
-				element.onclick ||
-				element.getAttribute("onclick") ||
+				!!(element as HTMLElement).onclick ||
+				element.getAttribute("onclick") !== null ||
 				element.classList?.contains("clickable-badge") ||
 				element.classList?.contains("btn") ||
-				element.style?.cursor === "pointer"
+				(element as HTMLElement).style?.cursor === "pointer"
 			);
 		};
 
-		let currentElement = event.target;
+		let currentElement: Element | null = event.target as Element;
 		while (currentElement && currentElement !== event.currentTarget) {
 			if (isInteractiveElement(currentElement)) return;
 			currentElement = currentElement.parentElement;
@@ -294,7 +374,7 @@ export const GenericTableWithModals = ({
 		openViewModal(item);
 	};
 
-	const handleRowRightClick = (item, event) => {
+	const handleRowRightClick = (item: any, event: MouseEvent<HTMLTableRowElement>): void => {
 		event.preventDefault();
 		event.stopPropagation();
 		setContextMenu({ item, x: event.clientX, y: event.clientY, show: true });
@@ -312,7 +392,7 @@ export const GenericTableWithModals = ({
 	});
 
 	// Context menu handlers
-	const handleContextAction = (action, e) => {
+	const handleContextAction = (action: string, e: MouseEvent): void => {
 		e.stopPropagation();
 		if (contextMenu?.item) {
 			switch (action) {
@@ -331,19 +411,27 @@ export const GenericTableWithModals = ({
 	};
 
 	// Success handlers
-	const handleEditSuccess = (updatedItem) => {
+	const handleEditSuccess = (updatedItem: any): void => {
 		updateItem(updatedItem);
 		closeEditModal();
 	};
-	const handleAddSuccess = (newItem) => {
+	const handleAddSuccess = (newItem: any): void => {
 		addItem(newItem);
 		closeAddModal();
 	};
 
 	// Close context menu on outside click or escape
 	useEffect(() => {
-		const handleGlobalClick = () => contextMenu && setContextMenu(null);
-		const handleKeyPress = (e) => e.key === "Escape" && contextMenu && setContextMenu(null);
+		const handleGlobalClick = (): void => {
+			if (contextMenu) {
+				setContextMenu(null);
+			}
+		};
+		const handleKeyPress = (e: KeyboardEvent): void => {
+			if (e.key === "Escape" && contextMenu) {
+				setContextMenu(null);
+			}
+		};
 
 		if (contextMenu) {
 			document.addEventListener("click", handleGlobalClick);
@@ -365,8 +453,8 @@ export const GenericTableWithModals = ({
 
 	useEffect(() => setCurrentPage(0), [searchTerm, data]);
 
-	const goToPage = (page) => setCurrentPage(Math.max(0, Math.min(totalPages - 1, page)));
-	const handlePageSizeChange = (newPageSize) => {
+	const goToPage = (page: number): void => setCurrentPage(Math.max(0, Math.min(totalPages - 1, page)));
+	const handlePageSizeChange = (newPageSize: number): void => {
 		setPageSize(newPageSize);
 		setCurrentPage(0);
 	};
@@ -386,7 +474,6 @@ export const GenericTableWithModals = ({
 		return <div className="alert alert-danger mt-3">{error}</div>;
 	}
 
-	// noinspection JSValidateTypes
 	return (
 		<div className={"table-container"}>
 			{title && (
@@ -425,7 +512,7 @@ export const GenericTableWithModals = ({
 				{showAdd && (
 					<Button
 						variant="primary"
-						size={compact ? "sm" : undefined}
+						{...(compact ? { size: "sm" as const } : {})}
 						onClick={() => openAddModal()}
 						className="d-flex align-items-center justify-content-center"
 						style={{
@@ -641,8 +728,8 @@ export const GenericTableWithModals = ({
 								color: color || "inherit",
 							}}
 							onClick={(e) => handleContextAction(action, e)}
-							onMouseEnter={(e) => (e.target.style.backgroundColor = "#f8f9fa")}
-							onMouseLeave={(e) => (e.target.style.backgroundColor = "white")}
+							onMouseEnter={(e) => ((e.target as HTMLElement).style.backgroundColor = "#f8f9fa")}
+							onMouseLeave={(e) => ((e.target as HTMLElement).style.backgroundColor = "white")}
 							id={id}
 						>
 							<i className={`bi bi-${icon} me-2`}></i>

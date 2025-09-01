@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { GenericTableWithModals } from "./GenericTable";
 import { columns } from "../rendering/view/TableColumnRenders";
-import { JobViewModal } from "../modals/_JobModal";
+// import { JobViewModal } from "../modals/_JobModal";
 
 const JobsToChase = ({ initialData = [], onDataChange, loading: externalLoading = false }) => {
 	const [jobsToChase, setJobsToChase] = useState(initialData);
@@ -65,23 +65,23 @@ const JobsToChase = ({ initialData = [], onDataChange, loading: externalLoading 
 	};
 
 	// Custom modal wrapper to handle both job and application data
-	const ChaseJobModal = (props) => {
-		const jobData = props.data;
-		const applicationData = jobData?.job_application;
-
-		return (
-			<JobViewModal
-				{...props}
-				jobData={jobData}
-				jobApplicationData={applicationData}
-				jobSubmode="view"
-				jobApplicationSubmode="edit" // Allow editing application to add updates
-				defaultTab="application" // Start with application tab since that's what needs updating
-				onJobSuccess={handleJobSuccess}
-				onJobApplicationSuccess={handleJobApplicationSuccess}
-			/>
-		);
-	};
+	// const ChaseJobModal = (props) => {
+	// 	const jobData = props.data;
+	// 	const applicationData = jobData?.job_application;
+	//
+	// 	return (
+	// 		<JobViewModal
+	// 			{...props}
+	// 			jobData={jobData}
+	// 			jobApplicationData={applicationData}
+	// 			jobSubmode="view"
+	// 			jobApplicationSubmode="edit" // Allow editing application to add updates
+	// 			defaultTab="application" // Start with application tab since that's what needs updating
+	// 			onJobSuccess={handleJobSuccess}
+	// 			onJobApplicationSuccess={handleJobApplicationSuccess}
+	// 		/>
+	// 	);
+	// };
 
 	return (
 		<GenericTableWithModals
@@ -93,8 +93,8 @@ const JobsToChase = ({ initialData = [], onDataChange, loading: externalLoading 
 			onSearchChange={setSearchTerm}
 			loading={externalLoading}
 			error={null}
-			ViewModal={ChaseJobModal}
-			FormModal={ChaseJobModal}
+			// ViewModal={ChaseJobModal}
+			// FormModal={ChaseJobModal}
 			endpoint="jobs"
 			nameKey="title"
 			itemType="Job"

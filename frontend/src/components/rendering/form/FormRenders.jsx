@@ -15,10 +15,10 @@ import { LocationFormModal } from "../../modals/LocationModal";
 import { KeywordFormModal } from "../../modals/KeywordModal";
 import { PersonFormModal } from "../../modals/PersonModal";
 import { AggregatorFormModal } from "../../modals/AggregatorModal";
-import { JobFormModal } from "../../modals/_JobModal";
 import { JobApplicationFormModal } from "../../modals/JobApplicationModal";
 import { THEMES } from "../../../utils/Theme.ts";
 import { toSelectOptions } from "../../../utils/Utils.ts";
+import { JobAndApplicationModal } from "../../modals/JobAndApplicationModal";
 
 export const useCountries = () => {
 	const [countries, setCountries] = useState([]);
@@ -260,7 +260,7 @@ export const useFormOptions = (requiredOptions = []) => {
 	);
 
 	const renderJobModal = () => (
-		<JobFormModal show={showJobModal} onHide={closeJobModal} onSuccess={handleJobAddSuccess} />
+		<JobAndApplicationModal show={showJobModal} onHide={closeJobModal} onSuccess={handleJobAddSuccess} />
 	);
 
 	const renderJobApplicationModal = () => (

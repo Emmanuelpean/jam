@@ -4,8 +4,8 @@ import { useAuth } from "../../contexts/AuthContext.tsx";
 import { useLoading } from "../../contexts/LoadingContext.tsx";
 import { api } from "../../services/Api.ts";
 import JobsToChase from "../../components/tables/JobsToChase";
-import { JobViewModal } from "../../components/modals/_JobModal";
 import "./DashboardPage.css";
+import { JobAndApplicationModal } from "../../components/modals/JobAndApplicationModal";
 
 const JobSearchDashboard = () => {
 	const { token } = useAuth();
@@ -354,7 +354,7 @@ const JobSearchDashboard = () => {
 
 			{/* Job Modal */}
 			{selectedJob && (
-				<JobViewModal
+				<JobAndApplicationModal
 					show={showJobModal}
 					onHide={() => {
 						setShowJobModal(false);
