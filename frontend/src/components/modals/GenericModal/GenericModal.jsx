@@ -168,7 +168,6 @@ const GenericModal = ({
 		}
 	};
 
-	// Immediate hide without confirmation (used internally)
 	const handleHideImmediate = () => {
 		const effectiveProps = getEffectiveProps();
 
@@ -185,6 +184,13 @@ const GenericModal = ({
 		if (tabs && tabs.length > 0) {
 			setActiveTab(defaultActiveTab || tabs[0].key);
 		}
+
+		// // Always call onSuccess when closing the modal with the current data
+		// if (onSuccess && effectiveData) {
+		// 	console.log("onSuccess called with effectiveData:", effectiveData);
+		// 	onSuccess(effectiveData);
+		// }
+
 		onHide();
 	};
 

@@ -674,6 +674,7 @@ export const GenericTableWithModals = ({
 			<ViewModal
 				show={showViewModal}
 				onHide={closeViewModal}
+				onSuccess={handleAddSuccess}
 				data={selectedItem}
 				onEdit={() => {
 					closeViewModal();

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
 import { LocationFormModal, LocationViewModal } from "../components/modals/LocationModal";
-import LocationMap from "../components/maps/LocationMap";
+import LocationMap from "../components/maps/LocationMap.jsx";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
 

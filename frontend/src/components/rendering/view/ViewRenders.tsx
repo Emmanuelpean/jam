@@ -10,7 +10,7 @@ import { accessAttribute } from "../../../utils/Utils";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
-import LocationMap from "../../maps/LocationMap";
+import LocationMap from "../../maps/LocationMap.jsx";
 import {
 	CompanyOut,
 	KeywordOut,
@@ -635,7 +635,6 @@ export const renderFieldValue = (field: Field, item: any, id: string): ReactNode
 			id: `${id}-${field.key}`,
 		});
 	} else {
-		console.log("no render function for field", item, field);
 		rendered = item?.[field.key];
 	}
 

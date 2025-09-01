@@ -28,27 +28,27 @@ interface Progress {
 
 // Component to handle map view updates
 interface MapViewUpdaterProps {
-	center: [number, number];
-	zoom: number;
 	locations: GeocodedLocation[];
 }
 
-const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ center, zoom, locations }) => {
+const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }) => {
 	const map = useMap();
 
 	useEffect(() => {
 		if (locations.length === 0) {
-			// If no locations, just set the center and zoom
-			map.setView(center, zoom);
+			// If no locations, use default center
+			map.setView([51.505, -0.09], 2);
 		} else if (locations.length === 1) {
 			// For single location, center on it
-			map.setView(center, zoom);
+			const location = locations[0];
+			// @ts-ignore
+			map.setView([location.geocoded!.latitude, location.geocoded!.longitude], 10);
 		} else {
 			// For multiple locations, fit bounds to show all markers
 			const bounds = L.latLngBounds(locations.map((loc) => [loc.geocoded!.latitude, loc.geocoded!.longitude]));
 			map.fitBounds(bounds, { padding: [20, 20] });
 		}
-	}, [map, center, zoom, locations]);
+	}, [map, locations]);
 
 	return null;
 };
@@ -66,9 +66,6 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 	const [progress, setProgress] = useState<Progress>({ current: 0, total: 0 });
 	const mapRef = useRef<L.Map | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
-
-	const defaultCenter: [number, number] = [51.505, -0.09]; // London
-	const defaultZoom = 6;
 
 	// Cleanup function to properly destroy the map
 	useEffect(() => {
@@ -123,49 +120,6 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 		),
 	]);
 
-	const getMapCenter = (): [number, number] => {
-		if (geocodedLocations.length === 0) return defaultCenter;
-
-		const avgLat =
-			geocodedLocations.reduce((sum, loc) => sum + loc.geocoded!.latitude, 0) / geocodedLocations.length;
-		const avgLng =
-			geocodedLocations.reduce((sum, loc) => sum + loc.geocoded!.longitude, 0) / geocodedLocations.length;
-
-		return [avgLat, avgLng];
-	};
-
-	const calculateOptimalZoom = (): number => {
-		if (geocodedLocations.length === 0) return defaultZoom;
-		if (geocodedLocations.length === 1) return 12; // Reasonable zoom for single location
-
-		// Calculate bounds of all locations
-		const latitudes = geocodedLocations.map((loc) => loc.geocoded!.latitude);
-		const longitudes = geocodedLocations.map((loc) => loc.geocoded!.longitude);
-
-		const minLat = Math.min(...latitudes);
-		const maxLat = Math.max(...latitudes);
-		const minLng = Math.min(...longitudes);
-		const maxLng = Math.max(...longitudes);
-
-		// Calculate the distance spans
-		const latSpan = maxLat - minLat;
-		const lngSpan = maxLng - minLng;
-		const maxSpan = Math.max(latSpan, lngSpan);
-
-		// Determine zoom level based on geographic span
-		// These thresholds provide good balance between showing all locations and being readable
-		if (maxSpan > 50) return 3; // Continental/multi-country view
-		if (maxSpan > 20) return 4; // Large country view
-		if (maxSpan > 10) return 5; // Country/large region view
-		if (maxSpan > 5) return 6; // Regional view
-		if (maxSpan > 2) return 7; // State/province view
-		if (maxSpan > 1) return 8; // Large metropolitan area
-		if (maxSpan > 0.5) return 9; // Metropolitan area
-		if (maxSpan > 0.2) return 10; // City area
-		if (maxSpan > 0.1) return 11; // District area
-		return 12; // Local area
-	};
-
 	const formatLocationName = (location: GeocodedLocation): string => {
 		const parts = [location.city, location.country].filter(Boolean);
 		return parts.length > 0 ? parts.join(", ") : "Unknown Location";
@@ -196,18 +150,10 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 		);
 	}
 
-	const mapCenter = getMapCenter();
-	const mapZoom = calculateOptimalZoom();
-
 	return (
 		<div ref={containerRef} style={{ height }} className="border rounded overflow-hidden">
-			<MapContainer
-				center={mapCenter}
-				zoom={mapZoom}
-				style={{ height: "100%", width: "100%" }}
-				className="leaflet-container"
-			>
-				<MapViewUpdater center={mapCenter} zoom={mapZoom} locations={geocodedLocations} />
+			<MapContainer style={{ height: "100%", width: "100%" }} className="leaflet-container">
+				<MapViewUpdater locations={geocodedLocations} />
 				<TileLayer
 					attribution='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 					url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"
