@@ -3,6 +3,11 @@ export type SelectOption = {
 	label: string;
 };
 
+export interface Progress {
+	current: number;
+	total: number;
+}
+
 export const accessAttribute = (item: any, key: string) => {
 	const parts = key.split(".");
 	let obj = item;

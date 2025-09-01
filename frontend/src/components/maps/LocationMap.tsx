@@ -5,10 +5,10 @@ import L from "leaflet";
 import { geocodeLocationsBatch } from "../../services/GeoCoding";
 import "leaflet/dist/leaflet.css";
 import { LocationCreate } from "../../services/Schemas";
-import "leaflet/dist/leaflet.css";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import { Progress } from "../../utils/Utils";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -29,12 +29,6 @@ interface LocationMapProps {
 	height?: string;
 }
 
-interface Progress {
-	current: number;
-	total: number;
-}
-
-// Component to handle map view updates
 interface MapViewUpdaterProps {
 	locations: GeocodedLocation[];
 }
@@ -70,18 +64,9 @@ const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpd
 };
 
 const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400px" }) => {
-	console.log("MapViewUpdater - locations:", locations);
 	const [geocodedLocations, setGeocodedLocations] = useState<GeocodedLocation[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [progress, setProgress] = useState<Progress>({ current: 0, total: 0 });
-
-	// Add logging to see what's changing
-	const locationsKey = JSON.stringify(
-		locations.map((location) => ({
-			id: location.id,
-			city: location.modified_at,
-		})),
-	);
 
 	useEffect(() => {
 		const geocodeLocations = async (): Promise<void> => {
@@ -109,7 +94,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 		};
 
 		geocodeLocations().then(() => null);
-	}, [locationsKey]);
+	}, [locations]);
 
 	const formatLocationName = (location: LocationCreate): string => {
 		const parts = [location.city, location.country].filter(Boolean);
@@ -157,7 +142,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 					<h6 className="text-muted">No mappable locations found</h6>
 					<p className="text-muted mb-0 small">
 						{locations.length === 0
-							? "Add some non-remote locations to see them on the map."
+							? "Add some locations to see them on the map."
 							: "Could not find coordinates for any locations."}
 					</p>
 				</div>
