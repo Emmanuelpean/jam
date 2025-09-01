@@ -27,7 +27,7 @@ export const LocationModal = ({
 	// View fields for display
 	let viewFieldsArray;
 	if (!data?.remote) {
-		viewFieldsArray = [[viewFields.city(), viewFields.postcode(), viewFields.country()]];
+		viewFieldsArray = [[viewFields.city(), viewFields.postcode(), viewFields.country()], viewFields.locationMap()];
 	} else {
 		viewFieldsArray = [viewFields.locationMap({ label: "" })];
 	}

@@ -10,7 +10,7 @@ import { accessAttribute } from "../../../utils/Utils";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
-import LocationMap from "../../maps/LocationMap.jsx";
+import LocationMap from "../../maps/LocationMap";
 import {
 	CompanyOut,
 	KeywordOut,

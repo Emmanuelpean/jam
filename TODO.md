@@ -12,13 +12,14 @@
 * [X] Rename Keywords to Tags
 * [X] job title column is incorrect
 * [ ] Prevent people from creating the same
-  * [ ] Location (all fields)
-  * [ ] Company (name)
-  * [ ] Aggregator (name)
-  * [ ] Keyword (name)
+  * [X] Location (all fields)
+  * [X] Company (name)
+  * [X] Aggregator (name)
+  * [X] Keyword (name)
   * [ ] Person (first name + last name + company)
   * [ ] Job (link)
-* [ ] Add pound sign in front of salary input
-* [ ] Hide system fields in dropdown
+* [X] Add pound sign in front of salary input
+* [X] Hide system fields in dropdown
 * [X] Fix bug where the location map loading is flashing
 * [ ] The theme shown in the user setting page is not updated when changed in the sidebar.
+* [ ] When deleting an entry through the modal, do not refresh the page, refresh the table.
