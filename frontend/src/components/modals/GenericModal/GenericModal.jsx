@@ -88,6 +88,7 @@ const GenericModal = ({
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
 
 	useEffect(() => {
+		console.log("GenericModal useEffect");
 		const loadDataFromBackend = async () => {
 			if (show && id && endpoint && token) {
 				setLoading(true);
@@ -238,6 +239,7 @@ const GenericModal = ({
 	useEffect(() => {
 		if (show && !previousShow.current) {
 			const effectiveProps = getEffectiveProps();
+			console.log("effectiveProps:", effectiveProps);
 
 			if (effectiveProps.submode === "add") {
 				setFormData({ ...effectiveProps.data });
@@ -259,6 +261,20 @@ const GenericModal = ({
 		}
 		previousShow.current = show;
 	}, [show, data, submode, tabs, defaultActiveTab]);
+
+	useEffect(() => {
+		if (show && effectiveData && isEditing) {
+			const effectiveProps = getEffectiveProps();
+			// Only update if formData is empty or if we just loaded new data
+			const isFormDataEmpty = Object.keys(formData).length === 0;
+			const isOriginalFormDataEmpty = Object.keys(originalFormData).length === 0;
+
+			if (isFormDataEmpty || isOriginalFormDataEmpty) {
+				setFormData({ ...effectiveProps.data });
+				setOriginalFormData({ ...effectiveProps.data });
+			}
+		}
+	}, [effectiveData, show, isEditing]);
 
 	useEffect(() => {
 		const effectiveProps = getEffectiveProps();

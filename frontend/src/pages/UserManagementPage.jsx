@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
-import { UserFormModal, UserViewModal } from "../components/modals/UserModal";
+import { UserModal } from "../components/modals/UserModal";
 import { columns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
 
@@ -51,8 +51,7 @@ export const UserManagementPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			FormModal={UserFormModal}
-			ViewModal={UserViewModal}
+			Modal={UserModal}
 			endpoint="users"
 			nameKey="email"
 			itemType="User"
