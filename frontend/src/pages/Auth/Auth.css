@@ -34,9 +34,7 @@
     transition: all 0.3s ease;
 }
 
-/* Enhanced animated field container for confirm password */
 .auth-field-container {
-    overflow: hidden;
     transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
     will-change: max-height, opacity, transform;
 }
@@ -47,6 +45,7 @@
     margin-bottom: 0 !important;
     transform: translateY(-20px);
     pointer-events: none;
+    overflow: hidden; /* Only hide overflow when actually hidden */
 }
 
 .auth-field-visible {
@@ -55,6 +54,7 @@
     transform: translateY(0);
     pointer-events: auto;
 }
+
 
 /* Smooth transitions for form group inside container */
 .auth-field-container .form-group,

@@ -277,7 +277,7 @@ function AuthForm(): JSX.Element {
 						>
 							<Form.Group className="mb-4">
 								<Form.Label>
-									<i className="bi bi-lock-check-fill me-2 text-muted"></i>
+									<i className="bi bi-lock-fill me-2 text-muted"></i>
 									Confirm Password
 								</Form.Label>
 								{renderInputField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
