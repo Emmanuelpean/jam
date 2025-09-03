@@ -88,51 +88,32 @@ export interface GenericTableWithModalsProps {
 }
 
 /**
- * Custom hook for managing table data with CRUD operations
+ * Base hook with shared table functionality
  */
-export const useTableData = (
-	endpoint: string,
-	dependencies: any[] = [],
-	queryParams: Record<string, any> = {},
+const useBaseTableData = (
 	customSortConfig: Partial<SortConfig> = {},
-	providedData: any[] | null = null,
-): UseTableDataResult => {
-	const { token } = useAuth();
-
-	const [data, setData] = useState<any[]>(providedData || []);
-	const [loading, setLoading] = useState<boolean>(!providedData);
+): {
+	data: any[];
+	setData: React.Dispatch<React.SetStateAction<any[]>>;
+	loading: boolean;
+	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+	error: string | null;
+	setError: React.Dispatch<React.SetStateAction<string | null>>;
+	sortConfig: SortConfig;
+	setSortConfig: React.Dispatch<React.SetStateAction<SortConfig>>;
+	searchTerm: string;
+	setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
+	addItem: (newItem: any) => void;
+	updateItem: (updatedItem: any) => void;
+	deleteItem: (itemId: string | number) => void;
+} => {
+	const [data, setData] = useState<any[]>([]);
+	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 	const [sortConfig, setSortConfig] = useState<SortConfig>(
 		(customSortConfig as SortConfig) || { key: "created_at", direction: "desc" },
 	);
 	const [searchTerm, setSearchTerm] = useState<string>("");
-
-	// Memoize the fetch function to prevent unnecessary re-renders
-	// noinspection com.intellij.reactbuddy.ExhaustiveDepsInspection
-	const fetchData = useCallback(async (): Promise<void> => {
-		setLoading(true);
-		try {
-			const queryString =
-				Object.keys(queryParams).length > 0 ? "?" + new URLSearchParams(queryParams).toString() : "";
-			const result = await api.get(`${endpoint}/${queryString}`, token);
-			setData(result || []); // Ensure result is always an array
-		} catch (err) {
-			console.error(`Error fetching ${endpoint}:`, err);
-			setError(`Failed to load ${endpoint}. Please try again later.`);
-		} finally {
-			setLoading(false);
-		}
-	}, [endpoint, token, JSON.stringify(queryParams)]);
-
-	useEffect(() => {
-		// If data is provided, use it directly
-		if (providedData !== null) {
-			setData(providedData);
-			setLoading(false);
-		} else if (token) {
-			fetchData().then(() => null);
-		}
-	}, [token, fetchData, providedData, ...dependencies]);
 
 	const addItem = useCallback((newItem: any) => setData((prev) => [newItem, ...prev]), []);
 	const updateItem = useCallback(
@@ -148,7 +129,9 @@ export const useTableData = (
 		data,
 		setData,
 		loading,
+		setLoading,
 		error,
+		setError,
 		sortConfig,
 		setSortConfig,
 		searchTerm,
@@ -156,6 +139,73 @@ export const useTableData = (
 		addItem,
 		updateItem,
 		deleteItem,
+	};
+};
+
+/**
+ * Hook for managing provided table data
+ */
+export const useProvidedTableData = (
+	providedData: any[] | null = null,
+	customSortConfig: Partial<SortConfig> = {},
+): UseTableDataResult => {
+	const base = useBaseTableData(customSortConfig);
+
+	// Update data when providedData changes
+	useEffect(() => {
+		base.setData(providedData || []);
+		base.setLoading(false);
+		base.setError(null);
+	}, [providedData, base.setData, base.setLoading, base.setError]);
+
+	const refetch = useCallback(async () => {}, []);
+
+	return {
+		...base,
+		refetch,
+	};
+};
+
+/**
+ * Hook for managing API-fetched table data
+ */
+export const useTableData = (
+	endpoint: string,
+	dependencies: any[] = [],
+	queryParams: Record<string, any> = {},
+	customSortConfig: Partial<SortConfig> = {},
+): UseTableDataResult => {
+	const { token } = useAuth();
+	const base = useBaseTableData(customSortConfig);
+
+	// API fetch function
+	const fetchData = useCallback(async (): Promise<void> => {
+		base.setLoading(true);
+		base.setError(null);
+
+		try {
+			const queryString =
+				Object.keys(queryParams).length > 0 ? "?" + new URLSearchParams(queryParams).toString() : "";
+			const result = await api.get(`${endpoint}/${queryString}`, token);
+			base.setData(result || []);
+		} catch (err) {
+			console.error(`Error fetching ${endpoint}:`, err);
+			base.setError(`Failed to load ${endpoint}. Please try again later.`);
+			base.setData([]);
+		} finally {
+			base.setLoading(false);
+		}
+	}, [endpoint, token, JSON.stringify(queryParams), base.setData, base.setLoading, base.setError]);
+
+	// Fetch data when dependencies change
+	useEffect(() => {
+		if (token) {
+			fetchData();
+		}
+	}, [token, fetchData, ...dependencies]);
+
+	return {
+		...base,
 		refetch: fetchData,
 	};
 };

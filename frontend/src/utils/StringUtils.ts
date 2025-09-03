@@ -14,7 +14,7 @@ export function pluralize(word: string): string {
 
 	const lowerWord = word.toLowerCase();
 	if (irregulars[lowerWord]) {
-		return irregulars[lowerWord];
+		return irregulars[lowerWord]!;
 	}
 
 	// Handle basic rules

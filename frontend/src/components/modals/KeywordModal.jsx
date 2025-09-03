@@ -20,7 +20,7 @@ export const KeywordModal = ({
 
 	const fields = {
 		form: [formFields.name({ required: true })],
-		view: [viewFields.name({ isTitle: true })],
+		view: [viewFields.name({ isTitle: true }), viewFields.jobs()],
 	};
 
 	const transformFormData = (data) => {

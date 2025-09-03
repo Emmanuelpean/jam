@@ -19,6 +19,7 @@ import {
 	LocationOut,
 	PersonOut,
 } from "../../../services/Schemas";
+import JobsTable from "../../tables/JobTable";
 
 interface ModalComponentProps {
 	show: boolean;
@@ -643,6 +644,12 @@ export const renderFunctions = {
 		return <JobApplicationUpdateTable data={updates} jobApplicationId={param.item.id} onChange={onChange} />;
 	},
 
+	jobTable: (param: RenderParams): ReactNode => {
+		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
+		const onChange = () => {};
+		return <JobsAccordion jobs={jobs} onChange={onChange} itemId={param.item.id} />;
+	},
+
 	locationMap: (param: RenderParams): ReactNode => {
 		const locations: LocationCreate[] = param.item ? [param.item] : [];
 		return <LocationMap locations={locations} />;
@@ -670,4 +677,30 @@ export const renderFieldValue = (field: Field, item: any, id: string): ReactNode
 	} else {
 		return noText;
 	}
+};
+
+const JobsAccordion: React.FC<{ jobs: any[]; onChange: () => void; itemId: number }> = ({ jobs, onChange, itemId }) => {
+	const [isOpen, setIsOpen] = React.useState(false);
+
+	return (
+		<div className="accordion">
+			<div className="accordion-item">
+				<h2 className="accordion-header">
+					<button
+						className={`accordion-button ${isOpen ? "" : "collapsed"}`}
+						type="button"
+						onClick={() => setIsOpen(!isOpen)}
+						aria-expanded={isOpen}
+					>
+						Jobs ({jobs?.length || 0})
+					</button>
+				</h2>
+				<div className={`accordion-collapse collapse ${isOpen ? "show" : ""}`}>
+					<div className="accordion-body">
+						<JobsTable data={jobs} onChange={onChange} />
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 };

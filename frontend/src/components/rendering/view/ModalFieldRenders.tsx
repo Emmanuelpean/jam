@@ -268,4 +268,11 @@ export const viewFields: ViewFields = {
 		render: renderFunctions.updateType,
 		...overrides,
 	}),
+
+	jobs: (overrides: ViewFieldOverrides = {}): ViewField => ({
+		key: "job",
+		label: "Jobs",
+		render: renderFunctions.jobTable,
+		...overrides,
+	}),
 };
