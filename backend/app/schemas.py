@@ -74,7 +74,7 @@ class KeywordCreate(BaseModel):
 
 
 class KeywordOut(KeywordCreate, OwnedOut):
-    jobs: list["JobMinOut"] = (
+    jobs: list["JobOut"] = (
         []
     )  # should return the min job data (including including application, updates and interviews)
 

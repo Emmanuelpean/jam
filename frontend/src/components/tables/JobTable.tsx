@@ -14,6 +14,8 @@ const JobsTable: React.FC<JobsTableProps> = ({ onChange, data = null }) => {
 		loading,
 		error,
 		addItem,
+		sortConfig,
+		setSortConfig,
 		updateItem,
 		deleteItem,
 	} = useProvidedTableData(data, { key: "created_at", direction: "desc" });
@@ -24,9 +26,10 @@ const JobsTable: React.FC<JobsTableProps> = ({ onChange, data = null }) => {
 		<GenericTableWithModals
 			data={jobs}
 			columns={ViewColumns}
-			sortConfig={{ key: "created_at", direction: "desc" }}
 			loading={loading}
 			error={error}
+			sortConfig={sortConfig}
+			onSort={setSortConfig}
 			Modal={JobAndApplicationModal}
 			endpoint="jobs"
 			nameKey="title"
