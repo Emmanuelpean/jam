@@ -6,6 +6,7 @@ interface ViewFieldOverrides {
 	label?: string;
 	type?: string;
 	columnClass?: string;
+	outsideCard?: boolean;
 	render?: (params: RenderParams) => ReactNode;
 }
 
@@ -14,6 +15,7 @@ interface ViewField {
 	label: string;
 	type?: string;
 	columnClass?: string;
+	outsideCard?: boolean;
 	render?: (params: RenderParams) => ReactNode;
 }
 
@@ -273,6 +275,7 @@ export const viewFields: ViewFields = {
 		key: "job",
 		label: "Jobs",
 		render: renderFunctions.jobTable,
+		outsideCard: true,
 		...overrides,
 	}),
 };

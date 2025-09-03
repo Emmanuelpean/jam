@@ -586,8 +586,8 @@ textarea.form-control {
     border: none;
     border-radius: 12px;
     padding: 0.75rem 1.25rem;
-    font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 1rem;
+    font-weight: bold;
     transition: all 0.3s ease;
     box-shadow: none;
 }
@@ -599,6 +599,12 @@ textarea.form-control {
 .accordion-button:focus {
     border-color: var(--primary-light);
     box-shadow: 0 0 0 0.25rem var(--jam-glow);
+}
+
+.accordion-body {
+    padding: 0 !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
 }
 
 /* ---------------------------------------------------- STAR RATING ------------------------------------------------- */

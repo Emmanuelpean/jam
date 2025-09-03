@@ -20,8 +20,10 @@ export const KeywordModal = ({
 
 	const fields = {
 		form: [formFields.name({ required: true })],
-		view: [viewFields.name({ isTitle: true }), viewFields.jobs()],
+		view: [viewFields.name({ isTitle: true })],
 	};
+
+	const additionalFields = [viewFields.jobs()];
 
 	const transformFormData = (data) => {
 		return {
@@ -54,6 +56,7 @@ export const KeywordModal = ({
 			data={data || {}}
 			id={id}
 			fields={fields}
+			additionalFields={additionalFields}
 			endpoint={endpoint}
 			onSuccess={onSuccess}
 			onDelete={onDelete}

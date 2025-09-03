@@ -57,6 +57,7 @@ const GenericModal = ({
 	onTabChange = null,
 	submode = "view",
 	fields = {},
+	additionalFields = {},
 	data = null,
 	id = null,
 	endpoint,
@@ -480,17 +481,35 @@ const GenericModal = ({
 						</div>
 					) : (
 						<div>
-							<Card>
-								<Card.Body>
-									<div>
-										{viewF.map((item, index) => (
-											<div key={`view-field-${index}`}>
-												{renderFieldGroup(item, index, false)}
+							{(() => {
+								return (
+									<>
+										{viewF.length > 0 && (
+											<Card>
+												<Card.Body>
+													<div>
+														{viewF.map((item, index) => (
+															<div key={`view-field-${index}`}>
+																{renderFieldGroup(item, index, false)}
+															</div>
+														))}
+													</div>
+												</Card.Body>
+											</Card>
+										)}
+
+										{additionalFields.length > 0 && (
+											<div className="outside-card-content mt-3">
+												{additionalFields.map((item, index) => (
+													<div key={`outside-field-${index}`}>
+														{renderFieldValue(item, getCurrentData(), getModalId())}
+													</div>
+												))}
 											</div>
-										))}
-									</div>
-								</Card.Body>
-							</Card>
+										)}
+									</>
+								);
+							})()}
 						</div>
 					)}
 				</div>

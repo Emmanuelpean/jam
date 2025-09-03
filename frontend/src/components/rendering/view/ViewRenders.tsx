@@ -180,6 +180,48 @@ const accessSubAttribute = (item: any, accessKey: string | undefined, key: strin
 	return item?.[key];
 };
 
+interface GenericAccordionProps<T = any> {
+	title: string;
+	data: T[];
+	onChange?: () => void;
+	itemId?: number;
+	children: (data: T[], onChange?: () => void) => React.ReactNode;
+	icon?: string;
+	defaultOpen?: boolean;
+}
+
+export const GenericAccordion = <T,>({
+	title,
+	data,
+	onChange,
+	children,
+	icon,
+	defaultOpen = false,
+}: GenericAccordionProps<T>) => {
+	const [isOpen, setIsOpen] = React.useState(defaultOpen);
+
+	return (
+		<div className="accordion">
+			<div className="accordion-item">
+				<h2 className="accordion-header">
+					<button
+						className={`accordion-button ${isOpen ? "" : "collapsed"}`}
+						type="button"
+						onClick={() => setIsOpen(!isOpen)}
+						aria-expanded={isOpen}
+					>
+						{icon && <i className={`${icon} me-2`}></i>}
+						{title} ({data?.length || 0})
+					</button>
+				</h2>
+				<div className={`accordion-collapse collapse ${isOpen ? "show" : ""}`}>
+					<div className="accordion-body">{children(data, onChange)}</div>
+				</div>
+			</div>
+		</div>
+	);
+};
+
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
@@ -647,7 +689,11 @@ export const renderFunctions = {
 	jobTable: (param: RenderParams): ReactNode => {
 		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
 		const onChange = () => {};
-		return <JobsAccordion jobs={jobs} onChange={onChange} itemId={param.item.id} />;
+		return (
+			<GenericAccordion title="Jobs" data={jobs} onChange={onChange} icon={getTableIcon("Jobs")}>
+				{(data, onChangeCallback) => <JobsTable data={data} onChange={onChangeCallback} />}
+			</GenericAccordion>
+		);
 	},
 
 	locationMap: (param: RenderParams): ReactNode => {
@@ -677,30 +723,4 @@ export const renderFieldValue = (field: Field, item: any, id: string): ReactNode
 	} else {
 		return noText;
 	}
-};
-
-const JobsAccordion: React.FC<{ jobs: any[]; onChange: () => void; itemId: number }> = ({ jobs, onChange, itemId }) => {
-	const [isOpen, setIsOpen] = React.useState(false);
-
-	return (
-		<div className="accordion">
-			<div className="accordion-item">
-				<h2 className="accordion-header">
-					<button
-						className={`accordion-button ${isOpen ? "" : "collapsed"}`}
-						type="button"
-						onClick={() => setIsOpen(!isOpen)}
-						aria-expanded={isOpen}
-					>
-						Jobs ({jobs?.length || 0})
-					</button>
-				</h2>
-				<div className={`accordion-collapse collapse ${isOpen ? "show" : ""}`}>
-					<div className="accordion-body">
-						<JobsTable data={jobs} onChange={onChange} />
-					</div>
-				</div>
-			</div>
-		</div>
-	);
 };
