@@ -159,11 +159,17 @@
     min-height: 0;
 }
 
-/* Remove the problematic Bootstrap tab overrides */
 .modal-content-animated {
     transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     overflow: hidden !important;
 }
+
+.modal-content-animated-inner {
+    padding-left: 2px;
+    padding-right: 2px;
+    overflow: visible;
+}
+
 
 .custom-tab-button:hover {
     color: var(--primary-mid);

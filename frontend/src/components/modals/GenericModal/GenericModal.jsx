@@ -741,7 +741,9 @@ const GenericModal = ({
 
 		return (
 			<div className="modal-content-animated" style={{ height: containerHeight }}>
-				<div ref={contentRef}>{renderContent()}</div>
+				<div className="modal-content-animated-inner">
+					<div ref={contentRef}>{renderContent()}</div>
+				</div>
 			</div>
 		);
 	};
