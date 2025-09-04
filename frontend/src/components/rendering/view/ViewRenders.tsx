@@ -185,7 +185,7 @@ export const GenericAccordion = <T,>({
 	const [isOpen, setIsOpen] = React.useState(defaultOpen);
 
 	return (
-		<div className="simple-accordion mb-4" style={{ paddingLeft: "10px", paddingRight: "10px" }}>
+		<div className="simple-accordion" style={{ paddingLeft: "10px", paddingRight: "10px" }}>
 			<div
 				className="simple-accordion-header d-flex align-items-center justify-content-between py-2 border-bottom"
 				onClick={() => setIsOpen(!isOpen)}
