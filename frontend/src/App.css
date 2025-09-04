@@ -336,10 +336,9 @@ textarea.form-control {
 .form-check-input {
     width: 1.15rem;
     height: 1.15rem;
-    margin-left: 1rem !important;
-    /* Add padding around the checkbox to accommodate focus outline */
+    margin-left: 0 !important;
+    margin-right: 10px !important;
     padding: 2px !important;
-    /* Ensure focus outline is visible */
     outline-offset: 2px;
 }
 
