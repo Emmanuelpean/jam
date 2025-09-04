@@ -22,23 +22,6 @@ import {
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
 
-interface ModalComponentProps {
-	show: boolean;
-	onHide: () => void;
-	data: any;
-	id: string | number | null;
-	submode?: string;
-	size?: string;
-	endpoint?: string;
-	jobId?: string | number | null;
-	onSuccess: (item: any) => void;
-	onDelete: (item: any) => void;
-	onJobSuccess?: (item: any) => void;
-	onApplicationSuccess?: (item: any) => void;
-	onJobDelete?: (item: any) => void;
-	onApplicationDelete?: (item: any) => void;
-}
-
 interface ModalManagerProps {
 	children: (handleClick: (item: any) => void) => ReactNode;
 }
@@ -202,7 +185,7 @@ export const GenericAccordion = <T,>({
 	const [isOpen, setIsOpen] = React.useState(defaultOpen);
 
 	return (
-		<div className="simple-accordion mb-4">
+		<div className="simple-accordion mb-4" style={{ paddingLeft: "10px", paddingRight: "10px" }}>
 			<div
 				className="simple-accordion-header d-flex align-items-center justify-content-between py-2 border-bottom"
 				onClick={() => setIsOpen(!isOpen)}
@@ -215,7 +198,7 @@ export const GenericAccordion = <T,>({
 				</div>
 				<i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}></i>
 			</div>
-			{isOpen && <div className="simple-accordion-content mt-3">{children(data, onChange)}</div>}
+			{isOpen && <div className="simple-accordion-content">{children(data, onChange)}</div>}
 		</div>
 	);
 };
