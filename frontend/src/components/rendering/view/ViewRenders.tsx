@@ -202,23 +202,20 @@ export const GenericAccordion = <T,>({
 	const [isOpen, setIsOpen] = React.useState(defaultOpen);
 
 	return (
-		<div className="accordion">
-			<div className="accordion-item">
-				<h2 className="accordion-header">
-					<button
-						className={`accordion-button ${isOpen ? "" : "collapsed"}`}
-						type="button"
-						onClick={() => setIsOpen(!isOpen)}
-						aria-expanded={isOpen}
-					>
-						{icon && <i className={`${icon} me-2`}></i>}
-						{title} ({data?.length || 0})
-					</button>
-				</h2>
-				<div className={`accordion-collapse collapse ${isOpen ? "show" : ""}`}>
-					<div className="accordion-body">{children(data, onChange)}</div>
+		<div className="simple-accordion mb-4">
+			<div
+				className="simple-accordion-header d-flex align-items-center justify-content-between py-2 border-bottom"
+				onClick={() => setIsOpen(!isOpen)}
+				style={{ cursor: "pointer" }}
+			>
+				<div className="d-flex align-items-center">
+					{icon && <i className={`${icon} me-2`}></i>}
+					<span className="fw-medium">{title}</span>
+					<span className="text-muted ms-2">({data?.length || 0})</span>
 				</div>
+				<i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}></i>
 			</div>
+			{isOpen && <div className="simple-accordion-content mt-3">{children(data, onChange)}</div>}
 		</div>
 	);
 };
