@@ -23,7 +23,7 @@ export const KeywordModal = ({
 		view: [viewFields.name({ isTitle: true })],
 	};
 
-	const additionalFields = [viewFields.jobs()];
+	const additionalFields = [viewFields.jobTable()];
 
 	const transformFormData = (data) => {
 		return {

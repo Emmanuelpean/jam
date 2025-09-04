@@ -120,7 +120,7 @@ class CompanyCreate(BaseModel):
 
 
 class CompanyOut(CompanyCreate, OwnedOut):
-    jobs: list["JobMinOut"] = []
+    jobs: list["JobOut"] = []
     persons: list["PersonMinOut"] = []
 
 

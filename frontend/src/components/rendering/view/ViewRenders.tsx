@@ -20,6 +20,7 @@ import {
 	PersonOut,
 } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
+import PersonTable from "../../tables/PersonTable";
 
 interface ModalComponentProps {
 	show: boolean;
@@ -692,6 +693,16 @@ export const renderFunctions = {
 		return (
 			<GenericAccordion title="Jobs" data={jobs} onChange={onChange} icon={getTableIcon("Jobs")}>
 				{(data, onChangeCallback) => <JobsTable data={data} onChange={onChangeCallback} />}
+			</GenericAccordion>
+		);
+	},
+
+	PersonTable: (param: RenderParams): ReactNode => {
+		const persons = accessSubAttribute(param.item, param.accessKey, "persons");
+		const onChange = () => {};
+		return (
+			<GenericAccordion title="Persons" data={persons} onChange={onChange} icon={getTableIcon("Persons")}>
+				{(data, onChangeCallback) => <PersonTable data={data} onChange={onChangeCallback} />}
 			</GenericAccordion>
 		);
 	},

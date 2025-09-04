@@ -23,7 +23,7 @@ export const AggregatorModal = ({
 		view: [viewFields.name({ isTitle: true }), viewFields.url()],
 	};
 
-	const additionalFields = [viewFields.jobs()];
+	const additionalFields = [viewFields.jobTable()];
 
 	const transformFormData = (data) => {
 		return {

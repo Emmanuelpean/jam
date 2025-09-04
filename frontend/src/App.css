@@ -607,6 +607,10 @@ textarea.form-control {
     padding-right: 0.5rem !important;
 }
 
+.accordion-button:not(.collapsed) {
+    background: none;
+}
+
 /* ---------------------------------------------------- STAR RATING ------------------------------------------------- */
 
 .star-rating-container {

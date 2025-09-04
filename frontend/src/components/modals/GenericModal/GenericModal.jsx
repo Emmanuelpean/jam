@@ -501,7 +501,7 @@ const GenericModal = ({
 										{additionalFields.length > 0 && (
 											<div className="outside-card-content mt-3">
 												{additionalFields.map((item, index) => (
-													<div key={`outside-field-${index}`}>
+													<div key={`outside-field-${index}`} className="mb-3">
 														{renderFieldValue(item, getCurrentData(), getModalId())}
 													</div>
 												))}

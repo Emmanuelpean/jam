@@ -27,6 +27,8 @@ export const CompanyModal = ({
 		view: [viewFields.name({ isTitle: true }), viewFields.url(), [viewFields.description()]],
 	};
 
+	const additionalFields = [viewFields.jobTable(), viewFields.personTable()];
+
 	const transformFormData = (data) => {
 		return {
 			name: data.name?.trim(),
@@ -64,6 +66,7 @@ export const CompanyModal = ({
 			data={data || {}}
 			id={id}
 			fields={fields}
+			additionalFields={additionalFields}
 			endpoint={endpoint}
 			onSuccess={onSuccess}
 			onDelete={onDelete}
