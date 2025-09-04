@@ -17,11 +17,11 @@ export const LocationModal = ({
 	size = "lg",
 }) => {
 	const { token } = useAuth();
-	const { countries, loading: loadingCountries } = useCountries();
+	const { countries } = useCountries();
 
 	let formFieldsArray = [];
 	if (!data?.remote) {
-		formFieldsArray = [formFields.city(), formFields.postcode(), formFields.country(countries, loadingCountries)];
+		formFieldsArray = [formFields.city(), formFields.postcode(), formFields.country(countries)];
 	}
 
 	// View fields for display

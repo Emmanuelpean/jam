@@ -542,15 +542,14 @@ export const formFields = {
 		...overrides,
 	}),
 
-	country: (countries: SelectOption[] = [], loading: boolean = false, overrides: Overrides = {}): FormField => ({
+	country: (countries: SelectOption[] = [], overrides: Overrides = {}): FormField => ({
 		name: "country",
 		label: "Country",
 		type: "select",
 		options: countries,
-		placeholder: loading ? "Loading countries..." : "Search and select a country...",
+		placeholder: "Search and select a country...",
 		isSearchable: true,
 		isClearable: true,
-		isDisabled: loading,
 		...overrides,
 	}),
 
