@@ -9,10 +9,6 @@ export interface Progress {
 	total: number;
 }
 
-export interface Overrides {
-	[key: string]: any;
-}
-
 export const accessAttribute = (item: any, key: string) => {
 	const parts = key.split(".");
 	let obj = item;
