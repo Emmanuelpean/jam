@@ -5,7 +5,7 @@ import Select from "react-select";
 import makeAnimated from "react-select/animated";
 import { useDropzone } from "react-dropzone";
 import useGenericAlert from "../../../hooks/useGenericAlert.ts";
-import AlertModal from "../../../components/modals/AlertModal";
+import AlertModal from "../../modals/AlertModal.tsx";
 import { parseSizeText, formatFileSize } from "../../../utils/FileUtils.ts";
 import "./WidgetRender.css";
 

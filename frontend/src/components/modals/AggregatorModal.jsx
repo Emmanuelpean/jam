@@ -23,6 +23,8 @@ export const AggregatorModal = ({
 		view: [viewFields.name({ isTitle: true }), viewFields.url()],
 	};
 
+	const additionalFields = [viewFields.jobs()];
+
 	const transformFormData = (data) => {
 		return {
 			name: data?.name?.trim(),
@@ -50,6 +52,7 @@ export const AggregatorModal = ({
 			onHide={onHide}
 			mode="formview"
 			submode={submode}
+			additionalFields={additionalFields}
 			itemName="Aggregator"
 			size={size}
 			data={data || {}}

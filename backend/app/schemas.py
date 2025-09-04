@@ -96,9 +96,7 @@ class AggregatorCreate(BaseModel):
 
 
 class AggregatorOut(AggregatorCreate, OwnedOut):
-    jobs: list["JobMinOut"] = (
-        []
-    )  # should return the min job data (including including application, updates and interviews)
+    jobs: list["JobOut"] = []
     job_applications: list["JobApplicationOut"] = (
         []
     )  # should return the min job application data (including updates and interviews)

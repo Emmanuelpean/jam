@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AlertState } from "../components/modals/AlertModal";
 
 interface AlertConfig {
 	title?: string;
@@ -11,20 +12,6 @@ interface AlertConfig {
 	id?: string | null;
 	onSuccess?: (() => void) | null;
 	onCancel?: (() => void) | null;
-}
-
-interface AlertState {
-	show: boolean;
-	title: string;
-	message: string;
-	type: "info" | "success" | "danger" | "warning";
-	confirmText: string;
-	cancelText: string | null;
-	icon: string | null;
-	size: "sm" | "md" | "lg" | "xl";
-	id: string | null;
-	onSuccess: (() => void) | null;
-	onCancel: (() => void) | null;
 }
 
 const useGenericAlert = () => {

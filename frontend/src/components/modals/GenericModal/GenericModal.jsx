@@ -6,7 +6,7 @@ import { renderFieldValue } from "../../rendering/view/ViewRenders";
 import { ActionButton, renderInputField } from "../../rendering/form/WidgetRenders";
 import { api } from "../../../services/Api.ts";
 import useGenericAlert from "../../../hooks/useGenericAlert.ts";
-import AlertModal from "../AlertModal";
+import AlertModal from "../AlertModal.tsx";
 
 export const createGenericDeleteHandler = ({
 	endpoint,
