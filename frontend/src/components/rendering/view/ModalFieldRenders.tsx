@@ -1,15 +1,6 @@
 import { ReactNode } from "react";
 import { renderFunctions, RenderParams } from "./ViewRenders";
 
-interface ViewFieldOverrides {
-	key?: string;
-	label?: string;
-	type?: string;
-	columnClass?: string;
-	outsideCard?: boolean;
-	render?: (params: RenderParams) => ReactNode;
-}
-
 interface ViewField {
 	key: string;
 	label: string;
@@ -19,63 +10,59 @@ interface ViewField {
 	render?: (params: RenderParams) => ReactNode;
 }
 
-type ViewFieldFactory = (overrides?: ViewFieldOverrides) => ViewField;
+interface ViewFieldOverride extends Partial<ViewField> {}
 
-interface ViewFields {
-	[key: string]: ViewFieldFactory;
-}
-
-export const viewFields: ViewFields = {
+export const viewFields = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
 
-	name: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	name: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "name",
 		label: "Name",
 		...overrides,
 	}),
 
-	title: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	title: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "title",
 		label: "Title",
 		...overrides,
 	}),
 
-	description: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	description: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "description",
 		label: "Description",
 		render: (params: RenderParams) => renderFunctions.description({ ...params, view: true }),
 		...overrides,
 	}),
 
-	url: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	url: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "url",
 		label: "Website",
 		render: (params: RenderParams) => renderFunctions.url({ ...params, view: true }),
 		...overrides,
 	}),
 
-	note: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	note: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "note",
 		label: "Notes",
 		render: (params: RenderParams) => renderFunctions.note({ ...params, view: true }),
 		...overrides,
 	}),
 
-	date: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	date: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "date",
 		label: "Date",
 		render: (params: RenderParams) => renderFunctions.date({ ...params, view: true }),
 		...overrides,
 	}),
 
-	datetime: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	datetime: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "date",
 		label: "Date & Time",
 		render: (params: RenderParams) => renderFunctions.datetime({ ...params, view: true }),
 		...overrides,
 	}),
 
-	type: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	type: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "type",
 		label: "Type",
 		...overrides,
@@ -83,14 +70,14 @@ export const viewFields: ViewFields = {
 
 	// ------------------------------------------------------ USER -----------------------------------------------------
 
-	appTheme: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	appTheme: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "theme",
 		label: "Theme",
 		render: renderFunctions.appTheme,
 		...overrides,
 	}),
 
-	isAdmin: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	isAdmin: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "is_admin",
 		label: "Admin",
 		render: (params: RenderParams) => renderFunctions.isAdmin({ ...params, view: true }),
@@ -99,32 +86,32 @@ export const viewFields: ViewFields = {
 
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
-	location: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	location: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "location",
 		label: "Location",
 		render: (params: RenderParams) => renderFunctions.location({ ...params, view: true }),
 		...overrides,
 	}),
 
-	city: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	city: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "city",
 		label: "City",
 		...overrides,
 	}),
 
-	postcode: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	postcode: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "postcode",
 		label: "Postcode",
 		...overrides,
 	}),
 
-	country: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	country: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "country",
 		label: "Country",
 		...overrides,
 	}),
 
-	locationMap: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	locationMap: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "location_map",
 		label: "📍 Location on Map",
 		type: "custom",
@@ -135,7 +122,7 @@ export const viewFields: ViewFields = {
 
 	// --------------------------------------------------- COMPANIES ---------------------------------------------------
 
-	company: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	company: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "company",
 		label: "Company",
 		render: renderFunctions.company,
@@ -144,7 +131,7 @@ export const viewFields: ViewFields = {
 
 	// ---------------------------------------------------- KEYWORDS ---------------------------------------------------
 
-	keywords: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	keywords: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "keywords",
 		label: "Tags",
 		render: (params: RenderParams) => renderFunctions.keywords({ ...params, view: true }),
@@ -153,41 +140,41 @@ export const viewFields: ViewFields = {
 
 	// ---------------------------------------------------- PERSONS ----------------------------------------------------
 
-	persons: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	persons: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "person",
 		label: "Contacts",
 		render: (params: RenderParams) => renderFunctions.contacts({ ...params, view: true }),
 		...overrides,
 	}),
 
-	personName: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	personName: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "name",
 		label: "Full Name",
 		...overrides,
 	}),
 
-	email: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	email: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "email",
 		label: "Email",
 		render: (params: RenderParams) => renderFunctions.email({ ...params, view: true }),
 		...overrides,
 	}),
 
-	phone: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	phone: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "phone",
 		label: "Phone",
 		render: (params: RenderParams) => renderFunctions.phone({ ...params, view: true }),
 		...overrides,
 	}),
 
-	linkedinUrl: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	linkedinUrl: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "linkedin_url",
 		label: "LinkedIn Profile",
 		render: (params: RenderParams) => renderFunctions.linkedinUrl({ ...params, view: true }),
 		...overrides,
 	}),
 
-	role: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	role: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "role",
 		label: "Role",
 		...overrides,
@@ -195,21 +182,21 @@ export const viewFields: ViewFields = {
 
 	// ------------------------------------------------------ JOBS -----------------------------------------------------
 
-	salaryRange: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	salaryRange: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "salary_range",
 		label: "Salary Range",
 		render: (params: RenderParams) => renderFunctions.salaryRange({ ...params, view: true }),
 		...overrides,
 	}),
 
-	personalRating: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	personalRating: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "personal_rating",
 		label: "Personal Rating",
 		render: (params: RenderParams) => renderFunctions.personalRating({ ...params, view: true }),
 		...overrides,
 	}),
 
-	job: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	job: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "job",
 		label: "Job",
 		render: (params: RenderParams) => renderFunctions.job({ ...params, view: true }),
@@ -218,28 +205,28 @@ export const viewFields: ViewFields = {
 
 	// ------------------------------------------------ JOB APPLICATION ------------------------------------------------
 
-	jobApplication: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	jobApplication: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "job_application",
 		label: "Application Status",
 		render: (params: RenderParams) => renderFunctions.jobApplication({ ...params, view: true }),
 		...overrides,
 	}),
 
-	status: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	status: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "status",
 		label: "Status",
 		render: (params: RenderParams) => renderFunctions.status({ ...params, view: true }),
 		...overrides,
 	}),
 
-	interviewers: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	interviewers: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "person",
 		label: "Interviewers",
 		render: (params: RenderParams) => renderFunctions.interviewers({ ...params, view: true }),
 		...overrides,
 	}),
 
-	appliedVia: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	appliedVia: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "applied_via",
 		label: "Applied Via",
 		render: (params: RenderParams) => renderFunctions.appliedVia({ ...params, view: true }),
@@ -248,7 +235,7 @@ export const viewFields: ViewFields = {
 
 	// --------------------------------------------------- INTERVIEW ---------------------------------------------------
 
-	interviews: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	interviews: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "interviews",
 		label: "Interviews",
 		render: renderFunctions.interviewTable,
@@ -257,21 +244,21 @@ export const viewFields: ViewFields = {
 
 	// --------------------------------------------- JOB APPLICATION UPDATE --------------------------------------------
 
-	updates: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	updates: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "updates",
 		label: "Updates",
 		render: renderFunctions.jobApplicationUpdateTable,
 		...overrides,
 	}),
 
-	updateType: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	updateType: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "type",
 		label: "Type",
 		render: renderFunctions.updateType,
 		...overrides,
 	}),
 
-	jobTable: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	jobTable: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "job",
 		label: "Jobs",
 		render: renderFunctions.jobTable,
@@ -279,7 +266,7 @@ export const viewFields: ViewFields = {
 		...overrides,
 	}),
 
-	personTable: (overrides: ViewFieldOverrides = {}): ViewField => ({
+	personTable: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "persons",
 		label: "Persons",
 		render: renderFunctions.PersonTable,

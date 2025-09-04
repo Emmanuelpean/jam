@@ -17,7 +17,7 @@ import { PersonModal } from "../../modals/PersonModal";
 import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobApplicationModal } from "../../modals/JobApplicationModal";
 import { Theme, THEMES } from "../../../utils/Theme";
-import { Overrides, SelectOption, toSelectOptions } from "../../../utils/Utils";
+import { SelectOption, toSelectOptions } from "../../../utils/Utils";
 import { JobAndApplicationModal } from "../../modals/JobAndApplicationModal";
 
 interface UseCountriesReturn {
@@ -60,9 +60,15 @@ interface FormField {
 	placeholder?: string;
 	options?: SelectOption[];
 	validation?: (value: string) => { isValid: boolean; message: string } | undefined;
-
-	[key: string]: any;
+	rows?: number;
+	isSearchable?: boolean;
+	isMulti?: boolean;
+	isClearable?: boolean;
+	step?: string;
+	maxRating?: number;
 }
+
+interface FormFieldOverride extends Partial<FormField> {}
 
 export const useCountries = (): UseCountriesReturn => {
 	const [countries, setCountries] = useState<SelectOption[]>([]);
@@ -373,7 +379,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 export const formFields = {
 	// ------------------------------------------------- BASIC FIELDS -------------------------------------------------
 
-	title: (overrides: Overrides = {}): FormField => ({
+	title: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "title",
 		label: "Title",
 		type: "text",
@@ -382,7 +388,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	name: (overrides: Overrides = {}): FormField => ({
+	name: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "name",
 		label: "Name",
 		type: "text",
@@ -391,7 +397,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	description: (overrides: Overrides = {}): FormField => ({
+	description: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "description",
 		label: "Description",
 		type: "textarea",
@@ -400,7 +406,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	note: (overrides: Overrides = {}): FormField => ({
+	note: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "note",
 		label: "Notes",
 		type: "textarea",
@@ -409,7 +415,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	url: (overrides: Overrides = {}): FormField => ({
+	url: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "url",
 		label: "URL",
 		type: "text",
@@ -417,7 +423,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	datetime: (overrides: Overrides = {}): FormField => ({
+	datetime: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "date",
 		label: "Date & Time",
 		type: "datetime-local",
@@ -426,7 +432,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	updateType: (overrides: Overrides = {}): FormField => ({
+	updateType: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "type",
 		label: "Update Type",
 		type: "select",
@@ -440,7 +446,7 @@ export const formFields = {
 
 	// ------------------------------------------------- USERS ------------------------------------------------
 
-	appTheme: (overrides: Overrides = {}): FormField => ({
+	appTheme: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "theme",
 		label: "App Theme",
 		type: "select",
@@ -448,14 +454,14 @@ export const formFields = {
 		...overrides,
 	}),
 
-	isAdmin: (overrides: Overrides = {}): FormField => ({
+	isAdmin: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "is_admin",
 		label: "Admin",
 		type: "checkbox",
 		...overrides,
 	}),
 
-	password: (overrides: Overrides = {}): FormField => ({
+	password: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "password",
 		label: "Password",
 		type: "password",
@@ -465,7 +471,7 @@ export const formFields = {
 
 	// ------------------------------------------------- PERSON FIELDS ------------------------------------------------
 
-	firstName: (overrides: Overrides = {}): FormField => ({
+	firstName: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "first_name",
 		label: "First Name",
 		type: "text",
@@ -474,7 +480,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	lastName: (overrides: Overrides = {}): FormField => ({
+	lastName: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "last_name",
 		label: "Last Name",
 		type: "text",
@@ -483,7 +489,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	email: (overrides: Overrides = {}): FormField => ({
+	email: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "email",
 		label: "Email",
 		type: "text",
@@ -496,7 +502,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	phone: (overrides: Overrides = {}): FormField => ({
+	phone: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "phone",
 		label: "Phone",
 		type: "tel",
@@ -504,7 +510,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	linkedinUrl: (overrides: Overrides = {}): FormField => ({
+	linkedinUrl: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "linkedin_url",
 		label: "LinkedIn Profile",
 		type: "text",
@@ -517,7 +523,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	role: (overrides: Overrides = {}): FormField => ({
+	role: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "role",
 		label: "Role",
 		type: "text",
@@ -526,7 +532,7 @@ export const formFields = {
 
 	// ------------------------------------------------- LOCATION FIELDS -----------------------------------------------
 
-	city: (overrides: Overrides = {}): FormField => ({
+	city: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "city",
 		label: "City",
 		type: "text",
@@ -534,7 +540,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	postcode: (overrides: Overrides = {}): FormField => ({
+	postcode: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "postcode",
 		label: "Post Code",
 		type: "text",
@@ -542,7 +548,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	country: (countries: SelectOption[] = [], overrides: Overrides = {}): FormField => ({
+	country: (countries: SelectOption[] = [], overrides: FormFieldOverride = {}): FormField => ({
 		name: "country",
 		label: "Country",
 		type: "select",
@@ -555,7 +561,7 @@ export const formFields = {
 
 	// ------------------------------------------------- JOB FIELDS --------------------------------------------------
 
-	jobTitle: (overrides: Overrides = {}): FormField => ({
+	jobTitle: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "title",
 		label: "Job Title",
 		type: "text",
@@ -564,7 +570,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	salaryMin: (overrides: Overrides = {}): FormField => ({
+	salaryMin: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "salary_min",
 		label: "Minimum Salary",
 		type: "salary",
@@ -573,7 +579,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	salaryMax: (overrides: Overrides = {}): FormField => ({
+	salaryMax: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "salary_max",
 		label: "Maximum Salary",
 		type: "salary",
@@ -582,7 +588,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	personalRating: (overrides: Overrides = {}): FormField => ({
+	personalRating: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "personal_rating",
 		label: "Personal Rating",
 		type: "rating",
@@ -590,7 +596,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	attendanceType: (overrides: Overrides = {}): FormField => ({
+	attendanceType: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "attendance_type",
 		label: "Attendance Type",
 		type: "select",
@@ -602,7 +608,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	interviewAttendanceType: (overrides: Overrides = {}): FormField => ({
+	interviewAttendanceType: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "attendance_type",
 		label: "Attendance Type",
 		type: "select",
@@ -615,7 +621,7 @@ export const formFields = {
 
 	// ------------------------------------------------- INTERVIEW FIELDS --------------------------------------------
 
-	interviewType: (overrides: Overrides = {}): FormField => ({
+	interviewType: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "type",
 		label: "Interview Type",
 		type: "select",
@@ -637,7 +643,7 @@ export const formFields = {
 
 	// ------------------------------------------------- APPLICATION FIELDS -----------------------------------------
 
-	applicationDate: (overrides: Overrides = {}): FormField => ({
+	applicationDate: (overrides: FormFieldOverride = {}): FormField => ({
 		...formFields.datetime(),
 		name: "date",
 		label: "Application Date",
@@ -645,7 +651,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	applicationStatus: (overrides: Overrides = {}): FormField => ({
+	applicationStatus: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "status",
 		label: "Application Status",
 		type: "select",
@@ -660,7 +666,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	applicationVia: (overrides: Overrides = {}): FormField => ({
+	applicationVia: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "applied_via",
 		label: "Application Via",
 		type: "select",
@@ -678,7 +684,7 @@ export const formFields = {
 	company: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
-		overrides: Overrides = {},
+		overrides: FormFieldOverride = {},
 	): FormField => ({
 		name: "company_id",
 		label: "Company",
@@ -698,7 +704,7 @@ export const formFields = {
 	location: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
-		overrides: Overrides = {},
+		overrides: FormFieldOverride = {},
 	): FormField => ({
 		name: "location_id",
 		label: "Location",
@@ -718,7 +724,7 @@ export const formFields = {
 	keywords: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
-		overrides: Overrides = {},
+		overrides: FormFieldOverride = {},
 	): FormField => ({
 		name: "keywords",
 		label: "Tags",
@@ -737,7 +743,7 @@ export const formFields = {
 	contacts: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
-		overrides: Overrides = {},
+		overrides: FormFieldOverride = {},
 	): FormField => ({
 		name: "contacts",
 		label: "Contacts",
@@ -756,7 +762,7 @@ export const formFields = {
 	interviewers: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
-		overrides: Overrides = {},
+		overrides: FormFieldOverride = {},
 	): FormField => ({
 		name: "interviewers",
 		label: "Interviewers",
@@ -771,7 +777,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	jobApplication: (options: SelectOption[] = [], overrides: Overrides = {}): FormField => ({
+	jobApplication: (options: SelectOption[] = [], overrides: FormFieldOverride = {}): FormField => ({
 		name: "job_application_id",
 		label: "Job Application",
 		type: "select",
@@ -782,7 +788,11 @@ export const formFields = {
 		...overrides,
 	}),
 
-	job: (options: SelectOption[] = [], onAdd: (() => void) | null = null, overrides: Overrides = {}): FormField => ({
+	job: (
+		options: SelectOption[] = [],
+		onAdd: (() => void) | null = null,
+		overrides: FormFieldOverride = {},
+	): FormField => ({
 		name: "job_id",
 		label: "Job",
 		type: "select",
@@ -802,7 +812,7 @@ export const formFields = {
 	aggregator: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
-		overrides: Overrides = {},
+		overrides: FormFieldOverride = {},
 	): FormField => ({
 		name: "aggregator_id",
 		label: "Aggregator",
