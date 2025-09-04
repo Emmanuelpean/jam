@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../../../contexts/AuthContext.tsx";
+import React, { JSX, useEffect, useState } from "react";
+import { useAuth } from "../../../contexts/AuthContext";
 import {
 	aggregatorsApi,
 	companiesApi,
@@ -8,25 +8,69 @@ import {
 	keywordsApi,
 	locationsApi,
 	personsApi,
-} from "../../../services/Api.ts";
-import { fetchCountries } from "../../../utils/CountryUtils.ts";
+} from "../../../services/Api";
+import { fetchCountries } from "../../../utils/CountryUtils";
 import { CompanyModal } from "../../modals/CompanyModal";
 import { LocationModal } from "../../modals/LocationModal";
 import { KeywordModal } from "../../modals/KeywordModal";
 import { PersonModal } from "../../modals/PersonModal";
 import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobApplicationModal } from "../../modals/JobApplicationModal";
-import { THEMES } from "../../../utils/Theme.ts";
-import { toSelectOptions } from "../../../utils/Utils.ts";
+import { Theme, THEMES } from "../../../utils/Theme";
+import { Overrides, SelectOption, toSelectOptions } from "../../../utils/Utils";
 import { JobAndApplicationModal } from "../../modals/JobAndApplicationModal";
 
-export const useCountries = () => {
-	const [countries, setCountries] = useState([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState(null);
+interface UseCountriesReturn {
+	countries: SelectOption[];
+	loading: boolean;
+	error: Error | null;
+}
+
+interface UseFormOptionsReturn {
+	loading: boolean;
+	error: Error | null;
+	companies: SelectOption[];
+	locations: SelectOption[];
+	keywords: SelectOption[];
+	persons: SelectOption[];
+	aggregators: SelectOption[];
+	jobs: SelectOption[];
+	jobApplications: SelectOption[];
+	openCompanyModal: () => void;
+	renderCompanyModal: () => JSX.Element;
+	openLocationModal: () => void;
+	renderLocationModal: () => JSX.Element;
+	openKeywordModal: () => void;
+	renderKeywordModal: () => JSX.Element;
+	openPersonModal: () => void;
+	renderPersonModal: () => JSX.Element;
+	openAggregatorModal: () => void;
+	renderAggregatorModal: () => JSX.Element;
+	openJobModal: () => void;
+	renderJobModal: () => JSX.Element;
+	openJobApplicationModal: () => void;
+	renderJobApplicationModal: () => JSX.Element;
+}
+
+interface FormField {
+	name: string;
+	label: string;
+	type: string;
+	required?: boolean;
+	placeholder?: string;
+	options?: SelectOption[];
+	validation?: (value: string) => { isValid: boolean; message: string } | undefined;
+
+	[key: string]: any;
+}
+
+export const useCountries = (): UseCountriesReturn => {
+	const [countries, setCountries] = useState<SelectOption[]>([]);
+	const [loading, setLoading] = useState<boolean>(true);
+	const [error, setError] = useState<Error | null>(null);
 
 	useEffect(() => {
-		const loadCountries = async () => {
+		const loadCountries = async (): Promise<void> => {
 			try {
 				setLoading(true);
 				const countriesList = await fetchCountries();
@@ -34,7 +78,7 @@ export const useCountries = () => {
 				setError(null);
 			} catch (err) {
 				console.error("Failed to load countries:", err);
-				setError(err);
+				setError(err as Error);
 			} finally {
 				setLoading(false);
 			}
@@ -46,37 +90,37 @@ export const useCountries = () => {
 	return { countries, loading, error };
 };
 
-export const useFormOptions = (requiredOptions = []) => {
+export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsReturn => {
 	const { token } = useAuth();
-	const [companies, setCompanies] = useState([]);
-	const [locations, setLocations] = useState([]);
-	const [keywords, setKeywords] = useState([]);
-	const [persons, setPersons] = useState([]);
-	const [aggregators, setAggregators] = useState([]);
-	const [jobs, setJobs] = useState([]);
-	const [jobApplications, setJobApplications] = useState([]);
-	const [loading, setLoading] = useState(false);
-	const [error, setError] = useState(null);
+	const [companies, setCompanies] = useState<SelectOption[]>([]);
+	const [locations, setLocations] = useState<SelectOption[]>([]);
+	const [keywords, setKeywords] = useState<SelectOption[]>([]);
+	const [persons, setPersons] = useState<SelectOption[]>([]);
+	const [aggregators, setAggregators] = useState<SelectOption[]>([]);
+	const [jobs, setJobs] = useState<SelectOption[]>([]);
+	const [jobApplications, setJobApplications] = useState<SelectOption[]>([]);
+	const [loading, setLoading] = useState<boolean>(false);
+	const [error, setError] = useState<Error | null>(null);
 
 	// Modal states
-	const [showCompanyModal, setShowCompanyModal] = useState(false);
-	const [showLocationModal, setShowLocationModal] = useState(false);
-	const [showKeywordModal, setShowKeywordModal] = useState(false);
-	const [showPersonModal, setShowPersonModal] = useState(false);
-	const [showAggregatorModal, setShowAggregatorModal] = useState(false);
-	const [showJobModal, setShowJobModal] = useState(false);
-	const [showJobApplicationModal, setShowJobApplicationModal] = useState(false);
+	const [showCompanyModal, setShowCompanyModal] = useState<boolean>(false);
+	const [showLocationModal, setShowLocationModal] = useState<boolean>(false);
+	const [showKeywordModal, setShowKeywordModal] = useState<boolean>(false);
+	const [showPersonModal, setShowPersonModal] = useState<boolean>(false);
+	const [showAggregatorModal, setShowAggregatorModal] = useState<boolean>(false);
+	const [showJobModal, setShowJobModal] = useState<boolean>(false);
+	const [showJobApplicationModal, setShowJobApplicationModal] = useState<boolean>(false);
 
 	useEffect(() => {
-		const fetchOptions = async () => {
+		const fetchOptions = async (): Promise<void> => {
 			if (!token || requiredOptions.length === 0) return;
 
 			setLoading(true);
 			setError(null);
 
 			try {
-				const apiCalls = [];
-				const optionTypes = [];
+				const apiCalls: Promise<any>[] = [];
+				const optionTypes: string[] = [];
 
 				// Only fetch what's needed
 				if (requiredOptions.includes("companies")) {
@@ -111,7 +155,7 @@ export const useFormOptions = (requiredOptions = []) => {
 				const results = await Promise.all(apiCalls);
 
 				// Set the data based on what was fetched
-				results.forEach((data, index) => {
+				results.forEach((data: any, index: number) => {
 					const type = optionTypes[index];
 					switch (type) {
 						case "companies":
@@ -139,7 +183,7 @@ export const useFormOptions = (requiredOptions = []) => {
 				});
 			} catch (err) {
 				console.error("Error fetching form options:", err);
-				setError(err);
+				setError(err as Error);
 			} finally {
 				setLoading(false);
 			}
@@ -149,151 +193,152 @@ export const useFormOptions = (requiredOptions = []) => {
 	}, [token, JSON.stringify(requiredOptions)]);
 
 	// Modal handlers
-	const openCompanyModal = () => setShowCompanyModal(true);
-	const closeCompanyModal = () => setShowCompanyModal(false);
+	const openCompanyModal = (): void => setShowCompanyModal(true);
+	const closeCompanyModal = (): void => setShowCompanyModal(false);
 
-	const openLocationModal = () => setShowLocationModal(true);
-	const closeLocationModal = () => setShowLocationModal(false);
+	const openLocationModal = (): void => setShowLocationModal(true);
+	const closeLocationModal = (): void => setShowLocationModal(false);
 
-	const openKeywordModal = () => setShowKeywordModal(true);
-	const closeKeywordModal = () => setShowKeywordModal(false);
+	const openKeywordModal = (): void => setShowKeywordModal(true);
+	const closeKeywordModal = (): void => setShowKeywordModal(false);
 
-	const openPersonModal = () => setShowPersonModal(true);
-	const closePersonModal = () => setShowPersonModal(false);
+	const openPersonModal = (): void => setShowPersonModal(true);
+	const closePersonModal = (): void => setShowPersonModal(false);
 
-	const openAggregatorModal = () => setShowAggregatorModal(true);
-	const closeAggregatorModal = () => setShowAggregatorModal(false);
+	const openAggregatorModal = (): void => setShowAggregatorModal(true);
+	const closeAggregatorModal = (): void => setShowAggregatorModal(false);
 
-	const openJobModal = () => setShowJobModal(true);
-	const closeJobModal = () => setShowJobModal(false);
+	const openJobModal = (): void => setShowJobModal(true);
+	const closeJobModal = (): void => setShowJobModal(false);
 
-	const openJobApplicationModal = () => setShowJobApplicationModal(true);
-	const closeJobApplicationModal = () => setShowJobApplicationModal(false);
+	const openJobApplicationModal = (): void => setShowJobApplicationModal(true);
+	const closeJobApplicationModal = (): void => setShowJobApplicationModal(false);
 
 	// Handle successful item creation
-	const handleCompanyAddSuccess = (newCompany) => {
-		const newOption = {
-			value: newCompany.id,
-			label: newCompany.name,
-		};
+	const handleCompanyAddSuccess = (newCompany: any): void => {
+		const newOption: SelectOption = toSelectOptions([newCompany])[0]!;
 		setCompanies((prev) => [...prev, newOption]);
 		closeCompanyModal();
 	};
 
-	const handleLocationAddSuccess = (newLocation) => {
-		const newOption = {
-			value: newLocation.id,
-			label: newLocation.name,
-		};
+	const handleLocationAddSuccess = (newLocation: any): void => {
+		const newOption: SelectOption = toSelectOptions([newLocation])[0]!;
 		setLocations((prev) => [...prev, newOption]);
 		closeLocationModal();
 	};
 
-	const handleKeywordAddSuccess = (newKeyword) => {
-		const newOption = {
-			value: newKeyword.id,
-			label: newKeyword.name,
-		};
+	const handleKeywordAddSuccess = (newKeyword: any): void => {
+		const newOption: SelectOption = toSelectOptions([newKeyword])[0]!;
 		setKeywords((prev) => [...prev, newOption]);
 		closeKeywordModal();
 	};
 
-	const handlePersonAddSuccess = (newPerson) => {
-		const newOption = {
-			value: newPerson.id,
-			label: newPerson.name,
-		};
+	const handlePersonAddSuccess = (newPerson: any): void => {
+		const newOption: SelectOption = toSelectOptions([newPerson])[0]!;
 		setPersons((prev) => [...prev, newOption]);
 		closePersonModal();
 	};
 
-	const handleAggregatorAddSuccess = (newAggregator) => {
-		const newOption = {
-			value: newAggregator.id,
-			label: newAggregator.name,
-		};
+	const handleAggregatorAddSuccess = (newAggregator: any): void => {
+		const newOption: SelectOption = toSelectOptions([newAggregator])[0]!;
 		setAggregators((prev) => [...prev, newOption]);
 		closeAggregatorModal();
 	};
 
-	const handleJobAddSuccess = (newJob) => {
-		const newOption = {
-			value: newJob.id,
-			label: newJob.title,
-		};
+	const handleJobAddSuccess = (newJob: any): void => {
+		const newOption: SelectOption = toSelectOptions([newJob, "id", "title"])[0]!;
 		setJobs((prev) => [...prev, newOption]);
 		closeJobModal();
 	};
 
-	const handleJobApplicationAddSuccess = (newJobApplication) => {
-		const newOption = {
-			value: newJobApplication.id,
-			label: newJobApplication.title,
-		};
+	const handleJobApplicationAddSuccess = (newJobApplication: any): void => {
+		const newOption: SelectOption = toSelectOptions([newJobApplication], "id", "title")[0]!;
 		setJobApplications((prev) => [...prev, newOption]);
 		closeJobApplicationModal();
 	};
 
 	// Render modal functions
-	const renderCompanyModal = () => (
+	const renderCompanyModal = (): JSX.Element => (
 		<CompanyModal
 			show={showCompanyModal}
 			onHide={closeCompanyModal}
+			data={{}}
+			id={null}
 			onSuccess={handleCompanyAddSuccess}
+			onDelete={() => {}}
 			submode="add"
 		/>
 	);
 
-	const renderLocationModal = () => (
+	const renderLocationModal = (): JSX.Element => (
 		<LocationModal
 			show={showLocationModal}
 			onHide={closeLocationModal}
+			data={{}}
+			id={null}
 			onSuccess={handleLocationAddSuccess}
+			onDelete={() => {}}
 			submode="add"
 		/>
 	);
 
-	const renderKeywordModal = () => (
+	const renderKeywordModal = (): JSX.Element => (
 		<KeywordModal
 			show={showKeywordModal}
 			onHide={closeKeywordModal}
+			data={{}}
+			id={null}
 			onSuccess={handleKeywordAddSuccess}
+			onDelete={() => {}}
 			submode="add"
 		/>
 	);
 
-	const renderPersonModal = () => (
+	const renderPersonModal = (): JSX.Element => (
 		<PersonModal
 			show={showPersonModal}
 			onHide={closePersonModal}
+			data={{}}
+			id={null}
 			onSuccess={handlePersonAddSuccess}
+			onDelete={() => {}}
 			submode="add"
 		/>
 	);
 
-	const renderAggregatorModal = () => (
+	const renderAggregatorModal = (): JSX.Element => (
 		<AggregatorModal
 			show={showAggregatorModal}
 			onHide={closeAggregatorModal}
+			data={{}}
+			id={null}
 			onSuccess={handleAggregatorAddSuccess}
+			onDelete={() => {}}
 			submode="add"
 		/>
 	);
 
-	const renderJobModal = () => (
+	const renderJobModal = (): JSX.Element => (
 		<JobAndApplicationModal
 			show={showJobModal}
 			onHide={closeJobModal}
+			data={{}}
+			id={null}
+			// @ts-ignore
 			onSuccess={handleJobAddSuccess}
+			onDelete={() => {}}
 			submode="add"
 		/>
 	);
 
-	const renderJobApplicationModal = () => (
+	const renderJobApplicationModal = (): JSX.Element => (
 		<JobApplicationModal
 			show={showJobApplicationModal}
 			onHide={closeJobApplicationModal}
+			data={{}}
+			id={null}
 			onSuccess={handleJobApplicationAddSuccess}
+			onDelete={() => {}}
 			submode="add"
 		/>
 	);
@@ -301,7 +346,6 @@ export const useFormOptions = (requiredOptions = []) => {
 	return {
 		loading,
 		error,
-		// Only return the data that was requested
 		companies: requiredOptions.includes("companies") ? companies : [],
 		locations: requiredOptions.includes("locations") ? locations : [],
 		keywords: requiredOptions.includes("keywords") ? keywords : [],
@@ -309,7 +353,6 @@ export const useFormOptions = (requiredOptions = []) => {
 		aggregators: requiredOptions.includes("aggregators") ? aggregators : [],
 		jobs: requiredOptions.includes("jobs") ? jobs : [],
 		jobApplications: requiredOptions.includes("jobApplications") ? jobApplications : [],
-		// All modal handlers (same as before)
 		openCompanyModal,
 		renderCompanyModal,
 		openLocationModal,
@@ -330,7 +373,7 @@ export const useFormOptions = (requiredOptions = []) => {
 export const formFields = {
 	// ------------------------------------------------- BASIC FIELDS -------------------------------------------------
 
-	title: (overrides = {}) => ({
+	title: (overrides: Overrides = {}): FormField => ({
 		name: "title",
 		label: "Title",
 		type: "text",
@@ -339,7 +382,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	name: (overrides = {}) => ({
+	name: (overrides: Overrides = {}): FormField => ({
 		name: "name",
 		label: "Name",
 		type: "text",
@@ -348,7 +391,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	description: (overrides = {}) => ({
+	description: (overrides: Overrides = {}): FormField => ({
 		name: "description",
 		label: "Description",
 		type: "textarea",
@@ -357,16 +400,16 @@ export const formFields = {
 		...overrides,
 	}),
 
-	note: (overrides = {}) => ({
+	note: (overrides: Overrides = {}): FormField => ({
 		name: "note",
 		label: "Notes",
 		type: "textarea",
-		rows: 3,
+		rows: 4,
 		placeholder: "Add your notes...",
 		...overrides,
 	}),
 
-	url: (overrides = {}) => ({
+	url: (overrides: Overrides = {}): FormField => ({
 		name: "url",
 		label: "URL",
 		type: "text",
@@ -374,7 +417,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	datetime: (overrides = {}) => ({
+	datetime: (overrides: Overrides = {}): FormField => ({
 		name: "date",
 		label: "Date & Time",
 		type: "datetime-local",
@@ -383,7 +426,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	updateType: (overrides = {}) => ({
+	updateType: (overrides: Overrides = {}): FormField => ({
 		name: "type",
 		label: "Update Type",
 		type: "select",
@@ -397,23 +440,22 @@ export const formFields = {
 
 	// ------------------------------------------------- USERS ------------------------------------------------
 
-	appTheme: (overrides = {}) => ({
+	appTheme: (overrides: Overrides = {}): FormField => ({
 		name: "theme",
 		label: "App Theme",
 		type: "select",
-		required: false,
-		options: THEMES.map((theme) => ({ value: theme.key, label: theme.name })),
+		options: THEMES.map((theme: Theme): SelectOption => ({ value: theme.key, label: theme.name })),
 		...overrides,
 	}),
 
-	isAdmin: (overrides = {}) => ({
+	isAdmin: (overrides: Overrides = {}): FormField => ({
 		name: "is_admin",
 		label: "Admin",
 		type: "checkbox",
 		...overrides,
 	}),
 
-	password: (overrides = {}) => ({
+	password: (overrides: Overrides = {}): FormField => ({
 		name: "password",
 		label: "Password",
 		type: "password",
@@ -423,7 +465,7 @@ export const formFields = {
 
 	// ------------------------------------------------- PERSON FIELDS ------------------------------------------------
 
-	firstName: (overrides = {}) => ({
+	firstName: (overrides: Overrides = {}): FormField => ({
 		name: "first_name",
 		label: "First Name",
 		type: "text",
@@ -432,7 +474,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	lastName: (overrides = {}) => ({
+	lastName: (overrides: Overrides = {}): FormField => ({
 		name: "last_name",
 		label: "Last Name",
 		type: "text",
@@ -441,13 +483,12 @@ export const formFields = {
 		...overrides,
 	}),
 
-	email: (overrides = {}) => ({
+	email: (overrides: Overrides = {}): FormField => ({
 		name: "email",
 		label: "Email",
 		type: "text",
-		required: false,
 		placeholder: "person@company.com",
-		validation: (value) => {
+		validation: (value: string) => {
 			if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
 				return { isValid: false, message: "Please enter a valid email address" };
 			}
@@ -455,22 +496,20 @@ export const formFields = {
 		...overrides,
 	}),
 
-	phone: (overrides = {}) => ({
+	phone: (overrides: Overrides = {}): FormField => ({
 		name: "phone",
 		label: "Phone",
 		type: "tel",
-		required: false,
-		placeholder: "+1-555-0123",
+		placeholder: "+44 20 7946 0958",
 		...overrides,
 	}),
 
-	linkedinUrl: (overrides = {}) => ({
+	linkedinUrl: (overrides: Overrides = {}): FormField => ({
 		name: "linkedin_url",
 		label: "LinkedIn Profile",
 		type: "text",
-		required: false,
 		placeholder: "https://linkedin.com/in/username",
-		validation: (value) => {
+		validation: (value: string) => {
 			if (value && !value.includes("linkedin.com")) {
 				return { isValid: false, message: "Please enter a valid LinkedIn URL" };
 			}
@@ -478,39 +517,35 @@ export const formFields = {
 		...overrides,
 	}),
 
-	role: (overrides = {}) => ({
+	role: (overrides: Overrides = {}): FormField => ({
 		name: "role",
 		label: "Role",
 		type: "text",
-		required: false,
 		...overrides,
 	}),
 
 	// ------------------------------------------------- LOCATION FIELDS -----------------------------------------------
 
-	city: (overrides = {}) => ({
+	city: (overrides: Overrides = {}): FormField => ({
 		name: "city",
 		label: "City",
 		type: "text",
-		required: false,
 		placeholder: "Enter city name",
 		...overrides,
 	}),
 
-	postcode: (overrides = {}) => ({
+	postcode: (overrides: Overrides = {}): FormField => ({
 		name: "postcode",
 		label: "Post Code",
 		type: "text",
-		required: false,
 		placeholder: "Enter post code",
 		...overrides,
 	}),
 
-	country: (countries = [], loading = false, overrides = {}) => ({
+	country: (countries: SelectOption[] = [], loading: boolean = false, overrides: Overrides = {}): FormField => ({
 		name: "country",
 		label: "Country",
 		type: "select",
-		required: false,
 		options: countries,
 		placeholder: loading ? "Loading countries..." : "Search and select a country...",
 		isSearchable: true,
@@ -521,7 +556,7 @@ export const formFields = {
 
 	// ------------------------------------------------- JOB FIELDS --------------------------------------------------
 
-	jobTitle: (overrides = {}) => ({
+	jobTitle: (overrides: Overrides = {}): FormField => ({
 		name: "title",
 		label: "Job Title",
 		type: "text",
@@ -530,7 +565,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	salaryMin: (overrides = {}) => ({
+	salaryMin: (overrides: Overrides = {}): FormField => ({
 		name: "salary_min",
 		label: "Minimum Salary",
 		type: "salary",
@@ -539,7 +574,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	salaryMax: (overrides = {}) => ({
+	salaryMax: (overrides: Overrides = {}): FormField => ({
 		name: "salary_max",
 		label: "Maximum Salary",
 		type: "salary",
@@ -548,16 +583,15 @@ export const formFields = {
 		...overrides,
 	}),
 
-	personalRating: (overrides = {}) => ({
+	personalRating: (overrides: Overrides = {}): FormField => ({
 		name: "personal_rating",
 		label: "Personal Rating",
 		type: "rating",
-		required: false,
 		maxRating: 5,
 		...overrides,
 	}),
 
-	attendanceType: (overrides = {}) => ({
+	attendanceType: (overrides: Overrides = {}): FormField => ({
 		name: "attendance_type",
 		label: "Attendance Type",
 		type: "select",
@@ -569,7 +603,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	interviewAttendanceType: (overrides = {}) => ({
+	interviewAttendanceType: (overrides: Overrides = {}): FormField => ({
 		name: "attendance_type",
 		label: "Attendance Type",
 		type: "select",
@@ -582,7 +616,7 @@ export const formFields = {
 
 	// ------------------------------------------------- INTERVIEW FIELDS --------------------------------------------
 
-	interviewType: (overrides = {}) => ({
+	interviewType: (overrides: Overrides = {}): FormField => ({
 		name: "type",
 		label: "Interview Type",
 		type: "select",
@@ -604,7 +638,7 @@ export const formFields = {
 
 	// ------------------------------------------------- APPLICATION FIELDS -----------------------------------------
 
-	applicationDate: (overrides = {}) => ({
+	applicationDate: (overrides: Overrides = {}): FormField => ({
 		...formFields.datetime(),
 		name: "date",
 		label: "Application Date",
@@ -612,7 +646,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	applicationStatus: (overrides = {}) => ({
+	applicationStatus: (overrides: Overrides = {}): FormField => ({
 		name: "status",
 		label: "Application Status",
 		type: "select",
@@ -627,7 +661,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	applicationVia: (overrides = {}) => ({
+	applicationVia: (overrides: Overrides = {}): FormField => ({
 		name: "applied_via",
 		label: "Application Via",
 		type: "select",
@@ -642,11 +676,14 @@ export const formFields = {
 
 	// ------------------------------------------- SELECT FIELDS WITH OPTIONS ------------------------------------------
 
-	company: (options = [], onAdd = null, overrides = {}) => ({
+	company: (
+		options: SelectOption[] = [],
+		onAdd: (() => void) | null = null,
+		overrides: Overrides = {},
+	): FormField => ({
 		name: "company_id",
 		label: "Company",
 		type: "select",
-		required: false,
 		placeholder: "Select or search company...",
 		isSearchable: true,
 		isClearable: true,
@@ -659,7 +696,11 @@ export const formFields = {
 		...overrides,
 	}),
 
-	location: (options = [], onAdd = null, overrides = {}) => ({
+	location: (
+		options: SelectOption[] = [],
+		onAdd: (() => void) | null = null,
+		overrides: Overrides = {},
+	): FormField => ({
 		name: "location_id",
 		label: "Location",
 		type: "select",
@@ -675,7 +716,11 @@ export const formFields = {
 		...overrides,
 	}),
 
-	keywords: (options = [], onAdd = null, overrides = {}) => ({
+	keywords: (
+		options: SelectOption[] = [],
+		onAdd: (() => void) | null = null,
+		overrides: Overrides = {},
+	): FormField => ({
 		name: "keywords",
 		label: "Tags",
 		type: "multiselect",
@@ -690,7 +735,11 @@ export const formFields = {
 		...overrides,
 	}),
 
-	contacts: (options = [], onAdd = null, overrides = {}) => ({
+	contacts: (
+		options: SelectOption[] = [],
+		onAdd: (() => void) | null = null,
+		overrides: Overrides = {},
+	): FormField => ({
 		name: "contacts",
 		label: "Contacts",
 		type: "multiselect",
@@ -705,7 +754,11 @@ export const formFields = {
 		...overrides,
 	}),
 
-	interviewers: (options = [], onAdd = null, overrides = {}) => ({
+	interviewers: (
+		options: SelectOption[] = [],
+		onAdd: (() => void) | null = null,
+		overrides: Overrides = {},
+	): FormField => ({
 		name: "interviewers",
 		label: "Interviewers",
 		type: "multiselect",
@@ -719,7 +772,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	jobApplication: (options = [], overrides = {}) => ({
+	jobApplication: (options: SelectOption[] = [], overrides: Overrides = {}): FormField => ({
 		name: "job_application_id",
 		label: "Job Application",
 		type: "select",
@@ -730,7 +783,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	job: (options = [], onAdd = null, overrides = {}) => ({
+	job: (options: SelectOption[] = [], onAdd: (() => void) | null = null, overrides: Overrides = {}): FormField => ({
 		name: "job_id",
 		label: "Job",
 		type: "select",
@@ -747,7 +800,11 @@ export const formFields = {
 		...overrides,
 	}),
 
-	aggregator: (options = [], onAdd = null, overrides = {}) => ({
+	aggregator: (
+		options: SelectOption[] = [],
+		onAdd: (() => void) | null = null,
+		overrides: Overrides = {},
+	): FormField => ({
 		name: "aggregator_id",
 		label: "Aggregator",
 		type: "select",

@@ -1,11 +1,16 @@
 export type SelectOption = {
 	value: string;
 	label: string;
+	data?: any;
 };
 
 export interface Progress {
 	current: number;
 	total: number;
+}
+
+export interface Overrides {
+	[key: string]: any;
 }
 
 export const accessAttribute = (item: any, key: string) => {
@@ -18,7 +23,7 @@ export const accessAttribute = (item: any, key: string) => {
 	return obj;
 };
 
-export const toSelectOptions = (data: [], valueKey = "id", labelKey = "name"): SelectOption[] => {
+export const toSelectOptions = (data: any[], valueKey = "id", labelKey = "name"): SelectOption[] => {
 	return data.map((item: any) => ({
 		value: accessAttribute(item, valueKey),
 		label: accessAttribute(item, labelKey),
