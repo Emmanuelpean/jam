@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
 import { UserModal } from "../components/modals/UserModal";
-import { columns } from "../components/rendering/view/TableColumnRenders";
+import { tableColumns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
 
 export const UserManagementPage = () => {
@@ -20,13 +20,13 @@ export const UserManagementPage = () => {
 		removeItem,
 	} = useTableData("users", [], {}, { key: "id", direction: "asc" });
 
-	const tableColumns = [
-		columns.id(),
-		columns.email(),
-		columns.appTheme(),
-		columns.last_login(),
-		columns.isAdmin(),
-		columns.createdAt(),
+	const columns = [
+		tableColumns.id(),
+		tableColumns.email(),
+		tableColumns.appTheme(),
+		tableColumns.last_login(),
+		tableColumns.isAdmin(),
+		tableColumns.createdAt(),
 	];
 
 	useEffect(() => {
@@ -44,7 +44,7 @@ export const UserManagementPage = () => {
 		<GenericTableWithModals
 			title="Users"
 			data={users}
-			columns={tableColumns}
+			columns={columns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
 			searchTerm={searchTerm}

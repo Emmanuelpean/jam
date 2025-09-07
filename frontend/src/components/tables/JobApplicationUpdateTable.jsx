@@ -1,6 +1,6 @@
 import React from "react";
 import { GenericTableWithModals, useTableData } from "./GenericTable.tsx";
-import { columns } from "../rendering/view/TableColumnRenders";
+import { tableColumns } from "../rendering/view/TableColumnRenders";
 import { JobApplicationUpdateModal } from "../modals/JobApplicationUpdateModal";
 
 const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, data = null }) => {
@@ -40,7 +40,7 @@ const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, data = null })
 		}
 	};
 
-	const ViewColumns = [columns.date(), columns.updateType(), columns.note()];
+	const ViewColumns = [tableColumns.date(), tableColumns.updateType(), tableColumns.note()];
 
 	const ModalWithProps = (props) => (
 		<JobApplicationUpdateModal

@@ -37,7 +37,10 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 		view: [viewFields.name({ isTitle: true }), viewFields.url(), [viewFields.description()]],
 	};
 
-	const additionalFields = [viewFields.jobTable(), viewFields.personTable()];
+	const additionalFields = [
+		viewFields.jobTable({ excludedColumns: "company" }),
+		viewFields.personTable({ excludedColumns: "company" }),
+	];
 
 	const transformFormData = (data: FormData): FormData => {
 		return {

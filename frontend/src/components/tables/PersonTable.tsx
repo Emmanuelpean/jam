@@ -1,6 +1,6 @@
 import React from "react";
 import { GenericTableWithModals, useProvidedTableData } from "./GenericTable";
-import { columns } from "../rendering/view/TableColumnRenders";
+import { tableColumns } from "../rendering/view/TableColumnRenders";
 import { PersonModal } from "../modals/PersonModal";
 
 interface PersonTableProps {
@@ -21,11 +21,11 @@ const PersonTable: React.FC<PersonTableProps> = ({ onChange, data = null }) => {
 	} = useProvidedTableData(data, { key: "name", direction: "asc" }); // TODO sorting not working
 
 	const ViewColumns = [
-		columns.personName!(),
-		columns.role!(),
-		columns.email!(),
-		columns.phone!(),
-		columns.linkedinUrl!(),
+		tableColumns.personName!(),
+		tableColumns.role!(),
+		tableColumns.email!(),
+		tableColumns.phone!(),
+		tableColumns.linkedinUrl!(),
 	];
 
 	return (

@@ -34,7 +34,7 @@ interface Columns {
 	[key: string]: TableColumnFactory;
 }
 
-export const columns: Columns = {
+export const tableColumns: Columns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
 
 	id: (overrides: TableColumnOverrides = {}): TableColumn => ({
@@ -404,6 +404,15 @@ export const columns: Columns = {
 		sortable: true,
 		searchable: false,
 		render: renderFunctions.jobApplicationCount,
+		...overrides,
+	}),
+
+	personCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "persons",
+		label: "Individuals",
+		sortable: true,
+		searchable: false,
+		render: renderFunctions.personCount,
 		...overrides,
 	}),
 

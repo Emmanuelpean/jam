@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
 import { CompanyModal } from "../components/modals/CompanyModal";
-import { columns } from "../components/rendering/view/TableColumnRenders";
+import { tableColumns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
 
 const CompaniesPage = () => {
@@ -20,12 +20,13 @@ const CompaniesPage = () => {
 		removeItem,
 	} = useTableData("companies", [], {}, { key: "name", direction: "asc" });
 
-	const tableColumns = [
-		columns.name(),
-		columns.description(),
-		columns.url(),
-		columns.jobCount(),
-		columns.createdAt(),
+	const columns = [
+		tableColumns.name(),
+		tableColumns.description(),
+		tableColumns.url(),
+		tableColumns.jobCount(),
+		tableColumns.personCount(),
+		tableColumns.createdAt(),
 	];
 
 	useEffect(() => {
@@ -43,7 +44,7 @@ const CompaniesPage = () => {
 		<GenericTableWithModals
 			title="Companies"
 			data={companies}
-			columns={tableColumns}
+			columns={columns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
 			searchTerm={searchTerm}

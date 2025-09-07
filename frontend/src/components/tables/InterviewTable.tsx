@@ -1,6 +1,6 @@
 import React from "react";
 import { GenericTableWithModals, useProvidedTableData } from "./GenericTable";
-import { columns } from "../rendering/view/TableColumnRenders";
+import { tableColumns } from "../rendering/view/TableColumnRenders";
 import { InterviewModal } from "../modals/InterviewModal";
 
 interface InterviewsTableProps {
@@ -36,7 +36,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({ jobApplicationId, onC
 		deleteItem,
 	} = useProvidedTableData(data, { key: "date", direction: "desc" });
 
-	const ViewColumns = [columns.date!(), columns.type!(), columns.location!(), columns.note!()];
+	const ViewColumns = [tableColumns.date!(), tableColumns.type!(), tableColumns.location!(), tableColumns.note!()];
 
 	const ModalWithProps: React.FC<ModalProps> = (
 		props, // @ts-ignore // TODO

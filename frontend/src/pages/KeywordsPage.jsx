@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
 import { KeywordModal } from "../components/modals/KeywordModal";
-import { columns } from "../components/rendering/view/TableColumnRenders";
+import { tableColumns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
 
 const KeywordsPage = () => {
@@ -20,7 +20,7 @@ const KeywordsPage = () => {
 		removeItem,
 	} = useTableData("keywords", [], {}, { key: "name", direction: "asc" });
 
-	const tableColumns = [columns.name(), columns.jobCount(), columns.createdAt()];
+	const columns = [tableColumns.name(), tableColumns.jobCount(), tableColumns.createdAt()];
 
 	useEffect(() => {
 		if (loading) {
@@ -37,7 +37,7 @@ const KeywordsPage = () => {
 		<GenericTableWithModals
 			title="Tags"
 			data={keywords}
-			columns={tableColumns}
+			columns={columns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
 			searchTerm={searchTerm}

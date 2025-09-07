@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { GenericTableWithModals } from "./GenericTable";
-import { columns } from "../rendering/view/TableColumnRenders";
+import { tableColumns } from "../rendering/view/TableColumnRenders";
 // import { JobViewModal } from "../modals/_JobModal";
 
 const JobsToChase = ({ initialData = [], onDataChange, loading: externalLoading = false }) => {
@@ -22,11 +22,11 @@ const JobsToChase = ({ initialData = [], onDataChange, loading: externalLoading 
 	};
 
 	const tableColumns = [
-		columns.title(),
-		columns.company(),
-		columns.location(),
-		columns.daysSinceLastUpdate(),
-		columns.lastUpdateType(),
+		tableColumns.title(),
+		tableColumns.company(),
+		tableColumns.location(),
+		tableColumns.daysSinceLastUpdate(),
+		tableColumns.lastUpdateType(),
 	];
 
 	// Handle success for combined modal updates

@@ -5,8 +5,8 @@ export interface ViewField extends Field {
 	label: string;
 	type?: string;
 	columnClass?: string;
-	outsideCard?: boolean;
 	isTitle?: boolean;
+	excludedColumns?: string | string[];
 }
 
 export const renderViewField = (field: ViewField, item: any, id: string): ReactNode => {
@@ -284,7 +284,6 @@ export const viewFields = {
 		key: "job",
 		label: "Jobs",
 		render: renderFunctions.jobTable,
-		outsideCard: true,
 		...overrides,
 	}),
 
@@ -292,7 +291,6 @@ export const viewFields = {
 		key: "persons",
 		label: "Persons",
 		render: renderFunctions.PersonTable,
-		outsideCard: true,
 		...overrides,
 	}),
 };

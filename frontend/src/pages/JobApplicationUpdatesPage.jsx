@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { JobApplicationUpdateModal } from "../components/modals/JobApplicationUpdateModal";
 import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable.tsx";
-import { columns } from "../components/rendering/view/TableColumnRenders";
+import { tableColumns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
 
 const JobApplicationUpdatesPage = () => {
@@ -20,12 +20,12 @@ const JobApplicationUpdatesPage = () => {
 		removeItem,
 	} = useTableData("jobapplicationupdates", [], {}, { key: "date", direction: "desc" });
 
-	const tableColumns = [
-		columns.jobApplicationJob(),
-		columns.date(),
-		columns.updateType(),
-		columns.note(),
-		columns.createdAt(),
+	const columns = [
+		tableColumns.jobApplicationJob(),
+		tableColumns.date(),
+		tableColumns.updateType(),
+		tableColumns.note(),
+		tableColumns.createdAt(),
 	];
 
 	useEffect(() => {
@@ -43,7 +43,7 @@ const JobApplicationUpdatesPage = () => {
 		<GenericTableWithModals
 			title="Job Application Updates"
 			data={jobApplicationUpdates}
-			columns={tableColumns}
+			columns={columns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
 			searchTerm={searchTerm}

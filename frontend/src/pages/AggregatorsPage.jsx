@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { AggregatorModal } from "../components/modals/AggregatorModal";
 import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable.tsx";
-import { columns } from "../components/rendering/view/TableColumnRenders";
+import { tableColumns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
 
 const AggregatorsPage = () => {
@@ -20,12 +20,12 @@ const AggregatorsPage = () => {
 		removeItem,
 	} = useTableData("aggregators", [], {}, { key: "name", direction: "asc" });
 
-	const tableColumns = [
-		columns.name(),
-		columns.url(),
-		columns.jobCount(),
-		columns.jobApplicationCount(),
-		columns.createdAt(),
+	const columns = [
+		tableColumns.name(),
+		tableColumns.url(),
+		tableColumns.jobCount(),
+		tableColumns.jobApplicationCount(),
+		tableColumns.createdAt(),
 	];
 
 	useEffect(() => {
@@ -43,7 +43,7 @@ const AggregatorsPage = () => {
 		<GenericTableWithModals
 			title="Job Aggregators"
 			data={aggregators}
-			columns={tableColumns}
+			columns={columns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
 			searchTerm={searchTerm}

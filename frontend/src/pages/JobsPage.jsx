@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useTableData, GenericTableWithModals } from "../components/tables/GenericTable.tsx";
 import { JobAndApplicationModal } from "../components/modals/JobAndApplicationModal";
-import { columns } from "../components/rendering/view/TableColumnRenders";
+import { tableColumns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext.tsx";
 
 const JobsPage = () => {
@@ -36,22 +36,22 @@ const JobsPage = () => {
 		};
 	}, [loading, showLoading, hideLoading]);
 
-	const tableColumns = [
-		columns.title(),
-		columns.company(),
-		columns.location(),
-		columns.url(),
-		columns.salaryRange(),
-		columns.personalRating(),
-		columns.jobapplication(),
-		columns.createdAt(),
+	const columns = [
+		tableColumns.title(),
+		tableColumns.company(),
+		tableColumns.location(),
+		tableColumns.url(),
+		tableColumns.salaryRange(),
+		tableColumns.personalRating(),
+		tableColumns.jobapplication(),
+		tableColumns.createdAt(),
 	];
 
 	return (
 		<GenericTableWithModals
 			title="Jobs"
 			data={jobs}
-			columns={tableColumns}
+			columns={columns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
 			searchTerm={searchTerm}

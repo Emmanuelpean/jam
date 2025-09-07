@@ -31,6 +31,7 @@ export interface RenderParams {
 	view?: boolean;
 	accessKey?: string | undefined;
 	id?: string;
+	excludedColumns?: string | string[];
 }
 
 interface Job {
@@ -48,6 +49,7 @@ export interface Field {
 	key: string;
 	render?: (params: RenderParams) => ReactNode;
 	accessKey?: string;
+	excludedColumns?: string | string[];
 }
 
 interface ModalManagerProps {
@@ -423,6 +425,11 @@ export const renderFunctions = {
 		return job_applications?.length || 0;
 	},
 
+	personCount: (param: RenderParams): number => {
+		const persons = accessSubAttribute(param.item, param.accessKey, "persons");
+		return persons?.length || 0;
+	},
+
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
 	jobApplication: (param: RenderParams): ReactNode => {
@@ -668,12 +675,13 @@ export const renderFunctions = {
 	},
 
 	jobTable: (param: RenderParams): ReactNode => {
-		// TODO pass the columns to display here so that companies are not shown in company modal
 		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
 		const onChange = () => {};
 		return (
 			<GenericAccordion title="Jobs" data={jobs} onChange={onChange} icon={getTableIcon("Jobs")}>
-				{(data, onChangeCallback) => <JobsTable data={data} onChange={onChangeCallback} />}
+				{(data, onChangeCallback) => (
+					<JobsTable data={data} onChange={onChangeCallback} excludeColumns={param.excludedColumns} />
+				)}
 			</GenericAccordion>
 		);
 	},
@@ -699,12 +707,14 @@ export const renderViewElement = (field: Field, item: any, id: string): ReactNod
 
 	let rendered: ReactNode;
 	if (field.render) {
-		rendered = field.render({
-			item,
+		const renderParams: RenderParams = {
+			item: item,
 			view: false,
 			accessKey: field.accessKey,
 			id: `${id}-${field.key}`,
-		});
+			excludedColumns: field.excludedColumns,
+		};
+		rendered = field.render(renderParams);
 	} else {
 		rendered = item?.[field.key];
 	}
