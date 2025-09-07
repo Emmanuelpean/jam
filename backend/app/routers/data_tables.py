@@ -287,7 +287,7 @@ def get_needs_chase_job_applications(
         db.query(models.Job)
         .join(models.JobApplication, models.Job.id == models.JobApplication.job_id)
         .filter(models.Job.owner_id == current_user.id)
-        .filter(models.JobApplication.status.notin_(["Rejected", "Withdrawn"]))
+        .filter(models.JobApplication.status.notin_(["rejected", "withdrawn"]))
         .all()
     )
 
