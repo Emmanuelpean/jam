@@ -1,9 +1,19 @@
 import React from "react";
-import { GenericTableWithModals, useTableData } from "./GenericTable.tsx";
+import { GenericTableWithModals, useProvidedTableData } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumnRenders";
 import { JobApplicationUpdateModal } from "../modals/JobApplicationUpdateModal";
 
-const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, data = null }) => {
+interface JobApplicationUpdatesTableProps {
+	jobApplicationId: string | number;
+	onChange?: () => void;
+	data?: any[] | null;
+}
+
+const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
+	jobApplicationId,
+	onChange,
+	data = null,
+}) => {
 	const {
 		data: updatesData,
 		loading,
@@ -11,38 +21,32 @@ const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, data = null })
 		addItem,
 		updateItem,
 		deleteItem,
-	} = useTableData(
-		"jobapplicationupdates",
-		[jobApplicationId, data],
-		{ job_application_id: jobApplicationId },
-		{ key: "date", direction: "desc" },
-		data,
-	);
+	} = useProvidedTableData(data, { key: "date", direction: "desc" });
 
-	const handleAddSuccess = (newEntry) => {
+	const handleAddSuccess = (newEntry: any) => {
 		addItem(newEntry);
 		if (onChange) {
 			onChange();
 		}
 	};
 
-	const handleUpdateSuccess = (updatedEntry) => {
+	const handleUpdateSuccess = (updatedEntry: any) => {
 		updateItem(updatedEntry);
 		if (onChange) {
 			onChange();
 		}
 	};
 
-	const handleDeleteSuccess = (deletedId) => {
+	const handleDeleteSuccess = (deletedId: string | number) => {
 		deleteItem(deletedId);
 		if (onChange) {
 			onChange();
 		}
 	};
 
-	const ViewColumns = [tableColumns.date(), tableColumns.updateType(), tableColumns.note()];
+	const ViewColumns = [tableColumns.date!(), tableColumns.updateType!(), tableColumns.note!()];
 
-	const ModalWithProps = (props) => (
+	const ModalWithProps = (props: any) => (
 		<JobApplicationUpdateModal
 			{...props}
 			jobApplicationId={jobApplicationId}
@@ -73,6 +77,7 @@ const JobApplicationUpdatesTable = ({ jobApplicationId, onChange, data = null })
 			ModalSize="lg"
 			showAllEntries={true}
 			compact={true}
+			setData={() => {}}
 		/>
 	);
 };
