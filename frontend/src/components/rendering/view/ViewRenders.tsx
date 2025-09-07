@@ -122,9 +122,8 @@ export const getApplicationStatusBadgeClass = (status: string | undefined): stri
 		case "offer":
 			return "bg-success";
 		case "rejected":
-			return "bg-secondary";
 		case "withdrawn":
-			return "bg-light";
+			return "bg-secondary";
 		default:
 			return "bg-primary";
 	}
@@ -454,29 +453,10 @@ export const renderFunctions = {
 		return null;
 	},
 
-	jobApplication2: (param: RenderParams): ReactNode => {
-		const job_application: JobApplication = accessSubAttribute(param.item, param.accessKey, "job_application");
-		if (job_application) {
-			return (
-				<JobApplicationModalManager>
-					{(handleClick) => (
-						<span
-							className={`badge bg-info clickable-badge`}
-							onClick={() => handleClick(job_application.id)}
-							id={param.id}
-						>
-							{job_application.job.title}
-						</span>
-					)}
-				</JobApplicationModalManager>
-			);
-		}
-		return null;
-	},
-
 	job: (param: RenderParams): ReactNode => {
 		// TODO refractor with below
-		const job: Job = accessSubAttribute(param.item, param.accessKey, "job");
+		console.log("job", param.item);
+		const job: JobData = accessSubAttribute(param.item, param.accessKey, "job");
 		if (job) {
 			return (
 				<JobAndApplicationModalManager>

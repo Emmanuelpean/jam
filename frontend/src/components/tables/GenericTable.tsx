@@ -78,7 +78,6 @@ export interface GenericTableWithModalsProps {
 	// Display options
 	title?: string;
 	showAllEntries?: boolean;
-	selectable?: boolean;
 	emptyMessage?: string;
 	compact?: boolean;
 	showSearch?: boolean;
@@ -88,9 +87,6 @@ export interface GenericTableWithModalsProps {
 	children?: ReactNode;
 }
 
-/**
- * Base hook with shared table functionality
- */
 const useBaseTableData = (
 	customSortConfig: Partial<SortConfig> = {},
 ): {
@@ -143,9 +139,6 @@ const useBaseTableData = (
 	};
 };
 
-/**
- * Hook for managing provided table data
- */
 export const useProvidedTableData = (
 	providedData: any[] | null = null,
 	customSortConfig: Partial<SortConfig> = {},
@@ -167,9 +160,6 @@ export const useProvidedTableData = (
 	};
 };
 
-/**
- * Hook for managing API-fetched table data
- */
 export const useTableData = (
 	endpoint: string,
 	dependencies: any[] = [],
@@ -253,10 +243,6 @@ export const createGenericDeleteHandler = ({
 	};
 };
 
-/**
- * Comprehensive table component with modals, sorting, searching, and CRUD operations
- */
-
 export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 	// Table data
 	data = [],
@@ -287,7 +273,6 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 	// Display options
 	title,
 	showAllEntries = false,
-	selectable = false,
 	emptyMessage,
 	compact = false,
 	showSearch = true,
@@ -314,7 +299,6 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 		closeEditModal,
 	} = useModalState();
 
-	// Utility functions
 	const getEffectiveItem = (item: any, column: TableColumn): any => {
 		if (!column || !column.accessKey) return item;
 		return accessAttribute(item, column.accessKey);
@@ -623,7 +607,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 							<tr
 								key={item.id || index}
 								id={`table-row-${item.id}`}
-								className={`${selectable ? "table-row-selectable" : ""} table-row-clickable`}
+								className={`table-row-clickable`}
 								onClick={(e) => handleRowClick(e, item)}
 								onContextMenu={(e) => handleRowRightClick(item, e)}
 								style={{ cursor: "pointer" }}

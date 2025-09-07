@@ -297,9 +297,9 @@ class JobApplicationOut(JobApplicationCreate, OwnedOut):
     @computed_field
     @property
     def last_update_date(self) -> datetime:
-        """Computed property that returns the most recent activity date from creation, modification, interviews, or updates"""
+        """Computed property that returns the most recent activity date from application date, interviews, or updates"""
 
-        dates = [self.created_at, self.modified_at]
+        dates = [self.date]
 
         # Add interview dates
         if self.interviews:
@@ -317,14 +317,9 @@ class JobApplicationOut(JobApplicationCreate, OwnedOut):
     @property
     def last_update_type(self) -> str:
         """Computed property that returns the type of the most recent activity"""
-        # Start with creation as the baseline
-        most_recent_date = self.created_at
-        most_recent_type = "Creation"
 
-        # Check if modification is more recent
-        if self.modified_at and self.modified_at > most_recent_date:
-            most_recent_date = self.modified_at
-            most_recent_type = "Modification"
+        most_recent_date = self.date
+        most_recent_type = "Application"
 
         # Check interviews
         if self.interviews:

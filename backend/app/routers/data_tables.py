@@ -213,8 +213,7 @@ def get_all_updates(
             "data": job_application,
             "date": job_application.date,
             "type": "Application",
-            "job_title": job_application.job.title,
-            "job_application": job_application,
+            "job": job_application.job,
         }
         all_updates.append(update_item)
 
@@ -224,8 +223,7 @@ def get_all_updates(
             "data": interview,
             "date": interview.date,
             "type": "Interview",
-            "job_title": interview.job_application.job.title,
-            "job_application": interview.job_application,
+            "job": interview.job_application.job,
         }
         all_updates.append(update_item)
 
@@ -235,8 +233,7 @@ def get_all_updates(
             "data": update,
             "date": update.date,
             "type": "Job Application Update",
-            "job_title": update.job_application.job.title,
-            "job_application": update.job_application,
+            "job": update.job_application.job,
         }
         all_updates.append(update_item)
 
@@ -258,7 +255,7 @@ def get_stats(
 
     job_n = db.query(models.Job).filter(models.Job.owner_id == current_user.id).count()
     job_app_query = db.query(models.JobApplication).filter(models.JobApplication.owner_id == current_user.id)
-    job_app_pending_n = job_app_query.filter(models.JobApplication.status not in ["rejected", "withdrawn"]).count()
+    job_app_pending_n = job_app_query.filter(models.JobApplication.status.notin_(["rejected", "withdrawn"])).count()
     job_app_n = job_app_query.count()
     interview_n = db.query(models.Interview).filter(models.Interview.owner_id == current_user.id).count()
     return {

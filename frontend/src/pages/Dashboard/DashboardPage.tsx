@@ -7,6 +7,7 @@ import JobsToChase from "../../components/tables/JobsToChase";
 import "./DashboardPage.css";
 import { JobAndApplicationModal } from "../../components/modals/JobAndApplicationModal";
 import { renderFunctions, RenderParams } from "../../components/rendering/view/ViewRenders";
+import { ApplicationData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
 
 interface DashboardStats {
 	totalJobs: number;
@@ -18,10 +19,10 @@ interface DashboardStats {
 }
 
 interface RecentActivity {
+	data: JobApplicationUpdateData | InterviewData | ApplicationData;
 	type: string;
 	date: string;
-	job_title?: string;
-	note?: string;
+	job: JobData;
 }
 
 interface ChaseJobData {
@@ -175,10 +176,6 @@ const JobSearchDashboard: React.FC = () => {
 							const activityColor = getActivityColor(activity.type);
 							const activityIcon = getActivityIcon(activity.type);
 
-							const param: RenderParams = {
-								item: { id: 0 }, // TODO to change
-							};
-
 							return (
 								<div key={`activity-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
 									<div className="d-flex position-relative">
@@ -233,16 +230,7 @@ const JobSearchDashboard: React.FC = () => {
 												</small>
 											</div>
 
-											{renderFunctions.jobApplication2(param)}
-
-											{/* Note/description if available */}
-											{activity.note && (
-												<div className="text-muted small lh-sm" style={{ fontSize: "0.85rem" }}>
-													{activity.note.length > 120
-														? `${activity.note.substring(0, 120)}...`
-														: activity.note}
-												</div>
-											)}
+											{renderFunctions.job({ item: activity })}
 										</div>
 									</div>
 								</div>
