@@ -1,31 +1,40 @@
 import React, { useState } from "react";
 import { Card, Col, Form, Row } from "react-bootstrap";
-import { useAuth } from "../../contexts/AuthContext.tsx";
-import { api } from "../../services/Api.ts";
-import { THEMES } from "../../utils/Theme.ts";
-import { renderFormField } from "../../components/rendering/widgets/WidgetRenders";
+import { useAuth } from "../../contexts/AuthContext";
+import { api } from "../../services/Api";
+import { THEMES } from "../../utils/Theme";
+import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../../components/rendering/view/ViewRenders";
-import { useGlobalToast } from "../../hooks/useNotificationToast.ts";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { findByKey } from "../../utils/Utils";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
+import { FormField } from "../../components/rendering/form/FormRenders";
+import { ValidationErrors } from "../../components/modals/GenericModal/GenericModal";
+import { ApiError } from "../../services/Api";
 
-const UserSettingsPage = () => {
+interface FormData {
+	email: string;
+	currentPassword: string;
+	newPassword: string;
+	confirmPassword: string;
+}
+
+const UserSettingsPage: React.FC = () => {
 	const { currentUser, token } = useAuth();
-	const [formData, setFormData] = useState({
+	const [formData, setFormData] = useState<FormData>({
 		email: "",
 		currentPassword: "",
 		newPassword: "",
 		confirmPassword: "",
 	});
 	const { showSuccess, showError } = useGlobalToast();
-	const [errors, setErrors] = useState({});
-	const [loading, setLoading] = useState(false);
+	const [errors, setErrors] = useState<ValidationErrors>({});
+	const [loading, setLoading] = useState<boolean>(false);
 
-	// Get minimum password length from environment variables
-	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH);
+	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
 
-	const handleInputChange = (e) => {
+	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
 		setFormData((prev) => ({
 			...prev,
@@ -41,8 +50,8 @@ const UserSettingsPage = () => {
 		}
 	};
 
-	const validateForm = () => {
-		const newErrors = {};
+	const validateForm = (): boolean => {
+		const newErrors: ValidationErrors = {};
 
 		// Current password validation
 		if (!formData.currentPassword) {
@@ -72,7 +81,7 @@ const UserSettingsPage = () => {
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const handleSubmit = async (e) => {
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
 		e.preventDefault();
 
 		if (!validateForm()) {
@@ -82,7 +91,7 @@ const UserSettingsPage = () => {
 		setLoading(true);
 
 		try {
-			const updateData = {
+			const updateData: { current_password: string; email?: string; password?: string } = {
 				current_password: formData.currentPassword,
 			};
 
@@ -105,11 +114,12 @@ const UserSettingsPage = () => {
 					email: formData.email,
 				});
 			}
-			showSuccess("User data updated successfully.");
-		} catch (error) {
-			if (error.status === 400) {
+			showSuccess("User settings updated successfully.");
+		} catch (error: unknown) {
+			const apiError = error as ApiError;
+			if (apiError.status === 400) {
 				showError("Email is already in use. Please try a different email.");
-			} else if (error.status === 401) {
+			} else if (apiError.status === 401) {
 				showError("Current password is incorrect. Please try again.");
 			} else {
 				showError("An unknown error occurred. Please try again later.");
@@ -118,29 +128,33 @@ const UserSettingsPage = () => {
 		setLoading(false);
 	};
 
-	const emailField = {
+	const emailField: FormField = {
 		name: "email",
+		label: "Email Address",
 		type: "text",
 		placeholder: "Enter your email address",
 		autoComplete: "off",
 	};
 
-	const currentPasswordField = {
+	const currentPasswordField: FormField = {
 		name: "currentPassword",
 		type: "password",
+		label: "Current Password",
 		placeholder: "Enter your current password",
 		helpText: "Required to change your email or password",
 	};
 
-	const newPasswordField = {
+	const newPasswordField: FormField = {
 		name: "newPassword",
 		type: "password",
+		label: "New Password",
 		placeholder: "Enter new password",
 	};
 
-	const confirmPasswordField = {
+	const confirmPasswordField: FormField = {
 		name: "confirmPassword",
 		type: "password",
+		label: "Confirm New Password",
 		placeholder: "Confirm new password",
 	};
 
@@ -164,10 +178,7 @@ const UserSettingsPage = () => {
 						<Card.Body className="p-0">
 							<Form onSubmit={handleSubmit} className="p-4">
 								<Col md={12} className="mb-3">
-									<Form.Group className="form-group-enhanced">
-										<Form.Label className="form-label-enhanced">Current Password</Form.Label>
-										{renderFormField(currentPasswordField, formData, handleInputChange, errors)}
-									</Form.Group>
+									{renderFormField(currentPasswordField, formData, handleInputChange, errors)}
 								</Col>
 
 								{/* Account Settings Section */}
@@ -178,11 +189,7 @@ const UserSettingsPage = () => {
 											Account Settings
 										</h5>
 									</div>
-
-									<Form.Group className="form-group-enhanced">
-										<Form.Label className="form-label-enhanced">Email Address</Form.Label>
-										{renderFormField(emailField, formData, handleInputChange, errors)}
-									</Form.Group>
+									{renderFormField(emailField, formData, handleInputChange, errors)}
 								</div>
 
 								{/* Security Section */}
@@ -198,23 +205,10 @@ const UserSettingsPage = () => {
 
 									<Row>
 										<Col md={6} className="mb-3">
-											<Form.Group className="form-group-enhanced">
-												<Form.Label className="form-label-enhanced">New Password</Form.Label>
-												{renderFormField(newPasswordField, formData, handleInputChange, errors)}
-											</Form.Group>
+											{renderFormField(newPasswordField, formData, handleInputChange, errors)}
 										</Col>
 										<Col md={6} className="mb-3">
-											<Form.Group className="form-group-enhanced">
-												<Form.Label className="form-label-enhanced">
-													Confirm New Password
-												</Form.Label>
-												{renderFormField(
-													confirmPasswordField,
-													formData,
-													handleInputChange,
-													errors,
-												)}
-											</Form.Group>
+											{renderFormField(confirmPasswordField, formData, handleInputChange, errors)}
 										</Col>
 									</Row>
 								</div>
@@ -230,7 +224,7 @@ const UserSettingsPage = () => {
 
 									<div className="form-group-enhanced">
 										<p className="form-label-enhanced" id="theme-hint">
-											{findByKey(THEMES, currentUser.theme)?.name} is not your favourite flavour
+											{findByKey(THEMES, currentUser?.theme)?.name} is not your favourite flavour
 											of JAM?! You can easily pick another flavour by clicking on the JAM logo in
 											the sidebar.
 										</p>

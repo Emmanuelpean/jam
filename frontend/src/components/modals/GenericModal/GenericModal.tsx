@@ -11,13 +11,7 @@ import AlertModal from "../AlertModal";
 import { areSame, findByKey, flattenArray } from "../../../utils/Utils";
 import { renderViewField, ViewField } from "../../rendering/view/ModalFieldRenders";
 import { FormField } from "../../rendering/form/FormRenders";
-
-export interface SyntheticEvent {
-	target: {
-		name: string;
-		value: any;
-	};
-}
+import { SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 
 interface CreateGenericDeleteHandlerParams {
 	endpoint: string;

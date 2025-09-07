@@ -1,5 +1,5 @@
 // Define types for better type safety
-interface ApiError extends Error {
+export interface ApiError extends Error {
 	status?: number;
 	data?: any;
 }
