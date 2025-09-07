@@ -1,14 +1,14 @@
 import React, { useEffect } from "react";
-import { AggregatorModal } from "../components/modals/AggregatorModal";
-import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable.tsx";
+import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
+import { PersonModal } from "../components/modals/PersonModal";
 import { tableColumns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext.tsx";
+import { useLoading } from "../contexts/LoadingContext";
 
-const AggregatorsPage = () => {
+const PersonsPage = () => {
 	const { showLoading, hideLoading } = useLoading();
 	const {
-		data: aggregators,
-		setData: setAggregators,
+		data: persons,
+		setData: setPersons,
 		loading,
 		error,
 		sortConfig,
@@ -18,19 +18,21 @@ const AggregatorsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("aggregators", [], {}, { key: "name", direction: "asc" });
+	} = useTableData("persons", [], {}, { key: "created_at", direction: "desc" });
 
 	const columns = [
-		tableColumns.name(),
-		tableColumns.url(),
-		tableColumns.jobCount(),
-		tableColumns.jobApplicationCount(),
-		tableColumns.createdAt(),
+		tableColumns.personName!(),
+		tableColumns.company!(),
+		tableColumns.role!(),
+		tableColumns.email!(),
+		tableColumns.phone!(),
+		tableColumns.linkedinUrl!(),
+		tableColumns.createdAt!(),
 	];
 
 	useEffect(() => {
 		if (loading) {
-			showLoading("Loading Aggregators...");
+			showLoading("Loading Persons...");
 		} else {
 			hideLoading();
 		}
@@ -41,8 +43,8 @@ const AggregatorsPage = () => {
 
 	return (
 		<GenericTableWithModals
-			title="Job Aggregators"
-			data={aggregators}
+			title="Persons"
+			data={persons}
 			columns={columns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
@@ -50,16 +52,16 @@ const AggregatorsPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			Modal={AggregatorModal}
-			endpoint="aggregators"
+			Modal={PersonModal}
+			endpoint="persons"
 			nameKey="name"
-			itemType="Aggregator"
+			itemType="Person"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}
-			setData={setAggregators}
+			setData={setPersons}
 		/>
 	);
 };
 
-export default AggregatorsPage;
+export default PersonsPage;

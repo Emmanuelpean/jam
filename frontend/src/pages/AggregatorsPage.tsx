@@ -1,14 +1,14 @@
 import React, { useEffect } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
-import { CompanyModal } from "../components/modals/CompanyModal";
+import { AggregatorModal } from "../components/modals/AggregatorModal";
+import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable";
 import { tableColumns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext.tsx";
+import { useLoading } from "../contexts/LoadingContext";
 
-const CompaniesPage = () => {
+const AggregatorsPage = () => {
 	const { showLoading, hideLoading } = useLoading();
 	const {
-		data: companies,
-		setData: setCompanies,
+		data: aggregators,
+		setData: setAggregators,
 		loading,
 		error,
 		sortConfig,
@@ -18,20 +18,19 @@ const CompaniesPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("companies", [], {}, { key: "name", direction: "asc" });
+	} = useTableData("aggregators", [], {}, { key: "name", direction: "asc" });
 
 	const columns = [
-		tableColumns.name(),
-		tableColumns.description(),
-		tableColumns.url(),
-		tableColumns.jobCount(),
-		tableColumns.personCount(),
-		tableColumns.createdAt(),
+		tableColumns.name!(),
+		tableColumns.url!(),
+		tableColumns.jobCount!(),
+		tableColumns.jobApplicationCount!(),
+		tableColumns.createdAt!(),
 	];
 
 	useEffect(() => {
 		if (loading) {
-			showLoading("Loading Companies...");
+			showLoading("Loading Aggregators...");
 		} else {
 			hideLoading();
 		}
@@ -42,8 +41,8 @@ const CompaniesPage = () => {
 
 	return (
 		<GenericTableWithModals
-			title="Companies"
-			data={companies}
+			title="Job Aggregators"
+			data={aggregators}
 			columns={columns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
@@ -51,16 +50,16 @@ const CompaniesPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			Modal={CompanyModal}
-			endpoint="companies"
+			Modal={AggregatorModal}
+			endpoint="aggregators"
 			nameKey="name"
-			itemType="Company"
+			itemType="Aggregator"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}
-			setData={setCompanies}
+			setData={setAggregators}
 		/>
 	);
 };
 
-export default CompaniesPage;
+export default AggregatorsPage;

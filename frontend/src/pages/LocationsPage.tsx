@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
+import React, { useEffect } from "react";
+import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
 import { LocationModal } from "../components/modals/LocationModal";
-import LocationMap from "../components/maps/LocationMap.tsx";
+import LocationMap from "../components/maps/LocationMap";
 import { tableColumns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext.tsx";
+import { useLoading } from "../contexts/LoadingContext";
 
 const LocationsPage = () => {
 	const { showLoading, hideLoading } = useLoading();
@@ -22,13 +22,13 @@ const LocationsPage = () => {
 	} = useTableData("locations", [], {}, { key: "created_at", direction: "desc" });
 
 	const columns = [
-		tableColumns.name(),
-		tableColumns.city(),
-		tableColumns.postcode(),
-		tableColumns.country(),
-		tableColumns.jobCount(),
-		tableColumns.interviewCount(),
-		tableColumns.createdAt(),
+		tableColumns.name!(),
+		tableColumns.city!(),
+		tableColumns.postcode!(),
+		tableColumns.country!(),
+		tableColumns.jobCount!(),
+		tableColumns.interviewCount!(),
+		tableColumns.createdAt!(),
 	];
 
 	useEffect(() => {

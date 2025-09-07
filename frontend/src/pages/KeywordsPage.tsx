@@ -1,14 +1,14 @@
 import React, { useEffect } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
-import { PersonModal } from "../components/modals/PersonModal";
+import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
+import { KeywordModal } from "../components/modals/KeywordModal";
 import { tableColumns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext.tsx";
+import { useLoading } from "../contexts/LoadingContext";
 
-const PersonsPage = () => {
+const KeywordsPage = () => {
 	const { showLoading, hideLoading } = useLoading();
 	const {
-		data: persons,
-		setData: setPersons,
+		data: keywords,
+		setData: setKeywords,
 		loading,
 		error,
 		sortConfig,
@@ -18,21 +18,13 @@ const PersonsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("persons", [], {}, { key: "created_at", direction: "desc" });
+	} = useTableData("keywords", [], {}, { key: "name", direction: "asc" });
 
-	const columns = [
-		tableColumns.personName(),
-		tableColumns.company(),
-		tableColumns.role(),
-		tableColumns.email(),
-		tableColumns.phone(),
-		tableColumns.linkedinUrl(),
-		tableColumns.createdAt(),
-	];
+	const columns = [tableColumns.name!(), tableColumns.jobCount!(), tableColumns.createdAt!()];
 
 	useEffect(() => {
 		if (loading) {
-			showLoading("Loading Persons...");
+			showLoading("Loading Tags...");
 		} else {
 			hideLoading();
 		}
@@ -43,8 +35,8 @@ const PersonsPage = () => {
 
 	return (
 		<GenericTableWithModals
-			title="Persons"
-			data={persons}
+			title="Tags"
+			data={keywords}
 			columns={columns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
@@ -52,16 +44,16 @@ const PersonsPage = () => {
 			onSearchChange={setSearchTerm}
 			loading={false}
 			error={error}
-			Modal={PersonModal}
-			endpoint="persons"
+			Modal={KeywordModal}
+			endpoint="keywords"
 			nameKey="name"
-			itemType="Person"
+			itemType="Tag"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}
-			setData={setPersons}
+			setData={setKeywords}
 		/>
 	);
 };
 
-export default PersonsPage;
+export default KeywordsPage;

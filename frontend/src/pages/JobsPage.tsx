@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
-import { useTableData, GenericTableWithModals } from "../components/tables/GenericTable.tsx";
+import { useTableData, GenericTableWithModals } from "../components/tables/GenericTable";
 import { JobAndApplicationModal } from "../components/modals/JobAndApplicationModal";
 import { tableColumns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext.tsx";
+import { useLoading } from "../contexts/LoadingContext";
 
 const JobsPage = () => {
 	const { showLoading, hideLoading } = useLoading();
@@ -37,14 +37,14 @@ const JobsPage = () => {
 	}, [loading, showLoading, hideLoading]);
 
 	const columns = [
-		tableColumns.title(),
-		tableColumns.company(),
-		tableColumns.location(),
-		tableColumns.url(),
-		tableColumns.salaryRange(),
-		tableColumns.personalRating(),
-		tableColumns.jobapplication(),
-		tableColumns.createdAt(),
+		tableColumns.title!(),
+		tableColumns.company!(),
+		tableColumns.location!(),
+		tableColumns.url!(),
+		tableColumns.salaryRange!(),
+		tableColumns.personalRating!(),
+		tableColumns.jobapplication!(),
+		tableColumns.createdAt!(),
 	];
 
 	return (

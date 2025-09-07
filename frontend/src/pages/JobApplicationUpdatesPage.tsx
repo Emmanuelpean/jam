@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { JobApplicationUpdateModal } from "../components/modals/JobApplicationUpdateModal";
-import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable.tsx";
+import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable";
 import { tableColumns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext.tsx";
+import { useLoading } from "../contexts/LoadingContext";
 
 const JobApplicationUpdatesPage = () => {
 	const { showLoading, hideLoading } = useLoading();
@@ -21,11 +21,11 @@ const JobApplicationUpdatesPage = () => {
 	} = useTableData("jobapplicationupdates", [], {}, { key: "date", direction: "desc" });
 
 	const columns = [
-		tableColumns.jobApplicationJob(),
-		tableColumns.date(),
-		tableColumns.updateType(),
-		tableColumns.note(),
-		tableColumns.createdAt(),
+		tableColumns.jobApplicationJob!(),
+		tableColumns.date!(),
+		tableColumns.updateType!(),
+		tableColumns.note!(),
+		tableColumns.createdAt!(),
 	];
 
 	useEffect(() => {
