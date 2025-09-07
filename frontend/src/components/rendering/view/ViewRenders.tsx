@@ -44,7 +44,7 @@ interface JobApplication {
 	status: string;
 }
 
-interface Field {
+export interface Field {
 	key: string;
 	render?: (params: RenderParams) => ReactNode;
 	accessKey?: string;
@@ -693,7 +693,7 @@ export const renderFunctions = {
 	},
 };
 
-export const renderFieldValue = (field: Field, item: any, id: string): ReactNode => {
+export const renderViewElement = (field: Field, item: any, id: string): ReactNode => {
 	const noText = <span className="text-muted">Not Provided</span>;
 
 	let rendered: ReactNode;

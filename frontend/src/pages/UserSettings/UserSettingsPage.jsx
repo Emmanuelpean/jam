@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext.tsx";
 import { api } from "../../services/Api.ts";
-import { getThemeByKey } from "../../utils/Theme.ts";
-import { ActionButton, renderInputField } from "../../components/rendering/form/WidgetRenders";
+import { THEMES } from "../../utils/Theme.ts";
+import { renderFormField } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../../components/rendering/view/ViewRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast.ts";
+import { findByKey } from "../../utils/Utils";
+import { ActionButton } from "../../components/rendering/form/ActionButton";
 
 const UserSettingsPage = () => {
 	const { currentUser, token } = useAuth();
@@ -164,7 +166,7 @@ const UserSettingsPage = () => {
 								<Col md={12} className="mb-3">
 									<Form.Group className="form-group-enhanced">
 										<Form.Label className="form-label-enhanced">Current Password</Form.Label>
-										{renderInputField(currentPasswordField, formData, handleInputChange, errors)}
+										{renderFormField(currentPasswordField, formData, handleInputChange, errors)}
 									</Form.Group>
 								</Col>
 
@@ -179,7 +181,7 @@ const UserSettingsPage = () => {
 
 									<Form.Group className="form-group-enhanced">
 										<Form.Label className="form-label-enhanced">Email Address</Form.Label>
-										{renderInputField(emailField, formData, handleInputChange, errors)}
+										{renderFormField(emailField, formData, handleInputChange, errors)}
 									</Form.Group>
 								</div>
 
@@ -198,12 +200,7 @@ const UserSettingsPage = () => {
 										<Col md={6} className="mb-3">
 											<Form.Group className="form-group-enhanced">
 												<Form.Label className="form-label-enhanced">New Password</Form.Label>
-												{renderInputField(
-													newPasswordField,
-													formData,
-													handleInputChange,
-													errors,
-												)}
+												{renderFormField(newPasswordField, formData, handleInputChange, errors)}
 											</Form.Group>
 										</Col>
 										<Col md={6} className="mb-3">
@@ -211,7 +208,7 @@ const UserSettingsPage = () => {
 												<Form.Label className="form-label-enhanced">
 													Confirm New Password
 												</Form.Label>
-												{renderInputField(
+												{renderFormField(
 													confirmPasswordField,
 													formData,
 													handleInputChange,
@@ -233,9 +230,9 @@ const UserSettingsPage = () => {
 
 									<div className="form-group-enhanced">
 										<p className="form-label-enhanced" id="theme-hint">
-											{getThemeByKey(currentUser.theme)?.name} is not your favourite flavour of
-											JAM?! You can easily pick another flavour by clicking on the JAM logo in the
-											sidebar.
+											{findByKey(THEMES, currentUser.theme)?.name} is not your favourite flavour
+											of JAM?! You can easily pick another flavour by clicking on the JAM logo in
+											the sidebar.
 										</p>
 									</div>
 								</div>

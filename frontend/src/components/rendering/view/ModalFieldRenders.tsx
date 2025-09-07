@@ -1,14 +1,36 @@
-import { ReactNode } from "react";
-import { renderFunctions, RenderParams } from "./ViewRenders";
+import React, { ReactNode } from "react";
+import { renderFunctions, RenderParams, Field, renderViewElement } from "./ViewRenders";
 
-interface ViewField {
-	key: string;
+export interface ViewField extends Field {
 	label: string;
 	type?: string;
 	columnClass?: string;
 	outsideCard?: boolean;
-	render?: (params: RenderParams) => ReactNode;
+	isTitle?: boolean;
 }
+
+export const renderViewField = (field: ViewField, item: any, id: string): ReactNode => {
+	const output = renderViewElement(field, item, id);
+
+	if (field.isTitle) {
+		return (
+			<>
+				<div className="text-center p-1">
+					<h2 className="display-6 fw-bold mt-4 mb-4" style={{ color: "var(--primary-mid)" }}>
+						{output}
+					</h2>
+				</div>
+			</>
+		);
+	} else {
+		return (
+			<>
+				<h6 className="mb-2 fw-bold">{field.label}</h6>
+				<div className="mb-3">{output}</div>
+			</>
+		);
+	}
+};
 
 interface ViewFieldOverride extends Partial<ViewField> {}
 

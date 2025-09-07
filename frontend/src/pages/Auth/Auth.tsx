@@ -5,30 +5,15 @@ import "./Auth.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
-import { ActionButton, renderInputField } from "../../components/rendering/form/WidgetRenders";
+import { Errors, renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { ActionButton } from "../../components/rendering/form/ActionButton";
+import { FormField } from "../../components/rendering/form/FormRenders";
 
 interface FormData {
 	email: string;
 	password: string;
 	confirmPassword: string;
-}
-
-interface FieldErrors {
-	email?: string;
-	password?: string;
-	confirmPassword?: string;
-	terms?: string;
-}
-
-interface FieldConfig {
-	// TODO might be reused
-	name: string;
-	type: string;
-	placeholder: string;
-	autoComplete?: string;
-	helpText?: string | null;
-	tabIndex?: number;
 }
 
 interface AuthResult {
@@ -47,7 +32,7 @@ function AuthForm(): JSX.Element {
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
-	const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+	const [fieldErrors, setFieldErrors] = useState<Errors>({});
 	const { login, register, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -66,16 +51,18 @@ function AuthForm(): JSX.Element {
 		setIsLogin(location.pathname === "/login");
 	}, [location.pathname, isAuthenticated, navigate]);
 
-	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
-		setFormData((prev) => ({
-			...prev,
-			[name]: value,
-		}));
+		setFormData(
+			(prev: FormData): FormData => ({
+				...prev,
+				[name]: value,
+			}),
+		);
 
 		// Clear field errors when user starts typing
-		if (fieldErrors[name as keyof FieldErrors]) {
-			setFieldErrors((prev) => ({
+		if (fieldErrors[name as keyof Errors]) {
+			setFieldErrors((prev: Errors) => ({
 				...prev,
 				[name]: "",
 			}));
@@ -85,7 +72,6 @@ function AuthForm(): JSX.Element {
 	const switchMode = (): void => {
 		setIsLogin(!isLogin);
 		setFieldErrors({});
-		// Clear confirm password and terms when switching to login
 		if (!isLogin) {
 			setFormData((prev) => ({
 				...prev,
@@ -107,11 +93,11 @@ function AuthForm(): JSX.Element {
 		setFieldErrors({});
 	};
 
-	const validateForm = (): FieldErrors => {
-		const errors: FieldErrors = {};
+	const validateForm = (): Errors => {
+		const errors: Errors = {};
 
 		// Email validation
-		if (!formData.email || !formData.email.includes("@")) {
+		if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
 			errors.email = "Please provide a valid email address.";
 		}
 
@@ -205,26 +191,50 @@ function AuthForm(): JSX.Element {
 	};
 
 	// Define field configurations
-	const emailField: FieldConfig = {
+	const emailField: FormField = {
 		name: "email",
 		type: "text",
+		label: "Email Address",
+		icon: "bi bi-envelope-fill",
 		placeholder: "Enter your email",
 	};
 
-	const passwordField: FieldConfig = {
+	const passwordField: FormField = {
 		name: "password",
 		type: "password",
+		label: "Password",
+		icon: "bi bi-lock-fill",
 		placeholder: "Enter your password",
 		autoComplete: isLogin ? "current-password" : "new-password",
 		helpText: !isLogin ? "Password must be at least 8 characters long" : null,
 	};
 
-	const confirmPasswordField: FieldConfig = {
+	const confirmPasswordField: FormField = {
 		name: "confirmPassword",
 		type: "password",
+		label: "Confirm Password",
+		icon: "bi bi-lock-fill",
 		placeholder: "Confirm your password",
 		autoComplete: "new-password",
 		tabIndex: isLogin ? -1 : 0,
+	};
+
+	const termsField: FormField = {
+		name: "terms",
+		type: "checkbox",
+		label: (
+			<span>
+				I agree to the{" "}
+				<button
+					type="button"
+					onClick={handleShowTerms}
+					className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+					style={{ cursor: "pointer" }}
+				>
+					Terms and Conditions
+				</button>
+			</span>
+		),
 	};
 
 	// Show loading state while checking authentication
@@ -255,68 +265,25 @@ function AuthForm(): JSX.Element {
 					<Card.Title className="text-primary">{isLogin ? "Login" : "Create Account"}</Card.Title>
 
 					<Form onSubmit={handleSubmit} autoComplete="on">
-						<Form.Group className="mb-3">
-							<Form.Label>
-								<i className="bi bi-envelope-fill me-2 text-muted"></i>
-								Email Address
-							</Form.Label>
-							{renderInputField(emailField, formData, handleInputChange, fieldErrors)}
-						</Form.Group>
+						{renderFormField(emailField, formData, handleInputChange, fieldErrors)}
 
-						<Form.Group className="mb-3">
-							<Form.Label>
-								<i className="bi bi-lock-fill me-2 text-muted"></i>
-								Password
-							</Form.Label>
-							{renderInputField(passwordField, formData, handleInputChange, fieldErrors)}
-						</Form.Group>
+						{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
 
-						{/* Always render confirm password field but control visibility with CSS */}
 						<div
 							className={`auth-field-container ${!isLogin ? "auth-field-visible" : "auth-field-hidden"}`}
 						>
-							<Form.Group className="mb-4">
-								<Form.Label>
-									<i className="bi bi-lock-fill me-2 text-muted"></i>
-									Confirm Password
-								</Form.Label>
-								{renderInputField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
-							</Form.Group>
+							{renderFormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
 						</div>
-
-						{/* Terms and Conditions checkbox - only for registration */}
 						<div
 							className={`auth-field-container ${!isLogin ? "auth-field-visible" : "auth-field-hidden"}`}
 						>
-							<Form.Group className="mb-4">
-								<Form.Check
-									type="checkbox"
-									id="accept-terms"
-									name="terms"
-									checked={acceptedTerms}
-									onChange={handleTermsCheckboxChange}
-									isInvalid={!!fieldErrors.terms}
-									tabIndex={isLogin ? -1 : 0}
-									label={
-										<span>
-											I agree to the{" "}
-											<button
-												type="button"
-												onClick={handleShowTerms}
-												className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-												style={{ cursor: "pointer" }}
-											>
-												Terms and Conditions
-											</button>
-										</span>
-									}
-								/>
-								{fieldErrors.terms && (
-									<div id="terms-error-message" className="invalid-feedback d-block">
-										{fieldErrors.terms}
-									</div>
-								)}
-							</Form.Group>
+							{renderFormField(
+								termsField,
+								{ terms: acceptedTerms },
+								//@ts-ignore
+								handleTermsCheckboxChange,
+								fieldErrors,
+							)}
 						</div>
 
 						<div className="d-grid">
@@ -328,11 +295,7 @@ function AuthForm(): JSX.Element {
 								className="fw-semibold"
 								loadingText={isLogin ? "Logging in..." : "Creating Account..."}
 								defaultText={isLogin ? "Login" : "Create Account"}
-								loadingIcon=""
 								defaultIcon={isLogin ? "bi bi-box-arrow-in-right" : "bi bi-person-plus"}
-								onClick={() => {}}
-								customContent={null}
-								customLoadingContent={null}
 							/>
 						</div>
 					</Form>

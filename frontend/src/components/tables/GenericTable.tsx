@@ -2,7 +2,7 @@ import React, { MouseEvent, ReactNode, useCallback, useEffect, useState } from "
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../services/Api";
-import { getTableIcon, renderFieldValue } from "../rendering/view/ViewRenders";
+import { getTableIcon, renderViewElement } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";
 import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";
@@ -640,7 +640,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 												: {}),
 										}}
 									>
-										{renderFieldValue(column, item, `table-row-${item.id}`)}
+										{renderViewElement(column, item, `table-row-${item.id}`)}
 									</td>
 								))}
 							</tr>

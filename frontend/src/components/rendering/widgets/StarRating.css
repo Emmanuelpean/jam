@@ -1,0 +1,32 @@
+
+.star-rating-container {
+    display: flex;
+    align-items: center;
+    height: 51px;
+}
+
+.star-rating-stars {
+    display: flex;
+    gap: 0.125rem;
+    align-items: center;
+}
+
+.star-rating-star {
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    user-select: none;
+    color: #cfcfcf;
+    background: transparent;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+    background-clip: unset;
+}
+
+.star-rating-star.bi-star-fill {
+    background: var(--primary-mid);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px var(--jam-glow));
+}

@@ -523,31 +523,6 @@ textarea.form-control {
 
 /* ---------------------------------------------------- DATETIME ---------------------------------------------------- */
 
-
-.datetime-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.datetime-input-with-icon {
-    padding-right: 3rem !important;
-}
-
-.datetime-embedded-icon {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: black;
-    font-size: 1.1rem;
-    cursor: pointer;
-    padding: 0.25rem;
-    z-index: 10;
-    background: transparent;
-    border: none;
-}
-
 .logo-container {
     display: flex;
     align-items: center;
@@ -608,35 +583,4 @@ textarea.form-control {
 
 .accordion-button:not(.collapsed) {
     background: none;
-}
-
-/* ---------------------------------------------------- STAR RATING ------------------------------------------------- */
-
-.star-rating-container {
-    display: flex;
-    align-items: center;
-    height: 51px;
-}
-
-.star-rating-stars {
-    display: flex;
-    gap: 0.125rem;
-    align-items: center;
-}
-
-.star-rating-star {
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 0.25rem;
-    user-select: none;
-    color: #cfcfcf;
-}
-
-.star-rating-star.bi-star-fill {
-    background: var(--primary-mid);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 2px 4px var(--jam-glow));
 }

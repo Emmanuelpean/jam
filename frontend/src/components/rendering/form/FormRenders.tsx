@@ -52,9 +52,10 @@ interface UseFormOptionsReturn {
 	renderJobApplicationModal: () => JSX.Element;
 }
 
-interface FormField {
+export interface FormField {
 	name: string;
-	label: string;
+	label?: string | JSX.Element;
+	icon?: string;
 	type: string;
 	required?: boolean;
 	placeholder?: string;
@@ -66,6 +67,10 @@ interface FormField {
 	isClearable?: boolean;
 	step?: string;
 	maxRating?: number;
+	autoComplete?: string;
+	helpText?: string | null;
+	addButton?: { onClick?: () => void };
+	tabIndex?: number;
 }
 
 interface FormFieldOverride extends Partial<FormField> {}

@@ -1,0 +1,23 @@
+.datetime-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.datetime-input-with-icon {
+    padding-right: 3rem !important;
+}
+
+.datetime-embedded-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: black;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    z-index: 10;
+    background: transparent;
+    border: none;
+}
