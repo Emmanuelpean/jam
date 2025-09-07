@@ -24,7 +24,6 @@ export interface DataModalProps {
 	onSuccess?: (data: any) => void;
 	onDelete?: ((item: any) => Promise<void>) | null;
 	size?: "sm" | "lg" | "xl";
-	endpoint?: string;
 }
 
 export const AggregatorModal: React.FC<DataModalProps> = ({

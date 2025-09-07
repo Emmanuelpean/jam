@@ -668,6 +668,7 @@ export const renderFunctions = {
 	},
 
 	jobTable: (param: RenderParams): ReactNode => {
+		// TODO pass the columns to display here so that companies are not shown in company modal
 		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
 		const onChange = () => {};
 		return (

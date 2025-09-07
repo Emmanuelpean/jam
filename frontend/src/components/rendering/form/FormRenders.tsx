@@ -276,7 +276,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 			data={{}}
 			id={null}
 			onSuccess={handleCompanyAddSuccess}
-			onDelete={() => {}}
+			onDelete={async (_item: any) => {}}
 			submode="add"
 		/>
 	);
@@ -288,7 +288,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 			data={{}}
 			id={null}
 			onSuccess={handleLocationAddSuccess}
-			onDelete={() => {}}
+			onDelete={async (_item: any) => {}}
 			submode="add"
 		/>
 	);
@@ -300,7 +300,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 			data={{}}
 			id={null}
 			onSuccess={handleKeywordAddSuccess}
-			onDelete={() => {}}
+			onDelete={async (_item: any) => {}}
 			submode="add"
 		/>
 	);
@@ -312,7 +312,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 			data={{}}
 			id={null}
 			onSuccess={handlePersonAddSuccess}
-			onDelete={() => {}}
+			onDelete={async (_item: any) => {}}
 			submode="add"
 		/>
 	);
@@ -348,7 +348,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 			data={{}}
 			id={null}
 			onSuccess={handleJobApplicationAddSuccess}
-			onDelete={() => {}}
+			onDelete={async (_item: any) => {}}
 			submode="add"
 		/>
 	);

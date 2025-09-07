@@ -2,17 +2,27 @@ import React from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { companiesApi } from "../../services/Api.ts";
-import { useAuth } from "../../contexts/AuthContext.tsx";
+import { companiesApi } from "../../services/Api";
+import { useAuth } from "../../contexts/AuthContext";
+import { DataModalProps } from "./AggregatorModal";
 
-export const CompanyModal = ({
+interface FormData {
+	name: string;
+	url?: string | null;
+	description?: string | null;
+}
+
+interface ValidationErrors {
+	[key: string]: string;
+}
+
+export const CompanyModal: React.FC<DataModalProps> = ({
 	show,
 	onHide,
 	data,
 	id,
 	onSuccess,
 	onDelete,
-	endpoint = "companies",
 	submode = "view",
 	size = "lg",
 }) => {
@@ -29,7 +39,7 @@ export const CompanyModal = ({
 
 	const additionalFields = [viewFields.jobTable(), viewFields.personTable()];
 
-	const transformFormData = (data) => {
+	const transformFormData = (data: FormData): FormData => {
 		return {
 			name: data.name?.trim(),
 			url: data.url?.trim() || null,
@@ -37,14 +47,17 @@ export const CompanyModal = ({
 		};
 	};
 
-	const customValidation = async (formData) => {
-		const errors = {};
+	const customValidation = async (formData: FormData): Promise<ValidationErrors> => {
+		const errors: ValidationErrors = {};
 		if (!formData.name) {
+			return errors;
+		}
+		if (!token) {
 			return errors;
 		}
 		const queryParams = { name: formData.name.trim() };
 		const matches = await companiesApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing) => {
+		const duplicates = matches.filter((existing: any) => {
 			return data?.id !== existing.id;
 		});
 
@@ -59,7 +72,6 @@ export const CompanyModal = ({
 		<GenericModal
 			show={show}
 			onHide={onHide}
-			mode="formview"
 			submode={submode}
 			itemName="Company"
 			size={size}
@@ -67,7 +79,7 @@ export const CompanyModal = ({
 			id={id}
 			fields={fields}
 			additionalFields={additionalFields}
-			endpoint={endpoint}
+			endpoint="companies"
 			onSuccess={onSuccess}
 			onDelete={onDelete}
 			transformFormData={transformFormData}
