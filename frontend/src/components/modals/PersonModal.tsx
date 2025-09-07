@@ -2,19 +2,21 @@ import React from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { personsApi } from "../../services/Api.ts";
-import { useAuth } from "../../contexts/AuthContext.tsx";
-import AlertModal from "./AlertModal.tsx";
-import useGenericAlert from "../../hooks/useGenericAlert.ts";
+import { personsApi } from "../../services/Api";
+import { useAuth } from "../../contexts/AuthContext";
+import AlertModal from "./AlertModal";
+import useGenericAlert from "../../hooks/useGenericAlert";
+import { DataModalProps } from "./AggregatorModal";
+import { PersonData } from "../../services/Schemas";
+import { ValidationErrors } from "./GenericModal/GenericModal";
 
-export const PersonModal = ({
+export const PersonModal: React.FC<DataModalProps> = ({
 	show,
 	onHide,
 	data,
 	id = null,
 	onSuccess,
 	onDelete,
-	endpoint = "persons",
 	submode = "view",
 	size = "lg",
 }) => {
@@ -41,15 +43,20 @@ export const PersonModal = ({
 		view: viewFieldsArray,
 	};
 
-	const customValidation = async (formData) => {
-		const errors = {};
+	const customValidation = async (formData: PersonData): Promise<ValidationErrors> => {
+		const errors: ValidationErrors = {};
+
+		if (!token) {
+			return errors;
+		}
+
 		const queryParams = {
 			first_name: formData.first_name.trim(),
 			last_name: formData.last_name.trim(),
 			company_id: formData.company_id,
 		};
 		const matches = await personsApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing) => {
+		const duplicates = matches.filter((existing: any) => {
 			return data?.id !== existing.id;
 		});
 
@@ -62,7 +69,7 @@ export const PersonModal = ({
 		return errors;
 	};
 
-	const transformFormData = (data) => {
+	const transformFormData = (data: PersonData) => {
 		return {
 			first_name: data.first_name?.trim(),
 			last_name: data.last_name?.trim(),
@@ -85,7 +92,7 @@ export const PersonModal = ({
 				id={id}
 				data={data || {}}
 				fields={fields}
-				endpoint={endpoint}
+				endpoint="persons"
 				onSuccess={onSuccess}
 				onDelete={onDelete}
 				validation={customValidation}

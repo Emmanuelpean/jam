@@ -5,7 +5,7 @@ interface ApiError extends Error {
 }
 
 interface QueryParams {
-	[key: string]: string | number | boolean | undefined;
+	[key: string]: any;
 }
 
 interface RequestOptions {

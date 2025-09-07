@@ -2,43 +2,41 @@ import React from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields, useCountries } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { locationsApi } from "../../services/Api.ts";
-import { useAuth } from "../../contexts/AuthContext.tsx";
+import { locationsApi } from "../../services/Api";
+import { useAuth } from "../../contexts/AuthContext";
+import { ValidationErrors } from "./GenericModal/GenericModal";
+import { DataModalProps } from "./AggregatorModal";
+import { LocationData } from "../../services/Schemas";
 
-export const LocationModal = ({
+export const LocationModal: React.FC<DataModalProps> = ({
 	show,
 	onHide,
 	data,
 	id,
 	onSuccess,
 	onDelete,
-	endpoint = "locations",
 	submode = "view",
 	size = "lg",
 }) => {
 	const { token } = useAuth();
 	const { countries } = useCountries();
 
-	let formFieldsArray = [];
-	if (!data?.remote) {
-		formFieldsArray = [formFields.city(), formFields.postcode(), formFields.country(countries)];
-	}
-
-	// View fields for display
-	let viewFieldsArray;
-	if (!data?.remote) {
-		viewFieldsArray = [[viewFields.city(), viewFields.postcode(), viewFields.country()], viewFields.locationMap()];
-	} else {
-		viewFieldsArray = [viewFields.locationMap({ label: "" })];
-	}
+	const formFieldsArray = [formFields.city(), formFields.postcode(), formFields.country(countries)];
+	const viewFieldsArray = [
+		[viewFields.city(), viewFields.postcode(), viewFields.country()],
+		viewFields.locationMap(),
+	];
 
 	const fields = {
 		form: formFieldsArray,
 		view: viewFieldsArray,
 	};
 
-	const customValidation = async (formData) => {
-		const errors = {};
+	const customValidation = async (formData: LocationData): Promise<ValidationErrors> => {
+		const errors: ValidationErrors = {};
+		if (!token) {
+			return errors;
+		}
 
 		// Check if any value has been set
 		const hasCity = formData.city && formData.city.trim();
@@ -54,12 +52,12 @@ export const LocationModal = ({
 
 		// Check if the location already exist
 		if (Object.keys(errors).length === 0) {
-			const queryParams = {};
+			const queryParams: Partial<LocationData> = {};
 			queryParams.city = (formData.city && formData.city.trim()) || null;
 			queryParams.postcode = (formData.postcode && formData.postcode.trim()) || null;
 			queryParams.country = (formData.country && formData.country.trim()) || null;
 			const matchingLocations = await locationsApi.getAll(token, queryParams);
-			const duplicates = matchingLocations.filter((existingLocation) => {
+			const duplicates = matchingLocations.filter((existingLocation: LocationData) => {
 				return data?.id !== existingLocation.id;
 			});
 
@@ -74,7 +72,7 @@ export const LocationModal = ({
 		return errors;
 	};
 
-	const transformFormData = (data) => {
+	const transformFormData = (data: LocationData) => {
 		return {
 			city: data.city?.trim() || null,
 			postcode: data.postcode?.trim() || null,
@@ -86,14 +84,13 @@ export const LocationModal = ({
 		<GenericModal
 			show={show}
 			onHide={onHide}
-			mode="formview"
 			submode={submode}
 			itemName="Location"
 			size={size}
 			data={data}
 			id={id}
 			fields={fields}
-			endpoint={endpoint}
+			endpoint="locations"
 			onSuccess={onSuccess}
 			onDelete={onDelete}
 			validation={customValidation}

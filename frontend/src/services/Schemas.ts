@@ -77,6 +77,24 @@ export interface KeywordData {
 	name: string;
 }
 
+export interface PersonData {
+	first_name: string;
+	last_name: string;
+	email?: string;
+	phone?: string;
+	role?: string;
+	linkedin_url?: string;
+	company_id?: number | null;
+}
+
+export interface LocationData {
+	id?: string | number;
+	city?: string | null;
+	postcode?: string | null;
+	country?: string | null;
+	name?: string;
+}
+
 export interface JobData {
 	id?: number;
 	title: string;
