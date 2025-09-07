@@ -1,78 +1,112 @@
-import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Alert, Button } from "react-bootstrap";
-import { useAuth } from "../../contexts/AuthContext.tsx";
-import { useLoading } from "../../contexts/LoadingContext.tsx";
-import { api } from "../../services/Api.ts";
+import React, { useEffect, useState, JSX } from "react";
+import { Alert, Card, Col, Container, Row } from "react-bootstrap";
+import { useAuth } from "../../contexts/AuthContext";
+import { useLoading } from "../../contexts/LoadingContext";
+import { api } from "../../services/Api";
 import JobsToChase from "../../components/tables/JobsToChase";
 import "./DashboardPage.css";
 import { JobAndApplicationModal } from "../../components/modals/JobAndApplicationModal";
+import { renderFunctions, RenderParams } from "../../components/rendering/view/ViewRenders";
 
-const JobSearchDashboard = () => {
+interface DashboardStats {
+	totalJobs: number;
+	totalApplications: number;
+	pendingApplications: number;
+	interviewsScheduled: number;
+	jobsNeedingChase: number;
+	recentActivity: RecentActivity[];
+}
+
+interface RecentActivity {
+	type: string;
+	date: string;
+	job_title?: string;
+	note?: string;
+}
+
+interface ChaseJobData {
+	id: number;
+	status: string;
+
+	[key: string]: any;
+}
+
+interface Job {
+	id: number;
+	itemName: string;
+
+	[key: string]: any;
+}
+
+interface StatCardProps {
+	itemName: string;
+	value: number;
+	icon: string;
+	variant: string;
+	description?: string;
+}
+
+const getActivityIcon = (type: string): string => {
+	const iconMap: { [key: string]: string } = {
+		Application: "bi-send-fill",
+		Interview: "bi-people-fill",
+		"Job Application Update": "bi-pencil-fill",
+		"Follow-up": "bi-telephone-fill",
+	};
+	return iconMap[type] || "bi-plus-circle-fill";
+};
+
+const getActivityColor = (type: string): string => {
+	const colorMap: { [key: string]: string } = {
+		Application: "#3b82f6",
+		Interview: "#8b5cf6",
+		"Job Application Update": "#6b7280",
+	};
+	return colorMap[type] || "#3b82f6";
+};
+
+const JobSearchDashboard: React.FC = () => {
 	const { token } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
-	const [dashboardStats, setDashboardStats] = useState({
+	const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
 		totalJobs: 0,
 		totalApplications: 0,
 		pendingApplications: 0,
 		interviewsScheduled: 0,
 		jobsNeedingChase: 0,
 		recentActivity: [],
-		applicationsByStatus: {},
 	});
-	const [chaseJobsData, setChaseJobsData] = useState([]);
-	const [error, setError] = useState(null);
-	const [selectedJob, setSelectedJob] = useState(null);
-	const [showJobModal, setShowJobModal] = useState(false);
+	const [chaseJobsData, setChaseJobsData] = useState<ChaseJobData[]>([]);
+	const [error, setError] = useState<string | null>(null);
+	const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+	const [showJobModal, setShowJobModal] = useState<boolean>(false);
 
 	useEffect(() => {
-		const fetchDashboardData = async () => {
+		const fetchDashboardData = async (): Promise<void> => {
 			try {
 				showLoading("Loading dashboard data...");
 
-				// Fetch various statistics using the new dedicated routes
-				const [
-					jobsResponse,
-					applicationsResponse,
-					interviewsResponse,
-					chaseApplicationsResponse,
-					recentUpdatesResponse,
-				] = await Promise.all([
-					api.get("jobs/", token),
-					api.get("jobapplications/", token),
-					api.get("interviews/", token),
-					api.get("jobapplications/needs_chase", token),
+				const [statsResponse, chaseApplicationsResponse, recentUpdatesResponse] = await Promise.all([
+					api.get("stats", token),
+					api.get("needs_chase", token),
 					api.get("latest_updates", token),
 				]);
 
-				// Store the chase applications data for passing to the table
 				setChaseJobsData(chaseApplicationsResponse || []);
-
-				// Calculate statistics
-				const applications = applicationsResponse || [];
-				const statusCounts = applications.reduce((acc, app) => {
-					acc[app.status] = (acc[app.status] || 0) + 1;
-					return acc;
-				}, {});
-
-				const pendingStatuses = ["Applied", "Under Review", "Interview Scheduled"];
-				const pendingCount = applications.filter((app) => pendingStatuses.includes(app.status)).length;
-
-				// Get upcoming interviews (next 7 days)
-				const nextWeek = new Date();
-				nextWeek.setDate(nextWeek.getDate() + 7);
-				const upcomingInterviews = (interviewsResponse || []).filter((interview) => {
-					const interviewDate = new Date(interview.date);
-					return interviewDate >= new Date() && interviewDate <= nextWeek;
-				});
+				const stats = statsResponse || {
+					jobs: 0,
+					job_applications: 0,
+					job_application_pending: 0,
+					interviews: 0,
+				};
 
 				setDashboardStats({
-					totalJobs: jobsResponse?.length || 0,
-					totalApplications: applications.length,
-					pendingApplications: pendingCount,
-					interviewsScheduled: upcomingInterviews.length,
+					totalJobs: stats.jobs,
+					totalApplications: stats.job_applications,
+					pendingApplications: stats.job_application_pending,
+					interviewsScheduled: stats.interviews,
 					jobsNeedingChase: chaseApplicationsResponse?.length || 0,
 					recentActivity: recentUpdatesResponse || [],
-					applicationsByStatus: statusCounts,
 				});
 			} catch (err) {
 				console.error("Error fetching dashboard data:", err);
@@ -82,38 +116,16 @@ const JobSearchDashboard = () => {
 			}
 		};
 
-		fetchDashboardData();
-	}, [token]); // Remove showLoading and hideLoading from dependencies
-	// Function to handle job button click
-	const handleJobClick = async (jobTitle) => {
-		try {
-			showLoading("Loading job details...");
-			// Find the job by title from the jobs data we already have
-			const jobsResponse = await api.get("jobs/", token);
-			const job = jobsResponse.find((j) => j.itemName === jobTitle);
+		fetchDashboardData().then(() => null);
+	}, [token]);
 
-			if (job) {
-				setSelectedJob(job);
-				setShowJobModal(true);
-			}
-		} catch (err) {
-			console.error("Error fetching job details:", err);
-		} finally {
-			hideLoading();
-		}
-	};
-
-	// Callback to handle updates from the JobsToChase table
-	const handleChaseJobsUpdate = (updatedApplications) => {
-		setChaseJobsData(updatedApplications);
-		setDashboardStats((prev) => ({
-			...prev,
-			jobsNeedingChase: updatedApplications.length,
-		}));
-	};
-
-	// Rest of your component remains the same...
-	const StatCard = ({ itemName, value, icon, variant, description }) => (
+	const StatCard: React.FC<StatCardProps> = ({
+		itemName,
+		value,
+		icon,
+		variant,
+		description,
+	}: StatCardProps): JSX.Element => (
 		<Card className="h-100 shadow-sm border-0">
 			<Card.Body className="d-flex align-items-center">
 				<div className="flex-grow-1">
@@ -128,7 +140,7 @@ const JobSearchDashboard = () => {
 		</Card>
 	);
 
-	const RecentActivityCard = () => (
+	const RecentActivityCard: React.FC = (): JSX.Element => (
 		<Card className="h-100 shadow-sm border-0">
 			<Card.Header className="card-header border-0 p-0">
 				<div className="d-flex align-items-center justify-content-between p-4">
@@ -157,32 +169,15 @@ const JobSearchDashboard = () => {
 					</div>
 				) : (
 					<div className="activity-timeline px-4" style={{ maxHeight: "400px", overflowY: "auto" }}>
-						{dashboardStats.recentActivity.map((activity, index) => {
+						{dashboardStats.recentActivity.map((activity: RecentActivity, index) => {
 							const isLast = index === dashboardStats.recentActivity.length - 1;
-
-							// Activity type icon mapping - updated for new types
-							const getActivityIcon = (type) => {
-								const iconMap = {
-									Application: "bi-send-fill",
-									Interview: "bi-people-fill",
-									"Job Application Update": "bi-pencil-fill",
-									"Follow-up": "bi-telephone-fill",
-								};
-								return iconMap[type] || "bi-plus-circle-fill";
-							};
-
-							// Activity type color mapping - updated for new types
-							const getActivityColor = (type) => {
-								const colorMap = {
-									Application: "#3b82f6",
-									Interview: "#8b5cf6",
-									"Job Application Update": "#6b7280",
-								};
-								return colorMap[type] || "#3b82f6";
-							};
 
 							const activityColor = getActivityColor(activity.type);
 							const activityIcon = getActivityIcon(activity.type);
+
+							const param: RenderParams = {
+								item: { id: 0 }, // TODO to change
+							};
 
 							return (
 								<div key={`activity-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
@@ -238,21 +233,7 @@ const JobSearchDashboard = () => {
 												</small>
 											</div>
 
-											{/* Job title as clickable button */}
-											{activity.job_title && (
-												<div className="mt-1 mb-2">
-													<Button
-														variant="link"
-														size="sm"
-														className="p-0 text-primary fw-medium text-decoration-none"
-														style={{ fontSize: "0.85rem" }}
-														onClick={() => handleJobClick(activity.job_title)}
-													>
-														<i className="bi bi-briefcase me-1"></i>
-														{activity.job_title}
-													</Button>
-												</div>
-											)}
+											{renderFunctions.jobApplication2(param)}
 
 											{/* Note/description if available */}
 											{activity.note && (
@@ -287,7 +268,7 @@ const JobSearchDashboard = () => {
 			<Row className="g-4 mb-4">
 				<Col md={6} lg={3}>
 					<StatCard
-						title="Total Jobs"
+						itemName="Total Jobs"
 						value={dashboardStats.totalJobs}
 						icon="briefcase"
 						variant="primary"
@@ -296,7 +277,7 @@ const JobSearchDashboard = () => {
 				</Col>
 				<Col md={6} lg={3}>
 					<StatCard
-						title="Applications"
+						itemName="Applications"
 						value={dashboardStats.totalApplications}
 						icon="send"
 						variant="success"
@@ -305,7 +286,7 @@ const JobSearchDashboard = () => {
 				</Col>
 				<Col md={6} lg={3}>
 					<StatCard
-						title="Pending"
+						itemName="Pending"
 						value={dashboardStats.pendingApplications}
 						icon="clock"
 						variant="warning"
@@ -314,7 +295,7 @@ const JobSearchDashboard = () => {
 				</Col>
 				<Col md={6} lg={3}>
 					<StatCard
-						title="Need Follow-up"
+						itemName="Need Follow-up"
 						value={dashboardStats.jobsNeedingChase}
 						icon="telephone"
 						variant="danger"
@@ -346,7 +327,7 @@ const JobSearchDashboard = () => {
 							</div>
 						</Card.Header>
 						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-							<JobsToChase initialData={chaseJobsData} onDataChange={handleChaseJobsUpdate} />
+							<JobsToChase data={chaseJobsData} />
 						</Card.Body>
 					</Card>
 				</Col>
@@ -361,9 +342,7 @@ const JobSearchDashboard = () => {
 						setSelectedJob(null);
 					}}
 					data={selectedJob}
-					jobData={selectedJob}
-					jobSubmode="view"
-					onJobSuccess={(updatedJob) => {
+					onJobSuccess={(updatedJob: Job) => {
 						// Handle job update if needed
 						console.log("Job updated:", updatedJob);
 					}}

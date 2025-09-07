@@ -14,6 +14,7 @@ import LocationMap from "../../maps/LocationMap";
 import {
 	AggregatorOut,
 	CompanyOut,
+	JobData,
 	KeywordOut,
 	LocationCreate,
 	LocationOut,
@@ -43,6 +44,7 @@ interface Job {
 interface JobApplication {
 	id: string | number;
 	status: string;
+	job: JobData;
 }
 
 export interface Field {
@@ -452,7 +454,28 @@ export const renderFunctions = {
 		return null;
 	},
 
+	jobApplication2: (param: RenderParams): ReactNode => {
+		const job_application: JobApplication = accessSubAttribute(param.item, param.accessKey, "job_application");
+		if (job_application) {
+			return (
+				<JobApplicationModalManager>
+					{(handleClick) => (
+						<span
+							className={`badge bg-info clickable-badge`}
+							onClick={() => handleClick(job_application.id)}
+							id={param.id}
+						>
+							{job_application.job.title}
+						</span>
+					)}
+				</JobApplicationModalManager>
+			);
+		}
+		return null;
+	},
+
 	job: (param: RenderParams): ReactNode => {
+		// TODO refractor with below
 		const job: Job = accessSubAttribute(param.item, param.accessKey, "job");
 		if (job) {
 			return (
@@ -700,6 +723,11 @@ export const renderFunctions = {
 		const locations: LocationCreate[] = param.item ? [param.item] : [];
 		return <LocationMap locations={locations} />;
 	},
+
+	lastUpdateDays: (params: RenderParams): ReactNode => {
+		const daysSinceLastUpdate = accessSubAttribute(params.item, params.accessKey, "days_since_last_update");
+		return <span className={"text-danger"}>{daysSinceLastUpdate} days</span>;
+	},
 };
 
 export const renderViewElement = (field: Field, item: any, id: string): ReactNode => {
@@ -716,6 +744,9 @@ export const renderViewElement = (field: Field, item: any, id: string): ReactNod
 		};
 		rendered = field.render(renderParams);
 	} else {
+		if (field.accessKey) {
+			item = item[field.accessKey];
+		}
 		rendered = item?.[field.key];
 	}
 

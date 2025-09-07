@@ -792,11 +792,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	job: (
-		options: SelectOption[] = [],
-		onAdd: (() => void) | null = null,
-		overrides: FormFieldOverride = {},
-	): FormField => ({
+	job: (options: SelectOption[] = [], overrides: FormFieldOverride = {}): FormField => ({
 		name: "job_id",
 		label: "Job",
 		type: "select",
@@ -805,11 +801,6 @@ export const formFields = {
 		isSearchable: true,
 		isClearable: false,
 		options: options,
-		...(onAdd && {
-			addButton: {
-				onClick: onAdd,
-			},
-		}),
 		...overrides,
 	}),
 

@@ -4,9 +4,7 @@ import base64
 import datetime
 
 from fastapi import APIRouter, Depends, status, HTTPException, Response
-from sqlalchemy import func
-from sqlalchemy.orm import Session
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import Session, selectinload
 
 from app import models, database, oauth2, schemas
 from app.routers import generate_data_table_crud_router
@@ -83,175 +81,14 @@ interview_router = generate_data_table_crud_router(
     },
 )
 
-
-job_application_router = APIRouter(prefix="/jobapplications", tags=["Job Applications"])
-
-
-@job_application_router.get("/needs_chase", response_model=list[schemas.JobToChaseOut])
-def get_needs_chase_job_applications(
-    days: int = 30,
-    db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(oauth2.get_current_user),
-):
-    """Get jobs for applications that need to be chased (followed up on).
-    A job application needs to be chased if:
-    1. Either:
-       - No job application updates exist, and the application date is older than X days
-       - Interview exists, and the latest interview is older than X days
-       - Job application updates exist, and the latest update is older than X days
-    :param days: Number of days to check for follow-up
-    :param db: Database session
-    :param current_user: Authenticated user
-    :return: List of jobs for applications that need follow-up with additional metadata"""
-
-    # Calculate the cutoff date
-    cutoff_date = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=days)
-    now = datetime.datetime.now(datetime.UTC)
-
-    # Subquery to get the latest update date for each job application
-    latest_update_subquery = (
-        db.query(
-            models.JobApplicationUpdate.job_application_id,
-            func.max(models.JobApplicationUpdate.date).label("latest_update_date"),
-        )
-        .group_by(models.JobApplicationUpdate.job_application_id)
-        .subquery()
-    )
-
-    # Subquery to get the latest interview date and count for each job application
-    latest_interview_subquery = (
-        db.query(
-            models.Interview.job_application_id,
-            func.max(models.Interview.date).label("latest_interview_date"),
-            func.count(models.Interview.id).label("interview_count"),
-        )
-        .group_by(models.Interview.job_application_id)
-        .subquery()
-    )
-
-    # Subquery to get the count of updates for each job application
-    update_count_subquery = (
-        db.query(
-            models.JobApplicationUpdate.job_application_id,
-            func.count(models.JobApplicationUpdate.id).label("update_count"),
-        )
-        .group_by(models.JobApplicationUpdate.job_application_id)
-        .subquery()
-    )
-
-    # Main query to get jobs for applications that need chasing
-    # noinspection PyTypeChecker
-    query = (
-        db.query(
-            models.Job,
-            models.JobApplication.date.label("application_date"),
-            latest_update_subquery.c.latest_update_date,
-            latest_interview_subquery.c.latest_interview_date,
-            latest_interview_subquery.c.interview_count,
-            update_count_subquery.c.update_count,
-        )
-        .join(models.JobApplication, models.Job.id == models.JobApplication.job_id)
-        .outerjoin(latest_update_subquery, models.JobApplication.id == latest_update_subquery.c.job_application_id)
-        .outerjoin(
-            latest_interview_subquery, models.JobApplication.id == latest_interview_subquery.c.job_application_id
-        )
-        .outerjoin(update_count_subquery, models.JobApplication.id == update_count_subquery.c.job_application_id)
-        .filter(models.JobApplication.owner_id == current_user.id)
-        .filter(models.JobApplication.status.notin_(["Rejected", "Withdrawn"]))
-        .filter(
-            # Job application needs chasing if:
-            # 1. No updates and no interviews exist, and application date is old enough, OR
-            # 2. Updates exist but no interviews, and latest update is old enough, OR
-            # 3. Interviews exist but no updates, and latest interview is old enough, OR
-            # 4. Both updates and interviews exist, and the most recent of either is old enough
-            (
-                # Case 1: No updates, no interviews - check application date
-                (latest_update_subquery.c.latest_update_date.is_(None))
-                & (latest_interview_subquery.c.latest_interview_date.is_(None))
-                & (models.JobApplication.date < cutoff_date)
-            )
-            | (
-                # Case 2: Updates exist, no interviews - check latest update
-                (latest_update_subquery.c.latest_update_date.is_not(None))
-                & (latest_interview_subquery.c.latest_interview_date.is_(None))
-                & (latest_update_subquery.c.latest_update_date < cutoff_date)
-            )
-            | (
-                # Case 3: Interviews exist, no updates - check latest interview
-                (latest_update_subquery.c.latest_update_date.is_(None))
-                & (latest_interview_subquery.c.latest_interview_date.is_not(None))
-                & (latest_interview_subquery.c.latest_interview_date < cutoff_date)
-            )
-            | (
-                # Case 4: Both exist - check the most recent of either
-                (latest_update_subquery.c.latest_update_date.is_not(None))
-                & (latest_interview_subquery.c.latest_interview_date.is_not(None))
-                & (
-                    func.greatest(
-                        latest_update_subquery.c.latest_update_date, latest_interview_subquery.c.latest_interview_date
-                    )
-                    < cutoff_date
-                )
-            )
-        )
-        .order_by(
-            # Order by oldest first (most urgent) - use the most recent activity date
-            func.coalesce(
-                func.greatest(
-                    latest_update_subquery.c.latest_update_date, latest_interview_subquery.c.latest_interview_date
-                ),
-                latest_update_subquery.c.latest_update_date,
-                latest_interview_subquery.c.latest_interview_date,
-                models.JobApplication.date,
-            ).asc()
-        )
-    )
-
-    results = query.all()
-
-    # Process results to add metadata
-    jobs_with_metadata = []
-    for result in results:
-        job = result[0]  # The Job object
-        application_date = result[1]
-        latest_update_date = result[2]
-        latest_interview_date = result[3]
-        interview_count = result[4] or 0
-        update_count = result[5] or 0
-
-        # Determine the most recent activity date and type
-        most_recent_date = application_date
-        last_update_type = "Application"
-
-        if latest_update_date and (not most_recent_date or latest_update_date > most_recent_date):
-            most_recent_date = latest_update_date
-            last_update_type = f"Update #{update_count}"
-
-        if latest_interview_date and (not most_recent_date or latest_interview_date > most_recent_date):
-            most_recent_date = latest_interview_date
-            last_update_type = f"Interview #{interview_count}"
-
-        # Calculate days since last update
-        days_since_last_update = (now - most_recent_date).days
-
-        # Add metadata to the job object (as dynamic attributes)
-        job.days_since_last_update = days_since_last_update
-        job.last_update_type = last_update_type
-
-        jobs_with_metadata.append(job)
-
-    return jobs_with_metadata
-
-
 # JobApplication router
-generate_data_table_crud_router(
+job_application_router = generate_data_table_crud_router(
     table_model=models.JobApplication,
     create_schema=schemas.JobApplicationCreate,
     update_schema=schemas.JobApplicationUpdate,
     out_schema=schemas.JobApplicationOut,
     endpoint="jobapplications",
     not_found_msg="Job Application not found",
-    router=job_application_router,
 )
 
 job_application_update_router = generate_data_table_crud_router(
@@ -351,52 +188,18 @@ def get_all_updates(
     # Get recent job applications
     # noinspection PyTypeChecker
     job_applications = (
-        db.query(models.JobApplication)
-        .filter(models.JobApplication.owner_id == current_user.id)
-        .options(
-            joinedload(models.JobApplication.job).joinedload(models.Job.company),
-            joinedload(models.JobApplication.job).joinedload(models.Job.location),
-            joinedload(models.JobApplication.aggregator),
-            joinedload(models.JobApplication.cv),
-            joinedload(models.JobApplication.cover_letter),
-        )
-        .limit(limit)
-        .all()
+        db.query(models.JobApplication).filter(models.JobApplication.owner_id == current_user.id).limit(limit).all()
     )
 
     # Get recent interviews
     # noinspection PyTypeChecker
-    interviews = (
-        db.query(models.Interview)
-        .join(models.JobApplication, models.Interview.job_application_id == models.JobApplication.id)
-        .filter(models.JobApplication.owner_id == current_user.id)
-        .options(
-            joinedload(models.Interview.job_application)
-            .joinedload(models.JobApplication.job)
-            .joinedload(models.Job.company),
-            joinedload(models.Interview.job_application).joinedload(models.JobApplication.aggregator),
-            joinedload(models.Interview.job_application).joinedload(models.JobApplication.cv),
-            joinedload(models.Interview.job_application).joinedload(models.JobApplication.cover_letter),
-            joinedload(models.Interview.location),
-        )
-        .limit(limit)
-        .all()
-    )
+    interviews = db.query(models.Interview).filter(models.JobApplication.owner_id == current_user.id).limit(limit).all()
 
     # Get recent job application updates
     # noinspection PyTypeChecker
     job_app_updates = (
         db.query(models.JobApplicationUpdate)
-        .join(models.JobApplication, models.JobApplicationUpdate.job_application_id == models.JobApplication.id)
         .filter(models.JobApplication.owner_id == current_user.id)
-        .options(
-            joinedload(models.JobApplicationUpdate.job_application)
-            .joinedload(models.JobApplication.job)
-            .joinedload(models.Job.company),
-            joinedload(models.JobApplicationUpdate.job_application).joinedload(models.JobApplication.aggregator),
-            joinedload(models.JobApplicationUpdate.job_application).joinedload(models.JobApplication.cv),
-            joinedload(models.JobApplicationUpdate.job_application).joinedload(models.JobApplication.cover_letter),
-        )
         .limit(limit)
         .all()
     )
@@ -441,3 +244,68 @@ def get_all_updates(
     all_updates.sort(key=lambda x: x["date"], reverse=True)
 
     return all_updates[:limit]
+
+
+@general_router.get("/stats")
+def get_stats(
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    """Get general statistics about the application.
+    :param db: Database session
+    :param current_user: Authenticated user
+    :return: Dictionary of general statistics"""
+
+    job_n = db.query(models.Job).filter(models.Job.owner_id == current_user.id).count()
+    job_app_query = db.query(models.JobApplication).filter(models.JobApplication.owner_id == current_user.id)
+    job_app_pending_n = job_app_query.filter(models.JobApplication.status not in ["rejected", "withdrawn"]).count()
+    job_app_n = job_app_query.count()
+    interview_n = db.query(models.Interview).filter(models.Interview.owner_id == current_user.id).count()
+    return {
+        "jobs": job_n,
+        "job_applications": job_app_n,
+        "job_application_pending": job_app_pending_n,
+        "interviews": interview_n,
+    }
+
+
+@general_router.get("/needs_chase", response_model=list[schemas.JobToChaseOut])
+def get_needs_chase_job_applications(
+    days: int = 30,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
+):
+    """Get jobs that need to be chased (followed up on) based on their job applications.
+    A job needs to be chased if the last update on its application was more than X days ago.
+    :param days: Number of days to check for follow-up
+    :param db: Database session
+    :param current_user: Authenticated user
+    :return: List of jobs that need follow-up with additional metadata"""
+
+    # Calculate the cutoff date
+    now = datetime.datetime.now(datetime.UTC)
+
+    # Query jobs that have job applications with active status
+    jobs = (
+        db.query(models.Job)
+        .join(models.JobApplication, models.Job.id == models.JobApplication.job_id)
+        .filter(models.Job.owner_id == current_user.id)
+        .filter(models.JobApplication.status.notin_(["Rejected", "Withdrawn"]))
+        .all()
+    )
+
+    # Filter by last update date in Python and prepare job data
+    needs_chase = []
+    for job in jobs:
+        try:
+            # Convert job application to Pydantic schema to access computed fields
+            job_app_schema = schemas.JobApplicationOut.model_validate(job.job_application, from_attributes=True)
+
+            if (job_app_schema.last_update_date - now) > datetime.timedelta(days=days):
+                needs_chase.append(job)
+        except Exception as e:
+            # Skip this job if validation fails
+            print(f"Failed to validate job {job.id}: {e}")
+            continue
+
+    return needs_chase

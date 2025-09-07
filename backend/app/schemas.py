@@ -5,10 +5,10 @@ Min schemas should be used to return minimal data to the user (enough to display
 contain reference to other tables.
 Update schemas should be used to update existing entries in the database."""
 
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, computed_field
 
 
 class Out(BaseModel):
@@ -286,17 +286,67 @@ class JobApplicationCreate(BaseModel):
 
 
 class JobApplicationOut(JobApplicationCreate, OwnedOut):
+    # last_update_type: str
+    # last_update_date: datetime
+    # days_since_last_update: int | None = None
     job: JobMinOut | None = None
     aggregator: AggregatorMinOut | None = None
-    interviews: list["InterviewOut"] = []  # get the full interviews
-    updates: list["JobApplicationUpdateOut"] = []  # get the full updates
+    interviews: list["InterviewAppOut"] = []  # get the full interviews
+    updates: list["JobApplicationUpdateAppOut"] = []  # get the full updates
 
+    @computed_field
+    @property
+    def last_update_date(self) -> datetime:
+        """Computed property that returns the most recent activity date from creation, modification, interviews, or updates"""
 
-class JobApplicationMinOut(JobApplicationCreate, OwnedOut):
-    job: JobMinOut | None = None
-    aggregator: AggregatorMinOut | None = None
-    interviews: list["InterviewMinOut"] = []  # get the full interviews
-    updates: list["JobApplicationUpdateOut"] = []  # get the full updates
+        dates = [self.created_at, self.modified_at]
+
+        # Add interview dates
+        if self.interviews:
+            dates.extend([interview.date for interview in self.interviews])
+
+        # Add update dates
+        if self.updates:
+            dates.extend([update.date for update in self.updates])
+
+        # Filter out None values and return the maximum date
+        valid_dates = [d for d in dates if d is not None]
+        return max(valid_dates) if valid_dates else self.created_at
+
+    @computed_field
+    @property
+    def last_update_type(self) -> str:
+        """Computed property that returns the type of the most recent activity"""
+        # Start with creation as the baseline
+        most_recent_date = self.created_at
+        most_recent_type = "Creation"
+
+        # Check if modification is more recent
+        if self.modified_at and self.modified_at > most_recent_date:
+            most_recent_date = self.modified_at
+            most_recent_type = "Modification"
+
+        # Check interviews
+        if self.interviews:
+            latest_interview = max(self.interviews, key=lambda x: x.date, default=None)
+            if latest_interview and latest_interview.date > most_recent_date:
+                most_recent_date = latest_interview.date
+                most_recent_type = f"Interview ({len(self.interviews)})"
+
+        # Check updates
+        if self.updates:
+            latest_update = max(self.updates, key=lambda x: x.date, default=None)
+            if latest_update and latest_update.date > most_recent_date:
+                most_recent_type = f"Update ({len(self.updates)})"
+
+        return most_recent_type
+
+    @computed_field
+    @property
+    def days_since_last_update(self) -> int:
+        """Calculate days since last update"""
+        now = datetime.now(UTC)
+        return (self.last_update_date - now).days
 
 
 class JobApplicationUpdate(JobApplicationCreate):
@@ -319,6 +369,12 @@ class InterviewCreate(BaseModel):
 
 
 class InterviewOut(InterviewCreate, OwnedOut):
+    location: LocationMinOut | None = None
+    interviewers: list["PersonMinOut"] = []
+    job_application: JobApplicationOut | None = None
+
+
+class InterviewAppOut(InterviewCreate, OwnedOut):
     location: LocationMinOut | None = None
     interviewers: list["PersonMinOut"] = []
 
@@ -348,6 +404,10 @@ class JobApplicationUpdateCreate(BaseModel):
 
 
 class JobApplicationUpdateOut(JobApplicationUpdateCreate, OwnedOut):
+    job_application: JobApplicationOut | None = None
+
+
+class JobApplicationUpdateAppOut(JobApplicationUpdateCreate, OwnedOut):
     pass
 
 

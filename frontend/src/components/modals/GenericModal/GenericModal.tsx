@@ -645,7 +645,6 @@ const GenericModal = ({
 		const viewFields = effectiveProps.fields.view;
 		const formFields = effectiveProps.fields.form;
 		const additionalFields = effectiveProps.additionalFields;
-		console.log("effectiveProps.additionalFields", effectiveProps.additionalFields);
 
 		const renderContentInner = () => (
 			<div className={`modal-content-visible`}>

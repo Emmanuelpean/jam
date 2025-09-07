@@ -423,9 +423,7 @@ export const tableColumns: Columns = {
 		label: "Days Since Last Update",
 		sortable: true,
 		type: "number",
-		render: (params: RenderParams) => {
-			return <span className={"text-danger"}>{params.item.days_since_last_update} days</span>;
-		},
+		render: renderFunctions.lastUpdateDays,
 		...overrides,
 	}),
 
