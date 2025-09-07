@@ -143,3 +143,11 @@ export interface CompanyData {
 	url?: string | null;
 	description?: string | null;
 }
+
+export interface JobApplicationUpdateData {
+	date: string;
+	type: string;
+	job_application_id?: string | number;
+	note?: string;
+	id?: string | number;
+}

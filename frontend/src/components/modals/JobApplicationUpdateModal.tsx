@@ -2,21 +2,26 @@ import React, { useMemo } from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { formatDateTime } from "../../utils/TimeUtils.ts";
+import { formatDateTime } from "../../utils/TimeUtils";
+import { DataModalProps } from "./AggregatorModal";
+import { JobApplicationUpdateData } from "../../services/Schemas";
 
-export const JobApplicationUpdateModal = ({
+interface JobApplicationUpdateModalProps extends DataModalProps {
+	jobApplicationId?: string | number;
+}
+
+export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps> = ({
 	show,
 	onHide,
 	data,
 	id,
 	onSuccess,
 	onDelete,
-	endpoint = "jobapplicationupdates",
 	submode = "view",
-	size = "md",
+	size = "sm",
 	jobApplicationId,
 }) => {
-	const { jobApplications, openJobApplicationModal } = useFormOptions(["jobApplications"]);
+	const { jobApplications } = useFormOptions(["jobApplications"]);
 
 	const initialData = useMemo(() => {
 		if (submode === "add" && !data?.id) {
@@ -26,7 +31,7 @@ export const JobApplicationUpdateModal = ({
 	}, [data, submode]);
 
 	const formFieldsArray = [
-		...(!jobApplicationId ? [formFields.jobApplication(jobApplications, openJobApplicationModal)] : []),
+		...(!jobApplicationId ? [formFields.jobApplication(jobApplications)] : []),
 		[
 			formFields.datetime({
 				required: true,
@@ -50,7 +55,7 @@ export const JobApplicationUpdateModal = ({
 		view: viewFieldsArray,
 	};
 
-	const transformFormData = (data) => {
+	const transformFormData = (data: JobApplicationUpdateData) => {
 		return {
 			date: new Date(data.date).toISOString(),
 			type: data.type,
@@ -64,14 +69,13 @@ export const JobApplicationUpdateModal = ({
 			<GenericModal
 				show={show}
 				onHide={onHide}
-				mode="formview"
 				submode={submode}
 				itemName="Update"
 				size={size}
 				data={initialData}
 				id={id}
 				fields={fields}
-				endpoint={endpoint}
+				endpoint="jobapplicationupdates"
 				onSuccess={onSuccess}
 				onDelete={onDelete}
 				transformFormData={transformFormData}
