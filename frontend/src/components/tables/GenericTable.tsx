@@ -64,6 +64,7 @@ export interface GenericTableWithModalsProps {
 	// Modal configuration
 	Modal: React.ComponentType<any>;
 	ModalSize?: string;
+	ModalProps?: any;
 
 	// Data management
 	endpoint: string;
@@ -272,6 +273,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 	// Modal configuration
 	Modal,
 	ModalSize = "lg",
+	ModalProps = {},
 
 	// Data management
 	endpoint,
@@ -818,6 +820,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 					openEditModal(selectedItem);
 				}}
 				size={ModalSize}
+				{...ModalProps}
 			/>
 
 			<AlertModal alertState={alertState} hideAlert={hideAlert} />

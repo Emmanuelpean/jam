@@ -11,6 +11,7 @@ interface JobAndApplicationProps extends DataModalProps {
 	onApplicationSuccess?: (data: any) => void;
 	onJobDelete?: ((item: any) => Promise<void>) | null;
 	onApplicationDelete?: ((item: any) => Promise<void>) | null;
+	defaultActiveTab?: "job" | "application";
 }
 
 interface ApplicationFormData {
@@ -29,6 +30,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 	onApplicationDelete,
 	submode = "view",
 	size = "xl",
+	defaultActiveTab = "job",
 }) => {
 	// Track current form data for conditional fields
 	const [currentApplicationFormData, setCurrentApplicationFormData] = useState<ApplicationFormData>({});
@@ -192,7 +194,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 				size={size}
 				tabs={tabs}
 				id={id}
-				defaultActiveTab="job"
+				defaultActiveTab={defaultActiveTab}
 				endpoint=""
 				fields={{ form: [], view: [] }}
 			/>

@@ -48,6 +48,7 @@ const ApplicationToChaseTable: React.FC<DataTableProps> = ({ onChange, data = nu
 			ModalSize="xl"
 			showSearch={false}
 			showAdd={false}
+			ModalProps={{ defaultActiveTab: "application" }}
 		/>
 	);
 };
