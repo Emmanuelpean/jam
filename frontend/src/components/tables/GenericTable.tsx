@@ -33,7 +33,7 @@ export interface UseTableDataResult {
 	setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
 	addItem: (newItem: any) => void;
 	updateItem: (updatedItem: any) => void;
-	deleteItem: (itemId: string | number) => void;
+	removeItem: (itemId: string | number) => void;
 	refetch: () => Promise<void>;
 }
 
@@ -105,7 +105,7 @@ const useBaseTableData = (
 	setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
 	addItem: (newItem: any) => void;
 	updateItem: (updatedItem: any) => void;
-	deleteItem: (itemId: string | number) => void;
+	removeItem: (itemId: string | number) => void;
 } => {
 	const [data, setData] = useState<any[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -120,7 +120,7 @@ const useBaseTableData = (
 		(updatedItem: any) => setData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))),
 		[],
 	);
-	const deleteItem = useCallback(
+	const removeItem = useCallback(
 		(itemId: string | number) => setData((prev) => prev.filter((item) => item.id !== itemId)),
 		[],
 	);
@@ -138,7 +138,7 @@ const useBaseTableData = (
 		setSearchTerm,
 		addItem,
 		updateItem,
-		deleteItem,
+		removeItem,
 	};
 };
 

@@ -18,7 +18,7 @@ const JobsTable: React.FC<JobsTableProps> = ({ onChange, data = null, excludeCol
 		sortConfig,
 		setSortConfig,
 		updateItem,
-		deleteItem,
+		removeItem,
 	} = useProvidedTableData(data, { key: "created_at", direction: "desc" });
 
 	const columns = [
@@ -48,7 +48,7 @@ const JobsTable: React.FC<JobsTableProps> = ({ onChange, data = null, excludeCol
 			showAdd={false}
 			showSearch={true}
 			updateItem={updateItem}
-			removeItem={deleteItem}
+			removeItem={removeItem}
 			setData={() => {}}
 			ModalSize="lg"
 			showAllEntries={true}

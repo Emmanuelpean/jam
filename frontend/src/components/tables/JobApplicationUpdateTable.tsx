@@ -20,7 +20,7 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 		error,
 		addItem,
 		updateItem,
-		deleteItem,
+		removeItem,
 	} = useProvidedTableData(data, { key: "date", direction: "desc" });
 
 	const handleAddSuccess = (newEntry: any) => {
@@ -38,7 +38,7 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 	};
 
 	const handleDeleteSuccess = (deletedId: string | number) => {
-		deleteItem(deletedId);
+		removeItem(deletedId);
 		if (onChange) {
 			onChange();
 		}

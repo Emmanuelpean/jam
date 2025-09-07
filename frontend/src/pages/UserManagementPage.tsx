@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable.tsx";
+import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
 import { UserModal } from "../components/modals/UserModal";
 import { tableColumns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext.tsx";
+import { useLoading } from "../contexts/LoadingContext";
 
-export const UserManagementPage = () => {
+export const UserManagementPage: React.FC = () => {
 	const { showLoading, hideLoading } = useLoading();
 	const {
 		data: users,
@@ -21,12 +21,12 @@ export const UserManagementPage = () => {
 	} = useTableData("users", [], {}, { key: "id", direction: "asc" });
 
 	const columns = [
-		tableColumns.id(),
-		tableColumns.email(),
-		tableColumns.appTheme(),
-		tableColumns.last_login(),
-		tableColumns.isAdmin(),
-		tableColumns.createdAt(),
+		tableColumns.id!(),
+		tableColumns.email!(),
+		tableColumns.appTheme!(),
+		tableColumns.last_login!(),
+		tableColumns.isAdmin!(),
+		tableColumns.createdAt!(),
 	];
 
 	useEffect(() => {

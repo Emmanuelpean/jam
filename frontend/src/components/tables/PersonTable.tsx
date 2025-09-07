@@ -17,7 +17,7 @@ const PersonTable: React.FC<PersonTableProps> = ({ onChange, data = null }) => {
 		sortConfig,
 		setSortConfig,
 		updateItem,
-		deleteItem,
+		removeItem,
 	} = useProvidedTableData(data, { key: "name", direction: "asc" }); // TODO sorting not working
 
 	const ViewColumns = [
@@ -44,7 +44,7 @@ const PersonTable: React.FC<PersonTableProps> = ({ onChange, data = null }) => {
 			showAdd={false}
 			showSearch={true}
 			updateItem={updateItem}
-			removeItem={deleteItem}
+			removeItem={removeItem}
 			setData={() => {}}
 			ModalSize="lg"
 			showAllEntries={true}

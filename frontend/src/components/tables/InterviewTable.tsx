@@ -33,7 +33,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({ jobApplicationId, onC
 		sortConfig,
 		setSortConfig,
 		updateItem,
-		deleteItem,
+		removeItem,
 	} = useProvidedTableData(data, { key: "date", direction: "desc" });
 
 	const ViewColumns = [tableColumns.date!(), tableColumns.type!(), tableColumns.location!(), tableColumns.note!()];
@@ -56,7 +56,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({ jobApplicationId, onC
 			itemType="Interview"
 			addItem={addItem}
 			updateItem={updateItem}
-			removeItem={deleteItem}
+			removeItem={removeItem}
 			setData={() => {}}
 			ModalSize="lg"
 			showAllEntries={true}
