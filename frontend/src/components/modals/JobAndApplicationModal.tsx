@@ -1,10 +1,24 @@
 import React, { useCallback, useMemo, useState } from "react";
-import GenericModal from "./GenericModal/GenericModal";
+import GenericModal, { TabConfig } from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { getApplicationStatusBadgeClass } from "../rendering/view/ViewRenders";
+import { DataModalProps } from "./AggregatorModal";
+import { JobData, ApplicationData } from "../../services/Schemas";
 
-export const JobAndApplicationModal = ({
+interface JobAndApplicationProps extends DataModalProps {
+	onJobSuccess?: (data: any) => void;
+	onApplicationSuccess?: (data: any) => void;
+	onJobDelete?: ((item: any) => Promise<void>) | null;
+	onApplicationDelete?: ((item: any) => Promise<void>) | null;
+}
+
+interface ApplicationFormData {
+	applied_via?: string;
+	[key: string]: any;
+}
+
+export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 	show,
 	onHide,
 	data,
@@ -17,7 +31,7 @@ export const JobAndApplicationModal = ({
 	size = "xl",
 }) => {
 	// Track current form data for conditional fields
-	const [currentApplicationFormData, setCurrentApplicationFormData] = useState({});
+	const [currentApplicationFormData, setCurrentApplicationFormData] = useState<ApplicationFormData>({});
 
 	// Get form options for both job and application
 	const {
@@ -39,15 +53,14 @@ export const JobAndApplicationModal = ({
 	} = useFormOptions(["companies", "locations", "keywords", "persons", "aggregators"]);
 
 	// Handler for application form data changes
-	const handleApplicationFormDataChange = useCallback((newFormData) => {
+	const handleApplicationFormDataChange = useCallback((newFormData: ApplicationFormData) => {
 		setCurrentApplicationFormData((prev) => ({
 			...prev,
 			...newFormData,
 		}));
 	}, []);
 
-	// Job form fields
-	const jobFormFieldsArray = [
+	const jobFormFields = [
 		formFields.jobTitle(),
 		[formFields.company(companies, openCompanyModal), formFields.location(locations, openLocationModal)],
 		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
@@ -57,7 +70,7 @@ export const JobAndApplicationModal = ({
 		formFields.note(),
 	];
 
-	const jobViewFieldsArray = [
+	const jobViewFields = [
 		[viewFields.title({ isTitle: true })],
 		[viewFields.company(), viewFields.location()],
 		viewFields.description(),
@@ -66,7 +79,7 @@ export const JobAndApplicationModal = ({
 		[viewFields.keywords(), viewFields.persons()],
 	];
 
-	const applicationFormFieldsArray = useMemo(() => {
+	const applicationFormFields = useMemo(() => {
 		return [
 			[formFields.applicationDate(), formFields.applicationStatus()],
 			[
@@ -82,7 +95,7 @@ export const JobAndApplicationModal = ({
 		];
 	}, [currentApplicationFormData.applied_via, openAggregatorModal, aggregators]);
 
-	const applicationViewFieldsArray = useMemo(() => {
+	const applicationViewFields = useMemo(() => {
 		const baseFields = [
 			[viewFields.date(), viewFields.status()],
 			[viewFields.appliedVia()],
@@ -98,7 +111,7 @@ export const JobAndApplicationModal = ({
 		return baseFields;
 	}, [data?.job_application?.id]);
 
-	const transformJobData = (jobData) => {
+	const transformJobData = (jobData: JobData) => {
 		return {
 			title: jobData.title.trim(),
 			description: jobData.description?.trim() || null,
@@ -109,12 +122,12 @@ export const JobAndApplicationModal = ({
 			personal_rating: jobData.personal_rating || null,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
-			keywords: jobData.keywords?.map((item) => item.id || item) || [],
-			contacts: jobData.contacts?.map((item) => item.id || item) || [],
+			keywords: jobData.keywords?.map((item: any) => item.id || item) || [], // TODO remove any
+			contacts: jobData.contacts?.map((item: any) => item.id || item) || [],
 		};
 	};
 
-	const transformApplicationData = (jobApplicationData) => {
+	const transformApplicationData = (jobApplicationData: ApplicationData) => {
 		return {
 			date: new Date(jobApplicationData.date).toISOString(),
 			url: jobApplicationData.url?.trim() || null,
@@ -138,16 +151,15 @@ export const JobAndApplicationModal = ({
 	);
 	const applicationSubmode = data?.job_application ? submode : "add";
 
-	const tabs = [
+	const tabs: TabConfig[] = [
 		{
 			key: "job",
 			title: "Job Details",
-			mode: "formview",
 			submode: submode,
 			data: data || {},
 			fields: {
-				form: jobFormFieldsArray,
-				view: jobViewFieldsArray,
+				form: jobFormFields,
+				view: jobViewFields,
 			},
 			endpoint: "jobs",
 			onSuccess: onJobSuccess,
@@ -157,12 +169,11 @@ export const JobAndApplicationModal = ({
 		{
 			key: "application",
 			title: applicationTabTitle,
-			mode: "formview",
 			submode: applicationSubmode,
 			data: data?.job_application || {},
 			fields: {
-				form: applicationFormFieldsArray,
-				view: applicationViewFieldsArray,
+				form: applicationFormFields,
+				view: applicationViewFields,
 			},
 			endpoint: "jobapplications",
 			onSuccess: onApplicationSuccess,
@@ -182,6 +193,8 @@ export const JobAndApplicationModal = ({
 				tabs={tabs}
 				id={id}
 				defaultActiveTab="job"
+				endpoint=""
+				fields={{ form: [], view: [] }}
 			/>
 
 			{renderCompanyModal()}

@@ -2,17 +2,38 @@ import React from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { aggregatorsApi } from "../../services/Api.ts";
-import { useAuth } from "../../contexts/AuthContext.tsx";
+import { aggregatorsApi } from "../../services/Api";
+import { useAuth } from "../../contexts/AuthContext";
 
-export const AggregatorModal = ({
+interface FormData {
+	name: string;
+	url: string;
+}
+
+interface ValidationErrors {
+	name?: string;
+	url?: string;
+}
+
+export interface DataModalProps {
+	show: boolean;
+	onHide: () => void;
+	submode?: "view" | "edit" | "add";
+	data?: any;
+	id?: number | null;
+	onSuccess?: (data: any) => void;
+	onDelete?: ((item: any) => Promise<void>) | null;
+	size?: "sm" | "lg" | "xl";
+	endpoint?: string;
+}
+
+export const AggregatorModal: React.FC<DataModalProps> = ({
 	show,
 	onHide,
 	data,
 	id,
 	onSuccess,
 	onDelete,
-	endpoint = "aggregators",
 	submode = "view",
 	size = "lg",
 }) => {
@@ -25,18 +46,23 @@ export const AggregatorModal = ({
 
 	const additionalFields = [viewFields.jobTable()];
 
-	const transformFormData = (data) => {
+	const transformFormData = (data: FormData): FormData => {
 		return {
 			name: data?.name?.trim(),
 			url: data?.url?.trim(),
 		};
 	};
 
-	const customValidation = async (formData) => {
-		const errors = {};
+	const customValidation = async (formData: FormData): Promise<ValidationErrors> => {
+		const errors: ValidationErrors = {};
+
+		if (!token) {
+			return errors;
+		}
+
 		const queryParams = { name: formData.name.trim() };
 		const matches = await aggregatorsApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing) => {
+		const duplicates = matches.filter((existing: { id: number }) => {
 			return data?.id !== existing.id;
 		});
 
@@ -50,7 +76,6 @@ export const AggregatorModal = ({
 		<GenericModal
 			show={show}
 			onHide={onHide}
-			mode="formview"
 			submode={submode}
 			additionalFields={additionalFields}
 			itemName="Aggregator"
@@ -58,7 +83,7 @@ export const AggregatorModal = ({
 			data={data || {}}
 			id={id}
 			fields={fields}
-			endpoint={endpoint}
+			endpoint="aggregators"
 			onSuccess={onSuccess}
 			onDelete={onDelete}
 			transformFormData={transformFormData}

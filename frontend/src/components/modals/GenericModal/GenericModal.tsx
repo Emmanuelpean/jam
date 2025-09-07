@@ -76,9 +76,12 @@ export const createGenericDeleteHandler = ({
 	};
 };
 
+export type ViewFields = (ViewField | ViewField[])[];
+export type FormFields = (FormField | FormField[])[];
+
 interface ModalProps {
 	submode?: "view" | "edit" | "add";
-	fields: { view: ViewField[]; form: FormField[] };
+	fields: { view: ViewFields; form: FormFields };
 	data?: any;
 	endpoint: string;
 	onSuccess?: (data: any) => void;
@@ -89,13 +92,12 @@ interface ModalProps {
 	additionalFields?: ViewField[];
 }
 
-interface TabConfig extends ModalProps {
+export interface TabConfig extends ModalProps {
 	key: string;
-	label: string;
-	title: string;
+	title: string | JSX.Element;
 }
 
-interface GenericModalProps extends ModalProps {
+export interface GenericModalProps extends ModalProps {
 	show: boolean;
 	onHide: () => void;
 	itemName?: string;
@@ -394,7 +396,7 @@ const GenericModal = ({
 
 	// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 
-	const getCurrentFields = (): ViewField[] | FormField[] => {
+	const getCurrentFields = (): ViewFields | FormFields => {
 		const effectiveProps: ModalProps = getEffectiveProps();
 		if (isEditing) {
 			return effectiveProps.fields.form;
@@ -652,7 +654,7 @@ const GenericModal = ({
 					<div>
 						{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
 						<div>
-							{formFields.map((item: FormField, index: number) => (
+							{formFields.map((item: FormField | FormField[], index: number) => (
 								<div key={`form-field-${index}`}>{renderFieldGroup(item, index, true)}</div>
 							))}
 						</div>
@@ -663,7 +665,7 @@ const GenericModal = ({
 							<Card>
 								<Card.Body>
 									<div>
-										{viewFields.map((item: ViewField, index: number) => (
+										{viewFields.map((item: ViewField | ViewField[], index: number) => (
 											<div key={`view-field-${index}`}>
 												{renderFieldGroup(item, index, false)}
 											</div>

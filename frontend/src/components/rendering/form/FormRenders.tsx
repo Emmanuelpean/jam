@@ -324,7 +324,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 			data={{}}
 			id={null}
 			onSuccess={handleAggregatorAddSuccess}
-			onDelete={() => {}}
+			onDelete={async (_item: any) => {}}
 			submode="add"
 		/>
 	);
@@ -335,9 +335,8 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 			onHide={closeJobModal}
 			data={{}}
 			id={null}
-			// @ts-ignore
 			onSuccess={handleJobAddSuccess}
-			onDelete={() => {}}
+			onDelete={async (_item: any) => {}}
 			submode="add"
 		/>
 	);
