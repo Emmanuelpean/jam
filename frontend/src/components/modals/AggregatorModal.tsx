@@ -4,16 +4,8 @@ import { formFields } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { aggregatorsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-
-interface FormData {
-	name: string;
-	url: string;
-}
-
-interface ValidationErrors {
-	name?: string;
-	url?: string;
-}
+import { ValidationErrors } from "./GenericModal/GenericModal";
+import { AggregatorData } from "../../services/Schemas";
 
 export interface DataModalProps {
 	show: boolean;
@@ -45,14 +37,14 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 
 	const additionalFields = [viewFields.jobTable()];
 
-	const transformFormData = (data: FormData): FormData => {
+	const transformFormData = (data: AggregatorData): AggregatorData => {
 		return {
 			name: data?.name?.trim(),
 			url: data?.url?.trim(),
 		};
 	};
 
-	const customValidation = async (formData: FormData): Promise<ValidationErrors> => {
+	const customValidation = async (formData: AggregatorData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
 
 		if (!token) {

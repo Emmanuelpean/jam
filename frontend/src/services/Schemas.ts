@@ -102,3 +102,16 @@ export interface ApplicationData {
 	aggregator_id?: number | null;
 	note?: string | null;
 }
+
+export interface UserData {
+	email: string;
+	password?: string;
+	theme?: string;
+	is_admin?: boolean;
+}
+
+export interface CompanyData {
+	name: string;
+	url?: string | null;
+	description?: string | null;
+}

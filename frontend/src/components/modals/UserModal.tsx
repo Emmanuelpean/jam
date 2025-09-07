@@ -2,18 +2,20 @@ import React from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { userApi } from "../../services/Api.ts";
-import { useAuth } from "../../contexts/AuthContext.tsx";
+import { userApi } from "../../services/Api";
+import { useAuth } from "../../contexts/AuthContext";
 import "../../pages/Auth/Auth.css";
+import { DataModalProps } from "./AggregatorModal";
+import { ValidationErrors } from "./GenericModal/GenericModal";
+import { UserData } from "../../services/Schemas";
 
-export const UserModal = ({
+export const UserModal: React.FC<DataModalProps> = ({
 	show,
 	onHide,
 	data,
 	id,
 	onSuccess,
 	onDelete,
-	endpoint = "users",
 	submode = "view",
 	size = "lg",
 }) => {
@@ -23,7 +25,7 @@ export const UserModal = ({
 		[
 			...(submode === "add"
 				? [formFields.email({ required: true }), formFields.password({ required: true })]
-				: [formFields.email({ required: submode === "add" })]),
+				: [formFields.email({ required: false })]),
 		],
 		formFields.appTheme(),
 		formFields.isAdmin(),
@@ -35,11 +37,14 @@ export const UserModal = ({
 		view: viewFieldsArray,
 	};
 
-	const customValidation = async (formData) => {
-		const errors = {};
+	const customValidation = async (formData: UserData): Promise<ValidationErrors> => {
+		const errors: ValidationErrors = {};
+		if (!token) {
+			return errors;
+		}
 		const queryParams = { email: formData.email.trim() };
 		const matches = await userApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing) => {
+		const duplicates = matches.filter((existing: any) => {
 			return data?.id !== existing.id;
 		});
 		console.log(duplicates);
@@ -50,8 +55,8 @@ export const UserModal = ({
 		return errors;
 	};
 
-	const transformFormData = (data) => {
-		const transformed = {
+	const transformFormData = (data: UserData) => {
+		const transformed: any = {
 			email: data.email?.trim(),
 			theme: data.theme?.trim() || "mixed-berry",
 			is_admin: data.is_admin || false,
@@ -68,14 +73,13 @@ export const UserModal = ({
 		<GenericModal
 			show={show}
 			onHide={onHide}
-			mode="formview"
 			submode={submode}
 			itemName="User"
 			size={size}
 			data={data || {}}
 			id={id}
 			fields={fields}
-			endpoint={endpoint}
+			endpoint="users"
 			onSuccess={onSuccess}
 			onDelete={onDelete}
 			validation={customValidation}

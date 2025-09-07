@@ -5,16 +5,8 @@ import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { companiesApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { DataModalProps } from "./AggregatorModal";
-
-interface FormData {
-	name: string;
-	url?: string | null;
-	description?: string | null;
-}
-
-interface ValidationErrors {
-	[key: string]: string;
-}
+import { ValidationErrors } from "./GenericModal/GenericModal";
+import { CompanyData } from "../../services/Schemas";
 
 export const CompanyModal: React.FC<DataModalProps> = ({
 	show,
@@ -42,7 +34,7 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 		viewFields.personTable({ excludedColumns: "company" }),
 	];
 
-	const transformFormData = (data: FormData): FormData => {
+	const transformFormData = (data: CompanyData): CompanyData => {
 		return {
 			name: data.name?.trim(),
 			url: data.url?.trim() || null,
@@ -50,7 +42,7 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 		};
 	};
 
-	const customValidation = async (formData: FormData): Promise<ValidationErrors> => {
+	const customValidation = async (formData: CompanyData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
 		if (!formData.name) {
 			return errors;

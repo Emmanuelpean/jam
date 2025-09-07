@@ -107,6 +107,10 @@ export interface GenericModalProps extends ModalProps {
 	id?: string | number | null;
 }
 
+export interface ValidationErrors {
+	[key: string]: string;
+}
+
 const GenericModal = ({
 	show,
 	onHide,
