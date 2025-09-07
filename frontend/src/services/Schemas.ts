@@ -87,6 +87,16 @@ export interface PersonData {
 	company_id?: number | null;
 }
 
+export interface InterviewData {
+	date?: string;
+	type?: string;
+	location_id?: string | number;
+	job_application_id?: string | number;
+	interviewers?: any[];
+	note?: string;
+	attendance_type?: string;
+}
+
 export interface LocationData {
 	id?: string | number;
 	city?: string | null;

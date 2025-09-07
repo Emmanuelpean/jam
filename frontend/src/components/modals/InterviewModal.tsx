@@ -2,18 +2,23 @@ import React, { useMemo, useState, useEffect } from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { formatDateTime } from "../../utils/TimeUtils.ts";
+import { formatDateTime } from "../../utils/TimeUtils";
+import { DataModalProps } from "./AggregatorModal";
+import { InterviewData } from "../../services/Schemas";
 
-export const InterviewModal = ({
+interface InterviewModalProps extends DataModalProps {
+	jobApplicationId?: string | number;
+}
+
+export const InterviewModal: React.FC<InterviewModalProps> = ({
 	show,
 	onHide,
 	data,
 	id,
 	onSuccess,
 	onDelete,
-	endpoint = "interviews",
 	submode = "view",
-	size = "md",
+	size = "sm",
 	jobApplicationId,
 }) => {
 	const {
@@ -22,12 +27,11 @@ export const InterviewModal = ({
 		jobApplications,
 		openLocationModal,
 		openPersonModal,
-		openJobApplicationModal,
 		renderLocationModal,
 		renderPersonModal,
 	} = useFormOptions(["locations", "persons", "jobApplications"]);
 
-	const [currentFormData, setCurrentFormData] = useState({});
+	const [currentFormData, setCurrentFormData] = useState<InterviewData>({});
 
 	const initialData = useMemo(() => {
 		if (submode === "add" && !data?.id) {
@@ -44,7 +48,7 @@ export const InterviewModal = ({
 	}, [show, initialData]);
 
 	// Handler for form data changes
-	const handleFormDataChange = (newFormData) => {
+	const handleFormDataChange = (newFormData: InterviewData) => {
 		setCurrentFormData((prev) => ({
 			...prev,
 			...newFormData,
@@ -52,7 +56,7 @@ export const InterviewModal = ({
 	};
 
 	const formFieldsArray = [
-		...(!jobApplicationId ? [formFields.jobApplication(jobApplications, openJobApplicationModal)] : []),
+		...(!jobApplicationId ? [formFields.jobApplication(jobApplications)] : []),
 		[
 			formFields.datetime({
 				required: true,
@@ -83,13 +87,13 @@ export const InterviewModal = ({
 		view: viewFieldsArray,
 	};
 
-	const transformFormData = (data) => {
+	const transformFormData = (data: InterviewData) => {
 		console.log(data);
 		return {
-			date: new Date(data.date).toISOString(),
-			type: data.type,
-			location_id: data.location_id,
-			job_application_id: jobApplicationId || data.job_application_id,
+			date: new Date(data.date!).toISOString(),
+			type: data.type!,
+			location_id: data.location_id!,
+			job_application_id: jobApplicationId || data.job_application_id!,
 			interviewers: data.interviewers?.map((interviewer) => interviewer.id || interviewer) || [],
 			note: data.note?.trim() || null,
 		};
@@ -100,14 +104,13 @@ export const InterviewModal = ({
 			<GenericModal
 				show={show}
 				onHide={onHide}
-				mode="formview"
 				submode={submode}
 				itemName="Interview"
 				size={size}
 				data={initialData}
 				id={id}
 				fields={fields}
-				endpoint={endpoint}
+				endpoint="interviews"
 				onSuccess={onSuccess}
 				onDelete={onDelete}
 				transformFormData={transformFormData}
