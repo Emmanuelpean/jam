@@ -1,7 +1,6 @@
 import React from "react";
 import { GenericTableWithModals, useProvidedTableData } from "./GenericTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumnRenders";
-import { JobApplicationModal } from "../modals/JobApplicationModal";
 import { JobAndApplicationModal } from "../modals/JobAndApplicationModal";
 
 interface DataTableProps {
@@ -45,10 +44,10 @@ const ApplicationToChaseTable: React.FC<DataTableProps> = ({ onChange, data = nu
 			updateItem={updateItem}
 			removeItem={removeItem}
 			setData={() => {}}
-			ModalSize="xl"
+			modalSize="xl"
 			showSearch={false}
 			showAdd={false}
-			ModalProps={{ defaultActiveTab: "application" }}
+			modalProps={{ defaultActiveTab: "application" }}
 		/>
 	);
 };

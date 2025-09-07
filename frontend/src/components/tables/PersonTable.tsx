@@ -46,7 +46,7 @@ const PersonTable: React.FC<PersonTableProps> = ({ onChange, data = null }) => {
 			updateItem={updateItem}
 			removeItem={removeItem}
 			setData={() => {}}
-			ModalSize="lg"
+			modalSize="lg"
 			showAllEntries={true}
 			compact={true}
 		/>

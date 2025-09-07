@@ -63,8 +63,8 @@ export interface GenericTableWithModalsProps {
 
 	// Modal configuration
 	Modal: React.ComponentType<any>;
-	ModalSize?: string;
-	ModalProps?: any;
+	modalSize?: string;
+	modalProps?: any;
 
 	// Data management
 	endpoint: string;
@@ -272,8 +272,8 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 
 	// Modal configuration
 	Modal,
-	ModalSize = "lg",
-	ModalProps = {},
+	modalSize = "lg",
+	modalProps = {},
 
 	// Data management
 	endpoint,
@@ -795,7 +795,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 				show={showModal}
 				onHide={closeAddModal}
 				onSuccess={handleAddSuccess}
-				size={ModalSize}
+				size={modalSize}
 				data={{}}
 				submode="add"
 			/>
@@ -806,7 +806,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 				onSuccess={handleEditSuccess}
 				data={selectedItem || {}}
 				submode="edit"
-				size={ModalSize}
+				size={modalSize}
 			/>
 
 			<Modal
@@ -819,8 +819,8 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 					closeViewModal();
 					openEditModal(selectedItem);
 				}}
-				size={ModalSize}
-				{...ModalProps}
+				size={modalSize}
+				{...modalProps}
 			/>
 
 			<AlertModal alertState={alertState} hideAlert={hideAlert} />

@@ -58,7 +58,7 @@ const JobApplicationUpdatesPage = () => {
 			updateItem={updateItem}
 			removeItem={removeItem}
 			setData={setJobApplicationUpdates}
-			ModalSize="lg"
+			modalSize="lg"
 		/>
 	);
 };

@@ -50,7 +50,7 @@ const JobsTable: React.FC<JobsTableProps> = ({ onChange, data = null, excludeCol
 			updateItem={updateItem}
 			removeItem={removeItem}
 			setData={() => {}}
-			ModalSize="lg"
+			modalSize="lg"
 			showAllEntries={true}
 			compact={true}
 		/>

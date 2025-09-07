@@ -74,7 +74,7 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={handleDeleteSuccess}
-			ModalSize="lg"
+			modalSize="lg"
 			showAllEntries={true}
 			compact={true}
 			setData={() => {}}
