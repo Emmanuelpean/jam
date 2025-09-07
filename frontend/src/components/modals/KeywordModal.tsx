@@ -2,19 +2,21 @@ import React from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { keywordsApi } from "../../services/Api.ts";
-import { useAuth } from "../../contexts/AuthContext.tsx";
+import { keywordsApi } from "../../services/Api";
+import { useAuth } from "../../contexts/AuthContext";
+import { DataModalProps } from "./AggregatorModal";
+import { ValidationErrors } from "./GenericModal/GenericModal";
+import { KeywordData } from "../../services/Schemas";
 
-export const KeywordModal = ({
+export const KeywordModal: React.FC<DataModalProps> = ({
 	show,
 	onHide,
 	data,
 	id,
 	onSuccess,
 	onDelete,
-	endpoint = "keywords",
 	submode = "view",
-	size = "md",
+	size = "sm",
 }) => {
 	const { token } = useAuth();
 
@@ -25,17 +27,20 @@ export const KeywordModal = ({
 
 	const additionalFields = [viewFields.jobTable()];
 
-	const transformFormData = (data) => {
+	const transformFormData = (data: any): KeywordData => {
 		return {
 			name: data?.name?.trim(),
 		};
 	};
 
-	const customValidation = async (formData) => {
-		const errors = {};
+	const customValidation = async (formData: KeywordData): Promise<ValidationErrors> => {
+		const errors: ValidationErrors = {};
+		if (!token) {
+			return errors;
+		}
 		const queryParams = { name: formData.name.trim() };
 		const matches = await keywordsApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing) => {
+		const duplicates = matches.filter((existing: any) => {
 			return data?.id !== existing.id;
 		});
 
@@ -49,7 +54,6 @@ export const KeywordModal = ({
 		<GenericModal
 			show={show}
 			onHide={onHide}
-			mode="formview"
 			submode={submode}
 			itemName="Tag"
 			size={size}
@@ -57,7 +61,7 @@ export const KeywordModal = ({
 			id={id}
 			fields={fields}
 			additionalFields={additionalFields}
-			endpoint={endpoint}
+			endpoint="keywords"
 			onSuccess={onSuccess}
 			onDelete={onDelete}
 			transformFormData={transformFormData}
