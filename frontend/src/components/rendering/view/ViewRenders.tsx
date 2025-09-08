@@ -22,6 +22,7 @@ import {
 } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
+import JobApplicationsTable from "../../tables/JobApplicationTable";
 
 interface ModalManagerProps {
 	children: (handleClick: (item: any) => void) => ReactNode;
@@ -455,7 +456,6 @@ export const renderFunctions = {
 
 	job: (param: RenderParams): ReactNode => {
 		// TODO refractor with below
-		console.log("job", param.item);
 		const job: JobData = accessSubAttribute(param.item, param.accessKey, "job");
 		if (job) {
 			return (
@@ -574,6 +574,7 @@ export const renderFunctions = {
 	},
 
 	company: (param: RenderParams): ReactNode => {
+		console.log("Company render", param);
 		const company: CompanyOut = accessSubAttribute(param.item, param.accessKey, "company");
 		if (company) {
 			return (
@@ -684,6 +685,27 @@ export const renderFunctions = {
 			<GenericAccordion title="Jobs" data={jobs} onChange={onChange} icon={getTableIcon("Jobs")}>
 				{(data, onChangeCallback) => (
 					<JobsTable data={data} onChange={onChangeCallback} excludeColumns={param.excludedColumns} />
+				)}
+			</GenericAccordion>
+		);
+	},
+
+	jobApplicationTable: (param: RenderParams): ReactNode => {
+		const jobApplications = accessSubAttribute(param.item, param.accessKey, "job_applications");
+		const onChange = () => {};
+		return (
+			<GenericAccordion
+				title="Job Applications"
+				data={jobApplications}
+				onChange={onChange}
+				icon={getTableIcon("Jobs")}
+			>
+				{(data, onChangeCallback) => (
+					<JobApplicationsTable
+						data={data}
+						onChange={onChangeCallback}
+						excludeColumns={param.excludedColumns}
+					/>
 				)}
 			</GenericAccordion>
 		);

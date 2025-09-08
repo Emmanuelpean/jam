@@ -35,7 +35,7 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 		view: [viewFields.name({ isTitle: true }), viewFields.url()],
 	};
 
-	const additionalFields = [viewFields.jobTable()];
+	const additionalFields = [viewFields.jobTable(), viewFields.jobApplicationTable()];
 
 	const transformFormData = (data: AggregatorData): AggregatorData => {
 		return {

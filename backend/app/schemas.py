@@ -238,7 +238,7 @@ class JobOut(JobCreate, OwnedOut):
     source: AggregatorMinOut | None = None
     keywords: list[KeywordMinOut] = []
     contacts: list[PersonMinOut] = []
-    job_application: Optional["JobApplicationOut"] = None  # call the full entry
+    job_application: Optional["JobApplicationMinOut"] = None
     name: str
 
 
@@ -285,11 +285,7 @@ class JobApplicationCreate(BaseModel):
     aggregator_id: int | None = None
 
 
-class JobApplicationOut(JobApplicationCreate, OwnedOut):
-    # last_update_type: str
-    # last_update_date: datetime
-    # days_since_last_update: int | None = None
-    job: JobMinOut | None = None
+class JobApplicationOutBase(JobApplicationCreate, OwnedOut):
     aggregator: AggregatorMinOut | None = None
     interviews: list["InterviewAppOut"] = []  # get the full interviews
     updates: list["JobApplicationUpdateAppOut"] = []  # get the full updates
@@ -342,6 +338,14 @@ class JobApplicationOut(JobApplicationCreate, OwnedOut):
         """Calculate days since last update"""
         now = datetime.now(UTC)
         return (self.last_update_date - now).days
+
+
+class JobApplicationOut(JobApplicationOutBase):
+    job: JobOut | None = None
+
+
+class JobApplicationMinOut(JobApplicationOutBase):
+    job: JobMinOut | None = None
 
 
 class JobApplicationUpdate(JobApplicationCreate):

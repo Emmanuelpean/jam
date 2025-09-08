@@ -287,6 +287,13 @@ export const viewFields = {
 		...overrides,
 	}),
 
+	jobApplicationTable: (overrides: ViewFieldOverride = {}): ViewField => ({
+		key: "job_application",
+		label: "Job Applications",
+		render: renderFunctions.jobApplicationTable,
+		...overrides,
+	}),
+
 	personTable: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "persons",
 		label: "Persons",

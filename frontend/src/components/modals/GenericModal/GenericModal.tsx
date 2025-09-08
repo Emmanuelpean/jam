@@ -77,6 +77,7 @@ interface ModalProps {
 	submode?: "view" | "edit" | "add";
 	fields: { view: ViewFields; form: FormFields };
 	data?: any;
+	id?: string | number | null;
 	endpoint: string;
 	onSuccess?: (data: any) => void;
 	validation?: ((data: any) => any) | null;
@@ -98,7 +99,6 @@ export interface GenericModalProps extends ModalProps {
 	size?: "sm" | "lg" | "xl";
 	tabs?: TabConfig[] | null;
 	defaultActiveTab?: string | null;
-	id?: string | number | null;
 }
 
 export interface ValidationErrors {
@@ -155,6 +155,7 @@ const GenericModal = ({
 					setLoading(true);
 					try {
 						const response = await api.get(`${endpoint}/${id}`, token);
+						console.log("response:", response);
 						if (response) {
 							setEffectiveData(response);
 						}
@@ -313,6 +314,7 @@ const GenericModal = ({
 	};
 
 	const handleHideImmediate = (): void => {
+		// if (onSuccess())
 		// TODO all needed?
 		// const effectiveProps = getEffectiveProps();
 		//
