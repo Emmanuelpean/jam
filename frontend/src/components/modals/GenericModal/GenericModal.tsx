@@ -86,9 +86,11 @@ interface ModalProps {
 	additionalFields?: ViewField[];
 }
 
-export interface TabConfig extends ModalProps {
+export interface TabConfig {
 	key: string;
 	title: string | JSX.Element;
+	fields: { view: ViewFields; form: FormFields };
+	additionalFields?: ViewField[];
 }
 
 export interface GenericModalProps extends ModalProps {
@@ -203,9 +205,11 @@ const GenericModal = ({
 			return baseProps;
 		}
 
+		// Override with tab-specific fields
 		return {
 			...baseProps,
-			...Object.fromEntries(Object.entries(currentTab).filter(([_key, value]) => value !== undefined)),
+			fields: currentTab.fields,
+			additionalFields: currentTab.additionalFields || additionalFields,
 		};
 	};
 
@@ -472,7 +476,7 @@ const GenericModal = ({
 		try {
 			await handleDelete(effectiveProps.data);
 			if (onDelete) {
-				onDelete(effectiveProps.data);
+				await onDelete(effectiveProps.data);
 			}
 			handleHideImmediate();
 		} catch (error) {}

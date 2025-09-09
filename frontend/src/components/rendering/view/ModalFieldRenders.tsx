@@ -283,7 +283,7 @@ export const viewFields = {
 	applicationDate: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "application_date",
 		label: "Application Date",
-		render: (params: RenderParams) => renderFunctions.date({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.applicationDate({ ...params, view: true }),
 		...overrides,
 	}),
 

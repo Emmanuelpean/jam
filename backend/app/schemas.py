@@ -136,7 +136,7 @@ class CompanyOut(CompanyCreate, OwnedOut):
     """Company output schema with job data and individuals"""
 
     jobs: list["JobOut"] = []
-    persons: list["PersonMinOut"] = []
+    persons: list["PersonOut"] = []
 
 
 class CompanyMinOut(CompanyCreate, OwnedOut):

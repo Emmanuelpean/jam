@@ -330,7 +330,7 @@ const JobSearchDashboard: React.FC = () => {
 						setSelectedJob(null);
 					}}
 					data={selectedJob}
-					onJobSuccess={(updatedJob: Job) => {
+					onSuccess={(updatedJob: Job) => {
 						// Handle job update if needed
 						console.log("Job updated:", updatedJob);
 					}}

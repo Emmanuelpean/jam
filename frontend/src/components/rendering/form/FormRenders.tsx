@@ -606,7 +606,7 @@ export const formFields = {
 		...formFields.datetime(),
 		name: "application_date",
 		label: "Application Date",
-		required: true,
+		required: false,
 		...overrides,
 	}),
 
@@ -621,7 +621,6 @@ export const formFields = {
 			{ value: "offer", label: "Offer" },
 			{ value: "withdrawn", label: "Withdrawn" },
 		],
-		required: true,
 		...overrides,
 	}),
 

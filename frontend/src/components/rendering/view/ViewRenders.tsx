@@ -283,8 +283,11 @@ export const renderFunctions = {
 		return null;
 	},
 
+	applicationDate: (param: RenderParams): string | null => {
+		return renderFunctions._date(param, "application_date");
+	},
+
 	date: (param: RenderParams): string | null => {
-		// TODO needed?
 		return renderFunctions._date(param, "date");
 	},
 
@@ -474,7 +477,7 @@ export const renderFunctions = {
 		const keywords: KeywordOut[] = accessSubAttribute(param.item, param.accessKey, "keywords");
 		if (keywords?.length > 0) {
 			return (
-				<div>
+				<div className="badge-group">
 					{keywords.map((keyword, index) => (
 						<span key={keyword.id || index} className="me-1">
 							<KeywordModalManager>
@@ -605,8 +608,9 @@ export const renderFunctions = {
 
 	appliedVia: (param: RenderParams): ReactNode => {
 		const appliedVia = accessSubAttribute(param.item, param.accessKey, "applied_via");
+		console.log("AAAA", param, appliedVia);
 		if (appliedVia === "aggregator") {
-			return renderFunctions.aggregator(param);
+			return renderFunctions.applicationAggregator(param);
 		}
 		if (appliedVia) {
 			return (
@@ -618,8 +622,8 @@ export const renderFunctions = {
 		return null;
 	},
 
-	aggregator: (param: RenderParams): ReactNode => {
-		const aggregator: AggregatorOut = accessSubAttribute(param.item, param.accessKey, "aggregator");
+	_aggregator: (param: RenderParams, attribute: string): ReactNode => {
+		const aggregator: AggregatorOut = accessSubAttribute(param.item, param.accessKey, attribute);
 		if (aggregator) {
 			return (
 				<AggregatorModalManager>
@@ -637,6 +641,14 @@ export const renderFunctions = {
 			);
 		}
 		return null;
+	},
+
+	aggregator: (param: RenderParams): ReactNode => {
+		return renderFunctions._aggregator(param, "aggregator");
+	},
+
+	applicationAggregator: (param: RenderParams): ReactNode => {
+		return renderFunctions._aggregator(param, "application_aggregator");
 	},
 
 	interviewTable: (param: RenderParams): ReactNode => {

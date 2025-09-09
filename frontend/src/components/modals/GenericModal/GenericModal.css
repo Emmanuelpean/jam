@@ -118,7 +118,7 @@
     flex-direction: row;
     flex-wrap: nowrap;
     justify-content: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     gap: 25px;
     flex-shrink: 0;
 }
@@ -126,7 +126,7 @@
 .custom-tab-button {
     border: none;
     border-radius: 0;
-    padding: 1rem 1.5rem;
+    padding: 0.5rem;
     font-weight: 500;
     color: #6c757d;
     background: transparent;

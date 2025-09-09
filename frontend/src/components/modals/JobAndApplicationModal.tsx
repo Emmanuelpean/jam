@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import GenericModal, { TabConfig } from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
@@ -7,10 +7,8 @@ import { DataModalProps } from "./AggregatorModal";
 import { JobData } from "../../services/Schemas";
 
 interface JobAndApplicationProps extends DataModalProps {
-	onJobSuccess?: (data: any) => void;
-	onApplicationSuccess?: (data: any) => void;
-	onJobDelete?: ((item: any) => Promise<void>) | null;
-	onApplicationDelete?: ((item: any) => Promise<void>) | null;
+	onSuccess?: (data: any) => void;
+	onDelete?: ((item: any) => Promise<void>) | null;
 	defaultActiveTab?: "job" | "application";
 }
 
@@ -25,16 +23,14 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 	onHide,
 	data,
 	id,
-	onJobSuccess,
-	onApplicationSuccess,
-	onJobDelete,
-	onApplicationDelete,
+	onSuccess,
+	onDelete,
 	submode = "view",
 	size = "xl",
 	defaultActiveTab = "job",
 }) => {
 	// Track current form data for conditional fields
-	const [currentApplicationFormData, setCurrentApplicationFormData] = useState<ApplicationFormData>({});
+	const [currentApplicationFormData] = useState<ApplicationFormData>({});
 
 	// Get form options for both job and application
 	const {
@@ -55,14 +51,6 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		renderAggregatorModal,
 	} = useFormOptions(["companies", "locations", "keywords", "persons", "aggregators"]);
 
-	// Handler for application form data changes
-	const handleApplicationFormDataChange = useCallback((newFormData: ApplicationFormData) => {
-		setCurrentApplicationFormData((prev) => ({
-			...prev,
-			...newFormData,
-		}));
-	}, []);
-
 	const jobFormFields = [
 		formFields.jobTitle(),
 		[formFields.company(companies, openCompanyModal), formFields.location(locations, openLocationModal)],
@@ -77,6 +65,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		[viewFields.title({ isTitle: true })],
 		[viewFields.company(), viewFields.location()],
 		viewFields.description(),
+		viewFields.note(),
 		[viewFields.salaryRange(), viewFields.personalRating()],
 		viewFields.url({ label: "Job URL" }),
 		[viewFields.keywords(), viewFields.persons()],
@@ -107,15 +96,15 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 			viewFields.note(),
 		];
 
-		if (data?.job_application?.id) {
+		if (data?.application_date) {
 			baseFields.push(viewFields.interviews());
 			baseFields.push(viewFields.updates());
 		}
 
 		return baseFields;
-	}, [data?.job_application?.id]);
+	}, [data?.application_date]);
 
-	const transformJobData = (jobData: JobData) => {
+	const transformData = (jobData: JobData) => {
 		return {
 			title: jobData.title.trim(),
 			description: jobData.description?.trim() || null,
@@ -128,11 +117,6 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 			location_id: jobData.location_id || null,
 			keywords: jobData.keywords?.map((item: any) => item.id || item) || [], // TODO remove any
 			contacts: jobData.contacts?.map((item: any) => item.id || item) || [],
-		};
-	};
-
-	const transformApplicationData = (data: JobData) => {
-		return {
 			application_date: data.application_date ? new Date(data.application_date).toISOString() : null,
 			application_url: data.application_url?.trim() || null,
 			application_status: data.application_status,
@@ -152,36 +136,23 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 	) : (
 		"Create Job Application"
 	);
-	const applicationSubmode = data?.application_date ? submode : "add";
 
 	const tabs: TabConfig[] = [
 		{
 			key: "job",
 			title: "Job Details",
-			submode: submode,
-			data: data || {},
 			fields: {
 				form: jobFormFields,
 				view: jobViewFields,
 			},
-			onSuccess: onJobSuccess,
-			onDelete: onJobDelete,
-			transformFormData: transformJobData,
 		},
 		{
 			key: "application",
 			title: applicationTabTitle,
-			submode: applicationSubmode,
-			data: data || {},
 			fields: {
 				form: applicationFormFields,
 				view: applicationViewFields,
 			},
-
-			onSuccess: onApplicationSuccess,
-			onDelete: onApplicationDelete,
-			transformFormData: transformApplicationData,
-			onFormDataChange: handleApplicationFormDataChange,
 		},
 	];
 
@@ -190,6 +161,11 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 			<GenericModal
 				show={show}
 				onHide={onHide}
+				data={data}
+				submode={submode}
+				onDelete={onDelete}
+				onSuccess={onSuccess}
+				transformFormData={transformData}
 				itemName="Job & Application"
 				endpoint="jobs"
 				size={size}
