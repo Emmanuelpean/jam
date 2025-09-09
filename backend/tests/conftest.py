@@ -30,7 +30,6 @@ from tests.utils.create_data import (
     create_people,
     create_jobs,
     create_files,
-    create_job_applications,
     create_interviews,
     create_job_alert_emails,
     create_scraped_jobs,
@@ -157,14 +156,7 @@ def test_jobs(session, test_users, test_companies, test_locations, test_keywords
 
 
 @pytest.fixture
-def test_job_applications(session, test_users, test_jobs, test_files) -> list[models.JobApplication]:
-    """Create test job application data using File references"""
-
-    return create_job_applications(session)
-
-
-@pytest.fixture
-def test_interviews(session, test_users, test_job_applications, test_locations, test_persons) -> list[models.Interview]:
+def test_interviews(session, test_users, test_jobs, test_locations, test_persons) -> list[models.Interview]:
     """Create test interview data"""
 
     return create_interviews(session, test_persons)
@@ -192,7 +184,7 @@ def test_service_logs(session) -> list[eis_models.EisServiceLog]:
 
 
 @pytest.fixture
-def test_job_application_updates(session, test_job_applications) -> list[models.JobApplicationUpdate]:
+def test_job_application_updates(session, test_jobs) -> list[models.JobApplicationUpdate]:
     """Create test job application update data"""
 
     return create_job_application_updates(session)

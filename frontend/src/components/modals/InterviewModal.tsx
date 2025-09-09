@@ -21,15 +21,8 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	size = "sm",
 	jobApplicationId,
 }) => {
-	const {
-		locations,
-		persons,
-		jobApplications,
-		openLocationModal,
-		openPersonModal,
-		renderLocationModal,
-		renderPersonModal,
-	} = useFormOptions(["locations", "persons", "jobApplications"]);
+	const { locations, persons, jobs, openLocationModal, openPersonModal, renderLocationModal, renderPersonModal } =
+		useFormOptions(["locations", "persons", "jobs"]);
 
 	const [currentFormData, setCurrentFormData] = useState<InterviewData>({});
 
@@ -56,7 +49,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	};
 
 	const formFieldsArray = [
-		...(!jobApplicationId ? [formFields.jobApplication(jobApplications)] : []),
+		...(!jobApplicationId ? [formFields.job(jobs)] : []),
 		[
 			formFields.datetime({
 				required: true,
@@ -76,7 +69,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	];
 
 	const viewFieldsArray = [
-		...(!jobApplicationId ? [viewFields.jobApplication({ label: "Job Application" })] : []),
+		...(!jobApplicationId ? [viewFields.job({ label: "Job Application" })] : []),
 		[viewFields.datetime(), viewFields.type()],
 		[viewFields.location(), viewFields.interviewers()],
 		viewFields.note(),

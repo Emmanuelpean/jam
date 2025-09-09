@@ -1,21 +1,12 @@
 import React, { JSX, useEffect, useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
-import {
-	aggregatorsApi,
-	companiesApi,
-	jobApplicationsApi,
-	jobsApi,
-	keywordsApi,
-	locationsApi,
-	personsApi,
-} from "../../../services/Api";
+import { aggregatorsApi, companiesApi, jobsApi, keywordsApi, locationsApi, personsApi } from "../../../services/Api";
 import { fetchCountries } from "../../../utils/CountryUtils";
 import { CompanyModal } from "../../modals/CompanyModal";
 import { LocationModal } from "../../modals/LocationModal";
 import { KeywordModal } from "../../modals/KeywordModal";
 import { PersonModal } from "../../modals/PersonModal";
 import { AggregatorModal } from "../../modals/AggregatorModal";
-import { JobApplicationModal } from "../../modals/JobApplicationModal";
 import { Theme, THEMES } from "../../../utils/Theme";
 import { SelectOption, toSelectOptions } from "../../../utils/Utils";
 import { JobAndApplicationModal } from "../../modals/JobAndApplicationModal";
@@ -35,7 +26,6 @@ interface UseFormOptionsReturn {
 	persons: SelectOption[];
 	aggregators: SelectOption[];
 	jobs: SelectOption[];
-	jobApplications: SelectOption[];
 	openCompanyModal: () => void;
 	renderCompanyModal: () => JSX.Element;
 	openLocationModal: () => void;
@@ -48,8 +38,6 @@ interface UseFormOptionsReturn {
 	renderAggregatorModal: () => JSX.Element;
 	openJobModal: () => void;
 	renderJobModal: () => JSX.Element;
-	openJobApplicationModal: () => void;
-	renderJobApplicationModal: () => JSX.Element;
 }
 
 export interface FormField {
@@ -109,7 +97,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 	const [persons, setPersons] = useState<SelectOption[]>([]);
 	const [aggregators, setAggregators] = useState<SelectOption[]>([]);
 	const [jobs, setJobs] = useState<SelectOption[]>([]);
-	const [jobApplications, setJobApplications] = useState<SelectOption[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<Error | null>(null);
 
@@ -120,7 +107,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 	const [showPersonModal, setShowPersonModal] = useState<boolean>(false);
 	const [showAggregatorModal, setShowAggregatorModal] = useState<boolean>(false);
 	const [showJobModal, setShowJobModal] = useState<boolean>(false);
-	const [showJobApplicationModal, setShowJobApplicationModal] = useState<boolean>(false);
 
 	useEffect(() => {
 		const fetchOptions = async (): Promise<void> => {
@@ -158,10 +144,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 					apiCalls.push(jobsApi.getAll(token));
 					optionTypes.push("jobs");
 				}
-				if (requiredOptions.includes("jobApplications")) {
-					apiCalls.push(jobApplicationsApi.getAll(token));
-					optionTypes.push("jobApplications");
-				}
 
 				const results = await Promise.all(apiCalls);
 
@@ -186,9 +168,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 							break;
 						case "jobs":
 							setJobs(toSelectOptions(data));
-							break;
-						case "jobApplications":
-							setJobApplications(toSelectOptions(data, "id", "job.name"));
 							break;
 					}
 				});
@@ -221,9 +200,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 
 	const openJobModal = (): void => setShowJobModal(true);
 	const closeJobModal = (): void => setShowJobModal(false);
-
-	const openJobApplicationModal = (): void => setShowJobApplicationModal(true);
-	const closeJobApplicationModal = (): void => setShowJobApplicationModal(false);
 
 	// Handle successful item creation
 	const handleCompanyAddSuccess = (newCompany: any): void => {
@@ -260,12 +236,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 		const newOption: SelectOption = toSelectOptions([newJob, "id", "title"])[0]!;
 		setJobs((prev) => [...prev, newOption]);
 		closeJobModal();
-	};
-
-	const handleJobApplicationAddSuccess = (newJobApplication: any): void => {
-		const newOption: SelectOption = toSelectOptions([newJobApplication], "id", "title")[0]!;
-		setJobApplications((prev) => [...prev, newOption]);
-		closeJobApplicationModal();
 	};
 
 	// Render modal functions
@@ -341,18 +311,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 		/>
 	);
 
-	const renderJobApplicationModal = (): JSX.Element => (
-		<JobApplicationModal
-			show={showJobApplicationModal}
-			onHide={closeJobApplicationModal}
-			data={{}}
-			id={null}
-			onSuccess={handleJobApplicationAddSuccess}
-			onDelete={async (_item: any) => {}}
-			submode="add"
-		/>
-	);
-
 	return {
 		loading,
 		error,
@@ -362,7 +320,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 		persons: requiredOptions.includes("persons") ? persons : [],
 		aggregators: requiredOptions.includes("aggregators") ? aggregators : [],
 		jobs: requiredOptions.includes("jobs") ? jobs : [],
-		jobApplications: requiredOptions.includes("jobApplications") ? jobApplications : [],
 		openCompanyModal,
 		renderCompanyModal,
 		openLocationModal,
@@ -375,8 +332,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 		renderAggregatorModal,
 		openJobModal,
 		renderJobModal,
-		openJobApplicationModal,
-		renderJobApplicationModal,
 	};
 };
 
@@ -649,14 +604,14 @@ export const formFields = {
 
 	applicationDate: (overrides: FormFieldOverride = {}): FormField => ({
 		...formFields.datetime(),
-		name: "date",
+		name: "application_date",
 		label: "Application Date",
 		required: true,
 		...overrides,
 	}),
 
 	applicationStatus: (overrides: FormFieldOverride = {}): FormField => ({
-		name: "status",
+		name: "application_status",
 		label: "Application Status",
 		type: "select",
 		options: [
@@ -667,6 +622,14 @@ export const formFields = {
 			{ value: "withdrawn", label: "Withdrawn" },
 		],
 		required: true,
+		...overrides,
+	}),
+
+	applicationUrl: (overrides: FormFieldOverride = {}): FormField => ({
+		name: "application_url",
+		label: "Application URL",
+		type: "text",
+		placeholder: "https://...",
 		...overrides,
 	}),
 
@@ -778,17 +741,6 @@ export const formFields = {
 				onClick: onAdd,
 			},
 		}),
-		...overrides,
-	}),
-
-	jobApplication: (options: SelectOption[] = [], overrides: FormFieldOverride = {}): FormField => ({
-		name: "job_application_id",
-		label: "Job Application",
-		type: "select",
-		options: options,
-		required: true,
-		placeholder: "Select a job application",
-		isSearchable: true,
 		...overrides,
 	}),
 

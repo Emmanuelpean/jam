@@ -18,7 +18,6 @@ from tests.utils.create_data import (
     create_people,
     create_jobs,
     create_files,
-    create_job_applications,
     create_interviews,
     create_job_alert_emails,
     create_scraped_jobs,
@@ -66,9 +65,8 @@ def seed_database() -> None:
         aggregators = create_aggregators(db)
         keywords = create_keywords(db)
         people = create_people(db)
-        jobs = create_jobs(db, keywords, people)
         files = create_files(db)
-        applications = create_job_applications(db)
+        jobs = create_jobs(db, keywords, people)
         interviews = create_interviews(db, people)
         service_logs = create_service_logs(db)
         alert_emails = create_job_alert_emails(db)
@@ -86,7 +84,6 @@ def seed_database() -> None:
         print(f"People: {len(people)}")
         print(f"Jobs: {len(jobs)}")
         print(f"Files: {len(files)}")
-        print(f"Job Applications: {len(applications)}")
         print(f"Interviews: {len(interviews)}")
         print(f"Service Logs: {len(service_logs)}")
         print(f"Job Alert Emails: {len(alert_emails)}")

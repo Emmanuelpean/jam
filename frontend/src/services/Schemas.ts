@@ -116,6 +116,12 @@ export interface JobData {
 	personal_rating?: number | null;
 	company_id?: number | null;
 	location_id?: number | null;
+	application_date?: Date | null;
+	application_status?: string | null;
+	applied_via?: string | null;
+	application_note?: string | null;
+	application_aggregator_id?: number | null;
+	application_url: string | null;
 	keywords?: KeywordData[] | number[];
 	contacts?: AggregatorData[] | number[];
 }

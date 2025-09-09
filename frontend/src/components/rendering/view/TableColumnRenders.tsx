@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import { ReactNode } from "react";
 import { renderFunctions, RenderParams } from "./ViewRenders";
 import { localeDateOnly } from "../../../utils/TimeUtils";
 
@@ -325,17 +325,6 @@ export const tableColumns: Columns = {
 		searchable: true,
 		type: "text",
 		render: renderFunctions.keywords,
-		...overrides,
-	}),
-
-	jobapplication: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "jobapplication",
-		label: "Application Status",
-		sortable: true,
-		searchable: false,
-		sortField: "job_application.status",
-		searchFields: "job_application.status",
-		render: renderFunctions.jobApplication,
 		...overrides,
 	}),
 

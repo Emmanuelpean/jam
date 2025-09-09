@@ -5,7 +5,7 @@ import { InterviewModal } from "../modals/InterviewModal";
 import { DataModalProps } from "../modals/AggregatorModal";
 
 interface InterviewsTableProps {
-	jobApplicationId: number;
+	jobApplicationId?: number;
 	onChange?: () => void;
 	data?: any[] | null;
 }

@@ -4,7 +4,7 @@ import base64
 import datetime
 
 from fastapi import APIRouter, Depends, status, HTTPException, Response
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from app import models, database, oauth2, schemas
 from app.routers import generate_data_table_crud_router
@@ -81,16 +81,7 @@ interview_router = generate_data_table_crud_router(
     },
 )
 
-# JobApplication router
-job_application_router = generate_data_table_crud_router(
-    table_model=models.JobApplication,
-    create_schema=schemas.JobApplicationCreate,
-    update_schema=schemas.JobApplicationUpdate,
-    out_schema=schemas.JobApplicationOut,
-    endpoint="jobapplications",
-    not_found_msg="Job Application not found",
-)
-
+# Job Application Update router
 job_application_update_router = generate_data_table_crud_router(
     table_model=models.JobApplicationUpdate,
     create_schema=schemas.JobApplicationUpdateCreate,
@@ -187,19 +178,17 @@ def get_all_updates(
 
     # Get recent job applications
     # noinspection PyTypeChecker
-    job_applications = (
-        db.query(models.JobApplication).filter(models.JobApplication.owner_id == current_user.id).limit(limit).all()
-    )
+    jobs = db.query(models.Job).filter(models.Job.owner_id == current_user.id).limit(limit).all()
 
     # Get recent interviews
     # noinspection PyTypeChecker
-    interviews = db.query(models.Interview).filter(models.JobApplication.owner_id == current_user.id).limit(limit).all()
+    interviews = db.query(models.Interview).filter(models.Interview.owner_id == current_user.id).limit(limit).all()
 
     # Get recent job application updates
     # noinspection PyTypeChecker
     job_app_updates = (
         db.query(models.JobApplicationUpdate)
-        .filter(models.JobApplication.owner_id == current_user.id)
+        .filter(models.JobApplicationUpdate.owner_id == current_user.id)
         .limit(limit)
         .all()
     )
@@ -208,12 +197,12 @@ def get_all_updates(
     all_updates = []
 
     # Add job applications as "Application" updates
-    for job_application in job_applications:
+    for job in jobs:
         update_item = {
-            "data": job_application,
-            "date": job_application.date,
+            "data": job,
+            "date": job.application_date,
             "type": "Application",
-            "job": job_application.job,
+            "job": job,
         }
         all_updates.append(update_item)
 
@@ -223,7 +212,7 @@ def get_all_updates(
             "data": interview,
             "date": interview.date,
             "type": "Interview",
-            "job": interview.job_application.job,
+            "job": interview.job,
         }
         all_updates.append(update_item)
 
@@ -233,7 +222,7 @@ def get_all_updates(
             "data": update,
             "date": update.date,
             "type": "Job Application Update",
-            "job": update.job_application.job,
+            "job": update.job,
         }
         all_updates.append(update_item)
 
@@ -253,20 +242,23 @@ def get_stats(
     :param current_user: Authenticated user
     :return: Dictionary of general statistics"""
 
-    job_n = db.query(models.Job).filter(models.Job.owner_id == current_user.id).count()
-    job_app_query = db.query(models.JobApplication).filter(models.JobApplication.owner_id == current_user.id)
-    job_app_pending_n = job_app_query.filter(models.JobApplication.status.notin_(["rejected", "withdrawn"])).count()
-    job_app_n = job_app_query.count()
+    job_query = db.query(models.Job).filter(models.Job.owner_id == current_user.id)
+    job_n = job_query.count()
+    job_application_query = job_query.filter(models.Job.application_date.isnot(None))
+    job_application_n = job_application_query.count()
+    job_application_pending_n = job_application_query.filter(
+        models.Job.application_status.notin_(["rejected", "withdrawn"])
+    ).count()
     interview_n = db.query(models.Interview).filter(models.Interview.owner_id == current_user.id).count()
     return {
         "jobs": job_n,
-        "job_applications": job_app_n,
-        "job_application_pending": job_app_pending_n,
+        "job_applications": job_application_n,
+        "job_application_pending": job_application_pending_n,
         "interviews": interview_n,
     }
 
 
-@general_router.get("/needs_chase", response_model=list[schemas.JobToChaseOut])
+@general_router.get("/needs_chase", response_model=list[schemas.JobOut])
 def get_needs_chase_job_applications(
     days: int = 30,
     db: Session = Depends(database.get_db),
@@ -285,24 +277,19 @@ def get_needs_chase_job_applications(
     # Query jobs that have job applications with active status
     jobs = (
         db.query(models.Job)
-        .join(models.JobApplication, models.Job.id == models.JobApplication.job_id)
         .filter(models.Job.owner_id == current_user.id)
-        .filter(models.JobApplication.status.notin_(["rejected", "withdrawn"]))
+        .filter(models.Job.application_date.isnot(None))
+        .filter(models.Job.status.notin_(["rejected", "withdrawn"]))
         .all()
     )
 
     # Filter by last update date in Python and prepare job data
     needs_chase = []
     for job in jobs:
-        try:
-            # Convert job application to Pydantic schema to access computed fields
-            job_app_schema = schemas.JobApplicationOut.model_validate(job.job_application, from_attributes=True)
+        # Convert job application to Pydantic schema to access computed fields
+        job_schema = schemas.JobOut.model_validate(job, from_attributes=True)
 
-            if (job_app_schema.last_update_date - now) > datetime.timedelta(days=days):
-                needs_chase.append(job)
-        except Exception as e:
-            # Skip this job if validation fails
-            print(f"Failed to validate job {job.id}: {e}")
-            continue
+        if (job_schema.last_update_date - now) > datetime.timedelta(days=days):
+            needs_chase.append(job)
 
     return needs_chase

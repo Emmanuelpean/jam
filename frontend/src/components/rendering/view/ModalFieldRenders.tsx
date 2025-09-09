@@ -227,15 +227,8 @@ export const viewFields = {
 
 	// ------------------------------------------------ JOB APPLICATION ------------------------------------------------
 
-	jobApplication: (overrides: ViewFieldOverride = {}): ViewField => ({
-		key: "job_application",
-		label: "Application Status",
-		render: (params: RenderParams) => renderFunctions.jobApplication({ ...params, view: true }),
-		...overrides,
-	}),
-
-	status: (overrides: ViewFieldOverride = {}): ViewField => ({
-		key: "status",
+	applicationStatus: (overrides: ViewFieldOverride = {}): ViewField => ({
+		key: "application_status",
 		label: "Status",
 		render: (params: RenderParams) => renderFunctions.status({ ...params, view: true }),
 		...overrides,
@@ -280,24 +273,38 @@ export const viewFields = {
 		...overrides,
 	}),
 
+	accordionInterviewTable: (overrides: ViewFieldOverride = {}): ViewField => ({
+		key: "interviews",
+		label: "Interviews",
+		render: renderFunctions.accordionInterviewTable,
+		...overrides,
+	}),
+
+	applicationDate: (overrides: ViewFieldOverride = {}): ViewField => ({
+		key: "application_date",
+		label: "Application Date",
+		render: (params: RenderParams) => renderFunctions.date({ ...params, view: true }),
+		...overrides,
+	}),
+
 	jobTable: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "job",
 		label: "Jobs",
-		render: renderFunctions.jobTable,
+		render: renderFunctions.accordionJobTable,
 		...overrides,
 	}),
 
 	jobApplicationTable: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "job_application",
 		label: "Job Applications",
-		render: renderFunctions.jobApplicationTable,
+		render: renderFunctions.accordionJobApplicationTable,
 		...overrides,
 	}),
 
 	personTable: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "persons",
 		label: "Persons",
-		render: renderFunctions.PersonTable,
+		render: renderFunctions.accordionPersonTable,
 		...overrides,
 	}),
 };

@@ -6,7 +6,6 @@ contain reference to other tables.
 Update schemas should be used to update existing entries in the database."""
 
 from datetime import datetime, UTC
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr, computed_field
 
@@ -36,7 +35,7 @@ class UserCreate(BaseModel):
 class UserOut(Out):
     email: EmailStr
     theme: str
-    is_admin: bool | None = None
+    is_admin: bool = False
     last_login: datetime | None = None
 
 
@@ -70,20 +69,26 @@ class TokenData(BaseModel):
 
 
 class KeywordCreate(BaseModel):
+    """Keyword create schema"""
+
     name: str
 
 
 class KeywordOut(KeywordCreate, OwnedOut):
-    jobs: list["JobOut"] = (
-        []
-    )  # should return the min job data (including including application, updates and interviews)
+    """Keyword output schema with full job data"""
+
+    jobs: list["JobOut"] = []
 
 
 class KeywordMinOut(KeywordCreate, OwnedOut):
+    """Bare Keyword output schema"""
+
     pass
 
 
 class KeywordUpdate(KeywordCreate):
+    """Keyword update schema"""
+
     name: str | None = None
 
 
@@ -91,22 +96,28 @@ class KeywordUpdate(KeywordCreate):
 
 
 class AggregatorCreate(BaseModel):
+    """Aggregator create schema"""
+
     name: str
     url: str | None = None
 
 
 class AggregatorOut(AggregatorCreate, OwnedOut):
+    """Aggregator output schema with full job data and job applications"""
+
     jobs: list["JobOut"] = []
-    job_applications: list["JobApplicationOut"] = (
-        []
-    )  # should return the min job application data (including updates and interviews)
+    job_applications: list["JobOut"] = []
 
 
 class AggregatorMinOut(AggregatorCreate, OwnedOut):
+    """Bare aggregator output schema"""
+
     pass
 
 
 class AggregatorUpdate(AggregatorCreate):
+    """Aggregator update schema"""
+
     name: str | None = None
 
 
@@ -114,21 +125,29 @@ class AggregatorUpdate(AggregatorCreate):
 
 
 class CompanyCreate(BaseModel):
+    """Company create schema"""
+
     name: str
     description: str | None = None
     url: str | None = None
 
 
 class CompanyOut(CompanyCreate, OwnedOut):
+    """Company output schema with job data and individuals"""
+
     jobs: list["JobOut"] = []
     persons: list["PersonMinOut"] = []
 
 
 class CompanyMinOut(CompanyCreate, OwnedOut):
+    """Bare company output schema"""
+
     pass
 
 
 class CompanyUpdate(CompanyCreate):
+    """Company update schema"""
+
     name: str | None = None
 
 
@@ -136,22 +155,30 @@ class CompanyUpdate(CompanyCreate):
 
 
 class LocationCreate(BaseModel):
+    """Location create schema"""
+
     postcode: str | None = None
     city: str | None = None
     country: str | None = None
 
 
 class LocationOut(LocationCreate, OwnedOut):
+    """Location output schema with job and interview data"""
+
     name: str | None = None
-    jobs: list["JobMinOut"] = []
+    jobs: list["JobOut"] = []
     interviews: list["InterviewMinOut"] = []
 
 
 class LocationMinOut(LocationCreate, OwnedOut):
+    """Bare location output schema"""
+
     name: str | None = None
 
 
 class LocationUpdate(LocationCreate):
+    """Location update schema"""
+
     pass
 
 
@@ -159,6 +186,8 @@ class LocationUpdate(LocationCreate):
 
 
 class FileCreate(BaseModel):
+    """File create schema"""
+
     filename: str
     type: str
     content: str
@@ -166,10 +195,14 @@ class FileCreate(BaseModel):
 
 
 class FileOut(FileCreate, OwnedOut):
+    """File output schema"""
+
     pass
 
 
 class FileUpdate(FileCreate):
+    """File update schema"""
+
     filename: str | None = None
     type: str | None = None
     content: str | None = None
@@ -180,6 +213,8 @@ class FileUpdate(FileCreate):
 
 
 class PersonCreate(BaseModel):
+    """Person create schema"""
+
     first_name: str
     last_name: str
     email: EmailStr | None = None
@@ -192,19 +227,25 @@ class PersonCreate(BaseModel):
 
 
 class PersonOut(PersonCreate, OwnedOut):
+    """Person out schema with job data and bare interview data"""
+
     company: CompanyMinOut | None = None
     interviews: list["InterviewMinOut"] = []
-    jobs: list["JobMinOut"] = []
+    jobs: list["JobOut"] = []
     name: str | None = None
     name_company: str | None = None
 
 
 class PersonMinOut(PersonCreate, OwnedOut):
+    """Bare person output schema"""
+
     name: str | None = None
     name_company: str | None = None
 
 
 class PersonUpdate(PersonCreate):
+    """Person update schema"""
+
     first_name: str | None = None
     last_name: str | None = None
 
@@ -213,6 +254,8 @@ class PersonUpdate(PersonCreate):
 
 
 class JobCreate(BaseModel):
+    """Job create schema"""
+
     title: str
     description: str | None = None
     salary_min: float | None = None
@@ -222,80 +265,46 @@ class JobCreate(BaseModel):
     deadline: datetime | None = None
     note: str | None = None
     attendance_type: str | None = None
+    application_date: datetime
+    application_url: str | None = None
+    application_status: str
+    application_note: str | None = None
+    applied_via: str | None = None
 
     # Foreign keys
     company_id: int | None = None
     location_id: int | None = None
     duplicate_id: int | None = None
     source_id: int | None = None
+    application_aggregator_id: int | None = None
+    cv_id: int | None = None
+    cover_letter_id: int | None = None
     keywords: list[int] = []
     contacts: list[int] = []
 
 
 class JobOut(JobCreate, OwnedOut):
+    """Job output schema with bare company, location, aggregator, keywords, contacts data and semi-full interview and update data"""
+
     company: CompanyMinOut | None = None
     location: LocationMinOut | None = None
     source: AggregatorMinOut | None = None
     keywords: list[KeywordMinOut] = []
     contacts: list[PersonMinOut] = []
-    job_application: Optional["JobApplicationMinOut"] = None
-    name: str
-
-
-class JobMinOut(OwnedOut):
-    title: str
-    description: str | None
-    salary_min: float | None
-    salary_max: float | None
-    personal_rating: int | None
-    url: str | None
-    deadline: datetime | None
-    note: str | None
-    attendance_type: str | None
-    name: str
-
-    # Foreign keys
-    company_id: int | None = None
-    location_id: int | None = None
-    duplicate_id: int | None = None
-    source_id: int | None = None
-
-
-class JobToChaseOut(JobOut):
-    last_update_type: str = ""
-    days_since_last_update: int = 0
-
-
-class JobUpdate(JobCreate):
-    title: str | None = None
-
-
-# --------------------------------------------------- JOB APPLICATION --------------------------------------------------
-
-
-class JobApplicationCreate(BaseModel):
-    date: datetime
-    url: str | None = None
-    status: str
-    note: str | None = None
-    applied_via: str | None = None
-
-    # Foreign keys
-    job_id: int
-    aggregator_id: int | None = None
-
-
-class JobApplicationOutBase(JobApplicationCreate, OwnedOut):
-    aggregator: AggregatorMinOut | None = None
+    application_aggregator: AggregatorMinOut | None = None
     interviews: list["InterviewAppOut"] = []  # get the full interviews
     updates: list["JobApplicationUpdateAppOut"] = []  # get the full updates
+    name: str
 
     @computed_field
     @property
     def last_update_date(self) -> datetime:
         """Computed property that returns the most recent activity date from application date, interviews, or updates"""
 
-        dates = [self.date]
+        if self.application_date is None:
+            return None
+
+        dates = [self.application_date]
 
         # Add interview dates
         if self.interviews:
@@ -314,7 +323,10 @@ class JobApplicationOutBase(JobApplicationCreate, OwnedOut):
     def last_update_type(self) -> str:
         """Computed property that returns the type of the most recent activity"""
 
-        most_recent_date = self.date
+        if self.application_date is None:
+            return None
+
+        most_recent_date = self.application_date
         most_recent_type = "Application"
 
         # Check interviews
@@ -335,82 +347,120 @@ class JobApplicationOutBase(JobApplicationCreate, OwnedOut):
     @computed_field
     @property
     def days_since_last_update(self) -> int:
-        """Calculate days since last update"""
+        """Calculate days since the last update"""
+
         now = datetime.now(UTC)
         return (self.last_update_date - now).days
 
 
-class JobApplicationOut(JobApplicationOutBase):
-    job: JobOut | None = None
+class JobMinOut(OwnedOut):
+    """Bare job output schema"""
+
+    title: str
+    description: str | None
+    salary_min: float | None
+    salary_max: float | None
+    personal_rating: int | None
+    url: str | None
+    deadline: datetime | None
+    note: str | None
+    attendance_type: str | None
+    application_date: datetime
+    application_url: str | None = None
+    application_status: str
+    application_note: str | None = None
+    applied_via: str | None = None
+    name: str
+
+    # Foreign keys
+    company_id: int | None = None
+    location_id: int | None = None
+    duplicate_id: int | None = None
+    source_id: int | None = None
+    application_aggregator_id: int | None = None
 
 
-class JobApplicationMinOut(JobApplicationOutBase):
-    job: JobMinOut | None = None
+class JobUpdate(JobCreate):
+    """Job update schema"""
 
-
-class JobApplicationUpdate(JobApplicationCreate):
-    date: datetime | None = None
-    job_id: int | None = None
-    status: str | None = None
+    title: str | None = None
 
 
 # ------------------------------------------------------ INTERVIEW -----------------------------------------------------
 
 
 class InterviewCreate(BaseModel):
+    """Interview create schema"""
+
     date: datetime
     type: str
+    job_id: int
+    attendance_type: str | None = None
     location_id: int | None = None
-    job_application_id: int
     note: str | None = None
     interviewers: list[int] | None = None
-    attendance_type: str | None = None
 
 
 class InterviewOut(InterviewCreate, OwnedOut):
+    """Interview output with bare location and person data, and job data"""
+
     location: LocationMinOut | None = None
-    interviewers: list["PersonMinOut"] = []
-    job_application: JobApplicationOut | None = None
+    interviewers: list[PersonMinOut] = []
+    job: JobOut | None = None
 
 
 class InterviewAppOut(InterviewCreate, OwnedOut):
+    """Interview output with bare location and person data"""
+
     location: LocationMinOut | None = None
-    interviewers: list["PersonMinOut"] = []
+    interviewers: list[PersonMinOut] = []
 
 
 class InterviewMinOut(OwnedOut):
+    """Bare interview output schema"""
+
     date: datetime
     type: str
     location_id: int | None
-    job_application_id: int
+    job_id: int
     note: str | None
     attendance_type: str | None
 
 
 class InterviewUpdate(InterviewCreate):
+    """Interview update schema"""
+
     date: datetime | None = None
-    job_application_id: int | None = None
+    job_id: int | None = None
 
 
 # ----------------------------------------------- JOB APPLICATION UPDATE -----------------------------------------------
 
 
 class JobApplicationUpdateCreate(BaseModel):
+    """Job Application Update create schema"""
+
     date: datetime
     type: str
-    job_application_id: int
+    job_id: int
     note: str | None = None
 
 
 class JobApplicationUpdateOut(JobApplicationUpdateCreate, OwnedOut):
-    job_application: JobApplicationOut | None = None
+    """Job Application Update output schema with job data"""
+
+    job: JobOut | None = None
 
 
 class JobApplicationUpdateAppOut(JobApplicationUpdateCreate, OwnedOut):
+    """Job Application Update output"""
+
     pass
 
 
 class JobApplicationUpdateUpdate(JobApplicationUpdateCreate):
+    """Job Application Update update schema"""
+
     date: datetime | None = None
     type: str | None = None
-    job_application_id: int | None = None
+    job_id: int | None = None

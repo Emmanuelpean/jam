@@ -156,13 +156,15 @@ class Aggregator(Owned, Base):
     Relationships:
     --------------
     - `jobs` (list of Job): List of jobs associated with the aggregator.
-    - `job_applications` (list of JobApplication): List of job applications associated with the aggregator."""
+    - `job_applications` (list of Job): List of jobs associated with the aggregator."""
 
     name = Column(String, nullable=False)
     url = Column(String, nullable=False)
 
-    jobs = relationship("Job", back_populates="source")
-    job_applications = relationship("JobApplication", back_populates="aggregator")
+    jobs = relationship("Job", foreign_keys="Job.source_id", back_populates="source")
+    job_applications = relationship(
+        "Job", foreign_keys="Job.application_aggregator_id", back_populates="application_aggregator"
+    )
 
 
 class Company(Owned, Base):
@@ -332,7 +334,6 @@ class Job(Owned, Base):
     - `company` (Company): Company object associated with the job posting.
     - `location` (Location): Location object associated with the job posting.
     - `keywords` (list of Keyword): List of keywords associated with the job posting.
-    - `job_application` (JobApplication): JobApplication object related to the job posting.
     - `contacts` (list of Person): List of people linked to the company that may be interested in the job posting.
     - `source` (Aggregator): Source of the job posting (e.g. LinkedIn, Indeed, etc.)."""
 
@@ -345,20 +346,36 @@ class Job(Owned, Base):
     note = Column(String, nullable=True)
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     attendance_type = Column(String, nullable=True)
+    application_date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=True)
+    application_url = Column(String, nullable=True)
+    application_status = Column(String, server_default="Applied", nullable=True)
+    applied_via = Column(String, nullable=True)
+    application_note = Column(String, nullable=True)
 
     # Foreign keys
     company_id = Column(Integer, ForeignKey("company.id", ondelete="SET NULL"), nullable=True, index=True)
     location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
-    duplicate_id = Column(Integer, ForeignKey("job.id", ondelete="SET NULL"), nullable=True)
-    source_id = Column(Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True)
+    duplicate_id = Column(Integer, ForeignKey("job.id", ondelete="SET NULL"), nullable=True, index=True)
+    source_id = Column(Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True, index=True)
+    application_aggregator_id = Column(
+        Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    cv_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
+    cover_letter_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Relationships
     company = relationship("Company", back_populates="jobs")
     location = relationship("Location", back_populates="jobs")
     keywords = relationship("Keyword", secondary=job_keyword_mapping, back_populates="jobs", lazy="selectin")
-    job_application = relationship("JobApplication", back_populates="job", uselist=False)
     contacts = relationship("Person", secondary=job_contact_mapping, back_populates="jobs", lazy="selectin")
-    source = relationship("Aggregator", back_populates="jobs")
+    source = relationship("Aggregator", foreign_keys=[source_id], back_populates="jobs")
+    interviews = relationship("Interview", back_populates="job")
+    updates = relationship("JobApplicationUpdate", back_populates="job")
+    application_aggregator = relationship(
+        "Aggregator", foreign_keys=[application_aggregator_id], back_populates="job_applications"
+    )
+    application_cv = relationship("File", foreign_keys=[cv_id], lazy="select")
+    application_cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
 
     @hybrid_property
     def name(self) -> str | Column[str]:
@@ -378,54 +395,6 @@ class Job(Owned, Base):
     )
 
 
-class JobApplication(Owned, Base):
-    """Represents job applications.
-
-    Attributes:
-    -----------
-    - `date` (datetime): The date and time of the application.
-    - `url` (str, optional): URL to the job application.
-    - `status` (str): Status of the application (Applied, Interview, Rejected, etc.).
-    - `applied_via` (str, optional): Method of application (email, phone, etc.).
-    - `note` (str, optional): Additional notes or comments about the application.
-
-    Foreign keys:
-    -------------
-    - `job_id` (int): Identifier for the job associated with the application.
-    - `aggregator_id` (int, optional): Identifier for the aggregator website through which the application was made.
-    - `cv_id` (int, optional): Identifier for the CV uploaded by the user.
-    - `cover_letter_id` (int, optional): Identifier for the cover letter uploaded by the user.
-
-    Relationships:
-    --------------
-    - `job` (Job): Job object related to the application.
-    - `interviews` (list of Interview): List of interviews performed.
-    - `aggregator` (Aggregator): Aggregator website through which the application was made.
-    - `cv` (File): CV uploaded by the user.
-    - `cover_letter` (File): Cover letter uploaded by the user.
-    - `updates` (list of JobApplicationUpdate): List of updates made to the application."""
-
-    date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
-    url = Column(String, nullable=True)
-    status = Column(String, server_default="Applied", nullable=False)
-    applied_via = Column(String, nullable=True)
-    note = Column(String, nullable=True)
-
-    # Foreign keys
-    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False, unique=True)
-    aggregator_id = Column(Integer, ForeignKey("aggregator.id", ondelete="SET NULL"), nullable=True, index=True)
-    cv_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
-    cover_letter_id = Column(Integer, ForeignKey("file.id", ondelete="SET NULL"), nullable=True, index=True)
-
-    # Relationships
-    job = relationship("Job", back_populates="job_application")
-    interviews = relationship("Interview", back_populates="job_application")
-    aggregator = relationship("Aggregator", back_populates="job_applications")
-    cv = relationship("File", foreign_keys=[cv_id], lazy="select")
-    cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
-    updates = relationship("JobApplicationUpdate", back_populates="job_application")
-
-
 class Interview(Owned, Base):
     """Represents interviews for job applications.
 
@@ -438,11 +407,11 @@ class Interview(Owned, Base):
     Foreign keys:
     -------------
     - `location_id` (int): Identifier for the location of the interview.
-    - `job_application_id` (int): Identifier for the job application associated with the interview.
+    - `job_id` (int): Identifier for the job application associated with the interview.
 
     Relationships:
     --------------
-    - `job_application` (JobApplication): JobApplication object related to the interview.
+    - `job` (Job): Job object related to the interview.
     - `interviewers` (list of Person): List of people who participated in the interview.
     - `location` (Location): Location object related to the interview."""
 
@@ -453,13 +422,11 @@ class Interview(Owned, Base):
 
     # Foreign keys
     location_id = Column(Integer, ForeignKey("location.id", ondelete="SET NULL"), nullable=True, index=True)
-    job_application_id = Column(
-        Integer, ForeignKey("job_application.id", ondelete="CASCADE"), nullable=False, index=True
-    )
+    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Relationships
     location = relationship("Location", back_populates="interviews")
-    job_application = relationship("JobApplication", back_populates="interviews")
+    job = relationship("Job", back_populates="interviews")
     interviewers = relationship("Person", secondary=interview_interviewer_mapping, back_populates="interviews")
 
     __table_args__ = (CheckConstraint("attendance_type IN ('on-site', 'remote')", name="valid_attendance_type_values"),)
@@ -476,18 +443,18 @@ class JobApplicationUpdate(Owned, Base):
 
     Foreign keys:
     -------------
-    - job_application_id (int): Identifier for the job application associated with the update.
+    - job_id (int): Identifier for the job application associated with the update.
 
     Relationships:
     --------------
-    - `job_application` (JobApplication): JobApplication object related to the update."""
+    - `job` (Job): Job object related to the update."""
 
     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     note = Column(String, nullable=True)
     type = Column(String, nullable=False)
 
     # Foreign keys
-    job_application_id = Column(Integer, ForeignKey("job_application.id", ondelete="CASCADE"), nullable=False)
+    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False)
 
     # Relationships
-    job_application = relationship("JobApplication", back_populates="updates")
+    job = relationship("Job", back_populates="updates")

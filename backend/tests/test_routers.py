@@ -18,7 +18,6 @@ from tests.utils.table_data import (
     KEYWORD_DATA,
     FILE_DATA,
     JOB_DATA,
-    JOB_APPLICATION_DATA,
     INTERVIEW_DATA,
     JOB_APPLICATION_UPDATE_DATA,
 )
@@ -205,25 +204,18 @@ class TestJobCRUD(CRUDTestBase):
     schema = schemas.JobCreate
     out_schema = schemas.JobOut
     test_data = "test_jobs"
-    add_fixture = ["test_persons", "test_locations", "test_keywords", "test_companies"]
+    add_fixture = [
+        "test_persons",
+        "test_locations",
+        "test_keywords",
+        "test_companies",
+        "test_aggregators",
+        "test_files",
+    ]
     create_data = JOB_DATA
     update_data = {
         "title": "Updated title",
         "url": "https://updated-linkedin.com",
-        "id": 1,
-    }
-
-
-class TestJobApplicationCRUD(CRUDTestBase):
-    endpoint = "/jobapplications"
-    schema = schemas.JobApplicationCreate
-    out_schema = schemas.JobApplicationOut
-    test_data = "test_job_applications"
-    add_fixture = ["test_jobs", "test_files"]
-    create_data = JOB_APPLICATION_DATA
-    update_data = {
-        "status": "Interview Completed",
-        "note": "Technical interview went well",
         "id": 1,
     }
 

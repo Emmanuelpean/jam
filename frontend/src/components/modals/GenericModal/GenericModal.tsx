@@ -78,7 +78,6 @@ interface ModalProps {
 	fields: { view: ViewFields; form: FormFields };
 	data?: any;
 	id?: string | number | null;
-	endpoint: string;
 	onSuccess?: (data: any) => void;
 	validation?: ((data: any) => any) | null;
 	transformFormData?: ((data: any) => any) | null;
@@ -99,6 +98,7 @@ export interface GenericModalProps extends ModalProps {
 	size?: "sm" | "lg" | "xl";
 	tabs?: TabConfig[] | null;
 	defaultActiveTab?: string | null;
+	endpoint: string;
 }
 
 export interface ValidationErrors {
@@ -314,30 +314,6 @@ const GenericModal = ({
 	};
 
 	const handleHideImmediate = (): void => {
-		// if (onSuccess())
-		// TODO all needed?
-		// const effectiveProps = getEffectiveProps();
-		//
-		// if (effectiveProps.submode === "add") {
-		// 	setFormData({});
-		// 	setOriginalFormData({});
-		// } else {
-		// 	setFormData({ ...effectiveProps.data }); // TODO needed?
-		// 	setOriginalFormData({ ...effectiveProps.data });
-		// }
-		// setErrors({});
-		// setSubmitting(false);
-		// setIsEditing(effectiveProps.submode === "add" || effectiveProps.submode === "edit");
-		// if (hasTabs) {
-		// 	setActiveTab(defaultActiveTab || tabs![0]!.key);
-		// }
-
-		// // Always call onSuccess when closing the modal with the current data
-		// if (onSuccess && effectiveData) {
-		// 	console.log("onSuccess called with effectiveData:", effectiveData);
-		// 	onSuccess(effectiveData);
-		// }
-
 		onHide();
 	};
 
@@ -572,8 +548,8 @@ const GenericModal = ({
 				// Submit to API
 				const apiResult =
 					effectiveProps.submode === "add"
-						? await api.post(`${effectiveProps.endpoint}/`, dataToSubmit, token)
-						: await api.put(`${effectiveProps.endpoint}/${getCurrentData().id}`, dataToSubmit, token);
+						? await api.post(`${endpoint}/`, dataToSubmit, token)
+						: await api.put(`${endpoint}/${getCurrentData().id}`, dataToSubmit, token);
 
 				// Handle success
 				if (effectiveProps.submode === "add") {

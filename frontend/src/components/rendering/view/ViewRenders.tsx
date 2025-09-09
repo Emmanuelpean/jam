@@ -3,7 +3,6 @@ import { LocationModal } from "../../modals/LocationModal";
 import { CompanyModal } from "../../modals/CompanyModal";
 import { PersonModal } from "../../modals/PersonModal";
 import { KeywordModal } from "../../modals/KeywordModal";
-import { JobApplicationModal } from "../../modals/JobApplicationModal";
 import { AggregatorModal } from "../../modals/AggregatorModal";
 import { accessAttribute } from "../../../utils/Utils";
 import InterviewsTable from "../../tables/InterviewTable";
@@ -22,7 +21,6 @@ import {
 } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
-import JobApplicationsTable from "../../tables/JobApplicationTable";
 
 interface ModalManagerProps {
 	children: (handleClick: (item: any) => void) => ReactNode;
@@ -40,12 +38,6 @@ interface Job {
 	id: string | number;
 	title?: string;
 	name?: string;
-}
-
-interface JobApplication {
-	id: string | number;
-	status: string;
-	job: JobData;
 }
 
 export interface Field {
@@ -110,7 +102,6 @@ const LocationModalManager = createModalManager(LocationModal);
 const CompanyModalManager = createModalManager(CompanyModal);
 const PersonModalManager = createModalManager(PersonModal);
 const KeywordModalManager = createModalManager(KeywordModal);
-const JobApplicationModalManager = createModalManager(JobApplicationModal);
 const JobAndApplicationModalManager = createModalManager(JobAndApplicationModal);
 const AggregatorModalManager = createModalManager(AggregatorModal);
 
@@ -403,9 +394,11 @@ export const renderFunctions = {
 	},
 
 	status: (param: RenderParams): ReactNode => {
-		const status = accessSubAttribute(param.item, param.accessKey, "status");
+		const status = accessSubAttribute(param.item, param.accessKey, "application_status");
 		return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
 	},
+
+	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
 	interviewCount: (param: RenderParams): number => {
 		const interviews = accessSubAttribute(param.item, param.accessKey, "interviews");
@@ -423,8 +416,8 @@ export const renderFunctions = {
 	},
 
 	jobApplicationCount: (param: RenderParams): number => {
-		const job_applications = accessSubAttribute(param.item, param.accessKey, "job_applications");
-		return job_applications?.length || 0;
+		const jobs = accessSubAttribute(param.item, param.accessKey, "job_applications");
+		return jobs?.length || 0;
 	},
 
 	personCount: (param: RenderParams): number => {
@@ -433,26 +426,6 @@ export const renderFunctions = {
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
-
-	jobApplication: (param: RenderParams): ReactNode => {
-		const job_application: JobApplication = accessSubAttribute(param.item, param.accessKey, "job_application");
-		if (job_application) {
-			return (
-				<JobApplicationModalManager>
-					{(handleClick) => (
-						<span
-							className={`badge ${getApplicationStatusBadgeClass(job_application.status)} clickable-badge`}
-							onClick={() => handleClick(job_application.id)}
-							id={param.id}
-						>
-							{job_application.status}
-						</span>
-					)}
-				</JobApplicationModalManager>
-			);
-		}
-		return null;
-	},
 
 	job: (param: RenderParams): ReactNode => {
 		// TODO refractor with below
@@ -678,7 +651,7 @@ export const renderFunctions = {
 		return <JobApplicationUpdateTable data={updates} jobApplicationId={param.item.id} onChange={onChange} />;
 	},
 
-	jobTable: (param: RenderParams): ReactNode => {
+	accordionJobTable: (param: RenderParams): ReactNode => {
 		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
 		const onChange = () => {};
 		return (
@@ -690,28 +663,39 @@ export const renderFunctions = {
 		);
 	},
 
-	jobApplicationTable: (param: RenderParams): ReactNode => {
-		const jobApplications = accessSubAttribute(param.item, param.accessKey, "job_applications");
+	accordionInterviewTable: (param: RenderParams): ReactNode => {
+		const interviews = accessSubAttribute(param.item, param.accessKey, "interviews");
+		const onChange = () => {};
+		return (
+			<GenericAccordion
+				title="Interviews"
+				data={interviews}
+				onChange={onChange}
+				icon={getTableIcon("Interviews")}
+			>
+				{(data, onChangeCallback) => <InterviewsTable data={data} onChange={onChangeCallback} />}
+			</GenericAccordion>
+		);
+	},
+
+	accordionJobApplicationTable: (param: RenderParams): ReactNode => {
+		const jobs = accessSubAttribute(param.item, param.accessKey, "job_applications");
 		const onChange = () => {};
 		return (
 			<GenericAccordion
 				title="Job Applications"
-				data={jobApplications}
+				data={jobs}
 				onChange={onChange}
-				icon={getTableIcon("Jobs")}
+				icon={getTableIcon("Job Applications")}
 			>
 				{(data, onChangeCallback) => (
-					<JobApplicationsTable
-						data={data}
-						onChange={onChangeCallback}
-						excludeColumns={param.excludedColumns}
-					/>
+					<JobsTable data={data} onChange={onChangeCallback} excludeColumns={param.excludedColumns} />
 				)}
 			</GenericAccordion>
 		);
 	},
 
-	PersonTable: (param: RenderParams): ReactNode => {
+	accordionPersonTable: (param: RenderParams): ReactNode => {
 		const persons = accessSubAttribute(param.item, param.accessKey, "persons");
 		const onChange = () => {};
 		return (

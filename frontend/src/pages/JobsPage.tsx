@@ -43,7 +43,7 @@ const JobsPage = () => {
 		tableColumns.url!(),
 		tableColumns.salaryRange!(),
 		tableColumns.personalRating!(),
-		tableColumns.jobapplication!(),
+		tableColumns.status!(),
 		tableColumns.createdAt!(),
 	];
 

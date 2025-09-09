@@ -45,7 +45,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onHoverChange }) => {
 	const allNavigationItems: NavigationItem[] = [
 		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard" },
 		{ path: "/jobs", text: "Jobs" },
-		{ path: "/jobapplications", text: "Job Applications" },
 		{ path: "/interviews", text: "Interviews" },
 		{ path: "/jobapplicationupdates", text: "Job Application Updates" },
 		{

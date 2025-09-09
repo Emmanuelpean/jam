@@ -12,7 +12,6 @@ from tests.utils.table_data import (
     JOB_KEYWORD_MAPPINGS,
     JOB_CONTACT_MAPPINGS,
     FILE_DATA,
-    JOB_APPLICATION_DATA,
     INTERVIEW_DATA,
     INTERVIEW_INTERVIEWER_MAPPINGS,
     JOB_ALERT_EMAIL_DATA,
@@ -151,17 +150,6 @@ def create_files(db) -> list[models.File]:
     db.add_all(files)
     db.commit()
     return files
-
-
-def create_job_applications(db) -> list[models.JobApplication]:
-    """Create sample job applications"""
-
-    print("Creating job applications...")
-    # noinspection PyArgumentList
-    job_applications = [models.JobApplication(**job_application) for job_application in JOB_APPLICATION_DATA]
-    db.add_all(job_applications)
-    db.commit()
-    return job_applications
 
 
 def create_interviews(db, persons) -> list[models.Interview]:

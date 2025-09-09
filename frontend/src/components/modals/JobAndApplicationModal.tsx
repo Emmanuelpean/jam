@@ -4,7 +4,7 @@ import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { getApplicationStatusBadgeClass } from "../rendering/view/ViewRenders";
 import { DataModalProps } from "./AggregatorModal";
-import { JobData, ApplicationData } from "../../services/Schemas";
+import { JobData } from "../../services/Schemas";
 
 interface JobAndApplicationProps extends DataModalProps {
 	onJobSuccess?: (data: any) => void;
@@ -16,6 +16,7 @@ interface JobAndApplicationProps extends DataModalProps {
 
 interface ApplicationFormData {
 	applied_via?: string;
+
 	[key: string]: any;
 }
 
@@ -90,16 +91,17 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 					? [formFields.aggregator(aggregators, openAggregatorModal)]
 					: []),
 			],
-			formFields.url(),
+			formFields.applicationUrl(),
 			formFields.note({
 				placeholder: "Add notes about your application process, interview details, etc...",
+				name: "application_note",
 			}),
 		];
 	}, [currentApplicationFormData.applied_via, openAggregatorModal, aggregators]);
 
 	const applicationViewFields = useMemo(() => {
 		const baseFields = [
-			[viewFields.date(), viewFields.status()],
+			[viewFields.applicationDate(), viewFields.applicationStatus()],
 			[viewFields.appliedVia()],
 			[viewFields.url({ label: "Application URL" })],
 			viewFields.note(),
@@ -129,29 +131,28 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		};
 	};
 
-	const transformApplicationData = (jobApplicationData: ApplicationData) => {
+	const transformApplicationData = (data: JobData) => {
 		return {
-			date: new Date(jobApplicationData.date).toISOString(),
-			url: jobApplicationData.url?.trim() || null,
-			status: jobApplicationData.status,
-			job_id: jobApplicationData.job_id || data?.id,
-			applied_via: jobApplicationData.applied_via,
-			aggregator_id: jobApplicationData.aggregator_id,
-			note: jobApplicationData.note?.trim() || null,
+			application_date: data.application_date ? new Date(data.application_date).toISOString() : null,
+			application_url: data.application_url?.trim() || null,
+			application_status: data.application_status,
+			applied_via: data.applied_via,
+			aggregator_id: data.application_aggregator_id,
+			application_note: data.application_note?.trim() || null,
 		};
 	};
 
-	const applicationTabTitle = data?.job_application ? (
+	const applicationTabTitle = data?.application_date ? (
 		<>
 			Job Application{" "}
-			<span className={`badge ${getApplicationStatusBadgeClass(data.job_application.status)} badge`}>
-				{data.job_application.status}
+			<span className={`badge ${getApplicationStatusBadgeClass(data.application_status)} badge`}>
+				{data.application_status}
 			</span>
 		</>
 	) : (
 		"Create Job Application"
 	);
-	const applicationSubmode = data?.job_application ? submode : "add";
+	const applicationSubmode = data?.application_date ? submode : "add";
 
 	const tabs: TabConfig[] = [
 		{
@@ -163,7 +164,6 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 				form: jobFormFields,
 				view: jobViewFields,
 			},
-			endpoint: "jobs",
 			onSuccess: onJobSuccess,
 			onDelete: onJobDelete,
 			transformFormData: transformJobData,
@@ -172,12 +172,12 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 			key: "application",
 			title: applicationTabTitle,
 			submode: applicationSubmode,
-			data: data?.job_application || {},
+			data: data || {},
 			fields: {
 				form: applicationFormFields,
 				view: applicationViewFields,
 			},
-			endpoint: "jobapplications",
+
 			onSuccess: onApplicationSuccess,
 			onDelete: onApplicationDelete,
 			transformFormData: transformApplicationData,
@@ -191,11 +191,11 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 				show={show}
 				onHide={onHide}
 				itemName="Job & Application"
+				endpoint="jobs"
 				size={size}
 				tabs={tabs}
 				id={id}
 				defaultActiveTab={defaultActiveTab}
-				endpoint=""
 				fields={{ form: [], view: [] }}
 			/>
 

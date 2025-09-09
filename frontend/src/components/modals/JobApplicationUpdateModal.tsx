@@ -21,7 +21,7 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 	size = "sm",
 	jobApplicationId,
 }) => {
-	const { jobApplications } = useFormOptions(["jobApplications"]);
+	const { jobs } = useFormOptions(["jobs"]);
 
 	const initialData = useMemo(() => {
 		if (submode === "add" && !data?.id) {
@@ -31,7 +31,7 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 	}, [data, submode]);
 
 	const formFieldsArray = [
-		...(!jobApplicationId ? [formFields.jobApplication(jobApplications)] : []),
+		...(!jobApplicationId ? [formFields.job(jobs)] : []),
 		[
 			formFields.datetime({
 				required: true,
@@ -43,7 +43,7 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 
 	const viewFieldsArray = [
 		[
-			...(jobApplicationId ? [] : [viewFields.jobApplication({ label: "Job Application" })]),
+			...(jobApplicationId ? [] : [viewFields.job({ label: "Job Application" })]),
 			viewFields.datetime(),
 			viewFields.updateType(),
 		],

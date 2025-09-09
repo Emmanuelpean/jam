@@ -474,12 +474,20 @@ JOB_DATA = [
         "description": "Lead backend development using Python and modern frameworks. Work with a talented team to build scalable web applications.",
         "personal_rating": 5,
         "url": "https://techcorp.com/jobs/senior_python_developer",
-        "company_id": 1,  # Tech Corp
-        "location_id": 2,  # Beverly Hills
+        "company_id": 1,
+        "location_id": 2,
         "note": "Excellent opportunity for senior developer",
         "attendance_type": "hybrid",
         "owner_id": 1,
         "source_id": 1,
+        "application_date": "2024-01-15T10:00:00",
+        "application_url": "https://techcorp.com/apply/senior-python",
+        "application_status": "applied",
+        "applied_via": "aggregator",
+        "application_note": "Submitted application with cover letter",
+        "cv_id": 3,
+        "cover_letter_id": 3,
+        "application_aggregator_id": 1,
     },
     {
         "title": "Full Stack JavaScript Developer",
@@ -488,12 +496,20 @@ JOB_DATA = [
         "description": "Build end-to-end web applications with React and Node.js. Join our dynamic startup environment.",
         "personal_rating": 4,
         "url": "https://startupxyz.com/jobs/fullstack_js_developer",
-        "company_id": 2,  # StartupXYZ
-        "location_id": 1,  # New York
+        "company_id": 2,
+        "location_id": 1,
         "note": "Great team culture mentioned in reviews",
         "attendance_type": "on-site",
         "owner_id": 1,
         "source_id": 2,
+        "application_date": "2024-01-16T14:30:00",
+        "application_url": "https://startupxyz.com/apply/fullstack-js",
+        "application_status": "interview",
+        "applied_via": "aggregator",
+        "application_note": "Phone screening scheduled for next week",
+        "cv_id": 1,
+        "cover_letter_id": None,
+        "application_aggregator_id": 5,
     },
     {
         "title": "Remote React Developer",
@@ -502,10 +518,18 @@ JOB_DATA = [
         "description": "Build modern React applications for distributed team. Full remote position with flexible hours.",
         "personal_rating": 3,
         "url": "https://techcorp.com/jobs/remote_react_developer",
-        "company_id": 1,  # Tech Corp
-        "location_id": 4,  # San Francisco
+        "company_id": 1,
+        "location_id": 4,
         "owner_id": 1,
         "source_id": 2,
+        "application_date": "2024-01-17T09:15:00",
+        "application_url": None,
+        "application_status": "applied",
+        "applied_via": "aggregator",
+        "application_note": "Applied through LinkedIn",
+        "cv_id": None,
+        "cover_letter_id": 2,
+        "application_aggregator_id": 4,
     },
     {
         "title": "Cloud Engineer",
@@ -514,11 +538,19 @@ JOB_DATA = [
         "description": "Design and maintain AWS cloud infrastructure. Experience with Kubernetes and Docker required.",
         "personal_rating": 4,
         "url": "https://startupxyz.com/jobs/cloud_engineer",
-        "company_id": 2,  # StartupXYZ
-        "location_id": 3,  # London
+        "company_id": 2,
+        "location_id": 3,
         "attendance_type": "hybrid",
         "owner_id": 1,
         "source_id": 2,
+        "application_date": "2024-01-18T16:45:00",
+        "application_url": "https://startupxyz.com/careers/cloud-engineer",
+        "application_status": "rejected",
+        "applied_via": "aggregator",
+        "application_note": "Not enough cloud experience",
+        "cv_id": 4,
+        "cover_letter_id": 4,
+        "application_aggregator_id": 7,
     },
     {
         "title": "Frontend Developer",
@@ -527,35 +559,68 @@ JOB_DATA = [
         "description": "Create beautiful user interfaces with React and JavaScript. Focus on user experience and modern design.",
         "personal_rating": 2,
         "url": "https://techcorp.com/jobs/frontend_developer",
-        "company_id": 1,  # Tech Corp
-        "location_id": 5,  # Berlin
+        "company_id": 1,
+        "location_id": 5,
         "attendance_type": "on-site",
         "owner_id": 1,
         "source_id": 4,
+        "application_date": None,
+        "application_url": None,
+        "application_status": None,
+        "applied_via": None,
+        "application_note": None,
+        "cv_id": None,
+        "cover_letter_id": None,
+        "application_aggregator_id": None,
     },
     {
         "title": "Backend Developer",
         "description": "Looking for a backend developer with Python experience. FastAPI knowledge preferred.",
-        "location_id": 4,  # San Francisco
+        "location_id": 4,
         "attendance_type": "hybrid",
         "owner_id": 1,
         "source_id": 1,
+        "application_date": "2024-01-20T13:30:00",
+        "application_url": None,
+        "application_status": "applied",
+        "applied_via": None,
+        "application_note": "Quick application through company form",
+        "cv_id": None,
+        "cover_letter_id": None,
+        "application_aggregator_id": None,
     },
     {
+        # Job 7 - Software Engineer Intern (no application)
         "title": "Software Engineer Intern",
         "description": "Summer internship opportunity for computer science students. Great learning environment.",
         "personal_rating": 1,
-        "company_id": 3,  # Oxford PV
+        "company_id": 3,
         "owner_id": 1,
         "source_id": 7,
+        "application_date": None,
+        "application_url": None,
+        "application_status": None,
+        "applied_via": None,
+        "application_note": None,
+        "cv_id": None,
+        "cover_letter_id": None,
+        "application_aggregator_id": None,
     },
     {
         "title": "Developer Position",
-        "company_id": 3,  # Oxford PV
-        "location_id": 5,  # Berlin
+        "company_id": 3,
+        "location_id": 5,
         "attendance_type": "hybrid",
         "owner_id": 1,
         "source_id": 9,
+        "application_date": None,
+        "application_url": None,
+        "application_status": None,
+        "applied_via": None,
+        "application_note": None,
+        "cv_id": None,
+        "cover_letter_id": None,
+        "application_aggregator_id": None,
     },
     {
         "title": "DevOps Engineer",
@@ -564,12 +629,20 @@ JOB_DATA = [
         "description": "Build and maintain CI/CD pipelines, manage cloud infrastructure",
         "personal_rating": 5,
         "url": "https://cloudfirst.io/careers/devops",
-        "company_id": 6,  # CloudFirst Inc
-        "location_id": 8,  # Paris
+        "company_id": 6,
+        "location_id": 8,
         "note": "Strong DevOps culture, great tools",
         "attendance_type": "hybrid",
         "owner_id": 1,
         "source_id": 9,
+        "application_date": "2024-01-21T09:00:00",
+        "application_url": "https://cloudfirst.io/apply/devops",
+        "application_status": "interview",
+        "applied_via": None,
+        "application_note": "Technical interview scheduled",
+        "cv_id": 8,
+        "cover_letter_id": 10,
+        "application_aggregator_id": None,
     },
     {
         "title": "Data Scientist",
@@ -577,11 +650,19 @@ JOB_DATA = [
         "salary_max": 125000,
         "description": "Work with big data to derive insights and build ML models",
         "personal_rating": 4,
-        "company_id": 5,  # DataTech Industries
-        "location_id": 9,  # Germany (no city)
+        "company_id": 5,
+        "location_id": 9,
         "attendance_type": "remote",
         "owner_id": 1,
         "source_id": 1,
+        "application_date": "2024-01-22T11:15:00",
+        "application_url": None,
+        "application_status": "applied",
+        "applied_via": None,
+        "application_note": None,
+        "cv_id": 9,
+        "cover_letter_id": None,
+        "application_aggregator_id": None,
     },
     {
         "title": "Vue.js Frontend Developer",
@@ -589,11 +670,19 @@ JOB_DATA = [
         "salary_max": 80000,
         "description": "Build modern SPAs with Vue.js and TypeScript",
         "url": "https://enterprise-solutions.com/jobs/vue-dev",
-        "company_id": 9,  # Enterprise Solutions
-        "location_id": 10,  # Tokyo
+        "company_id": 9,
+        "location_id": 10,
         "attendance_type": "on-site",
         "owner_id": 1,
         "source_id": 5,
+        "application_date": "2024-01-23T15:45:00",
+        "application_url": "https://enterprise-solutions.com/apply/vue-dev",
+        "application_status": "rejected",
+        "applied_via": None,
+        "application_note": "Position filled internally",
+        "cv_id": 6,
+        "cover_letter_id": 12,
+        "application_aggregator_id": None,
     },
     {
         "title": "Remote Full Stack Engineer",
@@ -602,12 +691,20 @@ JOB_DATA = [
         "description": "Work remotely on full stack applications",
         "personal_rating": 3,
         "url": "https://localbiz.com/jobs/fullstack",
-        "company_id": 10,  # LocalBiz
-        "location_id": 11,  # Australia
+        "company_id": 10,
+        "location_id": 11,
         "note": "Small team, lots of autonomy",
         "attendance_type": "remote",
         "owner_id": 1,
         "source_id": 7,
+        "application_date": "2024-01-24T08:30:00",
+        "application_url": None,
+        "application_status": "applied",
+        "applied_via": None,
+        "application_note": "Applied directly through website",
+        "cv_id": 3,
+        "cover_letter_id": None,
+        "application_aggregator_id": None,
     },
     {
         "title": "Junior Developer",
@@ -615,19 +712,35 @@ JOB_DATA = [
         "salary_max": 60000,
         "description": "Entry-level position for new graduates",
         "personal_rating": 2,
-        "company_id": 7,  # Minimal Corp
-        "location_id": 12,  # Toronto
+        "company_id": 7,
+        "location_id": 12,
         "attendance_type": "on-site",
         "owner_id": 1,
         "source_id": 8,
+        "application_date": "2024-01-25T10:00:00",
+        "application_url": None,
+        "application_status": "interview",
+        "applied_via": None,
+        "application_note": None,
+        "cv_id": 1,
+        "cover_letter_id": 7,
+        "application_aggregator_id": None,
     },
     {
         "title": "Freelance Web Developer",
         "description": "Contract position for web development projects",
-        "location_id": 13,  # Amsterdam
+        "location_id": 13,
         "note": "Flexible hours, project-based",
         "attendance_type": "remote",
         "owner_id": 1,
+        "application_date": None,
+        "application_url": None,
+        "application_status": None,
+        "applied_via": None,
+        "application_note": None,
+        "cv_id": None,
+        "cover_letter_id": None,
+        "application_aggregator_id": None,
     },
     {
         "title": "Mobile App Developer",
@@ -636,15 +749,31 @@ JOB_DATA = [
         "description": "Develop iOS and Android applications",
         "personal_rating": 4,
         "url": "https://websolutions.com/jobs/mobile-dev",
-        "company_id": 4,  # WebSolutions Ltd
-        "location_id": 12,  # Brazil
+        "company_id": 4,
+        "location_id": 12,
         "attendance_type": "hybrid",
         "owner_id": 1,
+        "application_date": "2024-01-26T16:00:00",
+        "application_url": "https://websolutions.com/apply/mobile-dev",
+        "application_status": "applied",
+        "applied_via": None,
+        "application_note": "Excited about mobile development opportunity",
+        "cv_id": 11,
+        "cover_letter_id": None,
+        "application_aggregator_id": None,
     },
     {
         "title": "Minimum Required Job",
         "attendance_type": "on-site",
         "owner_id": 1,
+        "application_date": "2024-01-27T12:00:00",
+        "application_url": None,
+        "application_status": "applied",
+        "applied_via": None,
+        "application_note": None,
+        "cv_id": None,
+        "cover_letter_id": None,
+        "application_aggregator_id": None,
     },
     {
         "title": "High Salary Position",
@@ -652,12 +781,26 @@ JOB_DATA = [
         "salary_max": 250000,
         "description": "Senior leadership role with high compensation",
         "personal_rating": 5,
-        "company_id": 9,  # Enterprise Solutions
-        "location_id": 1,  # New York
+        "company_id": 9,
+        "location_id": 1,
         "attendance_type": "hybrid",
         "owner_id": 1,
+        "application_date": "2024-01-28T14:20:00",
+        "application_url": "https://enterprise-solutions.com/apply/high-salary",
+        "application_status": "interview",
+        "applied_via": None,
+        "application_note": "Executive-level interview process",
+        "cv_id": 8,
+        "cover_letter_id": 2,
+        "application_aggregator_id": None,
     },
 ]
+
+JOB_APPLICATION_DATETIME = [current_date - timedelta(weeks=i) for i in range(len(JOB_DATA))]
+for job_application, date in zip(JOB_DATA, JOB_APPLICATION_DATETIME):
+    if job_application.get("application_date"):
+        job_application["application_date"] = date.strftime(DATE_FORMAT)
+
 
 FILE_DATA = [
     {
@@ -723,139 +866,12 @@ FILE_DATA = [
 ]
 
 
-JOB_APPLICATION_DATA = [
-    {
-        "date": "2024-01-15T10:00:00",
-        "url": "https://techcorp.com/apply/senior-python",
-        "job_id": 1,
-        "status": "applied",
-        "note": "Submitted application with cover letter",
-        "cv_id": 3,
-        "cover_letter_id": 3,
-        "owner_id": 1,
-        "applied_via": "aggregator",
-        "aggregator_id": 1,
-    },
-    {
-        "date": "2024-01-16T14:30:00",
-        "url": "https://startupxyz.com/apply/fullstack-js",
-        "job_id": 2,
-        "status": "interview",
-        "note": "Phone screening scheduled for next week",
-        "cv_id": 1,
-        "owner_id": 1,
-        "applied_via": "aggregator",
-        "aggregator_id": 5,
-    },
-    {
-        "date": "2024-01-17T09:15:00",
-        "job_id": 3,
-        "status": "applied",
-        "note": "Applied through LinkedIn",
-        "cover_letter_id": 2,
-        "owner_id": 1,
-        "applied_via": "aggregator",
-        "aggregator_id": 4,
-    },
-    {
-        "date": "2024-01-18T16:45:00",
-        "url": "https://startupxyz.com/careers/cloud-engineer",
-        "job_id": 4,
-        "status": "rejected",
-        "note": "Not enough cloud experience",
-        "cv_id": 4,
-        "cover_letter_id": 4,
-        "owner_id": 1,
-        "applied_via": "aggregator",
-        "aggregator_id": 7,
-    },
-    {
-        "date": "2024-01-20T13:30:00",
-        "job_id": 6,
-        "status": "applied",
-        "note": "Quick application through company form",
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-21T09:00:00",
-        "url": "https://cloudfirst.io/apply/devops",
-        "job_id": 9,  # DevOps Engineer
-        "status": "interview",
-        "note": "Technical interview scheduled",
-        "cv_id": 8,  # devops_engineer_cv.pdf
-        "cover_letter_id": 10,  # vue_developer_cover_letter.txt
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-22T11:15:00",
-        "job_id": 10,  # Data Scientist
-        "status": "applied",
-        "cv_id": 9,  # data_scientist_resume.pdf
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-23T15:45:00",
-        "url": "https://enterprise-solutions.com/apply/vue-dev",
-        "job_id": 11,  # Vue.js Frontend Developer
-        "status": "rejected",
-        "note": "Position filled internally",
-        "cv_id": 6,
-        "cover_letter_id": 12,  # generic_cover_letter.docx
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-24T08:30:00",
-        "job_id": 12,  # Remote Full Stack Engineer
-        "status": "applied",
-        "note": "Applied directly through website",
-        "cv_id": 3,
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-25T10:00:00",
-        "job_id": 13,  # Junior Developer
-        "status": "interview",
-        "cv_id": 1,
-        "cover_letter_id": 7,
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-26T16:00:00",
-        "url": "https://websolutions.com/apply/mobile-dev",
-        "job_id": 15,  # Mobile App Developer
-        "status": "applied",
-        "note": "Excited about mobile development opportunity",
-        "cv_id": 11,  # mobile_dev_portfolio.pdf
-        "owner_id": 1,
-    },
-    {
-        "date": "2024-01-27T12:00:00",
-        "job_id": 16,  # Minimum Required Job
-        "status": "applied",
-        "owner_id": 1,  # Minimal application
-    },
-    {
-        "date": "2024-01-28T14:20:00",
-        "url": "https://enterprise-solutions.com/apply/high-salary",
-        "job_id": 17,  # High Salary Position
-        "status": "interview",
-        "note": "Executive-level interview process",
-        "cv_id": 8,
-        "cover_letter_id": 2,
-        "owner_id": 1,
-    },
-]
-JOB_APPLICATION_DATETIME = [current_date - timedelta(weeks=i) for i in range(len(JOB_APPLICATION_DATA))]
-for job_application, date in zip(JOB_APPLICATION_DATA, JOB_APPLICATION_DATETIME):
-    job_application["date"] = date.strftime(DATE_FORMAT)
-
-
 INTERVIEW_DATA = [
     {
         "date": "2024-01-20T09:30:00",
         "type": "HR",
         "location_id": 1,
-        "job_application_id": 1,
+        "job_id": 1,
         "note": "First round technical interview",
         "attendance_type": "on-site",
         "owner_id": 1,
@@ -864,7 +880,7 @@ INTERVIEW_DATA = [
         "date": "2024-01-21T14:00:00",
         "type": "Technical",
         "location_id": 2,
-        "job_application_id": 2,
+        "job_id": 2,
         "note": "HR screening call",
         "attendance_type": "remote",
         "owner_id": 1,
@@ -873,7 +889,7 @@ INTERVIEW_DATA = [
         "date": "2024-01-22T10:15:00",
         "type": "Management",
         "location_id": 4,  # Remote
-        "job_application_id": 3,
+        "job_id": 3,
         "note": "Remote technical assessment",
         "attendance_type": "remote",
         "owner_id": 1,
@@ -882,7 +898,7 @@ INTERVIEW_DATA = [
         "date": "2024-01-23T16:30:00",
         "type": "HR",
         "location_id": 1,
-        "job_application_id": 4,
+        "job_id": 4,
         "note": "Final round with team lead",
         "attendance_type": "on-site",
         "owner_id": 1,
@@ -891,7 +907,7 @@ INTERVIEW_DATA = [
         "date": "2024-01-24T11:45:00",
         "type": "Other",
         "location_id": 3,
-        "job_application_id": 5,
+        "job_id": 5,
         "note": "Cultural fit interview",
         "attendance_type": "on-site",
         "owner_id": 1,
@@ -900,7 +916,7 @@ INTERVIEW_DATA = [
         "date": "2024-01-26T09:00:00",
         "type": "HR",
         "location_id": 7,  # Canada location
-        "job_application_id": 1,  # Same application, second interview
+        "job_id": 1,  # Same application, second interview
         "note": None,
         "attendance_type": "on-site",
         "owner_id": 1,
@@ -909,7 +925,7 @@ INTERVIEW_DATA = [
         "date": "2024-01-29T10:30:00",
         "type": "Technical",
         "location_id": 8,  # Paris
-        "job_application_id": 6,  # DevOps application
+        "job_id": 6,  # DevOps application
         "note": "Deep technical dive into infrastructure",
         "attendance_type": "on-site",
         "owner_id": 1,
@@ -918,7 +934,7 @@ INTERVIEW_DATA = [
         "date": "2024-01-30T15:00:00",
         "type": "Management",
         "location_id": 11,  # Australia (remote)
-        "job_application_id": 8,  # Remote Full Stack application
+        "job_id": 8,  # Remote Full Stack application
         "note": "Meeting with team leads",
         "attendance_type": "remote",
         "owner_id": 1,
@@ -927,7 +943,7 @@ INTERVIEW_DATA = [
         "date": "2024-02-01T09:45:00",
         "type": "HR",
         "location_id": 12,  # Toronto
-        "job_application_id": 10,  # Junior Developer application
+        "job_id": 10,  # Junior Developer application
         "note": "Initial screening for junior position",
         "attendance_type": "on-site",
         "owner_id": 1,
@@ -936,7 +952,7 @@ INTERVIEW_DATA = [
         "date": "2024-02-02T11:00:00",
         "type": "Technical",
         "location_id": 12,  # Brazil (remote)
-        "job_application_id": 11,  # Mobile App Developer
+        "job_id": 11,  # Mobile App Developer
         "note": "Technical skills assessment for mobile development",
         "attendance_type": "remote",
         "owner_id": 1,
@@ -945,7 +961,7 @@ INTERVIEW_DATA = [
         "date": "2024-02-03T14:15:00",
         "type": "Other",
         "location_id": 1,  # New York
-        "job_application_id": 13,  # High Salary Position
+        "job_id": 13,  # High Salary Position
         "note": "Panel interview with executives",
         "attendance_type": "on-site",
         "owner_id": 1,
@@ -954,13 +970,13 @@ INTERVIEW_DATA = [
         "date": "2024-02-04T16:30:00",
         "type": "Management",
         "location_id": 5,  # Germany (remote)
-        "job_application_id": 7,  # Data Scientist application
+        "job_id": 7,  # Data Scientist application
         "attendance_type": "remote",
         "owner_id": 1,  # Minimal interview info
     },
 ]
-interviews_sorted = sorted(INTERVIEW_DATA, key=lambda x: x["job_application_id"])
-grouped = {k: list(v) for k, v in groupby(interviews_sorted, key=lambda x: x["job_application_id"])}
+interviews_sorted = sorted(INTERVIEW_DATA, key=lambda x: x["job_id"])
+grouped = {k: list(v) for k, v in groupby(interviews_sorted, key=lambda x: x["job_id"])}
 for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
     for i, update in enumerate(grouped[update_key]):
         update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime(DATE_FORMAT)
@@ -969,112 +985,112 @@ for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
 JOB_APPLICATION_UPDATE_DATA = [
     {
         "date": "2024-01-15 14:30:00",
-        "job_application_id": 1,  # Tech startup application
+        "job_id": 1,  # Tech startup application
         "note": "Received automated confirmation email",
         "type": "received",
         "owner_id": 1,
     },
     {
         "date": "2024-01-18 09:15:00",
-        "job_application_id": 1,
+        "job_id": 1,
         "note": "HR recruiter called to schedule phone screening",
         "type": "received",
         "owner_id": 1,
     },
     {
         "date": "2024-01-22 16:45:00",
-        "job_application_id": 2,  # Marketing agency application
+        "job_id": 2,  # Marketing agency application
         "note": "Application status changed to 'Under Review'",
         "type": "received",
         "owner_id": 1,
     },
     {
         "date": "2024-01-25 11:20:00",
-        "job_application_id": 3,  # Finance corp application
+        "job_id": 3,  # Finance corp application
         "note": "Received rejection email - position filled internally",
         "type": "received",
         "owner_id": 1,
     },
     {
         "date": "2024-01-28 13:10:00",
-        "job_application_id": 4,  # Healthcare application
+        "job_id": 4,  # Healthcare application
         "note": "Invited to complete online assessment",
         "type": "received",
         "owner_id": 1,
     },
     {
         "date": "2024-02-01 08:30:00",
-        "job_application_id": 2,
+        "job_id": 2,
         "note": "Scheduled for first round interview next week",
         "type": "received",
         "owner_id": 1,
     },
     {
         "date": "2024-02-03 15:45:00",
-        "job_application_id": 5,  # Remote consulting application
+        "job_id": 5,  # Remote consulting application
         "note": "Application acknowledgment received",
         "type": "received",
         "owner_id": 1,
     },
     {
         "date": "2024-02-05 10:15:00",
-        "job_application_id": 4,
+        "job_id": 4,
         "note": "Completed technical assessment - awaiting results",
         "type": "sent",
         "owner_id": 1,
     },
     {
         "date": "2024-02-08 14:20:00",
-        "job_application_id": 6,  # Another application
+        "job_id": 6,  # Another application
         "note": "Phone screening scheduled for tomorrow",
         "type": "sent",
         "owner_id": 1,
     },
     {
         "date": "2024-02-12 11:45:00",
-        "job_application_id": 7,
+        "job_id": 7,
         "note": "Application moved to final review stage",
         "type": "sent",
         "owner_id": 1,
     },
     {
         "date": "2024-02-15 09:30:00",
-        "job_application_id": 8,
+        "job_id": 8,
         "note": "Hiring manager wants to schedule video call",
         "type": "sent",
         "owner_id": 1,
     },
     {
         "date": "2024-02-18 16:10:00",
-        "job_application_id": 9,
+        "job_id": 9,
         "note": "Received offer letter - salary negotiation in progress",
         "type": "sent",
         "owner_id": 1,
     },
     {
         "date": "2024-02-20 13:25:00",
-        "job_application_id": 10,
+        "job_id": 10,
         "note": "Application automatically withdrawn due to inactivity",
         "type": "sent",
         "owner_id": 1,
     },
     {
         "date": "2024-02-22 10:40:00",
-        "job_application_id": 2,
+        "job_id": 2,
         "note": "Second round interview scheduled - panel interview",
         "type": "sent",
         "owner_id": 1,
     },
     {
         "date": "2024-02-25 14:55:00",
-        "job_application_id": 11,
+        "job_id": 11,
         "note": "Reference check completed",
         "type": "sent",
         "owner_id": 1,
     },
 ]
-job_application_updates_sorted = sorted(JOB_APPLICATION_UPDATE_DATA, key=lambda x: x["job_application_id"])
-grouped = {k: list(v) for k, v in groupby(job_application_updates_sorted, key=lambda x: x["job_application_id"])}
+job_application_updates_sorted = sorted(JOB_APPLICATION_UPDATE_DATA, key=lambda x: x["job_id"])
+grouped = {k: list(v) for k, v in groupby(job_application_updates_sorted, key=lambda x: x["job_id"])}
 for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
     for i, update in enumerate(grouped[update_key]):
         update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime(DATE_FORMAT)

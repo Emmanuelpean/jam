@@ -32,6 +32,8 @@ export const LocationModal: React.FC<DataModalProps> = ({
 		view: viewFieldsArray,
 	};
 
+	const additionalFields = [viewFields.jobTable(), viewFields.accordionInterviewTable()];
+
 	const customValidation = async (formData: LocationData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
 		if (!token) {
@@ -88,6 +90,7 @@ export const LocationModal: React.FC<DataModalProps> = ({
 			itemName="Location"
 			size={size}
 			data={data}
+			additionalFields={additionalFields}
 			id={id}
 			fields={fields}
 			endpoint="locations"

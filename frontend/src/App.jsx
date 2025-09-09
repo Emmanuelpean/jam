@@ -10,7 +10,6 @@ import JobsPage from "./pages/JobsPage";
 import PersonPage from "./pages/PersonPage";
 import KeywordsPage from "./pages/KeywordsPage";
 import InterviewsPage from "./pages/InterviewsPage";
-import JobApplicationPage from "./pages/JobApplicationsPage";
 import "./Themes.css";
 import DashboardPage from "./pages/EISDashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
@@ -137,14 +136,6 @@ function App() {
 									element={
 										<ProtectedRoute>
 											<InterviewsPage />
-										</ProtectedRoute>
-									}
-								/>
-								<Route
-									path="/jobapplications"
-									element={
-										<ProtectedRoute>
-											<JobApplicationPage />
 										</ProtectedRoute>
 									}
 								/>
