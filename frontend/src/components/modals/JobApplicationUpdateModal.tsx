@@ -42,11 +42,8 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 	];
 
 	const viewFieldsArray = [
-		[
-			...(jobApplicationId ? [] : [viewFields.job({ label: "Job Application" })]),
-			viewFields.datetime(),
-			viewFields.updateType(),
-		],
+		...(jobApplicationId ? [] : [viewFields.job()]),
+		[viewFields.datetime(), viewFields.updateType()],
 		viewFields.note(),
 	];
 

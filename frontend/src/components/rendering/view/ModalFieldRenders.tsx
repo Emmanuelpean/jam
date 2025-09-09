@@ -235,7 +235,7 @@ export const viewFields = {
 	job: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "job",
 		label: "Job",
-		render: (params: RenderParams) => renderFunctions.job({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.jobName({ ...params }),
 		...overrides,
 	}),
 

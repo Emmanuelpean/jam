@@ -333,9 +333,9 @@ export const tableColumns: Columns = {
 		label: "Job",
 		sortable: true,
 		searchable: true,
-		searchFields: "job.title",
-		sortField: "job.title",
-		render: renderFunctions.job,
+		searchFields: "job.name",
+		sortField: "job.name",
+		render: renderFunctions.jobName,
 		...overrides,
 	}),
 
@@ -363,17 +363,6 @@ export const tableColumns: Columns = {
 		sortable: true,
 		searchable: false,
 		render: renderFunctions.updateCount,
-		...overrides,
-	}),
-
-	jobApplicationJob: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "job",
-		label: "Job",
-		sortable: true,
-		searchable: true,
-		searchFields: "job.title",
-		sortField: "job.title",
-		render: renderFunctions.jobName,
 		...overrides,
 	}),
 

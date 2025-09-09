@@ -21,7 +21,7 @@ const InterviewsPage = () => {
 	} = useTableData("interviews", [], {}, { key: "date", direction: "desc" });
 
 	const columns = [
-		tableColumns.jobApplicationJob!(),
+		tableColumns.job!(),
 		tableColumns.interviewers!(),
 		tableColumns.date!(),
 		tableColumns.type!(),

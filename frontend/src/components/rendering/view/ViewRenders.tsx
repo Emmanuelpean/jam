@@ -34,12 +34,6 @@ export interface RenderParams {
 	excludedColumns?: string | string[];
 }
 
-interface Job {
-	id: string | number;
-	title?: string;
-	name?: string;
-}
-
 export interface Field {
 	key: string;
 	render?: (params: RenderParams) => ReactNode;
@@ -444,7 +438,7 @@ export const renderFunctions = {
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
-	_jobBadge: (param: RenderParams, attribute: string, displayAttribute: string): ReactNode => {
+	_jobBadge: (param: RenderParams, attribute: string, displayAttribute: keyof JobData): ReactNode => {
 		const job: JobData = accessSubAttribute(param.item, param.accessKey, attribute);
 		if (job) {
 			return (
@@ -456,7 +450,7 @@ export const renderFunctions = {
 							id={param.id}
 						>
 							<i className="bi bi-briefcase me-1"></i>
-							{job ? [displayAttribute] : null}
+							{String(job[displayAttribute])}
 						</span>
 					)}
 				</JobAndApplicationModalManager>
@@ -470,7 +464,7 @@ export const renderFunctions = {
 	},
 
 	jobName: (param: RenderParams): ReactNode => {
-		return renderFunctions._jobBadge(param, "job_name", "name");
+		return renderFunctions._jobBadge(param, "job", "name");
 	},
 
 	keywords: (param: RenderParams): ReactNode => {

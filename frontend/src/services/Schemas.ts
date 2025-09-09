@@ -107,6 +107,7 @@ export interface LocationData {
 
 export interface JobData {
 	id?: number;
+	name?: string;
 	title: string;
 	description?: string | null;
 	note?: string | null;
