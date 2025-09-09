@@ -8,6 +8,7 @@ import "../../pages/Auth/Auth.css";
 import { DataModalProps } from "./AggregatorModal";
 import { ValidationErrors } from "./GenericModal/GenericModal";
 import { UserData } from "../../services/Schemas";
+import { THEMES } from "../../utils/Theme";
 
 export const UserModal: React.FC<DataModalProps> = ({
 	show,
@@ -44,12 +45,12 @@ export const UserModal: React.FC<DataModalProps> = ({
 		}
 		const queryParams = { email: formData.email.trim() };
 		const matches = await userApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing: any) => {
+		const duplicates = matches.filter((existing: UserData) => {
 			return data?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0) {
-			errors.email = `A tag with this name already exists`;
+			errors.email = `A user with this email address already exists`;
 		}
 		return errors;
 	};
@@ -57,13 +58,9 @@ export const UserModal: React.FC<DataModalProps> = ({
 	const transformFormData = (data: UserData) => {
 		const transformed: any = {
 			email: data.email?.trim(),
-			theme: data.theme?.trim() || "mixed-berry",
+			theme: data.theme?.trim() || THEMES[0],
 			is_admin: data.is_admin || false,
 		};
-
-		if (data.password) {
-			transformed.password = data.password;
-		}
 
 		return transformed;
 	};

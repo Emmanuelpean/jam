@@ -59,7 +59,7 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 		return {
 			date: new Date(data.date).toISOString(),
 			type: data.type,
-			job_application_id: jobApplicationId || data.job_application_id,
+			job_id: jobApplicationId || data.job_id,
 			note: data.note?.trim() || null,
 		};
 	};

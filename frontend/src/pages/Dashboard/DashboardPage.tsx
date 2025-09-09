@@ -1,4 +1,4 @@
-import React, { useEffect, useState, JSX } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { Alert, Card, Col, Container, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { useLoading } from "../../contexts/LoadingContext";
@@ -6,7 +6,7 @@ import { api } from "../../services/Api";
 import JobsToChase from "../../components/tables/JobsToChase";
 import "./DashboardPage.css";
 import { JobAndApplicationModal } from "../../components/modals/JobAndApplicationModal";
-import { renderFunctions, RenderParams } from "../../components/rendering/view/ViewRenders";
+import { renderFunctions } from "../../components/rendering/view/ViewRenders";
 import { ApplicationData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
 
 interface DashboardStats {

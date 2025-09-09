@@ -368,11 +368,10 @@ export const tableColumns: Columns = {
 
 	jobApplicationJob: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "job",
-		accessKey: "job_application",
 		label: "Job",
 		sortable: true,
 		searchable: true,
-		searchFields: "job.name",
+		searchFields: "job.title",
 		sortField: "job.title",
 		render: renderFunctions.jobName,
 		...overrides,

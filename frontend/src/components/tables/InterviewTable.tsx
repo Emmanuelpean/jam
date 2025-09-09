@@ -24,9 +24,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({ jobApplicationId, onC
 
 	const ViewColumns = [tableColumns.date!(), tableColumns.type!(), tableColumns.location!(), tableColumns.note!()];
 
-	const ModalWithProps: React.FC<DataModalProps> = (props) => (
-		<InterviewModal {...props} jobApplicationId={jobApplicationId} />
-	);
+	const ModalWithProps: React.FC<DataModalProps> = (props) => <InterviewModal {...props} jobId={jobApplicationId} />;
 
 	return (
 		<GenericTableWithModals

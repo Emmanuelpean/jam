@@ -444,9 +444,8 @@ export const renderFunctions = {
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
-	job: (param: RenderParams): ReactNode => {
-		// TODO refractor with below
-		const job: JobData = accessSubAttribute(param.item, param.accessKey, "job");
+	_jobBadge: (param: RenderParams, attribute: string, displayAttribute: string): ReactNode => {
+		const job: JobData = accessSubAttribute(param.item, param.accessKey, attribute);
 		if (job) {
 			return (
 				<JobAndApplicationModalManager>
@@ -457,7 +456,7 @@ export const renderFunctions = {
 							id={param.id}
 						>
 							<i className="bi bi-briefcase me-1"></i>
-							{job.title}
+							{job ? [displayAttribute] : null}
 						</span>
 					)}
 				</JobAndApplicationModalManager>
@@ -466,25 +465,12 @@ export const renderFunctions = {
 		return null;
 	},
 
+	job: (param: RenderParams): ReactNode => {
+		return renderFunctions._jobBadge(param, "job", "title");
+	},
+
 	jobName: (param: RenderParams): ReactNode => {
-		const job: Job = accessSubAttribute(param.item, param.accessKey, "job");
-		if (job) {
-			return (
-				<JobAndApplicationModalManager>
-					{(handleClick) => (
-						<span
-							className={`badge bg-info clickable-badge`}
-							onClick={() => handleClick(job.id)}
-							id={param.id}
-						>
-							<i className="bi bi-briefcase me-1"></i>
-							{job.name}
-						</span>
-					)}
-				</JobAndApplicationModalManager>
-			);
-		}
-		return null;
+		return renderFunctions._jobBadge(param, "job_name", "name");
 	},
 
 	keywords: (param: RenderParams): ReactNode => {

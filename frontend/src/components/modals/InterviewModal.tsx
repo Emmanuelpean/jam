@@ -7,7 +7,7 @@ import { DataModalProps } from "./AggregatorModal";
 import { InterviewData } from "../../services/Schemas";
 
 interface InterviewModalProps extends DataModalProps {
-	jobApplicationId?: string | number;
+	jobId?: string | number;
 }
 
 export const InterviewModal: React.FC<InterviewModalProps> = ({
@@ -19,26 +19,12 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	onDelete,
 	submode = "view",
 	size = "sm",
-	jobApplicationId,
+	jobId, // optional job id
 }) => {
 	const { locations, persons, jobs, openLocationModal, openPersonModal, renderLocationModal, renderPersonModal } =
 		useFormOptions(["locations", "persons", "jobs"]);
 
 	const [currentFormData, setCurrentFormData] = useState<InterviewData>({});
-
-	const initialData = useMemo(() => {
-		if (submode === "add" && !data?.id) {
-			return { date: formatDateTime() };
-		}
-		return data || {};
-	}, [data, submode]);
-
-	// Initialize current form data when modal opens or data changes
-	useEffect(() => {
-		if (show) {
-			setCurrentFormData(initialData);
-		}
-	}, [show, initialData]);
 
 	// Handler for form data changes
 	const handleFormDataChange = (newFormData: InterviewData) => {
@@ -49,7 +35,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	};
 
 	const formFieldsArray = [
-		...(!jobApplicationId ? [formFields.job(jobs)] : []),
+		...(!jobId ? [formFields.job(jobs)] : []),
 		[
 			formFields.datetime({
 				required: true,
@@ -69,7 +55,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	];
 
 	const viewFieldsArray = [
-		...(!jobApplicationId ? [viewFields.job({ label: "Job Application" })] : []),
+		...(!jobId ? [viewFields.job()] : []),
 		[viewFields.datetime(), viewFields.type()],
 		[viewFields.location(), viewFields.interviewers()],
 		viewFields.note(),
@@ -81,11 +67,12 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	};
 
 	const transformFormData = (data: InterviewData) => {
+		console.log(data);
 		return {
 			date: new Date(data.date!).toISOString(),
 			type: data.type!,
 			location_id: data.location_id!,
-			job_application_id: jobApplicationId || data.job_application_id!,
+			job_id: jobId || data.job_id!,
 			interviewers: data.interviewers?.map((interviewer) => interviewer.id || interviewer) || [],
 			note: data.note?.trim() || null,
 		};
@@ -99,7 +86,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 				submode={submode}
 				itemName="Interview"
 				size={size}
-				data={initialData}
+				data={data}
 				id={id}
 				fields={fields}
 				endpoint="interviews"

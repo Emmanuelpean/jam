@@ -91,7 +91,7 @@ export interface InterviewData {
 	date?: string;
 	type?: string;
 	location_id?: string | number;
-	job_application_id?: string | number;
+	job_id?: string | number;
 	interviewers?: any[];
 	note?: string;
 	attendance_type?: string;
@@ -138,8 +138,8 @@ export interface ApplicationData {
 }
 
 export interface UserData {
+	id?: number;
 	email: string;
-	password?: string;
 	theme?: string;
 	is_admin?: boolean;
 }
@@ -153,7 +153,7 @@ export interface CompanyData {
 export interface JobApplicationUpdateData {
 	date: string;
 	type: string;
-	job_application_id?: string | number;
+	job_id?: string | number;
 	note?: string;
 	id?: string | number;
 }
