@@ -49,7 +49,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		renderKeywordModal,
 		renderPersonModal,
 		renderAggregatorModal,
-	} = useFormOptions(["companies", "locations", "keywords", "persons", "aggregators"]);
+	} = useFormOptions(["companies", "locations", "keywordBadges", "persons", "aggregators"]);
 
 	const handleFormDataChange = (data: any) => {
 		setCurrentApplicationFormData(data);
@@ -112,7 +112,8 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 			personal_rating: jobData.personal_rating || null,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
-			keywords: jobData.keywords?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
+			keywordBadges:
+				jobData.keywords?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
 			contacts: jobData.contacts?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
 			application_date: jobData.application_date ? new Date(jobData.application_date).toISOString() : null,
 			application_url: jobData.application_url?.trim() || null,

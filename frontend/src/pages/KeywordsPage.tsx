@@ -18,7 +18,7 @@ const KeywordsPage = () => {
 		addItem,
 		updateItem,
 		removeItem,
-	} = useTableData("keywords", [], {}, { key: "name", direction: "asc" });
+	} = useTableData("keywordBadges", [], {}, { key: "name", direction: "asc" });
 
 	const columns = [tableColumns.name!(), tableColumns.jobCount!(), tableColumns.createdAt!()];
 

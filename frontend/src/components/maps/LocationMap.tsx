@@ -137,7 +137,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 			>
 				<div className="text-center p-4">
 					<div className="mb-3" style={{ fontSize: "2rem" }}>
-						🗺️
+						<i className="bi-compass"></i>
 					</div>
 					<h6 className="text-muted">No mappable locations found</h6>
 					<p className="text-muted mb-0 small">

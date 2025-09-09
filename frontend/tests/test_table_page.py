@@ -443,8 +443,8 @@ class TestTablePage(BaseTest):
         expected = (
             f"Location Details\nCity\n{entry.city}\nPostcode\n{entry.postcode}"
             f"\nCountry\n{entry.country}\n"
-            f"📍 Location on Map\n+\n−\nLeaflet | © OpenStreetMap contributors © CARTO\n"
-            f"📍 1 of 1 location shown\nClose\nEdit"
+            f"Location on Map\n+\n−\nLeaflet | © OpenStreetMap contributors © CARTO\n"
+            f"1 of 1 location shown\nClose\nEdit"
         )
         assert modal.text == expected
 

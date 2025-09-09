@@ -8,9 +8,15 @@ interface InterviewsTableProps {
 	jobApplicationId?: number;
 	onChange?: () => void;
 	data?: any[] | null;
+	showAdd?: boolean;
 }
 
-const InterviewsTable: React.FC<InterviewsTableProps> = ({ jobApplicationId, onChange, data = null }) => {
+const InterviewsTable: React.FC<InterviewsTableProps> = ({
+	jobApplicationId,
+	onChange,
+	data = null,
+	showAdd = true,
+}) => {
 	const {
 		data: interviewData,
 		loading,
@@ -45,6 +51,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({ jobApplicationId, onC
 			modalSize="lg"
 			showAllEntries={true}
 			compact={true}
+			showAdd={showAdd}
 		/>
 	);
 };

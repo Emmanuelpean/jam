@@ -156,7 +156,7 @@ export const tableColumns: Columns = {
 		type: "text",
 		sortField: "location.name", // TODO search by attendance_type too
 		searchFields: "location.name", // TODO filter by attendance_type too
-		render: renderFunctions.location,
+		render: renderFunctions.locationBadge,
 		...overrides,
 	}),
 
@@ -197,7 +197,7 @@ export const tableColumns: Columns = {
 		type: "text",
 		sortField: "company.name",
 		searchFields: "company.name",
-		render: renderFunctions.company,
+		render: renderFunctions.companyBadge,
 		...overrides,
 	}),
 
@@ -211,7 +211,7 @@ export const tableColumns: Columns = {
 		type: "text",
 		sortField: "person.last_name",
 		searchFields: "person.name",
-		render: renderFunctions.contacts,
+		render: renderFunctions.contactBadges,
 		...overrides,
 	}),
 
@@ -292,7 +292,7 @@ export const tableColumns: Columns = {
 		type: "text",
 		sortField: "person.last_name",
 		searchFields: "person.name",
-		render: (params: RenderParams) => renderFunctions.interviewers({ ...params, view: false }),
+		render: (params: RenderParams) => renderFunctions.interviewerBadges({ ...params, view: false }),
 		...overrides,
 	}),
 
@@ -319,12 +319,12 @@ export const tableColumns: Columns = {
 	}),
 
 	keywords: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "keywords",
+		key: "keywordBadges",
 		label: "Keywords",
 		sortable: false,
 		searchable: true,
 		type: "text",
-		render: renderFunctions.keywords,
+		render: renderFunctions.keywordBadges,
 		...overrides,
 	}),
 
@@ -335,7 +335,7 @@ export const tableColumns: Columns = {
 		searchable: true,
 		searchFields: "job.name",
 		sortField: "job.name",
-		render: renderFunctions.jobName,
+		render: renderFunctions.jobNameBadge,
 		...overrides,
 	}),
 

@@ -128,9 +128,9 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 					apiCalls.push(locationsApi.getAll(token));
 					optionTypes.push("locations");
 				}
-				if (requiredOptions.includes("keywords")) {
+				if (requiredOptions.includes("keywordBadges")) {
 					apiCalls.push(keywordsApi.getAll(token));
-					optionTypes.push("keywords");
+					optionTypes.push("keywordBadges");
 				}
 				if (requiredOptions.includes("persons")) {
 					apiCalls.push(personsApi.getAll(token));
@@ -157,7 +157,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 						case "locations":
 							setLocations(toSelectOptions(data));
 							break;
-						case "keywords":
+						case "keywordBadges":
 							setKeywords(toSelectOptions(data));
 							break;
 						case "persons":
@@ -316,7 +316,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 		error,
 		companies: requiredOptions.includes("companies") ? companies : [],
 		locations: requiredOptions.includes("locations") ? locations : [],
-		keywords: requiredOptions.includes("keywords") ? keywords : [],
+		keywords: requiredOptions.includes("keywordBadges") ? keywords : [],
 		persons: requiredOptions.includes("persons") ? persons : [],
 		aggregators: requiredOptions.includes("aggregators") ? aggregators : [],
 		jobs: requiredOptions.includes("jobs") ? jobs : [],
@@ -692,7 +692,7 @@ export const formFields = {
 		onAdd: (() => void) | null = null,
 		overrides: FormFieldOverride = {},
 	): FormField => ({
-		name: "keywords",
+		name: "keywordBadges",
 		label: "Tags",
 		type: "multiselect",
 		placeholder: "Select or search keywords...",

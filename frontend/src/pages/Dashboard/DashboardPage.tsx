@@ -230,7 +230,7 @@ const JobSearchDashboard: React.FC = () => {
 												</small>
 											</div>
 
-											{renderFunctions.job({ item: activity })}
+											{renderFunctions.jobBadge({ item: activity })}
 										</div>
 									</div>
 								</div>
