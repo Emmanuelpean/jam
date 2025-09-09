@@ -265,9 +265,9 @@ class JobCreate(BaseModel):
     deadline: datetime | None = None
     note: str | None = None
     attendance_type: str | None = None
-    application_date: datetime
+    application_date: datetime | None = None
     application_url: str | None = None
-    application_status: str
+    application_status: str | None = None
     application_note: str | None = None
     applied_via: str | None = None
 
@@ -298,7 +298,7 @@ class JobOut(JobCreate, OwnedOut):
 
     @computed_field
     @property
-    def last_update_date(self) -> datetime:
+    def last_update_date(self) -> datetime | None:
         """Computed property that returns the most recent activity date from application date, interviews, or updates"""
 
         if self.application_date is None:
@@ -320,7 +320,7 @@ class JobOut(JobCreate, OwnedOut):
 
     @computed_field
     @property
-    def last_update_type(self) -> str:
+    def last_update_type(self) -> str | None:
         """Computed property that returns the type of the most recent activity"""
 
         if self.application_date is None:
@@ -346,9 +346,11 @@ class JobOut(JobCreate, OwnedOut):
 
     @computed_field
     @property
-    def days_since_last_update(self) -> int:
+    def days_since_last_update(self) -> int | None:
         """Calculate days since the last update"""
 
+        if self.application_date is None:
+            return None
         now = datetime.now(UTC)
         return (self.last_update_date - now).days
 

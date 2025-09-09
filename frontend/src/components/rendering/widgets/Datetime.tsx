@@ -19,7 +19,12 @@ export const renderDateTimeLocal = ({ field, value, handleChange, error }: Widge
 	};
 
 	// Use formatDateTime for formatting
-	const formattedValue = formatDateTime(value);
+	let formattedValue: any;
+	if (value) {
+		formattedValue = formatDateTime(value);
+	} else {
+		formattedValue = null;
+	}
 
 	return (
 		<>

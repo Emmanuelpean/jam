@@ -153,7 +153,6 @@ function AuthForm(): JSX.Element {
 				}
 			} else {
 				const result: AuthResult = await register(formData.email, formData.password);
-				console.log(result);
 				if (result.success) {
 					setIsLogin(true);
 					resetForm();

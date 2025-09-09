@@ -63,10 +63,24 @@ export const viewFields = {
 		...overrides,
 	}),
 
+	applicationUrl: (overrides: ViewFieldOverride = {}): ViewField => ({
+		key: "application_url",
+		label: "Application URL",
+		render: (params: RenderParams) => renderFunctions.applicationUrl({ ...params, view: true }),
+		...overrides,
+	}),
+
 	note: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "note",
 		label: "Notes",
 		render: (params: RenderParams) => renderFunctions.note({ ...params, view: true }),
+		...overrides,
+	}),
+
+	applicationNote: (overrides: ViewFieldOverride = {}): ViewField => ({
+		key: "application_note",
+		label: "Notes",
+		render: (params: RenderParams) => renderFunctions.applicationNote({ ...params, view: true }),
 		...overrides,
 	}),
 

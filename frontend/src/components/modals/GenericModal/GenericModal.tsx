@@ -157,7 +157,6 @@ const GenericModal = ({
 					setLoading(true);
 					try {
 						const response = await api.get(`${endpoint}/${id}`, token);
-						console.log("response:", response);
 						if (response) {
 							setEffectiveData(response);
 						}

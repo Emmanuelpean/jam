@@ -226,12 +226,16 @@ export const renderFunctions = {
 		return renderFunctions._longText(param, "note");
 	},
 
+	applicationNote: (param: RenderParams): ReactNode => {
+		return renderFunctions._longText(param, "application_note");
+	},
+
 	description: (param: RenderParams): ReactNode => {
 		return renderFunctions._longText(param, "description");
 	},
 
-	url: (param: RenderParams): ReactNode => {
-		const url = accessSubAttribute(param.item, param.accessKey, "url");
+	_url: (param: RenderParams, attribute: string): ReactNode => {
+		const url = accessSubAttribute(param.item, param.accessKey, attribute);
 		if (url) {
 			const safeUrl = ensureHttpPrefix(url);
 			return (
@@ -241,6 +245,14 @@ export const renderFunctions = {
 			);
 		}
 		return null;
+	},
+
+	url: (param: RenderParams): ReactNode => {
+		return renderFunctions._url(param, "url");
+	},
+
+	applicationUrl: (param: RenderParams): ReactNode => {
+		return renderFunctions._url(param, "application_url");
 	},
 
 	appTheme: (param: RenderParams): ReactNode => {
@@ -398,7 +410,9 @@ export const renderFunctions = {
 
 	status: (param: RenderParams): ReactNode => {
 		const status = accessSubAttribute(param.item, param.accessKey, "application_status");
-		return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
+		if (status) {
+			return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
+		}
 	},
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
@@ -550,7 +564,6 @@ export const renderFunctions = {
 	},
 
 	company: (param: RenderParams): ReactNode => {
-		console.log("Company render", param);
 		const company: CompanyOut = accessSubAttribute(param.item, param.accessKey, "company");
 		if (company) {
 			return (
@@ -608,7 +621,6 @@ export const renderFunctions = {
 
 	appliedVia: (param: RenderParams): ReactNode => {
 		const appliedVia = accessSubAttribute(param.item, param.accessKey, "applied_via");
-		console.log("AAAA", param, appliedVia);
 		if (appliedVia === "aggregator") {
 			return renderFunctions.applicationAggregator(param);
 		}

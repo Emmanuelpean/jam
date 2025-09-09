@@ -20,8 +20,6 @@ const JobsPage = () => {
 		removeItem,
 	} = useTableData("jobs", [], {}, { key: "created_at", direction: "desc" });
 
-	console.log("JobsPage jobs:", jobs);
-
 	// Use the global spinner instead of table spinner
 	useEffect(() => {
 		if (loading) {

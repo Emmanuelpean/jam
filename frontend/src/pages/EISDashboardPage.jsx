@@ -66,7 +66,6 @@ const ServiceLogDashboard = () => {
 				limit: 10,
 			};
 			const data = await serviceLogApi.getAll(token, params);
-			console.log(data);
 			setRecentLogs(data);
 		} catch (err) {
 			console.error("Error fetching recent logs:", err);

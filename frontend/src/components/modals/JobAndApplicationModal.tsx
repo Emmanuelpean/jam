@@ -30,8 +30,8 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 	defaultActiveTab = "job",
 }) => {
 	// Track current form data for conditional fields
-	const [currentApplicationFormData] = useState<ApplicationFormData>({});
-
+	const [currentApplicationFormData, setCurrentApplicationFormData] = useState<ApplicationFormData>({});
+	console.log("Modal data", data);
 	// Get form options for both job and application
 	const {
 		companies,
@@ -50,6 +50,10 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		renderPersonModal,
 		renderAggregatorModal,
 	} = useFormOptions(["companies", "locations", "keywords", "persons", "aggregators"]);
+
+	const handleFormDataChange = (data: any) => {
+		setCurrentApplicationFormData(data);
+	};
 
 	const jobFormFields = [
 		formFields.jobTitle(),
@@ -77,7 +81,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 			[
 				formFields.applicationVia(),
 				...(currentApplicationFormData?.applied_via === "aggregator"
-					? [formFields.aggregator(aggregators, openAggregatorModal)]
+					? [formFields.aggregator(aggregators, openAggregatorModal, { name: "application_aggregator_id" })]
 					: []),
 			],
 			formFields.applicationUrl(),
@@ -88,21 +92,14 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		];
 	}, [currentApplicationFormData.applied_via, openAggregatorModal, aggregators]);
 
-	const applicationViewFields = useMemo(() => {
-		const baseFields = [
-			[viewFields.applicationDate(), viewFields.applicationStatus()],
-			[viewFields.appliedVia()],
-			[viewFields.url({ label: "Application URL" })],
-			viewFields.note(),
-		];
-
-		if (data?.application_date) {
-			baseFields.push(viewFields.interviews());
-			baseFields.push(viewFields.updates());
-		}
-
-		return baseFields;
-	}, [data?.application_date]);
+	const applicationViewFields = [
+		[viewFields.applicationDate(), viewFields.applicationStatus()],
+		[viewFields.appliedVia()],
+		[viewFields.applicationUrl()],
+		viewFields.applicationNote(),
+		viewFields.interviews(),
+		viewFields.updates(),
+	];
 
 	const transformData = (jobData: JobData) => {
 		return {
@@ -115,14 +112,14 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 			personal_rating: jobData.personal_rating || null,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
-			keywords: jobData.keywords?.map((item: any) => item.id || item) || [], // TODO remove any
-			contacts: jobData.contacts?.map((item: any) => item.id || item) || [],
-			application_date: data.application_date ? new Date(data.application_date).toISOString() : null,
-			application_url: data.application_url?.trim() || null,
-			application_status: data.application_status,
-			applied_via: data.applied_via,
-			aggregator_id: data.application_aggregator_id,
-			application_note: data.application_note?.trim() || null,
+			keywords: jobData.keywords?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
+			contacts: jobData.contacts?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
+			application_date: jobData.application_date ? new Date(jobData.application_date).toISOString() : null,
+			application_url: jobData.application_url?.trim() || null,
+			application_status: jobData.application_status?.trim() || null,
+			applied_via: jobData.applied_via?.trim() || null,
+			application_aggregator_id: jobData.application_aggregator_id || null,
+			application_note: jobData.application_note?.trim() || null,
 		};
 	};
 
@@ -173,6 +170,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 				id={id}
 				defaultActiveTab={defaultActiveTab}
 				fields={{ form: [], view: [] }}
+				onFormDataChange={handleFormDataChange}
 			/>
 
 			{renderCompanyModal()}

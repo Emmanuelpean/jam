@@ -47,7 +47,6 @@ export const UserModal: React.FC<DataModalProps> = ({
 		const duplicates = matches.filter((existing: any) => {
 			return data?.id !== existing.id;
 		});
-		console.log(duplicates);
 
 		if (duplicates.length > 0) {
 			errors.email = `A tag with this name already exists`;

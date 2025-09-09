@@ -346,9 +346,9 @@ class Job(Owned, Base):
     note = Column(String, nullable=True)
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     attendance_type = Column(String, nullable=True)
-    application_date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=True)
+    application_date = Column(TIMESTAMP(timezone=True), nullable=True)
     application_url = Column(String, nullable=True)
-    application_status = Column(String, server_default="Applied", nullable=True)
+    application_status = Column(String, nullable=True)
     applied_via = Column(String, nullable=True)
     application_note = Column(String, nullable=True)
 
