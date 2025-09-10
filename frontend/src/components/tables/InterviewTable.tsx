@@ -1,6 +1,6 @@
 import React from "react";
-import { GenericTableWithModals, useProvidedTableData, TableProps } from "./GenericTable";
-import { TableColumn, tableColumns } from "../rendering/view/TableColumnRenders";
+import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
+import { tableColumns } from "../rendering/view/TableColumnRenders";
 import { InterviewModal } from "../modals/InterviewModal";
 import { DataModalProps } from "../modals/AggregatorModal";
 

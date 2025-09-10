@@ -68,7 +68,7 @@ const handleResponse = async (response: Response): Promise<any> => {
 };
 
 class ApiService {
-	private baseUrl: string;
+	private readonly baseUrl: string;
 
 	constructor(baseUrl: string = API_BASE_URL) {
 		this.baseUrl = baseUrl;
@@ -196,10 +196,7 @@ export const companiesApi: CrudApi = createCrudApi("companies");
 export const locationsApi: CrudApi = createCrudApi("locations");
 export const keywordsApi: CrudApi = createCrudApi("keywordBadges");
 export const personsApi: CrudApi = createCrudApi("persons");
-export const jobApplicationsApi: CrudApi = createCrudApi("jobapplications");
-export const interviewsApi: CrudApi = createCrudApi("interviews");
 export const aggregatorsApi: CrudApi = createCrudApi("aggregators");
-export const jobAlertEmailApi: CrudApi = createCrudApi("jobalertemails");
 export const scrapedJobApi: CrudApi = createCrudApi("scrapedjobs");
 export const serviceLogApi: CrudApi = createCrudApi("servicelogs");
 export const userApi: CrudApi = createCrudApi("users");

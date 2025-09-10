@@ -7,7 +7,6 @@ import "./DashboardPage.css";
 import { JobAndApplicationModal } from "../../components/modals/JobAndApplicationModal";
 import { renderFunctions } from "../../components/rendering/view/ViewRenders";
 import { ApplicationData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
-import JobsToChase from "../../components/tables/JobsToChase";
 
 interface DashboardStats {
 	totalJobs: number;

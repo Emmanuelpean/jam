@@ -1,8 +1,7 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useState } from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { formatDateTime } from "../../utils/TimeUtils";
 import { DataModalProps } from "./AggregatorModal";
 import { InterviewData } from "../../services/Schemas";
 

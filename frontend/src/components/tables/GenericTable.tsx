@@ -197,7 +197,7 @@ export const useTableData = (
 	// Fetch data when dependencies change
 	useEffect(() => {
 		if (token) {
-			fetchData();
+			fetchData().then(() => {});
 		}
 	}, [token, fetchData, ...dependencies]);
 

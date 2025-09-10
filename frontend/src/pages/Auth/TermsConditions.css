@@ -149,6 +149,7 @@
     min-width: 180px;
     font-weight: 600;
     text-transform: uppercase;
+    /*noinspection CssNonIntegerLengthInPixels*/
     letter-spacing: 0.5px;
     background: var(--primary-gradient);
     border: none;
