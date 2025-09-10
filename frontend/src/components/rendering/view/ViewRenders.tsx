@@ -662,9 +662,8 @@ export const renderFunctions = {
 		return null;
 	},
 
-	aggregator: (param: RenderParams): ReactNode => {
-		// TODO missing source for the jobs
-		return renderFunctions._aggregatorBadge(param, "aggregator");
+	sourceBadge: (param: RenderParams): ReactNode => {
+		return renderFunctions._aggregatorBadge(param, "source");
 	},
 
 	applicationAggregatorBadge: (param: RenderParams): ReactNode => {

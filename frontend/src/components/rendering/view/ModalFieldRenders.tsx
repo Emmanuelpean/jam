@@ -209,6 +209,13 @@ export const viewFields = {
 		...overrides,
 	}),
 
+	sourceBadge: (overrides: ViewFieldOverride = {}): ViewField => ({
+		key: "source",
+		label: "Source",
+		render: renderFunctions.sourceBadge,
+		...overrides,
+	}),
+
 	// ----------------------------------------------------- OTHER -----------------------------------------------------
 
 	locationMap: (overrides: ViewFieldOverride = {}): ViewField => ({

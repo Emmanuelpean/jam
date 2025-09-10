@@ -31,7 +31,7 @@ export const UserModal: React.FC<DataModalProps> = ({
 		formFields.appTheme(),
 		formFields.isAdmin(),
 	];
-	const viewFieldsArray = [[viewFields.email(), viewFields.appTheme()], viewFields.isAdmin()];
+	const viewFieldsArray = [[viewFields.email(), viewFields.appTheme(), viewFields.isAdmin()]];
 
 	const fields = {
 		form: formFieldsArray,

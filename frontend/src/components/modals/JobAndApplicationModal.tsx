@@ -71,7 +71,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		viewFields.description(),
 		viewFields.note(),
 		[viewFields.salaryRange(), viewFields.personalRating()],
-		viewFields.url({ label: "Job URL" }),
+		[viewFields.sourceBadge(), viewFields.url({ label: "Job URL" })],
 		[viewFields.keywordBadges(), viewFields.personBadges()],
 	];
 
