@@ -67,12 +67,12 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 
 	const jobViewFields = [
 		[viewFields.title({ isTitle: true })],
-		[viewFields.company(), viewFields.location()],
+		[viewFields.companyBadge(), viewFields.locationBadge()],
 		viewFields.description(),
 		viewFields.note(),
 		[viewFields.salaryRange(), viewFields.personalRating()],
 		viewFields.url({ label: "Job URL" }),
-		[viewFields.keywords(), viewFields.persons()],
+		[viewFields.keywordBadges(), viewFields.personBadges()],
 	];
 
 	const applicationFormFields = useMemo(() => {
@@ -94,11 +94,11 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 
 	const applicationViewFields = [
 		[viewFields.applicationDate(), viewFields.applicationStatus()],
-		[viewFields.appliedVia()],
+		[viewFields.appliedViaBadge()],
 		[viewFields.applicationUrl()],
 		viewFields.applicationNote(),
-		viewFields.interviews(),
-		viewFields.updates(),
+		viewFields.interviewTable(),
+		viewFields.updateTable(),
 	];
 
 	const transformData = (jobData: JobData) => {
@@ -112,8 +112,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 			personal_rating: jobData.personal_rating || null,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
-			keywordBadges:
-				jobData.keywords?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
+			keywords: jobData.keywords?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
 			contacts: jobData.contacts?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
 			application_date: jobData.application_date ? new Date(jobData.application_date).toISOString() : null,
 			application_url: jobData.application_url?.trim() || null,

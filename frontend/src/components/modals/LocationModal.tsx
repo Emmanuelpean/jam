@@ -32,7 +32,7 @@ export const LocationModal: React.FC<DataModalProps> = ({
 		view: viewFieldsArray,
 	};
 
-	const additionalFields = [viewFields.jobTable(), viewFields.accordionInterviewTable()];
+	const additionalFields = [viewFields.accordionJobTable(), viewFields.accordionInterviewTable()];
 
 	const customValidation = async (formData: LocationData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};

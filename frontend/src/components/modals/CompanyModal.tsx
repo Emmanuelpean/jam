@@ -30,8 +30,8 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		viewFields.jobTable({ excludedColumns: "company" }),
-		viewFields.personTable({ excludedColumns: "company" }),
+		viewFields.accordionJobTable({ excludedColumns: "company" }),
+		viewFields.accordionPersonTable({ excludedColumns: "company" }),
 	];
 
 	const transformFormData = (data: CompanyData): CompanyData => {

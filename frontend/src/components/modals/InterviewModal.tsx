@@ -55,9 +55,9 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	];
 
 	const viewFieldsArray = [
-		...(!jobId ? [viewFields.job()] : []),
+		...(!jobId ? [viewFields.jobBadge()] : []),
 		[viewFields.datetime(), viewFields.type()],
-		[viewFields.location(), viewFields.interviewers()],
+		[viewFields.locationBadge(), viewFields.interviewerBadges()],
 		viewFields.note(),
 	];
 

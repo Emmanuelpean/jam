@@ -33,7 +33,7 @@ export const PersonModal: React.FC<DataModalProps> = ({
 
 	const viewFieldsArray = [
 		[viewFields.personName({ isTitle: true })],
-		[viewFields.company(), viewFields.role()],
+		[viewFields.companyBadge(), viewFields.role()],
 		[viewFields.email(), viewFields.phone()],
 		viewFields.linkedinUrl(),
 	];
