@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { ReactNode, useMemo, useState } from "react";
 import GenericModal, { TabConfig } from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
@@ -31,7 +31,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 }) => {
 	// Track current form data for conditional fields
 	const [currentApplicationFormData, setCurrentApplicationFormData] = useState<ApplicationFormData>({});
-	console.log("Modal data", data);
+
 	// Get form options for both job and application
 	const {
 		companies,
@@ -123,16 +123,18 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		};
 	};
 
-	const applicationTabTitle = data?.application_date ? (
-		<>
-			Job Application{" "}
-			<span className={`badge ${getApplicationStatusBadgeClass(data.application_status)} badge`}>
-				{data.application_status}
-			</span>
-		</>
-	) : (
-		"Create Job Application"
-	);
+	const applicationTabTitle = (jobData: JobData): ReactNode => {
+		return jobData?.application_status ? (
+			<>
+				Job Application{" "}
+				<span className={`badge ${getApplicationStatusBadgeClass(jobData.application_status)} badge`}>
+					{jobData.application_status}
+				</span>
+			</>
+		) : (
+			"Create Job Application"
+		);
+	};
 
 	const tabs: TabConfig[] = [
 		{

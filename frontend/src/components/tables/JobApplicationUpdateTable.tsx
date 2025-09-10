@@ -1,23 +1,26 @@
 import React from "react";
 import { GenericTableWithModals, useProvidedTableData } from "./GenericTable";
-import { tableColumns } from "../rendering/view/TableColumnRenders";
+import { TableColumn, tableColumns } from "../rendering/view/TableColumnRenders";
 import { JobApplicationUpdateModal } from "../modals/JobApplicationUpdateModal";
 
 interface JobApplicationUpdatesTableProps {
 	jobApplicationId: string | number;
 	onChange?: () => void;
 	data?: any[] | null;
+	columns?: TableColumn[];
 }
 
 const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 	jobApplicationId,
 	onChange,
 	data = null,
+	columns = [],
 }) => {
 	const {
 		data: updatesData,
 		loading,
 		error,
+		sortConfig,
 		addItem,
 		updateItem,
 		removeItem,
@@ -44,7 +47,9 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 		}
 	};
 
-	const ViewColumns = [tableColumns.date!(), tableColumns.updateType!(), tableColumns.note!()];
+	if (!columns.length) {
+		columns = [tableColumns.date!(), tableColumns.updateType!(), tableColumns.note!()];
+	}
 
 	const ModalWithProps = (props: any) => (
 		<JobApplicationUpdateModal
@@ -63,8 +68,8 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 	return (
 		<GenericTableWithModals
 			data={updatesData}
-			columns={ViewColumns}
-			sortConfig={{ key: "date", direction: "desc" }}
+			columns={columns}
+			sortConfig={sortConfig}
 			loading={loading}
 			error={error}
 			Modal={ModalWithProps}

@@ -1,15 +1,15 @@
 import React from "react";
 import { GenericTableWithModals, useProvidedTableData } from "./GenericTable";
-import { tableColumns } from "../rendering/view/TableColumnRenders";
+import { TableColumn, tableColumns } from "../rendering/view/TableColumnRenders";
 import { JobAndApplicationModal } from "../modals/JobAndApplicationModal";
 
 interface JobsTableProps {
 	onChange?: () => void;
 	data?: any[] | null;
-	excludeColumns?: string | string[];
+	columns?: TableColumn[];
 }
 
-const JobsTable: React.FC<JobsTableProps> = ({ onChange, data = null, excludeColumns = [] }) => {
+const JobsTable: React.FC<JobsTableProps> = ({ onChange, data = null, columns = [] }) => {
 	const {
 		data: jobs,
 		loading,
@@ -21,21 +21,14 @@ const JobsTable: React.FC<JobsTableProps> = ({ onChange, data = null, excludeCol
 		removeItem,
 	} = useProvidedTableData(data, { key: "created_at", direction: "desc" });
 
-	const columns = [
-		tableColumns.title!(),
-		tableColumns.company!(),
-		tableColumns.location!(),
-		tableColumns.createdAt!(),
-	];
-	if (!Array.isArray(excludeColumns)) {
-		excludeColumns = [excludeColumns];
+	if (!columns.length) {
+		columns = [tableColumns.title!(), tableColumns.company!(), tableColumns.location!(), tableColumns.createdAt!()];
 	}
-	const filteredColumns = columns.filter((column) => !excludeColumns?.includes(column.key));
 
 	return (
 		<GenericTableWithModals
 			data={jobs}
-			columns={filteredColumns}
+			columns={columns}
 			loading={loading}
 			error={error}
 			sortConfig={sortConfig}

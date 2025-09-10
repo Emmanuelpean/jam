@@ -1,6 +1,6 @@
 import React from "react";
 import { GenericTableWithModals, useProvidedTableData } from "./GenericTable";
-import { tableColumns } from "../rendering/view/TableColumnRenders";
+import { TableColumn, tableColumns } from "../rendering/view/TableColumnRenders";
 import { InterviewModal } from "../modals/InterviewModal";
 import { DataModalProps } from "../modals/AggregatorModal";
 
@@ -9,12 +9,14 @@ interface InterviewsTableProps {
 	onChange?: () => void;
 	data?: any[] | null;
 	showAdd?: boolean;
+	columns?: TableColumn[];
 }
 
 const InterviewsTable: React.FC<InterviewsTableProps> = ({
 	jobApplicationId,
 	onChange,
 	data = null,
+	columns = [],
 	showAdd = true,
 }) => {
 	const {
@@ -28,14 +30,16 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 		removeItem,
 	} = useProvidedTableData(data, { key: "date", direction: "desc" });
 
-	const ViewColumns = [tableColumns.date!(), tableColumns.type!(), tableColumns.location!(), tableColumns.note!()];
+	if (!columns.length) {
+		columns = [tableColumns.date!(), tableColumns.type!(), tableColumns.location!(), tableColumns.note!()];
+	}
 
 	const ModalWithProps: React.FC<DataModalProps> = (props) => <InterviewModal {...props} jobId={jobApplicationId} />;
 
 	return (
 		<GenericTableWithModals
 			data={interviewData}
-			columns={ViewColumns}
+			columns={columns}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
 			loading={loading}

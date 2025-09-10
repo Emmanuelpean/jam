@@ -21,6 +21,7 @@ import {
 } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
+import { TableColumn } from "./TableColumnRenders";
 
 interface ModalManagerProps {
 	children: (handleClick: (item: any) => void) => ReactNode;
@@ -31,14 +32,14 @@ export interface RenderParams {
 	view?: boolean;
 	accessKey?: string | undefined;
 	id?: string;
-	excludedColumns?: string | string[];
+	columns?: TableColumn[];
 }
 
 export interface Field {
 	key: string;
 	render?: (params: RenderParams) => ReactNode;
 	accessKey?: string;
-	excludedColumns?: string | string[];
+	columns?: TableColumn[];
 }
 
 interface ModalManagerProps {
@@ -115,16 +116,16 @@ export const getApplicationStatusBadgeClass = (status: string | undefined): stri
 	}
 };
 
-const getUpdateTypeIcon = (type: string): string => {
+function getUpdateTypeIcon(type: string): string {
 	switch (type?.toLowerCase()) {
 		case "received":
 			return "bi-download";
 		default:
 			return "bi-upload";
 	}
-};
+}
 
-export const getTableIcon = (title: string): string => {
+export function getTableIcon(title: string): string {
 	const iconMap: Record<string, string> = {
 		Jobs: "bi-briefcase",
 		Companies: "bi-building",
@@ -139,7 +140,7 @@ export const getTableIcon = (title: string): string => {
 		Users: "bi-person-lines-fill",
 	};
 	return iconMap[title] || "bi-table";
-};
+}
 
 export const getAdminIcon = (isAdmin: boolean): string => {
 	if (isAdmin) {
@@ -687,7 +688,7 @@ export const renderFunctions = {
 		return (
 			<GenericAccordion title="Jobs" data={jobs} onChange={onChange} icon={getTableIcon("Jobs")}>
 				{(data, onChangeCallback) => (
-					<JobsTable data={data} onChange={onChangeCallback} excludeColumns={param.excludedColumns} />
+					<JobsTable onChange={onChangeCallback} data={data} columns={param.columns} />
 				)}
 			</GenericAccordion>
 		);
@@ -704,7 +705,7 @@ export const renderFunctions = {
 				icon={getTableIcon("Interviews")}
 			>
 				{(data, onChangeCallback) => (
-					<InterviewsTable data={data} onChange={onChangeCallback} showAdd={false} />
+					<InterviewsTable data={data} onChange={onChangeCallback} showAdd={false} columns={param.columns} />
 				)}
 			</GenericAccordion>
 		);
@@ -721,7 +722,7 @@ export const renderFunctions = {
 				icon={getTableIcon("Job Applications")}
 			>
 				{(data, onChangeCallback) => (
-					<JobsTable data={data} onChange={onChangeCallback} excludeColumns={param.excludedColumns} />
+					<JobsTable data={data} onChange={onChangeCallback} columns={param.columns} />
 				)}
 			</GenericAccordion>
 		);
@@ -732,7 +733,9 @@ export const renderFunctions = {
 		const onChange = () => {};
 		return (
 			<GenericAccordion title="Persons" data={persons} onChange={onChange} icon={getTableIcon("Persons")}>
-				{(data, onChangeCallback) => <PersonTable data={data} onChange={onChangeCallback} />}
+				{(data, onChangeCallback) => (
+					<PersonTable data={data} onChange={onChangeCallback} columns={param.columns} />
+				)}
 			</GenericAccordion>
 		);
 	},
@@ -748,7 +751,7 @@ export const renderViewElement = (field: Field, item: any, id: string): ReactNod
 			view: false,
 			accessKey: field.accessKey,
 			id: `${id}-${field.key}`,
-			excludedColumns: field.excludedColumns,
+			columns: field.columns,
 		};
 		rendered = field.render(renderParams);
 	} else {

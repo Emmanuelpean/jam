@@ -7,6 +7,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { ValidationErrors } from "./GenericModal/GenericModal";
 import { DataModalProps } from "./AggregatorModal";
 import { LocationData } from "../../services/Schemas";
+import { tableColumns } from "../rendering/view/TableColumnRenders";
 
 export const LocationModal: React.FC<DataModalProps> = ({
 	show,
@@ -32,7 +33,12 @@ export const LocationModal: React.FC<DataModalProps> = ({
 		view: viewFieldsArray,
 	};
 
-	const additionalFields = [viewFields.accordionJobTable(), viewFields.accordionInterviewTable()];
+	const additionalFields = [
+		viewFields.accordionJobTable(),
+		viewFields.accordionInterviewTable({
+			columns: [tableColumns.date!(), tableColumns.job!(), tableColumns.type!(), tableColumns.note!()],
+		}),
+	];
 
 	const customValidation = async (formData: LocationData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};

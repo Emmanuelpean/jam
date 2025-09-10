@@ -1,12 +1,13 @@
 import React, { ReactNode } from "react";
 import { renderFunctions, RenderParams, Field, renderViewElement } from "./ViewRenders";
+import { TableColumn } from "./TableColumnRenders";
 
 export interface ViewField extends Field {
 	label: string;
 	type?: string;
 	columnClass?: string;
 	isTitle?: boolean;
-	excludedColumns?: string | string[];
+	columns?: TableColumn[];
 }
 
 export const renderViewField = (field: ViewField, item: any, id: string): ReactNode => {

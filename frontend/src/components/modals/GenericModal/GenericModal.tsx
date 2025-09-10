@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { JSX, ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
 import "./GenericModal.css";
@@ -88,7 +88,7 @@ interface ModalProps {
 
 export interface TabConfig {
 	key: string;
-	title: string | JSX.Element;
+	title: string | JSX.Element | ((data: any) => ReactNode);
 	fields: { view: ViewFields; form: FormFields };
 	additionalFields?: ViewField[];
 }
@@ -682,18 +682,20 @@ const GenericModal = ({
 			return (
 				<>
 					<div className="custom-tab-nav">
-						{tabs.map(
-							(tab: TabConfig): JSX.Element => (
+						{tabs.map((tab: TabConfig): JSX.Element => {
+							const tabTitle = typeof tab.title === "function" ? tab.title(getCurrentData()) : tab.title;
+
+							return (
 								<button
 									key={tab.key}
 									type="button"
 									className={`custom-tab-button ${activeTab === tab.key ? "active" : ""}`}
 									onClick={() => handleTabChange(tab.key)}
 								>
-									{tab.title}
+									{tabTitle}
 								</button>
-							),
-						)}
+							);
+						})}
 					</div>
 					<div className="custom-tab-content">{renderBodyContent()}</div>
 				</>

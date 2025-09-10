@@ -167,7 +167,7 @@ class LocationOut(LocationCreate, OwnedOut):
 
     name: str | None = None
     jobs: list["JobOut"] = []
-    interviews: list["InterviewMinOut"] = []
+    interviews: list["InterviewOut"] = []
 
 
 class LocationMinOut(LocationCreate, OwnedOut):

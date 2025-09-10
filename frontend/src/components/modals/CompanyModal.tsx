@@ -7,6 +7,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { DataModalProps } from "./AggregatorModal";
 import { ValidationErrors } from "./GenericModal/GenericModal";
 import { CompanyData } from "../../services/Schemas";
+import { tableColumns } from "../rendering/view/TableColumnRenders";
 
 export const CompanyModal: React.FC<DataModalProps> = ({
 	show,
@@ -30,8 +31,15 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		viewFields.accordionJobTable({ excludedColumns: "company" }),
-		viewFields.accordionPersonTable({ excludedColumns: "company" }),
+		viewFields.accordionJobTable({
+			columns: [
+				tableColumns.title!(),
+				tableColumns.location!(),
+				tableColumns.status!(),
+				tableColumns.createdAt!(),
+			],
+		}),
+		viewFields.accordionPersonTable(),
 	];
 
 	const transformFormData = (data: CompanyData): CompanyData => {
