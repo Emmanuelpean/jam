@@ -5,7 +5,7 @@ import { ActionMeta, MultiValue, SingleValue } from "react-select";
 import { SelectOption } from "../../../utils/Utils";
 import { GroupBase } from "react-select";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
-
+import "./SelectWidget.css";
 const animatedComponents = makeAnimated();
 
 // Create a wrapper component that matches react-select's expected signature
@@ -51,7 +51,7 @@ const CustomDropdownIndicator = (props: any): JSX.Element => {
 	);
 };
 
-export const renderSelect = ({ field, value, handleChange }: WidgetProps): JSX.Element => {
+export const renderSelect = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
 	const isMulti = field.type === "multiselect";
 	let selectedValue: SelectOption | SelectOption[] | null = null;
 
@@ -59,9 +59,7 @@ export const renderSelect = ({ field, value, handleChange }: WidgetProps): JSX.E
 		if (Array.isArray(value) && value.length > 0 && field.options && field.options.length > 0) {
 			selectedValue = value
 				.map((item: any) => {
-					// Extract the ID from the item (handle both objects with id property and primitive values)
 					const id = typeof item === "object" && item !== null ? item.id : item;
-
 					return field.options!.find((opt) => opt.value === id);
 				})
 				.filter(Boolean) as SelectOption[];
@@ -84,52 +82,61 @@ export const renderSelect = ({ field, value, handleChange }: WidgetProps): JSX.E
 	}
 
 	return (
-		<>
-			<Select<SelectOption, boolean, GroupBase<SelectOption>>
-				name={field.name}
-				value={selectedValue}
-				onChange={(
-					selectedOptions: MultiValue<SelectOption> | SingleValue<SelectOption>,
-					_actionMeta: ActionMeta<SelectOption>,
-				) => {
-					if (isMulti) {
-						const ids = Array.isArray(selectedOptions)
-							? selectedOptions.map((option: SelectOption) => option.value)
-							: [];
+		<Select<SelectOption, boolean, GroupBase<SelectOption>>
+			name={field.name}
+			value={selectedValue}
+			onChange={(
+				selectedOptions: MultiValue<SelectOption> | SingleValue<SelectOption>,
+				_actionMeta: ActionMeta<SelectOption>,
+			) => {
+				if (isMulti) {
+					const ids = Array.isArray(selectedOptions)
+						? selectedOptions.map((option: SelectOption) => option.value)
+						: [];
 
-						const syntheticEvent: SyntheticEvent = {
-							target: {
-								name: field.name,
-								value: ids,
-							},
-						};
-						handleChange(syntheticEvent);
-					} else {
-						const syntheticEvent: SyntheticEvent = {
-							target: {
-								name: field.name,
-								value: selectedOptions ? (selectedOptions as SelectOption).value : null,
-							},
-						};
-						handleChange(syntheticEvent);
-					}
-				}}
-				id={field.name}
-				options={field.options || []}
-				closeMenuOnSelect={!isMulti}
-				placeholder={field.placeholder || `Select ${field.label}`}
-				isSearchable={field.isSearchable !== false}
-				isClearable={field.isClearable !== false}
-				isMulti={isMulti}
-				menuPortalTarget={document.body}
-				className={`react-select-container ${field.required ? "required" : ""}`}
-				classNamePrefix="react-select"
-				components={selectComponents}
-				hideSelectedOptions={false}
-				controlShouldRenderValue={true}
-				// @ts-ignore
-				onAddButtonClick={field.addButton?.onClick}
-			/>
-		</>
+					const syntheticEvent: SyntheticEvent = {
+						target: {
+							name: field.name,
+							value: ids,
+						},
+					};
+					handleChange(syntheticEvent);
+				} else {
+					const syntheticEvent: SyntheticEvent = {
+						target: {
+							name: field.name,
+							value: selectedOptions ? (selectedOptions as SelectOption).value : null,
+						},
+					};
+					handleChange(syntheticEvent);
+				}
+			}}
+			id={field.name}
+			options={field.options || []}
+			closeMenuOnSelect={!isMulti}
+			placeholder={field.placeholder || `Select ${field.label}`}
+			isSearchable={field.isSearchable !== false}
+			isClearable={field.isClearable !== false}
+			isMulti={isMulti}
+			menuPortalTarget={document.body}
+			className={`react-select-container ${field.required ? "required" : ""} ${error ? "error" : ""}`}
+			classNamePrefix="react-select"
+			components={selectComponents}
+			hideSelectedOptions={false}
+			controlShouldRenderValue={true}
+			// @ts-ignore
+			onAddButtonClick={field.addButton?.onClick}
+			/** 👇 NEW: Add isInvalid support */
+			styles={{
+				control: (base, state) => ({
+					...base,
+					borderColor: error ? "red" : state.isFocused ? "#2684FF" : base.borderColor,
+					boxShadow: error ? "0 0 0 1px red" : state.isFocused ? "0 0 0 1px #2684FF" : base.boxShadow,
+					"&:hover": {
+						borderColor: error ? "red" : state.isFocused ? "#2684FF" : base.borderColor,
+					},
+				}),
+			}}
+		/>
 	);
 };

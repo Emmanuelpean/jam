@@ -21,11 +21,6 @@ export const renderSalaryInput = ({ field, value, handleChange, error }: WidgetP
 				/>
 				<InputGroup.Text>/Year</InputGroup.Text>
 			</InputGroup>
-			{error && (
-				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
-					{displayError(error)}
-				</div>
-			)}
 		</>
 	);
 };

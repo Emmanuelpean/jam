@@ -46,11 +46,6 @@ export const renderDefaultInput = ({ field, value, handleChange, error }: Widget
 				step={field.step}
 				autoComplete={field.autoComplete}
 			/>
-			{error && (
-				<div className="invalid-feedback" id={`${field.name}-error-message`}>
-					{displayError(error)}
-				</div>
-			)}
 		</>
 	);
 };
@@ -107,6 +102,11 @@ export const renderFormField = (
 						return renderDefaultInput(widgetProps);
 				}
 			})()}
+			{error && (
+				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
+					{displayError(error)}
+				</div>
+			)}
 		</Form.Group>
 	);
 };

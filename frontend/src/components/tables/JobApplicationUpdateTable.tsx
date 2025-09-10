@@ -54,7 +54,7 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 	const ModalWithProps = (props: any) => (
 		<JobApplicationUpdateModal
 			{...props}
-			jobApplicationId={jobApplicationId}
+			jobId={jobApplicationId}
 			onSuccess={
 				props.submode === "add"
 					? handleAddSuccess

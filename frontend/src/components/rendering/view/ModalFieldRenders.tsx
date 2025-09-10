@@ -211,7 +211,7 @@ export const viewFields = {
 
 	sourceBadge: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "source",
-		label: "Source",
+		label: "Source Aggregator",
 		render: renderFunctions.sourceBadge,
 		...overrides,
 	}),

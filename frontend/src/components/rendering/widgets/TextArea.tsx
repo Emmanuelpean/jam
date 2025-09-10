@@ -16,11 +16,6 @@ export const renderTextarea = ({ field, value, handleChange, error }: WidgetProp
 				isInvalid={!!error}
 				className="optimized-textarea"
 			/>
-			{error && (
-				<div className="invalid-feedback" id={`${field.name}-error-message`}>
-					{displayError(error)}
-				</div>
-			)}
 		</>
 	);
 };

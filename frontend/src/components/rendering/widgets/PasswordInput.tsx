@@ -29,11 +29,6 @@ const PasswordInput = ({ field, value, handleChange, error }: WidgetProps) => {
 					<i className="bi bi-eye"></i>
 				</button>
 			</div>
-			{error && (
-				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
-					{displayError(error)}
-				</div>
-			)}
 			{field.helpText && !error && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
 		</>
 	);

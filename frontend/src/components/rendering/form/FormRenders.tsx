@@ -311,7 +311,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 		/>
 	);
 
-	console.log("keywords", keywords);
 	return {
 		loading,
 		error,

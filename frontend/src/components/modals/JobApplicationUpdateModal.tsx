@@ -7,7 +7,7 @@ import { DataModalProps } from "./AggregatorModal";
 import { JobApplicationUpdateData } from "../../services/Schemas";
 
 interface JobApplicationUpdateModalProps extends DataModalProps {
-	jobApplicationId?: string | number;
+	jobId?: string | number;
 }
 
 export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps> = ({
@@ -19,19 +19,12 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 	onDelete,
 	submode = "view",
 	size = "lg",
-	jobApplicationId,
+	jobId,
 }) => {
 	const { jobs } = useFormOptions(["jobs"]);
 
-	const initialData = useMemo(() => {
-		if (submode === "add" && !data?.id) {
-			return { date: formatDateTime() };
-		}
-		return data || {};
-	}, [data, submode]);
-
 	const formFieldsArray = [
-		...(!jobApplicationId ? [formFields.job(jobs)] : []),
+		...(!jobId ? [formFields.job(jobs)] : []),
 		[
 			formFields.datetime({
 				required: true,
@@ -42,7 +35,7 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 	];
 
 	const viewFieldsArray = [
-		...(jobApplicationId ? [] : [viewFields.jobBadge()]),
+		...(jobId ? [] : [viewFields.jobBadge()]),
 		[viewFields.datetime(), viewFields.updateType()],
 		viewFields.note(),
 	];
@@ -56,7 +49,7 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 		return {
 			date: new Date(data.date).toISOString(),
 			type: data.type,
-			job_id: jobApplicationId || data.job_id,
+			job_id: jobId || data.job_id,
 			note: data.note?.trim() || null,
 		};
 	};
@@ -69,7 +62,7 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 				submode={submode}
 				itemName="Update"
 				size={size}
-				data={initialData}
+				data={data}
 				id={id}
 				fields={fields}
 				endpoint="jobapplicationupdates"

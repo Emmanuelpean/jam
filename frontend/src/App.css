@@ -54,12 +54,6 @@ html {
     font-weight: 500;
 }
 
-.react-select-container.is-invalid .react-select__control,
-.react-select-container.is-invalid .react-select__control:hover {
-    border-color: #dc3545 !important;
-}
-
-
 * {
     --edit-color: rgb(59, 130, 246);
     --view-color: rgb(16, 185, 129);
@@ -413,102 +407,6 @@ textarea.form-control {
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s ease;
-}
-
-/* -------------------------------------------------- SELECT WIDGET ------------------------------------------------- */
-
-.react-select__control,
-.react-select-container .react-select__control {
-    border: 2px solid #e8eaed;
-    border-radius: 12px;
-    min-height: 52px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.form-control:hover,
-.react-select__control:hover,
-.react-select-container .react-select__control:hover {
-    border-color: var(--primary-mid);
-}
-
-.form-control--is-focused,
-.react-select__control--is-focused,
-.react-select-container .react-select__control--is-focused {
-    border-color: var(--primary-mid);
-    box-shadow: 0 0 0 0.25rem var(--jam-glow), 0 4px 12px rgba(0, 0, 0, 0.1);
-    outline: none;
-}
-
-.react-select__value-container,
-.react-select-container .react-select__value-container {
-    padding: 8px 16px;
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-}
-
-.form-control::placeholder,
-.react-select__placeholder,
-.react-select-container .react-select__placeholder {
-    color: rgb(173, 181, 189);
-    font-style: italic;
-    font-weight: 300;
-    line-height: 1.5;
-}
-
-.react-select__option--is-selected,
-.react-select-container .react-select__option--is-selected {
-    background: var(--primary-mid) !important;
-    color: white;
-}
-
-.react-select-container .react-select__indicators {
-    padding-right: 12px;
-    height: 48px;
-    align-items: center;
-}
-
-.react-select__menu-portal {
-    z-index: 9999 !important;
-}
-
-.react-select__multi-value {
-    align-items: center !important;
-    padding: 6px 8px !important;
-    border-radius: 6px !important;
-    background-color: var(--primary-mid) !important;
-    border: 0 solid !important;
-    margin: 2px !important;
-    min-height: 28px !important;
-}
-
-.react-select__multi-value__label {
-    padding: 2px 4px !important;
-    font-size: 14px !important;
-    line-height: 1.4 !important;
-    color: white !important;
-    font-weight: 500 !important;
-}
-
-.react-select__multi-value__remove {
-    padding: 4px !important;
-    margin-left: 4px !important;
-    border-radius: 4px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background-color: var(--primary-end) !important;
-    color: white !important;
-    min-width: 20px !important;
-    min-height: 20px !important;
-}
-
-.react-select__value-container,
-.react-select-container .react-select__value-container {
-    padding: 0 8px;
-    display: flex;
-    align-items: center;
 }
 
 /* --------------------------------------------------- TEXT BOXES --------------------------------------------------- */

@@ -44,11 +44,6 @@ export const renderDateTimeLocal = ({ field, value, handleChange, error }: Widge
 					title="Set to current date and time"
 				></i>
 			</div>
-			{error && (
-				<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
-					{displayError(error)}
-				</div>
-			)}
 		</>
 	);
 };
