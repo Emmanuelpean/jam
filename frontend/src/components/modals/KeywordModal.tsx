@@ -15,8 +15,8 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 	id,
 	onSuccess,
 	onDelete,
-	submode = "view",
-	size = "sm",
+	submode,
+	size,
 }) => {
 	const { token } = useAuth();
 

@@ -229,13 +229,3 @@ export const authApi: AuthApi = {
 };
 
 export { api };
-
-export interface Location {
-	id: number;
-	postcode: string;
-	city: string;
-	country: string;
-	created_at: Date;
-	modified_at: Date;
-	owner_id: number;
-}

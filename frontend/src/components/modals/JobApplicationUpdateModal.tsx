@@ -18,7 +18,7 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 	onSuccess,
 	onDelete,
 	submode = "view",
-	size = "sm",
+	size = "lg",
 	jobApplicationId,
 }) => {
 	const { jobs } = useFormOptions(["jobs"]);

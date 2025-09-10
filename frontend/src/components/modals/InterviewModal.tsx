@@ -17,7 +17,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	onSuccess,
 	onDelete,
 	submode = "view",
-	size = "sm",
+	size = "lg",
 	jobId, // optional job id
 }) => {
 	const { locations, persons, jobs, openLocationModal, openPersonModal, renderLocationModal, renderPersonModal } =
