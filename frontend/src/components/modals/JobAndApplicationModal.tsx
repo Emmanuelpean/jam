@@ -132,7 +132,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 				</span>
 			</>
 		) : (
-			"Create Job Application"
+			"Job Application"
 		);
 	};
 

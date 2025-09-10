@@ -84,6 +84,16 @@ export const tableColumns: Columns = {
 		...overrides,
 	}),
 
+	urlGeneric: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "url",
+		label: "Link",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.urlGeneric,
+		...overrides,
+	}),
+
 	createdAt: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "created_at",
 		label: "Date Added",

@@ -264,13 +264,14 @@ export const renderFunctions = {
 
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
-	_url: (param: RenderParams, attribute: string): ReactNode => {
+	_url: (param: RenderParams, attribute: string, displayText: string | null = null): ReactNode => {
 		const url = accessSubAttribute(param.item, param.accessKey, attribute);
 		if (url) {
 			const safeUrl = ensureHttpPrefix(url);
+			const linkText = displayText || safeUrl?.slice(8);
 			return (
 				<a href={safeUrl} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
-					{safeUrl?.slice(8)} <i className="bi bi-box-arrow-up-right ms-1"></i>
+					{linkText} <i className="bi bi-box-arrow-up-right ms-1"></i>
 				</a>
 			);
 		}
@@ -279,6 +280,10 @@ export const renderFunctions = {
 
 	url: (param: RenderParams): ReactNode => {
 		return renderFunctions._url(param, "url");
+	},
+
+	urlGeneric: (param: RenderParams): ReactNode => {
+		return renderFunctions._url(param, "url", "Link");
 	},
 
 	applicationUrl: (param: RenderParams): ReactNode => {
