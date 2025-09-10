@@ -3,9 +3,9 @@ import { GenericTableWithModals, TableProps, useProvidedTableData } from "./Gene
 import { tableColumns } from "../rendering/view/TableColumnRenders";
 import { JobAndApplicationModal } from "../modals/JobAndApplicationModal";
 
-const ApplicationToChaseTable: React.FC<TableProps> = ({ onChange, data = null }) => {
+const JobToChaseTable: React.FC<TableProps> = ({ onChange, data = null, columns = [] }) => {
 	const {
-		data: jobApplicationData,
+		data: jobData,
 		loading,
 		error,
 		addItem,
@@ -15,26 +15,28 @@ const ApplicationToChaseTable: React.FC<TableProps> = ({ onChange, data = null }
 		removeItem,
 	} = useProvidedTableData(data, { key: "days_since_last_update", direction: "desc" });
 
-	const columns = [
-		tableColumns.title!(),
-		tableColumns.company!(),
-		tableColumns.location!(),
-		tableColumns.daysSinceLastUpdate!(),
-		tableColumns.lastUpdateType!(),
-	];
+	if (!columns.length) {
+		columns = [
+			tableColumns.title!(),
+			tableColumns.company!(),
+			tableColumns.location!(),
+			tableColumns.daysSinceLastUpdate!(),
+			tableColumns.lastUpdateType!(),
+		];
+	}
 
 	return (
 		<GenericTableWithModals
-			data={jobApplicationData}
+			data={jobData}
 			columns={columns}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
 			loading={loading}
 			error={error}
+			sortConfig={sortConfig}
+			onSort={setSortConfig}
 			Modal={JobAndApplicationModal}
-			endpoint="jobapplications"
-			nameKey="date"
-			itemType="Job Application"
+			endpoint="jobs"
+			nameKey="name"
+			itemType="Job"
 			addItem={addItem}
 			updateItem={updateItem}
 			removeItem={removeItem}
@@ -47,4 +49,4 @@ const ApplicationToChaseTable: React.FC<TableProps> = ({ onChange, data = null }
 	);
 };
 
-export default ApplicationToChaseTable;
+export default JobToChaseTable;

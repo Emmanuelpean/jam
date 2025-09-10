@@ -98,7 +98,7 @@ class GmailScraper(object):
             with open(self.token_file, "rb") as token:
                 credentials = pickle.load(token)
 
-        # If there are no valid credentials, request authorization
+        # If there are no valid credentials, request authorisation
         if not credentials or not credentials.valid:
             if credentials and credentials.expired and credentials.refresh_token:
                 credentials.refresh(Request())
@@ -600,7 +600,7 @@ class GmailScraperService:
     """Service wrapper for GmailScraper with start/stop functionality"""
 
     def __init__(self) -> None:
-        """Initialize the service with a GmailScraper instance."""
+        """Initialise the service with a GmailScraper instance."""
 
         self.scraper = GmailScraper()
         self.is_running = False

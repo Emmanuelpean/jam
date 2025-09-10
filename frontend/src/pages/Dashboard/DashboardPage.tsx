@@ -3,11 +3,11 @@ import { Alert, Card, Col, Container, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { useLoading } from "../../contexts/LoadingContext";
 import { api } from "../../services/Api";
-import JobsToChase from "../../components/tables/JobsToChase";
 import "./DashboardPage.css";
 import { JobAndApplicationModal } from "../../components/modals/JobAndApplicationModal";
 import { renderFunctions } from "../../components/rendering/view/ViewRenders";
 import { ApplicationData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
+import JobsToChase from "../../components/tables/JobsToChase";
 
 interface DashboardStats {
 	totalJobs: number;
@@ -250,6 +250,8 @@ const JobSearchDashboard: React.FC = () => {
 		);
 	}
 
+	console.log(chaseJobsData);
+
 	return (
 		<Container fluid className="py-4">
 			{/* Statistics Cards */}
@@ -314,28 +316,12 @@ const JobSearchDashboard: React.FC = () => {
 								)}
 							</div>
 						</Card.Header>
-						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-							<JobsToChase data={chaseJobsData} />
-						</Card.Body>
+						{/*<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>*/}
+						{/*	<JobsToChase data={chaseJobsData} />*/}
+						{/*</Card.Body>*/}
 					</Card>
 				</Col>
 			</Row>
-
-			{/* Job Modal */}
-			{selectedJob && (
-				<JobAndApplicationModal
-					show={showJobModal}
-					onHide={() => {
-						setShowJobModal(false);
-						setSelectedJob(null);
-					}}
-					data={selectedJob}
-					onSuccess={(updatedJob: Job) => {
-						// Handle job update if needed
-						console.log("Job updated:", updatedJob);
-					}}
-				/>
-			)}
 		</Container>
 	);
 };

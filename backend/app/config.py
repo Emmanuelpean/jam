@@ -24,4 +24,5 @@ class Settings(BaseSettings):
         env_file = Path(__file__).parent.parent / ".env"
 
 
+# noinspection PyArgumentList
 settings = Settings()

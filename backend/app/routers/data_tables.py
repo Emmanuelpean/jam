@@ -178,7 +178,13 @@ def get_all_updates(
 
     # Get recent job applications
     # noinspection PyTypeChecker
-    jobs = db.query(models.Job).filter(models.Job.owner_id == current_user.id).limit(limit).all()
+    jobs = (
+        db.query(models.Job)
+        .filter(models.Job.owner_id == current_user.id)
+        .filter(models.Job.application_date.isnot(None))
+        .limit(limit)
+        .all()
+    )
 
     # Get recent interviews
     # noinspection PyTypeChecker
@@ -242,6 +248,7 @@ def get_stats(
     :param current_user: Authenticated user
     :return: Dictionary of general statistics"""
 
+    # noinspection PyTypeChecker
     job_query = db.query(models.Job).filter(models.Job.owner_id == current_user.id)
     job_n = job_query.count()
     job_application_query = job_query.filter(models.Job.application_date.isnot(None))
@@ -249,6 +256,7 @@ def get_stats(
     job_application_pending_n = job_application_query.filter(
         models.Job.application_status.notin_(["rejected", "withdrawn"])
     ).count()
+    # noinspection PyTypeChecker
     interview_n = db.query(models.Interview).filter(models.Interview.owner_id == current_user.id).count()
     return {
         "jobs": job_n,
@@ -275,11 +283,12 @@ def get_needs_chase_job_applications(
     now = datetime.datetime.now(datetime.UTC)
 
     # Query jobs that have job applications with active status
+    # noinspection PyTypeChecker
     jobs = (
         db.query(models.Job)
         .filter(models.Job.owner_id == current_user.id)
         .filter(models.Job.application_date.isnot(None))
-        .filter(models.Job.status.notin_(["rejected", "withdrawn"]))
+        .filter(models.Job.application_status.notin_(["rejected", "withdrawn"]))
         .all()
     )
 
