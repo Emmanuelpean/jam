@@ -1,31 +1,13 @@
 import React, { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../services/Api";
+import { UserData, Response } from "../services/Schemas";
 
-// Define the user data structure
-interface UserData {
-	id?: number;
-	email?: string;
-	is_admin?: boolean;
-	theme?: string;
-	last_login?: string;
-	created_at?: string;
-	[key: string]: any; // Allow for additional properties
-}
-
-// Define the current user structure
 interface CurrentUser extends UserData {
 	isLoggedIn: boolean;
 }
 
-// Define the auth response types
-interface AuthResponse {
-	success: boolean;
-	error?: string;
-	status?: number | undefined;
-}
-
-interface LoginResponse extends AuthResponse {
+interface LoginResponse extends Response {
 	access_token?: string;
 }
 
@@ -34,8 +16,8 @@ interface AuthContextType {
 	currentUser: CurrentUser | null;
 	token: string | null;
 	is_admin: boolean;
-	login: (email: string, password: string) => Promise<AuthResponse>;
-	register: (email: string, password: string) => Promise<AuthResponse>;
+	login: (email: string, password: string) => Promise<Response>;
+	register: (email: string, password: string) => Promise<Response>;
 	logout: () => void;
 	isAuthenticated: boolean;
 }
@@ -95,7 +77,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 					setIsAdmin(false);
 				} else {
 					// If it's a network error, set basic auth state without admin
-					setCurrentUser({ isLoggedIn: true });
+					// We can't create a valid CurrentUser without email, so set to null
+					// The user will remain logged in via the token, but without user data
+					setCurrentUser(null);
 					setIsAdmin(false);
 					setUserFetched(true);
 				}
@@ -118,7 +102,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	}, []); // Remove fetchUserInfo from dependencies to prevent re-runs
 
-	const login = async (email: string, password: string): Promise<AuthResponse> => {
+	const login = async (email: string, password: string): Promise<Response> => {
 		try {
 			const data: LoginResponse = await authApi.login(email, password);
 			if (data.access_token) {
@@ -142,7 +126,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	};
 
 	// Register function
-	const register = async (email: string, password: string): Promise<AuthResponse> => {
+	const register = async (email: string, password: string): Promise<Response> => {
 		try {
 			await authApi.register(email, password);
 			return { success: true };

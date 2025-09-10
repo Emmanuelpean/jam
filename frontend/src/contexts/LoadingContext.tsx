@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-// Define the loading context value type
 interface LoadingContextType {
 	isLoading: boolean;
 	loadingMessage: string;
@@ -8,7 +7,6 @@ interface LoadingContextType {
 	hideLoading: () => void;
 }
 
-// Define props for LoadingProvider
 interface LoadingProviderProps {
 	children: ReactNode;
 }

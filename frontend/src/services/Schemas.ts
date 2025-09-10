@@ -8,6 +8,12 @@ interface OwnedOut extends BaseOut {
 	owner_id: number;
 }
 
+export interface Response {
+	success: boolean;
+	error?: string;
+	status?: number | undefined;
+}
+
 // ------------------------------------------------------- COMPANY ------------------------------------------------------
 
 export interface CompanyCreate {
@@ -141,8 +147,10 @@ export interface ApplicationData {
 export interface UserData {
 	id?: number;
 	email: string;
-	theme?: string;
 	is_admin?: boolean;
+	theme?: string;
+	last_login?: string;
+	created_at?: string;
 }
 
 export interface CompanyData {
