@@ -329,7 +329,7 @@ export const tableColumns: Columns = {
 	}),
 
 	keywords: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "keywordBadges",
+		key: "keywords",
 		label: "Keywords",
 		sortable: false,
 		searchable: true,

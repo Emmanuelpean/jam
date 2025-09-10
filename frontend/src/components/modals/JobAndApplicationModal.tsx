@@ -49,7 +49,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		renderKeywordModal,
 		renderPersonModal,
 		renderAggregatorModal,
-	} = useFormOptions(["companies", "locations", "keywordBadges", "persons", "aggregators"]);
+	} = useFormOptions(["companies", "locations", "keywords", "persons", "aggregators"]);
 
 	const handleFormDataChange = (data: any) => {
 		setCurrentApplicationFormData(data);

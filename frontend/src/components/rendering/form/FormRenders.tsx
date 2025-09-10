@@ -311,6 +311,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 		/>
 	);
 
+	console.log("keywords", keywords);
 	return {
 		loading,
 		error,
@@ -695,7 +696,7 @@ export const formFields = {
 		name: "keywords",
 		label: "Tags",
 		type: "multiselect",
-		placeholder: "Select or search keywords...",
+		placeholder: "Select or search tags...",
 		isSearchable: true,
 		options: options,
 		...(onAdd && {

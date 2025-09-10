@@ -194,7 +194,7 @@ const createCrudApi = (endpoint: string): CrudApi => ({
 export const jobsApi: CrudApi = createCrudApi("jobs");
 export const companiesApi: CrudApi = createCrudApi("companies");
 export const locationsApi: CrudApi = createCrudApi("locations");
-export const keywordsApi: CrudApi = createCrudApi("keywordBadges");
+export const keywordsApi: CrudApi = createCrudApi("keywords");
 export const personsApi: CrudApi = createCrudApi("persons");
 export const aggregatorsApi: CrudApi = createCrudApi("aggregators");
 export const scrapedJobApi: CrudApi = createCrudApi("scrapedjobs");
