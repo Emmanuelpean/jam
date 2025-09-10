@@ -802,7 +802,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 			<Modal
 				show={showViewModal}
 				onHide={closeViewModal}
-				onSuccess={handleAddSuccess}
+				onSuccess={handleEditSuccess}
 				data={selectedItem}
 				submode="view"
 				onEdit={() => {

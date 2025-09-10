@@ -555,9 +555,7 @@ const GenericModal = ({
 						: await api.put(`${endpoint}/${getCurrentData().id}`, dataToSubmit, token);
 
 				// Handle success
-				if (effectiveProps.submode === "add") {
-					effectiveProps.onSuccess?.(apiResult);
-				}
+				effectiveProps.onSuccess?.(apiResult);
 
 				// Update UI
 				if (effectiveProps.submode === "add" || effectiveProps.submode === "edit") {
