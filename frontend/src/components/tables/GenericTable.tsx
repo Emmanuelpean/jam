@@ -48,6 +48,12 @@ export interface CreateGenericDeleteHandlerProps {
 	itemType?: string;
 }
 
+export interface TableProps {
+	onChange?: () => void;
+	data?: any[] | null;
+	columns?: TableColumn[];
+}
+
 export interface GenericTableWithModalsProps {
 	// Table data
 	data?: any[];

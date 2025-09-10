@@ -1,15 +1,9 @@
 import React from "react";
-import { GenericTableWithModals, useProvidedTableData } from "./GenericTable";
-import { TableColumn, tableColumns } from "../rendering/view/TableColumnRenders";
+import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
+import { tableColumns } from "../rendering/view/TableColumnRenders";
 import { PersonModal } from "../modals/PersonModal";
 
-interface PersonTableProps {
-	onChange?: () => void;
-	data?: any[] | null;
-	columns?: TableColumn[];
-}
-
-const PersonTable: React.FC<PersonTableProps> = ({ onChange, data = null, columns = [] }) => {
+const PersonTable: React.FC<TableProps> = ({ onChange, data = null, columns = [] }) => {
 	const {
 		data: persons,
 		loading,

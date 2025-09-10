@@ -1,15 +1,12 @@
 import React from "react";
-import { GenericTableWithModals, useProvidedTableData } from "./GenericTable";
+import { GenericTableWithModals, useProvidedTableData, TableProps } from "./GenericTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumnRenders";
 import { InterviewModal } from "../modals/InterviewModal";
 import { DataModalProps } from "../modals/AggregatorModal";
 
-interface InterviewsTableProps {
+interface InterviewsTableProps extends TableProps {
 	jobApplicationId?: number;
-	onChange?: () => void;
-	data?: any[] | null;
 	showAdd?: boolean;
-	columns?: TableColumn[];
 }
 
 const InterviewsTable: React.FC<InterviewsTableProps> = ({

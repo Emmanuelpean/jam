@@ -1,15 +1,9 @@
 import React from "react";
-import { GenericTableWithModals, useProvidedTableData } from "./GenericTable";
-import { TableColumn, tableColumns } from "../rendering/view/TableColumnRenders";
+import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
+import { tableColumns } from "../rendering/view/TableColumnRenders";
 import { JobAndApplicationModal } from "../modals/JobAndApplicationModal";
 
-interface JobsTableProps {
-	onChange?: () => void;
-	data?: any[] | null;
-	columns?: TableColumn[];
-}
-
-const JobsTable: React.FC<JobsTableProps> = ({ onChange, data = null, columns = [] }) => {
+const JobsTable: React.FC<TableProps> = ({ onChange, data = null, columns = [] }) => {
 	const {
 		data: jobs,
 		loading,
