@@ -25,7 +25,6 @@
 .react-select-container .react-select__value-container {
     padding: 8px 16px;
     min-height: 48px;
-    /*display: flex;*/
     align-items: center;
 }
 

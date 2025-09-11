@@ -8,6 +8,7 @@ import { renderCheckbox } from "./Checkbox";
 import { renderSelect } from "./SelectWidget";
 import { FormField } from "../form/FormRenders";
 import React, { JSX } from "react";
+import { HelpBubble } from "./HelpBubble";
 
 export interface SyntheticEvent {
 	target: {
@@ -76,6 +77,7 @@ export const renderFormField = (
 				{field.icon && <i className={`${field.icon} me-2 text-muted`}></i>}
 				{field.label}
 				{"required" in field && field.required && <span className="text-danger">*</span>}
+				{field.helpText && <HelpBubble helpText={field.helpText} />}
 			</Form.Label>
 			{(() => {
 				switch (field.type) {
