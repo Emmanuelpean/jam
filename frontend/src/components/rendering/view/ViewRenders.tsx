@@ -22,6 +22,7 @@ import {
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
 import { TableColumn } from "./TableColumnRenders";
+import { HelpBubble } from "../widgets/HelpBubble";
 
 interface ModalManagerProps {
 	children: (handleClick: (item: any) => void) => ReactNode;
@@ -33,6 +34,7 @@ export interface RenderParams {
 	accessKey?: string | undefined;
 	id?: string;
 	columns?: TableColumn[];
+	helpText?: string;
 }
 
 export interface Field {
@@ -40,6 +42,7 @@ export interface Field {
 	render?: (params: RenderParams) => ReactNode;
 	accessKey?: string;
 	columns?: TableColumn[];
+	helpText?: string;
 }
 
 interface ModalManagerProps {
@@ -170,6 +173,7 @@ interface GenericAccordionProps<T = any> {
 	children: (data: T[], onChange?: () => void) => React.ReactNode;
 	icon?: string;
 	defaultOpen?: boolean;
+	helpText?: string;
 }
 
 export const GenericAccordion = <T,>({
@@ -179,6 +183,7 @@ export const GenericAccordion = <T,>({
 	children,
 	icon,
 	defaultOpen = false,
+	helpText,
 }: GenericAccordionProps<T>) => {
 	const [isOpen, setIsOpen] = React.useState(defaultOpen);
 
@@ -193,6 +198,7 @@ export const GenericAccordion = <T,>({
 					{icon && <i className={`${icon} me-2`}></i>}
 					<span className="fw-medium">{title}</span>
 					<span className="text-muted ms-2">({data?.length || 0})</span>
+					{helpText && <HelpBubble helpText={helpText} size="18px" />}
 				</div>
 				<i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}></i>
 			</div>
@@ -690,7 +696,13 @@ export const renderFunctions = {
 		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
 		const onChange = () => {};
 		return (
-			<GenericAccordion title="Jobs" data={jobs} onChange={onChange} icon={getTableIcon("Jobs")}>
+			<GenericAccordion
+				title="Jobs"
+				data={jobs}
+				onChange={onChange}
+				icon={getTableIcon("Jobs")}
+				helpText={param.helpText}
+			>
 				{(data, onChangeCallback) => (
 					<JobsTable onChange={onChangeCallback} data={data} columns={param.columns} />
 				)}
@@ -707,6 +719,7 @@ export const renderFunctions = {
 				data={interviews}
 				onChange={onChange}
 				icon={getTableIcon("Interviews")}
+				helpText={param.helpText}
 			>
 				{(data, onChangeCallback) => (
 					<InterviewsTable data={data} onChange={onChangeCallback} showAdd={false} columns={param.columns} />
@@ -724,6 +737,7 @@ export const renderFunctions = {
 				data={jobs}
 				onChange={onChange}
 				icon={getTableIcon("Job Applications")}
+				helpText={param.helpText}
 			>
 				{(data, onChangeCallback) => (
 					<JobsTable data={data} onChange={onChangeCallback} columns={param.columns} />
@@ -736,7 +750,13 @@ export const renderFunctions = {
 		const persons = accessSubAttribute(param.item, param.accessKey, "persons");
 		const onChange = () => {};
 		return (
-			<GenericAccordion title="Persons" data={persons} onChange={onChange} icon={getTableIcon("Persons")}>
+			<GenericAccordion
+				title="Persons"
+				data={persons}
+				onChange={onChange}
+				icon={getTableIcon("Persons")}
+				helpText={param.helpText}
+			>
 				{(data, onChangeCallback) => (
 					<PersonTable data={data} onChange={onChangeCallback} columns={param.columns} />
 				)}
@@ -756,6 +776,7 @@ export const renderViewElement = (field: Field, item: any, id: string): ReactNod
 			accessKey: field.accessKey,
 			id: `${id}-${field.key}`,
 			columns: field.columns,
+			helpText: field.helpText,
 		};
 		rendered = field.render(renderParams);
 	} else {

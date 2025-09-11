@@ -35,7 +35,12 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 		view: [viewFields.name({ isTitle: true }), viewFields.url()],
 	};
 
-	const additionalFields = [viewFields.accordionJobTable(), viewFields.accordionJobApplicationTable()];
+	const additionalFields = [
+		viewFields.accordionJobTable({ helpText: "List of jobs found with this job aggregator." }),
+		viewFields.accordionJobApplicationTable({
+			helpText: "List of job applications made using this job aggregator.",
+		}),
+	];
 
 	const transformFormData = (data: AggregatorData): AggregatorData => {
 		return {

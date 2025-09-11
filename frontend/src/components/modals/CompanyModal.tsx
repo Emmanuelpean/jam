@@ -38,8 +38,9 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 				tableColumns.status!(),
 				tableColumns.createdAt!(),
 			],
+			helpText: "List of jobs from this company.",
 		}),
-		viewFields.accordionPersonTable(),
+		viewFields.accordionPersonTable({ helpText: "List of persons working at this company." }),
 	];
 
 	const transformFormData = (data: CompanyData): CompanyData => {

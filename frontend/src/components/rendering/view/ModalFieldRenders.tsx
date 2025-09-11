@@ -8,6 +8,7 @@ export interface ViewField extends Field {
 	columnClass?: string;
 	isTitle?: boolean;
 	columns?: TableColumn[];
+	helpText?: string;
 }
 
 export const renderViewField = (field: ViewField, item: any, id: string): ReactNode => {

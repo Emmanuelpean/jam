@@ -37,6 +37,7 @@ export const LocationModal: React.FC<DataModalProps> = ({
 		viewFields.accordionJobTable(),
 		viewFields.accordionInterviewTable({
 			columns: [tableColumns.date!(), tableColumns.job!(), tableColumns.type!(), tableColumns.note!()],
+			helpText: "List of interviews associated with this location.",
 		}),
 	];
 

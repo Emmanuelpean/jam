@@ -4,9 +4,10 @@ import "./HelpBubble.css";
 interface HelpBubbleProps {
 	helpText: string;
 	placement?: "top" | "bottom" | "left" | "right";
+	size?: string;
 }
 
-export const HelpBubble: React.FC<HelpBubbleProps> = ({ helpText, placement = "right" }) => {
+export const HelpBubble: React.FC<HelpBubbleProps> = ({ helpText, placement = "right", size = "14px" }) => {
 	const [isVisible, setIsVisible] = useState(false);
 
 	return (
@@ -19,7 +20,7 @@ export const HelpBubble: React.FC<HelpBubbleProps> = ({ helpText, placement = "r
 			<i
 				className="bi bi-question-circle"
 				style={{
-					fontSize: "14px",
+					fontSize: size,
 					cursor: "default",
 					opacity: 0.8,
 				}}

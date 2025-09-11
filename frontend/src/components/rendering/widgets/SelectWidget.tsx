@@ -126,7 +126,6 @@ export const renderSelect = ({ field, value, handleChange, error }: WidgetProps)
 			controlShouldRenderValue={true}
 			// @ts-ignore
 			onAddButtonClick={field.addButton?.onClick}
-			/** 👇 NEW: Add isInvalid support */
 			styles={{
 				control: (base, state) => ({
 					...base,
