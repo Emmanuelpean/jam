@@ -34,10 +34,10 @@ export const LocationModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		viewFields.accordionJobTable(),
+		viewFields.accordionJobTable({ helpText: "List of jobs at this location." }),
 		viewFields.accordionInterviewTable({
 			columns: [tableColumns.date!(), tableColumns.job!(), tableColumns.type!(), tableColumns.note!()],
-			helpText: "List of interviews associated with this location.",
+			helpText: "List of interviews at this location.",
 		}),
 	];
 
