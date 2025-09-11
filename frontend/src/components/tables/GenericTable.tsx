@@ -9,6 +9,7 @@ import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumnRenders";
+import "./GenericTable.css";
 
 export interface SortConfig {
 	key: string;

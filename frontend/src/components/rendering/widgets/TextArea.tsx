@@ -1,6 +1,7 @@
 import React, { JSX } from "react";
 import { Form } from "react-bootstrap";
 import { displayError, WidgetProps } from "./WidgetRenders";
+import "./TextArea.css";
 
 export const renderTextarea = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
 	return (
