@@ -681,13 +681,13 @@ export const renderFunctions = {
 	interviewTable: (param: RenderParams): ReactNode => {
 		const interviews = accessSubAttribute(param.item, param.accessKey, "interviews");
 		const onChange = () => {}; // Empty function to satisfy the required prop
-		return <InterviewsTable data={interviews} jobApplicationId={param.item.id} onChange={onChange} />;
+		return <InterviewsTable data={interviews} jobId={param.item?.id} onChange={onChange} />;
 	},
 
 	jobApplicationUpdateTable: (param: RenderParams): ReactNode => {
 		const updates = accessSubAttribute(param.item, param.accessKey, "updates");
 		const onChange = () => {}; // Empty function to satisfy the required prop
-		return <JobApplicationUpdateTable data={updates} jobApplicationId={param.item.id} onChange={onChange} />;
+		return <JobApplicationUpdateTable data={updates} jobId={param.item?.id} onChange={onChange} />;
 	},
 
 	// ------------------------------------------------ ACCORDION TABLES -----------------------------------------------

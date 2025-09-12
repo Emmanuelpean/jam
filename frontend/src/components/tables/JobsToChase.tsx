@@ -2,8 +2,9 @@ import React from "react";
 import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumnRenders";
 import { JobAndApplicationModal } from "../modals/JobAndApplicationModal";
+import { InterviewModal } from "../modals/InterviewModal";
 
-const JobToChaseTable: React.FC<TableProps> = ({ onChange, data = null, columns = [] }) => {
+const JobToChaseTable: React.FC<TableProps> = ({ data = null, columns = [] }) => {
 	const {
 		data: jobData,
 		loading,

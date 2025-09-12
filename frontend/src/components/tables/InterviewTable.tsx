@@ -5,12 +5,12 @@ import { InterviewModal } from "../modals/InterviewModal";
 import { DataModalProps } from "../modals/AggregatorModal";
 
 interface InterviewsTableProps extends TableProps {
-	jobApplicationId?: number;
+	jobId?: number;
 	showAdd?: boolean;
 }
 
 const InterviewsTable: React.FC<InterviewsTableProps> = ({
-	jobApplicationId,
+	jobId,
 	onChange,
 	data = null,
 	columns = [],
@@ -31,7 +31,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 		columns = [tableColumns.date!(), tableColumns.type!(), tableColumns.location!(), tableColumns.note!()];
 	}
 
-	const ModalWithProps: React.FC<DataModalProps> = (props) => <InterviewModal {...props} jobId={jobApplicationId} />;
+	const ModalWithProps: React.FC<DataModalProps> = (props) => <InterviewModal {...props} jobId={jobId} />;
 
 	return (
 		<GenericTableWithModals

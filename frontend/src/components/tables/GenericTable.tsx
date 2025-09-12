@@ -10,7 +10,6 @@ import useGenericAlert from "../../hooks/useGenericAlert";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumnRenders";
 import "./GenericTable.css";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
 
 export interface SortConfig {
 	key: string;
@@ -224,7 +223,6 @@ export const createGenericDeleteHandler = ({
 }: CreateGenericDeleteHandlerProps) => {
 	return async (item: any): Promise<void> => {
 		let message: string;
-		console.log(nameKey);
 		if (nameKey !== "date") {
 			message = `Are you sure you want to delete "${item[nameKey]}"? This action cannot be undone.`;
 		} else {

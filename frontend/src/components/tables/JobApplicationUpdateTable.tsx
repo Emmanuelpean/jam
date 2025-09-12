@@ -4,14 +4,14 @@ import { TableColumn, tableColumns } from "../rendering/view/TableColumnRenders"
 import { JobApplicationUpdateModal } from "../modals/JobApplicationUpdateModal";
 
 interface JobApplicationUpdatesTableProps {
-	jobApplicationId: string | number;
+	jobId: string | number;
 	onChange?: () => void;
 	data?: any[] | null;
 	columns?: TableColumn[];
 }
 
 const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
-	jobApplicationId,
+	jobId,
 	onChange,
 	data = null,
 	columns = [],
@@ -54,7 +54,7 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 	const ModalWithProps = (props: any) => (
 		<JobApplicationUpdateModal
 			{...props}
-			jobId={jobApplicationId}
+			jobId={jobId}
 			onSuccess={
 				props.submode === "add"
 					? handleAddSuccess

@@ -4,9 +4,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useLoading } from "../../contexts/LoadingContext";
 import { api } from "../../services/Api";
 import "./DashboardPage.css";
-import { JobAndApplicationModal } from "../../components/modals/JobAndApplicationModal";
 import { renderFunctions } from "../../components/rendering/view/ViewRenders";
 import { ApplicationData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
+import JobsToChase from "../../components/tables/JobsToChase";
 
 interface DashboardStats {
 	totalJobs: number;
@@ -27,13 +27,6 @@ interface RecentActivity {
 interface ChaseJobData {
 	id: number;
 	status: string;
-
-	[key: string]: any;
-}
-
-interface Job {
-	id: number;
-	itemName: string;
 
 	[key: string]: any;
 }
@@ -78,8 +71,6 @@ const JobSearchDashboard: React.FC = () => {
 	});
 	const [chaseJobsData, setChaseJobsData] = useState<ChaseJobData[]>([]);
 	const [error, setError] = useState<string | null>(null);
-	const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-	const [showJobModal, setShowJobModal] = useState<boolean>(false);
 
 	useEffect(() => {
 		const fetchDashboardData = async (): Promise<void> => {
@@ -249,8 +240,6 @@ const JobSearchDashboard: React.FC = () => {
 		);
 	}
 
-	console.log(chaseJobsData);
-
 	return (
 		<Container fluid className="py-4">
 			{/* Statistics Cards */}
@@ -315,9 +304,9 @@ const JobSearchDashboard: React.FC = () => {
 								)}
 							</div>
 						</Card.Header>
-						{/*<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>*/}
-						{/*	<JobsToChase data={chaseJobsData} />*/}
-						{/*</Card.Body>*/}
+						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
+							<JobsToChase data={chaseJobsData} />
+						</Card.Body>
 					</Card>
 				</Col>
 			</Row>
