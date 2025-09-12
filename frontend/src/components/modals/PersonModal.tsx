@@ -20,7 +20,7 @@ export const PersonModal: React.FC<DataModalProps> = ({
 	submode = "view",
 	size = "lg",
 }) => {
-	const { companies, openCompanyModal, renderCompanyModal } = useFormOptions(["companies"]);
+	const { companies, openCompanyModal, renderCompanyModal } = useFormOptions(show ? ["companies"] : []);
 	const { alertState, hideAlert } = useGenericAlert();
 	const { token } = useAuth();
 

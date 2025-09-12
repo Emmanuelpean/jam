@@ -21,7 +21,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	jobId,
 }) => {
 	const { locations, persons, jobs, openLocationModal, openPersonModal, renderLocationModal, renderPersonModal } =
-		useFormOptions(["locations", "persons", "jobs"]);
+		useFormOptions(show ? ["locations", "persons", "jobs"] : []);
 
 	const [currentFormData, setCurrentFormData] = useState<InterviewData>({});
 

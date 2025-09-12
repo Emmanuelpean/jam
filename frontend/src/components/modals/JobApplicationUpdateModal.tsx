@@ -21,7 +21,7 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 	size = "lg",
 	jobId,
 }) => {
-	const { jobs } = useFormOptions(["jobs"]);
+	const { jobs } = useFormOptions(show ? ["jobs"] : []);
 
 	const formFieldsArray = [
 		...(!jobId ? [formFields.job(jobs)] : []),
