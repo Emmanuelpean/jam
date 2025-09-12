@@ -425,7 +425,7 @@ export const renderFunctions = {
 		return null;
 	},
 
-	status: (param: RenderParams): ReactNode => {
+	applicationStatus: (param: RenderParams): ReactNode => {
 		const status = accessSubAttribute(param.item, param.accessKey, "application_status");
 		if (status) {
 			return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;

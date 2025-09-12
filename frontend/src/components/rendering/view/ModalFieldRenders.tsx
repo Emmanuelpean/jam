@@ -252,7 +252,7 @@ export const viewFields = {
 	applicationStatus: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "application_status",
 		label: "Status",
-		render: (params: RenderParams) => renderFunctions.status({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.applicationStatus({ ...params, view: true }),
 		...overrides,
 	}),
 

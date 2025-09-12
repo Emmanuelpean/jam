@@ -16,7 +16,12 @@ const JobsTable: React.FC<TableProps> = ({ onChange, data = null, columns = [] }
 	} = useProvidedTableData(data, { key: "created_at", direction: "desc" });
 
 	if (!columns.length) {
-		columns = [tableColumns.title!(), tableColumns.company!(), tableColumns.location!(), tableColumns.createdAt!()];
+		columns = [
+			tableColumns.title!(),
+			tableColumns.company!(),
+			tableColumns.applicationStatus!(),
+			tableColumns.createdAt!(),
+		];
 	}
 
 	return (

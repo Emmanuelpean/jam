@@ -26,7 +26,9 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		viewFields.accordionJobTable({ helpText: "List of jobs that are associated with this tag." }),
+		viewFields.accordionJobTable({
+			helpText: "List of jobs associated with this tag.",
+		}),
 	];
 
 	const transformFormData = (data: any): KeywordData => {

@@ -349,12 +349,12 @@ export const tableColumns: Columns = {
 		...overrides,
 	}),
 
-	status: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "status",
+	applicationStatus: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "application_status",
 		label: "Status",
 		sortable: true,
 		searchable: true,
-		render: renderFunctions.status,
+		render: renderFunctions.applicationStatus,
 		...overrides,
 	}),
 

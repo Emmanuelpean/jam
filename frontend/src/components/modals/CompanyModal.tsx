@@ -35,7 +35,7 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 			columns: [
 				tableColumns.title!(),
 				tableColumns.location!(),
-				tableColumns.status!(),
+				tableColumns.applicationStatus!(),
 				tableColumns.createdAt!(),
 			],
 			helpText: "List of jobs from this company.",
