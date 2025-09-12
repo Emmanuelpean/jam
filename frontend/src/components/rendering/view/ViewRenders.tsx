@@ -198,7 +198,7 @@ export const GenericAccordion = <T,>({
 					{icon && <i className={`${icon} me-2`}></i>}
 					<span className="fw-medium">{title}</span>
 					<span className="text-muted ms-2">({data?.length || 0})</span>
-					{helpText && <HelpBubble helpText={helpText} size="18px" />}
+					{helpText && <HelpBubble helpText={helpText} size="17px" />}
 				</div>
 				<i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}></i>
 			</div>
