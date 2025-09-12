@@ -56,13 +56,28 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 	};
 
 	const jobFormFields = [
-		formFields.jobTitle(),
+		formFields.jobTitle({ placeholder: "Python Software Engineer" }),
 		[formFields.company(companies, openCompanyModal), formFields.location(locations, openLocationModal)],
 		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
-		[formFields.attendanceType(), formFields.url({ label: "Job URL" })],
-		[formFields.salaryMin(), formFields.salaryMax(), formFields.personalRating()],
-		formFields.description(),
-		formFields.note(),
+		[
+			formFields.attendanceType(),
+			formFields.url({ label: "Job URL", placeholder: "https://linkedin.com/jobs/453635" }),
+		],
+		[
+			formFields.salaryMin({ placeholder: "35000" }),
+			formFields.salaryMax({ placeholder: "45000" }),
+			formFields.personalRating(),
+		],
+		formFields.description({
+			placeholder:
+				"We are seeking a Python Software Engineer to develop, optimise, and maintain scalable software " +
+				"solutions that drive innovation and support our growing business needs.",
+		}),
+		formFields.note({
+			placeholder:
+				"This role offers a chance to apply Python expertise to build scalable solutions " +
+				"while exploring opportunities for growth in automation, data analysis, and collaborative software development.",
+		}),
 	];
 
 	const jobViewFields = [
@@ -84,9 +99,11 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 					? [formFields.aggregator(aggregators, openAggregatorModal, { name: "application_aggregator_id" })]
 					: []),
 			],
-			formFields.applicationUrl(),
+			formFields.applicationUrl({ placeholder: "https://linkedin.com/application/453635" }),
 			formFields.note({
-				placeholder: "Add notes about your application process, interview details, etc...",
+				placeholder:
+					"The application process involves submitting an online application, followed by technical " +
+					"assessments and interviews to evaluate coding skills, problem-solving ability, and cultural fit.",
 				name: "application_note",
 			}),
 		];

@@ -346,3 +346,20 @@ textarea.form-control {
 .accordion-button:not(.collapsed) {
     background: none;
 }
+
+.form-control:hover {
+    border-color: var(--primary-mid);
+}
+
+.form-control--is-focused {
+    border-color: var(--primary-mid);
+    box-shadow: 0 0 0 0.25rem var(--jam-glow), 0 4px 12px rgba(0, 0, 0, 0.1);
+    outline: none;
+}
+
+.form-control::placeholder{
+    color: rgb(173, 181, 189);
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.5;
+}

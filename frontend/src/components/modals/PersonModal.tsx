@@ -25,10 +25,10 @@ export const PersonModal: React.FC<DataModalProps> = ({
 	const { token } = useAuth();
 
 	const formFieldsArray = [
-		[formFields.firstName(), formFields.lastName()],
-		[formFields.company(companies, openCompanyModal), formFields.role()],
-		[formFields.email(), formFields.phone()],
-		[formFields.linkedinUrl()],
+		[formFields.firstName({ placeholder: "Jane" }), formFields.lastName({ placeholder: "Doe" })],
+		[formFields.company(companies, openCompanyModal), formFields.role({ placeholder: "Team Leader" })],
+		[formFields.email({ placeholder: "jane.doe@company.com" }), formFields.phone()],
+		[formFields.linkedinUrl({ placeholder: "https://linkedin.com/in/janedoe" })],
 	];
 
 	const viewFieldsArray = [

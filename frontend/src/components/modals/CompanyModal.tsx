@@ -23,9 +23,14 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 
 	const fields = {
 		form: [
-			formFields.name({ required: true }),
-			[formFields.url({ label: "Website URL" })],
-			[formFields.description()],
+			formFields.name({ required: true, placeholder: "Google" }),
+			[formFields.url({ label: "Website URL", placeholder: "https://www.google.com" })],
+			[
+				formFields.description({
+					placeholder:
+						"Google is a global technology company best known for its search engine, which organises and provides access to information across the internet, alongside a wide range of digital services and products.",
+				}),
+			],
 		],
 		view: [viewFields.name({ isTitle: true }), viewFields.url(), [viewFields.description()]],
 	};

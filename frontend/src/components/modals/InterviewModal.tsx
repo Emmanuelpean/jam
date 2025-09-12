@@ -25,7 +25,6 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 
 	const [currentFormData, setCurrentFormData] = useState<InterviewData>({});
 
-	// Handler for form data changes
 	const handleFormDataChange = (newFormData: InterviewData) => {
 		setCurrentFormData((prev) => ({
 			...prev,
@@ -43,7 +42,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 		],
 		[
 			formFields.interviewAttendanceType(),
-			...(currentFormData?.attendance_type !== "remote"
+			...(currentFormData?.attendance_type === "on-site"
 				? [formFields.location(locations, openLocationModal)]
 				: []),
 		],
