@@ -10,6 +10,7 @@ import useGenericAlert from "../../hooks/useGenericAlert";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumnRenders";
 import "./GenericTable.css";
+import { viewFields } from "../rendering/view/ModalFieldRenders";
 
 export interface SortConfig {
 	key: string;
@@ -222,11 +223,17 @@ export const createGenericDeleteHandler = ({
 	itemType = "item",
 }: CreateGenericDeleteHandlerProps) => {
 	return async (item: any): Promise<void> => {
-		const itemName = item[nameKey];
+		let message: string;
+		console.log(nameKey);
+		if (nameKey !== "date") {
+			message = `Are you sure you want to delete "${item[nameKey]}"? This action cannot be undone.`;
+		} else {
+			message = `Are you sure you want to delete this ${itemType}? This action cannot be undone.`;
+		}
 		try {
 			await showDelete({
 				title: `Delete ${itemType}`,
-				message: `Are you sure you want to delete "${itemName}"? This action cannot be undone.`,
+				message: message,
 				confirmText: "Delete",
 				cancelText: "Cancel",
 			});

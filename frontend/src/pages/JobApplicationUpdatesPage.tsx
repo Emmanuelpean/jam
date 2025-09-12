@@ -52,7 +52,7 @@ const JobApplicationUpdatesPage = () => {
 			error={error}
 			Modal={JobApplicationUpdateModal}
 			endpoint="jobapplicationupdates"
-			nameKey="note"
+			nameKey="date"
 			itemType="Job Application Update"
 			addItem={addItem}
 			updateItem={updateItem}

@@ -18,7 +18,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	onDelete,
 	submode = "view",
 	size = "lg",
-	jobId, // optional job id
+	jobId,
 }) => {
 	const { locations, persons, jobs, openLocationModal, openPersonModal, renderLocationModal, renderPersonModal } =
 		useFormOptions(["locations", "persons", "jobs"]);
