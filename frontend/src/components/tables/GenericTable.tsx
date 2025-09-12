@@ -224,7 +224,6 @@ export const createGenericDeleteHandler = ({
 }: CreateGenericDeleteHandlerProps) => {
 	return async (item: any): Promise<void> => {
 		let message: string;
-		console.log(nameKey);
 		if (nameKey !== "date") {
 			message = `Are you sure you want to delete "${item[nameKey]}"? This action cannot be undone.`;
 		} else {
