@@ -31,7 +31,10 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 	const { token } = useAuth();
 
 	const fields = {
-		form: [formFields.name({ required: true }), formFields.url({ required: true })],
+		form: [
+			formFields.name({ required: true, placeholder: "LinkedIn" }),
+			formFields.url({ required: true, placeholder: "https://linkedin.com" }),
+		],
 		view: [viewFields.name({ isTitle: true }), viewFields.url()],
 	};
 

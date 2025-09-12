@@ -22,7 +22,11 @@ export const LocationModal: React.FC<DataModalProps> = ({
 	const { token } = useAuth();
 	const { countries } = useCountries();
 
-	const formFieldsArray = [formFields.city(), formFields.postcode(), formFields.country(countries)];
+	const formFieldsArray = [
+		formFields.city({ placeholder: "Oxford" }),
+		formFields.postcode({ placeholder: "OX1 1AA" }),
+		formFields.country(countries),
+	];
 	const viewFieldsArray = [
 		[viewFields.city(), viewFields.postcode(), viewFields.country()],
 		viewFields.locationMap(),

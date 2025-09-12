@@ -21,7 +21,7 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 	const { token } = useAuth();
 
 	const fields = {
-		form: [formFields.name({ required: true })],
+		form: [formFields.name({ required: true, placeholder: "Software development" })],
 		view: [viewFields.name({ isTitle: true })],
 	};
 

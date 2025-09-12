@@ -41,7 +41,7 @@ const JobsPage = () => {
 		tableColumns.urlGeneric!(),
 		tableColumns.salaryRange!(),
 		tableColumns.personalRating!(),
-		tableColumns.status!(),
+		tableColumns.applicationStatus!(),
 		tableColumns.createdAt!(),
 	];
 

@@ -31,7 +31,10 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 			}),
 			formFields.updateType(),
 		],
-		formFields.note(),
+		formFields.note({
+			placeholder:
+				"Application is under review and the hiring team will contact me regarding the next steps in the process.",
+		}),
 	];
 
 	const viewFieldsArray = [
