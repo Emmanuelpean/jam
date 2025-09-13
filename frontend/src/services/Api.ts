@@ -92,6 +92,7 @@ class ApiService {
 	}
 
 	async get(endpoint: string, token: string | null = null, options: RequestOptions = {}): Promise<any> {
+		console.log("path", `${this.baseUrl}/${endpoint}`);
 		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "GET",
 			headers: getAuthHeaders(token || ""),
