@@ -31,7 +31,7 @@ interface AuthApi {
 	updateCurrentUser: (data: any, token: string) => Promise<any>;
 }
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 
 const getAuthHeaders = (token: string): HeadersInit => ({
 	"Content-Type": "application/json",
