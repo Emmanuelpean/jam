@@ -1,6 +1,7 @@
 {
   "name": "frontend",
   "version": "0.1.0",
+  "homepage": "/jam",
   "private": true,
   "dependencies": {
     "@coreui/coreui": "^5.4.1",

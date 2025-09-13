@@ -82,7 +82,7 @@ function App() {
 	const { toasts, showSuccess, showError, showWarning, showInfo, hideToast } = useToast();
 
 	return (
-		<BrowserRouter>
+		<BrowserRouter basename="/jam">
 			<AuthProvider>
 				<LoadingProvider>
 					<ToastContext.Provider value={{ showSuccess, showError, showWarning, showInfo }}>
