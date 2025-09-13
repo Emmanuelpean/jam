@@ -51,3 +51,4 @@ output = "reports/coverage/coverage.xml"
 
 [tool.setuptools.packages.find]
 exclude = ["reports*", "resources*"]
+include = ["app*"]
