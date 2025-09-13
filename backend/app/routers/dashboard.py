@@ -12,7 +12,7 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
 class UpdateItem(BaseModel):
-    data: dict[str, schemas.JobOut | schemas.InterviewOut | schemas.JobApplicationUpdateOut]
+    data: schemas.JobOut | schemas.InterviewOut | schemas.JobApplicationUpdateOut
     date: datetime.datetime
     type: str
     job: schemas.JobOut
@@ -74,10 +74,12 @@ def get_dashboard_data(
         # Convert job application to Pydantic schema to access computed fields
         job_schema = schemas.JobOut.model_validate(job, from_attributes=True)
 
-        if (job_schema.last_update_date - datetime.datetime.now(datetime.UTC)) > datetime.timedelta(
-            days=chase_threshold
-        ):
-            needs_chase.append(job)
+        # If we have a last update date, check if it's older than the threshold
+        if job_schema.last_update_date is not None:
+            if (datetime.datetime.now(datetime.UTC) - job_schema.last_update_date) > datetime.timedelta(
+                days=chase_threshold
+            ):
+                needs_chase.append(job_schema)
 
     # ----------------------------------------------------- UPDATES ----------------------------------------------------
 
@@ -86,31 +88,36 @@ def get_dashboard_data(
 
     # Add job applications as "Application" updates
     for job in jobs:
+        job_out = schemas.JobOut.model_validate(job, from_attributes=True)
         update_item = {
-            "data": job,
-            "date": job.application_date,
+            "data": job_out,
+            "date": job_out.application_date,
             "type": "Application",
-            "job": job,
+            "job": job_out,
         }
         all_updates.append(update_item)
 
     # Add interviews as "Interview" updates
     for interview in interviews:
+        interview_out = schemas.InterviewOut.model_validate(interview, from_attributes=True)
+        job_out = schemas.JobOut.model_validate(interview.job, from_attributes=True)
         update_item = {
-            "data": interview,
-            "date": interview.date,
+            "data": interview_out,
+            "date": interview_out.date,
             "type": "Interview",
-            "job": interview.job,
+            "job": job_out,
         }
         all_updates.append(update_item)
 
     # Add job application updates
     for update in updates:
+        update_out = schemas.JobApplicationUpdateOut.model_validate(update, from_attributes=True)
+        job_out = schemas.JobOut.model_validate(update.job, from_attributes=True)
         update_item = {
-            "data": update,
-            "date": update.date,
+            "data": update_out,
+            "date": update_out.date,
             "type": "Job Application Update",
-            "job": update.job,
+            "job": job_out,
         }
         all_updates.append(update_item)
 
