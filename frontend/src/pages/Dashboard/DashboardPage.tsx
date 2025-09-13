@@ -2,7 +2,7 @@ import React, { JSX, useEffect, useState } from "react";
 import { Alert, Card, Col, Container, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { useLoading } from "../../contexts/LoadingContext";
-import { api } from "../../services/Api";
+import { api, dashboardApi } from "../../services/Api";
 import "./DashboardPage.css";
 import { renderFunctions } from "../../components/rendering/view/ViewRenders";
 import { ApplicationData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
@@ -77,7 +77,10 @@ const JobSearchDashboard: React.FC = () => {
 			try {
 				showLoading("Loading dashboard data...");
 
-				const dashboardResponse = await api.get("dashboard", token);
+				if (!token) {
+					throw new Error("User is not authenticated");
+				}
+				const dashboardResponse = await dashboardApi.getAll(token);
 
 				const statistics = dashboardResponse?.statistics || {
 					jobs: 0,

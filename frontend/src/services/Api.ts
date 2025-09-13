@@ -71,12 +71,7 @@ class ApiService {
 	private readonly baseUrl: string;
 
 	constructor(baseUrl: string = API_BASE_URL) {
-		this.baseUrl = baseUrl.replace(/\/$/, "");
-	}
-
-	private joinUrl(endpoint: string): string {
-		const cleanEndpoint = (endpoint || "").replace(/^\/+/, "");
-		return `${this.baseUrl}/${cleanEndpoint}`;
+		this.baseUrl = baseUrl;
 	}
 
 	// Enhanced error handling helper for blob responses
@@ -97,9 +92,8 @@ class ApiService {
 	}
 
 	async get(endpoint: string, token: string | null = null, options: RequestOptions = {}): Promise<any> {
-		const url = this.joinUrl(endpoint);
-		console.log("path", url);
-		const response = await fetch(url, {
+		console.log("path", `${this.baseUrl}/${endpoint}`);
+		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "GET",
 			headers: getAuthHeaders(token || ""),
 		});
@@ -109,7 +103,7 @@ class ApiService {
 
 	// Generic POST request
 	async post(endpoint: string, data: any, token: string | null = null): Promise<any> {
-		const response = await fetch(this.joinUrl(endpoint), {
+		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "POST",
 			headers: getAuthHeaders(token || ""),
 			body: JSON.stringify(data),
@@ -119,7 +113,7 @@ class ApiService {
 
 	// Generic PUT request
 	async put(endpoint: string, data: any, token: string | null = null): Promise<any> {
-		const response = await fetch(this.joinUrl(endpoint), {
+		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "PUT",
 			headers: getAuthHeaders(token || ""),
 			body: JSON.stringify(data),
@@ -129,7 +123,7 @@ class ApiService {
 
 	// Generic PATCH request
 	async patch(endpoint: string, data: any, token: string | null = null): Promise<any> {
-		const response = await fetch(this.joinUrl(endpoint), {
+		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "PATCH",
 			headers: getAuthHeaders(token || ""),
 			body: JSON.stringify(data),
@@ -139,7 +133,7 @@ class ApiService {
 
 	// Generic DELETE request
 	async delete(endpoint: string, token: string | null = null): Promise<any> {
-		const response = await fetch(this.joinUrl(endpoint), {
+		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "DELETE",
 			headers: getAuthHeaders(token || ""),
 		});
@@ -149,7 +143,7 @@ class ApiService {
 	// Form data POST (for login, etc.)
 	async postFormData(endpoint: string, formData: FormData, token: string | null = null): Promise<any> {
 		const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-		const response = await fetch(this.joinUrl(endpoint), {
+		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "POST",
 			headers,
 			body: formData,
@@ -207,6 +201,7 @@ export const aggregatorsApi: CrudApi = createCrudApi("aggregators");
 export const scrapedJobApi: CrudApi = createCrudApi("scrapedjobs");
 export const serviceLogApi: CrudApi = createCrudApi("servicelogs");
 export const userApi: CrudApi = createCrudApi("users");
+export const dashboardApi: CrudApi = createCrudApi("dashboard");
 
 export const filesApi: FilesApi = {
 	...createCrudApi("files"),
