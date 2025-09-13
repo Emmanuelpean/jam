@@ -68,7 +68,16 @@ export const renderFormField = (
 	};
 
 	if (field.type === "checkbox") {
-		return <Form.Group className="mb-4">{renderCheckbox(widgetProps)}</Form.Group>;
+		return (
+			<Form.Group className="mb-4">
+				{renderCheckbox(widgetProps)}
+				{error && (
+					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
+						{displayError(error)}
+					</div>
+				)}
+			</Form.Group>
+		);
 	}
 
 	return (
