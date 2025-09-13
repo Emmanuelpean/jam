@@ -24,6 +24,7 @@ dependencies = [
     "google-auth-oauthlib==1.2.2",
     "cloudscraper==1.2.71",
     "tqdm==4.67.1",
+    "gunicorn==23.0.0",
 ]
 
 [project.optional-dependencies]
