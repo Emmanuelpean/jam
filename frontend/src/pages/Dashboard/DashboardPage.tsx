@@ -77,27 +77,26 @@ const JobSearchDashboard: React.FC = () => {
 			try {
 				showLoading("Loading dashboard data...");
 
-				const [statsResponse, chaseApplicationsResponse, recentUpdatesResponse] = await Promise.all([
-					api.get("stats", token),
-					api.get("needs_chase", token),
-					api.get("latest_updates", token),
-				]);
+				const dashboardResponse = await api.get("dashboard", token);
 
-				setChaseJobsData(chaseApplicationsResponse || []);
-				const stats = statsResponse || {
+				const statistics = dashboardResponse?.statistics || {
 					jobs: 0,
 					job_applications: 0,
 					job_application_pending: 0,
 					interviews: 0,
 				};
+				const needsChase = dashboardResponse?.needs_chase || [];
+				const allUpdates = dashboardResponse?.all_updates || [];
+
+				setChaseJobsData(needsChase);
 
 				setDashboardStats({
-					totalJobs: stats.jobs,
-					totalApplications: stats.job_applications,
-					pendingApplications: stats.job_application_pending,
-					interviewsScheduled: stats.interviews,
-					jobsNeedingChase: chaseApplicationsResponse?.length || 0,
-					recentActivity: recentUpdatesResponse || [],
+					totalJobs: statistics.jobs,
+					totalApplications: statistics.job_applications,
+					pendingApplications: statistics.job_application_pending,
+					interviewsScheduled: statistics.interviews,
+					jobsNeedingChase: needsChase.length,
+					recentActivity: allUpdates,
 				});
 			} catch (err) {
 				console.error("Error fetching dashboard data:", err);
