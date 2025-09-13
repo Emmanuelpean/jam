@@ -2,6 +2,7 @@ import app.eis.models as eis_models
 from app import models, utils
 from tests.utils.table_data import (
     USER_DATA,
+    SETTINGS_DATA,
     COMPANY_DATA,
     LOCATION_DATA,
     AGGREGATOR_DATA,
@@ -20,6 +21,17 @@ from tests.utils.table_data import (
     SERVICE_LOG_DATA,
     JOB_APPLICATION_UPDATE_DATA,
 )
+
+
+def create_settings(db) -> list[models.Settings]:
+    """Create sample settings"""
+
+    print("Creating settings...")
+    # noinspection PyArgumentList
+    settings = [models.Settings(**data) for data in SETTINGS_DATA]
+    db.add_all(settings)
+    db.commit()
+    return db.query(models.Settings).all()
 
 
 def create_users(db) -> list[models.User]:

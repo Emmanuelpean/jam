@@ -11,6 +11,7 @@ from sqlalchemy import text, inspect
 from app.database import engine, session_local, Base
 from tests.utils.create_data import (
     create_users,
+    create_settings,
     create_companies,
     create_locations,
     create_aggregators,
@@ -60,6 +61,7 @@ def seed_database() -> None:
     try:
         # Create data in order of dependencies
         users = create_users(db)
+        settings = create_settings(db)
         companies = create_companies(db)
         locations = create_locations(db)
         aggregators = create_aggregators(db)
@@ -77,6 +79,7 @@ def seed_database() -> None:
         print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
         print("=" * 50)
         print(f"Users: {len(users)}")
+        print(f"Settings: {len(settings)}")
         print(f"Companies: {len(companies)}")
         print(f"Locations: {len(locations)}")
         print(f"Aggregators: {len(aggregators)}")

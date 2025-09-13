@@ -99,7 +99,7 @@ class Settings(CommonBase, Base):
     - `description` (str): A description of the setting."""
 
     quantity = Column(String, nullable=False, unique=True)
-    value = Column(Float, nullable=False)
+    value = Column(String, nullable=False)
     description = Column(String, nullable=False)
 
 

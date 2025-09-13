@@ -163,6 +163,13 @@ def create_user(
     :param user: The user data.
     :param db: The database session."""
 
+    # noinspection PyTypeChecker
+    settings = db.query(models.Settings).filter(models.Settings.quantity == "allowlist").all()
+    if settings:
+        emails_allowed = settings[0].value.split(",")
+        if user.email not in emails_allowed:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not allowed")
+
     # Get all users and check if the email is already registered
     users = db.query(models.User).all()
     emails = [u.email for u in users]

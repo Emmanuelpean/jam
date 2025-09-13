@@ -160,7 +160,9 @@ function AuthForm(): JSX.Element {
 					showSuccess("Account created successfully! You can now log in.", "Registration Successful");
 				} else if (result.status === 400) {
 					showError("Email already registered", "Registration Failed");
-				} else {
+				} else if (result.status === 401)
+            {showError("Sorry, you are not allowed to sign up for now.")}
+            else {
 					const errorMessage =
 						typeof result.error === "object"
 							? JSON.stringify(result.error)

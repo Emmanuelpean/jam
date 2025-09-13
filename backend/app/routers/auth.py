@@ -25,7 +25,7 @@ def login(
     if user is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found")
 
-    # Check that the password correspond to that user
+    # Check that the password corresponds to that user
     if not utils.verify_password(user_credentials.password, user.password):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Incorrect password")
 

@@ -41,6 +41,15 @@ USER_DATA = [
 ]
 
 
+SETTINGS_DATA = [
+    {
+        "quantity": "allowlist",
+        "value": ",".join(data["email"] for data in USER_DATA),
+        "description": "Emails allowed to sign up",
+    }
+]
+
+
 COMPANY_DATA = [
     {
         "name": "Tech Corp",
