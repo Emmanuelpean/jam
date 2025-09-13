@@ -42,13 +42,13 @@ function AuthForm(): JSX.Element {
 	useEffect(() => {
 		// Redirect authenticated users to dashboard
 		if (isAuthenticated) {
-			navigate("/dashboard", { replace: true });
+			navigate("dashboard", { replace: true });
 			return;
 		}
 
 		document.documentElement.setAttribute("data-theme", "mixed-berry");
 		// Set form mode based on current path
-		setIsLogin(location.pathname === "/login");
+		setIsLogin(location.pathname === "login");
 	}, [location.pathname, isAuthenticated, navigate]);
 
 	const handleInputChange = (e: SyntheticEvent): void => {
@@ -80,7 +80,7 @@ function AuthForm(): JSX.Element {
 			setAcceptedTerms(false);
 		}
 		// Update URL without navigation
-		window.history.replaceState(null, "", isLogin ? "/register" : "/login");
+		window.history.replaceState(null, "", isLogin ? "register" : "login");
 	};
 
 	const resetForm = (): void => {
@@ -142,7 +142,7 @@ function AuthForm(): JSX.Element {
 			if (isLogin) {
 				const result: AuthResult = await login(formData.email, formData.password);
 				if (result.success) {
-					navigate("/dashboard");
+					navigate("dashboard");
 				} else {
 					// Add null check for result.status
 					if (result.status && [404, 403].includes(result.status)) {
