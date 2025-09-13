@@ -352,7 +352,7 @@ class JobOut(JobCreate, OwnedOut):
         if self.application_date is None:
             return None
         now = datetime.now(UTC)
-        return (self.last_update_date - now).days
+        return (now - self.last_update_date).days
 
 
 class JobMinOut(OwnedOut):

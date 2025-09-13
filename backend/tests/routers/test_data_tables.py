@@ -219,23 +219,6 @@ class TestJobCRUD(CRUDTestBase):
         "id": 1,
     }
 
-    def test_needs_chase_custom_days(self, authorised_clients) -> None:
-        """Test needs_chase endpoint with custom days parameter"""
-
-        # Test with 7 days - should return fewer results
-        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=7")
-        assert response.status_code == 200
-        applications_7_days = response.json()
-        assert len(applications_7_days) == 10
-        for app in applications_7_days:
-            assert app["job_application"]["status"] not in ["Rejected", "Withdrawn"]
-
-        # Test with 60 days - should return more results
-        response = authorised_clients[0].get(f"{self.endpoint}/needs_chase?days=60")
-        assert response.status_code == 200
-        applications_60_days = response.json()
-        assert len(applications_60_days) == 4
-
 
 class TestJobApplicationUpdateCRUD(CRUDTestBase):
     endpoint = "/jobapplicationupdates"

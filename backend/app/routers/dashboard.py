@@ -1,36 +1,20 @@
 """API router for dashboard data"""
 
-import datetime
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app import models, database, oauth2, schemas
-from app.schemas import BaseModel
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
-class UpdateItem(BaseModel):
-    data: schemas.JobOut | schemas.InterviewOut | schemas.JobApplicationUpdateOut
-    date: datetime.datetime
-    type: str
-    job: schemas.JobOut
-
-
-class DashboardResponse(BaseModel):
-    statistics: dict[str, int]
-    needs_chase: list[schemas.JobOut]
-    updates: list[UpdateItem]
-
-
-@router.get("/", response_model=DashboardResponse)
+@router.get("/")
 def get_dashboard_data(
     update_limit: int = 20,
     chase_threshold: int = 30,
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
-) -> DashboardResponse:
+):
     """Get dashboard data including job applications, interviews, and job application updates.
     :param update_limit: Maximum number of updates to return
     :param chase_threshold: Number of days to check for follow-up
@@ -75,10 +59,8 @@ def get_dashboard_data(
         job_schema = schemas.JobOut.model_validate(job, from_attributes=True)
 
         # If we have a last update date, check if it's older than the threshold
-        if job_schema.last_update_date is not None:
-            if (datetime.datetime.now(datetime.UTC) - job_schema.last_update_date) > datetime.timedelta(
-                days=chase_threshold
-            ):
+        if job_schema.days_since_last_update is not None:
+            if job_schema.days_since_last_update > chase_threshold:
                 needs_chase.append(job_schema)
 
     # ----------------------------------------------------- UPDATES ----------------------------------------------------
@@ -125,6 +107,4 @@ def get_dashboard_data(
     all_updates.sort(key=lambda x: x["date"], reverse=True)
     all_updates = all_updates[:update_limit]
 
-    print(all_updates)
-
-    return DashboardResponse(statistics=statistics, needs_chase=needs_chase, updates=all_updates)
+    return dict(statistics=statistics, needs_chase=needs_chase, all_updates=all_updates)
