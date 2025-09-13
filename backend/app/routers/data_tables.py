@@ -1,23 +1,31 @@
 """Module for generating CRUD routers for the JAM data tables"""
 
 import base64
-import datetime
 
-from fastapi import APIRouter, Depends, status, HTTPException, Response
+from fastapi import Depends, status, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from app import models, database, oauth2, schemas
 from app.routers import generate_data_table_crud_router
 
+# Keyword router
+keyword_router = generate_data_table_crud_router(
+    table_model=models.Keyword,
+    create_schema=schemas.KeywordCreate,
+    update_schema=schemas.KeywordUpdate,
+    out_schema=schemas.KeywordOut,
+    endpoint="keywords",
+    not_found_msg="Keyword not found",
+)
 
-# Person router
-person_router = generate_data_table_crud_router(
-    table_model=models.Person,
-    create_schema=schemas.PersonCreate,
-    update_schema=schemas.PersonUpdate,
-    out_schema=schemas.PersonOut,
-    endpoint="persons",
-    not_found_msg="Person not found",
+# Aggregator router
+aggregator_router = generate_data_table_crud_router(
+    table_model=models.Aggregator,
+    create_schema=schemas.AggregatorCreate,
+    update_schema=schemas.AggregatorUpdate,
+    out_schema=schemas.AggregatorOut,
+    endpoint="aggregators",
+    not_found_msg="Aggregator not found",
 )
 
 # Company router
@@ -28,6 +36,26 @@ company_router = generate_data_table_crud_router(
     out_schema=schemas.CompanyOut,
     endpoint="companies",
     not_found_msg="Company not found",
+)
+
+# Location router
+location_router = generate_data_table_crud_router(
+    table_model=models.Location,
+    create_schema=schemas.LocationCreate,
+    update_schema=schemas.LocationUpdate,
+    out_schema=schemas.LocationOut,
+    endpoint="locations",
+    not_found_msg="Location not found",
+)
+
+# Person router
+person_router = generate_data_table_crud_router(
+    table_model=models.Person,
+    create_schema=schemas.PersonCreate,
+    update_schema=schemas.PersonUpdate,
+    out_schema=schemas.PersonOut,
+    endpoint="persons",
+    not_found_msg="Person not found",
 )
 
 # Job router
@@ -42,26 +70,6 @@ job_router = generate_data_table_crud_router(
         "keywords": {"table": models.job_keyword_mapping, "local_key": "job_id", "remote_key": "keyword_id"},
         "contacts": {"table": models.job_contact_mapping, "local_key": "job_id", "remote_key": "person_id"},
     },
-)
-
-# Location router
-location_router = generate_data_table_crud_router(
-    table_model=models.Location,
-    create_schema=schemas.LocationCreate,
-    update_schema=schemas.LocationUpdate,
-    out_schema=schemas.LocationOut,
-    endpoint="locations",
-    not_found_msg="Location not found",
-)
-
-# Aggregator router
-aggregator_router = generate_data_table_crud_router(
-    table_model=models.Aggregator,
-    create_schema=schemas.AggregatorCreate,
-    update_schema=schemas.AggregatorUpdate,
-    out_schema=schemas.AggregatorOut,
-    endpoint="aggregators",
-    not_found_msg="Aggregator not found",
 )
 
 # Interview router
@@ -91,16 +99,6 @@ job_application_update_router = generate_data_table_crud_router(
     not_found_msg="Job Application Update not found",
 )
 
-# Keyword router
-keyword_router = generate_data_table_crud_router(
-    table_model=models.Keyword,
-    create_schema=schemas.KeywordCreate,
-    update_schema=schemas.KeywordUpdate,
-    out_schema=schemas.KeywordOut,
-    endpoint="keywords",
-    not_found_msg="Keyword not found",
-)
-
 # File router
 file_router = generate_data_table_crud_router(
     table_model=models.File,
@@ -114,9 +112,9 @@ file_router = generate_data_table_crud_router(
 
 @file_router.get("/{file_id}/download")
 def download_file(
-    file_id: int,
-    db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(oauth2.get_current_user),
+        file_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(oauth2.get_current_user),
 ):
     """Download a file by ID.
     :param file_id: The file ID.

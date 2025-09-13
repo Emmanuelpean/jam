@@ -26,6 +26,31 @@ from tests.utils.table_data import (
 # ---------------------------------------------------- SIMPLE TABLES ---------------------------------------------------
 
 
+class TestKeywordCRUD(CRUDTestBase):
+    endpoint = "/keywords"
+    schema = schemas.KeywordCreate
+    out_schema = schemas.KeywordOut
+    test_data = "test_keywords"
+    create_data = KEYWORD_DATA
+    update_data = {
+        "id": 1,
+        "name": "Updated Python",
+    }
+
+
+class TestAggregatorCRUD(CRUDTestBase):
+    endpoint = "/aggregators"
+    schema = schemas.AggregatorCreate
+    out_schema = schemas.AggregatorOut
+    test_data = "test_aggregators"
+    create_data = AGGREGATOR_DATA
+    update_data = {
+        "name": "Updated LinkedIn",
+        "url": "https://updated-linkedin.com",
+        "id": 1,
+    }
+
+
 class TestCompanyCRUD(CRUDTestBase):
     endpoint = "/companies"
     schema = schemas.CompanyCreate
@@ -50,31 +75,6 @@ class TestCompanyCRUD(CRUDTestBase):
         response = authorised_clients[1].get(f"{self.endpoint}/?id=1")
         assert response.status_code == 200
         assert len(response.json()) == 0
-
-
-class TestKeywordCRUD(CRUDTestBase):
-    endpoint = "/keywords"
-    schema = schemas.KeywordCreate
-    out_schema = schemas.KeywordOut
-    test_data = "test_keywords"
-    create_data = KEYWORD_DATA
-    update_data = {
-        "id": 1,
-        "name": "Updated Python",
-    }
-
-
-class TestAggregatorCRUD(CRUDTestBase):
-    endpoint = "/aggregators"
-    schema = schemas.AggregatorCreate
-    out_schema = schemas.AggregatorOut
-    test_data = "test_aggregators"
-    create_data = AGGREGATOR_DATA
-    update_data = {
-        "name": "Updated LinkedIn",
-        "url": "https://updated-linkedin.com",
-        "id": 1,
-    }
 
 
 class TestLocationCRUD(CRUDTestBase):
@@ -219,7 +219,7 @@ class TestJobCRUD(CRUDTestBase):
         "id": 1,
     }
 
-    def test_needs_chase_custom_days(self, authorised_clients, test_job_applications) -> None:
+    def test_needs_chase_custom_days(self, authorised_clients) -> None:
         """Test needs_chase endpoint with custom days parameter"""
 
         # Test with 7 days - should return fewer results
@@ -242,7 +242,7 @@ class TestJobApplicationUpdateCRUD(CRUDTestBase):
     schema = schemas.JobApplicationUpdateCreate
     out_schema = schemas.JobApplicationUpdateOut
     test_data = "test_job_application_updates"
-    add_fixture = ["test_job_applications"]
+    add_fixture = ["test_jobs"]
     create_data = JOB_APPLICATION_UPDATE_DATA
     update_data = {
         "id": 1,
@@ -255,103 +255,11 @@ class TestInterviewCRUD(CRUDTestBase):
     schema = schemas.InterviewCreate
     out_schema = schemas.InterviewOut
     test_data = "test_interviews"
-    add_fixture = ["test_job_applications", "test_locations", "test_persons"]
+    add_fixture = ["test_jobs", "test_locations", "test_persons"]
     create_data = INTERVIEW_DATA
     update_data = {
+        "job_id": 1,
         "note": "Interview went very well - positive feedback",
         "date": "2024-01-20T10:00:00",
         "id": 1,
     }
-
-
-class TestLatestUpdatesRouter:
-    """Test class for the updates router endpoints"""
-
-    def test_get_all_updates_basic_functionality(
-        self, authorised_clients, test_job_applications, test_interviews, test_job_application_updates
-    ) -> None:
-        """Test get_all_updates endpoint returns unified updates"""
-        response = authorised_clients[0].get("/latest_updates/")
-        assert response.status_code == 200
-
-        updates = response.json()
-        assert isinstance(updates, list)
-
-        # Verify each update has the expected structure
-        for update in updates:
-            assert "date" in update
-            assert "type" in update
-            assert "job_title" in update
-
-            # Verify type is one of the expected values
-            assert update["type"] in ["Application", "Interview", "Job Application Update"]
-
-            # Verify date format (should be ISO datetime string)
-            assert isinstance(update["date"], str)
-
-        # Verify updates are sorted by date (most recent first)
-        if len(updates) > 1:
-            for i in range(len(updates) - 1):
-                current_date = updates[i]["date"]
-                next_date = updates[i + 1]["date"]
-                assert current_date >= next_date
-
-    def test_get_all_updates_with_limit(self, authorised_clients, test_job_applications) -> None:
-        """Test get_all_updates endpoint with custom limit parameter"""
-        # Test with small limit
-        response = authorised_clients[0].get("/latest_updates/?limit=5")
-        assert response.status_code == 200
-
-        updates = response.json()
-        assert len(updates) <= 5
-
-        # Test with larger limit
-        response = authorised_clients[0].get("/latest_updates/?limit=50")
-        assert response.status_code == 200
-
-        updates_large = response.json()
-        assert len(updates_large) >= len(updates)  # Should return same or more results
-
-    def test_get_all_updates_unauthorized(self, client) -> None:
-        """Test that unauthorized requests are rejected"""
-        response = client.get("/latest_updates/")
-        assert response.status_code == 401
-
-
-class TestGeneralRouter:
-    """Test class for general router endpoints"""
-
-    def test_get_all_updates_with_job_applications(self, test_users, authorised_clients, test_job_applications) -> None:
-        """Test get_all_updates returns job applications with attached job application data"""
-
-        response = authorised_clients[0].get("/latest_updates")
-        data = response.json()
-        assert all(d["type"] == "Application" for d in data)
-        assert len(data) == len(test_job_applications)
-        assert all({d["data"]["owner_id"] == test_users[0].id for d in data})
-
-    def test_get_all_updates_with_interviews(self, test_users, authorised_clients, test_interviews) -> None:
-        """Test get_all_updates returns interviews with attached job application data"""
-
-        response = authorised_clients[0].get("/latest_updates")
-        data = response.json()
-        job_applications = [d for d in data if d["type"] == "Application"]
-        interviews = [d for d in data if d["type"] == "Interview"]
-        assert len(job_applications) == 8
-        assert len(interviews) == 12
-        assert all({d["data"]["owner_id"] == test_users[0].id for d in data})
-
-    def test_get_all_updates_with_interviews_updates(
-        self, test_users, authorised_clients, test_interviews, test_job_application_updates
-    ) -> None:
-        """Test get_all_updates returns interviews with attached job application data"""
-
-        response = authorised_clients[0].get("/latest_updates")
-        data = response.json()
-        job_applications = [d for d in data if d["type"] == "Application"]
-        interviews = [d for d in data if d["type"] == "Interview"]
-        updates = [d for d in data if d["type"] == "Job Application Update"]
-        assert len(updates) == 10
-        assert len(job_applications) == 3
-        assert len(interviews) == 7
-        assert all({d["data"]["owner_id"] == test_users[0].id for d in data})

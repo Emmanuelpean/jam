@@ -62,7 +62,7 @@ def create_companies(db) -> list[models.Company]:
     companies = [models.Company(**company) for company in COMPANY_DATA]
     db.add_all(companies)
     db.commit()
-    return companies
+    return db.query(models.Company).all()
 
 
 def create_locations(db) -> list[models.Location]:
@@ -73,7 +73,7 @@ def create_locations(db) -> list[models.Location]:
     locations = [models.Location(**location) for location in LOCATION_DATA]
     db.add_all(locations)
     db.commit()
-    return locations
+    return db.query(models.Location).all()
 
 
 def create_aggregators(db) -> list[models.Aggregator]:
@@ -84,7 +84,7 @@ def create_aggregators(db) -> list[models.Aggregator]:
     aggregators = [models.Aggregator(**aggregator) for aggregator in AGGREGATOR_DATA]
     db.add_all(aggregators)
     db.commit()
-    return aggregators
+    return db.query(models.Aggregator).all()
 
 
 def create_keywords(db) -> list[models.Keyword]:
@@ -95,7 +95,7 @@ def create_keywords(db) -> list[models.Keyword]:
     keywords = [models.Keyword(**keyword) for keyword in KEYWORD_DATA]
     db.add_all(keywords)
     db.commit()
-    return keywords
+    return db.query(models.Keyword).all()
 
 
 def create_people(db) -> list[models.Person]:
@@ -106,7 +106,7 @@ def create_people(db) -> list[models.Person]:
     persons = [models.Person(**person) for person in PERSON_DATA]
     db.add_all(persons)
     db.commit()
-    return persons
+    return db.query(models.Person).all()
 
 
 def create_jobs(db, keywords, persons) -> list[models.Job]:
@@ -138,7 +138,7 @@ def create_jobs(db, keywords, persons) -> list[models.Job]:
 
     db.add_all(jobs)
     db.commit()
-    return jobs
+    return db.query(models.Job).all()
 
 
 def create_files(db) -> list[models.File]:
@@ -149,7 +149,7 @@ def create_files(db) -> list[models.File]:
     files = [models.File(**file) for file in FILE_DATA]
     db.add_all(files)
     db.commit()
-    return files
+    return db.query(models.File).all()
 
 
 def create_interviews(db, persons) -> list[models.Interview]:
@@ -171,7 +171,7 @@ def create_interviews(db, persons) -> list[models.Interview]:
 
     db.add_all(interviews)
     db.commit()
-    return interviews
+    return db.query(models.Interview).all()
 
 
 def create_job_alert_emails(db) -> list[eis_models.JobAlertEmail]:
@@ -182,7 +182,7 @@ def create_job_alert_emails(db) -> list[eis_models.JobAlertEmail]:
     emails = [eis_models.JobAlertEmail(**email) for email in JOB_ALERT_EMAIL_DATA]
     db.add_all(emails)
     db.commit()
-    return emails
+    return db.query(eis_models.JobAlertEmail).all()
 
 
 def create_scraped_jobs(db, emails) -> list[eis_models.ScrapedJob]:
@@ -204,7 +204,7 @@ def create_scraped_jobs(db, emails) -> list[eis_models.ScrapedJob]:
 
     db.add_all(scraped_jobs)
     db.commit()
-    return scraped_jobs
+    return db.query(eis_models.ScrapedJob).all()
 
 
 def create_service_logs(db) -> list[eis_models.EisServiceLog]:
@@ -215,7 +215,7 @@ def create_service_logs(db) -> list[eis_models.EisServiceLog]:
     logs = [eis_models.EisServiceLog(**log) for log in SERVICE_LOG_DATA]
     db.add_all(logs)
     db.commit()
-    return logs
+    return db.query(eis_models.EisServiceLog).all()
 
 
 def create_job_application_updates(db) -> list[models.JobApplicationUpdate]:
@@ -226,4 +226,4 @@ def create_job_application_updates(db) -> list[models.JobApplicationUpdate]:
     updates = [models.JobApplicationUpdate(**update) for update in JOB_APPLICATION_UPDATE_DATA]
     db.add_all(updates)
     db.commit()
-    return updates
+    return db.query(models.JobApplicationUpdate).all()

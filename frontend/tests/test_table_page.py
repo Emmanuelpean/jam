@@ -622,7 +622,7 @@ class TestJobApplicationUpdatesPage(TestTablePage):
 
     endpoint = "jobapplicationupdates"
     page_url = "jobapplicationupdates"
-    test_fixture = ["test_job_application_updates", "test_job_applications"]
+    test_fixture = ["test_job_application_updates", "test_jobs"]
     entry_name = "update"
     required_fields = ["job_application_id", "type"]
     test_data = {

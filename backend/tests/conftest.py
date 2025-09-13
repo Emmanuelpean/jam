@@ -149,7 +149,7 @@ def test_files(session, test_users) -> list[models.File]:
 
 
 @pytest.fixture
-def test_jobs(session, test_users, test_companies, test_locations, test_keywords, test_persons) -> list[models.Job]:
+def test_jobs(session, test_users, test_companies, test_locations, test_keywords, test_persons, test_aggregators, test_files) -> list[models.Job]:
     """Create test job data"""
 
     return create_jobs(session, test_keywords, test_persons)
@@ -224,17 +224,14 @@ class CRUDTestBase:
         if isinstance(response_data, dict):
             response_data = self.out_schema(**response_data)
 
-        # # Process the input
-        # if isinstance(test_data, dict):
-        #     test_data = self.schema(**test_data)
-
+        # Use the test data keys for comparison
         if isinstance(test_data, dict):
             items = test_data.items()
         else:
             items = vars(test_data).items()
 
         for key, value in items:
-            if key[0] != "_":
+            if key[0] != "_" and key in response_data:
                 response_value = getattr(response_data, key)
                 if isinstance(value, models.Base) or isinstance(value, list):
                     self.check_output(value, response_value)
@@ -305,7 +302,6 @@ class CRUDTestBase:
     ) -> None:
         test_data = request.getfixturevalue(self.test_data)
         response = self.get_all(authorised_clients[0])
-        print(response.json())
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
 

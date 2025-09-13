@@ -433,6 +433,7 @@ class InterviewUpdate(InterviewCreate):
     """Interview update schema"""
 
     date: datetime | None = None
+    type: str | None = None
     job_id: int | None = None
 
 
