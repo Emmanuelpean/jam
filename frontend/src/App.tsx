@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, ReactNode, createContext, JSX } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext.tsx";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./pages/Auth/Auth";
 import LocationsPage from "./pages/LocationsPage";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -17,24 +17,28 @@ import NotFoundPage from "./pages/NotFoundPage";
 import { Sidebar } from "./components/sidebar/Sidebar";
 import JobApplicationUpdatesPage from "./pages/JobApplicationUpdatesPage";
 import JobSearchDashboard from "./pages/Dashboard/DashboardPage";
-import { LoadingProvider, useLoading } from "./contexts/LoadingContext.tsx";
+import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
-import { useToast } from "./hooks/useNotificationToast.ts";
-import { ToastStack } from "./components/toasts/Toast.tsx";
+import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
+import { ToastStack } from "./components/toasts/Toast";
 
-export const ToastContext = React.createContext();
+export const ToastContext = createContext<UseToastReturn | undefined>(undefined);
 
-function AppLayout({ children }) {
+interface AppLayoutProps {
+	children: ReactNode;
+}
+
+function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const { isLoading, loadingMessage } = useLoading();
 	const location = useLocation();
 	const { currentUser } = useAuth();
-	const [sidebarExpanded, setSidebarExpanded] = useState(false);
+	const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(false);
 
 	// Don't show sidebar on auth pages
 	const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
-	const handleSidebarHoverChange = (isHovering) => {
+	const handleSidebarHoverChange = (isHovering: boolean): void => {
 		setSidebarExpanded(isHovering);
 	};
 
@@ -71,21 +75,29 @@ function AppLayout({ children }) {
 	);
 }
 
-// Protected route wrapper
-function ProtectedRoute({ children }) {
-	const { isAuthenticated } = useAuth();
-
-	return isAuthenticated ? children : <Navigate to="/login" />;
+// Define props interface for ProtectedRoute component
+interface ProtectedRouteProps {
+	children: ReactNode;
 }
 
-function App() {
+// Protected route wrapper
+function ProtectedRoute({ children }: ProtectedRouteProps): JSX.Element {
+	const { isAuthenticated } = useAuth();
+
+	return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+}
+
+function App(): JSX.Element {
 	const { toasts, showSuccess, showError, showWarning, showInfo, hideToast } = useToast();
 
 	return (
 		<BrowserRouter basename="/jam">
 			<AuthProvider>
 				<LoadingProvider>
-					<ToastContext.Provider value={{ showSuccess, showError, showWarning, showInfo }}>
+					<ToastContext.Provider
+						// @ts-ignore
+						value={{ showSuccess, showError, showWarning, showInfo }}
+					>
 						<AppLayout>
 							<Routes>
 								<Route path="/login" element={<Login />} />

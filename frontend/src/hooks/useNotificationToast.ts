@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { ToastContext } from "../App";
 
 // Define the toast variant types
@@ -15,19 +15,7 @@ interface Toast {
 }
 
 // Define the return type for useToast hook
-interface UseToastReturn {
-	toasts: Toast[];
-	showToast: (message: string, variant?: ToastVariant, title?: string | null, delay?: number) => void;
-	hideToast: (id: number) => void;
-	hideAllToasts: () => void;
-	showSuccess: (message: string, title?: string | null, delay?: number) => void;
-	showError: (message: string, title?: string | null, delay?: number) => void;
-	showWarning: (message: string, title?: string | null, delay?: number) => void;
-	showInfo: (message: string, title?: string | null, delay?: number) => void;
-}
-
-// Define the context type (this should match what's provided by ToastContext)
-interface ToastContextType {
+export interface UseToastReturn {
 	toasts: Toast[];
 	showToast: (message: string, variant?: ToastVariant, title?: string | null, delay?: number) => void;
 	hideToast: (id: number) => void;
@@ -101,7 +89,7 @@ export const useToast = (): UseToastReturn => {
 	};
 };
 
-export const useGlobalToast = (): ToastContextType => {
+export const useGlobalToast = (): UseToastReturn => {
 	const context = useContext(ToastContext);
 
 	if (!context) {
