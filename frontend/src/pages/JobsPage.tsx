@@ -1,9 +1,8 @@
 import React, { useEffect } from "react";
-import { useTableData, GenericTableWithModals } from "../components/tables/GenericTable";
+import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable";
 import { JobAndApplicationModal } from "../components/modals/JobAndApplicationModal";
 import { tableColumns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
-import JobsTour from "../tours/JobsTour";
 
 const JobsPage = () => {
 	const { showLoading, hideLoading } = useLoading();
@@ -45,7 +44,6 @@ const JobsPage = () => {
 
 	return (
 		<>
-			<JobsTour />
 			<GenericTableWithModals
 				title="Jobs"
 				data={jobs}
