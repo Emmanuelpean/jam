@@ -244,7 +244,6 @@ const GenericModal = ({
 			const effectiveProps = getEffectiveProps();
 
 			const newData = effectiveProps.data || data;
-			console.log("newData", newData);
 
 			if (effectiveProps.submode === "add") {
 				setFormData({ ...formData });

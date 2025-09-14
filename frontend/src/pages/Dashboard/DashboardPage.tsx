@@ -2,7 +2,7 @@ import React, { JSX, useEffect, useState } from "react";
 import { Alert, Card, Col, Container, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { useLoading } from "../../contexts/LoadingContext";
-import { api, dashboardApi } from "../../services/Api";
+import { dashboardApi } from "../../services/Api";
 import "./DashboardPage.css";
 import { renderFunctions } from "../../components/rendering/view/ViewRenders";
 import { ApplicationData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
