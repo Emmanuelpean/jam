@@ -618,7 +618,7 @@ class TestSaveJobDataToDb:
         assert sample_scraped_job.company is None
 
         # Save job data
-        GmailScraper.save_job_data_to_db(job_records=sample_scraped_job, job_data=sample_job_data, db=session)
+        GmailScraper.save_job_data_to_db(job_records=sample_scraped_job, job_data=sample_job_data, db=session, scraped_date=datetime.datetime.now())
 
         # Refresh the record from database
         session.refresh(sample_scraped_job)
@@ -678,7 +678,7 @@ class TestSaveJobDataToDb:
         }
 
         # Save job data
-        GmailScraper.save_job_data_to_db(job_records=[job_1, job_2], job_data=[job_data_1, job_data_2], db=session)
+        GmailScraper.save_job_data_to_db(job_records=[job_1, job_2], job_data=[job_data_1, job_data_2], db=session, scraped_date=datetime.datetime.now())
 
         # Refresh records
         session.refresh(job_1)
