@@ -240,36 +240,23 @@ const GenericModal = ({
 
 	const handleTabChange = async (tabKey: string): Promise<void> => {
 		if (hasTabs) {
-			if (hasUnsavedChanges()) {
-				try {
-					await showDelete({
-						title: "Unsaved Changes",
-						message: "You have unsaved changes. Are you sure you want to switch tabs without saving?",
-						confirmText: "Switch without saving",
-						cancelText: "Cancel",
-					});
-				} catch (error) {
-					// User cancelled, don't switch tabs
-					return;
-				}
-			}
-
 			setActiveTab(tabKey);
 			const effectiveProps = getEffectiveProps();
 
 			const newData = effectiveProps.data || data;
+			console.log("newData", newData);
 
 			if (effectiveProps.submode === "add") {
-				setFormData({ ...newData });
-				setOriginalFormData({ ...newData });
+				setFormData({ ...formData });
+				setOriginalFormData({ ...formData });
 				setIsEditing(true);
 			} else if (effectiveProps.submode === "edit") {
-				setFormData({ ...newData });
-				setOriginalFormData({ ...newData });
+				setFormData({ ...formData });
+				setOriginalFormData({ ...formData });
 				setIsEditing(true);
 			} else {
-				setFormData({ ...newData });
-				setOriginalFormData({ ...newData });
+				setFormData({ ...formData });
+				setOriginalFormData({ ...formData });
 				setIsEditing(false);
 			}
 			setErrors({});
