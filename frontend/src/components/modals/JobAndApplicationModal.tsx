@@ -1,10 +1,12 @@
 import React, { ReactNode, useMemo } from "react";
-import GenericModal, { TabConfig } from "./GenericModal/GenericModal";
+import GenericModal, { TabConfig, ValidationErrors } from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { getApplicationStatusBadgeClass } from "../rendering/view/ViewRenders";
 import { DataModalProps } from "./AggregatorModal";
 import { JobData } from "../../services/Schemas";
+import { jobsApi } from "../../services/Api";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -21,6 +23,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 	size,
 	defaultActiveTab = "job",
 }) => {
+	const { token } = useAuth();
 	const {
 		companies,
 		locations,
@@ -122,6 +125,23 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		};
 	};
 
+	const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
+		const errors: ValidationErrors = {};
+		if (!token) {
+			return errors;
+		}
+		const queryParams = { name: formData.url?.trim() };
+		const matches = await jobsApi.getAll(token, queryParams);
+		const duplicates = matches.filter((existing: any) => {
+			return data?.id !== existing.id;
+		});
+
+		if (duplicates.length > 0) {
+			errors.name = `A Job with this URL already exists`;
+		}
+		return errors;
+	};
+
 	const applicationTabTitle = (jobData: JobData): ReactNode => {
 		return jobData?.application_status ? (
 			<>
@@ -170,6 +190,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 				tabs={tabs}
 				id={id}
 				defaultActiveTab={defaultActiveTab}
+				validation={customValidation}
 				fields={{ form: [], view: [] }}
 			/>
 
