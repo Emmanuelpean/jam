@@ -52,7 +52,15 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 	} = useFormOptions(show ? ["companies", "locations", "keywords", "persons", "aggregators"] : []);
 
 	const handleFormDataChange = (data: any) => {
-		setCurrentApplicationFormData(data);
+		// Avoid infinite re-render loops by only updating when relevant fields actually change
+		setCurrentApplicationFormData((prev) => {
+			const prevVia = prev?.applied_via ?? null;
+			const nextVia = data?.applied_via ?? null;
+			if (prevVia === nextVia) {
+				return prev; // no change, prevent state update
+			}
+			return { ...prev, applied_via: nextVia };
+		});
 	};
 
 	const jobFormFields = [
