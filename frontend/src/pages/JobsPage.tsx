@@ -3,6 +3,7 @@ import { useTableData, GenericTableWithModals } from "../components/tables/Gener
 import { JobAndApplicationModal } from "../components/modals/JobAndApplicationModal";
 import { tableColumns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
+import JobsTour from "../tours/JobsTour";
 
 const JobsPage = () => {
 	const { showLoading, hideLoading } = useLoading();
@@ -20,15 +21,12 @@ const JobsPage = () => {
 		removeItem,
 	} = useTableData("jobs", [], {}, { key: "created_at", direction: "desc" });
 
-	// Use the global spinner instead of table spinner
 	useEffect(() => {
 		if (loading) {
-			showLoading("Loading jobs...");
+			showLoading("Loading Jobs...");
 		} else {
 			hideLoading();
 		}
-
-		// Cleanup function to hide loading when component unmounts
 		return () => {
 			hideLoading();
 		};
@@ -46,26 +44,29 @@ const JobsPage = () => {
 	];
 
 	return (
-		<GenericTableWithModals
-			title="Jobs"
-			data={jobs}
-			columns={columns}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
-			searchTerm={searchTerm}
-			onSearchChange={setSearchTerm}
-			loading={false}
-			error={error}
-			Modal={JobAndApplicationModal}
-			endpoint="jobs"
-			nameKey="title"
-			itemType="Job"
-			addItem={addItem}
-			updateItem={updateItem}
-			removeItem={removeItem}
-			setData={setJobs}
-			modalSize="xl"
-		/>
+		<>
+			<JobsTour />
+			<GenericTableWithModals
+				title="Jobs"
+				data={jobs}
+				columns={columns}
+				sortConfig={sortConfig}
+				onSort={setSortConfig}
+				searchTerm={searchTerm}
+				onSearchChange={setSearchTerm}
+				loading={false}
+				error={error}
+				Modal={JobAndApplicationModal}
+				endpoint="jobs"
+				nameKey="title"
+				itemType="Job"
+				addItem={addItem}
+				updateItem={updateItem}
+				removeItem={removeItem}
+				setData={setJobs}
+				modalSize="xl"
+			/>
+		</>
 	);
 };
 
