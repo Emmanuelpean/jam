@@ -3,15 +3,14 @@ import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
 import "./GenericModal.css";
 import { renderViewElement } from "../../rendering/view/ViewRenders";
-import { Errors, renderFormField } from "../../rendering/widgets/WidgetRenders";
+import { Errors, renderFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
 import { api } from "../../../services/Api";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import AlertModal from "../AlertModal";
-import { areSame, findByKey, flattenArray } from "../../../utils/Utils";
+import { areDifferent, findByKey, flattenArray } from "../../../utils/Utils";
 import { renderViewField, ViewField } from "../../rendering/view/ModalFieldRenders";
 import { FormField } from "../../rendering/form/FormRenders";
-import { SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 
 interface CreateGenericDeleteHandlerParams {
 	endpoint: string;
@@ -126,7 +125,7 @@ const GenericModal = ({
 	onFormDataChange = null,
 	onDelete = null,
 }: GenericModalProps) => {
-	const hasTabs = tabs && tabs.length > 0 && tabs[0];
+	const hasTabs = tabs && tabs.length > 0;
 
 	const { token } = useAuth();
 	const [effectiveData, setEffectiveData] = useState(data);
@@ -150,7 +149,6 @@ const GenericModal = ({
 	// -------------------------------------------------- DATA LOADING -------------------------------------------------
 
 	useEffect(() => {
-		// Load the data
 		const loadData = async () => {
 			if (show && endpoint && token) {
 				if (id) {
@@ -177,114 +175,81 @@ const GenericModal = ({
 		loadData().then(() => {});
 	}, [id, endpoint, token, data]);
 
-	// ------------------------------------------------ DATA POPULATING ------------------------------------------------
+	// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
 
-	const getCurrentTab = (): TabConfig | null | undefined => {
+	const getCurrentTabConfig = (): TabConfig | null => {
 		if (!hasTabs) return null;
 		return findByKey(tabs, activeTab) || tabs[0];
 	};
 
-	const getEffectiveProps = (): ModalProps => {
-		// Get the current tab's properties
-		const currentTab = getCurrentTab();
-		const baseProps = {
-			submode,
-			fields: fields as { view: ViewField[]; form: FormField[] },
-			data: effectiveData,
-			additionalFields,
-			endpoint,
-			onSuccess,
-			validation,
-			transformFormData,
-			onFormDataChange,
-			onDelete,
-		};
-
+	const getCurrentFields = (): { view: ViewFields; form: FormFields } => {
+		const currentTab = getCurrentTabConfig();
 		if (!currentTab) {
-			return baseProps;
+			return fields;
 		}
+		const formFields = filterConditionalFields(currentTab.fields.form);
+		const viewFields = filterConditionalFields(currentTab.fields.view);
+		return { form: formFields, view: viewFields };
+	};
 
-		// Override with tab-specific fields
-		return {
-			...baseProps,
-			fields: currentTab.fields,
-			additionalFields: currentTab.additionalFields || additionalFields,
-		};
+	const getCurrentAdditionalFields = (): ViewField[] => {
+		const currentTab = getCurrentTabConfig();
+		return currentTab?.additionalFields || additionalFields;
 	};
 
 	useEffect(() => {
-		// Initialize the modal's state when it first becomes visible or when data loads
+		// Initialize modal state when it becomes visible or data changes
 		if (show && (!previousShow.current || (effectiveData && Object.keys(formData).length === 0))) {
-			const effectiveProps = getEffectiveProps();
-
-			if (effectiveProps.submode === "add") {
+			if (submode === "add") {
 				setFormData({});
 				setOriginalFormData({});
 				setIsEditing(true);
-			} else if (effectiveProps.submode === "edit") {
-				setFormData({ ...effectiveProps.data });
-				setOriginalFormData({ ...effectiveProps.data });
+			} else if (submode === "edit") {
+				setFormData({ ...effectiveData });
+				setOriginalFormData({ ...effectiveData });
 				setIsEditing(true);
 			} else {
-				setFormData({ ...effectiveProps.data });
-				setOriginalFormData({ ...effectiveProps.data });
+				setFormData({ ...effectiveData });
+				setOriginalFormData({ ...effectiveData });
 				setIsEditing(false);
 			}
 			setErrors({});
+
+			// Reset active tab only when modal first opens
 			if (hasTabs && !previousShow.current) {
 				setActiveTab(defaultActiveTab || tabs[0]!.key);
 			}
 		}
 		previousShow.current = show;
-	}, [show, data, submode, tabs, defaultActiveTab, effectiveData]);
+	}, [show, effectiveData, submode, tabs, defaultActiveTab]);
 
-	const handleTabChange = async (tabKey: string): Promise<void> => {
-		if (hasTabs) {
-			setActiveTab(tabKey);
-			const effectiveProps = getEffectiveProps();
-
-			const newData = effectiveProps.data || data;
-
-			if (effectiveProps.submode === "add") {
-				setFormData({ ...formData });
-				setOriginalFormData({ ...formData });
-				setIsEditing(true);
-			} else if (effectiveProps.submode === "edit") {
-				setFormData({ ...formData });
-				setOriginalFormData({ ...formData });
-				setIsEditing(true);
-			} else {
-				setFormData({ ...formData });
-				setOriginalFormData({ ...formData });
-				setIsEditing(false);
-			}
-			setErrors({});
-		}
+	// Simple tab change - just update the active tab, keep shared editing state
+	const handleTabChange = (tabKey: string): void => {
+		setActiveTab(tabKey);
+		setErrors({}); // Clear errors when switching tabs
 	};
 
 	useEffect(() => {
-		// Allow to have dynamic form fields
-		const effectiveProps = getEffectiveProps();
-		if (effectiveProps.onFormDataChange && isEditing) {
-			effectiveProps.onFormDataChange(formData);
+		// Allow dynamic form fields based on current data
+		if (onFormDataChange && isEditing) {
+			onFormDataChange(formData);
 		}
-	}, [formData, isEditing, activeTab]);
+	}, [formData, isEditing, onFormDataChange]);
 
 	// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
 	const hasUnsavedChanges = (): boolean => {
-		// Check if there are any changes in the form data
 		if (!isEditing) return false;
 		const keys: string[] = Object.keys(formData);
 		return keys.some((key: string) => {
-			const currentValue: any = formData[key as keyof typeof formData];
-			const originalValue: any = originalFormData[key as keyof typeof originalFormData];
-			return areSame(currentValue, originalValue);
+			const currentValue: any = formData[key];
+			const originalValue: any = originalFormData[key];
+			console.log(currentValue, originalValue, typeof currentValue, typeof originalValue);
+			return areDifferent(currentValue, originalValue);
 		});
 	};
 
 	const handleCloseWithConfirmation = async () => {
-		// Check if there are any unsaved changes before closing the modal
 		if (hasUnsavedChanges()) {
 			try {
 				await showDelete({
@@ -309,20 +274,16 @@ const GenericModal = ({
 	// ---------------------------------------------------- EDITING ----------------------------------------------------
 
 	const handleEditToView = (): void => {
-		// Change the mode from edit to view
 		setIsEditing(false);
-		const effectiveProps = getEffectiveProps();
-		setFormData({ ...effectiveProps.data });
-		setOriginalFormData({ ...effectiveProps.data });
+		setFormData({ ...effectiveData });
+		setOriginalFormData({ ...effectiveData });
 		setErrors({});
 	};
 
 	const handleEdit = () => {
-		// Change the mode from view to edit
 		setIsEditing(true);
-		const effectiveProps = getEffectiveProps();
-		setFormData({ ...effectiveProps.data });
-		setOriginalFormData({ ...effectiveProps.data });
+		setFormData({ ...effectiveData });
+		setOriginalFormData({ ...effectiveData });
 	};
 
 	// ----------------------------------------------------- LAYOUT ----------------------------------------------------
@@ -336,44 +297,25 @@ const GenericModal = ({
 			}
 		};
 
-		// Initial height calculation
 		updateHeight();
 
-		// Create ResizeObserver to watch for content size changes
 		const resizeObserver = new ResizeObserver(() => {
 			updateHeight();
 		});
 
-		// Observe the content element
 		resizeObserver.observe(contentRef.current);
 
-		// Also observe all child elements that might change size
 		const childElements = contentRef.current.querySelectorAll("*");
 		childElements.forEach((el: Element) => {
 			resizeObserver.observe(el);
 		});
 
-		// Cleanup
 		return () => {
 			resizeObserver.disconnect();
 		};
-	}, [isEditing, activeTab, fields, additionalFields, effectiveData]);
+	}, [isEditing, activeTab, effectiveData]);
 
 	// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
-
-	const getCurrentFields = (): ViewFields | FormFields => {
-		const effectiveProps: ModalProps = getEffectiveProps();
-		if (isEditing) {
-			return effectiveProps.fields.form;
-		} else {
-			return effectiveProps.fields.view;
-		}
-	};
-
-	const getCurrentData = (): any => {
-		const effectiveProps = getEffectiveProps();
-		return effectiveProps.data;
-	};
 
 	const renderFieldGroup = (
 		item: ViewField | FormField | ViewField[] | FormField[],
@@ -391,11 +333,12 @@ const GenericModal = ({
 			const firstItem = itemList[0];
 			if (firstItem && "isTitle" in firstItem && firstItem.isTitle) {
 				const currentFields = getCurrentFields();
-				const hasElementsUnderneath = index < currentFields.length - 1;
+				const fieldsToCheck = isFormMode ? currentFields.form : currentFields.view;
+				const hasElementsUnderneath = index < fieldsToCheck.length - 1;
 
 				return (
-					<div className={hasElementsUnderneath ? "mb-3" : ""}>
-						{renderViewField(firstItem as ViewField, getCurrentData(), getModalId())}
+					<div className={hasElementsUnderneath ? "mb-3" : ""} key={index}>
+						{renderViewField(firstItem as ViewField, effectiveData, getModalId())}
 					</div>
 				);
 			}
@@ -422,20 +365,14 @@ const GenericModal = ({
 				{itemList.map((field: ViewField | FormField, fieldIndex: number) => {
 					const fieldKey =
 						("key" in field ? field.key : null) ||
-						("name" in field ? field.name : null) || // TODO remove name and use key instead
+						("name" in field ? field.name : null) ||
 						`field_${index}_${fieldIndex}`;
 
 					return (
 						<div key={fieldKey} className={columnClass}>
 							{isFormMode
-								? renderFormField(
-										field as FormField,
-										formData,
-										//@ts-ignore
-										handleChange,
-										errors,
-									)
-								: renderViewField(field as ViewField, getCurrentData(), getModalId())}
+								? renderFormField(field as FormField, formData, handleChange, errors)
+								: renderViewField(field as ViewField, effectiveData, getModalId())}
 						</div>
 					);
 				})}
@@ -456,15 +393,15 @@ const GenericModal = ({
 	});
 
 	const handleDeleteClick = async () => {
-		// TODO this shouldn't reload the page
-		const effectiveProps = getEffectiveProps();
 		try {
-			await handleDelete(effectiveProps.data);
+			await handleDelete(effectiveData);
 			if (onDelete) {
-				await onDelete(effectiveProps.data);
+				await onDelete(effectiveData);
 			}
 			handleHideImmediate();
-		} catch (error) {}
+		} catch (error) {
+			// Error already handled by createGenericDeleteHandler
+		}
 	};
 
 	const handleChange = (e: SyntheticEvent) => {
@@ -478,10 +415,33 @@ const GenericModal = ({
 		}
 	};
 
-	const validateFormFields = async (): Promise<{}> => {
+	const filterConditionalFields = <T extends ViewField | FormField>(fieldsToFilter: (T | T[])[]): (T | T[])[] => {
+		return fieldsToFilter
+			.map((item) => {
+				if (Array.isArray(item)) {
+					const filteredArray = item.filter((field) => {
+						if (!field.condition) {
+							return true;
+						} else {
+							return field.condition(formData);
+						}
+					});
+					return filteredArray.length > 0 ? filteredArray : null;
+				} else {
+					if (!item.condition) {
+						return item;
+					} else {
+						return item.condition(formData) ? item : null;
+					}
+				}
+			})
+			.filter((item) => item !== null) as (T | T[])[];
+	};
+
+	const validateFormFields = async (): Promise<Errors> => {
 		const newErrors: Errors = {};
-		const allFields = flattenArray(getCurrentFields());
-		const effectiveProps = getEffectiveProps();
+		const currentFields = getCurrentFields();
+		const allFields = flattenArray(currentFields.form);
 
 		// 1) Required field validation
 		allFields.forEach((field): void => {
@@ -502,10 +462,10 @@ const GenericModal = ({
 			}
 		}
 
-		// 3) Custom entry validation (e.g. check that the entry does not already exist, only run if no previous errors)
-		if (effectiveProps.validation && Object.keys(newErrors).length === 0) {
-			if (typeof effectiveProps.validation === "function") {
-				const customErrorsResult = effectiveProps.validation(formData);
+		// 3) Custom entry validation
+		if (validation && Object.keys(newErrors).length === 0) {
+			if (typeof validation === "function") {
+				const customErrorsResult = validation(formData);
 				const customErrors =
 					customErrorsResult instanceof Promise ? await customErrorsResult : customErrorsResult;
 				Object.keys(customErrors).forEach((fieldName) => {
@@ -518,43 +478,42 @@ const GenericModal = ({
 	};
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-		e.preventDefault(); // Prevent default form submission behavior (i.e. page reload)
-		const effectiveProps: ModalProps = getEffectiveProps();
+		e.preventDefault();
 		setSubmitting(true);
 		setErrors({});
+
 		try {
 			const validationErrors = await validateFormFields();
 			if (Object.keys(validationErrors).length > 0) {
 				setErrors(validationErrors);
 				setSubmitting(false);
 				return;
+			}
+
+			// Transform data if needed
+			const dataToSubmit = transformFormData ? transformFormData(formData) : formData;
+
+			// Submit to API
+			const apiResult =
+				submode === "add"
+					? await api.post(`${endpoint}/`, dataToSubmit, token)
+					: await api.put(`${endpoint}/${effectiveData.id}`, dataToSubmit, token);
+
+			// Handle success
+			if (submode === "add") {
+				onSuccess?.(apiResult);
+			}
+
+			// Update UI
+			if (submode === "add" || submode === "edit") {
+				handleHideImmediate();
 			} else {
-				// Transform data if needed
-				const dataToSubmit = effectiveProps.transformFormData
-					? effectiveProps.transformFormData(formData)
-					: formData;
-
-				// Submit to API
-				const apiResult =
-					effectiveProps.submode === "add"
-						? await api.post(`${endpoint}/`, dataToSubmit, token)
-						: await api.put(`${endpoint}/${getCurrentData().id}`, dataToSubmit, token);
-
-				// Handle success
-				if (effectiveProps.submode === "add") {
-					effectiveProps.onSuccess?.(apiResult);
-				}
-
-				// Update UI
-				if (effectiveProps.submode === "add" || effectiveProps.submode === "edit") {
-					handleHideImmediate();
-				} else {
-					Object.assign(getCurrentData(), apiResult);
-					handleEditToView();
-				}
+				Object.assign(effectiveData, apiResult);
+				setEffectiveData({ ...effectiveData });
+				handleEditToView();
 			}
 		} catch (err: any) {
-			const errorMessage = `Failed to ${effectiveProps.submode === "add" ? "create" : "update"} 
+			const errorMessage = `Failed to ${submode === "add" ? "create" : "update"} 
 			${itemName.toLowerCase()} due to the following error: ${err.message}`;
 			setErrors({
 				submit: errorMessage,
@@ -573,12 +532,11 @@ const GenericModal = ({
 	};
 
 	const renderHeader = (): JSX.Element => {
-		const effectiveProps = getEffectiveProps();
 		let icon: string, text: string;
-		if (effectiveProps.submode === "add") {
+		if (submode === "add") {
 			icon = "bi bi-plus-circle";
 			text = `Add New ${itemName}`;
-		} else if (effectiveProps.submode === "edit" || isEditing) {
+		} else if (submode === "edit" || isEditing) {
 			icon = "bi bi-pencil";
 			text = `Edit ${itemName}`;
 		} else {
@@ -608,10 +566,9 @@ const GenericModal = ({
 			);
 		}
 
-		const effectiveProps = getEffectiveProps();
-		const viewFields = effectiveProps.fields.view;
-		const formFields = effectiveProps.fields.form;
-		const additionalFields = effectiveProps.additionalFields;
+		const currentFields = getCurrentFields();
+		const currentAdditionalFields = getCurrentAdditionalFields();
+		const formFields = filterConditionalFields(currentFields.form);
 
 		const renderContentInner = () => (
 			<div className={`modal-content-visible`}>
@@ -626,11 +583,11 @@ const GenericModal = ({
 					</div>
 				) : (
 					<div>
-						{viewFields.length > 0 && (
+						{currentFields.view.length > 0 && (
 							<Card>
 								<Card.Body>
 									<div>
-										{viewFields.map((item: ViewField | ViewField[], index: number) => (
+										{currentFields.view.map((item: ViewField | ViewField[], index: number) => (
 											<div key={`view-field-${index}`}>
 												{renderFieldGroup(item, index, false)}
 											</div>
@@ -640,11 +597,11 @@ const GenericModal = ({
 							</Card>
 						)}
 
-						{additionalFields && additionalFields.length > 0 && (
+						{currentAdditionalFields && currentAdditionalFields.length > 0 && (
 							<div className="outside-card-content mt-3">
-								{additionalFields.map((item: ViewField, index: number) => (
+								{currentAdditionalFields.map((item: ViewField, index: number) => (
 									<div key={`outside-field-${index}`} className="mb-3">
-										{renderViewElement(item, getCurrentData(), getModalId())}
+										{renderViewElement(item, effectiveData, getModalId())}
 									</div>
 								))}
 							</div>
@@ -669,7 +626,7 @@ const GenericModal = ({
 				<>
 					<div className="custom-tab-nav">
 						{tabs.map((tab: TabConfig): JSX.Element => {
-							const tabTitle = typeof tab.title === "function" ? tab.title(getCurrentData()) : tab.title;
+							const tabTitle = typeof tab.title === "function" ? tab.title(effectiveData) : tab.title;
 
 							return (
 								<button
@@ -691,10 +648,8 @@ const GenericModal = ({
 	};
 
 	const renderFooter = (): JSX.Element => {
-		const effectiveProps = getEffectiveProps();
-
 		if (isEditing) {
-			if (effectiveProps.submode === "add") {
+			if (submode === "add") {
 				return (
 					<Modal.Footer>
 						<div className="d-flex flex-column w-100 gap-2">
@@ -728,10 +683,8 @@ const GenericModal = ({
 									<ActionButton
 										id="cancel-button"
 										variant="secondary"
-										onClick={
-											effectiveProps.submode === "edit" ? handleHideImmediate : handleEditToView
-										}
-										defaultText={effectiveProps.submode === "edit" ? "Close" : "Cancel"}
+										onClick={submode === "edit" ? handleHideImmediate : handleEditToView}
+										defaultText={submode === "edit" ? "Close" : "Cancel"}
 										fullWidth={false}
 									/>
 									<ActionButton
@@ -771,12 +724,8 @@ const GenericModal = ({
 										<ActionButton
 											id="cancel-button"
 											variant="secondary"
-											onClick={
-												effectiveProps.submode === "edit"
-													? handleHideImmediate
-													: handleEditToView
-											}
-											defaultText={effectiveProps.submode === "edit" ? "Close" : "Cancel"}
+											onClick={submode === "edit" ? handleHideImmediate : handleEditToView}
+											defaultText={submode === "edit" ? "Close" : "Cancel"}
 											fullWidth={false}
 										/>
 									</div>

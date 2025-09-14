@@ -1,4 +1,4 @@
-import React, { ReactNode, useMemo, useState } from "react";
+import React, { ReactNode, useMemo } from "react";
 import GenericModal, { TabConfig } from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
@@ -7,15 +7,7 @@ import { DataModalProps } from "./AggregatorModal";
 import { JobData } from "../../services/Schemas";
 
 interface JobAndApplicationProps extends DataModalProps {
-	onSuccess?: (data: any) => void;
-	onDelete?: ((item: any) => Promise<void>) | null;
 	defaultActiveTab?: "job" | "application";
-}
-
-interface ApplicationFormData {
-	applied_via?: string;
-
-	[key: string]: any;
 }
 
 export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
@@ -25,14 +17,10 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 	id,
 	onSuccess,
 	onDelete,
-	submode = "view",
-	size = "xl",
+	submode,
+	size,
 	defaultActiveTab = "job",
 }) => {
-	// Track current form data for conditional fields
-	const [currentApplicationFormData, setCurrentApplicationFormData] = useState<ApplicationFormData>({});
-
-	// Get form options for both job and application
 	const {
 		companies,
 		locations,
@@ -51,26 +39,14 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		renderAggregatorModal,
 	} = useFormOptions(show ? ["companies", "locations", "keywords", "persons", "aggregators"] : []);
 
-	const handleFormDataChange = (data: any) => {
-		// Avoid infinite re-render loops by only updating when relevant fields actually change
-		setCurrentApplicationFormData((prev) => {
-			const prevVia = prev?.applied_via ?? null;
-			const nextVia = data?.applied_via ?? null;
-			if (prevVia === nextVia) {
-				return prev; // no change, prevent state update
-			}
-			return { ...prev, applied_via: nextVia };
-		});
-	};
-
 	const jobFormFields = [
 		formFields.jobTitle({ placeholder: "Python Software Engineer" }),
-		[formFields.company(companies, openCompanyModal), formFields.location(locations, openLocationModal)],
-		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
 		[
-			formFields.attendanceType(),
+			formFields.company(companies, openCompanyModal),
 			formFields.url({ label: "Job URL", placeholder: "https://linkedin.com/jobs/453635" }),
 		],
+		[formFields.attendanceType(), formFields.location(locations, openLocationModal)],
+		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
 		[
 			formFields.salaryMin({ placeholder: "35000" }),
 			formFields.salaryMax({ placeholder: "45000" }),
@@ -103,9 +79,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 			[formFields.applicationDate(), formFields.applicationStatus()],
 			[
 				formFields.applicationVia(),
-				...(currentApplicationFormData?.applied_via === "aggregator"
-					? [formFields.aggregator(aggregators, openAggregatorModal, { name: "application_aggregator_id" })]
-					: []),
+				formFields.aggregator(aggregators, openAggregatorModal, { name: "application_aggregator_id" }),
 			],
 			formFields.applicationUrl({ placeholder: "https://linkedin.com/application/453635" }),
 			formFields.note({
@@ -115,7 +89,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 				name: "application_note",
 			}),
 		];
-	}, [currentApplicationFormData.applied_via, openAggregatorModal, aggregators]);
+	}, [openAggregatorModal, aggregators]);
 
 	const applicationViewFields = [
 		[viewFields.applicationDate(), viewFields.applicationStatus()],
@@ -197,7 +171,6 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 				id={id}
 				defaultActiveTab={defaultActiveTab}
 				fields={{ form: [], view: [] }}
-				onFormDataChange={handleFormDataChange}
 			/>
 
 			{renderCompanyModal()}

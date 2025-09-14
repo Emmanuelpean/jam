@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import GenericModal from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { DataModalProps } from "./AggregatorModal";
-import { InterviewData } from "../../services/Schemas";
+import { InterviewData, JobData } from "../../services/Schemas";
 
 interface InterviewModalProps extends DataModalProps {
 	jobId?: string | number;
@@ -23,15 +23,6 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	const { locations, persons, jobs, openLocationModal, openPersonModal, renderLocationModal, renderPersonModal } =
 		useFormOptions(show ? ["locations", "persons", "jobs"] : []);
 
-	const [currentFormData, setCurrentFormData] = useState<InterviewData>({});
-
-	const handleFormDataChange = (newFormData: InterviewData) => {
-		setCurrentFormData((prev) => ({
-			...prev,
-			...newFormData,
-		}));
-	};
-
 	const formFieldsArray = [
 		...(!jobId ? [formFields.job(jobs)] : []),
 		[
@@ -42,9 +33,11 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 		],
 		[
 			formFields.interviewAttendanceType(),
-			...(currentFormData?.attendance_type === "on-site"
-				? [formFields.location(locations, openLocationModal)]
-				: []),
+			formFields.location(locations, openLocationModal, {
+				condition: (formData: JobData): boolean => {
+					return formData.attendance_type === "on-site";
+				},
+			}),
 		],
 		formFields.interviewers(persons, openPersonModal),
 		formFields.note({
@@ -70,6 +63,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 			type: data.type!,
 			location_id: data.location_id!,
 			job_id: jobId || data.job_id!,
+			attendance_type: data.attendance_type!,
 			interviewers: data.interviewers?.map((interviewer) => interviewer.id || interviewer) || [],
 			note: data.note?.trim() || null,
 		};
@@ -90,11 +84,9 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 				onSuccess={onSuccess}
 				onDelete={onDelete}
 				transformFormData={transformFormData}
-				onFormDataChange={handleFormDataChange}
 			/>
 
 			{renderLocationModal()}
-
 			{renderPersonModal()}
 		</>
 	);

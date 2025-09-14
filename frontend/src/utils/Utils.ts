@@ -35,7 +35,7 @@ export const toSelectOptions = (data: any[], valueKey = "id", labelKey = "name")
  * @param value2 - Second value to compare
  * @returns true if values are different, false if they are equivalent
  */
-export const areSame = (value1: any, value2: any): boolean => {
+export const areDifferent = (value1: any, value2: any): boolean => {
 	// Handle null/undefined/empty string equivalence
 	const isEmptyValue = (val: any): boolean => val === null || val === undefined || val === "";
 

@@ -10,6 +10,7 @@ import { AggregatorModal } from "../../modals/AggregatorModal";
 import { Theme, THEMES } from "../../../utils/Theme";
 import { SelectOption, toSelectOptions } from "../../../utils/Utils";
 import { JobAndApplicationModal } from "../../modals/JobAndApplicationModal";
+import { JobData } from "../../../services/Schemas";
 
 interface UseCountriesReturn {
 	countries: SelectOption[];
@@ -59,6 +60,7 @@ export interface FormField {
 	helpText?: string | null;
 	addButton?: { onClick?: () => void };
 	tabIndex?: number;
+	condition?: (item: any) => boolean;
 }
 
 interface FormFieldOverride extends Partial<FormField> {}
@@ -678,6 +680,9 @@ export const formFields = {
 		placeholder: "Select or search location...",
 		isSearchable: true,
 		isClearable: true,
+		condition: (formData: JobData): boolean => {
+			return formData.attendance_type ? formData.attendance_type === "on-site" : true;
+		},
 		options: options,
 		...(onAdd && {
 			addButton: {
@@ -766,6 +771,9 @@ export const formFields = {
 		placeholder: "Select an aggregator",
 		isSearchable: true,
 		isClearable: true,
+		condition: (formData: any): boolean => {
+			return formData.applied_via ? formData.applied_via === "aggregator" : true;
+		},
 		options: options,
 		...(onAdd && {
 			addButton: {

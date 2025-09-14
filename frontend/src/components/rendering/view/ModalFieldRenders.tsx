@@ -9,6 +9,7 @@ export interface ViewField extends Field {
 	isTitle?: boolean;
 	columns?: TableColumn[];
 	helpText?: string;
+	condition?: (item: any) => boolean;
 }
 
 export const renderViewField = (field: ViewField, item: any, id: string): ReactNode => {

@@ -128,7 +128,8 @@ export interface JobData {
 	applied_via?: string | null;
 	application_note?: string | null;
 	application_aggregator_id?: number | null;
-	application_url: string | null;
+	application_url?: string | null;
+	attendance_type?: string | null;
 	keywords?: KeywordData[] | number[];
 	contacts?: AggregatorData[] | number[];
 }

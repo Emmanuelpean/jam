@@ -16,10 +16,15 @@
   * [X] Company (name)
   * [X] Aggregator (name)
   * [X] Keyword (name)
-  * [ ] Person (first name + last name + company)
+  * [X] Person (first name + last name + company)
   * [ ] Job (link)
 * [X] Add pound sign in front of salary input
 * [X] Hide system fields in dropdown
 * [X] Fix bug where the location map loading is flashing
 * [ ] The theme shown in the user setting page is not updated when changed in the sidebar.
 * [ ] When deleting an entry through the modal, do not refresh the page, refresh the table.
+* [ ] When a job is added, check if the url is unique
+* [ ] Fix formatting of multiselect
+* [ ] Update the table data when interviews/updates are added/deleted/edited
+* [ ] Update the table data when accordion table data are changed
+* [ ] Add guided tour for new users
