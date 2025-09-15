@@ -1,4 +1,5 @@
 """API router for dashboard data"""
+from datetime import datetime
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -34,7 +35,8 @@ def get_dashboard_data(
     ).all()
 
     # noinspection PyTypeChecker
-    interviews = db.query(models.Interview).filter(models.Interview.owner_id == current_user.id).all()
+    interview_query = db.query(models.Interview).filter(models.Interview.owner_id == current_user.id)
+    interviews = interview_query.all()
 
     # noinspection PyTypeChecker
     updates = (
@@ -107,4 +109,8 @@ def get_dashboard_data(
     all_updates.sort(key=lambda x: x["date"], reverse=True)
     all_updates = all_updates[:update_limit]
 
-    return dict(statistics=statistics, needs_chase=needs_chase, all_updates=all_updates)
+    # ---------------------------------------------- UPCOMING INTERVIEWS -----------------------------------------------
+
+    upcoming_interviews = interview_query.filter(models.Interview.date >= datetime.now()).all()
+    upcoming_interviews = []  # TODO
+    return dict(statistics=statistics, needs_chase=needs_chase, all_updates=all_updates, upcoming_interviews=upcoming_interviews)

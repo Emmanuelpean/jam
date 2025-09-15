@@ -141,6 +141,7 @@ export function getTableIcon(title: string): string {
 		"Job Application Updates": "bi-bell",
 		"Job Aggregators": "bi-linkedin",
 		Users: "bi-person-lines-fill",
+		Settings: "bi-database-gear",
 	};
 	return iconMap[title] || "bi-table";
 }
@@ -241,6 +242,10 @@ export const renderFunctions = {
 
 	description: (param: RenderParams): ReactNode => {
 		return renderFunctions._longText(param, "description");
+	},
+
+	value: (param: RenderParams): ReactNode => {
+		return renderFunctions._longText(param, "value");
 	},
 
 	appTheme: (param: RenderParams): ReactNode => {

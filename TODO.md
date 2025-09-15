@@ -28,3 +28,5 @@
 * [ ] Update the table data when interviews/updates are added/deleted/edited
 * [ ] Update the table data when accordion table data are changed
 * [ ] Add guided tour for new users
+* [ ] Prevent non admin from accessing the settings and user management page
+* [ ] Add a "Upcoming Interviews" section in the dashboard + table of upcomming deadlines

@@ -43,7 +43,7 @@ USER_DATA = [
 
 SETTINGS_DATA = [
     {
-        "quantity": "allowlist",
+        "name": "allowlist",
         "value": ",".join([data["email"] for data in USER_DATA] + ["newuser@user.com"]),
         "description": "Emails allowed to sign up",
     }

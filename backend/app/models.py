@@ -94,13 +94,13 @@ class Settings(CommonBase, Base):
 
     Attributes:
     -----------
-    - `quantity` (str): The name of the setting.
+    - `name` (str): The name of the setting.
     - `value` (float): The value of the setting.
     - `description` (str): A description of the setting."""
 
-    quantity = Column(String, nullable=False, unique=True)
+    name = Column(String, nullable=False, unique=True)
     value = Column(String, nullable=False)
-    description = Column(String, nullable=False)
+    description = Column(String, nullable=True)
 
 
 class User(CommonBase, Base):

@@ -55,6 +55,16 @@ export const tableColumns: Columns = {
 		...overrides,
 	}),
 
+	value: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "value",
+		label: "Value",
+		sortable: true,
+		searchable: false,
+		type: "number",
+		render: renderFunctions.value,
+		...overrides,
+	}),
+
 	title: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "title",
 		label: "Title",

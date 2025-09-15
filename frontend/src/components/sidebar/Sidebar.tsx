@@ -65,6 +65,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onHoverChange }) => {
 			submenu: [
 				{ path: "/eis_dashboard", icon: "bi-envelope-arrow-down", text: "EIS Dashboard" },
 				{ path: "/users", text: "Users" },
+				{ path: "/app_settings", text: "Settings" },
 			],
 		},
 	];

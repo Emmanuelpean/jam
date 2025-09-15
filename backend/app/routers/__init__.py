@@ -21,6 +21,7 @@ def generate_data_table_crud_router(
     not_found_msg: str = "Entry not found",
     many_to_many_fields: dict = None,
     router: APIRouter | None = None,
+    admin_only: bool = False,
 ) -> APIRouter:
     """Generate a FastAPI router with standard CRUD endpoints for a given table.
     :param table_model: SQLAlchemy model class representing the database table.
@@ -38,6 +39,7 @@ def generate_data_table_crud_router(
                                    }
                                }
     :param router: Optional router to which the endpoints will be added.
+    :param admin_only: If True, restrict access to admin users only.
     :return: Configured APIRouter instance with CRUD endpoints."""
 
     if router is None:
@@ -114,7 +116,14 @@ def generate_data_table_crud_router(
 
         # Start with base query
         # noinspection PyTypeChecker
-        query = db.query(table_model).filter(table_model.owner_id == current_user.id)
+        if not admin_only:
+            query = db.query(table_model).filter(table_model.owner_id == current_user.id)
+        elif current_user.is_admin:
+            query = db.query(table_model)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
+            )
 
         # Get all query parameters except 'limit'
         filter_params = dict(request.query_params)
@@ -171,10 +180,10 @@ def generate_data_table_crud_router(
         if not entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
 
-        if entry.owner_id != current_user.id:
+        if (entry.owner_id != current_user.id) or (admin_only and not current_user.is_admin):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to perform requested action",
+                detail="Not authorised to perform requested action",
             )
 
         return entry
@@ -191,6 +200,11 @@ def generate_data_table_crud_router(
         :param db: Database session.
         :param current_user: Authenticated user.
         :return: The created entry."""
+
+        if not admin_only and not current_user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
+            )
 
         # Extract the item data and exclude many-to-many fields from main creation
         item_dict = item.model_dump()
@@ -243,9 +257,9 @@ def generate_data_table_crud_router(
         if not entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
 
-        if entry.owner_id != current_user.id:
+        if (entry.owner_id != current_user.id) or (admin_only and not current_user.is_admin):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
             )
 
         # Extract the item data
@@ -297,9 +311,9 @@ def generate_data_table_crud_router(
         if not entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
 
-        if entry.owner_id != current_user.id:
+        if (entry.owner_id != current_user.id) or (admin_only and not current_user.is_admin):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
             )
 
         # Delete many-to-many relationships first if they exist

@@ -201,6 +201,7 @@ export const scrapedJobApi: CrudApi = createCrudApi("scrapedjobs");
 export const serviceLogApi: CrudApi = createCrudApi("servicelogs");
 export const userApi: CrudApi = createCrudApi("users");
 export const dashboardApi: CrudApi = createCrudApi("dashboard");
+export const settingsApi: CrudApi = createCrudApi("settings");
 
 export const filesApi: FilesApi = {
 	...createCrudApi("files"),

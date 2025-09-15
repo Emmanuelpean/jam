@@ -72,6 +72,12 @@ export interface PersonOut extends PersonCreate, OwnedOut {
 
 // --------------------------------------------------------- JOB --------------------------------------------------------
 
+export interface SettingData {
+	name: string;
+	value: string;
+	description?: string;
+}
+
 export interface AggregatorData {
 	id?: number;
 	name: string;

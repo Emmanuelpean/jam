@@ -24,6 +24,30 @@ class OwnedOut(Out):
     owner_id: int
 
 
+# ------------------------------------------------------- SETTINGS ------------------------------------------------------
+
+
+class SettingCreate(BaseModel):
+    """Setting create schema"""
+
+    name: str
+    value: str
+    description: str | None = None
+
+
+class SettingOut(SettingCreate, Out):
+    """Setting output schema"""
+
+    pass
+
+
+class SettingUpdate(SettingCreate):
+    """Keyword update schema"""
+
+    name: str | None = None
+    value: str | None = None
+
+
 # -------------------------------------------------------- USER --------------------------------------------------------
 
 

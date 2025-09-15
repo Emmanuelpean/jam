@@ -15,6 +15,8 @@ interface DashboardStats {
 	interviewsScheduled: number;
 	jobsNeedingChase: number;
 	recentActivity: RecentActivity[];
+	upcomingInterviews: InterviewData[];
+	jobsToChase: JobData[];
 }
 
 interface RecentActivity {
@@ -22,13 +24,6 @@ interface RecentActivity {
 	type: string;
 	date: string;
 	job: JobData;
-}
-
-interface ChaseJobData {
-	id: number;
-	status: string;
-
-	[key: string]: any;
 }
 
 interface StatCardProps {
@@ -68,8 +63,9 @@ const JobSearchDashboard: React.FC = () => {
 		interviewsScheduled: 0,
 		jobsNeedingChase: 0,
 		recentActivity: [],
+		upcomingInterviews: [],
+		jobsToChase: [],
 	});
-	const [chaseJobsData, setChaseJobsData] = useState<ChaseJobData[]>([]);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -90,8 +86,7 @@ const JobSearchDashboard: React.FC = () => {
 				};
 				const needsChase = dashboardResponse?.needs_chase || [];
 				const allUpdates = dashboardResponse?.all_updates || [];
-
-				setChaseJobsData(needsChase);
+				const upcomingInterviews = dashboardResponse?.upcoming_interviews || [];
 
 				setDashboardStats({
 					totalJobs: statistics.jobs,
@@ -100,6 +95,8 @@ const JobSearchDashboard: React.FC = () => {
 					interviewsScheduled: statistics.interviews,
 					jobsNeedingChase: needsChase.length,
 					recentActivity: allUpdates,
+					upcomingInterviews: upcomingInterviews,
+					jobsToChase: needsChase,
 				});
 			} catch (err) {
 				console.error("Error fetching dashboard data:", err);
@@ -307,7 +304,7 @@ const JobSearchDashboard: React.FC = () => {
 							</div>
 						</Card.Header>
 						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-							<JobsToChase data={chaseJobsData} />
+							<JobsToChase data={dashboardStats.jobsToChase} />
 						</Card.Body>
 					</Card>
 				</Col>

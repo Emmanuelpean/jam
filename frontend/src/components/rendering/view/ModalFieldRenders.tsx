@@ -52,6 +52,13 @@ export const viewFields = {
 		...overrides,
 	}),
 
+	value: (overrides: ViewFieldOverride = {}): ViewField => ({
+		key: "value",
+		label: "Value",
+		render: (params: RenderParams) => renderFunctions.value({ ...params, view: true }),
+		...overrides,
+	}),
+
 	description: (overrides: ViewFieldOverride = {}): ViewField => ({
 		key: "description",
 		label: "Description",

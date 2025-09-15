@@ -349,6 +349,14 @@ export const formFields = {
 		...overrides,
 	}),
 
+	value: (overrides: FormFieldOverride = {}): FormField => ({
+		name: "value",
+		label: "Value",
+		type: "textarea",
+		required: true,
+		...overrides,
+	}),
+
 	name: (overrides: FormFieldOverride = {}): FormField => ({
 		name: "name",
 		label: "Name",
