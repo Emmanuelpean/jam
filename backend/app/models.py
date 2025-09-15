@@ -112,13 +112,19 @@ class User(CommonBase, Base):
     - `email` (str): User's email address (must be unique).
     - `theme` (str): The theme of the application.
     - `is_admin` (bool): Indicates whether the user is an administrator.
-    - `last_login` (datetime): The timestamp of the last login."""
+    - `last_login` (datetime): The timestamp of the last login.
+    - `chase_threshold` (int): The threshold for chasing jobs in the dashboard.
+    - `deadline_threshold` (int): The threshold for deadlines in the dashboard.
+    - `update_limit` (int): Max number updates displayed in the dashboard."""
 
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
     theme = Column(String, nullable=False, server_default="mixed-berry")
     is_admin = Column(Boolean, nullable=False, server_default=expression.false())
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
+    chase_threshold = Column(Integer, nullable=False, server_default="30")
+    deadline_threshold = Column(Integer, nullable=False, server_default="30")
+    update_limit = Column(Integer, nullable=False, server_default="10")
 
     __table_args__ = (
         CheckConstraint(f"length(password) >= {settings.min_password_length}", name="minimum_password_length"),

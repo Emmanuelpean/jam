@@ -61,6 +61,9 @@ class UserOut(Out):
     theme: str
     is_admin: bool = False
     last_login: datetime | None = None
+    chase_threshold: int
+    deadline_threshold: int
+    update_limit: int
 
 
 class UserLogin(BaseModel):
@@ -75,6 +78,9 @@ class UserUpdate(BaseModel):
     password: str | None = None
     is_admin: bool | None = None
     last_login: datetime | None = None
+    chase_threshold: int | None = None
+    deadline_threshold: int | None = None
+    update_limit: int | None = None
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------
@@ -377,6 +383,16 @@ class JobOut(JobCreate, OwnedOut):
             return None
         now = datetime.now(UTC)
         return (now - self.last_update_date).days
+
+    @computed_field
+    @property
+    def days_until_deadline(self) -> int | None:
+        """Calculate the number of days before the deadline"""
+
+        if self.deadline is None:
+            return None
+        now = datetime.now(UTC)
+        return (self.deadline - now).days
 
 
 class JobMinOut(OwnedOut):

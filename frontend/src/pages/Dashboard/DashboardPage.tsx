@@ -7,6 +7,7 @@ import "./DashboardPage.css";
 import { renderFunctions } from "../../components/rendering/view/ViewRenders";
 import { ApplicationData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
 import JobsToChase from "../../components/tables/JobsToChase";
+import UpcomingDeadlinesTable from "../../components/tables/UpcomingDeadlines";
 
 interface DashboardStats {
 	totalJobs: number;
@@ -17,6 +18,7 @@ interface DashboardStats {
 	recentActivity: RecentActivity[];
 	upcomingInterviews: InterviewData[];
 	jobsToChase: JobData[];
+	upcomingDeadlines: JobData[];
 }
 
 interface RecentActivity {
@@ -65,6 +67,7 @@ const JobSearchDashboard: React.FC = () => {
 		recentActivity: [],
 		upcomingInterviews: [],
 		jobsToChase: [],
+		upcomingDeadlines: [],
 	});
 	const [error, setError] = useState<string | null>(null);
 
@@ -87,6 +90,7 @@ const JobSearchDashboard: React.FC = () => {
 				const needsChase = dashboardResponse?.needs_chase || [];
 				const allUpdates = dashboardResponse?.all_updates || [];
 				const upcomingInterviews = dashboardResponse?.upcoming_interviews || [];
+				const upcomingDeadlines = dashboardResponse?.upcoming_deadlines || [];
 
 				setDashboardStats({
 					totalJobs: statistics.jobs,
@@ -97,6 +101,7 @@ const JobSearchDashboard: React.FC = () => {
 					recentActivity: allUpdates,
 					upcomingInterviews: upcomingInterviews,
 					jobsToChase: needsChase,
+					upcomingDeadlines: upcomingDeadlines,
 				});
 			} catch (err) {
 				console.error("Error fetching dashboard data:", err);
@@ -305,6 +310,29 @@ const JobSearchDashboard: React.FC = () => {
 						</Card.Header>
 						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
 							<JobsToChase data={dashboardStats.jobsToChase} />
+						</Card.Body>
+					</Card>
+				</Col>
+				<Col lg={9}>
+					<Card className="shadow-sm border-0">
+						<Card.Header className="table-card-header border-0 p-0">
+							<div className="d-flex align-items-center justify-content-between p-4">
+								<div className="d-flex align-items-center">
+									<div className="header-icon-wrapper me-3">
+										<i className="bi bi-clock"></i>
+									</div>
+									<div>
+										<h5 className="mb-0 fw-bold text-dark">Upcoming Deadlines</h5>
+										<small className="text-muted">Jobs that need your attention</small>
+									</div>
+								</div>
+								{dashboardStats.upcomingDeadlines.length > 0 && (
+									<div className="table-count-badge">{dashboardStats.upcomingDeadlines.length}</div>
+								)}
+							</div>
+						</Card.Header>
+						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
+							<UpcomingDeadlinesTable data={dashboardStats.upcomingDeadlines} />
 						</Card.Body>
 					</Card>
 				</Col>

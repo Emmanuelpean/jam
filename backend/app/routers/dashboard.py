@@ -1,7 +1,9 @@
 """API router for dashboard data"""
-from datetime import datetime
+
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app import models, database, oauth2, schemas
@@ -11,24 +13,27 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("/")
 def get_dashboard_data(
-    update_limit: int = 20,
-    chase_threshold: int = 30,
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(oauth2.get_current_user),
-):
+) -> dict:
     """Get dashboard data including job applications, interviews, and job application updates.
-    :param update_limit: Maximum number of updates to return
-    :param chase_threshold: Number of days to check for follow-up
     :param db: Database session
     :param current_user: Authenticated user"""
+
+    update_limit = current_user.update_limit
+    chase_threshold = current_user.chase_threshold
+    deadline_threshold = current_user.deadline_threshold
 
     # ---------------------------------------------------- ALL DATA ----------------------------------------------------
 
     # noinspection PyTypeChecker
     job_query = db.query(models.Job).filter(models.Job.owner_id == current_user.id)
-    jobs = job_query.filter(models.Job.application_date.isnot(None)).all()
+    jobs = job_query.all()
 
-    job_application_query = job_query.filter(models.Job.application_date.isnot(None))
+    job_application_query = job_query.filter(
+        or_(models.Job.application_date.isnot(None), models.Job.application_status.isnot(None))
+    )
+    job_applications = job_application_query.all()
 
     job_application_pending = job_application_query.filter(
         models.Job.application_status.notin_(["rejected", "withdrawn"])
@@ -47,7 +52,7 @@ def get_dashboard_data(
 
     statistics = {
         "jobs": len(jobs),
-        "job_applications": job_application_query.count(),
+        "job_applications": len(job_applications),
         "job_application_pending": len(job_application_pending),
         "interviews": len(interviews),
     }
@@ -71,7 +76,7 @@ def get_dashboard_data(
     all_updates = []
 
     # Add job applications as "Application" updates
-    for job in jobs:
+    for job in job_applications:
         job_out = schemas.JobOut.model_validate(job, from_attributes=True)
         update_item = {
             "data": job_out,
@@ -112,5 +117,23 @@ def get_dashboard_data(
     # ---------------------------------------------- UPCOMING INTERVIEWS -----------------------------------------------
 
     upcoming_interviews = interview_query.filter(models.Interview.date >= datetime.now()).all()
-    upcoming_interviews = []  # TODO
-    return dict(statistics=statistics, needs_chase=needs_chase, all_updates=all_updates, upcoming_interviews=upcoming_interviews)
+    upcoming_interviews = [
+        schemas.InterviewOut.model_validate(interview, from_attributes=True) for interview in upcoming_interviews
+    ]
+
+    # --------------------------------=-------------- UPCOMING DEADLINES -----------------------------------------------
+
+    upcoming_deadlines = (
+        job_query.filter(models.Job.application_date.is_(None), models.Job.application_status.is_(None))
+        .filter((models.Job.deadline - datetime.now()) <= timedelta(days=deadline_threshold))
+        .all()
+    )
+    upcoming_deadlines = [schemas.JobOut.model_validate(job, from_attributes=True) for job in upcoming_deadlines]
+
+    return dict(
+        statistics=statistics,
+        needs_chase=needs_chase,
+        all_updates=all_updates,
+        upcoming_interviews=upcoming_interviews,
+        upcoming_deadlines=upcoming_deadlines,
+    )
