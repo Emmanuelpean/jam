@@ -50,11 +50,8 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		],
 		[formFields.attendanceType(), formFields.location(locations, openLocationModal)],
 		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
-		[
-			formFields.salaryMin({ placeholder: "35000" }),
-			formFields.salaryMax({ placeholder: "45000" }),
-			formFields.personalRating(),
-		],
+		[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
+		[formFields.personalRating(), formFields.deadline()],
 		formFields.description({
 			placeholder:
 				"We are seeking a Python Software Engineer to develop, optimise, and maintain scalable software " +
@@ -75,6 +72,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		[viewFields.salaryRange(), viewFields.personalRating()],
 		[viewFields.sourceBadge(), viewFields.url({ label: "Job URL" })],
 		[viewFields.keywordBadges(), viewFields.personBadges()],
+		viewFields.deadline(),
 	];
 
 	const applicationFormFields = useMemo(() => {
@@ -114,6 +112,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 			personal_rating: jobData.personal_rating || null,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
+			deadline: jobData.deadline ? jobData.deadline + "T23:59:59" : null,
 			keywords: jobData.keywords?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
 			contacts: jobData.contacts?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
 			application_date: jobData.application_date ? new Date(jobData.application_date).toISOString() : null,
@@ -130,14 +129,16 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 		if (!token) {
 			return errors;
 		}
-		const queryParams = { name: formData.url?.trim() };
-		const matches = await jobsApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing: any) => {
-			return data?.id !== existing.id;
-		});
+		if (formData.url) {
+			const queryParams = { url: formData.url?.trim() };
+			const matches = await jobsApi.getAll(token, queryParams);
+			const duplicates = matches.filter((existing: JobData) => {
+				return data?.id !== existing.id;
+			});
 
-		if (duplicates.length > 0) {
-			errors.name = `A Job with this URL already exists`;
+			if (duplicates.length > 0) {
+				errors.url = `A Job with this URL already exists`;
+			}
 		}
 		return errors;
 	};

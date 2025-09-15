@@ -2,7 +2,7 @@ import { Form } from "react-bootstrap";
 import { renderStarRating } from "./StarRating";
 import { renderSalaryInput } from "./SalaryInput";
 import { renderTextarea } from "./TextArea";
-import { renderDateTimeLocal } from "./Datetime";
+import { renderDateLocal, renderDateTimeLocal } from "./Datetime";
 import { renderPasswordInput } from "./PasswordInput";
 import { renderCheckbox } from "./Checkbox";
 import { renderSelect } from "./SelectWidget";
@@ -99,6 +99,9 @@ export const renderFormField = (
 
 					case "datetime-local":
 						return renderDateTimeLocal(widgetProps);
+
+					case "date":
+						return renderDateLocal(widgetProps);
 
 					case "password":
 						return renderPasswordInput(widgetProps);

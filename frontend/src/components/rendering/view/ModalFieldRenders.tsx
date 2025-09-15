@@ -330,4 +330,11 @@ export const viewFields = {
 		render: (params: RenderParams) => renderFunctions.datetime({ ...params, view: true }),
 		...overrides,
 	}),
+
+	deadline: (overrides: ViewFieldOverride = {}): ViewField => ({
+		key: "deadline",
+		label: "Application Deadline",
+		render: (params: RenderParams) => renderFunctions.deadline({ ...params, view: true }),
+		...overrides,
+	}),
 };

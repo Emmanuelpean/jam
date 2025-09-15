@@ -127,6 +127,7 @@ export interface JobData {
 	salary_min?: number | null;
 	salary_max?: number | null;
 	personal_rating?: number | null;
+	deadline?: Date | null;
 	company_id?: number | null;
 	location_id?: number | null;
 	application_date?: Date | null;

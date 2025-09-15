@@ -397,7 +397,13 @@ export const formFields = {
 		label: "Date & Time",
 		type: "datetime-local",
 		required: true,
-		placeholder: "Select date and time",
+		...overrides,
+	}),
+
+	deadline: (overrides: FormFieldOverride = {}): FormField => ({
+		name: "deadline",
+		label: "Application Deadline",
+		type: "date",
 		...overrides,
 	}),
 

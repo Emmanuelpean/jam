@@ -348,6 +348,10 @@ export const renderFunctions = {
 		return renderFunctions._date(param, "application_date");
 	},
 
+	deadline: (param: RenderParams): string | null => {
+		return renderFunctions._date(param, "deadline");
+	},
+
 	date: (param: RenderParams): string | null => {
 		return renderFunctions._date(param, "date");
 	},

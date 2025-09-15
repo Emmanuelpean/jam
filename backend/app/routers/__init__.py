@@ -201,7 +201,7 @@ def generate_data_table_crud_router(
         :param current_user: Authenticated user.
         :return: The created entry."""
 
-        if not admin_only and not current_user.is_active:
+        if not admin_only and not current_user.is_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
             )

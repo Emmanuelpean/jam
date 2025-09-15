@@ -30,3 +30,15 @@ export const formatTimeAgo = (dateString: string): string => {
 	if (diffDays === 1) return "1 day ago";
 	return `${diffDays} days ago`;
 };
+
+export const formatDate = (datetime?: string | Date): string => {
+	if (!datetime) {
+		datetime = new Date();
+	} else {
+		datetime = new Date(datetime);
+	}
+	const year = datetime.getFullYear();
+	const month = String(datetime.getMonth() + 1).padStart(2, "0");
+	const day = String(datetime.getDate()).padStart(2, "0");
+	return `${year}-${month}-${day}`;
+};
