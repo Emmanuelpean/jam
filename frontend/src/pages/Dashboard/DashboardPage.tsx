@@ -351,11 +351,10 @@ const JobSearchDashboard: React.FC = () => {
 							subtitle="Jobs that need your attention"
 							badgeValue={dashboardStats.jobsNeedingChase}
 						/>
-						<Card.Body
-							className="p-0 flex-grow-1"
-							style={{ marginLeft: "1rem", marginRight: "1rem", overflowY: "auto", minHeight: 0 }}
-						>
-							<JobsToChase data={dashboardStats.jobsToChase} />
+						<Card.Body className="p-0 flex-grow-1" style={{ overflowY: "auto", minHeight: 0 }}>
+							<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
+								<JobsToChase data={dashboardStats.jobsToChase} />
+							</div>
 						</Card.Body>
 					</Card>
 				</Col>
@@ -372,8 +371,12 @@ const JobSearchDashboard: React.FC = () => {
 							subtitle="Jobs that need your attention"
 							badgeValue={dashboardStats.upcomingDeadlines.length}
 						/>
-						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-							<UpcomingDeadlinesTable data={dashboardStats.upcomingDeadlines} />
+						<Card.Body className="p-0">
+							<div style={{ overflowY: "auto", minHeight: 0 }}>
+								<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
+									<UpcomingDeadlinesTable data={dashboardStats.upcomingDeadlines} />
+								</div>
+							</div>
 						</Card.Body>
 					</Card>
 				</Col>
