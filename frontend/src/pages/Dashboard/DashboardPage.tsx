@@ -287,7 +287,7 @@ const JobSearchDashboard: React.FC = () => {
 	}
 
 	return (
-		<Container fluid className="py-4">
+		<>
 			<Row className="g-4 mb-4">
 				<Col md={6} lg={3}>
 					<StatCard
@@ -326,9 +326,8 @@ const JobSearchDashboard: React.FC = () => {
 					/>
 				</Col>
 			</Row>
-
-			<Row className="g-4" style={{ height: "500px" }}>
-				<Col lg={3} style={{ height: "100%", minHeight: 0 }}>
+			<Row className="g-4" style={{ height: "500px", minHeight: 0 }}>
+				<Col lg={4} style={{ height: "100%", minHeight: 0 }}>
 					<ActivityFeedCard
 						icon="clock-history"
 						title="Recent Activity"
@@ -341,7 +340,7 @@ const JobSearchDashboard: React.FC = () => {
 						renderItem={renderRecentActivityItem}
 					/>
 				</Col>
-				<Col lg={9} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
+				<Col lg={8} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
 					<Card
 						className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
 						style={{ height: "100%", minHeight: 0 }}
@@ -360,7 +359,9 @@ const JobSearchDashboard: React.FC = () => {
 						</Card.Body>
 					</Card>
 				</Col>
-				<Col lg={9} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
+			</Row>
+			<Row className="g-4" style={{ height: "500px", minHeight: 0, paddingTop: "3rem" }}>
+				<Col lg={8} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
 					<Card
 						className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
 						style={{ height: "100%", minHeight: 0 }}
@@ -376,7 +377,7 @@ const JobSearchDashboard: React.FC = () => {
 						</Card.Body>
 					</Card>
 				</Col>
-				<Col lg={3} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
+				<Col lg={4} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
 					<ActivityFeedCard
 						icon="calendar-event"
 						title="Upcoming Interviews"
@@ -390,7 +391,7 @@ const JobSearchDashboard: React.FC = () => {
 					/>
 				</Col>
 			</Row>
-		</Container>
+		</>
 	);
 };
 
