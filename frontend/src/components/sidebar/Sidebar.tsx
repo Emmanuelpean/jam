@@ -13,6 +13,7 @@ interface NavigationItem {
 	text: string;
 	submenu?: NavigationSubItem[];
 	adminOnly?: boolean;
+	position?: "top" | "bottom"; // New positioning option
 }
 
 interface NavigationSubItem {
@@ -43,13 +44,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onHoverChange }) => {
 	const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 	const allNavigationItems: NavigationItem[] = [
-		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard" },
-		{ path: "/jobs", text: "Jobs" },
-		{ path: "/interviews", text: "Interviews" },
-		{ path: "/jobapplicationupdates", text: "Job Application Updates" },
+		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard", position: "top" },
+		{ path: "/jobs", text: "Jobs", position: "top" },
+		{ path: "/interviews", text: "Interviews", position: "top" },
+		{ path: "/jobapplicationupdates", text: "Job Application Updates", position: "top" },
 		{
 			text: "Other",
 			icon: "bi-three-dots",
+			position: "top",
 			submenu: [
 				{ path: "/persons", text: "People" },
 				{ path: "/locations", text: "Locations" },
@@ -58,10 +60,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onHoverChange }) => {
 				{ path: "/keywords", text: "Tags" },
 			],
 		},
+		// Bottom positioned items
+		{ path: "/settings", icon: "bi-gear", text: "User Settings", position: "bottom" },
 		{
 			text: "Admin",
 			icon: "bi-person-gear",
 			adminOnly: true,
+			position: "bottom",
 			submenu: [
 				{ path: "/eis_dashboard", icon: "bi-envelope-arrow-down", text: "EIS Dashboard" },
 				{ path: "/users", text: "Users" },
@@ -78,13 +83,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ onHoverChange }) => {
 		});
 	}, [is_admin]);
 
+	// Split items by position
+	const topNavigationItems = useMemo(() => {
+		return navigationItems.filter((item) => item.position !== "bottom");
+	}, [navigationItems]);
+
+	const bottomNavigationItems = useMemo(() => {
+		return navigationItems.filter((item) => item.position === "bottom");
+	}, [navigationItems]);
+
 	useEffect(() => {
 		// Initialize theme
 		const savedTheme = localStorage.getItem("theme");
 		const initTheme = savedTheme && isValidTheme(savedTheme) ? savedTheme : DEFAULT_THEME;
 		setCurrentTheme(initTheme);
 		document.documentElement.setAttribute("data-theme", initTheme);
-	}, []); // Remove themes dependency
+	}, []);
 
 	// Auto-expand submenu if any of its items is active
 	useEffect(() => {
@@ -256,6 +270,80 @@ export const Sidebar: React.FC<SidebarProps> = ({ onHoverChange }) => {
 		return baseStyle;
 	};
 
+	// Render navigation items helper function
+	const renderNavigationItems = (items: NavigationItem[]) => {
+		return items.map((item, index) => {
+			// Handle submenu items
+			if (item.submenu) {
+				const isSubmenuItemActive = isSubmenuActive(item.submenu);
+				const isExpanded = expandedSubmenu === item.text;
+				const showSubmenu = shouldShowSubmenu(item);
+
+				return (
+					<div key={`submenu-${item.text}-${index}`}>
+						<div
+							className={`nav-item ${isSubmenuItemActive ? "active" : ""}`}
+							onClick={() => isHovering && handleSubmenuToggle(item.text)}
+							title={!isHovering ? item.text : ""}
+							style={{ cursor: isHovering ? "pointer" : "default" }}
+						>
+							<span className="nav-icon">
+								<i className={`bi ${item?.icon || getTableIcon(item.text)}`}></i>
+							</span>
+							{isHovering && (
+								<>
+									<span className="nav-text">{item.text}</span>
+									<span className={`submenu-arrow ms-auto ${isExpanded ? "expanded" : ""}`}>
+										<i className="bi bi-chevron-right"></i>
+									</span>
+								</>
+							)}
+						</div>
+
+						<div
+							className={`submenu ${!isHovering ? "collapsed-submenu" : ""} ${showSubmenu ? "open" : ""}`}
+						>
+							{item.submenu.map((subItem, subIndex) => (
+								<Link
+									key={subItem.path}
+									to={subItem.path}
+									className={`nav-item submenu-item ${isActive(subItem.path) ? "active" : ""}`}
+									title={!isHovering ? subItem.text : subItem.text}
+									style={{
+										transitionDelay: showSubmenu
+											? `${subIndex * 0.05 + 0.1}s`
+											: //@ts-ignore
+												`${(item.submenu.length - subIndex - 1) * 0.03}s`,
+									}}
+								>
+									<span className="nav-icon">
+										<i className={`bi ${subItem?.icon || getTableIcon(subItem.text)}`}></i>
+									</span>
+									{isHovering && <span className="nav-text">{subItem.text}</span>}
+								</Link>
+							))}
+						</div>
+					</div>
+				);
+			}
+
+			// Handle regular nav items
+			return (
+				<Link
+					key={item.path || `nav-${item.text}-${index}`}
+					to={item.path!}
+					className={`nav-item ${isActive(item.path!) ? "active" : ""}`}
+					title={!isHovering ? item.text : ""}
+				>
+					<span className="nav-icon">
+						<i className={`bi ${item?.icon || getTableIcon(item.text)}`}></i>
+					</span>
+					{isHovering && <span className="nav-text">{item.text}</span>}
+				</Link>
+			);
+		});
+	};
+
 	return (
 		<div
 			className={`custom-sidebar collapsed ${isHovering ? "hovering" : ""}`}
@@ -297,87 +385,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onHoverChange }) => {
 				</div>
 			</div>
 
-			<nav className="sidebar-nav">
-				{navigationItems.map((item, index) => {
-					// Handle submenu items
-					if (item.submenu) {
-						const isSubmenuItemActive = isSubmenuActive(item.submenu);
-						const isExpanded = expandedSubmenu === item.text;
-						const showSubmenu = shouldShowSubmenu(item);
+			{/* Top Navigation Items */}
+			<nav className="sidebar-nav sidebar-nav-top">{renderNavigationItems(topNavigationItems)}</nav>
 
-						return (
-							<div key={`submenu-${index}`}>
-								<div
-									className={`nav-item ${isSubmenuItemActive ? "active" : ""}`}
-									onClick={() => isHovering && handleSubmenuToggle(item.text)}
-									title={!isHovering ? item.text : ""}
-									style={{ cursor: isHovering ? "pointer" : "default" }}
-								>
-									<span className="nav-icon">
-										<i className={`bi ${item?.icon || getTableIcon(item.text)}`}></i>
-									</span>
-									{isHovering && (
-										<>
-											<span className="nav-text">{item.text}</span>
-											<span className={`submenu-arrow ms-auto ${isExpanded ? "expanded" : ""}`}>
-												<i className="bi bi-chevron-right"></i>
-											</span>
-										</>
-									)}
-								</div>
+			{/* Bottom Navigation Items */}
+			<nav className="sidebar-nav sidebar-nav-bottom">{renderNavigationItems(bottomNavigationItems)}</nav>
 
-								{showSubmenu && (
-									<div className={`submenu ${!isHovering ? "collapsed-submenu" : ""}`}>
-										{item.submenu.map((subItem) => (
-											<Link
-												key={subItem.path}
-												to={subItem.path}
-												className={`nav-item submenu-item ${isActive(subItem.path) ? "active" : ""}`}
-												title={!isHovering ? subItem.text : subItem.text}
-											>
-												<span className="nav-icon">
-													<i
-														className={`bi ${subItem?.icon || getTableIcon(subItem.text)}`}
-													></i>
-												</span>
-												{isHovering && <span className="nav-text">{subItem.text}</span>}
-											</Link>
-										))}
-									</div>
-								)}
-							</div>
-						);
-					}
-
-					// Handle regular nav items
-					return (
-						<Link
-							key={item.path}
-							to={item.path!}
-							className={`nav-item ${isActive(item.path!) ? "active" : ""}`}
-							title={!isHovering ? item.text : ""}
-						>
-							<span className="nav-icon">
-								<i className={`bi ${item?.icon || getTableIcon(item.text)}`}></i>
-							</span>
-							{isHovering && <span className="nav-text">{item.text}</span>}
-						</Link>
-					);
-				})}
-			</nav>
-			<nav className="sidebar-nav" style={{ flex: "none", paddingTop: "0", paddingBottom: "0.2rem" }}>
-				<Link
-					key="/settings"
-					to="/settings"
-					className={`nav-item submenu-item ${isActive("/settings") ? "active" : ""}`}
-					title="User Settings"
-				>
-					<span className="nav-icon">
-						<i className={`bi bi-gear`}></i>
-					</span>
-					{isHovering && <span className="nav-text">User Settings</span>}
-				</Link>
-			</nav>
 			<div className="sidebar-footer border-top">
 				<div
 					onClick={handleLogout}

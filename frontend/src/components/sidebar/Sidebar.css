@@ -31,13 +31,11 @@
     transition: padding 0.3s ease, justify-content 0.3s ease;
 }
 
-
 .custom-sidebar.collapsed.hovering .sidebar-header {
     padding-left: 1rem;
     justify-content: flex-start;
-    align-items: center; /* Keep centered vertically */
+    align-items: center;
 }
-
 
 .sidebar-brand {
     display: block;
@@ -76,7 +74,6 @@
     transition: opacity 0.3s ease, width 0.3s ease;
 }
 
-
 .custom-sidebar.collapsed.hovering .logo-text {
     opacity: 1;
     width: auto;
@@ -95,19 +92,36 @@
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 0.5rem;
-    transition: left 0.3s ease; /* Smooth transition when sidebar expands */
+    transition: left 0.3s ease;
 }
 
+/* Base sidebar navigation styles */
 .sidebar-nav {
-    flex: 1;
     padding: 1rem 0.25rem;
     overflow-y: auto;
     overflow-x: hidden;
     transition: padding 0.3s ease;
 }
 
-.custom-sidebar.collapsed.hovering .sidebar-nav {
-    padding: 1rem 0;
+/* Top navigation - takes available space */
+.sidebar-nav-top {
+    flex: 1;
+}
+
+/* Bottom navigation - sticks to bottom above footer */
+.sidebar-nav-bottom {
+    flex: none;
+    margin-top: auto;
+    border-top: 1px solid #dee2e6;
+    padding-top: 1rem;
+    padding-bottom: 0.5rem;
+}
+
+/* Remove border if no bottom items */
+.sidebar-nav-bottom:empty {
+    border-top: none;
+    padding: 0;
+    margin-top: 0;
 }
 
 .nav-item {
@@ -175,8 +189,9 @@
 .sidebar-footer {
     padding: 1rem 0.5rem;
     border-top: 1px solid #dee2e6;
-    margin-top: auto;
+    margin-top: 0;
     transition: padding 0.3s ease;
+    flex: none;
 }
 
 .custom-sidebar.collapsed.hovering .sidebar-footer {
@@ -277,23 +292,69 @@
     color: var(--primary-mid);
 }
 
+/* Animated submenu arrow */
 .submenu-arrow {
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease-out;
 }
 
 .submenu-arrow.expanded {
     transform: rotate(90deg);
 }
 
-
+/* Base submenu styles with closing animation */
 .submenu {
-    padding-left: 20px;
-    transition: all 0.3s ease;
+    max-height: 0;
     overflow: hidden;
+    opacity: 0;
+    padding-left: 20px;
+    transform: translateY(-3px);
+    transition: max-height 0.25s ease-in,
+    opacity 0.15s ease-in,
+    transform 0.25s ease-in,
+    padding 0.25s ease-in;
+}
+
+/* Opening animation */
+.submenu.open {
+    max-height: 300px;
+    opacity: 1;
+    transform: translateY(0);
+    transition: max-height 0.4s ease-out,
+    opacity 0.3s ease-out 0.1s,
+    transform 0.3s ease-out 0.1s,
+    padding 0.4s ease-out;
 }
 
 .collapsed-submenu {
     padding-left: 0;
+}
+
+.collapsed-submenu.open {
+    max-height: 300px;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Staggered animation for submenu items */
+.submenu-item {
+    transform: translateX(-15px);
+    opacity: 0;
+    transition: transform 0.2s ease-out,
+    opacity 0.2s ease-out;
+    transition-delay: 0s;
+}
+
+.submenu.open .submenu-item {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+/* Closing animation for submenu items */
+.submenu:not(.open) .submenu-item {
+    transform: translateX(-15px);
+    opacity: 0;
+    transition: transform 0.15s ease-in,
+    opacity 0.15s ease-in;
 }
 
 .nav-item.active:hover .submenu-arrow {
