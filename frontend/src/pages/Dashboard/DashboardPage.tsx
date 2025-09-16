@@ -327,7 +327,7 @@ const JobSearchDashboard: React.FC = () => {
 				</Col>
 			</Row>
 
-			<Row className="g-4" style={{ height: "600px" }}>
+			<Row className="g-4 flex-grow-1" style={{ height: "500px" }}>
 				<Col lg={3} style={{ height: "100%", minHeight: 0 }}>
 					<ActivityFeedCard
 						icon="clock-history"
@@ -341,10 +341,10 @@ const JobSearchDashboard: React.FC = () => {
 						renderItem={renderRecentActivityItem}
 					/>
 				</Col>
-				<Col lg={9}>
+				<Col lg={9} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
 					<Card
-						className="shadow-sm border-0"
-						style={{ maxHeight: "100%", paddingBottom: "1rem", minHeight: 0 }}
+						className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
+						style={{ height: "100%", minHeight: 0 }}
 					>
 						<TableCardHeader
 							icon="telephone"
@@ -352,11 +352,16 @@ const JobSearchDashboard: React.FC = () => {
 							subtitle="Jobs that need your attention"
 							badgeValue={dashboardStats.jobsNeedingChase}
 						/>
-						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
+						<Card.Body
+							className="p-0 flex-grow-1"
+							style={{ marginLeft: "1rem", marginRight: "1rem", overflowY: "auto", minHeight: 0 }}
+						>
 							<JobsToChase data={dashboardStats.jobsToChase} />
 						</Card.Body>
 					</Card>
 				</Col>
+			</Row>
+			<Row className="g-4 flex-grow-1" style={{ height: "500px" }}>
 				<Col lg={9}>
 					<Card className="shadow-sm border-0">
 						<TableCardHeader
