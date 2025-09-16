@@ -86,11 +86,11 @@ const ActivityFeedCard = <T,>({
 	items,
 	renderItem,
 }: ActivityFeedCardProps<T>) => (
-	<Card className="h-100 shadow-sm border-0">
+	<Card className="h-100 shadow-sm border-0 d-flex flex-column">
 		<TableCardHeader icon={icon} title={title} subtitle={subtitle} badgeValue={badgeValue} />
-		<Card.Body className="p-0">
+		<Card.Body className="p-0 flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>
 			{items.length === 0 ? (
-				<div className="text-center py-5 px-4">
+				<div className="text-center py-5 px-4 flex-grow-1 d-flex flex-column justify-content-center">
 					<div className="mb-3">
 						<i className={`bi bi-${emptyIcon} text-muted`} style={{ fontSize: "3.5rem" }}></i>
 					</div>
@@ -98,7 +98,10 @@ const ActivityFeedCard = <T,>({
 					<p className="text-muted small mb-0">{emptyDescription}</p>
 				</div>
 			) : (
-				<div className="activity-timeline px-4" style={{ maxHeight: "400px", overflowY: "auto" }}>
+				<div
+					className="activity-timeline px-4 flex-grow-1"
+					style={{ overflowY: "auto", height: "100%", minHeight: 0 }}
+				>
 					{items.map((item, index) => renderItem(item, index, index === items.length - 1))}
 				</div>
 			)}
@@ -324,8 +327,8 @@ const JobSearchDashboard: React.FC = () => {
 				</Col>
 			</Row>
 
-			<Row className="g-4" style={{ height: "400px" }}>
-				<Col lg={3}>
+			<Row className="g-4" style={{ height: "600px" }}>
+				<Col lg={3} style={{ height: "100%", minHeight: 0 }}>
 					<ActivityFeedCard
 						icon="clock-history"
 						title="Recent Activity"
@@ -339,7 +342,10 @@ const JobSearchDashboard: React.FC = () => {
 					/>
 				</Col>
 				<Col lg={9}>
-					<Card className="shadow-sm border-0" style={{ height: "100%", paddingBottom: "1rem" }}>
+					<Card
+						className="shadow-sm border-0"
+						style={{ maxHeight: "100%", paddingBottom: "1rem", minHeight: 0 }}
+					>
 						<TableCardHeader
 							icon="telephone"
 							title="Applications Requiring Follow-up"
