@@ -599,7 +599,6 @@ JOB_DATA = [
         "application_aggregator_id": None,
     },
     {
-        # Job 7 - Software Engineer Intern (no application)
         "title": "Software Engineer Intern",
         "description": "Summer internship opportunity for computer science students. Great learning environment.",
         "personal_rating": 1,
@@ -630,6 +629,7 @@ JOB_DATA = [
         "cv_id": None,
         "cover_letter_id": None,
         "application_aggregator_id": None,
+        "deadline": (current_date + timedelta(days=10)).strftime("%Y-%m-%d"),
     },
     {
         "title": "DevOps Engineer",
@@ -734,6 +734,7 @@ JOB_DATA = [
         "cv_id": 1,
         "cover_letter_id": 7,
         "application_aggregator_id": None,
+        "deadline": current_date + timedelta(days=10),
     },
     {
         "title": "Freelance Web Developer",

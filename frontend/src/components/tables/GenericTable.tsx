@@ -666,7 +666,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 			</div>
 
 			{/* Pagination */}
-			{!showAllEntries && (
+			{!showAllEntries && data.length > 19 && (
 				<div className={`d-flex justify-content-between align-items-center mt-0`}>
 					<div className="d-flex align-items-center gap-0">
 						{[

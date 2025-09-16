@@ -16,7 +16,12 @@ const UpcomingDeadlinesTable: React.FC<TableProps> = ({ data = null, columns = [
 	} = useProvidedTableData(data, { key: "days_since_last_update", direction: "desc" });
 
 	if (!columns.length) {
-		columns = [tableColumns.title!(), tableColumns.company!(), tableColumns.location!()];
+		columns = [
+			tableColumns.title!(),
+			tableColumns.company!(),
+			tableColumns.location!(),
+			tableColumns.daysUntilDeadline!(),
+		];
 	}
 
 	return (
@@ -38,7 +43,7 @@ const UpcomingDeadlinesTable: React.FC<TableProps> = ({ data = null, columns = [
 			modalSize="xl"
 			showSearch={false}
 			showAdd={false}
-			modalProps={{ defaultActiveTab: "application" }}
+			modalProps={{ defaultActiveTab: "job" }}
 		/>
 	);
 };

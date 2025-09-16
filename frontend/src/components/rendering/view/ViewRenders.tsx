@@ -451,6 +451,11 @@ export const renderFunctions = {
 		return <span className={"text-danger"}>{daysSinceLastUpdate} days</span>;
 	},
 
+	daysUntilDeadline: (params: RenderParams): ReactNode => {
+		const daysUntilDeadline = accessSubAttribute(params.item, params.accessKey, "days_until_deadline");
+		return <span className={"text-danger"}>{daysUntilDeadline} days</span>;
+	},
+
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
 	interviewCount: (param: RenderParams): number => {

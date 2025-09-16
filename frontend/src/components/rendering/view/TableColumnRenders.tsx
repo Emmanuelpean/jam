@@ -417,10 +417,19 @@ export const tableColumns: Columns = {
 
 	daysSinceLastUpdate: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "days_since_last_update",
-		label: "Days Since Last Update",
+		label: "Time Since Last Update",
 		sortable: true,
 		type: "number",
 		render: renderFunctions.lastUpdateDays,
+		...overrides,
+	}),
+
+	daysUntilDeadline: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "days_until_deadline",
+		label: "Time Until Deadline",
+		sortable: true,
+		type: "number",
+		render: renderFunctions.daysUntilDeadline,
 		...overrides,
 	}),
 

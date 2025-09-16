@@ -286,12 +286,12 @@ const JobSearchDashboard: React.FC = () => {
 				</Col>
 			</Row>
 
-			<Row className="g-4">
+			<Row className="g-4" style={{ height: "400px" }}>
 				<Col lg={3}>
 					<RecentActivityCard />
 				</Col>
 				<Col lg={9}>
-					<Card className="shadow-sm border-0">
+					<Card className="shadow-sm border-0" style={{ height: "100%", paddingBottom: "1rem" }}>
 						<Card.Header className="table-card-header border-0 p-0">
 							<div className="d-flex align-items-center justify-content-between p-4">
 								<div className="d-flex align-items-center">
