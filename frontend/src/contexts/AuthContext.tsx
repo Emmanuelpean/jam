@@ -119,7 +119,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			const apiError = error as ApiError;
 			return {
 				success: false,
-				error: "Login failed. Please check your credentials and try again.",
+				error: "Login failed. Please check your credentials and try again." + apiError.message,
 				status: apiError.status,
 			};
 		}
