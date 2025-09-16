@@ -137,22 +137,13 @@ const JobSearchDashboard: React.FC = () => {
 
 	const RecentActivityCard: React.FC = (): JSX.Element => (
 		<Card className="h-100 shadow-sm border-0">
-			<Card.Header className="card-header border-0 p-0">
-				<div className="d-flex align-items-center justify-content-between p-4">
-					<div className="d-flex align-items-center">
-						<div className="header-icon-wrapper me-3">
-							<i className="bi bi-clock-history"></i>
-						</div>
-						<div>
-							<h5 className="mb-0 fw-bold text-dark">Recent Activity</h5>
-							<small className="text-muted">Latest updates across all activities</small>
-						</div>
-					</div>
-					{dashboardStats.recentActivity.length > 0 && (
-						<div className="activity-count-badge">{dashboardStats.recentActivity.length}</div>
-					)}
-				</div>
-			</Card.Header>
+			<TableCardHeader
+				icon="clock-history"
+				title="Recent Activity"
+				subtitle="Latest updates across all activities"
+				badgeValue={dashboardStats.recentActivity.length}
+				badgeClassName="activity-count-badge"
+			/>
 			<Card.Body className="p-0">
 				{dashboardStats.recentActivity.length === 0 ? (
 					<div className="text-center py-5 px-4">
@@ -236,24 +227,46 @@ const JobSearchDashboard: React.FC = () => {
 		</Card>
 	);
 
+	interface TableCardHeaderProps {
+		icon: string;
+		title: string;
+		subtitle: string;
+		badgeValue?: number;
+		badgeClassName?: string; // Optional: for different badge styles
+	}
+
+	const TableCardHeader: React.FC<TableCardHeaderProps> = ({
+		icon,
+		title,
+		subtitle,
+		badgeValue,
+		badgeClassName = "table-count-badge",
+	}) => (
+		<Card.Header className="table-card-header border-0 p-0">
+			<div className="d-flex align-items-center justify-content-between p-4">
+				<div className="d-flex align-items-center">
+					<div className="header-icon-wrapper me-3">
+						<i className={`bi bi-${icon}`}></i>
+					</div>
+					<div>
+						<h5 className="mb-0 fw-bold text-dark">{title}</h5>
+						<small className="text-muted">{subtitle}</small>
+					</div>
+				</div>
+				{badgeValue && badgeValue > 0 && <div className={badgeClassName}>{badgeValue}</div>}
+			</div>
+		</Card.Header>
+	);
+
 	const UpcomingInterviewsCard: React.FC = (): JSX.Element => (
 		<Card className="h-100 shadow-sm border-0">
-			<Card.Header className="card-header border-0 p-0">
-				<div className="d-flex align-items-center justify-content-between p-4">
-					<div className="d-flex align-items-center">
-						<div className="header-icon-wrapper me-3">
-							<i className="bi bi-calendar-event"></i>
-						</div>
-						<div>
-							<h5 className="mb-0 fw-bold text-dark">Upcoming Interviews</h5>
-							<small className="text-muted">Scheduled interviews</small>
-						</div>
-					</div>
-					{dashboardStats.upcomingInterviews.length > 0 && (
-						<div className="activity-count-badge">{dashboardStats.upcomingInterviews.length}</div>
-					)}
-				</div>
-			</Card.Header>
+			<TableCardHeader
+				icon="calendar-event"
+				title="Upcoming Interviews"
+				subtitle="Scheduled interviews"
+				badgeValue={dashboardStats.upcomingInterviews.length}
+				badgeClassName="activity-count-badge"
+			/>
 			<Card.Body className="p-0">
 				{dashboardStats.upcomingInterviews.length === 0 ? (
 					<div className="text-center py-5 px-4">
@@ -340,7 +353,6 @@ const JobSearchDashboard: React.FC = () => {
 
 	return (
 		<Container fluid className="py-4">
-			{/* Statistics Cards */}
 			<Row className="g-4 mb-4">
 				<Col md={6} lg={3}>
 					<StatCard
@@ -366,7 +378,7 @@ const JobSearchDashboard: React.FC = () => {
 						value={dashboardStats.pendingApplications}
 						icon="clock"
 						variant="warning"
-						description="Awaiting response"
+						description="Applications awaiting response"
 					/>
 				</Col>
 				<Col md={6} lg={3}>
@@ -386,22 +398,12 @@ const JobSearchDashboard: React.FC = () => {
 				</Col>
 				<Col lg={9}>
 					<Card className="shadow-sm border-0" style={{ height: "100%", paddingBottom: "1rem" }}>
-						<Card.Header className="table-card-header border-0 p-0">
-							<div className="d-flex align-items-center justify-content-between p-4">
-								<div className="d-flex align-items-center">
-									<div className="header-icon-wrapper me-3">
-										<i className="bi bi-telephone-outbound"></i>
-									</div>
-									<div>
-										<h5 className="mb-0 fw-bold text-dark">Applications Requiring Follow-up</h5>
-										<small className="text-muted">Jobs that need your attention</small>
-									</div>
-								</div>
-								{dashboardStats.jobsNeedingChase > 0 && (
-									<div className="table-count-badge">{dashboardStats.jobsNeedingChase}</div>
-								)}
-							</div>
-						</Card.Header>
+						<TableCardHeader
+							icon="telephone"
+							title="Applications Requiring Follow-up"
+							subtitle="Jobs that need your attention"
+							badgeValue={dashboardStats.jobsNeedingChase}
+						/>
 						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
 							<JobsToChase data={dashboardStats.jobsToChase} />
 						</Card.Body>
@@ -409,22 +411,12 @@ const JobSearchDashboard: React.FC = () => {
 				</Col>
 				<Col lg={9}>
 					<Card className="shadow-sm border-0">
-						<Card.Header className="table-card-header border-0 p-0">
-							<div className="d-flex align-items-center justify-content-between p-4">
-								<div className="d-flex align-items-center">
-									<div className="header-icon-wrapper me-3">
-										<i className="bi bi-clock"></i>
-									</div>
-									<div>
-										<h5 className="mb-0 fw-bold text-dark">Upcoming Deadlines</h5>
-										<small className="text-muted">Jobs that need your attention</small>
-									</div>
-								</div>
-								{dashboardStats.upcomingDeadlines.length > 0 && (
-									<div className="table-count-badge">{dashboardStats.upcomingDeadlines.length}</div>
-								)}
-							</div>
-						</Card.Header>
+						<TableCardHeader
+							icon="clock"
+							title="Upcoming Deadlines"
+							subtitle="Jobs that need your attention"
+							badgeValue={dashboardStats.upcomingDeadlines.length}
+						/>
 						<Card.Body className="p-0" style={{ marginLeft: "1rem", marginRight: "1rem" }}>
 							<UpcomingDeadlinesTable data={dashboardStats.upcomingDeadlines} />
 						</Card.Body>

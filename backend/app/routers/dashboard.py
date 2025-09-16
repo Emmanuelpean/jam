@@ -116,7 +116,9 @@ def get_dashboard_data(
 
     # ---------------------------------------------- UPCOMING INTERVIEWS -----------------------------------------------
 
-    upcoming_interviews = interview_query.filter(models.Interview.date >= datetime.now()).all()
+    upcoming_interviews = (
+        interview_query.filter(models.Interview.date >= datetime.now()).order_by(models.Interview.date).all()
+    )
     upcoming_interviews = [
         schemas.InterviewOut.model_validate(interview, from_attributes=True) for interview in upcoming_interviews
     ]
@@ -126,6 +128,7 @@ def get_dashboard_data(
     upcoming_deadlines = (
         job_query.filter(models.Job.application_date.is_(None), models.Job.application_status.is_(None))
         .filter((models.Job.deadline - datetime.now()) <= timedelta(days=deadline_threshold))
+        .order_by(models.Job.deadline)
         .all()
     )
     upcoming_deadlines = [schemas.JobOut.model_validate(job, from_attributes=True) for job in upcoming_deadlines]
