@@ -787,3 +787,14 @@ const GenericModal = ({
 };
 
 export default GenericModal;
+
+export interface DataModalProps {
+	show: boolean;
+	onHide: () => void;
+	submode?: "view" | "edit" | "add";
+	data?: any;
+	id?: number | null;
+	onSuccess?: (data: any) => void;
+	onDelete?: ((item: any) => Promise<void>) | null;
+	size?: "sm" | "lg" | "xl";
+}

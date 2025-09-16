@@ -2,7 +2,7 @@ import React from "react";
 import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumnRenders";
 import { InterviewModal } from "../modals/InterviewModal";
-import { DataModalProps } from "../modals/AggregatorModal";
+import { DataModalProps } from "../modals/GenericModal/GenericModal";
 
 interface InterviewsTableProps extends TableProps {
 	jobId?: number;

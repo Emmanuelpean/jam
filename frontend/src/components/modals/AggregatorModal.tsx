@@ -1,22 +1,10 @@
 import React from "react";
-import GenericModal from "./GenericModal/GenericModal";
+import GenericModal, { DataModalProps, ValidationErrors } from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { aggregatorsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import { ValidationErrors } from "./GenericModal/GenericModal";
 import { AggregatorData } from "../../services/Schemas";
-
-export interface DataModalProps {
-	show: boolean;
-	onHide: () => void;
-	submode?: "view" | "edit" | "add";
-	data?: any;
-	id?: number | null;
-	onSuccess?: (data: any) => void;
-	onDelete?: ((item: any) => Promise<void>) | null;
-	size?: "sm" | "lg" | "xl";
-}
 
 export const AggregatorModal: React.FC<DataModalProps> = ({
 	show,

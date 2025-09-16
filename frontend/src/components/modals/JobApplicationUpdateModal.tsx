@@ -1,9 +1,8 @@
 import React, { useMemo } from "react";
-import GenericModal from "./GenericModal/GenericModal";
+import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { formatDateTime } from "../../utils/TimeUtils";
-import { DataModalProps } from "./AggregatorModal";
 import { JobApplicationUpdateData } from "../../services/Schemas";
 
 interface JobApplicationUpdateModalProps extends DataModalProps {

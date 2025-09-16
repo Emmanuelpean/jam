@@ -1,8 +1,7 @@
 import React from "react";
-import GenericModal from "./GenericModal/GenericModal";
+import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
-import { DataModalProps } from "./AggregatorModal";
 import { InterviewData, JobData } from "../../services/Schemas";
 
 interface InterviewModalProps extends DataModalProps {

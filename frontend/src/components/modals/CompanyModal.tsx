@@ -1,10 +1,9 @@
 import React from "react";
-import GenericModal from "./GenericModal/GenericModal";
+import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { companiesApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import { DataModalProps } from "./AggregatorModal";
 import { ValidationErrors } from "./GenericModal/GenericModal";
 import { CompanyData } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumnRenders";

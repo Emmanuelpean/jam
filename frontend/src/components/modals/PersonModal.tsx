@@ -1,12 +1,11 @@
 import React from "react";
-import GenericModal from "./GenericModal/GenericModal";
+import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { personsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import AlertModal from "./AlertModal";
 import useGenericAlert from "../../hooks/useGenericAlert";
-import { DataModalProps } from "./AggregatorModal";
 import { PersonData } from "../../services/Schemas";
 import { ValidationErrors } from "./GenericModal/GenericModal";
 

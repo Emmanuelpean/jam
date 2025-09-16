@@ -1,9 +1,8 @@
 import React, { ReactNode, useMemo } from "react";
-import GenericModal, { TabConfig, ValidationErrors } from "./GenericModal/GenericModal";
+import GenericModal, { DataModalProps, TabConfig, ValidationErrors } from "./GenericModal/GenericModal";
 import { formFields, useFormOptions } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { getApplicationStatusBadgeClass } from "../rendering/view/ViewRenders";
-import { DataModalProps } from "./AggregatorModal";
 import { JobData } from "../../services/Schemas";
 import { jobsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
@@ -20,7 +19,7 @@ export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
 	onSuccess,
 	onDelete,
 	submode,
-	size,
+	size = "xl",
 	defaultActiveTab = "job",
 }) => {
 	const { token } = useAuth();

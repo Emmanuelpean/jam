@@ -24,9 +24,11 @@
 * [ ] The theme shown in the user setting page is not updated when changed in the sidebar.
 * [ ] When deleting an entry through the modal, do not refresh the page, refresh the table.
 * [X] When a job is added, check if the url is unique
-* [ ] Fix formatting of multiselect
+* [X] Fix formatting of multiselect
 * [ ] Update the table data when interviews/updates are added/deleted/edited
 * [ ] Update the table data when accordion table data are changed
 * [ ] Add guided tour for new users
 * [ ] Prevent non admin from accessing the settings and user management page
-* [ ] Add a "Upcoming Interviews" section in the dashboard + table of upcomming deadlines
+* [ ] Add a "Upcoming Interviews" section in the dashboard + 
+* [X] table of upcoming deadlines
+* [ ] Fix help bubbles clipping in the user setting page

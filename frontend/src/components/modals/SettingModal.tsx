@@ -1,10 +1,9 @@
 import React from "react";
-import GenericModal, { ValidationErrors } from "./GenericModal/GenericModal";
+import GenericModal, { DataModalProps, ValidationErrors } from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { viewFields } from "../rendering/view/ModalFieldRenders";
 import { settingsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import { DataModalProps } from "./AggregatorModal";
 import { SettingData } from "../../services/Schemas";
 
 export const SettingModal: React.FC<DataModalProps> = ({
@@ -15,7 +14,7 @@ export const SettingModal: React.FC<DataModalProps> = ({
 	onSuccess,
 	onDelete,
 	submode,
-	size,
+	size = "lg",
 }) => {
 	const { token } = useAuth();
 
