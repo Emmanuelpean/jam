@@ -122,7 +122,7 @@ function AuthForm(): JSX.Element {
 				// Registration successful
 				setIsLogin(true);
 				resetForm();
-				window.history.replaceState(null, "", "/login");
+				navigate("/login");
 				showSuccess("Account created successfully! You can now log in.", "Registration Successful");
 			}
 		} else {

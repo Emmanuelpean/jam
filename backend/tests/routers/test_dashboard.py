@@ -17,10 +17,13 @@ class TestDashboardRouter:
         assert response.status_code == 200
 
         data = response.json()
-        statistics, needs_chase, all_updates = data["statistics"], data["needs_chase"], data["all_updates"]
-        assert statistics == {"jobs": 13, "job_applications": 13, "job_application_pending": 11, "interviews": 12}
+        statistics, needs_chase, all_updates, upcoming_interviews, upcoming_deadlines = (
+            data["statistics"], data["needs_chase"], data["all_updates"], data["upcoming_interviews"], data["upcoming_deadlines"])
+        assert statistics == {"jobs": 17, "job_applications": 13, "job_application_pending": 11, "interviews": 12}
         assert len(needs_chase) == 5
-        assert len(all_updates) == 20
+        assert len(all_updates) == 10
+        assert len(upcoming_interviews) == 5
+        assert len(upcoming_deadlines) == 1
 
         # Update a job
         job_id = needs_chase[0]["id"]

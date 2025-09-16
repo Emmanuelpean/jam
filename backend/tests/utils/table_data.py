@@ -3,13 +3,16 @@
 from datetime import datetime, timedelta, timezone
 from itertools import groupby
 
+from sqlalchemy import DATETIME
+
 from tests.utils.files import load_all_resource_files
 
 RESOURCE_FILES = load_all_resource_files()
 
 
 current_date = datetime.now(timezone.utc)
-DATE_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
+DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
+DATE_FORMAT = "%Y-%m-%d"
 
 
 USER_DATA = [
@@ -629,7 +632,7 @@ JOB_DATA = [
         "cv_id": None,
         "cover_letter_id": None,
         "application_aggregator_id": None,
-        "deadline": (current_date + timedelta(days=10)).strftime("%Y-%m-%d"),
+        "deadline": (current_date + timedelta(days=10)).strftime(DATE_FORMAT),
     },
     {
         "title": "DevOps Engineer",
@@ -734,7 +737,7 @@ JOB_DATA = [
         "cv_id": 1,
         "cover_letter_id": 7,
         "application_aggregator_id": None,
-        "deadline": current_date + timedelta(days=10),
+        "deadline": (current_date + timedelta(days=10)).strftime(DATE_FORMAT),
     },
     {
         "title": "Freelance Web Developer",
@@ -809,7 +812,7 @@ JOB_DATA = [
 JOB_APPLICATION_DATETIME = [current_date - timedelta(weeks=i) for i in range(len(JOB_DATA))]
 for job_application, date in zip(JOB_DATA, JOB_APPLICATION_DATETIME):
     if job_application.get("application_date"):
-        job_application["application_date"] = date.strftime(DATE_FORMAT)
+        job_application["application_date"] = date.strftime(DATETIME_FORMAT)
 
 
 FILE_DATA = [
@@ -989,7 +992,7 @@ interviews_sorted = sorted(INTERVIEW_DATA, key=lambda x: x["job_id"])
 grouped = {k: list(v) for k, v in groupby(interviews_sorted, key=lambda x: x["job_id"])}
 for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
     for i, update in enumerate(grouped[update_key]):
-        update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime(DATE_FORMAT)
+        update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime(DATETIME_FORMAT)
 
 
 JOB_APPLICATION_UPDATE_DATA = [
@@ -1103,7 +1106,7 @@ job_application_updates_sorted = sorted(JOB_APPLICATION_UPDATE_DATA, key=lambda 
 grouped = {k: list(v) for k, v in groupby(job_application_updates_sorted, key=lambda x: x["job_id"])}
 for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
     for i, update in enumerate(grouped[update_key]):
-        update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime(DATE_FORMAT)
+        update["date"] = (date + timedelta(weeks=4) * (i + 1)).strftime(DATETIME_FORMAT)
 
 
 JOB_KEYWORD_MAPPINGS = [
@@ -1476,7 +1479,7 @@ SERVICE_LOG_DATA = [
 ]
 SERVICE_LOG_DATETIME = [current_date - timedelta(days=i) for i in range(len(SERVICE_LOG_DATA))]
 for service_log, date in zip(SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
-    service_log["run_datetime"] = date.strftime(DATE_FORMAT)
+    service_log["run_datetime"] = date.strftime(DATETIME_FORMAT)
 
 
 EMAIL_SCRAPEDJOB_MAPPINGS = [

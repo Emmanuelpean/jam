@@ -58,7 +58,7 @@ const TableCardHeader: React.FC<TableCardHeaderProps> = ({ icon, title, subtitle
 					<small className="text-muted">{subtitle}</small>
 				</div>
 			</div>
-			{badgeValue && badgeValue > 0 && <div className={"table-count-badge"}>{badgeValue}</div>}
+			{badgeValue != null && <div className="table-count-badge">{badgeValue}</div>}
 		</div>
 	</Card.Header>
 );
