@@ -327,7 +327,7 @@ const JobSearchDashboard: React.FC = () => {
 				</Col>
 			</Row>
 
-			<Row className="g-4 flex-grow-1" style={{ height: "500px" }}>
+			<Row className="g-4" style={{ height: "500px" }}>
 				<Col lg={3} style={{ height: "100%", minHeight: 0 }}>
 					<ActivityFeedCard
 						icon="clock-history"
@@ -360,8 +360,6 @@ const JobSearchDashboard: React.FC = () => {
 						</Card.Body>
 					</Card>
 				</Col>
-			</Row>
-			<Row className="g-4 flex-grow-1" style={{ height: "500px" }}>
 				<Col lg={9}>
 					<Card className="shadow-sm border-0">
 						<TableCardHeader
