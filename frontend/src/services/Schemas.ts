@@ -100,13 +100,14 @@ export interface PersonData {
 }
 
 export interface InterviewData {
-	date?: string;
+	date?: Date;
 	type?: string;
 	location_id?: string | number;
 	job_id?: string | number;
 	interviewers?: any[];
 	note?: string;
 	attendance_type?: string;
+	job?: JobData;
 }
 
 export interface LocationData {

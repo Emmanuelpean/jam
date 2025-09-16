@@ -213,7 +213,7 @@ const JobSearchDashboard: React.FC = () => {
 													{activity.type}
 												</div>
 												<small className="text-muted flex-shrink-0 ms-2">
-													{new Date(activity.date).toLocaleDateString("en-US", {
+													{new Date(activity.date).toLocaleDateString("en-UK", {
 														month: "short",
 														day: "numeric",
 														...(new Date().getFullYear() !==
@@ -225,6 +225,100 @@ const JobSearchDashboard: React.FC = () => {
 											</div>
 
 											{renderFunctions.jobBadge({ item: activity })}
+										</div>
+									</div>
+								</div>
+							);
+						})}
+					</div>
+				)}
+			</Card.Body>
+		</Card>
+	);
+
+	const UpcomingInterviewsCard: React.FC = (): JSX.Element => (
+		<Card className="h-100 shadow-sm border-0">
+			<Card.Header className="card-header border-0 p-0">
+				<div className="d-flex align-items-center justify-content-between p-4">
+					<div className="d-flex align-items-center">
+						<div className="header-icon-wrapper me-3">
+							<i className="bi bi-calendar-event"></i>
+						</div>
+						<div>
+							<h5 className="mb-0 fw-bold text-dark">Upcoming Interviews</h5>
+							<small className="text-muted">Scheduled interviews</small>
+						</div>
+					</div>
+					{dashboardStats.upcomingInterviews.length > 0 && (
+						<div className="activity-count-badge">{dashboardStats.upcomingInterviews.length}</div>
+					)}
+				</div>
+			</Card.Header>
+			<Card.Body className="p-0">
+				{dashboardStats.upcomingInterviews.length === 0 ? (
+					<div className="text-center py-5 px-4">
+						<div className="mb-3">
+							<i className="bi bi-calendar-x text-muted" style={{ fontSize: "3.5rem" }}></i>
+						</div>
+						<h6 className="text-muted fw-semibold">No upcoming interviews</h6>
+						<p className="text-muted small mb-0">Your scheduled interviews will appear here</p>
+					</div>
+				) : (
+					<div className="activity-timeline px-4" style={{ maxHeight: "400px", overflowY: "auto" }}>
+						{dashboardStats.upcomingInterviews.map((interview, index) => {
+							const isLast = index === dashboardStats.upcomingInterviews.length - 1;
+							return (
+								<div
+									key={`interview-${index}`}
+									className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}
+								>
+									<div className="d-flex position-relative">
+										{!isLast && (
+											<div
+												className="position-absolute"
+												style={{
+													left: "15px",
+													top: "40px",
+													width: "2px",
+													height: "calc(100% + 8px)",
+													backgroundColor: "#e5e7eb",
+													zIndex: 0,
+												}}
+											></div>
+										)}
+										<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
+											<div
+												className="rounded-circle d-flex align-items-center justify-content-center"
+												style={{
+													width: "32px",
+													height: "32px",
+													backgroundColor: "#8b5cf6",
+													boxShadow: "0 0 0 3px rgba(139, 92, 246, 0.1)",
+												}}
+											>
+												<i
+													className="bi bi-people-fill text-white"
+													style={{ fontSize: "0.9rem" }}
+												></i>
+											</div>
+										</div>
+										<div className="flex-grow-1 min-width-0">
+											<div className="d-flex align-items-start justify-content-between mb-1">
+												<div className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+													{interview.type}
+												</div>
+												<small className="text-muted flex-shrink-0 ms-2">
+													{new Date(interview.date!).toLocaleDateString("en-UK", {
+														month: "short",
+														day: "numeric",
+														...(new Date().getFullYear() !==
+															new Date(interview.date!).getFullYear() && {
+															year: "numeric",
+														}),
+													})}
+												</small>
+											</div>
+											{renderFunctions.jobBadge({ item: { job: interview.job } })}
 										</div>
 									</div>
 								</div>
@@ -335,6 +429,9 @@ const JobSearchDashboard: React.FC = () => {
 							<UpcomingDeadlinesTable data={dashboardStats.upcomingDeadlines} />
 						</Card.Body>
 					</Card>
+				</Col>
+				<Col lg={3}>
+					<UpcomingInterviewsCard />
 				</Col>
 			</Row>
 		</Container>
