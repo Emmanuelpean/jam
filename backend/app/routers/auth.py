@@ -7,10 +7,10 @@ from sqlalchemy.orm import Session
 
 from app import utils, models, database, schemas, oauth2
 
-router = APIRouter(tags=["Authentication"])
+router = APIRouter(prefix="/login", tags=["Authentication"])
 
 
-@router.post("/login", status_code=status.HTTP_200_OK, response_model=schemas.Token)
+@router.post("/", status_code=status.HTTP_200_OK, response_model=schemas.Token)
 def login(
     user_credentials: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(database.get_db),
