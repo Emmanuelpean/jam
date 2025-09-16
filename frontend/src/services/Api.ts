@@ -214,7 +214,7 @@ export const authApi: AuthApi = {
 		const formData = new FormData();
 		formData.append("username", email);
 		formData.append("password", password);
-		return api.postFormData("login", formData);
+		return api.postFormData("login/", formData);
 	},
 
 	register: async (email: string, password: string) => {
