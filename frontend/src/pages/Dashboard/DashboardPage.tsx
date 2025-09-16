@@ -4,10 +4,205 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useLoading } from "../../contexts/LoadingContext";
 import { dashboardApi } from "../../services/Api";
 import "./DashboardPage.css";
-import { renderFunctions } from "../../components/rendering/view/ViewRenders";
+import { getTableIcon, renderFunctions } from "../../components/rendering/view/ViewRenders";
 import { ApplicationData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
 import JobsToChase from "../../components/tables/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/tables/UpcomingDeadlines";
+import { formatActivityDate } from "../../utils/TimeUtils";
+
+interface StatCardProps {
+	itemName: string;
+	value: number;
+	icon: string;
+	variant: string;
+	description?: string;
+}
+
+const StatCard: React.FC<StatCardProps> = ({
+	itemName,
+	value,
+	icon,
+	variant,
+	description,
+}: StatCardProps): JSX.Element => (
+	<Card className="h-100 shadow-sm border-0">
+		<Card.Body className="d-flex align-items-center">
+			<div className="flex-grow-1">
+				<div className="d-flex align-items-center mb-2">
+					<i className={`bi bi-${icon} text-${variant} me-2`} style={{ fontSize: "1.5rem" }}></i>
+					<h5 className="card-itemName mb-0">{itemName}</h5>
+				</div>
+				<div className={`display-6 fw-bold text-${variant}`}>{value}</div>
+				{description && <small className="text-muted">{description}</small>}
+			</div>
+		</Card.Body>
+	</Card>
+);
+
+interface TableCardHeaderProps {
+	icon: string;
+	title: string;
+	subtitle: string;
+	badgeValue?: number;
+}
+
+const TableCardHeader: React.FC<TableCardHeaderProps> = ({ icon, title, subtitle, badgeValue }) => (
+	<Card.Header className="table-card-header border-0 p-0">
+		<div className="d-flex align-items-center justify-content-between p-4">
+			<div className="d-flex align-items-center">
+				<div className="header-icon-wrapper me-3">
+					<i className={`bi bi-${icon}`}></i>
+				</div>
+				<div>
+					<h5 className="mb-0 fw-bold text-dark">{title}</h5>
+					<small className="text-muted">{subtitle}</small>
+				</div>
+			</div>
+			{badgeValue && badgeValue > 0 && <div className={"table-count-badge"}>{badgeValue}</div>}
+		</div>
+	</Card.Header>
+);
+
+interface ActivityFeedCardProps<T> {
+	icon: string;
+	title: string;
+	subtitle: string;
+	badgeValue: number;
+	emptyIcon: string;
+	emptyTitle: string;
+	emptyDescription: string;
+	items: T[];
+	renderItem: (item: T, index: number, isLast: boolean) => JSX.Element;
+}
+
+const ActivityFeedCard = <T,>({
+	icon,
+	title,
+	subtitle,
+	badgeValue,
+	emptyIcon,
+	emptyTitle,
+	emptyDescription,
+	items,
+	renderItem,
+}: ActivityFeedCardProps<T>) => (
+	<Card className="h-100 shadow-sm border-0">
+		<TableCardHeader icon={icon} title={title} subtitle={subtitle} badgeValue={badgeValue} />
+		<Card.Body className="p-0">
+			{items.length === 0 ? (
+				<div className="text-center py-5 px-4">
+					<div className="mb-3">
+						<i className={`bi bi-${emptyIcon} text-muted`} style={{ fontSize: "3.5rem" }}></i>
+					</div>
+					<h6 className="text-muted fw-semibold">{emptyTitle}</h6>
+					<p className="text-muted small mb-0">{emptyDescription}</p>
+				</div>
+			) : (
+				<div className="activity-timeline px-4" style={{ maxHeight: "400px", overflowY: "auto" }}>
+					{items.map((item, index) => renderItem(item, index, index === items.length - 1))}
+				</div>
+			)}
+		</Card.Body>
+	</Card>
+);
+
+interface RecentActivity {
+	data: JobApplicationUpdateData | InterviewData | ApplicationData;
+	type: string;
+	date: string;
+	job: JobData;
+}
+
+const renderRecentActivityItem = (activity: RecentActivity, index: number, isLast: boolean): JSX.Element => {
+	const getActivityIcon = (type: string): string => {
+		const iconMap: { [key: string]: string } = {
+			Application: getTableIcon("Job Applications"),
+			Interview: getTableIcon("Interviews"),
+			"Job Application Update": getTableIcon("Job Application Updates"),
+		};
+		return iconMap[type] || "bi-plus-circle-fill";
+	};
+
+	const getActivityColor = (type: string): string => {
+		const colorMap: { [key: string]: string } = {
+			Application: "#2563eb",
+			Interview: "#10b981",
+			"Job Application Update": "#f59e42",
+		};
+		return colorMap[type] || "#2563eb";
+	};
+
+	const activityColor = getActivityColor(activity.type);
+	const activityIcon = getActivityIcon(activity.type);
+
+	return (
+		<div key={`activity-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
+			<div className="d-flex position-relative">
+				{/* Timeline line */}
+				{!isLast && <div className="position-absolute activity-line"></div>}
+
+				{/* Activity icon */}
+				<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
+					<div
+						className="rounded-circle d-flex align-items-center justify-content-center"
+						style={{
+							width: "35px",
+							height: "35px",
+							backgroundColor: activityColor,
+						}}
+					>
+						<i className={`bi ${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
+					</div>
+				</div>
+
+				{/* Activity content */}
+				<div className="flex-grow-1 min-width-0">
+					<div className="d-flex align-items-start justify-content-between mb-1">
+						<div className="fw-semibold text-dark" style={{ fontSize: "1rem" }}>
+							{activity.type}
+						</div>
+						<small className="text-muted flex-shrink-0 ms-2">{formatActivityDate(activity.date)}</small>
+					</div>
+					{renderFunctions.jobBadge({ item: activity })}
+				</div>
+			</div>
+		</div>
+	);
+};
+
+const renderUpcomingInterviewItem = (interview: InterviewData, index: number, isLast: boolean): JSX.Element => {
+	return (
+		<div key={`interview-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
+			<div className="d-flex position-relative">
+				{/* Timeline line */}
+				{!isLast && <div className="position-absolute activity-line"></div>}
+				{/* Interview icon */}
+				<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
+					<div
+						className="rounded-circle d-flex align-items-center justify-content-center"
+						style={{
+							width: "35px",
+							height: "35px",
+							backgroundColor: "#8b5cf6",
+						}}
+					>
+						<i className="bi bi-people-fill text-white" style={{ fontSize: "1rem" }}></i>
+					</div>
+				</div>
+				{/* Interview content */}
+				<div className="flex-grow-1 min-width-0">
+					<div className="d-flex align-items-start justify-content-between mb-1">
+						<div className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+							{interview.type}
+						</div>
+						<small className="text-muted flex-shrink-0 ms-2">{formatActivityDate(interview.date!)}</small>
+					</div>
+					{renderFunctions.jobBadge({ item: { job: interview.job } })}
+				</div>
+			</div>
+		</div>
+	);
+};
 
 interface DashboardStats {
 	totalJobs: number;
@@ -20,40 +215,6 @@ interface DashboardStats {
 	jobsToChase: JobData[];
 	upcomingDeadlines: JobData[];
 }
-
-interface RecentActivity {
-	data: JobApplicationUpdateData | InterviewData | ApplicationData;
-	type: string;
-	date: string;
-	job: JobData;
-}
-
-interface StatCardProps {
-	itemName: string;
-	value: number;
-	icon: string;
-	variant: string;
-	description?: string;
-}
-
-const getActivityIcon = (type: string): string => {
-	const iconMap: { [key: string]: string } = {
-		Application: "bi-send-fill",
-		Interview: "bi-people-fill",
-		"Job Application Update": "bi-pencil-fill",
-		"Follow-up": "bi-telephone-fill",
-	};
-	return iconMap[type] || "bi-plus-circle-fill";
-};
-
-const getActivityColor = (type: string): string => {
-	const colorMap: { [key: string]: string } = {
-		Application: "#3b82f6",
-		Interview: "#8b5cf6",
-		"Job Application Update": "#6b7280",
-	};
-	return colorMap[type] || "#3b82f6";
-};
 
 const JobSearchDashboard: React.FC = () => {
 	const { token } = useAuth();
@@ -114,235 +275,6 @@ const JobSearchDashboard: React.FC = () => {
 		fetchDashboardData().then(() => null);
 	}, [token]);
 
-	const StatCard: React.FC<StatCardProps> = ({
-		itemName,
-		value,
-		icon,
-		variant,
-		description,
-	}: StatCardProps): JSX.Element => (
-		<Card className="h-100 shadow-sm border-0">
-			<Card.Body className="d-flex align-items-center">
-				<div className="flex-grow-1">
-					<div className="d-flex align-items-center mb-2">
-						<i className={`bi bi-${icon} text-${variant} me-2`} style={{ fontSize: "1.5rem" }}></i>
-						<h5 className="card-itemName mb-0">{itemName}</h5>
-					</div>
-					<div className={`display-6 fw-bold text-${variant}`}>{value}</div>
-					{description && <small className="text-muted">{description}</small>}
-				</div>
-			</Card.Body>
-		</Card>
-	);
-
-	const RecentActivityCard: React.FC = (): JSX.Element => (
-		<Card className="h-100 shadow-sm border-0">
-			<TableCardHeader
-				icon="clock-history"
-				title="Recent Activity"
-				subtitle="Latest updates across all activities"
-				badgeValue={dashboardStats.recentActivity.length}
-				badgeClassName="activity-count-badge"
-			/>
-			<Card.Body className="p-0">
-				{dashboardStats.recentActivity.length === 0 ? (
-					<div className="text-center py-5 px-4">
-						<div className="mb-3">
-							<i className="bi bi-inbox text-muted" style={{ fontSize: "3.5rem" }}></i>
-						</div>
-						<h6 className="text-muted fw-semibold">No recent activity</h6>
-						<p className="text-muted small mb-0">Your recent activity will appear here</p>
-					</div>
-				) : (
-					<div className="activity-timeline px-4" style={{ maxHeight: "400px", overflowY: "auto" }}>
-						{dashboardStats.recentActivity.map((activity: RecentActivity, index) => {
-							const isLast = index === dashboardStats.recentActivity.length - 1;
-
-							const activityColor = getActivityColor(activity.type);
-							const activityIcon = getActivityIcon(activity.type);
-
-							return (
-								<div key={`activity-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
-									<div className="d-flex position-relative">
-										{/* Timeline line */}
-										{!isLast && (
-											<div
-												className="position-absolute"
-												style={{
-													left: "15px",
-													top: "40px",
-													width: "2px",
-													height: "calc(100% + 8px)",
-													backgroundColor: "#e5e7eb",
-													zIndex: 0,
-												}}
-											></div>
-										)}
-
-										{/* Activity icon */}
-										<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
-											<div
-												className="rounded-circle d-flex align-items-center justify-content-center"
-												style={{
-													width: "32px",
-													height: "32px",
-													backgroundColor: activityColor,
-													boxShadow: `0 0 0 3px rgba(${parseInt(activityColor.slice(1, 3), 16)}, ${parseInt(activityColor.slice(3, 5), 16)}, ${parseInt(activityColor.slice(5, 7), 16)}, 0.1)`,
-												}}
-											>
-												<i
-													className={`bi ${activityIcon} text-white`}
-													style={{ fontSize: "0.9rem" }}
-												></i>
-											</div>
-										</div>
-
-										{/* Activity content */}
-										<div className="flex-grow-1 min-width-0">
-											<div className="d-flex align-items-start justify-content-between mb-1">
-												<div className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
-													{activity.type}
-												</div>
-												<small className="text-muted flex-shrink-0 ms-2">
-													{new Date(activity.date).toLocaleDateString("en-UK", {
-														month: "short",
-														day: "numeric",
-														...(new Date().getFullYear() !==
-															new Date(activity.date).getFullYear() && {
-															year: "numeric",
-														}),
-													})}
-												</small>
-											</div>
-
-											{renderFunctions.jobBadge({ item: activity })}
-										</div>
-									</div>
-								</div>
-							);
-						})}
-					</div>
-				)}
-			</Card.Body>
-		</Card>
-	);
-
-	interface TableCardHeaderProps {
-		icon: string;
-		title: string;
-		subtitle: string;
-		badgeValue?: number;
-		badgeClassName?: string; // Optional: for different badge styles
-	}
-
-	const TableCardHeader: React.FC<TableCardHeaderProps> = ({
-		icon,
-		title,
-		subtitle,
-		badgeValue,
-		badgeClassName = "table-count-badge",
-	}) => (
-		<Card.Header className="table-card-header border-0 p-0">
-			<div className="d-flex align-items-center justify-content-between p-4">
-				<div className="d-flex align-items-center">
-					<div className="header-icon-wrapper me-3">
-						<i className={`bi bi-${icon}`}></i>
-					</div>
-					<div>
-						<h5 className="mb-0 fw-bold text-dark">{title}</h5>
-						<small className="text-muted">{subtitle}</small>
-					</div>
-				</div>
-				{badgeValue && badgeValue > 0 && <div className={badgeClassName}>{badgeValue}</div>}
-			</div>
-		</Card.Header>
-	);
-
-	const UpcomingInterviewsCard: React.FC = (): JSX.Element => (
-		<Card className="h-100 shadow-sm border-0">
-			<TableCardHeader
-				icon="calendar-event"
-				title="Upcoming Interviews"
-				subtitle="Scheduled interviews"
-				badgeValue={dashboardStats.upcomingInterviews.length}
-				badgeClassName="activity-count-badge"
-			/>
-			<Card.Body className="p-0">
-				{dashboardStats.upcomingInterviews.length === 0 ? (
-					<div className="text-center py-5 px-4">
-						<div className="mb-3">
-							<i className="bi bi-calendar-x text-muted" style={{ fontSize: "3.5rem" }}></i>
-						</div>
-						<h6 className="text-muted fw-semibold">No upcoming interviews</h6>
-						<p className="text-muted small mb-0">Your scheduled interviews will appear here</p>
-					</div>
-				) : (
-					<div className="activity-timeline px-4" style={{ maxHeight: "400px", overflowY: "auto" }}>
-						{dashboardStats.upcomingInterviews.map((interview, index) => {
-							const isLast = index === dashboardStats.upcomingInterviews.length - 1;
-							return (
-								<div
-									key={`interview-${index}`}
-									className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}
-								>
-									<div className="d-flex position-relative">
-										{!isLast && (
-											<div
-												className="position-absolute"
-												style={{
-													left: "15px",
-													top: "40px",
-													width: "2px",
-													height: "calc(100% + 8px)",
-													backgroundColor: "#e5e7eb",
-													zIndex: 0,
-												}}
-											></div>
-										)}
-										<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
-											<div
-												className="rounded-circle d-flex align-items-center justify-content-center"
-												style={{
-													width: "32px",
-													height: "32px",
-													backgroundColor: "#8b5cf6",
-													boxShadow: "0 0 0 3px rgba(139, 92, 246, 0.1)",
-												}}
-											>
-												<i
-													className="bi bi-people-fill text-white"
-													style={{ fontSize: "0.9rem" }}
-												></i>
-											</div>
-										</div>
-										<div className="flex-grow-1 min-width-0">
-											<div className="d-flex align-items-start justify-content-between mb-1">
-												<div className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
-													{interview.type}
-												</div>
-												<small className="text-muted flex-shrink-0 ms-2">
-													{new Date(interview.date!).toLocaleDateString("en-UK", {
-														month: "short",
-														day: "numeric",
-														...(new Date().getFullYear() !==
-															new Date(interview.date!).getFullYear() && {
-															year: "numeric",
-														}),
-													})}
-												</small>
-											</div>
-											{renderFunctions.jobBadge({ item: { job: interview.job } })}
-										</div>
-									</div>
-								</div>
-							);
-						})}
-					</div>
-				)}
-			</Card.Body>
-		</Card>
-	);
-
 	if (error) {
 		return (
 			<Container fluid className="py-4">
@@ -394,7 +326,17 @@ const JobSearchDashboard: React.FC = () => {
 
 			<Row className="g-4" style={{ height: "400px" }}>
 				<Col lg={3}>
-					<RecentActivityCard />
+					<ActivityFeedCard
+						icon="clock-history"
+						title="Recent Activity"
+						subtitle="Latest job applications, interviews and updates"
+						badgeValue={dashboardStats.recentActivity.length}
+						emptyIcon="inbox"
+						emptyTitle="No recent activity"
+						emptyDescription="Your recent activity will appear here"
+						items={dashboardStats.recentActivity}
+						renderItem={renderRecentActivityItem}
+					/>
 				</Col>
 				<Col lg={9}>
 					<Card className="shadow-sm border-0" style={{ height: "100%", paddingBottom: "1rem" }}>
@@ -423,7 +365,17 @@ const JobSearchDashboard: React.FC = () => {
 					</Card>
 				</Col>
 				<Col lg={3}>
-					<UpcomingInterviewsCard />
+					<ActivityFeedCard
+						icon="calendar-event"
+						title="Upcoming Interviews"
+						subtitle="Scheduled interviews"
+						badgeValue={dashboardStats.upcomingInterviews.length}
+						emptyIcon="calendar-x"
+						emptyTitle="No upcoming interviews"
+						emptyDescription="Your scheduled interviews will appear here"
+						items={dashboardStats.upcomingInterviews}
+						renderItem={renderUpcomingInterviewItem}
+					/>
 				</Col>
 			</Row>
 		</Container>

@@ -67,3 +67,12 @@
     place-items: center;
     min-height: 100vh;
 }
+
+.activity-line {
+    left: 17px;
+    top: 20px;
+    width: 2px;
+    height: 110%;
+    background-color: #e5e7eb;
+    z-index: 0,
+}

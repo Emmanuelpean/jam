@@ -42,3 +42,14 @@ export const formatDate = (datetime?: string | Date): string => {
 	const day = String(datetime.getDate()).padStart(2, "0");
 	return `${year}-${month}-${day}`;
 };
+
+export function formatActivityDate(dateString: string): string {
+	const date = new Date(dateString);
+	const now = new Date();
+	const options: Intl.DateTimeFormatOptions = {
+		month: "short",
+		day: "numeric",
+		...(now.getFullYear() !== date.getFullYear() && { year: "numeric" }),
+	};
+	return date.toLocaleDateString("en-UK", options);
+}

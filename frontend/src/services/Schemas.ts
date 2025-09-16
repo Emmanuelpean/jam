@@ -100,7 +100,7 @@ export interface PersonData {
 }
 
 export interface InterviewData {
-	date?: Date;
+	date?: string;
 	type?: string;
 	location_id?: string | number;
 	job_id?: string | number;
