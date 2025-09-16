@@ -1,6 +1,6 @@
 """Main script"""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import models
@@ -19,7 +19,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # Data table routers
 app.include_router(data_tables.company_router)
@@ -47,3 +46,11 @@ app.include_router(auth.router)
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the JAM API"}
+
+
+health_router = APIRouter(prefix="/health", tags=["health"])
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
