@@ -86,7 +86,7 @@ export const renderFormField = (
 				{field.icon && <i className={`${field.icon} me-2 text-muted`}></i>}
 				{field.label}
 				{"required" in field && field.required && <span className="text-danger">*</span>}
-				<div>{field.helpText && <HelpBubble helpText={field.helpText} />}</div>
+				{field.helpText && <HelpBubble helpText={field.helpText} />}
 			</Form.Label>
 			{(() => {
 				switch (field.type) {
