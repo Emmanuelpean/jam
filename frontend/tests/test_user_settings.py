@@ -17,7 +17,7 @@ class TestUserSettingsPage(BaseTest):
 
     @property
     def current_password(self):
-        return self.get_element("currentPassword")
+        return self.get_element("current_password")
 
     @property
     def email(self):
@@ -29,13 +29,13 @@ class TestUserSettingsPage(BaseTest):
     def new_password(self):
         """Set the new password field to the given value"""
 
-        return self.get_element("newPassword")
+        return self.get_element("new_password")
 
     @property
     def confirm_password(self):
         """Set the confirm password field to the given value"""
 
-        return self.get_element("confirmPassword")
+        return self.get_element("confirm_password")
 
     @property
     def theme_hint(self):
@@ -66,17 +66,17 @@ class TestUserSettingsPage(BaseTest):
     def assert_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("currentPassword-", error_message)
+        self._assert_message("current_password-", error_message)
 
     def assert_new_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("newPassword-", error_message)
+        self._assert_message("new_password-", error_message)
 
     def assert_confirm_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("confirmPassword-", error_message)
+        self._assert_message("confirm_password-", error_message)
 
     @property
     def db_user(self):

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../services/Api";
@@ -12,27 +12,61 @@ import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { FormField } from "../../components/rendering/form/FormRenders";
 import { ValidationErrors } from "../../components/modals/GenericModal/GenericModal";
 import { ApiError } from "../../services/Api";
+import { useLoading } from "../../contexts/LoadingContext";
 
 interface FormData {
 	email: string;
-	currentPassword: string;
-	newPassword: string;
-	confirmPassword: string;
+	current_password?: string;
+	new_password?: string;
+	confirm_password?: string;
+	chase_threshold?: number;
+	deadline_threshold?: number;
+	update_limit?: number;
 }
 
 const UserSettingsPage: React.FC = () => {
 	const { currentUser, token } = useAuth();
 	const [formData, setFormData] = useState<FormData>({
+		chase_threshold: 0,
+		confirm_password: "",
+		current_password: "",
+		deadline_threshold: 0,
 		email: "",
-		currentPassword: "",
-		newPassword: "",
-		confirmPassword: "",
+		new_password: "",
+		update_limit: 0,
 	});
 	const { showSuccess, showError } = useGlobalToast();
 	const [errors, setErrors] = useState<ValidationErrors>({});
-	const [loading, setLoading] = useState<boolean>(false);
+	const [submitting, setSubmitting] = useState<boolean>(false);
+	const { showLoading, hideLoading } = useLoading();
 
 	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
+
+	// Load user settings on component mount
+	useEffect(() => {
+		const loadUserSettings = async () => {
+			if (!token) return;
+
+			showLoading("Loading User Settings...");
+			try {
+				const response = await api.get("users/me", token);
+
+				setFormData(() => ({
+					email: response.email || "",
+					chase_threshold: response.chase_threshold,
+					deadline_threshold: response.deadline_threshold,
+					update_limit: response.update_limit,
+				}));
+			} catch (error) {
+				console.error("Failed to load user settings:", error);
+				showError("Failed to load user settings. Please refresh the page.");
+			} finally {
+				hideLoading();
+			}
+		};
+
+		loadUserSettings().then(() => {});
+	}, [token]);
 
 	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
@@ -53,9 +87,13 @@ const UserSettingsPage: React.FC = () => {
 	const validateForm = (): boolean => {
 		const newErrors: ValidationErrors = {};
 
-		// Current password validation
-		if (!formData.currentPassword) {
-			newErrors.currentPassword = "Current password is required to update email or password";
+		// Check if any changes were made
+		const hasAccountChanges =
+			formData.email !== currentUser?.email || formData.new_password || formData.confirm_password;
+
+		// If making account changes, current password is required
+		if (hasAccountChanges && !formData.current_password) {
+			newErrors.current_password = "Current password is required to update email or password";
 		}
 
 		// Email validation
@@ -64,17 +102,30 @@ const UserSettingsPage: React.FC = () => {
 		}
 
 		// New password validation (only if changing password)
-		if (formData.newPassword || formData.confirmPassword) {
-			if (formData.newPassword.length < MIN_PASSWORD_LENGTH) {
-				newErrors.newPassword = `New password must be at least ${MIN_PASSWORD_LENGTH} characters long`;
+		if (formData.new_password || formData.confirm_password) {
+			if (formData.new_password && formData.new_password.length < MIN_PASSWORD_LENGTH) {
+				newErrors.new_password = `New password must be at least ${MIN_PASSWORD_LENGTH} characters long`;
 			}
-			if (formData.newPassword !== formData.confirmPassword) {
-				newErrors.confirmPassword = "Passwords do not match";
+			if (formData.new_password !== formData.confirm_password) {
+				newErrors.confirm_password = "Passwords do not match";
 			}
 		}
 
-		if (!formData.email && !formData.newPassword && !formData.confirmPassword) {
-			newErrors.email = "Please enter ";
+		// Dashboard settings validation
+		if (
+			formData.chase_threshold !== undefined &&
+			(formData.chase_threshold < 1 || formData.chase_threshold > 365)
+		) {
+			newErrors.chase_threshold = "Chase threshold must be between 1 and 365 days";
+		}
+		if (
+			formData.deadline_threshold !== undefined &&
+			(formData.deadline_threshold < 1 || formData.deadline_threshold > 365)
+		) {
+			newErrors.deadline_threshold = "Deadline threshold must be between 1 and 365 days";
+		}
+		if (formData.update_limit !== undefined && (formData.update_limit < 1 || formData.update_limit > 1000)) {
+			newErrors.update_limit = "Update limit must be between 1 and 1000";
 		}
 
 		setErrors(newErrors);
@@ -88,31 +139,51 @@ const UserSettingsPage: React.FC = () => {
 			return;
 		}
 
-		setLoading(true);
+		setSubmitting(true);
 
 		try {
-			const updateData: { current_password: string; email?: string; password?: string } = {
-				current_password: formData.currentPassword,
-			};
+			const updateData: {
+				current_password?: string;
+				email?: string;
+				password?: string;
+				chase_threshold?: number;
+				deadline_threshold?: number;
+				update_limit?: number;
+			} = {};
 
-			if (formData.email) {
-				updateData.email = formData.email;
+			// Add account changes if current password is provided
+			if (formData.current_password) {
+				updateData.current_password = formData.current_password;
+
+				if (formData.email && formData.email !== currentUser?.email) {
+					updateData.email = formData.email;
+				}
+
+				if (formData.new_password) {
+					updateData.password = formData.new_password;
+				}
 			}
 
-			if (formData.newPassword) {
-				updateData.password = formData.newPassword;
+			// Add dashboard settings
+			if (formData.chase_threshold !== undefined) {
+				updateData.chase_threshold = formData.chase_threshold;
+			}
+			if (formData.deadline_threshold !== undefined) {
+				updateData.deadline_threshold = formData.deadline_threshold;
+			}
+			if (formData.update_limit !== undefined) {
+				updateData.update_limit = formData.update_limit;
 			}
 
 			await api.put("users/me", updateData, token);
 
-			// Success case - the request completed successfully
-			if (formData.newPassword) {
-				setFormData({
-					currentPassword: "",
-					newPassword: "",
-					confirmPassword: "",
-					email: formData.email,
-				});
+			// Success case - clear password fields but keep other data
+			if (formData.new_password) {
+				setFormData((prev) => ({
+					...prev,
+					new_password: "",
+					confirm_password: "",
+				}));
 			}
 			showSuccess("User settings updated successfully.");
 		} catch (error: unknown) {
@@ -125,7 +196,7 @@ const UserSettingsPage: React.FC = () => {
 				showError("An unknown error occurred. Please try again later.");
 			}
 		}
-		setLoading(false);
+		setSubmitting(false);
 	};
 
 	const emailField: FormField = {
@@ -133,11 +204,10 @@ const UserSettingsPage: React.FC = () => {
 		label: "Email Address",
 		type: "text",
 		placeholder: "Enter your email address",
-		autoComplete: "off",
 	};
 
 	const currentPasswordField: FormField = {
-		name: "currentPassword",
+		name: "current_password",
 		type: "password",
 		label: "Current Password",
 		placeholder: "Enter your current password",
@@ -145,17 +215,41 @@ const UserSettingsPage: React.FC = () => {
 	};
 
 	const newPasswordField: FormField = {
-		name: "newPassword",
+		name: "new_password",
 		type: "password",
 		label: "New Password",
 		placeholder: "Enter new password",
 	};
 
 	const confirmPasswordField: FormField = {
-		name: "confirmPassword",
+		name: "confirm_password",
 		type: "password",
 		label: "Confirm New Password",
 		placeholder: "Confirm new password",
+	};
+
+	const chaseThresholdField: FormField = {
+		name: "chase_threshold",
+		type: "number",
+		label: "Chase Threshold (days)",
+		placeholder: "10",
+		helpText: "Jobs below this threshold will be flagged for follow-up",
+	};
+
+	const deadlineThresholdField: FormField = {
+		name: "deadline_threshold",
+		type: "number",
+		label: "Deadline Threshold (days)",
+		placeholder: "3",
+		helpText: "Jobs within this threshold are considered near deadline",
+	};
+
+	const updateLimitField: FormField = {
+		name: "update_limit",
+		type: "number",
+		label: "Update Display Limit",
+		placeholder: "50",
+		helpText: "Maximum number of job updates to show",
 	};
 
 	return (
@@ -177,6 +271,8 @@ const UserSettingsPage: React.FC = () => {
 
 						<Card.Body className="p-0">
 							<Form onSubmit={handleSubmit} className="p-4">
+								{errors.general && <div className="alert alert-danger mb-4">{errors.general}</div>}
+
 								<Col md={12} className="mb-3">
 									{renderFormField(currentPasswordField, formData, handleInputChange, errors)}
 								</Col>
@@ -213,6 +309,32 @@ const UserSettingsPage: React.FC = () => {
 									</Row>
 								</div>
 
+								{/* Dashboard Section */}
+								<div className="settings-section">
+									<div className="section-header mb-4">
+										<h5 className="section-title">
+											<i className="bi bi-speedometer2 me-2 text-primary"></i>
+											Dashboard Settings
+										</h5>
+									</div>
+									<Row>
+										<Col md={4} className="mb-3">
+											{renderFormField(chaseThresholdField, formData, handleInputChange, errors)}
+										</Col>
+										<Col md={4} className="mb-3">
+											{renderFormField(
+												deadlineThresholdField,
+												formData,
+												handleInputChange,
+												errors,
+											)}
+										</Col>
+										<Col md={4} className="mb-3">
+											{renderFormField(updateLimitField, formData, handleInputChange, errors)}
+										</Col>
+									</Row>
+								</div>
+
 								{/* Appearance Section */}
 								<div className="settings-section">
 									<div className="section-header mb-4">
@@ -235,14 +357,11 @@ const UserSettingsPage: React.FC = () => {
 									<ActionButton
 										id="confirm-button"
 										type="submit"
-										disabled={
-											loading ||
-											(!formData.email && !formData.newPassword && !formData.confirmPassword)
-										}
-										loading={loading}
+										disabled={submitting}
+										loading={submitting}
 										className="save-button"
 										loadingText="Saving Changes..."
-										defaultText="Save Account Changes"
+										defaultText="Save Changes"
 										defaultIcon="bi bi-check-circle"
 									/>
 								</div>

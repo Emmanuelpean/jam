@@ -45,7 +45,7 @@ class TestAuthenticationPage(BaseTest):
     def set_confirm_password(self, password: str) -> None:
         """Set the confirm password field to the given value"""
 
-        self.get_element("confirmPassword").send_keys(password)
+        self.get_element("confirm_password").send_keys(password)
 
     def confirm(self) -> None:
         """Confirm the form submission"""
@@ -82,7 +82,7 @@ class TestAuthenticationPage(BaseTest):
     def assert_confirm_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("confirmPassword-", error_message)
+        self._assert_message("confirm_password-", error_message)
 
     def assert_accept_terms_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
