@@ -42,3 +42,8 @@ app.include_router(eis_routers.eis_servicelog_router)
 # Authentification router
 app.include_router(user.user_router)
 app.include_router(auth.router)
+
+
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the JAM API"}
