@@ -9,18 +9,7 @@ import { Errors, renderFormField, SyntheticEvent } from "../../components/render
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { FormField } from "../../components/rendering/form/FormRenders";
-
-interface FormData {
-	email: string;
-	password: string;
-	confirmPassword: string;
-}
-
-interface AuthResult {
-	success: boolean;
-	status?: number;
-	error?: string | object;
-}
+import { FormData, AuthResponse } from "../../contexts/AuthContext";
 
 function AuthForm(): JSX.Element {
 	const [isLogin, setIsLogin] = useState<boolean>(true);
@@ -125,6 +114,26 @@ function AuthForm(): JSX.Element {
 		return errors;
 	};
 
+	const handleAuthResponse = (result: AuthResponse, isLoginAction: boolean): void => {
+		if (result.success) {
+			if (isLoginAction) {
+				navigate("/dashboard");
+			} else {
+				// Registration successful
+				setIsLogin(true);
+				resetForm();
+				window.history.replaceState(null, "", "/login");
+				showSuccess("Account created successfully! You can now log in.", "Registration Successful");
+			}
+		} else {
+			// Use centralized error messages from AuthContext
+			const title = isLoginAction ? "Login Failed" : "Registration Failed";
+			const message = result.error || "An unknown error occurred";
+			showError(message, title);
+			console.log(result.error);
+		}
+	};
+
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
 		e.preventDefault();
 
@@ -139,47 +148,21 @@ function AuthForm(): JSX.Element {
 		setLoading(true);
 
 		try {
-			if (isLogin) {
-				const result: AuthResult = await login(formData.email, formData.password);
-				if (result.success) {
-					navigate("/dashboard");
-				} else {
-					// Add null check for result.status
-					if (result.status && [404, 403].includes(result.status)) {
-						showError("Incorrect email or password", "Login Failed");
-					} else {
-						showError("Failed to login. An unknown error occurred", "Login Failed");
-					}
-				}
-			} else {
-				const result: AuthResult = await register(formData.email, formData.password);
-				if (result.success) {
-					setIsLogin(true);
-					resetForm();
-					window.history.replaceState(null, "", "/login");
-					showSuccess("Account created successfully! You can now log in.", "Registration Successful");
-				} else if (result.status === 400) {
-					showError("Email already registered", "Registration Failed");
-				} else if (result.status === 401)
-            {showError("Sorry, you are not allowed to sign up for now.")}
-            else {
-					const errorMessage =
-						typeof result.error === "object"
-							? JSON.stringify(result.error)
-							: result.error || "Registration failed";
-					showError(errorMessage, "Registration Error");
-				}
-			}
-		} catch (error) {
-			showError(
-				isLogin
-					? "Failed to login. An unknown error occurred"
-					: "Failed to create an account. An unknown error occurred",
-				isLogin ? "Login Error" : "Registration Error",
-			);
-		}
+			const result: AuthResponse = isLogin
+				? await login(formData.email, formData.password)
+				: await register(formData.email, formData.password);
 
-		setLoading(false);
+			handleAuthResponse(result, isLogin);
+		} catch (error) {
+			// Fallback error handling for unexpected errors
+			const title = isLogin ? "Login Error" : "Registration Error";
+			const message = isLogin
+				? "Failed to login. An unknown error occurred"
+				: "Failed to create an account. An unknown error occurred";
+			showError(message, title);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const handleTermsCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -207,7 +190,7 @@ function AuthForm(): JSX.Element {
 		icon: "bi bi-lock-fill",
 		placeholder: "Enter your password",
 		autoComplete: isLogin ? "current-password" : "new-password",
-		helpText: !isLogin ? "Password must be at least 8 characters long" : null,
+		helpText: !isLogin ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` : null,
 	};
 
 	const confirmPasswordField: FormField = {

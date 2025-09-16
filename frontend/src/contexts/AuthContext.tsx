@@ -1,39 +1,82 @@
-import React, { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../services/Api";
-import { UserData, Response } from "../services/Schemas";
+import { authApi, ApiError } from "../services/Api";
+import { UserData } from "../services/Schemas";
 
-interface CurrentUser extends UserData {
+export interface CurrentUser extends UserData {
 	isLoggedIn: boolean;
 }
 
-interface LoginResponse extends Response {
+export interface AuthResponse {
+	success: boolean;
+	status?: number;
+	error?: string;
+	userMessage?: string;
+}
+
+export interface LoginResponse {
 	access_token?: string;
 }
 
-// Define the auth context value type
-interface AuthContextType {
+export interface AuthContextType {
 	currentUser: CurrentUser | null;
 	token: string | null;
 	is_admin: boolean;
-	login: (email: string, password: string) => Promise<Response>;
-	register: (email: string, password: string) => Promise<Response>;
+	login: (email: string, password: string) => Promise<AuthResponse>;
+	register: (email: string, password: string) => Promise<AuthResponse>;
 	logout: () => void;
 	isAuthenticated: boolean;
 }
 
-// Define props for AuthProvider
-interface AuthProviderProps {
+export interface AuthProviderProps {
 	children: ReactNode;
 }
 
-// Define API error type (should match your Api.ts file)
-interface ApiError extends Error {
-	status?: number;
-	data?: any;
+export type AuthAction = "login" | "register";
+
+export interface FormData {
+	email: string;
+	password: string;
+	confirmPassword: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const getErrorMessage = (status: number | undefined, action: AuthAction): string => {
+	switch (status) {
+		case 400:
+			return action === "register" ? "Email already registered" : "Invalid request. Please check your input.";
+		case 401:
+			return action === "register"
+				? "Sorry, you are not allowed to sign up for now."
+				: "Incorrect email or password";
+		case 403:
+			return "Access denied. Please check your credentials.";
+		case 404:
+			return "Incorrect email or password";
+		case 422:
+			return "Invalid input data. Please check your information.";
+		case 500:
+			return "Server error. Please try again later.";
+		default:
+			return action === "register"
+				? "Registration failed. Please try again later."
+				: "Login failed. Please check your credentials and try again.";
+	}
+};
+
+const getUserMessage = (status: number | undefined, action: AuthAction): string => {
+	switch (status) {
+		case 400:
+			return action === "register" ? "Registration Failed" : "Login Failed";
+		case 401:
+		case 403:
+		case 404:
+			return action === "register" ? "Registration Failed" : "Login Failed";
+		default:
+			return action === "register" ? "Registration Error" : "Login Error";
+	}
+};
 
 export function useAuth(): AuthContextType {
 	const context = useContext(AuthContext);
@@ -48,7 +91,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	const [token, setToken] = useState<string | null>(localStorage.getItem("token") || null);
 	const [is_admin, setIsAdmin] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(true);
-	const [userFetched, setUserFetched] = useState<boolean>(false); // Add this flag
+	const [userFetched, setUserFetched] = useState<boolean>(false);
 	const navigate = useNavigate();
 
 	// Memoize fetchUserInfo to prevent unnecessary re-creation
@@ -102,7 +145,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	}, []); // Remove fetchUserInfo from dependencies to prevent re-runs
 
-	const login = async (email: string, password: string): Promise<Response> => {
+	const login = async (email: string, password: string): Promise<AuthResponse> => {
 		try {
 			const data: LoginResponse = await authApi.login(email, password);
 			if (data.access_token) {
@@ -119,14 +162,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			const apiError = error as ApiError;
 			return {
 				success: false,
-				error: "Login failed. Please check your credentials and try again." + apiError.message,
+				error: getErrorMessage(apiError.status, "login"),
+				userMessage: getUserMessage(apiError.status, "login"),
 				status: apiError.status,
 			};
 		}
 	};
 
 	// Register function
-	const register = async (email: string, password: string): Promise<Response> => {
+	const register = async (email: string, password: string): Promise<AuthResponse> => {
 		try {
 			await authApi.register(email, password);
 			return { success: true };
@@ -134,7 +178,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			const apiError = error as ApiError;
 			return {
 				success: false,
-				error: "Registration failed. Please try again later.",
+				error: getErrorMessage(apiError.status, "register"),
+				userMessage: getUserMessage(apiError.status, "register"),
 				status: apiError.status,
 			};
 		}
@@ -146,7 +191,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		setToken(null);
 		setCurrentUser(null);
 		setIsAdmin(false);
-		setUserFetched(false); // Reset the flag
+		setUserFetched(false);
 		navigate("/login");
 	};
 
