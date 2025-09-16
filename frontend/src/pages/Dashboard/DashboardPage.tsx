@@ -360,8 +360,11 @@ const JobSearchDashboard: React.FC = () => {
 						</Card.Body>
 					</Card>
 				</Col>
-				<Col lg={9}>
-					<Card className="shadow-sm border-0">
+				<Col lg={9} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
+					<Card
+						className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
+						style={{ height: "100%", minHeight: 0 }}
+					>
 						<TableCardHeader
 							icon="clock"
 							title="Upcoming Deadlines"
@@ -373,7 +376,7 @@ const JobSearchDashboard: React.FC = () => {
 						</Card.Body>
 					</Card>
 				</Col>
-				<Col lg={3}>
+				<Col lg={3} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
 					<ActivityFeedCard
 						icon="calendar-event"
 						title="Upcoming Interviews"
