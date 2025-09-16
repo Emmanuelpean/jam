@@ -10,13 +10,14 @@
     padding: 8px 12px;
     border-radius: 6px;
     font-size: 14px;
-    white-space: nowrap;
-    z-index: 1151;
+    white-space: normal;
+    z-index: 9999;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     pointer-events: none;
+    max-width: 360px;
+    word-break: break-word;
 }
 
-/* Positioning classes */
 .help-tooltip-right {
     left: calc(100% + 8px);
     top: 50%;

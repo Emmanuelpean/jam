@@ -29,6 +29,6 @@
 * [ ] Update the table data when accordion table data are changed
 * [ ] Add guided tour for new users
 * [ ] Prevent non admin from accessing the settings and user management page
-* [ ] Add a "Upcoming Interviews" section in the dashboard + 
+* [X] Add a "Upcoming Interviews" section in the dashboard
 * [X] table of upcoming deadlines
 * [ ] Fix help bubbles clipping in the user setting page
