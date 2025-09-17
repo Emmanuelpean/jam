@@ -33,6 +33,7 @@
 * [X] table of upcoming deadlines
 * [X] Fix help bubbles clipping in the user setting page
 * [ ] Add missing test cases
+* [ ] Review T&Cs
 
 ### Know Issues
 * [ ] Modals darken when a help bubble is displayed.

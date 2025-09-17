@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { api } from "../../services/Api";
+import { api, ApiError } from "../../services/Api";
 import { THEMES } from "../../utils/Theme";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
@@ -11,7 +11,6 @@ import { findByKey } from "../../utils/Utils";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { FormField } from "../../components/rendering/form/FormRenders";
 import { ValidationErrors } from "../../components/modals/GenericModal/GenericModal";
-import { ApiError } from "../../services/Api";
 import { useLoading } from "../../contexts/LoadingContext";
 
 interface FormData {
@@ -254,122 +253,112 @@ const UserSettingsPage: React.FC = () => {
 
 	return (
 		<div className="settings-wrapper">
-			<Row className="justify-content-center">
-				<Col xl={6} lg={8} md={10}>
-					<Card className="settings-card border-0 shadow-sm">
-						<Card.Header className="settings-header border-0 p-0">
-							<div className="d-flex align-items-center p-4">
-								<div className="header-icon-wrapper me-3">
-									<i className={`bi ${getTableIcon("Users")}`}></i>
-								</div>
-								<div>
-									<h4 className="mb-0 fw-bold text-dark">User Settings</h4>
-									<small className="text-muted">Manage your account preferences</small>
-								</div>
+			<Card className="settings-card border-0 shadow-sm">
+				<Card.Header className="settings-header border-0 p-0">
+					<div className="d-flex align-items-center p-4">
+						<div className="header-icon-wrapper me-3">
+							<i className={`bi ${getTableIcon("Users")}`}></i>
+						</div>
+						<div>
+							<h4 className="mb-0 fw-bold text-dark">User Settings</h4>
+							<small className="text-muted">Manage your account preferences</small>
+						</div>
+					</div>
+				</Card.Header>
+
+				<Card.Body className="p-0">
+					<Form onSubmit={handleSubmit} className="p-4">
+						{errors.general && <div className="alert alert-danger mb-4">{errors.general}</div>}
+
+						<Col md={12} className="mb-3">
+							{renderFormField(currentPasswordField, formData, handleInputChange, errors)}
+						</Col>
+
+						{/* Account Settings Section */}
+						<div className="settings-section">
+							<div className="section-header mb-4">
+								<h5 className="section-title">
+									<i className="bi bi-envelope me-2 text-primary"></i>
+									Account Settings
+								</h5>
 							</div>
-						</Card.Header>
+							{renderFormField(emailField, formData, handleInputChange, errors)}
+						</div>
 
-						<Card.Body className="p-0">
-							<Form onSubmit={handleSubmit} className="p-4">
-								{errors.general && <div className="alert alert-danger mb-4">{errors.general}</div>}
+						{/* Security Section */}
+						<div className="settings-section">
+							<div className="section-header mb-4">
+								<h5 className="section-title">
+									<i className="bi bi-shield-lock me-2 text-primary"></i>
+									Security
+								</h5>
+							</div>
 
-								<Col md={12} className="mb-3">
-									{renderFormField(currentPasswordField, formData, handleInputChange, errors)}
+							<div className="password-hint mb-4"></div>
+
+							<Row>
+								<Col md={6} className="mb-3">
+									{renderFormField(newPasswordField, formData, handleInputChange, errors)}
 								</Col>
+								<Col md={6} className="mb-3">
+									{renderFormField(confirmPasswordField, formData, handleInputChange, errors)}
+								</Col>
+							</Row>
+						</div>
 
-								{/* Account Settings Section */}
-								<div className="settings-section">
-									<div className="section-header mb-4">
-										<h5 className="section-title">
-											<i className="bi bi-envelope me-2 text-primary"></i>
-											Account Settings
-										</h5>
-									</div>
-									{renderFormField(emailField, formData, handleInputChange, errors)}
-								</div>
+						{/* Dashboard Section */}
+						<div className="settings-section">
+							<div className="section-header mb-4">
+								<h5 className="section-title">
+									<i className="bi bi-speedometer2 me-2 text-primary"></i>
+									Dashboard Settings
+								</h5>
+							</div>
+							<Row>
+								<Col md={4} className="mb-3">
+									{renderFormField(chaseThresholdField, formData, handleInputChange, errors)}
+								</Col>
+								<Col md={4} className="mb-3">
+									{renderFormField(deadlineThresholdField, formData, handleInputChange, errors)}
+								</Col>
+								<Col md={4} className="mb-3">
+									{renderFormField(updateLimitField, formData, handleInputChange, errors)}
+								</Col>
+							</Row>
+						</div>
 
-								{/* Security Section */}
-								<div className="settings-section">
-									<div className="section-header mb-4">
-										<h5 className="section-title">
-											<i className="bi bi-shield-lock me-2 text-primary"></i>
-											Security
-										</h5>
-									</div>
+						{/* Appearance Section */}
+						<div className="settings-section">
+							<div className="section-header mb-4">
+								<h5 className="section-title">
+									<i className="bi bi-palette me-2 text-primary"></i>
+									Appearance
+								</h5>
+							</div>
 
-									<div className="password-hint mb-4"></div>
+							<div className="form-group-enhanced">
+								<p className="form-label-enhanced" id="theme-hint">
+									{findByKey(THEMES, currentUser?.theme)?.name} is not your favourite flavour of JAM?!
+									You can easily pick another flavour by clicking on the JAM logo in the sidebar.
+								</p>
+							</div>
+						</div>
 
-									<Row>
-										<Col md={6} className="mb-3">
-											{renderFormField(newPasswordField, formData, handleInputChange, errors)}
-										</Col>
-										<Col md={6} className="mb-3">
-											{renderFormField(confirmPasswordField, formData, handleInputChange, errors)}
-										</Col>
-									</Row>
-								</div>
-
-								{/* Dashboard Section */}
-								<div className="settings-section">
-									<div className="section-header mb-4">
-										<h5 className="section-title">
-											<i className="bi bi-speedometer2 me-2 text-primary"></i>
-											Dashboard Settings
-										</h5>
-									</div>
-									<Row>
-										<Col md={4} className="mb-3">
-											{renderFormField(chaseThresholdField, formData, handleInputChange, errors)}
-										</Col>
-										<Col md={4} className="mb-3">
-											{renderFormField(
-												deadlineThresholdField,
-												formData,
-												handleInputChange,
-												errors,
-											)}
-										</Col>
-										<Col md={4} className="mb-3">
-											{renderFormField(updateLimitField, formData, handleInputChange, errors)}
-										</Col>
-									</Row>
-								</div>
-
-								{/* Appearance Section */}
-								<div className="settings-section">
-									<div className="section-header mb-4">
-										<h5 className="section-title">
-											<i className="bi bi-palette me-2 text-primary"></i>
-											Appearance
-										</h5>
-									</div>
-
-									<div className="form-group-enhanced">
-										<p className="form-label-enhanced" id="theme-hint">
-											{findByKey(THEMES, currentUser?.theme)?.name} is not your favourite flavour
-											of JAM?! You can easily pick another flavour by clicking on the JAM logo in
-											the sidebar.
-										</p>
-									</div>
-								</div>
-
-								<div className="settings-actions">
-									<ActionButton
-										id="confirm-button"
-										type="submit"
-										disabled={submitting}
-										loading={submitting}
-										className="save-button"
-										loadingText="Saving Changes..."
-										defaultText="Save Changes"
-										defaultIcon="bi bi-check-circle"
-									/>
-								</div>
-							</Form>
-						</Card.Body>
-					</Card>
-				</Col>
-			</Row>
+						<div className="settings-actions">
+							<ActionButton
+								id="confirm-button"
+								type="submit"
+								disabled={submitting}
+								loading={submitting}
+								className="save-button"
+								loadingText="Saving Changes..."
+								defaultText="Save Changes"
+								defaultIcon="bi bi-check-circle"
+							/>
+						</div>
+					</Form>
+				</Card.Body>
+			</Card>
 		</div>
 	);
 };

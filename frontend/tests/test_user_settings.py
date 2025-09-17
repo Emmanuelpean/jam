@@ -1,3 +1,5 @@
+import time
+
 from app.utils import verify_password
 from conftest import models, BaseTest
 
@@ -43,6 +45,24 @@ class TestUserSettingsPage(BaseTest):
 
         return self.get_element("theme-hint")
 
+    @property
+    def chase_threshold(self):
+        """Get the chase threshold input"""
+
+        return self.get_element("chase_threshold")
+
+    @property
+    def deadline_threshold(self):
+        """Get the deadline threshold input"""
+
+        return self.get_element("deadline_threshold")
+
+    @property
+    def update_limit(self):
+        """Get the update limit input"""
+
+        return self.get_element("update_limit")
+
     def confirm(self):
         """Confirm the form submission"""
 
@@ -84,11 +104,13 @@ class TestUserSettingsPage(BaseTest):
 
         return self.db.query(models.User).filter(models.User.id == self.user.id).first()
 
+    # ------------------------------------------------- UPDATING EMAIL -------------------------------------------------
+
     def test_no_password(self):
         """Test updating email without current password"""
 
         self.set_text(self.current_password, "")
-        self.set_text(self.email, self.user.email)
+        self.set_text(self.email, "test@test.com")
         self.confirm()
         self.assert_password_error_message("Current password is required to update email or password")
 
@@ -96,11 +118,9 @@ class TestUserSettingsPage(BaseTest):
         """Test updating email without current password"""
 
         self.set_text(self.current_password, "wrong")
-        self.set_text(self.email, self.user.email)
+        self.set_text(self.email, "test@test.com")
         self.confirm()
         self.assert_toast("Current password is incorrect. Please try again.")
-
-    # ------------------------------------------------- UPDATING EMAIL -------------------------------------------------
 
     def test_change_email_success(self, test_users) -> None:
         """Test changing the email address"""
@@ -108,7 +128,7 @@ class TestUserSettingsPage(BaseTest):
         self.set_text(self.current_password, test_users[1].password)
         self.set_text(self.email, "newemail@email.com")
         self.confirm()
-        self.assert_toast("User data updated successfully.")
+        self.assert_toast("User settings updated successfully.")
         assert self.db_user.email == "newemail@email.com"
 
     def test_change_email_already_exist(self, test_users) -> None:
@@ -138,7 +158,7 @@ class TestUserSettingsPage(BaseTest):
         self.set_text(self.new_password, "newpassword")
         self.set_text(self.confirm_password, "newpassword")
         self.confirm()
-        self.assert_toast("User data updated successfully.")
+        self.assert_toast("User settings updated successfully.")
         assert verify_password("newpassword", self.db_user.password)
 
     def test_change_password_invalid(self, test_users) -> None:
@@ -170,3 +190,23 @@ class TestUserSettingsPage(BaseTest):
             "Mixed Berry is not your favourite flavour of JAM?! You can easily pick "
             "another flavour by clicking on the JAM logo in the sidebar."
         )
+
+    # ----------------------------------------------- DASHBOARD SETTINGS -----------------------------------------------
+
+    def test_dashboard_settings(self) -> None:
+        """Test changing the dashboard settings"""
+
+        print(self.db_user)
+        assert self.db_user.chase_threshold == 30
+        assert self.db_user.deadline_threshold == 30
+        assert self.db_user.update_limit == 10
+
+        self.set_text(self.chase_threshold, "100")
+        self.set_text(self.deadline_threshold, "101")
+        self.set_text(self.update_limit, "102")
+        self.confirm()
+        time.sleep(0.1)
+
+        assert self.db_user.chase_threshold == 100
+        assert self.db_user.deadline_threshold == 101
+        assert self.db_user.update_limit == 102

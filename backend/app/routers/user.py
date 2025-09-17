@@ -8,6 +8,14 @@ from app import utils, models, oauth2, database, schemas
 user_router = APIRouter(prefix="/users", tags=["users"])
 
 
+def assert_admin(user: models.User) -> None:
+    """Check if the user is an admin.
+    :param user: The user to check."""
+
+    if not user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
+
+
 @user_router.get("/", response_model=list[schemas.UserOut])
 def get_all_users(
     request: Request,
@@ -20,8 +28,7 @@ def get_all_users(
     :param current_user: Authenticated user.
     :return: List of entries."""
 
-    if not current_user.is_admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
+    assert_admin(current_user)
 
     # noinspection PyTypeChecker
     query = db.query(models.User)
@@ -78,8 +85,7 @@ def get_one_user(
 ):
     """Get a user by ID."""
 
-    if not current_user.is_admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
+    assert_admin(current_user)
 
     # noinspection PyTypeChecker
     user = db.query(models.User).filter(models.User.id == entry_id).first()
@@ -99,7 +105,38 @@ def update_current_user_profile(
     :param current_user: The current authenticated user.
     :param db: The database session."""
 
-    return update_user(current_user.id, user_update, current_user, db)
+    user_update = user_update.model_dump(exclude_defaults=True)
+
+    # Hash password if it's being updated
+    if "password" in user_update:
+        user_update["password"] = utils.hash_password(user_update["password"])
+
+    # Determine if the user is updating the password or email
+    requires_password_check = "password" in user_update or "email" in user_update
+
+    # Get the user record to update
+    # noinspection PyTypeChecker
+    user_db = db.query(models.User).filter(models.User.id == current_user.id).first()
+    current_password = user_update.get("current_password", "")
+
+    # Update password/email
+    if requires_password_check and not utils.verify_password(current_password, user_db.password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="The current password is required")
+
+    # Validate email
+    # noinspection PyTypeChecker
+    other_users = db.query(models.User).filter(models.User.id != current_user.id).all()
+    emails = [u.email for u in other_users]
+    if "email" in user_update and user_update["email"] in emails:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
+    # Update the user record
+    for field, value in user_update.items():
+        setattr(user_db, field, value)
+
+    db.commit()
+    db.refresh(user_db)
+    return user_db
 
 
 @user_router.put("/{entry_id}", response_model=schemas.UserOut)
@@ -111,20 +148,9 @@ def update_user(
 ):
     """Update a user by ID."""
 
-    # Allow only admins or the matching user to update the data
-    if not (current_user.is_admin or current_user.id == entry_id):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
+    assert_admin(current_user)
 
     user_update = user_update.model_dump(exclude_defaults=True)
-
-    # Validate theme if provided
-    if "theme" in user_update:
-        valid_themes = ["strawberry", "blueberry", "raspberry", "mixed-berry", "forest-berry", "blackberry"]
-        if user_update["theme"] not in valid_themes:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid theme. Must be one of: {', '.join(valid_themes)}",
-            )
 
     # Hash password if it's being updated
     if "password" in user_update:
@@ -133,15 +159,11 @@ def update_user(
     # Get the user record to update
     # noinspection PyTypeChecker
     user_db = db.query(models.User).filter(models.User.id == entry_id).first()
-    if not current_user.is_admin and not utils.verify_password(
-        user_update.get("current_password", ""), user_db.password
-    ):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
 
     # Validate email
     # noinspection PyTypeChecker
-    users = db.query(models.User).filter(models.User.id != entry_id).all()
-    emails = [u.email for u in users]
+    other_users = db.query(models.User).filter(models.User.id != entry_id).all()
+    emails = [u.email for u in other_users]
     if "email" in user_update and user_update["email"] in emails:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 

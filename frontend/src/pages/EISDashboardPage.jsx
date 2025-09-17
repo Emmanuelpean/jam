@@ -16,7 +16,7 @@ const TIME_RANGES = [
 ];
 
 const ServiceLogDashboard = () => {
-	const { token, is_admin } = useAuth();
+	const { token } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
 	const [durationData, setDurationData] = useState([]);
 	const [scrapingData, setScrapingData] = useState([]);
@@ -31,13 +31,9 @@ const ServiceLogDashboard = () => {
 	const [modalLoading, setModalLoading] = useState(false);
 
 	useEffect(() => {
-		if (!is_admin) {
-			setError("Access denied: Admin privileges required");
-			return;
-		}
 		fetchServiceLogData().then(() => null);
 		fetchRecentLogs().then(() => null);
-	}, [token, is_admin, timeRange]);
+	}, [token, timeRange]);
 
 	const fetchServiceLogData = async () => {
 		try {
@@ -224,17 +220,6 @@ const ServiceLogDashboard = () => {
 		if (isFailed) return "Failed";
 		return "Pending";
 	};
-
-	if (!is_admin) {
-		return (
-			<Container className="mt-4">
-				<div className="alert alert-danger border-0 shadow-sm" role="alert">
-					<i className="bi bi-shield-x me-2"></i>
-					Access denied: Admin privileges required to view service logs
-				</div>
-			</Container>
-		);
-	}
 
 	if (error) {
 		return (
