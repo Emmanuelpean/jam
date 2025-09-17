@@ -16,6 +16,7 @@ from fastapi import status
 from requests import Response
 from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
+import os
 
 from app import models, database, schemas
 from app.eis import models as eis_models
@@ -196,6 +197,16 @@ def test_settings(session) -> list[models.Setting]:
     """Create test settings data"""
 
     return create_settings(session)
+
+
+def open_file(filepath: str) -> str:
+    """Helper function to open a text file from the resources directory.
+    :param filepath: The name of the file located in the resources directory"""
+
+    base_dir = os.path.dirname(__file__)  # directory of this test file
+    filepath = os.path.join(base_dir, "resources", filepath)
+    with open(filepath, "r") as ofile:
+        return ofile.read()
 
 
 class CRUDTestBase:

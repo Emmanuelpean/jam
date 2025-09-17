@@ -1,0 +1,71 @@
+name: Test and Deploy
+
+on:
+  push:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    environment:
+      name: production
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Update pip and install dependencies
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: | 
+          python -m pip install --upgrade pip
+          python -m pip install .[dev]
+
+      - name: Run Tests with Pytest and Coverage
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: |
+          coverage run -m pytest backend --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
+
+      - name: Generate badges and coverage
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: |
+          genbadge tests --input-file=reports/tests/tests.xml --output-file=reports/tests/tests-badge.svg
+          coverage html
+          coverage xml
+          genbadge coverage --output-file=reports/coverage/coverage-badge.svg
+          coverage html
+
+      - name: Commit and push badge
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add -f reports/
+          git commit -m "Added reports"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.PYTEST_COVERAGE_COMMENT }}
+
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /home/my_apps/scripts/
+            ./deploy_jam.sh

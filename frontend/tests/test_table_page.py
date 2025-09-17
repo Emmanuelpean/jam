@@ -1,7 +1,6 @@
 """Test the main pages of JAM"""
 
 import time
-from datetime import datetime
 
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
@@ -185,6 +184,13 @@ class TestTablePage(BaseTest):
 
         return self.get_element("edit-button")
 
+    def set_page_item_select(self, value):
+        """Set the number of items to display per page
+        :param value: Value to select (e.g. "20", "40")"""
+
+        if len(self.test_entries) > 20:
+            Select(self.get_element("page-items-select")).select_by_value(value)
+
     # ---------------------------------------------------- UTILITIES ---------------------------------------------------
 
     @property
@@ -203,7 +209,7 @@ class TestTablePage(BaseTest):
         assert len(self.table_rows) == min([20, len(entries)]), "The table rows should match the entries"
 
         # Increase to 40
-        Select(self.get_element("page-items-select")).select_by_value("40")
+        self.set_page_item_select("40")
         self.wait_for_table_load()
         assert len(self.table_rows) == min([40, len(entries)]), "The table rows should match the entries"
 
@@ -255,7 +261,7 @@ class TestTablePage(BaseTest):
     def test_add_valid_entry(self) -> None:
         """Test adding a new entry"""
 
-        Select(self.get_element("page-items-select")).select_by_value("100")
+        self.set_page_item_select("100")
         values = generate_entry_combinations(self.test_data, self.required_fields, self.duplicate_fields)
 
         for combination in values:
@@ -317,7 +323,7 @@ class TestTablePage(BaseTest):
     def test_edit_entry_through_view_modal(self) -> None:
         """Test editing an entry through the view modal's edit button"""
 
-        Select(self.get_element("page-items-select")).select_by_value("100")
+        self.set_page_item_select("100")
         initial_count = len(self.table_rows)
         self.table_row(self.test_entry.id).click()
         self.wait_for_view_modal()
@@ -331,7 +337,7 @@ class TestTablePage(BaseTest):
     def test_edit_entry_through_right_click_context_menu(self) -> None:
         """Test editing an entry through right-click context menu"""
 
-        Select(self.get_element("page-items-select")).select_by_value("100")
+        self.set_page_item_select("100")
         initial_count = len(self.table_rows)
         self.context_menu(self.test_entry.id, "edit")
         self._fill_modal(**self.test_data)
@@ -411,7 +417,7 @@ class TestTablePage(BaseTest):
         modal = self.wait_for_view_modal("tag")
 
         # Verify modal contains the entry information
-        expected = f"Tag Details\n{entry.name}\nClose\nEdit"
+        expected = f"Tag Details\n{entry.name}\nJobs\n({len(entry.jobs)})\nClose\nEdit"
         assert modal.text == expected
 
         # Close modal
@@ -424,7 +430,8 @@ class TestTablePage(BaseTest):
         modal = self.wait_for_view_modal("aggregator")
 
         # Verify modal contains the entry information
-        expected = f"Aggregator Details\n{entry.name}\nWebsite\nlinkedin.com/jobs\nClose\nEdit"
+        expected = (f"Aggregator Details\n{entry.name}\nWebsite\n{entry.url.replace('https://', '')}\nJobs\n({len(entry.jobs)})"
+                    f"\nJob Applications\n({len(entry.job_applications)})\nClose\nEdit")
         assert modal.text == expected
 
         # Close modal
@@ -435,16 +442,15 @@ class TestTablePage(BaseTest):
         """Helper method to test the view modal for a location entry"""
 
         modal = self.wait_for_view_modal("location")
-
-        self.wait.until(lambda d: "location shown" in modal.text, message="Waiting for map data to load in modal")
+        self.wait.until(lambda d: "Finding location on map..." not in modal.text)
 
         # Verify modal contains the entry information
-        date = datetime.strftime(entry.created_at, "%d/%m/%Y")
         expected = (
             f"Location Details\nCity\n{entry.city}\nPostcode\n{entry.postcode}"
             f"\nCountry\n{entry.country}\n"
-            f"Location on Map\n+\n−\nLeaflet | © OpenStreetMap contributors © CARTO\n"
-            f"1 of 1 location shown\nClose\nEdit"
+            f"Location on Map\n+\n−\nLeaflet | © OpenStreetMap\n"
+            f"Jobs\n({len(entry.jobs)})\nInterviews\n({len(entry.interviews)})\n"
+            f"Close\nEdit"
         )
         assert modal.text == expected
 
@@ -458,10 +464,9 @@ class TestTablePage(BaseTest):
         modal = self.wait_for_view_modal("company")
 
         # Verify modal contains the entry information
-        date = datetime.strftime(entry.created_at, "%d/%m/%Y")
         expected = (
             f"Company Details\n{entry.name}\nWebsite\n{entry.url.replace("https://", "")}"
-            f"\nDescription\n{entry.description}\nClose\nEdit"
+            f"\nDescription\n{entry.description}\nJobs\n({len(entry.jobs)})\nPersons\n({len(entry.persons)})\nClose\nEdit"
         )
         assert modal.text == expected
 
@@ -473,12 +478,10 @@ class TestTablePage(BaseTest):
         """Helper method to test the view modal for a person entry"""
 
         modal = self.wait_for_view_modal("person")
-        date = datetime.strftime(entry.created_at, "%d/%m/%Y")
         expected = (
-            f"Person Details\n"
-            f"{entry.name}\n"
+            f"Person Details\n{entry.name}\n"
             f"Company\n{entry.company.name.upper()}\nRole\n{entry.role}\n"
-            f"Email\n{entry.email}\nPhone{entry.phone}\nLinkedIn Profile\nProfile\nClose\nEdit"
+            f"Email\n{entry.email}\nPhone\n{entry.phone}\nLinkedIn Profile\nProfile\nClose\nEdit"
         )
         assert modal.text == expected
 

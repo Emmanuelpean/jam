@@ -9,7 +9,7 @@ from app.eis import schemas
 from app.eis.email_scraper import clean_email_address, get_user_id_from_email, GmailScraper
 from app.eis.job_scraper import extract_indeed_jobs_from_email
 from app.eis.models import JobAlertEmail, ScrapedJob
-from eis.schemas import JobAlertEmailCreate
+from tests.conftest import open_file
 from tests.eis.test_job_scraper import MockLinkedinJobScraper, MockIndeedJobScraper
 
 
@@ -91,16 +91,15 @@ def create_email_data(
     :param platform: platform name
     :param user_index: user index"""
 
-    with open(f"resources/{filename}.txt") as ofile:
-        email_record = schemas.JobAlertEmailCreate(
-            external_email_id=f"{filename}_{platform}_{user_index}",
-            subject="Subject",
-            sender=test_users[user_index].email,
-            date_received=datetime.datetime.now(),
-            platform=platform,
-            body=ofile.read(),
-        )
-    return email_record
+    ofile = open_file(f"{filename}.txt")
+    return schemas.JobAlertEmailCreate(
+        external_email_id=f"{filename}_{platform}_{user_index}",
+        subject="Subject",
+        sender=test_users[user_index].email,
+        date_received=datetime.datetime.now(),
+        platform=platform,
+        body=ofile,
+    )
 
 
 # Job ids extracted from the linkedin email body
@@ -142,7 +141,7 @@ INDEED_JOB_IDS = [
 
 
 @pytest.fixture
-def linkedin_email_data(test_users) -> tuple[JobAlertEmailCreate, list[str]]:
+def linkedin_email_data(test_users) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
     """Create a LinkedIn job alert email record for testing."""
 
     return create_email_data(test_users, "linkedin_email", "linkedin", 0), LINKEDIN_JOB_IDS
