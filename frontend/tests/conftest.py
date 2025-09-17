@@ -373,7 +373,7 @@ def api_base_url(test_backend_server) -> str:
 def frontend_base_url(test_frontend_server) -> str:
     """Base URL for the frontend"""
 
-    return test_frontend_server
+    return test_frontend_server + "/jam"
 
 
 def contiguous_subdicts(dictionary: dict) -> list[dict]:

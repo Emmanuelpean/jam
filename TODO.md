@@ -31,4 +31,8 @@
 * [ ] Prevent non admin from accessing the settings and user management page
 * [X] Add a "Upcoming Interviews" section in the dashboard
 * [X] table of upcoming deadlines
-* [ ] Fix help bubbles clipping in the user setting page
+* [X] Fix help bubbles clipping in the user setting page
+* [ ] Add missing test cases
+
+### Know Issues
+* [ ] Modals darken when a help bubble is displayed.

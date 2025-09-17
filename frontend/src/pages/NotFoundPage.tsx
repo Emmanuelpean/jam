@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-const NotFound = () => {
+export const NotAllowed = (errorCode: string, errorTitle: string, errorMessage: string) => {
 	const navigate = useNavigate();
 
 	const goBack = () => {
@@ -15,12 +15,9 @@ const NotFound = () => {
 		>
 			<div className="col-12 col-md-8 col-lg-6" style={{ maxWidth: "700px" }}>
 				<div className="error-content">
-					<h1 className="display-1 fw-bold text-primary mb-3">404</h1>
-					<h2 className="h3 mb-3">Oops! Something Is Jamming Our Radars</h2>
-					<p className="lead text-muted mb-4">
-						The page you're looking for might have been removed, had its name changed, or is temporarily
-						unavailable.
-					</p>
+					<h1 className="display-1 fw-bold text-primary mb-3">{errorCode}</h1>
+					<h2 className="h3 mb-3">{errorTitle}</h2>
+					<p className="lead text-muted mb-4">{errorMessage}</p>
 					<div className="d-flex gap-3 justify-content-center flex-wrap">
 						<Link to="/dashboard" className="btn btn-primary">
 							<i className="bi bi-house-fill me-2"></i>
@@ -37,4 +34,18 @@ const NotFound = () => {
 	);
 };
 
-export default NotFound;
+export const NotFoundPage = () => {
+	return NotAllowed(
+		"404",
+		"Oops! Something Is Jamming Our Radars",
+		"The page you're looking for might have been removed, had its name changed, or is temporarily unavailable.",
+	);
+};
+
+export const NotAuthorisedPage = () => {
+	return NotAllowed(
+		"403",
+		"Access Denied: You Shall Not Pass!",
+		"Sorry, you don't have the necessary permissions to access this resource.",
+	);
+};

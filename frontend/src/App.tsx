@@ -1,4 +1,4 @@
-import React, { useState, ReactNode, createContext, JSX } from "react";
+import React, { createContext, JSX, ReactNode, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./pages/Auth/Auth";
@@ -13,7 +13,7 @@ import InterviewsPage from "./pages/InterviewsPage";
 import "./Themes.css";
 import DashboardPage from "./pages/EISDashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
-import NotFoundPage from "./pages/NotFoundPage";
+import { NotAuthorisedPage, NotFoundPage } from "./pages/NotFoundPage";
 import { Sidebar } from "./components/sidebar/Sidebar";
 import JobApplicationUpdatesPage from "./pages/JobApplicationUpdatesPage";
 import JobSearchDashboard from "./pages/Dashboard/DashboardPage";
@@ -76,16 +76,20 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	);
 }
 
-// Define props interface for ProtectedRoute component
 interface ProtectedRouteProps {
 	children: ReactNode;
 }
 
-// Protected route wrapper
 function ProtectedRoute({ children }: ProtectedRouteProps): JSX.Element {
 	const { isAuthenticated } = useAuth();
 
 	return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+}
+
+function AdminProtectedRoute({ children }: ProtectedRouteProps): JSX.Element {
+	const { isAuthenticated, is_admin } = useAuth();
+
+	return isAuthenticated && is_admin ? <>{children}</> : <NotAuthorisedPage />;
 }
 
 function App(): JSX.Element {
@@ -155,9 +159,9 @@ function App(): JSX.Element {
 								<Route
 									path="/eis_dashboard"
 									element={
-										<ProtectedRoute>
+										<AdminProtectedRoute>
 											<DashboardPage />
-										</ProtectedRoute>
+										</AdminProtectedRoute>
 									}
 								/>
 								<Route
@@ -187,9 +191,9 @@ function App(): JSX.Element {
 								<Route
 									path="/users"
 									element={
-										<ProtectedRoute>
+										<AdminProtectedRoute>
 											<UserManagementPage />
-										</ProtectedRoute>
+										</AdminProtectedRoute>
 									}
 								/>
 								<Route
@@ -203,9 +207,9 @@ function App(): JSX.Element {
 								<Route
 									path="/app_settings"
 									element={
-										<ProtectedRoute>
+										<AdminProtectedRoute>
 											<SettingsPage />
-										</ProtectedRoute>
+										</AdminProtectedRoute>
 									}
 								/>
 								<Route path="*" element={<NotFoundPage />} />

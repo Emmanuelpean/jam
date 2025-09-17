@@ -45,7 +45,7 @@ class TestAuthenticationPage(BaseTest):
     def set_confirm_password(self, password: str) -> None:
         """Set the confirm password field to the given value"""
 
-        self.get_element("confirm_password").send_keys(password)
+        self.get_element("confirmPassword").send_keys(password)
 
     def confirm(self) -> None:
         """Confirm the form submission"""
@@ -55,7 +55,7 @@ class TestAuthenticationPage(BaseTest):
     def set_terms(self) -> None:
         """Set the accept terms checkbox to True"""
 
-        self.get_element("accept-terms").click()
+        self.get_element("terms").click()
 
     def _assert_message(self, key: str, message: str) -> None:
         """Assert that the given message is displayed on the page
@@ -82,7 +82,7 @@ class TestAuthenticationPage(BaseTest):
     def assert_confirm_password_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        self._assert_message("confirm_password-", error_message)
+        self._assert_message("confirmPassword-", error_message)
 
     def assert_accept_terms_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
@@ -109,7 +109,8 @@ class TestAuthenticationPage(BaseTest):
 
         self.get_element("switch-mode-button").click()
 
-    # -------------------------------------------------- LOG IN TESTS --------------------------------------------------
+
+class TestLogIn(TestAuthenticationPage):
 
     def test_valid_login(self, test_users) -> None:
         """Test login with valid credentials"""
@@ -181,7 +182,8 @@ class TestAuthenticationPage(BaseTest):
         # Verify error message
         self.assert_password_error_message("Password is required")
 
-    # -------------------------------------------------- SIGN UP TESTS -------------------------------------------------
+
+class TestSignUp(TestAuthenticationPage):
 
     def test_mode_switching_buttons(self) -> None:
         """Test switching between login and register modes using the toggle buttons"""
@@ -328,4 +330,18 @@ class TestAuthenticationPage(BaseTest):
 
         # Verify error message and database
         self.assert_accept_terms_error_message("You must accept the Terms and Conditions to register")
+        assert not self.verify_user_in_database(test_email)
+
+    def test_signup_limited(self, test_settings):
+        """Test signup when registrations are limited"""
+
+        self.go_to_register()
+        test_email, test_password = f"test@test.com", "Test123!"
+        self.set_email(test_email)
+        self.set_password(test_password)
+        self.set_confirm_password(test_password)
+        self.set_terms()
+        self.confirm()
+
+        self.assert_error_message("Sorry, you are not allowed to sign up for now.")
         assert not self.verify_user_in_database(test_email)

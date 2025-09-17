@@ -35,6 +35,7 @@ from tests.utils.create_data import (
     create_scraped_jobs,
     create_service_logs,
     create_job_application_updates,
+    create_settings,
 )
 from tests.utils.seed_database import reset_database
 
@@ -188,6 +189,13 @@ def test_job_application_updates(session, test_jobs) -> list[models.JobApplicati
     """Create test job application update data"""
 
     return create_job_application_updates(session)
+
+
+@pytest.fixture
+def test_settings(session) -> list[models.Setting]:
+    """Create test settings data"""
+
+    return create_settings(session)
 
 
 class CRUDTestBase:

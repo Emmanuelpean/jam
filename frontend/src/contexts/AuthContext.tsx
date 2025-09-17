@@ -51,8 +51,6 @@ const getErrorMessage = (status: number | undefined, action: AuthAction): string
 				? "Sorry, you are not allowed to sign up for now."
 				: "Incorrect email or password";
 		case 403:
-			return "Access denied. Please check your credentials.";
-		case 404:
 			return "Incorrect email or password";
 		case 422:
 			return "Invalid input data. Please check your information.";

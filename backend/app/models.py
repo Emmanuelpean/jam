@@ -89,7 +89,7 @@ class Owned(CommonBase):
 # --------------------------------------------------------- APP --------------------------------------------------------
 
 
-class Settings(CommonBase, Base):
+class Setting(CommonBase, Base):
     """Represents the application settings
 
     Attributes:

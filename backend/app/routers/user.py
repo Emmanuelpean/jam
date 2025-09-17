@@ -164,7 +164,7 @@ def create_user(
     :param db: The database session."""
 
     # noinspection PyTypeChecker
-    settings = db.query(models.Settings).filter(models.Settings.name == "allowlist").all()
+    settings = db.query(models.Setting).filter(models.Setting.name == "allowlist").all()
     if settings:
         emails_allowed = settings[0].value.split(",")
         if user.email not in emails_allowed:
