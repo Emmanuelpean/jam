@@ -13,7 +13,7 @@ const UpcomingDeadlinesTable: React.FC<TableProps> = ({ data = null, columns = [
 		setSortConfig,
 		updateItem,
 		removeItem,
-	} = useProvidedTableData(data, { key: "days_since_last_update", direction: "desc" });
+	} = useProvidedTableData(data, { key: "days_until_deadline", direction: "desc" });
 
 	if (!columns.length) {
 		columns = [

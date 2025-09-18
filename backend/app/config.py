@@ -14,7 +14,6 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
-    signup: str
     min_password_length: int
     max_file_size_mb: int
 
