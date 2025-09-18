@@ -8,7 +8,7 @@ from app.database import engine
 from app.routers import data_tables, user, login, dashboard
 from app.eis import routers as eis_routers
 
-models.Base.metadata.create_all(bind=engine)
+# models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
