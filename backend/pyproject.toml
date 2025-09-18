@@ -9,13 +9,13 @@ license = "MIT"
 requires-python = ">=3.12"
 
 dependencies = [
-    "fastapi[all]==0.116.1",
+    "fastapi[all]==0.116.2",
     "requests==2.32.5",
     "sqlalchemy==2.0.43",
     "httpx==0.28.1",
     "pydantic-settings==2.10.1",
     "psycopg2-binary",
-    "pydantic[email]==2.11.7",
+    "pydantic[email]==2.11.9",
     "python-jose==3.5.0",
     "bcrypt==4.3.0",
     "google-api-python-client==2.179.0",
@@ -28,9 +28,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest==8.4.1",
-    "pytest-cov==6.2.1",
+    "pytest==8.4.2",
+    "pytest-cov==7.0.0",
     "pytest-html==4.1.1",
+    "genbadge[all]==1.1.2",
     "black==25.1.0",
 ]
 
