@@ -20,12 +20,12 @@ jobs:
       SECRET_KEY: ${{secrets.SECRET_KEY}}
       ALGORITHM: ${{secrets.ALGORITHM}}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${{secrets.ACCESS_TOKEN_EXPIRE_MINUTES}}
-      MIN_PASSWORD_LENGTH: 8
-      MAX_FILE_SIZE_MB: 10
+      MIN_PASSWORD_LENGTH: ${{secrets.MIN_PASSWORD_LENGTH}}
+      MAX_FILE_SIZE_MB: ${{secrets.MAX_FILE_SIZE_MB}}
 
     services:
       postgres:
-        image: postgres
+        image: postgres:17
         env:
           POSTGRES_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
           POSTGRES_DB: ${{secrets.DATABASE_NAME}}_test
