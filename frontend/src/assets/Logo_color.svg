@@ -7,7 +7,7 @@
    id="svg18"
    width="669.51593"
    height="913.36749"
-   sodipodi:docname="Logo_color.svg"
+   sodipodi:docname="Logo.svg"
    inkscape:version="1.4 (86a8ad7, 2024-10-11)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -49,22 +49,20 @@
     <!-- Theme-aware gradient -->
     <linearGradient
        id="themeGradient"
-       x1="0%"
-       y1="0%"
-       x2="100%"
-       y2="100%">
+       x1="-2.619919e-08"
+       y1="3.5268098e-08"
+       x2="1.0000001"
+       y2="1.0000001">
       <stop
-         offset="0%"
+         offset="0"
          stop-color="var(--primary-start)"
-         id="stop1" />
+         id="stop1"
+         style="stop-color:#ff0000;stop-opacity:1;" />
       <stop
-         offset="50%"
-         stop-color="var(--primary-mid)"
-         id="stop2" />
-      <stop
-         offset="100%"
+         offset="1"
          stop-color="var(--primary-end)"
-         id="stop3" />
+         id="stop3"
+         style="stop-color:#360000;stop-opacity:1;" />
     </linearGradient>
   </defs>
   <rect

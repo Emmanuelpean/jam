@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/Emmanuelpean/jam/blob/main/frontend/src/assets/Logo.svg" alt="Jam" width="150">
+  <img src="https://github.com/Emmanuelpean/jam/blob/main/frontend/src/assets/Logo_color.svg" alt="Jam" width="150">
 </p>
 
 <h1 align="center">JAM</h1>
@@ -16,14 +16,9 @@
 
 </div>
 
-*Jam* is a user-friendly web app designed to give you a quick look at your data without needing to write a single line 
-of code or spend time reformatting files. It supports a wide range of data file formats and takes care of the behind-
-the-scenes work of reading and processing the data, so you can jump straight to visualising and exploring your results.
-
-The idea came from a simple frustration: too often, valuable time is lost just trying to open and make sense of a data 
-file. This app removes that barrier. Whether you are checking raw instrument output, exploring simulation results, or 
-comparing experimental datasets, it lets you plot and inspect the data in just a few clicks. It is especially handy in 
-fast-paced research environments where quick decisions depend on a fast understanding of the data.
+*Jam* is a user-friendly web app designed to help you manage your jobs, Applications, Interviews, and everything in-between.
+job search can be a time-consuming and tedious process, requiring to keep track of many jobs and applications at the same time. 
+*Jam* aims to make this process easier so that you can get the job of your dreams.
 
 ## Installation
 
