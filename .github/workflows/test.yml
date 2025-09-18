@@ -27,7 +27,7 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
           POSTGRES_DB: ${{secrets.DATABASE_NAME}}_test
         ports:
           - 5432:5432
@@ -39,6 +39,13 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - name: Debug DB environment
+        run: |
+          echo "DATABASE_HOSTNAME=$DATABASE_HOSTNAME"
+          echo "DATABASE_PORT=$DATABASE_PORT"
+          echo "DATABASE_NAME=$DATABASE_NAME"
+          echo "DATABASE_USERNAME=$DATABASE_USERNAME"
+          echo "DATABASE_PASSWORD=$DATABASE_PASSWORD"
 
       - name: Checkout Repository
         uses: actions/checkout@v4
