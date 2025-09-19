@@ -21,7 +21,6 @@
 * [X] Add pound sign in front of salary input
 * [X] Hide system fields in dropdown
 * [X] Fix bug where the location map loading is flashing
-* [ ] The theme shown in the user setting page is not updated when changed in the sidebar.
 * [ ] When deleting an entry through the modal, do not refresh the page, refresh the table.
 * [X] When a job is added, check if the url is unique
 * [X] Fix formatting of multiselect
@@ -34,7 +33,8 @@
 * [X] Fix help bubbles clipping in the user setting page
 * [ ] Add missing test cases
 * [X] Review T&Cs
-* [ ] Add basic data export
+* [X] Add basic data export
 
 ### Know Issues
 * [ ] Modals darken when a help bubble is displayed.
+* [ ] The theme shown in the user setting page is not updated when changed in the sidebar.

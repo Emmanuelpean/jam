@@ -18,7 +18,11 @@
 
 *Jam* is a user-friendly web app designed to help you manage your jobs, Applications, Interviews, and everything in-between.
 job search can be a time-consuming and tedious process, requiring to keep track of many jobs and applications at the same time. 
-*Jam* aims to make this process easier so that you can get the job of your dreams.
+*Jam* aims to make this process easier so that you can get the job of your dreams. *Jam* can:
+<li>Create and manage job application records</li>
+<li>Track interview schedules and outcomes</li>
+<li>Store company and contact information</li>
+<li>Monitor application status, progress, and deadline</li>
 
 ## Installation
 
