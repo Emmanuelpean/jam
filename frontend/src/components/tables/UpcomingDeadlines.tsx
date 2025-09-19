@@ -1,7 +1,7 @@
 import React from "react";
 import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumnRenders";
-import { JobAndApplicationModal } from "../modals/JobAndApplicationModal";
+import { JobModal } from "../modals/JobModal";
 
 const UpcomingDeadlinesTable: React.FC<TableProps> = ({ data = null, columns = [] }) => {
 	const {
@@ -32,7 +32,7 @@ const UpcomingDeadlinesTable: React.FC<TableProps> = ({ data = null, columns = [
 			error={error}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
-			Modal={JobAndApplicationModal}
+			Modal={JobModal}
 			endpoint="jobs"
 			nameKey="name"
 			itemType="Job"

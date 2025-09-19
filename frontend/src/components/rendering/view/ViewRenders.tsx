@@ -7,7 +7,7 @@ import { AggregatorModal } from "../../modals/AggregatorModal";
 import { accessAttribute } from "../../../utils/Utils";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
-import { JobAndApplicationModal } from "../../modals/JobAndApplicationModal";
+import { JobModal } from "../../modals/JobModal";
 import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../maps/LocationMap";
 import {
@@ -100,7 +100,7 @@ const LocationModalManager = createModalManager(LocationModal);
 const CompanyModalManager = createModalManager(CompanyModal);
 const PersonModalManager = createModalManager(PersonModal);
 const KeywordModalManager = createModalManager(KeywordModal);
-const JobAndApplicationModalManager = createModalManager(JobAndApplicationModal);
+const JobAndApplicationModalManager = createModalManager(JobModal);
 const AggregatorModalManager = createModalManager(AggregatorModal);
 
 export const getApplicationStatusBadgeClass = (status: string | undefined): string => {

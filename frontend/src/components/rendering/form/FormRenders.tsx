@@ -9,7 +9,7 @@ import { PersonModal } from "../../modals/PersonModal";
 import { AggregatorModal } from "../../modals/AggregatorModal";
 import { Theme, THEMES } from "../../../utils/Theme";
 import { SelectOption, toSelectOptions } from "../../../utils/Utils";
-import { JobAndApplicationModal } from "../../modals/JobAndApplicationModal";
+import { JobModal } from "../../modals/JobModal";
 import { JobData } from "../../../services/Schemas";
 
 interface UseCountriesReturn {
@@ -302,7 +302,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 	);
 
 	const renderJobModal = (): JSX.Element => (
-		<JobAndApplicationModal
+		<JobModal
 			show={showJobModal}
 			onHide={closeJobModal}
 			data={{}}

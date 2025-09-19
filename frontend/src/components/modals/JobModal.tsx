@@ -11,7 +11,7 @@ interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
 }
 
-export const JobAndApplicationModal: React.FC<JobAndApplicationProps> = ({
+export const JobModal: React.FC<JobAndApplicationProps> = ({
 	show,
 	onHide,
 	data,

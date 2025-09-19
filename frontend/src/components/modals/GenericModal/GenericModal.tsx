@@ -244,7 +244,6 @@ const GenericModal = ({
 		return keys.some((key: string) => {
 			const currentValue: any = formData[key];
 			const originalValue: any = originalFormData[key];
-			console.log(currentValue, originalValue, typeof currentValue, typeof originalValue);
 			return areDifferent(currentValue, originalValue);
 		});
 	};

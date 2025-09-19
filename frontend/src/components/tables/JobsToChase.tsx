@@ -1,7 +1,7 @@
 import React from "react";
 import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumnRenders";
-import { JobAndApplicationModal } from "../modals/JobAndApplicationModal";
+import { JobModal } from "../modals/JobModal";
 import { InterviewModal } from "../modals/InterviewModal";
 
 const JobToChaseTable: React.FC<TableProps> = ({ data = null, columns = [] }) => {
@@ -34,7 +34,7 @@ const JobToChaseTable: React.FC<TableProps> = ({ data = null, columns = [] }) =>
 			error={error}
 			sortConfig={sortConfig}
 			onSort={setSortConfig}
-			Modal={JobAndApplicationModal}
+			Modal={JobModal}
 			endpoint="jobs"
 			nameKey="name"
 			itemType="Job"

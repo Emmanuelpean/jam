@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable";
-import { JobAndApplicationModal } from "../components/modals/JobAndApplicationModal";
+import { JobModal } from "../components/modals/JobModal";
 import { tableColumns } from "../components/rendering/view/TableColumnRenders";
 import { useLoading } from "../contexts/LoadingContext";
 
@@ -54,7 +54,7 @@ const JobsPage = () => {
 				onSearchChange={setSearchTerm}
 				loading={false}
 				error={error}
-				Modal={JobAndApplicationModal}
+				Modal={JobModal}
 				endpoint="jobs"
 				nameKey="title"
 				itemType="Job"
