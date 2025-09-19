@@ -36,7 +36,7 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							Description of Service
 						</h4>
 						<p className="terms-text">
-							Job Application Manager is a web-based application that helps users organize and track their
+							Job Application Manager is a web-based application that helps users organise and track their
 							job applications, interviews, and related career management activities. The Service allows
 							you to:
 						</p>
@@ -44,8 +44,7 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							<li>Create and manage job application records</li>
 							<li>Track interview schedules and outcomes</li>
 							<li>Store company and contact information</li>
-							<li>Monitor application status and progress</li>
-							<li>Generate reports and analytics on your job search</li>
+							<li>Monitor application status, progress, and deadline</li>
 						</ul>
 					</div>
 
@@ -71,9 +70,9 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							<h5 className="terms-subsection-title">3.2 Account Security</h5>
 							<ul className="terms-list">
 								<li>Choose a strong password and keep it secure</li>
-								<li>Notify us immediately of any unauthorized use of your account</li>
+								<li>Notify us immediately of any unauthorised use of your account</li>
 								<li>
-									We are not liable for any loss or damage arising from unauthorized account access
+									We are not liable for any loss or damage arising from unauthorised account access
 								</li>
 							</ul>
 						</div>
@@ -99,11 +98,8 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 						<div className="terms-subsection">
 							<h5 className="terms-subsection-title">4.2 Data Usage</h5>
 							<ul className="terms-list">
-								<li>
-									We will not share your personal job application data with third parties without your
-									consent
-								</li>
-								<li>We may use aggregated, anonymized data for service improvement and analytics</li>
+								<li>We will not share your personal job application data with third parties.</li>
+								<li>We may use aggregated, anonymised data for service improvement and analytics</li>
 								<li>You may export or delete your data at any time</li>
 							</ul>
 						</div>
@@ -117,7 +113,7 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 						<p className="terms-text">You agree NOT to use the Service to:</p>
 						<ul className="terms-list terms-prohibited">
 							<li>Upload malicious code, viruses, or harmful content</li>
-							<li>Attempt to gain unauthorized access to our systems</li>
+							<li>Attempt to gain unauthorised access to our systems</li>
 							<li>Share false, misleading, or inaccurate information</li>
 							<li>Violate any applicable laws or regulations</li>
 							<li>Interfere with other users' use of the Service</li>
@@ -173,18 +169,7 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							Intellectual Property
 						</h4>
 						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">8.1 Our Rights</h5>
-							<ul className="terms-list">
-								<li>
-									The Service, including its design, code, and functionality, is our intellectual
-									property
-								</li>
-								<li>Our trademarks, logos, and brand elements are protected</li>
-							</ul>
-						</div>
-
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">8.2 Your Rights</h5>
+							<h5 className="terms-subsection-title">8.1 Your Rights</h5>
 							<ul className="terms-list">
 								<li>You retain rights to your data and content</li>
 								<li>We grant you a limited license to use the Service for its intended purpose</li>
@@ -256,18 +241,6 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 						<div className="terms-subsection">
 							<h5 className="terms-subsection-title">12.1 Governing Law</h5>
 							<p className="terms-text">These terms are governed by applicable local laws.</p>
-						</div>
-
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">12.2 Dispute Process</h5>
-							<ul className="terms-list">
-								<li>First, contact us to resolve disputes informally</li>
-								<li>
-									If informal resolution fails, disputes will be resolved through appropriate legal
-									channels
-								</li>
-								<li>You retain the right to pursue claims in small claims court where applicable</li>
-							</ul>
 						</div>
 					</div>
 

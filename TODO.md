@@ -28,12 +28,13 @@
 * [ ] Update the table data when interviews/updates are added/deleted/edited
 * [ ] Update the table data when accordion table data are changed
 * [ ] Add guided tour for new users
-* [ ] Prevent non admin from accessing the settings and user management page
+* [X] Prevent non admin from accessing the settings and user management page
 * [X] Add a "Upcoming Interviews" section in the dashboard
 * [X] table of upcoming deadlines
 * [X] Fix help bubbles clipping in the user setting page
 * [ ] Add missing test cases
-* [ ] Review T&Cs
+* [X] Review T&Cs
+* [ ] Add basic data export
 
 ### Know Issues
 * [ ] Modals darken when a help bubble is displayed.
