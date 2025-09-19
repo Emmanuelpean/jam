@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Form, Row } from "react-bootstrap";
+import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { api, ApiError } from "../../services/Api";
+import { api, ApiError, exportApi } from "../../services/Api";
 import { THEMES } from "../../utils/Theme";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
@@ -66,6 +66,16 @@ const UserSettingsPage: React.FC = () => {
 
 		loadUserSettings().then(() => {});
 	}, [token]);
+
+	const downloadJobsExport = async (token: string | null) => {
+		if (!token) return;
+		try {
+			await exportApi.download("jobs_export.csv", token);
+			showSuccess("Data downloaded");
+		} catch (e) {
+			showError("Failed to download data");
+		}
+	};
 
 	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
@@ -344,7 +354,23 @@ const UserSettingsPage: React.FC = () => {
 							</div>
 						</div>
 
+						{/* Download Section */}
+						<div className="settings-section">
+							<div className="section-header mb-4">
+								<h5 className="section-title">
+									<i className="bi bi-palette me-2 text-primary"></i>
+									Download Data
+								</h5>
+							</div>
+
+							<Button className="w-100" onClick={() => downloadJobsExport(token)}>
+								<i className="bi bi-download me-2"></i>
+								Download Data
+							</Button>
+						</div>
+
 						<div className="settings-actions">
+							<div className="horizontal-bar mb-3"></div>
 							<ActionButton
 								id="confirm-button"
 								type="submit"

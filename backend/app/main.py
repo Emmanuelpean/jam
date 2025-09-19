@@ -3,12 +3,8 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import models
-from app.database import engine
-from app.routers import data_tables, user, login, dashboard
+from app.routers import data_tables, user, login, dashboard, export
 from app.eis import routers as eis_routers
-
-# models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -43,6 +39,9 @@ app.include_router(login.router)
 
 # Dashboard router
 app.include_router(dashboard.router)
+
+# Export router
+app.include_router(export.router)
 
 
 @app.get("/")

@@ -57,7 +57,7 @@ jobs:
       - name: Run Tests with Pytest and Coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
-          coverage run -m pytest backend/tests/eis --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
+          coverage run -m pytest backend --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
 
       - name: Generate badges and coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
