@@ -85,7 +85,7 @@ export const PersonModal: React.FC<DataModalProps> = ({
 			<GenericModal
 				show={show}
 				onHide={onHide}
-				submode={submode}
+				mode={submode}
 				itemName="Person"
 				size={size}
 				id={id}

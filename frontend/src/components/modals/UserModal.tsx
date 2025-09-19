@@ -68,7 +68,7 @@ export const UserModal: React.FC<DataModalProps> = ({
 		<GenericModal
 			show={show}
 			onHide={onHide}
-			submode={submode}
+			mode={submode}
 			itemName="User"
 			size={size}
 			data={data || {}}

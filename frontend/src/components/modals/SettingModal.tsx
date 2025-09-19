@@ -56,7 +56,7 @@ export const SettingModal: React.FC<DataModalProps> = ({
 		<GenericModal
 			show={show}
 			onHide={onHide}
-			submode={submode}
+			mode={submode}
 			itemName="Tag"
 			size={size}
 			data={data || {}}

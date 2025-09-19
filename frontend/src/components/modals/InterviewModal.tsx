@@ -73,7 +73,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 			<GenericModal
 				show={show}
 				onHide={onHide}
-				submode={submode}
+				mode={submode}
 				itemName="Interview"
 				size={size}
 				data={data}

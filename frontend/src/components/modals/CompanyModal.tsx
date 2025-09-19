@@ -80,7 +80,7 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 		<GenericModal
 			show={show}
 			onHide={onHide}
-			submode={submode}
+			mode={submode}
 			itemName="Company"
 			size={size}
 			data={data}

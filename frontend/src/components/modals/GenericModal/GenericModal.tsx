@@ -73,7 +73,7 @@ export type ViewFields = (ViewField | ViewField[])[];
 export type FormFields = (FormField | FormField[])[];
 
 interface ModalProps {
-	submode?: "view" | "edit" | "add";
+	mode?: "view" | "edit" | "add";
 	fields: { view: ViewFields; form: FormFields };
 	data?: any;
 	id?: string | number | null;
@@ -114,7 +114,7 @@ const GenericModal = ({
 	size = "lg",
 	tabs = null,
 	defaultActiveTab = null,
-	submode = "view",
+	mode = "view",
 	additionalFields = [],
 	data = null,
 	id = null,
@@ -200,11 +200,11 @@ const GenericModal = ({
 	useEffect(() => {
 		// Initialize modal state when it becomes visible or data changes
 		if (show && (!previousShow.current || (effectiveData && Object.keys(formData).length === 0))) {
-			if (submode === "add") {
+			if (mode === "add") {
 				setFormData({});
 				setOriginalFormData({});
 				setIsEditing(true);
-			} else if (submode === "edit") {
+			} else if (mode === "edit") {
 				setFormData({ ...effectiveData });
 				setOriginalFormData({ ...effectiveData });
 				setIsEditing(true);
@@ -221,7 +221,7 @@ const GenericModal = ({
 			}
 		}
 		previousShow.current = show;
-	}, [show, effectiveData, submode, tabs, defaultActiveTab]);
+	}, [show, effectiveData, mode, tabs, defaultActiveTab]);
 
 	// Simple tab change - just update the active tab, keep shared editing state
 	const handleTabChange = (tabKey: string): void => {
@@ -494,17 +494,17 @@ const GenericModal = ({
 
 			// Submit to API
 			const apiResult =
-				submode === "add"
+				mode === "add"
 					? await api.post(`${endpoint}/`, dataToSubmit, token)
 					: await api.put(`${endpoint}/${effectiveData.id}`, dataToSubmit, token);
 
 			// Handle success
-			if (submode === "add") {
+			if (mode === "add") {
 				onSuccess?.(apiResult);
 			}
 
 			// Update UI
-			if (submode === "add" || submode === "edit") {
+			if (mode === "add" || mode === "edit") {
 				handleHideImmediate();
 			} else {
 				Object.assign(effectiveData, apiResult);
@@ -512,7 +512,7 @@ const GenericModal = ({
 				handleEditToView();
 			}
 		} catch (err: any) {
-			const errorMessage = `Failed to ${submode === "add" ? "create" : "update"} 
+			const errorMessage = `Failed to ${mode === "add" ? "create" : "update"} 
 			${itemName.toLowerCase()} due to the following error: ${err.message}`;
 			setErrors({
 				submit: errorMessage,
@@ -532,10 +532,10 @@ const GenericModal = ({
 
 	const renderHeader = (): JSX.Element => {
 		let icon: string, text: string;
-		if (submode === "add") {
+		if (mode === "add") {
 			icon = "bi bi-plus-circle";
 			text = `Add New ${itemName}`;
-		} else if (submode === "edit" || isEditing) {
+		} else if (mode === "edit" || isEditing) {
 			icon = "bi bi-pencil";
 			text = `Edit ${itemName}`;
 		} else {
@@ -648,7 +648,7 @@ const GenericModal = ({
 
 	const renderFooter = (): JSX.Element => {
 		if (isEditing) {
-			if (submode === "add") {
+			if (mode === "add") {
 				return (
 					<Modal.Footer>
 						<div className="d-flex flex-column w-100 gap-2">
@@ -682,8 +682,8 @@ const GenericModal = ({
 									<ActionButton
 										id="cancel-button"
 										variant="secondary"
-										onClick={submode === "edit" ? handleHideImmediate : handleEditToView}
-										defaultText={submode === "edit" ? "Close" : "Cancel"}
+										onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
+										defaultText={mode === "edit" ? "Close" : "Cancel"}
 										fullWidth={false}
 									/>
 									<ActionButton
@@ -723,8 +723,8 @@ const GenericModal = ({
 										<ActionButton
 											id="cancel-button"
 											variant="secondary"
-											onClick={submode === "edit" ? handleHideImmediate : handleEditToView}
-											defaultText={submode === "edit" ? "Close" : "Cancel"}
+											onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
+											defaultText={mode === "edit" ? "Close" : "Cancel"}
 											fullWidth={false}
 										/>
 									</div>

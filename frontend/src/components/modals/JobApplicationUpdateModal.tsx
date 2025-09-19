@@ -61,7 +61,7 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 			<GenericModal
 				show={show}
 				onHide={onHide}
-				submode={submode}
+				mode={submode}
 				itemName="Update"
 				size={size}
 				data={data}

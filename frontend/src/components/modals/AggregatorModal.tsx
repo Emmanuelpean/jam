@@ -63,7 +63,7 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 		<GenericModal
 			show={show}
 			onHide={onHide}
-			submode={submode}
+			mode={submode}
 			additionalFields={additionalFields}
 			itemName="Aggregator"
 			size={size}

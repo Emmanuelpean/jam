@@ -96,7 +96,7 @@ export const LocationModal: React.FC<DataModalProps> = ({
 		<GenericModal
 			show={show}
 			onHide={onHide}
-			submode={submode}
+			mode={submode}
 			itemName="Location"
 			size={size}
 			data={data}
