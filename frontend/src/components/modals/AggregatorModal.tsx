@@ -1,7 +1,7 @@
 import React from "react";
 import GenericModal, { DataModalProps, ValidationErrors } from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { aggregatorsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { AggregatorData } from "../../services/Schemas";
@@ -23,12 +23,12 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 			formFields.name({ required: true, placeholder: "LinkedIn" }),
 			formFields.url({ required: true, placeholder: "https://linkedin.com" }),
 		],
-		view: [viewFields.name({ isTitle: true }), viewFields.url()],
+		view: [modalViewFields.name({ isTitle: true }), modalViewFields.url()],
 	};
 
 	const additionalFields = [
-		viewFields.accordionJobTable({ helpText: "List of jobs found with this job aggregator." }),
-		viewFields.accordionJobApplicationTable({
+		modalViewFields.accordionJobTable({ helpText: "List of jobs found with this job aggregator." }),
+		modalViewFields.accordionJobApplicationTable({
 			helpText: "List of job applications made using this job aggregator.",
 		}),
 	];

@@ -1,63 +1,27 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { AggregatorModal } from "../components/modals/AggregatorModal";
-import { GenericTableWithModals, useTableData } from "../components/tables/GenericTable";
-import { tableColumns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext";
+import { GenericTable } from "../components/tables/GenericTable";
+import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const AggregatorsPage = () => {
-	const { showLoading, hideLoading } = useLoading();
-	const {
-		data: aggregators,
-		setData: setAggregators,
-		loading,
-		error,
-		sortConfig,
-		setSortConfig,
-		searchTerm,
-		setSearchTerm,
-		addItem,
-		updateItem,
-		removeItem,
-	} = useTableData("aggregators", [], {}, { key: "name", direction: "asc" });
-
 	const columns = [
-		tableColumns.name!(),
-		tableColumns.url!(),
-		tableColumns.jobCount!(),
-		tableColumns.jobApplicationCount!(),
-		tableColumns.createdAt!(),
+		tableColumns.name(),
+		tableColumns.url(),
+		tableColumns.jobCount(),
+		tableColumns.jobApplicationCount(),
+		tableColumns.createdAt(),
 	];
 
-	useEffect(() => {
-		if (loading) {
-			showLoading("Loading Aggregators...");
-		} else {
-			hideLoading();
-		}
-		return () => {
-			hideLoading();
-		};
-	}, [loading, showLoading, hideLoading]);
-
 	return (
-		<GenericTableWithModals
-			title="Job Aggregators"
-			data={aggregators}
-			columns={columns}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
-			searchTerm={searchTerm}
-			onSearchChange={setSearchTerm}
-			loading={false}
-			error={error}
-			Modal={AggregatorModal}
+		<GenericTable
+			mode="api"
 			endpoint="aggregators"
+			initialSortConfig={{ key: "name", direction: "asc" }}
+			title="Job Aggregators"
+			columns={columns}
+			Modal={AggregatorModal}
 			nameKey="name"
 			itemType="Aggregator"
-			addItem={addItem}
-			updateItem={updateItem}
-			removeItem={removeItem}
-			setData={setAggregators}
 		/>
 	);
 };

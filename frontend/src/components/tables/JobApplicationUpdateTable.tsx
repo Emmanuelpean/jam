@@ -1,88 +1,48 @@
 import React from "react";
-import { GenericTableWithModals, useProvidedTableData } from "./GenericTable";
-import { TableColumn, tableColumns } from "../rendering/view/TableColumnRenders";
-import { JobApplicationUpdateModal } from "../modals/JobApplicationUpdateModal";
+import { GenericTable, GenericTableWithModalsProps, TableProps } from "./GenericTable";
+import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
+import { JobApplicationUpdateModal, JobApplicationUpdateModalProps } from "../modals/JobApplicationUpdateModal";
+import { JobApplicationUpdateData } from "../../services/Schemas";
 
-interface JobApplicationUpdatesTableProps {
+interface JobApplicationUpdatesTableProps extends TableProps {
 	jobId: string | number;
-	onChange?: () => void;
-	data?: any[] | null;
-	columns?: TableColumn[];
 }
 
 const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 	jobId,
-	onChange,
-	data = null,
+	data = [],
+	onDataChange,
+	loading = false,
+	error = null,
 	columns = [],
 }) => {
-	const {
-		data: updatesData,
-		loading,
-		error,
-		sortConfig,
-		addItem,
-		updateItem,
-		removeItem,
-	} = useProvidedTableData(data, { key: "date", direction: "desc" });
+	const defaultColumns =
+		columns.length > 0 ? columns : [tableColumns.date(), tableColumns.updateType(), tableColumns.note()];
 
-	const handleAddSuccess = (newEntry: any) => {
-		addItem(newEntry);
-		if (onChange) {
-			onChange();
-		}
-	};
-
-	const handleUpdateSuccess = (updatedEntry: any) => {
-		updateItem(updatedEntry);
-		if (onChange) {
-			onChange();
-		}
-	};
-
-	const handleDeleteSuccess = (deletedId: string | number) => {
-		removeItem(deletedId);
-		if (onChange) {
-			onChange();
-		}
-	};
-
-	if (!columns.length) {
-		columns = [tableColumns.date!(), tableColumns.updateType!(), tableColumns.note!()];
-	}
-
-	const ModalWithProps = (props: any) => (
-		<JobApplicationUpdateModal
-			{...props}
-			jobId={jobId}
-			onSuccess={
-				props.submode === "add"
-					? handleAddSuccess
-					: props.submode === "edit"
-						? handleUpdateSuccess
-						: props.onSuccess
-			}
-		/>
+	const ModalWithProps = (props: JobApplicationUpdateModalProps) => (
+		<JobApplicationUpdateModal {...props} jobId={jobId} />
 	);
 
+	const handleDataChange = (newData: JobApplicationUpdateData[]) => {
+		onDataChange?.(newData);
+	};
+
 	return (
-		<GenericTableWithModals
-			data={updatesData}
-			columns={columns}
-			sortConfig={sortConfig}
+		<GenericTable
+			mode="controlled"
+			data={data}
+			onDataChange={handleDataChange}
 			loading={loading}
 			error={error}
+			columns={defaultColumns}
+			initialSortConfig={{ key: "date", direction: "desc" }}
 			Modal={ModalWithProps}
 			endpoint="jobapplicationupdates"
 			nameKey="date"
 			itemType="Update"
-			addItem={addItem}
-			updateItem={updateItem}
-			removeItem={handleDeleteSuccess}
 			modalSize="lg"
 			showAllEntries={true}
 			compact={true}
-			setData={() => {}}
 		/>
 	);
 };

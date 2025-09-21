@@ -1,10 +1,11 @@
 import React from "react";
 import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
-import { formFields, useFormOptions } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import { formFields } from "../rendering/form/FormRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { InterviewData, JobData } from "../../services/Schemas";
+import { useFormOptions } from "../rendering/form/FormOptions";
 
-interface InterviewModalProps extends DataModalProps {
+export interface InterviewModalProps extends DataModalProps {
 	jobId?: string | number;
 }
 
@@ -33,7 +34,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 		[
 			formFields.interviewAttendanceType(),
 			formFields.location(locations, openLocationModal, {
-				condition: (formData: JobData): boolean => {
+				displayCondition: (formData: JobData): boolean => {
 					return formData.attendance_type === "on-site";
 				},
 			}),
@@ -45,10 +46,10 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	];
 
 	const viewFieldsArray = [
-		...(!jobId ? [viewFields.jobBadge()] : []),
-		[viewFields.datetime(), viewFields.type()],
-		[viewFields.locationBadge(), viewFields.interviewerBadges()],
-		viewFields.note(),
+		...(!jobId ? [modalViewFields.jobBadge()] : []),
+		[modalViewFields.datetime(), modalViewFields.type()],
+		[modalViewFields.locationBadge(), modalViewFields.interviewerBadges()],
+		modalViewFields.note(),
 	];
 
 	const fields = {

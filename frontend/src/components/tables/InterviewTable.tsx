@@ -1,54 +1,50 @@
 import React from "react";
-import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
-import { tableColumns } from "../rendering/view/TableColumnRenders";
-import { InterviewModal } from "../modals/InterviewModal";
+import { GenericTable, GenericTableWithModalsProps, TableProps } from "./GenericTable";
+import { tableColumns } from "../rendering/view/TableColumns";
+import { InterviewModal, InterviewModalProps } from "../modals/InterviewModal";
 import { DataModalProps } from "../modals/GenericModal/GenericModal";
+import { InterviewData } from "../../services/Schemas";
 
 interface InterviewsTableProps extends TableProps {
 	jobId?: number;
-	showAdd?: boolean;
 }
 
 const InterviewsTable: React.FC<InterviewsTableProps> = ({
 	jobId,
-	onChange,
-	data = null,
+	data = [],
+	onDataChange,
+	loading = false,
+	error = null,
 	columns = [],
 	showAdd = true,
 }) => {
-	const {
-		data: interviewData,
-		loading,
-		error,
-		addItem,
-		sortConfig,
-		setSortConfig,
-		updateItem,
-		removeItem,
-	} = useProvidedTableData(data, { key: "date", direction: "desc" });
+	const defaultColumns =
+		columns.length > 0
+			? columns
+			: [tableColumns.date(), tableColumns.type(), tableColumns.location(), tableColumns.note()];
 
-	if (!columns.length) {
-		columns = [tableColumns.date!(), tableColumns.type!(), tableColumns.location!(), tableColumns.note!()];
-	}
+	const ModalWithProps: React.FC<DataModalProps> = (props: InterviewModalProps) => (
+		<InterviewModal {...props} jobId={jobId} />
+	);
 
-	const ModalWithProps: React.FC<DataModalProps> = (props) => <InterviewModal {...props} jobId={jobId} />;
+	const handleDataChange = (newData: InterviewData[]) => {
+		console.log("newData are", newData);
+		onDataChange?.(newData);
+	};
 
 	return (
-		<GenericTableWithModals
-			data={interviewData}
-			columns={columns}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
+		<GenericTable
+			mode="controlled"
+			data={data}
+			onDataChange={handleDataChange}
 			loading={loading}
 			error={error}
+			columns={defaultColumns}
+			initialSortConfig={{ key: "date", direction: "desc" }}
 			Modal={ModalWithProps}
 			endpoint="interviews"
 			nameKey="date"
 			itemType="Interview"
-			addItem={addItem}
-			updateItem={updateItem}
-			removeItem={removeItem}
-			setData={() => {}}
 			modalSize="lg"
 			showAllEntries={true}
 			compact={true}

@@ -1,11 +1,12 @@
 import React, { useMemo } from "react";
 import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
-import { formFields, useFormOptions } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import { formFields } from "../rendering/form/FormRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { formatDateTime } from "../../utils/TimeUtils";
 import { JobApplicationUpdateData } from "../../services/Schemas";
+import { useFormOptions } from "../rendering/form/FormOptions";
 
-interface JobApplicationUpdateModalProps extends DataModalProps {
+export interface JobApplicationUpdateModalProps extends DataModalProps {
 	jobId?: string | number;
 }
 
@@ -37,9 +38,9 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 	];
 
 	const viewFieldsArray = [
-		...(jobId ? [] : [viewFields.jobBadge()]),
-		[viewFields.datetime(), viewFields.updateType()],
-		viewFields.note(),
+		...(jobId ? [] : [modalViewFields.jobBadge()]),
+		[modalViewFields.datetime(), modalViewFields.updateType()],
+		modalViewFields.note(),
 	];
 
 	const fields = {

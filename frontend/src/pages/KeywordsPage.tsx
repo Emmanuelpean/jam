@@ -1,57 +1,21 @@
-import React, { useEffect } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
+import React from "react";
+import GenericTable from "../components/tables/GenericTable";
 import { KeywordModal } from "../components/modals/KeywordModal";
-import { tableColumns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext";
+import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const KeywordsPage = () => {
-	const { showLoading, hideLoading } = useLoading();
-	const {
-		data: keywords,
-		setData: setKeywords,
-		loading,
-		error,
-		sortConfig,
-		setSortConfig,
-		searchTerm,
-		setSearchTerm,
-		addItem,
-		updateItem,
-		removeItem,
-	} = useTableData("keywords", [], {}, { key: "name", direction: "asc" });
-
-	const columns = [tableColumns.name!(), tableColumns.jobCount!(), tableColumns.createdAt!()];
-
-	useEffect(() => {
-		if (loading) {
-			showLoading("Loading Tags...");
-		} else {
-			hideLoading();
-		}
-		return () => {
-			hideLoading();
-		};
-	}, [loading, showLoading, hideLoading]);
+	const columns = [tableColumns.name(), tableColumns.jobCount(), tableColumns.createdAt()];
 
 	return (
-		<GenericTableWithModals
-			title="Tags"
-			data={keywords}
-			columns={columns}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
-			searchTerm={searchTerm}
-			onSearchChange={setSearchTerm}
-			loading={false}
-			error={error}
-			Modal={KeywordModal}
+		<GenericTable
+			mode="api"
 			endpoint="keywords"
+			initialSortConfig={{ key: "name", direction: "asc" }}
+			title="Tags"
+			columns={columns}
+			Modal={KeywordModal}
 			nameKey="name"
 			itemType="Tag"
-			addItem={addItem}
-			updateItem={updateItem}
-			removeItem={removeItem}
-			setData={setKeywords}
 		/>
 	);
 };

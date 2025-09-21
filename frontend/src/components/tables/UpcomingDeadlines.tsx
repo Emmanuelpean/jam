@@ -1,45 +1,38 @@
 import React from "react";
-import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
-import { tableColumns } from "../rendering/view/TableColumnRenders";
+import { GenericTable, TableProps } from "./GenericTable";
+import { tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
-const UpcomingDeadlinesTable: React.FC<TableProps> = ({ data = null, columns = [] }) => {
-	const {
-		data: jobData,
-		loading,
-		error,
-		addItem,
-		sortConfig,
-		setSortConfig,
-		updateItem,
-		removeItem,
-	} = useProvidedTableData(data, { key: "days_until_deadline", direction: "desc" });
+const UpcomingDeadlinesTable: React.FC<TableProps> = ({
+	data = [],
+	onDataChange,
+	loading = false,
+	error = null,
+	columns = [],
+}) => {
+	const defaultColumns =
+		columns.length > 0
+			? columns
+			: [tableColumns.title(), tableColumns.company(), tableColumns.location(), tableColumns.daysUntilDeadline()];
 
-	if (!columns.length) {
-		columns = [
-			tableColumns.title!(),
-			tableColumns.company!(),
-			tableColumns.location!(),
-			tableColumns.daysUntilDeadline!(),
-		];
-	}
+	// Handle data changes and notify parent
+	const handleDataChange = (newData: any[]) => {
+		onDataChange?.(newData);
+	};
 
 	return (
-		<GenericTableWithModals
-			data={jobData}
-			columns={columns}
+		<GenericTable
+			mode="controlled"
+			data={data}
+			onDataChange={handleDataChange}
 			loading={loading}
 			error={error}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
+			columns={defaultColumns}
+			initialSortConfig={{ key: "days_until_deadline", direction: "asc" }}
 			Modal={JobModal}
 			endpoint="jobs"
-			nameKey="name"
+			nameKey="title"
 			itemType="Job"
-			addItem={addItem}
-			updateItem={updateItem}
-			removeItem={removeItem}
-			setData={() => {}}
 			modalSize="xl"
 			showSearch={false}
 			showAdd={false}

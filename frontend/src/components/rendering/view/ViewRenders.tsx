@@ -1,13 +1,7 @@
-import React, { ReactElement, ReactNode, useState } from "react";
-import { LocationModal } from "../../modals/LocationModal";
-import { CompanyModal } from "../../modals/CompanyModal";
-import { PersonModal } from "../../modals/PersonModal";
-import { KeywordModal } from "../../modals/KeywordModal";
-import { AggregatorModal } from "../../modals/AggregatorModal";
+import React, { ReactNode } from "react";
 import { accessAttribute } from "../../../utils/Utils";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
-import { JobModal } from "../../modals/JobModal";
 import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../maps/LocationMap";
 import {
@@ -21,12 +15,16 @@ import {
 } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
-import { TableColumn } from "./TableColumnRenders";
-import { HelpBubble } from "../widgets/HelpBubble";
-
-interface ModalManagerProps {
-	children: (handleClick: (item: any) => void) => ReactNode;
-}
+import { TableColumn } from "./TableColumns";
+import { Accordion } from "./Accordion";
+import {
+	AggregatorModalManager,
+	CompanyModalManager,
+	JobModalManager,
+	KeywordModalManager,
+	LocationModalManager,
+	PersonModalManager,
+} from "../../modals/ModalManagers";
 
 export interface RenderParams {
 	item: any;
@@ -35,73 +33,17 @@ export interface RenderParams {
 	id?: string;
 	columns?: TableColumn[];
 	helpText?: string;
+	onChange?: () => void;
 }
 
-export interface Field {
+// Base class for Fields (Table or Modal fields)
+export interface ViewField {
 	key: string;
 	render?: (params: RenderParams) => ReactNode;
 	accessKey?: string;
 	columns?: TableColumn[];
 	helpText?: string;
 }
-
-interface ModalManagerProps {
-	children: (handleClick: (item: any) => void) => ReactNode;
-}
-
-type FlexibleModalComponent = React.ComponentType<any>;
-
-const createModalManager = (ModalComponent: FlexibleModalComponent) => {
-	return ({ children }: ModalManagerProps): ReactElement => {
-		const [showModal, setShowModal] = useState<boolean>(false);
-		const [selectedItem, setSelectedItem] = useState<any>(null);
-		const [selectedId, setSelectedId] = useState<string | number | null>(null);
-
-		const handleClick = (itemId: number): void => {
-			setSelectedItem(null);
-			setSelectedId(itemId);
-			setShowModal(true);
-		};
-
-		const handleHide = () => {
-			setShowModal(false);
-			setTimeout(() => {
-				setSelectedItem(null);
-				setSelectedId(null);
-			}, 300);
-		};
-
-		// Empty handlers for modal callbacks since we're just viewing
-		const handleSuccess = () => {};
-		const handleDelete = () => {};
-
-		return (
-			<>
-				{children(handleClick)}
-				<ModalComponent
-					show={showModal}
-					onHide={handleHide}
-					data={selectedItem}
-					id={selectedId}
-					submode="view"
-					onSuccess={handleSuccess}
-					onDelete={handleDelete}
-					onJobSuccess={handleSuccess}
-					onApplicationSuccess={handleSuccess}
-					onJobDelete={handleDelete}
-					onApplicationDelete={handleDelete}
-				/>
-			</>
-		);
-	};
-};
-
-const LocationModalManager = createModalManager(LocationModal);
-const CompanyModalManager = createModalManager(CompanyModal);
-const PersonModalManager = createModalManager(PersonModal);
-const KeywordModalManager = createModalManager(KeywordModal);
-const JobAndApplicationModalManager = createModalManager(JobModal);
-const AggregatorModalManager = createModalManager(AggregatorModal);
 
 export const getApplicationStatusBadgeClass = (status: string | undefined): string => {
 	switch (status?.toLowerCase()) {
@@ -164,48 +106,6 @@ const accessSubAttribute = (item: any, accessKey: string | undefined, key: strin
 		item = accessAttribute(item, accessKey);
 	}
 	return item?.[key];
-};
-
-interface GenericAccordionProps<T = any> {
-	title: string;
-	data: T[];
-	onChange?: () => void;
-	itemId?: number;
-	children: (data: T[], onChange?: () => void) => React.ReactNode;
-	icon?: string;
-	defaultOpen?: boolean;
-	helpText?: string;
-}
-
-export const GenericAccordion = <T,>({
-	title,
-	data,
-	onChange,
-	children,
-	icon,
-	defaultOpen = false,
-	helpText,
-}: GenericAccordionProps<T>) => {
-	const [isOpen, setIsOpen] = React.useState(defaultOpen);
-
-	return (
-		<div className="simple-accordion" style={{ paddingLeft: "10px", paddingRight: "10px" }}>
-			<div
-				className="simple-accordion-header d-flex align-items-center justify-content-between py-2 border-bottom"
-				onClick={() => setIsOpen(!isOpen)}
-				style={{ cursor: "pointer" }}
-			>
-				<div className="d-flex align-items-center">
-					{icon && <i className={`${icon} me-2`}></i>}
-					<span className="fw-medium">{title}</span>
-					<span className="text-muted ms-2">({data?.length || 0})</span>
-					{helpText && <HelpBubble helpText={helpText} size="17px" />}
-				</div>
-				<i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}></i>
-			</div>
-			{isOpen && <div className="simple-accordion-content">{children(data, onChange)}</div>}
-		</div>
-	);
 };
 
 export const renderFunctions = {
@@ -463,11 +363,6 @@ export const renderFunctions = {
 		return interviews?.length || 0;
 	},
 
-	updateCount: (param: RenderParams): number => {
-		const updates = accessSubAttribute(param.item, param.accessKey, "updates");
-		return updates?.length || 0;
-	},
-
 	jobCount: (param: RenderParams): number => {
 		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
 		return jobs?.length || 0;
@@ -489,7 +384,7 @@ export const renderFunctions = {
 		const job: JobData = accessSubAttribute(param.item, param.accessKey, attribute);
 		if (job) {
 			return (
-				<JobAndApplicationModalManager>
+				<JobModalManager>
 					{(handleClick) => (
 						<span
 							className={`badge bg-info clickable-badge`}
@@ -500,7 +395,7 @@ export const renderFunctions = {
 							{String(job[displayAttribute])}
 						</span>
 					)}
-				</JobAndApplicationModalManager>
+				</JobModalManager>
 			);
 		}
 		return null;
@@ -649,7 +544,7 @@ export const renderFunctions = {
 	appliedViaBadge: (param: RenderParams): ReactNode => {
 		const appliedVia = accessSubAttribute(param.item, param.accessKey, "applied_via");
 		if (appliedVia === "aggregator") {
-			return renderFunctions.applicationAggregatorBadge(param);
+			return renderFunctions._aggregatorBadge(param, "application_aggregator");
 		}
 		if (appliedVia) {
 			return (
@@ -686,22 +581,16 @@ export const renderFunctions = {
 		return renderFunctions._aggregatorBadge(param, "source");
 	},
 
-	applicationAggregatorBadge: (param: RenderParams): ReactNode => {
-		return renderFunctions._aggregatorBadge(param, "application_aggregator");
-	},
-
 	// ----------------------------------------------------- TABLES ----------------------------------------------------
 
 	interviewTable: (param: RenderParams): ReactNode => {
 		const interviews = accessSubAttribute(param.item, param.accessKey, "interviews");
-		const onChange = () => {}; // Empty function to satisfy the required prop
-		return <InterviewsTable data={interviews} jobId={param.item?.id} onChange={onChange} />;
+		return <InterviewsTable data={interviews} jobId={param.item?.id} onDataChange={param.onChange} />;
 	},
 
 	jobApplicationUpdateTable: (param: RenderParams): ReactNode => {
 		const updates = accessSubAttribute(param.item, param.accessKey, "updates");
-		const onChange = () => {}; // Empty function to satisfy the required prop
-		return <JobApplicationUpdateTable data={updates} jobId={param.item?.id} onChange={onChange} />;
+		return <JobApplicationUpdateTable data={updates} jobId={param.item?.id} onDataChange={param.onChange} />;
 	},
 
 	// ------------------------------------------------ ACCORDION TABLES -----------------------------------------------
@@ -710,7 +599,7 @@ export const renderFunctions = {
 		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
 		const onChange = () => {};
 		return (
-			<GenericAccordion
+			<Accordion
 				title="Jobs"
 				data={jobs}
 				onChange={onChange}
@@ -718,9 +607,9 @@ export const renderFunctions = {
 				helpText={param.helpText}
 			>
 				{(data, onChangeCallback) => (
-					<JobsTable onChange={onChangeCallback} data={data} columns={param.columns} />
+					<JobsTable onDataChange={onChangeCallback} data={data} columns={param.columns} />
 				)}
-			</GenericAccordion>
+			</Accordion>
 		);
 	},
 
@@ -728,7 +617,7 @@ export const renderFunctions = {
 		const interviews = accessSubAttribute(param.item, param.accessKey, "interviews");
 		const onChange = () => {};
 		return (
-			<GenericAccordion
+			<Accordion
 				title="Interviews"
 				data={interviews}
 				onChange={onChange}
@@ -736,9 +625,14 @@ export const renderFunctions = {
 				helpText={param.helpText}
 			>
 				{(data, onChangeCallback) => (
-					<InterviewsTable data={data} onChange={onChangeCallback} showAdd={false} columns={param.columns} />
+					<InterviewsTable
+						data={data}
+						onDataChange={onChangeCallback}
+						showAdd={false}
+						columns={param.columns}
+					/>
 				)}
-			</GenericAccordion>
+			</Accordion>
 		);
 	},
 
@@ -746,7 +640,7 @@ export const renderFunctions = {
 		const jobs = accessSubAttribute(param.item, param.accessKey, "job_applications");
 		const onChange = () => {};
 		return (
-			<GenericAccordion
+			<Accordion
 				title="Job Applications"
 				data={jobs}
 				onChange={onChange}
@@ -754,9 +648,9 @@ export const renderFunctions = {
 				helpText={param.helpText}
 			>
 				{(data, onChangeCallback) => (
-					<JobsTable data={data} onChange={onChangeCallback} columns={param.columns} />
+					<JobsTable data={data} onDataChange={onChangeCallback} columns={param.columns} />
 				)}
-			</GenericAccordion>
+			</Accordion>
 		);
 	},
 
@@ -764,7 +658,7 @@ export const renderFunctions = {
 		const persons = accessSubAttribute(param.item, param.accessKey, "persons");
 		const onChange = () => {};
 		return (
-			<GenericAccordion
+			<Accordion
 				title="Persons"
 				data={persons}
 				onChange={onChange}
@@ -772,16 +666,14 @@ export const renderFunctions = {
 				helpText={param.helpText}
 			>
 				{(data, onChangeCallback) => (
-					<PersonTable data={data} onChange={onChangeCallback} columns={param.columns} />
+					<PersonTable data={data} onDataChange={onChangeCallback} columns={param.columns} />
 				)}
-			</GenericAccordion>
+			</Accordion>
 		);
 	},
 };
 
-export const renderViewElement = (field: Field, item: any, id: string): ReactNode => {
-	const noText = <span className="text-muted">Not Provided</span>;
-
+export const renderViewField = (field: ViewField, item: any, id: string, onChange?: any): ReactNode => {
 	let rendered: ReactNode;
 	if (field.render) {
 		const renderParams: RenderParams = {
@@ -791,6 +683,7 @@ export const renderViewElement = (field: Field, item: any, id: string): ReactNod
 			id: `${id}-${field.key}`,
 			columns: field.columns,
 			helpText: field.helpText,
+			onChange: onChange,
 		};
 		rendered = field.render(renderParams);
 	} else {
@@ -804,6 +697,6 @@ export const renderViewElement = (field: Field, item: any, id: string): ReactNod
 		// allow for 0
 		return rendered;
 	} else {
-		return noText;
+		return <span className="text-muted">Not Provided</span>;
 	}
 };

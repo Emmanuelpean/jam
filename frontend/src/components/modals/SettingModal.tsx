@@ -1,7 +1,7 @@
 import React from "react";
 import GenericModal, { DataModalProps, ValidationErrors } from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { settingsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { SettingData } from "../../services/Schemas";
@@ -24,7 +24,7 @@ export const SettingModal: React.FC<DataModalProps> = ({
 			formFields.value({ required: true, placeholder: "test_user@test.com" }),
 			formFields.description({ placeholder: "Allow only those email addresses to sign up." }),
 		],
-		view: [viewFields.name(), viewFields.value(), viewFields.description()],
+		view: [modalViewFields.name(), modalViewFields.value(), modalViewFields.description()],
 	};
 
 	const transformFormData = (data: any): SettingData => {

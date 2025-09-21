@@ -1,11 +1,12 @@
 import React, { ReactNode, useMemo } from "react";
 import GenericModal, { DataModalProps, TabConfig, ValidationErrors } from "./GenericModal/GenericModal";
-import { formFields, useFormOptions } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import { formFields } from "../rendering/form/FormRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/ViewRenders";
 import { JobData } from "../../services/Schemas";
 import { jobsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
+import { useFormOptions } from "../rendering/form/FormOptions";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -64,14 +65,14 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	];
 
 	const jobViewFields = [
-		[viewFields.title({ isTitle: true })],
-		[viewFields.companyBadge(), viewFields.locationBadge()],
-		viewFields.description(),
-		viewFields.note(),
-		[viewFields.salaryRange(), viewFields.personalRating()],
-		[viewFields.sourceBadge(), viewFields.url({ label: "Job URL" })],
-		[viewFields.keywordBadges(), viewFields.personBadges()],
-		viewFields.deadline(),
+		[modalViewFields.title({ isTitle: true })],
+		[modalViewFields.companyBadge(), modalViewFields.locationBadge()],
+		modalViewFields.description(),
+		modalViewFields.note(),
+		[modalViewFields.salaryRange(), modalViewFields.personalRating()],
+		[modalViewFields.sourceBadge(), modalViewFields.url({ label: "Job URL" })],
+		[modalViewFields.keywordBadges(), modalViewFields.personBadges()],
+		modalViewFields.deadline(),
 	];
 
 	const applicationFormFields = useMemo(() => {
@@ -92,12 +93,12 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	}, [openAggregatorModal, aggregators]);
 
 	const applicationViewFields = [
-		[viewFields.applicationDate(), viewFields.applicationStatus()],
-		[viewFields.appliedViaBadge()],
-		[viewFields.applicationUrl()],
-		viewFields.applicationNote(),
-		viewFields.interviewTable(),
-		viewFields.updateTable(),
+		[modalViewFields.applicationDate(), modalViewFields.applicationStatus()],
+		[modalViewFields.appliedViaBadge()],
+		[modalViewFields.applicationUrl()],
+		modalViewFields.applicationNote(),
+		modalViewFields.interviewTable(),
+		modalViewFields.updateTable(),
 	];
 
 	const transformData = (jobData: JobData) => {

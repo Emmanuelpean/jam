@@ -1,12 +1,12 @@
 import React from "react";
 import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { companiesApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { ValidationErrors } from "./GenericModal/GenericModal";
 import { CompanyData } from "../../services/Schemas";
-import { tableColumns } from "../rendering/view/TableColumnRenders";
+import { tableColumns } from "../rendering/view/TableColumns";
 
 export const CompanyModal: React.FC<DataModalProps> = ({
 	show,
@@ -31,11 +31,11 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 				}),
 			],
 		],
-		view: [viewFields.name({ isTitle: true }), viewFields.url(), [viewFields.description()]],
+		view: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
 	};
 
 	const additionalFields = [
-		viewFields.accordionJobTable({
+		modalViewFields.accordionJobTable({
 			columns: [
 				tableColumns.title!(),
 				tableColumns.location!(),
@@ -44,7 +44,7 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 			],
 			helpText: "List of jobs from this company.",
 		}),
-		viewFields.accordionPersonTable({ helpText: "List of persons working at this company." }),
+		modalViewFields.accordionPersonTable({ helpText: "List of persons working at this company." }),
 	];
 
 	const transformFormData = (data: CompanyData): CompanyData => {

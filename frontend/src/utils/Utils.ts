@@ -1,5 +1,3 @@
-import { Theme } from "./Theme";
-
 export type SelectOption = {
 	value: string;
 	label: string;
@@ -29,12 +27,6 @@ export const toSelectOptions = (data: any[], valueKey = "id", labelKey = "name")
 	}));
 };
 
-/**
- * Compares two values for deep equality, handling null/undefined/empty string equivalence and array comparisons
- * @param value1 - First value to compare
- * @param value2 - Second value to compare
- * @returns true if values are different, false if they are equivalent
- */
 export const areDifferent = (value1: any, value2: any): boolean => {
 	// Handle null/undefined/empty string equivalence
 	const isEmptyValue = (val: any): boolean => val === null || val === undefined || val === "";

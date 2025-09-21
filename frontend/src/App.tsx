@@ -23,6 +23,7 @@ import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
 import { ToastStack } from "./components/toasts/Toast";
 import SettingsPage from "./pages/AppSettingsPage";
+import AboutPage from "./pages/AboutPage";
 
 export const ToastContext = createContext<UseToastReturn | undefined>(undefined);
 
@@ -108,6 +109,14 @@ function App(): JSX.Element {
 								<Route path="/login" element={<Login />} />
 								<Route path="/register" element={<Login />} />
 								<Route path="/" element={<Navigate to="/dashboard" />} />
+								<Route
+									path="/about"
+									element={
+										<ProtectedRoute>
+											<AboutPage />
+										</ProtectedRoute>
+									}
+								/>
 								<Route
 									path="/locations"
 									element={

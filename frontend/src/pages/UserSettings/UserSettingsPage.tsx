@@ -3,13 +3,13 @@ import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api, ApiError, exportApi } from "../../services/Api";
 import { THEMES } from "../../utils/Theme";
-import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { renderModalFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../../components/rendering/view/ViewRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { findByKey } from "../../utils/Utils";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
-import { FormField } from "../../components/rendering/form/FormRenders";
+import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ValidationErrors } from "../../components/modals/GenericModal/GenericModal";
 import { useLoading } from "../../contexts/LoadingContext";
 
@@ -208,14 +208,14 @@ const UserSettingsPage: React.FC = () => {
 		setSubmitting(false);
 	};
 
-	const emailField: FormField = {
+	const emailField: ModalFormField = {
 		name: "email",
 		label: "Email Address",
 		type: "text",
 		placeholder: "Enter your email address",
 	};
 
-	const currentPasswordField: FormField = {
+	const currentPasswordField: ModalFormField = {
 		name: "current_password",
 		type: "password",
 		label: "Current Password",
@@ -223,21 +223,21 @@ const UserSettingsPage: React.FC = () => {
 		helpText: "Required to change your email or password",
 	};
 
-	const newPasswordField: FormField = {
+	const newPasswordField: ModalFormField = {
 		name: "new_password",
 		type: "password",
 		label: "New Password",
 		placeholder: "Enter new password",
 	};
 
-	const confirmPasswordField: FormField = {
+	const confirmPasswordField: ModalFormField = {
 		name: "confirm_password",
 		type: "password",
 		label: "Confirm New Password",
 		placeholder: "Confirm new password",
 	};
 
-	const chaseThresholdField: FormField = {
+	const chaseThresholdField: ModalFormField = {
 		name: "chase_threshold",
 		type: "number",
 		label: "Chase Threshold (days)",
@@ -245,7 +245,7 @@ const UserSettingsPage: React.FC = () => {
 		helpText: "Jobs below this threshold will be flagged for follow-up",
 	};
 
-	const deadlineThresholdField: FormField = {
+	const deadlineThresholdField: ModalFormField = {
 		name: "deadline_threshold",
 		type: "number",
 		label: "Deadline Threshold (days)",
@@ -253,7 +253,7 @@ const UserSettingsPage: React.FC = () => {
 		helpText: "Jobs within this threshold are considered near deadline",
 	};
 
-	const updateLimitField: FormField = {
+	const updateLimitField: ModalFormField = {
 		name: "update_limit",
 		type: "number",
 		label: "Update Display Limit",
@@ -281,7 +281,7 @@ const UserSettingsPage: React.FC = () => {
 						{errors.general && <div className="alert alert-danger mb-4">{errors.general}</div>}
 
 						<Col md={12} className="mb-3">
-							{renderFormField(currentPasswordField, formData, handleInputChange, errors)}
+							{renderModalFormField(currentPasswordField, formData, handleInputChange, errors)}
 						</Col>
 
 						{/* Account Settings Section */}
@@ -292,7 +292,7 @@ const UserSettingsPage: React.FC = () => {
 									Account Settings
 								</h5>
 							</div>
-							{renderFormField(emailField, formData, handleInputChange, errors)}
+							{renderModalFormField(emailField, formData, handleInputChange, errors)}
 						</div>
 
 						{/* Security Section */}
@@ -308,10 +308,10 @@ const UserSettingsPage: React.FC = () => {
 
 							<Row>
 								<Col md={6} className="mb-3">
-									{renderFormField(newPasswordField, formData, handleInputChange, errors)}
+									{renderModalFormField(newPasswordField, formData, handleInputChange, errors)}
 								</Col>
 								<Col md={6} className="mb-3">
-									{renderFormField(confirmPasswordField, formData, handleInputChange, errors)}
+									{renderModalFormField(confirmPasswordField, formData, handleInputChange, errors)}
 								</Col>
 							</Row>
 						</div>
@@ -326,13 +326,13 @@ const UserSettingsPage: React.FC = () => {
 							</div>
 							<Row>
 								<Col md={4} className="mb-3">
-									{renderFormField(chaseThresholdField, formData, handleInputChange, errors)}
+									{renderModalFormField(chaseThresholdField, formData, handleInputChange, errors)}
 								</Col>
 								<Col md={4} className="mb-3">
-									{renderFormField(deadlineThresholdField, formData, handleInputChange, errors)}
+									{renderModalFormField(deadlineThresholdField, formData, handleInputChange, errors)}
 								</Col>
 								<Col md={4} className="mb-3">
-									{renderFormField(updateLimitField, formData, handleInputChange, errors)}
+									{renderModalFormField(updateLimitField, formData, handleInputChange, errors)}
 								</Col>
 							</Row>
 						</div>

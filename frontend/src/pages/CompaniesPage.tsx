@@ -1,64 +1,28 @@
-import React, { useEffect } from "react";
-import GenericTableWithModals, { useTableData } from "../components/tables/GenericTable";
+import React from "react";
+import GenericTable from "../components/tables/GenericTable";
 import { CompanyModal } from "../components/modals/CompanyModal";
-import { tableColumns } from "../components/rendering/view/TableColumnRenders";
-import { useLoading } from "../contexts/LoadingContext";
+import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const CompaniesPage = () => {
-	const { showLoading, hideLoading } = useLoading();
-	const {
-		data: companies,
-		setData: setCompanies,
-		loading,
-		error,
-		sortConfig,
-		setSortConfig,
-		searchTerm,
-		setSearchTerm,
-		addItem,
-		updateItem,
-		removeItem,
-	} = useTableData("companies", [], {}, { key: "name", direction: "asc" });
-
 	const columns = [
-		tableColumns.name!(),
-		tableColumns.description!(),
-		tableColumns.url!(),
-		tableColumns.jobCount!(),
-		tableColumns.personCount!(),
-		tableColumns.createdAt!(),
+		tableColumns.name(),
+		tableColumns.description(),
+		tableColumns.url(),
+		tableColumns.jobCount(),
+		tableColumns.personCount(),
+		tableColumns.createdAt(),
 	];
 
-	useEffect(() => {
-		if (loading) {
-			showLoading("Loading Companies...");
-		} else {
-			hideLoading();
-		}
-		return () => {
-			hideLoading();
-		};
-	}, [loading, showLoading, hideLoading]);
-
 	return (
-		<GenericTableWithModals
-			title="Companies"
-			data={companies}
-			columns={columns}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
-			searchTerm={searchTerm}
-			onSearchChange={setSearchTerm}
-			loading={false}
-			error={error}
-			Modal={CompanyModal}
+		<GenericTable
+			mode="api"
 			endpoint="companies"
+			initialSortConfig={{ key: "name", direction: "asc" }}
+			title="Companies"
+			columns={columns}
+			Modal={CompanyModal}
 			nameKey="name"
 			itemType="Company"
-			addItem={addItem}
-			updateItem={updateItem}
-			removeItem={removeItem}
-			setData={setCompanies}
 		/>
 	);
 };

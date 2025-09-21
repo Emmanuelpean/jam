@@ -2,13 +2,13 @@ import React, { MouseEvent, ReactNode, useCallback, useEffect, useState } from "
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../services/Api";
-import { getTableIcon, renderViewElement } from "../rendering/view/ViewRenders";
+import { getTableIcon, renderViewField } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";
 import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { pluralize } from "../../utils/StringUtils";
-import { TableColumn } from "../rendering/view/TableColumnRenders";
+import { TableColumn } from "../rendering/view/TableColumns";
 import "./GenericTable.css";
 
 export interface SortConfig {
@@ -23,21 +23,6 @@ export interface ContextMenuState {
 	show: boolean;
 }
 
-export interface UseTableDataResult {
-	data: any[];
-	setData: React.Dispatch<React.SetStateAction<any[]>>;
-	loading: boolean;
-	error: string | null;
-	sortConfig: SortConfig;
-	setSortConfig: React.Dispatch<React.SetStateAction<SortConfig>>;
-	searchTerm: string;
-	setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
-	addItem: (newItem: any) => void;
-	updateItem: (updatedItem: any) => void;
-	removeItem: (itemId: string | number) => void;
-	refetch: () => Promise<void>;
-}
-
 export interface CreateGenericDeleteHandlerProps {
 	endpoint: string;
 	token: string | null;
@@ -50,19 +35,37 @@ export interface CreateGenericDeleteHandlerProps {
 }
 
 export interface TableProps {
-	onChange?: () => void;
-	data?: any[] | null;
+	data?: any | null;
 	columns?: TableColumn[];
+	onDataChange?: (data: any[]) => void;
+	loading?: boolean;
+	error?: string | null;
+	showAdd?: boolean;
 }
 
 export interface GenericTableWithModalsProps {
-	// Table data
+	// Data source configuration
+	mode: "provided" | "api" | "controlled";
+
+	// For provided mode
+	providedData?: any[];
+
+	// For API mode
+	endpoint?: string;
+	dependencies?: any[];
+	queryParams?: Record<string, any>;
+
+	// For controlled mode
 	data?: any[];
-	columns?: TableColumn[];
+	onDataChange?: (data: any[]) => void;
 	loading?: boolean;
 	error?: string | null;
 
-	// Search and sort
+	// Table configuration
+	columns?: TableColumn[];
+	initialSortConfig?: Partial<SortConfig>;
+
+	// Search and sort (controlled mode)
 	searchTerm?: string;
 	onSearchChange?: (searchTerm: string) => void;
 	sortConfig?: SortConfig;
@@ -74,13 +77,8 @@ export interface GenericTableWithModalsProps {
 	modalProps?: any;
 
 	// Data management
-	endpoint: string;
 	nameKey: string;
 	itemType: string;
-	addItem: (newItem: any) => void;
-	updateItem: (updatedItem: any) => void;
-	removeItem: (itemId: string | number) => void;
-	setData: React.Dispatch<React.SetStateAction<any[]>>;
 
 	// Display options
 	title?: string;
@@ -93,120 +91,6 @@ export interface GenericTableWithModalsProps {
 	// Additional content
 	children?: ReactNode;
 }
-
-const useBaseTableData = (
-	customSortConfig: Partial<SortConfig> = {},
-): {
-	data: any[];
-	setData: React.Dispatch<React.SetStateAction<any[]>>;
-	loading: boolean;
-	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-	error: string | null;
-	setError: React.Dispatch<React.SetStateAction<string | null>>;
-	sortConfig: SortConfig;
-	setSortConfig: React.Dispatch<React.SetStateAction<SortConfig>>;
-	searchTerm: string;
-	setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
-	addItem: (newItem: any) => void;
-	updateItem: (updatedItem: any) => void;
-	removeItem: (itemId: string | number) => void;
-} => {
-	const [data, setData] = useState<any[]>([]);
-	const [loading, setLoading] = useState<boolean>(false);
-	const [error, setError] = useState<string | null>(null);
-	const [sortConfig, setSortConfig] = useState<SortConfig>(
-		(customSortConfig as SortConfig) || { key: "created_at", direction: "desc" },
-	);
-	const [searchTerm, setSearchTerm] = useState<string>("");
-
-	const addItem = useCallback((newItem: any) => setData((prev) => [newItem, ...prev]), []);
-	const updateItem = useCallback(
-		(updatedItem: any) => setData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))),
-		[],
-	);
-	const removeItem = useCallback(
-		(itemId: string | number) => setData((prev) => prev.filter((item) => item.id !== itemId)),
-		[],
-	);
-
-	return {
-		data,
-		setData,
-		loading,
-		setLoading,
-		error,
-		setError,
-		sortConfig,
-		setSortConfig,
-		searchTerm,
-		setSearchTerm,
-		addItem,
-		updateItem,
-		removeItem,
-	};
-};
-
-export const useProvidedTableData = (
-	providedData: any[] | null = null,
-	customSortConfig: Partial<SortConfig> = {},
-): UseTableDataResult => {
-	const base = useBaseTableData(customSortConfig);
-
-	// Update data when providedData changes
-	useEffect(() => {
-		base.setData(providedData || []);
-		base.setLoading(false);
-		base.setError(null);
-	}, [providedData, base.setData, base.setLoading, base.setError]);
-
-	const refetch = useCallback(async () => {}, []);
-
-	return {
-		...base,
-		refetch,
-	};
-};
-
-export const useTableData = (
-	endpoint: string,
-	dependencies: any[] = [],
-	queryParams: Record<string, any> = {},
-	customSortConfig: Partial<SortConfig> = {},
-): UseTableDataResult => {
-	const { token } = useAuth();
-	const base = useBaseTableData(customSortConfig);
-
-	// API fetch function
-	const fetchData = useCallback(async (): Promise<void> => {
-		base.setLoading(true);
-		base.setError(null);
-
-		try {
-			const queryString =
-				Object.keys(queryParams).length > 0 ? "?" + new URLSearchParams(queryParams).toString() : "";
-			const result = await api.get(`${endpoint}/${queryString}`, token);
-			base.setData(result || []);
-		} catch (err) {
-			console.error(`Error fetching ${endpoint}:`, err);
-			base.setError(`Failed to load ${endpoint}. Please try again later.`);
-			base.setData([]);
-		} finally {
-			base.setLoading(false);
-		}
-	}, [endpoint, token, JSON.stringify(queryParams), base.setData, base.setLoading, base.setError]);
-
-	// Fetch data when dependencies change
-	useEffect(() => {
-		if (token) {
-			fetchData().then(() => {});
-		}
-	}, [token, fetchData, ...dependencies]);
-
-	return {
-		...base,
-		refetch: fetchData,
-	};
-};
 
 /**
  * Creates a reusable delete handler for table items
@@ -255,18 +139,27 @@ export const createGenericDeleteHandler = ({
 	};
 };
 
-export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
-	// Table data
-	data = [],
-	columns = [],
-	loading = false,
-	error = null,
+export const GenericTable: React.FC<GenericTableWithModalsProps> = ({
+	// Data source configuration
+	mode,
+	providedData = [],
+	endpoint = "",
+	dependencies = [],
+	queryParams = {},
+	data: controlledData = [],
+	onDataChange,
+	loading: controlledLoading = false,
+	error: controlledError = null,
 
-	// Search and sort
-	searchTerm = "",
-	onSearchChange = () => {},
-	sortConfig = { key: "", direction: "asc" },
-	onSort = () => {},
+	// Table configuration
+	columns = [],
+	initialSortConfig = {},
+
+	// Search and sort (controlled mode)
+	searchTerm: controlledSearchTerm = "",
+	onSearchChange: controlledOnSearchChange = () => {},
+	sortConfig: controlledSortConfig = { key: "", direction: "asc" },
+	onSort: controlledOnSort = () => {},
 
 	// Modal configuration
 	Modal,
@@ -274,13 +167,8 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 	modalProps = {},
 
 	// Data management
-	endpoint,
 	nameKey,
 	itemType,
-	addItem,
-	updateItem,
-	removeItem,
-	setData,
 
 	// Display options
 	title,
@@ -295,9 +183,21 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 }) => {
 	const { token } = useAuth();
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
+
+	// Internal state management
+	const [internalData, setInternalData] = useState<any[]>([]);
+	const [internalLoading, setInternalLoading] = useState<boolean>(false);
+	const [internalError, setInternalError] = useState<string | null>(null);
+	const [internalSortConfig, setInternalSortConfig] = useState<SortConfig>(
+		(initialSortConfig as SortConfig) || { key: "created_at", direction: "desc" },
+	);
+	const [internalSearchTerm, setInternalSearchTerm] = useState<string>("");
+
+	// UI state
 	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 	const [currentPage, setCurrentPage] = useState<number>(0);
 	const [pageSize, setPageSize] = useState<number>(20);
+
 	const {
 		showModal,
 		showViewModal,
@@ -311,6 +211,169 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 		closeEditModal,
 	} = useModalState();
 
+	// API fetch function for API mode
+	const fetchData = useCallback(async (): Promise<void> => {
+		if (mode !== "api" || !endpoint) return;
+
+		setInternalLoading(true);
+		setInternalError(null);
+
+		try {
+			const queryString =
+				Object.keys(queryParams).length > 0 ? "?" + new URLSearchParams(queryParams).toString() : "";
+			const result = await api.get(`${endpoint}/${queryString}`, token);
+			setInternalData(result || []);
+		} catch (err) {
+			console.error(`Error fetching ${endpoint}:`, err);
+			setInternalError(`Failed to load ${endpoint}. Please try again later.`);
+			setInternalData([]);
+		} finally {
+			setInternalLoading(false);
+		}
+	}, [endpoint, token, JSON.stringify(queryParams), mode]);
+
+	// Handle data updates based on mode
+	useEffect(() => {
+		switch (mode) {
+			case "provided":
+				setInternalData(providedData || []);
+				setInternalLoading(false);
+				setInternalError(null);
+				break;
+			case "api":
+				if (token) {
+					fetchData().then(() => {});
+				}
+				break;
+			case "controlled":
+				// Data is managed externally
+				break;
+		}
+	}, [mode, token, fetchData, ...dependencies]);
+
+	// Get effective values based on mode
+	const getEffectiveData = (): any[] => {
+		switch (mode) {
+			case "controlled":
+				return controlledData;
+			default:
+				return internalData;
+		}
+	};
+
+	const getEffectiveLoading = (): boolean => {
+		switch (mode) {
+			case "controlled":
+				return controlledLoading;
+			default:
+				return internalLoading;
+		}
+	};
+
+	const getEffectiveError = (): string | null => {
+		switch (mode) {
+			case "controlled":
+				return controlledError;
+			default:
+				return internalError;
+		}
+	};
+
+	const getEffectiveSearchTerm = (): string => {
+		switch (mode) {
+			case "controlled":
+				return controlledSearchTerm;
+			default:
+				return internalSearchTerm;
+		}
+	};
+
+	const getEffectiveSortConfig = (): SortConfig => {
+		switch (mode) {
+			case "controlled":
+				return controlledSortConfig;
+			default:
+				return internalSortConfig;
+		}
+	};
+
+	// CRUD operations
+	const addItem = useCallback(
+		(newItem: any) => {
+			if (mode === "controlled") {
+				const newData = [newItem, ...controlledData];
+				onDataChange?.(newData);
+			} else {
+				setInternalData((prev) => [newItem, ...prev]);
+			}
+		},
+		[mode, controlledData, onDataChange],
+	);
+
+	const updateItem = useCallback(
+		(updatedItem: any) => {
+			if (mode === "controlled") {
+				const newData = controlledData.map((item) => (item.id === updatedItem.id ? updatedItem : item));
+				onDataChange?.(newData);
+			} else {
+				setInternalData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
+			}
+		},
+		[mode, controlledData, onDataChange],
+	);
+
+	const removeItem = useCallback(
+		(itemId: string | number) => {
+			if (mode === "controlled") {
+				const newData = controlledData.filter((item) => item.id !== itemId);
+				onDataChange?.(newData);
+			} else {
+				setInternalData((prev) => prev.filter((item) => item.id !== itemId));
+			}
+		},
+		[mode, controlledData, onDataChange],
+	);
+
+	// Search and sort handlers
+	const handleSearchChange = useCallback(
+		(term: string) => {
+			if (mode === "controlled") {
+				controlledOnSearchChange(term);
+			} else {
+				setInternalSearchTerm(term);
+			}
+		},
+		[mode, controlledOnSearchChange],
+	);
+
+	const handleSort = useCallback(
+		(key: string) => {
+			let direction: "asc" | "desc" = "asc";
+			const currentSortConfig = getEffectiveSortConfig();
+
+			if (currentSortConfig.key === key && currentSortConfig.direction === "asc") {
+				direction = "desc";
+			}
+
+			const newSortConfig = { key, direction };
+
+			if (mode === "controlled") {
+				controlledOnSort(newSortConfig);
+			} else {
+				setInternalSortConfig(newSortConfig);
+			}
+		},
+		[mode, controlledOnSort, getEffectiveSortConfig],
+	);
+
+	// Get current effective values
+	const data = getEffectiveData();
+	const loading = getEffectiveLoading();
+	const error = getEffectiveError();
+	const searchTerm = getEffectiveSearchTerm();
+	const sortConfig = getEffectiveSortConfig();
+
+	// Helper methods
 	const getEffectiveItem = (item: any, column: TableColumn): any => {
 		if (!column || !column.accessKey) return item;
 		return accessAttribute(item, column.accessKey);
@@ -388,14 +451,6 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 	};
 
 	// Event handlers
-	const handleSort = (key: string): void => {
-		let direction: "asc" | "desc" = "asc";
-		if (sortConfig.key === key && sortConfig.direction === "asc") {
-			direction = "desc";
-		}
-		onSort({ key, direction });
-	};
-
 	const handleRowClick = (event: MouseEvent<HTMLTableRowElement>, item: any): void => {
 		if (contextMenu) return;
 
@@ -433,7 +488,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 		showDelete: showDelete,
 		showError: showError,
 		removeItem: removeItem,
-		setData: setData,
+		setData: mode === "controlled" ? undefined : setInternalData,
 		nameKey: nameKey,
 		itemType: itemType,
 	});
@@ -462,9 +517,11 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 		updateItem(updatedItem);
 		closeEditModal();
 	};
+
 	const handleAddSuccess = (newItem: any): void => {
 		addItem(newItem);
 		closeAddModal();
+		console.log("Data after adding", data.length);
 	};
 
 	// Close context menu on outside click or escape
@@ -548,7 +605,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 							className="form-control"
 							placeholder="Search..."
 							value={searchTerm}
-							onChange={(e) => onSearchChange(e.target.value)}
+							onChange={(e) => handleSearchChange(e.target.value)}
 							id="search-input"
 						/>
 						<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
@@ -638,7 +695,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 												: {}),
 										}}
 									>
-										{renderViewElement(column, item, `table-row-${item.id}`)}
+										{renderViewField(column, item, `table-row-${item.id}`)}
 									</td>
 								))}
 							</tr>
@@ -787,6 +844,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 			)}
 
 			{children}
+
 			<Modal
 				show={showModal}
 				onHide={closeAddModal}
@@ -794,6 +852,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 				size={modalSize}
 				data={{}}
 				submode="add"
+				{...modalProps}
 			/>
 
 			<Modal
@@ -803,6 +862,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 				data={selectedItem || {}}
 				submode="edit"
 				size={modalSize}
+				{...modalProps}
 			/>
 
 			<Modal
@@ -824,4 +884,4 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 	);
 };
 
-export default GenericTableWithModals;
+export default GenericTable;

@@ -62,6 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onHoverChange }) => {
 		},
 		// Bottom positioned items
 		{ path: "/settings", icon: "bi-gear", text: "User Settings", position: "bottom" },
+		{ path: "/about", icon: "bi-info-circle", text: "About", position: "bottom" },
 		{
 			text: "Admin",
 			icon: "bi-person-gear",

@@ -2,15 +2,14 @@ import React, { JSX, ReactNode, useEffect, useLayoutEffect, useRef, useState } f
 import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
 import "./GenericModal.css";
-import { renderViewElement } from "../../rendering/view/ViewRenders";
-import { Errors, renderFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
+import { Errors, renderModalFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
 import { api } from "../../../services/Api";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import AlertModal from "../AlertModal";
 import { areDifferent, findByKey, flattenArray } from "../../../utils/Utils";
-import { renderViewField, ViewField } from "../../rendering/view/ModalFieldRenders";
-import { FormField } from "../../rendering/form/FormRenders";
+import { renderModalViewField, ModalViewField } from "../../rendering/view/ModalFields";
+import { ModalFormField } from "../../rendering/form/FormRenders";
 
 interface CreateGenericDeleteHandlerParams {
 	endpoint: string;
@@ -69,8 +68,8 @@ export const createGenericDeleteHandler = ({
 	};
 };
 
-export type ViewFields = (ViewField | ViewField[])[];
-export type FormFields = (FormField | FormField[])[];
+export type ViewFields = (ModalViewField | ModalViewField[])[];
+export type FormFields = (ModalFormField | ModalFormField[])[];
 
 interface ModalProps {
 	mode?: "view" | "edit" | "add";
@@ -82,14 +81,14 @@ interface ModalProps {
 	transformFormData?: ((data: any) => any) | null;
 	onFormDataChange?: ((data: any) => void) | null;
 	onDelete?: ((item: any) => Promise<void>) | null;
-	additionalFields?: ViewField[];
+	additionalFields?: ModalViewField[];
 }
 
 export interface TabConfig {
 	key: string;
 	title: string | JSX.Element | ((data: any) => ReactNode);
 	fields: { view: ViewFields; form: FormFields };
-	additionalFields?: ViewField[];
+	additionalFields?: ModalViewField[];
 }
 
 export interface GenericModalProps extends ModalProps {
@@ -192,7 +191,7 @@ const GenericModal = ({
 		return { form: formFields, view: viewFields };
 	};
 
-	const getCurrentAdditionalFields = (): ViewField[] => {
+	const getCurrentAdditionalFields = (): ModalViewField[] => {
 		const currentTab = getCurrentTabConfig();
 		return currentTab?.additionalFields || additionalFields;
 	};
@@ -267,6 +266,9 @@ const GenericModal = ({
 	};
 
 	const handleHideImmediate = (): void => {
+		// if (onSuccess && effectiveData) {
+		// 	onSuccess(effectiveData);
+		// }
 		onHide();
 	};
 
@@ -317,15 +319,15 @@ const GenericModal = ({
 	// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 
 	const renderFieldGroup = (
-		item: ViewField | FormField | ViewField[] | FormField[],
+		item: ModalViewField | ModalFormField | ModalViewField[] | ModalFormField[],
 		index: number,
 		isFormMode = true,
 	) => {
-		let itemList: ViewField[] | FormField[];
+		let itemList: ModalViewField[] | ModalFormField[];
 		if (Array.isArray(item)) {
 			itemList = item;
 		} else {
-			itemList = [item] as ViewField[] | FormField[];
+			itemList = [item] as ModalViewField[] | ModalFormField[];
 		}
 
 		if (!isEditing && itemList.length === 1) {
@@ -337,7 +339,12 @@ const GenericModal = ({
 
 				return (
 					<div className={hasElementsUnderneath ? "mb-3" : ""} key={index}>
-						{renderViewField(firstItem as ViewField, effectiveData, getModalId())}
+						{renderModalViewField(
+							firstItem as ModalViewField,
+							effectiveData,
+							getModalId(),
+							createFieldHandler((firstItem as ModalViewField).key),
+						)}
 					</div>
 				);
 			}
@@ -361,7 +368,7 @@ const GenericModal = ({
 
 		return (
 			<div key={index} className="row mb-3" style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
-				{itemList.map((field: ViewField | FormField, fieldIndex: number) => {
+				{itemList.map((field: ModalViewField | ModalFormField, fieldIndex: number) => {
 					const fieldKey =
 						("key" in field ? field.key : null) ||
 						("name" in field ? field.name : null) ||
@@ -370,8 +377,13 @@ const GenericModal = ({
 					return (
 						<div key={fieldKey} className={columnClass}>
 							{isFormMode
-								? renderFormField(field as FormField, formData, handleChange, errors)
-								: renderViewField(field as ViewField, effectiveData, getModalId())}
+								? renderModalFormField(field as ModalFormField, formData, handleChange, errors)
+								: renderModalViewField(
+										field as ModalViewField,
+										effectiveData,
+										getModalId(),
+										createFieldHandler((field as ModalViewField).key),
+									)}
 						</div>
 					);
 				})}
@@ -414,27 +426,38 @@ const GenericModal = ({
 		}
 	};
 
-	const filterConditionalFields = <T extends ViewField | FormField>(fieldsToFilter: (T | T[])[]): (T | T[])[] => {
+	const filterConditionalFields = <T extends ModalViewField | ModalFormField>(
+		fieldsToFilter: (T | T[])[],
+	): (T | T[])[] => {
 		return fieldsToFilter
 			.map((item) => {
 				if (Array.isArray(item)) {
 					const filteredArray = item.filter((field) => {
-						if (!field.condition) {
+						if (!field.displayCondition) {
 							return true;
 						} else {
-							return field.condition(formData);
+							return field.displayCondition(formData);
 						}
 					});
 					return filteredArray.length > 0 ? filteredArray : null;
 				} else {
-					if (!item.condition) {
+					if (!item.displayCondition) {
 						return item;
 					} else {
-						return item.condition(formData) ? item : null;
+						return item.displayCondition(formData) ? item : null;
 					}
 				}
 			})
 			.filter((item) => item !== null) as (T | T[])[];
+	};
+
+	const createFieldHandler = (fieldName: string) => {
+		return (newData: any[]) => {
+			setEffectiveData((prev: any) => ({
+				...prev,
+				[fieldName]: newData,
+			}));
+		};
 	};
 
 	const validateFormFields = async (): Promise<Errors> => {
@@ -575,7 +598,7 @@ const GenericModal = ({
 					<div>
 						{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
 						<div>
-							{formFields.map((item: FormField | FormField[], index: number) => (
+							{formFields.map((item: ModalFormField | ModalFormField[], index: number) => (
 								<div key={`form-field-${index}`}>{renderFieldGroup(item, index, true)}</div>
 							))}
 						</div>
@@ -586,11 +609,13 @@ const GenericModal = ({
 							<Card>
 								<Card.Body>
 									<div>
-										{currentFields.view.map((item: ViewField | ViewField[], index: number) => (
-											<div key={`view-field-${index}`}>
-												{renderFieldGroup(item, index, false)}
-											</div>
-										))}
+										{currentFields.view.map(
+											(item: ModalViewField | ModalViewField[], index: number) => (
+												<div key={`view-field-${index}`}>
+													{renderFieldGroup(item, index, false)}
+												</div>
+											),
+										)}
 									</div>
 								</Card.Body>
 							</Card>
@@ -598,9 +623,14 @@ const GenericModal = ({
 
 						{currentAdditionalFields && currentAdditionalFields.length > 0 && (
 							<div className="outside-card-content mt-3">
-								{currentAdditionalFields.map((item: ViewField, index: number) => (
+								{currentAdditionalFields.map((item: ModalViewField, index: number) => (
 									<div key={`outside-field-${index}`} className="mb-3">
-										{renderViewElement(item, effectiveData, getModalId())}
+										{renderModalViewField(
+											item,
+											effectiveData,
+											getModalId(),
+											createFieldHandler(item.key),
+										)}
 									</div>
 								))}
 							</div>

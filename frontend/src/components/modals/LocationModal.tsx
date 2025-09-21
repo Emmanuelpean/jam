@@ -1,12 +1,13 @@
 import React from "react";
 import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
-import { formFields, useCountries } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import { formFields } from "../rendering/form/FormRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { locationsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { ValidationErrors } from "./GenericModal/GenericModal";
 import { LocationData } from "../../services/Schemas";
-import { tableColumns } from "../rendering/view/TableColumnRenders";
+import { tableColumns } from "../rendering/view/TableColumns";
+import { useFormOptions } from "../rendering/form/FormOptions";
 
 export const LocationModal: React.FC<DataModalProps> = ({
 	show,
@@ -19,7 +20,7 @@ export const LocationModal: React.FC<DataModalProps> = ({
 	size = "lg",
 }) => {
 	const { token } = useAuth();
-	const { countries } = useCountries();
+	const { countries } = useFormOptions(["countries"]);
 
 	const formFieldsArray = [
 		formFields.city({ placeholder: "Oxford" }),
@@ -27,8 +28,8 @@ export const LocationModal: React.FC<DataModalProps> = ({
 		formFields.country(countries),
 	];
 	const viewFieldsArray = [
-		[viewFields.city(), viewFields.postcode(), viewFields.country()],
-		viewFields.locationMap(),
+		[modalViewFields.city(), modalViewFields.postcode(), modalViewFields.country()],
+		modalViewFields.locationMap(),
 	];
 
 	const fields = {
@@ -37,8 +38,8 @@ export const LocationModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		viewFields.accordionJobTable({ helpText: "List of jobs at this location." }),
-		viewFields.accordionInterviewTable({
+		modalViewFields.accordionJobTable({ helpText: "List of jobs at this location." }),
+		modalViewFields.accordionInterviewTable({
 			columns: [tableColumns.date!(), tableColumns.job!(), tableColumns.type!(), tableColumns.note!()],
 			helpText: "List of interviews at this location.",
 		}),

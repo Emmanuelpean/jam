@@ -1,40 +1,19 @@
-import { ReactNode } from "react";
-import { renderFunctions, RenderParams } from "./ViewRenders";
+import { ViewField, renderFunctions, RenderParams } from "./ViewRenders";
 import { localeDateOnly } from "../../../utils/TimeUtils";
 
-interface TableColumnOverrides {
-	key?: string;
-	label?: string;
-	sortable?: boolean;
-	searchable?: boolean | ((item: any) => string);
-	type?: string;
-	render?: (params: RenderParams) => ReactNode;
-	sortField?: string;
-	searchFields?: string | ((item: any) => string);
-	columnClass?: string;
-	accessKey?: string | undefined;
-}
-
-export interface TableColumn {
-	key: string;
+export interface TableColumn extends ViewField {
 	label: string;
 	sortable?: boolean;
 	searchable?: boolean | ((item: any) => string);
 	type?: string;
-	render?: (params: RenderParams) => ReactNode;
 	sortField?: string;
 	searchFields?: string | ((item: any) => string);
 	columnClass?: string;
-	accessKey?: string | undefined;
 }
 
-type TableColumnFactory = (overrides?: TableColumnOverrides) => TableColumn;
+interface TableColumnOverrides extends Partial<TableColumn> {}
 
-interface Columns {
-	[key: string]: TableColumnFactory;
-}
-
-export const tableColumns: Columns = {
+export const tableColumns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
 
 	id: (overrides: TableColumnOverrides = {}): TableColumn => ({
@@ -374,15 +353,6 @@ export const tableColumns: Columns = {
 		sortable: true,
 		searchable: false,
 		render: renderFunctions.interviewCount,
-		...overrides,
-	}),
-
-	updateCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "updates",
-		label: "Updates",
-		sortable: true,
-		searchable: false,
-		render: renderFunctions.updateCount,
 		...overrides,
 	}),
 

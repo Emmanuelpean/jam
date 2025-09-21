@@ -6,7 +6,7 @@ import { renderDateLocal, renderDateTimeLocal } from "./Datetime";
 import { renderPasswordInput } from "./PasswordInput";
 import { renderCheckbox } from "./Checkbox";
 import { renderSelect } from "./SelectWidget";
-import { FormField } from "../form/FormRenders";
+import { ModalFormField } from "../form/FormRenders";
 import React, { JSX } from "react";
 import { HelpBubble } from "./HelpBubble";
 
@@ -22,7 +22,7 @@ export interface Errors {
 }
 
 export interface WidgetProps {
-	field: FormField;
+	field: ModalFormField;
 	value: any;
 	handleChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void;
 	error?: string | null;
@@ -51,8 +51,8 @@ export const renderDefaultInput = ({ field, value, handleChange, error }: Widget
 	);
 };
 
-export const renderFormField = (
-	field: FormField,
+export const renderModalFormField = (
+	field: ModalFormField,
 	formData: any,
 	handleChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
 	errors: Errors,

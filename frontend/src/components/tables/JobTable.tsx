@@ -1,50 +1,42 @@
 import React from "react";
-import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
-import { tableColumns } from "../rendering/view/TableColumnRenders";
+import { GenericTable, GenericTableWithModalsProps, TableProps } from "./GenericTable";
+import { tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
-const JobsTable: React.FC<TableProps> = ({ onChange, data = null, columns = [] }) => {
-	const {
-		data: jobs,
-		loading,
-		error,
-		addItem,
-		sortConfig,
-		setSortConfig,
-		updateItem,
-		removeItem,
-	} = useProvidedTableData(data, { key: "created_at", direction: "desc" });
+const JobsTable: React.FC<TableProps> = ({ data = [], onDataChange, loading = false, error = null, columns = [] }) => {
+	const defaultColumns =
+		columns.length > 0
+			? columns
+			: [
+					tableColumns.title(),
+					tableColumns.company(),
+					tableColumns.applicationStatus(),
+					tableColumns.createdAt(),
+				];
 
-	if (!columns.length) {
-		columns = [
-			tableColumns.title!(),
-			tableColumns.company!(),
-			tableColumns.applicationStatus!(),
-			tableColumns.createdAt!(),
-		];
-	}
+	// Handle data changes and notify parent
+	const handleDataChange = (newData: any[]) => {
+		onDataChange?.(newData);
+	};
 
 	return (
-		<GenericTableWithModals
-			data={jobs}
-			columns={columns}
+		<GenericTable
+			mode="controlled"
+			data={data}
+			onDataChange={handleDataChange}
 			loading={loading}
 			error={error}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
+			columns={defaultColumns}
+			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			Modal={JobModal}
 			endpoint="jobs"
 			nameKey="title"
 			itemType="Job"
-			addItem={addItem}
-			showAdd={false}
-			showSearch={true}
-			updateItem={updateItem}
-			removeItem={removeItem}
-			setData={() => {}}
 			modalSize="xl"
 			showAllEntries={true}
 			compact={true}
+			showAdd={false}
+			showSearch={true}
 		/>
 	);
 };

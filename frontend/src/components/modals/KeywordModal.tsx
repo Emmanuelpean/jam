@@ -1,7 +1,7 @@
 import React from "react";
 import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { keywordsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { ValidationErrors } from "./GenericModal/GenericModal";
@@ -21,11 +21,11 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 
 	const fields = {
 		form: [formFields.name({ required: true, placeholder: "Software development" })],
-		view: [viewFields.name({ isTitle: true })],
+		view: [modalViewFields.name({ isTitle: true })],
 	};
 
 	const additionalFields = [
-		viewFields.accordionJobTable({
+		modalViewFields.accordionJobTable({
 			helpText: "List of jobs associated with this tag.",
 		}),
 	];

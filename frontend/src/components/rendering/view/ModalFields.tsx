@@ -1,19 +1,17 @@
 import React, { ReactNode } from "react";
-import { renderFunctions, RenderParams, Field, renderViewElement } from "./ViewRenders";
-import { TableColumn } from "./TableColumnRenders";
+import { renderFunctions, RenderParams, ViewField, renderViewField } from "./ViewRenders";
 
-export interface ViewField extends Field {
-	label: string;
+export interface ModalViewField extends ViewField {
+	label?: string;
 	type?: string;
-	columnClass?: string;
 	isTitle?: boolean;
-	columns?: TableColumn[];
-	helpText?: string;
-	condition?: (item: any) => boolean;
+	displayCondition?: (item: any) => boolean;
 }
 
-export const renderViewField = (field: ViewField, item: any, id: string): ReactNode => {
-	const output = renderViewElement(field, item, id);
+interface ModalViewFieldOverride extends Partial<ModalViewField> {}
+
+export const renderModalViewField = (field: ModalViewField, item: any, id: string, onChange?: any): ReactNode => {
+	const output = renderViewField(field, item, id, onChange);
 
 	if (field.isTitle) {
 		return (
@@ -25,106 +23,106 @@ export const renderViewField = (field: ViewField, item: any, id: string): ReactN
 				</div>
 			</>
 		);
-	} else {
+	} else if (field.label) {
 		return (
 			<>
 				<h6 className="mb-2 fw-bold">{field.label}</h6>
 				<div className="mb-3">{output}</div>
 			</>
 		);
+	} else {
+		return output;
 	}
 };
 
-interface ViewFieldOverride extends Partial<ViewField> {}
-
-export const viewFields = {
+export const modalViewFields = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
-	name: (overrides: ViewFieldOverride = {}): ViewField => ({
+	name: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "name",
 		label: "Name",
 		...overrides,
 	}),
 
-	title: (overrides: ViewFieldOverride = {}): ViewField => ({
+	title: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "title",
 		label: "Title",
 		...overrides,
 	}),
 
-	value: (overrides: ViewFieldOverride = {}): ViewField => ({
+	value: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "value",
 		label: "Value",
 		render: (params: RenderParams) => renderFunctions.value({ ...params, view: true }),
 		...overrides,
 	}),
 
-	description: (overrides: ViewFieldOverride = {}): ViewField => ({
+	description: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "description",
 		label: "Description",
 		render: (params: RenderParams) => renderFunctions.description({ ...params, view: true }),
 		...overrides,
 	}),
 
-	note: (overrides: ViewFieldOverride = {}): ViewField => ({
+	note: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "note",
 		label: "Notes",
 		render: (params: RenderParams) => renderFunctions.note({ ...params, view: true }),
 		...overrides,
 	}),
 
-	applicationNote: (overrides: ViewFieldOverride = {}): ViewField => ({
+	applicationNote: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_note",
 		label: "Notes",
 		render: (params: RenderParams) => renderFunctions.applicationNote({ ...params, view: true }),
 		...overrides,
 	}),
 
-	type: (overrides: ViewFieldOverride = {}): ViewField => ({
+	type: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "type",
 		label: "Type",
 		...overrides,
 	}),
 
-	appTheme: (overrides: ViewFieldOverride = {}): ViewField => ({
+	appTheme: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "theme",
 		label: "Theme",
 		render: renderFunctions.appTheme,
 		...overrides,
 	}),
 
-	isAdmin: (overrides: ViewFieldOverride = {}): ViewField => ({
+	isAdmin: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "is_admin",
 		label: "Admin",
 		render: (params: RenderParams) => renderFunctions.isAdmin({ ...params, view: true }),
 		...overrides,
 	}),
 
-	city: (overrides: ViewFieldOverride = {}): ViewField => ({
+	city: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "city",
 		label: "City",
 		...overrides,
 	}),
 
-	postcode: (overrides: ViewFieldOverride = {}): ViewField => ({
+	postcode: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "postcode",
 		label: "Postcode",
 		...overrides,
 	}),
 
-	country: (overrides: ViewFieldOverride = {}): ViewField => ({
+	country: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "country",
 		label: "Country",
 		...overrides,
 	}),
 
-	personName: (overrides: ViewFieldOverride = {}): ViewField => ({
+	personName: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "name",
 		label: "Full Name",
 		...overrides,
 	}),
 
-	updateType: (overrides: ViewFieldOverride = {}): ViewField => ({
+	updateType: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "type",
 		label: "Type",
 		render: renderFunctions.updateType,
@@ -133,35 +131,35 @@ export const viewFields = {
 
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
-	url: (overrides: ViewFieldOverride = {}): ViewField => ({
+	url: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "url",
 		label: "Website",
 		render: (params: RenderParams) => renderFunctions.url({ ...params, view: true }),
 		...overrides,
 	}),
 
-	applicationUrl: (overrides: ViewFieldOverride = {}): ViewField => ({
+	applicationUrl: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_url",
 		label: "Application URL",
 		render: (params: RenderParams) => renderFunctions.applicationUrl({ ...params, view: true }),
 		...overrides,
 	}),
 
-	email: (overrides: ViewFieldOverride = {}): ViewField => ({
+	email: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "email",
 		label: "Email",
 		render: (params: RenderParams) => renderFunctions.email({ ...params, view: true }),
 		...overrides,
 	}),
 
-	linkedinUrl: (overrides: ViewFieldOverride = {}): ViewField => ({
+	linkedinUrl: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "linkedin_url",
 		label: "LinkedIn Profile",
 		render: (params: RenderParams) => renderFunctions.linkedinUrl({ ...params, view: true }),
 		...overrides,
 	}),
 
-	role: (overrides: ViewFieldOverride = {}): ViewField => ({
+	role: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "role",
 		label: "Role",
 		...overrides,
@@ -169,56 +167,56 @@ export const viewFields = {
 
 	// ----------------------------------------------------- BADGE -----------------------------------------------------
 
-	locationBadge: (overrides: ViewFieldOverride = {}): ViewField => ({
+	locationBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location",
 		label: "Location",
 		render: (params: RenderParams) => renderFunctions.locationBadge({ ...params, view: true }),
 		...overrides,
 	}),
 
-	companyBadge: (overrides: ViewFieldOverride = {}): ViewField => ({
+	companyBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "company",
 		label: "Company",
 		render: renderFunctions.companyBadge,
 		...overrides,
 	}),
 
-	keywordBadges: (overrides: ViewFieldOverride = {}): ViewField => ({
+	keywordBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "keywords",
 		label: "Tags",
 		render: (params: RenderParams) => renderFunctions.keywordBadges({ ...params, view: true }),
 		...overrides,
 	}),
 
-	personBadges: (overrides: ViewFieldOverride = {}): ViewField => ({
+	personBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "person",
 		label: "Contacts",
 		render: (params: RenderParams) => renderFunctions.contactBadges({ ...params, view: true }),
 		...overrides,
 	}),
 
-	jobBadge: (overrides: ViewFieldOverride = {}): ViewField => ({
+	jobBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job",
 		label: "Job",
 		render: (params: RenderParams) => renderFunctions.jobNameBadge({ ...params }),
 		...overrides,
 	}),
 
-	interviewerBadges: (overrides: ViewFieldOverride = {}): ViewField => ({
+	interviewerBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "person",
 		label: "Interviewers",
 		render: (params: RenderParams) => renderFunctions.interviewerBadges({ ...params, view: true }),
 		...overrides,
 	}),
 
-	appliedViaBadge: (overrides: ViewFieldOverride = {}): ViewField => ({
+	appliedViaBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "applied_via",
 		label: "Applied Via",
 		render: (params: RenderParams) => renderFunctions.appliedViaBadge({ ...params, view: true }),
 		...overrides,
 	}),
 
-	sourceBadge: (overrides: ViewFieldOverride = {}): ViewField => ({
+	sourceBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "source",
 		label: "Source Aggregator",
 		render: renderFunctions.sourceBadge,
@@ -227,37 +225,36 @@ export const viewFields = {
 
 	// ----------------------------------------------------- OTHER -----------------------------------------------------
 
-	locationMap: (overrides: ViewFieldOverride = {}): ViewField => ({
+	locationMap: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location_map",
 		label: "Location on Map",
 		type: "custom",
-		columnClass: "col-12",
 		render: renderFunctions.locationMap,
 		...overrides,
 	}),
 
-	phone: (overrides: ViewFieldOverride = {}): ViewField => ({
+	phone: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "phone",
 		label: "Phone",
 		render: (params: RenderParams) => renderFunctions.phone({ ...params, view: true }),
 		...overrides,
 	}),
 
-	salaryRange: (overrides: ViewFieldOverride = {}): ViewField => ({
+	salaryRange: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "salary_range",
 		label: "Salary Range",
 		render: (params: RenderParams) => renderFunctions.salaryRange({ ...params, view: true }),
 		...overrides,
 	}),
 
-	personalRating: (overrides: ViewFieldOverride = {}): ViewField => ({
+	personalRating: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "personal_rating",
 		label: "Personal Rating",
 		render: (params: RenderParams) => renderFunctions.personalRating({ ...params, view: true }),
 		...overrides,
 	}),
 
-	applicationStatus: (overrides: ViewFieldOverride = {}): ViewField => ({
+	applicationStatus: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_status",
 		label: "Status",
 		render: (params: RenderParams) => renderFunctions.applicationStatus({ ...params, view: true }),
@@ -266,72 +263,66 @@ export const viewFields = {
 
 	// ----------------------------------------------------- TABLE -----------------------------------------------------
 
-	interviewTable: (overrides: ViewFieldOverride = {}): ViewField => ({
+	interviewTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "interviews",
-		label: "Interviews",
 		render: renderFunctions.interviewTable,
 		...overrides,
 	}),
 
-	updateTable: (overrides: ViewFieldOverride = {}): ViewField => ({
+	updateTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "updates",
-		label: "Updates",
 		render: renderFunctions.jobApplicationUpdateTable,
 		...overrides,
 	}),
 
-	accordionInterviewTable: (overrides: ViewFieldOverride = {}): ViewField => ({
+	accordionInterviewTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "interviews",
-		label: "Interviews",
 		render: renderFunctions.accordionInterviewTable,
 		...overrides,
 	}),
 
-	accordionJobTable: (overrides: ViewFieldOverride = {}): ViewField => ({
+	accordionJobTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job",
-		label: "Jobs",
 		render: renderFunctions.accordionJobTable,
 		...overrides,
 	}),
 
-	accordionJobApplicationTable: (overrides: ViewFieldOverride = {}): ViewField => ({
+	accordionJobApplicationTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job_application",
-		label: "Job Applications",
 		render: renderFunctions.accordionJobApplicationTable,
 		...overrides,
 	}),
 
-	accordionPersonTable: (overrides: ViewFieldOverride = {}): ViewField => ({
+	accordionPersonTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "persons",
-		label: "Persons",
 		render: renderFunctions.accordionPersonTable,
 		...overrides,
 	}),
 
 	// ---------------------------------------------------- DATETIME ---------------------------------------------------
 
-	applicationDate: (overrides: ViewFieldOverride = {}): ViewField => ({
+	applicationDate: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_date",
 		label: "Application Date",
 		render: (params: RenderParams) => renderFunctions.applicationDate({ ...params, view: true }),
 		...overrides,
 	}),
 
-	date: (overrides: ViewFieldOverride = {}): ViewField => ({
+	date: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "date",
 		label: "Date",
 		render: (params: RenderParams) => renderFunctions.date({ ...params, view: true }),
 		...overrides,
 	}),
 
-	datetime: (overrides: ViewFieldOverride = {}): ViewField => ({
+	datetime: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "date",
 		label: "Date & Time",
 		render: (params: RenderParams) => renderFunctions.datetime({ ...params, view: true }),
 		...overrides,
 	}),
 
-	deadline: (overrides: ViewFieldOverride = {}): ViewField => ({
+	deadline: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "deadline",
 		label: "Application Deadline",
 		render: (params: RenderParams) => renderFunctions.deadline({ ...params, view: true }),
