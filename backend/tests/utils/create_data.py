@@ -53,11 +53,7 @@ def create_users(db, user_data: list[dict] = None) -> list[models.User]:
         # noinspection PyArgumentList
         users_hash.append(models.User(**user_dict))
 
-    db.add_all(users_hash)
-    db.commit()
-
-    for user in users_hash:
-        db.refresh(user)
+    users_hash = add_to_db(db, users_hash)
 
     # Create new user objects that won't become detached with the original passwords and database attributes
     result_users = []
@@ -73,6 +69,7 @@ def create_users(db, user_data: list[dict] = None) -> list[models.User]:
 
 def delete_user(db, user_email: str) -> models.User:
     """Delete a user by email and return the deleted user
+    :param db: database session
     :param user_email: user email address"""
 
     user = db.query(models.User).filter(models.User.email == user_email).first()
@@ -100,15 +97,23 @@ def override_owner_id(data: list[dict], *args) -> list[dict]:
     return data
 
 
+def add_to_db(db, items: list[models.CommonBase]) -> list:
+    """Add a list of items to the database and commit"""
+
+    db.add_all(items)
+    db.commit()
+    for item in items:
+        db.refresh(item)
+    return items
+
+
 def create_keywords(db, users: list[models.User]) -> list[models.Keyword]:
     """Create sample keywords"""
 
     print("Creating keywords...")
     # noinspection PyArgumentList
     keywords = [models.Keyword(**keyword) for keyword in override_owner_id(KEYWORD_DATA, ("owner_id", users))]
-    db.add_all(keywords)
-    db.commit()
-    return db.query(models.Keyword).all()
+    return add_to_db(db, keywords)
 
 
 def create_aggregators(db, users: list[models.User]) -> list[models.Aggregator]:
@@ -119,9 +124,7 @@ def create_aggregators(db, users: list[models.User]) -> list[models.Aggregator]:
     aggregators = [
         models.Aggregator(**aggregator) for aggregator in override_owner_id(AGGREGATOR_DATA, ("owner_id", users))
     ]
-    db.add_all(aggregators)
-    db.commit()
-    return db.query(models.Aggregator).all()
+    return add_to_db(db, aggregators)
 
 
 def create_companies(db, users: list[models.User]) -> list[models.Company]:
@@ -130,9 +133,7 @@ def create_companies(db, users: list[models.User]) -> list[models.Company]:
     print("Creating companies...")
     # noinspection PyArgumentList
     companies = [models.Company(**company) for company in override_owner_id(COMPANY_DATA, ("owner_id", users))]
-    db.add_all(companies)
-    db.commit()
-    return db.query(models.Company).all()
+    return add_to_db(db, companies)
 
 
 def create_locations(db, users: list[models.User]) -> list[models.Location]:
@@ -141,9 +142,7 @@ def create_locations(db, users: list[models.User]) -> list[models.Location]:
     print("Creating locations...")
     # noinspection PyArgumentList
     locations = [models.Location(**location) for location in override_owner_id(LOCATION_DATA, ("owner_id", users))]
-    db.add_all(locations)
-    db.commit()
-    return db.query(models.Location).all()
+    return add_to_db(db, locations)
 
 
 def create_people(db, users: list[models.User], companies: list[models.Company]) -> list[models.Person]:
@@ -155,9 +154,7 @@ def create_people(db, users: list[models.User], companies: list[models.Company])
         models.Person(**person)
         for person in override_owner_id(PERSON_DATA, ("owner_id", users), ("company_id", companies))
     ]
-    db.add_all(persons)
-    db.commit()
-    return db.query(models.Person).all()
+    return add_to_db(db, persons)
 
 
 def create_jobs(
@@ -208,9 +205,7 @@ def create_jobs(
         relationship_attr="contacts",
     )
 
-    db.add_all(jobs)
-    db.commit()
-    return db.query(models.Job).all()
+    return add_to_db(db, jobs)
 
 
 def create_files(db, users: list[models.User]) -> list[models.File]:
@@ -219,9 +214,7 @@ def create_files(db, users: list[models.User]) -> list[models.File]:
     print("Creating files...")
     # noinspection PyArgumentList
     files = [models.File(**file) for file in override_owner_id(FILE_DATA, ("owner_id", users))]
-    db.add_all(files)
-    db.commit()
-    return db.query(models.File).all()
+    return add_to_db(db, files)
 
 
 def create_interviews(
@@ -252,9 +245,7 @@ def create_interviews(
         relationship_attr="interviewers",
     )
 
-    db.add_all(interviews)
-    db.commit()
-    return db.query(models.Interview).all()
+    return add_to_db(db, interviews)
 
 
 def create_job_application_updates(
@@ -274,9 +265,8 @@ def create_job_application_updates(
             ("job_id", jobs),
         )
     ]
-    db.add_all(updates)
-    db.commit()
-    return db.query(models.JobApplicationUpdate).all()
+
+    return add_to_db(db, updates)
 
 
 def create_job_alert_emails(
@@ -296,9 +286,8 @@ def create_job_alert_emails(
     ]
     for email in emails:
         email.external_email_id += str(random.random())  # Ensure uniqueness
-    db.add_all(emails)
-    db.commit()
-    return db.query(eis_models.JobAlertEmail).all()
+
+    return add_to_db(db, emails)
 
 
 def create_scraped_jobs(db, emails, users: list[models.User]) -> list[eis_models.ScrapedJob]:
@@ -320,9 +309,7 @@ def create_scraped_jobs(db, emails, users: list[models.User]) -> list[eis_models
         relationship_attr="jobs",
     )
 
-    db.add_all(scraped_jobs)
-    db.commit()
-    return db.query(eis_models.ScrapedJob).all()
+    return add_to_db(db, scraped_jobs)
 
 
 def create_service_logs(db) -> list[eis_models.EisServiceLog]:
@@ -331,6 +318,5 @@ def create_service_logs(db) -> list[eis_models.EisServiceLog]:
     print("Creating service logs...")
     # noinspection PyArgumentList
     logs = [eis_models.EisServiceLog(**log) for log in SERVICE_LOG_DATA]
-    db.add_all(logs)
-    db.commit()
-    return db.query(eis_models.EisServiceLog).all()
+
+    return add_to_db(db, logs)
