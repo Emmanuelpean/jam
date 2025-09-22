@@ -6,12 +6,10 @@ This script will drop all data and repopulate with hard-coded sample data.
 import os
 import sys
 
-from sqlalchemy import text, inspect
-
-from app.database import engine, session_local, Base
+from app.database import session_local
 from tests.utils.create_data import (
+    delete_user,
     create_users,
-    create_settings,
     create_companies,
     create_locations,
     create_aggregators,
@@ -29,39 +27,24 @@ from tests.utils.create_data import (
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
-def reset_database(db_engine) -> None:
-    """Drop ALL tables in the database (including orphaned ones) and recreate from models"""
-    print("Dropping all tables in the database...")
-
-    with db_engine.connect() as conn:
-        # Get the database inspector to find all existing tables
-        inspector = inspect(db_engine)
-        table_names = inspector.get_table_names()
-
-        # For PostgreSQL: Drop tables with CASCADE to handle foreign key constraints
-        for table_name in table_names:
-            conn.execute(text(f'DROP TABLE IF EXISTS "{table_name}" CASCADE'))
-
-        conn.commit()
-
-    print("Creating all tables from models...")
-    Base.metadata.create_all(bind=db_engine)
-
-
 def seed_database() -> None:
     """Main function to seed the database"""
     print("Starting database seeding...")
-
-    # Reset the database
-    reset_database(engine)
 
     # Create a database session
     db = session_local()
 
     try:
-        # Create data in order of dependencies
-        users = create_users(db)
-        settings = create_settings(db)
+        delete_user(db, "test_user@test.com")
+        users = create_users(
+            db,
+            [
+                {
+                    "email": "test_user@test.com",
+                    "password": "test_password",
+                }
+            ],
+        )
         keywords = create_keywords(db, users)
         aggregators = create_aggregators(db, users)
         locations = create_locations(db, users)
@@ -79,7 +62,6 @@ def seed_database() -> None:
         print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
         print("=" * 50)
         print(f"Users: {len(users)}")
-        print(f"Settings: {len(settings)}")
         print(f"Companies: {len(companies)}")
         print(f"Locations: {len(locations)}")
         print(f"Aggregators: {len(aggregators)}")
@@ -88,10 +70,11 @@ def seed_database() -> None:
         print(f"Jobs: {len(jobs)}")
         print(f"Files: {len(files)}")
         print(f"Interviews: {len(interviews)}")
+        print(f"Job Application Updates: {len(job_application_updates)}")
         print(f"Service Logs: {len(service_logs)}")
         print(f"Job Alert Emails: {len(alert_emails)}")
         print(f"Scraped Jobs: {len(scraped_jobs)}")
-        print(f"Job Application Updates: {len(job_application_updates)}")
+
         print("=" * 50)
 
     except Exception as e:

@@ -109,73 +109,77 @@ def authorised_clients(client: TestClient, tokens: list[str]) -> list[TestClient
 
 
 @pytest.fixture
-def test_locations(session, test_users) -> list[models.Location]:
-    """Create test location data"""
+def test_keywords(session, test_users) -> list[models.Keyword]:
+    """Create test keyword data"""
 
-    return create_locations(session)
-
-
-@pytest.fixture
-def test_companies(session, test_users) -> list[models.Company]:
-    """Create test company data"""
-
-    return create_companies(session)
-
-
-@pytest.fixture
-def test_persons(session, test_users, test_companies) -> list[models.Person]:
-    """Create test person data"""
-
-    return create_people(session)
+    return create_keywords(session, test_users)
 
 
 @pytest.fixture
 def test_aggregators(session, test_users) -> list[models.Aggregator]:
     """Create test aggregator data"""
 
-    return create_aggregators(session)
+    return create_aggregators(session, test_users)
 
 
 @pytest.fixture
-def test_keywords(session, test_users) -> list[models.Keyword]:
-    """Create test keyword data"""
+def test_locations(session, test_users) -> list[models.Location]:
+    """Create test location data"""
 
-    return create_keywords(session)
+    return create_locations(session, test_users)
+
+
+@pytest.fixture
+def test_companies(session, test_users) -> list[models.Company]:
+    """Create test company data"""
+
+    return create_companies(session, test_users)
+
+
+@pytest.fixture
+def test_persons(session, test_users, test_companies) -> list[models.Person]:
+    """Create test person data"""
+
+    return create_people(session, test_users, test_companies)
 
 
 @pytest.fixture
 def test_files(session, test_users) -> list[models.File]:
     """Create test files for job applications"""
 
-    return create_files(session)
+    return create_files(session, test_users)
 
 
 @pytest.fixture
-def test_jobs(session, test_users, test_companies, test_locations, test_keywords, test_persons, test_aggregators, test_files) -> list[models.Job]:
+def test_jobs(
+    session, test_users, test_companies, test_locations, test_keywords, test_persons, test_aggregators, test_files
+) -> list[models.Job]:
     """Create test job data"""
 
-    return create_jobs(session, test_keywords, test_persons)
+    return create_jobs(
+        session, test_keywords, test_persons, test_users, test_companies, test_locations, test_aggregators, test_files
+    )
 
 
 @pytest.fixture
 def test_interviews(session, test_users, test_jobs, test_locations, test_persons) -> list[models.Interview]:
     """Create test interview data"""
 
-    return create_interviews(session, test_persons)
+    return create_interviews(session, test_persons, test_users, test_locations, test_jobs)
 
 
 @pytest.fixture
 def test_job_alert_emails(session, test_users, test_service_logs) -> list[eis_models.JobAlertEmail]:
     """Create test job alert emails"""
 
-    return create_job_alert_emails(session)
+    return create_job_alert_emails(session, test_users, test_service_logs)
 
 
 @pytest.fixture
-def test_scraped_jobs(session, test_job_alert_emails) -> list[eis_models.ScrapedJob]:
+def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[eis_models.ScrapedJob]:
     """Create test job alert email jobs"""
 
-    return create_scraped_jobs(session, test_job_alert_emails)
+    return create_scraped_jobs(session, test_job_alert_emails, test_users)
 
 
 @pytest.fixture
@@ -186,10 +190,10 @@ def test_service_logs(session) -> list[eis_models.EisServiceLog]:
 
 
 @pytest.fixture
-def test_job_application_updates(session, test_jobs) -> list[models.JobApplicationUpdate]:
+def test_job_application_updates(session, test_users, test_jobs) -> list[models.JobApplicationUpdate]:
     """Create test job application update data"""
 
-    return create_job_application_updates(session)
+    return create_job_application_updates(session, test_users, test_jobs)
 
 
 @pytest.fixture

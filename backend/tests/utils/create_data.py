@@ -1,3 +1,6 @@
+import copy
+import random
+
 import app.eis.models as eis_models
 from app import models, utils
 from tests.utils.table_data import (
@@ -34,14 +37,16 @@ def create_settings(db) -> list[models.Setting]:
     return db.query(models.Setting).all()
 
 
-def create_users(db) -> list[models.User]:
+def create_users(db, user_data: list[dict] = None) -> list[models.User]:
     """Create sample users and return them with non-hashed passwords but with database IDs"""
 
     print("Creating users...")
     users_hash = []
     original_passwords = []
+    if not user_data:
+        user_data = USER_DATA
 
-    for user_data in USER_DATA:
+    for user_data in user_data:
         user_dict = user_data.copy()
         original_passwords.append(user_dict["password"])  # Store original password
         user_dict["password"] = utils.hash_password(user_dict["password"])
@@ -66,67 +71,122 @@ def create_users(db) -> list[models.User]:
     return result_users
 
 
-def create_companies(db) -> list[models.Company]:
-    """Create sample companies"""
+def delete_user(db, user_email: str) -> models.User:
+    """Delete a user by email and return the deleted user
+    :param user_email: user email address"""
 
-    print("Creating companies...")
-    # noinspection PyArgumentList
-    companies = [models.Company(**company) for company in COMPANY_DATA]
-    db.add_all(companies)
-    db.commit()
-    return db.query(models.Company).all()
-
-
-def create_locations(db) -> list[models.Location]:
-    """Create sample locations"""
-
-    print("Creating locations...")
-    # noinspection PyArgumentList
-    locations = [models.Location(**location) for location in LOCATION_DATA]
-    db.add_all(locations)
-    db.commit()
-    return db.query(models.Location).all()
+    user = db.query(models.User).filter(models.User.email == user_email).first()
+    if user:
+        db.delete(user)
+        db.commit()
+    return user
 
 
-def create_aggregators(db) -> list[models.Aggregator]:
-    """Create sample aggregators"""
+def override_owner_id(data: list[dict], *args) -> list[dict]:
+    """Override the owner_id in a list of dictionaries"""
 
-    print("Creating aggregators...")
-    # noinspection PyArgumentList
-    aggregators = [models.Aggregator(**aggregator) for aggregator in AGGREGATOR_DATA]
-    db.add_all(aggregators)
-    db.commit()
-    return db.query(models.Aggregator).all()
+    data = copy.deepcopy(data)
+    for entry in data:
+        for arg in args:
+            key, values = arg
+            if entry.get(key, None) is not None:
+                try:
+                    current_id = entry[key] - 1
+                    new_id = values[current_id].id
+                    entry[key] = new_id
+                except IndexError:
+                    data.remove(entry)
+                    break
+    return data
 
 
-def create_keywords(db) -> list[models.Keyword]:
+def create_keywords(db, users: list[models.User]) -> list[models.Keyword]:
     """Create sample keywords"""
 
     print("Creating keywords...")
     # noinspection PyArgumentList
-    keywords = [models.Keyword(**keyword) for keyword in KEYWORD_DATA]
+    keywords = [models.Keyword(**keyword) for keyword in override_owner_id(KEYWORD_DATA, ("owner_id", users))]
     db.add_all(keywords)
     db.commit()
     return db.query(models.Keyword).all()
 
 
-def create_people(db) -> list[models.Person]:
+def create_aggregators(db, users: list[models.User]) -> list[models.Aggregator]:
+    """Create sample aggregators"""
+
+    print("Creating aggregators...")
+    # noinspection PyArgumentList
+    aggregators = [
+        models.Aggregator(**aggregator) for aggregator in override_owner_id(AGGREGATOR_DATA, ("owner_id", users))
+    ]
+    db.add_all(aggregators)
+    db.commit()
+    return db.query(models.Aggregator).all()
+
+
+def create_companies(db, users: list[models.User]) -> list[models.Company]:
+    """Create sample companies"""
+
+    print("Creating companies...")
+    # noinspection PyArgumentList
+    companies = [models.Company(**company) for company in override_owner_id(COMPANY_DATA, ("owner_id", users))]
+    db.add_all(companies)
+    db.commit()
+    return db.query(models.Company).all()
+
+
+def create_locations(db, users: list[models.User]) -> list[models.Location]:
+    """Create sample locations"""
+
+    print("Creating locations...")
+    # noinspection PyArgumentList
+    locations = [models.Location(**location) for location in override_owner_id(LOCATION_DATA, ("owner_id", users))]
+    db.add_all(locations)
+    db.commit()
+    return db.query(models.Location).all()
+
+
+def create_people(db, users: list[models.User], companies: list[models.Company]) -> list[models.Person]:
     """Create sample people"""
 
     print("Creating people...")
     # noinspection PyArgumentList
-    persons = [models.Person(**person) for person in PERSON_DATA]
+    persons = [
+        models.Person(**person)
+        for person in override_owner_id(PERSON_DATA, ("owner_id", users), ("company_id", companies))
+    ]
     db.add_all(persons)
     db.commit()
     return db.query(models.Person).all()
 
 
-def create_jobs(db, keywords, persons) -> list[models.Job]:
+def create_jobs(
+    db,
+    keywords,
+    persons,
+    users: list[models.User],
+    companies: list[models.Company],
+    locations: list[models.Location],
+    aggregators: list[models.Aggregator],
+    files: list[models.File],
+) -> list[models.Job]:
     """Create sample jobs"""
 
     print("Creating jobs...")
     # noinspection PyArgumentList
-    jobs = [models.Job(**job) for job in JOB_DATA]
+    jobs = [
+        models.Job(**job)
+        for job in override_owner_id(
+            JOB_DATA,
+            ("owner_id", users),
+            ("company_id", companies),
+            ("location_id", locations),
+            ("source_id", aggregators),
+            ("application_aggregator_id", aggregators),
+            ("cv_id", files),
+            ("cover_letter_id", files),
+        )
+    ]
 
     # Add keywords to jobs
     add_mappings(
@@ -153,23 +213,34 @@ def create_jobs(db, keywords, persons) -> list[models.Job]:
     return db.query(models.Job).all()
 
 
-def create_files(db) -> list[models.File]:
+def create_files(db, users: list[models.User]) -> list[models.File]:
     """Create sample files (CVs and cover letters)"""
 
     print("Creating files...")
     # noinspection PyArgumentList
-    files = [models.File(**file) for file in FILE_DATA]
+    files = [models.File(**file) for file in override_owner_id(FILE_DATA, ("owner_id", users))]
     db.add_all(files)
     db.commit()
     return db.query(models.File).all()
 
 
-def create_interviews(db, persons) -> list[models.Interview]:
+def create_interviews(
+    db,
+    persons,
+    users: list[models.User],
+    locations: list[models.Location],
+    jobs: list[models.Job],
+) -> list[models.Interview]:
     """Create sample interviews"""
 
     print("Creating interviews...")
     # noinspection PyArgumentList
-    interviews = [models.Interview(**interview) for interview in INTERVIEW_DATA]
+    interviews = [
+        models.Interview(**interview)
+        for interview in override_owner_id(
+            INTERVIEW_DATA, ("owner_id", users), ("location_id", locations), ("job_id", jobs)
+        )
+    ]
 
     # Add interviewers to interviews
     add_mappings(
@@ -186,23 +257,58 @@ def create_interviews(db, persons) -> list[models.Interview]:
     return db.query(models.Interview).all()
 
 
-def create_job_alert_emails(db) -> list[eis_models.JobAlertEmail]:
+def create_job_application_updates(
+    db,
+    users: list[models.User],
+    jobs: list[models.Job],
+) -> list[models.JobApplicationUpdate]:
+    """Create sample job application updates"""
+
+    print("Creating job application updates...")
+    # noinspection PyArgumentList
+    updates = [
+        models.JobApplicationUpdate(**update)
+        for update in override_owner_id(
+            JOB_APPLICATION_UPDATE_DATA,
+            ("owner_id", users),
+            ("job_id", jobs),
+        )
+    ]
+    db.add_all(updates)
+    db.commit()
+    return db.query(models.JobApplicationUpdate).all()
+
+
+def create_job_alert_emails(
+    db, users: list[models.User], service_logs: list[eis_models.EisServiceLog]
+) -> list[eis_models.JobAlertEmail]:
     """Create sample job alert emails"""
 
     print("Creating job alert emails...")
     # noinspection PyArgumentList
-    emails = [eis_models.JobAlertEmail(**email) for email in JOB_ALERT_EMAIL_DATA]
+    emails = [
+        eis_models.JobAlertEmail(**email)
+        for email in override_owner_id(
+            JOB_ALERT_EMAIL_DATA,
+            ("owner_id", users),
+            ("service_log_id", service_logs),
+        )
+    ]
+    for email in emails:
+        email.external_email_id += str(random.random())  # Ensure uniqueness
     db.add_all(emails)
     db.commit()
     return db.query(eis_models.JobAlertEmail).all()
 
 
-def create_scraped_jobs(db, emails) -> list[eis_models.ScrapedJob]:
+def create_scraped_jobs(db, emails, users: list[models.User]) -> list[eis_models.ScrapedJob]:
     """Create sample scraped jobs - some with scraped data, some without"""
 
     print("Creating scraped jobs...")
     # noinspection PyArgumentList
-    scraped_jobs = [eis_models.ScrapedJob(**job_data) for job_data in JOB_SCRAPED_DATA]
+    scraped_jobs = [
+        eis_models.ScrapedJob(**job_data) for job_data in override_owner_id(JOB_SCRAPED_DATA, ("owner_id", users))
+    ]
 
     # Add email mappings to scraped jobs
     add_mappings(
@@ -228,14 +334,3 @@ def create_service_logs(db) -> list[eis_models.EisServiceLog]:
     db.add_all(logs)
     db.commit()
     return db.query(eis_models.EisServiceLog).all()
-
-
-def create_job_application_updates(db) -> list[models.JobApplicationUpdate]:
-    """Create sample job application updates"""
-
-    print("Creating job application updates...")
-    # noinspection PyArgumentList
-    updates = [models.JobApplicationUpdate(**update) for update in JOB_APPLICATION_UPDATE_DATA]
-    db.add_all(updates)
-    db.commit()
-    return db.query(models.JobApplicationUpdate).all()
