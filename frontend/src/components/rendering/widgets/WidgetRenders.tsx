@@ -14,6 +14,8 @@ export interface SyntheticEvent {
 	target: {
 		name: string;
 		value: any;
+		type?: string;
+		checked?: boolean;
 	};
 }
 

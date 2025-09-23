@@ -261,6 +261,13 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	isActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "is_active",
+		label: "Active",
+		render: (params: RenderParams) => renderFunctions.isActive({ ...params, view: true }),
+		...overrides,
+	}),
+
 	// ----------------------------------------------------- TABLE -----------------------------------------------------
 
 	interviewTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({

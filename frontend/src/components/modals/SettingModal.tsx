@@ -23,8 +23,14 @@ export const SettingModal: React.FC<DataModalProps> = ({
 			formFields.name({ required: true, placeholder: "allowlist" }),
 			formFields.value({ required: true, placeholder: "test_user@test.com" }),
 			formFields.description({ placeholder: "Allow only those email addresses to sign up." }),
+			formFields.isActive(),
 		],
-		view: [modalViewFields.name(), modalViewFields.value(), modalViewFields.description()],
+		view: [
+			modalViewFields.name(),
+			modalViewFields.value(),
+			modalViewFields.description(),
+			modalViewFields.isActive(),
+		],
 	};
 
 	const transformFormData = (data: any): SettingData => {
@@ -32,6 +38,7 @@ export const SettingModal: React.FC<DataModalProps> = ({
 			name: data?.name?.trim(),
 			value: data?.value?.trim(),
 			description: data?.description?.trim(),
+			isActive: data?.isActive || false,
 		};
 	};
 
@@ -57,7 +64,7 @@ export const SettingModal: React.FC<DataModalProps> = ({
 			show={show}
 			onHide={onHide}
 			mode={submode}
-			itemName="Tag"
+			itemName="Setting"
 			size={size}
 			data={data || {}}
 			id={id}

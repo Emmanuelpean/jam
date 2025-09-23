@@ -285,6 +285,15 @@ export const renderFunctions = {
 		return <i className={icon}></i>;
 	},
 
+	isActive: (param: RenderParams): ReactNode => {
+		const isActive = accessSubAttribute(param.item, param.accessKey, "is_active");
+		if (isActive) {
+			return <span className="badge bg-success">Active</span>;
+		} else {
+			return <span className="badge bg-secondary">Inactive</span>;
+		}
+	},
+
 	salaryRange: (param: RenderParams): string | null => {
 		const salary_min = accessSubAttribute(param.item, param.accessKey, "salary_min");
 		const salary_max = accessSubAttribute(param.item, param.accessKey, "salary_max");

@@ -145,6 +145,16 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	isActive: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_active",
+		label: "Active",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.isActive,
+		...overrides,
+	}),
+
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
 	location: (overrides: TableColumnOverrides = {}): TableColumn => ({

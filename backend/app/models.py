@@ -101,6 +101,7 @@ class Setting(CommonBase, Base):
     name = Column(String, nullable=False, unique=True)
     value = Column(String, nullable=False)
     description = Column(String, nullable=True)
+    is_active = Column(Boolean, nullable=False, server_default=expression.true())
 
 
 class User(CommonBase, Base):

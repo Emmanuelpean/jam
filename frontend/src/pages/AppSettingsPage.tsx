@@ -4,7 +4,13 @@ import { tableColumns } from "../components/rendering/view/TableColumns";
 import { SettingModal } from "../components/modals/SettingModal";
 
 const SettingsPage = () => {
-	const columns = [tableColumns.name(), tableColumns.value(), tableColumns.description(), tableColumns.createdAt()];
+	const columns = [
+		tableColumns.name(),
+		tableColumns.value(),
+		tableColumns.description(),
+		tableColumns.isActive(),
+		tableColumns.createdAt(),
+	];
 
 	return (
 		<GenericTable

@@ -33,6 +33,7 @@ class SettingCreate(BaseModel):
     name: str
     value: str
     description: str | None = None
+    is_active: bool = True
 
 
 class SettingOut(SettingCreate, Out):

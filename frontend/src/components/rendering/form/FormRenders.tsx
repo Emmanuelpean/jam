@@ -109,6 +109,13 @@ export const formFields = {
 		...overrides,
 	}),
 
+	isActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "is_active",
+		label: "Active",
+		type: "checkbox",
+		...overrides,
+	}),
+
 	// ------------------------------------------------- USERS ------------------------------------------------
 
 	appTheme: (overrides: FormFieldOverride = {}): ModalFormField => ({
