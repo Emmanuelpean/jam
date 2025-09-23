@@ -3,8 +3,6 @@
 from datetime import datetime, timedelta, timezone
 from itertools import groupby
 
-from sqlalchemy import DATETIME
-
 from tests.utils.files import load_all_resource_files
 
 RESOURCE_FILES = load_all_resource_files()

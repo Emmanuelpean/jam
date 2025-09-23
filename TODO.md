@@ -31,7 +31,7 @@
 * [ ] When deleting an entry through the modal, do not refresh the page, refresh the table.
 * [ ] Update the table data when interviews/updates are added/deleted/edited
 * [ ] Update the table data when accordion table data are changed
-* [ ] Add ""
+* [ ] Add active state to app settings
 
 ### Know Issues
 * [ ] Modals darken when a help bubble is displayed.
