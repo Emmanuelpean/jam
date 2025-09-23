@@ -37,8 +37,6 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 	};
 
 	const customValidation = async (formData: KeywordData): Promise<ValidationErrors> => {
-		console.log("formData", formData);
-		console.log("data", data);
 		const errors: ValidationErrors = {};
 		if (!token) {
 			return errors;

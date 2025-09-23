@@ -355,7 +355,6 @@ export const renderFunctions = {
 
 	daysUntilDeadline: (param: RenderParams): ReactNode => {
 		const seconds = accessSubAttribute(param.item, param.accessKey, "days_until_deadline");
-		console.log(seconds);
 		if (typeof seconds === "number") {
 			return <span className={"text-danger"}>{formatTimedelta(seconds)}</span>;
 		}

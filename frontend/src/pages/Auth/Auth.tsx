@@ -130,7 +130,6 @@ function AuthForm(): JSX.Element {
 			const title = isLoginAction ? "Login Failed" : "Registration Failed";
 			const message = result.error || "An unknown error occurred";
 			showError(message, title);
-			console.log(result.error);
 		}
 	};
 

@@ -194,6 +194,7 @@ const GenericModal = ({
 	};
 
 	useEffect(() => {
+		console.log("GenericModal - show changed:", effectiveData);
 		// Initialize modal state when it becomes visible or data changes
 		if (show && (!previousShow.current || (effectiveData && Object.keys(formData).length === 0))) {
 			if (mode === "add") {
@@ -531,7 +532,7 @@ const GenericModal = ({
 			} else {
 				// Object.assign(effectiveData, apiResult);
 				setEffectiveData({ ...apiResult });
-				onSuccess?.(apiResult);
+				onSuccess?.(effectiveData);
 				handleEditToView();
 			}
 		} catch (err: any) {

@@ -27,7 +27,6 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 	);
 
 	const handleDataChange = (newData: InterviewData[]) => {
-		console.log("newData are", newData);
 		onDataChange?.(newData);
 	};
 

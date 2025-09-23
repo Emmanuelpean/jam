@@ -454,7 +454,6 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 	const handleAddSuccess = (newItem: any): void => {
 		addItem(newItem);
 		closeAddModal();
-		console.log("Data after adding", data.length);
 	};
 
 	// Close context menu on outside click or escape
