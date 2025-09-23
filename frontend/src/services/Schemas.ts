@@ -73,6 +73,7 @@ export interface KeywordData {
 }
 
 export interface PersonData {
+	id?: number;
 	first_name: string;
 	last_name: string;
 	email?: string;
@@ -145,6 +146,7 @@ export interface UserData {
 }
 
 export interface CompanyData {
+	id?: number;
 	name: string;
 	url?: string | null;
 	description?: string | null;

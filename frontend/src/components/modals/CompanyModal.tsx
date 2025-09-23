@@ -66,7 +66,7 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 		const queryParams = { name: formData.name.trim() };
 		const matches = await companiesApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing: any) => {
-			return data?.id !== existing.id;
+			return formData?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0 && formData.name) {

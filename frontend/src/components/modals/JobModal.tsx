@@ -133,7 +133,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 			const queryParams = { url: formData.url?.trim() };
 			const matches = await jobsApi.getAll(token, queryParams);
 			const duplicates = matches.filter((existing: JobData) => {
-				return data?.id !== existing.id;
+				return formData?.id !== existing.id;
 			});
 
 			if (duplicates.length > 0) {

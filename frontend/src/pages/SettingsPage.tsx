@@ -16,7 +16,7 @@ const SettingsPage = () => {
 		<GenericTable
 			mode="api"
 			endpoint="settings"
-			initialSortConfig={{ key: "name", direction: "desc" }}
+			initialSortConfig={{ key: "name", direction: "asc" }}
 			title="Settings"
 			columns={columns}
 			Modal={SettingModal}

@@ -37,6 +37,8 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 	};
 
 	const customValidation = async (formData: KeywordData): Promise<ValidationErrors> => {
+		console.log("formData", formData);
+		console.log("data", data);
 		const errors: ValidationErrors = {};
 		if (!token) {
 			return errors;
@@ -44,7 +46,7 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 		const queryParams = { name: formData.name.trim() };
 		const matches = await keywordsApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing: any) => {
-			return data?.id !== existing.id;
+			return formData?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0) {

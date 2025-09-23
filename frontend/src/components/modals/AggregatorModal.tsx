@@ -50,7 +50,7 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 		const queryParams = { name: formData.name.trim() };
 		const matches = await aggregatorsApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing: { id: number }) => {
-			return data?.id !== existing.id;
+			return formData?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0) {

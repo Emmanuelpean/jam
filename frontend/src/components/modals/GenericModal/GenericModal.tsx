@@ -521,6 +521,7 @@ const GenericModal = ({
 					? await api.post(`${endpoint}/`, dataToSubmit, token)
 					: await api.put(`${endpoint}/${effectiveData.id}`, dataToSubmit, token);
 
+			console.log("API Result:", apiResult);
 			if (mode === "add") {
 				onSuccess?.(apiResult);
 				handleHideImmediate();
@@ -528,8 +529,8 @@ const GenericModal = ({
 				onSuccess?.(apiResult);
 				handleHideImmediate();
 			} else {
-				Object.assign(effectiveData, apiResult);
-				setEffectiveData({ ...effectiveData });
+				// Object.assign(effectiveData, apiResult);
+				setEffectiveData({ ...apiResult });
 				onSuccess?.(apiResult);
 				handleEditToView();
 			}

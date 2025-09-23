@@ -32,6 +32,7 @@
 * [ ] Update the table data when interviews/updates are added/deleted/edited
 * [ ] Update the table data when accordion table data are changed
 * [ ] Add active state to app settings
+* [ ] Editing twice an entry leads to the validation error causing an error
 
 ### Know Issues
 * [ ] Modals darken when a help bubble is displayed.

@@ -71,7 +71,7 @@ export const LocationModal: React.FC<DataModalProps> = ({
 			queryParams.country = (formData.country && formData.country.trim()) || null;
 			const matchingLocations = await locationsApi.getAll(token, queryParams);
 			const duplicates = matchingLocations.filter((existingLocation: LocationData) => {
-				return data?.id !== existingLocation.id;
+				return formData?.id !== existingLocation.id;
 			});
 
 			if (duplicates.length > 0) {

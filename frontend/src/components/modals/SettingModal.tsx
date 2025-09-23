@@ -34,7 +34,6 @@ export const SettingModal: React.FC<DataModalProps> = ({
 	};
 
 	const transformFormData = (data: SettingData) => {
-		console.log(data);
 		return {
 			name: data?.name?.trim(),
 			value: data?.value?.trim(),

@@ -45,7 +45,7 @@ export const UserModal: React.FC<DataModalProps> = ({
 		const queryParams = { email: formData.email.trim() };
 		const matches = await userApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing: UserData) => {
-			return data?.id !== existing.id;
+			return formData?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0) {

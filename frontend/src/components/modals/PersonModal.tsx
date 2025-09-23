@@ -57,7 +57,7 @@ export const PersonModal: React.FC<DataModalProps> = ({
 		};
 		const matches = await personsApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing: any) => {
-			return data?.id !== existing.id;
+			return formData?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0) {
