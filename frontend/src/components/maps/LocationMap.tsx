@@ -4,7 +4,7 @@ import { ProgressBar, Spinner } from "react-bootstrap";
 import L from "leaflet";
 import { geocodeLocationsBatch } from "../../services/GeoCoding";
 import "leaflet/dist/leaflet.css";
-import { LocationCreate } from "../../services/Schemas";
+import { LocationData } from "../../services/Schemas";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -17,7 +17,7 @@ L.Icon.Default.mergeOptions({
 	shadowUrl: markerShadow,
 });
 
-interface GeocodedLocation extends LocationCreate {
+interface GeocodedLocation extends LocationData {
 	geocoded: {
 		latitude: number;
 		longitude: number;
@@ -25,7 +25,7 @@ interface GeocodedLocation extends LocationCreate {
 }
 
 interface LocationMapProps {
-	locations?: LocationCreate[];
+	locations?: LocationData[];
 	height?: string;
 }
 
@@ -96,7 +96,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 		geocodeLocations().then(() => null);
 	}, [locations]);
 
-	const formatLocationName = (location: LocationCreate): string => {
+	const formatLocationName = (location: LocationData): string => {
 		const parts = [location.city, location.country].filter(Boolean);
 		return parts.length > 0 ? parts.join(", ") : "Unknown Location";
 	};

@@ -4,15 +4,7 @@ import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../maps/LocationMap";
-import {
-	AggregatorOut,
-	CompanyOut,
-	JobData,
-	KeywordOut,
-	LocationCreate,
-	LocationOut,
-	PersonOut,
-} from "../../../services/Schemas";
+import { AggregatorOut, CompanyOut, JobData, KeywordOut, LocationData, PersonOut } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
 import { TableColumn } from "./TableColumns";
@@ -343,7 +335,7 @@ export const renderFunctions = {
 	},
 
 	locationMap: (param: RenderParams): ReactNode => {
-		const locations: LocationCreate[] = param.item ? [param.item] : [];
+		const locations: LocationData[] = param.item ? [param.item] : [];
 		return <LocationMap locations={locations} />;
 	},
 
@@ -441,7 +433,7 @@ export const renderFunctions = {
 	},
 
 	locationBadge: (param: RenderParams): ReactNode => {
-		const location: LocationOut = accessSubAttribute(param.item, param.accessKey, "location");
+		const location: LocationData = accessSubAttribute(param.item, param.accessKey, "location");
 		const attendanceType = accessAttribute(param.item, "attendance_type");
 
 		if (attendanceType === "remote") {

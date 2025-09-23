@@ -8,12 +8,6 @@ interface OwnedOut extends BaseOut {
 	owner_id: number;
 }
 
-export interface Response {
-	success: boolean;
-	error?: string;
-	status?: number | undefined;
-}
-
 // ------------------------------------------------------- COMPANY ------------------------------------------------------
 
 export interface CompanyCreate {
@@ -40,18 +34,6 @@ export interface AggregatorCreate {
 }
 
 export interface AggregatorOut extends AggregatorCreate, OwnedOut {}
-
-// ------------------------------------------------------ LOCATION ------------------------------------------------------
-
-export interface LocationCreate extends BaseOut {
-	postcode?: string;
-	city?: string;
-	country?: string;
-}
-
-export interface LocationOut extends LocationCreate, OwnedOut {
-	name?: string;
-}
 
 // ------------------------------------------------------- PERSON -------------------------------------------------------
 
@@ -110,12 +92,11 @@ export interface InterviewData {
 	job?: JobData;
 }
 
-export interface LocationData {
-	id?: string | number;
+export interface LocationData extends OwnedOut {
 	city?: string | null;
 	postcode?: string | null;
 	country?: string | null;
-	name?: string;
+	name: string;
 }
 
 export interface JobData {

@@ -3,6 +3,7 @@ import GenericTable from "../components/tables/GenericTable";
 import { LocationModal } from "../components/modals/LocationModal";
 import LocationMap from "../components/maps/LocationMap";
 import { tableColumns } from "../components/rendering/view/TableColumns";
+import { LocationData } from "../services/Schemas";
 
 const LocationsPage = () => {
 	const columns = [
@@ -15,7 +16,7 @@ const LocationsPage = () => {
 		tableColumns.createdAt(),
 	];
 
-	const locationMap = (locationData: any[]) => {
+	const locationMap = (locationData: LocationData[]) => {
 		return (
 			<div className="mt-4">
 				<h5 className="mb-3">Location Map</h5>
