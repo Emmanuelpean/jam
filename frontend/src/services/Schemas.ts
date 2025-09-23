@@ -58,7 +58,7 @@ export interface SettingData {
 	name: string;
 	value: string;
 	description?: string;
-	isActive: boolean;
+	is_active: boolean;
 }
 
 export interface AggregatorData {

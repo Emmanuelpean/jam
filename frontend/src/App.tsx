@@ -22,7 +22,7 @@ import { UserManagementPage } from "./pages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
 import { ToastStack } from "./components/toasts/Toast";
-import SettingsPage from "./pages/AppSettingsPage";
+import SettingsPage from "./pages/SettingsPage";
 import AboutPage from "./pages/AboutPage";
 
 export const ToastContext = createContext<UseToastReturn | undefined>(undefined);

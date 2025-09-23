@@ -33,12 +33,13 @@ export const SettingModal: React.FC<DataModalProps> = ({
 		],
 	};
 
-	const transformFormData = (data: any): SettingData => {
+	const transformFormData = (data: SettingData) => {
+		console.log(data);
 		return {
 			name: data?.name?.trim(),
 			value: data?.value?.trim(),
 			description: data?.description?.trim(),
-			isActive: data?.isActive || false,
+			is_active: data?.is_active,
 		};
 	};
 

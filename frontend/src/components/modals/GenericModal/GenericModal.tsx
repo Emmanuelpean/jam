@@ -263,12 +263,12 @@ const GenericModal = ({
 	};
 
 	const handleHideImmediate = (): void => {
-		onSuccess?.(effectiveData);
-		setFormData({});
-		setOriginalFormData({});
-		setErrors({});
-		setIsEditing(false);
-		setEffectiveData(null);
+		// onSuccess?.(effectiveData);
+		// setFormData({});
+		// setOriginalFormData({});
+		// setErrors({});
+		// setIsEditing(false);
+		// setEffectiveData(null);
 		onHide();
 	};
 
