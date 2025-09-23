@@ -53,3 +53,12 @@ export function formatActivityDate(dateString: string): string {
 	};
 	return date.toLocaleDateString("en-UK", options);
 }
+
+export function formatTimedelta(seconds: number): string {
+	const days = Math.floor(seconds / (24 * 3600));
+	if (days >= 1) {
+		return `${days} day${days > 1 ? "s" : ""}`;
+	}
+	const hours = Math.floor(seconds / 3600);
+	return `${hours} hour${hours !== 1 ? "s" : ""}`;
+}

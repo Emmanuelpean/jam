@@ -25,6 +25,7 @@ import {
 	LocationModalManager,
 	PersonModalManager,
 } from "../../modals/ModalManagers";
+import { formatTimedelta } from "../../../utils/TimeUtils";
 
 export interface RenderParams {
 	item: any;
@@ -351,9 +352,12 @@ export const renderFunctions = {
 		return <span className={"text-danger"}>{daysSinceLastUpdate} days</span>;
 	},
 
-	daysUntilDeadline: (params: RenderParams): ReactNode => {
-		const daysUntilDeadline = accessSubAttribute(params.item, params.accessKey, "days_until_deadline");
-		return <span className={"text-danger"}>{daysUntilDeadline} days</span>;
+	daysUntilDeadline: (param: RenderParams): ReactNode => {
+		const seconds = accessSubAttribute(param.item, param.accessKey, "days_until_deadline");
+		console.log(seconds);
+		if (typeof seconds === "number") {
+			return <span className={"text-danger"}>{formatTimedelta(seconds)}</span>;
+		}
 	},
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------

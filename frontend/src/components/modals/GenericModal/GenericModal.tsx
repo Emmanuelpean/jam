@@ -71,7 +71,14 @@ export const createGenericDeleteHandler = ({
 export type ViewFields = (ModalViewField | ModalViewField[])[];
 export type FormFields = (ModalFormField | ModalFormField[])[];
 
-interface ModalProps {
+export interface TabConfig {
+	key: string;
+	title: string | JSX.Element | ((data: any) => ReactNode);
+	fields: { view: ViewFields; form: FormFields };
+	additionalFields?: ModalViewField[];
+}
+
+export interface GenericModalProps {
 	mode?: "view" | "edit" | "add";
 	fields: { view: ViewFields; form: FormFields };
 	data?: any;
@@ -82,16 +89,6 @@ interface ModalProps {
 	onFormDataChange?: ((data: any) => void) | null;
 	onDelete?: ((item: any) => Promise<void>) | null;
 	additionalFields?: ModalViewField[];
-}
-
-export interface TabConfig {
-	key: string;
-	title: string | JSX.Element | ((data: any) => ReactNode);
-	fields: { view: ViewFields; form: FormFields };
-	additionalFields?: ModalViewField[];
-}
-
-export interface GenericModalProps extends ModalProps {
 	show: boolean;
 	onHide: () => void;
 	itemName?: string;
@@ -266,9 +263,12 @@ const GenericModal = ({
 	};
 
 	const handleHideImmediate = (): void => {
-		// if (onSuccess && effectiveData) {
-		// 	onSuccess(effectiveData);
-		// }
+		onSuccess?.(effectiveData);
+		setFormData({});
+		setOriginalFormData({});
+		setErrors({});
+		setIsEditing(false);
+		setEffectiveData(null);
 		onHide();
 	};
 
@@ -521,22 +521,21 @@ const GenericModal = ({
 					? await api.post(`${endpoint}/`, dataToSubmit, token)
 					: await api.put(`${endpoint}/${effectiveData.id}`, dataToSubmit, token);
 
-			// Handle success
 			if (mode === "add") {
 				onSuccess?.(apiResult);
-			}
-
-			// Update UI
-			if (mode === "add" || mode === "edit") {
+				handleHideImmediate();
+			} else if (mode === "edit") {
+				onSuccess?.(apiResult);
 				handleHideImmediate();
 			} else {
 				Object.assign(effectiveData, apiResult);
 				setEffectiveData({ ...effectiveData });
+				onSuccess?.(apiResult);
 				handleEditToView();
 			}
 		} catch (err: any) {
 			const errorMessage = `Failed to ${mode === "add" ? "create" : "update"} 
-			${itemName.toLowerCase()} due to the following error: ${err.message}`;
+        ${itemName.toLowerCase()} due to the following error: ${err.message}`;
 			setErrors({
 				submit: errorMessage,
 			});

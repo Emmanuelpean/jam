@@ -32,6 +32,13 @@ const AboutPage: React.FC = () => {
 				</a>
 			</h4>
 
+			<div>
+				App created and maintained by{" "}
+				<a href="https://emmanuelpean.me/" target="_blank" rel="noopener noreferrer">
+					Emmanuel V. Péan
+				</a>
+				.
+			</div>
 			<p style={{ maxWidth: 1200, fontSize: "18px", marginTop: "16px" }}>
 				<b>Jam</b> is a user-friendly web app designed to help you manage your jobs, applications, interviews,
 				and everything in-between. Job search can be a time-consuming and tedious process, requiring you to keep
@@ -44,21 +51,12 @@ const AboutPage: React.FC = () => {
 					<li>Monitor application status, progress, and deadlines</li>
 				</ul>
 			</p>
-
-			<div>
-				App created and maintained by{" "}
-				<a href="https://emmanuelpean.me/" target="_blank" rel="noopener noreferrer">
-					Emmanuel V. Péan
-				</a>
-				.
-			</div>
-
-			<div style={{ width: "100%", maxWidth: 1200, marginTop: 32 }}>
+			<div style={{ width: "100%", maxWidth: 1200, marginTop: "10px" }}>
 				<h4>Release Notes</h4>
 				<Accordion>
 					{Object.entries(releaseNotes).map(([version, note], idx) => (
 						<Accordion.Item eventKey={String(idx)} key={version}>
-							<Accordion.Header>v{version}</Accordion.Header>
+							<Accordion.Header>V{version}</Accordion.Header>
 							<Accordion.Body style={{ margin: "3px" }}>{note}</Accordion.Body>
 						</Accordion.Item>
 					))}

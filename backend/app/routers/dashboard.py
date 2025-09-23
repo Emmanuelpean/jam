@@ -128,6 +128,7 @@ def get_dashboard_data(
     upcoming_deadlines = (
         job_query.filter(models.Job.application_date.is_(None), models.Job.application_status.is_(None))
         .filter((models.Job.deadline - datetime.now()) <= timedelta(days=deadline_threshold))
+        .filter((models.Job.deadline - datetime.now()) > timedelta(days=0))
         .order_by(models.Job.deadline)
         .all()
     )

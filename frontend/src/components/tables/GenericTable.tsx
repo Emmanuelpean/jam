@@ -10,18 +10,7 @@ import useGenericAlert from "../../hooks/useGenericAlert";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
 import "./GenericTable.css";
-
-export interface SortConfig {
-	key: string;
-	direction: "asc" | "desc";
-}
-
-export interface ContextMenuState {
-	item: any;
-	x: number;
-	y: number;
-	show: boolean;
-}
+import { useLoading } from "../../contexts/LoadingContext";
 
 export interface CreateGenericDeleteHandlerProps {
 	endpoint: string;
@@ -32,64 +21,6 @@ export interface CreateGenericDeleteHandlerProps {
 	setData?: React.Dispatch<React.SetStateAction<any[]>>;
 	nameKey: string;
 	itemType?: string;
-}
-
-export interface TableProps {
-	data?: any | null;
-	columns?: TableColumn[];
-	onDataChange?: (data: any[]) => void;
-	loading?: boolean;
-	error?: string | null;
-	showAdd?: boolean;
-}
-
-export interface GenericTableWithModalsProps {
-	// Data source configuration
-	mode: "provided" | "api" | "controlled";
-
-	// For provided mode
-	providedData?: any[];
-
-	// For API mode
-	endpoint?: string;
-	dependencies?: any[];
-	queryParams?: Record<string, any>;
-
-	// For controlled mode
-	data?: any[];
-	onDataChange?: (data: any[]) => void;
-	loading?: boolean;
-	error?: string | null;
-
-	// Table configuration
-	columns?: TableColumn[];
-	initialSortConfig?: Partial<SortConfig>;
-
-	// Search and sort (controlled mode)
-	searchTerm?: string;
-	onSearchChange?: (searchTerm: string) => void;
-	sortConfig?: SortConfig;
-	onSort?: (config: SortConfig) => void;
-
-	// Modal configuration
-	Modal: React.ComponentType<any>;
-	modalSize?: string;
-	modalProps?: any;
-
-	// Data management
-	nameKey: string;
-	itemType: string;
-
-	// Display options
-	title?: string;
-	showAllEntries?: boolean;
-	emptyMessage?: string;
-	compact?: boolean;
-	showSearch?: boolean;
-	showAdd?: boolean;
-
-	// Additional content
-	children?: ReactNode;
 }
 
 /**
@@ -139,27 +70,78 @@ export const createGenericDeleteHandler = ({
 	};
 };
 
-export const GenericTable: React.FC<GenericTableWithModalsProps> = ({
+export interface SortConfig {
+	key: string;
+	direction: "asc" | "desc";
+}
+
+export interface ContextMenuState {
+	item: any;
+	x: number;
+	y: number;
+	show: boolean;
+}
+
+export interface DataTableProps {
+	data?: any | null;
+	columns?: TableColumn[];
+	onDataChange?: (data: any[]) => void;
+	error?: string | null;
+	showAdd?: boolean;
+}
+
+export interface GenericTableProps {
+	// Data source configuration
+	mode: "api" | "controlled";
+
+	// For API mode
+	endpoint?: string;
+	dependencies?: any[];
+	queryParams?: Record<string, any>;
+
+	// For controlled mode
+	data?: any[];
+	onDataChange?: (data: any[]) => void;
+	error?: string | null;
+
+	// Table configuration
+	columns?: TableColumn[];
+	initialSortConfig?: Partial<SortConfig>;
+
+	// Modal configuration
+	Modal: React.ComponentType<any>;
+	modalSize?: string;
+	modalProps?: any;
+
+	// Data management
+	nameKey: string;
+	itemType: string;
+
+	// Display options
+	title?: string;
+	showAllEntries?: boolean;
+	emptyMessage?: string;
+	compact?: boolean;
+	showSearch?: boolean;
+	showAdd?: boolean;
+
+	// Additional content
+	children?: (data: any[]) => ReactNode;
+}
+
+export const GenericTable: React.FC<GenericTableProps> = ({
 	// Data source configuration
 	mode,
-	providedData = [],
 	endpoint = "",
 	dependencies = [],
 	queryParams = {},
 	data: controlledData = [],
 	onDataChange,
-	loading: controlledLoading = false,
 	error: controlledError = null,
 
 	// Table configuration
 	columns = [],
 	initialSortConfig = {},
-
-	// Search and sort (controlled mode)
-	searchTerm: controlledSearchTerm = "",
-	onSearchChange: controlledOnSearchChange = () => {},
-	sortConfig: controlledSortConfig = { key: "", direction: "asc" },
-	onSort: controlledOnSort = () => {},
 
 	// Modal configuration
 	Modal,
@@ -186,12 +168,14 @@ export const GenericTable: React.FC<GenericTableWithModalsProps> = ({
 
 	// Internal state management
 	const [internalData, setInternalData] = useState<any[]>([]);
-	const [internalLoading, setInternalLoading] = useState<boolean>(false);
+	const { showLoading, hideLoading } = useLoading();
 	const [internalError, setInternalError] = useState<string | null>(null);
-	const [internalSortConfig, setInternalSortConfig] = useState<SortConfig>(
+
+	// Search and sort are always managed internally
+	const [sortConfig, setSortConfig] = useState<SortConfig>(
 		(initialSortConfig as SortConfig) || { key: "created_at", direction: "desc" },
 	);
-	const [internalSearchTerm, setInternalSearchTerm] = useState<string>("");
+	const [searchTerm, setSearchTerm] = useState<string>("");
 
 	// UI state
 	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -215,7 +199,7 @@ export const GenericTable: React.FC<GenericTableWithModalsProps> = ({
 	const fetchData = useCallback(async (): Promise<void> => {
 		if (mode !== "api" || !endpoint) return;
 
-		setInternalLoading(true);
+		showLoading();
 		setInternalError(null);
 
 		try {
@@ -228,18 +212,13 @@ export const GenericTable: React.FC<GenericTableWithModalsProps> = ({
 			setInternalError(`Failed to load ${endpoint}. Please try again later.`);
 			setInternalData([]);
 		} finally {
-			setInternalLoading(false);
+			hideLoading();
 		}
 	}, [endpoint, token, JSON.stringify(queryParams), mode]);
 
 	// Handle data updates based on mode
 	useEffect(() => {
 		switch (mode) {
-			case "provided":
-				setInternalData(providedData || []);
-				setInternalLoading(false);
-				setInternalError(null);
-				break;
 			case "api":
 				if (token) {
 					fetchData().then(() => {});
@@ -256,17 +235,8 @@ export const GenericTable: React.FC<GenericTableWithModalsProps> = ({
 		switch (mode) {
 			case "controlled":
 				return controlledData;
-			default:
+			case "api":
 				return internalData;
-		}
-	};
-
-	const getEffectiveLoading = (): boolean => {
-		switch (mode) {
-			case "controlled":
-				return controlledLoading;
-			default:
-				return internalLoading;
 		}
 	};
 
@@ -274,26 +244,8 @@ export const GenericTable: React.FC<GenericTableWithModalsProps> = ({
 		switch (mode) {
 			case "controlled":
 				return controlledError;
-			default:
+			case "api":
 				return internalError;
-		}
-	};
-
-	const getEffectiveSearchTerm = (): string => {
-		switch (mode) {
-			case "controlled":
-				return controlledSearchTerm;
-			default:
-				return internalSearchTerm;
-		}
-	};
-
-	const getEffectiveSortConfig = (): SortConfig => {
-		switch (mode) {
-			case "controlled":
-				return controlledSortConfig;
-			default:
-				return internalSortConfig;
 		}
 	};
 
@@ -334,44 +286,25 @@ export const GenericTable: React.FC<GenericTableWithModalsProps> = ({
 		[mode, controlledData, onDataChange],
 	);
 
-	// Search and sort handlers
-	const handleSearchChange = useCallback(
-		(term: string) => {
-			if (mode === "controlled") {
-				controlledOnSearchChange(term);
-			} else {
-				setInternalSearchTerm(term);
-			}
-		},
-		[mode, controlledOnSearchChange],
-	);
+	// Search and sort handlers - always use internal state
+	const handleSearchChange = useCallback((term: string) => {
+		setSearchTerm(term);
+	}, []);
 
 	const handleSort = useCallback(
 		(key: string) => {
 			let direction: "asc" | "desc" = "asc";
-			const currentSortConfig = getEffectiveSortConfig();
-
-			if (currentSortConfig.key === key && currentSortConfig.direction === "asc") {
+			if (sortConfig.key === key && sortConfig.direction === "asc") {
 				direction = "desc";
 			}
-
-			const newSortConfig = { key, direction };
-
-			if (mode === "controlled") {
-				controlledOnSort(newSortConfig);
-			} else {
-				setInternalSortConfig(newSortConfig);
-			}
+			setSortConfig({ key, direction });
 		},
-		[mode, controlledOnSort, getEffectiveSortConfig],
+		[sortConfig],
 	);
 
 	// Get current effective values
 	const data = getEffectiveData();
-	const loading = getEffectiveLoading();
 	const error = getEffectiveError();
-	const searchTerm = getEffectiveSearchTerm();
-	const sortConfig = getEffectiveSortConfig();
 
 	// Helper methods
 	const getEffectiveItem = (item: any, column: TableColumn): any => {
@@ -562,17 +495,6 @@ export const GenericTable: React.FC<GenericTableWithModalsProps> = ({
 		setPageSize(newPageSize);
 		setCurrentPage(0);
 	};
-
-	// Render loading/error states
-	if (loading) {
-		return (
-			<div className="d-flex justify-content-center mt-5">
-				<div className="spinner-border" role="status" id="table-spinner">
-					<span className="visually-hidden">Loading...</span>
-				</div>
-			</div>
-		);
-	}
 
 	if (error) {
 		return <div className="alert alert-danger mt-3">{error}</div>;
@@ -843,7 +765,7 @@ export const GenericTable: React.FC<GenericTableWithModalsProps> = ({
 				</div>
 			)}
 
-			{children}
+			{children ? children(getEffectiveData()) : null}
 
 			<Modal
 				show={showModal}

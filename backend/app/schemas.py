@@ -5,7 +5,7 @@ Min schemas should be used to return minimal data to the user (enough to display
 contain reference to other tables.
 Update schemas should be used to update existing entries in the database."""
 
-from datetime import datetime, UTC
+from datetime import datetime, UTC, time
 
 from pydantic import BaseModel, EmailStr, computed_field
 
@@ -386,13 +386,14 @@ class JobOut(JobCreate, OwnedOut):
 
     @computed_field
     @property
-    def days_until_deadline(self) -> int | None:
+    def days_until_deadline(self) -> float | None:
         """Calculate the number of days before the deadline"""
 
         if self.deadline is None:
             return None
-        now = datetime.now(UTC)
-        return (self.deadline - now).days
+        now = datetime.now()
+        deadline_dt = datetime.combine(self.deadline, time(23, 59, 59))
+        return (deadline_dt - now).total_seconds()
 
 
 class JobMinOut(OwnedOut):

@@ -34,7 +34,7 @@ const useModalState = <T = any>(): UseModalStateReturn<T> => {
 		// Delay clearing the selected item to allow closing animation
 		setTimeout(() => {
 			setSelectedItem(null);
-		}, 300); // Bootstrap modal animation duration is typically 300ms
+		}, 300);
 	};
 
 	const openEditModal = (item: T): void => {
@@ -47,7 +47,7 @@ const useModalState = <T = any>(): UseModalStateReturn<T> => {
 		// Delay clearing the selected item to allow closing animation
 		setTimeout(() => {
 			setSelectedItem(null);
-		}, 300); // Bootstrap modal animation duration is typically 300ms
+		}, 300);
 	};
 
 	return {

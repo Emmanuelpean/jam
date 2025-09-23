@@ -1,11 +1,11 @@
 import React from "react";
-import { GenericTable, GenericTableWithModalsProps, TableProps } from "./GenericTable";
+import { GenericTable, DataTableProps } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { InterviewModal, InterviewModalProps } from "../modals/InterviewModal";
 import { DataModalProps } from "../modals/GenericModal/GenericModal";
 import { InterviewData } from "../../services/Schemas";
 
-interface InterviewsTableProps extends TableProps {
+interface InterviewsTableProps extends DataTableProps {
 	jobId?: number;
 }
 
@@ -13,7 +13,6 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 	jobId,
 	data = [],
 	onDataChange,
-	loading = false,
 	error = null,
 	columns = [],
 	showAdd = true,
@@ -37,7 +36,6 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 			mode="controlled"
 			data={data}
 			onDataChange={handleDataChange}
-			loading={loading}
 			error={error}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}

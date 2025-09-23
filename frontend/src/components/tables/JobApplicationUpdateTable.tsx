@@ -1,10 +1,10 @@
 import React from "react";
-import { GenericTable, GenericTableWithModalsProps, TableProps } from "./GenericTable";
+import { GenericTable, GenericTableProps, DataTableProps } from "./GenericTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobApplicationUpdateModal, JobApplicationUpdateModalProps } from "../modals/JobApplicationUpdateModal";
 import { JobApplicationUpdateData } from "../../services/Schemas";
 
-interface JobApplicationUpdatesTableProps extends TableProps {
+interface JobApplicationUpdatesTableProps extends DataTableProps {
 	jobId: string | number;
 }
 
@@ -12,7 +12,6 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 	jobId,
 	data = [],
 	onDataChange,
-	loading = false,
 	error = null,
 	columns = [],
 }) => {
@@ -32,7 +31,6 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 			mode="controlled"
 			data={data}
 			onDataChange={handleDataChange}
-			loading={loading}
 			error={error}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}

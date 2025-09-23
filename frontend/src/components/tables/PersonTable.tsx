@@ -1,15 +1,9 @@
 import React from "react";
-import { GenericTable, GenericTableWithModalsProps, TableProps } from "./GenericTable";
+import { GenericTable, GenericTableProps, DataTableProps } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { PersonModal } from "../modals/PersonModal";
 
-const PersonTable: React.FC<TableProps> = ({
-	data = [],
-	onDataChange,
-	loading = false,
-	error = null,
-	columns = [],
-}) => {
+const PersonTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error = null, columns = [] }) => {
 	const defaultColumns =
 		columns.length > 0
 			? columns
@@ -31,7 +25,6 @@ const PersonTable: React.FC<TableProps> = ({
 			mode="controlled"
 			data={data}
 			onDataChange={handleDataChange}
-			loading={loading}
 			error={error}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "name", direction: "asc" }}
