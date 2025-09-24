@@ -4,40 +4,10 @@ and authentication workflows in the application. These tests ensure that the API
 operations behave as expected under various scenarios, including successful requests and erroneous cases.
 """
 
-import pytest
 from fastapi import status
-from starlette.testclient import TestClient
 
 import utils
 from app import schemas, models
-
-
-@pytest.fixture
-def admin_client(authorised_clients) -> TestClient:
-    """Fixture for an admin client."""
-    return authorised_clients[1]
-
-
-@pytest.fixture
-def admin_user(test_users) -> models.User:
-    """Fixture for an admin user."""
-    user = test_users[1]
-    assert user.is_admin
-    return user
-
-
-@pytest.fixture
-def test_client(authorised_clients) -> TestClient:
-    """Fixture for a non-admin client."""
-    return authorised_clients[0]
-
-
-@pytest.fixture
-def test_user(test_users) -> models.User:
-    """Fixture for a non-admin user."""
-    user = test_users[0]
-    assert not user.is_admin
-    return user
 
 
 class TestUser:

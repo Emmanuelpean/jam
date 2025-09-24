@@ -120,6 +120,48 @@ def authorised_clients(client: TestClient, tokens: list[str]) -> list[TestClient
 
 
 @pytest.fixture
+def admin_client(authorised_clients) -> TestClient:
+    """Fixture for an admin client."""
+    return authorised_clients[1]
+
+
+@pytest.fixture
+def admin_user(test_users) -> models.User:
+    """Fixture for an admin user."""
+    user = test_users[1]
+    assert user.is_admin
+    return user
+
+
+@pytest.fixture
+def test_client(authorised_clients) -> TestClient:
+    """Fixture for a non-admin client."""
+    return authorised_clients[0]
+
+
+@pytest.fixture
+def test_user(test_users) -> models.User:
+    """Fixture for a non-admin user."""
+    user = test_users[0]
+    assert not user.is_admin
+    return user
+
+
+@pytest.fixture
+def test_other_client(authorised_clients) -> TestClient:
+    """Fixture for a non-admin client."""
+    return authorised_clients[2]
+
+
+@pytest.fixture
+def test_other_user(test_users) -> models.User:
+    """Fixture for a non-admin user."""
+    user = test_users[2]
+    assert not user.is_admin
+    return user
+
+
+@pytest.fixture
 def test_keywords(session, test_users) -> list[models.Keyword]:
     """Create test keyword data"""
 
@@ -387,12 +429,20 @@ class CRUDTestBase:
 
     Subclasses must override:
     - endpoint: str - base URL path for the resource (e.g. "/aggregators")
-    - schema: Pydantic model class for input validation (e.g. schemas.Aggregator)
+    - create_schema: Pydantic model class for creation validation (e.g. schemas.AggregatorCreate)
     - out_schema: Pydantic model class for output validation (e.g. schemas.AggregatorOut)
-    - test_data: str - name of pytest fixture providing list of test objects"""
+    - test_data: str - name of pytest fixture providing list of test objects
+    - update_data: dict - example data for updating an existing object
+    - create_data: list[dict] - example data for creating new objects
+    - required_fixture: str or list[str] - name(s) of pytest fixture(s) for the post operations
+    - get_unauthorised_fixture: str - name of pytest fixture providing data for access tests with incorrect ownership
+    - unauthorised_data_fixture: str - name of pytest fixture providing data for creation tests  with incorrect ownership
+    - admin_only: bool - if True, only admin users can access the endpoint
+    """
 
     endpoint: str = ""
-    schema = None
+    admin_only: bool = False
+    create_schema = None
     out_schema = None
     test_data: str = ""
     update_data: dict = None
@@ -645,4 +695,284 @@ class CRUDTestBase:
     def test_delete_other_user(self, authorised_clients, request) -> None:
         test_data = request.getfixturevalue(self.test_data)
         response = self.delete(authorised_clients[1], test_data[0].id)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+class AdminCRUDTestBase:
+    """Base class for CRUD tests on FastAPI routes.
+
+    Subclasses must override:
+    - endpoint: str - base URL path for the resource (e.g. "/aggregators")
+    - create_schema: Pydantic model class for creation validation (e.g. schemas.AggregatorCreate)
+    - out_schema: Pydantic model class for output validation (e.g. schemas.AggregatorOut)
+    - test_data: str - name of pytest fixture providing list of test objects
+    - update_data: dict - example data for updating an existing object
+    - create_data: list[dict] - example data for creating new objects
+    - required_fixture: str or list[str] - name(s) of pytest fixture(s) for the post operations
+    - get_unauthorised_fixture: str - name of pytest fixture providing data for access tests with incorrect ownership
+    - unauthorised_data_fixture: str - name of pytest fixture providing data for creation tests  with incorrect ownership
+    - admin_only: bool - if True, only admin users can access the endpoint
+    """
+
+    endpoint: str = ""
+    create_schema = None
+    out_schema = None
+    test_data: str = ""
+    update_data: dict = None
+    create_data: list[dict] = None
+    required_fixture: str = None
+    get_unauthorised_fixture: str = None
+    unauthorised_data_fixture = None
+
+    def check_output(
+        self,
+        test_data: list[schemas.BaseModel] | list[dict] | dict | schemas.BaseModel,
+        response_data: list[dict] | dict,
+    ):
+        """Check that the output of a test matches the test data.
+        :param test_data: The test data to compare against.
+        :param response_data: The output data to compare against."""
+
+        if isinstance(test_data, list) and isinstance(response_data, list):
+            for d1, d2 in zip(test_data, response_data):
+                return self.check_output(d1, d2)
+
+        # Process the response
+        if isinstance(response_data, dict):
+            response_data = self.out_schema(**response_data)
+
+        # Use the test data keys for comparison
+        if isinstance(test_data, dict):
+            items = test_data.items()
+        else:
+            items = vars(test_data).items()
+
+        for key, value in items:
+            if key[0] != "_" and key in response_data:
+                response_value = getattr(response_data, key)
+                if isinstance(value, models.Base) or isinstance(value, list):
+                    self.check_output(value, response_value)
+                elif key == "date" and isinstance(value, str):
+                    # Handle datetime string comparison using fromisoformat
+                    if isinstance(response_value, dt.datetime):
+                        # Parse the string datetime and compare
+                        parsed_value = dt.datetime.fromisoformat(value)
+                        # Handle timezone differences - normalize both to the same timezone state
+                        if response_value.tzinfo is not None and parsed_value.tzinfo is None:
+                            parsed_value = parsed_value.replace(tzinfo=dt.timezone.utc)
+                        elif response_value.tzinfo is None and parsed_value.tzinfo is not None:
+                            parsed_value = parsed_value.replace(tzinfo=None)
+                        assert parsed_value == response_value
+                    else:
+                        assert value == response_value
+                else:
+                    try:
+                        assert value == response_value
+                    except Exception:
+                        print(value)
+                        print(response_value)
+                        raise AssertionError
+
+        return None
+
+    # ------------------------------------------------- HELPER METHODS -------------------------------------------------
+
+    def get_all(self, client) -> Response:
+        """Helper method to get all items from the endpoint."""
+
+        return client.get(self.endpoint)
+
+    def get_one(self, client, item_id) -> Response:
+        """Helper method to get one item from the endpoint."""
+
+        return client.get(f"{self.endpoint}/{item_id}")
+
+    def post(self, client, data) -> Response:
+        """Helper method to post a new item to the endpoint."""
+
+        return client.post(self.endpoint, json=data)
+
+    def put(self, client: TestClient, item_id: int, data) -> Response:
+        """Helper method to update an existing item in the endpoint."""
+
+        return client.put(f"{self.endpoint}/{item_id}", json=data)
+
+    def delete(self, client, item_id) -> Response:
+        """Helper method to delete an existing item from the endpoint."""
+
+        return client.delete(f"{self.endpoint}/{item_id}")
+
+    @pytest.fixture(autouse=True)
+    def setup_method(self, request) -> None:
+        """Fixture that runs before each test method."""
+
+        if isinstance(self.required_fixture, list):
+            for fixture in self.required_fixture:
+                request.getfixturevalue(fixture)
+
+    # ------------------------------------------------------- GET ------------------------------------------------------
+
+    def test_get_all_success(
+        self,
+        admin_client,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.get_all(admin_client)
+        assert response.status_code == status.HTTP_200_OK
+        self.check_output(test_data, response.json())
+
+    def test_get_all_unauthorized(
+        self,
+        client,
+    ) -> None:
+        response = self.get_all(client)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_get_one_success(
+        self,
+        admin_client,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.get_one(admin_client, test_data[0].id)
+        assert response.status_code == status.HTTP_200_OK
+        self.check_output(test_data[0], response.json())
+
+    def test_get_one_unauthorized(
+        self,
+        client,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.get_one(client, test_data[0].id)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_get_one_non_admin(
+        self,
+        test_client,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.get_one(test_client, test_data[0].id)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_get_one_non_exist(
+        self,
+        admin_client,
+    ) -> None:
+        response = self.get_one(admin_client, 999999)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    # ------------------------------------------------------ POST ------------------------------------------------------
+
+    def test_post_success(
+        self,
+        admin_client,
+    ) -> None:
+
+        for create_data in self.create_data:
+            create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
+            response = self.post(admin_client, create_data)
+            assert response.status_code == status.HTTP_201_CREATED
+            self.check_output(create_data, response.json())
+
+    def test_post_unauthorised(
+        self,
+        client,
+    ) -> None:
+        response = self.post(client, {})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_post_non_admin(
+        self,
+        test_client,
+    ) -> None:
+
+        for create_data in self.create_data:
+            create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
+            response = self.post(test_client, create_data)
+            assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    # ------------------------------------------------------- PUT ------------------------------------------------------
+
+    def test_put_success(
+        self,
+        admin_client,
+        request,
+    ) -> None:
+        request.getfixturevalue(self.test_data)
+        # noinspection PyTypeChecker
+        response = self.put(admin_client, self.update_data["id"], self.update_data)
+        assert response.status_code == status.HTTP_200_OK
+        self.check_output(self.update_data, response.json())
+
+    def test_put_empty_body(
+        self,
+        admin_client,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.put(admin_client, test_data[0].id, {})
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_put_non_exist(
+        self,
+        admin_client,
+    ) -> None:
+        response = self.put(admin_client, 999999, {})
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_put_unauthorized(
+        self,
+        client,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.put(client, test_data[0].id, {"name": "Test"})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_put_non_admin(
+        self,
+        test_client,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.put(test_client, test_data[0].id, {"name": "Test"})
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    # ----------------------------------------------------- DELETE -----------------------------------------------------
+
+    def test_delete_success(
+        self,
+        admin_client,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.delete(admin_client, test_data[0].id)
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    def test_delete_non_exist(
+        self,
+        admin_client,
+    ) -> None:
+        response = self.delete(admin_client, 999999)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_delete_unauthorised(
+        self,
+        client,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.delete(client, test_data[0].id)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_delete_non_admin(
+        self,
+        test_client,
+        request,
+    ) -> None:
+        test_data = request.getfixturevalue(self.test_data)
+        response = self.delete(test_client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
