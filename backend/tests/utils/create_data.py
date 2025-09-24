@@ -171,15 +171,22 @@ def create_locations(db, users: list[models.User]) -> list[models.Location]:
     return add_to_db(db, locations)
 
 
-def create_people(db, users: list[models.User], companies: list[models.Company]) -> list[models.Person]:
+def create_people(
+    db,
+    users: list[models.User],
+    companies: list[models.Company],
+    data: list[dict] | None = None,
+) -> list[models.Person]:
     """Create sample people"""
 
     print("Creating people...")
+    if not data:
+        data = PERSON_DATA
     # noinspection PyArgumentList
     persons = [
         models.Person(**person)
         for person in override_entries_properties(
-            PERSON_DATA,
+            data,
             ("owner_id", users),
             ("company_id", companies),
         )
@@ -196,15 +203,21 @@ def create_jobs(
     locations: list[models.Location],
     aggregators: list[models.Aggregator],
     files: list[models.File],
+    job_data: list[dict] | None = None,
+    job_keyword_mappings: list[dict] | None = None,
+    job_contact_mappings: list[dict] | None = None,
 ) -> list[models.Job]:
     """Create sample jobs"""
 
     print("Creating jobs...")
+
+    if job_data is None:
+        job_data = JOB_DATA
     # noinspection PyArgumentList
     jobs = [
         models.Job(**job)
         for job in override_entries_properties(
-            JOB_DATA,
+            job_data,
             ("owner_id", users),
             ("company_id", companies),
             ("location_id", locations),
@@ -216,20 +229,24 @@ def create_jobs(
     ]
 
     # Add keywords to jobs
+    if job_keyword_mappings is None:
+        job_keyword_mappings = JOB_KEYWORD_MAPPINGS
     add_mappings(
         primary_data=jobs,
         secondary_data=keywords,
-        mapping_data=JOB_KEYWORD_MAPPINGS,
+        mapping_data=job_keyword_mappings,
         primary_key="job_id",
         secondary_key="keyword_ids",
         relationship_attr="keywords",
     )
 
     # Add contacts to jobs
+    if job_contact_mappings is None:
+        job_contact_mappings = JOB_CONTACT_MAPPINGS
     add_mappings(
         primary_data=jobs,
         secondary_data=persons,
-        mapping_data=JOB_CONTACT_MAPPINGS,
+        mapping_data=job_contact_mappings,
         primary_key="job_id",
         secondary_key="person_ids",
         relationship_attr="contacts",
@@ -253,15 +270,19 @@ def create_interviews(
     users: list[models.User],
     locations: list[models.Location],
     jobs: list[models.Job],
+    interview_data: list[dict] | None = None,
+    interview_interviewer_mappings: list[dict] | None = None,
 ) -> list[models.Interview]:
     """Create sample interviews"""
 
     print("Creating interviews...")
+    if interview_data is None:
+        interview_data = INTERVIEW_DATA
     # noinspection PyArgumentList
     interviews = [
         models.Interview(**interview)
         for interview in override_entries_properties(
-            INTERVIEW_DATA,
+            interview_data,
             ("owner_id", users),
             ("location_id", locations),
             ("job_id", jobs),
@@ -269,10 +290,12 @@ def create_interviews(
     ]
 
     # Add interviewers to interviews
+    if interview_interviewer_mappings is None:
+        interview_interviewer_mappings = INTERVIEW_INTERVIEWER_MAPPINGS
     add_mappings(
         primary_data=interviews,
         secondary_data=persons,
-        mapping_data=INTERVIEW_INTERVIEWER_MAPPINGS,
+        mapping_data=interview_interviewer_mappings,
         primary_key="interview_id",
         secondary_key="person_ids",
         relationship_attr="interviewers",
@@ -285,15 +308,18 @@ def create_job_application_updates(
     db,
     users: list[models.User],
     jobs: list[models.Job],
+    update_data: list[dict] | None = None,
 ) -> list[models.JobApplicationUpdate]:
     """Create sample job application updates"""
 
     print("Creating job application updates...")
+    if update_data is None:
+        update_data = JOB_APPLICATION_UPDATE_DATA
     # noinspection PyArgumentList
     updates = [
         models.JobApplicationUpdate(**update)
         for update in override_entries_properties(
-            JOB_APPLICATION_UPDATE_DATA,
+            update_data,
             ("owner_id", users),
             ("job_id", jobs),
         )

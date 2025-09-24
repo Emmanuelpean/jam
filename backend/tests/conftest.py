@@ -45,6 +45,17 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+def find_non_owned(entries: list, owner_id: int) -> int:
+    """Find an entry not owned by the specified owner_id.
+    :param entries: List of entries to search.
+    :param owner_id: The owner ID to exclude."""
+
+    for entry in entries:
+        if entry.owner_id != owner_id:
+            return entry.id
+    raise AssertionError("No non-owned entry found")
+
+
 @pytest.fixture
 def session() -> Generator[orm.Session, Any, None]:
     """Fixture that sets up and tears down a new database session for each test function.
@@ -144,6 +155,16 @@ def test_persons(session, test_users, test_companies) -> list[models.Person]:
 
 
 @pytest.fixture
+def test_persons_unauthorised(session, test_users, test_companies, test_persons) -> tuple[list[models.Person], int]:
+    """Create test person data with incorrect company_id for access control testing"""
+
+    owner_id = 1
+    company_id = find_non_owned(test_companies, owner_id)
+    data = [{"first_name": "A", "last_name": "B", "company_id": company_id, "owner_id": owner_id}]
+    return create_people(session, test_users, test_companies, data), owner_id
+
+
+@pytest.fixture
 def test_files(session, test_users) -> list[models.File]:
     """Create test files for job applications"""
 
@@ -162,10 +183,99 @@ def test_jobs(
 
 
 @pytest.fixture
+def test_jobs_unauthorised(
+    session,
+    test_users,
+    test_companies,
+    test_locations,
+    test_keywords,
+    test_persons,
+    test_aggregators,
+    test_files,
+) -> tuple[list[models.Job], int]:
+    """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
+
+    owner_id = 1
+    company_id = find_non_owned(test_companies, owner_id)
+    location_id = find_non_owned(test_locations, owner_id)
+    job_keyword_mapping = [{"job_id": 1, "keyword_ids": [find_non_owned(test_keywords, owner_id)]}]
+    job_contact_mapping = [{"job_id": 1, "person_ids": [find_non_owned(test_persons, owner_id)]}]
+    data = [
+        {
+            "title": "A",
+            "company_id": company_id,
+            "location_id": location_id,
+            "owner_id": owner_id,
+        }
+    ]
+    jobs = create_jobs(
+        session,
+        test_keywords,
+        test_persons,
+        test_users,
+        test_companies,
+        test_locations,
+        test_aggregators,
+        test_files,
+        data,
+        job_keyword_mapping,
+        job_contact_mapping,
+    )
+    return jobs, owner_id
+
+
+@pytest.fixture
 def test_interviews(session, test_users, test_jobs, test_locations, test_persons) -> list[models.Interview]:
     """Create test interview data"""
 
     return create_interviews(session, test_persons, test_users, test_locations, test_jobs)
+
+
+@pytest.fixture
+def test_interviews_unauthorised(
+    session, test_users, test_jobs, test_locations, test_persons
+) -> tuple[list[models.Interview], int]:
+    """Create test interview data with incorrect job_id for access control testing"""
+
+    owner_id = 1
+    job_id = find_non_owned(test_jobs, owner_id)
+    data = [{"job_id": job_id, "date": dt.datetime.now(), "owner_id": owner_id, "type": "phone"}]
+    interview_interviewer_mappings = [{"interview_id": 1, "person_ids": [find_non_owned(test_persons, owner_id)]}]
+    interviews = create_interviews(
+        session,
+        test_persons,
+        test_users,
+        test_locations,
+        test_jobs,
+        data,
+        interview_interviewer_mappings,
+    )
+    return interviews, owner_id
+
+
+@pytest.fixture
+def test_job_application_updates(session, test_users, test_jobs) -> list[models.JobApplicationUpdate]:
+    """Create test job application update data"""
+
+    return create_job_application_updates(session, test_users, test_jobs)
+
+
+@pytest.fixture
+def test_job_application_updates_unauthorised(
+    session, test_users, test_jobs
+) -> tuple[list[models.JobApplicationUpdate], int]:
+    """Create test job application update data with incorrect job_id for access control testing"""
+
+    owner_id = 1
+    job_id = find_non_owned(test_jobs, owner_id)
+    data = [
+        {"job_id": job_id, "date": dt.datetime.now(), "type": "received", "owner_id": owner_id, "note": "Test note"}
+    ]
+    updates = create_job_application_updates(session, test_users, test_jobs, data)
+    return updates, owner_id
+
+
+# ---------------------------------------------------- EIS Fixtures ----------------------------------------------------
 
 
 @pytest.fixture
@@ -190,13 +300,6 @@ def test_service_logs(session) -> list[eis_models.EisServiceLog]:
 
 
 @pytest.fixture
-def test_job_application_updates(session, test_users, test_jobs) -> list[models.JobApplicationUpdate]:
-    """Create test job application update data"""
-
-    return create_job_application_updates(session, test_users, test_jobs)
-
-
-@pytest.fixture
 def test_settings(session) -> list[models.Setting]:
     """Create test settings data"""
 
@@ -211,6 +314,21 @@ def open_file(filepath: str) -> str:
     filepath = os.path.join(base_dir, "resources", filepath)
     with open(filepath, "r") as ofile:
         return ofile.read()
+
+
+def assert_ownership(item: list | dict, owner_id: int) -> None:
+    """Assert that all items in a list belong to the specified owner.
+    :param item: The item or list of items to check.
+    :param owner_id: The expected owner ID."""
+
+    if isinstance(item, dict):
+        if "owner_id" in item:
+            assert item["owner_id"] == owner_id
+        for key in item:
+            assert_ownership(item[key], owner_id)
+    if isinstance(item, list):
+        for subitem in item:
+            assert_ownership(subitem, owner_id)
 
 
 class CRUDTestBase:
@@ -229,6 +347,7 @@ class CRUDTestBase:
     update_data: dict = None
     create_data: list[dict] = None
     add_fixture = None
+    get_unauthorised_fixture = None
 
     def check_output(
         self,
@@ -369,6 +488,21 @@ class CRUDTestBase:
     ) -> None:
         response = self.get_one(authorised_clients[0], 999999)
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_get_all_data_only_authorised(
+        self,
+        authorised_clients,
+        request,
+    ) -> None:
+
+        if self.get_unauthorised_fixture:
+            owner_id = request.getfixturevalue(self.get_unauthorised_fixture)[1]
+            response = self.get_all(authorised_clients[owner_id - 1])
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            print(data)
+            if data:
+                assert_ownership(data, data[0]["owner_id"])
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 

@@ -78,8 +78,18 @@ job_router = generate_data_table_crud_router(
     endpoint="jobs",
     not_found_msg="Job not found",
     many_to_many_fields={
-        "keywords": {"table": models.job_keyword_mapping, "local_key": "job_id", "remote_key": "keyword_id"},
-        "contacts": {"table": models.job_contact_mapping, "local_key": "job_id", "remote_key": "person_id"},
+        "keywords": {
+            "table": models.job_keyword_mapping,
+            "local_key": "job_id",
+            "remote_key": "keyword_id",
+            "related_model": models.Keyword,
+        },
+        "contacts": {
+            "table": models.job_contact_mapping,
+            "local_key": "job_id",
+            "remote_key": "person_id",
+            "related_model": models.Person,
+        },
     },
 )
 
@@ -96,6 +106,7 @@ interview_router = generate_data_table_crud_router(
             "table": models.interview_interviewer_mapping,
             "local_key": "interview_id",
             "remote_key": "person_id",
+            "related_model": models.Person,
         },
     },
 )
@@ -123,9 +134,9 @@ file_router = generate_data_table_crud_router(
 
 @file_router.get("/{file_id}/download")
 def download_file(
-        file_id: int,
-        db: Session = Depends(database.get_db),
-        current_user: models.User = Depends(oauth2.get_current_user),
+    file_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(oauth2.get_current_user),
 ):
     """Download a file by ID.
     :param file_id: The file ID.

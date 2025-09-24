@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from app import utils, models, oauth2, database, schemas
+from app.routers import filter_query
 
 user_router = APIRouter(prefix="/users", tags=["users"])
 
@@ -13,7 +14,7 @@ def assert_admin(user: models.User) -> None:
     :param user: The user to check."""
 
     if not user.is_admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this resource")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to view this resource")
 
 
 @user_router.get("/", response_model=list[schemas.UserOut])
@@ -30,41 +31,11 @@ def get_all_users(
 
     assert_admin(current_user)
 
-    # noinspection PyTypeChecker
     query = db.query(models.User)
 
     # Get all query parameters
     filter_params = dict(request.query_params)
-
-    # Apply filters for each parameter that matches a table column
-    for param_name, param_value in filter_params.items():
-        if hasattr(models.User, param_name):
-            column = getattr(models.User, param_name)
-
-            # Handle null values - convert string "null" to actual None/NULL
-            if param_value.lower() == "null":
-                query = query.filter(column.is_(None))
-                continue
-
-            # Handle different data types
-            try:
-                # Try to convert to appropriate type based on column type
-                if hasattr(column.type, "python_type"):
-                    if column.type.python_type == int:
-                        param_value = int(param_value)
-                    elif column.type.python_type == float:
-                        param_value = float(param_value)
-                    elif column.type.python_type == bool:
-                        param_value = param_value.lower() in ("true", "1", "yes", "on")
-
-                # Add filter to query
-                # noinspection PyTypeChecker
-                query = query.filter(column == param_value)
-
-            except (ValueError, TypeError):
-                # If conversion fails, treat as string comparison
-                # noinspection PyTypeChecker
-                query = query.filter(column == param_value)
+    query = filter_query(query, models.User, filter_params)
 
     return query.all()
 
