@@ -17,27 +17,19 @@ USER_DATA = [
     {
         "email": "test_user@test.com",
         "password": "test_password",
+    },
+    {
+        "email": "test_admin@test.com",
+        "password": "test_password_admin",
         "is_admin": True,
     },
     {
-        "email": "emmanuelpean@gmail.com",
-        "password": "password2",
-    },
-    {
-        "email": "jessicaaggood@live.co.uk",
+        "email": "user3@live.co.uk",
         "password": "password3",
     },
     {
-        "email": "sarah.wilson@example.com",
+        "email": "user4@example.com",
         "password": "password4",
-    },
-    {
-        "email": "admin@example.com",
-        "password": "password5",
-    },
-    {
-        "email": "developer@techstartup.com",
-        "password": "password6",
     },
 ]
 
@@ -47,7 +39,12 @@ SETTINGS_DATA = [
         "name": "allowlist",
         "value": ",".join([data["email"] for data in USER_DATA] + ["newuser@user.com"]),
         "description": "Emails allowed to sign up",
-    }
+    },
+    {
+        "name": "default_person_role",
+        "value": "Recruiter",
+        "description": "Default role for new persons",
+    },
 ]
 
 
@@ -90,7 +87,7 @@ COMPANY_DATA = [
     },
     {
         "name": "Minimal Corp",
-        "owner_id": 1,  # Only required fields
+        "owner_id": 1,
     },
     {
         "name": "No URL Company",
@@ -108,6 +105,41 @@ COMPANY_DATA = [
         "description": "Small local business",
         "url": "https://localbiz.com",
         "owner_id": 1,
+    },
+    {
+        "name": "Tech Corp",  # DUPLICATE from user 1
+        "description": "A leading technology company specializing in web applications",
+        "url": "https://techcorp.com",
+        "owner_id": 2,
+    },
+    {
+        "name": "StartupXYZ",  # DUPLICATE from user 1
+        "description": "An innovative startup focused on AI-driven solutions",
+        "url": "https://startupxyz.com",
+        "owner_id": 2,
+    },
+    {
+        "name": "InnovateTech Solutions",
+        "description": "AI and machine learning consulting company",
+        "url": "https://innovatetech.ai",
+        "owner_id": 2,
+    },
+    {
+        "name": "GreenEnergy Corp",
+        "description": "Renewable energy and sustainability solutions",
+        "url": "https://greenenergy.com",
+        "owner_id": 2,
+    },
+    {
+        "name": "FinanceFlow Ltd",
+        "description": "Financial technology and payment processing",
+        "url": "https://financeflow.com",
+        "owner_id": 2,
+    },
+    {
+        "name": "HealthTech Solutions",
+        "description": "Healthcare technology and medical devices",
+        "owner_id": 2,
     },
 ]
 
@@ -181,6 +213,39 @@ LOCATION_DATA = [
         "country": "Brazil",
         "owner_id": 1,
     },
+    {
+        "postcode": "SW1A 1AA",
+        "city": "London",
+        "country": "United Kingdom",
+        "owner_id": 2,
+    },
+    {
+        "postcode": "OX1 2JD",
+        "city": "Oxford",
+        "country": "United Kingdom",
+        "owner_id": 2,
+    },
+    {
+        "postcode": "M1 1AA",
+        "city": "Manchester",
+        "country": "United Kingdom",
+        "owner_id": 2,
+    },
+    {
+        "city": "Edinburgh",
+        "country": "United Kingdom",
+        "owner_id": 2,
+    },
+    {
+        "country": "United Kingdom",
+        "owner_id": 2,
+    },
+    {
+        "postcode": "BS1 1AA",
+        "city": "Bristol",
+        "country": "United Kingdom",
+        "owner_id": 2,
+    },
 ]
 
 
@@ -234,6 +299,36 @@ AGGREGATOR_DATA = [
         "name": "ZipRecruiter",
         "url": "https://ziprecruiter.com",
         "owner_id": 1,
+    },
+    {
+        "name": "LinkedIn",
+        "url": "https://linkedin.com/jobs",
+        "owner_id": 2,
+    },
+    {
+        "name": "Indeed",
+        "url": "https://indeed.com",
+        "owner_id": 2,
+    },
+    {
+        "name": "TotalJobs",
+        "url": "https://totaljobs.com",
+        "owner_id": 2,
+    },
+    {
+        "name": "Reed",
+        "url": "https://reed.co.uk",
+        "owner_id": 2,
+    },
+    {
+        "name": "CV-Library",
+        "url": "https://cv-library.co.uk",
+        "owner_id": 2,
+    },
+    {
+        "name": "Jobsite",
+        "url": "https://jobsite.co.uk",
+        "owner_id": 2,
     },
 ]
 
@@ -339,6 +434,30 @@ KEYWORD_DATA = [
         "name": "Scrum",
         "owner_id": 1,
     },
+    {
+        "name": "Python",
+        "owner_id": 2,
+    },
+    {
+        "name": "JavaScript",
+        "owner_id": 2,
+    },
+    {
+        "name": "Java",
+        "owner_id": 2,
+    },
+    {
+        "name": "Spring Boot",
+        "owner_id": 2,
+    },
+    {
+        "name": "MySQL",
+        "owner_id": 2,
+    },
+    {
+        "name": "Flutter",
+        "owner_id": 2,
+    },
 ]
 
 
@@ -350,7 +469,7 @@ PERSON_DATA = [
         "phone": "1234567890",
         "linkedin_url": "https://linkedin.com/in/johndoe",
         "role": "Senior Engineering Manager",
-        "company_id": 1,  # Tech Corp
+        "company_id": 1,
         "owner_id": 1,
     },
     {
@@ -359,7 +478,7 @@ PERSON_DATA = [
         "email": "jane.smith@startupxyz.com",
         "linkedin_url": "https://linkedin.com/in/janesmith",
         "role": "Product Manager",
-        "company_id": 2,  # StartupXYZ
+        "company_id": 2,
         "owner_id": 1,
     },
     {
@@ -367,7 +486,7 @@ PERSON_DATA = [
         "last_name": "Taylor",
         "phone": "9876543210",
         "role": "Lead Developer",
-        "company_id": 1,  # Tech Corp
+        "company_id": 1,
         "owner_id": 1,
     },
     {
@@ -375,7 +494,7 @@ PERSON_DATA = [
         "last_name": "Davis",
         "email": "emily.davis@startupxyz.com",
         "role": "DevOps Engineer",
-        "company_id": 2,  # StartupXYZ
+        "company_id": 2,
         "owner_id": 1,
     },
     {
@@ -383,7 +502,7 @@ PERSON_DATA = [
         "last_name": "Brown",
         "linkedin_url": "https://linkedin.com/in/chrisbrown",
         "role": "Data Science Manager",
-        "company_id": 1,  # Tech Corp
+        "company_id": 1,
         "owner_id": 1,
     },
     {
@@ -391,7 +510,7 @@ PERSON_DATA = [
         "last_name": "Wilson",
         "email": "sarah.wilson@oxfordpv.com",
         "role": "Technical Recruiter",
-        "company_id": 3,  # Oxford PV
+        "company_id": 3,
         "owner_id": 1,
     },
     {
@@ -404,7 +523,7 @@ PERSON_DATA = [
         "first_name": "Tech",
         "last_name": "Recruiter",
         "role": "Talent Acquisition",
-        "company_id": 3,  # Oxford PV
+        "company_id": 3,
         "owner_id": 1,
     },
     {
@@ -414,7 +533,7 @@ PERSON_DATA = [
         "phone": "5551234567",
         "linkedin_url": "https://linkedin.com/in/alexjohnson",
         "role": "CTO",
-        "company_id": 6,  # CloudFirst Inc
+        "company_id": 6,
         "owner_id": 1,
     },
     {
@@ -422,7 +541,7 @@ PERSON_DATA = [
         "last_name": "Garcia",
         "email": "maria.garcia@enterprise.com",
         "role": "HR Director",
-        "company_id": 9,  # Enterprise Solutions
+        "company_id": 9,
         "owner_id": 1,
     },
     {
@@ -430,7 +549,7 @@ PERSON_DATA = [
         "last_name": "Kim",
         "phone": "5559876543",
         "linkedin_url": "https://linkedin.com/in/davidkim",
-        "company_id": None,  # Freelancer/Independent
+        "company_id": None,
         "owner_id": 1,
     },
     {
@@ -438,7 +557,7 @@ PERSON_DATA = [
         "last_name": "Chen",
         "email": "lisa@localbiz.com",
         "role": "Founder",
-        "company_id": 10,  # LocalBiz
+        "company_id": 10,
         "owner_id": 1,
     },
     {
@@ -446,7 +565,7 @@ PERSON_DATA = [
         "last_name": "Anderson",
         "linkedin_url": "https://linkedin.com/in/robertanderson",
         "role": "Senior Developer",
-        "company_id": 7,  # Minimal Corp
+        "company_id": 7,
         "owner_id": 1,
     },
     {
@@ -454,7 +573,7 @@ PERSON_DATA = [
         "last_name": "Brown",
         "phone": "5555551234",
         "role": "Product Owner",
-        "company_id": 8,  # No URL Company
+        "company_id": 8,
         "owner_id": 1,
     },
     {
@@ -464,14 +583,67 @@ PERSON_DATA = [
         "phone": "5557778888",
         "linkedin_url": "https://linkedin.com/in/michaelwilson",
         "role": "Data Scientist",
-        "company_id": 5,  # DataTech Industries
+        "company_id": 5,
         "owner_id": 1,
     },
     {
         "first_name": "Freelance",
         "last_name": "Developer",
         "email": "freelance@dev.com",
-        "owner_id": 1,  # No company, minimal info
+        "owner_id": 1,
+    },
+    {
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "email": "jane.smith@startupxyz.com",
+        "linkedin_url": "https://linkedin.com/in/janesmith",
+        "role": "Product Manager",
+        "company_id": 12,
+        "owner_id": 2,
+    },
+    {
+        "first_name": "Alice",
+        "last_name": "Thompson",
+        "email": "alice@innovatetech.ai",
+        "phone": "07700123456",
+        "linkedin_url": "https://linkedin.com/in/alicethompson",
+        "role": "Head of Engineering",
+        "company_id": 13,
+        "owner_id": 2,
+    },
+    {
+        "first_name": "Bob",
+        "last_name": "Williams",
+        "email": "b.williams@greenenergy.com",
+        "role": "Technical Recruiter",
+        "company_id": 14,
+        "owner_id": 2,
+    },
+    {
+        "first_name": "Catherine",
+        "last_name": "Jones",
+        "phone": "07700987654",
+        "linkedin_url": "https://linkedin.com/in/catjones",
+        "role": "Senior Java Developer",
+        "company_id": 15,
+        "owner_id": 2,
+    },
+    {
+        "first_name": "Daniel",
+        "last_name": "Brown",
+        "email": "dan.brown@healthtech.com",
+        "role": "CTO",
+        "company_id": 16,
+        "owner_id": 2,
+    },
+    {
+        "first_name": "Emma",
+        "last_name": "Davis",
+        "email": "emma@techcorp.com",
+        "phone": "07700555444",
+        "role": "Senior Software Engineer",
+        "company_id": 11,
+        "owner_id": 2,
     },
 ]
 
@@ -805,6 +977,107 @@ JOB_DATA = [
         "cover_letter_id": 2,
         "application_aggregator_id": None,
     },
+    {
+        "title": "Senior Python Developer",
+        "salary_min": 75000,
+        "salary_max": 120000,
+        "description": "Lead backend development using Python and modern frameworks for fintech applications",
+        "personal_rating": 4,
+        "url": "https://financeflow.com/jobs/senior-python",
+        "company_id": 15,
+        "location_id": 15,
+        "note": "Great fintech experience opportunity",
+        "attendance_type": "hybrid",
+        "owner_id": 2,
+        "source_id": 14,
+        "application_date": "2024-02-01T10:00:00",
+        "application_status": "applied",
+        "applied_via": "company",
+        "cv_id": 13,
+        "cover_letter_id": 13,
+    },
+    {
+        "title": "Mobile App Developer",
+        "salary_min": 50000,
+        "salary_max": 70000,
+        "description": "Build mobile applications using Flutter for healthcare sector",
+        "personal_rating": 5,
+        "company_id": 16,
+        "location_id": 17,
+        "attendance_type": "remote",
+        "owner_id": 2,
+        "source_id": 15,
+        "application_date": "2024-02-03T14:30:00",
+        "application_status": "interview",
+        "applied_via": "aggregator",
+        "cv_id": 14,
+        "application_aggregator_id": 13,
+    },
+    {
+        "title": "AI/ML Engineer",
+        "salary_min": 65000,
+        "salary_max": 95000,
+        "description": "Develop machine learning models and AI solutions",
+        "personal_rating": 5,
+        "company_id": 13,
+        "location_id": 18,
+        "attendance_type": "hybrid",
+        "owner_id": 2,
+        "source_id": 15,
+        "application_date": "2024-02-05T09:15:00",
+        "application_status": "applied",
+        "applied_via": "aggregator",
+        "cover_letter_id": 14,
+        "application_aggregator_id": 14,
+    },
+    {
+        "title": "Sustainability Software Engineer",
+        "salary_min": 55000,
+        "salary_max": 75000,
+        "description": "Develop software solutions for renewable energy management",
+        "personal_rating": 3,
+        "company_id": 14,
+        "location_id": 19,
+        "attendance_type": "on-site",
+        "owner_id": 2,
+        "source_id": 14,
+        "application_date": None,
+        "application_status": None,
+    },
+    {
+        "title": "Full Stack Developer",
+        "salary_min": 60000,
+        "salary_max": 85000,
+        "description": "Build end-to-end web applications using modern frameworks",
+        "personal_rating": 4,
+        "company_id": 12,
+        "location_id": 16,
+        "attendance_type": "hybrid",
+        "owner_id": 2,
+        "source_id": 15,
+        "application_date": "2024-02-07T11:00:00",
+        "application_status": "rejected",
+        "applied_via": "company",
+        "cv_id": 15,
+        "cover_letter_id": 15,
+    },
+    {
+        "title": "Software Engineer",
+        "salary_min": 45000,
+        "salary_max": 65000,
+        "description": "Join our growing tech team to build innovative solutions",
+        "personal_rating": 3,
+        "company_id": 11,
+        "location_id": 16,
+        "attendance_type": "on-site",
+        "owner_id": 2,
+        "source_id": 13,
+        "application_date": "2024-02-09T15:45:00",
+        "application_status": "applied",
+        "applied_via": "aggregator",
+        "cv_id": 16,
+        "application_aggregator_id": 11,
+    },
 ]
 
 JOB_APPLICATION_DATETIME = [current_date - timedelta(weeks=i) for i in range(len(JOB_DATA))]
@@ -874,6 +1147,36 @@ FILE_DATA = [
         "owner_id": 1,
         **RESOURCE_FILES["Cover Letter.docx"],
     },
+    {
+        "filename": "john_doe_cv_2024.pdf",
+        "owner_id": 2,
+        **RESOURCE_FILES["CV.pdf"],
+    },
+    {
+        "filename": "cover_letter_senior_python.docx",
+        "owner_id": 2,
+        **RESOURCE_FILES["Cover Letter.docx"],
+    },
+    {
+        "filename": "java_developer_cv.pdf",
+        "owner_id": 2,
+        **RESOURCE_FILES["CV.pdf"],
+    },
+    {
+        "filename": "mobile_dev_cover_letter.docx",
+        "owner_id": 2,
+        **RESOURCE_FILES["Cover Letter.docx"],
+    },
+    {
+        "filename": "ai_engineer_portfolio.pdf",
+        "owner_id": 2,
+        **RESOURCE_FILES["CV.pdf"],
+    },
+    {
+        "filename": "fullstack_developer_resume.txt",
+        "owner_id": 2,
+        **RESOURCE_FILES["Cover Letter.txt"],
+    },
 ]
 
 
@@ -926,8 +1229,8 @@ INTERVIEW_DATA = [
     {
         "date": "2024-01-26T09:00:00",
         "type": "HR",
-        "location_id": 7,  # Canada location
-        "job_id": 1,  # Same application, second interview
+        "location_id": 7,
+        "job_id": 1,
         "note": None,
         "attendance_type": "on-site",
         "owner_id": 1,
@@ -935,8 +1238,8 @@ INTERVIEW_DATA = [
     {
         "date": "2024-01-29T10:30:00",
         "type": "Technical",
-        "location_id": 8,  # Paris
-        "job_id": 6,  # DevOps application
+        "location_id": 8,
+        "job_id": 6,
         "note": "Deep technical dive into infrastructure",
         "attendance_type": "on-site",
         "owner_id": 1,
@@ -944,8 +1247,8 @@ INTERVIEW_DATA = [
     {
         "date": "2024-01-30T15:00:00",
         "type": "Management",
-        "location_id": 11,  # Australia (remote)
-        "job_id": 8,  # Remote Full Stack application
+        "location_id": 11,
+        "job_id": 8,
         "note": "Meeting with team leads",
         "attendance_type": "remote",
         "owner_id": 1,
@@ -953,8 +1256,8 @@ INTERVIEW_DATA = [
     {
         "date": "2024-02-01T09:45:00",
         "type": "HR",
-        "location_id": 12,  # Toronto
-        "job_id": 10,  # Junior Developer application
+        "location_id": 12,
+        "job_id": 10,
         "note": "Initial screening for junior position",
         "attendance_type": "on-site",
         "owner_id": 1,
@@ -962,8 +1265,8 @@ INTERVIEW_DATA = [
     {
         "date": "2024-02-02T11:00:00",
         "type": "Technical",
-        "location_id": 12,  # Brazil (remote)
-        "job_id": 11,  # Mobile App Developer
+        "location_id": 12,
+        "job_id": 11,
         "note": "Technical skills assessment for mobile development",
         "attendance_type": "remote",
         "owner_id": 1,
@@ -971,8 +1274,8 @@ INTERVIEW_DATA = [
     {
         "date": "2024-02-03T14:15:00",
         "type": "Other",
-        "location_id": 1,  # New York
-        "job_id": 13,  # High Salary Position
+        "location_id": 1,
+        "job_id": 13,
         "note": "Panel interview with executives",
         "attendance_type": "on-site",
         "owner_id": 1,
@@ -980,12 +1283,67 @@ INTERVIEW_DATA = [
     {
         "date": "2024-02-04T16:30:00",
         "type": "Management",
-        "location_id": 5,  # Germany (remote)
-        "job_id": 7,  # Data Scientist application
+        "location_id": 5,
+        "job_id": 7,
         "attendance_type": "remote",
-        "owner_id": 1,  # Minimal interview info
+        "owner_id": 1,
+    },
+    {
+        "date": "2024-02-08T10:00:00",
+        "type": "HR",
+        "location_id": 15,
+        "job_id": 18,
+        "note": "Initial HR screening for Python role",
+        "attendance_type": "remote",
+        "owner_id": 2,
+    },
+    {
+        "date": "2024-02-10T15:30:00",
+        "type": "Technical",
+        "location_id": 17,
+        "job_id": 18,
+        "note": "Technical interview for mobile development",
+        "attendance_type": "remote",
+        "owner_id": 2,
+    },
+    {
+        "date": "2024-02-12T11:45:00",
+        "type": "Management",
+        "location_id": 18,
+        "job_id": 19,
+        "note": "Final round with engineering manager",
+        "attendance_type": "on-site",
+        "owner_id": 2,
+    },
+    {
+        "date": "2024-02-14T09:00:00",
+        "type": "HR",
+        "location_id": 16,
+        "job_id": 21,
+        "note": "HR screening for StartupXYZ position",
+        "attendance_type": "remote",
+        "owner_id": 2,
+    },
+    {
+        "date": "2024-02-16T14:15:00",
+        "type": "Technical",
+        "location_id": 16,
+        "job_id": 22,
+        "note": "Coding challenge and technical discussion",
+        "attendance_type": "on-site",
+        "owner_id": 2,
+    },
+    {
+        "date": "2024-02-18T16:30:00",
+        "type": "Other",
+        "location_id": 19,
+        "job_id": 20,
+        "note": "Team culture fit interview",
+        "attendance_type": "on-site",
+        "owner_id": 2,
     },
 ]
+
 interviews_sorted = sorted(INTERVIEW_DATA, key=lambda x: x["job_id"])
 grouped = {k: list(v) for k, v in groupby(interviews_sorted, key=lambda x: x["job_id"])}
 for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
@@ -1099,7 +1457,50 @@ JOB_APPLICATION_UPDATE_DATA = [
         "type": "sent",
         "owner_id": 1,
     },
+    {
+        "date": "2024-02-02T11:30:00",
+        "job_id": 18,
+        "note": "Application received confirmation email",
+        "type": "received",
+        "owner_id": 2,
+    },
+    {
+        "date": "2024-02-04T16:45:00",
+        "job_id": 18,
+        "note": "Invited for HR screening interview",
+        "type": "received",
+        "owner_id": 2,
+    },
+    {
+        "date": "2024-02-06T09:20:00",
+        "job_id": 19,
+        "note": "Technical assessment link sent",
+        "type": "received",
+        "owner_id": 2,
+    },
+    {
+        "date": "2024-02-07T14:10:00",
+        "job_id": 18,
+        "note": "Completed online coding challenge",
+        "type": "sent",
+        "owner_id": 2,
+    },
+    {
+        "date": "2024-02-09T12:25:00",
+        "job_id": 21,
+        "note": "Application rejected - position filled internally",
+        "type": "received",
+        "owner_id": 2,
+    },
+    {
+        "date": "2024-02-11T10:15:00",
+        "job_id": 22,
+        "note": "Second round interview scheduled",
+        "type": "received",
+        "owner_id": 2,
+    },
 ]
+
 job_application_updates_sorted = sorted(JOB_APPLICATION_UPDATE_DATA, key=lambda x: x["job_id"])
 grouped = {k: list(v) for k, v in groupby(job_application_updates_sorted, key=lambda x: x["job_id"])}
 for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
@@ -1108,47 +1509,63 @@ for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
 
 
 JOB_KEYWORD_MAPPINGS = [
-    {"job_id": 1, "keyword_ids": [1, 2, 6, 7]},  # Senior Python Developer - Python, JavaScript, PostgreSQL, FastAPI
-    {"job_id": 2, "keyword_ids": [2, 3, 4, 13]},  # Full Stack JS Developer - JavaScript, React, Node.js, REST API
-    {"job_id": 3, "keyword_ids": [3, 2, 14]},  # Remote React Developer - React, JavaScript, Git
-    {"job_id": 4, "keyword_ids": [12, 10, 11, 9]},  # Cloud Engineer - AWS, Docker, Kubernetes, DevOps
-    {"job_id": 5, "keyword_ids": [2, 3, 14, 15]},  # Frontend Developer - JavaScript, React, Git, Agile
-    {"job_id": 9, "keyword_ids": [9, 10, 11, 22, 23]},  # DevOps Engineer - DevOps, Docker, Kubernetes, CI/CD, Terraform
-    {"job_id": 10, "keyword_ids": [8, 1, 18]},  # Data Scientist - Machine Learning, Python, MongoDB
-    {"job_id": 11, "keyword_ids": [16, 5, 2]},  # Vue.js Developer - Vue.js, TypeScript, JavaScript
-    {"job_id": 12, "keyword_ids": [2, 3, 4, 1]},  # Remote Full Stack - JavaScript, React, Node.js, Python
-    {"job_id": 13, "keyword_ids": [2, 14, 15]},  # Junior Developer - JavaScript, Git, Agile
-    {"job_id": 15, "keyword_ids": [2, 3, 17]},  # Mobile App Developer - JavaScript, React, Angular
+    {"job_id": 1, "keyword_ids": [1, 2, 6, 7]},
+    {"job_id": 2, "keyword_ids": [2, 3, 4, 13]},
+    {"job_id": 3, "keyword_ids": [3, 2, 14]},
+    {"job_id": 4, "keyword_ids": [12, 10, 11, 9]},
+    {"job_id": 5, "keyword_ids": [2, 3, 14, 15]},
+    {"job_id": 9, "keyword_ids": [9, 10, 11, 22, 23]},
+    {"job_id": 10, "keyword_ids": [8, 1, 18]},
+    {"job_id": 11, "keyword_ids": [16, 5, 2]},
+    {"job_id": 12, "keyword_ids": [2, 3, 4, 1]},
+    {"job_id": 13, "keyword_ids": [2, 14, 15]},
+    {"job_id": 15, "keyword_ids": [2, 3, 17]},
+    {"job_id": 18, "keyword_ids": [29, 26]},
+    {"job_id": 19, "keyword_ids": [28, 26]},
+    {"job_id": 20, "keyword_ids": [27, 26]},
+    {"job_id": 21, "keyword_ids": [27]},
+    {"job_id": 22, "keyword_ids": [26, 27]},
 ]
 
 
 JOB_CONTACT_MAPPINGS = [
-    {"job_id": 1, "person_ids": [1, 3]},  # Senior Python Developer - John Doe, Mike Taylor
-    {"job_id": 2, "person_ids": [2, 4]},  # Full Stack JS Developer - Jane Smith, Emily Davis
-    {"job_id": 3, "person_ids": [1]},  # Remote React Developer - John Doe
-    {"job_id": 4, "person_ids": [4]},  # Cloud Engineer - Emily Davis
-    {"job_id": 5, "person_ids": [5]},  # Frontend Developer - Chris Brown
-    {"job_id": 9, "person_ids": [9]},  # DevOps Engineer - Alex Johnson
-    {"job_id": 10, "person_ids": [15]},  # Data Scientist - Michael Wilson
-    {"job_id": 11, "person_ids": [10]},  # Vue.js Developer - Maria Garcia
-    {"job_id": 12, "person_ids": [12]},  # Remote Full Stack - Lisa Chen
-    {"job_id": 13, "person_ids": [13]},  # Junior Developer - Robert Anderson
-    {"job_id": 15, "person_ids": [11, 16]},  # Mobile App Developer - David Kim, Freelance Developer
+    {"job_id": 1, "person_ids": [1, 3]},
+    {"job_id": 2, "person_ids": [2, 4]},
+    {"job_id": 3, "person_ids": [1]},
+    {"job_id": 4, "person_ids": [4]},
+    {"job_id": 5, "person_ids": [5]},
+    {"job_id": 9, "person_ids": [9]},
+    {"job_id": 10, "person_ids": [15]},
+    {"job_id": 11, "person_ids": [10]},
+    {"job_id": 12, "person_ids": [12]},
+    {"job_id": 13, "person_ids": [13]},
+    {"job_id": 15, "person_ids": [11, 16]},
+    {"job_id": 18, "person_ids": [20]},
+    {"job_id": 19, "person_ids": [18]},
+    {"job_id": 20, "person_ids": [17]},
+    {"job_id": 21, "person_ids": [20]},
+    {"job_id": 22, "person_ids": [21]},
 ]
 
 
 INTERVIEW_INTERVIEWER_MAPPINGS = [
-    {"interview_id": 1, "person_ids": [1]},  # First round - John Doe
-    {"interview_id": 2, "person_ids": [2]},  # HR screening - Jane Smith
-    {"interview_id": 3, "person_ids": [3, 5]},  # Remote assessment - Mike Taylor, Chris Brown
-    {"interview_id": 4, "person_ids": [1]},  # Final round - John Doe
-    {"interview_id": 5, "person_ids": [4]},  # Cultural fit - Emily Davis
-    {"interview_id": 7, "person_ids": [9]},  # DevOps technical - Alex Johnson
-    {"interview_id": 8, "person_ids": [12, 11]},  # Remote Full Stack - Lisa Chen, David Kim
-    {"interview_id": 9, "person_ids": [13]},  # Junior Developer - Robert Anderson
-    {"interview_id": 10, "person_ids": [16]},  # Mobile App - Freelance Developer
-    {"interview_id": 11, "person_ids": [10, 15]},  # High Salary Position - Maria Garcia, Michael Wilson
-    {"interview_id": 12, "person_ids": [15]},  # Data Scientist - Michael Wilson
+    {"interview_id": 1, "person_ids": [1]},
+    {"interview_id": 2, "person_ids": [2]},
+    {"interview_id": 3, "person_ids": [3, 5]},
+    {"interview_id": 4, "person_ids": [1]},
+    {"interview_id": 5, "person_ids": [4]},
+    {"interview_id": 7, "person_ids": [9]},
+    {"interview_id": 8, "person_ids": [12, 11]},
+    {"interview_id": 9, "person_ids": [13]},
+    {"interview_id": 10, "person_ids": [16]},
+    {"interview_id": 11, "person_ids": [10, 15]},
+    {"interview_id": 12, "person_ids": [15]},
+    {"interview_id": 13, "person_ids": [19]},
+    {"interview_id": 14, "person_ids": [20]},
+    {"interview_id": 15, "person_ids": [18, 17]},
+    {"interview_id": 16, "person_ids": [20]},
+    {"interview_id": 17, "person_ids": [21]},
+    {"interview_id": 18, "person_ids": [17, 19]},
 ]
 
 
@@ -1204,7 +1621,7 @@ JOB_ALERT_EMAIL_DATA = [
         """,
     },
     {
-        "owner_id": 2,
+        "owner_id": 1,
         "external_email_id": "linkedin_alert_002",
         "subject": "Data Scientist positions you might like",
         "sender": "jobs-noreply@linkedin.com",
@@ -1309,6 +1726,146 @@ JOB_ALERT_EMAIL_DATA = [
         Indeed UK
         """,
     },
+    {
+        "owner_id": 2,
+        "external_email_id": "linkedin_alert_004",
+        "subject": "Java Developer opportunities in your area",
+        "sender": "jobs-noreply@linkedin.com",
+        "date_received": "2024-02-01T08:30:00",
+        "platform": "linkedin",
+        "service_log_id": 5,
+        "body": """
+        New Java opportunities:
+        
+        Senior Java Developer - London
+        https://linkedin.com/jobs/view/4123456789
+        
+        Java Spring Boot Developer - Manchester
+        https://linkedin.com/jobs/view/4123456790
+        
+        Lead Java Developer - Birmingham
+        https://linkedin.com/jobs/view/4123456791
+        
+        Best regards,
+        LinkedIn Jobs Team
+        """,
+    },
+    {
+        "owner_id": 2,
+        "external_email_id": "totaljobs_alert_001",
+        "subject": "Mobile App Developer jobs near you",
+        "sender": "alerts@totaljobs.com",
+        "date_received": "2024-02-03T12:15:00",
+        "platform": "totaljobs",
+        "service_log_id": 6,
+        "body": """
+        Mobile development opportunities:
+        
+        Flutter Developer - Healthcare sector
+        https://totaljobs.com/job/flutter-healthcare-567890
+        
+        iOS Developer - Fintech startup
+        https://totaljobs.com/job/ios-fintech-234567
+        
+        React Native Developer - Remote
+        https://totaljobs.com/job/react-native-remote-890123
+        
+        TotalJobs Team
+        """,
+    },
+    {
+        "owner_id": 2,
+        "external_email_id": "reed_alert_001",
+        "subject": "AI & Machine Learning weekly digest",
+        "sender": "noreply@reed.co.uk",
+        "date_received": "2024-02-05T16:40:00",
+        "platform": "reed",
+        "service_log_id": 7,
+        "body": """
+        This week's AI & ML roles:
+        
+        Machine Learning Engineer - Edinburgh
+        https://reed.co.uk/jobs/ml-engineer-edinburgh/345678
+        
+        AI Software Developer - London
+        https://reed.co.uk/jobs/ai-developer-london/456789
+        
+        Data Scientist - Manchester
+        https://reed.co.uk/jobs/data-scientist-manchester/567890
+        
+        Happy job hunting!
+        Reed
+        """,
+    },
+    {
+        "owner_id": 2,
+        "external_email_id": "cvlibrary_alert_001",
+        "subject": "Sustainability & Green Tech jobs",
+        "sender": "jobs@cv-library.co.uk",
+        "date_received": "2024-02-07T09:20:00",
+        "platform": "cv-library",
+        "service_log_id": 8,
+        "body": """
+        Green technology opportunities:
+        
+        Sustainability Software Engineer - Bristol
+        https://cv-library.co.uk/job/sustainability-bristol-678901
+        
+        Renewable Energy Developer - Edinburgh
+        https://cv-library.co.uk/job/renewable-edinburgh-789012
+        
+        Environmental Data Analyst - London
+        https://cv-library.co.uk/job/environmental-london-890123
+        
+        CV-Library Team
+        """,
+    },
+    {
+        "owner_id": 2,
+        "external_email_id": "jobsite_alert_001",
+        "subject": "Full Stack Developer positions",
+        "sender": "alerts@jobsite.co.uk",
+        "date_received": "2024-02-09T14:30:00",
+        "platform": "jobsite",
+        "service_log_id": 9,
+        "body": """
+        Full stack development roles:
+        
+        Full Stack JavaScript Developer - Manchester
+        https://jobsite.co.uk/job/fullstack-js-manchester-901234
+        
+        Python Full Stack Engineer - London
+        https://jobsite.co.uk/job/python-fullstack-london-012345
+        
+        MEAN Stack Developer - Birmingham
+        https://jobsite.co.uk/job/mean-stack-birmingham-123456
+        
+        Jobsite Team
+        """,
+    },
+    {
+        "owner_id": 2,
+        "external_email_id": "indeed_alert_004",
+        "subject": "Software Engineer jobs - Daily alerts",
+        "sender": "noreply@indeed.com",
+        "date_received": "2024-02-11T07:45:00",
+        "platform": "indeed",
+        "service_log_id": 10,
+        "body": """
+        Today's software engineering opportunities:
+        
+        Software Engineer - Tech Startup Oxford
+        https://indeed.com/viewjob?jk=soft123456789
+        
+        Senior Software Engineer - London Fintech
+        https://indeed.com/viewjob?jk=soft234567890
+        
+        Graduate Software Developer - Manchester
+        https://indeed.com/viewjob?jk=soft345678901
+        
+        Indeed Team
+        """,
+    },
 ]
 
 
@@ -1388,6 +1945,80 @@ JOB_SCRAPED_DATA = [
         "scrape_error": "Scraping blocked - rate limit exceeded",
         "title": "ML Engineer",
         "scrape_datetime": "2025-08-20T19:25:08.678901+00:00",
+    },
+    {
+        "external_job_id": "4123456789",
+        "owner_id": 2,
+        "is_scraped": True,
+        "is_failed": False,
+        "title": "Senior Java Developer",
+        "description": "Looking for experienced Java developer with Spring Boot expertise...",
+        "company": "FinTech Innovations Ltd",
+        "location": "London, UK",
+        "salary_min": 70000.0,
+        "salary_max": 95000.0,
+        "url": "https://linkedin.com/jobs/view/4123456789",
+        "scrape_datetime": "2025-09-01T10:15:30.123456+00:00",
+    },
+    {
+        "external_job_id": "totaljobs_567890",
+        "owner_id": 2,
+        "is_scraped": True,
+        "is_failed": False,
+        "title": "Flutter Developer",
+        "description": "Join our healthcare tech team to build mobile applications...",
+        "company": "HealthTech Solutions",
+        "location": "Remote, UK",
+        "salary_min": 50000.0,
+        "salary_max": 70000.0,
+        "url": "https://totaljobs.com/job/flutter-healthcare-567890",
+        "scrape_datetime": "2025-09-03T14:22:45.789012+00:00",
+    },
+    {
+        "external_job_id": "reed_345678",
+        "owner_id": 2,
+        "is_scraped": True,
+        "is_failed": False,
+        "title": "Machine Learning Engineer",
+        "description": "Build cutting-edge ML solutions for AI startup...",
+        "company": "InnovateTech Solutions",
+        "location": "Edinburgh, UK",
+        "salary_min": 65000.0,
+        "salary_max": 90000.0,
+        "url": "https://reed.co.uk/jobs/ml-engineer-edinburgh/345678",
+        "scrape_datetime": "2025-09-05T09:33:12.345678+00:00",
+    },
+    {
+        "external_job_id": "cvlib_678901",
+        "owner_id": 2,
+        "is_scraped": True,
+        "is_failed": True,
+        "scrape_error": "Access denied - company blocked scraping",
+        "title": "Sustainability Software Engineer",
+        "scrape_datetime": "2025-09-07T11:45:28.456789+00:00",
+    },
+    {
+        "external_job_id": "jobsite_901234",
+        "owner_id": 2,
+        "is_scraped": True,
+        "is_failed": False,
+        "title": "Full Stack JavaScript Developer",
+        "description": "Work with modern JavaScript frameworks in agile environment...",
+        "company": "StartupXYZ",
+        "location": "Manchester, UK",
+        "salary_min": 55000.0,
+        "salary_max": 80000.0,
+        "url": "https://jobsite.co.uk/job/fullstack-js-manchester-901234",
+        "scrape_datetime": "2025-09-09T13:20:15.567890+00:00",
+    },
+    {
+        "external_job_id": "soft123456789",
+        "owner_id": 2,
+        "is_scraped": True,
+        "is_failed": True,
+        "scrape_error": "Rate limit exceeded - retry after 24 hours",
+        "title": "Software Engineer",
+        "scrape_datetime": "2025-09-11T15:30:42.678901+00:00",
     },
 ]
 
@@ -1481,9 +2112,14 @@ for service_log, date in zip(SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
 
 
 EMAIL_SCRAPEDJOB_MAPPINGS = [
-    {"email_id": 1, "scraped_job_ids": [1, 2, 4]},  # Mix of scraped and unscraped jobs
-    {"email_id": 2, "scraped_job_ids": [3, 5]},  # One scraped, one unscraped
-    {"email_id": 3, "scraped_job_ids": [6, 7]},  # Both failed scraping attempts
+    {"email_id": 1, "scraped_job_ids": [1, 2, 4]},
+    {"email_id": 2, "scraped_job_ids": [3, 5]},
+    {"email_id": 3, "scraped_job_ids": [2, 5]},
+    {"email_id": 7, "scraped_job_ids": [8]},
+    {"email_id": 8, "scraped_job_ids": [9]},
+    {"email_id": 9, "scraped_job_ids": [10]},
+    {"email_id": 10, "scraped_job_ids": [11]},
+    {"email_id": 11, "scraped_job_ids": [12]},
 ]
 
 
@@ -1510,3 +2146,290 @@ def add_mappings(
         for secondary_id in secondary_ids:
             secondary_obj = secondary_data[secondary_id - 1]  # Convert to 0-based index
             getattr(primary_obj, relationship_attr).append(secondary_obj)
+
+
+def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
+    """Comprehensive function that checks ownership integrity across all relationships in the database.
+    Validates that:
+    1. All direct foreign key relationships respect owner boundaries
+    2. All many-to-many mapping relationships respect owner boundaries
+    3. Provides detailed reporting of violations and statistics
+    :param data_collections: Dictionary containing all data collections"""
+
+    results = {
+        "direct_foreign_key_violations": [],
+        "mapping_violations": [],
+        "statistics": {
+            "tables_checked": 0,
+            "entries_validated": 0,
+            "relationships_validated": 0,
+            "users_found": set(),
+        },
+        "edge_cases": [],
+        "summary": {},
+    }
+
+    # Helper functions
+    def find_owner_by_id(collection_name: str, entry_id: int) -> int | None:
+        """Find owner_id of an entry by its ID (1-based)
+        :param collection_name: Name of the data collection
+        :param entry_id: 1-based ID of the entry"""
+
+        collection = data_collections.get(collection_name, [])
+        if isinstance(entry_id, (int, float)) and 1 <= entry_id <= len(collection):
+            entry_ = collection[int(entry_id) - 1]  # Convert to 0-based index
+            owner_id = entry_.get("owner_id")
+            if owner_id is not None:
+                results["statistics"]["users_found"].add(owner_id)
+            return owner_id
+        return None
+
+    def log_edge_case(case_type: str, description: str, details: dict) -> None:
+        """Log edge cases for analysis
+        :param case_type: Type of edge case
+        :param description: Description of the edge case
+        :param details: Additional details about the case"""
+
+        results["edge_cases"].append({"type": case_type, "description": description, "details": details})
+
+    # Define all foreign key relationships
+    fk_relationships = {
+        "PERSON_DATA": [("company_id", "COMPANY_DATA", "optional")],  # Can be None
+        "JOB_DATA": [
+            ("company_id", "COMPANY_DATA", "optional"),
+            ("location_id", "LOCATION_DATA", "optional"),
+            ("source_id", "AGGREGATOR_DATA", "optional"),
+            ("cv_id", "FILE_DATA", "optional"),
+            ("cover_letter_id", "FILE_DATA", "optional"),
+            ("application_aggregator_id", "AGGREGATOR_DATA", "optional"),
+        ],
+        "INTERVIEW_DATA": [
+            ("location_id", "LOCATION_DATA", "optional"),
+            ("job_id", "JOB_DATA", "required"),  # Should always have a job
+        ],
+        "JOB_APPLICATION_UPDATE_DATA": [("job_id", "JOB_DATA", "required")],  # Should always reference a job
+    }
+
+    print("=== OWNERSHIP INTEGRITY VALIDATION ===\n")
+
+    # Phase 1: Validate direct foreign key relationships
+    print("Phase 1: Validating direct foreign key relationships...")
+
+    for table_name, relationships in fk_relationships.items():
+        table_data = data_collections.get(table_name, [])
+        if not table_data:
+            continue
+
+        results["statistics"]["tables_checked"] += 1
+        print(f"  Checking {table_name}: {len(table_data)} entries")
+
+        for entry_idx, entry in enumerate(table_data):
+            results["statistics"]["entries_validated"] += 1
+            entry_owner = entry.get("owner_id")
+
+            # Track users
+            if entry_owner is not None:
+                results["statistics"]["users_found"].add(entry_owner)
+
+            for fk_field, referenced_table, constraint in relationships:
+                results["statistics"]["relationships_validated"] += 1
+                fk_value = entry.get(fk_field)
+
+                # Handle different constraint types
+                if constraint == "required" and fk_value is None:
+                    log_edge_case(
+                        "missing_required_fk",
+                        f"Required foreign key {fk_field} is None",
+                        {"table": table_name, "entry_idx": entry_idx + 1},
+                    )
+                    continue
+
+                if fk_value is not None:
+                    referenced_owner = find_owner_by_id(referenced_table, fk_value)
+
+                    if referenced_owner is None:
+                        log_edge_case(
+                            "invalid_fk_reference",
+                            f"Foreign key {fk_field} references non-existent entry",
+                            {
+                                "table": table_name,
+                                "entry_idx": entry_idx + 1,
+                                "fk_value": fk_value,
+                                "referenced_table": referenced_table,
+                            },
+                        )
+                        continue
+
+                    if referenced_owner != entry_owner:
+                        results["direct_foreign_key_violations"].append(
+                            {
+                                "severity": "HIGH",
+                                "table": table_name,
+                                "entry_index": entry_idx + 1,
+                                "entry_data": {
+                                    k: v for k, v in entry.items() if k not in ["description", "body"]
+                                },  # Exclude long text
+                                "entry_owner": entry_owner,
+                                "field": fk_field,
+                                "referenced_id": fk_value,
+                                "referenced_table": referenced_table,
+                                "referenced_owner": referenced_owner,
+                                "violation_type": "cross_user_reference",
+                                "message": f"User {entry_owner} entry references {referenced_table} owned by user {referenced_owner}",
+                            }
+                        )
+
+    # Phase 2: Validate mapping relationships
+    print(f"\nPhase 2: Validating mapping relationships...")
+
+    mapping_relationships = {
+        "JOB_KEYWORD_MAPPINGS": {
+            "primary_table": "JOB_DATA",
+            "primary_id_field": "job_id",
+            "secondary_table": "KEYWORD_DATA",
+            "secondary_ids_field": "keyword_ids",
+            "description": "Job-Keyword associations",
+        },
+        "JOB_CONTACT_MAPPINGS": {
+            "primary_table": "JOB_DATA",
+            "primary_id_field": "job_id",
+            "secondary_table": "PERSON_DATA",
+            "secondary_ids_field": "person_ids",
+            "description": "Job-Contact person associations",
+        },
+        "INTERVIEW_INTERVIEWER_MAPPINGS": {
+            "primary_table": "INTERVIEW_DATA",
+            "primary_id_field": "interview_id",
+            "secondary_table": "PERSON_DATA",
+            "secondary_ids_field": "person_ids",
+            "description": "Interview-Interviewer associations",
+        },
+        "EMAIL_SCRAPEDJOB_MAPPINGS": {
+            "primary_table": "JOB_ALERT_EMAIL_DATA",
+            "primary_id_field": "email_id",
+            "secondary_table": "JOB_SCRAPED_DATA",
+            "secondary_ids_field": "scraped_job_ids",
+            "description": "Email-Scraped job associations",
+        },
+    }
+
+    for mapping_name, config in mapping_relationships.items():
+        mapping_data = data_collections.get(mapping_name, [])
+        if not mapping_data:
+            continue
+
+        print(f"  Checking {mapping_name}: {len(mapping_data)} mappings - {config['description']}")
+
+        for mapping_idx, mapping in enumerate(mapping_data):
+            primary_id = mapping.get(config["primary_id_field"])
+            secondary_ids = mapping.get(config["secondary_ids_field"], [])
+
+            if primary_id is None:
+                log_edge_case(
+                    "missing_primary_id",
+                    f"Mapping missing primary ID {config['primary_id_field']}",
+                    {"mapping_table": mapping_name, "mapping_idx": mapping_idx + 1},
+                )
+                continue
+
+            primary_owner = find_owner_by_id(config["primary_table"], primary_id)
+
+            if primary_owner is None:
+                log_edge_case(
+                    "invalid_primary_reference",
+                    f"Mapping references non-existent primary entry",
+                    {"mapping_table": mapping_name, "primary_id": primary_id},
+                )
+                continue
+
+            for secondary_id in secondary_ids:
+                results["statistics"]["relationships_validated"] += 1
+                secondary_owner = find_owner_by_id(config["secondary_table"], secondary_id)
+
+                if secondary_owner is None:
+                    log_edge_case(
+                        "invalid_secondary_reference",
+                        f"Mapping references non-existent secondary entry",
+                        {"mapping_table": mapping_name, "secondary_id": secondary_id},
+                    )
+                    continue
+
+                if primary_owner != secondary_owner:
+                    results["mapping_violations"].append(
+                        {
+                            "severity": "MEDIUM",
+                            "mapping_table": mapping_name,
+                            "mapping_index": mapping_idx + 1,
+                            "mapping_data": mapping,
+                            "primary_table": config["primary_table"],
+                            "primary_id": primary_id,
+                            "primary_owner": primary_owner,
+                            "secondary_table": config["secondary_table"],
+                            "secondary_id": secondary_id,
+                            "secondary_owner": secondary_owner,
+                            "violation_type": "cross_user_mapping",
+                            "message": f"Mapping connects {config['primary_table']} (user {primary_owner}) with {config['secondary_table']} (user {secondary_owner})",
+                        }
+                    )
+
+    # Phase 3: Generate comprehensive summary
+    print(f"\nPhase 3: Generating summary report...")
+
+    total_violations = len(results["direct_foreign_key_violations"]) + len(results["mapping_violations"])
+
+    results["summary"] = {
+        "validation_status": "PASS" if total_violations == 0 else "FAIL",
+        "total_violations": total_violations,
+        "high_severity_violations": len(results["direct_foreign_key_violations"]),
+        "medium_severity_violations": len(results["mapping_violations"]),
+        "edge_cases_found": len(results["edge_cases"]),
+        "tables_validated": results["statistics"]["tables_checked"],
+        "entries_validated": results["statistics"]["entries_validated"],
+        "relationships_validated": results["statistics"]["relationships_validated"],
+        "unique_users": len(results["statistics"]["users_found"]),
+        "user_ids_found": sorted(list(results["statistics"]["users_found"])),
+    }
+
+    return results
+
+
+analysis_results = validate_ownership_integrity_detailed(
+    {
+        "COMPANY_DATA": COMPANY_DATA,
+        "LOCATION_DATA": LOCATION_DATA,
+        "PERSON_DATA": PERSON_DATA,
+        "JOB_DATA": JOB_DATA,
+        "INTERVIEW_DATA": INTERVIEW_DATA,
+        "FILE_DATA": FILE_DATA,
+        "KEYWORD_DATA": KEYWORD_DATA,
+        "AGGREGATOR_DATA": AGGREGATOR_DATA,
+        "JOB_APPLICATION_UPDATE_DATA": JOB_APPLICATION_UPDATE_DATA,
+        "JOB_ALERT_EMAIL_DATA": JOB_ALERT_EMAIL_DATA,
+        "JOB_SCRAPED_DATA": JOB_SCRAPED_DATA,
+        "JOB_KEYWORD_MAPPINGS": JOB_KEYWORD_MAPPINGS,
+        "JOB_CONTACT_MAPPINGS": JOB_CONTACT_MAPPINGS,
+        "INTERVIEW_INTERVIEWER_MAPPINGS": INTERVIEW_INTERVIEWER_MAPPINGS,
+        "EMAIL_SCRAPEDJOB_MAPPINGS": EMAIL_SCRAPEDJOB_MAPPINGS,
+    }
+)
+
+
+if analysis_results["summary"]["validation_status"] == "FAIL":
+    print("\n=== DETAILED VIOLATION REPORT ===\n")
+
+    if analysis_results["direct_foreign_key_violations"]:
+        print("Direct Foreign Key Violations:")
+        for violation in analysis_results["direct_foreign_key_violations"]:
+            print(violation)
+
+    if analysis_results["mapping_violations"]:
+        print("\nMapping Violations:")
+        for violation in analysis_results["mapping_violations"]:
+            print(violation)
+
+    if analysis_results["edge_cases"]:
+        print("\nEdge Cases:")
+        for edge_case in analysis_results["edge_cases"]:
+            print(edge_case)
+
+    raise AssertionError("Ownership integrity validation failed - see report above.")
