@@ -397,7 +397,7 @@ class CRUDTestBase:
     test_data: str = ""
     update_data: dict = None
     create_data: list[dict] = None
-    add_fixture: str = None
+    required_fixture: str = None
     get_unauthorised_fixture: str = None
     unauthorised_data_fixture = None
 
@@ -483,8 +483,8 @@ class CRUDTestBase:
     def setup_method(self, request) -> None:
         """Fixture that runs before each test method."""
 
-        if isinstance(self.add_fixture, list):
-            for fixture in self.add_fixture:
+        if isinstance(self.required_fixture, list):
+            for fixture in self.required_fixture:
                 request.getfixturevalue(fixture)
 
     # ------------------------------------------------------- GET ------------------------------------------------------

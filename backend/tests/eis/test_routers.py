@@ -13,7 +13,7 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
         "id": 1,
         "subject": "Updated Python",
     }
-    add_fixture = ["test_service_logs"]
+    required_fixture = ["test_service_logs"]
 
 
 class TestScrapedJobCRUD(CRUDTestBase):

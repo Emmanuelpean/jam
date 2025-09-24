@@ -12,7 +12,6 @@ from app.eis.models import JobAlertEmail, ScrapedJob
 from tests.conftest import open_file
 from tests.eis.test_job_scraper import MockLinkedinJobScraper, MockIndeedJobScraper
 
-
 # ------------------------------------------------------ FIXTURES ------------------------------------------------------
 
 
@@ -81,10 +80,8 @@ def mock_get_indeed_redirected_url(url: str) -> str:
 
 
 @pytest.fixture(autouse=True)
-def patch_get_indeed_redirected_url(monkeypatch):
+def patch_get_indeed_redirected_url(monkeypatch) -> None:
     """Automatically patch get_indeed_redirected_url in all tests to avoid real HTTP requests"""
-
-    from app.eis.email_scraper import GmailScraper
 
     monkeypatch.setattr(GmailScraper, "get_indeed_redirected_url", mock_get_indeed_redirected_url)
 
@@ -209,28 +206,28 @@ def create_email_record(session, test_users, filename: str, platform: str, user_
 
 
 @pytest.fixture
-def linkedin_email_record(session, test_users):
+def linkedin_email_record(session, test_users) -> tuple[JobAlertEmail, list[str]]:
     """Create a LinkedIn job alert email record for testing."""
 
     return create_email_record(session, test_users, "linkedin_email", "linkedin", 0), LINKEDIN_JOB_IDS
 
 
 @pytest.fixture
-def linkedin_email_record_user2(session, test_users) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
+def linkedin_email_record_user2(session, test_users) -> tuple[JobAlertEmail, list[str]]:
     """Create a LinkedIn job alert email record for testing."""
 
     return create_email_record(session, test_users, "linkedin_email", "linkedin", 1), LINKEDIN_JOB_IDS
 
 
 @pytest.fixture
-def indeed_email_record(session, test_users) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
+def indeed_email_record(session, test_users) -> tuple[JobAlertEmail, list[str]]:
     """Create an Indeed job alert email record for testing."""
 
     return create_email_record(session, test_users, "indeed_email", "indeed", 0), INDEED_JOB_IDS
 
 
 @pytest.fixture
-def indeed_email_record_user2(session, test_users) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
+def indeed_email_record_user2(session, test_users) -> tuple[JobAlertEmail, list[str]]:
     """Create an Indeed job alert email record for testing."""
 
     return create_email_record(session, test_users, "indeed_email", "indeed", 1), INDEED_JOB_IDS

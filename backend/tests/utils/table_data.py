@@ -1850,7 +1850,7 @@ JOB_ALERT_EMAIL_DATA = [
         "sender": "noreply@indeed.com",
         "date_received": "2024-02-11T07:45:00",
         "platform": "indeed",
-        "service_log_id": 10,
+        "service_log_id": 5,
         "body": """
         Today's software engineering opportunities:
         

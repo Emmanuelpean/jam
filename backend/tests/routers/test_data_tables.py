@@ -191,7 +191,7 @@ class TestPersonCRUD(CRUDTestBase):
     schema = schemas.PersonCreate
     out_schema = schemas.PersonOut
     test_data = "test_persons"
-    add_fixture = ["test_companies"]
+    required_fixture = ["test_companies"]
     create_data = PERSON_DATA
     update_data = {
         "first_name": "OX",
@@ -206,7 +206,7 @@ class TestJobCRUD(CRUDTestBase):
     schema = schemas.JobCreate
     out_schema = schemas.JobOut
     test_data = "test_jobs"
-    add_fixture = [
+    required_fixture = [
         "test_persons",
         "test_locations",
         "test_keywords",
@@ -229,7 +229,7 @@ class TestJobApplicationUpdateCRUD(CRUDTestBase):
     schema = schemas.JobApplicationUpdateCreate
     out_schema = schemas.JobApplicationUpdateOut
     test_data = "test_job_application_updates"
-    add_fixture = ["test_jobs"]
+    required_fixture = ["test_jobs"]
     create_data = JOB_APPLICATION_UPDATE_DATA
     update_data = {
         "id": 1,
@@ -244,7 +244,7 @@ class TestInterviewCRUD(CRUDTestBase):
     schema = schemas.InterviewCreate
     out_schema = schemas.InterviewOut
     test_data = "test_interviews"
-    add_fixture = ["test_jobs", "test_locations", "test_persons"]
+    required_fixture = ["test_jobs", "test_locations", "test_persons"]
     create_data = INTERVIEW_DATA
     update_data = {
         "job_id": 1,
