@@ -155,12 +155,21 @@ def test_persons(session, test_users, test_companies) -> list[models.Person]:
 
 
 @pytest.fixture
-def test_persons_unauthorised(session, test_users, test_companies, test_persons) -> tuple[list[models.Person], int]:
+def persons_unauthorised_data(test_companies) -> tuple[list[dict], int]:
     """Create test person data with incorrect company_id for access control testing"""
 
     owner_id = 1
     company_id = find_non_owned(test_companies, owner_id)
-    data = [{"first_name": "A", "last_name": "B", "company_id": company_id, "owner_id": owner_id}]
+    return [{"first_name": "A", "last_name": "B", "company_id": company_id, "owner_id": owner_id}], owner_id
+
+
+@pytest.fixture
+def test_persons_unauthorised(
+    session, test_users, test_companies, persons_unauthorised_data
+) -> tuple[list[models.Person], int]:
+    """Create test person data with incorrect company_id for access control testing"""
+
+    data, owner_id = persons_unauthorised_data
     return create_people(session, test_users, test_companies, data), owner_id
 
 
@@ -183,7 +192,7 @@ def test_jobs(
 
 
 @pytest.fixture
-def test_jobs_unauthorised(
+def jobs_unauthorised_data(
     session,
     test_users,
     test_companies,
@@ -192,7 +201,7 @@ def test_jobs_unauthorised(
     test_persons,
     test_aggregators,
     test_files,
-) -> tuple[list[models.Job], int]:
+) -> tuple[list[dict], int, list[dict], list[dict]]:
     """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
 
     owner_id = 1
@@ -208,6 +217,24 @@ def test_jobs_unauthorised(
             "owner_id": owner_id,
         }
     ]
+    return data, owner_id, job_keyword_mapping, job_contact_mapping
+
+
+@pytest.fixture
+def test_jobs_unauthorised(
+    session,
+    test_users,
+    test_companies,
+    test_locations,
+    test_keywords,
+    test_persons,
+    test_aggregators,
+    test_files,
+    jobs_unauthorised_data,
+) -> tuple[list[models.Job], int]:
+    """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
+
+    data, owner_id, job_keyword_mapping, job_contact_mapping = jobs_unauthorised_data
     jobs = create_jobs(
         session,
         test_keywords,
@@ -232,15 +259,25 @@ def test_interviews(session, test_users, test_jobs, test_locations, test_persons
 
 
 @pytest.fixture
-def test_interviews_unauthorised(
+def interviews_unauthorised_data(
     session, test_users, test_jobs, test_locations, test_persons
-) -> tuple[list[models.Interview], int]:
+) -> tuple[list[dict], int, list[dict]]:
     """Create test interview data with incorrect job_id for access control testing"""
 
     owner_id = 1
     job_id = find_non_owned(test_jobs, owner_id)
-    data = [{"job_id": job_id, "date": dt.datetime.now(), "owner_id": owner_id, "type": "phone"}]
+    data = [{"job_id": job_id, "date": str(dt.datetime.now()), "owner_id": owner_id, "type": "phone"}]
     interview_interviewer_mappings = [{"interview_id": 1, "person_ids": [find_non_owned(test_persons, owner_id)]}]
+    return data, owner_id, interview_interviewer_mappings
+
+
+@pytest.fixture
+def test_interviews_unauthorised(
+    session, test_users, test_jobs, test_locations, test_persons, interviews_unauthorised_data
+) -> tuple[list[models.Interview], int]:
+    """Create test interview data with incorrect job_id for access control testing"""
+
+    data, owner_id, interview_interviewer_mappings = interviews_unauthorised_data
     interviews = create_interviews(
         session,
         test_persons,
@@ -261,16 +298,30 @@ def test_job_application_updates(session, test_users, test_jobs) -> list[models.
 
 
 @pytest.fixture
-def test_job_application_updates_unauthorised(
-    session, test_users, test_jobs
-) -> tuple[list[models.JobApplicationUpdate], int]:
+def job_application_updates_unauthorised_data(session, test_users, test_jobs) -> tuple[list[dict], int]:
     """Create test job application update data with incorrect job_id for access control testing"""
 
     owner_id = 1
     job_id = find_non_owned(test_jobs, owner_id)
     data = [
-        {"job_id": job_id, "date": dt.datetime.now(), "type": "received", "owner_id": owner_id, "note": "Test note"}
+        {
+            "job_id": job_id,
+            "date": str(dt.datetime.now()),
+            "type": "received",
+            "owner_id": owner_id,
+            "note": "Test note",
+        }
     ]
+    return data, owner_id
+
+
+@pytest.fixture
+def test_job_application_updates_unauthorised(
+    session, test_users, test_jobs, job_application_updates_unauthorised_data
+) -> tuple[list[models.JobApplicationUpdate], int]:
+    """Create test job application update data with incorrect job_id for access control testing"""
+
+    data, owner_id = job_application_updates_unauthorised_data
     updates = create_job_application_updates(session, test_users, test_jobs, data)
     return updates, owner_id
 
@@ -346,8 +397,9 @@ class CRUDTestBase:
     test_data: str = ""
     update_data: dict = None
     create_data: list[dict] = None
-    add_fixture = None
-    get_unauthorised_fixture = None
+    add_fixture: str = None
+    get_unauthorised_fixture: str = None
+    unauthorised_data_fixture = None
 
     def check_output(
         self,
@@ -502,7 +554,7 @@ class CRUDTestBase:
             data = response.json()
             print(data)
             if data:
-                assert_ownership(data, data[0]["owner_id"])
+                assert_ownership(data, owner_id)
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
@@ -521,12 +573,26 @@ class CRUDTestBase:
             assert response.status_code == status.HTTP_201_CREATED
             self.check_output(create_data, response.json())
 
-    def test_post_unauthorized(
+    def test_post_unauthorised(
         self,
         client,
     ) -> None:
         response = self.post(client, {})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_post_data_only_authorised(
+        self,
+        authorised_clients,
+        request,
+    ) -> None:
+
+        if self.unauthorised_data_fixture:
+            data, owner_id = request.getfixturevalue(self.unauthorised_data_fixture)[:2]
+            for datum in data:
+                datum = {key: value for key, value in datum.items() if key not in ("id", "owner_id")}
+                response = self.post(authorised_clients[owner_id - 1], datum)
+                assert response.status_code == status.HTTP_201_CREATED
+                assert_ownership(data, owner_id)
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 

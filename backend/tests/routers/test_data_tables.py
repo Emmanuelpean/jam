@@ -8,8 +8,6 @@ from CRUDTestBase to ensure consistent testing of standard CRUD operations, incl
 validation, and error handling. Additional custom endpoint tests are included where applicable.
 """
 
-import pytest
-
 from app import schemas
 from tests.conftest import CRUDTestBase
 from tests.utils.table_data import (
@@ -200,6 +198,7 @@ class TestPersonCRUD(CRUDTestBase):
         "id": 1,
     }
     get_unauthorised_fixture = "test_persons_unauthorised"
+    unauthorised_data_fixture = "persons_unauthorised_data"
 
 
 class TestJobCRUD(CRUDTestBase):
@@ -222,6 +221,7 @@ class TestJobCRUD(CRUDTestBase):
         "id": 1,
     }
     get_unauthorised_fixture = "test_jobs_unauthorised"
+    unauthorised_data_fixture = "jobs_unauthorised_data"
 
 
 class TestJobApplicationUpdateCRUD(CRUDTestBase):
@@ -236,6 +236,7 @@ class TestJobApplicationUpdateCRUD(CRUDTestBase):
         "note": "Updated note",
     }
     get_unauthorised_fixture = "test_job_application_updates_unauthorised"
+    unauthorised_data_fixture = "job_application_updates_unauthorised_data"
 
 
 class TestInterviewCRUD(CRUDTestBase):
@@ -252,3 +253,4 @@ class TestInterviewCRUD(CRUDTestBase):
         "id": 1,
     }
     get_unauthorised_fixture = "test_interviews_unauthorised"
+    unauthorised_data_fixture = "interviews_unauthorised_data"
