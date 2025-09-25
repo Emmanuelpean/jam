@@ -26,7 +26,6 @@ def get_dashboard_data(
 
     # ---------------------------------------------------- ALL DATA ----------------------------------------------------
 
-    # noinspection PyTypeChecker
     job_query = db.query(models.Job).filter(models.Job.owner_id == current_user.id)
     jobs = job_query.all()
 
@@ -39,11 +38,9 @@ def get_dashboard_data(
         models.Job.application_status.notin_(["rejected", "withdrawn"])
     ).all()
 
-    # noinspection PyTypeChecker
     interview_query = db.query(models.Interview).filter(models.Interview.owner_id == current_user.id)
     interviews = interview_query.all()
 
-    # noinspection PyTypeChecker
     updates = (
         db.query(models.JobApplicationUpdate).filter(models.JobApplicationUpdate.owner_id == current_user.id).all()
     )

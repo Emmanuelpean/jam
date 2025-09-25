@@ -58,7 +58,6 @@ def get_one_user(
 
     assert_admin(current_user)
 
-    # noinspection PyTypeChecker
     user = db.query(models.User).filter(models.User.id == entry_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -86,7 +85,6 @@ def update_current_user_profile(
     requires_password_check = "password" in user_update or "email" in user_update
 
     # Get the user record to update
-    # noinspection PyTypeChecker
     user_db = db.query(models.User).filter(models.User.id == current_user.id).first()
     current_password = user_update.get("current_password", "")
 
@@ -95,7 +93,6 @@ def update_current_user_profile(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="The current password is required")
 
     # Validate email
-    # noinspection PyTypeChecker
     other_users = db.query(models.User).filter(models.User.id != current_user.id).all()
     emails = [u.email for u in other_users]
     if "email" in user_update and user_update["email"] in emails:
@@ -128,11 +125,9 @@ def update_user(
         user_update["password"] = utils.hash_password(user_update["password"])
 
     # Get the user record to update
-    # noinspection PyTypeChecker
     user_db = db.query(models.User).filter(models.User.id == entry_id).first()
 
     # Validate email
-    # noinspection PyTypeChecker
     other_users = db.query(models.User).filter(models.User.id != entry_id).all()
     emails = [u.email for u in other_users]
     if "email" in user_update and user_update["email"] in emails:
@@ -156,7 +151,6 @@ def create_user(
     :param user: The user data.
     :param db: The database session."""
 
-    # noinspection PyTypeChecker
     settings = db.query(models.Setting).filter(models.Setting.name == "allowlist").all()
     if settings:
         emails_allowed = settings[0].value.split(",")

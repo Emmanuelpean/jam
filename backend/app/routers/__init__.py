@@ -115,12 +115,10 @@ def filter_query(
                         param_value = param_value.lower() in ("true", "1", "yes", "on")
 
                 # Add filter to query
-                # noinspection PyTypeChecker
                 query = query.filter(column == param_value)
 
             except (ValueError, TypeError):
                 # If conversion fails, treat as string comparison
-                # noinspection PyTypeChecker
                 query = query.filter(column == param_value)
 
     return query
@@ -175,7 +173,7 @@ def generate_data_table_crud_router(
         if admin_only and not current_user.is_admin:
             raise error
 
-        # Raise the error if the entry has an owner_id and it does not match the current user's ID
+        # Raise the error if the entry has an owner_id, and it does not match the current user's ID
         if hasattr(entry, "owner_id") and entry.owner_id != current_user.id:
             raise error
 
@@ -208,7 +206,6 @@ def generate_data_table_crud_router(
                     db.execute(association_table.delete().where(getattr(association_table.c, local_key) == entry_id))
 
                 for value_id in item_data[field_name]:
-                    # noinspection PyTypeChecker
                     related_obj = db.query(related_model).filter(related_model.id == value_id).first()
                     if related_obj and related_obj.owner_id == owner_id:
                         db.execute(association_table.insert().values(**{local_key: entry_id, remote_key: value_id}))
@@ -232,7 +229,6 @@ def generate_data_table_crud_router(
 
         # Start with base query
         if not admin_only:
-            # noinspection PyTypeChecker
             query = db.query(table_model).filter(table_model.owner_id == current_user.id)
         elif current_user.is_admin:
             query = db.query(table_model)
@@ -265,7 +261,6 @@ def generate_data_table_crud_router(
         :raises: HTTPException with a 404 status code if the entry is not found.
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-        # noinspection PyTypeChecker
         entry = db.query(table_model).filter(table_model.id == entry_id).first()
 
         if not entry:
@@ -344,7 +339,6 @@ def generate_data_table_crud_router(
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action.
         :raises: HTTPException with a 400 status code if no field is provided for the update."""
 
-        # noinspection PyTypeChecker
         query = db.query(table_model).filter(table_model.id == entry_id)
         entry = query.first()
 
@@ -397,7 +391,6 @@ def generate_data_table_crud_router(
         :raises: HTTPException with a 404 status code if an entry is not found.
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-        # noinspection PyTypeChecker
         query = db.query(table_model).filter(table_model.id == entry_id)
         entry = query.first()
 

@@ -2,7 +2,6 @@
 
 import csv
 import io
-import zipfile
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
@@ -13,17 +12,6 @@ from app import database, oauth2
 router = APIRouter(prefix="/export", tags=["export"])
 
 from app import models
-
-MODEL_LIST = [
-    models.Job,
-    models.Company,
-    models.Keyword,
-    models.Person,
-    models.Location,
-    models.Aggregator,
-    models.Interview,
-    models.JobApplicationUpdate,
-]
 
 
 @router.get("/")
@@ -87,5 +75,7 @@ def export_jobs_with_all_columns(
 
     output.seek(0)
     return StreamingResponse(
-        output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=jobs_export.csv"}
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=jobs_export.csv"},
     )

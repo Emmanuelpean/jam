@@ -123,7 +123,7 @@ def create_email_data(
     )
 
 
-# Job ids extracted from the linkedin email body
+# Job ids extracted from the LinkedIn email body
 LINKEDIN_JOB_IDS = [
     "4289870503",
     "4291891707",
@@ -312,7 +312,6 @@ class TestSaveEmailToDb:
         assert result_email.service_log_id == test_service_logs[0].id
 
         # Verify it's actually in the database
-        # noinspection PyTypeChecker
         db_email = (
             session.query(JobAlertEmail)
             .filter(JobAlertEmail.external_email_id == linkedin_email_data.external_email_id)
@@ -346,7 +345,6 @@ class TestSaveEmailToDb:
         assert result_email.subject == "Different Subject"  # Original data preserved
 
         # Verify only one record exists
-        # noinspection PyTypeChecker
         email_count = (
             session.query(JobAlertEmail)
             .filter(JobAlertEmail.external_email_id == linkedin_email_data[0].external_email_id)
@@ -747,7 +745,6 @@ class TestProcessEmailJobs:
             service_log_entry=test_service_logs[0],
         )
 
-        # noinspection PyTypeChecker
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(linkedin_email_record[1])
 
@@ -766,7 +763,6 @@ class TestProcessEmailJobs:
             service_log_entry=test_service_logs[0],
         )
 
-        # noinspection PyTypeChecker
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == indeed_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(indeed_email_record[1])
 
@@ -785,7 +781,6 @@ class TestProcessEmailJobs:
             service_log_entry=test_service_logs[0],
         )
 
-        # noinspection PyTypeChecker
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == indeed_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(indeed_email_record[1])
         assert len(result) == len(indeed_email_record[1])
@@ -812,10 +807,8 @@ class TestProcessEmailJobs:
             service_log_entry=test_service_logs[0],
         )
 
-        # noinspection PyTypeChecker
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(linkedin_email_record[1])
-        # noinspection PyTypeChecker
         scraped_jobs = (
             session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record_user2[0].owner_id).all()
         )
@@ -842,7 +835,6 @@ class TestProcessEmailJobs:
             service_log_entry=test_service_logs[0],
         )
 
-        # noinspection PyTypeChecker
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(linkedin_email_record[1])
 
@@ -894,7 +886,6 @@ class TestProcessUserEmails:
             assert test_service_logs[0].emails_saved_n == 1
 
             # Verify email was saved to database
-            # noinspection PyTypeChecker
             saved_emails = (
                 session.query(JobAlertEmail)
                 .filter(JobAlertEmail.external_email_id == linkedin_email_data[0].external_email_id)
@@ -904,13 +895,11 @@ class TestProcessUserEmails:
             assert saved_emails[0].platform == linkedin_email_data[0].platform
 
             # Verify jobs were created only for the first user
-            # noinspection PyTypeChecker
             user1_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[0].id).all()
             assert len(user1_jobs) == len(linkedin_email_data[1])
 
             # Verify no jobs for other users
             for i in range(1, len(test_users)):
-                # noinspection PyTypeChecker
                 user_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[i].id).all()
                 assert len(user_jobs) == 0
 
@@ -967,16 +956,13 @@ class TestProcessUserEmails:
             )
 
             # Verify jobs were created for appropriate users
-            # noinspection PyTypeChecker
             user1_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[0].id).all()
-            # noinspection PyTypeChecker
             user2_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[1].id).all()
             assert len(user1_jobs) == len(linkedin_email_data[1])
             assert len(user2_jobs) == len(indeed_email_data_user2[1])
 
             # Verify no jobs for remaining users (if any)
             for i in range(2, len(test_users)):
-                # noinspection PyTypeChecker
                 user_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[i].id).all()
                 assert len(user_jobs) == 0
 
@@ -1032,16 +1018,13 @@ class TestProcessUserEmails:
             )
 
             # Verify jobs were created for appropriate users
-            # noinspection PyTypeChecker
             user1_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[0].id).all()
-            # noinspection PyTypeChecker
             user2_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[1].id).all()
             assert len(user1_jobs) == len(linkedin_email_data[1])
             assert len(user2_jobs) == len(linkedin_email_data_user2[1])
 
             # Verify no jobs for remaining users (if any)
             for i in range(2, len(test_users)):
-                # noinspection PyTypeChecker
                 user_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[i].id).all()
                 assert len(user_jobs) == 0
 
