@@ -102,6 +102,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	];
 
 	const transformData = (jobData: JobData) => {
+		console.log("AAAAA", jobData);
 		return {
 			title: jobData.title.trim(),
 			description: jobData.description?.trim() || null,

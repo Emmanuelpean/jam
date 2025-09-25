@@ -17,6 +17,8 @@ const AboutPage: React.FC = () => {
 				flexDirection: "column",
 				justifyContent: "center",
 				alignItems: "center",
+				paddingLeft: "10rem",
+				paddingRight: "10rem",
 			}}
 		>
 			<div style={{ marginBottom: 24, paddingTop: "20vh" }}>

@@ -8,7 +8,7 @@ import { api } from "../../../services/Api";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import AlertModal from "../AlertModal";
 import { areDifferent, findByKey, flattenArray } from "../../../utils/Utils";
-import { renderModalViewField, ModalViewField } from "../../rendering/view/ModalFields";
+import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
 
 interface CreateGenericDeleteHandlerParams {
@@ -22,7 +22,6 @@ interface CreateGenericDeleteHandlerParams {
 	}) => Promise<boolean>;
 	showError: (options: { message: string }) => Promise<boolean>;
 	removeItem?: (id: string | number) => void;
-	setData?: React.Dispatch<React.SetStateAction<any[]>>;
 	itemType?: string;
 }
 
@@ -36,7 +35,6 @@ export const createGenericDeleteHandler = ({
 	showDelete,
 	showError,
 	removeItem,
-	setData,
 	itemType = "item",
 }: CreateGenericDeleteHandlerParams) => {
 	return async (item: DeleteHandlerItem): Promise<void> => {
@@ -49,13 +47,8 @@ export const createGenericDeleteHandler = ({
 			});
 
 			await api.delete(`${endpoint}/${item.id}`, token);
-
-			if (typeof removeItem === "function") {
+			if (removeItem) {
 				removeItem(item.id);
-			} else if (typeof setData === "function") {
-				setData((prevData: any[]) => prevData.filter((dataItem: any) => dataItem.id !== item.id));
-			} else {
-				window.location.reload();
 			}
 		} catch (error) {
 			if (error !== false) {
@@ -79,23 +72,23 @@ export interface TabConfig {
 }
 
 export interface GenericModalProps {
-	mode?: "view" | "edit" | "add";
-	fields: { view: ViewFields; form: FormFields };
-	data?: any;
-	id?: string | number | null;
-	onSuccess?: (data: any) => void;
-	validation?: ((data: any) => any) | null;
-	transformFormData?: ((data: any) => any) | null;
+	mode?: "view" | "edit" | "add"; // modal mode
+	fields: { view: ViewFields; form: FormFields }; // fields to display
+	data?: any; // data to populate the fields
+	id?: string | number | null; // if id is provided, use the id and endpoint to load the data
+	onSuccess?: (data: any) => void; // called when the entry is added or updated
+	validation?: ((data: any) => any) | null; // custom validation method before submit
+	transformFormData?: ((data: any) => any) | null; // custom data transformation before submit
 	onFormDataChange?: ((data: any) => void) | null;
-	onDelete?: ((item: any) => Promise<void>) | null;
-	additionalFields?: ModalViewField[];
-	show: boolean;
-	onHide: () => void;
-	itemName?: string;
-	size?: "sm" | "lg" | "xl";
-	tabs?: TabConfig[] | null;
-	defaultActiveTab?: string | null;
-	endpoint: string;
+	onDelete?: (id: string | number) => void; // called when the entry is deleted
+	additionalFields?: ModalViewField[]; // additional fields displayed outside the card in view mode
+	show: boolean; // whether to show the modal
+	onHide: () => void; // called to hide the modal
+	itemName?: string; // name of the item being managed, used in titles and messages
+	size?: "sm" | "lg" | "xl"; // modal size
+	tabs?: TabConfig[] | null; // optional tabs configuration
+	defaultActiveTab?: string | null; // default active tab key
+	endpoint: string; // API endpoint for CRUD operations
 }
 
 export interface ValidationErrors {
@@ -119,7 +112,7 @@ const GenericModal = ({
 	validation = null,
 	transformFormData = null,
 	onFormDataChange = null,
-	onDelete = null,
+	onDelete,
 }: GenericModalProps) => {
 	const hasTabs = tabs && tabs.length > 0;
 
@@ -139,7 +132,6 @@ const GenericModal = ({
 	});
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef<HTMLDivElement>(null);
-	const previousShow = useRef(show);
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
 
 	// -------------------------------------------------- DATA LOADING -------------------------------------------------
@@ -181,11 +173,30 @@ const GenericModal = ({
 	const getCurrentFields = (): { view: ViewFields; form: FormFields } => {
 		const currentTab = getCurrentTabConfig();
 		if (!currentTab) {
-			return fields;
+			return {
+				view: filterConditionalFields(fields.view),
+				form: filterConditionalFields(fields.form),
+			};
+		} else {
+			return {
+				view: filterConditionalFields(currentTab.fields.view),
+				form: filterConditionalFields(currentTab.fields.form),
+			};
 		}
-		const formFields = filterConditionalFields(currentTab.fields.form);
-		const viewFields = filterConditionalFields(currentTab.fields.view);
-		return { form: formFields, view: viewFields };
+	};
+
+	const getAllFields = (): { view: ViewFields; form: FormFields } => {
+		if (!hasTabs || !tabs) {
+			return {
+				form: filterConditionalFields(fields.form),
+				view: filterConditionalFields(fields.view),
+			};
+		} else {
+			return {
+				form: tabs.flatMap((tab) => filterConditionalFields(tab.fields.form)),
+				view: tabs.flatMap((tab) => filterConditionalFields(tab.fields.view)),
+			};
+		}
 	};
 
 	const getCurrentAdditionalFields = (): ModalViewField[] => {
@@ -194,44 +205,35 @@ const GenericModal = ({
 	};
 
 	useEffect(() => {
-		console.log("GenericModal - show changed:", effectiveData);
 		// Initialize modal state when it becomes visible or data changes
-		if (show && (!previousShow.current || (effectiveData && Object.keys(formData).length === 0))) {
-			if (mode === "add") {
-				setFormData({});
-				setOriginalFormData({});
-				setIsEditing(true);
-			} else if (mode === "edit") {
-				setFormData({ ...effectiveData });
-				setOriginalFormData({ ...effectiveData });
-				setIsEditing(true);
-			} else {
-				setFormData({ ...effectiveData });
-				setOriginalFormData({ ...effectiveData });
-				setIsEditing(false);
-			}
-			setErrors({});
 
-			// Reset active tab only when modal first opens
-			if (hasTabs && !previousShow.current) {
-				setActiveTab(defaultActiveTab || tabs[0]!.key);
-			}
+		if (mode === "add") {
+			setFormData({});
+			setOriginalFormData({});
+			setIsEditing(true);
+		} else if (mode === "edit") {
+			setFormData({ ...effectiveData });
+			setOriginalFormData({ ...effectiveData });
+			setIsEditing(true);
+		} else {
+			setFormData({ ...effectiveData });
+			setOriginalFormData({ ...effectiveData });
+			setIsEditing(false);
 		}
-		previousShow.current = show;
+		setErrors({});
+
+		// Reset active tab only when modal first opens
+		if (hasTabs) {
+			setActiveTab(defaultActiveTab || tabs[0]!.key);
+		}
 	}, [show, effectiveData, mode, tabs, defaultActiveTab]);
 
-	// Simple tab change - just update the active tab, keep shared editing state
-	const handleTabChange = (tabKey: string): void => {
-		setActiveTab(tabKey);
-		setErrors({}); // Clear errors when switching tabs
-	};
-
-	useEffect(() => {
-		// Allow dynamic form fields based on current data
-		if (onFormDataChange && isEditing) {
-			onFormDataChange(formData);
-		}
-	}, [formData, isEditing, onFormDataChange]);
+	// useEffect(() => {
+	// 	// Allow dynamic form fields based on current data
+	// 	if (onFormDataChange && isEditing) {
+	// 		onFormDataChange(formData);
+	// 	}
+	// }, [formData, isEditing, onFormDataChange]);
 
 	// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
@@ -344,7 +346,7 @@ const GenericModal = ({
 							firstItem as ModalViewField,
 							effectiveData,
 							getModalId(),
-							createFieldHandler((firstItem as ModalViewField).key),
+							// createFieldHandler((firstItem as ModalViewField).key),
 						)}
 					</div>
 				);
@@ -383,7 +385,7 @@ const GenericModal = ({
 										field as ModalViewField,
 										effectiveData,
 										getModalId(),
-										createFieldHandler((field as ModalViewField).key),
+										// createFieldHandler((field as ModalViewField).key),
 									)}
 						</div>
 					);
@@ -399,17 +401,13 @@ const GenericModal = ({
 		token,
 		showDelete,
 		showError,
-		removeItem: undefined,
-		setData: undefined,
+		removeItem: onDelete,
 		itemType: itemName,
 	});
 
 	const handleDeleteClick = async () => {
 		try {
 			await handleDelete(effectiveData);
-			if (onDelete) {
-				await onDelete(effectiveData);
-			}
 			handleHideImmediate();
 		} catch (error) {
 			// Error already handled by createGenericDeleteHandler
@@ -463,7 +461,7 @@ const GenericModal = ({
 
 	const validateFormFields = async (): Promise<Errors> => {
 		const newErrors: Errors = {};
-		const currentFields = getCurrentFields();
+		const currentFields = getAllFields();
 		const allFields = flattenArray(currentFields.form);
 
 		// 1) Required field validation
@@ -497,6 +495,17 @@ const GenericModal = ({
 			}
 		}
 
+		// Switch to the tab containing the first error
+		if (hasTabs && tabs) {
+			for (const tab of tabs) {
+				const tabFields = flattenArray(filterConditionalFields(tab.fields.form));
+				if (tabFields.some((field: ModalFormField) => newErrors[field.name])) {
+					setActiveTab(tab.key);
+					break;
+				}
+			}
+		}
+
 		return newErrors;
 	};
 
@@ -522,18 +531,14 @@ const GenericModal = ({
 					? await api.post(`${endpoint}/`, dataToSubmit, token)
 					: await api.put(`${endpoint}/${effectiveData.id}`, dataToSubmit, token);
 
-			console.log("API Result:", apiResult);
+			onSuccess?.(apiResult);
+
 			if (mode === "add") {
-				onSuccess?.(apiResult);
 				handleHideImmediate();
 			} else if (mode === "edit") {
-				onSuccess?.(apiResult);
 				handleHideImmediate();
 			} else {
-				// Object.assign(effectiveData, apiResult);
-				setEffectiveData({ ...apiResult });
-				onSuccess?.(effectiveData);
-				handleEditToView();
+				setEffectiveData(apiResult); // reset to view mode since data changed
 			}
 		} catch (err: any) {
 			const errorMessage = `Failed to ${mode === "add" ? "create" : "update"} 
@@ -569,8 +574,10 @@ const GenericModal = ({
 		return (
 			<Modal.Header closeButton>
 				<Modal.Title>
-					{icon && <i className={`${icon} me-2`} style={{ fontSize: "1.05em" }} />}
-					{text}
+					<span style={{ display: "flex", alignItems: "center" }}>
+						{icon && <i className={`${icon} me-2`} style={{ fontSize: "1.05em" }} />}
+						<span>{text}</span>
+					</span>
 				</Modal.Title>
 			</Modal.Header>
 		);
@@ -591,7 +598,6 @@ const GenericModal = ({
 
 		const currentFields = getCurrentFields();
 		const currentAdditionalFields = getCurrentAdditionalFields();
-		const formFields = filterConditionalFields(currentFields.form);
 
 		const renderContentInner = () => (
 			<div className={`modal-content-visible`}>
@@ -599,7 +605,7 @@ const GenericModal = ({
 					<div>
 						{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
 						<div>
-							{formFields.map((item: ModalFormField | ModalFormField[], index: number) => (
+							{currentFields.form.map((item: ModalFormField | ModalFormField[], index: number) => (
 								<div key={`form-field-${index}`}>{renderFieldGroup(item, index, true)}</div>
 							))}
 						</div>
@@ -630,7 +636,7 @@ const GenericModal = ({
 											item,
 											effectiveData,
 											getModalId(),
-											createFieldHandler(item.key),
+											// createFieldHandler(item.key),
 										)}
 									</div>
 								))}
@@ -663,7 +669,7 @@ const GenericModal = ({
 									key={tab.key}
 									type="button"
 									className={`custom-tab-button ${activeTab === tab.key ? "active" : ""}`}
-									onClick={() => handleTabChange(tab.key)}
+									onClick={() => setActiveTab(tab.key)}
 								>
 									{tabTitle}
 								</button>
@@ -825,6 +831,6 @@ export interface DataModalProps {
 	data?: any;
 	id?: number | null;
 	onSuccess?: (data: any) => void;
-	onDelete?: ((item: any) => Promise<void>) | null;
+	onDelete?: (id: number | string) => void;
 	size?: "sm" | "lg" | "xl";
 }

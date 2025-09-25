@@ -17,7 +17,7 @@ export interface CreateGenericDeleteHandlerProps {
 	token: string | null;
 	showDelete: (config: any) => Promise<boolean>;
 	showError: (config: any) => Promise<boolean>;
-	removeItem?: (itemId: string | number) => void;
+	removeItem: (itemId: string | number) => void;
 	setData?: React.Dispatch<React.SetStateAction<any[]>>;
 	nameKey: string;
 	itemType?: string;
@@ -27,12 +27,12 @@ export interface CreateGenericDeleteHandlerProps {
  * Creates a reusable delete handler for table items
  */
 export const createGenericDeleteHandler = ({
+	// TODO merge with modal delete handler?
 	endpoint,
 	token,
 	showDelete,
 	showError,
 	removeItem,
-	setData,
 	nameKey,
 	itemType = "item",
 }: CreateGenericDeleteHandlerProps) => {
@@ -52,14 +52,7 @@ export const createGenericDeleteHandler = ({
 			});
 
 			await api.delete(`${endpoint}/${item.id}`, token);
-
-			if (typeof removeItem === "function") {
-				removeItem(item.id);
-			} else if (typeof setData === "function") {
-				setData((prevData) => prevData.filter((dataItem) => dataItem.id !== item.id));
-			} else {
-				window.location.reload();
-			}
+			removeItem(item.id);
 		} catch (error) {
 			if (error !== false) {
 				await showError({
@@ -264,11 +257,14 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 
 	const updateItem = useCallback(
 		(updatedItem: any) => {
-			if (mode === "controlled") {
-				const newData = controlledData.map((item) => (item.id === updatedItem.id ? updatedItem : item));
-				onDataChange?.(newData);
-			} else {
-				setInternalData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
+			console.log("Updating item:", updatedItem);
+			if (updatedItem) {
+				if (mode === "controlled") {
+					const newData = controlledData.map((item) => (item.id === updatedItem.id ? updatedItem : item));
+					onDataChange?.(newData);
+				} else {
+					setInternalData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
+				}
 			}
 		},
 		[mode, controlledData, onDataChange],
@@ -421,7 +417,6 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		showDelete: showDelete,
 		showError: showError,
 		removeItem: removeItem,
-		setData: mode === "controlled" ? undefined : setInternalData,
 		nameKey: nameKey,
 		itemType: itemType,
 	});
@@ -782,16 +777,21 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 				onSuccess={handleEditSuccess}
 				data={selectedItem || {}}
 				submode="edit"
+				onDelete={removeItem}
 				size={modalSize}
 				{...modalProps}
 			/>
 
 			<Modal
 				show={showViewModal}
-				onHide={closeViewModal}
+				onHide={() => {
+					updateItem(selectedItem); // Todo
+					closeViewModal();
+				}}
 				onSuccess={handleEditSuccess}
 				data={selectedItem}
 				submode="view"
+				onDelete={removeItem}
 				onEdit={() => {
 					closeViewModal();
 					openEditModal(selectedItem);

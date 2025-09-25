@@ -392,7 +392,7 @@ export const formFields = {
 		isSearchable: true,
 		isClearable: true,
 		displayCondition: (formData: JobData): boolean => {
-			return formData.attendance_type ? formData.attendance_type === "on-site" : true;
+			return formData.attendance_type ? ["on-site", "hybrid"].includes(formData.attendance_type) : true;
 		},
 		options: options,
 		...(onAdd && {

@@ -49,8 +49,8 @@ export const SettingModal: React.FC<DataModalProps> = ({
 		}
 		const queryParams = { name: formData.name.trim() };
 		const matches = await settingsApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing: any) => {
-			return data?.id !== existing.id;
+		const duplicates = matches.filter((existing: SettingData) => {
+			return formData?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0) {
@@ -66,7 +66,7 @@ export const SettingModal: React.FC<DataModalProps> = ({
 			mode={submode}
 			itemName="Setting"
 			size={size}
-			data={data || {}}
+			data={data}
 			id={id}
 			fields={fields}
 			endpoint="settings"

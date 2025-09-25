@@ -529,7 +529,7 @@ class BaseTest:
         pass
 
     def login(self) -> None:
-        """Helper method to login to the application"""
+        """Helper method to log in to the application"""
 
         login_url = f"{self.frontend_base_url}/login"
         self.driver.get(login_url)
