@@ -17,17 +17,13 @@ export interface CreateGenericDeleteHandlerProps {
 	token: string | null;
 	showDelete: (config: any) => Promise<boolean>;
 	showError: (config: any) => Promise<boolean>;
-	removeItem: (itemId: string | number) => void;
+	removeItem?: (itemId: string | number) => void;
 	setData?: React.Dispatch<React.SetStateAction<any[]>>;
-	nameKey: string;
+	nameKey?: string;
 	itemType?: string;
 }
 
-/**
- * Creates a reusable delete handler for table items
- */
 export const createGenericDeleteHandler = ({
-	// TODO merge with modal delete handler?
 	endpoint,
 	token,
 	showDelete,
@@ -38,10 +34,12 @@ export const createGenericDeleteHandler = ({
 }: CreateGenericDeleteHandlerProps) => {
 	return async (item: any): Promise<void> => {
 		let message: string;
-		if (nameKey !== "date") {
+		if (!nameKey) {
+			message = `Are you sure you want to delete this ${itemType}? This action cannot be undone.`;
+		} else if (nameKey !== "date") {
 			message = `Are you sure you want to delete "${item[nameKey]}"? This action cannot be undone.`;
 		} else {
-			message = `Are you sure you want to delete this ${itemType}? This action cannot be undone.`;
+			message = `Are you sure you want to delete this item? This action cannot be undone.`;
 		}
 		try {
 			await showDelete({
@@ -52,7 +50,7 @@ export const createGenericDeleteHandler = ({
 			});
 
 			await api.delete(`${endpoint}/${item.id}`, token);
-			removeItem(item.id);
+			removeItem?.(item.id);
 		} catch (error) {
 			if (error !== false) {
 				await showError({

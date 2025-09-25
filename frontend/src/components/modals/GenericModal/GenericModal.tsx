@@ -10,56 +10,7 @@ import AlertModal from "../AlertModal";
 import { areDifferent, findByKey, flattenArray } from "../../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
-
-interface CreateGenericDeleteHandlerParams {
-	endpoint: string;
-	token: string | null;
-	showDelete: (options: {
-		title: string;
-		message: string;
-		confirmText: string;
-		cancelText: string;
-	}) => Promise<boolean>;
-	showError: (options: { message: string }) => Promise<boolean>;
-	removeItem?: (id: string | number) => void;
-	itemType?: string;
-}
-
-interface DeleteHandlerItem {
-	id: string | number;
-}
-
-export const createGenericDeleteHandler = ({
-	endpoint,
-	token,
-	showDelete,
-	showError,
-	removeItem,
-	itemType = "item",
-}: CreateGenericDeleteHandlerParams) => {
-	return async (item: DeleteHandlerItem): Promise<void> => {
-		try {
-			await showDelete({
-				title: `Delete ${itemType}`,
-				message: `Are you sure you want to delete this entry? This action cannot be undone.`,
-				confirmText: "Delete",
-				cancelText: "Cancel",
-			});
-
-			await api.delete(`${endpoint}/${item.id}`, token);
-			if (removeItem) {
-				removeItem(item.id);
-			}
-		} catch (error) {
-			if (error !== false) {
-				await showError({
-					message: `Failed to delete ${itemType}.`,
-				});
-			}
-			throw error;
-		}
-	};
-};
+import { createGenericDeleteHandler } from "../../tables/GenericTable";
 
 export type ViewFields = (ModalViewField | ModalViewField[])[];
 export type FormFields = (ModalFormField | ModalFormField[])[];
