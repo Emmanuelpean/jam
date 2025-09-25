@@ -111,7 +111,6 @@ const GenericModal = ({
 	onSuccess,
 	validation = null,
 	transformFormData = null,
-	onFormDataChange = null,
 	onDelete,
 }: GenericModalProps) => {
 	const hasTabs = tabs && tabs.length > 0;
@@ -206,7 +205,6 @@ const GenericModal = ({
 
 	useEffect(() => {
 		// Initialize modal state when it becomes visible or data changes
-
 		if (mode === "add") {
 			setFormData({});
 			setOriginalFormData({});
@@ -226,14 +224,7 @@ const GenericModal = ({
 		if (hasTabs) {
 			setActiveTab(defaultActiveTab || tabs[0]!.key);
 		}
-	}, [show, effectiveData, mode, tabs, defaultActiveTab]);
-
-	// useEffect(() => {
-	// 	// Allow dynamic form fields based on current data
-	// 	if (onFormDataChange && isEditing) {
-	// 		onFormDataChange(formData);
-	// 	}
-	// }, [formData, isEditing, onFormDataChange]);
+	}, [show, mode, defaultActiveTab]);
 
 	// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
@@ -266,12 +257,6 @@ const GenericModal = ({
 	};
 
 	const handleHideImmediate = (): void => {
-		// onSuccess?.(effectiveData);
-		// setFormData({});
-		// setOriginalFormData({});
-		// setErrors({});
-		// setIsEditing(false);
-		// setEffectiveData(null);
 		onHide();
 	};
 
@@ -346,7 +331,7 @@ const GenericModal = ({
 							firstItem as ModalViewField,
 							effectiveData,
 							getModalId(),
-							// createFieldHandler((firstItem as ModalViewField).key),
+							handleViewDataChange((firstItem as ModalViewField).key),
 						)}
 					</div>
 				);
@@ -385,7 +370,7 @@ const GenericModal = ({
 										field as ModalViewField,
 										effectiveData,
 										getModalId(),
-										// createFieldHandler((field as ModalViewField).key),
+										handleViewDataChange((field as ModalViewField).key),
 									)}
 						</div>
 					);
@@ -450,12 +435,15 @@ const GenericModal = ({
 			.filter((item) => item !== null) as (T | T[])[];
 	};
 
-	const createFieldHandler = (fieldName: string) => {
+	const handleViewDataChange = (fieldName: string) => {
 		return (newData: any[]) => {
-			setEffectiveData((prev: any) => ({
-				...prev,
+			console.log("Field handler called for", fieldName, newData);
+			const updatedData = {
+				...effectiveData,
 				[fieldName]: newData,
-			}));
+			};
+			setEffectiveData(updatedData);
+			onSuccess?.(updatedData);
 		};
 	};
 
@@ -636,7 +624,7 @@ const GenericModal = ({
 											item,
 											effectiveData,
 											getModalId(),
-											// createFieldHandler(item.key),
+											handleViewDataChange(item.key),
 										)}
 									</div>
 								))}

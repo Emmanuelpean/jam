@@ -26,15 +26,11 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 		<InterviewModal {...props} jobId={jobId} />
 	);
 
-	const handleDataChange = (newData: InterviewData[]) => {
-		onDataChange?.(newData);
-	};
-
 	return (
 		<GenericTable
 			mode="controlled"
 			data={data}
-			onDataChange={handleDataChange}
+			onDataChange={onDataChange}
 			error={error}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}

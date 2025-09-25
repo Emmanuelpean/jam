@@ -241,6 +241,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 
 	const updateItem = useCallback(
 		(updatedItem: any) => {
+			console.log("Updating item:", updatedItem);
 			if (updatedItem) {
 				if (mode === "controlled") {
 					const newData = controlledData.map((item) => (item.id === updatedItem.id ? updatedItem : item));
@@ -755,11 +756,8 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 
 			<Modal
 				show={showViewModal}
-				onHide={() => {
-					updateItem(selectedItem); // Todo
-					closeViewModal();
-				}}
-				onSuccess={handleEditSuccess}
+				onHide={closeViewModal}
+				onSuccess={updateItem}
 				data={selectedItem}
 				submode="view"
 				onDelete={removeItem}

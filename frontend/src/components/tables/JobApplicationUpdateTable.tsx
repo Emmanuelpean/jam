@@ -1,8 +1,7 @@
 import React from "react";
-import { GenericTable, GenericTableProps, DataTableProps } from "./GenericTable";
-import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
+import { DataTableProps, GenericTable } from "./GenericTable";
+import { tableColumns } from "../rendering/view/TableColumns";
 import { JobApplicationUpdateModal, JobApplicationUpdateModalProps } from "../modals/JobApplicationUpdateModal";
-import { JobApplicationUpdateData } from "../../services/Schemas";
 
 interface JobApplicationUpdatesTableProps extends DataTableProps {
 	jobId: string | number;
@@ -22,15 +21,11 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 		<JobApplicationUpdateModal {...props} jobId={jobId} />
 	);
 
-	const handleDataChange = (newData: JobApplicationUpdateData[]) => {
-		onDataChange?.(newData);
-	};
-
 	return (
 		<GenericTable
 			mode="controlled"
 			data={data}
-			onDataChange={handleDataChange}
+			onDataChange={onDataChange}
 			error={error}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}

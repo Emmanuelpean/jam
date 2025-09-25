@@ -1,5 +1,5 @@
 import React from "react";
-import { GenericTable, DataTableProps } from "./GenericTable";
+import { DataTableProps, GenericTable } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
@@ -9,16 +9,11 @@ const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], onDataCha
 			? columns
 			: [tableColumns.title(), tableColumns.company(), tableColumns.location(), tableColumns.daysUntilDeadline()];
 
-	// Handle data changes and notify parent
-	const handleDataChange = (newData: any[]) => {
-		onDataChange?.(newData);
-	};
-
 	return (
 		<GenericTable
 			mode="controlled"
 			data={data}
-			onDataChange={handleDataChange}
+			onDataChange={onDataChange}
 			error={error}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "days_until_deadline", direction: "asc" }}

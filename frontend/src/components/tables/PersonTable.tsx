@@ -1,5 +1,5 @@
 import React from "react";
-import { GenericTable, GenericTableProps, DataTableProps } from "./GenericTable";
+import { DataTableProps, GenericTable } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { PersonModal } from "../modals/PersonModal";
 
@@ -15,16 +15,11 @@ const PersonTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error 
 					tableColumns.linkedinUrl(),
 				];
 
-	// Handle data changes and notify parent
-	const handleDataChange = (newData: any[]) => {
-		onDataChange?.(newData);
-	};
-
 	return (
 		<GenericTable
 			mode="controlled"
 			data={data}
-			onDataChange={handleDataChange}
+			onDataChange={onDataChange}
 			error={error}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "name", direction: "asc" }}

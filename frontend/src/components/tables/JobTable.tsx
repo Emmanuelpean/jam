@@ -1,5 +1,5 @@
 import React from "react";
-import { GenericTable, GenericTableProps, DataTableProps } from "./GenericTable";
+import { DataTableProps, GenericTable } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
@@ -14,16 +14,11 @@ const JobsTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error = 
 					tableColumns.createdAt(),
 				];
 
-	// Handle data changes and notify parent
-	const handleDataChange = (newData: any[]) => {
-		onDataChange?.(newData);
-	};
-
 	return (
 		<GenericTable
 			mode="controlled"
 			data={data}
-			onDataChange={handleDataChange}
+			onDataChange={onDataChange}
 			error={error}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "created_at", direction: "desc" }}

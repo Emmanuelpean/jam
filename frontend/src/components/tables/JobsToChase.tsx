@@ -1,5 +1,5 @@
 import React from "react";
-import { GenericTable, GenericTableProps, DataTableProps } from "./GenericTable";
+import { DataTableProps, GenericTable } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
@@ -15,16 +15,11 @@ const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], onDataChange, er
 					tableColumns.lastUpdateType(),
 				];
 
-	// Handle data changes and notify parent
-	const handleDataChange = (newData: any[]) => {
-		onDataChange?.(newData);
-	};
-
 	return (
 		<GenericTable
 			mode="controlled"
 			data={data}
-			onDataChange={handleDataChange}
+			onDataChange={onDataChange}
 			error={error}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "days_since_last_update", direction: "desc" }}
