@@ -289,13 +289,13 @@ export const modalViewFields = {
 	}),
 
 	accordionJobTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "job",
+		key: "jobs",
 		render: renderFunctions.accordionJobTable,
 		...overrides,
 	}),
 
 	accordionJobApplicationTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "job_application",
+		key: "job_applications",
 		render: renderFunctions.accordionJobApplicationTable,
 		...overrides,
 	}),

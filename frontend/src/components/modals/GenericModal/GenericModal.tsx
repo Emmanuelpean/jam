@@ -442,6 +442,7 @@ const GenericModal = ({
 				...effectiveData,
 				[fieldName]: newData,
 			};
+			console.log("Updated data:", updatedData);
 			setEffectiveData(updatedData);
 			onSuccess?.(updatedData);
 		};
@@ -527,6 +528,7 @@ const GenericModal = ({
 				handleHideImmediate();
 			} else {
 				setEffectiveData(apiResult); // reset to view mode since data changed
+				handleEditToView();
 			}
 		} catch (err: any) {
 			const errorMessage = `Failed to ${mode === "add" ? "create" : "update"} 

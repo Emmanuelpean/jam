@@ -4,7 +4,6 @@ import { HelpBubble } from "../widgets/HelpBubble";
 interface GenericAccordionProps<T = any> {
 	title: string;
 	data: T[];
-	onChange?: () => void;
 	itemId?: number;
 	children: (data: T[], onChange?: () => void) => React.ReactNode;
 	icon?: string;
@@ -15,7 +14,6 @@ interface GenericAccordionProps<T = any> {
 export const Accordion = <T,>({
 	title,
 	data,
-	onChange,
 	children,
 	icon,
 	defaultOpen = false,
@@ -38,7 +36,7 @@ export const Accordion = <T,>({
 				</div>
 				<i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}></i>
 			</div>
-			{isOpen && <div className="simple-accordion-content">{children(data, onChange)}</div>}
+			{isOpen && <div className="simple-accordion-content">{children(data)}</div>}
 		</div>
 	);
 };

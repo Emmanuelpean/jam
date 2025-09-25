@@ -3,7 +3,16 @@ import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../maps/LocationMap";
-import { AggregatorOut, CompanyOut, JobData, KeywordOut, LocationData, PersonOut } from "../../../services/Schemas";
+import {
+	AggregatorOut,
+	CompanyOut,
+	InterviewData,
+	JobData,
+	KeywordOut,
+	LocationData,
+	PersonData,
+	PersonOut,
+} from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
 import { TableColumn } from "./TableColumns";
@@ -594,38 +603,22 @@ export const renderFunctions = {
 	// ------------------------------------------------ ACCORDION TABLES -----------------------------------------------
 
 	accordionJobTable: (param: RenderParams): ReactNode => {
-		const jobs = param.item?.jobs;
-		const onChange = () => {};
+		const jobs: JobData[] = param.item?.jobs;
 		return (
-			<Accordion
-				title="Jobs"
-				data={jobs}
-				onChange={onChange}
-				icon={getTableIcon("Jobs")}
-				helpText={param.helpText}
-			>
-				{(data, onChangeCallback) => (
-					<JobsTable onDataChange={onChangeCallback} data={data} columns={param.columns} />
-				)}
+			<Accordion title="Jobs" data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
+				{(data) => <JobsTable onDataChange={param.onChange} data={data} columns={param.columns} />}
 			</Accordion>
 		);
 	},
 
 	accordionInterviewTable: (param: RenderParams): ReactNode => {
-		const interviews = param.item?.interviews;
-		const onChange = () => {};
+		const interviews: InterviewData[] = param.item?.interviews;
 		return (
-			<Accordion
-				title="Interviews"
-				data={interviews}
-				onChange={onChange}
-				icon={getTableIcon("Interviews")}
-				helpText={param.helpText}
-			>
-				{(data, onChangeCallback) => (
+			<Accordion title="Interviews" data={interviews} icon={getTableIcon("Interviews")} helpText={param.helpText}>
+				{(data) => (
 					<InterviewsTable
 						data={data}
-						onDataChange={onChangeCallback}
+						onDataChange={param.onChange}
 						showAdd={false}
 						columns={param.columns}
 					/>
@@ -635,37 +628,24 @@ export const renderFunctions = {
 	},
 
 	accordionJobApplicationTable: (param: RenderParams): ReactNode => {
-		const jobs = param.item?.job_applications;
-		const onChange = () => {};
+		const jobs: JobData[] = param.item?.job_applications;
 		return (
 			<Accordion
 				title="Job Applications"
 				data={jobs}
-				onChange={onChange}
 				icon={getTableIcon("Job Applications")}
 				helpText={param.helpText}
 			>
-				{(data, onChangeCallback) => (
-					<JobsTable data={data} onDataChange={onChangeCallback} columns={param.columns} />
-				)}
+				{(data) => <JobsTable data={data} onDataChange={param.onChange} columns={param.columns} />}
 			</Accordion>
 		);
 	},
 
 	accordionPersonTable: (param: RenderParams): ReactNode => {
-		const persons = param.item?.persons;
-		const onChange = () => {};
+		const persons: PersonData[] = param.item?.persons;
 		return (
-			<Accordion
-				title="Persons"
-				data={persons}
-				onChange={onChange}
-				icon={getTableIcon("Persons")}
-				helpText={param.helpText}
-			>
-				{(data, onChangeCallback) => (
-					<PersonTable data={data} onDataChange={onChangeCallback} columns={param.columns} />
-				)}
+			<Accordion title="Persons" data={persons} icon={getTableIcon("Persons")} helpText={param.helpText}>
+				{(data) => <PersonTable data={data} onDataChange={param.onChange} columns={param.columns} />}
 			</Accordion>
 		);
 	},
