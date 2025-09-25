@@ -1,18 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import { ReactComponent as JamLogo } from "../assets/Logo.svg";
 import packageJson from "../../package.json";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Card from "react-bootstrap/Card";
-import Button from "react-bootstrap/Button";
-import Collapse from "react-bootstrap/Collapse";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.css";
+import { Accordion } from "react-bootstrap";
 
 const AboutPage = () => {
-	const [expandedAccordion, setExpandedAccordion] = useState(null);
-
 	const releaseNotes = {
 		"1.0.0":
 			"Initial release of Jam, the Job Application Manager. Features include job application tracking, interview scheduling, company and contact management, and application status monitoring.",
@@ -20,30 +17,26 @@ const AboutPage = () => {
 
 	const features = [
 		{
-			icon: "💼",
+			icon: "bi-briefcase",
 			title: "Job Application Records",
 			description: "Create and manage comprehensive job application records",
 		},
 		{
-			icon: "📅",
+			icon: "bi-calendar-check",
 			title: "Interview Scheduling",
 			description: "Track interview schedules and outcomes efficiently",
 		},
 		{
-			icon: "🏢",
+			icon: "bi-building",
 			title: "Company Management",
 			description: "Store detailed company and contact information",
 		},
 		{
-			icon: "📈",
+			icon: "bi-bar-chart",
 			title: "Progress Monitoring",
 			description: "Monitor application status, progress, and deadlines",
 		},
 	];
-
-	const toggleAccordion = (index: any) => {
-		setExpandedAccordion(expandedAccordion === index ? null : index);
-	};
 
 	return (
 		<>
@@ -125,7 +118,7 @@ const AboutPage = () => {
 
 					{/* Features Section */}
 					<Row className="justify-content-center mb-5">
-						<Col lg={8} className="text-center mb-5">
+						<Col lg={8} className="text-center mb-2">
 							<h2 className="display-5 fw-bold text-dark">What Jam Can Do For You</h2>
 						</Col>
 					</Row>
@@ -134,7 +127,9 @@ const AboutPage = () => {
 							<Col md={6} key={index}>
 								<div className="feature-card p-4 h-100">
 									<div className="d-flex align-items-start align-items-center">
-										<div className="feature-icon me-3">{feature.icon}</div>
+										<div className="feature-icon me-3">
+											<i className={`bi ${feature.icon}`} style={{ fontSize: "2rem" }}></i>
+										</div>
 										<div>
 											<h5 className="fw-bold text-dark mb-2">{feature.title}</h5>
 											<p className="about-text-muted mb-0">{feature.description}</p>
@@ -148,64 +143,20 @@ const AboutPage = () => {
 					{/* Release Notes Section */}
 					<Row className="justify-content-center">
 						<Col lg={10}>
-							<Card className="glass-card border-0 p-4">
-								<Card.Body>
-									<h2 className="display-6 fw-bold text-dark mb-4 text-center">Release Notes</h2>
-									<div className="accordion-custom">
-										{Object.entries(releaseNotes).map(([version, note], index) => (
-											<div
-												key={version}
-												className="border border-light rounded-3 overflow-hidden bg-white shadow-sm mb-3"
-											>
-												<Button
-													variant="link"
-													onClick={() => toggleAccordion(index)}
-													className={`accordion-button-custom w-100 text-start p-3 text-decoration-none ${expandedAccordion === index ? "active" : ""}`}
-													aria-expanded={expandedAccordion === index}
-												>
-													<div className="d-flex justify-content-between align-items-center w-100">
-														<span className="fs-5 fw-semibold">Version {version}</span>
-														<svg
-															className={`transition ${expandedAccordion === index ? "rotate-180" : ""}`}
-															width="20"
-															height="20"
-															fill="currentColor"
-															viewBox="0 0 16 16"
-															style={{
-																transform:
-																	expandedAccordion === index
-																		? "rotate(180deg)"
-																		: "rotate(0deg)",
-																transition: "transform 0.2s ease",
-															}}
-														>
-															<path
-																fillRule="evenodd"
-																d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"
-															/>
-														</svg>
-													</div>
-												</Button>
-												<Collapse in={expandedAccordion === index}>
-													<div className="accordion-body-custom p-3">{note}</div>
-												</Collapse>
-											</div>
-										))}
-									</div>
-								</Card.Body>
-							</Card>
+							<div style={{ width: "100%", maxWidth: 1200, marginTop: "10px" }}>
+								<h4>Release Notes</h4>
+								<Accordion>
+									{Object.entries(releaseNotes).map(([version, note], idx) => (
+										<Accordion.Item eventKey={String(idx)} key={version}>
+											<Accordion.Header>V{version}</Accordion.Header>
+											<Accordion.Body style={{ margin: "3px" }}>{note}</Accordion.Body>
+										</Accordion.Item>
+									))}
+								</Accordion>
+							</div>
 						</Col>
 					</Row>
 				</Container>
-
-				{/* Footer Decoration */}
-				<div
-					style={{
-						height: "80px",
-						background:
-							"linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%)",
-					}}
-				></div>
 			</div>
 		</>
 	);

@@ -1,6 +1,9 @@
 .gradient-bg {
     background: linear-gradient(135deg, #f1f5f9 0%, #dbeafe 50%, #e0e7ff 100%);
     min-height: 100vh;
+    border-radius: 2px;
+    border-width: 2px;
+    border-color: #0c3363;
 }
 
 .hero-overlay {
