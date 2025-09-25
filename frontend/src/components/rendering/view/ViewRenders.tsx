@@ -1,5 +1,4 @@
 import React, { ReactNode } from "react";
-import { accessAttribute } from "../../../utils/Utils";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
@@ -22,7 +21,6 @@ import { formatTimedelta } from "../../../utils/TimeUtils";
 export interface RenderParams {
 	item: any;
 	view?: boolean;
-	accessKey?: string | undefined;
 	id?: string;
 	columns?: TableColumn[];
 	helpText?: string;
@@ -33,7 +31,6 @@ export interface RenderParams {
 export interface ViewField {
 	key: string;
 	render?: (params: RenderParams) => ReactNode;
-	accessKey?: string;
 	columns?: TableColumn[];
 	helpText?: string;
 }
@@ -94,18 +91,11 @@ const ensureHttpPrefix = (url: string): string => {
 	return `https://${url}`;
 };
 
-const accessSubAttribute = (item: any, accessKey: string | undefined, key: string): any => {
-	if (accessKey) {
-		item = accessAttribute(item, accessKey);
-	}
-	return item?.[key];
-};
-
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
 	_longText: (param: RenderParams, key: string): ReactNode => {
-		const text = accessSubAttribute(param.item, param.accessKey, key);
+		const text = param.item?.[key];
 		if (text) {
 			if (param.view) {
 				return text;
@@ -142,7 +132,7 @@ export const renderFunctions = {
 	},
 
 	appTheme: (param: RenderParams): ReactNode => {
-		const themeKey = accessSubAttribute(param.item, param.accessKey, "theme");
+		const themeKey = param.item?.theme;
 		if (themeKey) {
 			const theme = THEMES.find((theme) => theme.key === themeKey);
 			return theme?.name;
@@ -151,7 +141,7 @@ export const renderFunctions = {
 	},
 
 	updateType: (param: RenderParams): ReactNode => {
-		const updateType = accessSubAttribute(param.item, param.accessKey, "type");
+		const updateType = param.item?.type;
 		if (updateType) {
 			const capitalizedType = updateType.charAt(0).toUpperCase() + updateType.slice(1);
 			const icon = getUpdateTypeIcon(updateType);
@@ -169,7 +159,7 @@ export const renderFunctions = {
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
 	_url: (param: RenderParams, attribute: string, displayText: string | null = null): ReactNode => {
-		const url = accessSubAttribute(param.item, param.accessKey, attribute);
+		const url = param.item?.[attribute];
 		if (url) {
 			const safeUrl = ensureHttpPrefix(url);
 			const linkText = displayText || safeUrl?.slice(8);
@@ -195,7 +185,7 @@ export const renderFunctions = {
 	},
 
 	email: (param: RenderParams): ReactNode => {
-		const email = accessSubAttribute(param.item, param.accessKey, "email");
+		const email = param.item?.email;
 		if (email)
 			return (
 				<a href={`mailto:${email}`} className="text-decoration-none">
@@ -207,7 +197,7 @@ export const renderFunctions = {
 	},
 
 	linkedinUrl: (param: RenderParams): ReactNode => {
-		const linkedinUrl = accessSubAttribute(param.item, param.accessKey, "linkedin_url");
+		const linkedinUrl = param.item?.linkedin_url;
 		if (linkedinUrl) {
 			return (
 				<a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
@@ -222,7 +212,7 @@ export const renderFunctions = {
 	// ---------------------------------------------------- DATETIME ---------------------------------------------------
 
 	_date: (param: RenderParams, key: string): string | null => {
-		const date = accessSubAttribute(param.item, param.accessKey, key);
+		const date = param.item?.[key];
 		if (date) {
 			return new Date(date).toLocaleDateString();
 		}
@@ -250,7 +240,7 @@ export const renderFunctions = {
 	},
 
 	datetime: (param: RenderParams): string | null => {
-		const date = accessSubAttribute(param.item, param.accessKey, "date");
+		const date = param.item?.date;
 		if (date) {
 			return (
 				new Date(date).toLocaleDateString() +
@@ -267,7 +257,7 @@ export const renderFunctions = {
 	// ----------------------------------------------------- OTHER -----------------------------------------------------
 
 	phone: (param: RenderParams): ReactNode => {
-		const phone = accessSubAttribute(param.item, param.accessKey, "phone");
+		const phone = param.item?.phone;
 		if (phone) {
 			return (
 				<a href={`tel:${phone}`} className="text-decoration-none">
@@ -280,13 +270,13 @@ export const renderFunctions = {
 	},
 
 	isAdmin: (param: RenderParams): ReactNode => {
-		const isAdmin = accessSubAttribute(param.item, param.accessKey, "is_admin");
+		const isAdmin = param.item?.is_admin;
 		const icon = getAdminIcon(isAdmin);
 		return <i className={icon}></i>;
 	},
 
 	isActive: (param: RenderParams): ReactNode => {
-		const isActive = accessSubAttribute(param.item, param.accessKey, "is_active");
+		const isActive = param.item?.is_active;
 		if (isActive) {
 			return <span className="badge bg-success">Active</span>;
 		} else {
@@ -295,8 +285,8 @@ export const renderFunctions = {
 	},
 
 	salaryRange: (param: RenderParams): string | null => {
-		const salary_min = accessSubAttribute(param.item, param.accessKey, "salary_min");
-		const salary_max = accessSubAttribute(param.item, param.accessKey, "salary_max");
+		const salary_min = param.item?.salary_min;
+		const salary_max = param.item?.salary_max;
 		if (!salary_min && !salary_max) {
 			return null;
 		}
@@ -312,7 +302,7 @@ export const renderFunctions = {
 	},
 
 	personalRating: (param: RenderParams): ReactNode => {
-		const personal_rating = accessSubAttribute(param.item, param.accessKey, "personal_rating");
+		const personal_rating = param.item?.personal_rating;
 		if (personal_rating) {
 			const rating = Math.max(0, Math.min(5, personal_rating));
 
@@ -337,7 +327,7 @@ export const renderFunctions = {
 	},
 
 	applicationStatus: (param: RenderParams): ReactNode => {
-		const status = accessSubAttribute(param.item, param.accessKey, "application_status");
+		const status = param.item?.application_status;
 		if (status) {
 			return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
 		}
@@ -349,12 +339,12 @@ export const renderFunctions = {
 	},
 
 	lastUpdateDays: (params: RenderParams): ReactNode => {
-		const daysSinceLastUpdate = accessSubAttribute(params.item, params.accessKey, "days_since_last_update");
+		const daysSinceLastUpdate = params.item?.days_since_last_update;
 		return <span className={"text-danger"}>{daysSinceLastUpdate} days</span>;
 	},
 
 	daysUntilDeadline: (param: RenderParams): ReactNode => {
-		const seconds = accessSubAttribute(param.item, param.accessKey, "days_until_deadline");
+		const seconds = param.item?.days_until_deadline;
 		if (typeof seconds === "number") {
 			return <span className={"text-danger"}>{formatTimedelta(seconds)}</span>;
 		}
@@ -363,29 +353,29 @@ export const renderFunctions = {
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
 	interviewCount: (param: RenderParams): number => {
-		const interviews = accessSubAttribute(param.item, param.accessKey, "interviews");
+		const interviews = param.item?.interviews;
 		return interviews?.length || 0;
 	},
 
 	jobCount: (param: RenderParams): number => {
-		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
+		const jobs = param.item?.jobs;
 		return jobs?.length || 0;
 	},
 
 	jobApplicationCount: (param: RenderParams): number => {
-		const jobs = accessSubAttribute(param.item, param.accessKey, "job_applications");
+		const jobs = param.item?.job_applications;
 		return jobs?.length || 0;
 	},
 
 	personCount: (param: RenderParams): number => {
-		const persons = accessSubAttribute(param.item, param.accessKey, "persons");
+		const persons = param.item?.persons;
 		return persons?.length || 0;
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
 	_jobBadge: (param: RenderParams, attribute: string, displayAttribute: keyof JobData): ReactNode => {
-		const job: JobData = accessSubAttribute(param.item, param.accessKey, attribute);
+		const job: JobData = param.item?.[attribute];
 		if (job) {
 			return (
 				<JobModalManager>
@@ -414,7 +404,7 @@ export const renderFunctions = {
 	},
 
 	keywordBadges: (param: RenderParams): ReactNode => {
-		const keywords: KeywordOut[] = accessSubAttribute(param.item, param.accessKey, "keywords");
+		const keywords: KeywordOut[] = param.item?.keywords;
 		if (keywords?.length > 0) {
 			return (
 				<div className="badge-group">
@@ -441,8 +431,8 @@ export const renderFunctions = {
 	},
 
 	locationBadge: (param: RenderParams): ReactNode => {
-		const location: LocationData = accessSubAttribute(param.item, param.accessKey, "location");
-		const attendanceType = accessAttribute(param.item, "attendance_type");
+		const location: LocationData = param.item?.location;
+		const attendanceType = param.item?.attendance_type;
 
 		if (attendanceType === "remote") {
 			return (
@@ -455,21 +445,25 @@ export const renderFunctions = {
 
 		if (location) {
 			let displayText = location.name;
+			let icon = "bi-building";
 			if (attendanceType === "on-site") {
 				displayText = `${location.name} (On-site)`;
 			} else if (attendanceType === "hybrid") {
 				displayText = `${location.name} (Hybrid)`;
+			} else {
+				displayText = `${location.name} (Remote)`;
+				icon = "bi-house";
 			}
 
 			return (
 				<LocationModalManager>
 					{(handleClick) => (
 						<span
-							className={`badge bg-warning clickable-badge`}
+							className="badge bg-warning clickable-badge"
 							onClick={() => handleClick(location.id)}
 							id={param.id}
 						>
-							<i className="bi bi-geo-alt me-1"></i>
+							<i className={`bi ${icon} me-1`}></i>
 							{displayText}
 						</span>
 					)}
@@ -490,7 +484,7 @@ export const renderFunctions = {
 	},
 
 	companyBadge: (param: RenderParams): ReactNode => {
-		const company: CompanyOut = accessSubAttribute(param.item, param.accessKey, "company");
+		const company: CompanyOut = param.item?.company;
 		if (company) {
 			return (
 				<CompanyModalManager>
@@ -511,7 +505,7 @@ export const renderFunctions = {
 	},
 
 	_personBadges: (param: RenderParams, key: string): ReactNode => {
-		const persons: PersonOut[] = accessSubAttribute(param.item, param.accessKey, key);
+		const persons: PersonOut[] = param.item?.[key];
 		if (persons?.length > 0) {
 			return (
 				<div className="badge-group">
@@ -546,7 +540,7 @@ export const renderFunctions = {
 	},
 
 	appliedViaBadge: (param: RenderParams): ReactNode => {
-		const appliedVia = accessSubAttribute(param.item, param.accessKey, "applied_via");
+		const appliedVia = param.item?.applied_via;
 		if (appliedVia === "aggregator") {
 			return renderFunctions._aggregatorBadge(param, "application_aggregator");
 		}
@@ -561,7 +555,7 @@ export const renderFunctions = {
 	},
 
 	_aggregatorBadge: (param: RenderParams, attribute: string): ReactNode => {
-		const aggregator: AggregatorOut = accessSubAttribute(param.item, param.accessKey, attribute);
+		const aggregator: AggregatorOut = param.item?.[attribute];
 		if (aggregator) {
 			return (
 				<AggregatorModalManager>
@@ -588,19 +582,19 @@ export const renderFunctions = {
 	// ----------------------------------------------------- TABLES ----------------------------------------------------
 
 	interviewTable: (param: RenderParams): ReactNode => {
-		const interviews = accessSubAttribute(param.item, param.accessKey, "interviews");
+		const interviews = param.item?.interviews;
 		return <InterviewsTable data={interviews} jobId={param.item?.id} onDataChange={param.onChange} />;
 	},
 
 	jobApplicationUpdateTable: (param: RenderParams): ReactNode => {
-		const updates = accessSubAttribute(param.item, param.accessKey, "updates");
+		const updates = param.item?.updates;
 		return <JobApplicationUpdateTable data={updates} jobId={param.item?.id} onDataChange={param.onChange} />;
 	},
 
 	// ------------------------------------------------ ACCORDION TABLES -----------------------------------------------
 
 	accordionJobTable: (param: RenderParams): ReactNode => {
-		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
+		const jobs = param.item?.jobs;
 		const onChange = () => {};
 		return (
 			<Accordion
@@ -618,7 +612,7 @@ export const renderFunctions = {
 	},
 
 	accordionInterviewTable: (param: RenderParams): ReactNode => {
-		const interviews = accessSubAttribute(param.item, param.accessKey, "interviews");
+		const interviews = param.item?.interviews;
 		const onChange = () => {};
 		return (
 			<Accordion
@@ -641,7 +635,7 @@ export const renderFunctions = {
 	},
 
 	accordionJobApplicationTable: (param: RenderParams): ReactNode => {
-		const jobs = accessSubAttribute(param.item, param.accessKey, "job_applications");
+		const jobs = param.item?.job_applications;
 		const onChange = () => {};
 		return (
 			<Accordion
@@ -659,7 +653,7 @@ export const renderFunctions = {
 	},
 
 	accordionPersonTable: (param: RenderParams): ReactNode => {
-		const persons = accessSubAttribute(param.item, param.accessKey, "persons");
+		const persons = param.item?.persons;
 		const onChange = () => {};
 		return (
 			<Accordion
@@ -683,7 +677,6 @@ export const renderViewField = (field: ViewField, item: any, id: string, onChang
 		const renderParams: RenderParams = {
 			item: item,
 			view: false,
-			accessKey: field.accessKey,
 			id: `${id}-${field.key}`,
 			columns: field.columns,
 			helpText: field.helpText,
@@ -691,9 +684,6 @@ export const renderViewField = (field: ViewField, item: any, id: string, onChang
 		};
 		rendered = field.render(renderParams);
 	} else {
-		if (field.accessKey) {
-			item = item[field.accessKey];
-		}
 		rendered = item?.[field.key];
 	}
 

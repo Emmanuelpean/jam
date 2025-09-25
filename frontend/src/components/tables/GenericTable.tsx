@@ -3,7 +3,7 @@ import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../services/Api";
 import { getTableIcon, renderViewField } from "../rendering/view/ViewRenders";
-import { accessAttribute } from "../../utils/Utils";
+import { accessAttribute, normaliseList } from "../../utils/Utils";
 import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
@@ -63,9 +63,11 @@ export const createGenericDeleteHandler = ({
 	};
 };
 
+export type Direction = "asc" | "desc";
+
 export interface SortConfig {
 	key: string;
-	direction: "asc" | "desc";
+	direction: Direction;
 }
 
 export interface ContextMenuState {
@@ -89,8 +91,6 @@ export interface GenericTableProps {
 
 	// For API mode
 	endpoint?: string;
-	dependencies?: any[];
-	queryParams?: Record<string, any>;
 
 	// For controlled mode
 	data?: any[];
@@ -126,11 +126,8 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 	// Data source configuration
 	mode,
 	endpoint = "",
-	dependencies = [],
-	queryParams = {},
 	data: controlledData = [],
 	onDataChange,
-	error: controlledError = null,
 
 	// Table configuration
 	columns = [],
@@ -161,10 +158,9 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 
 	// Internal state management
 	const [internalData, setInternalData] = useState<any[]>([]);
-	const { showLoading, hideLoading } = useLoading();
-	const [internalError, setInternalError] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
 
-	// Search and sort are always managed internally
+	// Search and sort
 	const [sortConfig, setSortConfig] = useState<SortConfig>(
 		(initialSortConfig as SortConfig) || { key: "created_at", direction: "desc" },
 	);
@@ -174,6 +170,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 	const [currentPage, setCurrentPage] = useState<number>(0);
 	const [pageSize, setPageSize] = useState<number>(20);
+	const { showLoading, hideLoading } = useLoading();
 
 	const {
 		showModal,
@@ -188,29 +185,26 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		closeEditModal,
 	} = useModalState();
 
-	// API fetch function for API mode
 	const fetchData = useCallback(async (): Promise<void> => {
-		if (mode !== "api" || !endpoint) return;
-
+		// Fetch the data through the API
+		if (mode !== "api" || !endpoint) {
+			return;
+		}
 		showLoading();
-		setInternalError(null);
-
+		setError(null);
 		try {
-			const queryString =
-				Object.keys(queryParams).length > 0 ? "?" + new URLSearchParams(queryParams).toString() : "";
-			const result = await api.get(`${endpoint}/${queryString}`, token);
-			setInternalData(result || []);
+			const result = await api.get(`${endpoint}`, token);
+			setInternalData(result);
 		} catch (err) {
-			console.error(`Error fetching ${endpoint}:`, err);
-			setInternalError(`Failed to load ${endpoint}. Please try again later.`);
+			setError(`Failed to load ${endpoint}. Please try again later.`);
 			setInternalData([]);
 		} finally {
 			hideLoading();
 		}
-	}, [endpoint, token, JSON.stringify(queryParams), mode]);
+	}, [endpoint, token, mode]);
 
-	// Handle data updates based on mode
 	useEffect(() => {
+		// Handle data updates based on mode
 		switch (mode) {
 			case "api":
 				if (token) {
@@ -218,27 +212,17 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 				}
 				break;
 			case "controlled":
-				// Data is managed externally
 				break;
 		}
-	}, [mode, token, fetchData, ...dependencies]);
+	}, [mode, token, fetchData]);
 
-	// Get effective values based on mode
 	const getEffectiveData = (): any[] => {
+		// Get effective data based on mode
 		switch (mode) {
 			case "controlled":
 				return controlledData;
 			case "api":
 				return internalData;
-		}
-	};
-
-	const getEffectiveError = (): string | null => {
-		switch (mode) {
-			case "controlled":
-				return controlledError;
-			case "api":
-				return internalError;
 		}
 	};
 
@@ -257,7 +241,6 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 
 	const updateItem = useCallback(
 		(updatedItem: any) => {
-			console.log("Updating item:", updatedItem);
 			if (updatedItem) {
 				if (mode === "controlled") {
 					const newData = controlledData.map((item) => (item.id === updatedItem.id ? updatedItem : item));
@@ -282,14 +265,9 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		[mode, controlledData, onDataChange],
 	);
 
-	// Search and sort handlers - always use internal state
-	const handleSearchChange = useCallback((term: string) => {
-		setSearchTerm(term);
-	}, []);
-
 	const handleSort = useCallback(
 		(key: string) => {
-			let direction: "asc" | "desc" = "asc";
+			let direction: Direction = "asc";
 			if (sortConfig.key === key && sortConfig.direction === "asc") {
 				direction = "desc";
 			}
@@ -298,49 +276,40 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		[sortConfig],
 	);
 
-	// Get current effective values
+	// Get current effective data
 	const data = getEffectiveData();
-	const error = getEffectiveError();
-
-	// Helper methods
-	const getEffectiveItem = (item: any, column: TableColumn): any => {
-		if (!column || !column.accessKey) return item;
-		return accessAttribute(item, column.accessKey);
-	};
 
 	const getColumnValue = (item: any, column: TableColumn, field?: string): any => {
-		if (!column) return null;
-		const effectiveItem = getEffectiveItem(item, column);
-		if (field) return accessAttribute(effectiveItem, field);
-		return accessAttribute(effectiveItem, column.key);
+		// if (field) {
+		// 	return accessAttribute(effectiveItem, field);
+		// } else {
+		return accessAttribute(item, column.key);
+		// }
 	};
 
 	// Data processing
 	const getSortedData = (): any[] => {
 		let filteredData = [...data];
+		const searchTermLower = searchTerm.toLowerCase();
 
 		// Filter by search term
-		if (searchTerm && columns.some((col) => col.searchable)) {
-			const searchTermLower = searchTerm.toLowerCase();
-			filteredData = filteredData.filter((item) => {
-				return columns.some((column) => {
+		if (searchTermLower && columns.some((col: TableColumn) => col.searchable)) {
+			filteredData = filteredData.filter((item: any): boolean => {
+				return columns.some((column: TableColumn): boolean => {
 					if (!column.searchable) return false;
 					let value: string;
 					if (column.searchFields) {
 						if (typeof column.searchFields === "function") {
-							const rawValue = getColumnValue(item, column);
-							value = column.searchFields(rawValue);
+							value = column.searchFields(item[column.key]);
 						} else {
-							const fields = Array.isArray(column.searchFields)
-								? column.searchFields
-								: [column.searchFields];
+							const fields: string[] = normaliseList(column.searchFields);
 							value = fields
-								.map((field) => getColumnValue(item, column, field))
-								.filter((val) => val != null)
+								.map((field: string): any => item[field])
+								.filter((val: any): boolean => val != null)
 								.join(" ");
 						}
 					} else {
-						value = getColumnValue(item, column);
+						value = item[column.key];
 					}
 					return value?.toString().toLowerCase().includes(searchTermLower);
 				});
@@ -349,16 +318,25 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 
 		// Sort data
 		if (sortConfig.key) {
-			filteredData.sort((a, b) => {
-				const column = columns.find((col) => col.key === sortConfig.key);
+			filteredData.sort((a: any, b: any) => {
+				const column = columns.find((col: TableColumn) => col.key === sortConfig.key);
 				let aValue: any, bValue: any;
+				if (!column) return 0;
 
-				if (column?.sortField) {
-					aValue = getColumnValue(a, column, column.sortField);
-					bValue = getColumnValue(b, column, column.sortField);
+				if (typeof column.sortField === "function") {
+					aValue = column.sortField(a);
+					bValue = column.sortField(b);
+				} else if (typeof column.sortField === "string" || Array.isArray(column.sortField)) {
+					const sortFields: string[] = normaliseList(column.sortField);
+					aValue = sortFields
+						.map((field: string) => accessAttribute(a, field))
+						.reduce((acc, val) => acc + (val ?? ""), "");
+					bValue = sortFields
+						.map((field: string) => accessAttribute(b, field))
+						.reduce((acc, val) => acc + (val ?? ""), "");
 				} else {
-					aValue = getColumnValue(a, column!);
-					bValue = getColumnValue(b, column!);
+					aValue = a[column.key];
+					bValue = b[column.key];
 				}
 
 				if (aValue == null && bValue == null) return 0;
@@ -521,7 +499,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 							className="form-control"
 							placeholder="Search..."
 							value={searchTerm}
-							onChange={(e) => handleSearchChange(e.target.value)}
+							onChange={(e) => setSearchTerm(e.target.value)}
 							id="search-input"
 						/>
 						<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>

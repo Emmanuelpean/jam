@@ -391,9 +391,9 @@ export const formFields = {
 		placeholder: "Select or search location...",
 		isSearchable: true,
 		isClearable: true,
-		displayCondition: (formData: JobData): boolean => {
-			return formData.attendance_type ? ["on-site", "hybrid"].includes(formData.attendance_type) : true;
-		},
+		// displayCondition: (formData: JobData): boolean => {
+		// 	return formData.attendance_type ? ["on-site", "hybrid"].includes(formData.attendance_type) : true;
+		// },
 		options: options,
 		...(onAdd && {
 			addButton: {

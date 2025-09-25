@@ -124,6 +124,8 @@ export interface JobData {
 	attendance_type?: string | null;
 	keywords?: KeywordData[] | number[];
 	contacts?: AggregatorData[] | number[];
+	location?: LocationData | null;
+	company?: CompanyData | null;
 }
 
 export interface ApplicationData {

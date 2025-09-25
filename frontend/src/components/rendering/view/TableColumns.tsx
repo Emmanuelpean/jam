@@ -1,13 +1,14 @@
 import { ViewField, renderFunctions, RenderParams } from "./ViewRenders";
 import { localeDateOnly } from "../../../utils/TimeUtils";
+import { JobData } from "../../../services/Schemas";
 
 export interface TableColumn extends ViewField {
 	label: string;
 	sortable?: boolean;
 	searchable?: boolean | ((item: any) => string);
 	type?: string;
-	sortField?: string;
-	searchFields?: string | ((item: any) => string);
+	sortField?: string | ((item: any) => string | number) | string[];
+	searchFields?: string | ((item: any) => string) | string[];
 	columnClass?: string;
 }
 
@@ -163,8 +164,8 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		sortField: "location.name", // TODO search by attendance_type too
-		searchFields: "location.name", // TODO filter by attendance_type too
+		sortField: ["location.name", "attendance_type"],
+		searchFields: ["location.name", "attendance_type"],
 		render: renderFunctions.locationBadge,
 		...overrides,
 	}),

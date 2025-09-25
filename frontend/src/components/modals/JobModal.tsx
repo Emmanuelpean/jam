@@ -122,6 +122,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 			applied_via: jobData.applied_via?.trim() || null,
 			application_aggregator_id: jobData.application_aggregator_id || null,
 			application_note: jobData.application_note?.trim() || null,
+			attendance_type: jobData.attendance_type?.trim() || null,
 		};
 	};
 

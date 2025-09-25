@@ -9,7 +9,8 @@ export interface Progress {
 	total: number;
 }
 
-export const accessAttribute = (item: any, key: string) => {
+export const accessAttribute = (item: any, key: string | null | undefined) => {
+	if (!key) return item;
 	const parts = key.split(".");
 	let obj = item;
 	for (const part of parts) {
@@ -59,3 +60,8 @@ export function flattenArray(arr: Array<any>): Array<any> {
 	}
 	return result;
 }
+
+export const normaliseList = <T>(variable: T | T[] | null | undefined): T[] => {
+	if (variable === null || variable === undefined) return [];
+	return Array.isArray(variable) ? variable : [variable];
+};
