@@ -279,14 +279,6 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 	// Get current effective data
 	const data = getEffectiveData();
 
-	const getColumnValue = (item: any, column: TableColumn, field?: string): any => {
-		// if (field) {
-		// 	return accessAttribute(effectiveItem, field);
-		// } else {
-		return accessAttribute(item, column.key);
-		// }
-	};
-
 	// Data processing
 	const getSortedData = (): any[] => {
 		let filteredData = [...data];
@@ -697,10 +689,11 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 						zIndex: 9999,
 						backgroundColor: "white",
 						border: "1px solid #ccc",
-						borderRadius: "4px",
+						borderRadius: "8px",
 						boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
 						padding: "4px 0",
 						minWidth: compact ? "120px" : "150px",
+						overflow: "hidden",
 					}}
 					onClick={(e) => e.stopPropagation()}
 				>
