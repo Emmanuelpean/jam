@@ -74,14 +74,15 @@ def get_dashboard_data(
 
     # Add job applications as "Application" updates
     for job in job_applications:
-        job_out = schemas.JobOut.model_validate(job, from_attributes=True)
-        update_item = {
-            "data": job_out,
-            "date": job_out.application_date,
-            "type": "Application",
-            "job": job_out,
-        }
-        all_updates.append(update_item)
+        if job.application_date is not None:
+            job_out = schemas.JobOut.model_validate(job, from_attributes=True)
+            update_item = {
+                "data": job_out,
+                "date": job_out.application_date,
+                "type": "Application",
+                "job": job_out,
+            }
+            all_updates.append(update_item)
 
     # Add interviews as "Interview" updates
     for interview in interviews:
