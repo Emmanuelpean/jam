@@ -101,15 +101,15 @@ const AboutPage = () => {
 									<h2 className="display-5 fw-bold text-dark mb-4">
 										Streamline Your Job Search Journey
 									</h2>
-									<p className="fs-5 text-muted mb-4" style={{ lineHeight: "1.625" }}>
-										<strong className="text-primary">Jam</strong> is a user-friendly web app
-										designed to help you manage your jobs, applications, interviews, and everything
-										in-between. Job search can be a time-consuming and tedious process, requiring
-										you to keep track of many jobs and applications at the same time.
+									<p className="fs-5 about-text-muted mb-4" style={{ lineHeight: "1.625" }}>
+										<strong style={{ color: "var(--primary-mid)" }}>Jam</strong> is a user-friendly
+										web app designed to help you manage your jobs, applications, interviews, and
+										everything in-between. Job search can be a time-consuming and tedious process,
+										requiring you to keep track of many jobs and applications at the same time.
 									</p>
-									<p className="fs-5 text-muted" style={{ lineHeight: "1.625" }}>
-										<strong className="text-primary">Jam</strong> aims to make this process easier
-										so that you can get the job of your dreams.
+									<p className="fs-5 about-text-muted" style={{ lineHeight: "1.625" }}>
+										<strong style={{ color: "var(--primary-mid)" }}>Jam</strong> aims to make this
+										process easier so that you can get the job of your dreams.
 									</p>
 								</Card.Body>
 							</Card>
@@ -141,15 +141,19 @@ const AboutPage = () => {
 					</Row>
 
 					{/* Release Notes Section */}
+					<Row className="justify-content-center mb-2">
+						<Col lg={8} className="text-center mb-2">
+							<h2 className="display-5 fw-bold text-dark">Release Notes</h2>
+						</Col>
+					</Row>
 					<Row className="justify-content-center">
 						<Col lg={10}>
 							<div style={{ width: "100%", maxWidth: 1200, marginTop: "10px" }}>
-								<h4>Release Notes</h4>
 								<Accordion>
 									{Object.entries(releaseNotes).map(([version, note], idx) => (
 										<Accordion.Item eventKey={String(idx)} key={version}>
 											<Accordion.Header>V{version}</Accordion.Header>
-											<Accordion.Body style={{ margin: "3px" }}>{note}</Accordion.Body>
+											<Accordion.Body style={{ margin: "10px" }}>{note}</Accordion.Body>
 										</Accordion.Item>
 									))}
 								</Accordion>
