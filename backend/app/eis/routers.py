@@ -13,6 +13,7 @@ from app.eis import models, schemas
 from app.routers import generate_data_table_crud_router
 from app.database import get_db
 from app.oauth2 import get_current_user
+from app.eis.job_scraper import LinkedinJobScraper, VeganJobsScraper
 
 
 # Job Alert Email router
@@ -81,3 +82,40 @@ def get_service_logs_by_date_range(
         query = query.limit(limit)
 
     return query.all()
+
+
+scraper_router = APIRouter(prefix="/scraper", tags=["scraper"])
+
+
+@scraper_router.get("/linkedin/{job_id}")
+def scrape_job(
+    job_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Trigger scraping of a job posting from LinkedIn by job ID.
+    :param job_id: LinkedIn job ID to scrape
+    :param current_user: Current authenticated user
+    :return: Success message or error"""
+
+    if not current_user.toast_active:
+        raise AssertionError("You are not allowed to use TOAST")
+
+    scraper = LinkedinJobScraper(job_id)
+    return scraper.scrape_job()
+
+
+@scraper_router.get("/veganjobs/{job_id}")
+def scrape_job(
+        job_id: str,
+        current_user: User = Depends(get_current_user),
+):
+    """Trigger scraping of a job posting from LinkedIn by job ID.
+    :param job_id: LinkedIn job ID to scrape
+    :param current_user: Current authenticated user
+    :return: Success message or error"""
+
+    if not current_user.toast_active:
+        raise AssertionError("You are not allowed to use TOAST")
+
+    scraper = VeganJobsScraper(job_id)
+    return scraper.scrape_job()

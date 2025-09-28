@@ -170,6 +170,15 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	scrapedLocation: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "location",
+		label: "Location",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		...overrides,
+	}),
+
 	city: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "city",
 		label: "City",
@@ -199,8 +208,8 @@ export const tableColumns = {
 
 	// --------------------------------------------------- COMPANIES ---------------------------------------------------
 
-	company: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "company",
+	companyBadge: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "companyBadge",
 		label: "Company",
 		sortable: true,
 		searchable: true,
@@ -208,6 +217,17 @@ export const tableColumns = {
 		sortField: "company.name",
 		searchFields: "company.name",
 		render: renderFunctions.companyBadge,
+		...overrides,
+	}),
+
+	scrapedCompany: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "company",
+		label: "Company",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		sortField: "company",
+		searchFields: "company",
 		...overrides,
 	}),
 

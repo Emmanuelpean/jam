@@ -443,27 +443,36 @@ export const renderFunctions = {
 		const location: LocationData = param.item?.location;
 		const attendanceType = param.item?.attendance_type;
 
-		if (attendanceType === "remote") {
-			return (
-				<span className="badge bg-warning" id={param.id}>
-					<i className="bi bi-house me-1"></i>
-					Remote
-				</span>
-			);
+		let icon: string;
+		if (attendanceType === "on-site") {
+			icon = "bi-building";
+		} else if (attendanceType === "hybrid") {
+			icon = "bi-house-door";
+		} else {
+			icon = "bi-house";
 		}
 
-		if (location) {
-			let displayText = location.name;
-			let icon = "bi-building";
-			if (attendanceType === "on-site") {
-				displayText = `${location.name} (On-site)`;
-			} else if (attendanceType === "hybrid") {
-				displayText = `${location.name} (Hybrid)`;
-			} else {
-				displayText = `${location.name} (Remote)`;
-				icon = "bi-house";
-			}
+		let attendanceString: string | null = null;
+		if (attendanceType === "on-site") {
+			attendanceString = "On-site";
+		} else if (attendanceType === "hybrid") {
+			attendanceString = "Hybrid";
+		} else if (attendanceType === "remote") {
+			attendanceString = "Remote";
+		}
 
+		let displayText: string | null = null;
+		if (location && attendanceString) {
+			displayText = `${location.name} (${attendanceString})`;
+		} else if (location) {
+			displayText = location.name;
+		} else if (attendanceString) {
+			displayText = attendanceString;
+		} else {
+			return null;
+		}
+
+		if (displayText) {
 			return (
 				<LocationModalManager>
 					{(handleClick) => (
@@ -478,18 +487,9 @@ export const renderFunctions = {
 					)}
 				</LocationModalManager>
 			);
+		} else {
+			return null;
 		}
-
-		if (attendanceType && attendanceType !== "remote") {
-			return (
-				<span className="badge bg-warning" id={param.id}>
-					<i className="bi bi-building me-1"></i>
-					{attendanceType.charAt(0).toUpperCase() + attendanceType.slice(1)}
-				</span>
-			);
-		}
-
-		return null;
 	},
 
 	companyBadge: (param: RenderParams): ReactNode => {

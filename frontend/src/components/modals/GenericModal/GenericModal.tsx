@@ -23,9 +23,9 @@ export interface TabConfig {
 }
 
 export interface GenericModalProps {
-	mode?: "view" | "edit" | "add"; // modal mode
+	mode?: "view" | "edit" | "add" | "import"; // modal mode - added "import"
 	fields: { view: ViewFields; form: FormFields }; // fields to display
-	data?: any; // data to populate the fields
+	data?: any; // data to populate the fields (required for import mode)
 	id?: string | number | null; // if id is provided, use the id and endpoint to load the data
 	onSuccess?: (data: any) => void; // called when the entry is added or updated
 	validation?: ((data: any) => any) | null; // custom validation method before submit
@@ -74,6 +74,7 @@ const GenericModal = ({
 	const [errors, setErrors] = useState<Errors>({});
 	const [isEditing, setIsEditing] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const { currentUser } = useAuth();
 	const [activeTab, setActiveTab] = useState<string | null>(() => {
 		if (hasTabs) {
 			return defaultActiveTab || tabs[0]!.key;
@@ -111,7 +112,7 @@ const GenericModal = ({
 		};
 
 		loadData().then(() => {});
-	}, [id, endpoint, token, data]);
+	}, [id, endpoint, token, data, mode]);
 
 	// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
 
@@ -164,6 +165,11 @@ const GenericModal = ({
 			setFormData({ ...effectiveData });
 			setOriginalFormData({ ...effectiveData });
 			setIsEditing(true);
+		} else if (mode === "import") {
+			console.log("Effectivedata for import:", effectiveData);
+			setFormData({ ...effectiveData });
+			setOriginalFormData({ ...effectiveData });
+			setIsEditing(true);
 		} else {
 			setFormData({ ...effectiveData });
 			setOriginalFormData({ ...effectiveData });
@@ -175,7 +181,7 @@ const GenericModal = ({
 		if (hasTabs) {
 			setActiveTab(defaultActiveTab || tabs[0]!.key);
 		}
-	}, [show, mode, defaultActiveTab]);
+	}, [show, mode, defaultActiveTab, effectiveData]);
 
 	// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
@@ -316,7 +322,13 @@ const GenericModal = ({
 					return (
 						<div key={fieldKey} className={columnClass}>
 							{isFormMode
-								? renderModalFormField(field as ModalFormField, formData, handleChange, errors)
+								? renderModalFormField(
+										field as ModalFormField,
+										formData,
+										handleChange,
+										errors,
+										currentUser,
+									)
 								: renderModalViewField(
 										field as ModalViewField,
 										effectiveData,
@@ -473,7 +485,7 @@ const GenericModal = ({
 
 			onSuccess?.(apiResult);
 
-			if (mode === "add") {
+			if (mode === "add" || mode === "import") {
 				handleHideImmediate();
 			} else if (mode === "edit") {
 				handleHideImmediate();
@@ -482,7 +494,7 @@ const GenericModal = ({
 				handleEditToView();
 			}
 		} catch (err: any) {
-			const errorMessage = `Failed to ${mode === "add" ? "create" : "update"} 
+			const errorMessage = `Failed to ${mode === "add" || mode === "import" ? "create" : "update"} 
         ${itemName.toLowerCase()} due to the following error: ${err.message}`;
 			setErrors({
 				submit: errorMessage,
@@ -494,6 +506,9 @@ const GenericModal = ({
 
 	const getModalId = (): string => {
 		if (isEditing) {
+			if (mode === "import") {
+				return `modal-import-${itemName.toLowerCase()}`;
+			}
 			return `modal-edit-${itemName.toLowerCase()}`;
 		} else {
 			return `modal-view-${itemName.toLowerCase()}`;
@@ -505,6 +520,9 @@ const GenericModal = ({
 		if (mode === "add") {
 			icon = "bi bi-plus-circle";
 			text = `Add New ${itemName}`;
+		} else if (mode === "import") {
+			icon = "bi bi-download";
+			text = `Import ${itemName}`;
 		} else if (mode === "edit" || isEditing) {
 			icon = "bi bi-pencil";
 			text = `Edit ${itemName}`;
@@ -651,6 +669,32 @@ const GenericModal = ({
 						</div>
 					</Modal.Footer>
 				);
+			} else if (mode === "import") {
+				return (
+					<Modal.Footer>
+						<div className="d-flex flex-column w-100 gap-2">
+							<div className="modal-buttons-container">
+								<ActionButton
+									id="cancel-button"
+									variant="secondary"
+									onClick={handleHideImmediate}
+									defaultText="Cancel"
+									fullWidth={false}
+								/>
+								<ActionButton
+									id="import-button"
+									type="submit"
+									disabled={submitting || loading}
+									loading={submitting}
+									loadingText="Importing..."
+									defaultText="Import"
+									defaultIcon="bi bi-download"
+									fullWidth={false}
+								/>
+							</div>
+						</div>
+					</Modal.Footer>
+				);
 			} else {
 				return (
 					<Modal.Footer>
@@ -768,7 +812,7 @@ export default GenericModal;
 export interface DataModalProps {
 	show: boolean;
 	onHide: () => void;
-	submode?: "view" | "edit" | "add";
+	submode?: "view" | "edit" | "add" | "import";
 	data?: any;
 	id?: number | null;
 	onSuccess?: (data: any) => void;

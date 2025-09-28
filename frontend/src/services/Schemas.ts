@@ -142,7 +142,8 @@ export interface ApplicationData {
 export interface UserData {
 	id?: number;
 	email: string;
-	is_admin?: boolean;
+	is_admin: boolean;
+	toast_active: boolean;
 	theme?: string;
 	last_login?: string;
 	created_at?: string;

@@ -116,7 +116,8 @@ class User(CommonBase, Base):
     - `last_login` (datetime): The timestamp of the last login.
     - `chase_threshold` (int): The threshold for chasing jobs in the dashboard.
     - `deadline_threshold` (int): The threshold for deadlines in the dashboard.
-    - `update_limit` (int): Max number updates displayed in the dashboard."""
+    - `update_limit` (int): Max number updates displayed in the dashboard.
+    - `toast_active` (bool): Indicates whether the TOAST feature is active."""
 
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
@@ -126,6 +127,7 @@ class User(CommonBase, Base):
     chase_threshold = Column(Integer, nullable=False, server_default="30")
     deadline_threshold = Column(Integer, nullable=False, server_default="30")
     update_limit = Column(Integer, nullable=False, server_default="10")
+    toast_active = Column(Boolean, nullable=False, server_default=expression.false())
 
     __table_args__ = (
         CheckConstraint(f"length(password) >= {settings.min_password_length}", name="minimum_password_length"),

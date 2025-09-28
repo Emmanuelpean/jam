@@ -6,7 +6,7 @@ import { tableColumns } from "../components/rendering/view/TableColumns";
 const JobsPage = () => {
 	const columns = [
 		tableColumns.title(),
-		tableColumns.company(),
+		tableColumns.companyBadge(),
 		tableColumns.location(),
 		tableColumns.urlGeneric(),
 		tableColumns.salaryRange(),

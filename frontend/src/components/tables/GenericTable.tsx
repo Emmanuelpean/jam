@@ -85,9 +85,9 @@ export interface DataTableProps {
 
 export interface GenericTableProps {
 	// Data source configuration
-	mode: "api" | "controlled";
+	mode: "api" | "controlled" | "import";
 
-	// For API mode
+	// For API mode and import mode
 	endpoint?: string;
 
 	// For controlled mode
@@ -115,6 +115,9 @@ export interface GenericTableProps {
 	compact?: boolean;
 	showSearch?: boolean;
 	showAdd?: boolean;
+
+	// Import mode configuration
+	onImportSuccess?: (importedItem: any) => void;
 
 	// Additional content
 	children?: (data: any[]) => ReactNode;
@@ -148,6 +151,9 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 	showSearch = true,
 	showAdd = true,
 
+	// Import mode configuration
+	onImportSuccess,
+
 	// Additional content
 	children,
 }) => {
@@ -174,6 +180,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		showModal,
 		showViewModal,
 		showEditModal,
+		showImportModal,
 		selectedItem,
 		openAddModal,
 		closeAddModal,
@@ -181,11 +188,13 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		closeViewModal,
 		openEditModal,
 		closeEditModal,
+		openImportModal,
+		closeImportModal,
 	} = useModalState();
 
 	const fetchData = useCallback(async (): Promise<void> => {
 		// Fetch the data through the API
-		if (mode !== "api" || !endpoint) {
+		if ((mode !== "api" && mode !== "import") || !endpoint) {
 			return;
 		}
 		showLoading();
@@ -205,6 +214,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		// Handle data updates based on mode
 		switch (mode) {
 			case "api":
+			case "import":
 				if (token) {
 					fetchData().then(() => {});
 				}
@@ -220,6 +230,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 			case "controlled":
 				return controlledData;
 			case "api":
+			case "import":
 				return internalData;
 		}
 	};
@@ -371,7 +382,12 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 			currentElement = currentElement.parentElement;
 		}
 
-		openViewModal(item);
+		// Different behavior based on mode
+		if (mode === "import") {
+			openImportModal(item);
+		} else {
+			openViewModal(item);
+		}
 	};
 
 	const handleRowRightClick = (item: any, event: MouseEvent<HTMLTableRowElement>): void => {
@@ -401,6 +417,9 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 				case "edit":
 					openEditModal(contextMenu.item);
 					break;
+				case "import":
+					openImportModal(contextMenu.item);
+					break;
 				default:
 					handleDelete(contextMenu.item).then(() => null);
 					break;
@@ -418,6 +437,11 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 	const handleAddSuccess = (newItem: any): void => {
 		addItem(newItem);
 		closeAddModal();
+	};
+
+	const handleImportSuccess = (importedItem: any): void => {
+		onImportSuccess?.(importedItem);
+		closeImportModal();
 	};
 
 	// Close context menu on outside click or escape
@@ -459,6 +483,50 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		setCurrentPage(0);
 	};
 
+	// Get context menu items based on mode
+	const getContextMenuItems = () => {
+		if (mode === "import") {
+			return [
+				{ action: "import", icon: "upload", text: "Import", id: "context-menu-import" },
+				{
+					action: "delete",
+					icon: "trash",
+					text: "Delete",
+					id: "context-menu-delete",
+					color: "#dc3545",
+				},
+			];
+		}
+
+		return [
+			{ action: "view", icon: "eye", text: "View", id: "context-menu-view" },
+			{ action: "edit", icon: "pencil", text: "Edit", id: "context-menu-edit" },
+			{
+				action: "delete",
+				icon: "trash",
+				text: "Delete",
+				id: "context-menu-delete",
+				color: "#dc3545",
+			},
+		];
+	};
+
+	// Get button text based on mode
+	const getAddButtonText = () => {
+		if (mode === "import") {
+			return `Import ${itemType}`;
+		}
+		return `Add ${itemType}`;
+	};
+
+	// Get button icon based on mode
+	const getAddButtonIcon = () => {
+		if (mode === "import") {
+			return "bi-upload";
+		}
+		return "bi-plus-circle";
+	};
+
 	if (error) {
 		return <div className="alert alert-danger mt-3">{error}</div>;
 	}
@@ -498,7 +566,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 						</span>
 					</div>
 				)}
-				{showAdd && (
+				{showAdd && mode !== "import" && (
 					<Button
 						variant="primary"
 						{...(compact ? { size: "sm" as const } : {})}
@@ -512,8 +580,8 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 						}}
 						id="add-entity-button"
 					>
-						<i className="bi bi-plus-circle me-2" style={{ fontSize: "1.1rem" }}></i>
-						Add {itemType}
+						<i className={`${getAddButtonIcon()} me-2`} style={{ fontSize: "1.1rem" }}></i>
+						{getAddButtonText()}
 					</Button>
 				)}
 			</div>
@@ -696,17 +764,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 					}}
 					onClick={(e) => e.stopPropagation()}
 				>
-					{[
-						{ action: "view", icon: "eye", text: "View", id: "context-menu-view" },
-						{ action: "edit", icon: "pencil", text: "Edit", id: "context-menu-edit" },
-						{
-							action: "delete",
-							icon: "trash",
-							text: "Delete",
-							id: "context-menu-delete",
-							color: "#dc3545",
-						},
-					].map(({ action, icon, text, id, color }) => (
+					{getContextMenuItems().map(({ action, icon, text, id, color }) => (
 						<div
 							key={action}
 							className="context-menu-item"
@@ -731,41 +789,57 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 
 			{children ? children(getEffectiveData()) : null}
 
-			<Modal
-				show={showModal}
-				onHide={closeAddModal}
-				onSuccess={handleAddSuccess}
-				size={modalSize}
-				data={{}}
-				submode="add"
-				{...modalProps}
-			/>
+			{mode !== "import" && (
+				<>
+					<Modal
+						show={showModal}
+						onHide={closeAddModal}
+						onSuccess={handleAddSuccess}
+						size={modalSize}
+						data={{}}
+						submode="add"
+						{...modalProps}
+					/>
 
-			<Modal
-				show={showEditModal}
-				onHide={closeEditModal}
-				onSuccess={handleEditSuccess}
-				data={selectedItem || {}}
-				submode="edit"
-				onDelete={removeItem}
-				size={modalSize}
-				{...modalProps}
-			/>
+					<Modal
+						show={showEditModal}
+						onHide={closeEditModal}
+						onSuccess={handleEditSuccess}
+						data={selectedItem || {}}
+						submode="edit"
+						onDelete={removeItem}
+						size={modalSize}
+						{...modalProps}
+					/>
 
-			<Modal
-				show={showViewModal}
-				onHide={closeViewModal}
-				onSuccess={updateItem}
-				data={selectedItem}
-				submode="view"
-				onDelete={removeItem}
-				onEdit={() => {
-					closeViewModal();
-					openEditModal(selectedItem);
-				}}
-				size={modalSize}
-				{...modalProps}
-			/>
+					<Modal
+						show={showViewModal}
+						onHide={closeViewModal}
+						onSuccess={updateItem}
+						data={selectedItem}
+						submode="view"
+						onDelete={removeItem}
+						onEdit={() => {
+							closeViewModal();
+							openEditModal(selectedItem);
+						}}
+						size={modalSize}
+						{...modalProps}
+					/>
+				</>
+			)}
+
+			{mode === "import" && (
+				<Modal
+					show={showImportModal}
+					onHide={closeImportModal}
+					onSuccess={handleImportSuccess}
+					data={selectedItem}
+					submode="import"
+					size={modalSize}
+					{...modalProps}
+				/>
+			)}
 
 			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</div>

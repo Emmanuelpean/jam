@@ -9,7 +9,7 @@ const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], onDataChange, er
 			? columns
 			: [
 					tableColumns.title(),
-					tableColumns.company(),
+					tableColumns.companyBadge(),
 					tableColumns.location(),
 					tableColumns.daysSinceLastUpdate(),
 					tableColumns.lastUpdateType(),

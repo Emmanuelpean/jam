@@ -31,6 +31,7 @@ app.include_router(data_tables.job_application_update_router)
 app.include_router(eis_routers.scrapedjob_router)
 app.include_router(eis_routers.email_router)
 app.include_router(eis_routers.eis_servicelog_router)
+app.include_router(eis_routers.scraper_router)
 
 # Authentification router
 app.include_router(user.user_router)
@@ -57,5 +58,6 @@ health_router = APIRouter(prefix="/health", tags=["health"])
 
 
 @app.get("/health")
-def health_check():
+def health_check() -> dict:
+    """Health check endpoint"""
     return {"status": "ok"}

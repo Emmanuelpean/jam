@@ -37,6 +37,7 @@ class ScrapedJobCreate(BaseModel):
     is_failed: bool = False
     scrape_error: str | None = None
     is_active: bool = True
+    is_imported: bool = False
 
     # Job data
     title: str | None = None
@@ -47,6 +48,7 @@ class ScrapedJobCreate(BaseModel):
     deadline: datetime | None = None
     company: str | None = None
     location: str | None = None
+    attendance_type: str | None = None
 
 
 class ScrapedJobUpdate(ScrapedJobCreate):

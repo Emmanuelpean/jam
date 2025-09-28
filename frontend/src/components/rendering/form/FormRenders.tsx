@@ -1,10 +1,10 @@
 import { JSX } from "react";
 import { Theme, THEMES } from "../../../utils/Theme";
 import { SelectOption } from "../../../utils/Utils";
-import { JobData } from "../../../services/Schemas";
 
 export interface ModalFormField {
 	name: string;
+	secondaryName?: string;
 	label?: string | JSX.Element;
 	icon?: string;
 	type: string;
@@ -77,7 +77,7 @@ export const formFields = {
 	url: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "url",
 		label: "URL",
-		type: "text",
+		type: "url",
 		placeholder: "https://...",
 		...overrides,
 	}),
@@ -380,6 +380,27 @@ export const formFields = {
 		...overrides,
 	}),
 
+	scrapedCompany: (
+		options: SelectOption[] = [],
+		onAdd: (() => void) | null = null,
+		overrides: FormFieldOverride = {},
+	): ModalFormField => ({
+		name: "company_id",
+		secondaryName: "company",
+		label: "Company",
+		type: "select",
+		placeholder: "Select or search company...",
+		isSearchable: true,
+		isClearable: true,
+		options: options,
+		...(onAdd && {
+			addButton: {
+				onClick: onAdd,
+			},
+		}),
+		...overrides,
+	}),
+
 	location: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
@@ -391,9 +412,27 @@ export const formFields = {
 		placeholder: "Select or search location...",
 		isSearchable: true,
 		isClearable: true,
-		// displayCondition: (formData: JobData): boolean => {
-		// 	return formData.attendance_type ? ["on-site", "hybrid"].includes(formData.attendance_type) : true;
-		// },
+		options: options,
+		...(onAdd && {
+			addButton: {
+				onClick: onAdd,
+			},
+		}),
+		...overrides,
+	}),
+
+	scrapedLocation: (
+		options: SelectOption[] = [],
+		onAdd: (() => void) | null = null,
+		overrides: FormFieldOverride = {},
+	): ModalFormField => ({
+		name: "location_id",
+		secondaryName: "location",
+		label: "Location",
+		type: "select",
+		placeholder: "Select or search location...",
+		isSearchable: true,
+		isClearable: true,
 		options: options,
 		...(onAdd && {
 			addButton: {

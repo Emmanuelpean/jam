@@ -65,6 +65,7 @@ class UserOut(Out):
     chase_threshold: int
     deadline_threshold: int
     update_limit: int
+    toast_active: bool
 
 
 class UserLogin(BaseModel):
@@ -82,6 +83,7 @@ class UserUpdate(BaseModel):
     chase_threshold: int | None = None
     deadline_threshold: int | None = None
     update_limit: int | None = None
+    toast_active: bool = False
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------

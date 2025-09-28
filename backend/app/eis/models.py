@@ -71,6 +71,7 @@ class ScrapedJob(Owned, Base):
     - `is_failed` (bool): Indicates whether the job scraping failed.
     - `scrape_error` (str, optional): Error message if the job scraping failed.
     - `is_active` (bool): Indicates whether the job is active
+    - `is_imported` (bool): Indicates whether the job was imported into a job.
     - `title` (str, optional): Title of the job.
     - `description` (str, optional): Description of the job.
     - `salary_min` (float, optional): Minimum salary of the job.
@@ -79,6 +80,7 @@ class ScrapedJob(Owned, Base):
     - `deadline` (datetime, optional): Deadline for the job.
     - `company` (str, optional): Company name of the job.
     - `location` (str, optional): Location of the job.
+    - `attendance_type` (str, optional): Attendance type of the job (e.g., remote, onsite).
 
     Relationships:
     --------------
@@ -90,6 +92,7 @@ class ScrapedJob(Owned, Base):
     scrape_error = Column(String, nullable=True)
     scrape_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
+    is_imported = Column(Boolean, nullable=False, server_default=expression.false())
 
     # Job data
     title = Column(String, nullable=True)
@@ -100,6 +103,7 @@ class ScrapedJob(Owned, Base):
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     company = Column(String, nullable=True)
     location = Column(String, nullable=True)
+    attendance_type = Column(String, nullable=True)
 
     # Relationships
     emails = relationship("JobAlertEmail", secondary=email_scrapedjob_mapping, back_populates="jobs")

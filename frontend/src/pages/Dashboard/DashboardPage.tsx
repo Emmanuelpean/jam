@@ -9,6 +9,7 @@ import { ApplicationData, InterviewData, JobApplicationUpdateData, JobData } fro
 import JobsToChase from "../../components/tables/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/tables/UpcomingDeadlines";
 import { formatActivityDate } from "../../utils/TimeUtils";
+import ScrapedJobsTable from "../../components/tables/ScrapedJobTable";
 
 interface StatCardProps {
 	itemName: string;
@@ -392,6 +393,28 @@ const JobSearchDashboard: React.FC = () => {
 						items={dashboardStats.upcomingInterviews}
 						renderItem={renderUpcomingInterviewItem}
 					/>
+				</Col>
+			</Row>
+			<Row className="g-4" style={{ height: "500px", minHeight: 0, paddingTop: "3rem" }}>
+				<Col lg={12} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
+					<Card
+						className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
+						style={{ height: "100%", minHeight: 0 }}
+					>
+						<TableCardHeader
+							icon="inbox"
+							title="Job Alerts"
+							subtitle="Jobs that you received from job boards"
+							badgeValue={dashboardStats.upcomingDeadlines.length}
+						/>
+						<Card.Body className="p-0">
+							<div style={{ overflowY: "auto", minHeight: 0 }}>
+								<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
+									<ScrapedJobsTable />
+								</div>
+							</div>
+						</Card.Body>
+					</Card>
 				</Col>
 			</Row>
 		</>

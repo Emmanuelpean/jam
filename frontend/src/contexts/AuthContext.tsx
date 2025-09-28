@@ -5,6 +5,9 @@ import { UserData } from "../services/Schemas";
 
 export interface CurrentUser extends UserData {
 	isLoggedIn: boolean;
+	is_admin: boolean;
+	toast_active: boolean;
+	token: string | null;
 }
 
 export interface AuthResponse {
@@ -103,9 +106,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 			try {
 				const userData: UserData = await authApi.getCurrentUser(authToken);
-				setCurrentUser({ isLoggedIn: true, ...userData });
+				setCurrentUser({
+					isLoggedIn: true,
+					token: token,
+					...userData,
+				});
 				setIsAdmin(userData.is_admin || false);
 				setUserFetched(true);
+				console.log(currentUser);
 			} catch (error) {
 				const apiError = error as ApiError;
 				console.error("Failed to fetch user info:", apiError);

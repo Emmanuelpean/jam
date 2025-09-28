@@ -202,6 +202,7 @@ export const serviceLogApi: CrudApi = createCrudApi("servicelogs");
 export const userApi: CrudApi = createCrudApi("users");
 export const dashboardApi: CrudApi = createCrudApi("dashboard");
 export const settingsApi: CrudApi = createCrudApi("settings");
+export const scraperApi: CrudApi = createCrudApi("scraper");
 
 export const exportApi: CrudApi & { download: (filename: string, token: string) => Promise<void> } = {
 	...createCrudApi("export"),

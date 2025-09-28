@@ -9,6 +9,9 @@ import { renderSelect } from "./SelectWidget";
 import { ModalFormField } from "../form/FormRenders";
 import React, { JSX } from "react";
 import { HelpBubble } from "./HelpBubble";
+import { renderUrlInputWidget } from "./UrlInput";
+import { UserData } from "../../../services/Schemas";
+import { CurrentUser } from "../../../contexts/AuthContext";
 
 export interface SyntheticEvent {
 	target: {
@@ -28,6 +31,8 @@ export interface WidgetProps {
 	value: any;
 	handleChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void;
 	error?: string | null;
+	secondaryValue?: string | null;
+	currentUser?: CurrentUser | null;
 }
 
 export const displayError = (errorMessage: string | null): JSX.Element[] | null => {
@@ -58,8 +63,10 @@ export const renderModalFormField = (
 	formData: any,
 	handleChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
 	errors: Errors,
+	currentUser?: CurrentUser | null,
 ) => {
 	const value: any = formData[field.name];
+	const secondaryValue: any = field.secondaryName ? formData[field.secondaryName] : null;
 	const error: string | null | undefined = errors[field.name];
 
 	const widgetProps: WidgetProps = {
@@ -67,6 +74,8 @@ export const renderModalFormField = (
 		value,
 		handleChange,
 		error,
+		secondaryValue,
+		currentUser,
 	};
 
 	if (field.type === "checkbox") {
@@ -113,6 +122,9 @@ export const renderModalFormField = (
 
 					case "rating":
 						return renderStarRating(widgetProps);
+
+					case "url":
+						return renderUrlInputWidget(widgetProps);
 
 					default:
 						return renderDefaultInput(widgetProps);

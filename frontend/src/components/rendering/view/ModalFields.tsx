@@ -175,7 +175,7 @@ export const modalViewFields = {
 	}),
 
 	companyBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "company",
+		key: "companyBadge",
 		label: "Company",
 		render: renderFunctions.companyBadge,
 		...overrides,

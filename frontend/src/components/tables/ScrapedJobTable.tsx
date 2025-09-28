@@ -1,38 +1,38 @@
 import React from "react";
 import { DataTableProps, GenericTable } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumns";
-import { JobModal } from "../modals/JobModal";
+import { ScrapedJobModal } from "../modals/ScrapedJobModal";
 
-const JobsTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error = null, columns = [] }) => {
+const ScrapedJobsTable: React.FC<DataTableProps> = ({ onDataChange, columns = [] }) => {
 	const defaultColumns =
 		columns.length > 0
 			? columns
 			: [
 					tableColumns.title(),
-					tableColumns.companyBadge(),
-					tableColumns.applicationStatus(),
+					tableColumns.scrapedCompany(),
+					tableColumns.scrapedLocation(),
+					tableColumns.salaryRange(),
+					tableColumns.description(),
+					tableColumns.url(),
 					tableColumns.createdAt(),
 				];
 
 	return (
 		<GenericTable
-			mode="controlled"
-			data={data}
+			mode="import"
 			onDataChange={onDataChange}
-			error={error}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
-			Modal={JobModal}
-			endpoint="jobs"
+			Modal={ScrapedJobModal}
+			endpoint="scrapedjobs"
 			nameKey="title"
-			itemType="Job"
+			itemType="Scraped Job"
 			modalSize="xl"
 			showAllEntries={true}
-			compact={true}
 			showAdd={false}
-			showSearch={true}
+			showSearch={false}
 		/>
 	);
 };
 
-export default JobsTable;
+export default ScrapedJobsTable;

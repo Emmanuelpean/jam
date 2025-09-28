@@ -8,12 +8,14 @@ import { JobModal } from "./JobModal";
 
 interface ModalManagerProps {
 	children: (handleClick: (item: any) => void) => ReactNode;
+	onSuccess?: () => void;
+	onDelete?: () => void;
 }
 
 type FlexibleModalComponent = React.ComponentType<any>;
 
 const createModalManager = (ModalComponent: FlexibleModalComponent) => {
-	return ({ children }: ModalManagerProps): ReactElement => {
+	return ({ children, onSuccess, onDelete }: ModalManagerProps): ReactElement => {
 		const [showModal, setShowModal] = useState<boolean>(false);
 		const [selectedItem, setSelectedItem] = useState<any>(null);
 		const [selectedId, setSelectedId] = useState<string | number | null>(null);
@@ -32,10 +34,6 @@ const createModalManager = (ModalComponent: FlexibleModalComponent) => {
 			}, 300);
 		};
 
-		// Empty handlers for modal callbacks since we're just viewing
-		const handleSuccess = () => {};
-		const handleDelete = () => {};
-
 		return (
 			<>
 				{children(handleClick)}
@@ -45,12 +43,8 @@ const createModalManager = (ModalComponent: FlexibleModalComponent) => {
 					data={selectedItem}
 					id={selectedId}
 					submode="view"
-					onSuccess={handleSuccess}
-					onDelete={handleDelete}
-					onJobSuccess={handleSuccess}
-					onApplicationSuccess={handleSuccess}
-					onJobDelete={handleDelete}
-					onApplicationDelete={handleDelete}
+					onSuccess={onSuccess}
+					onDelete={onDelete}
 				/>
 			</>
 		);

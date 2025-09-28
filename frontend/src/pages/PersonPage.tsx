@@ -6,7 +6,7 @@ import { tableColumns } from "../components/rendering/view/TableColumns";
 const PersonsPage = () => {
 	const columns = [
 		tableColumns.personName(),
-		tableColumns.company(),
+		tableColumns.companyBadge(),
 		tableColumns.role(),
 		tableColumns.email(),
 		tableColumns.phone(),
