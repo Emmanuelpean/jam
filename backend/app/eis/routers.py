@@ -13,7 +13,7 @@ from app.eis import models, schemas
 from app.routers import generate_data_table_crud_router
 from app.database import get_db
 from app.oauth2 import get_current_user
-from app.eis.job_scraper import LinkedinJobScraper, VeganJobsScraper
+from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScraper, VeganJobsScraper
 
 
 # Job Alert Email router
@@ -101,6 +101,23 @@ def scrape_job(
         raise AssertionError("You are not allowed to use TOAST")
 
     scraper = LinkedinJobScraper(job_id)
+    return scraper.scrape_job()
+
+
+@scraper_router.get("/indeed/{job_id}")
+def scrape_job(
+        job_id: str,
+        current_user: User = Depends(get_current_user),
+):
+    """Trigger scraping of a job posting from Indeed by job ID.
+    :param job_id: Indeed job ID to scrape
+    :param current_user: Current authenticated user
+    :return: Success message or error"""
+
+    if not current_user.toast_active:
+        raise AssertionError("You are not allowed to use TOAST")
+
+    scraper = IndeedJobScraper(job_id)
     return scraper.scrape_job()
 
 

@@ -407,8 +407,11 @@ const JobSearchDashboard: React.FC = () => {
 							subtitle="Jobs that you received from job boards"
 							badgeValue={dashboardStats.upcomingDeadlines.length}
 						/>
-						<Card.Body className="p-0">
-							<div style={{ overflowY: "auto", minHeight: 0 }}>
+						<Card.Body
+							className="p-0 flex-grow-1 d-flex flex-column"
+							style={{ height: "100%", minHeight: 0 }}
+						>
+							<div style={{ flexGrow: 1, overflowY: "auto", minHeight: 0 }}>
 								<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
 									<ScrapedJobsTable />
 								</div>
