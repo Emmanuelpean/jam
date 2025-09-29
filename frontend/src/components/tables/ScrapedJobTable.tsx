@@ -14,7 +14,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ onDataChange, columns = []
 					tableColumns.salaryRange(),
 					tableColumns.description(),
 					tableColumns.url(),
-					tableColumns.createdAt(),
+					tableColumns.createdAt({ label: "Date Received" }),
 				];
 
 	return (
@@ -24,7 +24,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ onDataChange, columns = []
 			columns={defaultColumns}
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			Modal={ScrapedJobModal}
-			endpoint="scrapedjobs"
+			endpoint="scraped_jobs"
 			nameKey="title"
 			itemType="Scraped Job"
 			modalSize="xl"

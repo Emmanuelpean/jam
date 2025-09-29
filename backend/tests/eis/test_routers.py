@@ -4,7 +4,7 @@ from tests.utils.table_data import JOB_ALERT_EMAIL_DATA, JOB_SCRAPED_DATA
 
 
 class TestJobAlertEmailCRUD(CRUDTestBase):
-    endpoint = "/jobalertemails"
+    endpoint = "/job_alert_emails"
     create_schema = schemas.JobAlertEmailCreate
     out_schema = schemas.JobAlertEmailOut
     test_data = "test_job_alert_emails"
@@ -17,7 +17,7 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
 
 
 class TestScrapedJobCRUD(CRUDTestBase):
-    endpoint = "/scrapedjobs"
+    endpoint = "/scraped_jobs"
     create_schema = schemas.ScrapedJobCreate
     out_schema = schemas.ScrapedJobOut
     test_data = "test_scraped_jobs"

@@ -163,3 +163,9 @@ export interface JobApplicationUpdateData {
 	note?: string;
 	id?: string | number;
 }
+
+export interface ScrapedJobUpdate {
+	id?: number;
+	is_imported?: boolean;
+	is_active?: boolean;
+}

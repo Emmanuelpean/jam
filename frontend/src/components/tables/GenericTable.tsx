@@ -11,55 +11,7 @@ import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
 import "./GenericTable.css";
 import { useLoading } from "../../contexts/LoadingContext";
-
-export interface CreateGenericDeleteHandlerProps {
-	endpoint: string;
-	token: string | null;
-	showDelete: (config: any) => Promise<boolean>;
-	showError: (config: any) => Promise<boolean>;
-	removeItem?: (itemId: string | number) => void;
-	setData?: React.Dispatch<React.SetStateAction<any[]>>;
-	nameKey?: string;
-	itemType?: string;
-}
-
-export const createGenericDeleteHandler = ({
-	endpoint,
-	token,
-	showDelete,
-	showError,
-	removeItem,
-	nameKey,
-	itemType = "item",
-}: CreateGenericDeleteHandlerProps) => {
-	return async (item: any): Promise<void> => {
-		let message: string;
-		if (!nameKey) {
-			message = `Are you sure you want to delete this ${itemType}? This action cannot be undone.`;
-		} else if (nameKey !== "date") {
-			message = `Are you sure you want to delete "${item[nameKey]}"? This action cannot be undone.`;
-		} else {
-			message = `Are you sure you want to delete this item? This action cannot be undone.`;
-		}
-		try {
-			await showDelete({
-				title: `Delete ${itemType}`,
-				message: message,
-				confirmText: "Delete",
-				cancelText: "Cancel",
-			});
-
-			await api.delete(`${endpoint}/${item.id}`, token);
-			removeItem?.(item.id);
-		} catch (error) {
-			if (error !== false) {
-				await showError({
-					message: `Failed to delete ${itemType}. Please check your connection and try again.`,
-				});
-			}
-		}
-	};
-};
+import { createActiveHandler, createDeleteHandler } from "../../utils/DeleteHandler";
 
 export type Direction = "asc" | "desc";
 
@@ -396,15 +348,28 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		setContextMenu({ item, x: event.clientX, y: event.clientY, show: true });
 	};
 
-	const handleDelete = createGenericDeleteHandler({
-		endpoint: endpoint,
-		token: token,
-		showDelete: showDelete,
-		showError: showError,
-		removeItem: removeItem,
-		nameKey: nameKey,
-		itemType: itemType,
-	});
+	let handleDelete: (item: any) => Promise<void>;
+	if (mode === "import") {
+		handleDelete = createActiveHandler({
+			endpoint: endpoint,
+			token: token,
+			showDelete: showDelete,
+			showError: showError,
+			removeItem: removeItem,
+			nameKey: nameKey,
+			itemType: itemType,
+		});
+	} else {
+		handleDelete = createDeleteHandler({
+			endpoint: endpoint,
+			token: token,
+			showDelete: showDelete,
+			showError: showError,
+			removeItem: removeItem,
+			nameKey: nameKey,
+			itemType: itemType,
+		});
+	}
 
 	// Context menu handlers
 	const handleContextAction = (action: string, e: MouseEvent): void => {
@@ -834,6 +799,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 					show={showImportModal}
 					onHide={closeImportModal}
 					onSuccess={handleImportSuccess}
+					onDelete={removeItem}
 					data={selectedItem}
 					submode="import"
 					size={modalSize}

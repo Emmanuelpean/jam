@@ -405,7 +405,6 @@ const JobSearchDashboard: React.FC = () => {
 							icon="inbox"
 							title="Job Alerts"
 							subtitle="Jobs that you received from job boards"
-							badgeValue={dashboardStats.upcomingDeadlines.length}
 						/>
 						<Card.Body
 							className="p-0 flex-grow-1 d-flex flex-column"

@@ -10,7 +10,7 @@ import AlertModal from "../AlertModal";
 import { areDifferent, findByKey, flattenArray } from "../../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
-import { createGenericDeleteHandler } from "../../tables/GenericTable";
+import { createDeleteHandler } from "../../../utils/DeleteHandler";
 
 export type ViewFields = (ModalViewField | ModalViewField[])[];
 export type FormFields = (ModalFormField | ModalFormField[])[];
@@ -344,7 +344,7 @@ const GenericModal = ({
 
 	// ----------------------------------------------------- DELETE ----------------------------------------------------
 
-	const handleDelete = createGenericDeleteHandler({
+	const handleDelete = createDeleteHandler({
 		endpoint,
 		token,
 		showDelete,
@@ -358,7 +358,7 @@ const GenericModal = ({
 			await handleDelete(effectiveData);
 			handleHideImmediate();
 		} catch (error) {
-			// Error already handled by createGenericDeleteHandler
+			// Error already handled by createDeleteHandler
 		}
 	};
 
@@ -485,7 +485,10 @@ const GenericModal = ({
 
 			onSuccess?.(apiResult);
 
-			if (mode === "add" || mode === "import") {
+			if (mode === "add") {
+				handleHideImmediate();
+			} else if (mode === "import") {
+				onDelete?.(apiResult);
 				handleHideImmediate();
 			} else if (mode === "edit") {
 				handleHideImmediate();
@@ -675,11 +678,11 @@ const GenericModal = ({
 						<div className="d-flex flex-column w-100 gap-2">
 							<div className="modal-buttons-container">
 								<ActionButton
-									id="cancel-button"
-									variant="secondary"
-									onClick={handleHideImmediate}
-									defaultText="Cancel"
-									fullWidth={false}
+									variant="danger"
+									onClick={handleDeleteClick}
+									className="me-auto"
+									defaultText="Delete"
+									defaultIcon="bi bi-trash"
 								/>
 								<ActionButton
 									id="import-button"
@@ -689,6 +692,15 @@ const GenericModal = ({
 									loadingText="Importing..."
 									defaultText="Import"
 									defaultIcon="bi bi-download"
+									fullWidth={false}
+								/>
+							</div>
+							<div className="modal-buttons-container">
+								<ActionButton
+									id="cancel-button"
+									variant="secondary"
+									onClick={handleHideImmediate}
+									defaultText="Cancel"
 									fullWidth={false}
 								/>
 							</div>

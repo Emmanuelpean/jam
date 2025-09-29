@@ -51,10 +51,12 @@ class ScrapedJobCreate(BaseModel):
     attendance_type: str | None = None
 
 
-class ScrapedJobUpdate(ScrapedJobCreate):
+class ScrapedJobUpdate(BaseModel):
     """Represents scraped job postings from external sources with additional metadata."""
 
-    external_job_id: str | None = None
+    id: int | None = None
+    is_active: bool | None = None
+    is_imported: bool | None = None
 
 
 class ScrapedJobOut(ScrapedJobCreate, OwnedOut):

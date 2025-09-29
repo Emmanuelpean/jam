@@ -7,39 +7,108 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+from starlette.requests import Request
 
-from app.models import User
-from app.eis import models, schemas
-from app.routers import generate_data_table_crud_router
+from app import models as app_models
 from app.database import get_db
-from app.oauth2 import get_current_user
+from app.eis import models, schemas
 from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScraper, VeganJobsScraper
+from app.models import User
+from app.oauth2 import get_current_user
+from app.routers import generate_data_table_crud_router, filter_query, filter_owned_relationships
+
+# --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
 
 
-# Job Alert Email router
 email_router = generate_data_table_crud_router(
     table_model=models.JobAlertEmail,
     create_schema=schemas.JobAlertEmailCreate,
     update_schema=schemas.JobAlertEmailUpdate,
     out_schema=schemas.JobAlertEmailOut,
-    endpoint="jobalertemails",
+    endpoint="job_alert_emails",
     not_found_msg="Job alert email not found",
+    allowed_actions=["get"],
 )
 
 
-# Scraped Job router
-scrapedjob_router = generate_data_table_crud_router(
-    table_model=models.ScrapedJob,
-    create_schema=schemas.ScrapedJobCreate,
-    update_schema=schemas.ScrapedJobUpdate,
-    out_schema=schemas.ScrapedJobOut,
-    endpoint="scrapedjobs",
-    not_found_msg="Scraped job not found",
-)
+# ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
+
+
+scrapedjob_router = APIRouter(prefix="/scraped_jobs", tags=["scraped_jobs"])
+
+
+@scrapedjob_router.get("/", response_model=list[schemas.ScrapedJobOut])
+def get_all(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: app_models.User = Depends(get_current_user),
+    limit: int | None = None,
+):
+    """Retrieve all scraped jobs for the current user that have not been imported, are active and successfully scraped.
+    :param request: FastAPI request object to access query parameters
+    :param db: Database session.
+    :param current_user: Authenticated user.
+    :param limit: Maximum number of entries to return.
+    :return: List of entries."""
+
+    query = (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.is_scraped)
+        .filter(models.ScrapedJob.is_imported.is_(False))
+        .filter(models.ScrapedJob.is_active)
+    )
+    filter_params = dict(request.query_params)
+    filter_params.pop("limit", None)
+    query = filter_query(query, models.ScrapedJob, filter_params)
+
+    results = query.limit(limit).all()
+    filtered_results = [filter_owned_relationships(result, current_user.id) for result in results]
+    return filtered_results
+
+
+@scrapedjob_router.put("/update/{entry_id}", response_model=schemas.ScrapedJobOut)
+def update_scraped_job(
+    entry_id: int,
+    item: schemas.ScrapedJobUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Mark a scraped job as imported.
+    :param entry_id: ID of the scraped job to update
+    :param item: update data
+    :param current_user: Current authenticated user
+    :param db: Database session"""
+
+    query = db.query(models.ScrapedJob).filter(models.ScrapedJob.id == entry_id)
+    scraped_job = query.first()
+
+    if not scraped_job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scraped job not found")
+
+    if scraped_job.owner_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to update this job")
+
+    # Extract the item data
+    item_dict = item.model_dump(exclude_unset=True)
+
+    if not item_dict:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided for update")
+
+    print(item_dict)
+
+    query.update(item.model_dump(exclude_unset=True))
+
+    db.commit()
+
+    return filter_owned_relationships(query.first(), current_user.id)
+
+
+# -------------------------------------------------- EIS SERVICE LOGS --------------------------------------------------
 
 
 # Email Ingestion Service Log router
-eis_servicelog_router = APIRouter(prefix="/servicelogs", tags=["servicelogs"])
+eis_servicelog_router = APIRouter(prefix="/eis_service_logs", tags=["eis_service_logs"])
 
 
 @eis_servicelog_router.get("/", response_model=list[schemas.EisServiceLogOut])
@@ -84,6 +153,9 @@ def get_service_logs_by_date_range(
     return query.all()
 
 
+# ------------------------------------------------------ SCRAPING ------------------------------------------------------
+
+
 scraper_router = APIRouter(prefix="/scraper", tags=["scraper"])
 
 
@@ -106,8 +178,8 @@ def scrape_job(
 
 @scraper_router.get("/indeed/{job_id}")
 def scrape_job(
-        job_id: str,
-        current_user: User = Depends(get_current_user),
+    job_id: str,
+    current_user: User = Depends(get_current_user),
 ):
     """Trigger scraping of a job posting from Indeed by job ID.
     :param job_id: Indeed job ID to scrape
@@ -123,8 +195,8 @@ def scrape_job(
 
 @scraper_router.get("/veganjobs/{job_id}")
 def scrape_job(
-        job_id: str,
-        current_user: User = Depends(get_current_user),
+    job_id: str,
+    current_user: User = Depends(get_current_user),
 ):
     """Trigger scraping of a job posting from LinkedIn by job ID.
     :param job_id: LinkedIn job ID to scrape

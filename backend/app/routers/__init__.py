@@ -135,6 +135,7 @@ def generate_data_table_crud_router(
     many_to_many_fields: dict | None = None,
     router: APIRouter | None = None,
     admin_only: bool = False,
+    allowed_actions: list[str] | None = None,
 ) -> APIRouter:
     """Generate a FastAPI router with standard CRUD endpoints for a given table.
     :param table_model: SQLAlchemy model class representing the database table.
@@ -151,10 +152,14 @@ def generate_data_table_crud_router(
                                            'related_model': RelatedModelClass}}
     :param router: Optional router to which the endpoints will be added.
     :param admin_only: If True, restrict access to admin users only.
+    :param allowed_actions: List of allowed actions (get, post, put, delete). If None, all are allowed.
     :return: Configured APIRouter instance with CRUD endpoints."""
 
     if router is None:
         router = APIRouter(prefix=f"/{endpoint}", tags=[endpoint])
+
+    if not allowed_actions:
+        allowed_actions = ["get", "post", "put", "delete"]
 
     def check_authorisation(
         entry: Any,
@@ -227,6 +232,11 @@ def generate_data_table_crud_router(
         :param limit: Maximum number of entries to return.
         :return: List of entries."""
 
+        if "get" not in allowed_actions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
+            )
+
         # Start with base query
         if not admin_only:
             query = db.query(table_model).filter(table_model.owner_id == current_user.id)
@@ -261,6 +271,11 @@ def generate_data_table_crud_router(
         :raises: HTTPException with a 404 status code if the entry is not found.
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
+        if "get" not in allowed_actions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
+            )
+
         entry = db.query(table_model).filter(table_model.id == entry_id).first()
 
         if not entry:
@@ -284,6 +299,11 @@ def generate_data_table_crud_router(
         :param db: Database session.
         :param current_user: Authenticated user.
         :return: The created entry."""
+
+        if "post" not in allowed_actions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
+            )
 
         if admin_only and not current_user.is_admin:
             raise HTTPException(
@@ -339,12 +359,18 @@ def generate_data_table_crud_router(
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action.
         :raises: HTTPException with a 400 status code if no field is provided for the update."""
 
+        if "put" not in allowed_actions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
+            )
+
         query = db.query(table_model).filter(table_model.id == entry_id)
         entry = query.first()
 
         if not entry:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
 
+        # Ensure that the user is authorised to modify this entry
         check_authorisation(entry, current_user)
 
         # Extract the item data
@@ -390,6 +416,11 @@ def generate_data_table_crud_router(
         :returns: Dict with a deletion status message.
         :raises: HTTPException with a 404 status code if an entry is not found.
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
+
+        if "delete" not in allowed_actions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
+            )
 
         query = db.query(table_model).filter(table_model.id == entry_id)
         entry = query.first()

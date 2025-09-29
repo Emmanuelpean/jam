@@ -4,7 +4,7 @@ import React from "react";
 import GenericModal, { DataModalProps, ValidationErrors } from "./GenericModal/GenericModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { JobData } from "../../services/Schemas";
-import { jobsApi } from "../../services/Api";
+import { jobsApi, scrapedJobApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
@@ -114,6 +114,16 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 		return errors;
 	};
 
+	const handleOnSuccess = (createdItem: any) => {
+		if (!token) {
+			return;
+		}
+		scrapedJobApi.setImported(data.id, { is_imported: true }, token);
+		if (onSuccess) {
+			onSuccess(createdItem);
+		}
+	};
+
 	const fields = {
 		form: jobFormFields,
 		view: [],
@@ -128,7 +138,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 				mode={submode}
 				fields={fields}
 				onDelete={onDelete}
-				onSuccess={onSuccess}
+				onSuccess={handleOnSuccess}
 				transformFormData={transformData}
 				itemName="Scraped Job"
 				endpoint="jobs"
