@@ -221,7 +221,6 @@ interface DashboardStats {
 }
 
 const JobSearchDashboard: React.FC = () => {
-	const { token } = useAuth();
 	const { showLoading, hideLoading } = useLoading();
 	const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
 		totalJobs: 0,
@@ -235,6 +234,8 @@ const JobSearchDashboard: React.FC = () => {
 		upcomingDeadlines: [],
 	});
 	const [error, setError] = useState<string | null>(null);
+	const { currentUser, token } = useAuth();
+	console.log(currentUser);
 
 	useEffect(() => {
 		const fetchDashboardData = async (): Promise<void> => {
@@ -395,30 +396,32 @@ const JobSearchDashboard: React.FC = () => {
 					/>
 				</Col>
 			</Row>
-			<Row className="g-4" style={{ height: "500px", minHeight: 0, paddingTop: "3rem" }}>
-				<Col lg={12} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
-					<Card
-						className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
-						style={{ height: "100%", minHeight: 0 }}
-					>
-						<TableCardHeader
-							icon="inbox"
-							title="Job Alerts"
-							subtitle="Jobs that you received from job boards"
-						/>
-						<Card.Body
-							className="p-0 flex-grow-1 d-flex flex-column"
+			{currentUser?.toast_active && (
+				<Row className="g-4" style={{ height: "500px", minHeight: 0, paddingTop: "3rem" }}>
+					<Col lg={12} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
+						<Card
+							className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
 							style={{ height: "100%", minHeight: 0 }}
 						>
-							<div style={{ flexGrow: 1, overflowY: "auto", minHeight: 0 }}>
-								<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-									<ScrapedJobsTable />
+							<TableCardHeader
+								icon="inbox"
+								title="Job Alerts"
+								subtitle="Jobs that you received from job boards"
+							/>
+							<Card.Body
+								className="p-0 flex-grow-1 d-flex flex-column"
+								style={{ height: "100%", minHeight: 0 }}
+							>
+								<div style={{ flexGrow: 1, overflowY: "auto", minHeight: 0 }}>
+									<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
+										<ScrapedJobsTable />
+									</div>
 								</div>
-							</div>
-						</Card.Body>
-					</Card>
-				</Col>
-			</Row>
+							</Card.Body>
+						</Card>
+					</Col>
+				</Row>
+			)}
 		</>
 	);
 };

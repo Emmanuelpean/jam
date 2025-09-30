@@ -303,7 +303,7 @@ class JobCreate(BaseModel):
     application_status: str | None = None
     application_note: str | None = None
     applied_via: str | None = None
-    followup_snooze_datetime: datetime | None
+    followup_snooze_datetime: datetime | None = None
 
     # Foreign keys
     company_id: int | None = None

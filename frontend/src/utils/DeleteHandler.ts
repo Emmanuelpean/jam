@@ -42,7 +42,7 @@ export const createDeleteHandler = ({
 			});
 
 			if (!confirmed) {
-				return false; // User cancelled
+				return false;
 			}
 
 			await api.delete(`${endpoint}/${item.id}`, token);
@@ -78,7 +78,7 @@ export const createActiveHandler = ({
 			});
 
 			if (!confirmed) {
-				return false; // User cancelled
+				return false;
 			}
 
 			await api.put(`${endpoint}/${item.id}`, { is_active: false }, token);
