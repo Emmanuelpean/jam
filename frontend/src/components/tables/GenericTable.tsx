@@ -9,35 +9,17 @@ import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
-import "./GenericTable.css";
 import { useLoading } from "../../contexts/LoadingContext";
 import { createActiveHandler, createDeleteHandler } from "../../utils/DeleteHandler";
-import ContextMenu from "./ContextMenu";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
+import "./GenericTable.css";
 
 export type Direction = "asc" | "desc";
 
 export interface SortConfig {
 	key: string;
 	direction: Direction;
-}
-
-export interface MenuItem {
-	action: string;
-	icon?: string;
-	text: string;
-	id?: string;
-	color?: string;
-	function?: (e: MouseEvent) => void;
-	hasSubmenu?: boolean;
-	submenu?: MenuItem[];
-}
-
-export interface ContextMenuState {
-	item: any;
-	x: number;
-	y: number;
-	show: boolean;
 }
 
 export interface DataTableProps {
@@ -89,39 +71,26 @@ export interface GenericTableProps {
 }
 
 export const GenericTable: React.FC<GenericTableProps> = ({
-	// Data source configuration
 	mode,
 	endpoint = "",
 	data: controlledData = [],
 	onDataChange,
-
-	// Table configuration
 	columns = [],
 	initialSortConfig = {},
-
-	// Modal configuration
 	Modal,
 	modalSize = "lg",
 	modalProps = {},
-
-	// Data management
 	nameKey,
 	itemType,
-
-	// Display options
 	title,
 	showAllEntries = false,
 	emptyMessage,
 	compact = false,
 	showSearch = true,
 	showAdd = true,
-
-	// Import mode configuration
 	onImportSuccess,
-
-	// Additional content
 	children,
-}) => {
+}: GenericTableProps) => {
 	const { token } = useAuth();
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
 
@@ -216,7 +185,6 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 
 	const updateItem = useCallback(
 		(updatedItem: any) => {
-			console.log("Updating item:", updatedItem);
 			if (updatedItem) {
 				if (mode === "controlled") {
 					const newData = controlledData.map((item) => (item.id === updatedItem.id ? updatedItem : item));
@@ -398,6 +366,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 
 	const handleImportSuccess = (importedItem: any): void => {
 		onImportSuccess?.(importedItem);
+		removeItem?.(importedItem.id);
 		closeImportModal();
 	};
 

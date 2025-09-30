@@ -11,6 +11,13 @@ export interface MenuItem {
 	submenu?: MenuItem[];
 }
 
+export interface ContextMenuState {
+	item: any;
+	x: number;
+	y: number;
+	show: boolean;
+}
+
 export interface ContextMenuPosition {
 	x: number;
 	y: number;
@@ -252,5 +259,3 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 		</>
 	);
 };
-
-export default ContextMenu;
