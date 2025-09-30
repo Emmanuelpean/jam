@@ -17,6 +17,7 @@ USER_DATA = [
     {
         "email": "test_user@test.com",
         "password": "test_password",
+        "toast_active": True,
     },
     {
         "email": "test_admin@test.com",

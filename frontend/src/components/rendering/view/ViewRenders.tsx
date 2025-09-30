@@ -95,6 +95,14 @@ export const getAdminIcon = (isAdmin: boolean): string => {
 	}
 };
 
+export const getToastIcon = (toastActive: boolean): string => {
+	if (toastActive) {
+		return "bi bi-cup-hot text-success";
+	} else {
+		return "bi bi-cup text-danger";
+	}
+};
+
 const ensureHttpPrefix = (url: string): string => {
 	if (url.match(/^https?:\/\//)) return url;
 	return `https://${url}`;
@@ -281,6 +289,12 @@ export const renderFunctions = {
 	isAdmin: (param: RenderParams): ReactNode => {
 		const isAdmin = param.item?.is_admin;
 		const icon = getAdminIcon(isAdmin);
+		return <i className={icon}></i>;
+	},
+
+	toastActive: (param: RenderParams): ReactNode => {
+		const toastActive = param.item?.toast_active;
+		const icon = getToastIcon(toastActive);
 		return <i className={icon}></i>;
 	},
 

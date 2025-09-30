@@ -94,7 +94,14 @@ export const modalViewFields = {
 	isAdmin: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "is_admin",
 		label: "Admin",
-		render: (params: RenderParams) => renderFunctions.isAdmin({ ...params, view: true }),
+		render: renderFunctions.isAdmin,
+		...overrides,
+	}),
+
+	toastActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "toast_active",
+		label: "TOAST",
+		render: renderFunctions.toastActive,
 		...overrides,
 	}),
 

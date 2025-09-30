@@ -269,9 +269,19 @@ export const tableColumns = {
 		key: "is_admin",
 		label: "Admin",
 		sortable: true,
-		searchable: true,
+		searchable: false,
 		type: "text",
 		render: renderFunctions.isAdmin,
+		...overrides,
+	}),
+
+	toastActive: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "toast_active",
+		label: "TOAST",
+		sortable: true,
+		searchable: false,
+		type: "text",
+		render: renderFunctions.toastActive,
 		...overrides,
 	}),
 

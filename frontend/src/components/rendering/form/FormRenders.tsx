@@ -133,6 +133,13 @@ export const formFields = {
 		...overrides,
 	}),
 
+	toastActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "toast_active",
+		label: "Toast Active",
+		type: "checkbox",
+		...overrides,
+	}),
+
 	password: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "password",
 		label: "Password",

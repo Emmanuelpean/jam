@@ -28,9 +28,12 @@ export const UserModal: React.FC<DataModalProps> = ({
 				: [formFields.email({ required: false })]),
 		],
 		formFields.appTheme(),
-		formFields.isAdmin(),
+		[formFields.isAdmin(), formFields.toastActive()],
 	];
-	const viewFieldsArray = [[modalViewFields.email(), modalViewFields.appTheme(), modalViewFields.isAdmin()]];
+	const viewFieldsArray = [
+		[modalViewFields.email(), modalViewFields.appTheme()],
+		[modalViewFields.isAdmin(), modalViewFields.toastActive()],
+	];
 
 	const fields = {
 		form: formFieldsArray,
@@ -59,6 +62,7 @@ export const UserModal: React.FC<DataModalProps> = ({
 			email: data.email?.trim(),
 			theme: data.theme?.trim() || THEMES[0],
 			is_admin: data.is_admin || false,
+			toast_active: data.toast_active || false,
 		};
 
 		return transformed;
