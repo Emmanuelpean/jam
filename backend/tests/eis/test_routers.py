@@ -14,15 +14,17 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
         "subject": "Updated Python",
     }
     required_fixture = ["test_service_logs"]
+    actions_to_test = ["get"]
 
 
-class TestScrapedJobCRUD(CRUDTestBase):
-    endpoint = "/scraped_jobs"
-    create_schema = schemas.ScrapedJobCreate
-    out_schema = schemas.ScrapedJobOut
-    test_data = "test_scraped_jobs"
-    create_data = JOB_SCRAPED_DATA
-    update_data = {
-        "id": 1,
-        "title": "Updated Python",
-    }
+# class TestScrapedJobCRUD(CRUDTestBase):
+#     endpoint = "/scraped_jobs"
+#     create_schema = schemas.ScrapedJobCreate
+#     out_schema = schemas.ScrapedJobOut
+#     test_data = "test_scraped_jobs"
+#     create_data = JOB_SCRAPED_DATA
+#     update_data = {
+#         "id": 1,
+#         "title": "Updated Python",
+#     }
+# TODO

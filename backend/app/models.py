@@ -17,14 +17,15 @@ from sqlalchemy import (
     CheckConstraint,
     Table,
     func,
+    UniqueConstraint,
 )
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.database import Base
 from app.config import settings
+from app.database import Base
 
 # ------------------------------------------------------ MAPPINGS ------------------------------------------------------
 
@@ -56,6 +57,7 @@ job_contact_mapping = Table(
 
 class CommonBase(object):
     """A base class that contains common attributes shared by all tables.
+    The table name is automatically generated from the class name by converting CamelCase to snake_case.
 
     Attributes:
     -----------
@@ -94,9 +96,10 @@ class Setting(CommonBase, Base):
 
     Attributes:
     -----------
-    - `name` (str): The name of the setting.
+    - `name` (str, unique): The name of the setting.
     - `value` (float): The value of the setting.
-    - `description` (str): A description of the setting."""
+    - `description` (str): A description of the setting.
+    - `is_active` (bool): Indicates whether the setting is active."""
 
     name = Column(String, nullable=False, unique=True)
     value = Column(String, nullable=False)
@@ -110,14 +113,18 @@ class User(CommonBase, Base):
     Attributes:
     -----------
     - `password` (str): Encrypted password for authentication.
-    - `email` (str): User's email address (must be unique).
+    - `email` (str, unique): User's email address.
     - `theme` (str): The theme of the application.
     - `is_admin` (bool): Indicates whether the user is an administrator.
-    - `last_login` (datetime): The timestamp of the last login.
+    - `last_login` (datetime, optional): The timestamp of the last login.
     - `chase_threshold` (int): The threshold for chasing jobs in the dashboard.
     - `deadline_threshold` (int): The threshold for deadlines in the dashboard.
     - `update_limit` (int): Max number updates displayed in the dashboard.
-    - `toast_active` (bool): Indicates whether the TOAST feature is active."""
+    - `toast_active` (bool): Indicates whether the TOAST feature is active.
+
+    Constraints:
+    ------------
+    - Minimum password length is enforced based on environment variables."""
 
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
@@ -146,12 +153,19 @@ class Keyword(Owned, Base):
 
     Relationships:
     --------------
-    - `jobs` (list of Job): List of jobs associated with the keyword."""
+    - `jobs` (list of Job): List of jobs associated with the keyword.
+
+    Constraints:
+    ------------
+    - Combination of owner_id and name must be unique to prevent duplicate keywords for the same user."""
 
     name = Column(String, nullable=False)
 
     # Relationships
     jobs = relationship("Job", secondary=job_keyword_mapping, back_populates="keywords")
+
+    # Constraints
+    __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_keyword_name"),)
 
 
 class Aggregator(Owned, Base):
@@ -165,15 +179,23 @@ class Aggregator(Owned, Base):
     Relationships:
     --------------
     - `jobs` (list of Job): List of jobs associated with the aggregator.
-    - `job_applications` (list of Job): List of jobs associated with the aggregator."""
+    - `job_applications` (list of Job): List of jobs associated with the aggregator.
+
+    Constraints:
+    ------------
+    - Combination of owner_id and name must be unique to prevent duplicate aggregators for the same user."""
 
     name = Column(String, nullable=False)
     url = Column(String, nullable=False)
 
+    # Relationships
     jobs = relationship("Job", foreign_keys="Job.source_id", back_populates="source")
     job_applications = relationship(
         "Job", foreign_keys="Job.application_aggregator_id", back_populates="application_aggregator"
     )
+
+    # Constraints
+    __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_aggregator_name"),)
 
 
 class Company(Owned, Base):
@@ -181,14 +203,18 @@ class Company(Owned, Base):
 
     Attributes:
     -----------
-    - `name` (str): Name of the company.
+    - `name` (str, unique): Name of the company.
     - `description` (str, optional): Description or details about the company.
     - `url` (str, optional): Web link to the company's website.
 
     Relationships:
     --------------
     - `jobs` (list of Job): List of jobs associated with the company.
-    - `persons` (list of Person): List of people linked to the company."""
+    - `persons` (list of Person): List of people linked to the company.
+
+    Constraints:
+    ------------
+    - Combination of owner_id and name must be unique to prevent duplicate companies for the same user."""
 
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
@@ -197,6 +223,9 @@ class Company(Owned, Base):
     # Relationships
     jobs = relationship("Job", back_populates="company")
     persons = relationship("Person", back_populates="company")
+
+    # Constraints
+    __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_company_name"),)
 
 
 class Location(Owned, Base):
@@ -212,7 +241,11 @@ class Location(Owned, Base):
     Relationships:
     --------------
     - `jobs` (list of Job): List of jobs associated with the location.
-    - `interviews` (list of Interview): List of interviews associated with the location."""
+    - `interviews` (list of Interview): List of interviews associated with the location.
+
+    Constraints:
+    ------------
+    - At least one of postcode, city, or country must be provided."""
 
     postcode = Column(String, nullable=True)
     city = Column(String, nullable=True)
@@ -328,15 +361,24 @@ class Job(Owned, Base):
     - `personal_rating` (int, optional): Personalised rating given to the job.
     - `note` (str, optional): Additional note about the job posting.
     - `deadline` (datetime, optional): Deadline for the job application.
+    - `followup_snooze_datetime` (datetime, optional): Date and time to snooze follow-up reminders.
     - `attendance_type` (str, optional): Type of attendance offered for the job (on-site, remote, hybrid).
     - `name` (str): Computed property combining the job title and company name.
+    - `application_date` (datetime, optional): Date when the application was submitted.
+    - `application_url` (str, optional): URL used to submit the application.
+    - `application_status` (str, optional): Current status of the job application
+    - `applied_via` (str, optional): Method used to apply for the job.
+    - `application_note` (str, optional): Additional note about the job application.
 
     Foreign keys:
     -------------
-    - `company_id` (int): Identifier for the company offering the job.
+    - `company_id` (int, optional): Identifier for the company offering the job.
     - `location_id` (int, optional): Identifier for the geographical location where the job is located.
     - `duplicate_id` (int, optional): Identifier for a duplicate job posting.
     - `source_id` (int, optional): Identifier for the aggregator website where the job was posted.
+    - `application_aggregator_id` (int, optional): Identifier for the aggregator website used to apply for the job.
+    - `cv_id` (int, optional): Identifier for the CV file used in the job application.
+    - `cover_letter_id` (int, optional): Identifier for the cover letter file used in the job application.
 
     Relationships:
     --------------
@@ -344,7 +386,20 @@ class Job(Owned, Base):
     - `location` (Location): Location object associated with the job posting.
     - `keywords` (list of Keyword): List of keywords associated with the job posting.
     - `contacts` (list of Person): List of people linked to the company that may be interested in the job posting.
-    - `source` (Aggregator): Source of the job posting (e.g. LinkedIn, Indeed, etc.)."""
+    - `source` (Aggregator): Source of the job posting (e.g. LinkedIn, Indeed, etc.).
+    - `interviews` (list of Interview): List of interviews associated with the job application.
+    - `updates` (list of JobApplicationUpdate): List of updates associated with the job application.
+    - `application_aggregator` (Aggregator): Source used to apply for the job.
+    - `application_cv` (File): CV file used in the job application.
+    - `application_cover_letter` (File): Cover letter file used in the job application.
+
+    Constraints:
+    ------------
+    - `personal_rating` must be between 1 and 5 if provided.
+    - `salary_min` must be less than or equal to `salary_max` if both are provided.
+    - `attendance_type` must be one of 'on-site', 'remote', or 'hybrid' if provided.
+    - `application_status` must be one of 'applied', 'interview', 'offer', 'rejected' or 'withdrawn' if provided.
+    - `applied_via` must be one of 'aggregator', 'email', 'phone', or 'other' if provided."""
 
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
@@ -354,7 +409,10 @@ class Job(Owned, Base):
     personal_rating = Column(Integer, nullable=True)
     note = Column(String, nullable=True)
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
+    followup_snooze_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     attendance_type = Column(String, nullable=True)
+
+    # Application specific fields
     application_date = Column(TIMESTAMP(timezone=True), nullable=True)
     application_url = Column(String, nullable=True)
     application_status = Column(String, nullable=True)
@@ -401,6 +459,11 @@ class Job(Owned, Base):
         CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name=f"valid_rating_range"),
         CheckConstraint("salary_min <= salary_max", name=f"valid_salary_range"),
         CheckConstraint("attendance_type IN ('on-site', 'remote', 'hybrid')", name="valid_attendance_type_values"),
+        CheckConstraint(
+            "application_status IN ('applied', 'interview', 'offer', 'rejected', 'withdrawn')",
+            name="valid_application_status_values",
+        ),
+        CheckConstraint("applied_via IN ('aggregator', 'email', 'phone', 'other')", name="valid_applied_via_values"),
     )
 
 
@@ -412,6 +475,7 @@ class Interview(Owned, Base):
     - `date` (datetime): The date and time of the interview.
     - `type` (str): Type of the interview (HR, technical, management, ...)
     - `note` (str, optional): Additional notes or comments about the interview.
+    - `attendance_type` (str, optional): The attendance type of the interview (on-site, remote).
 
     Foreign keys:
     -------------
@@ -422,7 +486,11 @@ class Interview(Owned, Base):
     --------------
     - `job` (Job): Job object related to the interview.
     - `interviewers` (list of Person): List of people who participated in the interview.
-    - `location` (Location): Location object related to the interview."""
+    - `location` (Location): Location object related to the interview.
+
+    Constraints:
+    ------------
+    - `attendance_type` must be one of 'on-site' or 'remote' if provided."""
 
     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     type = Column(String, nullable=False)
@@ -456,7 +524,11 @@ class JobApplicationUpdate(Owned, Base):
 
     Relationships:
     --------------
-    - `job` (Job): Job object related to the update."""
+    - `job` (Job): Job object related to the update.
+
+    Constraints:
+    ------------
+    - `type` must be one of 'received' or 'sent'."""
 
     date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
     note = Column(String, nullable=True)
@@ -467,3 +539,5 @@ class JobApplicationUpdate(Owned, Base):
 
     # Relationships
     job = relationship("Job", back_populates="updates")
+
+    __table_args__ = (CheckConstraint("type IN ('received', 'sent')", name="valid_update_type_values"),)
