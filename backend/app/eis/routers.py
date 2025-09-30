@@ -67,7 +67,7 @@ def get_all(
     return filtered_results
 
 
-@scrapedjob_router.put("/update/{entry_id}", response_model=schemas.ScrapedJobOut)
+@scrapedjob_router.put("/{entry_id}", response_model=schemas.ScrapedJobOut)
 def update_scraped_job(
     entry_id: int,
     item: schemas.ScrapedJobUpdate,

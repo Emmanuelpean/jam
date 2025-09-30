@@ -303,6 +303,7 @@ class JobCreate(BaseModel):
     application_status: str | None = None
     application_note: str | None = None
     applied_via: str | None = None
+    followup_snooze_datetime: datetime | None
 
     # Foreign keys
     company_id: int | None = None
@@ -411,6 +412,7 @@ class JobMinOut(OwnedOut):
     deadline: datetime | None
     note: str | None
     attendance_type: str | None
+    followup_snooze_datetime: datetime | None
     application_date: datetime
     application_url: str | None = None
     application_status: str

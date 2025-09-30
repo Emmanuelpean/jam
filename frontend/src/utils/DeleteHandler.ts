@@ -81,7 +81,7 @@ export const createActiveHandler = ({
 				return false; // User cancelled
 			}
 
-			await api.put(`${endpoint}/set_active/${item.id}`, { is_active: false }, token);
+			await api.put(`${endpoint}/${item.id}`, { is_active: false }, token);
 			removeItem?.(item.id);
 			return true;
 		} catch (error) {

@@ -94,7 +94,7 @@ function AdminProtectedRoute({ children }: ProtectedRouteProps): JSX.Element {
 }
 
 function App(): JSX.Element {
-	const { toasts, showSuccess, showError, showWarning, showInfo, hideToast } = useToast();
+	const { toasts, showToastSuccess, showToastError, showToastWarning, showToastInfo, hideToast } = useToast();
 
 	return (
 		<BrowserRouter basename="/jam">
@@ -102,7 +102,12 @@ function App(): JSX.Element {
 				<LoadingProvider>
 					<ToastContext.Provider
 						// @ts-ignore
-						value={{ showSuccess, showError, showWarning, showInfo }}
+						value={{
+							showToastSuccess,
+							showToastError,
+							showToastWarning,
+							showToastInfo,
+						}}
 					>
 						<AppLayout>
 							<Routes>

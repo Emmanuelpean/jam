@@ -34,7 +34,7 @@ const UserSettingsPage: React.FC = () => {
 		new_password: "",
 		update_limit: 0,
 	});
-	const { showSuccess, showError } = useGlobalToast();
+	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState<boolean>(false);
 	const { showLoading, hideLoading } = useLoading();
@@ -58,7 +58,7 @@ const UserSettingsPage: React.FC = () => {
 				}));
 			} catch (error) {
 				console.error("Failed to load user settings:", error);
-				showError("Failed to load user settings. Please refresh the page.");
+				showToastError("Failed to load user settings. Please refresh the page.");
 			} finally {
 				hideLoading();
 			}
@@ -71,9 +71,9 @@ const UserSettingsPage: React.FC = () => {
 		if (!token) return;
 		try {
 			await exportApi.download("jobs_export.csv", token);
-			showSuccess("Data downloaded");
+			showToastSuccess("Data downloaded");
 		} catch (e) {
-			showError("Failed to download data");
+			showToastError("Failed to download data");
 		}
 	};
 
@@ -194,15 +194,15 @@ const UserSettingsPage: React.FC = () => {
 					confirm_password: "",
 				}));
 			}
-			showSuccess("User settings updated successfully.");
+			showToastSuccess("User settings updated successfully.");
 		} catch (error: unknown) {
 			const apiError = error as ApiError;
 			if (apiError.status === 400) {
-				showError("Email is already in use. Please try a different email.");
+				showToastError("Email is already in use. Please try a different email.");
 			} else if (apiError.status === 401) {
-				showError("Current password is incorrect. Please try again.");
+				showToastError("Current password is incorrect. Please try again.");
 			} else {
-				showError("An unknown error occurred. Please try again later.");
+				showToastError("An unknown error occurred. Please try again later.");
 			}
 		}
 		setSubmitting(false);

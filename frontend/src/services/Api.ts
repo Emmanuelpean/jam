@@ -217,7 +217,7 @@ export const exportApi: CrudApi & { download: (filename: string, token: string) 
 export const scrapedJobApi: ScrapedJobApi = {
 	...createCrudApi("scraped_jobs"),
 	setImported: (id: number | string, data: ScrapedJobUpdate, token: string) => {
-		api.put(`scraped_jobs/update/${id}`, data, token).catch((error) => {
+		api.put(`scraped_jobs/${id}`, data, token).catch((error) => {
 			console.error("Failed to mark scraped job as imported:", error);
 		});
 	},

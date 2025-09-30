@@ -1,6 +1,6 @@
 """API router for dashboard data"""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import or_
@@ -63,8 +63,11 @@ def get_dashboard_data(
         job_schema = schemas.JobOut.model_validate(job, from_attributes=True)
 
         # If we have a last update date, check if it's older than the threshold
-        if job_schema.days_since_last_update is not None:
-            if job_schema.days_since_last_update > chase_threshold:
+        if job_schema.days_since_last_update is not None and job_schema.days_since_last_update > chase_threshold:
+            if job_schema.followup_snooze_datetime is not None:
+                if job_schema.followup_snooze_datetime < datetime.now(timezone.utc):
+                    needs_chase.append(job_schema)
+            else:
                 needs_chase.append(job_schema)
 
     # ----------------------------------------------------- UPDATES ----------------------------------------------------

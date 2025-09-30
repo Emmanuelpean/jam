@@ -25,7 +25,7 @@ function AuthForm(): JSX.Element {
 	const { login, register, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { showSuccess, showError } = useGlobalToast();
+	const { showToastSuccess, showToastError } = useGlobalToast();
 	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
 
 	useEffect(() => {
@@ -123,13 +123,13 @@ function AuthForm(): JSX.Element {
 				setIsLogin(true);
 				resetForm();
 				navigate("/login");
-				showSuccess("Account created successfully! You can now log in.", "Registration Successful");
+				showToastSuccess("Account created successfully! You can now log in.", "Registration Successful");
 			}
 		} else {
 			// Use centralized error messages from AuthContext
 			const title = isLoginAction ? "Login Failed" : "Registration Failed";
 			const message = result.error || "An unknown error occurred";
-			showError(message, title);
+			showToastError(message, title);
 		}
 	};
 
@@ -158,7 +158,7 @@ function AuthForm(): JSX.Element {
 			const message = isLogin
 				? "Failed to login. An unknown error occurred"
 				: "Failed to create an account. An unknown error occurred";
-			showError(message, title);
+			showToastError(message, title);
 		} finally {
 			setLoading(false);
 		}

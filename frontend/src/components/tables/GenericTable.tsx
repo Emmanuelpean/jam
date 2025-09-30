@@ -12,12 +12,25 @@ import { TableColumn } from "../rendering/view/TableColumns";
 import "./GenericTable.css";
 import { useLoading } from "../../contexts/LoadingContext";
 import { createActiveHandler, createDeleteHandler } from "../../utils/DeleteHandler";
+import ContextMenu from "./ContextMenu";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
 
 export type Direction = "asc" | "desc";
 
 export interface SortConfig {
 	key: string;
 	direction: Direction;
+}
+
+export interface MenuItem {
+	action: string;
+	icon?: string;
+	text: string;
+	id?: string;
+	color?: string;
+	function?: (e: MouseEvent) => void;
+	hasSubmenu?: boolean;
+	submenu?: MenuItem[];
 }
 
 export interface ContextMenuState {
@@ -123,6 +136,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 	const [searchTerm, setSearchTerm] = useState<string>("");
 
 	// UI state
+	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 	const [currentPage, setCurrentPage] = useState<number>(0);
 	const [pageSize, setPageSize] = useState<number>(20);
@@ -371,28 +385,6 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		});
 	}
 
-	// Context menu handlers
-	const handleContextAction = (action: string, e: MouseEvent): void => {
-		e.stopPropagation();
-		if (contextMenu?.item) {
-			switch (action) {
-				case "view":
-					openViewModal(contextMenu.item);
-					break;
-				case "edit":
-					openEditModal(contextMenu.item);
-					break;
-				case "import":
-					openImportModal(contextMenu.item);
-					break;
-				default:
-					handleDelete(contextMenu.item).then(() => null);
-					break;
-			}
-		}
-		setContextMenu(null);
-	};
-
 	// Success handlers
 	const handleEditSuccess = (updatedItem: any): void => {
 		updateItem(updatedItem);
@@ -448,40 +440,82 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		setCurrentPage(0);
 	};
 
+	const handleSnoozeItem = (weeks: number) => {
+		return async (item: any) => {
+			try {
+				const snoozeDate = new Date();
+				snoozeDate.setDate(snoozeDate.getDate() + weeks * 7);
+
+				await api.put(`${endpoint}/${item.id}`, { followup_snooze_datetime: snoozeDate.toISOString() }, token);
+				removeItem(item.id);
+				showToastSuccess("Job snoozed successfully");
+			} catch (error) {
+				showToastError(`Failed to snooze ${itemType}. Please try again.`);
+				hideLoading();
+			} finally {
+				setContextMenu(null);
+			}
+		};
+	};
+
 	// Get context menu items based on mode
 	const getContextMenuItems = () => {
-		if (mode === "import") {
-			return [
-				{ action: "import", icon: "upload", text: "Import", id: "context-menu-import" },
-				{
-					action: "delete",
-					icon: "trash",
-					text: "Delete",
-					id: "context-menu-delete",
-					color: "#dc3545",
-				},
-			];
-		}
-
-		return [
-			{ action: "view", icon: "eye", text: "View", id: "context-menu-view" },
-			{ action: "edit", icon: "pencil", text: "Edit", id: "context-menu-edit" },
+		const baseItems: MenuItem[] = [
+			{ action: "view", icon: "eye", text: "View", id: "context-menu-view", function: openViewModal },
+			{ action: "edit", icon: "pencil", text: "Edit", id: "context-menu-edit", function: openEditModal },
+			{
+				action: "snooze",
+				icon: "alarm",
+				text: "Snooze for...",
+				id: "context-menu-snooze",
+				hasSubmenu: true,
+				submenu: [
+					{ action: "snooze-1", text: "1 week", function: handleSnoozeItem(1) },
+					{ action: "snooze-2", text: "2 weeks", function: handleSnoozeItem(2) },
+					{ action: "snooze-3", text: "3 weeks", function: handleSnoozeItem(3) },
+					{ action: "snooze-4", text: "4 weeks", function: handleSnoozeItem(4) },
+				],
+			},
 			{
 				action: "delete",
 				icon: "trash",
 				text: "Delete",
 				id: "context-menu-delete",
 				color: "#dc3545",
+				function: handleDelete,
 			},
 		];
+
+		if (mode === "import") {
+			return [
+				{
+					action: "import",
+					icon: "upload",
+					text: "Import",
+					id: "context-menu-import",
+					function: openImportModal,
+				},
+				{
+					action: "delete",
+					icon: "trash",
+					text: "Delete",
+					id: "context-menu-delete",
+					color: "#dc3545",
+					function: handleDelete,
+				},
+			];
+		}
+
+		return baseItems;
 	};
 
 	// Get button text based on mode
 	const getAddButtonText = () => {
 		if (mode === "import") {
 			return `Import ${itemType}`;
+		} else {
+			return `Add ${itemType}`;
 		}
-		return `Add ${itemType}`;
 	};
 
 	// Get button icon based on mode
@@ -712,44 +746,18 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 
 			{/* Context Menu */}
 			{contextMenu?.show && (
-				<div
-					className="context-menu"
-					style={{
-						position: "fixed",
-						top: contextMenu.y,
-						left: contextMenu.x,
-						zIndex: 9999,
-						backgroundColor: "white",
-						border: "1px solid #ccc",
-						borderRadius: "8px",
-						boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-						padding: "4px 0",
-						minWidth: compact ? "120px" : "150px",
-						overflow: "hidden",
+				<ContextMenu
+					position={{ x: contextMenu.x, y: contextMenu.y }}
+					items={getContextMenuItems()}
+					selectedItem={contextMenu.item}
+					onClose={() => setContextMenu(null)}
+					onItemClick={(menuItem, item) => {
+						if (menuItem.function) {
+							menuItem.function(item);
+						}
 					}}
-					onClick={(e) => e.stopPropagation()}
-				>
-					{getContextMenuItems().map(({ action, icon, text, id, color }) => (
-						<div
-							key={action}
-							className="context-menu-item"
-							style={{
-								padding: compact ? "6px 12px" : "8px 16px",
-								cursor: "pointer",
-								fontSize: compact ? "13px" : "14px",
-								borderBottom: action !== "delete" ? "1px solid #eee" : "none",
-								color: color || "inherit",
-							}}
-							onClick={(e) => handleContextAction(action, e)}
-							onMouseEnter={(e) => ((e.target as HTMLElement).style.backgroundColor = "#f8f9fa")}
-							onMouseLeave={(e) => ((e.target as HTMLElement).style.backgroundColor = "white")}
-							id={id}
-						>
-							<i className={`bi bi-${icon} me-2`}></i>
-							{text}
-						</div>
-					))}
-				</div>
+					compact={compact}
+				/>
 			)}
 
 			{children ? children(getEffectiveData()) : null}
