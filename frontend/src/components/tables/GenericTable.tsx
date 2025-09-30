@@ -348,7 +348,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 		setContextMenu({ item, x: event.clientX, y: event.clientY, show: true });
 	};
 
-	let handleDelete: (item: any) => Promise<void>;
+	let handleDelete: (item: any) => Promise<boolean>;
 	if (mode === "import") {
 		handleDelete = createActiveHandler({
 			endpoint: endpoint,

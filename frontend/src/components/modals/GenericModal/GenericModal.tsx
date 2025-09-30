@@ -354,11 +354,9 @@ const GenericModal = ({
 	});
 
 	const handleDeleteClick = async () => {
-		try {
-			await handleDelete(effectiveData);
+		const confirm = await handleDelete(effectiveData);
+		if (confirm) {
 			handleHideImmediate();
-		} catch (error) {
-			// Error already handled by createDeleteHandler
 		}
 	};
 

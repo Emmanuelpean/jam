@@ -41,7 +41,7 @@ const useGenericAlert = () => {
 		onSuccess = null,
 		onCancel = null,
 	}: AlertConfig): Promise<boolean> => {
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			setAlertState({
 				show: true,
 				title,
@@ -59,7 +59,7 @@ const useGenericAlert = () => {
 				},
 				onCancel: () => {
 					if (onCancel) onCancel();
-					reject(false);
+					resolve(false);
 					hideAlert();
 				},
 			});
