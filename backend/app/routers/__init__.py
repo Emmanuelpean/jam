@@ -14,35 +14,41 @@ from starlette.requests import Request
 from app import database, models, oauth2
 
 
-def filter_owned_relationships(
-    obj: Any,
+NOT_ALLOWED_EXCEPTION = HTTPException(
+    status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
+)
+
+
+def filter_out_non_owned(
+    entry: Any,
     current_user_id: int,
     processed_objects: set = None,
 ) -> Any:
     """Recursively filter out related objects that don't belong to the current user.
-    :param obj: The SQLAlchemy model instance to filter
+    :param entry: The SQLAlchemy model instance to filter
     :param current_user_id: The ID of the current user
-    :param processed_objects: Set to track processed objects (prevents infinite recursion)"""
+    :param processed_objects: Set to track processed objects (prevents infinite recursion)
+    :return: The filtered SQLAlchemy model instance"""
 
     if processed_objects is None:
         processed_objects = set()
 
     # Avoid infinite recursion
-    obj_id = id(obj)
+    obj_id = id(entry)
     if obj_id in processed_objects:
-        return obj
+        return entry
     processed_objects.add(obj_id)
 
     # Get the SQLAlchemy mapper for this object
-    if not hasattr(obj, "__mapper__"):
-        return obj
+    if not hasattr(entry, "__mapper__"):
+        return entry
 
-    mapper = obj.__mapper__
+    mapper = entry.__mapper__
 
     # Iterate through all relationships
     for relationship_prop in mapper.relationships:
         attr_name = relationship_prop.key
-        related_value = getattr(obj, attr_name, None)
+        related_value = getattr(entry, attr_name, None)
 
         if related_value is None:
             continue
@@ -55,32 +61,32 @@ def filter_owned_relationships(
                 if hasattr(item, "owner_id"):
                     if item.owner_id == current_user_id:
                         # Recursively filter this item too
-                        filtered_item = filter_owned_relationships(item, current_user_id, processed_objects)
+                        filtered_item = filter_out_non_owned(item, current_user_id, processed_objects)
                         filtered_list.append(filtered_item)
                 else:
                     # Keep items without owner_id (like system data)
-                    filtered_item = filter_owned_relationships(item, current_user_id, processed_objects)
+                    filtered_item = filter_out_non_owned(item, current_user_id, processed_objects)
                     filtered_list.append(filtered_item)
 
             # Replace the relationship with filtered list
-            setattr(obj, attr_name, filtered_list)
+            setattr(entry, attr_name, filtered_list)
 
         # Handle single relationships (many-to-one, one-to-one)
         else:
             if hasattr(related_value, "owner_id"):
                 if related_value.owner_id != current_user_id:
                     # Set to None if not owned by current user
-                    setattr(obj, attr_name, None)
+                    setattr(entry, attr_name, None)
                 else:
                     # Recursively filter the related object
-                    filtered_related = filter_owned_relationships(related_value, current_user_id, processed_objects)
-                    setattr(obj, attr_name, filtered_related)
+                    filtered_related = filter_out_non_owned(related_value, current_user_id, processed_objects)
+                    setattr(entry, attr_name, filtered_related)
             else:
                 # Keep and recursively filter items without owner_id
-                filtered_related = filter_owned_relationships(related_value, current_user_id, processed_objects)
-                setattr(obj, attr_name, filtered_related)
+                filtered_related = filter_out_non_owned(related_value, current_user_id, processed_objects)
+                setattr(entry, attr_name, filtered_related)
 
-    return obj
+    return entry
 
 
 def filter_query(
@@ -124,6 +130,14 @@ def filter_query(
     return query
 
 
+def assert_admin(user: models.User) -> None:
+    """Check if the user is an admin.
+    :param user: The user to check."""
+
+    if not user.is_admin:
+        raise NOT_ALLOWED_EXCEPTION
+
+
 def generate_data_table_crud_router(
     *,
     table_model,
@@ -158,7 +172,9 @@ def generate_data_table_crud_router(
     if router is None:
         router = APIRouter(prefix=f"/{endpoint}", tags=[endpoint])
 
-    if not allowed_actions:
+    NOT_FOUND_EXCEPTION = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
+
+    if allowed_actions is None:
         allowed_actions = ["get", "post", "put", "delete"]
 
     def check_authorisation(
@@ -166,21 +182,18 @@ def generate_data_table_crud_router(
         current_user: models.User,
     ) -> None:
         """Check if the user is allowed to perform the action on the entry.
+        Raises HTTPException if not the endpoint is admin only and the user is not an admin or if the entry has an
+        owner_id and it does not match the current user's ID.
         :param entry: The database entry.
         :param current_user: The current authenticated user."""
 
-        error = HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorised to perform requested action",
-        )
-
         # Raise the error if the table is admin only and the user is not an admin
         if admin_only and not current_user.is_admin:
-            raise error
+            raise NOT_ALLOWED_EXCEPTION
 
         # Raise the error if the entry has an owner_id, and it does not match the current user's ID
         if hasattr(entry, "owner_id") and entry.owner_id != current_user.id:
-            raise error
+            raise NOT_ALLOWED_EXCEPTION
 
     def upsert_many_to_many(
         db: Session,
@@ -190,7 +203,7 @@ def generate_data_table_crud_router(
         clear_existing: bool = False,
     ):
         """Handle creation or update of many-to-many relationships with owner check.
-        ATTENTION: THIS IS NOT CURRENTLY COMPATIBLE WITH TABLES WITHOUT AN OWNER ID FIELD.
+        Ensures that if the entry being linked has an owner_id, it matches the current user's ID.
         :param db: Database session
         :param entry_id: ID of the entry to which the relationships are being added
         :param item_data: Data containing the relationships to be added
@@ -212,7 +225,10 @@ def generate_data_table_crud_router(
 
                 for value_id in item_data[field_name]:
                     related_obj = db.query(related_model).filter(related_model.id == value_id).first()
-                    if related_obj and related_obj.owner_id == owner_id:
+                    if not related_obj:
+                        continue
+
+                    if not hasattr(related_obj, "owner_id") or getattr(related_obj, "owner_id") == owner_id:
                         db.execute(association_table.insert().values(**{local_key: entry_id, remote_key: value_id}))
 
     # ------------------------------------------------------- GET ------------------------------------------------------
@@ -230,12 +246,11 @@ def generate_data_table_crud_router(
         :param db: Database session.
         :param current_user: Authenticated user.
         :param limit: Maximum number of entries to return.
-        :return: List of entries."""
+        :return: List of entries.
+        :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
         if "get" not in allowed_actions:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
-            )
+            raise NOT_ALLOWED_EXCEPTION
 
         # Start with base query
         if not admin_only:
@@ -243,9 +258,7 @@ def generate_data_table_crud_router(
         elif current_user.is_admin:
             query = db.query(table_model)
         else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
-            )
+            raise NOT_ALLOWED_EXCEPTION
 
         # Get all query parameters except 'limit'
         filter_params = dict(request.query_params)
@@ -253,8 +266,7 @@ def generate_data_table_crud_router(
         query = filter_query(query, table_model, filter_params)
 
         results = query.limit(limit).all()
-        filtered_results = [filter_owned_relationships(result, current_user.id) for result in results]
-        return filtered_results
+        return [filter_out_non_owned(result, current_user.id) for result in results]
 
     # noinspection PyTypeHints
     @router.get("/{entry_id}", response_model=out_schema)
@@ -272,18 +284,16 @@ def generate_data_table_crud_router(
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
         if "get" not in allowed_actions:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
-            )
+            raise NOT_ALLOWED_EXCEPTION
 
         entry = db.query(table_model).filter(table_model.id == entry_id).first()
 
         if not entry:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
+            raise NOT_FOUND_EXCEPTION
 
         check_authorisation(entry, current_user)
 
-        return filter_owned_relationships(entry, current_user.id)
+        return filter_out_non_owned(entry, current_user.id)
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
@@ -298,17 +308,14 @@ def generate_data_table_crud_router(
         :param item: Data for the new entry.
         :param db: Database session.
         :param current_user: Authenticated user.
-        :return: The created entry."""
+        :return: The created entry.
+        :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
         if "post" not in allowed_actions:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
-            )
+            raise NOT_ALLOWED_EXCEPTION
 
         if admin_only and not current_user.is_admin:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
-            )
+            raise NOT_ALLOWED_EXCEPTION
 
         # Extract the item data and exclude many-to-many fields from main creation
         item_dict = item.model_dump()
@@ -322,6 +329,7 @@ def generate_data_table_crud_router(
                 if field_name in main_data:
                     m2m_data[field_name] = main_data.pop(field_name)
 
+        # Add the owner id if the table has an owner_id field
         if hasattr(table_model, "owner_id"):
             main_data["owner_id"] = current_user.id
 
@@ -337,7 +345,7 @@ def generate_data_table_crud_router(
             db.commit()
             db.refresh(new_entry)
 
-        return filter_owned_relationships(new_entry, current_user.id)
+        return filter_out_non_owned(new_entry, current_user.id)
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
@@ -360,15 +368,14 @@ def generate_data_table_crud_router(
         :raises: HTTPException with a 400 status code if no field is provided for the update."""
 
         if "put" not in allowed_actions:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
-            )
+            raise NOT_ALLOWED_EXCEPTION
 
+        # Get the entry to update
         query = db.query(table_model).filter(table_model.id == entry_id)
         entry = query.first()
 
         if not entry:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
+            raise NOT_FOUND_EXCEPTION
 
         # Ensure that the user is authorised to modify this entry
         check_authorisation(entry, current_user)
@@ -388,9 +395,9 @@ def generate_data_table_crud_router(
                 if field_name in main_data:
                     m2m_data[field_name] = main_data.pop(field_name)
 
-        # Update main fields if any
-        if main_data:
-            query.update(main_data, synchronize_session=False)
+        # Update the record
+        for field, value in main_data.items():
+            setattr(entry, field, value)
 
         # Handle many-to-many relationships
         if m2m_data:
@@ -399,7 +406,7 @@ def generate_data_table_crud_router(
         db.commit()
 
         # Return the updated entry
-        return filter_owned_relationships(query.first(), current_user.id)
+        return filter_out_non_owned(query.first(), current_user.id)
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
@@ -418,16 +425,16 @@ def generate_data_table_crud_router(
         :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
         if "delete" not in allowed_actions:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
-            )
+            raise NOT_ALLOWED_EXCEPTION
 
+        # Get the entry to delete
         query = db.query(table_model).filter(table_model.id == entry_id)
         entry = query.first()
 
         if not entry:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
+            raise NOT_FOUND_EXCEPTION
 
+        # Ensure that the user is authorised to delete this entry
         check_authorisation(entry, current_user)
 
         # Delete many-to-many relationships first if they exist

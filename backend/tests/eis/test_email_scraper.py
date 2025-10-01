@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.eis import schemas
+from app.models import Setting
 from app.eis.email_scraper import clean_email_address, get_user_id_from_email, GmailScraper
 from app.eis.job_scraper import extract_indeed_jobs_from_email
 from app.eis.models import JobAlertEmail, ScrapedJob
@@ -15,9 +16,8 @@ from tests.eis.test_job_scraper import MockLinkedinJobScraper, MockIndeedJobScra
 # ------------------------------------------------------ FIXTURES ------------------------------------------------------
 
 
-def create_gmail_scraper(**kwargs) -> GmailScraper:
-    """Create a GmailScraper instance for testing with mocked file dependencies
-    :param kwargs: keyword arguments passed to the GmailScraper constructor"""
+def create_gmail_scraper() -> GmailScraper:
+    """Create a GmailScraper instance for testing with mocked file dependencies"""
 
     with (
         patch("builtins.open", create=True),
@@ -59,7 +59,7 @@ def create_gmail_scraper(**kwargs) -> GmailScraper:
             mock_flow.return_value = mock_flow_instance
 
             # Create scraper with mocked dependencies
-            scraper = GmailScraper(secrets_file="test_secrets.json", token_file="test_token.json", **kwargs)
+            scraper = GmailScraper(secrets_file="test_secrets.json", token_file="test_token.json")
 
             return scraper
 
@@ -87,17 +87,25 @@ def patch_get_indeed_redirected_url(monkeypatch) -> None:
 
 
 @pytest.fixture
-def gmail_scraper() -> GmailScraper:
+def gmail_scraper(session) -> GmailScraper:
     """Create a GmailScraper instance for testing with mocked file dependencies."""
 
-    return create_gmail_scraper(skip_indeed_brightapi_scraping=False)
+    # noinspection PyArgumentList
+    entry = Setting(name="indeed_scraper", value="brightapi")
+    session.add(entry)
+    session.commit()
+    return create_gmail_scraper()
 
 
 @pytest.fixture
-def gmail_scraper_with_brightapi_skip() -> GmailScraper:
+def gmail_scraper_with_brightapi_skip(session) -> GmailScraper:
     """Create a GmailScraper instance with BrightAPI skip enabled."""
 
-    return create_gmail_scraper(skip_indeed_brightapi_scraping=True)
+    # noinspection PyArgumentList
+    entry = Setting(name="indeed_scraper", value="email")
+    session.add(entry)
+    session.commit()
+    return create_gmail_scraper()
 
 
 def create_email_data(

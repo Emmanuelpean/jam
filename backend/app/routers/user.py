@@ -4,17 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from app import utils, models, oauth2, database, schemas
-from app.routers import filter_query
+from app.routers import filter_query, assert_admin
 
 user_router = APIRouter(prefix="/users", tags=["users"])
-
-
-def assert_admin(user: models.User) -> None:
-    """Check if the user is an admin.
-    :param user: The user to check."""
-
-    if not user.is_admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to view this resource")
 
 
 @user_router.get("/", response_model=list[schemas.UserOut])
@@ -33,7 +25,7 @@ def get_all_users(
 
     query = db.query(models.User)
 
-    # Get all query parameters
+    # Filter the query
     filter_params = dict(request.query_params)
     query = filter_query(query, models.User, filter_params)
 
@@ -60,7 +52,7 @@ def get_one_user(
 
     user = db.query(models.User).filter(models.User.id == entry_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
 
 
@@ -75,31 +67,31 @@ def update_current_user_profile(
     :param current_user: The current authenticated user.
     :param db: The database session."""
 
-    user_update = user_update.model_dump(exclude_defaults=True)
+    user_update_dict = user_update.model_dump(exclude_defaults=True)
 
     # Hash password if it's being updated
-    if "password" in user_update:
-        user_update["password"] = utils.hash_password(user_update["password"])
+    if "password" in user_update_dict:
+        user_update_dict["password"] = utils.hash_password(user_update_dict["password"])
 
     # Determine if the user is updating the password or email
-    requires_password_check = "password" in user_update or "email" in user_update
+    requires_password_check = "password" in user_update_dict or "email" in user_update_dict
 
     # Get the user record to update
     user_db = db.query(models.User).filter(models.User.id == current_user.id).first()
-    current_password = user_update.get("current_password", "")
 
     # Update password/email
+    current_password = user_update_dict.get("current_password", "")
     if requires_password_check and not utils.verify_password(current_password, user_db.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="The current password is required")
 
     # Validate email
     other_users = db.query(models.User).filter(models.User.id != current_user.id).all()
     emails = [u.email for u in other_users]
-    if "email" in user_update and user_update["email"] in emails:
+    if "email" in user_update_dict and user_update_dict["email"] in emails:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
     # Update the user record
-    for field, value in user_update.items():
+    for field, value in user_update_dict.items():
         setattr(user_db, field, value)
 
     db.commit()
@@ -118,23 +110,23 @@ def update_user(
 
     assert_admin(current_user)
 
-    user_update = user_update.model_dump(exclude_defaults=True)
+    user_update_dict = user_update.model_dump(exclude_defaults=True)
 
-    # Hash password if it's being updated
-    if "password" in user_update:
-        user_update["password"] = utils.hash_password(user_update["password"])
+    # Hash password if provided
+    if "password" in user_update_dict:
+        user_update_dict["password"] = utils.hash_password(user_update_dict["password"])
 
     # Get the user record to update
     user_db = db.query(models.User).filter(models.User.id == entry_id).first()
 
-    # Validate email
+    # Validate email if provided
     other_users = db.query(models.User).filter(models.User.id != entry_id).all()
     emails = [u.email for u in other_users]
-    if "email" in user_update and user_update["email"] in emails:
+    if "email" in user_update_dict and user_update_dict["email"] in emails:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
     # Update the user record
-    for field, value in user_update.items():
+    for field, value in user_update_dict.items():
         setattr(user_db, field, value)
 
     db.commit()
@@ -151,9 +143,10 @@ def create_user(
     :param user: The user data.
     :param db: The database session."""
 
-    settings = db.query(models.Setting).filter(models.Setting.name == "allowlist").all()
+    # Check the user can be created
+    settings = db.query(models.Setting).filter(models.Setting.name == "allowlist").first()
     if settings:
-        emails_allowed = settings[0].value.split(",")
+        emails_allowed = settings.value.split(",")
         if user.email not in emails_allowed:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not allowed")
 
@@ -165,8 +158,7 @@ def create_user(
 
     # Hash the password and create the user
     user.password = utils.hash_password(user.password)
-    # noinspection PyArgumentList
-    new_user = models.User(**user.model_dump())
+    new_user = models.User(**user.model_dump())  # noqa
     db.add(new_user)
     db.commit()
 

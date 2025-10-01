@@ -25,7 +25,7 @@ from app.database import session_local
 from app.eis import schemas
 from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScraper, extract_indeed_jobs_from_email
 from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
-from app.models import User
+from app.models import User, get_setting
 from app.utils import get_gmail_logger
 
 logger = get_gmail_logger()
@@ -59,16 +59,13 @@ class GmailScraper(object):
         self,
         token_file: str = "token.pickle",
         secrets_file: str = "eis_secrets.json",
-        skip_indeed_brightapi_scraping: bool = True,
     ) -> None:
         """Object constructor
         :param token_file: Path to the token pickle file
-        :param secrets_file: Path to the secrets JSON file containing OAuth credentials
-        :param skip_indeed_brightapi_scraping: if True, use the email content to extract the indeed job data."""
+        :param secrets_file: Path to the secrets JSON file containing OAuth credentials"""
 
         self.token_file = token_file
         self.secrets_file = secrets_file
-        self.skip_indeed_brightapi_scraping = skip_indeed_brightapi_scraping
         self.SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
         self.service = None
 
@@ -127,21 +124,28 @@ class GmailScraper(object):
         :param timedelta_days: Number of days to search for emails
         :return: List of message IDs matching the query"""
 
+        # Build the query
         query = ""
-        # query += f" from:{sender_email}" if sender_email else ""
         query += f" deliveredto:{sender_email}" if sender_email else ""
         query += " in:inbox" if inbox_only else ""
         query += f" newer_than:{timedelta_days}d" if timedelta_days else ""
         query = query.strip()
 
+        # Execute the query and extract the message IDs
         result = self.service.users().messages().list(userId="me", q=query).execute()
         messages = result.get("messages", [])
         return [msg["id"] for msg in messages]
 
-    def _extract_email_body(self, payload: dict) -> str:
+    @staticmethod
+    def _extract_email_body(payload: dict) -> str:
         """Extract email body from payload
         :param payload: Email payload dictionary
         :return: Email body content as a string"""
+
+        def decode_base64(data_: str) -> str:
+            """Decode base64 URL-safe string"""
+
+            return base64.urlsafe_b64decode(data_).decode("utf-8")
 
         body = ""
 
@@ -149,23 +153,17 @@ class GmailScraper(object):
             for part in payload["parts"]:
                 if part["mimeType"] == "text/plain":
                     data = part["body"]["data"]
-                    body = self._decode_base64(data)
+                    body = decode_base64(data)
                     break
                 elif part["mimeType"] == "text/html":
                     data = part["body"]["data"]
-                    body = self._decode_base64(data)
+                    body = decode_base64(data)
         else:
             if payload["mimeType"] == "text/plain":
                 data = payload["body"]["data"]
-                body = self._decode_base64(data)
+                body = decode_base64(data)
 
         return body
-
-    @staticmethod
-    def _decode_base64(data: str) -> str:
-        """Decode base64 URL-safe string"""
-
-        return base64.urlsafe_b64decode(data).decode("utf-8")
 
     def get_email_data(
         self,
@@ -190,7 +188,7 @@ class GmailScraper(object):
         if "linkedin" in body.lower():
             platform = "linkedin"
         elif "indeed" in body.lower():
-            platform = "indeed"
+            platform = "indeed"  # TODO add veganjobs
         else:
             raise ValueError("Email body does not contain a valid platform identifier.")
 
@@ -400,7 +398,6 @@ class GmailScraper(object):
             # Service log
             # noinspection PyArgumentList
             service_log_entry = EisServiceLog(
-                name="Email Scraper Service",
                 run_datetime=start_time,
             )
             db.add(service_log_entry)
@@ -503,7 +500,7 @@ class GmailScraper(object):
         elif email_record.platform == "indeed":
 
             # Use the email body to extract the job information instead of using the Bright API
-            if self.skip_indeed_brightapi_scraping:
+            if get_setting(db, "indeed_scraper", "brightapi") == "email":
                 jobs = extract_indeed_jobs_from_email(email_record.body)
                 for job in jobs:
                     try:
@@ -558,7 +555,7 @@ class GmailScraper(object):
             if job_record.emails[0].platform == "linkedin":
                 scrapper = LinkedinJobScraper(job_record.external_job_id)
             elif job_record.emails[0].platform == "indeed":
-                if not self.skip_indeed_brightapi_scraping:
+                if not get_setting(db, "indeed_scraper", "brightapi") == "email":
                     scrapper = IndeedJobScraper(job_record.external_job_id)
                 else:
                     scrapper = None

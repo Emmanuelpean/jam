@@ -53,11 +53,15 @@ class SettingUpdate(SettingCreate):
 
 
 class UserCreate(BaseModel):
+    """User create schema"""
+
     password: str
     email: EmailStr
 
 
 class UserOut(Out):
+    """User output schema"""
+
     email: EmailStr
     theme: str
     is_admin: bool = False
@@ -69,11 +73,15 @@ class UserOut(Out):
 
 
 class UserLogin(BaseModel):
+    """User login schema"""
+
     email: EmailStr
     password: str
 
 
 class UserUpdate(BaseModel):
+    """User update schema"""
+
     current_password: str | None = None
     email: EmailStr | None = None
     theme: str | None = None

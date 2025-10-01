@@ -60,4 +60,5 @@ health_router = APIRouter(prefix="/health", tags=["health"])
 @app.get("/health")
 def health_check() -> dict:
     """Health check endpoint"""
+
     return {"status": "ok"}

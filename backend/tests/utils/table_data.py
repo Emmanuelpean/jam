@@ -1079,6 +1079,32 @@ JOB_DATA = [
         "cv_id": 16,
         "application_aggregator_id": 11,
     },
+    {
+        "title": "Software Engineer",
+        "salary_min": 45000,
+        "salary_max": 65000,
+        "description": "Join our growing tech team to build innovative solutions",
+        "personal_rating": 3,
+        "company_id": 1,
+        "location_id": 6,
+        "attendance_type": "on-site",
+        "owner_id": 1,
+        "source_id": 3,
+        "deadline": (current_date + timedelta(days=15)).strftime(DATE_FORMAT),
+    },
+    {
+        "title": "Sustainability Software Engineer",
+        "salary_min": 55000,
+        "salary_max": 75000,
+        "description": "Develop software solutions for renewable energy management",
+        "personal_rating": 3,
+        "company_id": 2,
+        "location_id": 4,
+        "attendance_type": "on-site",
+        "owner_id": 1,
+        "source_id": 2,
+        "deadline": (current_date + timedelta(days=20)).strftime(DATE_FORMAT),
+    },
 ]
 
 JOB_APPLICATION_DATETIME = [current_date - timedelta(weeks=i) for i in range(len(JOB_DATA))]
@@ -2026,7 +2052,6 @@ JOB_SCRAPED_DATA = [
 
 SERVICE_LOG_DATA = [
     {
-        "name": "Email Scraper Service",
         "run_duration": 45.2,
         "run_datetime": "2024-01-15 08:30:00",
         "is_success": True,
@@ -2035,7 +2060,6 @@ SERVICE_LOG_DATA = [
         "job_fail_n": 2,
     },
     {
-        "name": "Email Scraper Service",
         "run_duration": 123.8,
         "run_datetime": "2024-01-15 09:15:00",
         "is_success": True,
@@ -2044,7 +2068,6 @@ SERVICE_LOG_DATA = [
         "job_fail_n": 5,
     },
     {
-        "name": "Email Scraper Service",
         "run_duration": 67.4,
         "run_datetime": "2024-01-15 10:00:00",
         "is_success": False,
@@ -2053,7 +2076,6 @@ SERVICE_LOG_DATA = [
         "job_fail_n": 45,
     },
     {
-        "name": "Email Scraper Service",
         "run_duration": 89.1,
         "run_datetime": "2024-01-15 11:30:00",
         "is_success": True,
@@ -2062,7 +2084,6 @@ SERVICE_LOG_DATA = [
         "job_fail_n": 8,
     },
     {
-        "name": "Email Scraper Service",
         "run_duration": 12.3,
         "run_datetime": "2024-01-15 12:00:00",
         "is_success": True,
@@ -2071,7 +2092,6 @@ SERVICE_LOG_DATA = [
         "job_fail_n": None,
     },
     {
-        "name": "Email Scraper Service",
         "run_duration": 3.7,
         "run_datetime": "2024-01-15 13:45:00",
         "is_success": False,
@@ -2080,7 +2100,6 @@ SERVICE_LOG_DATA = [
         "job_fail_n": 12,
     },
     {
-        "name": "Email Scraper Service",
         "run_duration": 156.9,
         "run_datetime": "2024-01-15 14:20:00",
         "is_success": True,
@@ -2089,7 +2108,6 @@ SERVICE_LOG_DATA = [
         "job_fail_n": 18,
     },
     {
-        "name": "Email Scraper Service",
         "run_duration": 78.5,
         "run_datetime": "2024-01-15 15:30:00",
         "is_success": False,
@@ -2098,7 +2116,6 @@ SERVICE_LOG_DATA = [
         "job_fail_n": 67,
     },
     {
-        "name": "Email Scraper Service",
         "run_duration": 34.2,
         "run_datetime": "2024-01-16 08:00:00",
         "is_success": True,

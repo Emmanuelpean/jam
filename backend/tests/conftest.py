@@ -10,7 +10,7 @@ and providing the necessary utilities for seamless interactions with the applica
 
 import datetime as dt
 from functools import wraps
-from typing import Any, Generator
+from typing import Any, Generator, Callable
 
 import pytest
 from fastapi import status
@@ -411,10 +411,16 @@ def assert_ownership(item: list | dict, owner_id: int) -> None:
             assert_ownership(subitem, owner_id)
 
 
-def skip_if_action_not_enabled(action):
-    def decorator(func):
+def skip_if_action_not_enabled(action: str) -> Any:
+    """Decorator to skip a test if the specified action is not enabled in the actions_to_test list."""
+
+    def decorator(func: Callable) -> Any:
+        """Decorator to skip a test if the specified action is not enabled in the actions_to_test list."""
+
         @wraps(func)
-        def wrapper(self, *args, **kwargs):
+        def wrapper(self, *args, **kwargs) -> Any:
+            """Wrapper function to check if the action is enabled."""
+
             if action not in self.actions_to_test:
                 pytest.skip(f"Skipping {action.upper()} tests as per actions_to_test setting")
             return func(self, *args, **kwargs)

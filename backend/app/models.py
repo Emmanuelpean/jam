@@ -4,6 +4,7 @@ the database, with its fields defining the table's columns and relationships. Th
 to provide a shared structure for all models, including common attributes like `id`, `created_at`, and `created_by`."""
 
 import re
+from typing import Any
 
 from sqlalchemy import (
     Column,
@@ -105,6 +106,23 @@ class Setting(CommonBase, Base):
     value = Column(String, nullable=False)
     description = Column(String, nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
+
+
+def get_setting(
+    db,
+    name: str,
+    default: Any,
+):
+    """Retrieve a setting value from the database by its name.
+    :param db: Database session.
+    :param name: The name of the setting to retrieve.
+    :param default: The default value to return if the setting is not found."""
+
+    entry = db.query(Setting).filter(Setting.name == name).first()
+    if entry:
+        return entry.value
+    else:
+        return default
 
 
 class User(CommonBase, Base):

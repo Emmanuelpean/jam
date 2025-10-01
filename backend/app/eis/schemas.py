@@ -11,6 +11,8 @@ from app.schemas import BaseModel, OwnedOut, Out
 
 
 class JobAlertEmailCreate(BaseModel):
+    """Job Alert Email create schema"""
+
     external_email_id: str
     subject: str | None = None
     sender: str | None = None
@@ -21,17 +23,30 @@ class JobAlertEmailCreate(BaseModel):
 
 
 class JobAlertEmailUpdate(JobAlertEmailCreate):
+    """Job Alert Email update schema"""
+
     external_email_id: str | None = None
 
 
 class JobAlertEmailOut(JobAlertEmailCreate, OwnedOut):
-    jobs: list["ScrapedJobOut"]
+    """Job Alert Email output schema"""
+
+    jobs: list["ScrapedJobMinOut"]
+    service_log: "EisServiceLogMinOut"
+
+
+class JobAlertEmailMinOut(JobAlertEmailCreate, OwnedOut):
+    """Job Alert Email minimal output schema"""
+
+    pass
 
 
 # ----------------------------------------------------- SCRAPED JOB ----------------------------------------------------
 
 
 class ScrapedJobCreate(BaseModel):
+    """Scraped Job create schema"""
+
     external_job_id: str
     is_scraped: bool = False
     is_failed: bool = False
@@ -48,31 +63,33 @@ class ScrapedJobCreate(BaseModel):
     deadline: datetime | None = None
     company: str | None = None
     location: str | None = None
-    attendance_type: str | None = None
 
 
 class ScrapedJobUpdate(BaseModel):
-    """Represents scraped job postings from external sources with additional metadata."""
+    """Scraped Job update schema"""
 
-    id: int | None = None
     is_active: bool | None = None
     is_imported: bool | None = None
 
 
 class ScrapedJobOut(ScrapedJobCreate, OwnedOut):
-    """Represents scraped job postings from external sources with additional metadata."""
+    """Scraped Job output schema"""
+
+    emails: list[JobAlertEmailMinOut]
+
+
+class ScrapedJobMinOut(ScrapedJobCreate, OwnedOut):
+    """Scraped Job minimal output schema"""
 
     pass
-    # emails: list[JobAlertEmailOut]
 
 
 # ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
 
 
 class EisServiceLogCreate(BaseModel):
-    """Represents a log of a service run."""
+    """EIS Service Log create schema"""
 
-    name: str
     run_datetime: datetime
     run_duration: float | None = None
     is_success: bool | None = None
@@ -82,12 +99,18 @@ class EisServiceLogCreate(BaseModel):
 
 
 class EisServiceLogUpdate(EisServiceLogCreate):
-    """Represents a log of a service run."""
+    """EIS Service Log update schema"""
 
-    name: str | None = None
+    run_datetime: datetime | None = None
 
 
 class EisServiceLogOut(EisServiceLogCreate, Out):
-    """Represents a log of a service run."""
+    """EIS Service Log output schema"""
 
     emails: list[JobAlertEmailOut]
+
+
+class EisServiceLogMinOut(EisServiceLogCreate, Out):
+    """EIS Service Log minimal output schema"""
+
+    pass

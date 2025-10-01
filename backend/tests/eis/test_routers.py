@@ -1,3 +1,5 @@
+"""Tests for EIS routers."""
+
 from app.eis import schemas
 from tests.conftest import CRUDTestBase
 from tests.utils.table_data import JOB_ALERT_EMAIL_DATA, JOB_SCRAPED_DATA
