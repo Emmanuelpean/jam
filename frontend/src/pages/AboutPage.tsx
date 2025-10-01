@@ -148,7 +148,7 @@ const AboutPage = () => {
 					</Row>
 					<Row className="justify-content-center">
 						<Col lg={10}>
-							<div style={{ width: "100%", maxWidth: 1200, marginTop: "10px" }}>
+							<div style={{ width: "100%", marginTop: "10px" }}>
 								<Accordion>
 									{Object.entries(releaseNotes).map(([version, note], idx) => (
 										<Accordion.Item eventKey={String(idx)} key={version}>
