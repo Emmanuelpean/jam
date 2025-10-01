@@ -1963,6 +1963,7 @@ JOB_SCRAPED_DATA = [
         "scrape_error": "Page not found - job posting may have been removed",
         "title": "Data Engineer",
         "scrape_datetime": "2025-08-18T08:30:55.567890+00:00",
+        "is_imported": True,
     },
     {
         "external_job_id": "9988776655",
@@ -1972,6 +1973,7 @@ JOB_SCRAPED_DATA = [
         "scrape_error": "Scraping blocked - rate limit exceeded",
         "title": "ML Engineer",
         "scrape_datetime": "2025-08-20T19:25:08.678901+00:00",
+        "is_active": False,
     },
     {
         "external_job_id": "4123456789",
@@ -2046,6 +2048,11 @@ JOB_SCRAPED_DATA = [
         "scrape_error": "Rate limit exceeded - retry after 24 hours",
         "title": "Software Engineer",
         "scrape_datetime": "2025-09-11T15:30:42.678901+00:00",
+    },
+    {
+        "external_job_id": "soft1sdf23456789",
+        "owner_id": 1,
+        "is_scraped": False,
     },
 ]
 

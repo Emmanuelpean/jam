@@ -175,7 +175,7 @@ def generate_data_table_crud_router(
     NOT_FOUND_EXCEPTION = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
 
     if allowed_actions is None:
-        allowed_actions = ["get", "post", "put", "delete"]
+        allowed_actions = ["get", "get_all", "get_one", "post", "put", "delete"]
 
     def check_authorisation(
         entry: Any,
@@ -233,219 +233,210 @@ def generate_data_table_crud_router(
 
     # ------------------------------------------------------- GET ------------------------------------------------------
 
-    # noinspection PyTypeHints
-    @router.get("/", response_model=list[out_schema])
-    def get_all(
-        request: Request,
-        db: Session = Depends(database.get_db),
-        current_user: models.User = Depends(oauth2.get_current_user),
-        limit: int | None = None,
-    ):
-        """Retrieve all entries for the current user.
-        :param request: FastAPI request object to access query parameters
-        :param db: Database session.
-        :param current_user: Authenticated user.
-        :param limit: Maximum number of entries to return.
-        :return: List of entries.
-        :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
+    if "get" in allowed_actions or "get_all" in allowed_actions:
+        # noinspection PyTypeHints
+        @router.get("/", response_model=list[out_schema])
+        def get_all(
+            request: Request,
+            db: Session = Depends(database.get_db),
+            current_user: models.User = Depends(oauth2.get_current_user),
+            limit: int | None = None,
+        ):
+            """Retrieve all entries for the current user.
+            :param request: FastAPI request object to access query parameters
+            :param db: Database session.
+            :param current_user: Authenticated user.
+            :param limit: Maximum number of entries to return.
+            :return: List of entries.
+            :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-        if "get" not in allowed_actions:
-            raise NOT_ALLOWED_EXCEPTION
+            # Start with base query
+            if not admin_only:
+                query = db.query(table_model).filter(table_model.owner_id == current_user.id)
+            elif current_user.is_admin:
+                query = db.query(table_model)
+            else:
+                raise NOT_ALLOWED_EXCEPTION
 
-        # Start with base query
-        if not admin_only:
-            query = db.query(table_model).filter(table_model.owner_id == current_user.id)
-        elif current_user.is_admin:
-            query = db.query(table_model)
-        else:
-            raise NOT_ALLOWED_EXCEPTION
+            # Get all query parameters except 'limit'
+            filter_params = dict(request.query_params)
+            filter_params.pop("limit", None)  # Remove limit from filters
+            query = filter_query(query, table_model, filter_params)
 
-        # Get all query parameters except 'limit'
-        filter_params = dict(request.query_params)
-        filter_params.pop("limit", None)  # Remove limit from filters
-        query = filter_query(query, table_model, filter_params)
+            results = query.limit(limit).all()
+            return [filter_out_non_owned(result, current_user.id) for result in results]
 
-        results = query.limit(limit).all()
-        return [filter_out_non_owned(result, current_user.id) for result in results]
+    if "get" in allowed_actions or "get_one" in allowed_actions:
+        # noinspection PyTypeHints
+        @router.get("/{entry_id}", response_model=out_schema)
+        def get_one(
+            entry_id: int,
+            db: Session = Depends(database.get_db),
+            current_user: models.User = Depends(oauth2.get_current_user),
+        ):
+            """Get an entry by ID.
+            :param entry_id: The entry ID.
+            :param db: The database session.
+            :param current_user: The current user.
+            :returns: The entry if found.
+            :raises: HTTPException with a 404 status code if the entry is not found.
+            :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-    # noinspection PyTypeHints
-    @router.get("/{entry_id}", response_model=out_schema)
-    def get_one(
-        entry_id: int,
-        db: Session = Depends(database.get_db),
-        current_user: models.User = Depends(oauth2.get_current_user),
-    ):
-        """Get an entry by ID.
-        :param entry_id: The entry ID.
-        :param db: The database session.
-        :param current_user: The current user.
-        :returns: The entry if found.
-        :raises: HTTPException with a 404 status code if the entry is not found.
-        :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
+            entry = db.query(table_model).filter(table_model.id == entry_id).first()
 
-        if "get" not in allowed_actions:
-            raise NOT_ALLOWED_EXCEPTION
+            if not entry:
+                raise NOT_FOUND_EXCEPTION
 
-        entry = db.query(table_model).filter(table_model.id == entry_id).first()
+            check_authorisation(entry, current_user)
 
-        if not entry:
-            raise NOT_FOUND_EXCEPTION
-
-        check_authorisation(entry, current_user)
-
-        return filter_out_non_owned(entry, current_user.id)
+            return filter_out_non_owned(entry, current_user.id)
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
-    # noinspection PyTypeHints
-    @router.post("/", status_code=status.HTTP_201_CREATED, response_model=out_schema)
-    def create(
-        item: create_schema,
-        db: Session = Depends(database.get_db),
-        current_user: models.User = Depends(oauth2.get_current_user),
-    ):
-        """Create a new entry.
-        :param item: Data for the new entry.
-        :param db: Database session.
-        :param current_user: Authenticated user.
-        :return: The created entry.
-        :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
+    if "post" in allowed_actions:
+        # noinspection PyTypeHints
+        @router.post("/", status_code=status.HTTP_201_CREATED, response_model=out_schema)
+        def create(
+            item: create_schema,
+            db: Session = Depends(database.get_db),
+            current_user: models.User = Depends(oauth2.get_current_user),
+        ):
+            """Create a new entry.
+            :param item: Data for the new entry.
+            :param db: Database session.
+            :param current_user: Authenticated user.
+            :return: The created entry.
+            :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-        if "post" not in allowed_actions:
-            raise NOT_ALLOWED_EXCEPTION
+            if admin_only and not current_user.is_admin:
+                raise NOT_ALLOWED_EXCEPTION
 
-        if admin_only and not current_user.is_admin:
-            raise NOT_ALLOWED_EXCEPTION
+            # Extract the item data and exclude many-to-many fields from main creation
+            item_dict = item.model_dump()
 
-        # Extract the item data and exclude many-to-many fields from main creation
-        item_dict = item.model_dump()
+            # Remove many-to-many fields from main creation data
+            main_data = item_dict.copy()
+            m2m_data = {}
 
-        # Remove many-to-many fields from main creation data
-        main_data = item_dict.copy()
-        m2m_data = {}
+            if many_to_many_fields:
+                for field_name in many_to_many_fields.keys():
+                    if field_name in main_data:
+                        m2m_data[field_name] = main_data.pop(field_name)
 
-        if many_to_many_fields:
-            for field_name in many_to_many_fields.keys():
-                if field_name in main_data:
-                    m2m_data[field_name] = main_data.pop(field_name)
+            # Add the owner id if the table has an owner_id field
+            if hasattr(table_model, "owner_id"):
+                main_data["owner_id"] = current_user.id
 
-        # Add the owner id if the table has an owner_id field
-        if hasattr(table_model, "owner_id"):
-            main_data["owner_id"] = current_user.id
-
-        # Create the main entry
-        new_entry = table_model(**main_data)
-        db.add(new_entry)
-        db.commit()
-        db.refresh(new_entry)
-
-        # Handle many-to-many relationships
-        if m2m_data:
-            upsert_many_to_many(db, new_entry.id, m2m_data, current_user.id)
+            # Create the main entry
+            new_entry = table_model(**main_data)
+            db.add(new_entry)
             db.commit()
             db.refresh(new_entry)
 
-        return filter_out_non_owned(new_entry, current_user.id)
+            # Handle many-to-many relationships
+            if m2m_data:
+                upsert_many_to_many(db, new_entry.id, m2m_data, current_user.id)
+                db.commit()
+                db.refresh(new_entry)
+
+            return filter_out_non_owned(new_entry, current_user.id)
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
-    # noinspection PyTypeHints
-    @router.put("/{entry_id}", response_model=out_schema)
-    def update(
-        entry_id: int,
-        item: update_schema,
-        db: Session = Depends(database.get_db),
-        current_user: models.User = Depends(oauth2.get_current_user),
-    ):
-        """Update an entry by ID.
-        :param entry_id: The entry ID.
-        :param item: The updated data.
-        :param db: The database session.
-        :param current_user: The current user.
-        :returns: The updated entry.
-        :raises: HTTPException with a 404 status code if an entry is not found.
-        :raises: HTTPException with a 403 status code if not authorised to perform the requested action.
-        :raises: HTTPException with a 400 status code if no field is provided for the update."""
+    if "put" in allowed_actions:
+        # noinspection PyTypeHints
+        @router.put("/{entry_id}", response_model=out_schema)
+        def update(
+            entry_id: int,
+            item: update_schema,
+            db: Session = Depends(database.get_db),
+            current_user: models.User = Depends(oauth2.get_current_user),
+        ):
+            """Update an entry by ID.
+            :param entry_id: The entry ID.
+            :param item: The updated data.
+            :param db: The database session.
+            :param current_user: The current user.
+            :returns: The updated entry.
+            :raises: HTTPException with a 404 status code if an entry is not found.
+            :raises: HTTPException with a 403 status code if not authorised to perform the requested action.
+            :raises: HTTPException with a 400 status code if no field is provided for the update."""
 
-        if "put" not in allowed_actions:
-            raise NOT_ALLOWED_EXCEPTION
+            # Get the entry to update
+            query = db.query(table_model).filter(table_model.id == entry_id)
+            entry = query.first()
 
-        # Get the entry to update
-        query = db.query(table_model).filter(table_model.id == entry_id)
-        entry = query.first()
+            if not entry:
+                raise NOT_FOUND_EXCEPTION
 
-        if not entry:
-            raise NOT_FOUND_EXCEPTION
+            # Ensure that the user is authorised to modify this entry
+            check_authorisation(entry, current_user)
 
-        # Ensure that the user is authorised to modify this entry
-        check_authorisation(entry, current_user)
+            # Extract the item data
+            item_dict = item.model_dump(exclude_unset=True)
 
-        # Extract the item data
-        item_dict = item.model_dump(exclude_unset=True)
+            if not item_dict:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided for update")
 
-        if not item_dict:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided for update")
+            # Separate main fields from many-to-many fields
+            main_data = item_dict.copy()
+            m2m_data = {}
 
-        # Separate main fields from many-to-many fields
-        main_data = item_dict.copy()
-        m2m_data = {}
+            if many_to_many_fields:
+                for field_name in many_to_many_fields.keys():
+                    if field_name in main_data:
+                        m2m_data[field_name] = main_data.pop(field_name)
 
-        if many_to_many_fields:
-            for field_name in many_to_many_fields.keys():
-                if field_name in main_data:
-                    m2m_data[field_name] = main_data.pop(field_name)
+            # Update the record
+            for field, value in main_data.items():
+                setattr(entry, field, value)
 
-        # Update the record
-        for field, value in main_data.items():
-            setattr(entry, field, value)
+            # Handle many-to-many relationships
+            if m2m_data:
+                upsert_many_to_many(db, entry_id, m2m_data, current_user.id, True)
 
-        # Handle many-to-many relationships
-        if m2m_data:
-            upsert_many_to_many(db, entry_id, m2m_data, current_user.id, True)
+            db.commit()
 
-        db.commit()
-
-        # Return the updated entry
-        return filter_out_non_owned(query.first(), current_user.id)
+            # Return the updated entry
+            return filter_out_non_owned(query.first(), current_user.id)
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
-    @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
-    def delete(
-        entry_id: int,
-        db: Session = Depends(database.get_db),
-        current_user: models.User = Depends(oauth2.get_current_user),
-    ):
-        """Delete an entry by ID.
-        :param entry_id: The entry ID.
-        :param db: The database session.
-        :param current_user: The current user.
-        :returns: Dict with a deletion status message.
-        :raises: HTTPException with a 404 status code if an entry is not found.
-        :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
+    if "delete" in allowed_actions:
 
-        if "delete" not in allowed_actions:
-            raise NOT_ALLOWED_EXCEPTION
+        @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
+        def delete(
+            entry_id: int,
+            db: Session = Depends(database.get_db),
+            current_user: models.User = Depends(oauth2.get_current_user),
+        ):
+            """Delete an entry by ID.
+            :param entry_id: The entry ID.
+            :param db: The database session.
+            :param current_user: The current user.
+            :returns: Dict with a deletion status message.
+            :raises: HTTPException with a 404 status code if an entry is not found.
+            :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-        # Get the entry to delete
-        query = db.query(table_model).filter(table_model.id == entry_id)
-        entry = query.first()
+            # Get the entry to delete
+            query = db.query(table_model).filter(table_model.id == entry_id)
+            entry = query.first()
 
-        if not entry:
-            raise NOT_FOUND_EXCEPTION
+            if not entry:
+                raise NOT_FOUND_EXCEPTION
 
-        # Ensure that the user is authorised to delete this entry
-        check_authorisation(entry, current_user)
+            # Ensure that the user is authorised to delete this entry
+            check_authorisation(entry, current_user)
 
-        # Delete many-to-many relationships first if they exist
-        if many_to_many_fields:
-            for field_name, m2m_config in many_to_many_fields.items():
-                association_table = m2m_config["table"]
-                local_key = m2m_config["local_key"]
+            # Delete many-to-many relationships first if they exist
+            if many_to_many_fields:
+                for field_name, m2m_config in many_to_many_fields.items():
+                    association_table = m2m_config["table"]
+                    local_key = m2m_config["local_key"]
 
-                db.execute(association_table.delete().where(getattr(association_table.c, local_key) == entry_id))
+                    db.execute(association_table.delete().where(getattr(association_table.c, local_key) == entry_id))
 
-        query.delete(synchronize_session=False)
-        db.commit()
+            query.delete(synchronize_session=False)
+            db.commit()
 
     return router
