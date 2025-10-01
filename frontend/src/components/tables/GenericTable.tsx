@@ -28,6 +28,7 @@ export interface DataTableProps {
 	onDataChange?: (data: any[]) => void;
 	error?: string | null;
 	showAdd?: boolean;
+	menuItems?: string[];
 }
 
 export interface GenericTableProps {
@@ -45,6 +46,7 @@ export interface GenericTableProps {
 	// Table configuration
 	columns?: TableColumn[];
 	initialSortConfig?: Partial<SortConfig>;
+	menuItems?: string[];
 
 	// Modal configuration
 	Modal: React.ComponentType<any>;
@@ -90,6 +92,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 	showAdd = true,
 	onImportSuccess,
 	children,
+	menuItems,
 }: GenericTableProps) => {
 	const { token } = useAuth();
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
@@ -429,7 +432,7 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 
 	// Get context menu items based on mode
 	const getContextMenuItems = () => {
-		const baseItems: MenuItem[] = [
+		let baseItems: MenuItem[] = [
 			{ action: "view", icon: "eye", text: "View", id: "context-menu-view", function: openViewModal },
 			{ action: "edit", icon: "pencil", text: "Edit", id: "context-menu-edit", function: openEditModal },
 			{
@@ -446,6 +449,13 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 				],
 			},
 			{
+				action: "import",
+				icon: "upload",
+				text: "Import",
+				id: "context-menu-import",
+				function: openImportModal,
+			},
+			{
 				action: "delete",
 				icon: "trash",
 				text: "Delete",
@@ -455,25 +465,14 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 			},
 		];
 
-		if (mode === "import") {
-			return [
-				{
-					action: "import",
-					icon: "upload",
-					text: "Import",
-					id: "context-menu-import",
-					function: openImportModal,
-				},
-				{
-					action: "delete",
-					icon: "trash",
-					text: "Delete",
-					id: "context-menu-delete",
-					color: "#dc3545",
-					function: handleDelete,
-				},
-			];
+		if (!menuItems) {
+			if (mode === "import") {
+				menuItems = ["import", "delete"];
+			} else {
+				menuItems = ["view", "edit", "delete"];
+			}
 		}
+		baseItems = baseItems.filter((item: MenuItem): boolean => menuItems!.includes(item.action));
 
 		return baseItems;
 	};

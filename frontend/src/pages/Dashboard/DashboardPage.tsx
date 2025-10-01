@@ -222,7 +222,7 @@ interface DashboardStats {
 
 const JobSearchDashboard: React.FC = () => {
 	const { showLoading, hideLoading } = useLoading();
-	const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+	const [dashboardData, setDashboardData] = useState<DashboardStats>({
 		totalJobs: 0,
 		totalApplications: 0,
 		pendingApplications: 0,
@@ -235,48 +235,47 @@ const JobSearchDashboard: React.FC = () => {
 	});
 	const [error, setError] = useState<string | null>(null);
 	const { currentUser, token } = useAuth();
-	console.log(currentUser);
+
+	const fetchDashboardData = async (): Promise<void> => {
+		try {
+			showLoading("Loading dashboard data...");
+
+			if (!token) {
+				throw new Error("User is not authenticated");
+			}
+			const dashboardResponse = await dashboardApi.getAll(token);
+
+			const statistics = dashboardResponse?.statistics || {
+				jobs: 0,
+				job_applications: 0,
+				job_application_pending: 0,
+				interviews: 0,
+			};
+			const needsChase = dashboardResponse?.needs_chase || [];
+			const allUpdates = dashboardResponse?.all_updates || [];
+			const upcomingInterviews = dashboardResponse?.upcoming_interviews || [];
+			const upcomingDeadlines = dashboardResponse?.upcoming_deadlines || [];
+
+			setDashboardData({
+				totalJobs: statistics.jobs,
+				totalApplications: statistics.job_applications,
+				pendingApplications: statistics.job_application_pending,
+				interviewsScheduled: statistics.interviews,
+				jobsNeedingChase: needsChase.length,
+				recentActivity: allUpdates,
+				upcomingInterviews: upcomingInterviews,
+				jobsToChase: needsChase,
+				upcomingDeadlines: upcomingDeadlines,
+			});
+		} catch (err) {
+			console.error("Error fetching dashboard data:", err);
+			setError("Failed to load dashboard data. Please try again later.");
+		} finally {
+			hideLoading();
+		}
+	};
 
 	useEffect(() => {
-		const fetchDashboardData = async (): Promise<void> => {
-			try {
-				showLoading("Loading dashboard data...");
-
-				if (!token) {
-					throw new Error("User is not authenticated");
-				}
-				const dashboardResponse = await dashboardApi.getAll(token);
-
-				const statistics = dashboardResponse?.statistics || {
-					jobs: 0,
-					job_applications: 0,
-					job_application_pending: 0,
-					interviews: 0,
-				};
-				const needsChase = dashboardResponse?.needs_chase || [];
-				const allUpdates = dashboardResponse?.all_updates || [];
-				const upcomingInterviews = dashboardResponse?.upcoming_interviews || [];
-				const upcomingDeadlines = dashboardResponse?.upcoming_deadlines || [];
-
-				setDashboardStats({
-					totalJobs: statistics.jobs,
-					totalApplications: statistics.job_applications,
-					pendingApplications: statistics.job_application_pending,
-					interviewsScheduled: statistics.interviews,
-					jobsNeedingChase: needsChase.length,
-					recentActivity: allUpdates,
-					upcomingInterviews: upcomingInterviews,
-					jobsToChase: needsChase,
-					upcomingDeadlines: upcomingDeadlines,
-				});
-			} catch (err) {
-				console.error("Error fetching dashboard data:", err);
-				setError("Failed to load dashboard data. Please try again later.");
-			} finally {
-				hideLoading();
-			}
-		};
-
 		fetchDashboardData().then(() => null);
 	}, [token]);
 
@@ -294,7 +293,7 @@ const JobSearchDashboard: React.FC = () => {
 				<Col md={6} lg={3}>
 					<StatCard
 						itemName="Total Jobs"
-						value={dashboardStats.totalJobs}
+						value={dashboardData.totalJobs}
 						icon="briefcase"
 						variant="primary"
 						description="Jobs in your database"
@@ -303,7 +302,7 @@ const JobSearchDashboard: React.FC = () => {
 				<Col md={6} lg={3}>
 					<StatCard
 						itemName="Applications"
-						value={dashboardStats.totalApplications}
+						value={dashboardData.totalApplications}
 						icon="send"
 						variant="success"
 						description="Total applications sent"
@@ -312,7 +311,7 @@ const JobSearchDashboard: React.FC = () => {
 				<Col md={6} lg={3}>
 					<StatCard
 						itemName="Pending"
-						value={dashboardStats.pendingApplications}
+						value={dashboardData.pendingApplications}
 						icon="clock"
 						variant="warning"
 						description="Applications awaiting response"
@@ -321,7 +320,7 @@ const JobSearchDashboard: React.FC = () => {
 				<Col md={6} lg={3}>
 					<StatCard
 						itemName="Need Follow-up"
-						value={dashboardStats.jobsNeedingChase}
+						value={dashboardData.jobsNeedingChase}
 						icon="telephone"
 						variant="danger"
 						description="Applications requiring action"
@@ -334,11 +333,11 @@ const JobSearchDashboard: React.FC = () => {
 						icon="clock-history"
 						title="Recent Activity"
 						subtitle="Latest job applications, interviews and updates"
-						badgeValue={dashboardStats.recentActivity.length}
+						badgeValue={dashboardData.recentActivity.length}
 						emptyIcon="inbox"
 						emptyTitle="No recent activity"
 						emptyDescription="Your recent activity will appear here"
-						items={dashboardStats.recentActivity}
+						items={dashboardData.recentActivity}
 						renderItem={renderRecentActivityItem}
 					/>
 				</Col>
@@ -351,11 +350,15 @@ const JobSearchDashboard: React.FC = () => {
 							icon="telephone"
 							title="Applications Requiring Follow-up"
 							subtitle="Jobs that need your attention"
-							badgeValue={dashboardStats.jobsNeedingChase}
+							badgeValue={dashboardData.jobsNeedingChase}
 						/>
 						<Card.Body className="p-0 flex-grow-1" style={{ overflowY: "auto", minHeight: 0 }}>
 							<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-								<JobsToChase data={dashboardStats.jobsToChase} />
+								<JobsToChase
+									data={dashboardData.jobsToChase}
+									onDataChange={fetchDashboardData}
+									menuItems={["view", "edit", "snooze", "delete"]}
+								/>
 							</div>
 						</Card.Body>
 					</Card>
@@ -371,12 +374,15 @@ const JobSearchDashboard: React.FC = () => {
 							icon="clock"
 							title="Upcoming Deadlines"
 							subtitle="Jobs that need your attention"
-							badgeValue={dashboardStats.upcomingDeadlines.length}
+							badgeValue={dashboardData.upcomingDeadlines.length}
 						/>
 						<Card.Body className="p-0">
 							<div style={{ overflowY: "auto", minHeight: 0 }}>
 								<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-									<UpcomingDeadlinesTable data={dashboardStats.upcomingDeadlines} />
+									<UpcomingDeadlinesTable
+										data={dashboardData.upcomingDeadlines}
+										onDataChange={fetchDashboardData}
+									/>
 								</div>
 							</div>
 						</Card.Body>
@@ -387,11 +393,11 @@ const JobSearchDashboard: React.FC = () => {
 						icon="calendar-event"
 						title="Upcoming Interviews"
 						subtitle="Scheduled interviews"
-						badgeValue={dashboardStats.upcomingInterviews.length}
+						badgeValue={dashboardData.upcomingInterviews.length}
 						emptyIcon="calendar-x"
 						emptyTitle="No upcoming interviews"
 						emptyDescription="Your scheduled interviews will appear here"
-						items={dashboardStats.upcomingInterviews}
+						items={dashboardData.upcomingInterviews}
 						renderItem={renderUpcomingInterviewItem}
 					/>
 				</Col>

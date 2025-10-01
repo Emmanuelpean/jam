@@ -3,7 +3,13 @@ import { DataTableProps, GenericTable } from "./GenericTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
-const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error = null, columns = [] }) => {
+const JobToChaseTable: React.FC<DataTableProps> = ({
+	data = [],
+	onDataChange,
+	error = null,
+	columns = [],
+	menuItems = [],
+}) => {
 	const defaultColumns =
 		columns.length > 0
 			? columns
@@ -30,6 +36,7 @@ const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], onDataChange, er
 			modalSize="xl"
 			showSearch={false}
 			showAdd={false}
+			menuItems={menuItems}
 			modalProps={{ defaultActiveTab: "application" }}
 		/>
 	);
