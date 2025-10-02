@@ -211,7 +211,7 @@ export const scraperApi: CrudApi = createCrudApi("scraper");
 
 export const exportApi: CrudApi & { download: (filename: string, token: string) => Promise<void> } = {
 	...createCrudApi("export"),
-	download: (filename: string, token: string) => api.downloadFile("export", filename, token),
+	download: (filename: string, token: string) => api.downloadFile("export/", filename, token),
 };
 
 export const scrapedJobApi: ScrapedJobApi = {
