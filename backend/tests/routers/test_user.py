@@ -6,8 +6,7 @@ operations behave as expected under various scenarios, including successful requ
 
 from fastapi import status
 
-import utils
-from app import schemas, models
+from app import schemas, models, utils
 
 
 class TestUser:
