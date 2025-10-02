@@ -21,7 +21,7 @@
 
 /*Header*/
 .sidebar-header {
-    padding: 1rem 0.5rem;
+    padding-left: 12px;
     border-bottom: 1px solid #dee2e6;
     display: flex;
     height: 100px;
@@ -29,6 +29,7 @@
 }
 
 .logo-text {
+    padding-left: 13px;
     font-weight: 600;
     font-size: 50px !important;
     color: var(--primary-mid) !important;
