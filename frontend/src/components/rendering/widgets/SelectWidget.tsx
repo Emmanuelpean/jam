@@ -6,6 +6,7 @@ import { SelectOption } from "../../../utils/Utils";
 import { GroupBase } from "react-select";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 import "./SelectWidget.css";
+
 const animatedComponents = makeAnimated();
 
 // Create a wrapper component that matches react-select's expected signature
@@ -51,7 +52,7 @@ const CustomDropdownIndicator = (props: any): JSX.Element => {
 	);
 };
 
-export const renderSelect = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
+export const renderSelect = ({ field, value, handleChange, error, secondaryValue }: WidgetProps): JSX.Element => {
 	const isMulti = field.type === "multiselect";
 	let selectedValue: SelectOption | SelectOption[] | null = null;
 
@@ -81,7 +82,7 @@ export const renderSelect = ({ field, value, handleChange, error }: WidgetProps)
 		selectComponents.IndicatorSeparator = undefined;
 	}
 
-	return (
+	const selectElement = (
 		<Select<SelectOption, boolean, GroupBase<SelectOption>>
 			name={field.name}
 			value={selectedValue}
@@ -138,4 +139,51 @@ export const renderSelect = ({ field, value, handleChange, error }: WidgetProps)
 			}}
 		/>
 	);
+
+	// If secondaryValue is provided, render it with an arrow before the select
+	if (secondaryValue && secondaryValue.trim() !== "") {
+		return (
+			<div
+				className="select-widget-with-secondary"
+				style={{
+					display: "flex",
+					alignItems: "center",
+					gap: "12px",
+					width: "100%",
+				}}
+			>
+				<div
+					className="secondary-value"
+					style={{
+						padding: "8px 12px",
+						backgroundColor: "#f5f5f5",
+						border: "1px solid #ccc",
+						borderRadius: "4px",
+						fontSize: "14px",
+						color: "#333",
+						whiteSpace: "nowrap",
+						minWidth: "fit-content",
+					}}
+				>
+					{secondaryValue}
+				</div>
+				<div
+					className="arrow-indicator"
+					style={{
+						fontSize: "18px",
+						color: "#666",
+						userSelect: "none",
+						minWidth: "20px",
+						textAlign: "center",
+					}}
+				>
+					→
+				</div>
+				<div style={{ flex: 1, minWidth: 0 }}>{selectElement}</div>
+			</div>
+		);
+	}
+
+	// If no secondaryValue, render just the select as before
+	return selectElement;
 };

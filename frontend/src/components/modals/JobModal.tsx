@@ -1,11 +1,12 @@
 import React, { ReactNode, useMemo } from "react";
-import GenericModal, { DataModalProps, TabConfig, ValidationErrors } from "./GenericModal/GenericModal";
-import { formFields, useFormOptions } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import DataModal, { DataModalProps, TabConfig, ValidationErrors } from "./GenericModal/DataModal";
+import { formFields } from "../rendering/form/FormRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/ViewRenders";
 import { JobData } from "../../services/Schemas";
 import { jobsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
+import { useFormOptions } from "../rendering/form/FormOptions";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -64,40 +65,39 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	];
 
 	const jobViewFields = [
-		[viewFields.title({ isTitle: true })],
-		[viewFields.companyBadge(), viewFields.locationBadge()],
-		viewFields.description(),
-		viewFields.note(),
-		[viewFields.salaryRange(), viewFields.personalRating()],
-		[viewFields.sourceBadge(), viewFields.url({ label: "Job URL" })],
-		[viewFields.keywordBadges(), viewFields.personBadges()],
-		viewFields.deadline(),
+		[modalViewFields.title({ isTitle: true })],
+		[modalViewFields.companyBadge(), modalViewFields.locationBadge()],
+		modalViewFields.description(),
+		modalViewFields.note(),
+		[modalViewFields.salaryRange(), modalViewFields.personalRating()],
+		[modalViewFields.sourceBadge(), modalViewFields.url({ label: "Job URL" })],
+		[modalViewFields.keywordBadges(), modalViewFields.personBadges()],
+		[modalViewFields.deadline()],
 	];
 
-	const applicationFormFields = useMemo(() => {
-		return [
-			[formFields.applicationDate(), formFields.applicationStatus()],
-			[
-				formFields.applicationVia(),
-				formFields.aggregator(aggregators, openAggregatorModal, { name: "application_aggregator_id" }),
-			],
-			formFields.applicationUrl({ placeholder: "https://linkedin.com/application/453635" }),
-			formFields.note({
-				placeholder:
-					"The application process involves submitting an online application, followed by technical " +
-					"assessments and interviews to evaluate coding skills, problem-solving ability, and cultural fit.",
-				name: "application_note",
-			}),
-		];
-	}, [openAggregatorModal, aggregators]);
+	const applicationFormFields = [
+		[formFields.applicationDate(), formFields.applicationStatus()],
+		[
+			formFields.applicationVia(),
+			formFields.aggregator(aggregators, openAggregatorModal, { name: "application_aggregator_id" }),
+		],
+		formFields.applicationUrl({ placeholder: "https://linkedin.com/application/453635" }),
+		formFields.note({
+			placeholder:
+				"The application process involves submitting an online application, followed by technical " +
+				"assessments and interviews to evaluate coding skills, problem-solving ability, and cultural fit.",
+			name: "application_note",
+		}),
+	];
 
 	const applicationViewFields = [
-		[viewFields.applicationDate(), viewFields.applicationStatus()],
-		[viewFields.appliedViaBadge()],
-		[viewFields.applicationUrl()],
-		viewFields.applicationNote(),
-		viewFields.interviewTable(),
-		viewFields.updateTable(),
+		[modalViewFields.applicationDate(), modalViewFields.applicationStatus()],
+		[modalViewFields.appliedViaBadge()],
+		[modalViewFields.applicationUrl()],
+		modalViewFields.applicationNote(),
+		modalViewFields.interviewTable(),
+		modalViewFields.updateTable(),
+		modalViewFields.followupSnoozeDateTime(),
 	];
 
 	const transformData = (jobData: JobData) => {
@@ -120,6 +120,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 			applied_via: jobData.applied_via?.trim() || null,
 			application_aggregator_id: jobData.application_aggregator_id || null,
 			application_note: jobData.application_note?.trim() || null,
+			attendance_type: jobData.attendance_type?.trim() || null,
 		};
 	};
 
@@ -132,7 +133,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 			const queryParams = { url: formData.url?.trim() };
 			const matches = await jobsApi.getAll(token, queryParams);
 			const duplicates = matches.filter((existing: JobData) => {
-				return data?.id !== existing.id;
+				return formData?.id !== existing.id;
 			});
 
 			if (duplicates.length > 0) {
@@ -176,7 +177,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 
 	return (
 		<>
-			<GenericModal
+			<DataModal
 				show={show}
 				onHide={onHide}
 				data={data}
@@ -191,7 +192,6 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 				id={id}
 				defaultActiveTab={defaultActiveTab}
 				validation={customValidation}
-				fields={{ form: [], view: [] }}
 			/>
 
 			{renderCompanyModal()}

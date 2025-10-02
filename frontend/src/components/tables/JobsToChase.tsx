@@ -1,50 +1,42 @@
 import React from "react";
-import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
-import { tableColumns } from "../rendering/view/TableColumnRenders";
+import { DataTableProps, DataTable } from "./DataTable";
+import { tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
-import { InterviewModal } from "../modals/InterviewModal";
 
-const JobToChaseTable: React.FC<TableProps> = ({ data = null, columns = [] }) => {
-	const {
-		data: jobData,
-		loading,
-		error,
-		addItem,
-		sortConfig,
-		setSortConfig,
-		updateItem,
-		removeItem,
-	} = useProvidedTableData(data, { key: "days_since_last_update", direction: "desc" });
-
-	if (!columns.length) {
-		columns = [
-			tableColumns.title!(),
-			tableColumns.company!(),
-			tableColumns.location!(),
-			tableColumns.daysSinceLastUpdate!(),
-			tableColumns.lastUpdateType!(),
-		];
-	}
+const JobToChaseTable: React.FC<DataTableProps> = ({
+	data = [],
+	onDataChange,
+	error = null,
+	columns = [],
+	menuItems = [],
+}) => {
+	const defaultColumns =
+		columns.length > 0
+			? columns
+			: [
+					tableColumns.title(),
+					tableColumns.companyBadge(),
+					tableColumns.location(),
+					tableColumns.daysSinceLastUpdate(),
+					tableColumns.lastUpdateType(),
+				];
 
 	return (
-		<GenericTableWithModals
-			data={jobData}
-			columns={columns}
-			loading={loading}
+		<DataTable
+			mode="controlled"
+			data={data}
+			onDataChange={onDataChange}
 			error={error}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
+			columns={defaultColumns}
+			initialSortConfig={{ key: "days_since_last_update", direction: "desc" }}
 			Modal={JobModal}
 			endpoint="jobs"
-			nameKey="name"
+			nameKey="title"
 			itemType="Job"
-			addItem={addItem}
-			updateItem={updateItem}
-			removeItem={removeItem}
-			setData={() => {}}
 			modalSize="xl"
 			showSearch={false}
 			showAdd={false}
+			menuItems={menuItems}
 			modalProps={{ defaultActiveTab: "application" }}
 		/>
 	);

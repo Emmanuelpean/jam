@@ -288,7 +288,7 @@ class TestSignUp(TestAuthenticationPage):
         self.go_to_register()
         test_email = f"test@test.com"
 
-        # Fill in signup form with non matching passwords
+        # Fill in signup form with non-matching passwords
         self.set_email(test_email)
         self.set_password("Password123")
         self.set_confirm_password("Password124")
@@ -305,7 +305,7 @@ class TestSignUp(TestAuthenticationPage):
         self.go_to_register()
         test_email = f"test@test.com"
 
-        # Fill in signup form with non matching passwords
+        # Fill in signup form with non-matching passwords
         self.set_email(test_email)
         self.set_password("Passw")
         self.set_confirm_password("Passw")
@@ -322,7 +322,7 @@ class TestSignUp(TestAuthenticationPage):
         self.go_to_register()
         test_email, test_password = f"test@test.com", "Test123!"
 
-        # Fill in signup form with non matching passwords
+        # Fill in signup form with non-matching passwords
         self.set_email(test_email)
         self.set_password(test_password)
         self.set_confirm_password(test_password)

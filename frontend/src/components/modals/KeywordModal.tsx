@@ -1,10 +1,10 @@
 import React from "react";
-import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
+import DataModal, { DataModalProps } from "./GenericModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { keywordsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import { ValidationErrors } from "./GenericModal/GenericModal";
+import { ValidationErrors } from "./GenericModal/DataModal";
 import { KeywordData } from "../../services/Schemas";
 
 export const KeywordModal: React.FC<DataModalProps> = ({
@@ -21,11 +21,11 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 
 	const fields = {
 		form: [formFields.name({ required: true, placeholder: "Software development" })],
-		view: [viewFields.name({ isTitle: true })],
+		view: [modalViewFields.name({ isTitle: true })],
 	};
 
 	const additionalFields = [
-		viewFields.accordionJobTable({
+		modalViewFields.accordionJobTable({
 			helpText: "List of jobs associated with this tag.",
 		}),
 	];
@@ -44,7 +44,7 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 		const queryParams = { name: formData.name.trim() };
 		const matches = await keywordsApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing: any) => {
-			return data?.id !== existing.id;
+			return formData?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0) {
@@ -54,7 +54,7 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 	};
 
 	return (
-		<GenericModal
+		<DataModal
 			show={show}
 			onHide={onHide}
 			mode={submode}

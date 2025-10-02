@@ -8,12 +8,6 @@ interface OwnedOut extends BaseOut {
 	owner_id: number;
 }
 
-export interface Response {
-	success: boolean;
-	error?: string;
-	status?: number | undefined;
-}
-
 // ------------------------------------------------------- COMPANY ------------------------------------------------------
 
 export interface CompanyCreate {
@@ -41,18 +35,6 @@ export interface AggregatorCreate {
 
 export interface AggregatorOut extends AggregatorCreate, OwnedOut {}
 
-// ------------------------------------------------------ LOCATION ------------------------------------------------------
-
-export interface LocationCreate extends BaseOut {
-	postcode?: string;
-	city?: string;
-	country?: string;
-}
-
-export interface LocationOut extends LocationCreate, OwnedOut {
-	name?: string;
-}
-
 // ------------------------------------------------------- PERSON -------------------------------------------------------
 
 export interface PersonCreate {
@@ -73,9 +55,11 @@ export interface PersonOut extends PersonCreate, OwnedOut {
 // --------------------------------------------------------- JOB --------------------------------------------------------
 
 export interface SettingData {
+	id?: number;
 	name: string;
 	value: string;
 	description?: string;
+	is_active: boolean;
 }
 
 export interface AggregatorData {
@@ -90,6 +74,7 @@ export interface KeywordData {
 }
 
 export interface PersonData {
+	id?: number;
 	first_name: string;
 	last_name: string;
 	email?: string;
@@ -110,12 +95,11 @@ export interface InterviewData {
 	job?: JobData;
 }
 
-export interface LocationData {
-	id?: string | number;
+export interface LocationData extends OwnedOut {
 	city?: string | null;
 	postcode?: string | null;
 	country?: string | null;
-	name?: string;
+	name: string;
 }
 
 export interface JobData {
@@ -140,6 +124,8 @@ export interface JobData {
 	attendance_type?: string | null;
 	keywords?: KeywordData[] | number[];
 	contacts?: AggregatorData[] | number[];
+	location?: LocationData | null;
+	company?: CompanyData | null;
 }
 
 export interface ApplicationData {
@@ -156,13 +142,15 @@ export interface ApplicationData {
 export interface UserData {
 	id?: number;
 	email: string;
-	is_admin?: boolean;
+	is_admin: boolean;
+	toast_active: boolean;
 	theme?: string;
 	last_login?: string;
 	created_at?: string;
 }
 
 export interface CompanyData {
+	id?: number;
 	name: string;
 	url?: string | null;
 	description?: string | null;
@@ -174,4 +162,10 @@ export interface JobApplicationUpdateData {
 	job_id?: string | number;
 	note?: string;
 	id?: string | number;
+}
+
+export interface ScrapedJobUpdate {
+	id?: number;
+	is_imported?: boolean;
+	is_active?: boolean;
 }

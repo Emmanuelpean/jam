@@ -1,112 +1,52 @@
 import React, { JSX, ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
-import "./GenericModal.css";
-import { renderViewElement } from "../../rendering/view/ViewRenders";
-import { Errors, renderFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
+import "./DataModal.css";
+import { Errors, renderModalFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
 import { api } from "../../../services/Api";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import AlertModal from "../AlertModal";
 import { areDifferent, findByKey, flattenArray } from "../../../utils/Utils";
-import { renderViewField, ViewField } from "../../rendering/view/ModalFieldRenders";
-import { FormField } from "../../rendering/form/FormRenders";
+import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
+import { ModalFormField } from "../../rendering/form/FormRenders";
+import { createDeleteHandler } from "../../../utils/DeleteHandler";
 
-interface CreateGenericDeleteHandlerParams {
-	endpoint: string;
-	token: string | null;
-	showDelete: (options: {
-		title: string;
-		message: string;
-		confirmText: string;
-		cancelText: string;
-	}) => Promise<boolean>;
-	showError: (options: { message: string }) => Promise<boolean>;
-	removeItem?: (id: string | number) => void;
-	setData?: React.Dispatch<React.SetStateAction<any[]>>;
-	itemType?: string;
-}
-
-interface DeleteHandlerItem {
-	id: string | number;
-}
-
-export const createGenericDeleteHandler = ({
-	endpoint,
-	token,
-	showDelete,
-	showError,
-	removeItem,
-	setData,
-	itemType = "item",
-}: CreateGenericDeleteHandlerParams) => {
-	return async (item: DeleteHandlerItem): Promise<void> => {
-		try {
-			await showDelete({
-				title: `Delete ${itemType}`,
-				message: `Are you sure you want to delete this entry? This action cannot be undone.`,
-				confirmText: "Delete",
-				cancelText: "Cancel",
-			});
-
-			await api.delete(`${endpoint}/${item.id}`, token);
-
-			if (typeof removeItem === "function") {
-				removeItem(item.id);
-			} else if (typeof setData === "function") {
-				setData((prevData: any[]) => prevData.filter((dataItem: any) => dataItem.id !== item.id));
-			} else {
-				window.location.reload();
-			}
-		} catch (error) {
-			if (error !== false) {
-				await showError({
-					message: `Failed to delete ${itemType}.`,
-				});
-			}
-			throw error;
-		}
-	};
-};
-
-export type ViewFields = (ViewField | ViewField[])[];
-export type FormFields = (FormField | FormField[])[];
-
-interface ModalProps {
-	mode?: "view" | "edit" | "add";
-	fields: { view: ViewFields; form: FormFields };
-	data?: any;
-	id?: string | number | null;
-	onSuccess?: (data: any) => void;
-	validation?: ((data: any) => any) | null;
-	transformFormData?: ((data: any) => any) | null;
-	onFormDataChange?: ((data: any) => void) | null;
-	onDelete?: ((item: any) => Promise<void>) | null;
-	additionalFields?: ViewField[];
-}
+export type ViewFields = (ModalViewField | ModalViewField[])[];
+export type FormFields = (ModalFormField | ModalFormField[])[];
 
 export interface TabConfig {
 	key: string;
 	title: string | JSX.Element | ((data: any) => ReactNode);
 	fields: { view: ViewFields; form: FormFields };
-	additionalFields?: ViewField[];
+	additionalFields?: ModalViewField[];
 }
 
-export interface GenericModalProps extends ModalProps {
-	show: boolean;
-	onHide: () => void;
-	itemName?: string;
-	size?: "sm" | "lg" | "xl";
-	tabs?: TabConfig[] | null;
-	defaultActiveTab?: string | null;
-	endpoint: string;
+export interface GenericModalProps {
+	mode?: "view" | "edit" | "add" | "import"; // modal mode - added "import"
+	fields?: { view: ViewFields; form: FormFields }; // fields to display
+	data?: any; // data to populate the fields (required for import mode)
+	id?: string | number | null; // if id is provided, use the id and endpoint to load the data
+	onSuccess?: (data: any) => void; // called when the entry is added or updated
+	validation?: ((data: any) => any) | null; // custom validation method before submit
+	transformFormData?: ((data: any) => any) | null; // custom data transformation before submit
+	onFormDataChange?: ((data: any) => void) | null;
+	onDelete?: (id: string | number) => void; // called when the entry is deleted
+	additionalFields?: ModalViewField[]; // additional fields displayed outside the card in view mode
+	show: boolean; // whether to show the modal
+	onHide: () => void; // called to hide the modal
+	itemName?: string; // name of the item being managed, used in titles and messages
+	size?: "sm" | "lg" | "xl"; // modal size
+	tabs?: TabConfig[] | null; // optional tabs configuration
+	defaultActiveTab?: string | null; // default active tab key
+	endpoint: string; // API endpoint for CRUD operations
 }
 
 export interface ValidationErrors {
 	[key: string]: string;
 }
 
-const GenericModal = ({
+const DataModal = ({
 	show,
 	onHide,
 	fields,
@@ -122,8 +62,7 @@ const GenericModal = ({
 	onSuccess,
 	validation = null,
 	transformFormData = null,
-	onFormDataChange = null,
-	onDelete = null,
+	onDelete,
 }: GenericModalProps) => {
 	const hasTabs = tabs && tabs.length > 0;
 
@@ -135,6 +74,7 @@ const GenericModal = ({
 	const [errors, setErrors] = useState<Errors>({});
 	const [isEditing, setIsEditing] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const { currentUser } = useAuth();
 	const [activeTab, setActiveTab] = useState<string | null>(() => {
 		if (hasTabs) {
 			return defaultActiveTab || tabs[0]!.key;
@@ -143,7 +83,6 @@ const GenericModal = ({
 	});
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef<HTMLDivElement>(null);
-	const previousShow = useRef(show);
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
 
 	// -------------------------------------------------- DATA LOADING -------------------------------------------------
@@ -173,7 +112,7 @@ const GenericModal = ({
 		};
 
 		loadData().then(() => {});
-	}, [id, endpoint, token, data]);
+	}, [id, endpoint, token, data, mode]);
 
 	// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
 
@@ -185,56 +124,64 @@ const GenericModal = ({
 	const getCurrentFields = (): { view: ViewFields; form: FormFields } => {
 		const currentTab = getCurrentTabConfig();
 		if (!currentTab) {
-			return fields;
+			return {
+				view: filterConditionalFields(fields!.view),
+				form: filterConditionalFields(fields!.form),
+			};
+		} else {
+			return {
+				view: filterConditionalFields(currentTab.fields.view),
+				form: filterConditionalFields(currentTab.fields.form),
+			};
 		}
-		const formFields = filterConditionalFields(currentTab.fields.form);
-		const viewFields = filterConditionalFields(currentTab.fields.view);
-		return { form: formFields, view: viewFields };
 	};
 
-	const getCurrentAdditionalFields = (): ViewField[] => {
+	const getAllFields = (): { view: ViewFields; form: FormFields } => {
+		if (!hasTabs || !tabs) {
+			return {
+				form: filterConditionalFields(fields!.form),
+				view: filterConditionalFields(fields!.view),
+			};
+		} else {
+			return {
+				form: tabs.flatMap((tab) => filterConditionalFields(tab.fields.form)),
+				view: tabs.flatMap((tab) => filterConditionalFields(tab.fields.view)),
+			};
+		}
+	};
+
+	const getCurrentAdditionalFields = (): ModalViewField[] => {
 		const currentTab = getCurrentTabConfig();
 		return currentTab?.additionalFields || additionalFields;
 	};
 
 	useEffect(() => {
 		// Initialize modal state when it becomes visible or data changes
-		if (show && (!previousShow.current || (effectiveData && Object.keys(formData).length === 0))) {
-			if (mode === "add") {
-				setFormData({});
-				setOriginalFormData({});
-				setIsEditing(true);
-			} else if (mode === "edit") {
-				setFormData({ ...effectiveData });
-				setOriginalFormData({ ...effectiveData });
-				setIsEditing(true);
-			} else {
-				setFormData({ ...effectiveData });
-				setOriginalFormData({ ...effectiveData });
-				setIsEditing(false);
-			}
-			setErrors({});
-
-			// Reset active tab only when modal first opens
-			if (hasTabs && !previousShow.current) {
-				setActiveTab(defaultActiveTab || tabs[0]!.key);
-			}
+		if (mode === "add") {
+			setFormData({});
+			setOriginalFormData({});
+			setIsEditing(true);
+		} else if (mode === "edit") {
+			setFormData({ ...effectiveData });
+			setOriginalFormData({ ...effectiveData });
+			setIsEditing(true);
+		} else if (mode === "import") {
+			console.log("Effectivedata for import:", effectiveData);
+			setFormData({ ...effectiveData });
+			setOriginalFormData({ ...effectiveData });
+			setIsEditing(true);
+		} else {
+			setFormData({ ...effectiveData });
+			setOriginalFormData({ ...effectiveData });
+			setIsEditing(false);
 		}
-		previousShow.current = show;
-	}, [show, effectiveData, mode, tabs, defaultActiveTab]);
+		setErrors({});
 
-	// Simple tab change - just update the active tab, keep shared editing state
-	const handleTabChange = (tabKey: string): void => {
-		setActiveTab(tabKey);
-		setErrors({}); // Clear errors when switching tabs
-	};
-
-	useEffect(() => {
-		// Allow dynamic form fields based on current data
-		if (onFormDataChange && isEditing) {
-			onFormDataChange(formData);
+		// Reset active tab only when modal first opens
+		if (hasTabs) {
+			setActiveTab(defaultActiveTab || tabs[0]!.key);
 		}
-	}, [formData, isEditing, onFormDataChange]);
+	}, [show, mode, defaultActiveTab, effectiveData]);
 
 	// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
@@ -317,15 +264,15 @@ const GenericModal = ({
 	// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 
 	const renderFieldGroup = (
-		item: ViewField | FormField | ViewField[] | FormField[],
+		item: ModalViewField | ModalFormField | ModalViewField[] | ModalFormField[],
 		index: number,
 		isFormMode = true,
 	) => {
-		let itemList: ViewField[] | FormField[];
+		let itemList: ModalViewField[] | ModalFormField[];
 		if (Array.isArray(item)) {
 			itemList = item;
 		} else {
-			itemList = [item] as ViewField[] | FormField[];
+			itemList = [item] as ModalViewField[] | ModalFormField[];
 		}
 
 		if (!isEditing && itemList.length === 1) {
@@ -337,7 +284,12 @@ const GenericModal = ({
 
 				return (
 					<div className={hasElementsUnderneath ? "mb-3" : ""} key={index}>
-						{renderViewField(firstItem as ViewField, effectiveData, getModalId())}
+						{renderModalViewField(
+							firstItem as ModalViewField,
+							effectiveData,
+							getModalId(),
+							handleViewDataChange((firstItem as ModalViewField).key),
+						)}
 					</div>
 				);
 			}
@@ -361,7 +313,7 @@ const GenericModal = ({
 
 		return (
 			<div key={index} className="row mb-3" style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
-				{itemList.map((field: ViewField | FormField, fieldIndex: number) => {
+				{itemList.map((field: ModalViewField | ModalFormField, fieldIndex: number) => {
 					const fieldKey =
 						("key" in field ? field.key : null) ||
 						("name" in field ? field.name : null) ||
@@ -370,8 +322,19 @@ const GenericModal = ({
 					return (
 						<div key={fieldKey} className={columnClass}>
 							{isFormMode
-								? renderFormField(field as FormField, formData, handleChange, errors)
-								: renderViewField(field as ViewField, effectiveData, getModalId())}
+								? renderModalFormField(
+										field as ModalFormField,
+										formData,
+										handleChange,
+										errors,
+										currentUser,
+									)
+								: renderModalViewField(
+										field as ModalViewField,
+										effectiveData,
+										getModalId(),
+										handleViewDataChange((field as ModalViewField).key),
+									)}
 						</div>
 					);
 				})}
@@ -381,65 +344,74 @@ const GenericModal = ({
 
 	// ----------------------------------------------------- DELETE ----------------------------------------------------
 
-	const handleDelete = createGenericDeleteHandler({
+	const handleDelete = createDeleteHandler({
 		endpoint,
 		token,
 		showDelete,
 		showError,
-		removeItem: undefined,
-		setData: undefined,
+		removeItem: onDelete,
 		itemType: itemName,
 	});
 
 	const handleDeleteClick = async () => {
-		try {
-			await handleDelete(effectiveData);
-			if (onDelete) {
-				await onDelete(effectiveData);
-			}
+		const confirm = await handleDelete(effectiveData);
+		if (confirm) {
 			handleHideImmediate();
-		} catch (error) {
-			// Error already handled by createGenericDeleteHandler
 		}
 	};
 
 	const handleChange = (e: SyntheticEvent) => {
-		const { name, value } = e.target;
+		const { name, type, checked, value } = e.target;
 		setFormData((prev) => ({
 			...prev,
-			[name]: value,
+			[name]: type === "checkbox" ? checked : value,
 		}));
 		if (errors[name]) {
 			setErrors((prev) => ({ ...prev, [name]: "" }));
 		}
 	};
 
-	const filterConditionalFields = <T extends ViewField | FormField>(fieldsToFilter: (T | T[])[]): (T | T[])[] => {
+	const filterConditionalFields = <T extends ModalViewField | ModalFormField>(
+		fieldsToFilter: (T | T[])[],
+	): (T | T[])[] => {
 		return fieldsToFilter
 			.map((item) => {
 				if (Array.isArray(item)) {
 					const filteredArray = item.filter((field) => {
-						if (!field.condition) {
+						if (!field.displayCondition) {
 							return true;
 						} else {
-							return field.condition(formData);
+							return field.displayCondition(formData);
 						}
 					});
 					return filteredArray.length > 0 ? filteredArray : null;
 				} else {
-					if (!item.condition) {
+					if (!item.displayCondition) {
 						return item;
 					} else {
-						return item.condition(formData) ? item : null;
+						return item.displayCondition(formData) ? item : null;
 					}
 				}
 			})
 			.filter((item) => item !== null) as (T | T[])[];
 	};
 
+	const handleViewDataChange = (fieldName: string) => {
+		return (newData: any[]) => {
+			console.log("Field handler called for", fieldName, newData);
+			const updatedData = {
+				...effectiveData,
+				[fieldName]: newData,
+			};
+			console.log("Updated data:", updatedData);
+			setEffectiveData(updatedData);
+			onSuccess?.(updatedData);
+		};
+	};
+
 	const validateFormFields = async (): Promise<Errors> => {
 		const newErrors: Errors = {};
-		const currentFields = getCurrentFields();
+		const currentFields = getAllFields();
 		const allFields = flattenArray(currentFields.form);
 
 		// 1) Required field validation
@@ -473,6 +445,17 @@ const GenericModal = ({
 			}
 		}
 
+		// Switch to the tab containing the first error
+		if (hasTabs && tabs) {
+			for (const tab of tabs) {
+				const tabFields = flattenArray(filterConditionalFields(tab.fields.form));
+				if (tabFields.some((field: ModalFormField) => newErrors[field.name])) {
+					setActiveTab(tab.key);
+					break;
+				}
+			}
+		}
+
 		return newErrors;
 	};
 
@@ -498,22 +481,22 @@ const GenericModal = ({
 					? await api.post(`${endpoint}/`, dataToSubmit, token)
 					: await api.put(`${endpoint}/${effectiveData.id}`, dataToSubmit, token);
 
-			// Handle success
-			if (mode === "add") {
-				onSuccess?.(apiResult);
-			}
+			onSuccess?.(apiResult);
 
-			// Update UI
-			if (mode === "add" || mode === "edit") {
+			if (mode === "add") {
+				handleHideImmediate();
+			} else if (mode === "import") {
+				onDelete?.(apiResult);
+				handleHideImmediate();
+			} else if (mode === "edit") {
 				handleHideImmediate();
 			} else {
-				Object.assign(effectiveData, apiResult);
-				setEffectiveData({ ...effectiveData });
+				setEffectiveData(apiResult); // reset to view mode since data changed
 				handleEditToView();
 			}
 		} catch (err: any) {
-			const errorMessage = `Failed to ${mode === "add" ? "create" : "update"} 
-			${itemName.toLowerCase()} due to the following error: ${err.message}`;
+			const errorMessage = `Failed to ${mode === "add" || mode === "import" ? "create" : "update"} 
+        ${itemName.toLowerCase()} due to the following error: ${err.message}`;
 			setErrors({
 				submit: errorMessage,
 			});
@@ -524,6 +507,9 @@ const GenericModal = ({
 
 	const getModalId = (): string => {
 		if (isEditing) {
+			if (mode === "import") {
+				return `modal-import-${itemName.toLowerCase()}`;
+			}
 			return `modal-edit-${itemName.toLowerCase()}`;
 		} else {
 			return `modal-view-${itemName.toLowerCase()}`;
@@ -535,6 +521,9 @@ const GenericModal = ({
 		if (mode === "add") {
 			icon = "bi bi-plus-circle";
 			text = `Add New ${itemName}`;
+		} else if (mode === "import") {
+			icon = "bi bi-download";
+			text = `Import ${itemName}`;
 		} else if (mode === "edit" || isEditing) {
 			icon = "bi bi-pencil";
 			text = `Edit ${itemName}`;
@@ -545,8 +534,10 @@ const GenericModal = ({
 		return (
 			<Modal.Header closeButton>
 				<Modal.Title>
-					{icon && <i className={`${icon} me-2`} style={{ fontSize: "1.05em" }} />}
-					{text}
+					<span style={{ display: "flex", alignItems: "center" }}>
+						{icon && <i className={`${icon} me-2`} style={{ fontSize: "1.05em" }} />}
+						<span>{text}</span>
+					</span>
 				</Modal.Title>
 			</Modal.Header>
 		);
@@ -567,7 +558,6 @@ const GenericModal = ({
 
 		const currentFields = getCurrentFields();
 		const currentAdditionalFields = getCurrentAdditionalFields();
-		const formFields = filterConditionalFields(currentFields.form);
 
 		const renderContentInner = () => (
 			<div className={`modal-content-visible`}>
@@ -575,7 +565,7 @@ const GenericModal = ({
 					<div>
 						{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
 						<div>
-							{formFields.map((item: FormField | FormField[], index: number) => (
+							{currentFields.form.map((item: ModalFormField | ModalFormField[], index: number) => (
 								<div key={`form-field-${index}`}>{renderFieldGroup(item, index, true)}</div>
 							))}
 						</div>
@@ -586,11 +576,13 @@ const GenericModal = ({
 							<Card>
 								<Card.Body>
 									<div>
-										{currentFields.view.map((item: ViewField | ViewField[], index: number) => (
-											<div key={`view-field-${index}`}>
-												{renderFieldGroup(item, index, false)}
-											</div>
-										))}
+										{currentFields.view.map(
+											(item: ModalViewField | ModalViewField[], index: number) => (
+												<div key={`view-field-${index}`}>
+													{renderFieldGroup(item, index, false)}
+												</div>
+											),
+										)}
 									</div>
 								</Card.Body>
 							</Card>
@@ -598,9 +590,14 @@ const GenericModal = ({
 
 						{currentAdditionalFields && currentAdditionalFields.length > 0 && (
 							<div className="outside-card-content mt-3">
-								{currentAdditionalFields.map((item: ViewField, index: number) => (
+								{currentAdditionalFields.map((item: ModalViewField, index: number) => (
 									<div key={`outside-field-${index}`} className="mb-3">
-										{renderViewElement(item, effectiveData, getModalId())}
+										{renderModalViewField(
+											item,
+											effectiveData,
+											getModalId(),
+											handleViewDataChange(item.key),
+										)}
 									</div>
 								))}
 							</div>
@@ -632,7 +629,7 @@ const GenericModal = ({
 									key={tab.key}
 									type="button"
 									className={`custom-tab-button ${activeTab === tab.key ? "active" : ""}`}
-									onClick={() => handleTabChange(tab.key)}
+									onClick={() => setActiveTab(tab.key)}
 								>
 									{tabTitle}
 								</button>
@@ -667,6 +664,41 @@ const GenericModal = ({
 									loading={submitting}
 									loadingText="Submitting..."
 									defaultText="Confirm"
+									fullWidth={false}
+								/>
+							</div>
+						</div>
+					</Modal.Footer>
+				);
+			} else if (mode === "import") {
+				return (
+					<Modal.Footer>
+						<div className="d-flex flex-column w-100 gap-2">
+							<div className="modal-buttons-container">
+								<ActionButton
+									variant="danger"
+									onClick={handleDeleteClick}
+									className="me-auto"
+									defaultText="Delete"
+									defaultIcon="bi bi-trash"
+								/>
+								<ActionButton
+									id="import-button"
+									type="submit"
+									disabled={submitting || loading}
+									loading={submitting}
+									loadingText="Importing..."
+									defaultText="Import"
+									defaultIcon="bi bi-download"
+									fullWidth={false}
+								/>
+							</div>
+							<div className="modal-buttons-container">
+								<ActionButton
+									id="cancel-button"
+									variant="secondary"
+									onClick={handleHideImmediate}
+									defaultText="Cancel"
 									fullWidth={false}
 								/>
 							</div>
@@ -785,15 +817,15 @@ const GenericModal = ({
 	);
 };
 
-export default GenericModal;
+export default DataModal;
 
 export interface DataModalProps {
 	show: boolean;
 	onHide: () => void;
-	submode?: "view" | "edit" | "add";
+	submode?: "view" | "edit" | "add" | "import";
 	data?: any;
 	id?: number | null;
 	onSuccess?: (data: any) => void;
-	onDelete?: ((item: any) => Promise<void>) | null;
+	onDelete?: (id: number | string) => void;
 	size?: "sm" | "lg" | "xl";
 }

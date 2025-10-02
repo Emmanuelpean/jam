@@ -28,7 +28,7 @@ from tests.utils.table_data import (
 
 class TestKeywordCRUD(CRUDTestBase):
     endpoint = "/keywords"
-    schema = schemas.KeywordCreate
+    create_schema = schemas.KeywordCreate
     out_schema = schemas.KeywordOut
     test_data = "test_keywords"
     create_data = KEYWORD_DATA
@@ -40,7 +40,7 @@ class TestKeywordCRUD(CRUDTestBase):
 
 class TestAggregatorCRUD(CRUDTestBase):
     endpoint = "/aggregators"
-    schema = schemas.AggregatorCreate
+    create_schema = schemas.AggregatorCreate
     out_schema = schemas.AggregatorOut
     test_data = "test_aggregators"
     create_data = AGGREGATOR_DATA
@@ -53,7 +53,7 @@ class TestAggregatorCRUD(CRUDTestBase):
 
 class TestCompanyCRUD(CRUDTestBase):
     endpoint = "/companies"
-    schema = schemas.CompanyCreate
+    create_schema = schemas.CompanyCreate
     out_schema = schemas.CompanyOut
     test_data = "test_companies"
     create_data = COMPANY_DATA
@@ -79,7 +79,7 @@ class TestCompanyCRUD(CRUDTestBase):
 
 class TestLocationCRUD(CRUDTestBase):
     endpoint = "/locations"
-    schema = schemas.LocationCreate
+    create_schema = schemas.LocationCreate
     out_schema = schemas.LocationOut
     test_data = "test_locations"
     create_data = LOCATION_DATA
@@ -91,7 +91,7 @@ class TestLocationCRUD(CRUDTestBase):
 
 class TestFileCRUD(CRUDTestBase):
     endpoint = "/files"
-    schema = schemas.FileCreate
+    create_schema = schemas.FileCreate
     out_schema = schemas.FileOut
     test_data = "test_files"
     create_data = FILE_DATA
@@ -188,23 +188,25 @@ class TestFileCRUD(CRUDTestBase):
 
 class TestPersonCRUD(CRUDTestBase):
     endpoint = "/persons"
-    schema = schemas.PersonCreate
+    create_schema = schemas.PersonCreate
     out_schema = schemas.PersonOut
     test_data = "test_persons"
-    add_fixture = ["test_companies"]
+    required_fixture = ["test_companies"]
     create_data = PERSON_DATA
     update_data = {
         "first_name": "OX",
         "id": 1,
     }
+    get_unauthorised_fixture = "test_persons_unauthorised"
+    unauthorised_data_fixture = "persons_unauthorised_data"
 
 
 class TestJobCRUD(CRUDTestBase):
     endpoint = "/jobs"
-    schema = schemas.JobCreate
+    create_schema = schemas.JobCreate
     out_schema = schemas.JobOut
     test_data = "test_jobs"
-    add_fixture = [
+    required_fixture = [
         "test_persons",
         "test_locations",
         "test_keywords",
@@ -218,27 +220,31 @@ class TestJobCRUD(CRUDTestBase):
         "url": "https://updated-linkedin.com",
         "id": 1,
     }
+    get_unauthorised_fixture = "test_jobs_unauthorised"
+    unauthorised_data_fixture = "jobs_unauthorised_data"
 
 
 class TestJobApplicationUpdateCRUD(CRUDTestBase):
     endpoint = "/jobapplicationupdates"
-    schema = schemas.JobApplicationUpdateCreate
+    create_schema = schemas.JobApplicationUpdateCreate
     out_schema = schemas.JobApplicationUpdateOut
     test_data = "test_job_application_updates"
-    add_fixture = ["test_jobs"]
+    required_fixture = ["test_jobs"]
     create_data = JOB_APPLICATION_UPDATE_DATA
     update_data = {
         "id": 1,
         "note": "Updated note",
     }
+    get_unauthorised_fixture = "test_job_application_updates_unauthorised"
+    unauthorised_data_fixture = "job_application_updates_unauthorised_data"
 
 
 class TestInterviewCRUD(CRUDTestBase):
     endpoint = "/interviews"
-    schema = schemas.InterviewCreate
+    create_schema = schemas.InterviewCreate
     out_schema = schemas.InterviewOut
     test_data = "test_interviews"
-    add_fixture = ["test_jobs", "test_locations", "test_persons"]
+    required_fixture = ["test_jobs", "test_locations", "test_persons"]
     create_data = INTERVIEW_DATA
     update_data = {
         "job_id": 1,
@@ -246,3 +252,5 @@ class TestInterviewCRUD(CRUDTestBase):
         "date": "2024-01-20T10:00:00",
         "id": 1,
     }
+    get_unauthorised_fixture = "test_interviews_unauthorised"
+    unauthorised_data_fixture = "interviews_unauthorised_data"

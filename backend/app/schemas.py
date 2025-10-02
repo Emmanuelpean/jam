@@ -5,7 +5,7 @@ Min schemas should be used to return minimal data to the user (enough to display
 contain reference to other tables.
 Update schemas should be used to update existing entries in the database."""
 
-from datetime import datetime, UTC
+from datetime import datetime, UTC, time
 
 from pydantic import BaseModel, EmailStr, computed_field
 
@@ -33,6 +33,7 @@ class SettingCreate(BaseModel):
     name: str
     value: str
     description: str | None = None
+    is_active: bool = True
 
 
 class SettingOut(SettingCreate, Out):
@@ -52,11 +53,15 @@ class SettingUpdate(SettingCreate):
 
 
 class UserCreate(BaseModel):
+    """User create schema"""
+
     password: str
     email: EmailStr
 
 
 class UserOut(Out):
+    """User output schema"""
+
     email: EmailStr
     theme: str
     is_admin: bool = False
@@ -64,14 +69,19 @@ class UserOut(Out):
     chase_threshold: int
     deadline_threshold: int
     update_limit: int
+    toast_active: bool
 
 
 class UserLogin(BaseModel):
+    """User login schema"""
+
     email: EmailStr
     password: str
 
 
 class UserUpdate(BaseModel):
+    """User update schema"""
+
     current_password: str | None = None
     email: EmailStr | None = None
     theme: str | None = None
@@ -81,6 +91,7 @@ class UserUpdate(BaseModel):
     chase_threshold: int | None = None
     deadline_threshold: int | None = None
     update_limit: int | None = None
+    toast_active: bool = False
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------
@@ -300,6 +311,7 @@ class JobCreate(BaseModel):
     application_status: str | None = None
     application_note: str | None = None
     applied_via: str | None = None
+    followup_snooze_datetime: datetime | None = None
 
     # Foreign keys
     company_id: int | None = None
@@ -386,13 +398,14 @@ class JobOut(JobCreate, OwnedOut):
 
     @computed_field
     @property
-    def days_until_deadline(self) -> int | None:
+    def days_until_deadline(self) -> float | None:
         """Calculate the number of days before the deadline"""
 
         if self.deadline is None:
             return None
-        now = datetime.now(UTC)
-        return (self.deadline - now).days
+        now = datetime.now()
+        deadline_dt = datetime.combine(self.deadline, time(23, 59, 59))
+        return (deadline_dt - now).total_seconds()
 
 
 class JobMinOut(OwnedOut):
@@ -407,6 +420,7 @@ class JobMinOut(OwnedOut):
     deadline: datetime | None
     note: str | None
     attendance_type: str | None
+    followup_snooze_datetime: datetime | None
     application_date: datetime
     application_url: str | None = None
     application_status: str

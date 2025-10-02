@@ -17,8 +17,10 @@ class Settings(BaseSettings):
     min_password_length: int
     max_file_size_mb: int
 
-    model_config = SettingsConfigDict(extra="ignore", env_file=Path(__file__).parent.parent / ".env")
+    model_config = SettingsConfigDict(
+        extra="ignore",
+        env_file=Path(__file__).parent.parent / ".env",
+    )
 
 
-# noinspection PyArgumentList
-settings = Settings()
+settings = Settings()  # type: ignore[call-arg]

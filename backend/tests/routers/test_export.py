@@ -17,6 +17,14 @@ class TestExport:
         """Test export endpoint returns CSV data with all columns and related data"""
 
         response = authorised_clients[0].get("/export")
+        jobs = []
+        for job in test_jobs:
+            try:
+                if job.owner_id == test_users[0].id:
+                    jobs.append(job)
+            except:  # required for unknown reason
+                pass
+        assert len(response.content.decode().split("\r\n")) == len(jobs) + 2  # +2 for header and trailing newline
         assert response.status_code == 200
 
     def test_export_no_data(self, authorised_clients) -> None:

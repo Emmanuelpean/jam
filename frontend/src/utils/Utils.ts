@@ -1,5 +1,3 @@
-import { Theme } from "./Theme";
-
 export type SelectOption = {
 	value: string;
 	label: string;
@@ -11,7 +9,8 @@ export interface Progress {
 	total: number;
 }
 
-export const accessAttribute = (item: any, key: string) => {
+export const accessAttribute = (item: any, key: string | null | undefined) => {
+	if (!key) return item;
 	const parts = key.split(".");
 	let obj = item;
 	for (const part of parts) {
@@ -29,12 +28,6 @@ export const toSelectOptions = (data: any[], valueKey = "id", labelKey = "name")
 	}));
 };
 
-/**
- * Compares two values for deep equality, handling null/undefined/empty string equivalence and array comparisons
- * @param value1 - First value to compare
- * @param value2 - Second value to compare
- * @returns true if values are different, false if they are equivalent
- */
 export const areDifferent = (value1: any, value2: any): boolean => {
 	// Handle null/undefined/empty string equivalence
 	const isEmptyValue = (val: any): boolean => val === null || val === undefined || val === "";
@@ -67,3 +60,8 @@ export function flattenArray(arr: Array<any>): Array<any> {
 	}
 	return result;
 }
+
+export const normaliseList = <T>(variable: T | T[] | null | undefined): T[] => {
+	if (variable === null || variable === undefined) return [];
+	return Array.isArray(variable) ? variable : [variable];
+};

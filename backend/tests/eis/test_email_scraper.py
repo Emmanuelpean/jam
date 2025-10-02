@@ -6,19 +6,18 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.eis import schemas
+from app.models import Setting
 from app.eis.email_scraper import clean_email_address, get_user_id_from_email, GmailScraper
 from app.eis.job_scraper import extract_indeed_jobs_from_email
 from app.eis.models import JobAlertEmail, ScrapedJob
 from tests.conftest import open_file
 from tests.eis.test_job_scraper import MockLinkedinJobScraper, MockIndeedJobScraper
 
-
 # ------------------------------------------------------ FIXTURES ------------------------------------------------------
 
 
-def create_gmail_scraper(**kwargs) -> GmailScraper:
-    """Create a GmailScraper instance for testing with mocked file dependencies
-    :param kwargs: keyword arguments passed to the GmailScraper constructor"""
+def create_gmail_scraper() -> GmailScraper:
+    """Create a GmailScraper instance for testing with mocked file dependencies"""
 
     with (
         patch("builtins.open", create=True),
@@ -60,7 +59,7 @@ def create_gmail_scraper(**kwargs) -> GmailScraper:
             mock_flow.return_value = mock_flow_instance
 
             # Create scraper with mocked dependencies
-            scraper = GmailScraper(secrets_file="test_secrets.json", token_file="test_token.json", **kwargs)
+            scraper = GmailScraper(secrets_file="test_secrets.json", token_file="test_token.json")
 
             return scraper
 
@@ -81,26 +80,32 @@ def mock_get_indeed_redirected_url(url: str) -> str:
 
 
 @pytest.fixture(autouse=True)
-def patch_get_indeed_redirected_url(monkeypatch):
+def patch_get_indeed_redirected_url(monkeypatch) -> None:
     """Automatically patch get_indeed_redirected_url in all tests to avoid real HTTP requests"""
-
-    from app.eis.email_scraper import GmailScraper
 
     monkeypatch.setattr(GmailScraper, "get_indeed_redirected_url", mock_get_indeed_redirected_url)
 
 
 @pytest.fixture
-def gmail_scraper() -> GmailScraper:
+def gmail_scraper(session) -> GmailScraper:
     """Create a GmailScraper instance for testing with mocked file dependencies."""
 
-    return create_gmail_scraper(skip_indeed_brightapi_scraping=False)
+    # noinspection PyArgumentList
+    entry = Setting(name="indeed_scraper", value="brightapi")
+    session.add(entry)
+    session.commit()
+    return create_gmail_scraper()
 
 
 @pytest.fixture
-def gmail_scraper_with_brightapi_skip() -> GmailScraper:
+def gmail_scraper_with_brightapi_skip(session) -> GmailScraper:
     """Create a GmailScraper instance with BrightAPI skip enabled."""
 
-    return create_gmail_scraper(skip_indeed_brightapi_scraping=True)
+    # noinspection PyArgumentList
+    entry = Setting(name="indeed_scraper", value="email")
+    session.add(entry)
+    session.commit()
+    return create_gmail_scraper()
 
 
 def create_email_data(
@@ -126,7 +131,7 @@ def create_email_data(
     )
 
 
-# Job ids extracted from the linkedin email body
+# Job ids extracted from the LinkedIn email body
 LINKEDIN_JOB_IDS = [
     "4289870503",
     "4291891707",
@@ -209,28 +214,28 @@ def create_email_record(session, test_users, filename: str, platform: str, user_
 
 
 @pytest.fixture
-def linkedin_email_record(session, test_users):
+def linkedin_email_record(session, test_users) -> tuple[JobAlertEmail, list[str]]:
     """Create a LinkedIn job alert email record for testing."""
 
     return create_email_record(session, test_users, "linkedin_email", "linkedin", 0), LINKEDIN_JOB_IDS
 
 
 @pytest.fixture
-def linkedin_email_record_user2(session, test_users) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
+def linkedin_email_record_user2(session, test_users) -> tuple[JobAlertEmail, list[str]]:
     """Create a LinkedIn job alert email record for testing."""
 
     return create_email_record(session, test_users, "linkedin_email", "linkedin", 1), LINKEDIN_JOB_IDS
 
 
 @pytest.fixture
-def indeed_email_record(session, test_users) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
+def indeed_email_record(session, test_users) -> tuple[JobAlertEmail, list[str]]:
     """Create an Indeed job alert email record for testing."""
 
     return create_email_record(session, test_users, "indeed_email", "indeed", 0), INDEED_JOB_IDS
 
 
 @pytest.fixture
-def indeed_email_record_user2(session, test_users) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
+def indeed_email_record_user2(session, test_users) -> tuple[JobAlertEmail, list[str]]:
     """Create an Indeed job alert email record for testing."""
 
     return create_email_record(session, test_users, "indeed_email", "indeed", 1), INDEED_JOB_IDS
@@ -315,7 +320,6 @@ class TestSaveEmailToDb:
         assert result_email.service_log_id == test_service_logs[0].id
 
         # Verify it's actually in the database
-        # noinspection PyTypeChecker
         db_email = (
             session.query(JobAlertEmail)
             .filter(JobAlertEmail.external_email_id == linkedin_email_data.external_email_id)
@@ -349,7 +353,6 @@ class TestSaveEmailToDb:
         assert result_email.subject == "Different Subject"  # Original data preserved
 
         # Verify only one record exists
-        # noinspection PyTypeChecker
         email_count = (
             session.query(JobAlertEmail)
             .filter(JobAlertEmail.external_email_id == linkedin_email_data[0].external_email_id)
@@ -750,7 +753,6 @@ class TestProcessEmailJobs:
             service_log_entry=test_service_logs[0],
         )
 
-        # noinspection PyTypeChecker
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(linkedin_email_record[1])
 
@@ -769,7 +771,6 @@ class TestProcessEmailJobs:
             service_log_entry=test_service_logs[0],
         )
 
-        # noinspection PyTypeChecker
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == indeed_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(indeed_email_record[1])
 
@@ -788,7 +789,6 @@ class TestProcessEmailJobs:
             service_log_entry=test_service_logs[0],
         )
 
-        # noinspection PyTypeChecker
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == indeed_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(indeed_email_record[1])
         assert len(result) == len(indeed_email_record[1])
@@ -815,10 +815,8 @@ class TestProcessEmailJobs:
             service_log_entry=test_service_logs[0],
         )
 
-        # noinspection PyTypeChecker
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(linkedin_email_record[1])
-        # noinspection PyTypeChecker
         scraped_jobs = (
             session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record_user2[0].owner_id).all()
         )
@@ -845,7 +843,6 @@ class TestProcessEmailJobs:
             service_log_entry=test_service_logs[0],
         )
 
-        # noinspection PyTypeChecker
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(linkedin_email_record[1])
 
@@ -897,7 +894,6 @@ class TestProcessUserEmails:
             assert test_service_logs[0].emails_saved_n == 1
 
             # Verify email was saved to database
-            # noinspection PyTypeChecker
             saved_emails = (
                 session.query(JobAlertEmail)
                 .filter(JobAlertEmail.external_email_id == linkedin_email_data[0].external_email_id)
@@ -907,13 +903,11 @@ class TestProcessUserEmails:
             assert saved_emails[0].platform == linkedin_email_data[0].platform
 
             # Verify jobs were created only for the first user
-            # noinspection PyTypeChecker
             user1_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[0].id).all()
             assert len(user1_jobs) == len(linkedin_email_data[1])
 
             # Verify no jobs for other users
             for i in range(1, len(test_users)):
-                # noinspection PyTypeChecker
                 user_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[i].id).all()
                 assert len(user_jobs) == 0
 
@@ -970,16 +964,13 @@ class TestProcessUserEmails:
             )
 
             # Verify jobs were created for appropriate users
-            # noinspection PyTypeChecker
             user1_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[0].id).all()
-            # noinspection PyTypeChecker
             user2_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[1].id).all()
             assert len(user1_jobs) == len(linkedin_email_data[1])
             assert len(user2_jobs) == len(indeed_email_data_user2[1])
 
             # Verify no jobs for remaining users (if any)
             for i in range(2, len(test_users)):
-                # noinspection PyTypeChecker
                 user_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[i].id).all()
                 assert len(user_jobs) == 0
 
@@ -1035,16 +1026,13 @@ class TestProcessUserEmails:
             )
 
             # Verify jobs were created for appropriate users
-            # noinspection PyTypeChecker
             user1_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[0].id).all()
-            # noinspection PyTypeChecker
             user2_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[1].id).all()
             assert len(user1_jobs) == len(linkedin_email_data[1])
             assert len(user2_jobs) == len(linkedin_email_data_user2[1])
 
             # Verify no jobs for remaining users (if any)
             for i in range(2, len(test_users)):
-                # noinspection PyTypeChecker
                 user_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[i].id).all()
                 assert len(user_jobs) == 0
 

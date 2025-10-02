@@ -1,107 +1,48 @@
-import React, { ReactElement, ReactNode, useState } from "react";
-import { LocationModal } from "../../modals/LocationModal";
-import { CompanyModal } from "../../modals/CompanyModal";
-import { PersonModal } from "../../modals/PersonModal";
-import { KeywordModal } from "../../modals/KeywordModal";
-import { AggregatorModal } from "../../modals/AggregatorModal";
-import { accessAttribute } from "../../../utils/Utils";
+import React, { ReactNode } from "react";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
-import { JobModal } from "../../modals/JobModal";
 import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../maps/LocationMap";
 import {
 	AggregatorOut,
 	CompanyOut,
+	InterviewData,
 	JobData,
 	KeywordOut,
-	LocationCreate,
-	LocationOut,
+	LocationData,
+	PersonData,
 	PersonOut,
 } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
-import { TableColumn } from "./TableColumnRenders";
-import { HelpBubble } from "../widgets/HelpBubble";
-
-interface ModalManagerProps {
-	children: (handleClick: (item: any) => void) => ReactNode;
-}
+import { TableColumn } from "./TableColumns";
+import { Accordion } from "./Accordion";
+import {
+	AggregatorModalManager,
+	CompanyModalManager,
+	JobModalManager,
+	KeywordModalManager,
+	LocationModalManager,
+	PersonModalManager,
+} from "../../modals/ModalManagers";
+import { formatTimedelta } from "../../../utils/TimeUtils";
 
 export interface RenderParams {
 	item: any;
 	view?: boolean;
-	accessKey?: string | undefined;
 	id?: string;
 	columns?: TableColumn[];
 	helpText?: string;
+	onChange?: () => void;
 }
 
-export interface Field {
+// Base class for Fields (Table or Modal fields)
+export interface ViewField {
 	key: string;
 	render?: (params: RenderParams) => ReactNode;
-	accessKey?: string;
 	columns?: TableColumn[];
 	helpText?: string;
 }
-
-interface ModalManagerProps {
-	children: (handleClick: (item: any) => void) => ReactNode;
-}
-
-type FlexibleModalComponent = React.ComponentType<any>;
-
-const createModalManager = (ModalComponent: FlexibleModalComponent) => {
-	return ({ children }: ModalManagerProps): ReactElement => {
-		const [showModal, setShowModal] = useState<boolean>(false);
-		const [selectedItem, setSelectedItem] = useState<any>(null);
-		const [selectedId, setSelectedId] = useState<string | number | null>(null);
-
-		const handleClick = (itemId: number): void => {
-			setSelectedItem(null);
-			setSelectedId(itemId);
-			setShowModal(true);
-		};
-
-		const handleHide = () => {
-			setShowModal(false);
-			setTimeout(() => {
-				setSelectedItem(null);
-				setSelectedId(null);
-			}, 300);
-		};
-
-		// Empty handlers for modal callbacks since we're just viewing
-		const handleSuccess = () => {};
-		const handleDelete = () => {};
-
-		return (
-			<>
-				{children(handleClick)}
-				<ModalComponent
-					show={showModal}
-					onHide={handleHide}
-					data={selectedItem}
-					id={selectedId}
-					submode="view"
-					onSuccess={handleSuccess}
-					onDelete={handleDelete}
-					onJobSuccess={handleSuccess}
-					onApplicationSuccess={handleSuccess}
-					onJobDelete={handleDelete}
-					onApplicationDelete={handleDelete}
-				/>
-			</>
-		);
-	};
-};
-
-const LocationModalManager = createModalManager(LocationModal);
-const CompanyModalManager = createModalManager(CompanyModal);
-const PersonModalManager = createModalManager(PersonModal);
-const KeywordModalManager = createModalManager(KeywordModal);
-const JobAndApplicationModalManager = createModalManager(JobModal);
-const AggregatorModalManager = createModalManager(AggregatorModal);
 
 export const getApplicationStatusBadgeClass = (status: string | undefined): string => {
 	switch (status?.toLowerCase()) {
@@ -154,65 +95,24 @@ export const getAdminIcon = (isAdmin: boolean): string => {
 	}
 };
 
+export const getToastIcon = (toastActive: boolean): string => {
+	if (toastActive) {
+		return "bi bi-cup-hot text-success";
+	} else {
+		return "bi bi-cup text-danger";
+	}
+};
+
 const ensureHttpPrefix = (url: string): string => {
 	if (url.match(/^https?:\/\//)) return url;
 	return `https://${url}`;
-};
-
-const accessSubAttribute = (item: any, accessKey: string | undefined, key: string): any => {
-	if (accessKey) {
-		item = accessAttribute(item, accessKey);
-	}
-	return item?.[key];
-};
-
-interface GenericAccordionProps<T = any> {
-	title: string;
-	data: T[];
-	onChange?: () => void;
-	itemId?: number;
-	children: (data: T[], onChange?: () => void) => React.ReactNode;
-	icon?: string;
-	defaultOpen?: boolean;
-	helpText?: string;
-}
-
-export const GenericAccordion = <T,>({
-	title,
-	data,
-	onChange,
-	children,
-	icon,
-	defaultOpen = false,
-	helpText,
-}: GenericAccordionProps<T>) => {
-	const [isOpen, setIsOpen] = React.useState(defaultOpen);
-
-	return (
-		<div className="simple-accordion" style={{ paddingLeft: "10px", paddingRight: "10px" }}>
-			<div
-				className="simple-accordion-header d-flex align-items-center justify-content-between py-2 border-bottom"
-				onClick={() => setIsOpen(!isOpen)}
-				style={{ cursor: "pointer" }}
-			>
-				<div className="d-flex align-items-center">
-					{icon && <i className={`${icon} me-2`}></i>}
-					<span className="fw-medium">{title}</span>
-					<span className="text-muted ms-2">({data?.length || 0})</span>
-					{helpText && <HelpBubble helpText={helpText} size="17px" />}
-				</div>
-				<i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}></i>
-			</div>
-			{isOpen && <div className="simple-accordion-content">{children(data, onChange)}</div>}
-		</div>
-	);
 };
 
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
 	_longText: (param: RenderParams, key: string): ReactNode => {
-		const text = accessSubAttribute(param.item, param.accessKey, key);
+		const text = param.item?.[key];
 		if (text) {
 			if (param.view) {
 				return text;
@@ -249,7 +149,7 @@ export const renderFunctions = {
 	},
 
 	appTheme: (param: RenderParams): ReactNode => {
-		const themeKey = accessSubAttribute(param.item, param.accessKey, "theme");
+		const themeKey = param.item?.theme;
 		if (themeKey) {
 			const theme = THEMES.find((theme) => theme.key === themeKey);
 			return theme?.name;
@@ -258,7 +158,7 @@ export const renderFunctions = {
 	},
 
 	updateType: (param: RenderParams): ReactNode => {
-		const updateType = accessSubAttribute(param.item, param.accessKey, "type");
+		const updateType = param.item?.type;
 		if (updateType) {
 			const capitalizedType = updateType.charAt(0).toUpperCase() + updateType.slice(1);
 			const icon = getUpdateTypeIcon(updateType);
@@ -276,7 +176,7 @@ export const renderFunctions = {
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
 	_url: (param: RenderParams, attribute: string, displayText: string | null = null): ReactNode => {
-		const url = accessSubAttribute(param.item, param.accessKey, attribute);
+		const url = param.item?.[attribute];
 		if (url) {
 			const safeUrl = ensureHttpPrefix(url);
 			const linkText = displayText || safeUrl?.slice(8);
@@ -302,7 +202,7 @@ export const renderFunctions = {
 	},
 
 	email: (param: RenderParams): ReactNode => {
-		const email = accessSubAttribute(param.item, param.accessKey, "email");
+		const email = param.item?.email;
 		if (email)
 			return (
 				<a href={`mailto:${email}`} className="text-decoration-none">
@@ -314,7 +214,7 @@ export const renderFunctions = {
 	},
 
 	linkedinUrl: (param: RenderParams): ReactNode => {
-		const linkedinUrl = accessSubAttribute(param.item, param.accessKey, "linkedin_url");
+		const linkedinUrl = param.item?.linkedin_url;
 		if (linkedinUrl) {
 			return (
 				<a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
@@ -329,7 +229,7 @@ export const renderFunctions = {
 	// ---------------------------------------------------- DATETIME ---------------------------------------------------
 
 	_date: (param: RenderParams, key: string): string | null => {
-		const date = accessSubAttribute(param.item, param.accessKey, key);
+		const date = param.item?.[key];
 		if (date) {
 			return new Date(date).toLocaleDateString();
 		}
@@ -357,7 +257,7 @@ export const renderFunctions = {
 	},
 
 	datetime: (param: RenderParams): string | null => {
-		const date = accessSubAttribute(param.item, param.accessKey, "date");
+		const date = param.item?.date;
 		if (date) {
 			return (
 				new Date(date).toLocaleDateString() +
@@ -371,10 +271,15 @@ export const renderFunctions = {
 		return null;
 	},
 
+	followupSnoozeDateTime: (param: RenderParams): string | null => {
+		const date = param.item?.followup_snooze_datetime;
+		return renderFunctions._date(param, "followup_snooze_datetime");
+	},
+
 	// ----------------------------------------------------- OTHER -----------------------------------------------------
 
 	phone: (param: RenderParams): ReactNode => {
-		const phone = accessSubAttribute(param.item, param.accessKey, "phone");
+		const phone = param.item?.phone;
 		if (phone) {
 			return (
 				<a href={`tel:${phone}`} className="text-decoration-none">
@@ -387,14 +292,29 @@ export const renderFunctions = {
 	},
 
 	isAdmin: (param: RenderParams): ReactNode => {
-		const isAdmin = accessSubAttribute(param.item, param.accessKey, "is_admin");
+		const isAdmin = param.item?.is_admin;
 		const icon = getAdminIcon(isAdmin);
 		return <i className={icon}></i>;
 	},
 
+	toastActive: (param: RenderParams): ReactNode => {
+		const toastActive = param.item?.toast_active;
+		const icon = getToastIcon(toastActive);
+		return <i className={icon}></i>;
+	},
+
+	isActive: (param: RenderParams): ReactNode => {
+		const isActive = param.item?.is_active;
+		if (isActive) {
+			return <span className="badge bg-success">Active</span>;
+		} else {
+			return <span className="badge bg-secondary">Inactive</span>;
+		}
+	},
+
 	salaryRange: (param: RenderParams): string | null => {
-		const salary_min = accessSubAttribute(param.item, param.accessKey, "salary_min");
-		const salary_max = accessSubAttribute(param.item, param.accessKey, "salary_max");
+		const salary_min = param.item?.salary_min;
+		const salary_max = param.item?.salary_max;
 		if (!salary_min && !salary_max) {
 			return null;
 		}
@@ -410,7 +330,7 @@ export const renderFunctions = {
 	},
 
 	personalRating: (param: RenderParams): ReactNode => {
-		const personal_rating = accessSubAttribute(param.item, param.accessKey, "personal_rating");
+		const personal_rating = param.item?.personal_rating;
 		if (personal_rating) {
 			const rating = Math.max(0, Math.min(5, personal_rating));
 
@@ -435,61 +355,58 @@ export const renderFunctions = {
 	},
 
 	applicationStatus: (param: RenderParams): ReactNode => {
-		const status = accessSubAttribute(param.item, param.accessKey, "application_status");
+		const status = param.item?.application_status;
 		if (status) {
 			return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
 		}
 	},
 
 	locationMap: (param: RenderParams): ReactNode => {
-		const locations: LocationCreate[] = param.item ? [param.item] : [];
+		const locations: LocationData[] = param.item ? [param.item] : [];
 		return <LocationMap locations={locations} />;
 	},
 
 	lastUpdateDays: (params: RenderParams): ReactNode => {
-		const daysSinceLastUpdate = accessSubAttribute(params.item, params.accessKey, "days_since_last_update");
+		const daysSinceLastUpdate = params.item?.days_since_last_update;
 		return <span className={"text-danger"}>{daysSinceLastUpdate} days</span>;
 	},
 
-	daysUntilDeadline: (params: RenderParams): ReactNode => {
-		const daysUntilDeadline = accessSubAttribute(params.item, params.accessKey, "days_until_deadline");
-		return <span className={"text-danger"}>{daysUntilDeadline} days</span>;
+	daysUntilDeadline: (param: RenderParams): ReactNode => {
+		const seconds = param.item?.days_until_deadline;
+		if (typeof seconds === "number") {
+			return <span className={"text-danger"}>{formatTimedelta(seconds)}</span>;
+		}
 	},
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
 	interviewCount: (param: RenderParams): number => {
-		const interviews = accessSubAttribute(param.item, param.accessKey, "interviews");
+		const interviews = param.item?.interviews;
 		return interviews?.length || 0;
 	},
 
-	updateCount: (param: RenderParams): number => {
-		const updates = accessSubAttribute(param.item, param.accessKey, "updates");
-		return updates?.length || 0;
-	},
-
 	jobCount: (param: RenderParams): number => {
-		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
+		const jobs = param.item?.jobs;
 		return jobs?.length || 0;
 	},
 
 	jobApplicationCount: (param: RenderParams): number => {
-		const jobs = accessSubAttribute(param.item, param.accessKey, "job_applications");
+		const jobs = param.item?.job_applications;
 		return jobs?.length || 0;
 	},
 
 	personCount: (param: RenderParams): number => {
-		const persons = accessSubAttribute(param.item, param.accessKey, "persons");
+		const persons = param.item?.persons;
 		return persons?.length || 0;
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
 	_jobBadge: (param: RenderParams, attribute: string, displayAttribute: keyof JobData): ReactNode => {
-		const job: JobData = accessSubAttribute(param.item, param.accessKey, attribute);
+		const job: JobData = param.item?.[attribute];
 		if (job) {
 			return (
-				<JobAndApplicationModalManager>
+				<JobModalManager>
 					{(handleClick) => (
 						<span
 							className={`badge bg-info clickable-badge`}
@@ -500,7 +417,7 @@ export const renderFunctions = {
 							{String(job[displayAttribute])}
 						</span>
 					)}
-				</JobAndApplicationModalManager>
+				</JobModalManager>
 			);
 		}
 		return null;
@@ -515,7 +432,7 @@ export const renderFunctions = {
 	},
 
 	keywordBadges: (param: RenderParams): ReactNode => {
-		const keywords: KeywordOut[] = accessSubAttribute(param.item, param.accessKey, "keywords");
+		const keywords: KeywordOut[] = param.item?.keywords;
 		if (keywords?.length > 0) {
 			return (
 				<div className="badge-group">
@@ -542,56 +459,60 @@ export const renderFunctions = {
 	},
 
 	locationBadge: (param: RenderParams): ReactNode => {
-		const location: LocationOut = accessSubAttribute(param.item, param.accessKey, "location");
-		const attendanceType = accessAttribute(param.item, "attendance_type");
+		const location: LocationData = param.item?.location;
+		const attendanceType = param.item?.attendance_type;
 
-		if (attendanceType === "remote") {
-			return (
-				<span className="badge bg-warning" id={param.id}>
-					<i className="bi bi-house me-1"></i>
-					Remote
-				</span>
-			);
+		let icon: string;
+		if (attendanceType === "on-site") {
+			icon = "bi-building";
+		} else if (attendanceType === "hybrid") {
+			icon = "bi-house-door";
+		} else {
+			icon = "bi-house";
 		}
 
-		if (location) {
-			let displayText = location.name;
-			if (attendanceType === "on-site") {
-				displayText = `${location.name} (On-site)`;
-			} else if (attendanceType === "hybrid") {
-				displayText = `${location.name} (Hybrid)`;
-			}
+		let attendanceString: string | null = null;
+		if (attendanceType === "on-site") {
+			attendanceString = "On-site";
+		} else if (attendanceType === "hybrid") {
+			attendanceString = "Hybrid";
+		} else if (attendanceType === "remote") {
+			attendanceString = "Remote";
+		}
 
+		let displayText: string | null = null;
+		if (location && attendanceString) {
+			displayText = `${location.name} (${attendanceString})`;
+		} else if (location) {
+			displayText = location.name;
+		} else if (attendanceString) {
+			displayText = attendanceString;
+		} else {
+			return null;
+		}
+
+		if (displayText) {
 			return (
 				<LocationModalManager>
 					{(handleClick) => (
 						<span
-							className={`badge bg-warning clickable-badge`}
+							className="badge bg-warning clickable-badge"
 							onClick={() => handleClick(location.id)}
 							id={param.id}
 						>
-							<i className="bi bi-geo-alt me-1"></i>
+							<i className={`bi ${icon} me-1`}></i>
 							{displayText}
 						</span>
 					)}
 				</LocationModalManager>
 			);
+		} else {
+			return null;
 		}
-
-		if (attendanceType && attendanceType !== "remote") {
-			return (
-				<span className="badge bg-warning" id={param.id}>
-					<i className="bi bi-building me-1"></i>
-					{attendanceType.charAt(0).toUpperCase() + attendanceType.slice(1)}
-				</span>
-			);
-		}
-
-		return null;
 	},
 
 	companyBadge: (param: RenderParams): ReactNode => {
-		const company: CompanyOut = accessSubAttribute(param.item, param.accessKey, "company");
+		const company: CompanyOut = param.item?.company;
 		if (company) {
 			return (
 				<CompanyModalManager>
@@ -612,7 +533,7 @@ export const renderFunctions = {
 	},
 
 	_personBadges: (param: RenderParams, key: string): ReactNode => {
-		const persons: PersonOut[] = accessSubAttribute(param.item, param.accessKey, key);
+		const persons: PersonOut[] = param.item?.[key];
 		if (persons?.length > 0) {
 			return (
 				<div className="badge-group">
@@ -647,9 +568,9 @@ export const renderFunctions = {
 	},
 
 	appliedViaBadge: (param: RenderParams): ReactNode => {
-		const appliedVia = accessSubAttribute(param.item, param.accessKey, "applied_via");
+		const appliedVia = param.item?.applied_via;
 		if (appliedVia === "aggregator") {
-			return renderFunctions.applicationAggregatorBadge(param);
+			return renderFunctions._aggregatorBadge(param, "application_aggregator");
 		}
 		if (appliedVia) {
 			return (
@@ -662,7 +583,7 @@ export const renderFunctions = {
 	},
 
 	_aggregatorBadge: (param: RenderParams, attribute: string): ReactNode => {
-		const aggregator: AggregatorOut = accessSubAttribute(param.item, param.accessKey, attribute);
+		const aggregator: AggregatorOut = param.item?.[attribute];
 		if (aggregator) {
 			return (
 				<AggregatorModalManager>
@@ -686,117 +607,82 @@ export const renderFunctions = {
 		return renderFunctions._aggregatorBadge(param, "source");
 	},
 
-	applicationAggregatorBadge: (param: RenderParams): ReactNode => {
-		return renderFunctions._aggregatorBadge(param, "application_aggregator");
-	},
-
 	// ----------------------------------------------------- TABLES ----------------------------------------------------
 
 	interviewTable: (param: RenderParams): ReactNode => {
-		const interviews = accessSubAttribute(param.item, param.accessKey, "interviews");
-		const onChange = () => {}; // Empty function to satisfy the required prop
-		return <InterviewsTable data={interviews} jobId={param.item?.id} onChange={onChange} />;
+		const interviews = param.item?.interviews;
+		return <InterviewsTable data={interviews} jobId={param.item?.id} onDataChange={param.onChange} />;
 	},
 
 	jobApplicationUpdateTable: (param: RenderParams): ReactNode => {
-		const updates = accessSubAttribute(param.item, param.accessKey, "updates");
-		const onChange = () => {}; // Empty function to satisfy the required prop
-		return <JobApplicationUpdateTable data={updates} jobId={param.item?.id} onChange={onChange} />;
+		const updates = param.item?.updates;
+		return <JobApplicationUpdateTable data={updates} jobId={param.item?.id} onDataChange={param.onChange} />;
 	},
 
 	// ------------------------------------------------ ACCORDION TABLES -----------------------------------------------
 
 	accordionJobTable: (param: RenderParams): ReactNode => {
-		const jobs = accessSubAttribute(param.item, param.accessKey, "jobs");
-		const onChange = () => {};
+		const jobs: JobData[] = param.item?.jobs;
 		return (
-			<GenericAccordion
-				title="Jobs"
-				data={jobs}
-				onChange={onChange}
-				icon={getTableIcon("Jobs")}
-				helpText={param.helpText}
-			>
-				{(data, onChangeCallback) => (
-					<JobsTable onChange={onChangeCallback} data={data} columns={param.columns} />
-				)}
-			</GenericAccordion>
+			<Accordion title="Jobs" data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
+				{(data) => <JobsTable onDataChange={param.onChange} data={data} columns={param.columns} />}
+			</Accordion>
 		);
 	},
 
 	accordionInterviewTable: (param: RenderParams): ReactNode => {
-		const interviews = accessSubAttribute(param.item, param.accessKey, "interviews");
-		const onChange = () => {};
+		const interviews: InterviewData[] = param.item?.interviews;
 		return (
-			<GenericAccordion
-				title="Interviews"
-				data={interviews}
-				onChange={onChange}
-				icon={getTableIcon("Interviews")}
-				helpText={param.helpText}
-			>
-				{(data, onChangeCallback) => (
-					<InterviewsTable data={data} onChange={onChangeCallback} showAdd={false} columns={param.columns} />
+			<Accordion title="Interviews" data={interviews} icon={getTableIcon("Interviews")} helpText={param.helpText}>
+				{(data) => (
+					<InterviewsTable
+						data={data}
+						onDataChange={param.onChange}
+						showAdd={false}
+						columns={param.columns}
+					/>
 				)}
-			</GenericAccordion>
+			</Accordion>
 		);
 	},
 
 	accordionJobApplicationTable: (param: RenderParams): ReactNode => {
-		const jobs = accessSubAttribute(param.item, param.accessKey, "job_applications");
-		const onChange = () => {};
+		const jobs: JobData[] = param.item?.job_applications;
 		return (
-			<GenericAccordion
+			<Accordion
 				title="Job Applications"
 				data={jobs}
-				onChange={onChange}
 				icon={getTableIcon("Job Applications")}
 				helpText={param.helpText}
 			>
-				{(data, onChangeCallback) => (
-					<JobsTable data={data} onChange={onChangeCallback} columns={param.columns} />
-				)}
-			</GenericAccordion>
+				{(data) => <JobsTable data={data} onDataChange={param.onChange} columns={param.columns} />}
+			</Accordion>
 		);
 	},
 
 	accordionPersonTable: (param: RenderParams): ReactNode => {
-		const persons = accessSubAttribute(param.item, param.accessKey, "persons");
-		const onChange = () => {};
+		const persons: PersonData[] = param.item?.persons;
 		return (
-			<GenericAccordion
-				title="Persons"
-				data={persons}
-				onChange={onChange}
-				icon={getTableIcon("Persons")}
-				helpText={param.helpText}
-			>
-				{(data, onChangeCallback) => (
-					<PersonTable data={data} onChange={onChangeCallback} columns={param.columns} />
-				)}
-			</GenericAccordion>
+			<Accordion title="Persons" data={persons} icon={getTableIcon("Persons")} helpText={param.helpText}>
+				{(data) => <PersonTable data={data} onDataChange={param.onChange} columns={param.columns} />}
+			</Accordion>
 		);
 	},
 };
 
-export const renderViewElement = (field: Field, item: any, id: string): ReactNode => {
-	const noText = <span className="text-muted">Not Provided</span>;
-
+export const renderViewField = (field: ViewField, item: any, id: string, onChange?: any): ReactNode => {
 	let rendered: ReactNode;
 	if (field.render) {
 		const renderParams: RenderParams = {
 			item: item,
 			view: false,
-			accessKey: field.accessKey,
 			id: `${id}-${field.key}`,
 			columns: field.columns,
 			helpText: field.helpText,
+			onChange: onChange,
 		};
 		rendered = field.render(renderParams);
 	} else {
-		if (field.accessKey) {
-			item = item[field.accessKey];
-		}
 		rendered = item?.[field.key];
 	}
 
@@ -804,6 +690,6 @@ export const renderViewElement = (field: Field, item: any, id: string): ReactNod
 		// allow for 0
 		return rendered;
 	} else {
-		return noText;
+		return <span className="text-muted">Not Provided</span>;
 	}
 };

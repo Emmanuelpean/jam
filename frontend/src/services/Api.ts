@@ -1,4 +1,6 @@
 // Define types for better type safety
+import { ScrapedJobUpdate } from "./Schemas";
+
 export interface ApiError extends Error {
 	status?: number;
 	data?: any;
@@ -22,6 +24,10 @@ interface CrudApi {
 
 interface FilesApi extends CrudApi {
 	download: (id: string | number, filename: string, token: string) => Promise<void>;
+}
+
+interface ScrapedJobApi extends CrudApi {
+	setImported: (id: string | number, data: ScrapedJobUpdate, token: string) => void;
 }
 
 interface AuthApi {
@@ -197,15 +203,24 @@ export const locationsApi: CrudApi = createCrudApi("locations");
 export const keywordsApi: CrudApi = createCrudApi("keywords");
 export const personsApi: CrudApi = createCrudApi("persons");
 export const aggregatorsApi: CrudApi = createCrudApi("aggregators");
-export const scrapedJobApi: CrudApi = createCrudApi("scrapedjobs");
-export const serviceLogApi: CrudApi = createCrudApi("servicelogs");
+export const serviceLogApi: CrudApi = createCrudApi("eis_service_logs");
 export const userApi: CrudApi = createCrudApi("users");
 export const dashboardApi: CrudApi = createCrudApi("dashboard");
 export const settingsApi: CrudApi = createCrudApi("settings");
+export const scraperApi: CrudApi = createCrudApi("scraper");
 
 export const exportApi: CrudApi & { download: (filename: string, token: string) => Promise<void> } = {
 	...createCrudApi("export"),
 	download: (filename: string, token: string) => api.downloadFile("export", filename, token),
+};
+
+export const scrapedJobApi: ScrapedJobApi = {
+	...createCrudApi("scraped_jobs"),
+	setImported: (id: number | string, data: ScrapedJobUpdate, token: string) => {
+		api.put(`scraped_jobs/${id}`, data, token).catch((error) => {
+			console.error("Failed to mark scraped job as imported:", error);
+		});
+	},
 };
 
 export const filesApi: FilesApi = {

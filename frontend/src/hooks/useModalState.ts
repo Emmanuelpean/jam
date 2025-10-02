@@ -13,12 +13,16 @@ interface UseModalStateReturn<T = any> {
 	closeViewModal: () => void;
 	openEditModal: (item: T) => void;
 	closeEditModal: () => void;
+	showImportModal: boolean;
+	openImportModal: (item: T) => void;
+	closeImportModal: () => void;
 }
 
 const useModalState = <T = any>(): UseModalStateReturn<T> => {
 	const [showModal, setShowModal] = useState<boolean>(false);
 	const [showViewModal, setShowViewModal] = useState<boolean>(false);
 	const [showEditModal, setShowEditModal] = useState<boolean>(false);
+	const [showImportModal, setShowImportModal] = useState(false);
 	const [selectedItem, setSelectedItem] = useState<T | null>(null);
 
 	const openAddModal = (): void => setShowModal(true);
@@ -34,7 +38,7 @@ const useModalState = <T = any>(): UseModalStateReturn<T> => {
 		// Delay clearing the selected item to allow closing animation
 		setTimeout(() => {
 			setSelectedItem(null);
-		}, 300); // Bootstrap modal animation duration is typically 300ms
+		}, 300);
 	};
 
 	const openEditModal = (item: T): void => {
@@ -47,7 +51,17 @@ const useModalState = <T = any>(): UseModalStateReturn<T> => {
 		// Delay clearing the selected item to allow closing animation
 		setTimeout(() => {
 			setSelectedItem(null);
-		}, 300); // Bootstrap modal animation duration is typically 300ms
+		}, 300);
+	};
+
+	const openImportModal = (item?: any) => {
+		setSelectedItem(item);
+		setShowImportModal(true);
+	};
+
+	const closeImportModal = () => {
+		setShowImportModal(false);
+		setSelectedItem(null);
 	};
 
 	return {
@@ -61,6 +75,9 @@ const useModalState = <T = any>(): UseModalStateReturn<T> => {
 		closeViewModal,
 		openEditModal,
 		closeEditModal,
+		showImportModal,
+		openImportModal,
+		closeImportModal,
 	};
 };
 

@@ -18,16 +18,17 @@ def login(
     """Login a user.
     :param user_credentials: The user credentials (note: username is the email field).
     :param db: The database session.
-    :returns: The access token."""
+    :returns: The access token.
+    :raises HTTPException with a 403 status code if the credentials are invalid."""
 
     # Find the user in the list based on the email provided
     user = db.query(models.User).filter(user_credentials.username.strip() == models.User.email).first()
     if user is None:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
 
     # Check that the password corresponds to that user
     if not utils.verify_password(user_credentials.password, user.password):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Incorrect password")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
 
     # Update the user last login
     user.last_login = datetime.now(timezone.utc)

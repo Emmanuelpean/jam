@@ -1,51 +1,37 @@
 import React from "react";
-import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
-import { tableColumns } from "../rendering/view/TableColumnRenders";
+import { DataTableProps, DataTable } from "./DataTable";
+import { tableColumns } from "../rendering/view/TableColumns";
 import { PersonModal } from "../modals/PersonModal";
 
-const PersonTable: React.FC<TableProps> = ({ onChange, data = null, columns = [] }) => {
-	const {
-		data: persons,
-		loading,
-		error,
-		addItem,
-		sortConfig,
-		setSortConfig,
-		updateItem,
-		removeItem,
-	} = useProvidedTableData(data, { key: "name", direction: "asc" }); // TODO sorting not working
-
-	if (!columns.length) {
-		columns = [
-			tableColumns.personName!(),
-			tableColumns.role!(),
-			tableColumns.email!(),
-			tableColumns.phone!(),
-			tableColumns.linkedinUrl!(),
-		];
-	}
+const PersonTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error = null, columns = [] }) => {
+	const defaultColumns =
+		columns.length > 0
+			? columns
+			: [
+					tableColumns.personName(),
+					tableColumns.role(),
+					tableColumns.email(),
+					tableColumns.phone(),
+					tableColumns.linkedinUrl(),
+				];
 
 	return (
-		<GenericTableWithModals
-			data={persons}
-			columns={columns}
-			loading={loading}
+		<DataTable
+			mode="controlled"
+			data={data}
+			onDataChange={onDataChange}
 			error={error}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
+			columns={defaultColumns}
+			initialSortConfig={{ key: "name", direction: "asc" }}
 			Modal={PersonModal}
 			endpoint="persons"
 			nameKey="name"
 			itemType="Person"
-			addItem={addItem}
-			showAdd={false}
-			showSearch={true}
-			updateItem={updateItem}
-			removeItem={removeItem}
-			setData={() => {}}
 			modalSize="lg"
 			showAllEntries={true}
 			compact={true}
+			showAdd={false}
+			showSearch={true}
 		/>
 	);
 };

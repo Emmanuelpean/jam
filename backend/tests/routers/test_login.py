@@ -1,3 +1,5 @@
+"""Tests for the login/register page of the application."""
+
 import pytest
 from jose import jwt
 

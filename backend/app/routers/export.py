@@ -2,35 +2,20 @@
 
 import csv
 import io
-import zipfile
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
 
-from app import database, oauth2
+from app import database, oauth2, models
 
 router = APIRouter(prefix="/export", tags=["export"])
-
-from app import models
-
-MODEL_LIST = [
-    models.Job,
-    models.Company,
-    models.Keyword,
-    models.Person,
-    models.Location,
-    models.Aggregator,
-    models.Interview,
-    models.JobApplicationUpdate,
-]
 
 
 @router.get("/")
 def export_jobs_with_all_columns(
-    db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(oauth2.get_current_user),
-):
+    db=Depends(database.get_db),
+    current_user=Depends(oauth2.get_current_user),
+) -> StreamingResponse:
     """Export jobs with all columns (except IDs) and related data as a single CSV file."""
 
     jobs = db.query(models.Job).filter(models.Job.owner_id == current_user.id).all()
@@ -87,5 +72,7 @@ def export_jobs_with_all_columns(
 
     output.seek(0)
     return StreamingResponse(
-        output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=jobs_export.csv"}
+        output,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=jobs_export.csv"},
     )
