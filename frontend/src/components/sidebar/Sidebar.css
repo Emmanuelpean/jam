@@ -69,10 +69,11 @@
 /* Navigation items */
 .nav-item {
     display: flex;
-    padding: 0.75rem 22px;
+    padding: 0.75rem 19px;
+    margin: 0.1rem 0.2rem;
     color: #495057;
     text-decoration: none;
-    width: 100%;
+    width: calc(100% - 0.4rem);
     cursor: pointer;
     border-radius: 8px;
 }
@@ -96,11 +97,8 @@
 
 /* Text container with clipping mask */
 .nav-text-container {
-    padding-left: 24px;
+    padding-left: 23px;
     align-content: center;
-    /*display: flex;*/
-    /*align-items: center;*/
-    /*overflow: hidden;*/
 }
 
 .nav-text {
@@ -128,6 +126,7 @@
 .custom-sidebar.expanded .submenu-arrow {
     opacity: 1;
     width: auto;
+    align-content: center;
 }
 
 .submenu-arrow.expanded {
