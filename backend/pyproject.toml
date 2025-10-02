@@ -24,6 +24,7 @@ dependencies = [
     "cloudscraper==1.2.71",
     "tqdm==4.67.1",
     "gunicorn==23.0.0",
+    "beautifulsoup4==4.14.2",
 ]
 
 [project.optional-dependencies]
