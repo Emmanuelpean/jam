@@ -138,7 +138,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		showLoading();
 		setError(null);
 		try {
-			const result = await api.get(`${endpoint}`, token);
+			const result = await api.get(`${endpoint}/`, token);
 			setInternalData(result);
 		} catch (err) {
 			setError(`Failed to load ${endpoint}. Please try again later.`);
