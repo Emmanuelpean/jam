@@ -1,10 +1,10 @@
 import React from "react";
-import DataModal, { DataModalProps } from "./GenericModal/DataModal";
+import DataModal, { DataModalProps } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { companiesApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import { ValidationErrors } from "./GenericModal/DataModal";
+import { ValidationErrors } from "./DataModal/DataModal";
 import { CompanyData } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 

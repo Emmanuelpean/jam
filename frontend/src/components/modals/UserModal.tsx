@@ -1,11 +1,11 @@
 import React from "react";
-import DataModal, { DataModalProps } from "./GenericModal/DataModal";
+import DataModal, { DataModalProps } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { userApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../pages/Auth/Auth.css";
-import { ValidationErrors } from "./GenericModal/DataModal";
+import { ValidationErrors } from "./DataModal/DataModal";
 import { UserData } from "../../services/Schemas";
 import { THEMES } from "../../utils/Theme";
 
@@ -58,14 +58,12 @@ export const UserModal: React.FC<DataModalProps> = ({
 	};
 
 	const transformFormData = (data: UserData) => {
-		const transformed: any = {
+		return {
 			email: data.email?.trim(),
 			theme: data.theme?.trim() || THEMES[0],
 			is_admin: data.is_admin || false,
 			toast_active: data.toast_active || false,
 		};
-
-		return transformed;
 	};
 
 	return (

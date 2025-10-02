@@ -2,7 +2,7 @@ import React from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { InterviewModal, InterviewModalProps } from "../modals/InterviewModal";
-import { DataModalProps } from "../modals/GenericModal/DataModal";
+import { DataModalProps } from "../modals/DataModal/DataModal";
 import { InterviewData } from "../../services/Schemas";
 
 interface InterviewsTableProps extends DataTableProps {
