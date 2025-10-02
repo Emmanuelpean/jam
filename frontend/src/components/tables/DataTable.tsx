@@ -2,71 +2,51 @@ import React, { MouseEvent, ReactNode, useCallback, useEffect, useState } from "
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api } from "../../services/Api";
-import { getTableIcon, renderViewElement } from "../rendering/view/ViewRenders";
-import { accessAttribute } from "../../utils/Utils";
+import { getTableIcon, renderViewField } from "../rendering/view/ViewRenders";
+import { accessAttribute, normaliseList } from "../../utils/Utils";
 import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { pluralize } from "../../utils/StringUtils";
-import { TableColumn } from "../rendering/view/TableColumnRenders";
-import "./GenericTable.css";
+import { TableColumn } from "../rendering/view/TableColumns";
+import { useLoading } from "../../contexts/LoadingContext";
+import { createActiveHandler, createDeleteHandler } from "../../utils/DeleteHandler";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
+import "./DataTable.css";
+
+export type Direction = "asc" | "desc";
 
 export interface SortConfig {
 	key: string;
-	direction: "asc" | "desc";
+	direction: Direction;
 }
 
-export interface ContextMenuState {
-	item: any;
-	x: number;
-	y: number;
-	show: boolean;
-}
-
-export interface UseTableDataResult {
-	data: any[];
-	setData: React.Dispatch<React.SetStateAction<any[]>>;
-	loading: boolean;
-	error: string | null;
-	sortConfig: SortConfig;
-	setSortConfig: React.Dispatch<React.SetStateAction<SortConfig>>;
-	searchTerm: string;
-	setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
-	addItem: (newItem: any) => void;
-	updateItem: (updatedItem: any) => void;
-	removeItem: (itemId: string | number) => void;
-	refetch: () => Promise<void>;
-}
-
-export interface CreateGenericDeleteHandlerProps {
-	endpoint: string;
-	token: string | null;
-	showDelete: (config: any) => Promise<boolean>;
-	showError: (config: any) => Promise<boolean>;
-	removeItem?: (itemId: string | number) => void;
-	setData?: React.Dispatch<React.SetStateAction<any[]>>;
-	nameKey: string;
-	itemType?: string;
-}
-
-export interface TableProps {
-	onChange?: () => void;
-	data?: any[] | null;
+export interface DataTableProps {
+	data?: any | null;
 	columns?: TableColumn[];
+	onDataChange?: (data: any[]) => void;
+	error?: string | null;
+	showAdd?: boolean;
+	menuItems?: string[];
 }
 
-export interface GenericTableWithModalsProps {
-	// Table data
+export interface GenericTableProps {
+	// Data source configuration
+	mode: "api" | "controlled" | "import";
+
+	// For API mode and import mode
+	endpoint?: string;
+
+	// For controlled mode
 	data?: any[];
-	columns?: TableColumn[];
-	loading?: boolean;
+	onDataChange?: (data: any[]) => void;
 	error?: string | null;
 
-	// Search and sort
-	searchTerm?: string;
-	onSearchChange?: (searchTerm: string) => void;
-	sortConfig?: SortConfig;
-	onSort?: (config: SortConfig) => void;
+	// Table configuration
+	columns?: TableColumn[];
+	initialSortConfig?: Partial<SortConfig>;
+	menuItems?: string[];
 
 	// Modal configuration
 	Modal: React.ComponentType<any>;
@@ -74,13 +54,8 @@ export interface GenericTableWithModalsProps {
 	modalProps?: any;
 
 	// Data management
-	endpoint: string;
 	nameKey: string;
 	itemType: string;
-	addItem: (newItem: any) => void;
-	updateItem: (updatedItem: any) => void;
-	removeItem: (itemId: string | number) => void;
-	setData: React.Dispatch<React.SetStateAction<any[]>>;
 
 	// Display options
 	title?: string;
@@ -90,218 +65,60 @@ export interface GenericTableWithModalsProps {
 	showSearch?: boolean;
 	showAdd?: boolean;
 
+	// Import mode configuration
+	onImportSuccess?: (importedItem: any) => void;
+
 	// Additional content
-	children?: ReactNode;
+	children?: (data: any[]) => ReactNode;
 }
 
-const useBaseTableData = (
-	customSortConfig: Partial<SortConfig> = {},
-): {
-	data: any[];
-	setData: React.Dispatch<React.SetStateAction<any[]>>;
-	loading: boolean;
-	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-	error: string | null;
-	setError: React.Dispatch<React.SetStateAction<string | null>>;
-	sortConfig: SortConfig;
-	setSortConfig: React.Dispatch<React.SetStateAction<SortConfig>>;
-	searchTerm: string;
-	setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
-	addItem: (newItem: any) => void;
-	updateItem: (updatedItem: any) => void;
-	removeItem: (itemId: string | number) => void;
-} => {
-	const [data, setData] = useState<any[]>([]);
-	const [loading, setLoading] = useState<boolean>(false);
-	const [error, setError] = useState<string | null>(null);
-	const [sortConfig, setSortConfig] = useState<SortConfig>(
-		(customSortConfig as SortConfig) || { key: "created_at", direction: "desc" },
-	);
-	const [searchTerm, setSearchTerm] = useState<string>("");
-
-	const addItem = useCallback((newItem: any) => setData((prev) => [newItem, ...prev]), []);
-	const updateItem = useCallback(
-		(updatedItem: any) => setData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item))),
-		[],
-	);
-	const removeItem = useCallback(
-		(itemId: string | number) => setData((prev) => prev.filter((item) => item.id !== itemId)),
-		[],
-	);
-
-	return {
-		data,
-		setData,
-		loading,
-		setLoading,
-		error,
-		setError,
-		sortConfig,
-		setSortConfig,
-		searchTerm,
-		setSearchTerm,
-		addItem,
-		updateItem,
-		removeItem,
-	};
-};
-
-export const useProvidedTableData = (
-	providedData: any[] | null = null,
-	customSortConfig: Partial<SortConfig> = {},
-): UseTableDataResult => {
-	const base = useBaseTableData(customSortConfig);
-
-	// Update data when providedData changes
-	useEffect(() => {
-		base.setData(providedData || []);
-		base.setLoading(false);
-		base.setError(null);
-	}, [providedData, base.setData, base.setLoading, base.setError]);
-
-	const refetch = useCallback(async () => {}, []);
-
-	return {
-		...base,
-		refetch,
-	};
-};
-
-export const useTableData = (
-	endpoint: string,
-	dependencies: any[] = [],
-	queryParams: Record<string, any> = {},
-	customSortConfig: Partial<SortConfig> = {},
-): UseTableDataResult => {
-	const { token } = useAuth();
-	const base = useBaseTableData(customSortConfig);
-
-	// API fetch function
-	const fetchData = useCallback(async (): Promise<void> => {
-		base.setLoading(true);
-		base.setError(null);
-
-		try {
-			const queryString =
-				Object.keys(queryParams).length > 0 ? "?" + new URLSearchParams(queryParams).toString() : "";
-			const result = await api.get(`${endpoint}/${queryString}`, token);
-			base.setData(result || []);
-		} catch (err) {
-			console.error(`Error fetching ${endpoint}:`, err);
-			base.setError(`Failed to load ${endpoint}. Please try again later.`);
-			base.setData([]);
-		} finally {
-			base.setLoading(false);
-		}
-	}, [endpoint, token, JSON.stringify(queryParams), base.setData, base.setLoading, base.setError]);
-
-	// Fetch data when dependencies change
-	useEffect(() => {
-		if (token) {
-			fetchData().then(() => {});
-		}
-	}, [token, fetchData, ...dependencies]);
-
-	return {
-		...base,
-		refetch: fetchData,
-	};
-};
-
-/**
- * Creates a reusable delete handler for table items
- */
-export const createGenericDeleteHandler = ({
-	endpoint,
-	token,
-	showDelete,
-	showError,
-	removeItem,
-	setData,
-	nameKey,
-	itemType = "item",
-}: CreateGenericDeleteHandlerProps) => {
-	return async (item: any): Promise<void> => {
-		let message: string;
-		if (nameKey !== "date") {
-			message = `Are you sure you want to delete "${item[nameKey]}"? This action cannot be undone.`;
-		} else {
-			message = `Are you sure you want to delete this ${itemType}? This action cannot be undone.`;
-		}
-		try {
-			await showDelete({
-				title: `Delete ${itemType}`,
-				message: message,
-				confirmText: "Delete",
-				cancelText: "Cancel",
-			});
-
-			await api.delete(`${endpoint}/${item.id}`, token);
-
-			if (typeof removeItem === "function") {
-				removeItem(item.id);
-			} else if (typeof setData === "function") {
-				setData((prevData) => prevData.filter((dataItem) => dataItem.id !== item.id));
-			} else {
-				window.location.reload();
-			}
-		} catch (error) {
-			if (error !== false) {
-				await showError({
-					message: `Failed to delete ${itemType}. Please check your connection and try again.`,
-				});
-			}
-		}
-	};
-};
-
-export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
-	// Table data
-	data = [],
+export const DataTable: React.FC<GenericTableProps> = ({
+	mode,
+	endpoint = "",
+	data: controlledData = [],
+	onDataChange,
 	columns = [],
-	loading = false,
-	error = null,
-
-	// Search and sort
-	searchTerm = "",
-	onSearchChange = () => {},
-	sortConfig = { key: "", direction: "asc" },
-	onSort = () => {},
-
-	// Modal configuration
+	initialSortConfig = {},
 	Modal,
 	modalSize = "lg",
 	modalProps = {},
-
-	// Data management
-	endpoint,
 	nameKey,
 	itemType,
-	addItem,
-	updateItem,
-	removeItem,
-	setData,
-
-	// Display options
 	title,
 	showAllEntries = false,
 	emptyMessage,
 	compact = false,
 	showSearch = true,
 	showAdd = true,
-
-	// Additional content
+	onImportSuccess,
 	children,
-}) => {
+	menuItems,
+}: GenericTableProps) => {
 	const { token } = useAuth();
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
+
+	// Internal state management
+	const [internalData, setInternalData] = useState<any[]>([]);
+	const [error, setError] = useState<string | null>(null);
+
+	// Search and sort
+	const [sortConfig, setSortConfig] = useState<SortConfig>(
+		(initialSortConfig as SortConfig) || { key: "created_at", direction: "desc" },
+	);
+	const [searchTerm, setSearchTerm] = useState<string>("");
+
+	// UI state
+	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 	const [currentPage, setCurrentPage] = useState<number>(0);
 	const [pageSize, setPageSize] = useState<number>(20);
+	const { showLoading, hideLoading } = useLoading();
+
 	const {
 		showModal,
 		showViewModal,
 		showEditModal,
+		showImportModal,
 		selectedItem,
 		openAddModal,
 		closeAddModal,
@@ -309,46 +126,129 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 		closeViewModal,
 		openEditModal,
 		closeEditModal,
+		openImportModal,
+		closeImportModal,
 	} = useModalState();
 
-	const getEffectiveItem = (item: any, column: TableColumn): any => {
-		if (!column || !column.accessKey) return item;
-		return accessAttribute(item, column.accessKey);
+	const fetchData = useCallback(async (): Promise<void> => {
+		// Fetch the data through the API
+		if ((mode !== "api" && mode !== "import") || !endpoint) {
+			return;
+		}
+		showLoading();
+		setError(null);
+		try {
+			const result = await api.get(`${endpoint}`, token);
+			setInternalData(result);
+		} catch (err) {
+			setError(`Failed to load ${endpoint}. Please try again later.`);
+			setInternalData([]);
+		} finally {
+			hideLoading();
+		}
+	}, [endpoint, token, mode]);
+
+	useEffect(() => {
+		// Handle data updates based on mode
+		switch (mode) {
+			case "api":
+			case "import":
+				if (token) {
+					fetchData().then(() => {});
+				}
+				break;
+			case "controlled":
+				break;
+		}
+	}, [mode, token, fetchData]);
+
+	const getEffectiveData = (): any[] => {
+		// Get effective data based on mode
+		switch (mode) {
+			case "controlled":
+				return controlledData;
+			case "api":
+			case "import":
+				return internalData;
+		}
 	};
 
-	const getColumnValue = (item: any, column: TableColumn, field?: string): any => {
-		if (!column) return null;
-		const effectiveItem = getEffectiveItem(item, column);
-		if (field) return accessAttribute(effectiveItem, field);
-		return accessAttribute(effectiveItem, column.key);
-	};
+	// CRUD operations
+	const addItem = useCallback(
+		(newItem: any) => {
+			if (mode === "controlled") {
+				const newData = [newItem, ...controlledData];
+				onDataChange?.(newData);
+			} else {
+				setInternalData((prev) => [newItem, ...prev]);
+			}
+		},
+		[mode, controlledData, onDataChange],
+	);
+
+	const updateItem = useCallback(
+		(updatedItem: any) => {
+			if (updatedItem) {
+				if (mode === "controlled") {
+					const newData = controlledData.map((item) => (item.id === updatedItem.id ? updatedItem : item));
+					onDataChange?.(newData);
+				} else {
+					setInternalData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
+				}
+			}
+		},
+		[mode, controlledData, onDataChange],
+	);
+
+	const removeItem = useCallback(
+		(itemId: string | number) => {
+			if (mode === "controlled") {
+				const newData = controlledData.filter((item) => item.id !== itemId);
+				onDataChange?.(newData);
+			} else {
+				setInternalData((prev) => prev.filter((item) => item.id !== itemId));
+			}
+		},
+		[mode, controlledData, onDataChange],
+	);
+
+	const handleSort = useCallback(
+		(key: string) => {
+			let direction: Direction = "asc";
+			if (sortConfig.key === key && sortConfig.direction === "asc") {
+				direction = "desc";
+			}
+			setSortConfig({ key, direction });
+		},
+		[sortConfig],
+	);
+
+	// Get current effective data
+	const data = getEffectiveData();
 
 	// Data processing
 	const getSortedData = (): any[] => {
 		let filteredData = [...data];
+		const searchTermLower = searchTerm.toLowerCase();
 
 		// Filter by search term
-		if (searchTerm && columns.some((col) => col.searchable)) {
-			const searchTermLower = searchTerm.toLowerCase();
-			filteredData = filteredData.filter((item) => {
-				return columns.some((column) => {
+		if (searchTermLower && columns.some((col: TableColumn) => col.searchable)) {
+			filteredData = filteredData.filter((item: any): boolean => {
+				return columns.some((column: TableColumn): boolean => {
 					if (!column.searchable) return false;
 					let value: string;
 					if (column.searchFields) {
 						if (typeof column.searchFields === "function") {
-							const rawValue = getColumnValue(item, column);
-							value = column.searchFields(rawValue);
+							value = column.searchFields(item[column.key]);
 						} else {
-							const fields = Array.isArray(column.searchFields)
-								? column.searchFields
-								: [column.searchFields];
+							const fields: string[] = normaliseList(column.searchFields);
 							value = fields
-								.map((field) => getColumnValue(item, column, field))
-								.filter((val) => val != null)
+								.map((field: string): any => item[field])
+								.filter((val: any): boolean => val != null)
 								.join(" ");
 						}
 					} else {
-						value = getColumnValue(item, column);
+						value = item[column.key];
 					}
 					return value?.toString().toLowerCase().includes(searchTermLower);
 				});
@@ -357,16 +257,25 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 
 		// Sort data
 		if (sortConfig.key) {
-			filteredData.sort((a, b) => {
-				const column = columns.find((col) => col.key === sortConfig.key);
+			filteredData.sort((a: any, b: any) => {
+				const column = columns.find((col: TableColumn) => col.key === sortConfig.key);
 				let aValue: any, bValue: any;
+				if (!column) return 0;
 
-				if (column?.sortField) {
-					aValue = getColumnValue(a, column, column.sortField);
-					bValue = getColumnValue(b, column, column.sortField);
+				if (typeof column.sortField === "function") {
+					aValue = column.sortField(a);
+					bValue = column.sortField(b);
+				} else if (typeof column.sortField === "string" || Array.isArray(column.sortField)) {
+					const sortFields: string[] = normaliseList(column.sortField);
+					aValue = sortFields
+						.map((field: string) => accessAttribute(a, field))
+						.reduce((acc, val) => acc + (val ?? ""), "");
+					bValue = sortFields
+						.map((field: string) => accessAttribute(b, field))
+						.reduce((acc, val) => acc + (val ?? ""), "");
 				} else {
-					aValue = getColumnValue(a, column!);
-					bValue = getColumnValue(b, column!);
+					aValue = a[column.key];
+					bValue = b[column.key];
 				}
 
 				if (aValue == null && bValue == null) return 0;
@@ -388,14 +297,6 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 	};
 
 	// Event handlers
-	const handleSort = (key: string): void => {
-		let direction: "asc" | "desc" = "asc";
-		if (sortConfig.key === key && sortConfig.direction === "asc") {
-			direction = "desc";
-		}
-		onSort({ key, direction });
-	};
-
 	const handleRowClick = (event: MouseEvent<HTMLTableRowElement>, item: any): void => {
 		if (contextMenu) return;
 
@@ -418,7 +319,12 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 			currentElement = currentElement.parentElement;
 		}
 
-		openViewModal(item);
+		// Different behavior based on mode
+		if (mode === "import") {
+			openImportModal(item);
+		} else {
+			openViewModal(item);
+		}
 	};
 
 	const handleRowRightClick = (item: any, event: MouseEvent<HTMLTableRowElement>): void => {
@@ -427,44 +333,44 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 		setContextMenu({ item, x: event.clientX, y: event.clientY, show: true });
 	};
 
-	const handleDelete = createGenericDeleteHandler({
-		endpoint: endpoint,
-		token: token,
-		showDelete: showDelete,
-		showError: showError,
-		removeItem: removeItem,
-		setData: setData,
-		nameKey: nameKey,
-		itemType: itemType,
-	});
-
-	// Context menu handlers
-	const handleContextAction = (action: string, e: MouseEvent): void => {
-		e.stopPropagation();
-		if (contextMenu?.item) {
-			switch (action) {
-				case "view":
-					openViewModal(contextMenu.item);
-					break;
-				case "edit":
-					openEditModal(contextMenu.item);
-					break;
-				default:
-					handleDelete(contextMenu.item).then(() => null);
-					break;
-			}
-		}
-		setContextMenu(null);
-	};
+	let handleDelete: (item: any) => Promise<boolean>;
+	if (mode === "import") {
+		handleDelete = createActiveHandler({
+			endpoint: endpoint,
+			token: token,
+			showDelete: showDelete,
+			showError: showError,
+			removeItem: removeItem,
+			nameKey: nameKey,
+			itemType: itemType,
+		});
+	} else {
+		handleDelete = createDeleteHandler({
+			endpoint: endpoint,
+			token: token,
+			showDelete: showDelete,
+			showError: showError,
+			removeItem: removeItem,
+			nameKey: nameKey,
+			itemType: itemType,
+		});
+	}
 
 	// Success handlers
 	const handleEditSuccess = (updatedItem: any): void => {
 		updateItem(updatedItem);
 		closeEditModal();
 	};
+
 	const handleAddSuccess = (newItem: any): void => {
 		addItem(newItem);
 		closeAddModal();
+	};
+
+	const handleImportSuccess = (importedItem: any): void => {
+		onImportSuccess?.(importedItem);
+		removeItem?.(importedItem.id);
+		closeImportModal();
 	};
 
 	// Close context menu on outside click or escape
@@ -506,16 +412,87 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 		setCurrentPage(0);
 	};
 
-	// Render loading/error states
-	if (loading) {
-		return (
-			<div className="d-flex justify-content-center mt-5">
-				<div className="spinner-border" role="status" id="table-spinner">
-					<span className="visually-hidden">Loading...</span>
-				</div>
-			</div>
-		);
-	}
+	const handleSnoozeItem = (weeks: number) => {
+		return async (item: any) => {
+			try {
+				const snoozeDate = new Date();
+				snoozeDate.setDate(snoozeDate.getDate() + weeks * 7);
+
+				await api.put(`${endpoint}/${item.id}`, { followup_snooze_datetime: snoozeDate.toISOString() }, token);
+				removeItem(item.id);
+				showToastSuccess("Job snoozed successfully");
+			} catch (error) {
+				showToastError(`Failed to snooze ${itemType}. Please try again.`);
+				hideLoading();
+			} finally {
+				setContextMenu(null);
+			}
+		};
+	};
+
+	// Get context menu items based on mode
+	const getContextMenuItems = () => {
+		let baseItems: MenuItem[] = [
+			{ action: "view", icon: "eye", text: "View", id: "context-menu-view", function: openViewModal },
+			{ action: "edit", icon: "pencil", text: "Edit", id: "context-menu-edit", function: openEditModal },
+			{
+				action: "snooze",
+				icon: "alarm",
+				text: "Snooze for...",
+				id: "context-menu-snooze",
+				hasSubmenu: true,
+				submenu: [
+					{ action: "snooze-1", text: "1 week", function: handleSnoozeItem(1) },
+					{ action: "snooze-2", text: "2 weeks", function: handleSnoozeItem(2) },
+					{ action: "snooze-3", text: "3 weeks", function: handleSnoozeItem(3) },
+					{ action: "snooze-4", text: "4 weeks", function: handleSnoozeItem(4) },
+				],
+			},
+			{
+				action: "import",
+				icon: "upload",
+				text: "Import",
+				id: "context-menu-import",
+				function: openImportModal,
+			},
+			{
+				action: "delete",
+				icon: "trash",
+				text: "Delete",
+				id: "context-menu-delete",
+				color: "#dc3545",
+				function: handleDelete,
+			},
+		];
+
+		if (!menuItems) {
+			if (mode === "import") {
+				menuItems = ["import", "delete"];
+			} else {
+				menuItems = ["view", "edit", "delete"];
+			}
+		}
+		baseItems = baseItems.filter((item: MenuItem): boolean => menuItems!.includes(item.action));
+
+		return baseItems;
+	};
+
+	// Get button text based on mode
+	const getAddButtonText = () => {
+		if (mode === "import") {
+			return `Import ${itemType}`;
+		} else {
+			return `Add ${itemType}`;
+		}
+	};
+
+	// Get button icon based on mode
+	const getAddButtonIcon = () => {
+		if (mode === "import") {
+			return "bi-upload";
+		}
+		return "bi-plus-circle";
+	};
 
 	if (error) {
 		return <div className="alert alert-danger mt-3">{error}</div>;
@@ -548,7 +525,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 							className="form-control"
 							placeholder="Search..."
 							value={searchTerm}
-							onChange={(e) => onSearchChange(e.target.value)}
+							onChange={(e) => setSearchTerm(e.target.value)}
 							id="search-input"
 						/>
 						<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
@@ -556,7 +533,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 						</span>
 					</div>
 				)}
-				{showAdd && (
+				{showAdd && mode !== "import" && (
 					<Button
 						variant="primary"
 						{...(compact ? { size: "sm" as const } : {})}
@@ -570,8 +547,8 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 						}}
 						id="add-entity-button"
 					>
-						<i className="bi bi-plus-circle me-2" style={{ fontSize: "1.1rem" }}></i>
-						Add {itemType}
+						<i className={`${getAddButtonIcon()} me-2`} style={{ fontSize: "1.1rem" }}></i>
+						{getAddButtonText()}
 					</Button>
 				)}
 			</div>
@@ -638,7 +615,7 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 												: {}),
 										}}
 									>
-										{renderViewElement(column, item, `table-row-${item.id}`)}
+										{renderViewField(column, item, `table-row-${item.id}`)}
 									</td>
 								))}
 							</tr>
@@ -737,91 +714,78 @@ export const GenericTableWithModals: React.FC<GenericTableWithModalsProps> = ({
 
 			{/* Context Menu */}
 			{contextMenu?.show && (
-				<div
-					className="context-menu"
-					style={{
-						position: "fixed",
-						top: contextMenu.y,
-						left: contextMenu.x,
-						zIndex: 9999,
-						backgroundColor: "white",
-						border: "1px solid #ccc",
-						borderRadius: "4px",
-						boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-						padding: "4px 0",
-						minWidth: compact ? "120px" : "150px",
+				<ContextMenu
+					position={{ x: contextMenu.x, y: contextMenu.y }}
+					items={getContextMenuItems()}
+					selectedItem={contextMenu.item}
+					onClose={() => setContextMenu(null)}
+					onItemClick={(menuItem, item) => {
+						if (menuItem.function) {
+							menuItem.function(item);
+						}
 					}}
-					onClick={(e) => e.stopPropagation()}
-				>
-					{[
-						{ action: "view", icon: "eye", text: "View", id: "context-menu-view" },
-						{ action: "edit", icon: "pencil", text: "Edit", id: "context-menu-edit" },
-						{
-							action: "delete",
-							icon: "trash",
-							text: "Delete",
-							id: "context-menu-delete",
-							color: "#dc3545",
-						},
-					].map(({ action, icon, text, id, color }) => (
-						<div
-							key={action}
-							className="context-menu-item"
-							style={{
-								padding: compact ? "6px 12px" : "8px 16px",
-								cursor: "pointer",
-								fontSize: compact ? "13px" : "14px",
-								borderBottom: action !== "delete" ? "1px solid #eee" : "none",
-								color: color || "inherit",
-							}}
-							onClick={(e) => handleContextAction(action, e)}
-							onMouseEnter={(e) => ((e.target as HTMLElement).style.backgroundColor = "#f8f9fa")}
-							onMouseLeave={(e) => ((e.target as HTMLElement).style.backgroundColor = "white")}
-							id={id}
-						>
-							<i className={`bi bi-${icon} me-2`}></i>
-							{text}
-						</div>
-					))}
-				</div>
+					compact={compact}
+				/>
 			)}
 
-			{children}
-			<Modal
-				show={showModal}
-				onHide={closeAddModal}
-				onSuccess={handleAddSuccess}
-				size={modalSize}
-				data={{}}
-				submode="add"
-			/>
+			{children ? children(getEffectiveData()) : null}
 
-			<Modal
-				show={showEditModal}
-				onHide={closeEditModal}
-				onSuccess={handleEditSuccess}
-				data={selectedItem || {}}
-				submode="edit"
-				size={modalSize}
-			/>
+			{mode !== "import" && (
+				<>
+					<Modal
+						show={showModal}
+						onHide={closeAddModal}
+						onSuccess={handleAddSuccess}
+						size={modalSize}
+						data={{}}
+						submode="add"
+						{...modalProps}
+					/>
 
-			<Modal
-				show={showViewModal}
-				onHide={closeViewModal}
-				onSuccess={handleEditSuccess}
-				data={selectedItem}
-				submode="view"
-				onEdit={() => {
-					closeViewModal();
-					openEditModal(selectedItem);
-				}}
-				size={modalSize}
-				{...modalProps}
-			/>
+					<Modal
+						show={showEditModal}
+						onHide={closeEditModal}
+						onSuccess={handleEditSuccess}
+						data={selectedItem || {}}
+						submode="edit"
+						onDelete={removeItem}
+						size={modalSize}
+						{...modalProps}
+					/>
+
+					<Modal
+						show={showViewModal}
+						onHide={closeViewModal}
+						onSuccess={updateItem}
+						data={selectedItem}
+						submode="view"
+						onDelete={removeItem}
+						onEdit={() => {
+							closeViewModal();
+							openEditModal(selectedItem);
+						}}
+						size={modalSize}
+						{...modalProps}
+					/>
+				</>
+			)}
+
+			{mode === "import" && (
+				<Modal
+					show={showImportModal}
+					onHide={closeImportModal}
+					onSuccess={handleImportSuccess}
+					onDelete={removeItem}
+					data={selectedItem}
+					submode="import"
+					size={modalSize}
+					{...modalProps}
+				/>
+			)}
 
 			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</div>
 	);
 };
 
-export default GenericTableWithModals;
+export default DataTable;

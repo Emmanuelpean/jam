@@ -35,7 +35,7 @@ class TestUserSettingsPage(BaseTest):
 
     @property
     def confirm_password(self):
-        """Set the confirm password field to the given value"""
+        """Set the confirmation password field to the given value"""
 
         return self.get_element("confirm_password")
 

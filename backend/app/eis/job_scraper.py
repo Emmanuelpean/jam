@@ -9,7 +9,9 @@ import os
 import re
 import time
 
+import cloudscraper
 import requests
+from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 
@@ -212,6 +214,77 @@ class LinkedinJobScraper(JobScrapper):
         return results
 
 
+class VeganJobsScraper:
+    """Scraper for veganjobs.com job listings."""
+
+    def __init__(self, url: str) -> None:
+        """Initialize the scraper with headers and delay settings.
+        :param url: The job listing URL"""
+
+        self.scraper = cloudscraper.create_scraper()
+        self.url = "https://veganjobs.com/job/" + url
+
+    def scrape_job_listing(self) -> dict:
+        """Scrape job data from a specific veganjobs.com job listing URL"""
+
+        response = self.scraper.get(self.url)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.content, "html.parser")
+        data = dict()
+        results = {
+            "company": None,
+            "company_id": None,
+            "location": None,
+            "job": {
+                "title": None,
+                "description": None,
+                "url": self.url,
+                "salary": {"min_amount": None, "max_amount": None},
+            },
+            "raw": soup.text,
+        }
+
+        # Title
+        title = soup.find("h2", class_="page-title")
+        if title:
+            results["job"]["title"] = title.get_text(strip=True)
+
+        # Company
+        company = soup.find("div", class_="joblisting-meta-company-name")
+        if company:
+            results["company"] = company.get_text(strip=True)
+
+        # Salary
+        container = soup.find("div", class_="job_listing-description")
+        # noinspection PyArgumentList
+        text_content = container.get_text(separator="\n", strip=True)
+        salary_match = re.search(r"Salary:\s*(.+)", text_content)
+        salary = salary_match.group(1).split("\n")[0] if salary_match else None
+        data["salary"] = salary
+
+        # Description
+        description = re.sub(r"Salary:.*", "", text_content, flags=re.DOTALL).strip().strip("Overwiew").strip()
+        results["job"]["description"] = description
+
+        # Location
+        location = soup.find("li", class_="location")
+        if location:
+            results["location"] = location.get_text(strip=True)
+
+        return results
+
+    def scrape_job(self) -> dict:
+        """Scrape a single job listing from the given URL."""
+
+        for i in range(10):
+            try:
+                return self.scrape_job_listing()
+            except:
+                pass
+        raise AssertionError()
+
+
 def extract_indeed_jobs_from_email(body: str) -> list[dict[str, str | dict]]:
     """Extract job information directly from an Indeed email body
     :param body: Email body content as string
@@ -347,10 +420,18 @@ def parse_indeed_job_section(section: str) -> dict[str, str] | None:
 
 # Usage example:
 if __name__ == "__main__":
+
+    # LinkedIn job scraper example
     scraper = LinkedinJobScraper(["4280160167"])
     job_data1 = scraper.scrape_job()
     print(job_data1)
 
+    # Indeed job scraper example
     scraper = IndeedJobScraper("7b9119575c72cb5c")
     job_data1 = scraper.scrape_job()
     print(job_data1)
+
+    # VeganJobs scraper example
+    scraper = VeganJobsScraper("sharpen-strategy-remote-usa-operations-coordinator")
+    veganjob_data = scraper.scrape_job()
+    print(veganjob_data)

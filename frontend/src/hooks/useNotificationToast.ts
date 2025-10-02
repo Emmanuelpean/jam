@@ -20,10 +20,10 @@ export interface UseToastReturn {
 	showToast: (message: string, variant?: ToastVariant, title?: string | null, delay?: number) => void;
 	hideToast: (id: number) => void;
 	hideAllToasts: () => void;
-	showSuccess: (message: string, title?: string | null, delay?: number) => void;
-	showError: (message: string, title?: string | null, delay?: number) => void;
-	showWarning: (message: string, title?: string | null, delay?: number) => void;
-	showInfo: (message: string, title?: string | null, delay?: number) => void;
+	showToastSuccess: (message: string, title?: string | null, delay?: number) => void;
+	showToastError: (message: string, title?: string | null, delay?: number) => void;
+	showToastWarning: (message: string, title?: string | null, delay?: number) => void;
+	showToastInfo: (message: string, title?: string | null, delay?: number) => void;
 }
 
 export const useToast = (): UseToastReturn => {
@@ -61,19 +61,19 @@ export const useToast = (): UseToastReturn => {
 		setToasts([]);
 	};
 
-	const showSuccess = (message: string, title: string | null = null, delay: number = 5000): void => {
+	const showToastSuccess = (message: string, title: string | null = null, delay: number = 5000): void => {
 		showToast(message, "success", title, delay);
 	};
 
-	const showError = (message: string, title: string | null = null, delay: number = 5000): void => {
+	const showToastError = (message: string, title: string | null = null, delay: number = 5000): void => {
 		showToast(message, "danger", title, delay);
 	};
 
-	const showWarning = (message: string, title: string | null = null, delay: number = 5000): void => {
+	const showToastWarning = (message: string, title: string | null = null, delay: number = 5000): void => {
 		showToast(message, "warning", title, delay);
 	};
 
-	const showInfo = (message: string, title: string | null = null, delay: number = 5000): void => {
+	const showToastInfo = (message: string, title: string | null = null, delay: number = 5000): void => {
 		showToast(message, "info", title, delay);
 	};
 
@@ -82,10 +82,10 @@ export const useToast = (): UseToastReturn => {
 		showToast,
 		hideToast,
 		hideAllToasts,
-		showSuccess,
-		showError,
-		showWarning,
-		showInfo,
+		showToastSuccess,
+		showToastError,
+		showToastWarning,
+		showToastInfo,
 	};
 };
 

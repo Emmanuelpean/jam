@@ -14,8 +14,8 @@ from app.models import Base, CommonBase, Owned
 # ------------------------------------------------------ MAPPINGS ------------------------------------------------------
 
 
-email_scrapedjob_mapping = Table(
-    "email_scrapedjob_mapping",
+jobalertemail_scrapedjob_mapping = Table(
+    "jobalertemail_scrapedjob_mapping",
     Base.metadata,
     Column("email_id", Integer, ForeignKey("job_alert_email.id", ondelete="CASCADE"), primary_key=True),
     Column("job_id", Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), primary_key=True),
@@ -44,7 +44,11 @@ class JobAlertEmail(Owned, Base):
     Relationships:
     --------------
     - `jobs` (list of ScrapedJob): List of scraped jobs associated with the email.
-    - `service_log` (EisServiceLog): EisServiceLog object associated with the email."""
+    - `service_log` (EisServiceLog): EisServiceLog object associated with the email.
+
+    Constraints:
+    ------------
+    - Unique constraint on the combination of `external_email_id` and `owner_id` to ensure uniqueness per user."""
 
     external_email_id = Column(String, unique=True, nullable=False)
     subject = Column(String, nullable=True)
@@ -57,8 +61,10 @@ class JobAlertEmail(Owned, Base):
     service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
-    jobs = relationship("ScrapedJob", secondary=email_scrapedjob_mapping, back_populates="emails")
+    jobs = relationship("ScrapedJob", secondary=jobalertemail_scrapedjob_mapping, back_populates="emails")
     service_log = relationship("EisServiceLog", back_populates="emails")
+
+    __table_args__ = (UniqueConstraint("external_email_id", "owner_id", name="unique_email_per_owner"),)
 
 
 class ScrapedJob(Owned, Base):
@@ -70,7 +76,11 @@ class ScrapedJob(Owned, Base):
     - `is_scraped` (bool): Indicates whether the job has been scraped.
     - `is_failed` (bool): Indicates whether the job scraping failed.
     - `scrape_error` (str, optional): Error message if the job scraping failed.
+    - `scrape_datetime` (datetime, optional): Date and time when the job was scraped.
     - `is_active` (bool): Indicates whether the job is active
+    - `is_imported` (bool): Indicates whether the job was imported into a job.
+
+    # Job data
     - `title` (str, optional): Title of the job.
     - `description` (str, optional): Description of the job.
     - `salary_min` (float, optional): Minimum salary of the job.
@@ -82,7 +92,11 @@ class ScrapedJob(Owned, Base):
 
     Relationships:
     --------------
-    - `emails` (list of JobAlertEmail): List of email messages associated with the job."""
+    - `emails` (list of JobAlertEmail): List of email messages associated with the job.
+
+    Constraints:
+    ------------
+    - Unique constraint on the combination of `external_job_id` and `owner_id` to ensure uniqueness per user."""
 
     external_job_id = Column(String, nullable=False)
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
@@ -90,6 +104,7 @@ class ScrapedJob(Owned, Base):
     scrape_error = Column(String, nullable=True)
     scrape_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
+    is_imported = Column(Boolean, nullable=False, server_default=expression.false())
 
     # Job data
     title = Column(String, nullable=True)
@@ -102,7 +117,7 @@ class ScrapedJob(Owned, Base):
     location = Column(String, nullable=True)
 
     # Relationships
-    emails = relationship("JobAlertEmail", secondary=email_scrapedjob_mapping, back_populates="jobs")
+    emails = relationship("JobAlertEmail", secondary=jobalertemail_scrapedjob_mapping, back_populates="jobs")
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
@@ -113,7 +128,6 @@ class EisServiceLog(CommonBase, Base):
 
     Attributes:
     -----------
-    - `name` (str): Name of the service.
     - `run_duration` (float, optional): Duration of the service run.
     - `run_datetime` (datetime): Date and time of the service run.
     - `is_success` (bool): Indicates whether the service run was successful.
@@ -131,7 +145,6 @@ class EisServiceLog(CommonBase, Base):
     --------------
     - `emails` (list of JobAlertEmail): List of email messages associated with the service."""
 
-    name = Column(String, nullable=False)
     run_duration = Column(Float, nullable=True)
     run_datetime = Column(DateTime, nullable=False)
     is_success = Column(Boolean, nullable=True)

@@ -11,6 +11,9 @@
       <sourceFolder url="file://$MODULE_DIR$/backend/app" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/backend/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/logs" />
+      <excludeFolder url="file://$MODULE_DIR$/reports" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.12 (jam)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

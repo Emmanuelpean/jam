@@ -5,40 +5,85 @@ and service execution logs with CRUD operations and admin access controls."""
 
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from starlette.requests import Request
 
-from app.models import User
-from app.eis import models, schemas
-from app.routers import generate_data_table_crud_router
+from app import models as app_models
 from app.database import get_db
+from app.eis import models, schemas
+from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScraper, VeganJobsScraper
 from app.oauth2 import get_current_user
+from app.routers import (
+    generate_data_table_crud_router,
+    filter_query,
+    filter_out_non_owned,
+    assert_admin,
+    NOT_ALLOWED_EXCEPTION,
+)
+
+# --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
 
 
-# Job Alert Email router
 email_router = generate_data_table_crud_router(
     table_model=models.JobAlertEmail,
     create_schema=schemas.JobAlertEmailCreate,
     update_schema=schemas.JobAlertEmailUpdate,
     out_schema=schemas.JobAlertEmailOut,
-    endpoint="jobalertemails",
+    endpoint="job_alert_emails",
     not_found_msg="Job alert email not found",
+    allowed_actions=["get"],
 )
 
 
-# Scraped Job router
+# ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
+
+
 scrapedjob_router = generate_data_table_crud_router(
     table_model=models.ScrapedJob,
     create_schema=schemas.ScrapedJobCreate,
     update_schema=schemas.ScrapedJobUpdate,
     out_schema=schemas.ScrapedJobOut,
-    endpoint="scrapedjobs",
-    not_found_msg="Scraped job not found",
+    endpoint="scraped_jobs",
+    not_found_msg="Scraped Job not found",
+    allowed_actions=["get_one", "put"],
 )
 
 
+@scrapedjob_router.get("/", response_model=list[schemas.ScrapedJobOut])
+def get_all(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: app_models.User = Depends(get_current_user),
+    limit: int | None = None,
+):
+    """Retrieve all scraped jobs for the current user that have not been imported, are active and successfully scraped.
+    :param request: FastAPI request object to access query parameters
+    :param db: Database session.
+    :param current_user: Authenticated user.
+    :param limit: Maximum number of entries to return.
+    :return: List of entries."""
+
+    query = (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.is_scraped)
+        .filter(models.ScrapedJob.is_imported.is_(False))
+        .filter(models.ScrapedJob.is_active)
+    )
+    filter_params = dict(request.query_params)
+    filter_params.pop("limit", None)
+    query = filter_query(query, models.ScrapedJob, filter_params)
+
+    results = query.limit(limit).all()
+    return [filter_out_non_owned(result, current_user.id) for result in results]
+
+
+# -------------------------------------------------- EIS SERVICE LOGS --------------------------------------------------
+
+
 # Email Ingestion Service Log router
-eis_servicelog_router = APIRouter(prefix="/servicelogs", tags=["servicelogs"])
+eis_servicelog_router = APIRouter(prefix="/eis_service_logs", tags=["eis_service_logs"])
 
 
 @eis_servicelog_router.get("/", response_model=list[schemas.EisServiceLogOut])
@@ -47,7 +92,7 @@ def get_service_logs_by_date_range(
     end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
     delta_days: int | None = Query(None, description="Number of days to go back in time"),
     limit: int | None = Query(None, description="Maximum number of logs to return"),
-    current_user: User = Depends(get_current_user),
+    current_user: app_models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get service logs within a specified date range. Admin access required.
@@ -59,8 +104,7 @@ def get_service_logs_by_date_range(
     :param db: Database session
     :return: list of service logs within the date range ordered by run_datetime descending"""
 
-    if not current_user.is_admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    assert_admin(current_user)
 
     query = db.query(models.EisServiceLog)
 
@@ -81,3 +125,58 @@ def get_service_logs_by_date_range(
         query = query.limit(limit)
 
     return query.all()
+
+
+# ------------------------------------------------------ SCRAPING ------------------------------------------------------
+
+
+scraper_router = APIRouter(prefix="/scraper", tags=["scraper"])
+
+
+@scraper_router.get("/linkedin/{external_job_id}")
+def scrape_job(
+    external_job_id: str,
+    current_user: app_models.User = Depends(get_current_user),
+):
+    """Trigger scraping of a job posting from LinkedIn by job ID.
+    :param external_job_id: LinkedIn job ID to scrape
+    :param current_user: Current authenticated user"""
+
+    if not current_user.toast_active:
+        raise NOT_ALLOWED_EXCEPTION
+
+    scraper = LinkedinJobScraper(external_job_id)
+    return scraper.scrape_job()
+
+
+@scraper_router.get("/indeed/{external_job_id}")
+def scrape_job(
+    external_job_id: str,
+    current_user: app_models.User = Depends(get_current_user),
+):
+    """Trigger scraping of a job posting from Indeed by job ID.
+    :param external_job_id: Indeed job ID to scrape
+    :param current_user: Current authenticated user"""
+
+    if not current_user.toast_active:
+        raise NOT_ALLOWED_EXCEPTION
+
+    scraper = IndeedJobScraper(external_job_id)
+    return scraper.scrape_job()
+
+
+@scraper_router.get("/veganjobs/{external_job_id}")
+def scrape_job(
+    external_job_id: str,
+    current_user: app_models.User = Depends(get_current_user),
+):
+    """Trigger scraping of a job posting from Vegan Jobs by job ID.
+    :param external_job_id: LinkedIn job ID to scrape
+    :param current_user: Current authenticated user
+    :return: Success message or error"""
+
+    if not current_user.toast_active:
+        raise NOT_ALLOWED_EXCEPTION
+
+    scraper = VeganJobsScraper(external_job_id)
+    return scraper.scrape_job()

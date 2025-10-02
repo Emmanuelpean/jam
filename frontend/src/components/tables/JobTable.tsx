@@ -1,50 +1,36 @@
 import React from "react";
-import { GenericTableWithModals, TableProps, useProvidedTableData } from "./GenericTable";
-import { tableColumns } from "../rendering/view/TableColumnRenders";
+import { DataTableProps, DataTable } from "./DataTable";
+import { tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
-const JobsTable: React.FC<TableProps> = ({ onChange, data = null, columns = [] }) => {
-	const {
-		data: jobs,
-		loading,
-		error,
-		addItem,
-		sortConfig,
-		setSortConfig,
-		updateItem,
-		removeItem,
-	} = useProvidedTableData(data, { key: "created_at", direction: "desc" });
-
-	if (!columns.length) {
-		columns = [
-			tableColumns.title!(),
-			tableColumns.company!(),
-			tableColumns.applicationStatus!(),
-			tableColumns.createdAt!(),
-		];
-	}
+const JobsTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error = null, columns = [] }) => {
+	const defaultColumns =
+		columns.length > 0
+			? columns
+			: [
+					tableColumns.title(),
+					tableColumns.companyBadge(),
+					tableColumns.applicationStatus(),
+					tableColumns.createdAt(),
+				];
 
 	return (
-		<GenericTableWithModals
-			data={jobs}
-			columns={columns}
-			loading={loading}
+		<DataTable
+			mode="controlled"
+			data={data}
+			onDataChange={onDataChange}
 			error={error}
-			sortConfig={sortConfig}
-			onSort={setSortConfig}
+			columns={defaultColumns}
+			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			Modal={JobModal}
 			endpoint="jobs"
 			nameKey="title"
 			itemType="Job"
-			addItem={addItem}
-			showAdd={false}
-			showSearch={true}
-			updateItem={updateItem}
-			removeItem={removeItem}
-			setData={() => {}}
 			modalSize="xl"
 			showAllEntries={true}
 			compact={true}
+			showAdd={false}
+			showSearch={true}
 		/>
 	);
 };

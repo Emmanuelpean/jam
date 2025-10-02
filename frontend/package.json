@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "homepage": "/jam",
   "private": true,
   "dependencies": {
@@ -17,6 +17,7 @@
     "@testing-library/user-event": "13.5.0",
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.7",
+    "@types/string-similarity": "^4.0.2",
     "ag-grid-community": "^33.3.2",
     "ag-grid-react": "^33.3.2",
     "axios": "1.9.0",
@@ -32,6 +33,7 @@
     "react-router-dom": "7.6.1",
     "react-scripts": "5.0.1",
     "react-select": "5.10.1",
+    "string-similarity": "^4.0.4",
     "typescript": "^5.9.2",
     "web-vitals": "2.1.4"
   },

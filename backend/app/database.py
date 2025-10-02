@@ -1,4 +1,4 @@
-"""Database functions"""
+"""Database connection functions"""
 
 from typing import Generator, Any
 

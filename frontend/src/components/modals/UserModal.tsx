@@ -1,11 +1,11 @@
 import React from "react";
-import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
+import DataModal, { DataModalProps } from "./GenericModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { userApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../pages/Auth/Auth.css";
-import { ValidationErrors } from "./GenericModal/GenericModal";
+import { ValidationErrors } from "./GenericModal/DataModal";
 import { UserData } from "../../services/Schemas";
 import { THEMES } from "../../utils/Theme";
 
@@ -28,9 +28,12 @@ export const UserModal: React.FC<DataModalProps> = ({
 				: [formFields.email({ required: false })]),
 		],
 		formFields.appTheme(),
-		formFields.isAdmin(),
+		[formFields.isAdmin(), formFields.toastActive()],
 	];
-	const viewFieldsArray = [[viewFields.email(), viewFields.appTheme(), viewFields.isAdmin()]];
+	const viewFieldsArray = [
+		[modalViewFields.email(), modalViewFields.appTheme()],
+		[modalViewFields.isAdmin(), modalViewFields.toastActive()],
+	];
 
 	const fields = {
 		form: formFieldsArray,
@@ -45,7 +48,7 @@ export const UserModal: React.FC<DataModalProps> = ({
 		const queryParams = { email: formData.email.trim() };
 		const matches = await userApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing: UserData) => {
-			return data?.id !== existing.id;
+			return formData?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0) {
@@ -59,19 +62,20 @@ export const UserModal: React.FC<DataModalProps> = ({
 			email: data.email?.trim(),
 			theme: data.theme?.trim() || THEMES[0],
 			is_admin: data.is_admin || false,
+			toast_active: data.toast_active || false,
 		};
 
 		return transformed;
 	};
 
 	return (
-		<GenericModal
+		<DataModal
 			show={show}
 			onHide={onHide}
 			mode={submode}
 			itemName="User"
 			size={size}
-			data={data || {}}
+			data={data}
 			id={id}
 			fields={fields}
 			endpoint="users"

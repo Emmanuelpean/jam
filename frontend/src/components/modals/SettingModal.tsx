@@ -1,7 +1,7 @@
 import React from "react";
-import GenericModal, { DataModalProps, ValidationErrors } from "./GenericModal/GenericModal";
+import DataModal, { DataModalProps, ValidationErrors } from "./GenericModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { settingsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { SettingData } from "../../services/Schemas";
@@ -23,15 +23,22 @@ export const SettingModal: React.FC<DataModalProps> = ({
 			formFields.name({ required: true, placeholder: "allowlist" }),
 			formFields.value({ required: true, placeholder: "test_user@test.com" }),
 			formFields.description({ placeholder: "Allow only those email addresses to sign up." }),
+			formFields.isActive(),
 		],
-		view: [viewFields.name(), viewFields.value(), viewFields.description()],
+		view: [
+			modalViewFields.name(),
+			modalViewFields.value(),
+			modalViewFields.description(),
+			modalViewFields.isActive(),
+		],
 	};
 
-	const transformFormData = (data: any): SettingData => {
+	const transformFormData = (data: SettingData) => {
 		return {
 			name: data?.name?.trim(),
 			value: data?.value?.trim(),
 			description: data?.description?.trim(),
+			is_active: data?.is_active,
 		};
 	};
 
@@ -42,8 +49,8 @@ export const SettingModal: React.FC<DataModalProps> = ({
 		}
 		const queryParams = { name: formData.name.trim() };
 		const matches = await settingsApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing: any) => {
-			return data?.id !== existing.id;
+		const duplicates = matches.filter((existing: SettingData) => {
+			return formData?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0) {
@@ -53,13 +60,13 @@ export const SettingModal: React.FC<DataModalProps> = ({
 	};
 
 	return (
-		<GenericModal
+		<DataModal
 			show={show}
 			onHide={onHide}
 			mode={submode}
-			itemName="Tag"
+			itemName="Setting"
 			size={size}
-			data={data || {}}
+			data={data}
 			id={id}
 			fields={fields}
 			endpoint="settings"

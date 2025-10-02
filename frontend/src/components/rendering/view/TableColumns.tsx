@@ -1,40 +1,20 @@
-import { ReactNode } from "react";
-import { renderFunctions, RenderParams } from "./ViewRenders";
+import { ViewField, renderFunctions, RenderParams } from "./ViewRenders";
 import { localeDateOnly } from "../../../utils/TimeUtils";
+import { JobData } from "../../../services/Schemas";
 
-interface TableColumnOverrides {
-	key?: string;
-	label?: string;
-	sortable?: boolean;
-	searchable?: boolean | ((item: any) => string);
-	type?: string;
-	render?: (params: RenderParams) => ReactNode;
-	sortField?: string;
-	searchFields?: string | ((item: any) => string);
-	columnClass?: string;
-	accessKey?: string | undefined;
-}
-
-export interface TableColumn {
-	key: string;
+export interface TableColumn extends ViewField {
 	label: string;
 	sortable?: boolean;
 	searchable?: boolean | ((item: any) => string);
 	type?: string;
-	render?: (params: RenderParams) => ReactNode;
-	sortField?: string;
-	searchFields?: string | ((item: any) => string);
+	sortField?: string | ((item: any) => string | number) | string[];
+	searchFields?: string | ((item: any) => string) | string[];
 	columnClass?: string;
-	accessKey?: string | undefined;
 }
 
-type TableColumnFactory = (overrides?: TableColumnOverrides) => TableColumn;
+interface TableColumnOverrides extends Partial<TableColumn> {}
 
-interface Columns {
-	[key: string]: TableColumnFactory;
-}
-
-export const tableColumns: Columns = {
+export const tableColumns = {
 	// ------------------------------------------------- GENERAL NAMES -------------------------------------------------
 
 	id: (overrides: TableColumnOverrides = {}): TableColumn => ({
@@ -166,6 +146,16 @@ export const tableColumns: Columns = {
 		...overrides,
 	}),
 
+	isActive: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_active",
+		label: "Active",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.isActive,
+		...overrides,
+	}),
+
 	// ---------------------------------------------------- LOCATION ---------------------------------------------------
 
 	location: (overrides: TableColumnOverrides = {}): TableColumn => ({
@@ -174,9 +164,18 @@ export const tableColumns: Columns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		sortField: "location.name", // TODO search by attendance_type too
-		searchFields: "location.name", // TODO filter by attendance_type too
+		sortField: ["location.name", "attendance_type"],
+		searchFields: ["location.name", "attendance_type"],
 		render: renderFunctions.locationBadge,
+		...overrides,
+	}),
+
+	scrapedLocation: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "location",
+		label: "Location",
+		sortable: true,
+		searchable: true,
+		type: "text",
 		...overrides,
 	}),
 
@@ -209,8 +208,8 @@ export const tableColumns: Columns = {
 
 	// --------------------------------------------------- COMPANIES ---------------------------------------------------
 
-	company: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "company",
+	companyBadge: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "companyBadge",
 		label: "Company",
 		sortable: true,
 		searchable: true,
@@ -218,6 +217,17 @@ export const tableColumns: Columns = {
 		sortField: "company.name",
 		searchFields: "company.name",
 		render: renderFunctions.companyBadge,
+		...overrides,
+	}),
+
+	scrapedCompany: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "company",
+		label: "Company",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		sortField: "company",
+		searchFields: "company",
 		...overrides,
 	}),
 
@@ -259,9 +269,19 @@ export const tableColumns: Columns = {
 		key: "is_admin",
 		label: "Admin",
 		sortable: true,
-		searchable: true,
+		searchable: false,
 		type: "text",
 		render: renderFunctions.isAdmin,
+		...overrides,
+	}),
+
+	toastActive: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "toast_active",
+		label: "TOAST",
+		sortable: true,
+		searchable: false,
+		type: "text",
+		render: renderFunctions.toastActive,
 		...overrides,
 	}),
 
@@ -374,15 +394,6 @@ export const tableColumns: Columns = {
 		sortable: true,
 		searchable: false,
 		render: renderFunctions.interviewCount,
-		...overrides,
-	}),
-
-	updateCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "updates",
-		label: "Updates",
-		sortable: true,
-		searchable: false,
-		render: renderFunctions.updateCount,
 		...overrides,
 	}),
 

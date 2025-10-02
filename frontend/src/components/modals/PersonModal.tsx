@@ -1,13 +1,14 @@
 import React from "react";
-import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
-import { formFields, useFormOptions } from "../rendering/form/FormRenders";
-import { viewFields } from "../rendering/view/ModalFieldRenders";
+import DataModal, { DataModalProps } from "./GenericModal/DataModal";
+import { formFields } from "../rendering/form/FormRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 import { personsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import AlertModal from "./AlertModal";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { PersonData } from "../../services/Schemas";
-import { ValidationErrors } from "./GenericModal/GenericModal";
+import { ValidationErrors } from "./GenericModal/DataModal";
+import { useFormOptions } from "../rendering/form/FormOptions";
 
 export const PersonModal: React.FC<DataModalProps> = ({
 	show,
@@ -31,10 +32,10 @@ export const PersonModal: React.FC<DataModalProps> = ({
 	];
 
 	const viewFieldsArray = [
-		[viewFields.personName({ isTitle: true })],
-		[viewFields.companyBadge(), viewFields.role()],
-		[viewFields.email(), viewFields.phone()],
-		viewFields.linkedinUrl(),
+		[modalViewFields.personName({ isTitle: true })],
+		[modalViewFields.companyBadge(), modalViewFields.role()],
+		[modalViewFields.email(), modalViewFields.phone()],
+		modalViewFields.linkedinUrl(),
 	];
 
 	const fields = {
@@ -56,7 +57,7 @@ export const PersonModal: React.FC<DataModalProps> = ({
 		};
 		const matches = await personsApi.getAll(token, queryParams);
 		const duplicates = matches.filter((existing: any) => {
-			return data?.id !== existing.id;
+			return formData?.id !== existing.id;
 		});
 
 		if (duplicates.length > 0) {
@@ -82,7 +83,7 @@ export const PersonModal: React.FC<DataModalProps> = ({
 
 	return (
 		<>
-			<GenericModal
+			<DataModal
 				show={show}
 				onHide={onHide}
 				mode={submode}

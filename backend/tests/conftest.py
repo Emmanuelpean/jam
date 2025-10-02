@@ -9,7 +9,8 @@ and providing the necessary utilities for seamless interactions with the applica
 """
 
 import datetime as dt
-from typing import Any, Generator
+from functools import wraps
+from typing import Any, Generator, Callable
 
 import pytest
 from fastapi import status
@@ -43,6 +44,17 @@ from tests.utils.seed_database import reset_database
 SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+def find_non_owned(entries: list, owner_id: int) -> int:
+    """Find an entry not owned by the specified owner_id.
+    :param entries: List of entries to search.
+    :param owner_id: The owner ID to exclude."""
+
+    for entry in entries:
+        if entry.owner_id != owner_id:
+            return entry.id
+    raise AssertionError("No non-owned entry found")
 
 
 @pytest.fixture
@@ -109,6 +121,34 @@ def authorised_clients(client: TestClient, tokens: list[str]) -> list[TestClient
 
 
 @pytest.fixture
+def admin_client(authorised_clients) -> TestClient:
+    """Fixture for an admin client."""
+    return authorised_clients[1]
+
+
+@pytest.fixture
+def admin_user(test_users) -> models.User:
+    """Fixture for an admin user."""
+    user = test_users[1]
+    assert user.is_admin
+    return user
+
+
+@pytest.fixture
+def test_client(authorised_clients) -> TestClient:
+    """Fixture for a non-admin client."""
+    return authorised_clients[0]
+
+
+@pytest.fixture
+def test_user(test_users) -> models.User:
+    """Fixture for a non-admin user."""
+    user = test_users[0]
+    assert not user.is_admin
+    return user
+
+
+@pytest.fixture
 def test_keywords(session, test_users) -> list[models.Keyword]:
     """Create test keyword data"""
 
@@ -144,6 +184,25 @@ def test_persons(session, test_users, test_companies) -> list[models.Person]:
 
 
 @pytest.fixture
+def persons_unauthorised_data(test_companies) -> tuple[list[dict], int]:
+    """Create test person data with incorrect company_id for access control testing"""
+
+    owner_id = 1
+    company_id = find_non_owned(test_companies, owner_id)
+    return [{"first_name": "A", "last_name": "B", "company_id": company_id, "owner_id": owner_id}], owner_id
+
+
+@pytest.fixture
+def test_persons_unauthorised(
+    session, test_users, test_companies, persons_unauthorised_data
+) -> tuple[list[models.Person], int]:
+    """Create test person data with incorrect company_id for access control testing"""
+
+    data, owner_id = persons_unauthorised_data
+    return create_people(session, test_users, test_companies, data), owner_id
+
+
+@pytest.fixture
 def test_files(session, test_users) -> list[models.File]:
     """Create test files for job applications"""
 
@@ -162,10 +221,141 @@ def test_jobs(
 
 
 @pytest.fixture
+def jobs_unauthorised_data(
+    session,
+    test_users,
+    test_companies,
+    test_locations,
+    test_keywords,
+    test_persons,
+    test_aggregators,
+    test_files,
+) -> tuple[list[dict], int, list[dict], list[dict]]:
+    """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
+
+    owner_id = 1
+    company_id = find_non_owned(test_companies, owner_id)
+    location_id = find_non_owned(test_locations, owner_id)
+    job_keyword_mapping = [{"job_id": 1, "keyword_ids": [find_non_owned(test_keywords, owner_id)]}]
+    job_contact_mapping = [{"job_id": 1, "person_ids": [find_non_owned(test_persons, owner_id)]}]
+    data = [
+        {
+            "title": "A",
+            "company_id": company_id,
+            "location_id": location_id,
+            "owner_id": owner_id,
+        }
+    ]
+    return data, owner_id, job_keyword_mapping, job_contact_mapping
+
+
+@pytest.fixture
+def test_jobs_unauthorised(
+    session,
+    test_users,
+    test_companies,
+    test_locations,
+    test_keywords,
+    test_persons,
+    test_aggregators,
+    test_files,
+    jobs_unauthorised_data,
+) -> tuple[list[models.Job], int]:
+    """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
+
+    data, owner_id, job_keyword_mapping, job_contact_mapping = jobs_unauthorised_data
+    jobs = create_jobs(
+        session,
+        test_keywords,
+        test_persons,
+        test_users,
+        test_companies,
+        test_locations,
+        test_aggregators,
+        test_files,
+        data,
+        job_keyword_mapping,
+        job_contact_mapping,
+    )
+    return jobs, owner_id
+
+
+@pytest.fixture
 def test_interviews(session, test_users, test_jobs, test_locations, test_persons) -> list[models.Interview]:
     """Create test interview data"""
 
     return create_interviews(session, test_persons, test_users, test_locations, test_jobs)
+
+
+@pytest.fixture
+def interviews_unauthorised_data(
+    session, test_users, test_jobs, test_locations, test_persons
+) -> tuple[list[dict], int, list[dict]]:
+    """Create test interview data with incorrect job_id for access control testing"""
+
+    owner_id = 1
+    job_id = find_non_owned(test_jobs, owner_id)
+    data = [{"job_id": job_id, "date": str(dt.datetime.now()), "owner_id": owner_id, "type": "phone"}]
+    interview_interviewer_mappings = [{"interview_id": 1, "person_ids": [find_non_owned(test_persons, owner_id)]}]
+    return data, owner_id, interview_interviewer_mappings
+
+
+@pytest.fixture
+def test_interviews_unauthorised(
+    session, test_users, test_jobs, test_locations, test_persons, interviews_unauthorised_data
+) -> tuple[list[models.Interview], int]:
+    """Create test interview data with incorrect job_id for access control testing"""
+
+    data, owner_id, interview_interviewer_mappings = interviews_unauthorised_data
+    interviews = create_interviews(
+        session,
+        test_persons,
+        test_users,
+        test_locations,
+        test_jobs,
+        data,
+        interview_interviewer_mappings,
+    )
+    return interviews, owner_id
+
+
+@pytest.fixture
+def test_job_application_updates(session, test_users, test_jobs) -> list[models.JobApplicationUpdate]:
+    """Create test job application update data"""
+
+    return create_job_application_updates(session, test_users, test_jobs)
+
+
+@pytest.fixture
+def job_application_updates_unauthorised_data(session, test_users, test_jobs) -> tuple[list[dict], int]:
+    """Create test job application update data with incorrect job_id for access control testing"""
+
+    owner_id = 1
+    job_id = find_non_owned(test_jobs, owner_id)
+    data = [
+        {
+            "job_id": job_id,
+            "date": str(dt.datetime.now()),
+            "type": "received",
+            "owner_id": owner_id,
+            "note": "Test note",
+        }
+    ]
+    return data, owner_id
+
+
+@pytest.fixture
+def test_job_application_updates_unauthorised(
+    session, test_users, test_jobs, job_application_updates_unauthorised_data
+) -> tuple[list[models.JobApplicationUpdate], int]:
+    """Create test job application update data with incorrect job_id for access control testing"""
+
+    data, owner_id = job_application_updates_unauthorised_data
+    updates = create_job_application_updates(session, test_users, test_jobs, data)
+    return updates, owner_id
+
+
+# ---------------------------------------------------- EIS Fixtures ----------------------------------------------------
 
 
 @pytest.fixture
@@ -190,13 +380,6 @@ def test_service_logs(session) -> list[eis_models.EisServiceLog]:
 
 
 @pytest.fixture
-def test_job_application_updates(session, test_users, test_jobs) -> list[models.JobApplicationUpdate]:
-    """Create test job application update data"""
-
-    return create_job_application_updates(session, test_users, test_jobs)
-
-
-@pytest.fixture
 def test_settings(session) -> list[models.Setting]:
     """Create test settings data"""
 
@@ -213,22 +396,67 @@ def open_file(filepath: str) -> str:
         return ofile.read()
 
 
+def assert_ownership(item: list | dict, owner_id: int) -> None:
+    """Assert that all items in a list belong to the specified owner.
+    :param item: The item or list of items to check.
+    :param owner_id: The expected owner ID."""
+
+    if isinstance(item, dict):
+        if "owner_id" in item:
+            assert item["owner_id"] == owner_id
+        for key in item:
+            assert_ownership(item[key], owner_id)
+    if isinstance(item, list):
+        for subitem in item:
+            assert_ownership(subitem, owner_id)
+
+
+def skip_if_action_not_enabled(action: str) -> Any:
+    """Decorator to skip a test if the specified action is not enabled in the actions_to_test list."""
+
+    def decorator(func: Callable) -> Any:
+        """Decorator to skip a test if the specified action is not enabled in the actions_to_test list."""
+
+        @wraps(func)
+        def wrapper(self, *args, **kwargs) -> Any:
+            """Wrapper function to check if the action is enabled."""
+
+            if action not in self.actions_to_test:
+                pytest.skip(f"Skipping {action.upper()} tests as per actions_to_test setting")
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 class CRUDTestBase:
     """Base class for CRUD tests on FastAPI routes.
 
     Subclasses must override:
     - endpoint: str - base URL path for the resource (e.g. "/aggregators")
-    - schema: Pydantic model class for input validation (e.g. schemas.Aggregator)
+    - create_schema: Pydantic model class for creation validation (e.g. schemas.AggregatorCreate)
     - out_schema: Pydantic model class for output validation (e.g. schemas.AggregatorOut)
-    - test_data: str - name of pytest fixture providing list of test objects"""
+    - test_data: str - name of pytest fixture providing list of test objects
+    - update_data: dict - example data for updating an existing object
+    - create_data: list[dict] - example data for creating new objects
+    - required_fixture: str or list[str] - name(s) of pytest fixture(s) for the post operations
+    - get_unauthorised_fixture: str - name of pytest fixture providing data for access tests with incorrect ownership
+    - unauthorised_data_fixture: str - name of pytest fixture providing data for creation tests with incorrect ownership
+    - admin_only: bool - if True, only admin users can access the endpoint
+    """
 
     endpoint: str = ""
-    schema = None
+    admin_only: bool = False
+    create_schema = None
     out_schema = None
     test_data: str = ""
-    update_data: dict = None
+    update_data: dict[str, str | int] = None
     create_data: list[dict] = None
-    add_fixture = None
+    required_fixture: str = None
+    get_unauthorised_fixture: str = None
+    unauthorised_data_fixture = None
+    actions_to_test: list[str] = ["get", "post", "put", "delete"]
 
     def check_output(
         self,
@@ -285,164 +513,295 @@ class CRUDTestBase:
 
     def get_all(self, client) -> Response:
         """Helper method to get all items from the endpoint."""
-
         return client.get(self.endpoint)
 
     def get_one(self, client, item_id) -> Response:
         """Helper method to get one item from the endpoint."""
-
         return client.get(f"{self.endpoint}/{item_id}")
 
     def post(self, client, data) -> Response:
         """Helper method to post a new item to the endpoint."""
-
         return client.post(self.endpoint, json=data)
 
     def put(self, client: TestClient, item_id: int, data) -> Response:
         """Helper method to update an existing item in the endpoint."""
-
         return client.put(f"{self.endpoint}/{item_id}", json=data)
 
     def delete(self, client, item_id) -> Response:
         """Helper method to delete an existing item from the endpoint."""
-
         return client.delete(f"{self.endpoint}/{item_id}")
+
+    def _get_authorized_client(self, authorised_clients) -> TestClient:
+        """Get the appropriate authorized client based on admin_only setting."""
+        if self.admin_only:
+            return authorised_clients[1]  # admin_client
+        else:
+            return authorised_clients[0]  # regular user client
+
+    def _get_unauthorized_client(self, authorised_clients) -> TestClient:
+        """Get a client that should be denied access."""
+        if self.admin_only:
+            return authorised_clients[0]  # non-admin client
+        else:
+            return authorised_clients[1]  # different user client
+
+    def get_user_data(self, test_users) -> list[dict]:
+        """Get create data filtered by owner_id based on admin_only setting."""
+
+        if self.admin_only:
+            user = test_users[0]
+        else:
+            user = test_users[1]
+        new_data = []
+        for data in new_data:
+            if "owner_id" in data:
+                if data["owner_id"] == user.id:
+                    new_data.append(data)
+            else:
+                new_data.append(data)
+        return new_data
 
     @pytest.fixture(autouse=True)
     def setup_method(self, request) -> None:
         """Fixture that runs before each test method."""
-
-        if isinstance(self.add_fixture, list):
-            for fixture in self.add_fixture:
+        if isinstance(self.required_fixture, list):
+            for fixture in self.required_fixture:
                 request.getfixturevalue(fixture)
 
     # ------------------------------------------------------- GET ------------------------------------------------------
 
+    @skip_if_action_not_enabled("get")
     def test_get_all_success(
         self,
         authorised_clients,
         request,
     ) -> None:
+        """Test that authorized users can successfully retrieve all items from the endpoint.
+        Verifies 200 OK response and validates the returned data matches expected test data."""
         test_data = request.getfixturevalue(self.test_data)
-        response = self.get_all(authorised_clients[0])
+        client = self._get_authorized_client(authorised_clients)
+        response = self.get_all(client)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
 
+    @skip_if_action_not_enabled("get")
     def test_get_all_unauthorized(
         self,
         client: TestClient,
     ) -> None:
+        """Test that unauthenticated requests to get all items are rejected.
+        Verifies 401 Unauthorized response when no authentication is provided."""
         response = self.get_all(client)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
+    @skip_if_action_not_enabled("get")
     def test_get_one_success(
         self,
         authorised_clients,
         request,
     ) -> None:
+        """Test that authorized users can successfully retrieve a specific item by ID.
+        Verifies 200 OK response and validates the returned data matches the requested item."""
         test_data = request.getfixturevalue(self.test_data)
-        response = self.get_one(authorised_clients[0], test_data[0].id)
+        client = self._get_authorized_client(authorised_clients)
+        response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data[0], response.json())
 
+    @skip_if_action_not_enabled("get")
     def test_get_one_unauthorized(
         self,
         client,
         request,
     ) -> None:
+        """Test that unauthenticated requests to get a specific item are rejected.
+        Verifies 401 Unauthorized response when no authentication is provided."""
         test_data = request.getfixturevalue(self.test_data)
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_get_one_other_user(
+    @skip_if_action_not_enabled("get")
+    def test_get_one_forbidden(
         self,
         authorised_clients,
         request,
     ) -> None:
+        """Test that users are denied access to items they don't have permission to view.
+        For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
         test_data = request.getfixturevalue(self.test_data)
-        response = self.get_one(authorised_clients[1], test_data[0].id)
+        client = self._get_unauthorized_client(authorised_clients)
+        response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
+    @skip_if_action_not_enabled("get")
     def test_get_one_non_exist(
         self,
         authorised_clients,
     ) -> None:
-        response = self.get_one(authorised_clients[0], 999999)
+        """Test that requests for non-existent items return a 404 error.
+        Verifies proper handling when the requested item ID doesn't exist in the database."""
+        client = self._get_authorized_client(authorised_clients)
+        response = self.get_one(client, 999999)
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    @skip_if_action_not_enabled("get")
+    def test_get_all_data_only_authorised(
+        self,
+        authorised_clients,
+        request,
+    ) -> None:
+        """Test that users only see data they own when retrieving all items (non-admin endpoints only).
+        Verifies proper data filtering based on ownership using the get_unauthorised_fixture."""
+        if not self.admin_only and self.get_unauthorised_fixture:
+            owner_id = request.getfixturevalue(self.get_unauthorised_fixture)[1]
+            response = self.get_all(authorised_clients[owner_id - 1])
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            print(data)
+            if data:
+                assert_ownership(data, owner_id)
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
+    @skip_if_action_not_enabled("post")
     def test_post_success(
         self,
         authorised_clients,
+        test_users,
     ) -> None:
-        """
-        Generic POST test using class attribute post_test_data.
-        Subclasses should set post_test_data = [dict(...), ...]
-        """
-
-        for create_data in self.create_data:
+        """Test that authorized users can successfully create new items.
+        Iterates through create_data examples, verifies 201 Created responses and validates returned data."""
+        client = self._get_authorized_client(authorised_clients)
+        for create_data in self.get_user_data(test_users):
             create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
-            response = self.post(authorised_clients[0], create_data)
+            response = self.post(client, create_data)
             assert response.status_code == status.HTTP_201_CREATED
             self.check_output(create_data, response.json())
 
-    def test_post_unauthorized(
+    @skip_if_action_not_enabled("post")
+    def test_post_unauthorised(
         self,
         client,
     ) -> None:
+        """Test that unauthenticated requests to create items are rejected.
+        Verifies 401 Unauthorized response when no authentication is provided."""
         response = self.post(client, {})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
+    @skip_if_action_not_enabled("post")
+    def test_post_forbidden(
+        self,
+        authorised_clients,
+        test_users,
+    ) -> None:
+        """Test that non-admin users are denied access to create items on admin-only endpoints.
+        Only runs for admin_only=True endpoints, verifying 403 Forbidden responses."""
+
+        if self.admin_only:
+            client = self._get_unauthorized_client(authorised_clients)
+            for create_data in self.get_user_data(test_users):
+                create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
+                response = self.post(client, create_data)
+                assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    @skip_if_action_not_enabled("post")
+    def test_post_data_only_authorised(
+        self,
+        authorised_clients,
+        request,
+    ) -> None:
+        """Test that users can successfully create data they own on non-admin endpoints.
+        Uses unauthorised_data_fixture to verify proper ownership validation during creation."""
+        if not self.admin_only and self.unauthorised_data_fixture:
+            data, owner_id = request.getfixturevalue(self.unauthorised_data_fixture)[:2]
+            for datum in data:
+                datum = {key: value for key, value in datum.items() if key not in ("id", "owner_id")}
+                response = self.post(authorised_clients[owner_id - 1], datum)
+                assert response.status_code == status.HTTP_201_CREATED
+                assert_ownership(data, owner_id)
+
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
+    @skip_if_action_not_enabled("put")
     def test_put_success(
         self,
         authorised_clients,
         request,
     ) -> None:
+        """Test that authorized users can successfully update existing items.
+        Verifies 200 OK response and validates the returned data matches the update_data."""
         request.getfixturevalue(self.test_data)
-        # noinspection PyTypeChecker
-        response = self.put(authorised_clients[0], self.update_data["id"], self.update_data)
+        client = self._get_authorized_client(authorised_clients)
+        response = self.put(client, self.update_data.get("id"), self.update_data)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(self.update_data, response.json())
 
+    @skip_if_action_not_enabled("put")
     def test_put_empty_body(self, authorised_clients, request) -> None:
+        """Test that PUT requests with empty request bodies are rejected.
+        Verifies 400 Bad Request response when no update data is provided."""
         test_data = request.getfixturevalue(self.test_data)
-        response = self.put(authorised_clients[0], test_data[0].id, {})
+        client = self._get_authorized_client(authorised_clients)
+        response = self.put(client, test_data[0].id, {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    @skip_if_action_not_enabled("put")
     def test_put_non_exist(self, authorised_clients) -> None:
-        response = self.put(authorised_clients[0], 999999, {})
+        """Test that PUT requests for non-existent items return a 404 error.
+        Verifies proper handling when attempting to update an item that doesn't exist."""
+        client = self._get_authorized_client(authorised_clients)
+        response = self.put(client, 999999, {})
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    @skip_if_action_not_enabled("put")
     def test_put_unauthorized(self, client, request) -> None:
+        """Test that unauthenticated requests to update items are rejected.
+        Verifies 401 Unauthorized response when no authentication is provided."""
         test_data = request.getfixturevalue(self.test_data)
         response = self.put(client, test_data[0].id, {"name": "Test"})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_put_other_user(self, authorised_clients, request) -> None:
+    @skip_if_action_not_enabled("put")
+    def test_put_forbidden(self, authorised_clients, request) -> None:
+        """Test that users are denied access to update items they don't have permission to modify.
+        For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
         test_data = request.getfixturevalue(self.test_data)
-        response = self.put(authorised_clients[1], test_data[0].id, {"name": "Test"})
+        client = self._get_unauthorized_client(authorised_clients)
+        response = self.put(client, test_data[0].id, {"name": "Test"})
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
+    @skip_if_action_not_enabled("delete")
     def test_delete_success(self, authorised_clients, request) -> None:
+        """Test that authorized users can successfully delete existing items.
+        Verifies 204 No Content response indicating successful deletion."""
         test_data = request.getfixturevalue(self.test_data)
-        response = self.delete(authorised_clients[0], test_data[0].id)
+        client = self._get_authorized_client(authorised_clients)
+        response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
+    @skip_if_action_not_enabled("delete")
     def test_delete_non_exist(self, authorised_clients) -> None:
-        response = self.delete(authorised_clients[0], 999999)
+        """Test that DELETE requests for non-existent items return a 404 error.
+        Verifies proper handling when attempting to delete an item that doesn't exist."""
+        client = self._get_authorized_client(authorised_clients)
+        response = self.delete(client, 999999)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    @skip_if_action_not_enabled("delete")
     def test_delete_unauthorized(self, client, request) -> None:
+        """Test that unauthenticated requests to delete items are rejected.
+        Verifies 401 Unauthorized response when no authentication is provided."""
         test_data = request.getfixturevalue(self.test_data)
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_delete_other_user(self, authorised_clients, request) -> None:
+    @skip_if_action_not_enabled("delete")
+    def test_delete_forbidden(self, authorised_clients, request) -> None:
+        """Test that users are denied access to delete items they don't have permission to remove.
+        For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
         test_data = request.getfixturevalue(self.test_data)
-        response = self.delete(authorised_clients[1], test_data[0].id)
+        client = self._get_unauthorized_client(authorised_clients)
+        response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN

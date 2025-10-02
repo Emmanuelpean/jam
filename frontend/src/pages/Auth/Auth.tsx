@@ -5,10 +5,10 @@ import "./Auth.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
-import { Errors, renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { Errors, renderModalFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
-import { FormField } from "../../components/rendering/form/FormRenders";
+import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { FormData, AuthResponse } from "../../contexts/AuthContext";
 
 function AuthForm(): JSX.Element {
@@ -25,7 +25,7 @@ function AuthForm(): JSX.Element {
 	const { login, register, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { showSuccess, showError } = useGlobalToast();
+	const { showToastSuccess, showToastError } = useGlobalToast();
 	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
 
 	useEffect(() => {
@@ -123,14 +123,13 @@ function AuthForm(): JSX.Element {
 				setIsLogin(true);
 				resetForm();
 				navigate("/login");
-				showSuccess("Account created successfully! You can now log in.", "Registration Successful");
+				showToastSuccess("Account created successfully! You can now log in.", "Registration Successful");
 			}
 		} else {
 			// Use centralized error messages from AuthContext
 			const title = isLoginAction ? "Login Failed" : "Registration Failed";
 			const message = result.error || "An unknown error occurred";
-			showError(message, title);
-			console.log(result.error);
+			showToastError(message, title);
 		}
 	};
 
@@ -159,7 +158,7 @@ function AuthForm(): JSX.Element {
 			const message = isLogin
 				? "Failed to login. An unknown error occurred"
 				: "Failed to create an account. An unknown error occurred";
-			showError(message, title);
+			showToastError(message, title);
 		} finally {
 			setLoading(false);
 		}
@@ -175,7 +174,7 @@ function AuthForm(): JSX.Element {
 	};
 
 	// Define field configurations
-	const emailField: FormField = {
+	const emailField: ModalFormField = {
 		name: "email",
 		type: "text",
 		label: "Email Address",
@@ -183,7 +182,7 @@ function AuthForm(): JSX.Element {
 		placeholder: "Enter your email",
 	};
 
-	const passwordField: FormField = {
+	const passwordField: ModalFormField = {
 		name: "password",
 		type: "password",
 		label: "Password",
@@ -193,7 +192,7 @@ function AuthForm(): JSX.Element {
 		helpText: !isLogin ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` : null,
 	};
 
-	const confirmPasswordField: FormField = {
+	const confirmPasswordField: ModalFormField = {
 		name: "confirmPassword",
 		type: "password",
 		label: "Confirm Password",
@@ -203,7 +202,7 @@ function AuthForm(): JSX.Element {
 		tabIndex: isLogin ? -1 : 0,
 	};
 
-	const termsField: FormField = {
+	const termsField: ModalFormField = {
 		name: "terms",
 		type: "checkbox",
 		label: (
@@ -249,19 +248,19 @@ function AuthForm(): JSX.Element {
 					<Card.Title className="text-primary">{isLogin ? "Login" : "Create Account"}</Card.Title>
 
 					<Form onSubmit={handleSubmit} autoComplete="on">
-						{renderFormField(emailField, formData, handleInputChange, fieldErrors)}
+						{renderModalFormField(emailField, formData, handleInputChange, fieldErrors)}
 
-						{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
+						{renderModalFormField(passwordField, formData, handleInputChange, fieldErrors)}
 
 						<div
 							className={`auth-field-container ${!isLogin ? "auth-field-visible" : "auth-field-hidden"}`}
 						>
-							{renderFormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
+							{renderModalFormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
 						</div>
 						<div
 							className={`auth-field-container ${!isLogin ? "auth-field-visible" : "auth-field-hidden"}`}
 						>
-							{renderFormField(
+							{renderModalFormField(
 								termsField,
 								{ terms: acceptedTerms },
 								//@ts-ignore
