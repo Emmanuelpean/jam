@@ -35,31 +35,14 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const { isLoading, loadingMessage } = useLoading();
 	const location = useLocation();
 	const { currentUser } = useAuth();
-	const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(false);
 
-	// Don't show sidebar on auth pages
 	const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
-	const handleSidebarHoverChange = (isHovering: boolean): void => {
-		setSidebarExpanded(isHovering);
-	};
-
 	return (
-		<div style={{ display: "flex", height: "100vh" }}>
-			{!isAuthPage && currentUser && <Sidebar onHoverChange={handleSidebarHoverChange} />}
-			<div
-				className={!isAuthPage ? `main-content ${sidebarExpanded ? "sidebar-expanded" : ""}` : ""}
-				style={{ flex: 1, overflow: "auto" }}
-			>
-				<div
-					className="content-wrapper"
-					style={{
-						maxWidth: "95%",
-						margin: "0 auto",
-						paddingBottom: "20px",
-						paddingTop: "10px",
-					}}
-				>
+		<div style={{ display: "flex", minHeight: "100vh" }}>
+			{currentUser && <Sidebar />}
+			<div style={{ width: "100%" }}>
+				<div className={!isAuthPage ? `main-content` : ""}>
 					{isLoading && (
 						<div className="global-loading-overlay">
 							<div className="d-flex flex-column justify-content-center align-items-center h-100">
