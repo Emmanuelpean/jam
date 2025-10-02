@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
+import DataModal, { DataModalProps } from "./GenericModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { formatDateTime } from "../../utils/TimeUtils";
@@ -59,7 +59,7 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 
 	return (
 		<>
-			<GenericModal
+			<DataModal
 				show={show}
 				onHide={onHide}
 				mode={submode}

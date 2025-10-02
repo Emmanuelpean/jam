@@ -1,11 +1,11 @@
 import React from "react";
-import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
+import DataModal, { DataModalProps } from "./GenericModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { userApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../pages/Auth/Auth.css";
-import { ValidationErrors } from "./GenericModal/GenericModal";
+import { ValidationErrors } from "./GenericModal/DataModal";
 import { UserData } from "../../services/Schemas";
 import { THEMES } from "../../utils/Theme";
 
@@ -69,7 +69,7 @@ export const UserModal: React.FC<DataModalProps> = ({
 	};
 
 	return (
-		<GenericModal
+		<DataModal
 			show={show}
 			onHide={onHide}
 			mode={submode}

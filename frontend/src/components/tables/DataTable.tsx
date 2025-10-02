@@ -13,7 +13,7 @@ import { useLoading } from "../../contexts/LoadingContext";
 import { createActiveHandler, createDeleteHandler } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
-import "./GenericTable.css";
+import "./DataTable.css";
 
 export type Direction = "asc" | "desc";
 
@@ -72,7 +72,7 @@ export interface GenericTableProps {
 	children?: (data: any[]) => ReactNode;
 }
 
-export const GenericTable: React.FC<GenericTableProps> = ({
+export const DataTable: React.FC<GenericTableProps> = ({
 	mode,
 	endpoint = "",
 	data: controlledData = [],
@@ -788,4 +788,4 @@ export const GenericTable: React.FC<GenericTableProps> = ({
 	);
 };
 
-export default GenericTable;
+export default DataTable;

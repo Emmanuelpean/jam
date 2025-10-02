@@ -1,5 +1,5 @@
 import React from "react";
-import { DataTableProps, GenericTable } from "./GenericTable";
+import { DataTableProps, DataTable } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { JobApplicationUpdateModal, JobApplicationUpdateModalProps } from "../modals/JobApplicationUpdateModal";
 
@@ -22,7 +22,7 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 	);
 
 	return (
-		<GenericTable
+		<DataTable
 			mode="controlled"
 			data={data}
 			onDataChange={onDataChange}

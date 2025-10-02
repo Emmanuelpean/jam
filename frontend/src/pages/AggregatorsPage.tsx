@@ -1,6 +1,6 @@
 import React from "react";
 import { AggregatorModal } from "../components/modals/AggregatorModal";
-import { GenericTable } from "../components/tables/GenericTable";
+import { DataTable } from "../components/tables/DataTable";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const AggregatorsPage = () => {
@@ -13,7 +13,7 @@ const AggregatorsPage = () => {
 	];
 
 	return (
-		<GenericTable
+		<DataTable
 			mode="api"
 			endpoint="aggregators"
 			initialSortConfig={{ key: "name", direction: "asc" }}

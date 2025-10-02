@@ -1,5 +1,5 @@
 import React, { ReactNode, useMemo } from "react";
-import GenericModal, { DataModalProps, TabConfig, ValidationErrors } from "./GenericModal/GenericModal";
+import DataModal, { DataModalProps, TabConfig, ValidationErrors } from "./GenericModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/ViewRenders";
@@ -72,25 +72,23 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 		[modalViewFields.salaryRange(), modalViewFields.personalRating()],
 		[modalViewFields.sourceBadge(), modalViewFields.url({ label: "Job URL" })],
 		[modalViewFields.keywordBadges(), modalViewFields.personBadges()],
-		modalViewFields.deadline(),
+		[modalViewFields.deadline()],
 	];
 
-	const applicationFormFields = useMemo(() => {
-		return [
-			[formFields.applicationDate(), formFields.applicationStatus()],
-			[
-				formFields.applicationVia(),
-				formFields.aggregator(aggregators, openAggregatorModal, { name: "application_aggregator_id" }),
-			],
-			formFields.applicationUrl({ placeholder: "https://linkedin.com/application/453635" }),
-			formFields.note({
-				placeholder:
-					"The application process involves submitting an online application, followed by technical " +
-					"assessments and interviews to evaluate coding skills, problem-solving ability, and cultural fit.",
-				name: "application_note",
-			}),
-		];
-	}, [openAggregatorModal, aggregators]);
+	const applicationFormFields = [
+		[formFields.applicationDate(), formFields.applicationStatus()],
+		[
+			formFields.applicationVia(),
+			formFields.aggregator(aggregators, openAggregatorModal, { name: "application_aggregator_id" }),
+		],
+		formFields.applicationUrl({ placeholder: "https://linkedin.com/application/453635" }),
+		formFields.note({
+			placeholder:
+				"The application process involves submitting an online application, followed by technical " +
+				"assessments and interviews to evaluate coding skills, problem-solving ability, and cultural fit.",
+			name: "application_note",
+		}),
+	];
 
 	const applicationViewFields = [
 		[modalViewFields.applicationDate(), modalViewFields.applicationStatus()],
@@ -99,10 +97,10 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 		modalViewFields.applicationNote(),
 		modalViewFields.interviewTable(),
 		modalViewFields.updateTable(),
+		modalViewFields.followupSnoozeDateTime(),
 	];
 
 	const transformData = (jobData: JobData) => {
-		console.log("AAAAA", jobData);
 		return {
 			title: jobData.title.trim(),
 			description: jobData.description?.trim() || null,
@@ -179,7 +177,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 
 	return (
 		<>
-			<GenericModal
+			<DataModal
 				show={show}
 				onHide={onHide}
 				data={data}
@@ -194,7 +192,6 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 				id={id}
 				defaultActiveTab={defaultActiveTab}
 				validation={customValidation}
-				fields={{ form: [], view: [] }}
 			/>
 
 			{renderCompanyModal()}

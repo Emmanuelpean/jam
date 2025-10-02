@@ -1,5 +1,5 @@
 import React from "react";
-import { DataTableProps, GenericTable } from "./GenericTable";
+import { DataTableProps, DataTable } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../modals/ScrapedJobModal";
 
@@ -18,7 +18,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ onDataChange, columns = []
 				];
 
 	return (
-		<GenericTable
+		<DataTable
 			mode="import"
 			onDataChange={onDataChange}
 			columns={defaultColumns}

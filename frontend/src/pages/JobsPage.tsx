@@ -1,5 +1,5 @@
 import React from "react";
-import { GenericTable } from "../components/tables/GenericTable";
+import { DataTable } from "../components/tables/DataTable";
 import { JobModal } from "../components/modals/JobModal";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
@@ -16,7 +16,7 @@ const JobsPage = () => {
 	];
 
 	return (
-		<GenericTable
+		<DataTable
 			mode="api"
 			endpoint="jobs"
 			initialSortConfig={{ key: "created_at", direction: "desc" }}

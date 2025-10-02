@@ -1,5 +1,5 @@
 import React from "react";
-import { DataTableProps, GenericTable } from "./GenericTable";
+import { DataTableProps, DataTable } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { PersonModal } from "../modals/PersonModal";
 
@@ -16,7 +16,7 @@ const PersonTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error 
 				];
 
 	return (
-		<GenericTable
+		<DataTable
 			mode="controlled"
 			data={data}
 			onDataChange={onDataChange}

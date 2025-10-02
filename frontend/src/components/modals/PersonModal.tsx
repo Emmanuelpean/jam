@@ -1,5 +1,5 @@
 import React from "react";
-import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
+import DataModal, { DataModalProps } from "./GenericModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { personsApi } from "../../services/Api";
@@ -7,7 +7,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import AlertModal from "./AlertModal";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { PersonData } from "../../services/Schemas";
-import { ValidationErrors } from "./GenericModal/GenericModal";
+import { ValidationErrors } from "./GenericModal/DataModal";
 import { useFormOptions } from "../rendering/form/FormOptions";
 
 export const PersonModal: React.FC<DataModalProps> = ({
@@ -83,7 +83,7 @@ export const PersonModal: React.FC<DataModalProps> = ({
 
 	return (
 		<>
-			<GenericModal
+			<DataModal
 				show={show}
 				onHide={onHide}
 				mode={submode}

@@ -1,5 +1,5 @@
 import React from "react";
-import GenericModal, { DataModalProps } from "./GenericModal/GenericModal";
+import DataModal, { DataModalProps } from "./GenericModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { InterviewData, JobData } from "../../services/Schemas";
@@ -71,7 +71,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 
 	return (
 		<>
-			<GenericModal
+			<DataModal
 				show={show}
 				onHide={onHide}
 				mode={submode}

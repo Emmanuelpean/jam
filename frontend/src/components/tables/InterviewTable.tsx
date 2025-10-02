@@ -1,8 +1,8 @@
 import React from "react";
-import { GenericTable, DataTableProps } from "./GenericTable";
+import { DataTable, DataTableProps } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { InterviewModal, InterviewModalProps } from "../modals/InterviewModal";
-import { DataModalProps } from "../modals/GenericModal/GenericModal";
+import { DataModalProps } from "../modals/GenericModal/DataModal";
 import { InterviewData } from "../../services/Schemas";
 
 interface InterviewsTableProps extends DataTableProps {
@@ -27,7 +27,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 	);
 
 	return (
-		<GenericTable
+		<DataTable
 			mode="controlled"
 			data={data}
 			onDataChange={onDataChange}

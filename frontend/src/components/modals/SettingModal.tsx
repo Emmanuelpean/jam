@@ -1,5 +1,5 @@
 import React from "react";
-import GenericModal, { DataModalProps, ValidationErrors } from "./GenericModal/GenericModal";
+import DataModal, { DataModalProps, ValidationErrors } from "./GenericModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { settingsApi } from "../../services/Api";
@@ -60,7 +60,7 @@ export const SettingModal: React.FC<DataModalProps> = ({
 	};
 
 	return (
-		<GenericModal
+		<DataModal
 			show={show}
 			onHide={onHide}
 			mode={submode}

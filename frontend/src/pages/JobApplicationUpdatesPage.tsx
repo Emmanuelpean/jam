@@ -1,6 +1,6 @@
 import React from "react";
 import { JobApplicationUpdateModal } from "../components/modals/JobApplicationUpdateModal";
-import { GenericTable } from "../components/tables/GenericTable";
+import { DataTable } from "../components/tables/DataTable";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const JobApplicationUpdatesPage = () => {
@@ -13,7 +13,7 @@ const JobApplicationUpdatesPage = () => {
 	];
 
 	return (
-		<GenericTable
+		<DataTable
 			mode="api"
 			endpoint="jobapplicationupdates"
 			initialSortConfig={{ key: "date", direction: "desc" }}

@@ -271,6 +271,11 @@ export const renderFunctions = {
 		return null;
 	},
 
+	followupSnoozeDateTime: (param: RenderParams): string | null => {
+		const date = param.item?.followup_snooze_datetime;
+		return renderFunctions._date(param, "followup_snooze_datetime");
+	},
+
 	// ----------------------------------------------------- OTHER -----------------------------------------------------
 
 	phone: (param: RenderParams): ReactNode => {

@@ -342,4 +342,12 @@ export const modalViewFields = {
 		render: (params: RenderParams) => renderFunctions.deadline({ ...params, view: true }),
 		...overrides,
 	}),
+
+	followupSnoozeDateTime: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "followup_snooze_datetime",
+		label: "Follow-up Snooze Until",
+		render: renderFunctions.followupSnoozeDateTime,
+		...overrides,
+		displayCondition: (item: any) => item.followup_snooze_datetime !== null,
+	}),
 };

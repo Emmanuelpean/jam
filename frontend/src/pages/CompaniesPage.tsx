@@ -1,5 +1,5 @@
 import React from "react";
-import GenericTable from "../components/tables/GenericTable";
+import DataTable from "../components/tables/DataTable";
 import { CompanyModal } from "../components/modals/CompanyModal";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
@@ -14,7 +14,7 @@ const CompaniesPage = () => {
 	];
 
 	return (
-		<GenericTable
+		<DataTable
 			mode="api"
 			endpoint="companies"
 			initialSortConfig={{ key: "name", direction: "asc" }}

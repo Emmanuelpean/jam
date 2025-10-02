@@ -1,5 +1,5 @@
 import React from "react";
-import GenericTable from "../components/tables/GenericTable";
+import DataTable from "../components/tables/DataTable";
 import { PersonModal } from "../components/modals/PersonModal";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
@@ -15,7 +15,7 @@ const PersonsPage = () => {
 	];
 
 	return (
-		<GenericTable
+		<DataTable
 			mode="api"
 			endpoint="persons"
 			initialSortConfig={{ key: "created_at", direction: "desc" }}

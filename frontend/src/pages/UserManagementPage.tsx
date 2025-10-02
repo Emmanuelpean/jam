@@ -1,5 +1,5 @@
 import React from "react";
-import GenericTable from "../components/tables/GenericTable";
+import DataTable from "../components/tables/DataTable";
 import { UserModal } from "../components/modals/UserModal";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
@@ -15,7 +15,7 @@ export const UserManagementPage: React.FC = () => {
 	];
 
 	return (
-		<GenericTable
+		<DataTable
 			mode="api"
 			endpoint="users"
 			initialSortConfig={{ key: "id", direction: "asc" }}

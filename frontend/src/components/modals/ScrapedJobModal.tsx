@@ -1,7 +1,7 @@
 // noinspection DuplicatedCode
 
 import React from "react";
-import GenericModal, { DataModalProps, ValidationErrors } from "./GenericModal/GenericModal";
+import DataModal, { DataModalProps, ValidationErrors } from "./GenericModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { JobData } from "../../services/Schemas";
 import { jobsApi, scrapedJobApi } from "../../services/Api";
@@ -131,7 +131,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 
 	return (
 		<>
-			<GenericModal
+			<DataModal
 				show={show}
 				onHide={onHide}
 				data={patchedData}

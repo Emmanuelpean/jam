@@ -1,7 +1,7 @@
 import React, { JSX, ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
-import "./GenericModal.css";
+import "./DataModal.css";
 import { Errors, renderModalFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
 import { api } from "../../../services/Api";
@@ -24,7 +24,7 @@ export interface TabConfig {
 
 export interface GenericModalProps {
 	mode?: "view" | "edit" | "add" | "import"; // modal mode - added "import"
-	fields: { view: ViewFields; form: FormFields }; // fields to display
+	fields?: { view: ViewFields; form: FormFields }; // fields to display
 	data?: any; // data to populate the fields (required for import mode)
 	id?: string | number | null; // if id is provided, use the id and endpoint to load the data
 	onSuccess?: (data: any) => void; // called when the entry is added or updated
@@ -46,7 +46,7 @@ export interface ValidationErrors {
 	[key: string]: string;
 }
 
-const GenericModal = ({
+const DataModal = ({
 	show,
 	onHide,
 	fields,
@@ -125,8 +125,8 @@ const GenericModal = ({
 		const currentTab = getCurrentTabConfig();
 		if (!currentTab) {
 			return {
-				view: filterConditionalFields(fields.view),
-				form: filterConditionalFields(fields.form),
+				view: filterConditionalFields(fields!.view),
+				form: filterConditionalFields(fields!.form),
 			};
 		} else {
 			return {
@@ -139,8 +139,8 @@ const GenericModal = ({
 	const getAllFields = (): { view: ViewFields; form: FormFields } => {
 		if (!hasTabs || !tabs) {
 			return {
-				form: filterConditionalFields(fields.form),
-				view: filterConditionalFields(fields.view),
+				form: filterConditionalFields(fields!.form),
+				view: filterConditionalFields(fields!.view),
 			};
 		} else {
 			return {
@@ -817,7 +817,7 @@ const GenericModal = ({
 	);
 };
 
-export default GenericModal;
+export default DataModal;
 
 export interface DataModalProps {
 	show: boolean;

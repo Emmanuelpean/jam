@@ -1,5 +1,5 @@
 import React from "react";
-import GenericTable from "../components/tables/GenericTable";
+import DataTable from "../components/tables/DataTable";
 import { LocationModal } from "../components/modals/LocationModal";
 import LocationMap from "../components/maps/LocationMap";
 import { tableColumns } from "../components/rendering/view/TableColumns";
@@ -26,7 +26,7 @@ const LocationsPage = () => {
 	};
 
 	return (
-		<GenericTable
+		<DataTable
 			mode="api"
 			endpoint="locations"
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
@@ -36,7 +36,7 @@ const LocationsPage = () => {
 			nameKey="name"
 			itemType="Location"
 			children={locationMap}
-		></GenericTable>
+		></DataTable>
 	);
 };
 
