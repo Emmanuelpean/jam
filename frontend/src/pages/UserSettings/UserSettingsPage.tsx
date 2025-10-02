@@ -70,7 +70,7 @@ const UserSettingsPage: React.FC = () => {
 	const downloadJobsExport = async (token: string | null) => {
 		if (!token) return;
 		try {
-			await exportApi.download("jobs_export.csv", token);
+			await exportApi.download("jobs_export.zip", token);
 			showToastSuccess("Data downloaded");
 		} catch (e) {
 			showToastError("Failed to download data");
