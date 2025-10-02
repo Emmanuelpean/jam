@@ -1,7 +1,7 @@
 // noinspection DuplicatedCode
 
 import React from "react";
-import DataModal, { DataModalProps, ValidationErrors } from "./GenericModal/DataModal";
+import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { JobData } from "../../services/Schemas";
 import { jobsApi, scrapedJobApi } from "../../services/Api";

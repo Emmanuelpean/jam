@@ -1,5 +1,5 @@
 import React from "react";
-import DataModal, { DataModalProps } from "./GenericModal/DataModal";
+import DataModal, { DataModalProps } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { InterviewData, JobData } from "../../services/Schemas";

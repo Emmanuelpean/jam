@@ -110,7 +110,7 @@ def update_user(
 
     assert_admin(current_user)
 
-    user_update_dict = user_update.model_dump(exclude_defaults=True)
+    user_update_dict = user_update.model_dump(exclude_unset=True)
 
     # Hash password if provided
     if "password" in user_update_dict:
@@ -126,6 +126,7 @@ def update_user(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
     # Update the user record
+    print(user_update_dict)
     for field, value in user_update_dict.items():
         setattr(user_db, field, value)
 

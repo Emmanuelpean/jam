@@ -10,7 +10,7 @@ import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { findByKey } from "../../utils/Utils";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { ValidationErrors } from "../../components/modals/GenericModal/DataModal";
+import { ValidationErrors } from "../../components/modals/DataModal/DataModal";
 import { useLoading } from "../../contexts/LoadingContext";
 
 interface FormData {

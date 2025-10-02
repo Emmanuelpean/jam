@@ -1,5 +1,5 @@
 import React from "react";
-import DataModal, { DataModalProps, ValidationErrors } from "./GenericModal/DataModal";
+import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { settingsApi } from "../../services/Api";
