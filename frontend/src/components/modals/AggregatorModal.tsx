@@ -27,7 +27,7 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		modalViewFields.accordionJobTable({ helpText: "List of jobs found with this job aggregator." }),
+		modalViewFields.accordionJobTableAggregator({ helpText: "List of jobs found with this job aggregator." }),
 		modalViewFields.accordionJobApplicationTable({
 			helpText: "List of job applications made using this job aggregator.",
 		}),

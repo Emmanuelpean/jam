@@ -8,8 +8,8 @@ const CompaniesPage = () => {
 		tableColumns.name(),
 		tableColumns.description(),
 		tableColumns.url(),
-		tableColumns.jobCount(),
-		tableColumns.personCount(),
+		tableColumns.jobCountCompany(),
+		tableColumns.personCountCompany(),
 		tableColumns.createdAt(),
 	];
 

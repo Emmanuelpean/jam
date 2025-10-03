@@ -1,18 +1,10 @@
 import React, { ReactNode } from "react";
+import { useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../maps/LocationMap";
-import {
-	AggregatorOut,
-	CompanyOut,
-	InterviewData,
-	JobData,
-	KeywordOut,
-	LocationData,
-	PersonData,
-	PersonOut,
-} from "../../../services/Schemas";
+import { InterviewData, JobData, LocationData, PersonData } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
 import { TableColumn } from "./TableColumns";
@@ -27,6 +19,17 @@ import {
 } from "../../modals/ModalManagers";
 import { formatTimedelta } from "../../../utils/TimeUtils";
 
+type ContextData = {
+	companies: any[];
+	locations: any[];
+	aggregators: any[];
+	persons: any[];
+	keywords: any[];
+	jobs: any[];
+	interviews: any[];
+	jobApplicationUpdates: any[];
+};
+
 export interface RenderParams {
 	item: any;
 	view?: boolean;
@@ -34,6 +37,7 @@ export interface RenderParams {
 	columns?: TableColumn[];
 	helpText?: string;
 	onChange?: () => void;
+	contextData?: ContextData;
 }
 
 // Base class for Fields (Table or Modal fields)
@@ -106,6 +110,51 @@ export const getToastIcon = (toastActive: boolean): string => {
 const ensureHttpPrefix = (url: string): string => {
 	if (url.match(/^https?:\/\//)) return url;
 	return `https://${url}`;
+};
+
+const getIds = (param: RenderParams, key: string) => {
+	return (param.item?.[key] || []).map((p: { id: number }): number => p.id);
+};
+
+function filterByKey(items: any[], key: string, id: number | undefined): any[] {
+	return items.filter((item) => {
+		const value = item[key];
+		if (Array.isArray(value)) {
+			// value is an array of objects with an id property
+			return value.some((obj: { id: number }) => obj.id === id);
+		}
+		// value is a number
+		return value === id;
+	});
+}
+
+const lookupEntity = {
+	getCompany: (companies: any[], id: number | null | undefined) => (id ? companies.find((c) => c.id === id) : null),
+
+	getLocation: (locations: any[], id: number | null | undefined) => (id ? locations.find((l) => l.id === id) : null),
+
+	getAggregator: (aggregators: any[], id: number | null | undefined) =>
+		id ? aggregators.find((a) => a.id === id) : null,
+
+	getPerson: (persons: any[], id: number | null | undefined) => (id ? persons.find((p) => p.id === id) : null),
+
+	getKeyword: (keywords: any[], id: number | null | undefined) => (id ? keywords.find((k) => k.id === id) : null),
+
+	getJob: (jobs: any[], id: number | null | undefined) => (id ? jobs.find((j) => j.id === id) : null),
+
+	getPersons: (persons: any[], ids: number[] | null | undefined) =>
+		ids ? persons.filter((p) => ids.includes(p.id)) : [],
+
+	getKeywords: (keywords: any[], ids: number[] | null | undefined) =>
+		ids ? keywords.filter((k) => ids.includes(k.id)) : [],
+
+	getInterviews: (interviews: any[], ids: number[] | null | undefined) =>
+		ids ? interviews.filter((i) => ids.includes(i.id)) : [],
+
+	getJobApplicationUpdates: (updates: any[], ids: number[] | null | undefined) =>
+		ids ? updates.filter((u) => ids.includes(u.id)) : [],
+
+	getJobs: (jobs: any[], ids: number[] | null | undefined) => (ids ? jobs.filter((j) => ids.includes(j.id)) : []),
 };
 
 export const renderFunctions = {
@@ -272,7 +321,6 @@ export const renderFunctions = {
 	},
 
 	followupSnoozeDateTime: (param: RenderParams): string | null => {
-		const date = param.item?.followup_snooze_datetime;
 		return renderFunctions._date(param, "followup_snooze_datetime");
 	},
 
@@ -362,7 +410,10 @@ export const renderFunctions = {
 	},
 
 	locationMap: (param: RenderParams): ReactNode => {
-		const locations: LocationData[] = param.item ? [param.item] : [];
+		const ctx = param.contextData;
+		if (!ctx) return null;
+		const location = lookupEntity.getLocation(ctx.locations, param.item?.location_id);
+		const locations: LocationData[] = location ? [location] : [];
 		return <LocationMap locations={locations} />;
 	},
 
@@ -381,29 +432,41 @@ export const renderFunctions = {
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
 	interviewCount: (param: RenderParams): number => {
-		const interviews = param.item?.interviews;
-		return interviews?.length || 0;
+		const ctx = param.contextData;
+		if (!ctx) return 0;
+
+		const interviewIds = getIds(param, "interviews");
+		const interviews = lookupEntity.getInterviews(ctx.interviews, interviewIds);
+		return interviews.length;
 	},
 
-	jobCount: (param: RenderParams): number => {
-		const jobs = param.item?.jobs;
-		return jobs?.length || 0;
+	_jobCount: (param: RenderParams, key: string): number => {
+		const ctx = param.contextData;
+		if (!ctx) return 0;
+		return filterByKey(ctx.jobs, key, param.item?.id).length;
 	},
 
-	jobApplicationCount: (param: RenderParams): number => {
-		const jobs = param.item?.job_applications;
-		return jobs?.length || 0;
+	jobApplicationCountAggregator: (param: RenderParams): number => {
+		const ctx = param.contextData;
+		if (!ctx) return 0;
+		return filterByKey(ctx.jobs, "application_aggregator_id", param.item?.id).length;
 	},
 
-	personCount: (param: RenderParams): number => {
-		const persons = param.item?.persons;
-		return persons?.length || 0;
+	personCountCompany: (param: RenderParams): number => {
+		const ctx = param.contextData;
+		if (!ctx) return 0;
+		return filterByKey(ctx.persons, "company_id", param.item?.id).length;
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
-	_jobBadge: (param: RenderParams, attribute: string, displayAttribute: keyof JobData): ReactNode => {
-		const job: JobData = param.item?.[attribute];
+	_jobBadge: (param: RenderParams, idKey: string, displayAttribute: keyof JobData): ReactNode => {
+		const ctx = param.contextData;
+		if (!ctx) return null;
+
+		const jobId = param.item?.[idKey];
+		const job = lookupEntity.getJob(ctx.jobs, jobId);
+
 		if (job) {
 			return (
 				<JobModalManager>
@@ -424,16 +487,21 @@ export const renderFunctions = {
 	},
 
 	jobBadge: (param: RenderParams): ReactNode => {
-		return renderFunctions._jobBadge(param, "job", "title");
+		return renderFunctions._jobBadge(param, "job_id", "title");
 	},
 
 	jobNameBadge: (param: RenderParams): ReactNode => {
-		return renderFunctions._jobBadge(param, "job", "name");
+		return renderFunctions._jobBadge(param, "job_id", "name");
 	},
 
 	keywordBadges: (param: RenderParams): ReactNode => {
-		const keywords: KeywordOut[] = param.item?.keywords;
-		if (keywords?.length > 0) {
+		const ctx = param.contextData;
+		if (!ctx) return null;
+
+		const keywordIds = (param.item?.keywords || []).map((p: { id: number }): number => p.id);
+		const keywords = lookupEntity.getKeywords(ctx.keywords, keywordIds);
+
+		if (keywords.length > 0) {
 			return (
 				<div className="badge-group">
 					{keywords.map((keyword, index) => (
@@ -459,7 +527,10 @@ export const renderFunctions = {
 	},
 
 	locationBadge: (param: RenderParams): ReactNode => {
-		const location: LocationData = param.item?.location;
+		const ctx = param.contextData;
+		if (!ctx) return null;
+
+		const location = lookupEntity.getLocation(ctx.locations, param.item?.location_id);
 		const attendanceType = param.item?.attendance_type;
 
 		let icon: string;
@@ -497,7 +568,7 @@ export const renderFunctions = {
 					{(handleClick) => (
 						<span
 							className="badge bg-warning clickable-badge"
-							onClick={() => handleClick(location.id)}
+							onClick={() => location && handleClick(location.id)}
 							id={param.id}
 						>
 							<i className={`bi ${icon} me-1`}></i>
@@ -512,7 +583,11 @@ export const renderFunctions = {
 	},
 
 	companyBadge: (param: RenderParams): ReactNode => {
-		const company: CompanyOut = param.item?.company;
+		const ctx = param.contextData;
+		if (!ctx) return null;
+
+		const company = lookupEntity.getCompany(ctx.companies, param.item?.company_id);
+
 		if (company) {
 			return (
 				<CompanyModalManager>
@@ -533,8 +608,13 @@ export const renderFunctions = {
 	},
 
 	_personBadges: (param: RenderParams, key: string): ReactNode => {
-		const persons: PersonOut[] = param.item?.[key];
-		if (persons?.length > 0) {
+		const ctx = param.contextData;
+		if (!ctx) return null;
+
+		const personIds = getIds(param, key);
+		const persons = lookupEntity.getPersons(ctx.persons, personIds);
+
+		if (persons.length > 0) {
 			return (
 				<div className="badge-group">
 					{persons.map((person, index) => (
@@ -570,7 +650,7 @@ export const renderFunctions = {
 	appliedViaBadge: (param: RenderParams): ReactNode => {
 		const appliedVia = param.item?.applied_via;
 		if (appliedVia === "aggregator") {
-			return renderFunctions._aggregatorBadge(param, "application_aggregator");
+			return renderFunctions._aggregatorBadge(param, "application_aggregator_id");
 		}
 		if (appliedVia) {
 			return (
@@ -582,8 +662,12 @@ export const renderFunctions = {
 		return null;
 	},
 
-	_aggregatorBadge: (param: RenderParams, attribute: string): ReactNode => {
-		const aggregator: AggregatorOut = param.item?.[attribute];
+	_aggregatorBadge: (param: RenderParams, idKey: string): ReactNode => {
+		const ctx = param.contextData;
+		if (!ctx) return null;
+
+		const aggregator = lookupEntity.getAggregator(ctx.aggregators, param.item?.[idKey]);
+
 		if (aggregator) {
 			return (
 				<AggregatorModalManager>
@@ -604,25 +688,32 @@ export const renderFunctions = {
 	},
 
 	sourceBadge: (param: RenderParams): ReactNode => {
-		return renderFunctions._aggregatorBadge(param, "source");
+		return renderFunctions._aggregatorBadge(param, "source_id");
 	},
 
 	// ----------------------------------------------------- TABLES ----------------------------------------------------
 
 	interviewTable: (param: RenderParams): ReactNode => {
-		const interviews = param.item?.interviews;
+		const ctx: ContextData | undefined = param.contextData;
+		if (!ctx) return null;
+		const interviews = lookupEntity.getInterviews(ctx.interviews, param.item.id);
 		return <InterviewsTable data={interviews} jobId={param.item?.id} onDataChange={param.onChange} />;
 	},
 
 	jobApplicationUpdateTable: (param: RenderParams): ReactNode => {
-		const updates = param.item?.updates;
+		const ctx: ContextData | undefined = param.contextData;
+		if (!ctx) return null;
+		const updates = lookupEntity.getJobApplicationUpdates(ctx.jobApplicationUpdates, param.item?.id);
 		return <JobApplicationUpdateTable data={updates} jobId={param.item?.id} onDataChange={param.onChange} />;
 	},
 
 	// ------------------------------------------------ ACCORDION TABLES -----------------------------------------------
 
-	accordionJobTable: (param: RenderParams): ReactNode => {
-		const jobs: JobData[] = param.item?.jobs;
+	_accordionJobTable: (param: RenderParams, key: string): ReactNode => {
+		const ctx: ContextData | undefined = param.contextData;
+		if (!ctx) return null;
+
+		const jobs = filterByKey(ctx.jobs, key, param.item?.id);
 		return (
 			<Accordion title="Jobs" data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
 				{(data) => <JobsTable onDataChange={param.onChange} data={data} columns={param.columns} />}
@@ -630,8 +721,11 @@ export const renderFunctions = {
 		);
 	},
 
-	accordionInterviewTable: (param: RenderParams): ReactNode => {
-		const interviews: InterviewData[] = param.item?.interviews;
+	accordionInterviewTable: (param: RenderParams, key: string): ReactNode => {
+		const ctx = param.contextData;
+		if (!ctx) return null;
+
+		const interviews = filterByKey(ctx.interviews, key, param.item?.id);
 		return (
 			<Accordion title="Interviews" data={interviews} icon={getTableIcon("Interviews")} helpText={param.helpText}>
 				{(data) => (
@@ -647,7 +741,10 @@ export const renderFunctions = {
 	},
 
 	accordionJobApplicationTable: (param: RenderParams): ReactNode => {
-		const jobs: JobData[] = param.item?.job_applications;
+		const ctx = param.contextData;
+		if (!ctx) return null;
+
+		const jobs = filterByKey(ctx.jobs, "application_aggregator_id", param.item?.id);
 		return (
 			<Accordion
 				title="Job Applications"
@@ -661,7 +758,10 @@ export const renderFunctions = {
 	},
 
 	accordionPersonTable: (param: RenderParams): ReactNode => {
-		const persons: PersonData[] = param.item?.persons;
+		const ctx = param.contextData;
+		if (!ctx) return null;
+
+		const persons = filterByKey(ctx.persons, "company_id", param.item?.id);
 		return (
 			<Accordion title="Persons" data={persons} icon={getTableIcon("Persons")} helpText={param.helpText}>
 				{(data) => <PersonTable data={data} onDataChange={param.onChange} columns={param.columns} />}
@@ -670,7 +770,14 @@ export const renderFunctions = {
 	},
 };
 
-export const renderViewField = (field: ViewField, item: any, id: string, onChange?: any): ReactNode => {
+export const RenderViewFieldWithContext: React.FC<{
+	field: ViewField;
+	item: any;
+	id: string;
+	onChange?: any;
+}> = ({ field, item, id, onChange }) => {
+	const context = useDataContext();
+
 	let rendered: ReactNode;
 	if (field.render) {
 		const renderParams: RenderParams = {
@@ -680,6 +787,16 @@ export const renderViewField = (field: ViewField, item: any, id: string, onChang
 			columns: field.columns,
 			helpText: field.helpText,
 			onChange: onChange,
+			contextData: {
+				companies: context.companies,
+				locations: context.locations,
+				aggregators: context.aggregators,
+				persons: context.persons,
+				keywords: context.keywords,
+				jobs: context.jobs,
+				interviews: context.interviews,
+				jobApplicationUpdates: context.jobApplicationUpdates,
+			},
 		};
 		rendered = field.render(renderParams);
 	} else {
@@ -687,8 +804,7 @@ export const renderViewField = (field: ViewField, item: any, id: string, onChang
 	}
 
 	if (rendered !== null && rendered !== undefined) {
-		// allow for 0
-		return rendered;
+		return <>{rendered}</>;
 	} else {
 		return <span className="text-muted">Not Provided</span>;
 	}

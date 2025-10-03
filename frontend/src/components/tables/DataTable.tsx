@@ -3,7 +3,7 @@ import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDataContext } from "../../contexts/DataContext";
 import { api } from "../../services/Api";
-import { getTableIcon, renderViewField } from "../rendering/view/ViewRenders";
+import { getTableIcon, RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute, normaliseList } from "../../utils/Utils";
 import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";
@@ -45,6 +45,9 @@ export interface GenericTableProps {
 		| "settings"
 		| "users";
 
+	// Override context data with provided data
+	data?: any[];
+
 	// For import mode (scraped jobs, etc.)
 	mode?: "default" | "import";
 	endpoint?: string;
@@ -81,6 +84,7 @@ export interface GenericTableProps {
 export const DataTable: React.FC<GenericTableProps> = ({
 	entityType,
 	mode = "default",
+	data: providedData,
 	endpoint = "",
 	columns = [],
 	initialSortConfig = {},
@@ -133,6 +137,12 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 	// Get data from context based on entityType
 	const getData = (): any[] => {
+		// If data is explicitly provided, use it
+		if (providedData !== undefined) {
+			return providedData;
+		}
+
+		// Otherwise, get from context
 		return (dataContext as any)[entityType] || [];
 	};
 
@@ -570,7 +580,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 												: {}),
 										}}
 									>
-										{renderViewField(column, item, `table-row-${item.id}`)}
+										<RenderViewFieldWithContext
+											field={column}
+											item={item}
+											id={`table-row-${item.id}`}
+										/>
 									</td>
 								))}
 							</tr>

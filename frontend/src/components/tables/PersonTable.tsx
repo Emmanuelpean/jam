@@ -3,7 +3,7 @@ import { DataTableProps, DataTable } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { PersonModal } from "../modals/PersonModal";
 
-const PersonTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error = null, columns = [] }) => {
+const PersonTable: React.FC<DataTableProps> = ({ data = [], columns = [] }) => {
 	const defaultColumns =
 		columns.length > 0
 			? columns
@@ -18,6 +18,7 @@ const PersonTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error 
 	return (
 		<DataTable
 			entityType="persons"
+			data={data}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			Modal={PersonModal}

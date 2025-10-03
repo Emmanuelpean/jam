@@ -51,7 +51,11 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 		[formFields.attendanceType(), formFields.location(locations, openLocationModal)],
 		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
 		[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
-		[formFields.personalRating(), formFields.deadline()],
+		[
+			formFields.personalRating(),
+			formFields.deadline(),
+			formFields.aggregator(aggregators, openAggregatorModal, { name: "source_id" }),
+		],
 		formFields.description({
 			placeholder:
 				"We are seeking a Python Software Engineer to develop, optimise, and maintain scalable software " +
@@ -112,6 +116,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
 			deadline: jobData.deadline ? jobData.deadline + "T23:59:59" : null,
+			source_id: jobData.source_id || null,
 			keywords: jobData.keywords?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
 			contacts: jobData.contacts?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
 			application_date: jobData.application_date ? new Date(jobData.application_date).toISOString() : null,

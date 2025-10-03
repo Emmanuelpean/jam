@@ -10,6 +10,7 @@ import JobsToChase from "../../components/tables/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/tables/UpcomingDeadlines";
 import { formatActivityDate } from "../../utils/TimeUtils";
 import ScrapedJobsTable from "../../components/tables/ScrapedJobTable";
+import { useDataContext } from "../../contexts/DataContext";
 
 interface StatCardProps {
 	itemName: string;
@@ -222,6 +223,7 @@ interface DashboardStats {
 
 const JobSearchDashboard: React.FC = () => {
 	const { showLoading, hideLoading } = useLoading();
+	const dataContext = useDataContext();
 	const [dashboardData, setDashboardData] = useState<DashboardStats>({
 		totalJobs: 0,
 		totalApplications: 0,
@@ -257,7 +259,7 @@ const JobSearchDashboard: React.FC = () => {
 			const upcomingDeadlines = dashboardResponse?.upcoming_deadlines || [];
 
 			setDashboardData({
-				totalJobs: statistics.jobs,
+				totalJobs: dataContext.jobs.length,
 				totalApplications: statistics.job_applications,
 				pendingApplications: statistics.job_application_pending,
 				interviewsScheduled: statistics.interviews,
@@ -274,6 +276,11 @@ const JobSearchDashboard: React.FC = () => {
 			hideLoading();
 		}
 	};
+
+	const jobApplications = dataContext.jobs.filter((job) => job.application_date || job.application_status);
+	const jobApplicationPending = jobApplications.filter(
+		(job) => job.application_status && !["rejected", "withdrawn"].includes(job.application_status),
+	);
 
 	useEffect(() => {
 		fetchDashboardData().then(() => null);
@@ -293,7 +300,7 @@ const JobSearchDashboard: React.FC = () => {
 				<Col md={6} lg={3}>
 					<StatCard
 						itemName="Total Jobs"
-						value={dashboardData.totalJobs}
+						value={dataContext.jobs.length}
 						icon="briefcase"
 						variant="primary"
 						description="Jobs in your database"
@@ -302,7 +309,7 @@ const JobSearchDashboard: React.FC = () => {
 				<Col md={6} lg={3}>
 					<StatCard
 						itemName="Applications"
-						value={dashboardData.totalApplications}
+						value={jobApplications.length}
 						icon="send"
 						variant="success"
 						description="Total applications sent"
@@ -311,7 +318,7 @@ const JobSearchDashboard: React.FC = () => {
 				<Col md={6} lg={3}>
 					<StatCard
 						itemName="Pending"
-						value={dashboardData.pendingApplications}
+						value={jobApplicationPending.length}
 						icon="clock"
 						variant="warning"
 						description="Applications awaiting response"
@@ -402,32 +409,32 @@ const JobSearchDashboard: React.FC = () => {
 					/>
 				</Col>
 			</Row>
-			{currentUser?.toast_active && (
-				<Row className="g-4" style={{ height: "500px", minHeight: 0, paddingTop: "3rem" }}>
-					<Col lg={12} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
-						<Card
-							className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
-							style={{ height: "100%", minHeight: 0 }}
-						>
-							<TableCardHeader
-								icon="inbox"
-								title="Job Alerts"
-								subtitle="Jobs that you received from job boards"
-							/>
-							<Card.Body
-								className="p-0 flex-grow-1 d-flex flex-column"
-								style={{ height: "100%", minHeight: 0 }}
-							>
-								<div style={{ flexGrow: 1, overflowY: "auto", minHeight: 0 }}>
-									<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-										<ScrapedJobsTable />
-									</div>
-								</div>
-							</Card.Body>
-						</Card>
-					</Col>
-				</Row>
-			)}
+			{/*{currentUser?.toast_active && (*/}
+			{/*	<Row className="g-4" style={{ height: "500px", minHeight: 0, paddingTop: "3rem" }}>*/}
+			{/*		<Col lg={12} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>*/}
+			{/*			<Card*/}
+			{/*				className="shadow-sm border-0 flex-grow-1 d-flex flex-column"*/}
+			{/*				style={{ height: "100%", minHeight: 0 }}*/}
+			{/*			>*/}
+			{/*				<TableCardHeader*/}
+			{/*					icon="inbox"*/}
+			{/*					title="Job Alerts"*/}
+			{/*					subtitle="Jobs that you received from job boards"*/}
+			{/*				/>*/}
+			{/*				<Card.Body*/}
+			{/*					className="p-0 flex-grow-1 d-flex flex-column"*/}
+			{/*					style={{ height: "100%", minHeight: 0 }}*/}
+			{/*				>*/}
+			{/*					<div style={{ flexGrow: 1, overflowY: "auto", minHeight: 0 }}>*/}
+			{/*						<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>*/}
+			{/*							<ScrapedJobsTable />*/}
+			{/*						</div>*/}
+			{/*					</div>*/}
+			{/*				</Card.Body>*/}
+			{/*			</Card>*/}
+			{/*		</Col>*/}
+			{/*	</Row>*/}
+			{/*)}*/}
 		</>
 	);
 };

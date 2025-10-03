@@ -35,7 +35,7 @@ export const CompanyModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		modalViewFields.accordionJobTable({
+		modalViewFields.accordionJobTableCompany({
 			columns: [
 				tableColumns.title!(),
 				tableColumns.location!(),

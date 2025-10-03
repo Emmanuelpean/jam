@@ -332,10 +332,14 @@ class JobOut(JobCreate, OwnedOut):
     location: LocationMinOut | None = None
     source: AggregatorMinOut | None = None
     keywords: list[KeywordMinOut] = []
+    keyword_ids: list[int] = []
     contacts: list[PersonMinOut] = []
+    contact_ids: list[int] = []
     application_aggregator: AggregatorMinOut | None = None
     interviews: list["InterviewAppOut"] = []  # get the full interviews
+    interview_ids: list[int] = []
     updates: list["JobApplicationUpdateAppOut"] = []  # get the full updates
+    update_ids: list[int] = []
     name: str
 
     @computed_field
@@ -462,6 +466,7 @@ class InterviewOut(InterviewCreate, OwnedOut):
 
     location: LocationMinOut | None = None
     interviewers: list[PersonMinOut] = []
+    interviewer_ids: list[int] | None = None
     job: JobOut | None = None
 
 

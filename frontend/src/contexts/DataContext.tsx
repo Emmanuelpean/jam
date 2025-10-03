@@ -96,8 +96,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 			// Only add admin-only calls if user is admin
 			if (currentUser?.is_admin) {
-				promises.push(settingsApi.getAll(token));
-				promises.push(userApi.getAll(token));
+				promises.push(await settingsApi.getAll(token));
+				promises.push(await userApi.getAll(token));
 			}
 
 			const results = await Promise.all(promises);

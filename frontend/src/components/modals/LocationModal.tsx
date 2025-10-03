@@ -38,7 +38,7 @@ export const LocationModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		modalViewFields.accordionJobTable({ helpText: "List of jobs at this location." }),
+		modalViewFields.accordionJobTableLocation({ helpText: "List of jobs at this location." }),
 		modalViewFields.accordionInterviewTable({
 			columns: [tableColumns.date!(), tableColumns.job!(), tableColumns.type!(), tableColumns.note!()],
 			helpText: "List of interviews at this location.",
