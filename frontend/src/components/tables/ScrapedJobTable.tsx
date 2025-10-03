@@ -19,8 +19,8 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ onDataChange, columns = []
 
 	return (
 		<DataTable
+			entityType="jobs"
 			mode="import"
-			onDataChange={onDataChange}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			Modal={ScrapedJobModal}

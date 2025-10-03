@@ -16,10 +16,7 @@ const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], onDataCha
 
 	return (
 		<DataTable
-			mode="controlled"
-			data={data}
-			onDataChange={onDataChange}
-			error={error}
+			entityType="jobs"
 			columns={defaultColumns}
 			initialSortConfig={{ key: "days_until_deadline", direction: "asc" }}
 			Modal={JobModal}
