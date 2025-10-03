@@ -195,7 +195,6 @@ const DataModal = ({
 			setOriginalFormData({ ...effectiveData });
 			setIsEditing(true);
 		} else if (mode === "import") {
-			console.log("Effectivedata for import:", effectiveData);
 			setFormData({ ...effectiveData });
 			setOriginalFormData({ ...effectiveData });
 			setIsEditing(true);
@@ -288,7 +287,7 @@ const DataModal = ({
 		return () => {
 			resizeObserver.disconnect();
 		};
-	}, [isEditing, activeTab, effectiveData]);
+	}, [isEditing, activeTab, effectiveData, show]);
 
 	// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 

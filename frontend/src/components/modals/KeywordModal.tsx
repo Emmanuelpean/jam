@@ -25,7 +25,7 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		modalViewFields.accordionJobTable({
+		modalViewFields.accordionJobTableKeyword({
 			helpText: "List of jobs associated with this tag.",
 		}),
 	];

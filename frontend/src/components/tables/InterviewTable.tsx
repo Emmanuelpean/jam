@@ -9,14 +9,7 @@ interface InterviewsTableProps extends DataTableProps {
 	jobId?: number;
 }
 
-const InterviewsTable: React.FC<InterviewsTableProps> = ({
-	jobId,
-	data = [],
-	onDataChange,
-	error = null,
-	columns = [],
-	showAdd = true,
-}) => {
+const InterviewsTable: React.FC<InterviewsTableProps> = ({ jobId, data = [], columns = [], showAdd = true }) => {
 	const defaultColumns =
 		columns.length > 0
 			? columns
@@ -29,6 +22,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 	return (
 		<DataTable
 			entityType="interviews"
+			data={data}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}
 			Modal={ModalWithProps}

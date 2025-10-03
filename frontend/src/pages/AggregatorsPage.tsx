@@ -7,8 +7,8 @@ const AggregatorsPage = () => {
 	const columns = [
 		tableColumns.name(),
 		tableColumns.url(),
-		tableColumns.jobCount(),
-		tableColumns.jobApplicationCount(),
+		tableColumns.jobCountAggregator(),
+		tableColumns.jobApplicationCountAggregator(),
 		tableColumns.createdAt(),
 	];
 

@@ -43,6 +43,10 @@ export const PersonModal: React.FC<DataModalProps> = ({
 		view: viewFieldsArray,
 	};
 
+	const additionalFields = [
+		modalViewFields.accordionInterviewTable({ helpText: "List of interviews associated with this person." }),
+	];
+
 	const customValidation = async (formData: PersonData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
 
@@ -97,6 +101,7 @@ export const PersonModal: React.FC<DataModalProps> = ({
 				onDelete={onDelete}
 				validation={customValidation}
 				transformFormData={transformFormData}
+				additionalFields={additionalFields}
 			/>
 
 			{renderCompanyModal()}

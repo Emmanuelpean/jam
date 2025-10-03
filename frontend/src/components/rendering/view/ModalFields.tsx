@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { renderFunctions, RenderParams, ViewField, renderViewField } from "./ViewRenders";
+import { renderFunctions, RenderParams, RenderViewFieldWithContext, ViewField } from "./ViewRenders";
 
 export interface ModalViewField extends ViewField {
 	label?: string;
@@ -11,7 +11,7 @@ export interface ModalViewField extends ViewField {
 interface ModalViewFieldOverride extends Partial<ModalViewField> {}
 
 export const renderModalViewField = (field: ModalViewField, item: any, id: string, onChange?: any): ReactNode => {
-	const output = renderViewField(field, item, id, onChange);
+	const output = <RenderViewFieldWithContext field={field} item={item} id={id} onChange={onChange} />;
 
 	if (field.isTitle) {
 		return (
@@ -291,13 +291,31 @@ export const modalViewFields = {
 
 	accordionInterviewTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "interviews",
-		render: renderFunctions.accordionInterviewTable,
+		render: (param) => renderFunctions.accordionInterviewTable(param, "location_id"),
 		...overrides,
 	}),
 
-	accordionJobTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	accordionJobTableAggregator: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "jobs",
-		render: renderFunctions.accordionJobTable,
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "source_id"),
+		...overrides,
+	}),
+
+	accordionJobTableCompany: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "company_id"),
+		...overrides,
+	}),
+
+	accordionJobTableKeyword: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "keywords"),
+		...overrides,
+	}),
+
+	accordionJobTableLocation: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "location_id"),
 		...overrides,
 	}),
 

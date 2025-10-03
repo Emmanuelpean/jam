@@ -3,7 +3,7 @@ import { DataTableProps, DataTable } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
-const JobsTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error = null, columns = [] }) => {
+const JobsTable: React.FC<DataTableProps> = ({ data = [], columns = [] }) => {
 	const defaultColumns =
 		columns.length > 0
 			? columns
@@ -17,6 +17,7 @@ const JobsTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error = 
 	return (
 		<DataTable
 			entityType="jobs"
+			data={data}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			Modal={JobModal}

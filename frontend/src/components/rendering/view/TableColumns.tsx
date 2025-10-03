@@ -388,7 +388,7 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	interviewCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	interviewCountLocation: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "interviews",
 		label: "Interviews",
 		sortable: true,
@@ -397,30 +397,57 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	jobCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	jobCountCompany: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "jobs",
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		render: renderFunctions.jobCount,
+		render: (param: RenderParams) => renderFunctions._jobCount(param, "company_id"),
 		...overrides,
 	}),
 
-	jobApplicationCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	jobCountAggregator: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "jobs",
+		label: "Jobs",
+		sortable: true,
+		searchable: false,
+		render: (param: RenderParams) => renderFunctions._jobCount(param, "aggregator_id"),
+		...overrides,
+	}),
+
+	jobCountLocation: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "jobs",
+		label: "Jobs",
+		sortable: true,
+		searchable: false,
+		render: (param: RenderParams) => renderFunctions._jobCount(param, "location_id"),
+		...overrides,
+	}),
+
+	jobCountKeyword: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "jobs",
+		label: "Jobs",
+		sortable: true,
+		searchable: false,
+		render: (param: RenderParams) => renderFunctions._jobCount(param, "keywords"),
+		...overrides,
+	}),
+
+	jobApplicationCountAggregator: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "job_applications",
 		label: "Job Applications",
 		sortable: true,
 		searchable: false,
-		render: renderFunctions.jobApplicationCount,
+		render: renderFunctions.jobApplicationCountAggregator,
 		...overrides,
 	}),
 
-	personCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	personCountCompany: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "persons",
 		label: "Individuals",
 		sortable: true,
 		searchable: false,
-		render: renderFunctions.personCount,
+		render: renderFunctions.personCountCompany,
 		...overrides,
 	}),
 

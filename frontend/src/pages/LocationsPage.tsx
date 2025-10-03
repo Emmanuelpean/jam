@@ -11,8 +11,8 @@ const LocationsPage = () => {
 		tableColumns.city(),
 		tableColumns.postcode(),
 		tableColumns.country(),
-		tableColumns.jobCount(),
-		tableColumns.interviewCount(),
+		tableColumns.jobCountLocation(),
+		tableColumns.interviewCountLocation(),
 		tableColumns.createdAt(),
 	];
 

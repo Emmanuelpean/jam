@@ -85,6 +85,7 @@ export interface PersonData {
 }
 
 export interface InterviewData {
+	id?: number;
 	date?: string;
 	type?: string;
 	location_id?: string | number;
@@ -114,6 +115,7 @@ export interface JobData {
 	personal_rating?: number | null;
 	deadline?: Date | null;
 	company_id?: number | null;
+	source_id?: number | null;
 	location_id?: number | null;
 	application_date?: Date | null;
 	application_status?: string | null;
