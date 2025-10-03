@@ -5,7 +5,7 @@ export interface CreateDeleteHandlerProps {
 	token: string | null;
 	showDelete: (config: any) => Promise<boolean>;
 	showError: (config: any) => Promise<boolean>;
-	removeItem?: (itemId: string | number) => void;
+	removeItem?: (itemId: number) => void;
 	setData?: React.Dispatch<React.SetStateAction<any[]>>;
 	nameKey?: string;
 	itemType?: string;

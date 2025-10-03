@@ -17,10 +17,7 @@ const PersonTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error 
 
 	return (
 		<DataTable
-			mode="controlled"
-			data={data}
-			onDataChange={onDataChange}
-			error={error}
+			entityType="persons"
 			columns={defaultColumns}
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			Modal={PersonModal}

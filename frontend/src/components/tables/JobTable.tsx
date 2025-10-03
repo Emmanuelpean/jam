@@ -16,10 +16,7 @@ const JobsTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error = 
 
 	return (
 		<DataTable
-			mode="controlled"
-			data={data}
-			onDataChange={onDataChange}
-			error={error}
+			entityType="jobs"
 			columns={defaultColumns}
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			Modal={JobModal}

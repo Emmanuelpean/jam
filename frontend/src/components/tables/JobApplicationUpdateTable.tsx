@@ -23,10 +23,7 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 
 	return (
 		<DataTable
-			mode="controlled"
-			data={data}
-			onDataChange={onDataChange}
-			error={error}
+			entityType="jobApplicationUpdates"
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}
 			Modal={ModalWithProps}

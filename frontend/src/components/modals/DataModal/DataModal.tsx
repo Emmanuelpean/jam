@@ -1,6 +1,7 @@
 import React, { JSX, ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useDataContext } from "../../../contexts/DataContext"; // Add DataContext
 import "./DataModal.css";
 import { Errors, renderModalFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
@@ -21,6 +22,31 @@ export interface TabConfig {
 	fields: { view: ViewFields; form: FormFields };
 	additionalFields?: ModalViewField[];
 }
+
+// Map endpoint names to DataContext entity types
+type EntityType =
+	| "jobs"
+	| "companies"
+	| "persons"
+	| "interviews"
+	| "jobApplicationUpdates"
+	| "aggregators"
+	| "keywords"
+	| "locations";
+
+const endpointToEntityType = (endpoint: string): EntityType | null => {
+	const mapping: Record<string, EntityType> = {
+		jobs: "jobs",
+		companies: "companies",
+		persons: "persons",
+		interviews: "interviews",
+		jobapplicationupdates: "jobApplicationUpdates",
+		aggregators: "aggregators",
+		keywords: "keywords",
+		locations: "locations",
+	};
+	return mapping[endpoint.toLowerCase()] || null;
+};
 
 export interface GenericModalProps {
 	mode?: "view" | "edit" | "add" | "import"; // modal mode - added "import"
@@ -67,6 +93,9 @@ const DataModal = ({
 	const hasTabs = tabs && tabs.length > 0;
 
 	const { token } = useAuth();
+	const dataContext = useDataContext(); // Get DataContext
+	const entityType = endpointToEntityType(endpoint); // Map endpoint to entity type
+
 	const [effectiveData, setEffectiveData] = useState(data);
 	const [formData, setFormData] = useState<Record<string, any>>({});
 	const [originalFormData, setOriginalFormData] = useState<Record<string, any>>({});
@@ -349,7 +378,14 @@ const DataModal = ({
 		token,
 		showDelete,
 		showError,
-		removeItem: onDelete,
+		removeItem: (id: string | number) => {
+			// Update DataContext if entity type is recognized
+			if (entityType) {
+				dataContext.deleteEntity(entityType, Number(id));
+			}
+			// Also call the provided onDelete callback
+			onDelete?.(id);
+		},
 		itemType: itemName,
 	});
 
@@ -405,6 +441,12 @@ const DataModal = ({
 			};
 			console.log("Updated data:", updatedData);
 			setEffectiveData(updatedData);
+
+			// Update DataContext if entity type is recognized
+			if (entityType && updatedData.id) {
+				dataContext.updateEntity(entityType, updatedData.id, updatedData);
+			}
+
 			onSuccess?.(updatedData);
 		};
 	};
@@ -481,17 +523,30 @@ const DataModal = ({
 					? await api.post(`${endpoint}/`, dataToSubmit, token)
 					: await api.put(`${endpoint}/${effectiveData.id}`, dataToSubmit, token);
 
+			// Update DataContext
+			if (entityType) {
+				if (mode === "add") {
+					dataContext.addEntity(entityType, apiResult);
+				} else {
+					dataContext.updateEntity(entityType, apiResult.id, apiResult);
+				}
+			}
+
 			onSuccess?.(apiResult);
 
 			if (mode === "add") {
 				handleHideImmediate();
 			} else if (mode === "import") {
-				onDelete?.(apiResult);
+				// For import mode, delete from context
+				if (entityType && apiResult.id) {
+					dataContext.deleteEntity(entityType, apiResult.id);
+				}
+				onDelete?.(apiResult.id);
 				handleHideImmediate();
 			} else if (mode === "edit") {
 				handleHideImmediate();
 			} else {
-				setEffectiveData(apiResult); // reset to view mode since data changed
+				setEffectiveData(apiResult);
 				handleEditToView();
 			}
 		} catch (err: any) {

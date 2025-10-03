@@ -28,10 +28,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 
 	return (
 		<DataTable
-			mode="controlled"
-			data={data}
-			onDataChange={onDataChange}
-			error={error}
+			entityType="interviews"
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}
 			Modal={ModalWithProps}
