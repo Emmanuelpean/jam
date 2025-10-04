@@ -8,6 +8,11 @@ export interface CurrentUser extends UserData {
 	is_admin: boolean;
 	toast_active: boolean;
 	token: string | null;
+	theme?: string;
+	chase_threshold: number;
+	last_login?: string;
+	deadline_threshold: number;
+	update_limit: number;
 }
 
 export interface AuthResponse {
@@ -109,6 +114,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 				setCurrentUser({
 					isLoggedIn: true,
 					token: token,
+					chase_threshold: userData.chase_threshold || 30,
+					deadline_threshold: userData.deadline_threshold || 10,
+					update_limit: userData.update_limit || 10,
 					...userData,
 				});
 				setIsAdmin(userData.is_admin || false);

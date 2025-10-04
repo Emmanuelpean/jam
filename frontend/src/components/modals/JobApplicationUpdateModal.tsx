@@ -15,8 +15,6 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 	onHide,
 	data,
 	id,
-	onSuccess,
-	onDelete,
 	submode = "view",
 	size = "lg",
 	jobId,
@@ -69,8 +67,6 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 				id={id}
 				fields={fields}
 				endpoint="jobapplicationupdates"
-				onSuccess={onSuccess}
-				onDelete={onDelete}
 				transformFormData={transformFormData}
 			/>
 		</>

@@ -79,8 +79,8 @@ const fetchCountries = async (): Promise<SelectOption[]> => {
 			// Transform the data to match our format
 			const countries: SelectOption[] = data
 				.map((country) => ({
-					value: country.name.common, // Use 2-letter country code
-					label: country.name.common, // Common country name
+					value: country.name.common,
+					label: country.name.common,
 				}))
 				.sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically
 

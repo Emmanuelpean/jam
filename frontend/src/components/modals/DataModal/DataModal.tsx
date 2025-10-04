@@ -1,7 +1,7 @@
 import React, { JSX, ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
-import { useDataContext } from "../../../contexts/DataContext"; // Add DataContext
+import { useDataContext } from "../../../contexts/DataContext";
 import "./DataModal.css";
 import { Errors, renderModalFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
@@ -11,7 +11,7 @@ import AlertModal from "../AlertModal";
 import { areDifferent, findByKey, flattenArray } from "../../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
-import { createDeleteHandler } from "../../../utils/DeleteHandler";
+import { useDeleteHandler } from "../../../utils/DeleteHandler";
 
 export type ViewFields = (ModalViewField | ModalViewField[])[];
 export type FormFields = (ModalFormField | ModalFormField[])[];
@@ -49,15 +49,13 @@ const endpointToEntityType = (endpoint: string): EntityType | null => {
 };
 
 export interface GenericModalProps {
-	mode?: "view" | "edit" | "add" | "import"; // modal mode - added "import"
+	mode?: "view" | "edit" | "add" | "import"; // modal mode
 	fields?: { view: ViewFields; form: FormFields }; // fields to display
 	data?: any; // data to populate the fields (required for import mode)
 	id?: string | number | null; // if id is provided, use the id and endpoint to load the data
-	onSuccess?: (data: any) => void; // called when the entry is added or updated
 	validation?: ((data: any) => any) | null; // custom validation method before submit
 	transformFormData?: ((data: any) => any) | null; // custom data transformation before submit
 	onFormDataChange?: ((data: any) => void) | null;
-	onDelete?: (id: string | number) => void; // called when the entry is deleted
 	additionalFields?: ModalViewField[]; // additional fields displayed outside the card in view mode
 	show: boolean; // whether to show the modal
 	onHide: () => void; // called to hide the modal
@@ -85,17 +83,14 @@ const DataModal = ({
 	data = null,
 	id = null,
 	endpoint,
-	onSuccess,
 	validation = null,
 	transformFormData = null,
-	onDelete,
 }: GenericModalProps) => {
 	const hasTabs = tabs && tabs.length > 0;
 
 	const { token } = useAuth();
-	const dataContext = useDataContext(); // Get DataContext
-	const entityType = endpointToEntityType(endpoint); // Map endpoint to entity type
-
+	const dataContext = useDataContext();
+	const entityType = endpointToEntityType(endpoint)!;
 	const [effectiveData, setEffectiveData] = useState(data);
 	const [formData, setFormData] = useState<Record<string, any>>({});
 	const [originalFormData, setOriginalFormData] = useState<Record<string, any>>({});
@@ -312,12 +307,7 @@ const DataModal = ({
 
 				return (
 					<div className={hasElementsUnderneath ? "mb-3" : ""} key={index}>
-						{renderModalViewField(
-							firstItem as ModalViewField,
-							effectiveData,
-							getModalId(),
-							handleViewDataChange((firstItem as ModalViewField).key),
-						)}
+						{renderModalViewField(firstItem as ModalViewField, effectiveData, getModalId())}
 					</div>
 				);
 			}
@@ -357,12 +347,7 @@ const DataModal = ({
 										errors,
 										currentUser,
 									)
-								: renderModalViewField(
-										field as ModalViewField,
-										effectiveData,
-										getModalId(),
-										handleViewDataChange((field as ModalViewField).key),
-									)}
+								: renderModalViewField(field as ModalViewField, effectiveData, getModalId())}
 						</div>
 					);
 				})}
@@ -372,19 +357,10 @@ const DataModal = ({
 
 	// ----------------------------------------------------- DELETE ----------------------------------------------------
 
-	const handleDelete = createDeleteHandler({
-		endpoint,
-		token,
-		showDelete,
-		showError,
-		removeItem: (id: string | number) => {
-			// Update DataContext if entity type is recognized
-			if (entityType) {
-				dataContext.deleteEntity(entityType, Number(id));
-			}
-			// Also call the provided onDelete callback
-			onDelete?.(id);
-		},
+	const handleDelete = useDeleteHandler({
+		entityType: entityType,
+		showDelete: showDelete,
+		showError: showError,
 		itemType: itemName,
 	});
 
@@ -429,25 +405,6 @@ const DataModal = ({
 				}
 			})
 			.filter((item) => item !== null) as (T | T[])[];
-	};
-
-	const handleViewDataChange = (fieldName: string) => {
-		return (newData: any[]) => {
-			console.log("Field handler called for", fieldName, newData);
-			const updatedData = {
-				...effectiveData,
-				[fieldName]: newData,
-			};
-			console.log("Updated data:", updatedData);
-			setEffectiveData(updatedData);
-
-			// Update DataContext if entity type is recognized
-			if (entityType && updatedData.id) {
-				dataContext.updateEntity(entityType, updatedData.id, updatedData);
-			}
-
-			onSuccess?.(updatedData);
-		};
 	};
 
 	const validateFormFields = async (): Promise<Errors> => {
@@ -519,30 +476,15 @@ const DataModal = ({
 			// Submit to API
 			const apiResult =
 				mode === "add"
-					? await api.post(`${endpoint}/`, dataToSubmit, token)
-					: await api.put(`${endpoint}/${effectiveData.id}`, dataToSubmit, token);
+					? await dataContext.addEntity(entityType, dataToSubmit)
+					: await dataContext.updateEntity(entityType, data.id, dataToSubmit);
 
-			// Update DataContext
-			if (entityType) {
-				if (mode === "add") {
-					dataContext.addEntity(entityType, apiResult);
-				} else {
-					dataContext.updateEntity(entityType, apiResult.id, apiResult);
-				}
-			}
-
-			onSuccess?.(apiResult);
-
-			if (mode === "add") {
+			if (mode === "add" || mode === "edit") {
 				handleHideImmediate();
 			} else if (mode === "import") {
-				// For import mode, delete from context
 				if (entityType && apiResult.id) {
 					dataContext.deleteEntity(entityType, apiResult.id);
 				}
-				onDelete?.(apiResult.id);
-				handleHideImmediate();
-			} else if (mode === "edit") {
 				handleHideImmediate();
 			} else {
 				setEffectiveData(apiResult);
@@ -646,12 +588,7 @@ const DataModal = ({
 							<div className="outside-card-content mt-3">
 								{currentAdditionalFields.map((item: ModalViewField, index: number) => (
 									<div key={`outside-field-${index}`} className="mb-3">
-										{renderModalViewField(
-											item,
-											effectiveData,
-											getModalId(),
-											handleViewDataChange(item.key),
-										)}
+										{renderModalViewField(item, effectiveData, getModalId())}
 									</div>
 								))}
 							</div>
