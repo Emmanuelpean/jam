@@ -321,7 +321,7 @@ export const modalViewFields = {
 
 	accordionJobApplicationTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job_applications",
-		render: renderFunctions.AccordionJobApplicationTable,
+		render: renderFunctions.accordionJobApplicationTable,
 		...overrides,
 	}),
 
@@ -336,35 +336,35 @@ export const modalViewFields = {
 	applicationDate: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_date",
 		label: "Application Date",
-		render: (params: RenderParams) => renderFunctions.applicationDate({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions._date(params, "application_date"),
 		...overrides,
 	}),
 
 	date: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "date",
 		label: "Date",
-		render: (params: RenderParams) => renderFunctions.date({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions._date(params, "date"),
 		...overrides,
 	}),
 
 	datetime: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "date",
 		label: "Date & Time",
-		render: (params: RenderParams) => renderFunctions.datetime({ ...params, view: true }),
+		render: renderFunctions.datetime,
 		...overrides,
 	}),
 
 	deadline: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "deadline",
 		label: "Application Deadline",
-		render: (params: RenderParams) => renderFunctions.deadline({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions._date(params, "deadline"),
 		...overrides,
 	}),
 
 	followupSnoozeDateTime: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "followup_snooze_datetime",
 		label: "Follow-up Snooze Until",
-		render: renderFunctions.followupSnoozeDateTime,
+		render: (param: RenderParams) => renderFunctions._date(param, "followup_snooze_datetime"),
 		...overrides,
 		displayCondition: (item: any) => item.followup_snooze_datetime !== null,
 	}),

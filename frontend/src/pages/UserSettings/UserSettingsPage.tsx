@@ -5,7 +5,7 @@ import { api, ApiError, exportApi } from "../../services/Api";
 import { THEMES } from "../../utils/Theme";
 import { renderModalFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
-import { getTableIcon } from "../../components/rendering/view/ViewRenders";
+import { getTableIcon } from "../../components/rendering/view/Icons";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { findByKey } from "../../utils/Utils";
 import { ActionButton } from "../../components/rendering/form/ActionButton";

@@ -2,7 +2,7 @@ import React, { ReactNode, useMemo } from "react";
 import DataModal, { DataModalProps, TabConfig, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { getApplicationStatusBadgeClass } from "../rendering/view/ViewRenders";
+import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
 import { JobData } from "../../services/Schemas";
 import { jobsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";

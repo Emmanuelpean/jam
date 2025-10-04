@@ -91,7 +91,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		searchFields: (item: any) => localeDateOnly(item.created_at),
-		render: renderFunctions.createdDate,
+		render: (params: RenderParams) => renderFunctions._date(params, "created_at"),
 		...overrides,
 	}),
 
@@ -112,7 +112,7 @@ export const tableColumns = {
 		searchable: true,
 		type: "date",
 		searchFields: (item: any) => localeDateOnly(item.date),
-		render: renderFunctions.date,
+		render: (params: RenderParams) => renderFunctions._date(params, "date"),
 		...overrides,
 	}),
 
@@ -142,7 +142,7 @@ export const tableColumns = {
 		searchable: true,
 		type: "date",
 		searchFields: (item: any) => localeDateOnly(item.last_login),
-		render: renderFunctions.lastLogin,
+		render: (params: RenderParams) => renderFunctions._date(params, "last_login"),
 		...overrides,
 	}),
 

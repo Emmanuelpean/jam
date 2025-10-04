@@ -1,7 +1,8 @@
 import React, { JSX } from "react";
 import { Card } from "react-bootstrap";
 import "./DashboardPage.css";
-import { getTableIcon, renderFunctions } from "../../components/rendering/view/ViewRenders";
+import { renderFunctions, RenderViewFieldWithContext } from "../../components/rendering/view/ViewRenders";
+import { getTableIcon } from "../../components/rendering/view/Icons";
 import { InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
 import { formatActivityDate } from "../../utils/TimeUtils";
 import { CardHeader } from "./CardHeader";
@@ -81,6 +82,11 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 	const activityColor = getActivityColor(activity.type);
 	const activityIcon = getActivityIcon(activity.type);
 
+	const jobField = {
+		key: "activity-item-" + index,
+		render: renderFunctions.jobBadge,
+	};
+
 	return (
 		<div key={`activity-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
 			<div className="d-flex position-relative">
@@ -109,7 +115,7 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 						</div>
 						<small className="text-muted flex-shrink-0 ms-2">{formatActivityDate(activity.date)}</small>
 					</div>
-					{renderFunctions.jobBadge({ item: activity })}
+					<RenderViewFieldWithContext field={jobField} item={activity} id={index.toString()} />
 				</div>
 			</div>
 		</div>
@@ -117,6 +123,11 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 };
 
 export const renderUpcomingInterviewItem = (interview: InterviewData, index: number, isLast: boolean): JSX.Element => {
+	const jobField = {
+		key: "activity-item-" + index,
+		render: renderFunctions.jobBadge,
+	};
+
 	return (
 		<div key={`interview-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
 			<div className="d-flex position-relative">
@@ -143,7 +154,7 @@ export const renderUpcomingInterviewItem = (interview: InterviewData, index: num
 						</div>
 						<small className="text-muted flex-shrink-0 ms-2">{formatActivityDate(interview.date!)}</small>
 					</div>
-					{renderFunctions.jobBadge({ item: { job_id: interview.job_id } })}
+					<RenderViewFieldWithContext field={jobField} item={interview} id={index.toString()} />
 				</div>
 			</div>
 		</div>
