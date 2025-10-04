@@ -9,16 +9,7 @@ import { ValidationErrors } from "./DataModal/DataModal";
 import { UserData } from "../../services/Schemas";
 import { THEMES } from "../../utils/Theme";
 
-export const UserModal: React.FC<DataModalProps> = ({
-	show,
-	onHide,
-	data,
-	id,
-	onSuccess,
-	onDelete,
-	submode = "view",
-	size = "lg",
-}) => {
+export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode = "view", size = "lg" }) => {
 	const { token } = useAuth();
 
 	const formFieldsArray = [
@@ -77,8 +68,6 @@ export const UserModal: React.FC<DataModalProps> = ({
 			id={id}
 			fields={fields}
 			endpoint="users"
-			onSuccess={onSuccess}
-			onDelete={onDelete}
 			validation={customValidation}
 			transformFormData={transformFormData}
 		/>

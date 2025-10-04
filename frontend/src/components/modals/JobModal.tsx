@@ -17,8 +17,6 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	onHide,
 	data,
 	id,
-	onSuccess,
-	onDelete,
 	submode,
 	size = "xl",
 	defaultActiveTab = "job",
@@ -187,8 +185,6 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 				onHide={onHide}
 				data={data}
 				mode={submode}
-				onDelete={onDelete}
-				onSuccess={onSuccess}
 				transformFormData={transformData}
 				itemName="Job & Application"
 				endpoint="jobs"

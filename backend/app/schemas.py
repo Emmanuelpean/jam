@@ -339,7 +339,7 @@ class JobOut(JobCreate, OwnedOut):
     interviews: list["InterviewAppOut"] = []  # get the full interviews
     interview_ids: list[int] = []
     updates: list["JobApplicationUpdateAppOut"] = []  # get the full updates
-    update_ids: list[int] = []
+    update_ids: list[int] = []  # TODO review
     name: str
 
     @computed_field

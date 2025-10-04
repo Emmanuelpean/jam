@@ -15,8 +15,6 @@ export const PersonModal: React.FC<DataModalProps> = ({
 	onHide,
 	data,
 	id = null,
-	onSuccess,
-	onDelete,
 	submode = "view",
 	size = "lg",
 }) => {
@@ -97,8 +95,6 @@ export const PersonModal: React.FC<DataModalProps> = ({
 				data={data}
 				fields={fields}
 				endpoint="persons"
-				onSuccess={onSuccess}
-				onDelete={onDelete}
 				validation={customValidation}
 				transformFormData={transformFormData}
 				additionalFields={additionalFields}

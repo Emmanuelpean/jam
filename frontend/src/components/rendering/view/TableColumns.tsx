@@ -166,7 +166,7 @@ export const tableColumns = {
 		type: "text",
 		sortField: ["location.name", "attendance_type"],
 		searchFields: ["location.name", "attendance_type"],
-		render: renderFunctions.locationBadge,
+		render: renderFunctions.LocationBadge,
 		...overrides,
 	}),
 
@@ -209,14 +209,14 @@ export const tableColumns = {
 	// --------------------------------------------------- COMPANIES ---------------------------------------------------
 
 	companyBadge: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "companyBadge",
+		key: "CompanyBadge",
 		label: "Company",
 		sortable: true,
 		searchable: true,
 		type: "text",
 		sortField: "company.name",
 		searchFields: "company.name",
-		render: renderFunctions.companyBadge,
+		render: renderFunctions.CompanyBadge,
 		...overrides,
 	}),
 
@@ -241,7 +241,7 @@ export const tableColumns = {
 		type: "text",
 		sortField: "person.last_name",
 		searchFields: "person.name",
-		render: renderFunctions.contactBadges,
+		render: renderFunctions.ContactBadges,
 		...overrides,
 	}),
 
@@ -332,7 +332,7 @@ export const tableColumns = {
 		type: "text",
 		sortField: "person.last_name",
 		searchFields: "person.name",
-		render: (params: RenderParams) => renderFunctions.interviewerBadges({ ...params, view: false }),
+		render: (params: RenderParams) => renderFunctions.InterviewerBadges({ ...params, view: false }),
 		...overrides,
 	}),
 
@@ -364,7 +364,7 @@ export const tableColumns = {
 		sortable: false,
 		searchable: true,
 		type: "text",
-		render: renderFunctions.keywordBadges,
+		render: renderFunctions.KeywordBadges,
 		...overrides,
 	}),
 
@@ -393,7 +393,7 @@ export const tableColumns = {
 		label: "Interviews",
 		sortable: true,
 		searchable: false,
-		render: renderFunctions.interviewCount,
+		render: (param: RenderParams) => renderFunctions._interviewCount(param, "location_id"),
 		...overrides,
 	}),
 
@@ -438,7 +438,7 @@ export const tableColumns = {
 		label: "Job Applications",
 		sortable: true,
 		searchable: false,
-		render: renderFunctions.jobApplicationCountAggregator,
+		render: (param: RenderParams) => renderFunctions._jobApplicationCount(param, "application_aggregator_id"),
 		...overrides,
 	}),
 
@@ -447,7 +447,7 @@ export const tableColumns = {
 		label: "Individuals",
 		sortable: true,
 		searchable: false,
-		render: renderFunctions.personCountCompany,
+		render: (param: RenderParams) => renderFunctions._personCount(param, "company_id"),
 		...overrides,
 	}),
 

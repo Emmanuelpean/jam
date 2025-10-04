@@ -11,8 +11,6 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 	onHide,
 	data,
 	id,
-	onSuccess,
-	onDelete,
 	submode = "view",
 	size = "lg",
 }) => {
@@ -71,8 +69,6 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 			id={id}
 			fields={fields}
 			endpoint="aggregators"
-			onSuccess={onSuccess}
-			onDelete={onDelete}
 			transformFormData={transformFormData}
 			validation={customValidation}
 		/>

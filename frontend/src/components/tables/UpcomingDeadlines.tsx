@@ -3,7 +3,7 @@ import { DataTableProps, DataTable } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
-const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], onDataChange, error = null, columns = [] }) => {
+const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], columns = [] }) => {
 	const defaultColumns =
 		columns.length > 0
 			? columns
@@ -18,6 +18,7 @@ const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], onDataCha
 		<DataTable
 			entityType="jobs"
 			columns={defaultColumns}
+			data={data}
 			initialSortConfig={{ key: "days_until_deadline", direction: "asc" }}
 			Modal={JobModal}
 			endpoint="jobs"

@@ -10,7 +10,7 @@ import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
-import { createActiveHandler, createDeleteHandler } from "../../utils/DeleteHandler";
+import { useActiveHandler, useDeleteHandler } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
 import "./DataTable.css";
@@ -293,22 +293,18 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 	let handleDelete: (item: any) => Promise<boolean>;
 	if (mode === "import") {
-		handleDelete = createActiveHandler({
-			endpoint: endpoint,
-			token: token,
+		handleDelete = useActiveHandler({
+			entityType: entityType,
 			showDelete: showDelete,
 			showError: showError,
-			removeItem: removeItem,
 			nameKey: nameKey,
 			itemType: itemType,
 		});
 	} else {
-		handleDelete = createDeleteHandler({
-			endpoint: endpoint || entityType,
-			token: token,
+		handleDelete = useDeleteHandler({
+			entityType: entityType,
 			showDelete: showDelete,
 			showError: showError,
-			removeItem: removeItem,
 			nameKey: nameKey,
 			itemType: itemType,
 		});

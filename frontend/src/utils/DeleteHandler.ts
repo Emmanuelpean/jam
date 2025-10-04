@@ -1,12 +1,9 @@
-import { api } from "../services/Api";
+import { useDataContext, EntityType } from "../contexts/DataContext";
 
 export interface CreateDeleteHandlerProps {
-	endpoint: string;
-	token: string | null;
+	entityType: EntityType;
 	showDelete: (config: any) => Promise<boolean>;
 	showError: (config: any) => Promise<boolean>;
-	removeItem?: (itemId: number) => void;
-	setData?: React.Dispatch<React.SetStateAction<any[]>>;
 	nameKey?: string;
 	itemType?: string;
 }
@@ -21,15 +18,15 @@ const getItemName = (item: any, nameKey?: string, itemType?: string): string => 
 	}
 };
 
-export const createDeleteHandler = ({
-	endpoint,
-	token,
+export const useDeleteHandler = ({
+	entityType,
 	showDelete,
 	showError,
-	removeItem,
 	nameKey,
 	itemType = "item",
 }: CreateDeleteHandlerProps) => {
+	const { deleteEntity } = useDataContext();
+
 	return async (item: any): Promise<boolean> => {
 		const itemName = getItemName(item, nameKey, itemType);
 
@@ -45,27 +42,26 @@ export const createDeleteHandler = ({
 				return false;
 			}
 
-			await api.delete(`${endpoint}/${item.id}`, token);
-			removeItem?.(item.id);
+			await deleteEntity(entityType, item.id);
 			return true;
 		} catch (error) {
 			await showError({
 				message: `Failed to delete ${itemName}. Please check your connection and try again.`,
 			});
-			return false; // Failed to delete
+			return false;
 		}
 	};
 };
 
-export const createActiveHandler = ({
-	endpoint,
-	token,
+export const useActiveHandler = ({
+	entityType,
 	showDelete,
 	showError,
-	removeItem,
 	nameKey,
 	itemType = "item",
 }: CreateDeleteHandlerProps) => {
+	const { updateEntity } = useDataContext();
+
 	return async (item: any): Promise<boolean> => {
 		const itemName = getItemName(item, nameKey, itemType);
 
@@ -81,8 +77,7 @@ export const createActiveHandler = ({
 				return false;
 			}
 
-			await api.put(`${endpoint}/${item.id}`, { is_active: false }, token);
-			removeItem?.(item.id);
+			await updateEntity(entityType, item.id, { is_active: false });
 			return true;
 		} catch (error) {
 			await showError({

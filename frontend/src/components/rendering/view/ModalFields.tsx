@@ -10,8 +10,8 @@ export interface ModalViewField extends ViewField {
 
 interface ModalViewFieldOverride extends Partial<ModalViewField> {}
 
-export const renderModalViewField = (field: ModalViewField, item: any, id: string, onChange?: any): ReactNode => {
-	const output = <RenderViewFieldWithContext field={field} item={item} id={id} onChange={onChange} />;
+export const renderModalViewField = (field: ModalViewField, item: any, id: string): ReactNode => {
+	const output = <RenderViewFieldWithContext field={field} item={item} id={id} />;
 
 	if (field.isTitle) {
 		return (
@@ -177,28 +177,28 @@ export const modalViewFields = {
 	locationBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location",
 		label: "Location",
-		render: (params: RenderParams) => renderFunctions.locationBadge({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.LocationBadge({ ...params, view: true }),
 		...overrides,
 	}),
 
 	companyBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "companyBadge",
+		key: "CompanyBadge",
 		label: "Company",
-		render: renderFunctions.companyBadge,
+		render: renderFunctions.CompanyBadge,
 		...overrides,
 	}),
 
 	keywordBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "keywords",
 		label: "Tags",
-		render: (params: RenderParams) => renderFunctions.keywordBadges({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.KeywordBadges({ ...params, view: true }),
 		...overrides,
 	}),
 
 	personBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "person",
 		label: "Contacts",
-		render: (params: RenderParams) => renderFunctions.contactBadges({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.ContactBadges({ ...params, view: true }),
 		...overrides,
 	}),
 
@@ -212,21 +212,21 @@ export const modalViewFields = {
 	interviewerBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "person",
 		label: "Interviewers",
-		render: (params: RenderParams) => renderFunctions.interviewerBadges({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.InterviewerBadges({ ...params, view: true }),
 		...overrides,
 	}),
 
 	appliedViaBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "applied_via",
 		label: "Applied Via",
-		render: (params: RenderParams) => renderFunctions.appliedViaBadge({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.AppliedViaBadge({ ...params, view: true }),
 		...overrides,
 	}),
 
 	sourceBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "source",
 		label: "Source Aggregator",
-		render: renderFunctions.sourceBadge,
+		render: renderFunctions.SourceBadge,
 		...overrides,
 	}),
 
@@ -279,19 +279,19 @@ export const modalViewFields = {
 
 	interviewTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "interviews",
-		render: renderFunctions.interviewTable,
+		render: renderFunctions.InterviewTable,
 		...overrides,
 	}),
 
 	updateTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "updates",
-		render: renderFunctions.jobApplicationUpdateTable,
+		render: renderFunctions.JobApplicationUpdateTable,
 		...overrides,
 	}),
 
 	accordionInterviewTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "interviews",
-		render: (param) => renderFunctions.accordionInterviewTable(param, "location_id"),
+		render: (param) => renderFunctions.AccordionInterviewTable(param, "location_id"),
 		...overrides,
 	}),
 
@@ -321,13 +321,13 @@ export const modalViewFields = {
 
 	accordionJobApplicationTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job_applications",
-		render: renderFunctions.accordionJobApplicationTable,
+		render: renderFunctions.AccordionJobApplicationTable,
 		...overrides,
 	}),
 
 	accordionPersonTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "persons",
-		render: renderFunctions.accordionPersonTable,
+		render: renderFunctions.AccordionPersonTable,
 		...overrides,
 	}),
 

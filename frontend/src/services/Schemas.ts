@@ -128,6 +128,8 @@ export interface JobData {
 	contacts?: AggregatorData[] | number[];
 	location?: LocationData | null;
 	company?: CompanyData | null;
+	days_since_last_update?: number | null;
+	followup_snooze_datetime?: Date | null;
 }
 
 export interface ApplicationData {
@@ -149,6 +151,9 @@ export interface UserData {
 	theme?: string;
 	last_login?: string;
 	created_at?: string;
+	chase_threshold?: number;
+	deadline_threshold?: number;
+	update_limit?: number;
 }
 
 export interface CompanyData {

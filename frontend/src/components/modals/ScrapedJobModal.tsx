@@ -14,15 +14,7 @@ interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
 }
 
-export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
-	show,
-	onHide,
-	data,
-	onSuccess,
-	onDelete,
-	submode,
-	size = "xl",
-}) => {
+export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide, data, submode, size = "xl" }) => {
 	const { token } = useAuth();
 	const {
 		companies,
@@ -114,15 +106,15 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 		return errors;
 	};
 
-	const handleOnSuccess = (createdItem: any) => {
-		if (!token) {
-			return;
-		}
-		scrapedJobApi.setImported(data.id, { is_imported: true }, token);
-		if (onSuccess) {
-			onSuccess(createdItem);
-		}
-	};
+	// const handleOnSuccess = (createdItem: any) => {
+	// 	if (!token) {
+	// 		return;
+	// 	}
+	// 	scrapedJobApi.setImported(data.id, { is_imported: true }, token);
+	// 	if (onSuccess) {
+	// 		onSuccess(createdItem);
+	// 	}
+	// };
 
 	const fields = {
 		form: jobFormFields,
@@ -137,8 +129,6 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 				data={patchedData}
 				mode={submode}
 				fields={fields}
-				onDelete={onDelete}
-				onSuccess={handleOnSuccess}
 				transformFormData={transformData}
 				itemName="Scraped Job"
 				endpoint="jobs"
