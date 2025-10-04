@@ -1,10 +1,19 @@
 import React, { ReactNode } from "react";
-import { useDataContext } from "../../../contexts/DataContext";
+import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../maps/LocationMap";
-import { InterviewData, JobData, LocationData, PersonData } from "../../../services/Schemas";
+import {
+	AggregatorData,
+	CompanyData,
+	InterviewData,
+	JobApplicationUpdateData,
+	JobData,
+	KeywordData,
+	LocationData,
+	PersonData,
+} from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
 import { TableColumn } from "./TableColumns";
@@ -18,112 +27,56 @@ import {
 	PersonModalManager,
 } from "../../modals/ModalManagers";
 import { formatTimedelta } from "../../../utils/TimeUtils";
+import {
+	getAdminIcon,
+	getApplicationStatusBadgeClass,
+	getTableIcon,
+	getToastIcon,
+	getUpdateTypeIcon,
+	getActiveBadge,
+} from "./Icons";
+import { ensureHttpPrefix } from "../../../utils/StringUtils";
+import { findByKey } from "../../../utils/Utils";
 
-type ContextData = {
-	companies: any[];
-	locations: any[];
-	aggregators: any[];
-	persons: any[];
-	keywords: any[];
-	jobs: any[];
-	interviews: any[];
-	jobApplicationUpdates: any[];
-};
-
+// Parameters passed to the view render functions
 export interface RenderParams {
-	item: any;
-	view?: boolean;
-	id?: string;
-	columns?: TableColumn[];
-	helpText?: string;
-	onChange?: () => void;
-	contextData?: ContextData;
+	item: any; // item containing the field to render
+	view?: boolean; // true if rendered in a modal, false if in a table
+	id?: string; // id of the rendered element
+	columns?: TableColumn[]; // columns for rendered tables
+	helpText?: string; // help text
+	dataContext: DataContextValue; // data context
 }
 
 // Base class for Fields (Table or Modal fields)
 export interface ViewField {
-	key: string;
-	render?: (params: RenderParams) => ReactNode;
-	columns?: TableColumn[];
-	helpText?: string;
+	key: string; // key used to access the field to render if no render function is used. Also used for the element id.
+	render?: (params: RenderParams) => ReactNode; // render function to use
+	columns?: TableColumn[]; // columns for rendered tables
+	helpText?: string; // help text
 }
-
-export const getApplicationStatusBadgeClass = (status: string | undefined): string => {
-	switch (status?.toLowerCase()) {
-		case "applied":
-			return "bg-primary";
-		case "interview":
-			return "bg-warning";
-		case "offer":
-			return "bg-success";
-		case "rejected":
-		case "withdrawn":
-			return "bg-secondary";
-		default:
-			return "bg-primary";
-	}
-};
-
-function getUpdateTypeIcon(type: string): string {
-	switch (type?.toLowerCase()) {
-		case "received":
-			return "bi-download";
-		default:
-			return "bi-upload";
-	}
-}
-
-export function getTableIcon(title: string): string {
-	const iconMap: Record<string, string> = {
-		Jobs: "bi-briefcase",
-		Companies: "bi-building",
-		Persons: "bi-people",
-		People: "bi-people",
-		Locations: "bi-geo-alt",
-		Tags: "bi-tags",
-		Interviews: "bi-calendar-event",
-		"Job Applications": "bi-person-workspace",
-		"Job Application Updates": "bi-bell",
-		"Job Aggregators": "bi-linkedin",
-		Users: "bi-person-lines-fill",
-		Settings: "bi-database-gear",
-	};
-	return iconMap[title] || "bi-table";
-}
-
-export const getAdminIcon = (isAdmin: boolean): string => {
-	if (isAdmin) {
-		return "bi bi-person-check text-success";
-	} else {
-		return "bi bi-person-x text-danger";
-	}
-};
-
-export const getToastIcon = (toastActive: boolean): string => {
-	if (toastActive) {
-		return "bi bi-cup-hot text-success";
-	} else {
-		return "bi bi-cup text-danger";
-	}
-};
-
-const ensureHttpPrefix = (url: string): string => {
-	if (url.match(/^https?:\/\//)) return url;
-	return `https://${url}`;
-};
 
 const getIds = (param: RenderParams, key: string) => {
 	return (param.item?.[key] || []).map((p: { id: number }): number => p.id);
 };
 
+type JamData =
+	| InterviewData
+	| JobData
+	| JobApplicationUpdateData
+	| LocationData
+	| AggregatorData
+	| KeywordData
+	| PersonData
+	| CompanyData;
+
 function filterByKey(items: any[], key: string, id: number | undefined): any[] {
+	// Filter items where item[key] is either a number equal to id or an array containing an object with id
 	return items.filter((item) => {
 		const value = item[key];
 		if (Array.isArray(value)) {
-			// value is an array of objects with an id property
 			return value.some((obj: { id: number }) => obj.id === id);
 		}
-		// value is a number
 		return value === id;
 	});
 }
@@ -200,8 +153,7 @@ export const renderFunctions = {
 	appTheme: (param: RenderParams): ReactNode => {
 		const themeKey = param.item?.theme;
 		if (themeKey) {
-			const theme = THEMES.find((theme) => theme.key === themeKey);
-			return theme?.name;
+			return findByKey(THEMES, themeKey)?.name;
 		}
 		return null;
 	},
@@ -285,26 +237,6 @@ export const renderFunctions = {
 		return null;
 	},
 
-	lastLogin: (param: RenderParams): string | null => {
-		return renderFunctions._date(param, "last_login");
-	},
-
-	createdDate: (param: RenderParams): string | null => {
-		return renderFunctions._date(param, "created_at");
-	},
-
-	applicationDate: (param: RenderParams): string | null => {
-		return renderFunctions._date(param, "application_date");
-	},
-
-	deadline: (param: RenderParams): string | null => {
-		return renderFunctions._date(param, "deadline");
-	},
-
-	date: (param: RenderParams): string | null => {
-		return renderFunctions._date(param, "date");
-	},
-
 	datetime: (param: RenderParams): string | null => {
 		const date = param.item?.date;
 		if (date) {
@@ -318,10 +250,6 @@ export const renderFunctions = {
 			);
 		}
 		return null;
-	},
-
-	followupSnoozeDateTime: (param: RenderParams): string | null => {
-		return renderFunctions._date(param, "followup_snooze_datetime");
 	},
 
 	// ----------------------------------------------------- OTHER -----------------------------------------------------
@@ -353,11 +281,7 @@ export const renderFunctions = {
 
 	isActive: (param: RenderParams): ReactNode => {
 		const isActive = param.item?.is_active;
-		if (isActive) {
-			return <span className="badge bg-success">Active</span>;
-		} else {
-			return <span className="badge bg-secondary">Inactive</span>;
-		}
+		return getActiveBadge(isActive);
 	},
 
 	salaryRange: (param: RenderParams): string | null => {
@@ -410,9 +334,7 @@ export const renderFunctions = {
 	},
 
 	locationMap: (param: RenderParams): ReactNode => {
-		const ctx = param.contextData;
-		if (!ctx) return null;
-		const location = lookupEntity.getLocation(ctx.locations, param.item?.location_id);
+		const location = param.item;
 		const locations: LocationData[] = location ? [location] : [];
 		return <LocationMap locations={locations} />;
 	},
@@ -432,33 +354,29 @@ export const renderFunctions = {
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
 	_interviewCount: (param: RenderParams, key: string): number => {
-		const ctx = param.contextData;
-		if (!ctx) return 0;
+		const ctx = param.dataContext;
 		return filterByKey(ctx.interviews, key, param.item?.id).length;
 	},
 
 	_jobCount: (param: RenderParams, key: string): number => {
-		const ctx = param.contextData;
-		if (!ctx) return 0;
+		const ctx = param.dataContext;
 		return filterByKey(ctx.jobs, key, param.item?.id).length;
 	},
 
 	_jobApplicationCount: (param: RenderParams, key: string): number => {
-		const ctx = param.contextData;
-		if (!ctx) return 0;
+		const ctx = param.dataContext;
 		return filterByKey(ctx.jobs, key, param.item?.id).length;
 	},
 
 	_personCount: (param: RenderParams, key: string): number => {
-		const ctx = param.contextData;
-		if (!ctx) return 0;
+		const ctx = param.dataContext;
 		return filterByKey(ctx.persons, key, param.item?.id).length;
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
 	_jobBadge: (param: RenderParams, idKey: string, displayAttribute: keyof JobData): ReactNode => {
-		const ctx = useDataContext();
+		const ctx = param.dataContext;
 		const jobId = param.item?.[idKey];
 		const job = lookupEntity.getJob(ctx.jobs, jobId);
 
@@ -490,7 +408,7 @@ export const renderFunctions = {
 	},
 
 	KeywordBadges: (param: RenderParams): ReactNode => {
-		const ctx = useDataContext();
+		const ctx = param.dataContext;
 		const keywordIds = getIds(param, "keywords");
 		const keywords = lookupEntity.getKeywords(ctx.keywords, keywordIds);
 
@@ -520,7 +438,7 @@ export const renderFunctions = {
 	},
 
 	LocationBadge: (param: RenderParams): ReactNode => {
-		const ctx = useDataContext();
+		const ctx = param.dataContext;
 		const location = lookupEntity.getLocation(ctx.locations, param.item?.location_id);
 		const attendanceType = param.item?.attendance_type;
 
@@ -574,7 +492,7 @@ export const renderFunctions = {
 	},
 
 	CompanyBadge: (param: RenderParams): ReactNode => {
-		const ctx = useDataContext();
+		const ctx = param.dataContext;
 		const company = lookupEntity.getCompany(ctx.companies, param.item?.company_id);
 
 		if (company) {
@@ -597,8 +515,7 @@ export const renderFunctions = {
 	},
 
 	_personBadges: (param: RenderParams, key: string): ReactNode => {
-		const ctx = useDataContext();
-
+		const ctx = param.dataContext;
 		const personIds = getIds(param, key);
 		const persons = lookupEntity.getPersons(ctx.persons, personIds);
 
@@ -651,9 +568,7 @@ export const renderFunctions = {
 	},
 
 	_aggregatorBadge: (param: RenderParams, idKey: string): ReactNode => {
-		const ctx = param.contextData;
-		if (!ctx) return null;
-
+		const ctx = param.dataContext;
 		const aggregator = lookupEntity.getAggregator(ctx.aggregators, param.item?.[idKey]);
 
 		if (aggregator) {
@@ -682,49 +597,42 @@ export const renderFunctions = {
 	// ----------------------------------------------------- TABLES ----------------------------------------------------
 
 	InterviewTable: (param: RenderParams): ReactNode => {
-		const ctx = useDataContext();
+		const ctx = param.dataContext;
 		const interviews = filterByKey(ctx.interviews, "job_id", param.item?.id);
-		return <InterviewsTable data={interviews} jobId={param.item?.id} onDataChange={param.onChange} />;
+		return <InterviewsTable data={interviews} jobId={param.item?.id} />;
 	},
 
 	JobApplicationUpdateTable: (param: RenderParams): ReactNode => {
-		const ctx = useDataContext();
+		const ctx = param.dataContext;
 		const updateIds = getIds(param, "job_application_updates");
 		const updates = lookupEntity.getJobApplicationUpdates(ctx.jobApplicationUpdates, updateIds);
-		return <JobApplicationUpdateTable data={updates} jobId={param.item?.id} onDataChange={param.onChange} />;
+		return <JobApplicationUpdateTable data={updates} jobId={param.item?.id} />;
 	},
 
 	// ------------------------------------------------ ACCORDION TABLES -----------------------------------------------
 
 	_accordionJobTable: (param: RenderParams, key: string): ReactNode => {
-		const ctx = useDataContext();
+		const ctx = param.dataContext;
 		const jobs = filterByKey(ctx.jobs, key, param.item?.id);
 		return (
 			<Accordion title="Jobs" data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
-				{(data) => <JobsTable onDataChange={param.onChange} data={data} columns={param.columns} />}
+				{(data) => <JobsTable data={data} columns={param.columns} />}
 			</Accordion>
 		);
 	},
 
 	AccordionInterviewTable: (param: RenderParams, key: string): ReactNode => {
-		const ctx = useDataContext();
+		const ctx = param.dataContext;
 		const interviews = filterByKey(ctx.interviews, key, param.item?.id);
 		return (
 			<Accordion title="Interviews" data={interviews} icon={getTableIcon("Interviews")} helpText={param.helpText}>
-				{(data) => (
-					<InterviewsTable
-						data={data}
-						onDataChange={param.onChange}
-						showAdd={false}
-						columns={param.columns}
-					/>
-				)}
+				{(data) => <InterviewsTable data={data} showAdd={false} columns={param.columns} />}
 			</Accordion>
 		);
 	},
 
-	AccordionJobApplicationTable: (param: RenderParams): ReactNode => {
-		const ctx = useDataContext();
+	accordionJobApplicationTable: (param: RenderParams): ReactNode => {
+		const ctx = param.dataContext;
 		const jobs = filterByKey(ctx.jobs, "application_aggregator_id", param.item?.id);
 		return (
 			<Accordion
@@ -733,17 +641,17 @@ export const renderFunctions = {
 				icon={getTableIcon("Job Applications")}
 				helpText={param.helpText}
 			>
-				{(data) => <JobsTable data={data} onDataChange={param.onChange} columns={param.columns} />}
+				{(data) => <JobsTable data={data} columns={param.columns} />}
 			</Accordion>
 		);
 	},
 
 	AccordionPersonTable: (param: RenderParams): ReactNode => {
-		const ctx = useDataContext();
+		const ctx = param.dataContext;
 		const persons = filterByKey(ctx.persons, "company_id", param.item?.id);
 		return (
 			<Accordion title="Persons" data={persons} icon={getTableIcon("Persons")} helpText={param.helpText}>
-				{(data) => <PersonTable data={data} onDataChange={param.onChange} columns={param.columns} />}
+				{(data) => <PersonTable data={data} columns={param.columns} />}
 			</Accordion>
 		);
 	},
@@ -753,8 +661,7 @@ export const RenderViewFieldWithContext: React.FC<{
 	field: ViewField;
 	item: any;
 	id: string;
-	onChange?: any;
-}> = ({ field, item, id, onChange }) => {
+}> = ({ field, item, id }) => {
 	const context = useDataContext();
 
 	let rendered: ReactNode;
@@ -765,17 +672,7 @@ export const RenderViewFieldWithContext: React.FC<{
 			id: `${id}-${field.key}`,
 			columns: field.columns,
 			helpText: field.helpText,
-			onChange: onChange,
-			contextData: {
-				companies: context.companies,
-				locations: context.locations,
-				aggregators: context.aggregators,
-				persons: context.persons,
-				keywords: context.keywords,
-				jobs: context.jobs,
-				interviews: context.interviews,
-				jobApplicationUpdates: context.jobApplicationUpdates,
-			},
+			dataContext: context,
 		};
 		rendered = field.render(renderParams);
 	} else {

@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import "./Sidebar.css";
-import { getTableIcon } from "../rendering/view/ViewRenders";
+import { getTableIcon } from "../rendering/view/Icons";
 import { DEFAULT_THEME, isValidTheme } from "../../utils/Theme";
 import { ThemeSelector } from "./ThemeSelector";
 
