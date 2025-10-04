@@ -147,7 +147,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	};
 
 	const data = getData();
-	const { loading, error: contextError } = dataContext;
+	const { error: contextError } = dataContext;
 
 	// CRUD operations using context methods
 	const addItem = useCallback(
@@ -291,24 +291,23 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		setContextMenu({ item, x: event.clientX, y: event.clientY, show: true });
 	};
 
-	let handleDelete: (item: any) => Promise<boolean>;
-	if (mode === "import") {
-		handleDelete = useActiveHandler({
-			entityType: entityType,
-			showDelete: showDelete,
-			showError: showError,
-			nameKey: nameKey,
-			itemType: itemType,
-		});
-	} else {
-		handleDelete = useDeleteHandler({
-			entityType: entityType,
-			showDelete: showDelete,
-			showError: showError,
-			nameKey: nameKey,
-			itemType: itemType,
-		});
-	}
+	const activeHandler = useActiveHandler({
+		entityType,
+		showDelete,
+		showError,
+		nameKey,
+		itemType,
+	});
+	const deleteHandler = useDeleteHandler({
+		entityType,
+		showDelete,
+		showError,
+		nameKey,
+		itemType,
+	});
+
+	// Select the handler based on mode
+	const handleDelete = mode === "import" ? activeHandler : deleteHandler;
 
 	// Success handlers
 	const handleEditSuccess = (updatedItem: any): void => {
@@ -453,10 +452,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 	if (contextError) {
 		return <div className="alert alert-danger mt-3">{contextError.message}</div>;
-	}
-
-	if (loading) {
-		return <div className="text-center py-4">Loading {itemType}s...</div>;
 	}
 
 	return (
