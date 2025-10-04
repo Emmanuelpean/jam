@@ -28,6 +28,7 @@ import {
 } from "../services/Schemas";
 import { SelectOption } from "../utils/Utils";
 import { fetchCountries } from "../utils/CountryUtils";
+import { useLoading } from "./LoadingContext";
 
 export type EntityType =
 	| "jobs"
@@ -55,7 +56,6 @@ export interface DataContextValue {
 	users: UserData[];
 	countries: SelectOption[];
 
-	loading: boolean;
 	error: ApiError | null;
 	reloadAll: () => void;
 
@@ -80,11 +80,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [countries, setCountries] = useState<SelectOption[]>([]);
-	const [loading, setLoading] = useState(true);
+	const { showLoading, hideLoading } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
 	const fetchAllData = async () => {
-		setLoading(true);
+		showLoading();
 		setError(null);
 		try {
 			const promises = [
@@ -138,7 +138,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		} catch (e: any) {
 			setError(e);
 		} finally {
-			setLoading(false);
+			hideLoading();
 		}
 	};
 
@@ -280,7 +280,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				settings,
 				users,
 				countries,
-				loading,
 				error,
 				reloadAll: fetchAllData,
 				updateEntity,

@@ -9,7 +9,6 @@ import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobModal } from "../../modals/JobModal";
 
 interface UseFormOptionsReturn {
-	loading: boolean;
 	error: Error | null;
 	companies: SelectOption[];
 	locations: SelectOption[];
@@ -41,7 +40,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 		aggregators: aggregatorsData,
 		jobs: jobsData,
 		countries: countriesData,
-		loading,
 		error,
 	} = useDataContext();
 
@@ -117,7 +115,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 	);
 
 	return {
-		loading,
 		error: error as Error | null,
 		companies: requiredOptions.includes("companies") ? companies : [],
 		locations: requiredOptions.includes("locations") ? locations : [],

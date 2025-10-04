@@ -95,8 +95,8 @@ function App(): JSX.Element {
 	return (
 		<BrowserRouter basename="/jam">
 			<AuthProvider>
-				<DataProviderWrapper>
-					<LoadingProvider>
+				<LoadingProvider>
+					<DataProviderWrapper>
 						<ToastContext.Provider
 							// @ts-ignore
 							value={{
@@ -228,8 +228,8 @@ function App(): JSX.Element {
 							</AppLayout>
 							<ToastStack toasts={toasts} onClose={hideToast} position="top-end" />
 						</ToastContext.Provider>
-					</LoadingProvider>
-				</DataProviderWrapper>
+					</DataProviderWrapper>
+				</LoadingProvider>
 			</AuthProvider>
 		</BrowserRouter>
 	);
