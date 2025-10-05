@@ -22,11 +22,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.header-icon-wrapper i {
     font-size: 1.25rem;
     color: white;
+    aspect-ratio: 1 / 1;
 }
 
 .table-count-badge {
@@ -38,6 +36,12 @@
     border-radius: 142px;
     min-width: 42px;
     text-align: center;
+    aspect-ratio: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
 }
 
 .activity-count-badge {
