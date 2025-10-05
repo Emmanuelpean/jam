@@ -9,7 +9,7 @@ import threading
 
 import psutil
 import requests
-from selenium.webdriver import Keys
+from selenium.webdriver import Keys, ActionChains
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
@@ -581,7 +581,9 @@ class BaseTest:
         :param selector: Selector to use for finding the element"""
 
         try:
-            return self.wait.until(ec.element_to_be_clickable((selector, element_id)))
+            element = self.wait.until(ec.element_to_be_clickable((selector, element_id)))
+            ActionChains(self.driver).move_to_element(element).perform()
+            return element
         except:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
 
