@@ -61,23 +61,24 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	);
 }
 
-interface ProtectedRouteProps {
-	children: ReactNode;
-}
-
-function ProtectedRoute({ children }: ProtectedRouteProps): JSX.Element {
+function ProtectedRoute({ children }: AppLayoutProps): JSX.Element {
 	const { isAuthenticated } = useAuth();
 
 	return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 }
 
-function AdminProtectedRoute({ children }: ProtectedRouteProps): JSX.Element {
-	const { isAuthenticated, is_admin } = useAuth();
+function AdminProtectedRoute({ children }: AppLayoutProps): JSX.Element {
+	const { isAuthenticated, currentUser } = useAuth();
 
-	return isAuthenticated && is_admin ? <>{children}</> : <NotAuthorisedPage />;
+	if (!isAuthenticated) {
+		return <Navigate to="/login" />;
+	} else if (!currentUser?.is_admin) {
+		return <NotAuthorisedPage />;
+	} else {
+		return <>{children}</>;
+	}
 }
 
-// New component to wrap DataProvider with token
 function DataProviderWrapper({ children }: { children: ReactNode }): JSX.Element {
 	const { token } = useAuth();
 

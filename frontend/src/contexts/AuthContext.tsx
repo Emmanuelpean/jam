@@ -4,7 +4,6 @@ import { authApi, ApiError } from "../services/Api";
 import { UserData } from "../services/Schemas";
 
 export interface CurrentUser extends UserData {
-	isLoggedIn: boolean;
 	token: string | null;
 }
 
@@ -22,9 +21,9 @@ export interface LoginResponse {
 export interface AuthContextType {
 	currentUser: CurrentUser | null;
 	token: string | null;
-	is_admin: boolean;
 	login: (email: string, password: string) => Promise<AuthResponse>;
 	register: (email: string, password: string) => Promise<AuthResponse>;
+	updateCurrentUser: (userData: Partial<UserData>) => void;
 	logout: () => void;
 	isAuthenticated: boolean;
 }
@@ -88,7 +87,6 @@ export function useAuth(): AuthContextType {
 export function AuthProvider({ children }: AuthProviderProps) {
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 	const [token, setToken] = useState<string | null>(localStorage.getItem("token") || null);
-	const [is_admin, setIsAdmin] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [userFetched, setUserFetched] = useState<boolean>(false);
 	const navigate = useNavigate();
@@ -105,11 +103,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			try {
 				const userData: UserData = await authApi.getCurrentUser(authToken);
 				setCurrentUser({
-					isLoggedIn: true,
 					token: token,
 					...userData,
 				});
-				setIsAdmin(userData.is_admin || false);
 				setUserFetched(true);
 			} catch (error) {
 				const apiError = error as ApiError;
@@ -120,13 +116,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 					localStorage.removeItem("token");
 					setToken(null);
 					setCurrentUser(null);
-					setIsAdmin(false);
 				} else {
 					// If it's a network error, set basic auth state without admin
 					// We can't create a valid CurrentUser without email, so set to null
 					// The user will remain logged in via the token, but without user data
 					setCurrentUser(null);
-					setIsAdmin(false);
 					setUserFetched(true);
 				}
 			} finally {
@@ -135,6 +129,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		},
 		[userFetched, currentUser, token],
 	);
+
+	const updateCurrentUser = useCallback((userData: Partial<UserData>): void => {
+		setCurrentUser((prev) => {
+			if (!prev) return prev;
+			return {
+				...prev,
+				...userData,
+			};
+		});
+	}, []);
 
 	// Check if token exists on load and fetch user info
 	useEffect(() => {
@@ -193,7 +197,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		localStorage.removeItem("token");
 		setToken(null);
 		setCurrentUser(null);
-		setIsAdmin(false);
 		setUserFetched(false);
 		navigate("/login");
 	};
@@ -201,10 +204,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	const value: AuthContextType = {
 		currentUser,
 		token,
-		is_admin,
 		login,
 		register,
 		logout,
+		updateCurrentUser,
 		isAuthenticated: !!token,
 	};
 
