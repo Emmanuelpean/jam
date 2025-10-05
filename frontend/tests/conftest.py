@@ -538,6 +538,8 @@ class BaseTest:
         self.get_element("confirm-button").click()
         self.wait_for_page("dashboard")
         self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
+        self.get_element("loading-spinner")
+        self.wait_for_disappear("loading-spinner")
 
     # ------------------------------------------------ GET/WAIT ELEMENTS -----------------------------------------------
 

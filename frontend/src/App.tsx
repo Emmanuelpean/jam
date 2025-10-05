@@ -47,7 +47,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 					{isLoading && (
 						<div className="global-loading-overlay">
 							<div className="d-flex flex-column justify-content-center align-items-center h-100">
-								<div className="spinner-border mb-3" role="status">
+								<div className="spinner-border mb-3" role="status" id="loading-spinner">
 									<span className="visually-hidden">Loading...</span>
 								</div>
 								<p className="text-muted">{loadingMessage}</p>
