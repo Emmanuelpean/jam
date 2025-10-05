@@ -13,7 +13,6 @@ import {
 	JobData,
 	KeywordData,
 	LocationData,
-	OwnedOut,
 	PersonData,
 } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
@@ -30,12 +29,12 @@ import {
 } from "../../modals/ModalManagers";
 import { formatTimedelta } from "../../../utils/TimeUtils";
 import {
+	getActiveBadge,
 	getAdminIcon,
 	getApplicationStatusBadgeClass,
 	getTableIcon,
 	getToastIcon,
 	getUpdateTypeIcon,
-	getActiveBadge,
 } from "./Icons";
 import { ensureHttpPrefix } from "../../../utils/StringUtils";
 import { findByKey } from "../../../utils/Utils";
@@ -342,7 +341,7 @@ export const renderFunctions = {
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
-	jobBadge: (param: RenderParams): ReactNode => {
+	jobBadge: (param: RenderParams, text: string | null | undefined): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const job: EnrichedJobData | undefined = getJamData(ctx.jobs, param.item?.job_id);
 
@@ -356,7 +355,7 @@ export const renderFunctions = {
 							id={param.id}
 						>
 							<i className="bi bi-briefcase me-1"></i>
-							{String(job.name)}
+							{String(text || job.name)}
 						</span>
 					)}
 				</JobModalManager>

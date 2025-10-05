@@ -375,7 +375,7 @@ export const tableColumns = {
 		searchable: true,
 		searchFields: "job.name",
 		sortField: "job.name",
-		render: renderFunctions.jobBadge,
+		render: (params: RenderParams) => renderFunctions.jobBadge(params, null),
 		...overrides,
 	}),
 
