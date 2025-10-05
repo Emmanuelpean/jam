@@ -81,8 +81,8 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
 			deadline: jobData.deadline ? jobData.deadline + "T23:59:59" : null,
-			keywords: jobData.keywords?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
-			contacts: jobData.contacts?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
+			keywords: jobData.keywords || [],
+			contacts: jobData.contacts || [],
 			attendance_type: jobData.attendance_type?.trim() || null,
 		};
 	};

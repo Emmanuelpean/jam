@@ -62,7 +62,7 @@ function filterByKey<T>(items: T[], key: string, id: number | undefined): T[] {
 	return items.filter((item: T): boolean => {
 		const value = (item as Record<string, any>)[key];
 		if (Array.isArray(value)) {
-			return value.some((obj: { id: number }) => obj.id === id);
+			return value.some((obj: number) => obj === id);
 		}
 		return value === id;
 	});
@@ -322,22 +322,22 @@ export const renderFunctions = {
 
 	_interviewCount: (param: RenderParams, key: keyof InterviewData): number => {
 		const ctx: DataContextValue = param.dataContext;
-		return filterByKey(ctx.interviews, key, param.item.id).length;
+		return filterByKey(ctx.interviews, key, param.item?.id).length;
 	},
 
 	_jobCount: (param: RenderParams, key: keyof JobData): number => {
 		const ctx: DataContextValue = param.dataContext;
-		return filterByKey(ctx.jobs, key, param.item.id).length;
+		return filterByKey(ctx.jobs, key, param.item?.id).length;
 	},
 
 	_jobApplicationCount: (param: RenderParams, key: keyof JobData): number => {
 		const ctx: DataContextValue = param.dataContext;
-		return filterByKey(ctx.jobs, key, param.item.id).length;
+		return filterByKey(ctx.jobs, key, param.item?.id).length;
 	},
 
 	_personCount: (param: RenderParams, key: keyof PersonData): number => {
 		const ctx: DataContextValue = param.dataContext;
-		return filterByKey(ctx.persons, key, param.item.id).length;
+		return filterByKey(ctx.persons, key, param.item?.id).length;
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
@@ -486,8 +486,7 @@ export const renderFunctions = {
 
 	KeywordBadges: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const keywordIds: number[] = param.item?.keywords?.map((keyword: OwnedOut) => keyword.id);
-		const keywords: KeywordData[] = getJamDataList(ctx.keywords, keywordIds);
+		const keywords: KeywordData[] = getJamDataList(ctx.keywords, param.item?.keywords);
 
 		if (keywords.length > 0) {
 			return (
@@ -516,8 +515,7 @@ export const renderFunctions = {
 
 	_personBadges: (param: RenderParams, key: string): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const personIds: number[] = param.item?.[key]?.map((person: OwnedOut) => person.id);
-		const persons: PersonData[] = getJamDataList(ctx.persons, personIds);
+		const persons: PersonData[] = getJamDataList(ctx.persons, param.item?.[key]);
 
 		if (persons.length > 0) {
 			return (
@@ -556,21 +554,21 @@ export const renderFunctions = {
 
 	InterviewTable: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const interviews: InterviewData[] = filterByKey(ctx.interviews, "job_id", param.item.id);
-		return <InterviewsTable data={interviews} jobId={param.item.id} />;
+		const interviews: InterviewData[] = filterByKey(ctx.interviews, "job_id", param.item?.id);
+		return <InterviewsTable data={interviews} jobId={param.item?.id} />;
 	},
 
 	JobApplicationUpdateTable: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const updates: JobApplicationUpdateData[] = filterByKey(ctx.jobApplicationUpdates, "job_id", param.item.id);
-		return <JobApplicationUpdateTable data={updates} jobId={param.item.id} />;
+		const updates: JobApplicationUpdateData[] = filterByKey(ctx.jobApplicationUpdates, "job_id", param.item?.id);
+		return <JobApplicationUpdateTable data={updates} jobId={param.item?.id} />;
 	},
 
 	// ------------------------------------------------ ACCORDION TABLES -----------------------------------------------
 
 	_accordionJobTable: (param: RenderParams, key: string): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const jobs: EnrichedJobData[] = filterByKey(ctx.jobs, key, param.item.id);
+		const jobs: EnrichedJobData[] = filterByKey(ctx.jobs, key, param.item?.id);
 		return (
 			<Accordion title="Jobs" data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
 				{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
@@ -580,7 +578,7 @@ export const renderFunctions = {
 
 	AccordionInterviewTable: (param: RenderParams, key: string): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const interviews: InterviewData[] = filterByKey(ctx.interviews, key, param.item.id);
+		const interviews: InterviewData[] = filterByKey(ctx.interviews, key, param.item?.id);
 		return (
 			<Accordion title="Interviews" data={interviews} icon={getTableIcon("Interviews")} helpText={param.helpText}>
 				{(data: InterviewData[]) => <InterviewsTable data={data} showAdd={false} columns={param.columns} />}
@@ -590,7 +588,7 @@ export const renderFunctions = {
 
 	accordionJobApplicationTable: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const jobs: EnrichedJobData[] = filterByKey(ctx.jobs, "application_aggregator_id", param.item.id);
+		const jobs: EnrichedJobData[] = filterByKey(ctx.jobs, "application_aggregator_id", param.item?.id);
 		return (
 			<Accordion
 				title="Job Applications"
@@ -605,7 +603,7 @@ export const renderFunctions = {
 
 	AccordionPersonTable: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const persons: PersonData[] = filterByKey(ctx.persons, "company_id", param.item.id);
+		const persons: PersonData[] = filterByKey(ctx.persons, "company_id", param.item?.id);
 		return (
 			<Accordion title="Persons" data={persons} icon={getTableIcon("Persons")} helpText={param.helpText}>
 				{(data: PersonData[]) => <PersonTable data={data} columns={param.columns} />}
