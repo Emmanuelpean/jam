@@ -5,7 +5,7 @@ import { modalViewFields } from "../rendering/view/ModalFields";
 import { keywordsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { ValidationErrors } from "./DataModal/DataModal";
-import { KeywordData } from "../../services/Schemas";
+import { KeywordData, KeywordDataTransform } from "../../services/Schemas";
 
 export const KeywordModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode, size = "lg" }) => {
 	const { token } = useAuth();
@@ -21,9 +21,9 @@ export const KeywordModal: React.FC<DataModalProps> = ({ show, onHide, data, id,
 		}),
 	];
 
-	const transformFormData = (data: any): KeywordData => {
+	const transformFormData = (data: KeywordData): KeywordDataTransform => {
 		return {
-			name: data?.name?.trim(),
+			name: data.name.trim(),
 		};
 	};
 

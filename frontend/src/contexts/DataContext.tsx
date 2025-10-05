@@ -1,5 +1,5 @@
 // DataContext.tsx
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState, useMemo } from "react";
 import {
 	aggregatorsApi,
 	ApiError,
@@ -17,6 +17,7 @@ import { useAuth } from "./AuthContext";
 import {
 	AggregatorData,
 	CompanyData,
+	EnrichedJobData,
 	InterviewData,
 	JobApplicationUpdateData,
 	JobData,
@@ -44,7 +45,7 @@ export type EntityType =
 
 export interface DataContextValue {
 	// Data arrays
-	jobs: JobData[];
+	jobs: EnrichedJobData[];
 	companies: CompanyData[];
 	persons: PersonData[];
 	interviews: InterviewData[];
@@ -69,7 +70,7 @@ const DataContext = createContext<DataContextValue | undefined>(undefined);
 
 export const DataProvider: React.FC<{ token: string; children: React.ReactNode }> = ({ token, children }) => {
 	const { currentUser } = useAuth();
-	const [jobs, setJobs] = useState<JobData[]>([]);
+	const [rawJobs, setRawJobs] = useState<JobData[]>([]);
 	const [companies, setCompanies] = useState<CompanyData[]>([]);
 	const [persons, setPersons] = useState<PersonData[]>([]);
 	const [interviews, setInterviews] = useState<InterviewData[]>([]);
@@ -82,6 +83,70 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [countries, setCountries] = useState<SelectOption[]>([]);
 	const { showLoading, hideLoading } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
+
+	const jobs: EnrichedJobData[] = useMemo<EnrichedJobData[]>((): EnrichedJobData[] => {
+		return rawJobs.map((job: JobData): EnrichedJobData => {
+			const jobInterviews = interviews.filter((i) => i.job_id === job.id);
+			const jobUpdates = jobApplicationUpdates.filter((u) => u.job_id === job.id);
+
+			// Calculate last_update_date
+			let lastUpdateDate: Date | null = null;
+			if (job.application_date) {
+				const dates: Date[] = [new Date(job.application_date)];
+				jobInterviews.forEach((i: InterviewData) => i.date && dates.push(new Date(i.date)));
+				jobUpdates.forEach((u: JobApplicationUpdateData) => u.date && dates.push(new Date(u.date)));
+				lastUpdateDate = dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
+			}
+
+			// Calculate last_update_type
+			let lastUpdateType: string | null = null;
+			if (job.application_date && lastUpdateDate) {
+				let mostRecentDate = new Date(job.application_date);
+				lastUpdateType = "Application";
+
+				if (jobInterviews.length > 0) {
+					const latestInterview = jobInterviews.reduce((latest, current) =>
+						new Date(current.date) > new Date(latest.date) ? current : latest,
+					);
+					if (new Date(latestInterview.date) > mostRecentDate) {
+						mostRecentDate = new Date(latestInterview.date);
+						lastUpdateType = `Interview (${jobInterviews.length})`;
+					}
+				}
+
+				if (jobUpdates.length > 0) {
+					const latestUpdate = jobUpdates.reduce((latest, current) =>
+						new Date(current.date) > new Date(latest.date) ? current : latest,
+					);
+					if (new Date(latestUpdate.date) > mostRecentDate) {
+						lastUpdateType = `Update (${jobUpdates.length})`;
+					}
+				}
+			}
+
+			// Calculate days_since_last_update
+			const daysSinceLastUpdate = lastUpdateDate
+				? Math.floor((Date.now() - lastUpdateDate.getTime()) / (1000 * 60 * 60 * 24))
+				: null;
+
+			// Calculate days_until_deadline
+			let daysUntilDeadline: number | null = null;
+			if (job.deadline) {
+				const now = new Date();
+				const deadlineDate = new Date(job.deadline);
+				deadlineDate.setHours(23, 59, 59);
+				daysUntilDeadline = (deadlineDate.getTime() - now.getTime()) / 1000;
+			}
+
+			return {
+				...job,
+				last_update_date: lastUpdateDate,
+				last_update_type: lastUpdateType,
+				days_since_last_update: daysSinceLastUpdate,
+				days_until_deadline: daysUntilDeadline,
+			};
+		});
+	}, [rawJobs, interviews, jobApplicationUpdates]);
 
 	const fetchAllData = async () => {
 		showLoading();
@@ -121,7 +186,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				...adminData
 			] = results;
 
-			setJobs(jobsData || []);
+			setRawJobs(jobsData || []);
 			setCompanies(companiesData || []);
 			setPersons(personsData || []);
 			setInterviews(interviewsData || []);
@@ -141,16 +206,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			hideLoading();
 		}
 	};
-
-	// Helper to refetch all jobs
-	const refetchJobs = useCallback(async () => {
-		try {
-			const jobsData = await jobsApi.getAll(token);
-			setJobs(jobsData || []);
-		} catch (error) {
-			console.error("Failed to refetch jobs:", error);
-		}
-	}, [token]);
 
 	// Helper to get API instance for an entity type
 	const getApi = (type: EntityType) => {
@@ -172,7 +227,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	// Helper to get setter function for an entity type
 	const getSetter = (type: EntityType) => {
 		const setterMap = {
-			jobs: setJobs,
+			jobs: setRawJobs,
 			companies: setCompanies,
 			persons: setPersons,
 			interviews: setInterviews,
@@ -198,18 +253,13 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				const setter = getSetter(type);
 				setter((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult : item)));
 
-				// Refetch jobs if jobs, interviews, or jobApplicationUpdates changed
-				if (type === "jobs" || type === "interviews" || type === "jobApplicationUpdates") {
-					await refetchJobs();
-				}
-
 				return apiResult;
 			} catch (error) {
 				console.error(`Failed to update ${type}:`, error);
 				throw error;
 			}
 		},
-		[token, refetchJobs],
+		[token],
 	);
 
 	// Generic delete function - refetch jobs if needed
@@ -223,17 +273,12 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				// Remove from the entity's own array
 				const setter = getSetter(type);
 				setter((prev: any[]): any[] => prev.filter((item: any) => item.id !== id));
-
-				// Refetch jobs if jobs, interviews, or jobApplicationUpdates changed
-				if (type === "jobs" || type === "interviews" || type === "jobApplicationUpdates") {
-					await refetchJobs();
-				}
 			} catch (error) {
 				console.error(`Failed to delete ${type}:`, error);
 				throw error;
 			}
 		},
-		[token, refetchJobs],
+		[token],
 	);
 
 	// Generic add function - refetch jobs if needed
@@ -248,18 +293,13 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				const setter = getSetter(type);
 				setter((prev: any[]): any[] => [...prev, apiResult]);
 
-				// Refetch jobs if jobs, interviews, or jobApplicationUpdates changed
-				if (type === "jobs" || type === "interviews" || type === "jobApplicationUpdates") {
-					await refetchJobs();
-				}
-
 				return apiResult;
 			} catch (error) {
 				console.error(`Failed to add ${type}:`, error);
 				throw error;
 			}
 		},
-		[token, refetchJobs],
+		[token],
 	);
 
 	useEffect(() => {

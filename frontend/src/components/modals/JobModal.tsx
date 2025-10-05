@@ -1,9 +1,9 @@
-import React, { ReactNode, useMemo } from "react";
+import React, { ReactNode } from "react";
 import DataModal, { DataModalProps, TabConfig, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
-import { JobData } from "../../services/Schemas";
+import { JobData, JobDataTransform } from "../../services/Schemas";
 import { jobsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
@@ -102,7 +102,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 		modalViewFields.followupSnoozeDateTime(),
 	];
 
-	const transformData = (jobData: JobData) => {
+	const transformData = (jobData: JobDataTransform): JobDataTransform => {
 		return {
 			title: jobData.title.trim(),
 			description: jobData.description?.trim() || null,
@@ -113,11 +113,11 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 			personal_rating: jobData.personal_rating || null,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
-			deadline: jobData.deadline ? jobData.deadline + "T23:59:59" : null,
+			deadline: jobData.deadline ? new Date(jobData.deadline + "T23:59:59") : null,
 			source_id: jobData.source_id || null,
-			keywords: jobData.keywords?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
-			contacts: jobData.contacts?.map((item) => (typeof item === "object" && item.id ? item.id : item)) || [],
-			application_date: jobData.application_date ? new Date(jobData.application_date).toISOString() : null,
+			keywords: jobData.keywords || [],
+			contacts: jobData.contacts || [],
+			application_date: jobData.application_date ? new Date(jobData.application_date) : null,
 			application_url: jobData.application_url?.trim() || null,
 			application_status: jobData.application_status?.trim() || null,
 			applied_via: jobData.applied_via?.trim() || null,

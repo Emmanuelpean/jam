@@ -4,7 +4,7 @@ import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { settingsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import { SettingData } from "../../services/Schemas";
+import { SettingData, SettingDataTransform } from "../../services/Schemas";
 
 export const SettingModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode, size = "lg" }) => {
 	const { token } = useAuth();
@@ -24,8 +24,7 @@ export const SettingModal: React.FC<DataModalProps> = ({ show, onHide, data, id,
 		],
 	};
 
-	const transformFormData = (data: SettingData) => {
-		console.log(data);
+	const transformFormData = (data: SettingData): SettingDataTransform => {
 		return {
 			name: data?.name?.trim(),
 			value: data?.value?.trim(),

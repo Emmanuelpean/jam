@@ -5,7 +5,7 @@ import { modalViewFields } from "../rendering/view/ModalFields";
 import { companiesApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { ValidationErrors } from "./DataModal/DataModal";
-import { CompanyData } from "../../services/Schemas";
+import { CompanyData, CompanyDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 
 export const CompanyModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode = "view", size = "lg" }) => {
@@ -38,7 +38,7 @@ export const CompanyModal: React.FC<DataModalProps> = ({ show, onHide, data, id,
 		modalViewFields.accordionPersonTable({ helpText: "List of persons working at this company." }),
 	];
 
-	const transformFormData = (data: CompanyData): CompanyData => {
+	const transformFormData = (data: CompanyData): CompanyDataTransform => {
 		return {
 			name: data.name?.trim(),
 			url: data.url?.trim() || null,

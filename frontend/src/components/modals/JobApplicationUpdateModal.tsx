@@ -3,11 +3,11 @@ import DataModal, { DataModalProps } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { formatDateTime } from "../../utils/TimeUtils";
-import { JobApplicationUpdateData } from "../../services/Schemas";
+import { JobApplicationUpdateData, JobApplicationUpdateDataTransform } from "../../services/Schemas";
 import { useFormOptions } from "../rendering/form/FormOptions";
 
 export interface JobApplicationUpdateModalProps extends DataModalProps {
-	jobId?: string | number;
+	jobId?: number;
 }
 
 export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps> = ({
@@ -46,9 +46,9 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 		view: viewFieldsArray,
 	};
 
-	const transformFormData = (data: JobApplicationUpdateData) => {
+	const transformFormData = (data: JobApplicationUpdateData): JobApplicationUpdateDataTransform => {
 		return {
-			date: new Date(data.date).toISOString(),
+			date: new Date(data.date),
 			type: data.type,
 			job_id: jobId || data.job_id,
 			note: data.note?.trim() || null,

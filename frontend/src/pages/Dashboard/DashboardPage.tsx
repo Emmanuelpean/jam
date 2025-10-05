@@ -2,7 +2,7 @@ import React from "react";
 import { Card, Col, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import "./DashboardPage.css";
-import { InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
+import { EnrichedJobData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
 import JobsToChase from "../../components/tables/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/tables/UpcomingDeadlines";
 import { useDataContext } from "../../contexts/DataContext";
@@ -19,15 +19,15 @@ const JobSearchDashboard: React.FC = () => {
 	}
 
 	const jobApplications = dataContext.jobs.filter(
-		(job: JobData): Date | string | null | undefined => job.application_date || job.application_status,
+		(job: EnrichedJobData): Date | string | null | undefined => job.application_date || job.application_status,
 	);
 	const jobApplicationPending = jobApplications.filter(
-		(job: JobData): boolean | string | null | undefined =>
+		(job: EnrichedJobData): boolean | string | null | undefined =>
 			job.application_status && !["rejected", "withdrawn"].includes(job.application_status),
 	);
 	const now = new Date();
-	const needsChase: JobData[] = jobApplicationPending.filter(
-		(job: JobData): boolean | 0 | null | undefined =>
+	const needsChase: EnrichedJobData[] = jobApplicationPending.filter(
+		(job: EnrichedJobData): boolean | 0 | null | undefined =>
 			job.days_since_last_update &&
 			job.days_since_last_update > currentUser.chase_threshold &&
 			(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now),
@@ -64,7 +64,7 @@ const JobSearchDashboard: React.FC = () => {
 
 	// Add interviews as "Interview" updates
 	dataContext.interviews.forEach((interview: InterviewData): void => {
-		if (interview.date && interview.job) {
+		if (interview.date) {
 			allUpdates.push({
 				data: interview,
 				date: interview.date,

@@ -4,7 +4,7 @@ import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { aggregatorsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import { AggregatorData } from "../../services/Schemas";
+import { AggregatorData, AggregatorDataTransform } from "../../services/Schemas";
 
 export const AggregatorModal: React.FC<DataModalProps> = ({
 	show,
@@ -31,7 +31,7 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 		}),
 	];
 
-	const transformFormData = (data: AggregatorData): AggregatorData => {
+	const transformFormData = (data: AggregatorData): AggregatorDataTransform => {
 		return {
 			name: data?.name?.trim(),
 			url: data?.url?.trim(),
