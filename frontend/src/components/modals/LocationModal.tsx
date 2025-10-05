@@ -5,20 +5,11 @@ import { modalViewFields } from "../rendering/view/ModalFields";
 import { locationsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { ValidationErrors } from "./DataModal/DataModal";
-import { LocationData } from "../../services/Schemas";
+import { LocationData, LocationDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { useFormOptions } from "../rendering/form/FormOptions";
 
-export const LocationModal: React.FC<DataModalProps> = ({
-	show,
-	onHide,
-	data,
-	id,
-	onSuccess,
-	onDelete,
-	submode = "view",
-	size = "lg",
-}) => {
+export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode = "view", size = "lg" }) => {
 	const { token } = useAuth();
 	const { countries } = useFormOptions(["countries"]);
 
@@ -38,7 +29,7 @@ export const LocationModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		modalViewFields.accordionJobTable({ helpText: "List of jobs at this location." }),
+		modalViewFields.accordionJobTableLocation({ helpText: "List of jobs at this location." }),
 		modalViewFields.accordionInterviewTable({
 			columns: [tableColumns.date!(), tableColumns.job!(), tableColumns.type!(), tableColumns.note!()],
 			helpText: "List of interviews at this location.",
@@ -85,7 +76,7 @@ export const LocationModal: React.FC<DataModalProps> = ({
 		return errors;
 	};
 
-	const transformFormData = (data: LocationData) => {
+	const transformFormData = (data: LocationData): LocationDataTransform => {
 		return {
 			city: data.city?.trim() || null,
 			postcode: data.postcode?.trim() || null,
@@ -105,8 +96,6 @@ export const LocationModal: React.FC<DataModalProps> = ({
 			id={id}
 			fields={fields}
 			endpoint="locations"
-			onSuccess={onSuccess}
-			onDelete={onDelete}
 			validation={customValidation}
 			transformFormData={transformFormData}
 		/>

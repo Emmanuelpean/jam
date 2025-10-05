@@ -5,18 +5,9 @@ import { modalViewFields } from "../rendering/view/ModalFields";
 import { keywordsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { ValidationErrors } from "./DataModal/DataModal";
-import { KeywordData } from "../../services/Schemas";
+import { KeywordData, KeywordDataTransform } from "../../services/Schemas";
 
-export const KeywordModal: React.FC<DataModalProps> = ({
-	show,
-	onHide,
-	data,
-	id,
-	onSuccess,
-	onDelete,
-	submode,
-	size = "lg",
-}) => {
+export const KeywordModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode, size = "lg" }) => {
 	const { token } = useAuth();
 
 	const fields = {
@@ -25,14 +16,14 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		modalViewFields.accordionJobTable({
+		modalViewFields.accordionJobTableKeyword({
 			helpText: "List of jobs associated with this tag.",
 		}),
 	];
 
-	const transformFormData = (data: any): KeywordData => {
+	const transformFormData = (data: KeywordData): KeywordDataTransform => {
 		return {
-			name: data?.name?.trim(),
+			name: data.name.trim(),
 		};
 	};
 
@@ -65,8 +56,6 @@ export const KeywordModal: React.FC<DataModalProps> = ({
 			fields={fields}
 			additionalFields={additionalFields}
 			endpoint="keywords"
-			onSuccess={onSuccess}
-			onDelete={onDelete}
 			transformFormData={transformFormData}
 			validation={customValidation}
 		/>

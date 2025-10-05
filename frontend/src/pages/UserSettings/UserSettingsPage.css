@@ -1,7 +1,7 @@
 .settings-wrapper {
     padding-top: 1rem;
-    padding-right: 3rem;
-    padding-left: 3rem;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
 .settings-card {

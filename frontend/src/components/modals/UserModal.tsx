@@ -6,19 +6,10 @@ import { userApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../pages/Auth/Auth.css";
 import { ValidationErrors } from "./DataModal/DataModal";
-import { UserData } from "../../services/Schemas";
+import { UserData, UserDataTransform } from "../../services/Schemas";
 import { THEMES } from "../../utils/Theme";
 
-export const UserModal: React.FC<DataModalProps> = ({
-	show,
-	onHide,
-	data,
-	id,
-	onSuccess,
-	onDelete,
-	submode = "view",
-	size = "lg",
-}) => {
+export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode = "view", size = "lg" }) => {
 	const { token } = useAuth();
 
 	const formFieldsArray = [
@@ -57,10 +48,10 @@ export const UserModal: React.FC<DataModalProps> = ({
 		return errors;
 	};
 
-	const transformFormData = (data: UserData) => {
+	const transformFormData = (data: UserData): UserDataTransform => {
 		return {
 			email: data.email?.trim(),
-			theme: data.theme?.trim() || THEMES[0],
+			theme: data.theme || THEMES[0],
 			is_admin: data.is_admin || false,
 			toast_active: data.toast_active || false,
 		};
@@ -77,8 +68,6 @@ export const UserModal: React.FC<DataModalProps> = ({
 			id={id}
 			fields={fields}
 			endpoint="users"
-			onSuccess={onSuccess}
-			onDelete={onDelete}
 			validation={customValidation}
 			transformFormData={transformFormData}
 		/>

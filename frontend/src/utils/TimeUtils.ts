@@ -43,7 +43,7 @@ export const formatDate = (datetime?: string | Date): string => {
 	return `${year}-${month}-${day}`;
 };
 
-export function formatActivityDate(dateString: string): string {
+export function formatActivityDate(dateString: string | Date): string {
 	const date = new Date(dateString);
 	const now = new Date();
 	const options: Intl.DateTimeFormatOptions = {

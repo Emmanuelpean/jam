@@ -8,14 +8,14 @@ const CompaniesPage = () => {
 		tableColumns.name(),
 		tableColumns.description(),
 		tableColumns.url(),
-		tableColumns.jobCount(),
-		tableColumns.personCount(),
+		tableColumns.jobCountCompany(),
+		tableColumns.personCountCompany(),
 		tableColumns.createdAt(),
 	];
 
 	return (
 		<DataTable
-			mode="api"
+			entityType="companies"
 			endpoint="companies"
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			title="Companies"

@@ -22,11 +22,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.header-icon-wrapper i {
     font-size: 1.25rem;
     color: white;
+    aspect-ratio: 1 / 1;
 }
 
 .table-count-badge {
@@ -38,6 +36,12 @@
     border-radius: 142px;
     min-width: 42px;
     text-align: center;
+    aspect-ratio: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
 }
 
 .activity-count-badge {
@@ -74,5 +78,20 @@
     width: 2px;
     height: 110%;
     background-color: #e5e7eb;
-    z-index: 0,
+    z-index: 0;
+}
+
+/* Responsive adjustments */
+@media (min-width: 992px) {
+    .table-column, .activity-column {
+        height: 500px;
+        min-height: 0;
+    }
+}
+
+@media (max-width: 991px) {
+    .table-column, .activity-column {
+        height: auto;
+        min-height: 400px;
+    }
 }

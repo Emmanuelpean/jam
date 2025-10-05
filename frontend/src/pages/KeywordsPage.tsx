@@ -4,11 +4,11 @@ import { KeywordModal } from "../components/modals/KeywordModal";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const KeywordsPage = () => {
-	const columns = [tableColumns.name(), tableColumns.jobCount(), tableColumns.createdAt()];
+	const columns = [tableColumns.name(), tableColumns.jobCountKeyword(), tableColumns.createdAt()];
 
 	return (
 		<DataTable
-			mode="api"
+			entityType="keywords"
 			endpoint="keywords"
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			title="Tags"

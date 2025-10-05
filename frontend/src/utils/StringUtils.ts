@@ -1,3 +1,5 @@
+import { RenderParams } from "../components/rendering/view/ViewRenders";
+
 export function pluralize(word: string): string {
 	// Handle common irregular nouns
 	const irregulars: { [key: string]: string } = {
@@ -36,3 +38,8 @@ export function pluralize(word: string): string {
 		return word + "s";
 	}
 }
+
+export const ensureHttpPrefix = (url: string): string => {
+	if (url.match(/^https?:\/\//)) return url;
+	return `https://${url}`;
+};

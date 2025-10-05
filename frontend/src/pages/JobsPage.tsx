@@ -17,7 +17,7 @@ const JobsPage = () => {
 
 	return (
 		<DataTable
-			mode="api"
+			entityType="jobs"
 			endpoint="jobs"
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			title="Jobs"

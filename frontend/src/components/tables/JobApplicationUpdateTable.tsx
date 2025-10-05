@@ -4,16 +4,10 @@ import { tableColumns } from "../rendering/view/TableColumns";
 import { JobApplicationUpdateModal, JobApplicationUpdateModalProps } from "../modals/JobApplicationUpdateModal";
 
 interface JobApplicationUpdatesTableProps extends DataTableProps {
-	jobId: string | number;
+	jobId: number;
 }
 
-const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
-	jobId,
-	data = [],
-	onDataChange,
-	error = null,
-	columns = [],
-}) => {
+const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({ jobId, data = [], columns = [] }) => {
 	const defaultColumns =
 		columns.length > 0 ? columns : [tableColumns.date(), tableColumns.updateType(), tableColumns.note()];
 
@@ -23,10 +17,8 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 
 	return (
 		<DataTable
-			mode="controlled"
+			entityType="jobApplicationUpdates"
 			data={data}
-			onDataChange={onDataChange}
-			error={error}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}
 			Modal={ModalWithProps}

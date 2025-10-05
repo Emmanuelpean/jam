@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { renderFunctions, RenderParams, ViewField, renderViewField } from "./ViewRenders";
+import { renderFunctions, RenderParams, RenderViewFieldWithContext, ViewField } from "./ViewRenders";
 
 export interface ModalViewField extends ViewField {
 	label?: string;
@@ -10,8 +10,8 @@ export interface ModalViewField extends ViewField {
 
 interface ModalViewFieldOverride extends Partial<ModalViewField> {}
 
-export const renderModalViewField = (field: ModalViewField, item: any, id: string, onChange?: any): ReactNode => {
-	const output = renderViewField(field, item, id, onChange);
+export const renderModalViewField = (field: ModalViewField, item: any, id: string): ReactNode => {
+	const output = <RenderViewFieldWithContext field={field} item={item} id={id} />;
 
 	if (field.isTitle) {
 		return (
@@ -177,56 +177,56 @@ export const modalViewFields = {
 	locationBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "location",
 		label: "Location",
-		render: (params: RenderParams) => renderFunctions.locationBadge({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.LocationBadge({ ...params, view: true }),
 		...overrides,
 	}),
 
 	companyBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "companyBadge",
+		key: "CompanyBadge",
 		label: "Company",
-		render: renderFunctions.companyBadge,
+		render: renderFunctions.CompanyBadge,
 		...overrides,
 	}),
 
 	keywordBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "keywords",
 		label: "Tags",
-		render: (params: RenderParams) => renderFunctions.keywordBadges({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.KeywordBadges({ ...params, view: true }),
 		...overrides,
 	}),
 
 	personBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "person",
 		label: "Contacts",
-		render: (params: RenderParams) => renderFunctions.contactBadges({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.ContactBadges({ ...params, view: true }),
 		...overrides,
 	}),
 
 	jobBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job",
 		label: "Job",
-		render: (params: RenderParams) => renderFunctions.jobNameBadge({ ...params }),
+		render: (params: RenderParams) => renderFunctions.jobBadge(params, null),
 		...overrides,
 	}),
 
 	interviewerBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "person",
 		label: "Interviewers",
-		render: (params: RenderParams) => renderFunctions.interviewerBadges({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.InterviewerBadges({ ...params, view: true }),
 		...overrides,
 	}),
 
 	appliedViaBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "applied_via",
 		label: "Applied Via",
-		render: (params: RenderParams) => renderFunctions.appliedViaBadge({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions.AppliedViaBadge({ ...params, view: true }),
 		...overrides,
 	}),
 
 	sourceBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "source",
 		label: "Source Aggregator",
-		render: renderFunctions.sourceBadge,
+		render: renderFunctions.SourceBadge,
 		...overrides,
 	}),
 
@@ -279,25 +279,55 @@ export const modalViewFields = {
 
 	interviewTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "interviews",
-		render: renderFunctions.interviewTable,
+		render: renderFunctions.InterviewTable,
 		...overrides,
 	}),
 
 	updateTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "updates",
-		render: renderFunctions.jobApplicationUpdateTable,
+		render: renderFunctions.JobApplicationUpdateTable,
 		...overrides,
 	}),
 
 	accordionInterviewTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "interviews",
-		render: renderFunctions.accordionInterviewTable,
+		render: (param) => renderFunctions.AccordionInterviewTable(param, "location_id"),
 		...overrides,
 	}),
 
-	accordionJobTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	accordionInterviewTablePerson: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "interviews",
+		render: (param) => renderFunctions.AccordionInterviewTable(param, "interviewers"),
+		...overrides,
+	}),
+
+	accordionJobTableAggregator: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "jobs",
-		render: renderFunctions.accordionJobTable,
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "source_id"),
+		...overrides,
+	}),
+
+	accordionJobTablePerson: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "contacts"),
+		...overrides,
+	}),
+
+	accordionJobTableCompany: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "company_id"),
+		...overrides,
+	}),
+
+	accordionJobTableKeyword: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "keywords"),
+		...overrides,
+	}),
+
+	accordionJobTableLocation: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "jobs",
+		render: (param: RenderParams) => renderFunctions._accordionJobTable(param, "location_id"),
 		...overrides,
 	}),
 
@@ -309,7 +339,7 @@ export const modalViewFields = {
 
 	accordionPersonTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "persons",
-		render: renderFunctions.accordionPersonTable,
+		render: renderFunctions.AccordionPersonTable,
 		...overrides,
 	}),
 
@@ -318,35 +348,35 @@ export const modalViewFields = {
 	applicationDate: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_date",
 		label: "Application Date",
-		render: (params: RenderParams) => renderFunctions.applicationDate({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions._date(params, "application_date"),
 		...overrides,
 	}),
 
 	date: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "date",
 		label: "Date",
-		render: (params: RenderParams) => renderFunctions.date({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions._date(params, "date"),
 		...overrides,
 	}),
 
 	datetime: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "date",
 		label: "Date & Time",
-		render: (params: RenderParams) => renderFunctions.datetime({ ...params, view: true }),
+		render: renderFunctions.datetime,
 		...overrides,
 	}),
 
 	deadline: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "deadline",
 		label: "Application Deadline",
-		render: (params: RenderParams) => renderFunctions.deadline({ ...params, view: true }),
+		render: (params: RenderParams) => renderFunctions._date(params, "deadline"),
 		...overrides,
 	}),
 
 	followupSnoozeDateTime: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "followup_snooze_datetime",
 		label: "Follow-up Snooze Until",
-		render: renderFunctions.followupSnoozeDateTime,
+		render: (param: RenderParams) => renderFunctions._date(param, "followup_snooze_datetime"),
 		...overrides,
 		displayCondition: (item: any) => item.followup_snooze_datetime !== null,
 	}),

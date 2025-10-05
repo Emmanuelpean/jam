@@ -11,8 +11,8 @@ const LocationsPage = () => {
 		tableColumns.city(),
 		tableColumns.postcode(),
 		tableColumns.country(),
-		tableColumns.jobCount(),
-		tableColumns.interviewCount(),
+		tableColumns.jobCountLocation(),
+		tableColumns.interviewCountLocation(),
 		tableColumns.createdAt(),
 	];
 
@@ -27,7 +27,7 @@ const LocationsPage = () => {
 
 	return (
 		<DataTable
-			mode="api"
+			entityType="locations"
 			endpoint="locations"
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			title="Locations"
