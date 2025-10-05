@@ -32,6 +32,15 @@ export const Sidebar = () => {
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
 	const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 700);
+
+	useEffect(() => {
+		const handleResize = () => setIsMobile(window.innerWidth <= 700);
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, []);
+
+	const handleSidebarToggle = () => setIsExpanded((prev) => !prev);
 
 	const allNavigationItems: NavigationItem[] = [
 		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard", position: "top" },
@@ -204,30 +213,82 @@ export const Sidebar = () => {
 	};
 
 	return (
-		<div
-			className={`custom-sidebar ${isExpanded ? "expanded" : "collapsed"}`}
-			onMouseEnter={handleMouseEnter}
-			onMouseLeave={handleMouseLeave}
-		>
-			<div className="sidebar-header">
-				<div onClick={() => setShowDropdown(!showDropdown)} style={{ cursor: "pointer" }}>
-					<div className="logo-container">
-						<JamLogo style={{ height: "57px", width: "auto" }} />
-						<span className="logo-text">JAM</span>
+		<>
+			{isMobile && !isExpanded && (
+				<button
+					className="sidebar-toggle-btn"
+					onClick={handleSidebarToggle}
+					aria-label="Toggle sidebar"
+					style={{
+						position: "fixed",
+						top: 16,
+						left: 16,
+						zIndex: 2100,
+						background: "#fff",
+						border: "none",
+						borderRadius: "6px",
+						boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+						width: 40,
+						height: 40,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						cursor: "pointer",
+					}}
+				>
+					<i className="bi bi-list" style={{ fontSize: 24 }}></i>
+				</button>
+			)}
+			<div
+				className={`custom-sidebar ${isExpanded ? "expanded" : "collapsed"}`}
+				onMouseEnter={!isMobile ? handleMouseEnter : undefined}
+				onMouseLeave={!isMobile ? handleMouseLeave : undefined}
+			>
+				{isMobile && isExpanded && (
+					<button
+						className="sidebar-close-btn"
+						onClick={handleSidebarToggle}
+						aria-label="Close sidebar"
+						style={{
+							position: "absolute",
+							top: 16,
+							right: 16,
+							zIndex: 2200,
+							background: "#fff",
+							border: "none",
+							borderRadius: "6px",
+							boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+							width: 40,
+							height: 40,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							cursor: "pointer",
+						}}
+					>
+						<i className="bi bi-x-lg" style={{ fontSize: 24 }}></i>
+					</button>
+				)}
+				<div className="sidebar-header">
+					<div onClick={() => setShowDropdown(!showDropdown)} style={{ cursor: "pointer" }}>
+						<div className="logo-container">
+							<JamLogo style={{ height: "57px", width: "auto" }} />
+							<span className="logo-text">JAM</span>
+						</div>
 					</div>
+
+					<ThemeSelector
+						currentTheme={currentTheme}
+						token={token}
+						onThemeChange={handleThemeChange}
+						isVisible={showDropdown && isExpanded}
+					/>
 				</div>
 
-				<ThemeSelector
-					currentTheme={currentTheme}
-					token={token}
-					onThemeChange={handleThemeChange}
-					isVisible={showDropdown && isExpanded}
-				/>
+				<nav className="sidebar-nav sidebar-nav-top">{renderNavigationItems(topNavigationItems)}</nav>
+
+				<nav className="sidebar-nav sidebar-nav-bottom">{renderNavigationItems(bottomNavigationItems)}</nav>
 			</div>
-
-			<nav className="sidebar-nav sidebar-nav-top">{renderNavigationItems(topNavigationItems)}</nav>
-
-			<nav className="sidebar-nav sidebar-nav-bottom">{renderNavigationItems(bottomNavigationItems)}</nav>
-		</div>
+		</>
 	);
 };
