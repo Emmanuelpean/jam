@@ -42,7 +42,8 @@ export const PersonModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		modalViewFields.accordionInterviewTable({ helpText: "List of interviews associated with this person." }),
+		modalViewFields.accordionInterviewTablePerson({ helpText: "List of interviews attended by this person." }),
+		modalViewFields.accordionJobTablePerson({ helpText: "List of jobs associated with this person." }),
 	];
 
 	const customValidation = async (formData: PersonData): Promise<ValidationErrors> => {
