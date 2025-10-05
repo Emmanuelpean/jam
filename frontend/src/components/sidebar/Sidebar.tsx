@@ -35,12 +35,12 @@ export const Sidebar = () => {
 	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 700);
 
 	useEffect(() => {
-		const handleResize = () => setIsMobile(window.innerWidth <= 700);
+		const handleResize = () => setIsMobile(window.innerWidth <= 990);
 		window.addEventListener("resize", handleResize);
 		return () => window.removeEventListener("resize", handleResize);
 	}, []);
 
-	const handleSidebarToggle = () => setIsExpanded((prev) => !prev);
+	const handleSidebarToggle = (): void => setIsExpanded((prev: boolean) => !prev);
 
 	const allNavigationItems: NavigationItem[] = [
 		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard", position: "top" },
@@ -238,6 +238,20 @@ export const Sidebar = () => {
 				>
 					<i className="bi bi-list" style={{ fontSize: 24 }}></i>
 				</button>
+			)}
+			{isMobile && isExpanded && (
+				<div
+					onClick={handleSidebarToggle}
+					style={{
+						position: "fixed",
+						top: 0,
+						left: 0,
+						width: "100vw",
+						height: "100vh",
+						background: "rgba(0,0,0,0.1)",
+						zIndex: 2000,
+					}}
+				/>
 			)}
 			<div
 				className={`custom-sidebar ${isExpanded ? "expanded" : "collapsed"}`}
