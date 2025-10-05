@@ -437,25 +437,26 @@ class CRUDTestBase:
     - endpoint: str - base URL path for the resource (e.g. "/aggregators")
     - create_schema: Pydantic model class for creation validation (e.g. schemas.AggregatorCreate)
     - out_schema: Pydantic model class for output validation (e.g. schemas.AggregatorOut)
-    - test_data: str - name of pytest fixture providing list of test objects
+    - test_data_ref: str - name of pytest fixture providing list of test objects
     - update_data: dict - example data for updating an existing object
     - create_data: list[dict] - example data for creating new objects
     - required_fixture: str or list[str] - name(s) of pytest fixture(s) for the post operations
     - get_unauthorised_fixture: str - name of pytest fixture providing data for access tests with incorrect ownership
     - unauthorised_data_fixture: str - name of pytest fixture providing data for creation tests with incorrect ownership
     - admin_only: bool - if True, only admin users can access the endpoint
+    - actions_to_test: list[str] - which CRUD actions to test (any subset of ["get", "post", "put", "delete"])
     """
 
     endpoint: str = ""
-    admin_only: bool = False
     create_schema = None
     out_schema = None
-    test_data: str = ""
+    test_data_ref: str = ""
     update_data: dict[str, str | int] = None
     create_data: list[dict] = None
     required_fixture: str = None
     get_unauthorised_fixture: str = None
     unauthorised_data_fixture = None
+    admin_only: bool = False
     actions_to_test: list[str] = ["get", "post", "put", "delete"]
 
     def check_output(
@@ -468,6 +469,7 @@ class CRUDTestBase:
         :param response_data: The output data to compare against."""
 
         if isinstance(test_data, list) and isinstance(response_data, list):
+            assert len(test_data) == len(response_data)
             for d1, d2 in zip(test_data, response_data):
                 return self.check_output(d1, d2)
 
@@ -545,28 +547,39 @@ class CRUDTestBase:
         else:
             return authorised_clients[1]  # different user client
 
-    def get_user_data(self, test_users) -> list[dict]:
+    def get_user_data(self, test_users, data: list) -> list:
         """Get create data filtered by owner_id based on admin_only setting."""
 
         if self.admin_only:
-            user = test_users[0]
-        else:
             user = test_users[1]
+        else:
+            user = test_users[0]
         new_data = []
-        for data in new_data:
-            if "owner_id" in data:
-                if data["owner_id"] == user.id:
-                    new_data.append(data)
+        for d in data:
+            if isinstance(d, dict):
+                condition = "owner_id" in d and d["owner_id"] == user.id
             else:
-                new_data.append(data)
+                condition = hasattr(d, "owner_id") and d.owner_id == user.id
+            if not self.admin_only:
+                if condition:
+                    new_data.append(d)
+            else:
+                new_data.append(d)
         return new_data
 
     @pytest.fixture(autouse=True)
     def setup_method(self, request) -> None:
         """Fixture that runs before each test method."""
+
         if isinstance(self.required_fixture, list):
             for fixture in self.required_fixture:
                 request.getfixturevalue(fixture)
+
+    @pytest.fixture
+    def test_data(self, request, test_users) -> list:
+        """Fixture to get the test data from the specified fixture name."""
+
+        return self.get_user_data(test_users, request.getfixturevalue(self.test_data_ref))
 
     # ------------------------------------------------------- GET ------------------------------------------------------
 
@@ -574,11 +587,12 @@ class CRUDTestBase:
     def test_get_all_success(
         self,
         authorised_clients,
-        request,
+        test_users,
+        test_data,
     ) -> None:
         """Test that authorized users can successfully retrieve all items from the endpoint.
         Verifies 200 OK response and validates the returned data matches expected test data."""
-        test_data = request.getfixturevalue(self.test_data)
+
         client = self._get_authorized_client(authorised_clients)
         response = self.get_all(client)
         assert response.status_code == status.HTTP_200_OK
@@ -588,6 +602,7 @@ class CRUDTestBase:
     def test_get_all_unauthorized(
         self,
         client: TestClient,
+        test_data,
     ) -> None:
         """Test that unauthenticated requests to get all items are rejected.
         Verifies 401 Unauthorized response when no authentication is provided."""
@@ -598,11 +613,11 @@ class CRUDTestBase:
     def test_get_one_success(
         self,
         authorised_clients,
-        request,
+        test_data,
     ) -> None:
         """Test that authorized users can successfully retrieve a specific item by ID.
         Verifies 200 OK response and validates the returned data matches the requested item."""
-        test_data = request.getfixturevalue(self.test_data)
+
         client = self._get_authorized_client(authorised_clients)
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_200_OK
@@ -612,11 +627,11 @@ class CRUDTestBase:
     def test_get_one_unauthorized(
         self,
         client,
-        request,
+        test_data,
     ) -> None:
         """Test that unauthenticated requests to get a specific item are rejected.
         Verifies 401 Unauthorized response when no authentication is provided."""
-        test_data = request.getfixturevalue(self.test_data)
+
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -624,11 +639,11 @@ class CRUDTestBase:
     def test_get_one_forbidden(
         self,
         authorised_clients,
-        request,
+        test_data,
     ) -> None:
         """Test that users are denied access to items they don't have permission to view.
         For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
-        test_data = request.getfixturevalue(self.test_data)
+
         client = self._get_unauthorized_client(authorised_clients)
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -640,8 +655,9 @@ class CRUDTestBase:
     ) -> None:
         """Test that requests for non-existent items return a 404 error.
         Verifies proper handling when the requested item ID doesn't exist in the database."""
+
         client = self._get_authorized_client(authorised_clients)
-        response = self.get_one(client, 999999)
+        response = self.get_one(client, 1)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @skip_if_action_not_enabled("get")
@@ -652,6 +668,7 @@ class CRUDTestBase:
     ) -> None:
         """Test that users only see data they own when retrieving all items (non-admin endpoints only).
         Verifies proper data filtering based on ownership using the get_unauthorised_fixture."""
+
         if not self.admin_only and self.get_unauthorised_fixture:
             owner_id = request.getfixturevalue(self.get_unauthorised_fixture)[1]
             response = self.get_all(authorised_clients[owner_id - 1])
@@ -671,8 +688,9 @@ class CRUDTestBase:
     ) -> None:
         """Test that authorized users can successfully create new items.
         Iterates through create_data examples, verifies 201 Created responses and validates returned data."""
+
         client = self._get_authorized_client(authorised_clients)
-        for create_data in self.get_user_data(test_users):
+        for create_data in self.get_user_data(test_users, self.create_data):
             create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
             response = self.post(client, create_data)
             assert response.status_code == status.HTTP_201_CREATED
@@ -685,6 +703,7 @@ class CRUDTestBase:
     ) -> None:
         """Test that unauthenticated requests to create items are rejected.
         Verifies 401 Unauthorized response when no authentication is provided."""
+
         response = self.post(client, {})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -699,7 +718,7 @@ class CRUDTestBase:
 
         if self.admin_only:
             client = self._get_unauthorized_client(authorised_clients)
-            for create_data in self.get_user_data(test_users):
+            for create_data in self.get_user_data(test_users, self.create_data):
                 create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
                 response = self.post(client, create_data)
                 assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -712,6 +731,7 @@ class CRUDTestBase:
     ) -> None:
         """Test that users can successfully create data they own on non-admin endpoints.
         Uses unauthorised_data_fixture to verify proper ownership validation during creation."""
+
         if not self.admin_only and self.unauthorised_data_fixture:
             data, owner_id = request.getfixturevalue(self.unauthorised_data_fixture)[:2]
             for datum in data:
@@ -726,21 +746,25 @@ class CRUDTestBase:
     def test_put_success(
         self,
         authorised_clients,
-        request,
+        test_data,
     ) -> None:
         """Test that authorized users can successfully update existing items.
         Verifies 200 OK response and validates the returned data matches the update_data."""
-        request.getfixturevalue(self.test_data)
+
         client = self._get_authorized_client(authorised_clients)
         response = self.put(client, self.update_data.get("id"), self.update_data)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(self.update_data, response.json())
 
     @skip_if_action_not_enabled("put")
-    def test_put_empty_body(self, authorised_clients, request) -> None:
+    def test_put_empty_body(
+        self,
+        authorised_clients,
+        test_data,
+    ) -> None:
         """Test that PUT requests with empty request bodies are rejected.
         Verifies 400 Bad Request response when no update data is provided."""
-        test_data = request.getfixturevalue(self.test_data)
+
         client = self._get_authorized_client(authorised_clients)
         response = self.put(client, test_data[0].id, {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -749,23 +773,28 @@ class CRUDTestBase:
     def test_put_non_exist(self, authorised_clients) -> None:
         """Test that PUT requests for non-existent items return a 404 error.
         Verifies proper handling when attempting to update an item that doesn't exist."""
+
         client = self._get_authorized_client(authorised_clients)
-        response = self.put(client, 999999, {})
+        response = self.put(client, 1, {})
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @skip_if_action_not_enabled("put")
-    def test_put_unauthorized(self, client, request) -> None:
+    def test_put_unauthorized(
+        self,
+        client,
+        test_data,
+    ) -> None:
         """Test that unauthenticated requests to update items are rejected.
         Verifies 401 Unauthorized response when no authentication is provided."""
-        test_data = request.getfixturevalue(self.test_data)
+
         response = self.put(client, test_data[0].id, {"name": "Test"})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @skip_if_action_not_enabled("put")
-    def test_put_forbidden(self, authorised_clients, request) -> None:
+    def test_put_forbidden(self, authorised_clients, test_data) -> None:
         """Test that users are denied access to update items they don't have permission to modify.
         For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
-        test_data = request.getfixturevalue(self.test_data)
+
         client = self._get_unauthorized_client(authorised_clients)
         response = self.put(client, test_data[0].id, {"name": "Test"})
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -773,35 +802,51 @@ class CRUDTestBase:
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
     @skip_if_action_not_enabled("delete")
-    def test_delete_success(self, authorised_clients, request) -> None:
+    def test_delete_success(
+        self,
+        authorised_clients,
+        test_data,
+    ) -> None:
         """Test that authorized users can successfully delete existing items.
         Verifies 204 No Content response indicating successful deletion."""
-        test_data = request.getfixturevalue(self.test_data)
+
         client = self._get_authorized_client(authorised_clients)
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
     @skip_if_action_not_enabled("delete")
-    def test_delete_non_exist(self, authorised_clients) -> None:
+    def test_delete_non_exist(
+        self,
+        authorised_clients,
+    ) -> None:
         """Test that DELETE requests for non-existent items return a 404 error.
         Verifies proper handling when attempting to delete an item that doesn't exist."""
+
         client = self._get_authorized_client(authorised_clients)
-        response = self.delete(client, 999999)
+        response = self.delete(client, 1)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @skip_if_action_not_enabled("delete")
-    def test_delete_unauthorized(self, client, request) -> None:
+    def test_delete_unauthorized(
+        self,
+        client,
+        test_data,
+    ) -> None:
         """Test that unauthenticated requests to delete items are rejected.
         Verifies 401 Unauthorized response when no authentication is provided."""
-        test_data = request.getfixturevalue(self.test_data)
+
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @skip_if_action_not_enabled("delete")
-    def test_delete_forbidden(self, authorised_clients, request) -> None:
+    def test_delete_forbidden(
+        self,
+        authorised_clients,
+        test_data,
+    ) -> None:
         """Test that users are denied access to delete items they don't have permission to remove.
         For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
-        test_data = request.getfixturevalue(self.test_data)
+
         client = self._get_unauthorized_client(authorised_clients)
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN

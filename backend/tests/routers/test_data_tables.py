@@ -30,7 +30,7 @@ class TestKeywordCRUD(CRUDTestBase):
     endpoint = "/keywords"
     create_schema = schemas.KeywordCreate
     out_schema = schemas.KeywordOut
-    test_data = "test_keywords"
+    test_data_ref = "test_keywords"
     create_data = KEYWORD_DATA
     update_data = {
         "id": 1,
@@ -42,7 +42,7 @@ class TestAggregatorCRUD(CRUDTestBase):
     endpoint = "/aggregators"
     create_schema = schemas.AggregatorCreate
     out_schema = schemas.AggregatorOut
-    test_data = "test_aggregators"
+    test_data_ref = "test_aggregators"
     create_data = AGGREGATOR_DATA
     update_data = {
         "name": "Updated LinkedIn",
@@ -55,7 +55,7 @@ class TestCompanyCRUD(CRUDTestBase):
     endpoint = "/companies"
     create_schema = schemas.CompanyCreate
     out_schema = schemas.CompanyOut
-    test_data = "test_companies"
+    test_data_ref = "test_companies"
     create_data = COMPANY_DATA
     update_data = {
         "name": "OXPV",
@@ -81,7 +81,7 @@ class TestLocationCRUD(CRUDTestBase):
     endpoint = "/locations"
     create_schema = schemas.LocationCreate
     out_schema = schemas.LocationOut
-    test_data = "test_locations"
+    test_data_ref = "test_locations"
     create_data = LOCATION_DATA
     update_data = {
         "postcode": "OX5 1HN",
@@ -93,7 +93,7 @@ class TestFileCRUD(CRUDTestBase):
     endpoint = "/files"
     create_schema = schemas.FileCreate
     out_schema = schemas.FileOut
-    test_data = "test_files"
+    test_data_ref = "test_files"
     create_data = FILE_DATA
     update_data = {
         "filename": "updated_john_doe_cv_2024.pdf",
@@ -190,7 +190,7 @@ class TestPersonCRUD(CRUDTestBase):
     endpoint = "/persons"
     create_schema = schemas.PersonCreate
     out_schema = schemas.PersonOut
-    test_data = "test_persons"
+    test_data_ref = "test_persons"
     required_fixture = ["test_companies"]
     create_data = PERSON_DATA
     update_data = {
@@ -205,7 +205,7 @@ class TestJobCRUD(CRUDTestBase):
     endpoint = "/jobs"
     create_schema = schemas.JobCreate
     out_schema = schemas.JobOut
-    test_data = "test_jobs"
+    test_data_ref = "test_jobs"
     required_fixture = [
         "test_persons",
         "test_locations",
@@ -228,7 +228,7 @@ class TestJobApplicationUpdateCRUD(CRUDTestBase):
     endpoint = "/jobapplicationupdates"
     create_schema = schemas.JobApplicationUpdateCreate
     out_schema = schemas.JobApplicationUpdateOut
-    test_data = "test_job_application_updates"
+    test_data_ref = "test_job_application_updates"
     required_fixture = ["test_jobs"]
     create_data = JOB_APPLICATION_UPDATE_DATA
     update_data = {
@@ -243,7 +243,7 @@ class TestInterviewCRUD(CRUDTestBase):
     endpoint = "/interviews"
     create_schema = schemas.InterviewCreate
     out_schema = schemas.InterviewOut
-    test_data = "test_interviews"
+    test_data_ref = "test_interviews"
     required_fixture = ["test_jobs", "test_locations", "test_persons"]
     create_data = INTERVIEW_DATA
     update_data = {
