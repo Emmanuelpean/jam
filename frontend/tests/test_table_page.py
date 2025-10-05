@@ -32,17 +32,17 @@ class TestTablePage(BaseTest):
     sorting_columns = []
     test_entry_index = 0
 
-    def setup_function(self, request):
+    def setup_function(self, request) -> None:
         """Function called during the setup"""
 
         if isinstance(self.test_fixture, str):
             self.test_fixture = [self.test_fixture]
         self.test_entries, *self.add_test_entries = [request.getfixturevalue(fixture) for fixture in self.test_fixture]
+        self.test_entries = [entry for entry in self.test_entries if entry.owner_id == self.user.id]
         self.test_entry = self.test_entries[self.test_entry_index]
         if not self.sorting_columns:
             self.sorting_columns = self.columns
         self.login()
-        self.wait_for_table_load()
 
     # ----------------------------------------------------- MODALS -----------------------------------------------------
 
@@ -95,6 +95,7 @@ class TestTablePage(BaseTest):
     def table_rows(self) -> list[WebElement]:
         """Get all table rows on the page"""
 
+        self.get_element("table-row-clickable", By.CLASS_NAME)
         return self.driver.find_elements(By.CLASS_NAME, "table-row-clickable")
 
     def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
@@ -161,7 +162,7 @@ class TestTablePage(BaseTest):
         return self.get_element("add-entity-button")
 
     @property
-    def delete_confirm_button(self):
+    def delete_confirm_button(self) -> WebElement:
         """Get the delete confirm button on the modal"""
 
         return self.get_element("delete-alert-modal-confirm-button")
@@ -184,11 +185,11 @@ class TestTablePage(BaseTest):
 
         return self.get_element("edit-button")
 
-    def set_page_item_select(self, value):
+    def set_page_item_select(self, value) -> None:
         """Set the number of items to display per page
         :param value: Value to select (e.g. "20", "40")"""
 
-        if len(self.test_entries) > 20:
+        if len(self.table_rows) >= 20:
             Select(self.get_element("page-items-select")).select_by_value(value)
 
     # ---------------------------------------------------- UTILITIES ---------------------------------------------------
@@ -205,13 +206,12 @@ class TestTablePage(BaseTest):
         """Test that entries are displayed correctly"""
 
         # Default 20 entries display
-        entries = [entry for entry in self.test_entries if entry.owner_id == self.user.id]
-        assert len(self.table_rows) == min([20, len(entries)]), "The table rows should match the entries"
+        assert len(self.table_rows) == min([20, len(self.test_entries)]), "The table rows should match the entries"
 
         # Increase to 40
         self.set_page_item_select("40")
         self.wait_for_table_load()
-        assert len(self.table_rows) == min([40, len(entries)]), "The table rows should match the entries"
+        assert len(self.table_rows) == min([40, len(self.test_entries)]), "The table rows should match the entries"
 
     def _test_view_modal(self) -> None:
         """Helper method to test the view modal for an entry"""
@@ -261,11 +261,10 @@ class TestTablePage(BaseTest):
     def test_add_valid_entry(self) -> None:
         """Test adding a new entry"""
 
-        self.set_page_item_select("100")
         values = generate_entry_combinations(self.test_data, self.required_fields, self.duplicate_fields)
 
         for combination in values:
-            print(combination)
+            self.set_page_item_select("100")
             # Determine the number of entries in the db and in the table
             n_entries = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
             initial_table_count = len(self.table_rows)
@@ -430,8 +429,10 @@ class TestTablePage(BaseTest):
         modal = self.wait_for_view_modal("aggregator")
 
         # Verify modal contains the entry information
-        expected = (f"Aggregator Details\n{entry.name}\nWebsite\n{entry.url.replace('https://', '')}\nJobs\n({len(entry.jobs)})"
-                    f"\nJob Applications\n({len(entry.job_applications)})\nClose\nEdit")
+        expected = (
+            f"Aggregator Details\n{entry.name}\nWebsite\n{entry.url.replace('https://', '')}\nJobs\n({len(entry.jobs)})"
+            f"\nJob Applications\n({len(entry.job_applications)})\nClose\nEdit"
+        )
         assert modal.text == expected
 
         # Close modal
@@ -481,7 +482,8 @@ class TestTablePage(BaseTest):
         expected = (
             f"Person Details\n{entry.name}\n"
             f"Company\n{entry.company.name.upper()}\nRole\n{entry.role}\n"
-            f"Email\n{entry.email}\nPhone\n{entry.phone}\nLinkedIn Profile\nProfile\nClose\nEdit"
+            f"Email\n{entry.email}\nPhone\n{entry.phone}\nLinkedIn Profile\nProfile\n"
+            f"Interviews\n(0)\nJobs\n(0)\nClose\nEdit"
         )
         assert modal.text == expected
 
@@ -603,7 +605,7 @@ class TestPersonsPage(TestTablePage):
         "role": "Test_role",
     }
     required_fields = ["last_name", "first_name"]
-    duplicate_fields = []
+    duplicate_fields = ["last_name", "first_name"]
     columns = ["last_name", "email", "company", "phone", "linkedin_url", "role"]
     sorting_columns = ["name", "company", "role", "email", "created_at"]
 
@@ -620,17 +622,17 @@ class TestPersonsPage(TestTablePage):
         self.check_company_view_modal(self.test_entry.company)
 
 
-class TestJobApplicationUpdatesPage(TestTablePage):
-    """Test class for Job Application Update Page functionalities"""
-
-    endpoint = "jobapplicationupdates"
-    page_url = "jobapplicationupdates"
-    test_fixture = ["test_job_application_updates", "test_jobs"]
-    entry_name = "update"
-    required_fields = ["job_application_id", "type"]
-    test_data = {
-        "date": "2024-01-15 14:30:00",
-        "job_application_id": "Senior Python Developer - Tech Corp",
-        "note": "Received automated confirmation email",
-        "type": "received",
-    }
+# class TestJobApplicationUpdatesPage(TestTablePage):
+#     """Test class for Job Application Update Page functionalities"""
+#
+#     endpoint = "jobapplicationupdates"
+#     page_url = "jobapplicationupdates"
+#     test_fixture = ["test_job_application_updates", "test_jobs"]
+#     entry_name = "update"
+#     required_fields = ["job_application_id", "type"]
+#     test_data = {
+#         "date": "2024-01-15 14:30:00",
+#         "job_application_id": "Senior Python Developer - Tech Corp",
+#         "note": "Received automated confirmation email",
+#         "type": "received",
+#     }

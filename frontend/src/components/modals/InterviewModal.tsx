@@ -2,11 +2,11 @@ import React from "react";
 import DataModal, { DataModalProps } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { InterviewData, JobData } from "../../services/Schemas";
+import { InterviewData, InterviewDataTransform, JobData } from "../../services/Schemas";
 import { useFormOptions } from "../rendering/form/FormOptions";
 
 export interface InterviewModalProps extends DataModalProps {
-	jobId?: string | number;
+	jobId?: number;
 }
 
 export const InterviewModal: React.FC<InterviewModalProps> = ({
@@ -14,8 +14,6 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	onHide,
 	data,
 	id,
-	onSuccess,
-	onDelete,
 	submode = "view",
 	size = "lg",
 	jobId,
@@ -57,14 +55,15 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 		view: viewFieldsArray,
 	};
 
-	const transformFormData = (data: InterviewData) => {
+	const transformFormData = (data: InterviewDataTransform): InterviewDataTransform => {
+		console.log(data);
 		return {
-			date: new Date(data.date!).toISOString(),
-			type: data.type!,
-			location_id: data.location_id!,
-			job_id: jobId || data.job_id!,
-			attendance_type: data.attendance_type!,
-			interviewers: data.interviewers?.map((interviewer) => interviewer.id || interviewer) || [],
+			date: new Date(data.date),
+			type: data.type,
+			location_id: data.location_id,
+			job_id: jobId || data.job_id,
+			attendance_type: data.attendance_type,
+			interviewers: data.interviewers || [],
 			note: data.note?.trim() || null,
 		};
 	};
@@ -81,8 +80,6 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 				id={id}
 				fields={fields}
 				endpoint="interviews"
-				onSuccess={onSuccess}
-				onDelete={onDelete}
 				transformFormData={transformFormData}
 			/>
 

@@ -5,7 +5,7 @@ import { api, ApiError, exportApi } from "../../services/Api";
 import { THEMES } from "../../utils/Theme";
 import { renderModalFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
-import { getTableIcon } from "../../components/rendering/view/ViewRenders";
+import { getTableIcon } from "../../components/rendering/view/Icons";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { findByKey } from "../../utils/Utils";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
@@ -70,7 +70,7 @@ const UserSettingsPage: React.FC = () => {
 	const downloadJobsExport = async (token: string | null) => {
 		if (!token) return;
 		try {
-			await exportApi.download("jobs_export.csv", token);
+			await exportApi.download("jobs_export.zip", token);
 			showToastSuccess("Data downloaded");
 		} catch (e) {
 			showToastError("Failed to download data");

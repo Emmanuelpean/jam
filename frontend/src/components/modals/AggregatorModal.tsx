@@ -4,15 +4,13 @@ import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { aggregatorsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import { AggregatorData } from "../../services/Schemas";
+import { AggregatorData, AggregatorDataTransform } from "../../services/Schemas";
 
 export const AggregatorModal: React.FC<DataModalProps> = ({
 	show,
 	onHide,
 	data,
 	id,
-	onSuccess,
-	onDelete,
 	submode = "view",
 	size = "lg",
 }) => {
@@ -27,13 +25,13 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 	};
 
 	const additionalFields = [
-		modalViewFields.accordionJobTable({ helpText: "List of jobs found with this job aggregator." }),
+		modalViewFields.accordionJobTableAggregator({ helpText: "List of jobs found with this job aggregator." }),
 		modalViewFields.accordionJobApplicationTable({
 			helpText: "List of job applications made using this job aggregator.",
 		}),
 	];
 
-	const transformFormData = (data: AggregatorData): AggregatorData => {
+	const transformFormData = (data: AggregatorData): AggregatorDataTransform => {
 		return {
 			name: data?.name?.trim(),
 			url: data?.url?.trim(),
@@ -71,8 +69,6 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 			id={id}
 			fields={fields}
 			endpoint="aggregators"
-			onSuccess={onSuccess}
-			onDelete={onDelete}
 			transformFormData={transformFormData}
 			validation={customValidation}
 		/>

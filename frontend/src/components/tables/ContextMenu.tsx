@@ -1,4 +1,5 @@
 import React, { MouseEvent, useEffect, useRef, useState } from "react";
+import "./ContextMenu.css";
 
 export interface MenuItem {
 	action: string;

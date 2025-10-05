@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import "./Sidebar.css";
-import { getTableIcon } from "../rendering/view/ViewRenders";
+import { getTableIcon } from "../rendering/view/Icons";
 import { DEFAULT_THEME, isValidTheme } from "../../utils/Theme";
 import { ThemeSelector } from "./ThemeSelector";
 
@@ -32,22 +32,31 @@ export const Sidebar = () => {
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
 	const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 700);
+
+	useEffect(() => {
+		const handleResize = () => setIsMobile(window.innerWidth <= 990);
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
+	}, []);
+
+	const handleSidebarToggle = (): void => setIsExpanded((prev: boolean) => !prev);
 
 	const allNavigationItems: NavigationItem[] = [
 		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard", position: "top" },
 		{ path: "/jobs", text: "Jobs", position: "top" },
-		{ path: "/interviews", text: "Interviews", position: "top" },
-		{ path: "/jobapplicationupdates", text: "Job Application Updates", position: "top" },
+		{ path: "/persons", text: "People" },
+		{ path: "/locations", text: "Locations", position: "top" },
+		{ path: "/companies", text: "Companies", position: "top" },
+		{ path: "/aggregators", text: "Job Aggregators", position: "top" },
+		{ path: "/keywords", text: "Tags", position: "top" },
 		{
 			text: "Other",
 			icon: "bi-three-dots",
 			position: "top",
 			submenu: [
-				{ path: "/persons", text: "People" },
-				{ path: "/locations", text: "Locations" },
-				{ path: "/companies", text: "Companies" },
-				{ path: "/aggregators", text: "Job Aggregators" },
-				{ path: "/keywords", text: "Tags" },
+				{ path: "/interviews", text: "Interviews" },
+				{ path: "/jobapplicationupdates", text: "Job Application Updates" },
 			],
 		},
 		{ path: "/settings", icon: "bi-gear", text: "User Settings", position: "bottom" },
@@ -137,7 +146,6 @@ export const Sidebar = () => {
 			if (item.submenu) {
 				const isSubmenuItemActive = isSubmenuActive(item.submenu);
 				const isSubmenuExpanded = expandedSubmenu === item.text;
-				console.log({ isSubmenuExpanded, expandedSubmenu, itemText: item.text });
 				const showSubmenu = shouldShowSubmenu(item);
 
 				return (
@@ -205,30 +213,96 @@ export const Sidebar = () => {
 	};
 
 	return (
-		<div
-			className={`custom-sidebar ${isExpanded ? "expanded" : "collapsed"}`}
-			onMouseEnter={handleMouseEnter}
-			onMouseLeave={handleMouseLeave}
-		>
-			<div className="sidebar-header">
-				<div onClick={() => setShowDropdown(!showDropdown)} style={{ cursor: "pointer" }}>
-					<div className="logo-container">
-						<JamLogo style={{ height: "57px", width: "auto" }} />
-						<span className="logo-text">JAM</span>
+		<>
+			{isMobile && !isExpanded && (
+				<button
+					className="sidebar-toggle-btn"
+					onClick={handleSidebarToggle}
+					aria-label="Toggle sidebar"
+					style={{
+						position: "fixed",
+						top: 16,
+						left: 16,
+						zIndex: 2100,
+						background: "#fff",
+						border: "none",
+						borderRadius: "6px",
+						boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+						width: 40,
+						height: 40,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						cursor: "pointer",
+					}}
+				>
+					<i className="bi bi-list" style={{ fontSize: 24 }}></i>
+				</button>
+			)}
+			{isMobile && isExpanded && (
+				<div
+					onClick={handleSidebarToggle}
+					style={{
+						position: "fixed",
+						top: 0,
+						left: 0,
+						width: "100vw",
+						height: "100vh",
+						background: "rgba(0,0,0,0.1)",
+						zIndex: 2000,
+					}}
+				/>
+			)}
+			<div
+				className={`custom-sidebar ${isExpanded ? "expanded" : "collapsed"}`}
+				onMouseEnter={!isMobile ? handleMouseEnter : undefined}
+				onMouseLeave={!isMobile ? handleMouseLeave : undefined}
+			>
+				{isMobile && isExpanded && (
+					<button
+						className="sidebar-close-btn"
+						onClick={handleSidebarToggle}
+						aria-label="Close sidebar"
+						style={{
+							position: "absolute",
+							top: 16,
+							right: 16,
+							zIndex: 2200,
+							background: "#fff",
+							border: "none",
+							borderRadius: "6px",
+							boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+							width: 40,
+							height: 40,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							cursor: "pointer",
+						}}
+					>
+						<i className="bi bi-x-lg" style={{ fontSize: 24 }}></i>
+					</button>
+				)}
+				<div className="sidebar-header">
+					<div onClick={() => setShowDropdown(!showDropdown)} style={{ cursor: "pointer" }}>
+						<div className="logo-container">
+							<JamLogo style={{ height: "57px", width: "auto" }} />
+							<span className="logo-text">JAM</span>
+						</div>
 					</div>
+
+					<ThemeSelector
+						currentTheme={currentTheme}
+						token={token}
+						onThemeChange={handleThemeChange}
+						isVisible={showDropdown && isExpanded}
+					/>
 				</div>
 
-				<ThemeSelector
-					currentTheme={currentTheme}
-					token={token}
-					onThemeChange={handleThemeChange}
-					isVisible={showDropdown && isExpanded}
-				/>
+				<nav className="sidebar-nav sidebar-nav-top">{renderNavigationItems(topNavigationItems)}</nav>
+
+				<nav className="sidebar-nav sidebar-nav-bottom">{renderNavigationItems(bottomNavigationItems)}</nav>
 			</div>
-
-			<nav className="sidebar-nav sidebar-nav-top">{renderNavigationItems(topNavigationItems)}</nav>
-
-			<nav className="sidebar-nav sidebar-nav-bottom">{renderNavigationItems(bottomNavigationItems)}</nav>
-		</div>
+		</>
 	);
 };

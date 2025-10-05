@@ -10,7 +10,7 @@ class TestSettingsCRUD(CRUDTestBase):
     admin_only = True
     create_schema = schemas.SettingCreate
     out_schema = schemas.SettingOut
-    test_data = "test_settings"
+    test_data_ref = "test_settings"
     create_data = SETTINGS_DATA
     update_data = {
         "id": 1,

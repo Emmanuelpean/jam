@@ -91,7 +91,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		searchFields: (item: any) => localeDateOnly(item.created_at),
-		render: renderFunctions.createdDate,
+		render: (params: RenderParams) => renderFunctions._date(params, "created_at"),
 		...overrides,
 	}),
 
@@ -112,7 +112,7 @@ export const tableColumns = {
 		searchable: true,
 		type: "date",
 		searchFields: (item: any) => localeDateOnly(item.date),
-		render: renderFunctions.date,
+		render: (params: RenderParams) => renderFunctions._date(params, "date"),
 		...overrides,
 	}),
 
@@ -142,7 +142,7 @@ export const tableColumns = {
 		searchable: true,
 		type: "date",
 		searchFields: (item: any) => localeDateOnly(item.last_login),
-		render: renderFunctions.lastLogin,
+		render: (params: RenderParams) => renderFunctions._date(params, "last_login"),
 		...overrides,
 	}),
 
@@ -166,7 +166,7 @@ export const tableColumns = {
 		type: "text",
 		sortField: ["location.name", "attendance_type"],
 		searchFields: ["location.name", "attendance_type"],
-		render: renderFunctions.locationBadge,
+		render: renderFunctions.LocationBadge,
 		...overrides,
 	}),
 
@@ -209,14 +209,14 @@ export const tableColumns = {
 	// --------------------------------------------------- COMPANIES ---------------------------------------------------
 
 	companyBadge: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "companyBadge",
+		key: "CompanyBadge",
 		label: "Company",
 		sortable: true,
 		searchable: true,
 		type: "text",
 		sortField: "company.name",
 		searchFields: "company.name",
-		render: renderFunctions.companyBadge,
+		render: renderFunctions.CompanyBadge,
 		...overrides,
 	}),
 
@@ -241,7 +241,7 @@ export const tableColumns = {
 		type: "text",
 		sortField: "person.last_name",
 		searchFields: "person.name",
-		render: renderFunctions.contactBadges,
+		render: renderFunctions.ContactBadges,
 		...overrides,
 	}),
 
@@ -332,7 +332,7 @@ export const tableColumns = {
 		type: "text",
 		sortField: "person.last_name",
 		searchFields: "person.name",
-		render: (params: RenderParams) => renderFunctions.interviewerBadges({ ...params, view: false }),
+		render: (params: RenderParams) => renderFunctions.InterviewerBadges({ ...params, view: false }),
 		...overrides,
 	}),
 
@@ -364,7 +364,7 @@ export const tableColumns = {
 		sortable: false,
 		searchable: true,
 		type: "text",
-		render: renderFunctions.keywordBadges,
+		render: renderFunctions.KeywordBadges,
 		...overrides,
 	}),
 
@@ -375,7 +375,7 @@ export const tableColumns = {
 		searchable: true,
 		searchFields: "job.name",
 		sortField: "job.name",
-		render: renderFunctions.jobNameBadge,
+		render: (params: RenderParams) => renderFunctions.jobBadge(params, null),
 		...overrides,
 	}),
 
@@ -388,39 +388,66 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	interviewCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	interviewCountLocation: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "interviews",
 		label: "Interviews",
 		sortable: true,
 		searchable: false,
-		render: renderFunctions.interviewCount,
+		render: (param: RenderParams) => renderFunctions._interviewCount(param, "location_id"),
 		...overrides,
 	}),
 
-	jobCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	jobCountCompany: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "jobs",
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		render: renderFunctions.jobCount,
+		render: (param: RenderParams) => renderFunctions._jobCount(param, "company_id"),
 		...overrides,
 	}),
 
-	jobApplicationCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	jobCountAggregator: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "jobs",
+		label: "Jobs",
+		sortable: true,
+		searchable: false,
+		render: (param: RenderParams) => renderFunctions._jobCount(param, "source_id"),
+		...overrides,
+	}),
+
+	jobCountLocation: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "jobs",
+		label: "Jobs",
+		sortable: true,
+		searchable: false,
+		render: (param: RenderParams) => renderFunctions._jobCount(param, "location_id"),
+		...overrides,
+	}),
+
+	jobCountKeyword: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "jobs",
+		label: "Jobs",
+		sortable: true,
+		searchable: false,
+		render: (param: RenderParams) => renderFunctions._jobCount(param, "keywords"),
+		...overrides,
+	}),
+
+	jobApplicationCountAggregator: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "job_applications",
 		label: "Job Applications",
 		sortable: true,
 		searchable: false,
-		render: renderFunctions.jobApplicationCount,
+		render: (param: RenderParams) => renderFunctions._jobApplicationCount(param, "application_aggregator_id"),
 		...overrides,
 	}),
 
-	personCount: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	personCountCompany: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "persons",
 		label: "Individuals",
 		sortable: true,
 		searchable: false,
-		render: renderFunctions.personCount,
+		render: (param: RenderParams) => renderFunctions._personCount(param, "company_id"),
 		...overrides,
 	}),
 
@@ -428,7 +455,7 @@ export const tableColumns = {
 
 	daysSinceLastUpdate: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "days_since_last_update",
-		label: "Time Since Last Update",
+		label: "Since Last Update",
 		sortable: true,
 		type: "number",
 		render: renderFunctions.lastUpdateDays,

@@ -1,16 +1,17 @@
 import React, { MouseEvent, ReactNode, useCallback, useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
+import { useDataContext } from "../../contexts/DataContext";
 import { api } from "../../services/Api";
-import { getTableIcon, renderViewField } from "../rendering/view/ViewRenders";
+import { getTableIcon } from "../rendering/view/Icons";
+import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute, normaliseList } from "../../utils/Utils";
 import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
-import { useLoading } from "../../contexts/LoadingContext";
-import { createActiveHandler, createDeleteHandler } from "../../utils/DeleteHandler";
+import { useActiveHandler, useDeleteHandler } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
 import "./DataTable.css";
@@ -32,16 +33,25 @@ export interface DataTableProps {
 }
 
 export interface GenericTableProps {
-	// Data source configuration
-	mode: "api" | "controlled" | "import";
+	// Data source - entity type from DataContext
+	entityType:
+		| "jobs"
+		| "companies"
+		| "persons"
+		| "interviews"
+		| "jobApplicationUpdates"
+		| "aggregators"
+		| "keywords"
+		| "locations"
+		| "settings"
+		| "users";
 
-	// For API mode and import mode
-	endpoint?: string;
-
-	// For controlled mode
+	// Override context data with provided data
 	data?: any[];
-	onDataChange?: (data: any[]) => void;
-	error?: string | null;
+
+	// For import mode (scraped jobs, etc.)
+	mode?: "default" | "import";
+	endpoint?: string;
 
 	// Table configuration
 	columns?: TableColumn[];
@@ -73,10 +83,10 @@ export interface GenericTableProps {
 }
 
 export const DataTable: React.FC<GenericTableProps> = ({
-	mode,
+	entityType,
+	mode = "default",
+	data: providedData,
 	endpoint = "",
-	data: controlledData = [],
-	onDataChange,
 	columns = [],
 	initialSortConfig = {},
 	Modal,
@@ -95,11 +105,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	menuItems,
 }: GenericTableProps) => {
 	const { token } = useAuth();
+	const dataContext = useDataContext();
 	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
-
-	// Internal state management
-	const [internalData, setInternalData] = useState<any[]>([]);
-	const [error, setError] = useState<string | null>(null);
 
 	// Search and sort
 	const [sortConfig, setSortConfig] = useState<SortConfig>(
@@ -112,7 +119,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 	const [currentPage, setCurrentPage] = useState<number>(0);
 	const [pageSize, setPageSize] = useState<number>(20);
-	const { showLoading, hideLoading } = useLoading();
 
 	const {
 		showModal,
@@ -130,86 +136,42 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		closeImportModal,
 	} = useModalState();
 
-	const fetchData = useCallback(async (): Promise<void> => {
-		// Fetch the data through the API
-		if ((mode !== "api" && mode !== "import") || !endpoint) {
-			return;
+	// Get data from context based on entityType
+	const getData = (): any[] => {
+		// If data is explicitly provided, use it
+		if (providedData !== undefined) {
+			return providedData;
 		}
-		showLoading();
-		setError(null);
-		try {
-			const result = await api.get(`${endpoint}/`, token);
-			setInternalData(result);
-		} catch (err) {
-			setError(`Failed to load ${endpoint}. Please try again later.`);
-			setInternalData([]);
-		} finally {
-			hideLoading();
-		}
-	}, [endpoint, token, mode]);
 
-	useEffect(() => {
-		// Handle data updates based on mode
-		switch (mode) {
-			case "api":
-			case "import":
-				if (token) {
-					fetchData().then(() => {});
-				}
-				break;
-			case "controlled":
-				break;
-		}
-	}, [mode, token, fetchData]);
-
-	const getEffectiveData = (): any[] => {
-		// Get effective data based on mode
-		switch (mode) {
-			case "controlled":
-				return controlledData;
-			case "api":
-			case "import":
-				return internalData;
-		}
+		// Otherwise, get from context
+		return (dataContext as any)[entityType] || [];
 	};
 
-	// CRUD operations
+	const data = getData();
+	const { error: contextError } = dataContext;
+
+	// CRUD operations using context methods
 	const addItem = useCallback(
 		(newItem: any) => {
-			if (mode === "controlled") {
-				const newData = [newItem, ...controlledData];
-				onDataChange?.(newData);
-			} else {
-				setInternalData((prev) => [newItem, ...prev]);
-			}
+			dataContext.addEntity(entityType, newItem);
 		},
-		[mode, controlledData, onDataChange],
+		[dataContext, entityType],
 	);
 
 	const updateItem = useCallback(
 		(updatedItem: any) => {
 			if (updatedItem) {
-				if (mode === "controlled") {
-					const newData = controlledData.map((item) => (item.id === updatedItem.id ? updatedItem : item));
-					onDataChange?.(newData);
-				} else {
-					setInternalData((prev) => prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)));
-				}
+				dataContext.updateEntity(entityType, updatedItem.id, updatedItem);
 			}
 		},
-		[mode, controlledData, onDataChange],
+		[dataContext, entityType],
 	);
 
 	const removeItem = useCallback(
-		(itemId: string | number) => {
-			if (mode === "controlled") {
-				const newData = controlledData.filter((item) => item.id !== itemId);
-				onDataChange?.(newData);
-			} else {
-				setInternalData((prev) => prev.filter((item) => item.id !== itemId));
-			}
+		(itemId: number) => {
+			dataContext.deleteEntity(entityType, itemId);
 		},
-		[mode, controlledData, onDataChange],
+		[dataContext, entityType],
 	);
 
 	const handleSort = useCallback(
@@ -222,9 +184,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		},
 		[sortConfig],
 	);
-
-	// Get current effective data
-	const data = getEffectiveData();
 
 	// Data processing
 	const getSortedData = (): any[] => {
@@ -333,28 +292,23 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		setContextMenu({ item, x: event.clientX, y: event.clientY, show: true });
 	};
 
-	let handleDelete: (item: any) => Promise<boolean>;
-	if (mode === "import") {
-		handleDelete = createActiveHandler({
-			endpoint: endpoint,
-			token: token,
-			showDelete: showDelete,
-			showError: showError,
-			removeItem: removeItem,
-			nameKey: nameKey,
-			itemType: itemType,
-		});
-	} else {
-		handleDelete = createDeleteHandler({
-			endpoint: endpoint,
-			token: token,
-			showDelete: showDelete,
-			showError: showError,
-			removeItem: removeItem,
-			nameKey: nameKey,
-			itemType: itemType,
-		});
-	}
+	const activeHandler = useActiveHandler({
+		entityType,
+		showDelete,
+		showError,
+		nameKey,
+		itemType,
+	});
+	const deleteHandler = useDeleteHandler({
+		entityType,
+		showDelete,
+		showError,
+		nameKey,
+		itemType,
+	});
+
+	// Select the handler based on mode
+	const handleDelete = mode === "import" ? activeHandler : deleteHandler;
 
 	// Success handlers
 	const handleEditSuccess = (updatedItem: any): void => {
@@ -418,12 +372,15 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				const snoozeDate = new Date();
 				snoozeDate.setDate(snoozeDate.getDate() + weeks * 7);
 
-				await api.put(`${endpoint}/${item.id}`, { followup_snooze_datetime: snoozeDate.toISOString() }, token);
-				removeItem(item.id);
+				const updatedItem = await api.put(
+					`${endpoint || entityType}/${item.id}`,
+					{ followup_snooze_datetime: snoozeDate.toISOString() },
+					token,
+				);
+				updateItem(updatedItem);
 				showToastSuccess("Job snoozed successfully");
 			} catch (error) {
 				showToastError(`Failed to snooze ${itemType}. Please try again.`);
-				hideLoading();
 			} finally {
 				setContextMenu(null);
 			}
@@ -494,8 +451,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		return "bi-plus-circle";
 	};
 
-	if (error) {
-		return <div className="alert alert-danger mt-3">{error}</div>;
+	if (contextError) {
+		return <div className="alert alert-danger mt-3">{contextError.message}</div>;
 	}
 
 	return (
@@ -615,7 +572,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 												: {}),
 										}}
 									>
-										{renderViewField(column, item, `table-row-${item.id}`)}
+										<RenderViewFieldWithContext
+											field={column}
+											item={item}
+											id={`table-row-${item.id}`}
+										/>
 									</td>
 								))}
 							</tr>
@@ -728,7 +689,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				/>
 			)}
 
-			{children ? children(getEffectiveData()) : null}
+			{children ? children(data) : null}
 
 			{mode !== "import" && (
 				<>

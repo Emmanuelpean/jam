@@ -6,7 +6,7 @@ import { personsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import AlertModal from "./AlertModal";
 import useGenericAlert from "../../hooks/useGenericAlert";
-import { PersonData } from "../../services/Schemas";
+import { PersonTransform, PersonData } from "../../services/Schemas";
 import { ValidationErrors } from "./DataModal/DataModal";
 import { useFormOptions } from "../rendering/form/FormOptions";
 
@@ -15,8 +15,6 @@ export const PersonModal: React.FC<DataModalProps> = ({
 	onHide,
 	data,
 	id = null,
-	onSuccess,
-	onDelete,
 	submode = "view",
 	size = "lg",
 }) => {
@@ -42,6 +40,11 @@ export const PersonModal: React.FC<DataModalProps> = ({
 		form: formFieldsArray,
 		view: viewFieldsArray,
 	};
+
+	const additionalFields = [
+		modalViewFields.accordionInterviewTablePerson({ helpText: "List of interviews attended by this person." }),
+		modalViewFields.accordionJobTablePerson({ helpText: "List of jobs associated with this person." }),
+	];
 
 	const customValidation = async (formData: PersonData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
@@ -69,7 +72,7 @@ export const PersonModal: React.FC<DataModalProps> = ({
 		return errors;
 	};
 
-	const transformFormData = (data: PersonData) => {
+	const transformFormData = (data: PersonData): PersonTransform => {
 		return {
 			first_name: data.first_name?.trim(),
 			last_name: data.last_name?.trim(),
@@ -93,10 +96,9 @@ export const PersonModal: React.FC<DataModalProps> = ({
 				data={data}
 				fields={fields}
 				endpoint="persons"
-				onSuccess={onSuccess}
-				onDelete={onDelete}
 				validation={customValidation}
 				transformFormData={transformFormData}
+				additionalFields={additionalFields}
 			/>
 
 			{renderCompanyModal()}

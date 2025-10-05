@@ -9,7 +9,7 @@ import threading
 
 import psutil
 import requests
-from selenium.webdriver import Keys
+from selenium.webdriver import Keys, ActionChains
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
@@ -424,6 +424,7 @@ def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_k
     keys = list(data_dict.keys())
     i = 0
     result = []
+    print(data_dict, required_keys, duplicate_keys)
 
     # Loop over all possible combination lengths
     for r in range(len(required_keys), len(keys) + 1):
@@ -536,8 +537,11 @@ class BaseTest:
         self.get_element("email").send_keys(self.user.email)
         self.get_element("password").send_keys(self.user.password)
         self.get_element("confirm-button").click()
+        self.get_element("loading-spinner")
+        self.wait_for_disappear("loading-spinner")
         self.wait_for_page("dashboard")
         self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
+        self.wait_for_table_load()
 
     # ------------------------------------------------ GET/WAIT ELEMENTS -----------------------------------------------
 
@@ -581,7 +585,9 @@ class BaseTest:
         :param selector: Selector to use for finding the element"""
 
         try:
-            return self.wait.until(ec.element_to_be_clickable((selector, element_id)))
+            element = self.wait.until(ec.element_to_be_clickable((selector, element_id)))
+            ActionChains(self.driver).move_to_element(element).perform()
+            return element
         except:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
 

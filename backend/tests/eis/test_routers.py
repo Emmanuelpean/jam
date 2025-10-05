@@ -11,7 +11,7 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
     endpoint = "/job_alert_emails"
     create_schema = schemas.JobAlertEmailCreate
     out_schema = schemas.JobAlertEmailOut
-    test_data = "test_job_alert_emails"
+    test_data_ref = "test_job_alert_emails"
     create_data = JOB_ALERT_EMAIL_DATA
     update_data = {
         "id": 1,
@@ -26,22 +26,28 @@ class TestScrapedJobCRUD(CRUDTestBase):
     endpoint = "/scraped_jobs"
     create_schema = schemas.ScrapedJobCreate
     out_schema = schemas.ScrapedJobOut
-    test_data = "test_scraped_jobs"
+    test_data_ref = "test_scraped_jobs"
     update_data = {
         "id": 1,
         "is_imported": True,
     }
     actions_to_test = ["get", "put"]
 
-    def test_get_all_success(self, test_scraped_jobs, authorised_clients) -> None:
+    def test_get_all_success(
+        self,
+        test_users,
+        authorised_clients,
+        test_scraped_jobs,
+    ) -> None:
         """Test retrieving all scraped jobs for the authorized user that are scraped, not imported, active"""
 
+        test_data = self.get_user_data(test_users, test_scraped_jobs)
         client = self._get_authorized_client(authorised_clients)
         response = self.get_all(client)
         assert response.status_code == status.HTTP_200_OK
-        self.check_output(test_scraped_jobs, response.json())
         jobs = []
-        for job in test_scraped_jobs:
+        for job in test_data:
             if job.is_scraped and not job.is_imported and job.owner_id == 1 and job.is_active:
                 jobs.append(job)
         assert len(response.json()) == len(jobs)
+        self.check_output(jobs, response.json())
