@@ -5,9 +5,9 @@ Min schemas should be used to return minimal data to the user (enough to display
 contain reference to other tables.
 Update schemas should be used to update existing entries in the database."""
 
-from datetime import datetime, UTC, time
+from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, computed_field
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class Out(BaseModel):
@@ -118,13 +118,7 @@ class KeywordCreate(BaseModel):
 class KeywordOut(KeywordCreate, OwnedOut):
     """Keyword output schema with full job data"""
 
-    jobs: list["JobOut"] = []
-
-
-class KeywordMinOut(KeywordCreate, OwnedOut):
-    """Bare Keyword output schema"""
-
-    pass
+    jobs: list[OwnedOut] = []
 
 
 class KeywordUpdate(KeywordCreate):
@@ -146,14 +140,8 @@ class AggregatorCreate(BaseModel):
 class AggregatorOut(AggregatorCreate, OwnedOut):
     """Aggregator output schema with full job data and job applications"""
 
-    jobs: list["JobOut"] = []
-    job_applications: list["JobOut"] = []
-
-
-class AggregatorMinOut(AggregatorCreate, OwnedOut):
-    """Bare aggregator output schema"""
-
-    pass
+    jobs: list[OwnedOut] = []
+    job_applications: list[OwnedOut] = []
 
 
 class AggregatorUpdate(AggregatorCreate):
@@ -176,14 +164,8 @@ class CompanyCreate(BaseModel):
 class CompanyOut(CompanyCreate, OwnedOut):
     """Company output schema with job data and individuals"""
 
-    jobs: list["JobOut"] = []
-    persons: list["PersonOut"] = []
-
-
-class CompanyMinOut(CompanyCreate, OwnedOut):
-    """Bare company output schema"""
-
-    pass
+    jobs: list[OwnedOut] = []
+    persons: list[OwnedOut] = []
 
 
 class CompanyUpdate(CompanyCreate):
@@ -207,14 +189,8 @@ class LocationOut(LocationCreate, OwnedOut):
     """Location output schema with job and interview data"""
 
     name: str | None = None
-    jobs: list["JobOut"] = []
-    interviews: list["InterviewOut"] = []
-
-
-class LocationMinOut(LocationCreate, OwnedOut):
-    """Bare location output schema"""
-
-    name: str | None = None
+    jobs: list[OwnedOut] = []
+    interviews: list[OwnedOut] = []
 
 
 class LocationUpdate(LocationCreate):
@@ -270,16 +246,8 @@ class PersonCreate(BaseModel):
 class PersonOut(PersonCreate, OwnedOut):
     """Person out schema with job data and bare interview data"""
 
-    company: CompanyMinOut | None = None
-    interviews: list["InterviewMinOut"] = []
-    jobs: list["JobOut"] = []
-    name: str | None = None
-    name_company: str | None = None
-
-
-class PersonMinOut(PersonCreate, OwnedOut):
-    """Bare person output schema"""
-
+    interviews: list[OwnedOut] = []
+    jobs: list[OwnedOut] = []
     name: str | None = None
     name_company: str | None = None
 
@@ -326,118 +294,19 @@ class JobCreate(BaseModel):
 
 
 class JobOut(JobCreate, OwnedOut):
-    """Job output schema with bare company, location, aggregator, keywords, contacts data and semi-full interview and update data"""
+    """Job output schema with IDs of related entities"""
 
-    company: CompanyMinOut | None = None
-    location: LocationMinOut | None = None
-    source: AggregatorMinOut | None = None
-    keywords: list[KeywordMinOut] = []
-    keyword_ids: list[int] = []
-    contacts: list[PersonMinOut] = []
-    contact_ids: list[int] = []
-    application_aggregator: AggregatorMinOut | None = None
-    interviews: list["InterviewAppOut"] = []  # get the full interviews
-    interview_ids: list[int] = []
-    updates: list["JobApplicationUpdateAppOut"] = []  # get the full updates
-    update_ids: list[int] = []  # TODO review
+    keywords: list[int] = []
+    contacts: list[int] = []
+    interviews: list[OwnedOut] = []
+    updates: list[OwnedOut] = []
     name: str
 
-    @computed_field
-    @property
-    def last_update_date(self) -> datetime | None:
-        """Computed property that returns the most recent activity date from application date, interviews, or updates"""
-
-        if self.application_date is None:
-            return None
-
-        dates = [self.application_date]
-
-        # Add interview dates
-        if self.interviews:
-            dates.extend([interview.date for interview in self.interviews])
-
-        # Add update dates
-        if self.updates:
-            dates.extend([update.date for update in self.updates])
-
-        # Filter out None values and return the maximum date
-        valid_dates = [d for d in dates if d is not None]
-        return max(valid_dates) if valid_dates else self.created_at
-
-    @computed_field
-    @property
-    def last_update_type(self) -> str | None:
-        """Computed property that returns the type of the most recent activity"""
-
-        if self.application_date is None:
-            return None
-
-        most_recent_date = self.application_date
-        most_recent_type = "Application"
-
-        # Check interviews
-        if self.interviews:
-            latest_interview = max(self.interviews, key=lambda x: x.date, default=None)
-            if latest_interview and latest_interview.date > most_recent_date:
-                most_recent_date = latest_interview.date
-                most_recent_type = f"Interview ({len(self.interviews)})"
-
-        # Check updates
-        if self.updates:
-            latest_update = max(self.updates, key=lambda x: x.date, default=None)
-            if latest_update and latest_update.date > most_recent_date:
-                most_recent_type = f"Update ({len(self.updates)})"
-
-        return most_recent_type
-
-    @computed_field
-    @property
-    def days_since_last_update(self) -> int | None:
-        """Calculate days since the last update"""
-
-        if self.application_date is None:
-            return None
-        now = datetime.now(UTC)
-        return (now - self.last_update_date).days
-
-    @computed_field
-    @property
-    def days_until_deadline(self) -> float | None:
-        """Calculate the number of days before the deadline"""
-
-        if self.deadline is None:
-            return None
-        now = datetime.now()
-        deadline_dt = datetime.combine(self.deadline, time(23, 59, 59))
-        return (deadline_dt - now).total_seconds()
-
-
-class JobMinOut(OwnedOut):
-    """Bare job output schema"""
-
-    title: str
-    description: str | None
-    salary_min: float | None
-    salary_max: float | None
-    personal_rating: int | None
-    url: str | None
-    deadline: datetime | None
-    note: str | None
-    attendance_type: str | None
-    followup_snooze_datetime: datetime | None
-    application_date: datetime
-    application_url: str | None = None
-    application_status: str
-    application_note: str | None = None
-    applied_via: str | None = None
-    name: str
-
-    # Foreign keys
-    company_id: int | None = None
-    location_id: int | None = None
-    duplicate_id: int | None = None
-    source_id: int | None = None
-    application_aggregator_id: int | None = None
+    @field_validator("keywords", "contacts", mode="before")
+    @classmethod
+    def serialize_relationships(cls, value) -> list[int]:
+        """Serialize relationships to list of IDs"""
+        return [item.id for item in value]
 
 
 class JobUpdate(JobCreate):
@@ -464,28 +333,13 @@ class InterviewCreate(BaseModel):
 class InterviewOut(InterviewCreate, OwnedOut):
     """Interview output with bare location and person data, and job data"""
 
-    location: LocationMinOut | None = None
-    interviewers: list[PersonMinOut] = []
-    interviewer_ids: list[int] | None = None
-    job: JobOut | None = None
+    interviewers: list[int] = []
 
-
-class InterviewAppOut(InterviewCreate, OwnedOut):
-    """Interview output with bare location and person data"""
-
-    location: LocationMinOut | None = None
-    interviewers: list[PersonMinOut] = []
-
-
-class InterviewMinOut(OwnedOut):
-    """Bare interview output schema"""
-
-    date: datetime
-    type: str
-    location_id: int | None
-    job_id: int
-    note: str | None
-    attendance_type: str | None
+    @field_validator("interviewers", mode="before")
+    @classmethod
+    def serialize_relationships(cls, value) -> list[int]:
+        """Serialize relationships to list of IDs"""
+        return [item.id for item in value]
 
 
 class InterviewUpdate(InterviewCreate):
@@ -510,12 +364,6 @@ class JobApplicationUpdateCreate(BaseModel):
 
 class JobApplicationUpdateOut(JobApplicationUpdateCreate, OwnedOut):
     """Job Application Update output schema with job data"""
-
-    job: JobOut | None = None
-
-
-class JobApplicationUpdateAppOut(JobApplicationUpdateCreate, OwnedOut):
-    """Job Application Update output"""
 
     pass
 

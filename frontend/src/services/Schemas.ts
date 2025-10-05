@@ -170,8 +170,8 @@ export interface JobData extends OwnedOut {
 	application_aggregator_id: number | null;
 	application_url: string | null;
 	attendance_type: string | null;
-	keywords: OwnedOut[];
-	contacts: OwnedOut[];
+	keywords: number[];
+	contacts: number[];
 }
 
 export interface EnrichedJobData extends JobData {
@@ -198,7 +198,7 @@ export interface InterviewData extends OwnedOut {
 	type: string;
 	location_id: number | null;
 	job_id: number;
-	interviewers: OwnedOut[];
+	interviewers: number[];
 	note: string | null;
 	attendance_type: string | null;
 }
