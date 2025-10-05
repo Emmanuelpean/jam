@@ -307,8 +307,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		fetchAllData().then(() => {});
 	}, [token, currentUser]);
 
-	console.log("Setting", settings);
-
 	return (
 		<DataContext.Provider
 			value={{

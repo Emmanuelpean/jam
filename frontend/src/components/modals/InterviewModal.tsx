@@ -56,7 +56,6 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	};
 
 	const transformFormData = (data: InterviewDataTransform): InterviewDataTransform => {
-		console.log(data);
 		return {
 			date: new Date(data.date),
 			type: data.type,
