@@ -476,7 +476,6 @@ const DataModal = ({
 
 			// Transform data if needed
 			const dataToSubmit = transformFormData ? transformFormData(formData) : formData;
-			console.log(dataToSubmit, data.id, entityType);
 
 			// Submit to API
 			const apiResult =
