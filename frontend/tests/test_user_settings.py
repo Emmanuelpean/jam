@@ -1,4 +1,8 @@
+"""Tests for the User Settings Page"""
+
 import time
+
+from selenium.webdriver.remote.webelement import WebElement
 
 from app.utils import verify_password
 from conftest import models, BaseTest
@@ -9,7 +13,9 @@ class TestUserSettingsPage(BaseTest):
 
     page_url = "settings"
 
-    def setup_function(self, request):
+    def setup_function(self, request) -> None:
+        """Setup for each test function"""
+
         self.login()
 
     def verify_user_in_database(self, email: str) -> bool:
@@ -18,57 +24,59 @@ class TestUserSettingsPage(BaseTest):
         return self.db.query(models.User).filter(models.User.email == email).all()
 
     @property
-    def current_password(self):
+    def current_password(self) -> WebElement:
+        """Get the current password field"""
         return self.get_element("current_password")
 
     @property
-    def email(self):
-        """Set the email field to the given value"""
+    def email(self) -> WebElement:
+        """Get the email field"""
 
         return self.get_element("email")
 
     @property
-    def new_password(self):
-        """Set the new password field to the given value"""
+    def new_password(self) -> WebElement:
+        """Get the new password field"""
 
         return self.get_element("new_password")
 
     @property
-    def confirm_password(self):
-        """Set the confirmation password field to the given value"""
+    def confirm_password(self) -> WebElement:
+        """Get the confirmation password field"""
 
         return self.get_element("confirm_password")
 
     @property
-    def theme_hint(self):
+    def theme_hint(self) -> WebElement:
         """Get the theme hint text"""
 
         return self.get_element("theme-hint")
 
     @property
-    def chase_threshold(self):
+    def chase_threshold(self) -> WebElement:
         """Get the chase threshold input"""
 
         return self.get_element("chase_threshold")
 
     @property
-    def deadline_threshold(self):
+    def deadline_threshold(self) -> WebElement:
         """Get the deadline threshold input"""
 
         return self.get_element("deadline_threshold")
 
     @property
-    def update_limit(self):
+    def update_limit(self) -> WebElement:
         """Get the update limit input"""
 
         return self.get_element("update_limit")
 
-    def confirm(self):
+    def confirm(self) -> None:
         """Confirm the form submission"""
 
-        return self.get_element("confirm-button").click()
+        self.get_element("confirm-button").click()
 
-    def assert_toast(self, message):
+    def assert_toast(self, message) -> None:
+        """Assert that the given toast message is displayed on the page"""
         assert message in self.get_element("toast").text, f"Message not found: {message}"
 
     def _assert_message(self, key: str, message: str) -> None:
@@ -99,22 +107,23 @@ class TestUserSettingsPage(BaseTest):
         self._assert_message("confirm_password-", error_message)
 
     @property
-    def db_user(self):
+    def db_user(self) -> models.User:
         """Get the user from the database"""
 
         return self.db.query(models.User).filter(models.User.id == self.user.id).first()
 
     # ------------------------------------------------- UPDATING EMAIL -------------------------------------------------
 
-    def test_no_password(self):
+    def test_no_password(self) -> None:
         """Test updating email without current password"""
 
         self.set_text(self.current_password, "")
         self.set_text(self.email, "test@test.com")
+        time.sleep(1)
         self.confirm()
         self.assert_password_error_message("Current password is required to update email or password")
 
-    def test_incorrect_password(self):
+    def test_incorrect_password(self) -> None:
         """Test updating email without current password"""
 
         self.set_text(self.current_password, "wrong")
@@ -196,7 +205,6 @@ class TestUserSettingsPage(BaseTest):
     def test_dashboard_settings(self) -> None:
         """Test changing the dashboard settings"""
 
-        print(self.db_user)
         assert self.db_user.chase_threshold == 30
         assert self.db_user.deadline_threshold == 30
         assert self.db_user.update_limit == 10
