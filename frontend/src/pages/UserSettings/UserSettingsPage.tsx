@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api, ApiError, exportApi } from "../../services/Api";
@@ -12,6 +12,7 @@ import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ValidationErrors } from "../../components/modals/DataModal/DataModal";
 import { useLoading } from "../../contexts/LoadingContext";
+import { UserData } from "../../services/Schemas";
 
 interface FormData {
 	email: string;
@@ -24,7 +25,7 @@ interface FormData {
 }
 
 const UserSettingsPage: React.FC = () => {
-	const { currentUser, token } = useAuth();
+	const { currentUser, token, updateCurrentUser } = useAuth();
 	const [formData, setFormData] = useState<FormData>({
 		chase_threshold: 0,
 		confirm_password: "",
@@ -184,7 +185,10 @@ const UserSettingsPage: React.FC = () => {
 				updateData.update_limit = formData.update_limit;
 			}
 
-			await api.put("users/me", updateData, token);
+			const response = await api.put("users/me", updateData, token);
+
+			// Update the context with the API response
+			updateCurrentUser(response);
 
 			// Success case - clear password fields but keep other data
 			if (formData.new_password) {
