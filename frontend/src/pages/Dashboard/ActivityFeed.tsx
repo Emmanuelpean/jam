@@ -1,7 +1,12 @@
 import React, { JSX } from "react";
 import { Card } from "react-bootstrap";
 import "./DashboardPage.css";
-import { renderFunctions, RenderViewFieldWithContext } from "../../components/rendering/view/ViewRenders";
+import {
+	renderFunctions,
+	RenderParams,
+	RenderViewFieldWithContext,
+	ViewField,
+} from "../../components/rendering/view/ViewRenders";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import { InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
 import { formatActivityDate } from "../../utils/TimeUtils";
@@ -82,9 +87,9 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 	const activityColor = getActivityColor(activity.type);
 	const activityIcon = getActivityIcon(activity.type);
 
-	const jobField = {
+	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: renderFunctions.jobBadge,
+		render: (params: RenderParams) => renderFunctions.jobBadge(params, null),
 	};
 
 	return (
@@ -123,9 +128,9 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 };
 
 export const renderUpcomingInterviewItem = (interview: InterviewData, index: number, isLast: boolean): JSX.Element => {
-	const jobField = {
+	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: renderFunctions.jobBadge,
+		render: (params: RenderParams) => renderFunctions.jobBadge(params, null),
 	};
 
 	return (
