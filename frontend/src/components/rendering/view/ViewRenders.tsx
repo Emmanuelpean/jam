@@ -355,7 +355,7 @@ export const renderFunctions = {
 							id={param.id}
 						>
 							<i className="bi bi-briefcase me-1"></i>
-							{String(text || job.name)}
+							{String(text || job.title)}
 						</span>
 					)}
 				</JobModalManager>

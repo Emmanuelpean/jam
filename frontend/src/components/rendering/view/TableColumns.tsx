@@ -455,7 +455,7 @@ export const tableColumns = {
 
 	daysSinceLastUpdate: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "days_since_last_update",
-		label: "Time Since Last Update",
+		label: "Since Last Update",
 		sortable: true,
 		type: "number",
 		render: renderFunctions.lastUpdateDays,

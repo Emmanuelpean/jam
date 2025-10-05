@@ -57,7 +57,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 	const keywords = useMemo(() => toSelectOptions(keywordsData), [keywordsData]);
 	const persons = useMemo(() => toSelectOptions(personsData), [personsData]);
 	const aggregators = useMemo(() => toSelectOptions(aggregatorsData), [aggregatorsData]);
-	const jobs = useMemo(() => toSelectOptions(jobsData, "id", "title"), [jobsData]);
+	const jobs = useMemo(() => toSelectOptions(jobsData, "id", "name"), [jobsData]);
 	const countries = useMemo(() => countriesData, [countriesData]);
 
 	// Modal handlers
