@@ -4,7 +4,7 @@ import { tableColumns } from "../rendering/view/TableColumns";
 import { JobApplicationUpdateModal, JobApplicationUpdateModalProps } from "../modals/JobApplicationUpdateModal";
 
 interface JobApplicationUpdatesTableProps extends DataTableProps {
-	jobId: string | number;
+	jobId: number;
 }
 
 const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({ jobId, data = [], columns = [] }) => {

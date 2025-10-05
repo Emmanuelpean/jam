@@ -137,7 +137,6 @@ export const Sidebar = () => {
 			if (item.submenu) {
 				const isSubmenuItemActive = isSubmenuActive(item.submenu);
 				const isSubmenuExpanded = expandedSubmenu === item.text;
-				console.log({ isSubmenuExpanded, expandedSubmenu, itemText: item.text });
 				const showSubmenu = shouldShowSubmenu(item);
 
 				return (

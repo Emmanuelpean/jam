@@ -375,7 +375,7 @@ export const tableColumns = {
 		searchable: true,
 		searchFields: "job.name",
 		sortField: "job.name",
-		render: renderFunctions.jobNameBadge,
+		render: renderFunctions.jobBadge,
 		...overrides,
 	}),
 
@@ -411,7 +411,7 @@ export const tableColumns = {
 		label: "Jobs",
 		sortable: true,
 		searchable: false,
-		render: (param: RenderParams) => renderFunctions._jobCount(param, "aggregator_id"),
+		render: (param: RenderParams) => renderFunctions._jobCount(param, "source_id"),
 		...overrides,
 	}),
 

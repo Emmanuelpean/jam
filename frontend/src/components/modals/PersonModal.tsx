@@ -6,7 +6,7 @@ import { personsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import AlertModal from "./AlertModal";
 import useGenericAlert from "../../hooks/useGenericAlert";
-import { PersonData } from "../../services/Schemas";
+import { PersonTransform, PersonData } from "../../services/Schemas";
 import { ValidationErrors } from "./DataModal/DataModal";
 import { useFormOptions } from "../rendering/form/FormOptions";
 
@@ -71,7 +71,7 @@ export const PersonModal: React.FC<DataModalProps> = ({
 		return errors;
 	};
 
-	const transformFormData = (data: PersonData) => {
+	const transformFormData = (data: PersonData): PersonTransform => {
 		return {
 			first_name: data.first_name?.trim(),
 			last_name: data.last_name?.trim(),
