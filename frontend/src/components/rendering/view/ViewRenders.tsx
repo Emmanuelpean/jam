@@ -404,7 +404,7 @@ export const renderFunctions = {
 					{(handleClick) => (
 						<span
 							className="badge bg-warning clickable-badge"
-							onClick={() => location && handleClick(location.id)}
+							onClick={() => location && handleClick(location)}
 							id={param.id}
 						>
 							<i className={`bi ${icon} me-1`}></i>
