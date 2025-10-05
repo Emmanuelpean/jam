@@ -32,7 +32,7 @@ class TestTablePage(BaseTest):
     sorting_columns = []
     test_entry_index = 0
 
-    def setup_function(self, request):
+    def setup_function(self, request) -> None:
         """Function called during the setup"""
 
         if isinstance(self.test_fixture, str):
@@ -42,7 +42,6 @@ class TestTablePage(BaseTest):
         if not self.sorting_columns:
             self.sorting_columns = self.columns
         self.login()
-        self.wait_for_table_load()
 
     # ----------------------------------------------------- MODALS -----------------------------------------------------
 
@@ -161,7 +160,7 @@ class TestTablePage(BaseTest):
         return self.get_element("add-entity-button")
 
     @property
-    def delete_confirm_button(self):
+    def delete_confirm_button(self) -> WebElement:
         """Get the delete confirm button on the modal"""
 
         return self.get_element("delete-alert-modal-confirm-button")
@@ -184,7 +183,7 @@ class TestTablePage(BaseTest):
 
         return self.get_element("edit-button")
 
-    def set_page_item_select(self, value):
+    def set_page_item_select(self, value) -> None:
         """Set the number of items to display per page
         :param value: Value to select (e.g. "20", "40")"""
 
@@ -430,8 +429,10 @@ class TestTablePage(BaseTest):
         modal = self.wait_for_view_modal("aggregator")
 
         # Verify modal contains the entry information
-        expected = (f"Aggregator Details\n{entry.name}\nWebsite\n{entry.url.replace('https://', '')}\nJobs\n({len(entry.jobs)})"
-                    f"\nJob Applications\n({len(entry.job_applications)})\nClose\nEdit")
+        expected = (
+            f"Aggregator Details\n{entry.name}\nWebsite\n{entry.url.replace('https://', '')}\nJobs\n({len(entry.jobs)})"
+            f"\nJob Applications\n({len(entry.job_applications)})\nClose\nEdit"
+        )
         assert modal.text == expected
 
         # Close modal
