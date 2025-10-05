@@ -10,6 +10,15 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr, field_validator
 
 
+def serialize_relationships(value) -> list[int]:
+    """Serialize relationships to list of IDs"""
+    if not value:
+        return []
+    if isinstance(value[0], int):
+        return value
+    return [item.id for item in value]
+
+
 class Out(BaseModel):
     """Base model for all output schemas"""
 
@@ -306,7 +315,7 @@ class JobOut(JobCreate, OwnedOut):
     @classmethod
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
-        return [item.id for item in value]
+        return serialize_relationships(value)
 
 
 class JobUpdate(JobCreate):
@@ -339,7 +348,7 @@ class InterviewOut(InterviewCreate, OwnedOut):
     @classmethod
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
-        return [item.id for item in value]
+        return serialize_relationships(value)
 
 
 class InterviewUpdate(InterviewCreate):
