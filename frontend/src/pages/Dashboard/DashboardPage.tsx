@@ -92,7 +92,7 @@ const JobSearchDashboard: React.FC = () => {
 	return (
 		<>
 			<Row className="g-4 mb-4">
-				<Col md={6} lg={3}>
+				<Col xs={6} md={6} lg={3}>
 					<StatCard
 						name="Total Jobs"
 						value={dataContext.jobs.length}
@@ -101,7 +101,7 @@ const JobSearchDashboard: React.FC = () => {
 						description="Jobs in your database"
 					/>
 				</Col>
-				<Col md={6} lg={3}>
+				<Col xs={6} md={6} lg={3}>
 					<StatCard
 						name="Applications"
 						value={jobApplications.length}
@@ -110,7 +110,7 @@ const JobSearchDashboard: React.FC = () => {
 						description="Total applications sent"
 					/>
 				</Col>
-				<Col md={6} lg={3}>
+				<Col xs={6} md={6} lg={3}>
 					<StatCard
 						name="Pending"
 						value={jobApplicationPending.length}
@@ -119,7 +119,7 @@ const JobSearchDashboard: React.FC = () => {
 						description="Applications awaiting response"
 					/>
 				</Col>
-				<Col md={6} lg={3}>
+				<Col xs={6} md={6} lg={3}>
 					<StatCard
 						name="Need Follow-up"
 						value={needsChase.length}
@@ -129,8 +129,10 @@ const JobSearchDashboard: React.FC = () => {
 					/>
 				</Col>
 			</Row>
-			<Row className="g-4" style={{ height: "500px", minHeight: 0 }}>
-				<Col lg={4} style={{ height: "100%", minHeight: 0 }}>
+
+			{/* First section: Recent Activity (left on desktop, top on mobile) and Follow-up Table */}
+			<Row className="g-4 mb-4">
+				<Col xs={12} lg={4} className="activity-column order-lg-1">
 					<ActivityFeedCard
 						icon="clock-history"
 						title="Recent Activity"
@@ -143,47 +145,41 @@ const JobSearchDashboard: React.FC = () => {
 						renderItem={renderRecentActivityItem}
 					/>
 				</Col>
-				<Col lg={8} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
-					<Card
-						className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
-						style={{ height: "100%", minHeight: 0 }}
-					>
+				<Col xs={12} lg={8} className="table-column order-lg-2">
+					<Card className="shadow-sm border-0 h-100 d-flex flex-column">
 						<CardHeader
 							icon="telephone"
 							title="Applications Requiring Follow-up"
 							subtitle="Jobs that need your attention"
 							badgeValue={needsChase.length}
 						/>
-						<Card.Body className="p-0 flex-grow-1" style={{ overflowY: "auto", minHeight: 0 }}>
-							<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
+						<Card.Body className="p-0 flex-grow-1 overflow-auto">
+							<div className="px-3">
 								<JobsToChase data={needsChase} menuItems={["view", "edit", "snooze", "delete"]} />
 							</div>
 						</Card.Body>
 					</Card>
 				</Col>
 			</Row>
-			<Row className="g-4" style={{ height: "500px", minHeight: 0, paddingTop: "3rem" }}>
-				<Col lg={8} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
-					<Card
-						className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
-						style={{ height: "100%", minHeight: 0 }}
-					>
+
+			{/* Second section: Upcoming Deadlines (left on desktop) and Upcoming Interviews */}
+			<Row className="g-4">
+				<Col xs={12} lg={8} className="table-column order-lg-1">
+					<Card className="shadow-sm border-0 h-100 d-flex flex-column">
 						<CardHeader
 							icon="clock"
 							title="Upcoming Deadlines"
 							subtitle="Jobs that need your attention"
 							badgeValue={upcomingDeadlines.length}
 						/>
-						<Card.Body className="p-0">
-							<div style={{ overflowY: "auto", minHeight: 0 }}>
-								<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
-									<UpcomingDeadlinesTable data={upcomingDeadlines} />
-								</div>
+						<Card.Body className="p-0 flex-grow-1 overflow-auto">
+							<div className="px-3">
+								<UpcomingDeadlinesTable data={upcomingDeadlines} />
 							</div>
 						</Card.Body>
 					</Card>
 				</Col>
-				<Col lg={4} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
+				<Col xs={12} lg={4} className="activity-column order-lg-2">
 					<ActivityFeedCard
 						icon="calendar-event"
 						title="Upcoming Interviews"
@@ -197,32 +193,6 @@ const JobSearchDashboard: React.FC = () => {
 					/>
 				</Col>
 			</Row>
-			{/*{currentUser?.toast_active && (*/}
-			{/*	<Row className="g-4" style={{ height: "500px", minHeight: 0, paddingTop: "3rem" }}>*/}
-			{/*		<Col lg={12} style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>*/}
-			{/*			<Card*/}
-			{/*				className="shadow-sm border-0 flex-grow-1 d-flex flex-column"*/}
-			{/*				style={{ height: "100%", minHeight: 0 }}*/}
-			{/*			>*/}
-			{/*				<CardHeader*/}
-			{/*					icon="inbox"*/}
-			{/*					title="Job Alerts"*/}
-			{/*					subtitle="Jobs that you received from job boards"*/}
-			{/*				/>*/}
-			{/*				<Card.Body*/}
-			{/*					className="p-0 flex-grow-1 d-flex flex-column"*/}
-			{/*					style={{ height: "100%", minHeight: 0 }}*/}
-			{/*				>*/}
-			{/*					<div style={{ flexGrow: 1, overflowY: "auto", minHeight: 0 }}>*/}
-			{/*						<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>*/}
-			{/*							<ScrapedJobsTable />*/}
-			{/*						</div>*/}
-			{/*					</div>*/}
-			{/*				</Card.Body>*/}
-			{/*			</Card>*/}
-			{/*		</Col>*/}
-			{/*	</Row>*/}
-			{/*)}*/}
 		</>
 	);
 };
