@@ -380,7 +380,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				updateItem(updatedItem);
 				showToastSuccess(`${item.title} was snoozed for ${weeks} week(s).`);
 			} catch (error) {
-				showToastError(`Failed to snooze ${itemType}. Please try again.`);
+				showToastError(`Failed to snooze ${item.title}. Please try again.`);
 			} finally {
 				setContextMenu(null);
 			}
