@@ -32,7 +32,9 @@ type EntityType =
 	| "jobApplicationUpdates"
 	| "aggregators"
 	| "keywords"
-	| "locations";
+	| "locations"
+	| "settings"
+	| "users";
 
 const endpointToEntityType = (endpoint: string): EntityType | null => {
 	const mapping: Record<string, EntityType> = {
@@ -44,6 +46,8 @@ const endpointToEntityType = (endpoint: string): EntityType | null => {
 		aggregators: "aggregators",
 		keywords: "keywords",
 		locations: "locations",
+		settings: "settings",
+		users: "users",
 	};
 	return mapping[endpoint.toLowerCase()] || null;
 };
@@ -472,6 +476,7 @@ const DataModal = ({
 
 			// Transform data if needed
 			const dataToSubmit = transformFormData ? transformFormData(formData) : formData;
+			console.log(dataToSubmit, data.id, entityType);
 
 			// Submit to API
 			const apiResult =
