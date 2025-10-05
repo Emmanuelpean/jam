@@ -378,7 +378,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 					token,
 				);
 				updateItem(updatedItem);
-				showToastSuccess("Job snoozed successfully");
+				showToastSuccess(`${item.title} was snoozed for ${weeks} week(s).`);
 			} catch (error) {
 				showToastError(`Failed to snooze ${itemType}. Please try again.`);
 			} finally {
