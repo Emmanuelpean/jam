@@ -61,7 +61,7 @@ export function flattenArray(arr: Array<any>): Array<any> {
 	return result;
 }
 
-export const normaliseList = <T>(variable: T | T[] | null | undefined): T[] => {
+export const toList = <T>(variable: T | T[] | null | undefined): T[] => {
 	if (variable === null || variable === undefined) return [];
 	return Array.isArray(variable) ? variable : [variable];
 };

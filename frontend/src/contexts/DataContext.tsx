@@ -305,7 +305,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		if (!currentUser) return;
 
 		fetchAllData().then(() => {});
-	}, [token, currentUser]);
+	}, [token, currentUser?.token, currentUser?.is_admin]);
 
 	return (
 		<DataContext.Provider
