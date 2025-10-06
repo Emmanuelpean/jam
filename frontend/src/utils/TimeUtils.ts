@@ -62,3 +62,13 @@ export function formatTimedelta(seconds: number): string {
 	const hours = Math.floor(seconds / 3600);
 	return `${hours} hour${hours !== 1 ? "s" : ""}`;
 }
+
+export function convertToEndOfDay(date: Date): Date {
+	// Create a copy to avoid mutating the original
+	const endDate = new Date(date);
+
+	// Set to end of day
+	endDate.setHours(23, 59, 59, 0);
+
+	return endDate;
+}
