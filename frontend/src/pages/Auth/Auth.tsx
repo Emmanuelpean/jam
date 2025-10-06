@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import "./Auth.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
-import { Card, Form, Spinner } from "react-bootstrap";
+import { Card, Form, Spinner, Alert } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
 import { Errors, renderModalFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
@@ -18,6 +18,7 @@ function AuthForm(): JSX.Element {
 		password: "",
 		confirmPassword: "",
 	});
+	const [showBanner, setShowBanner] = useState<boolean>(true);
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -242,6 +243,40 @@ function AuthForm(): JSX.Element {
 					</div>
 				</div>
 			</div>
+
+			{showBanner && (
+				<Alert
+					variant="info"
+					dismissible
+					onClose={() => setShowBanner(false)}
+					className="mb-3"
+					style={{ maxWidth: "500px" }}
+				>
+					<Alert.Heading className="h6 d-flex align-items-center mb-2">
+						<i className="bi bi-rocket-takeoff-fill me-2"></i>
+						Welcome to JAM Early Alpha!
+					</Alert.Heading>
+					<p className="mb-2 small">Thanks for testing! Try out the app with these demo credentials:</p>
+					<div className="d-flex flex-column gap-1 mb-2" style={{ fontSize: "0.875rem" }}>
+						<div>
+							<strong>Email:</strong>{" "}
+							<code className="bg-light px-2 py-1 rounded">test_user@test.com</code>
+						</div>
+						<div>
+							<strong>Password:</strong> <code className="bg-light px-2 py-1 rounded">test_password</code>
+						</div>
+					</div>
+					<p className="mb-0 small text-muted">
+						Found a bug or have feedback?{" "}
+						<a
+							href="mailto:emmanuelpean@gmail.com?subject=JAM Alpha Feedback"
+							className="text-decoration-none fw-semibold"
+						>
+							Let me know!
+						</a>
+					</p>
+				</Alert>
+			)}
 
 			<Card className="auth-card border-0 auth-card-animated">
 				<Card.Body>
