@@ -29,7 +29,7 @@ const PasswordInput = ({ field, value, handleChange, error }: WidgetProps) => {
 					<i className="bi bi-eye"></i>
 				</button>
 			</div>
-			{field.helpText && !error && <Form.Text className="text-muted">{field.helpText}</Form.Text>}
+			{/*{field.helpText && !error && <Form.Text className="text-muted">{field.helpText}</Form.Text>}*/}
 		</>
 	);
 };

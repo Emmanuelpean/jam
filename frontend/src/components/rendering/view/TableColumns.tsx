@@ -1,16 +1,32 @@
-import { ViewField, renderFunctions, RenderParams } from "./ViewRenders";
+import { renderFunctions, RenderParams, ViewField } from "./ViewRenders";
 import { localeDateOnly } from "../../../utils/TimeUtils";
-import { JobData } from "../../../services/Schemas";
+import { CompanyData, JobData, LocationData } from "../../../services/Schemas";
+import { DataContextValue } from "../../../contexts/DataContext";
 
 export interface TableColumn extends ViewField {
 	label: string;
 	sortable?: boolean;
 	searchable?: boolean | ((item: any) => string);
 	type?: string;
-	sortField?: string | ((item: any) => string | number) | string[];
-	searchFields?: string | ((item: any) => string) | string[];
+	sortField?: string | ((item: any, dataContext?: DataContextValue) => string | number) | string[];
+	searchFields?: string | ((item: any, dataContext?: DataContextValue) => string) | string[];
 	columnClass?: string;
 }
+
+const getCompanyText = (item: any, context?: DataContextValue): string => {
+	return context?.companies.filter((company: CompanyData): boolean => company.id === item.company_id)[0]?.name || "";
+};
+
+const getLocationText = (item: any, context?: DataContextValue): string => {
+	const location_name =
+		context?.locations.filter((location: LocationData): boolean => location.id === item.location_id)[0]?.name || "";
+	const attendance_name = item.attendance_type || "";
+	return location_name + attendance_name;
+};
+
+const getJobText = (item: any, context?: DataContextValue): string => {
+	return context?.jobs.filter((job: JobData): boolean => job.id === item.job_id)[0]?.name || "";
+};
 
 interface TableColumnOverrides extends Partial<TableColumn> {}
 
@@ -164,8 +180,8 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		sortField: ["location.name", "attendance_type"],
-		searchFields: ["location.name", "attendance_type"],
+		sortField: getLocationText,
+		searchFields: getLocationText,
 		render: renderFunctions.LocationBadge,
 		...overrides,
 	}),
@@ -215,7 +231,7 @@ export const tableColumns = {
 		searchable: true,
 		type: "text",
 		sortField: "company.name",
-		searchFields: "company.name",
+		searchFields: getCompanyText,
 		render: renderFunctions.CompanyBadge,
 		...overrides,
 	}),
@@ -373,8 +389,8 @@ export const tableColumns = {
 		label: "Job",
 		sortable: true,
 		searchable: true,
-		searchFields: "job.name",
-		sortField: "job.name",
+		searchFields: getJobText,
+		sortField: getJobText,
 		render: (params: RenderParams) => renderFunctions.jobBadge(params, null),
 		...overrides,
 	}),

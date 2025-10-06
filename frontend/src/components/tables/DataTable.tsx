@@ -5,7 +5,7 @@ import { useDataContext } from "../../contexts/DataContext";
 import { api } from "../../services/Api";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
-import { accessAttribute, normaliseList } from "../../utils/Utils";
+import { accessAttribute, toList } from "../../utils/Utils";
 import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
@@ -198,11 +198,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 					let value: string;
 					if (column.searchFields) {
 						if (typeof column.searchFields === "function") {
-							value = column.searchFields(item[column.key]);
+							value = column.searchFields(item, dataContext);
 						} else {
-							const fields: string[] = normaliseList(column.searchFields);
+							const fields: string[] = toList(column.searchFields);
 							value = fields
-								.map((field: string): any => item[field])
+								.map((field: string): any => accessAttribute(item, field))
 								.filter((val: any): boolean => val != null)
 								.join(" ");
 						}
@@ -222,10 +222,10 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				if (!column) return 0;
 
 				if (typeof column.sortField === "function") {
-					aValue = column.sortField(a);
-					bValue = column.sortField(b);
+					aValue = column.sortField(a, dataContext);
+					bValue = column.sortField(b, dataContext);
 				} else if (typeof column.sortField === "string" || Array.isArray(column.sortField)) {
-					const sortFields: string[] = normaliseList(column.sortField);
+					const sortFields: string[] = toList(column.sortField);
 					aValue = sortFields
 						.map((field: string) => accessAttribute(a, field))
 						.reduce((acc, val) => acc + (val ?? ""), "");

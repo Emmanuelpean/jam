@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState } from "react";
 import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api, ApiError, exportApi } from "../../services/Api";
@@ -11,8 +11,6 @@ import { findByKey } from "../../utils/Utils";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ValidationErrors } from "../../components/modals/DataModal/DataModal";
-import { useLoading } from "../../contexts/LoadingContext";
-import { UserData } from "../../services/Schemas";
 
 interface FormData {
 	email: string;
@@ -26,47 +24,20 @@ interface FormData {
 
 const UserSettingsPage: React.FC = () => {
 	const { currentUser, token, updateCurrentUser } = useAuth();
-	const [formData, setFormData] = useState<FormData>({
-		chase_threshold: 0,
-		confirm_password: "",
+	const [formData, setFormData] = useState<FormData>(() => ({
+		email: currentUser?.email || "",
+		chase_threshold: currentUser?.chase_threshold || 0,
+		deadline_threshold: currentUser?.deadline_threshold || 0,
+		update_limit: currentUser?.update_limit || 0,
 		current_password: "",
-		deadline_threshold: 0,
-		email: "",
 		new_password: "",
-		update_limit: 0,
-	});
+		confirm_password: "",
+	}));
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState<boolean>(false);
-	const { showLoading, hideLoading } = useLoading();
 
 	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
-
-	// Load user settings on component mount
-	useEffect(() => {
-		const loadUserSettings = async () => {
-			if (!token) return;
-
-			showLoading("Loading User Settings...");
-			try {
-				const response = await api.get("users/me", token);
-
-				setFormData(() => ({
-					email: response.email || "",
-					chase_threshold: response.chase_threshold,
-					deadline_threshold: response.deadline_threshold,
-					update_limit: response.update_limit,
-				}));
-			} catch (error) {
-				console.error("Failed to load user settings:", error);
-				showToastError("Failed to load user settings. Please refresh the page.");
-			} finally {
-				hideLoading();
-			}
-		};
-
-		loadUserSettings().then(() => {});
-	}, [token]);
 
 	const downloadJobsExport = async (token: string | null) => {
 		if (!token) return;

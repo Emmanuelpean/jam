@@ -12,7 +12,7 @@ from conftest import contiguous_subdicts, generate_entry_combinations, models, B
 from react_select import ReactSelect
 
 
-class TestTablePage(BaseTest):
+class TablePage(BaseTest):
     """Base class for testing pages"""
 
     test_entries = None
@@ -492,7 +492,7 @@ class TestTablePage(BaseTest):
         self.wait_for_view_modal_close("person")
 
 
-class TestKeywordsPage(TestTablePage):
+class TestKeywordsPage(TablePage):
     """Test class for the keywords Page functionality including:
     - Displaying entries
     - Adding entries
@@ -515,7 +515,7 @@ class TestKeywordsPage(TestTablePage):
         self.check_keyword_view_modal(self.test_entry)
 
 
-class TestAggregatorsPage(TestTablePage):
+class TestAggregatorsPage(TablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries
@@ -538,7 +538,7 @@ class TestAggregatorsPage(TestTablePage):
         self.check_aggregator_view_modal(self.test_entry)
 
 
-class TestCompaniesPage(TestTablePage):
+class TestCompaniesPage(TablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries
@@ -561,7 +561,7 @@ class TestCompaniesPage(TestTablePage):
         self.check_company_view_modal(self.test_entry)
 
 
-class TestLocationsPage(TestTablePage):
+class TestLocationsPage(TablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries
@@ -583,7 +583,7 @@ class TestLocationsPage(TestTablePage):
         self.check_location_view_modal(self.test_entry)
 
 
-class TestPersonsPage(TestTablePage):
+class TestPersonsPage(TablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries
@@ -617,7 +617,7 @@ class TestPersonsPage(TestTablePage):
     def test_table_company_badge(self):
         """Test that the company badge is displayed correctly"""
 
-        self.get_element("table-row-1-company").click()
+        self.get_element("table-row-1-CompanyBadge").click()
         print(self.test_entry)
         self.check_company_view_modal(self.test_entry.company)
 

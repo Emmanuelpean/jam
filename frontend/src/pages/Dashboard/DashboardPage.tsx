@@ -5,27 +5,29 @@ import "./DashboardPage.css";
 import { EnrichedJobData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
 import JobsToChase from "../../components/tables/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/tables/UpcomingDeadlines";
-import { useDataContext } from "../../contexts/DataContext";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { StatCard } from "./StatCard";
 import { CardHeader } from "./CardHeader";
 import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem } from "./ActivityFeed";
 import { RecentActivity } from "./ActivityFeed";
 
 const JobSearchDashboard: React.FC = () => {
-	const dataContext = useDataContext();
+	const dataContext: DataContextValue = useDataContext();
 	const { currentUser } = useAuth();
 	if (!currentUser) {
 		return null;
 	}
+	const now = new Date();
 
-	const jobApplications = dataContext.jobs.filter(
+	const jobApplications: EnrichedJobData[] = dataContext.jobs.filter(
 		(job: EnrichedJobData): Date | string | null | undefined => job.application_date || job.application_status,
 	);
-	const jobApplicationPending = jobApplications.filter(
+
+	const jobApplicationPending: EnrichedJobData[] = jobApplications.filter(
 		(job: EnrichedJobData): boolean | string | null | undefined =>
 			job.application_status && !["rejected", "withdrawn"].includes(job.application_status),
 	);
-	const now = new Date();
+
 	const needsChase: EnrichedJobData[] = jobApplicationPending.filter(
 		(job: EnrichedJobData): boolean | 0 | null | undefined =>
 			job.days_since_last_update &&
@@ -64,7 +66,7 @@ const JobSearchDashboard: React.FC = () => {
 
 	// Add interviews as "Interview" updates
 	dataContext.interviews.forEach((interview: InterviewData): void => {
-		if (interview.date) {
+		if (interview.date < now) {
 			allUpdates.push({
 				data: interview,
 				date: interview.date,
@@ -76,7 +78,7 @@ const JobSearchDashboard: React.FC = () => {
 
 	// Add job application updates
 	dataContext.jobApplicationUpdates.forEach((update: JobApplicationUpdateData): void => {
-		if (update.date) {
+		if (update.date < now) {
 			allUpdates.push({
 				data: update,
 				date: update.date,
