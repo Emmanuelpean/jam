@@ -9,7 +9,6 @@ const KeywordsPage = () => {
 	return (
 		<DataTable
 			entityType="keywords"
-			endpoint="keywords"
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			title="Tags"
 			columns={columns}

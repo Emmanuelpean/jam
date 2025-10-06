@@ -15,7 +15,6 @@ const AggregatorsPage = () => {
 	return (
 		<DataTable
 			entityType="aggregators"
-			endpoint="aggregators"
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			title="Job Aggregators"
 			columns={columns}

@@ -16,7 +16,6 @@ const InterviewsPage = () => {
 	return (
 		<DataTable
 			entityType="interviews"
-			endpoint="interviews"
 			initialSortConfig={{ key: "date", direction: "desc" }}
 			title="Interviews"
 			columns={columns}

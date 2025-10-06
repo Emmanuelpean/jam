@@ -26,7 +26,6 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({ jobId, data = [], col
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}
 			Modal={ModalWithProps}
-			endpoint="interviews"
 			nameKey="date"
 			itemType="Interview"
 			modalSize="lg"

@@ -10,6 +10,7 @@ import { StatCard } from "./StatCard";
 import { CardHeader } from "./CardHeader";
 import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem } from "./ActivityFeed";
 import { RecentActivity } from "./ActivityFeed";
+import ScrapedJobsTable from "../../components/tables/ScrapedJobTable";
 
 const JobSearchDashboard: React.FC = () => {
 	const dataContext: DataContextValue = useDataContext();
@@ -165,7 +166,7 @@ const JobSearchDashboard: React.FC = () => {
 			</Row>
 
 			{/* Second section: Upcoming Deadlines (left on desktop) and Upcoming Interviews */}
-			<Row className="g-4">
+			<Row className="g-4 mb-4">
 				<Col xs={12} lg={8} className="table-column order-lg-1">
 					<Card className="shadow-sm border-0 h-100 d-flex flex-column">
 						<CardHeader
@@ -195,6 +196,32 @@ const JobSearchDashboard: React.FC = () => {
 					/>
 				</Col>
 			</Row>
+			{currentUser?.toast_active && (
+				<Row className="g-4 mb-4">
+					<Col lg={12} className="table-column order-lg-1">
+						<Card
+							className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
+							style={{ height: "100%", minHeight: 0 }}
+						>
+							<CardHeader
+								icon="inbox"
+								title="Job Alerts"
+								subtitle="Jobs that you received from job boards"
+							/>
+							<Card.Body
+								className="p-0 flex-grow-1 d-flex flex-column"
+								style={{ height: "100%", minHeight: 0 }}
+							>
+								<div style={{ flexGrow: 1, overflowY: "auto", minHeight: 0 }}>
+									<div style={{ marginLeft: "1rem", marginRight: "1rem" }}>
+										<ScrapedJobsTable />
+									</div>
+								</div>
+							</Card.Body>
+						</Card>
+					</Col>
+				</Row>
+			)}
 		</>
 	);
 };
