@@ -7,6 +7,7 @@ import { JobData, JobDataTransform } from "../../services/Schemas";
 import { jobsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
+import { convertToEndOfDay } from "../../utils/TimeUtils";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -103,6 +104,8 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	];
 
 	const transformData = (jobData: JobDataTransform): JobDataTransform => {
+		console.log(jobData);
+
 		return {
 			title: jobData.title.trim(),
 			description: jobData.description?.trim() || null,
@@ -113,7 +116,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 			personal_rating: jobData.personal_rating || null,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
-			deadline: jobData.deadline ? new Date(jobData.deadline + "T23:59:59") : null,
+			deadline: jobData.deadline ? convertToEndOfDay(jobData.deadline) : null,
 			source_id: jobData.source_id || null,
 			keywords: jobData.keywords || [],
 			contacts: jobData.contacts || [],
