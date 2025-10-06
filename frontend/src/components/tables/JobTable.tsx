@@ -21,7 +21,6 @@ const JobsTable: React.FC<DataTableProps> = ({ data = [], columns = [] }) => {
 			columns={defaultColumns}
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			Modal={JobModal}
-			endpoint="jobs"
 			nameKey="title"
 			itemType="Job"
 			modalSize="xl"

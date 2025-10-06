@@ -22,7 +22,6 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}
 			Modal={ModalWithProps}
-			endpoint="jobapplicationupdates"
 			nameKey="date"
 			itemType="Update"
 			modalSize="lg"

@@ -1,9 +1,9 @@
-import React from "react";
+import React, { JSX } from "react";
 import { DataTableProps, DataTable } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../modals/ScrapedJobModal";
 
-const ScrapedJobsTable: React.FC<DataTableProps> = ({ onDataChange, columns = [] }) => {
+const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableProps): JSX.Element => {
 	const defaultColumns =
 		columns.length > 0
 			? columns
@@ -19,7 +19,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ onDataChange, columns = []
 
 	return (
 		<DataTable
-			entityType="jobs"
+			entityType="scrapedJobs"
 			mode="import"
 			columns={defaultColumns}
 			initialSortConfig={{ key: "created_at", direction: "desc" }}

@@ -1,7 +1,7 @@
 import React, { MouseEvent, ReactNode, useCallback, useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { useDataContext } from "../../contexts/DataContext";
+import { EntityType, useDataContext } from "../../contexts/DataContext";
 import { api } from "../../services/Api";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
@@ -26,7 +26,6 @@ export interface SortConfig {
 export interface DataTableProps {
 	data?: any | null;
 	columns?: TableColumn[];
-	onDataChange?: (data: any[]) => void;
 	error?: string | null;
 	showAdd?: boolean;
 	menuItems?: string[];
@@ -34,18 +33,7 @@ export interface DataTableProps {
 
 export interface GenericTableProps {
 	// Data source - entity type from DataContext
-	entityType:
-		| "jobs"
-		| "companies"
-		| "persons"
-		| "interviews"
-		| "jobApplicationUpdates"
-		| "aggregators"
-		| "keywords"
-		| "locations"
-		| "settings"
-		| "users";
-
+	entityType: EntityType;
 	// Override context data with provided data
 	data?: any[];
 
@@ -105,8 +93,12 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	menuItems,
 }: GenericTableProps) => {
 	const { token } = useAuth();
+
+	// Data management
 	const dataContext = useDataContext();
-	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [loadError, setLoadError] = useState<string | null>(null);
+	const [fetchedData, setFetchedData] = useState<any[]>([]);
 
 	// Search and sort
 	const [sortConfig, setSortConfig] = useState<SortConfig>(
@@ -115,6 +107,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const [searchTerm, setSearchTerm] = useState<string>("");
 
 	// UI state
+	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 	const [currentPage, setCurrentPage] = useState<number>(0);
@@ -136,14 +129,37 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		closeImportModal,
 	} = useModalState();
 
+	const fetchData = useCallback(async () => {
+		setIsLoading(true);
+		setLoadError(null);
+
+		try {
+			const response = await api.get(endpoint, token);
+			setFetchedData(response);
+		} catch (error: any) {
+			setLoadError(error.message || "Failed to load data");
+			showToastError(`Failed to load ${itemType}s`);
+		} finally {
+			setIsLoading(false);
+		}
+	}, [endpoint, token, itemType, showToastError]);
+
+	useEffect(() => {
+		if (endpoint && !providedData) {
+			fetchData();
+		}
+	}, [endpoint, entityType, providedData]);
+
 	// Get data from context based on entityType
 	const getData = (): any[] => {
-		// If data is explicitly provided, use it
 		if (providedData !== undefined) {
 			return providedData;
 		}
 
-		// Otherwise, get from context
+		if (endpoint) {
+			return fetchedData;
+		}
+
 		return (dataContext as any)[entityType] || [];
 	};
 
@@ -453,6 +469,26 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 	if (contextError) {
 		return <div className="alert alert-danger mt-3">{contextError.message}</div>;
+	}
+
+	if (isLoading) {
+		return (
+			<div className="d-flex justify-content-center align-items-center py-5">
+				<div className="spinner-border text-primary" role="status">
+					<span className="visually-hidden">Loading...</span>
+				</div>
+				<span className="ms-3">Loading {itemType}s...</span>
+			</div>
+		);
+	}
+
+	if (loadError) {
+		return (
+			<div className="alert alert-danger mt-3">
+				<i className="bi bi-exclamation-triangle-fill me-2"></i>
+				{loadError}
+			</div>
+		);
 	}
 
 	return (

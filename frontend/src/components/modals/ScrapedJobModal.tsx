@@ -9,6 +9,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
 import { SelectOption } from "../../utils/Utils";
+import { locationParserApi } from "../../services/Api";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -16,6 +17,7 @@ interface JobAndApplicationProps extends DataModalProps {
 
 export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide, data, submode, size = "xl" }) => {
 	const { token } = useAuth();
+
 	const {
 		companies,
 		locations,
@@ -30,7 +32,9 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		renderKeywordModal,
 		renderPersonModal,
 		renderAggregatorModal,
-	} = useFormOptions(show ? ["companies", "locations", "keywords", "persons"] : []);
+	} = useFormOptions(["companies", "locations", "keywords", "persons"], {
+		companies: () => ({ name: data?.company }),
+	});
 
 	function findClosest(companyOptions: SelectOption[], companyName: string) {
 		if (!companyName || companyOptions.length === 0) return null;

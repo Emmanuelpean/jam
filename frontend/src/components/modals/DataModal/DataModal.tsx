@@ -1,11 +1,10 @@
 import React, { JSX, ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
+import { Alert, Card, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
-import { useDataContext } from "../../../contexts/DataContext";
+import { endpointToEntityType, useDataContext } from "../../../contexts/DataContext";
 import "./DataModal.css";
 import { Errors, renderModalFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
-import { api } from "../../../services/Api";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import AlertModal from "../AlertModal";
 import { areDifferent, findByKey, flattenArray } from "../../../utils/Utils";
@@ -22,35 +21,6 @@ export interface TabConfig {
 	fields: { view: ViewFields; form: FormFields };
 	additionalFields?: ModalViewField[];
 }
-
-// Map endpoint names to DataContext entity types
-type EntityType =
-	| "jobs"
-	| "companies"
-	| "persons"
-	| "interviews"
-	| "jobApplicationUpdates"
-	| "aggregators"
-	| "keywords"
-	| "locations"
-	| "settings"
-	| "users";
-
-const endpointToEntityType = (endpoint: string): EntityType | null => {
-	const mapping: Record<string, EntityType> = {
-		jobs: "jobs",
-		companies: "companies",
-		persons: "persons",
-		interviews: "interviews",
-		jobapplicationupdates: "jobApplicationUpdates",
-		aggregators: "aggregators",
-		keywords: "keywords",
-		locations: "locations",
-		settings: "settings",
-		users: "users",
-	};
-	return mapping[endpoint.toLowerCase()] || null;
-};
 
 export interface GenericModalProps {
 	mode?: "view" | "edit" | "add" | "import"; // modal mode
@@ -92,7 +62,6 @@ const DataModal = ({
 }: GenericModalProps) => {
 	const hasTabs = tabs && tabs.length > 0;
 
-	const { token } = useAuth();
 	const dataContext = useDataContext();
 	const entityType = endpointToEntityType(endpoint)!;
 	const [effectiveData, setEffectiveData] = useState(data);
@@ -101,7 +70,6 @@ const DataModal = ({
 	const [submitting, setSubmitting] = useState(false);
 	const [errors, setErrors] = useState<Errors>({});
 	const [isEditing, setIsEditing] = useState(false);
-	const [loading, setLoading] = useState(false);
 	const { currentUser } = useAuth();
 	const [activeTab, setActiveTab] = useState<string | null>(() => {
 		if (hasTabs) {
@@ -117,30 +85,10 @@ const DataModal = ({
 
 	useEffect(() => {
 		const loadData = async () => {
-			if (show && endpoint && token) {
-				if (id) {
-					setLoading(true);
-					try {
-						const response = await api.get(`${endpoint}/${id}`, token);
-						if (response) {
-							setEffectiveData(response);
-						}
-					} catch (error) {
-						console.error(`Failed to load ${itemName}:`, error);
-						await showError({
-							message: `Failed to load ${itemName}.`,
-						});
-					} finally {
-						setLoading(false);
-					}
-				} else if (data) {
-					setEffectiveData(data);
-				}
-			}
+			setEffectiveData(data);
 		};
-
 		loadData().then(() => {});
-	}, [id, endpoint, token, data, mode]);
+	}, [id, endpoint, data, mode]);
 
 	// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
 
@@ -186,8 +134,8 @@ const DataModal = ({
 	useEffect(() => {
 		// Initialize modal state when it becomes visible or data changes
 		if (mode === "add") {
-			setFormData({});
-			setOriginalFormData({});
+			setFormData({ ...effectiveData });
+			setOriginalFormData({ ...effectiveData });
 			setIsEditing(true);
 		} else if (mode === "edit") {
 			setFormData({ ...effectiveData });
@@ -544,18 +492,6 @@ const DataModal = ({
 	};
 
 	const renderBodyContent = (): JSX.Element => {
-		if (loading) {
-			return (
-				<div
-					className="d-flex justify-content-center align-items-center py-5 modal-content-animated"
-					style={{ height: containerHeight }}
-				>
-					<Spinner animation="border" variant="primary" />
-					<span className="ms-3">Loading {itemName.toLowerCase()}...</span>
-				</div>
-			);
-		}
-
 		const currentFields = getCurrentFields();
 		const currentAdditionalFields = getCurrentAdditionalFields();
 
@@ -655,7 +591,7 @@ const DataModal = ({
 								<ActionButton
 									id="confirm-button"
 									type="submit"
-									disabled={submitting || loading}
+									disabled={submitting}
 									loading={submitting}
 									loadingText="Submitting..."
 									defaultText="Confirm"
@@ -680,7 +616,7 @@ const DataModal = ({
 								<ActionButton
 									id="import-button"
 									type="submit"
-									disabled={submitting || loading}
+									disabled={submitting}
 									loading={submitting}
 									loadingText="Importing..."
 									defaultText="Import"
@@ -778,7 +714,6 @@ const DataModal = ({
 							onClick={handleEdit}
 							defaultText="Edit"
 							fullWidth={false}
-							disabled={loading}
 						/>
 					</div>
 				</Modal.Footer>

@@ -8,6 +8,16 @@ import { PersonModal } from "../../modals/PersonModal";
 import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobModal } from "../../modals/JobModal";
 
+// Type for the factory function mapping
+type DataFactoryMap = {
+	companies?: () => any;
+	locations?: () => any;
+	keywords?: () => any;
+	persons?: () => any;
+	aggregators?: () => any;
+	jobs?: () => any;
+};
+
 interface UseFormOptionsReturn {
 	error: Error | null;
 	companies: SelectOption[];
@@ -31,7 +41,10 @@ interface UseFormOptionsReturn {
 	renderJobModal: () => JSX.Element;
 }
 
-export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsReturn => {
+export const useFormOptions = (
+	requiredOptions: string[] = [],
+	dataFactories?: DataFactoryMap,
+): UseFormOptionsReturn => {
 	const {
 		companies: companiesData,
 		locations: locationsData,
@@ -52,13 +65,13 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 	const [showJobModal, setShowJobModal] = useState<boolean>(false);
 
 	// Convert data to SelectOptions and memoize
-	const companies = useMemo(() => toSelectOptions(companiesData), [companiesData]);
-	const locations = useMemo(() => toSelectOptions(locationsData), [locationsData]);
-	const keywords = useMemo(() => toSelectOptions(keywordsData), [keywordsData]);
-	const persons = useMemo(() => toSelectOptions(personsData), [personsData]);
-	const aggregators = useMemo(() => toSelectOptions(aggregatorsData), [aggregatorsData]);
-	const jobs = useMemo(() => toSelectOptions(jobsData, "id", "name"), [jobsData]);
-	const countries = useMemo(() => countriesData, [countriesData]);
+	const companies: SelectOption[] = useMemo(() => toSelectOptions(companiesData), [companiesData]);
+	const locations: SelectOption[] = useMemo(() => toSelectOptions(locationsData), [locationsData]);
+	const keywords: SelectOption[] = useMemo(() => toSelectOptions(keywordsData), [keywordsData]);
+	const persons: SelectOption[] = useMemo(() => toSelectOptions(personsData), [personsData]);
+	const aggregators: SelectOption[] = useMemo(() => toSelectOptions(aggregatorsData), [aggregatorsData]);
+	const jobs: SelectOption[] = useMemo(() => toSelectOptions(jobsData, "id", "name"), [jobsData]);
+	const countries: SelectOption[] = useMemo(() => countriesData, [countriesData]);
 
 	// Modal handlers
 	const openCompanyModal = (): void => setShowCompanyModal(true);
@@ -79,40 +92,84 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 	const openJobModal = (): void => setShowJobModal(true);
 	const closeJobModal = (): void => setShowJobModal(false);
 
-	// Render modal functions
-	const renderCompanyModal = (): JSX.Element => (
-		<CompanyModal show={showCompanyModal} onHide={closeCompanyModal} onSuccess={closeCompanyModal} submode="add" />
-	);
+	// Render modal functions with factory data support
+	const renderCompanyModal = (): JSX.Element => {
+		const initialData = dataFactories?.companies?.();
+		return (
+			<CompanyModal
+				show={showCompanyModal}
+				onHide={closeCompanyModal}
+				onSuccess={closeCompanyModal}
+				submode="add"
+				data={initialData}
+			/>
+		);
+	};
 
-	const renderLocationModal = (): JSX.Element => (
-		<LocationModal
-			show={showLocationModal}
-			onHide={closeLocationModal}
-			onSuccess={closeCompanyModal}
-			submode="add"
-		/>
-	);
+	const renderLocationModal = (): JSX.Element => {
+		const initialData = dataFactories?.locations?.();
+		return (
+			<LocationModal
+				show={showLocationModal}
+				onHide={closeLocationModal}
+				onSuccess={closeLocationModal}
+				submode="add"
+				data={initialData}
+			/>
+		);
+	};
 
-	const renderKeywordModal = (): JSX.Element => (
-		<KeywordModal show={showKeywordModal} onHide={closeKeywordModal} onSuccess={closeKeywordModal} submode="add" />
-	);
+	const renderKeywordModal = (): JSX.Element => {
+		const initialData = dataFactories?.keywords?.();
+		return (
+			<KeywordModal
+				show={showKeywordModal}
+				onHide={closeKeywordModal}
+				onSuccess={closeKeywordModal}
+				submode="add"
+				data={initialData}
+			/>
+		);
+	};
 
-	const renderPersonModal = (): JSX.Element => (
-		<PersonModal show={showPersonModal} onHide={closePersonModal} onSuccess={closePersonModal} submode="add" />
-	);
+	const renderPersonModal = (): JSX.Element => {
+		const initialData = dataFactories?.persons?.();
+		return (
+			<PersonModal
+				show={showPersonModal}
+				onHide={closePersonModal}
+				onSuccess={closePersonModal}
+				submode="add"
+				data={initialData}
+			/>
+		);
+	};
 
-	const renderAggregatorModal = (): JSX.Element => (
-		<AggregatorModal
-			show={showAggregatorModal}
-			onHide={closeAggregatorModal}
-			onSuccess={closeAggregatorModal}
-			submode="add"
-		/>
-	);
+	const renderAggregatorModal = (): JSX.Element => {
+		const initialData = dataFactories?.aggregators?.();
+		return (
+			<AggregatorModal
+				show={showAggregatorModal}
+				onHide={closeAggregatorModal}
+				onSuccess={closeAggregatorModal}
+				submode="add"
+				data={initialData}
+			/>
+		);
+	};
 
-	const renderJobModal = (): JSX.Element => (
-		<JobModal show={showJobModal} onHide={closeJobModal} onSuccess={closeJobModal} submode="add" />
-	);
+	const renderJobModal = (): JSX.Element => {
+		const initialData = dataFactories?.jobs?.();
+		return (
+			<JobModal
+				show={showJobModal}
+				onHide={closeJobModal}
+				onSuccess={closeJobModal}
+				submode="add"
+				data={initialData}
+			/>
+		);
+	};
 
 	return {
 		error: error as Error | null,

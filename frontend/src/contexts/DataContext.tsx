@@ -9,6 +9,7 @@ import {
 	keywordsApi,
 	locationsApi,
 	personsApi,
+	scrapedJobApi,
 	settingsApi,
 	userApi,
 } from "../services/Api";
@@ -40,7 +41,24 @@ export type EntityType =
 	| "keywords"
 	| "locations"
 	| "settings"
-	| "users";
+	| "users"
+	| "scrapedJobs";
+
+export const endpointToEntityType = (endpoint: string): EntityType | null => {
+	const mapping: Record<string, EntityType> = {
+		jobs: "jobs",
+		companies: "companies",
+		persons: "persons",
+		interviews: "interviews",
+		jobapplicationupdates: "jobApplicationUpdates",
+		aggregators: "aggregators",
+		keywords: "keywords",
+		locations: "locations",
+		settings: "settings",
+		users: "users",
+	};
+	return mapping[endpoint.toLowerCase()] || null;
+};
 
 export interface DataContextValue {
 	// Data arrays
@@ -80,6 +98,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [countries, setCountries] = useState<SelectOption[]>([]);
+	const [scrapedJobs, setScrapedJobs] = useState<any[]>([]);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
@@ -237,6 +256,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			locations: locationsApi,
 			settings: settingsApi,
 			users: userApi,
+			scrapedJobs: scrapedJobApi,
 		};
 		return apiMap[type];
 	};
@@ -254,6 +274,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			locations: setLocations,
 			settings: setSettings,
 			users: setUsers,
+			scrapedJobs: setScrapedJobs,
 		};
 		return setterMap[type];
 	};
