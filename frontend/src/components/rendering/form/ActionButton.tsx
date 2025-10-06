@@ -65,19 +65,21 @@ export const ActionButton = ({
 			// Default loading content
 			return (
 				<>
-					{loadingIcon ? (
-						<i className={`${loadingIcon} me-2`}></i>
-					) : (
-						<Spinner
-							as="span"
-							animation="border"
-							size="sm"
-							role="status"
-							aria-hidden="true"
-							className="me-2"
-						/>
-					)}
-					{loadingText}
+					<div className="d-flex align-items-center justify-content-center">
+						{loadingIcon ? (
+							<i className={`${loadingIcon} me-2`}></i>
+						) : (
+							<Spinner
+								as="span"
+								animation="border"
+								size="sm"
+								role="status"
+								aria-hidden="true"
+								className="me-2"
+							/>
+						)}
+						{loadingText}
+					</div>
 				</>
 			);
 		}
@@ -90,8 +92,10 @@ export const ActionButton = ({
 		// Default content
 		return (
 			<>
-				{defaultIcon && <i className={`${defaultIcon} me-2`}></i>}
-				{defaultText}
+				<div className="d-flex align-items-center justify-content-center">
+					{defaultIcon && <i className={`${defaultIcon} me-2`} style={{ fontSize: "20px" }}></i>}
+					{defaultText}
+				</div>
 			</>
 		);
 	};
