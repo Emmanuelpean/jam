@@ -19,6 +19,7 @@ function AuthForm(): JSX.Element {
 		confirmPassword: "",
 	});
 	const [showBanner, setShowBanner] = useState<boolean>(true);
+	const [showMobileWarning, setShowMobileWarning] = useState<boolean>(false);
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -40,6 +41,22 @@ function AuthForm(): JSX.Element {
 		// Set form mode based on current path
 		setIsLogin(location.pathname === "/login");
 	}, [location.pathname, isAuthenticated, navigate]);
+
+	// Detect small screens
+	useEffect(() => {
+		const checkScreenSize = () => {
+			setShowMobileWarning(window.innerWidth < 768);
+		};
+
+		// Check on mount
+		checkScreenSize();
+
+		// Add event listener for window resize
+		window.addEventListener("resize", checkScreenSize);
+
+		// Cleanup
+		return () => window.removeEventListener("resize", checkScreenSize);
+	}, []);
 
 	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
@@ -243,6 +260,25 @@ function AuthForm(): JSX.Element {
 					</div>
 				</div>
 			</div>
+
+			{showMobileWarning && (
+				<Alert
+					variant="warning"
+					dismissible
+					onClose={() => setShowMobileWarning(false)}
+					className="mb-3"
+					style={{ maxWidth: "500px" }}
+				>
+					<Alert.Heading className="h6 d-flex align-items-center mb-2">
+						<i className="bi bi-exclamation-triangle-fill me-2"></i>
+						Limited Mobile Support
+					</Alert.Heading>
+					<p className="mb-0 small">
+						JAM is not fully optimized for small screens yet. For the best experience, please use a tablet
+						or desktop device.
+					</p>
+				</Alert>
+			)}
 
 			{showBanner && (
 				<Alert
