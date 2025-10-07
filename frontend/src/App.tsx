@@ -38,7 +38,7 @@ function composeProviders(...providers: React.ComponentType<{ children: ReactNod
 }
 
 function AppLayout({ children }: AppLayoutProps): JSX.Element {
-	const { isLoading, loadingMessage } = useLoading();
+	const { isLoading, loadingMessage, progress } = useLoading();
 	const location = useLocation();
 	const { currentUser } = useAuth();
 
@@ -55,7 +55,18 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 								<div className="spinner-border mb-3" role="status" id="loading-spinner">
 									<span className="visually-hidden">Loading...</span>
 								</div>
-								<p className="text-muted">{loadingMessage}</p>
+								<p className="text-muted mb-3">{loadingMessage}</p>
+								<div className="progress" style={{ width: "350px" }}>
+									<div
+										className="progress-bar progress-bar-striped progress-bar-animated"
+										role="progressbar"
+										style={{ width: `${progress}%` }}
+										aria-valuenow={progress}
+										aria-valuemin={0}
+										aria-valuemax={100}
+									/>
+									<span className="progress-text">{progress}%</span>
+								</div>
 							</div>
 						</div>
 					)}

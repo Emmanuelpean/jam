@@ -80,7 +80,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [countries, setCountries] = useState<SelectOption[]>([]);
-	const { showLoading, hideLoading } = useLoading();
+	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
 	const jobs: EnrichedJobData[] = useMemo<EnrichedJobData[]>((): EnrichedJobData[] => {
@@ -148,28 +148,47 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	}, [rawJobs, interviews, jobApplicationUpdates]);
 
 	const fetchAllData = async () => {
-		showLoading();
 		setError(null);
+
+		// Define all promises with their labels
+		const fetchOperations = [
+			{ promise: jobsApi.getAll(token), label: "Jobs" },
+			{ promise: companiesApi.getAll(token), label: "Companies" },
+			{ promise: personsApi.getAll(token), label: "Persons" },
+			{ promise: interviewsApi.getAll(token), label: "Interviews" },
+			{ promise: jobApplicationUpdatesApi.getAll(token), label: "Updates" },
+			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" },
+			{ promise: keywordsApi.getAll(token), label: "Keywords" },
+			{ promise: locationsApi.getAll(token), label: "Locations" },
+			{ promise: fetchCountries(), label: "Countries" },
+		];
+
+		// Add admin-only calls if user is admin
+		if (currentUser?.is_admin) {
+			fetchOperations.push(
+				{ promise: settingsApi.getAll(token), label: "Settings" },
+				{ promise: userApi.getAll(token), label: "Users" },
+			);
+		}
+
+		const totalOperations = fetchOperations.length;
+		let completedOperations = 0;
+
+		// Show initial loading state
+		showLoading("Initialising data load...", 0);
+
 		try {
-			const promises = [
-				await jobsApi.getAll(token),
-				await companiesApi.getAll(token),
-				await personsApi.getAll(token),
-				await interviewsApi.getAll(token),
-				await jobApplicationUpdatesApi.getAll(token),
-				await aggregatorsApi.getAll(token),
-				await keywordsApi.getAll(token),
-				await locationsApi.getAll(token),
-				await fetchCountries(),
-			];
+			// Track progress for each promise
+			const trackedPromises = fetchOperations.map(({ promise, label }) =>
+				promise.then((result) => {
+					completedOperations++;
+					const progressPercentage = Math.round((completedOperations / totalOperations) * 100);
+					updateProgress(progressPercentage, `Loading ${label}...`);
+					return result;
+				}),
+			);
 
-			// Only add admin-only calls if user is admin
-			if (currentUser?.is_admin) {
-				promises.push(await settingsApi.getAll(token));
-				promises.push(await userApi.getAll(token));
-			}
-
-			const results = await Promise.all(promises);
+			const results = await Promise.all(trackedPromises);
 
 			// Destructure based on what we fetched
 			const [
@@ -205,7 +224,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			hideLoading();
 		}
 	};
-
 	// Helper to get API instance for an entity type
 	const getApi = (type: EntityType) => {
 		const apiMap = {

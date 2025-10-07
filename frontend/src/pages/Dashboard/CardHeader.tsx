@@ -8,7 +8,7 @@ interface TableCardHeaderProps {
 }
 
 export const CardHeader: React.FC<TableCardHeaderProps> = ({ icon, title, subtitle, badgeValue }) => (
-	<Card.Header className="table-card-header border-0 p-0">
+	<Card.Header className="table-card-header border-0 p-0 bg-white">
 		<div className="d-flex align-items-center justify-content-between p-4">
 			<div className="d-flex align-items-center">
 				<div className="header-icon-wrapper me-3">
