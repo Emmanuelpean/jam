@@ -7,6 +7,7 @@ import queue
 import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 
 import psutil
@@ -456,6 +457,7 @@ class BaseTest:
         session,
     ) -> Generator[None, None, None]:
         """Set up the test environment before each test with test data"""
+        user_data_dir = tempfile.mkdtemp()
         try:
             # Configure Chrome options to disable password prompts
             chrome_options = Options()
@@ -465,6 +467,7 @@ class BaseTest:
                 "password_manager_enabled": False,
                 "profile.password_manager_enabled": False,
             }
+            chrome_options.add_argument(f"--user-data-dir={user_data_dir}")  # for github actions
             chrome_options.add_experimental_option("prefs", prefs)
             # chrome_options.add_argument("--start-minimized")
             # # chrome_options.add_argument("--headless=new")  # Run in headless mode
@@ -494,6 +497,8 @@ class BaseTest:
                     self.driver.quit()
                 except:
                     pass
+                if "user_data_dir" in locals() and os.path.exists(user_data_dir):
+                    shutil.rmtree(user_data_dir, ignore_errors=True)
             raise
 
         yield  # This allows the test to run
