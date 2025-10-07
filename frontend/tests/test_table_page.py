@@ -1,7 +1,9 @@
 """Test the main pages of JAM"""
 
+import datetime
 import time
 
+from selenium.webdriver import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -251,10 +253,24 @@ class TablePage(BaseTest):
 
         self.wait_for_edit_modal()
         for key, value in values.items():
-            if key in ("country", "company_id", "location_id", "job_id", "aggregator_id", "job_application_id"):
+            if key in (
+                "country",
+                "company_id",
+                "location_id",
+                "job_id",
+                "aggregator_id",
+                "job_application_id",
+                "type",
+                "attendance_type",
+            ):
                 select = ReactSelect(self.get_element(key))
                 select.open_menu()
                 select.select_by_visible_text(value)
+            elif key == "date":
+                element = self.get_element(key)
+                element.send_keys(value.strftime("%d%m%Y"))
+                element.send_keys(Keys.TAB)
+                element.send_keys(value.strftime("%H%M"))
             else:
                 self.set_text(self.get_element(key), value)
 
@@ -622,17 +638,34 @@ class TestPersonsPage(TablePage):
         self.check_company_view_modal(self.test_entry.company)
 
 
-# class TestJobApplicationUpdatesPage(TestTablePage):
-#     """Test class for Job Application Update Page functionalities"""
-#
-#     endpoint = "jobapplicationupdates"
-#     page_url = "jobapplicationupdates"
-#     test_fixture = ["test_job_application_updates", "test_jobs"]
-#     entry_name = "update"
-#     required_fields = ["job_application_id", "type"]
-#     test_data = {
-#         "date": "2024-01-15 14:30:00",
-#         "job_application_id": "Senior Python Developer - Tech Corp",
-#         "note": "Received automated confirmation email",
-#         "type": "received",
-#     }
+class TestJobApplicationUpdatesPage(TablePage):
+    """Test class for Job Application Update Page functionalities"""
+
+    endpoint = "jobapplicationupdates"
+    page_url = "jobapplicationupdates"
+    test_fixture = ["test_job_application_updates", "test_jobs"]
+    entry_name = "update"
+    required_fields = ["job_id", "type", "date"]
+    test_data = {
+        "date": datetime.datetime.now(),
+        "job_id": "Senior Python Developer - Tech Corp",
+        "note": "Received automated confirmation email",
+        "type": "Received",
+    }
+
+
+class TestInterviewPage(TablePage):
+    """Test class for Job Application Update Page functionalities"""
+
+    endpoint = "interviews"
+    page_url = "interviews"
+    test_fixture = ["test_interviews", "test_jobs"]
+    entry_name = "interview"
+    required_fields = ["job_id", "type", "date"]
+    test_data = {
+        "date": datetime.datetime.now(),
+        "job_id": "Senior Python Developer - Tech Corp",
+        "note": "Received automated confirmation email",
+        "attendance_type": "On-site",
+        "type": "HR Interview",
+    }

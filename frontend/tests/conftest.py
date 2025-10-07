@@ -1,3 +1,5 @@
+"""Fixtures and helper functions for integration tests"""
+
 import itertools
 import os
 import platform
@@ -25,7 +27,16 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
 # noinspection PyUnresolvedReferences
-from tests.conftest import session, models, test_users, SQLALCHEMY_DATABASE_URL, authorised_clients, client, tokens
+from tests.conftest import (
+    session,
+    models,
+    test_users,
+    SQLALCHEMY_DATABASE_URL,
+    authorised_clients,
+    client,
+    tokens,
+    test_settings,
+)
 from tests.conftest import *
 
 
@@ -392,29 +403,6 @@ def contiguous_subdicts(dictionary: dict) -> list[dict]:
     return [dict()] + results
 
 
-def contiguous_subdicts_with_required(dictionary: dict, required_keys: list) -> list[dict]:
-    """Return a list of all contiguous sub-dictionaries in the given dictionary,
-    :param dictionary: The dictionary to search.
-    :param required_keys: A list of required keys."""
-
-    keys = list(dictionary.keys())
-    n = len(keys)
-    seen = set()
-    results = []
-    for size in range(1, n + 1):
-        for start in range(n):
-            subkeys = [keys[(start + i) % n] for i in range(size)]
-            # Only filter if required_keys is not empty
-            if not required_keys or all(k in subkeys for k in required_keys):
-                subdict = {k: dictionary[k] for k in subkeys}
-                # Use sorted items as a hashable representation:
-                key_tuple = tuple(sorted(subdict.items()))
-                if key_tuple not in seen:
-                    seen.add(key_tuple)
-                    results.append(subdict)
-    return results
-
-
 def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_keys: list[str]) -> list[dict]:
     """Generate all possible combinations of entries in the given dictionary,
     :param data_dict: The dictionary to search.
@@ -424,7 +412,6 @@ def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_k
     keys = list(data_dict.keys())
     i = 0
     result = []
-    print(data_dict, required_keys, duplicate_keys)
 
     # Loop over all possible combination lengths
     for r in range(len(required_keys), len(keys) + 1):
@@ -441,20 +428,6 @@ def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_k
                 if d:
                     result.append(d)
     return result
-
-
-def test_generate_entry_combinations() -> None:
-
-    example_dict = {"a": "value1", "b": "value2", "c": "value3", "d": "value4"}
-    keys_A = ["a", "c"]
-    result = generate_entry_combinations(example_dict, keys_A)
-    assert len(result) == 4
-    assert result == [
-        {"a": "value1_0", "c": "value3_1"},
-        {"a": "value1_2", "b": "value2", "c": "value3_3"},
-        {"a": "value1_4", "c": "value3_5", "d": "value4"},
-        {"a": "value1_6", "b": "value2", "c": "value3_7", "d": "value4"},
-    ]
 
 
 class BaseTest:
@@ -493,6 +466,12 @@ class BaseTest:
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
+            # chrome_options.add_argument("--start-minimized")
+            # # chrome_options.add_argument("--headless=new")  # Run in headless mode
+            # chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--window-size=1920,1080")
+            # chrome_options.add_argument("--enable-gpu")
+            # chrome_options.add_argument("--disable-software-rasterizer")
 
             self.driver = webdriver.Chrome(options=chrome_options)
             self.driver.maximize_window()
@@ -526,7 +505,8 @@ class BaseTest:
         except Exception as e:
             print(f"Error during teardown: {e}")
 
-    def setup_function(self, request):
+    def setup_function(self, request) -> None:
+        """Function to run before each test - can be overridden in subclasses"""
         pass
 
     def login(self) -> None:
@@ -537,8 +517,11 @@ class BaseTest:
         self.get_element("email").send_keys(self.user.email)
         self.get_element("password").send_keys(self.user.password)
         self.get_element("confirm-button").click()
-        self.get_element("loading-spinner")
-        self.wait_for_disappear("loading-spinner")
+        try:
+            self.get_element("loading-spinner", timeout=2)
+            self.wait_for_disappear("loading-spinner", timeout=2)
+        except:
+            pass
         self.wait_for_page("dashboard")
         self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
         self.wait_for_table_load()
@@ -579,29 +562,35 @@ class BaseTest:
         self,
         element_id: str,
         selector: str = By.ID,
+        timeout: float = 10.0,
     ) -> WebElement:
-        """Get an element by its ID
+        """Get an element by its ID.
         :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element"""
-
+        :param selector: Selector to use for finding the element
+        :param timeout: How long to wait before raising an error
+        """
         try:
-            element = self.wait.until(ec.element_to_be_clickable((selector, element_id)))
+            wait = WebDriverWait(self.driver, timeout)
+            element = wait.until(ec.element_to_be_clickable((selector, element_id)))
             ActionChains(self.driver).move_to_element(element).perform()
             return element
-        except:
+        except Exception:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
 
     def wait_for_disappear(
         self,
         element_id: str,
         selector: str = By.ID,
+        timeout=10.0,
     ) -> None:
         """Wait for an element to disappear from the DOM
         :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element"""
+        :param selector: Selector to use for finding the element
+        :param timeout: How long to wait before raising an error"""
 
         try:
-            self.wait.until(ec.invisibility_of_element_located((selector, element_id)))
+            wait = WebDriverWait(self.driver, timeout)
+            wait.until(ec.invisibility_of_element_located((selector, element_id)))
         except TimeoutException:
             raise AssertionError(f"Element {element_id} did not disappear")
 

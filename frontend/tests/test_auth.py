@@ -4,6 +4,8 @@ This module contains comprehensive Selenium-based tests for the authentication s
 including login, registration, form validation, and mode switching functionality.
 """
 
+import time
+
 from conftest import models, BaseTest
 
 
@@ -15,7 +17,7 @@ class TestAuthenticationPage(BaseTest):
     - Signup with invalid data
     - Form validation"""
 
-    def verify_user_in_database(self, email: str) -> bool:
+    def verify_user_in_database(self, email: str) -> list[models.User]:
         """Helper method to verify user exists in database"""
 
         return self.db.query(models.User).filter(models.User.email == email).all()
@@ -192,6 +194,7 @@ class TestSignUp(TestAuthenticationPage):
         self.wait_for_login()
         self.switch_mode()
         self.wait_for_register()
+        time.sleep(0.4)  # Wait for animation
         self.switch_mode()
         self.wait_for_login()
 
@@ -316,7 +319,7 @@ class TestSignUp(TestAuthenticationPage):
         self.assert_password_error_message("Password must be at least 8 characters long.")
         assert not self.verify_user_in_database(test_email)
 
-    def test_signup_no_tc(self):
+    def test_signup_no_tc(self) -> None:
         """Test signup without checking the terms and conditions"""
 
         self.go_to_register()
@@ -332,7 +335,7 @@ class TestSignUp(TestAuthenticationPage):
         self.assert_accept_terms_error_message("You must accept the Terms and Conditions to register")
         assert not self.verify_user_in_database(test_email)
 
-    def test_signup_limited(self, test_settings):
+    def test_signup_limited(self, test_settings) -> None:
         """Test signup when registrations are limited"""
 
         self.go_to_register()
