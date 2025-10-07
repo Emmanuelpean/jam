@@ -32,7 +32,7 @@ export const Sidebar = () => {
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
 	const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 700);
+	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 990);
 
 	useEffect(() => {
 		const handleResize = () => setIsMobile(window.innerWidth <= 990);
