@@ -105,6 +105,68 @@ def kill_process_tree(parent_pid) -> None:
         print(f"Error killing process tree {parent_pid}: {e}")
 
 
+def check_backend_health(api_url: str, detailed: bool = True) -> dict:
+    """Check backend health and return detailed status information
+    :param api_url: Base URL of the API
+    :param detailed: Whether to return detailed information
+    :return: Dictionary with health check results
+    """
+
+    health_info = {
+        "status": "unknown",
+        "endpoint_accessible": False,
+        "response_time_ms": None,
+        "status_code": None,
+        "response_body": None,
+        "error": None,
+    }
+
+    try:
+        start_time = time.time()
+        response = requests.get(f"{api_url}/health", timeout=5)
+        end_time = time.time()
+
+        health_info["endpoint_accessible"] = True
+        health_info["status_code"] = response.status_code
+        health_info["response_time_ms"] = round((end_time - start_time) * 1000, 2)
+
+        try:
+            health_info["response_body"] = response.json()
+        except:
+            health_info["response_body"] = response.text
+
+        if response.status_code == 200:
+            health_info["status"] = "healthy"
+        else:
+            health_info["status"] = f"unhealthy (HTTP {response.status_code})"
+
+    except requests.exceptions.ConnectionError as e:
+        health_info["status"] = "connection_failed"
+        health_info["error"] = str(e)
+    except requests.exceptions.Timeout:
+        health_info["status"] = "timeout"
+        health_info["error"] = "Request timed out after 5 seconds"
+    except Exception as e:
+        health_info["status"] = "error"
+        health_info["error"] = str(e)
+
+    if detailed:
+        print("\n" + "=" * 70)
+        print("BACKEND HEALTH CHECK REPORT".center(70))
+        print("=" * 70)
+        print(f"Status:              {health_info['status'].upper()}")
+        print(f"Endpoint:            {api_url}/health")
+        print(f"Accessible:          {'✅ Yes' if health_info['endpoint_accessible'] else '❌ No'}")
+        print(f"Status Code:         {health_info['status_code'] or 'N/A'}")
+        print(f"Response Time:       {health_info['response_time_ms'] or 'N/A'} ms")
+        print(f"Response Body:       {health_info['response_body'] or 'N/A'}")
+        if health_info["error"]:
+            print(f"Error Details:       {health_info['error']}")
+        print("=" * 70 + "\n")
+
+    return health_info
+
+
 def print_backend_pid() -> None:
     """Print the PID of any backend processes currently running"""
 
@@ -163,6 +225,9 @@ def test_backend_server() -> Generator[str, None, None]:
         [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"],
         cwd=backend_path,
         env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
     )
 
     print(f"Backend process started with PID: {process.pid}")
@@ -171,6 +236,7 @@ def test_backend_server() -> Generator[str, None, None]:
     api_url = "http://localhost:8000"
     print(f"Waiting for backend server to be ready at {api_url}...")
 
+    backend_ready = False
     for attempt in range(30):  # 30 seconds max
         print(f"Attempt {attempt + 1}/30 - Checking backend server health...")
 
@@ -178,34 +244,37 @@ def test_backend_server() -> Generator[str, None, None]:
         if process.poll() is not None:
             stdout, stderr = process.communicate()
             print(f"❌ Backend process died! Return code: {process.poll()}")
-            print(f"STDOUT: {stdout}")
-            print(f"STDERR: {stderr}")
+            print(f"STDOUT:\n{stdout}")
+            print(f"STDERR:\n{stderr}")
             raise Exception(f"Backend server process terminated unexpectedly")
 
-        try:
-            response = requests.get(f"{api_url}/docs", timeout=3)
-            print(f"✅ Backend response status code: {response.status_code}")
-            if response.status_code == 200:
-                print("✅ Backend server is ready!")
-                break
-        except requests.exceptions.ConnectionError:
-            print("Backend connection refused, still starting...")
-        except requests.exceptions.Timeout:
-            print("Backend request timeout...")
-        except Exception as e:
-            print(f"Backend unexpected error: {e}")
+        # Check health endpoint
+        health_info = check_backend_health(api_url, detailed=False)
+
+        if health_info["status"] == "healthy":
+            print("✅ Backend server is ready!")
+            backend_ready = True
+            break
+        else:
+            print(f"Backend status: {health_info['status']}")
 
         time.sleep(1)
-    else:
-        # Backend failed to start
+
+    if not backend_ready:
+        # Backend failed to start - show detailed health check
         print("❌ Backend server failed to start after 30 seconds")
+        check_backend_health(api_url, detailed=True)
+
         kill_process_tree(process.pid)
         stdout, stderr = process.communicate(timeout=10)
-        print(f"Backend STDOUT: {stdout}")
-        print(f"Backend STDERR: {stderr}")
-        raise Exception(f"Backend server failed to start. STDERR: {stderr}")
+        print(f"Backend STDOUT:\n{stdout}")
+        print(f"Backend STDERR:\n{stderr}")
+        raise Exception(f"Backend server failed to start")
 
-    print("✅ Backend server startup completed successfully!")
+    # Final health check with detailed output
+    print("\n✅ Backend server startup completed successfully!")
+    check_backend_health(api_url, detailed=True)
+
     yield api_url
 
     # Cleanup
