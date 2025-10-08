@@ -1,4 +1,6 @@
 # After backend and frontend start, test CORS from browser
+from frontend.tests.conftest import check_backend_endpoint
+
 print("\n" + "=" * 80)
 print("TESTING CORS FROM BROWSER".center(80))
 print("=" * 80)
@@ -71,6 +73,15 @@ def test_cors(frontend_base_url):
 
         # Also test the actual login endpoint
         print(f"\nTesting CORS on /login endpoint...")
+
+        print("\nTesting OPTIONS request on /login...")
+        options_result = check_backend_endpoint(
+            "http://localhost:8000",
+            "/login/",
+            method="OPTIONS",
+        )
+        print(f"OPTIONS Status: {options_result['status_code']}")
+        print(f"OPTIONS Headers: {options_result.get('response_body', {})}")
 
         login_result = test_driver.execute_async_script(
             """
