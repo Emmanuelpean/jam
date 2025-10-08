@@ -89,9 +89,9 @@ def health_check() -> dict:
 # Print immediately after adding middleware
 import sys
 
-print("=" * 80, file=sys.stderr)
-print("CORS MIDDLEWARE CONFIGURED", file=sys.stderr)
-print("=" * 80, file=sys.stderr)
-print("allow_origins: ['*']", file=sys.stderr)
-print("allow_credentials: False", file=sys.stderr)
-print("=" * 80, file=sys.stderr)
+print("=" * 80)
+print("CORS MIDDLEWARE CONFIGURED")
+print("=" * 80)
+print("allow_origins: ['*']")
+print("allow_credentials: False")
+print("=" * 80)

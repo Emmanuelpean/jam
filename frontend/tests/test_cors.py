@@ -13,6 +13,7 @@ def test_simple_login(frontend_base_url, api_base_url):
     driver = webdriver.Chrome(options=options)
 
     try:
+
         # Navigate to login page
         print("\n1. Navigating to login page...")
         driver.get("http://localhost:3000/jam/login")
