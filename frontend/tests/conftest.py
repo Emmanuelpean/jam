@@ -515,6 +515,102 @@ class BaseTest:
     page_url = ""  # url of the page to test (not including the base url)
     user_index = 1  # index of the user to use for the test
 
+    def take_debug_screenshot(self, name: str = "debug") -> None:
+        """Take a screenshot for debugging purposes"""
+
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        filename = f"screenshots/{name}_{timestamp}.png"
+
+        # Create screenshots directory if it doesn't exist
+        os.makedirs("screenshots", exist_ok=True)
+
+        try:
+            self.driver.save_screenshot(filename)
+            print(f"📸 Screenshot saved: {filename}")
+        except Exception as e:
+            print(f"Failed to save screenshot: {e}")
+
+    def get_console_logs(self) -> list:
+        """Get browser console logs for debugging"""
+
+        try:
+            logs = self.driver.get_log("browser")
+            return logs
+        except Exception as e:
+            print(f"Could not get console logs: {e}")
+            return []
+
+    def print_console_logs(self) -> None:
+        """Print all browser console logs in a readable format"""
+
+        logs = self.get_console_logs()
+
+        if not logs:
+            print("No console logs found")
+            return
+
+        print("\n" + "=" * 80)
+        print("BROWSER CONSOLE LOGS".center(80))
+        print("=" * 80)
+
+        for log in logs:
+            level = log.get("level", "INFO")
+            message = log.get("message", "")
+            timestamp = log.get("timestamp", "")
+
+            # Add emoji based on log level
+            emoji = {"SEVERE": "🔴", "WARNING": "⚠️", "INFO": "ℹ️", "DEBUG": "🔍"}.get(level, "📝")
+
+            print(f"{emoji} [{level}] {message}")
+
+        print("=" * 80 + "\n")
+
+    def print_page_state(self, label: str = "Page State") -> None:
+        """Print comprehensive page state for debugging"""
+
+        print("\n" + "=" * 80)
+        print(f"{label.upper()}".center(80))
+        print("=" * 80)
+        print(f"Current URL:        {self.driver.current_url}")
+        print(f"Page Title:         {self.driver.title}")
+        print(f"Available IDs:      {len(self.get_all_element_ids())} elements")
+        print("=" * 80)
+
+        # Print console logs
+        self.print_console_logs()
+
+        # Take screenshot
+        self.take_debug_screenshot(label.lower().replace(" ", "_"))
+
+    def wait_for_network_idle(self, timeout: float = 5.0) -> None:
+        """Wait for network requests to complete"""
+
+        script = """
+        return window.performance.getEntriesByType('resource')
+            .filter(r => r.initiatorType === 'fetch' || r.initiatorType === 'xmlhttprequest')
+            .length;
+        """
+
+        start_time = time.time()
+        last_count = -1
+        stable_count = 0
+
+        while time.time() - start_time < timeout:
+            current_count = self.driver.execute_script(script)
+
+            if current_count == last_count:
+                stable_count += 1
+                if stable_count >= 3:  # Stable for 3 checks
+                    print(f"✅ Network idle after {time.time() - start_time:.2f}s")
+                    return
+            else:
+                stable_count = 0
+
+            last_count = current_count
+            time.sleep(0.5)
+
+        print(f"⚠️  Network may still be active after {timeout}s")
+
     @pytest.fixture(autouse=True)
     def setup_method(
         self,
@@ -536,16 +632,18 @@ class BaseTest:
                 "password_manager_enabled": False,
                 "profile.password_manager_enabled": False,
             }
-            chrome_options.add_argument(f"--user-data-dir={user_data_dir}")  # for github actions
+            chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
             chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--start-minimized")
-            # # chrome_options.add_argument("--headless=new")  # Run in headless mode
             chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1920,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--ignore-certificate-errors")
             chrome_options.add_argument("--disable-dev-shm-usage")
+
+            # Enable verbose logging
+            chrome_options.add_argument("--enable-logging")
+            chrome_options.add_argument("--v=1")
 
             self.driver = webdriver.Chrome(options=chrome_options)
             self.driver.maximize_window()
