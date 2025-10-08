@@ -1017,7 +1017,6 @@ def test_simple_login(frontend_base_url, api_base_url):
                 "/login/",
                 method="POST",
                 data={"username": "test_user@test.com", "password": "test_password"},
-                use_form_data=True,
             )
             print(f"   Python Request Status: {login_test['status_code']}")
             print(f"   Python Request Response: {login_test['response_body']}")
