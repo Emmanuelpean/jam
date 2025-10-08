@@ -59,7 +59,15 @@ jobs:
         run: |
           cd frontend
           npm install --legacy-peer-deps
-          coverage run -m pytest ./tests/test_auth.py -v --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
+          coverage run -m pytest ./tests/test_auth.py -x -v --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
+
+      - name: Upload Screenshots on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-screenshots
+          path: frontend/screenshots/
+          retention-days: 7
 
       - name: Generate badges and coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
