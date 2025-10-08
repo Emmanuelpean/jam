@@ -13,6 +13,34 @@ from app.routers import data_tables, user, login, export, settings
 app = FastAPI()
 
 
+# Custom middleware to FORCE CORS headers on everything
+@app.middleware("http")
+async def force_cors_headers(request: Request, call_next):
+    """Force CORS headers on ALL responses"""
+
+    # Handle OPTIONS requests immediately
+    if request.method == "OPTIONS":
+        return JSONResponse(
+            content={},
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Max-Age": "3600",
+            },
+        )
+
+    # Process the request
+    response = await call_next(request)
+
+    # FORCE CORS headers on the response
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+
+    return response
+
+
 # CRITICAL: Add CORS middleware FIRST, before any other middleware
 app.add_middleware(
     CORSMiddleware,
