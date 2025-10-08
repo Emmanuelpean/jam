@@ -6,7 +6,7 @@ including login, registration, form validation, and mode switching functionality
 
 import time
 
-from conftest import models, BaseTest, check_backend_endpoint
+from conftest import models, BaseTest
 
 
 class TestAuthenticationPage(BaseTest):
@@ -114,142 +114,33 @@ class TestAuthenticationPage(BaseTest):
 
 class TestLogIn(TestAuthenticationPage):
 
-    # def test_valid_login(self, test_users) -> None:
-    #     """Test login with valid credentials"""
-    #
-    #     self.go_to_login()
-    #     test_email, test_password = test_users[0].email, test_users[0].password
-    #
-    #     # Fill in login form
-    #     self.set_email(test_email)
-    #     self.set_password(test_password)
-    #     self.confirm()
-    #
-    #     # Confirm load by checking the dashboard
-    #     self.wait_for_dashboard()
+    def test_valid_login(self, test_users) -> None:
+        """Test login with valid credentials"""
+
+        self.go_to_login()
+        test_email, test_password = test_users[0].email, test_users[0].password
+
+        # Fill in login form
+        self.set_email(test_email)
+        self.set_password(test_password)
+        self.confirm()
+
+        # Confirm load by checking the dashboard
+        self.wait_for_dashboard()
 
     def test_invalid_login(self) -> None:
         """Test login with invalid credentials"""
 
         self.go_to_login()
-
-        # Capture initial page state
-        self.print_page_state("Initial Login Page")
-
         test_email, test_password = "wrong@email.com", "wrong_password"
-
-        print(f"\n{'='*60}")
-        print(f"ATTEMPTING INVALID LOGIN")
-        print(f"{'='*60}")
-        print(f"Email:    {test_email}")
-        print(f"Password: {'*' * len(test_password)}")
-        print(f"{'='*60}\n")
-
-        # Test backend endpoint directly first
-        print("Testing backend /login endpoint with invalid credentials...")
-        login_result = check_backend_endpoint(
-            self.backend_url, "/login", method="POST", data={"username": test_email, "password": test_password}
-        )
-
-        print(f"\nBackend Response:")
-        print(f"  Status Code:   {login_result['status_code']}")
-        print(f"  Response Body: {login_result['response_body']}")
-
-        if login_result["status_code"] == 500:
-            print("❌ CRITICAL: Backend returning 500 error for invalid login!")
-            print("   This should return 401 Unauthorized instead")
-        elif login_result["status_code"] == 401:
-            print("✅ Backend correctly returns 401 for invalid credentials")
 
         # Fill in login form with invalid credentials
         self.set_email(test_email)
         self.set_password(test_password)
-
-        # Capture state before clicking
-        self.print_page_state("Before Login Click")
-
         self.confirm()
 
-        # Wait for network activity
-        print("\nWaiting for network requests...")
-        self.wait_for_network_idle(timeout=10)
-
-        # Capture state after clicking
-        self.print_page_state("After Login Click")
-
-        # Check for loading spinner
-        try:
-            print("\nChecking for loading spinner...")
-            self.get_element("loading-spinner", timeout=2)
-            print("✅ Loading spinner found, waiting for it to disappear...")
-            self.wait_for_disappear("loading-spinner", timeout=5)
-        except Exception as e:
-            print(f"ℹ️  No loading spinner: {e}")
-
-        # Try to find toast
-        print("\nLooking for error toast...")
-        try:
-            toast = self.get_element("toast", timeout=5)
-            toast_text = toast.text
-            print(f"✅ Toast found with text: '{toast_text}'")
-            self.take_debug_screenshot("invalid_login_toast")
-
-            # Check what message we actually got
-            expected_message = "Incorrect email or password"
-
-            if expected_message in toast_text:
-                print(f"✅ Toast contains expected message: '{expected_message}'")
-            else:
-                print(f"❌ Toast message mismatch:")
-                print(f"   Expected (substring): '{expected_message}'")
-                print(f"   Actual (full text):   '{toast_text}'")
-
-                # Additional debugging
-                print(f"\n⚠️  ISSUE FOUND:")
-                print(f"   Backend response body: {login_result['response_body']}")
-                print(f"   Frontend toast text:   {toast_text}")
-
-                if login_result["status_code"] == 500:
-                    print(f"\n💡 ROOT CAUSE:")
-                    print(f"   Backend is returning 500 error instead of 401")
-                    print(f"   Frontend shows generic error: '{toast_text}'")
-                    print(f"   Backend should return 401 with message: '{expected_message}'")
-
-                raise AssertionError(
-                    f"Toast message mismatch.\n"
-                    f"Expected substring: '{expected_message}'\n"
-                    f"Actual toast text:  '{toast_text}'\n"
-                    f"Backend status:     {login_result['status_code']}\n"
-                    f"Backend response:   {login_result['response_body']}"
-                )
-
-        except Exception as e:
-            if "Could not find element toast" in str(e):
-                print("❌ No toast element found on page!")
-                print("\nAvailable elements on page:")
-                for element_id in self.get_all_element_ids():
-                    print(f"  - {element_id}")
-
-                self.print_page_state("No Toast Found")
-                self.take_debug_screenshot("no_toast_found")
-
-                raise AssertionError(
-                    f"Toast element not found after invalid login.\n"
-                    f"Backend status: {login_result['status_code']}\n"
-                    f"Backend response: {login_result['response_body']}\n"
-                    f"Check if React error handling is working."
-                )
-            else:
-                print(f"❌ Unexpected error: {e}")
-                raise
-
-        # Verify we're still on login page (didn't redirect)
-        current_url = self.driver.current_url
-        print(f"\nFinal URL: {current_url}")
-        if "login" in current_url:
-            print("✅ Correctly remained on login page")
-        else:
-            print(f"⚠️  Unexpected redirect to: {current_url}")
+        # Verify error message
+        self.assert_error_message("Incorrect email or password")
 
     def test_login_invalid_email(self) -> None:
         """Test login with invalid credentials"""
