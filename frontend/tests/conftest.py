@@ -471,10 +471,12 @@ class BaseTest:
             chrome_options.add_experimental_option("prefs", prefs)
             # chrome_options.add_argument("--start-minimized")
             # # chrome_options.add_argument("--headless=new")  # Run in headless mode
-            # chrome_options.add_argument("--headless=new")
-            # chrome_options.add_argument("--window-size=1920,1080")
-            # chrome_options.add_argument("--enable-gpu")
-            # chrome_options.add_argument("--disable-software-rasterizer")
+            chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--window-size=1920,1080")
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--ignore-certificate-errors")
+            chrome_options.add_argument("--disable-dev-shm-usage")
 
             self.driver = webdriver.Chrome(options=chrome_options)
             self.driver.maximize_window()
