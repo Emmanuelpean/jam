@@ -5,7 +5,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp
 
 from app.eis import routers as eis_routers
 from app.routers import data_tables, user, login, export, settings
@@ -33,19 +32,57 @@ class CORSHeaderMiddleware(BaseHTTPMiddleware):
                 },
             )
 
-        # Process the request
-        response = await call_next(request)
+        try:
+            # Process the request
+            response = await call_next(request)
 
-        # Add CORS headers using mutable_headers
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Methods"] = "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
-        response.headers["Access-Control-Allow-Headers"] = "*"
+            # Add CORS headers
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers["Access-Control-Allow-Methods"] = "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT"
+            response.headers["Access-Control-Allow-Headers"] = "*"
 
-        return response
+            return response
+
+        except Exception as e:
+            # If anything crashes, return 500 with CORS headers
+            print(f"❌ EXCEPTION IN MIDDLEWARE: {type(e).__name__}: {str(e)}")
+            import traceback
+
+            traceback.print_exc()
+
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Internal server error"},
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "*",
+                    "Access-Control-Allow-Headers": "*",
+                },
+            )
 
 
 # Add the custom CORS middleware
 app.add_middleware(CORSHeaderMiddleware)
+
+
+# Global exception handler for unhandled exceptions
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch all unhandled exceptions and add CORS headers"""
+    print(f"❌ UNHANDLED EXCEPTION: {type(exc).__name__}: {str(exc)}")
+    import traceback
+
+    traceback.print_exc()
+
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        },
+    )
 
 
 # Exception handlers with CORS
