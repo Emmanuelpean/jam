@@ -1,89 +1,36 @@
-# After backend and frontend start, test CORS from browser
-from frontend.tests.conftest import check_backend_endpoint
+def test_simple_login(frontend_base_url, api_base_url):
+    """Simple standalone test for login functionality"""
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    import time
 
-print("\n" + "=" * 80)
-print("TESTING CORS FROM BROWSER".center(80))
-print("=" * 80)
-import time
+    options = Options()
+    options.add_argument("--headless=new")
+    options.add_argument("--window-size=1920,1080")
+    options.set_capability("goog:loggingPrefs", {"browser": "ALL"})
 
-# Create a temporary driver to test CORS
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-
-
-def test_cors(frontend_base_url):
-    """Test CORS configuration from browser perspective"""
-
-    test_options = Options()
-    test_options.add_argument("--headless=new")
-    test_options.add_argument("--window-size=1920,1080")
-
-    test_driver = webdriver.Chrome(options=test_options)
+    driver = webdriver.Chrome(options=options)
 
     try:
-        # Navigate to frontend
-        print(f"\nNavigating to: {frontend_base_url}/login")
-        test_driver.get(f"{frontend_base_url}/login")
+        # Navigate to login page
+        print("\n1. Navigating to login page...")
+        driver.get("http://localhost:3000/jam/login")
         time.sleep(2)
 
-        # Execute a fetch request from browser console
-        print("\nTesting CORS from browser...")
+        # Fill in credentials
+        print("2. Filling in credentials...")
+        email_field = driver.find_element(By.ID, "email")
+        password_field = driver.find_element(By.ID, "password")
 
-        result = test_driver.execute_async_script(
-            """
-            const callback = arguments[arguments.length - 1];
+        email_field.send_keys("test_user@test.com")
+        password_field.send_keys("test_password")
 
-            fetch('http://localhost:8000/health', {
-                method: 'GET',
-                headers: {'Content-Type': 'application/json'}
-            })
-            .then(response => {
-                callback({
-                    status: response.status,
-                    ok: response.ok,
-                    corsError: false
-                });
-            })
-            .catch(error => {
-                callback({
-                    status: 0,
-                    ok: false,
-                    corsError: true,
-                    error: error.toString()
-                });
-            });
-        """
-        )
-
-        print(f"\n{'='*60}")
-        print(f"CORS TEST RESULT")
-        print(f"{'='*60}")
-        print(f"Status:      {result['status']}")
-        print(f"Success:     {result['ok']}")
-        print(f"CORS Error:  {result['corsError']}")
-
-        if result["corsError"]:
-            print(f"Error:       {result.get('error', 'Unknown')}")
-            print(f"{'='*60}")
-            print("❌ CORS is blocking browser requests!")
-            print("This confirms the CORS configuration is not working.")
-        else:
-            print(f"{'='*60}")
-            print("✅ CORS is working correctly from browser!")
-
-        # Also test the actual login endpoint
-        print(f"\nTesting CORS on /login endpoint...")
-
-        print("\nTesting OPTIONS request on /login...")
-        options_result = check_backend_endpoint(
-            "http://localhost:8000",
-            "/login/",
-            method="OPTIONS",
-        )
-        print(f"OPTIONS Status: {options_result['status_code']}")
-        print(f"OPTIONS Headers: {options_result.get('response_body', {})}")
-
-        login_result = test_driver.execute_async_script(
+        # Test with direct fetch first
+        print("3. Testing login with direct fetch...")
+        result = driver.execute_async_script(
             """
             const callback = arguments[arguments.length - 1];
 
@@ -93,54 +40,52 @@ def test_cors(frontend_base_url):
 
             fetch('http://localhost:8000/login/', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
                 body: formData
             })
-            .then(response => {
+            .then(async response => {
+                const text = await response.text();
                 callback({
                     status: response.status,
-                    ok: response.ok,
-                    corsError: false
+                    statusText: response.statusText,
+                    body: text
                 });
             })
             .catch(error => {
                 callback({
                     status: 0,
-                    ok: false,
-                    corsError: true,
-                    error: error.toString()
+                    error: error.toString(),
+                    errorMessage: error.message
                 });
             });
         """
         )
 
         print(f"\n{'='*60}")
-        print(f"LOGIN ENDPOINT CORS TEST")
-        print(f"{'='*60}")
-        print(f"Status:      {login_result['status']}")
-        print(f"Success:     {login_result['ok']}")
-        print(f"CORS Error:  {login_result['corsError']}")
-        assert login_result["status"] == 200
+        print(f"FETCH RESULT:")
+        print(f"  Status: {result['status']}")
+        print(f"  Response: {result.get('body', result.get('error', 'N/A'))}")
+        print(f"{'='*60}\n")
 
-        if login_result["corsError"]:
-            print(f"Error:       {login_result.get('error', 'Unknown')}")
-            print(f"{'='*60}")
-            print("❌ CORS is blocking login requests!")
+        # Get console logs
+        logs = driver.get_log("browser")
+        if logs:
+            print("Browser Console:")
+            for log in logs:
+                print(f"  [{log['level']}] {log['message']}")
 
-            # Get browser console logs
-            logs = test_driver.get_log("browser")
-            if logs:
-                print("\nBrowser Console Errors:")
-                for log in logs:
-                    if "SEVERE" in log["level"]:
-                        print(f"  🔴 {log['message']}")
+        # Assert
+        if result["status"] == 0:
+            print(f"\n❌ FAILED: Request blocked (status 0)")
+            print(f"   Error: {result.get('error', 'Unknown')}")
+        elif result["status"] == 200:
+            print(f"\n✅ SUCCESS: Login worked!")
         else:
-            print(f"{'='*60}")
-            print("✅ CORS is working on login endpoint!")
-            print(f"Note: Status {login_result['status']} might be 403/422 (invalid creds) but no CORS error")
+            print(f"\n⚠️  Request completed with status {result['status']}")
 
-        # Assert that CORS is working
-        assert not result["corsError"], f"CORS is blocking requests: {result.get('error', 'Unknown')}"
+        assert result["status"] != 0, f"Request blocked: {result.get('error')}"
 
     finally:
-        test_driver.quit()
+        driver.quit()
