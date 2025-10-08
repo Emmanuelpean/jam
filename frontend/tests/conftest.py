@@ -1,6 +1,7 @@
 """Fixtures and helper functions for integration tests"""
 
 import itertools
+import json
 import os
 import platform
 import queue
@@ -9,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from typing import Optional
 
 import psutil
 import requests
@@ -498,6 +500,102 @@ def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_k
                 if d:
                     result.append(d)
     return result
+
+
+def check_backend_endpoint(
+    api_url: str, endpoint: str, method: str = "GET", data: dict = None, headers: dict = None
+) -> dict:
+    """Check a specific backend endpoint and log the response
+
+    :param api_url: Base URL of the API
+    :param endpoint: Endpoint to check (e.g., '/login', '/users')
+    :param method: HTTP method (GET, POST, etc.)
+    :param data: Optional data to send with POST requests
+    :param headers: Optional headers to send with request
+    :return: Dictionary with response information
+    """
+
+    full_url = f"{api_url}{endpoint}"
+    result = {
+        "success": False,
+        "status_code": None,
+        "response_body": None,
+        "error": None,
+    }
+
+    try:
+        if method.upper() == "POST":
+            response = requests.post(full_url, json=data, headers=headers, timeout=5)
+        elif method.upper() == "PUT":
+            response = requests.put(full_url, json=data, headers=headers, timeout=5)
+        elif method.upper() == "DELETE":
+            response = requests.delete(full_url, headers=headers, timeout=5)
+        else:  # GET
+            response = requests.get(full_url, headers=headers, timeout=5)
+
+        result["status_code"] = response.status_code
+        result["success"] = 200 <= response.status_code < 300
+
+        try:
+            result["response_body"] = response.json()
+        except:
+            result["response_body"] = response.text
+
+        log_request_response(
+            method=method,
+            url=full_url,
+            status_code=response.status_code,
+            response_body=(
+                json.dumps(result["response_body"])
+                if isinstance(result["response_body"], dict)
+                else result["response_body"]
+            ),
+        )
+
+    except requests.exceptions.ConnectionError as e:
+        result["error"] = f"Connection failed: {str(e)}"
+        log_request_response(method=method, url=full_url, error=result["error"])
+    except requests.exceptions.Timeout:
+        result["error"] = "Request timed out after 5 seconds"
+        log_request_response(method=method, url=full_url, error=result["error"])
+    except Exception as e:
+        result["error"] = str(e)
+        log_request_response(method=method, url=full_url, error=result["error"])
+
+    return result
+
+
+def log_request_response(
+    method: str,
+    url: str,
+    status_code: Optional[int] = None,
+    response_body: Optional[str] = None,
+    error: Optional[str] = None,
+) -> None:
+    """Log HTTP request/response in a clean format for debugging"""
+
+    print("\n" + "=" * 80)
+    print(f"HTTP REQUEST/RESPONSE LOG".center(80))
+    print("=" * 80)
+    print(f"Method:          {method}")
+    print(f"URL:             {url}")
+
+    if status_code:
+        status_icon = "✅" if 200 <= status_code < 300 else "❌"
+        print(f"Status Code:     {status_icon} {status_code}")
+
+    if response_body:
+        try:
+            # Try to pretty print JSON
+            parsed = json.loads(response_body)
+            print(f"Response Body:   {json.dumps(parsed, indent=2)}")
+        except:
+            print(f"Response Body:   {response_body}")
+
+    if error:
+        print(f"Error:           {error}")
+
+    print("=" * 80 + "\n")
 
 
 class BaseTest:

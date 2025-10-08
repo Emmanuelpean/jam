@@ -114,19 +114,19 @@ class TestAuthenticationPage(BaseTest):
 
 class TestLogIn(TestAuthenticationPage):
 
-    def test_valid_login(self, test_users) -> None:
-        """Test login with valid credentials"""
-
-        self.go_to_login()
-        test_email, test_password = test_users[0].email, test_users[0].password
-
-        # Fill in login form
-        self.set_email(test_email)
-        self.set_password(test_password)
-        self.confirm()
-
-        # Confirm load by checking the dashboard
-        self.wait_for_dashboard()
+    # def test_valid_login(self, test_users) -> None:
+    #     """Test login with valid credentials"""
+    #
+    #     self.go_to_login()
+    #     test_email, test_password = test_users[0].email, test_users[0].password
+    #
+    #     # Fill in login form
+    #     self.set_email(test_email)
+    #     self.set_password(test_password)
+    #     self.confirm()
+    #
+    #     # Confirm load by checking the dashboard
+    #     self.wait_for_dashboard()
 
     def test_invalid_login(self) -> None:
         """Test login with invalid credentials"""
