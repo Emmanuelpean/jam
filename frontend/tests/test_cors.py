@@ -77,8 +77,8 @@ def test_cors(frontend_base_url):
             const callback = arguments[arguments.length - 1];
 
             const formData = new URLSearchParams();
-            formData.append('username', 'test@test.com');
-            formData.append('password', 'testpass');
+            formData.append('username', 'test_user@test.com');
+            formData.append('password', 'test_password');
 
             fetch('http://localhost:8000/login/', {
                 method: 'POST',
