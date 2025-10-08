@@ -608,6 +608,10 @@ class BaseTest:
         """Wait for the dashboard to load"""
 
         print("Current URL!!!!!!!!!!!!!!!!", self.driver.current_url)
+        print(self.driver.current_url.startswith(self.frontend_base_url))
+        print(list(self.frontend_base_url))
+        print(list(self.driver.current_url))
+        print("Waiting for page to load:", f"{self.frontend_base_url}/{page_url}")
         self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
 
     def wait_for_table_load(self, timeout: int | float = 0.1) -> None:
