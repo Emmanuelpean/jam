@@ -1062,6 +1062,18 @@ def test_simple_login(frontend_base_url, api_base_url):
             if not backend_running:
                 print("   ❌ Backend process not found - may have crashed!")
 
+            print("\n5. Testing actual POST request CORS headers...")
+            post_test = requests.post(
+                f"{api_base_url}/login/",
+                data={"username": "test_user@test.com", "password": "test_password"},
+                headers={"Origin": "http://localhost:3000"},
+            )
+            print(f"   POST Status: {post_test.status_code}")
+            print(f"   POST CORS Headers:")
+            for header, value in post_test.headers.items():
+                if "access-control" in header.lower():
+                    print(f"      {header}: {value}")
+
             print(f"{'='*80}\n")
 
             print(f"❌ FAILED: Request blocked (status 0)")
