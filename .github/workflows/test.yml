@@ -41,6 +41,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Install Python
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
