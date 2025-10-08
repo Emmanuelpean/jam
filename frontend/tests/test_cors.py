@@ -3,8 +3,6 @@ def test_simple_login(frontend_base_url, api_base_url):
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
     from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
     import time
 
     options = Options()

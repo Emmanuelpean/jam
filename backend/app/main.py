@@ -86,16 +86,12 @@ def health_check() -> dict:
     return {"status": "ok"}
 
 
-# Startup event to confirm CORS is working
-@app.on_event("startup")
-async def startup_event():
-    """Print startup information"""
-    print("\n" + "=" * 80)
-    print("🚀 FASTAPI APPLICATION STARTED")
-    print("=" * 80)
-    print("✅ CORS Configuration:")
-    print("   - Allow Origins: *")
-    print("   - Allow Credentials: False")
-    print("   - Allow Methods: *")
-    print("   - Allow Headers: *")
-    print("=" * 80 + "\n")
+# Print immediately after adding middleware
+import sys
+
+print("=" * 80, file=sys.stderr)
+print("CORS MIDDLEWARE CONFIGURED", file=sys.stderr)
+print("=" * 80, file=sys.stderr)
+print("allow_origins: ['*']", file=sys.stderr)
+print("allow_credentials: False", file=sys.stderr)
+print("=" * 80, file=sys.stderr)
