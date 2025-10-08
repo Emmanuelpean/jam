@@ -109,6 +109,7 @@ def test_cors(frontend_base_url):
         print(f"Status:      {login_result['status']}")
         print(f"Success:     {login_result['ok']}")
         print(f"CORS Error:  {login_result['corsError']}")
+        assert login_result["status"] == 200
 
         if login_result["corsError"]:
             print(f"Error:       {login_result.get('error', 'Unknown')}")
