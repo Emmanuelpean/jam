@@ -6,7 +6,7 @@ including login, registration, form validation, and mode switching functionality
 
 import time
 
-from conftest import models, BaseTest
+from conftest import models, BaseTest, check_backend_endpoint
 
 
 class TestAuthenticationPage(BaseTest):
