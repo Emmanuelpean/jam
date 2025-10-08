@@ -1,6 +1,6 @@
 """Main script"""
 
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import data_tables, user, login, export, settings
@@ -8,15 +8,40 @@ from app.eis import routers as eis_routers
 
 app = FastAPI()
 
+# CRITICAL: Add CORS middleware FIRST, before any other middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "*"
-    ],
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],  # Add this
 )
+
+
+# Debug middleware to log CORS issues
+@app.middleware("http")
+async def debug_cors(request: Request, call_next):
+    """Debug CORS issues"""
+
+    # Log incoming request
+    if request.method == "OPTIONS":
+        print(f"\n🔍 CORS Preflight Request to: {request.url.path}")
+        print(f"   Origin: {request.headers.get('origin', 'None')}")
+        print(f"   Method: {request.headers.get('access-control-request-method', 'None')}")
+
+    response = await call_next(request)
+
+    # Log CORS headers in response
+    if request.method == "OPTIONS":
+        print(f"📤 CORS Preflight Response:")
+        print(f"   Status: {response.status_code}")
+        print(f"   Access-Control-Allow-Origin: {response.headers.get('access-control-allow-origin', 'MISSING!')}")
+        print(f"   Access-Control-Allow-Methods: {response.headers.get('access-control-allow-methods', 'MISSING!')}")
+        print(f"   Access-Control-Allow-Headers: {response.headers.get('access-control-allow-headers', 'MISSING!')}\n")
+
+    return response
+
 
 # Data table routers
 app.include_router(data_tables.company_router)
@@ -49,7 +74,6 @@ app.include_router(settings.settings_router)
 @app.get("/")
 def read_root() -> dict:
     """Root endpoint"""
-
     return {"message": "Welcome to the JAM API"}
 
 
@@ -59,5 +83,19 @@ health_router = APIRouter(prefix="/health", tags=["health"])
 @app.get("/health")
 def health_check() -> dict:
     """Health check endpoint"""
-
     return {"status": "ok"}
+
+
+# Startup event to confirm CORS is working
+@app.on_event("startup")
+async def startup_event():
+    """Print startup information"""
+    print("\n" + "=" * 80)
+    print("🚀 FASTAPI APPLICATION STARTED")
+    print("=" * 80)
+    print("✅ CORS Configuration:")
+    print("   - Allow Origins: *")
+    print("   - Allow Credentials: False")
+    print("   - Allow Methods: *")
+    print("   - Allow Headers: *")
+    print("=" * 80 + "\n")
