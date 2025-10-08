@@ -1,12 +1,17 @@
 """Main script"""
 
-from fastapi import FastAPI, APIRouter, Request, Response
+from fastapi import APIRouter
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.routers import data_tables, user, login, export, settings
 from app.eis import routers as eis_routers
+from app.routers import data_tables, user, login, export, settings
 
 app = FastAPI()
+
 
 # CRITICAL: Add CORS middleware FIRST, before any other middleware
 app.add_middleware(
@@ -17,6 +22,55 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],  # Add this
 )
+
+
+# Add CORS headers to validation errors
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation errors and add CORS headers"""
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+            "Access-Control-Allow-Headers": "*",
+        },
+    )
+
+
+# Add CORS headers to HTTP exceptions
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Handle HTTP exceptions and add CORS headers"""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+            "Access-Control-Allow-Headers": "*",
+        },
+    )
+
+
+# Debug middleware
+@app.middleware("http")
+async def debug_cors(request: Request, call_next):
+    """Debug CORS issues"""
+
+    if request.method == "OPTIONS":
+        print(f"\n🔍 CORS Preflight Request to: {request.url.path}")
+        print(f"   Origin: {request.headers.get('origin', 'None')}")
+
+    response = await call_next(request)
+
+    # Log all responses
+    print(f"📤 Response to {request.method} {request.url.path}:")
+    print(f"   Status: {response.status_code}")
+    print(f"   CORS Header: {response.headers.get('access-control-allow-origin', 'MISSING!')}")
+
+    return response
 
 
 # Debug middleware to log CORS issues
@@ -87,7 +141,6 @@ def health_check() -> dict:
 
 
 # Print immediately after adding middleware
-import sys
 
 print("=" * 80)
 print("CORS MIDDLEWARE CONFIGURED")
