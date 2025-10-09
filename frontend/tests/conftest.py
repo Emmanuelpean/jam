@@ -109,6 +109,7 @@ def kill_process_tree(parent_pid) -> None:
 
 def check_backend_health(api_url: str, detailed: bool = True) -> dict:
     """Check backend health and return detailed status information
+
     :param api_url: Base URL of the API
     :param detailed: Whether to return detailed information
     :return: Dictionary with health check results
@@ -120,12 +121,13 @@ def check_backend_health(api_url: str, detailed: bool = True) -> dict:
         "response_time_ms": None,
         "status_code": None,
         "response_body": None,
+        "database": {},
         "error": None,
     }
 
     try:
         start_time = time.time()
-        response = requests.get(f"{api_url}/health", timeout=5)
+        response = requests.get(f"{api_url}/health/db", timeout=5)
         end_time = time.time()
 
         health_info["endpoint_accessible"] = True
@@ -133,12 +135,32 @@ def check_backend_health(api_url: str, detailed: bool = True) -> dict:
         health_info["response_time_ms"] = round((end_time - start_time) * 1000, 2)
 
         try:
-            health_info["response_body"] = response.json()
+            body = response.json()
+            health_info["response_body"] = body
+
+            # Extract database-specific information
+            if isinstance(body, dict):
+                health_info["database"] = {
+                    "status": body.get("status", body.get("database", "unknown")),
+                    "can_connect": body.get("can_connect", body.get("connection", {}).get("established", False)),
+                    "can_query": body.get("can_query", False),
+                    "tables_exist": body.get("tables_exist", False),
+                    "table_count": body.get("table_count", body.get("tables", {}).get("count", 0)),
+                    "tables": body.get("tables", body.get("table_list", [])),
+                    "user_table_exists": body.get("user_table_exists", False),
+                    "user_count": body.get("user_count"),
+                    "error": body.get("error"),
+                }
         except:
             health_info["response_body"] = response.text
 
         if response.status_code == 200:
-            health_info["status"] = "healthy"
+            # Check if database is actually healthy
+            db_status = health_info["database"].get("status", "unknown")
+            if db_status == "healthy":
+                health_info["status"] = "healthy"
+            else:
+                health_info["status"] = f"unhealthy (database: {db_status})"
         else:
             health_info["status"] = f"unhealthy (HTTP {response.status_code})"
 
@@ -157,13 +179,11 @@ def check_backend_health(api_url: str, detailed: bool = True) -> dict:
         print("BACKEND HEALTH CHECK REPORT".center(70))
         print("=" * 70)
         print(f"Status:              {health_info['status'].upper()}")
-        print(f"Endpoint:            {api_url}/health")
+        print(f"Endpoint:            {api_url}/health/db")
         print(f"Accessible:          {'✅ Yes' if health_info['endpoint_accessible'] else '❌ No'}")
         print(f"Status Code:         {health_info['status_code'] or 'N/A'}")
         print(f"Response Time:       {health_info['response_time_ms'] or 'N/A'} ms")
-        print(f"Response Body:       {health_info['response_body'] or 'N/A'}")
-        if health_info["error"]:
-            print(f"Error Details:       {health_info['error']}")
+        print(response.json())
         print("=" * 70 + "\n")
 
     return health_info
@@ -1019,9 +1039,10 @@ def test_simple_login(frontend_base_url, api_base_url):
 
             # Test backend health
             print("\n1. Testing backend health endpoint...")
-            health_result = check_backend_endpoint(api_base_url, "/health")
+            health_result = check_backend_endpoint(api_base_url, "/health/db")
             print(f"   Health Status: {health_result['status_code']}")
             print(f"   Health Response: {health_result['response_body']}")
+            print(health_result)
 
             # Test CORS with Python requests (should work)
             print("\n2. Testing backend /login with Python requests (bypasses CORS)...")

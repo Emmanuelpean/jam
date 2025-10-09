@@ -3,14 +3,18 @@
 import logging
 import traceback
 
-from fastapi import APIRouter, FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, Depends
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy import text, inspect
+from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app import config
 from app.eis import routers as eis_routers
 from app.routers import data_tables, user, login, export, settings
+from app.database import get_db, SQLALCHEMY_DATABASE_URL, engine
 
 app = FastAPI()
 
@@ -167,3 +171,60 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Global exception handler caught: {exc}")
     logger.error(f"Traceback: {traceback.format_exc()}")
     return JSONResponse(status_code=500, content={"detail": f"Internal server error: {str(exc)}"})
+
+
+@app.get("/health/db")
+async def health_database(db: Session = Depends(get_db)):
+    """Comprehensive database health check"""
+
+    db_status = {"status": "unknown", "connection": {}, "configuration": {}, "tables": {}, "checks": {}}
+
+    try:
+        # Configuration info (hide sensitive parts)
+        db_url_parts = SQLALCHEMY_DATABASE_URL.split("@")
+        safe_url = db_url_parts[-1] if len(db_url_parts) > 1 else "unable to parse"
+
+        db_status["configuration"] = {
+            "database_name": config.settings.database_name,
+            "database_hostname": config.settings.database_hostname,
+            "database_port": config.settings.database_port,
+            "url_safe": safe_url,
+            "engine_pool_size": engine.pool.size() if hasattr(engine.pool, "size") else "N/A",
+        }
+
+        # Test 1: Connection established via dependency injection
+        db_status["connection"]["established"] = True
+        db_status["checks"]["dependency_injection"] = "✅ success"
+
+        # Test 2: Simple query
+        result = db.execute(text("SELECT 1")).scalar()
+        db_status["checks"]["simple_query"] = "✅ success"
+        db_status["checks"]["query_result"] = result
+
+        # Test 3: Get all tables using inspector
+        inspector = inspect(engine)
+        table_names = inspector.get_table_names()
+
+        db_status["tables"]["count"] = len(table_names)
+        db_status["tables"]["names"] = table_names
+        db_status["checks"]["tables_exist"] = "✅ yes" if table_names else "❌ no tables found"
+
+        # Test 5: Check if we can get table columns
+        if "users" in table_names:
+            try:
+                columns = inspector.get_columns("users")
+                db_status["tables"]["users"]["columns"] = [col["name"] for col in columns]
+            except Exception as e:
+                db_status["tables"]["users"]["column_error"] = str(e)
+
+        db_status["status"] = "healthy"
+
+    except Exception as e:
+        db_status["status"] = "unhealthy"
+        db_status["error"] = {
+            "message": str(e),
+            "type": type(e).__name__,
+            "traceback": traceback.format_exc().split("\n"),
+        }
+
+    return db_status
