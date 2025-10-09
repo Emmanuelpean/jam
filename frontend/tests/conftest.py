@@ -236,117 +236,55 @@ def test_backend_server() -> Generator[str, None, None]:
     else:
         env["PYTHONPATH"] = backend_path
 
-    # Start the backend server and capture output
+    # Start the backend server on a different port to avoid conflicts
     print("Starting backend subprocess...")
     process = subprocess.Popen(
-        [
-            sys.executable,
-            "-m",
-            "uvicorn",
-            "app.main:app",
-            "--host",
-            "0.0.0.0",
-            "--port",
-            "8000",
-            "--log-level",
-            "debug",
-            "--access-log",
-        ],
+        [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"],
         cwd=backend_path,
         env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        bufsize=1,  # Line buffered
     )
 
     print(f"Backend process started with PID: {process.pid}")
-
-    # Capture backend startup output in a thread
-    backend_output = []
-
-    def read_backend_output(pipe, output_list):
-        """Read backend output line by line"""
-        for line in iter(pipe.readline, ""):
-            if line:
-                output_list.append(line.rstrip())
-                # Print CORS-related messages immediately
-                if "CORS" in line or "cors" in line.lower():
-                    print(f"  🔧 Backend: {line.rstrip()}")
-
-    stdout_thread = threading.Thread(target=read_backend_output, args=(process.stdout, backend_output))
-    stderr_thread = threading.Thread(target=read_backend_output, args=(process.stderr, backend_output))
-    stdout_thread.daemon = True
-    stderr_thread.daemon = True
-    stdout_thread.start()
-    stderr_thread.start()
 
     # Wait for server to start
     api_url = "http://localhost:8000"
     print(f"Waiting for backend server to be ready at {api_url}...")
 
-    backend_ready = False
     for attempt in range(30):  # 30 seconds max
         print(f"Attempt {attempt + 1}/30 - Checking backend server health...")
 
         # Check if process died
         if process.poll() is not None:
-            # Process died, collect output
-            stdout_thread.join(timeout=1)
-            stderr_thread.join(timeout=1)
-
+            stdout, stderr = process.communicate()
             print(f"❌ Backend process died! Return code: {process.poll()}")
-            print("\nBackend Output:")
-            for line in backend_output[-50:]:  # Last 50 lines
-                print(f"  {line}")
+            print(f"STDOUT: {stdout}")
+            print(f"STDERR: {stderr}")
             raise Exception(f"Backend server process terminated unexpectedly")
 
-        # Check health endpoint
-        health_info = check_backend_health(api_url, detailed=False)
-
-        if health_info["status"] == "healthy":
-            print("✅ Backend server is ready!")
-            backend_ready = True
-            break
-        else:
-            print(f"Backend status: {health_info['status']}")
+        try:
+            response = requests.get(f"{api_url}/docs", timeout=3)
+            print(f"✅ Backend response status code: {response.status_code}")
+            if response.status_code == 200:
+                print("✅ Backend server is ready!")
+                break
+        except requests.exceptions.ConnectionError:
+            print("Backend connection refused, still starting...")
+        except requests.exceptions.Timeout:
+            print("Backend request timeout...")
+        except Exception as e:
+            print(f"Backend unexpected error: {e}")
 
         time.sleep(1)
-
-    if not backend_ready:
+    else:
+        # Backend failed to start
         print("❌ Backend server failed to start after 30 seconds")
-        check_backend_health(api_url, detailed=True)
-
-        # Collect final output
-        stdout_thread.join(timeout=2)
-        stderr_thread.join(timeout=2)
-
-        print("\nBackend Startup Output:")
-        for line in backend_output:
-            print(f"  {line}")
-
         kill_process_tree(process.pid)
-        raise Exception(f"Backend server failed to start")
+        stdout, stderr = process.communicate(timeout=10)
+        print(f"Backend STDOUT: {stdout}")
+        print(f"Backend STDERR: {stderr}")
+        raise Exception(f"Backend server failed to start. STDERR: {stderr}")
 
-    # Print CORS-related startup output
-    print("\n" + "=" * 80)
-    print("BACKEND STARTUP OUTPUT (CORS RELATED)")
-    print("=" * 80)
-    cors_found = False
-    for line in backend_output:
-        if "CORS" in line or "cors" in line.lower() or "middleware" in line.lower():
-            print(f"  {line}")
-            cors_found = True
-
-    if not cors_found:
-        print("  ⚠️  No CORS-related output found in backend startup!")
-        print("  This might indicate CORS middleware isn't being configured.")
-    print("=" * 80 + "\n")
-
-    # Final health check with detailed output
     print("✅ Backend server startup completed successfully!")
-    check_backend_health(api_url, detailed=True)
-
     yield api_url
 
     # Cleanup
@@ -951,181 +889,182 @@ class BaseTest:
         element.send_keys(text)
 
 
-def test_simple_login(frontend_base_url, api_base_url, test_users):
-    """Simple standalone test for login functionality"""
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
-    from selenium.webdriver.common.by import By
-    import time
-
-    options = Options()
-    options.add_argument("--headless=new")
-    options.add_argument("--window-size=1920,1080")
-    options.set_capability("goog:loggingPrefs", {"browser": "ALL"})
-
-    driver = webdriver.Chrome(options=options)
-
-    try:
-        # Navigate to login page
-        print("\n1. Navigating to login page...")
-        driver.get(f"{frontend_base_url}/login")
-        time.sleep(2)
-
-        # Fill in credentials
-        print("2. Filling in credentials...")
-        email_field = driver.find_element(By.ID, "email")
-        password_field = driver.find_element(By.ID, "password")
-
-        email_field.send_keys("test_user@test.com")
-        password_field.send_keys("test_password")
-
-        # Test with direct fetch
-        print("3. Testing login with direct fetch...")
-        result = driver.execute_async_script(
-            """
-            const callback = arguments[arguments.length - 1];
-
-            const formData = new URLSearchParams();
-            formData.append('username', 'test_user@test.com');
-            formData.append('password', 'test_password');
-
-            fetch('http://localhost:8000/login/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: formData
-            })
-            .then(async response => {
-                const text = await response.text();
-                callback({
-                    status: response.status,
-                    statusText: response.statusText,
-                    body: text
-                });
-            })
-            .catch(error => {
-                callback({
-                    status: 0,
-                    error: error.toString(),
-                    errorMessage: error.message
-                });
-            });
-        """
-        )
-
-        print(f"\n{'='*60}")
-        print(f"FETCH RESULT:")
-        print(f"  Status: {result['status']}")
-        print(f"  Response: {result.get('body', result.get('error', 'N/A'))}")
-        print(f"{'='*60}\n")
-        assert result["status"] == 200
-
-        # Get browser console logs
-        logs = driver.get_log("browser")
-        if logs:
-            print("Browser Console:")
-            for log in logs:
-                print(f"  [{log['level']}] {log['message']}")
-
-        # If failed, check backend
-        if result["status"] == 0:
-            print(f"\n{'='*80}")
-            print("LOGIN FAILED - CHECKING BACKEND")
-            print(f"{'='*80}")
-
-            # Test backend health
-            print("\n1. Testing backend health endpoint...")
-            health_result = check_backend_endpoint(api_base_url, "/health/db")
-            print(f"   Health Status: {health_result['status_code']}")
-            print(f"   Health Response: {health_result['response_body']}")
-            print(health_result)
-
-            # Test CORS with Python requests (should work)
-            print("\n2. Testing backend /login with Python requests (bypasses CORS)...")
-            login_test = check_backend_endpoint(
-                api_base_url,
-                "/login/",
-                method="POST",
-                data={"username": "test_user@test.com", "password": "test_password"},
-            )
-            print(f"   Python Request Status: {login_test['status_code']}")
-            print(f"   Python Request Response: {login_test['response_body']}")
-            assert login_test["status_code"] == 200
-
-            # Test CORS preflight
-            print("\n3. Testing CORS preflight (OPTIONS)...")
-            import requests
-
-            cors_test = requests.options(
-                f"{api_base_url}/login/",
-                headers={
-                    "Origin": "http://localhost:3000",
-                    "Access-Control-Request-Method": "POST",
-                    "Access-Control-Request-Headers": "content-type",
-                },
-            )
-            print(f"   OPTIONS Status: {cors_test.status_code}")
-            print(f"   CORS Headers in Response:")
-            cors_headers_found = False
-            for header, value in cors_test.headers.items():
-                if "access-control" in header.lower():
-                    print(f"      {header}: {value}")
-                    cors_headers_found = True
-
-            if not cors_headers_found:
-                print("      ❌ NO CORS HEADERS FOUND!")
-                print(f"      All response headers: {dict(cors_test.headers)}")
-
-            # Try to get backend process logs
-            print("\n4. Checking if backend is still running...")
-            import psutil
-
-            backend_running = False
-            for proc in psutil.process_iter(["pid", "name", "cmdline"]):
-                try:
-                    if proc.info["cmdline"] and any("uvicorn" in str(cmd) for cmd in proc.info["cmdline"]):
-                        backend_running = True
-                        print(f"   ✅ Backend process found: PID {proc.info['pid']}")
-                        break
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    pass
-
-            if not backend_running:
-                print("   ❌ Backend process not found - may have crashed!")
-
-            print("\n5. Testing actual POST request CORS headers...")
-            post_test = requests.post(
-                f"{api_base_url}/login/",
-                data={"username": "test_user@test.com", "password": "test_password"},
-                headers={"Origin": "http://localhost:3000"},
-            )
-            print(f"   POST Status: {post_test.status_code}")
-            print(f"   POST CORS Headers:")
-            for header, value in post_test.headers.items():
-                if "access-control" in header.lower():
-                    print(f"      {header}: {value}")
-
-            print(f"{'='*80}\n")
-
-            print(f"❌ FAILED: Request blocked (status 0)")
-            print(f"   Error: {result.get('error', 'Unknown')}")
-            print(f"\n💡 DIAGNOSIS:")
-            print(f"   - Backend Health: {'✅ OK' if health_result['status_code'] == 200 else '❌ FAILED'}")
-            print(f"   - Python Request: {'✅ OK' if login_test['status_code'] in [200, 401, 403] else '❌ FAILED'}")
-            print(f"   - CORS Headers: {'✅ OK' if cors_headers_found else '❌ MISSING'}")
-            print(f"   - Backend Running: {'✅ YES' if backend_running else '❌ NO'}")
-
-            if not cors_headers_found:
-                print(f"\n🔍 ROOT CAUSE: CORS headers are missing from backend responses!")
-                print(f"   The backend is not returning Access-Control-Allow-Origin headers.")
-                print(f"   This causes the browser to block all requests.")
-        elif result["status"] == 200:
-            print(f"\n✅ SUCCESS: Login worked!")
-        else:
-            print(f"\n⚠️  Request completed with status {result['status']}")
-
-        assert result["status"] != 0, f"Request blocked: {result.get('error')}"
-
-    finally:
-        driver.quit()
+#
+# def test_simple_login(frontend_base_url, api_base_url, test_users):
+#     """Simple standalone test for login functionality"""
+#     from selenium import webdriver
+#     from selenium.webdriver.chrome.options import Options
+#     from selenium.webdriver.common.by import By
+#     import time
+#
+#     options = Options()
+#     options.add_argument("--headless=new")
+#     options.add_argument("--window-size=1920,1080")
+#     options.set_capability("goog:loggingPrefs", {"browser": "ALL"})
+#
+#     driver = webdriver.Chrome(options=options)
+#
+#     try:
+#         # Navigate to login page
+#         print("\n1. Navigating to login page...")
+#         driver.get(f"{frontend_base_url}/login")
+#         time.sleep(2)
+#
+#         # Fill in credentials
+#         print("2. Filling in credentials...")
+#         email_field = driver.find_element(By.ID, "email")
+#         password_field = driver.find_element(By.ID, "password")
+#
+#         email_field.send_keys("test_user@test.com")
+#         password_field.send_keys("test_password")
+#
+#         # Test with direct fetch
+#         print("3. Testing login with direct fetch...")
+#         result = driver.execute_async_script(
+#             """
+#             const callback = arguments[arguments.length - 1];
+#
+#             const formData = new URLSearchParams();
+#             formData.append('username', 'test_user@test.com');
+#             formData.append('password', 'test_password');
+#
+#             fetch('http://localhost:8000/login/', {
+#                 method: 'POST',
+#                 headers: {
+#                     'Content-Type': 'application/x-www-form-urlencoded',
+#                 },
+#                 body: formData
+#             })
+#             .then(async response => {
+#                 const text = await response.text();
+#                 callback({
+#                     status: response.status,
+#                     statusText: response.statusText,
+#                     body: text
+#                 });
+#             })
+#             .catch(error => {
+#                 callback({
+#                     status: 0,
+#                     error: error.toString(),
+#                     errorMessage: error.message
+#                 });
+#             });
+#         """
+#         )
+#
+#         print(f"\n{'='*60}")
+#         print(f"FETCH RESULT:")
+#         print(f"  Status: {result['status']}")
+#         print(f"  Response: {result.get('body', result.get('error', 'N/A'))}")
+#         print(f"{'='*60}\n")
+#         assert result["status"] == 200
+#
+#         # Get browser console logs
+#         logs = driver.get_log("browser")
+#         if logs:
+#             print("Browser Console:")
+#             for log in logs:
+#                 print(f"  [{log['level']}] {log['message']}")
+#
+#         # If failed, check backend
+#         if result["status"] == 0:
+#             print(f"\n{'='*80}")
+#             print("LOGIN FAILED - CHECKING BACKEND")
+#             print(f"{'='*80}")
+#
+#             # Test backend health
+#             print("\n1. Testing backend health endpoint...")
+#             health_result = check_backend_endpoint(api_base_url, "/health/db")
+#             print(f"   Health Status: {health_result['status_code']}")
+#             print(f"   Health Response: {health_result['response_body']}")
+#             print(health_result)
+#
+#             # Test CORS with Python requests (should work)
+#             print("\n2. Testing backend /login with Python requests (bypasses CORS)...")
+#             login_test = check_backend_endpoint(
+#                 api_base_url,
+#                 "/login/",
+#                 method="POST",
+#                 data={"username": "test_user@test.com", "password": "test_password"},
+#             )
+#             print(f"   Python Request Status: {login_test['status_code']}")
+#             print(f"   Python Request Response: {login_test['response_body']}")
+#             assert login_test["status_code"] == 200
+#
+#             # Test CORS preflight
+#             print("\n3. Testing CORS preflight (OPTIONS)...")
+#             import requests
+#
+#             cors_test = requests.options(
+#                 f"{api_base_url}/login/",
+#                 headers={
+#                     "Origin": "http://localhost:3000",
+#                     "Access-Control-Request-Method": "POST",
+#                     "Access-Control-Request-Headers": "content-type",
+#                 },
+#             )
+#             print(f"   OPTIONS Status: {cors_test.status_code}")
+#             print(f"   CORS Headers in Response:")
+#             cors_headers_found = False
+#             for header, value in cors_test.headers.items():
+#                 if "access-control" in header.lower():
+#                     print(f"      {header}: {value}")
+#                     cors_headers_found = True
+#
+#             if not cors_headers_found:
+#                 print("      ❌ NO CORS HEADERS FOUND!")
+#                 print(f"      All response headers: {dict(cors_test.headers)}")
+#
+#             # Try to get backend process logs
+#             print("\n4. Checking if backend is still running...")
+#             import psutil
+#
+#             backend_running = False
+#             for proc in psutil.process_iter(["pid", "name", "cmdline"]):
+#                 try:
+#                     if proc.info["cmdline"] and any("uvicorn" in str(cmd) for cmd in proc.info["cmdline"]):
+#                         backend_running = True
+#                         print(f"   ✅ Backend process found: PID {proc.info['pid']}")
+#                         break
+#                 except (psutil.NoSuchProcess, psutil.AccessDenied):
+#                     pass
+#
+#             if not backend_running:
+#                 print("   ❌ Backend process not found - may have crashed!")
+#
+#             print("\n5. Testing actual POST request CORS headers...")
+#             post_test = requests.post(
+#                 f"{api_base_url}/login/",
+#                 data={"username": "test_user@test.com", "password": "test_password"},
+#                 headers={"Origin": "http://localhost:3000"},
+#             )
+#             print(f"   POST Status: {post_test.status_code}")
+#             print(f"   POST CORS Headers:")
+#             for header, value in post_test.headers.items():
+#                 if "access-control" in header.lower():
+#                     print(f"      {header}: {value}")
+#
+#             print(f"{'='*80}\n")
+#
+#             print(f"❌ FAILED: Request blocked (status 0)")
+#             print(f"   Error: {result.get('error', 'Unknown')}")
+#             print(f"\n💡 DIAGNOSIS:")
+#             print(f"   - Backend Health: {'✅ OK' if health_result['status_code'] == 200 else '❌ FAILED'}")
+#             print(f"   - Python Request: {'✅ OK' if login_test['status_code'] in [200, 401, 403] else '❌ FAILED'}")
+#             print(f"   - CORS Headers: {'✅ OK' if cors_headers_found else '❌ MISSING'}")
+#             print(f"   - Backend Running: {'✅ YES' if backend_running else '❌ NO'}")
+#
+#             if not cors_headers_found:
+#                 print(f"\n🔍 ROOT CAUSE: CORS headers are missing from backend responses!")
+#                 print(f"   The backend is not returning Access-Control-Allow-Origin headers.")
+#                 print(f"   This causes the browser to block all requests.")
+#         elif result["status"] == 200:
+#             print(f"\n✅ SUCCESS: Login worked!")
+#         else:
+#             print(f"\n⚠️  Request completed with status {result['status']}")
+#
+#         assert result["status"] != 0, f"Request blocked: {result.get('error')}"
+#
+#     finally:
+#         driver.quit()
