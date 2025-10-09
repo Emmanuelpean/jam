@@ -61,7 +61,7 @@ jobs:
         run: |
           cd frontend
           npm install --legacy-peer-deps
-          coverage run -m pytest ./tests/test_auth.py -x -v --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
+          coverage run -m pytest ./backend -x -v --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
 #          coverage run -m pytest ./tests/conftest.py -x -v --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
 
       - name: Upload Screenshots on Failure
