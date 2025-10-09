@@ -499,7 +499,7 @@ class BaseTest:
             chrome_options.add_argument("--v=1")
 
             self.driver = webdriver.Chrome(options=chrome_options)
-            self.driver.maximize_window()
+            # self.driver.maximize_window()
             self.wait = WebDriverWait(self.driver, 10)
 
             # Frontend/Backend
