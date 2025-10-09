@@ -51,6 +51,7 @@ app.include_router(settings.settings_router)
 @app.get("/")
 def read_root() -> dict:
     """Root endpoint"""
+
     return {"message": "Welcome to the JAM API"}
 
 
@@ -60,4 +61,5 @@ health_router = APIRouter(prefix="/health", tags=["health"])
 @app.get("/health")
 def health_check() -> dict:
     """Health check endpoint"""
+
     return {"status": "ok"}
