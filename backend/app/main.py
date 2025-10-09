@@ -11,12 +11,15 @@ from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app import config
+from app import config, models
 from app.eis import routers as eis_routers
 from app.routers import data_tables, user, login, export, settings
 from app.database import get_db, SQLALCHEMY_DATABASE_URL, engine
 
 app = FastAPI()
+
+models.Base.metadata.create_all(bind=engine)
+
 
 print("=" * 80)
 print("CORS MIDDLEWARE CONFIGURED - CUSTOM IMPLEMENTATION")
