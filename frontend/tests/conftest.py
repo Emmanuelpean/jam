@@ -990,6 +990,7 @@ def test_simple_login(frontend_base_url, api_base_url):
         print(f"  Status: {result['status']}")
         print(f"  Response: {result.get('body', result.get('error', 'N/A'))}")
         print(f"{'='*60}\n")
+        assert result["status"] == 200
 
         # Get browser console logs
         logs = driver.get_log("browser")
