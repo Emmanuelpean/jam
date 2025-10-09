@@ -222,11 +222,23 @@ def test_backend_server() -> Generator[str, None, None]:
     # Start the backend server and capture output
     print("Starting backend subprocess...")
     process = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"],
+        [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "app.main:app",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8000",
+            "--log-level",
+            "debug",
+            "--access-log",
+        ],
         cwd=backend_path,
         env=env,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         text=True,
         bufsize=1,  # Line buffered
     )
