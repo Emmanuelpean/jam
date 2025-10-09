@@ -39,6 +39,7 @@ from tests.conftest import (
     client,
     tokens,
     test_settings,
+    DATABASE_NAME,
 )
 from tests.conftest import *
 
@@ -223,7 +224,7 @@ def test_backend_server() -> Generator[str, None, None]:
 
     # Set environment variables for test database
     env = os.environ.copy()
-    # env["DATABASE_NAME"] = "jam_test"
+    env["DATABASE_NAME"] = DATABASE_NAME
     env["SQLALCHEMY_DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
 
     print(f"Using database URL: {SQLALCHEMY_DATABASE_URL}")

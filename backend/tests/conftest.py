@@ -19,7 +19,7 @@ from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 import os
 
-from app import models, database, schemas
+from app import models, database, schemas, config
 from app.eis import models as eis_models
 from app.main import app
 from app.oauth2 import create_access_token
@@ -41,6 +41,7 @@ from tests.utils.create_data import (
 )
 from tests.utils.seed_database import reset_database
 
+DATABASE_NAME = config.settings.database_name + "_test"
 SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
