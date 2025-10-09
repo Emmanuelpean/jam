@@ -229,8 +229,6 @@ def test_backend_server() -> Generator[str, None, None]:
     print(f"Using database URL: {SQLALCHEMY_DATABASE_URL}")
     print(f"Backend path: {backend_path}")
 
-    models.Base.metadata.create_all(bind=engine)
-
     # Add backend path to PYTHONPATH for proper imports
     if "PYTHONPATH" in env:
         env["PYTHONPATH"] = f"{backend_path}{os.pathsep}{env['PYTHONPATH']}"
@@ -952,7 +950,7 @@ class BaseTest:
         element.send_keys(text)
 
 
-def test_simple_login(frontend_base_url, api_base_url):
+def test_simple_login(frontend_base_url, api_base_url, test_users):
     """Simple standalone test for login functionality"""
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
@@ -1052,6 +1050,7 @@ def test_simple_login(frontend_base_url, api_base_url):
             )
             print(f"   Python Request Status: {login_test['status_code']}")
             print(f"   Python Request Response: {login_test['response_body']}")
+            assert login_test["status_code"] == 200
 
             # Test CORS preflight
             print("\n3. Testing CORS preflight (OPTIONS)...")
