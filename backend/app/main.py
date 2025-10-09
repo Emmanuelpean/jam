@@ -1,5 +1,8 @@
 """Main script"""
 
+import logging
+import traceback
+
 from fastapi import APIRouter, FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -152,3 +155,15 @@ def read_root() -> dict:
 def health_check() -> dict:
     """Health check endpoint"""
     return {"status": "ok"}
+
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Global exception handler caught: {exc}")
+    logger.error(f"Traceback: {traceback.format_exc()}")
+    return JSONResponse(status_code=500, content={"detail": f"Internal server error: {str(exc)}"})
