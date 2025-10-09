@@ -18,9 +18,6 @@ from app.database import get_db, SQLALCHEMY_DATABASE_URL, engine
 
 app = FastAPI()
 
-models.Base.metadata.create_all(bind=engine)
-
-
 print("=" * 80)
 print("CORS MIDDLEWARE CONFIGURED - CUSTOM IMPLEMENTATION")
 print("=" * 80)

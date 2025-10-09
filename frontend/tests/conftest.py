@@ -229,6 +229,8 @@ def test_backend_server() -> Generator[str, None, None]:
     print(f"Using database URL: {SQLALCHEMY_DATABASE_URL}")
     print(f"Backend path: {backend_path}")
 
+    models.Base.metadata.create_all(bind=engine)
+
     # Add backend path to PYTHONPATH for proper imports
     if "PYTHONPATH" in env:
         env["PYTHONPATH"] = f"{backend_path}{os.pathsep}{env['PYTHONPATH']}"
