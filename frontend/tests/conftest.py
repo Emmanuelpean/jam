@@ -1,7 +1,6 @@
 """Fixtures and helper functions for integration tests"""
 
 import itertools
-import json
 import os
 import platform
 import queue
@@ -10,7 +9,6 @@ import subprocess
 import sys
 import tempfile
 import threading
-from typing import Optional
 
 import psutil
 import requests
@@ -106,88 +104,6 @@ def kill_process_tree(parent_pid) -> None:
         print(f"Process {parent_pid} not found")
     except Exception as e:
         print(f"Error killing process tree {parent_pid}: {e}")
-
-
-def check_backend_health(api_url: str, detailed: bool = True) -> dict:
-    """Check backend health and return detailed status information
-
-    :param api_url: Base URL of the API
-    :param detailed: Whether to return detailed information
-    :return: Dictionary with health check results
-    """
-
-    health_info = {
-        "status": "unknown",
-        "endpoint_accessible": False,
-        "response_time_ms": None,
-        "status_code": None,
-        "response_body": None,
-        "database": {},
-        "error": None,
-    }
-
-    try:
-        start_time = time.time()
-        response = requests.get(f"{api_url}/health/db", timeout=5)
-        end_time = time.time()
-
-        health_info["endpoint_accessible"] = True
-        health_info["status_code"] = response.status_code
-        health_info["response_time_ms"] = round((end_time - start_time) * 1000, 2)
-
-        try:
-            body = response.json()
-            health_info["response_body"] = body
-
-            # Extract database-specific information
-            if isinstance(body, dict):
-                health_info["database"] = {
-                    "status": body.get("status", body.get("database", "unknown")),
-                    "can_connect": body.get("can_connect", body.get("connection", {}).get("established", False)),
-                    "can_query": body.get("can_query", False),
-                    "tables_exist": body.get("tables_exist", False),
-                    "table_count": body.get("table_count", body.get("tables", {}).get("count", 0)),
-                    "tables": body.get("tables", body.get("table_list", [])),
-                    "user_table_exists": body.get("user_table_exists", False),
-                    "user_count": body.get("user_count"),
-                    "error": body.get("error"),
-                }
-        except:
-            health_info["response_body"] = response.text
-
-        if response.status_code == 200:
-            # Check if database is actually healthy
-            db_status = health_info["database"].get("status", "unknown")
-            if db_status == "healthy":
-                health_info["status"] = "healthy"
-            else:
-                health_info["status"] = f"unhealthy (database: {db_status})"
-        else:
-            health_info["status"] = f"unhealthy (HTTP {response.status_code})"
-
-    except requests.exceptions.ConnectionError as e:
-        health_info["status"] = "connection_failed"
-        health_info["error"] = str(e)
-    except requests.exceptions.Timeout:
-        health_info["status"] = "timeout"
-        health_info["error"] = "Request timed out after 5 seconds"
-    except Exception as e:
-        health_info["status"] = "error"
-        health_info["error"] = str(e)
-
-    if detailed:
-        print("\n" + "=" * 70)
-        print("BACKEND HEALTH CHECK REPORT".center(70))
-        print("=" * 70)
-        print(f"Status:              {health_info['status'].upper()}")
-        print(f"Endpoint:            {api_url}/health/db")
-        print(f"Accessible:          {'✅ Yes' if health_info['endpoint_accessible'] else '❌ No'}")
-        print(f"Status Code:         {health_info['status_code'] or 'N/A'}")
-        print(f"Response Time:       {health_info['response_time_ms'] or 'N/A'} ms")
-        print(response.json())
-        print("=" * 70 + "\n")
-
-    return health_info
 
 
 def print_backend_pid() -> None:
@@ -483,6 +399,29 @@ def contiguous_subdicts(dictionary: dict) -> list[dict]:
     return [dict()] + results
 
 
+def contiguous_subdicts_with_required(dictionary: dict, required_keys: list) -> list[dict]:
+    """Return a list of all contiguous sub-dictionaries in the given dictionary,
+    :param dictionary: The dictionary to search.
+    :param required_keys: A list of required keys."""
+
+    keys = list(dictionary.keys())
+    n = len(keys)
+    seen = set()
+    results = []
+    for size in range(1, n + 1):
+        for start in range(n):
+            subkeys = [keys[(start + i) % n] for i in range(size)]
+            # Only filter if required_keys is not empty
+            if not required_keys or all(k in subkeys for k in required_keys):
+                subdict = {k: dictionary[k] for k in subkeys}
+                # Use sorted items as a hashable representation:
+                key_tuple = tuple(sorted(subdict.items()))
+                if key_tuple not in seen:
+                    seen.add(key_tuple)
+                    results.append(subdict)
+    return results
+
+
 def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_keys: list[str]) -> list[dict]:
     """Generate all possible combinations of entries in the given dictionary,
     :param data_dict: The dictionary to search.
@@ -510,102 +449,6 @@ def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_k
     return result
 
 
-def check_backend_endpoint(
-    api_url: str, endpoint: str, method: str = "GET", data: dict = None, headers: dict = None
-) -> dict:
-    """Check a specific backend endpoint and log the response
-
-    :param api_url: Base URL of the API
-    :param endpoint: Endpoint to check (e.g., '/login', '/users')
-    :param method: HTTP method (GET, POST, etc.)
-    :param data: Optional data to send with POST requests
-    :param headers: Optional headers to send with request
-    :return: Dictionary with response information
-    """
-
-    full_url = f"{api_url}{endpoint}"
-    result = {
-        "success": False,
-        "status_code": None,
-        "response_body": None,
-        "error": None,
-    }
-
-    try:
-        if method.upper() == "POST":
-            response = requests.post(full_url, json=data, headers=headers, timeout=5)
-        elif method.upper() == "PUT":
-            response = requests.put(full_url, json=data, headers=headers, timeout=5)
-        elif method.upper() == "DELETE":
-            response = requests.delete(full_url, headers=headers, timeout=5)
-        else:  # GET
-            response = requests.get(full_url, headers=headers, timeout=5)
-
-        result["status_code"] = response.status_code
-        result["success"] = 200 <= response.status_code < 300
-
-        try:
-            result["response_body"] = response.json()
-        except:
-            result["response_body"] = response.text
-
-        log_request_response(
-            method=method,
-            url=full_url,
-            status_code=response.status_code,
-            response_body=(
-                json.dumps(result["response_body"])
-                if isinstance(result["response_body"], dict)
-                else result["response_body"]
-            ),
-        )
-
-    except requests.exceptions.ConnectionError as e:
-        result["error"] = f"Connection failed: {str(e)}"
-        log_request_response(method=method, url=full_url, error=result["error"])
-    except requests.exceptions.Timeout:
-        result["error"] = "Request timed out after 5 seconds"
-        log_request_response(method=method, url=full_url, error=result["error"])
-    except Exception as e:
-        result["error"] = str(e)
-        log_request_response(method=method, url=full_url, error=result["error"])
-
-    return result
-
-
-def log_request_response(
-    method: str,
-    url: str,
-    status_code: Optional[int] = None,
-    response_body: Optional[str] = None,
-    error: Optional[str] = None,
-) -> None:
-    """Log HTTP request/response in a clean format for debugging"""
-
-    print("\n" + "=" * 80)
-    print(f"HTTP REQUEST/RESPONSE LOG".center(80))
-    print("=" * 80)
-    print(f"Method:          {method}")
-    print(f"URL:             {url}")
-
-    if status_code:
-        status_icon = "✅" if 200 <= status_code < 300 else "❌"
-        print(f"Status Code:     {status_icon} {status_code}")
-
-    if response_body:
-        try:
-            # Try to pretty print JSON
-            parsed = json.loads(response_body)
-            print(f"Response Body:   {json.dumps(parsed, indent=2)}")
-        except:
-            print(f"Response Body:   {response_body}")
-
-    if error:
-        print(f"Error:           {error}")
-
-    print("=" * 80 + "\n")
-
-
 class BaseTest:
     """Base class for selenium tests"""
 
@@ -620,102 +463,6 @@ class BaseTest:
     # Parameters needed
     page_url = ""  # url of the page to test (not including the base url)
     user_index = 1  # index of the user to use for the test
-
-    def take_debug_screenshot(self, name: str = "debug") -> None:
-        """Take a screenshot for debugging purposes"""
-
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"screenshots/{name}_{timestamp}.png"
-
-        # Create screenshots directory if it doesn't exist
-        os.makedirs("screenshots", exist_ok=True)
-
-        try:
-            self.driver.save_screenshot(filename)
-            print(f"📸 Screenshot saved: {filename}")
-        except Exception as e:
-            print(f"Failed to save screenshot: {e}")
-
-    def get_console_logs(self) -> list:
-        """Get browser console logs for debugging"""
-
-        try:
-            logs = self.driver.get_log("browser")
-            return logs
-        except Exception as e:
-            print(f"Could not get console logs: {e}")
-            return []
-
-    def print_console_logs(self) -> None:
-        """Print all browser console logs in a readable format"""
-
-        logs = self.get_console_logs()
-
-        if not logs:
-            print("No console logs found")
-            return
-
-        print("\n" + "=" * 80)
-        print("BROWSER CONSOLE LOGS".center(80))
-        print("=" * 80)
-
-        for log in logs:
-            level = log.get("level", "INFO")
-            message = log.get("message", "")
-            timestamp = log.get("timestamp", "")
-
-            # Add emoji based on log level
-            emoji = {"SEVERE": "🔴", "WARNING": "⚠️", "INFO": "ℹ️", "DEBUG": "🔍"}.get(level, "📝")
-
-            print(f"{emoji} [{level}] {message}")
-
-        print("=" * 80 + "\n")
-
-    def print_page_state(self, label: str = "Page State") -> None:
-        """Print comprehensive page state for debugging"""
-
-        print("\n" + "=" * 80)
-        print(f"{label.upper()}".center(80))
-        print("=" * 80)
-        print(f"Current URL:        {self.driver.current_url}")
-        print(f"Page Title:         {self.driver.title}")
-        print(f"Available IDs:      {len(self.get_all_element_ids())} elements")
-        print("=" * 80)
-
-        # Print console logs
-        self.print_console_logs()
-
-        # Take screenshot
-        self.take_debug_screenshot(label.lower().replace(" ", "_"))
-
-    def wait_for_network_idle(self, timeout: float = 5.0) -> None:
-        """Wait for network requests to complete"""
-
-        script = """
-        return window.performance.getEntriesByType('resource')
-            .filter(r => r.initiatorType === 'fetch' || r.initiatorType === 'xmlhttprequest')
-            .length;
-        """
-
-        start_time = time.time()
-        last_count = -1
-        stable_count = 0
-
-        while time.time() - start_time < timeout:
-            current_count = self.driver.execute_script(script)
-
-            if current_count == last_count:
-                stable_count += 1
-                if stable_count >= 3:  # Stable for 3 checks
-                    print(f"✅ Network idle after {time.time() - start_time:.2f}s")
-                    return
-            else:
-                stable_count = 0
-
-            last_count = current_count
-            time.sleep(0.5)
-
-        print(f"⚠️  Network may still be active after {timeout}s")
 
     @pytest.fixture(autouse=True)
     def setup_method(
@@ -811,11 +558,6 @@ class BaseTest:
     def wait_for_page(self, page_url: str) -> None:
         """Wait for the dashboard to load"""
 
-        print("Current URL!!!!!!!!!!!!!!!!", self.driver.current_url)
-        print(self.driver.current_url.startswith(self.frontend_base_url))
-        print(list(self.frontend_base_url))
-        print(list(self.driver.current_url))
-        print("Waiting for page to load:", f"{self.frontend_base_url}/{page_url}")
         self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
 
     def wait_for_table_load(self, timeout: int | float = 0.1) -> None:
@@ -887,184 +629,3 @@ class BaseTest:
         element.send_keys(modifier_key, "a")
         element.send_keys(Keys.DELETE)
         element.send_keys(text)
-
-
-#
-# def test_simple_login(frontend_base_url, api_base_url, test_users):
-#     """Simple standalone test for login functionality"""
-#     from selenium import webdriver
-#     from selenium.webdriver.chrome.options import Options
-#     from selenium.webdriver.common.by import By
-#     import time
-#
-#     options = Options()
-#     options.add_argument("--headless=new")
-#     options.add_argument("--window-size=1920,1080")
-#     options.set_capability("goog:loggingPrefs", {"browser": "ALL"})
-#
-#     driver = webdriver.Chrome(options=options)
-#
-#     try:
-#         # Navigate to login page
-#         print("\n1. Navigating to login page...")
-#         driver.get(f"{frontend_base_url}/login")
-#         time.sleep(2)
-#
-#         # Fill in credentials
-#         print("2. Filling in credentials...")
-#         email_field = driver.find_element(By.ID, "email")
-#         password_field = driver.find_element(By.ID, "password")
-#
-#         email_field.send_keys("test_user@test.com")
-#         password_field.send_keys("test_password")
-#
-#         # Test with direct fetch
-#         print("3. Testing login with direct fetch...")
-#         result = driver.execute_async_script(
-#             """
-#             const callback = arguments[arguments.length - 1];
-#
-#             const formData = new URLSearchParams();
-#             formData.append('username', 'test_user@test.com');
-#             formData.append('password', 'test_password');
-#
-#             fetch('http://localhost:8000/login/', {
-#                 method: 'POST',
-#                 headers: {
-#                     'Content-Type': 'application/x-www-form-urlencoded',
-#                 },
-#                 body: formData
-#             })
-#             .then(async response => {
-#                 const text = await response.text();
-#                 callback({
-#                     status: response.status,
-#                     statusText: response.statusText,
-#                     body: text
-#                 });
-#             })
-#             .catch(error => {
-#                 callback({
-#                     status: 0,
-#                     error: error.toString(),
-#                     errorMessage: error.message
-#                 });
-#             });
-#         """
-#         )
-#
-#         print(f"\n{'='*60}")
-#         print(f"FETCH RESULT:")
-#         print(f"  Status: {result['status']}")
-#         print(f"  Response: {result.get('body', result.get('error', 'N/A'))}")
-#         print(f"{'='*60}\n")
-#         assert result["status"] == 200
-#
-#         # Get browser console logs
-#         logs = driver.get_log("browser")
-#         if logs:
-#             print("Browser Console:")
-#             for log in logs:
-#                 print(f"  [{log['level']}] {log['message']}")
-#
-#         # If failed, check backend
-#         if result["status"] == 0:
-#             print(f"\n{'='*80}")
-#             print("LOGIN FAILED - CHECKING BACKEND")
-#             print(f"{'='*80}")
-#
-#             # Test backend health
-#             print("\n1. Testing backend health endpoint...")
-#             health_result = check_backend_endpoint(api_base_url, "/health/db")
-#             print(f"   Health Status: {health_result['status_code']}")
-#             print(f"   Health Response: {health_result['response_body']}")
-#             print(health_result)
-#
-#             # Test CORS with Python requests (should work)
-#             print("\n2. Testing backend /login with Python requests (bypasses CORS)...")
-#             login_test = check_backend_endpoint(
-#                 api_base_url,
-#                 "/login/",
-#                 method="POST",
-#                 data={"username": "test_user@test.com", "password": "test_password"},
-#             )
-#             print(f"   Python Request Status: {login_test['status_code']}")
-#             print(f"   Python Request Response: {login_test['response_body']}")
-#             assert login_test["status_code"] == 200
-#
-#             # Test CORS preflight
-#             print("\n3. Testing CORS preflight (OPTIONS)...")
-#             import requests
-#
-#             cors_test = requests.options(
-#                 f"{api_base_url}/login/",
-#                 headers={
-#                     "Origin": "http://localhost:3000",
-#                     "Access-Control-Request-Method": "POST",
-#                     "Access-Control-Request-Headers": "content-type",
-#                 },
-#             )
-#             print(f"   OPTIONS Status: {cors_test.status_code}")
-#             print(f"   CORS Headers in Response:")
-#             cors_headers_found = False
-#             for header, value in cors_test.headers.items():
-#                 if "access-control" in header.lower():
-#                     print(f"      {header}: {value}")
-#                     cors_headers_found = True
-#
-#             if not cors_headers_found:
-#                 print("      ❌ NO CORS HEADERS FOUND!")
-#                 print(f"      All response headers: {dict(cors_test.headers)}")
-#
-#             # Try to get backend process logs
-#             print("\n4. Checking if backend is still running...")
-#             import psutil
-#
-#             backend_running = False
-#             for proc in psutil.process_iter(["pid", "name", "cmdline"]):
-#                 try:
-#                     if proc.info["cmdline"] and any("uvicorn" in str(cmd) for cmd in proc.info["cmdline"]):
-#                         backend_running = True
-#                         print(f"   ✅ Backend process found: PID {proc.info['pid']}")
-#                         break
-#                 except (psutil.NoSuchProcess, psutil.AccessDenied):
-#                     pass
-#
-#             if not backend_running:
-#                 print("   ❌ Backend process not found - may have crashed!")
-#
-#             print("\n5. Testing actual POST request CORS headers...")
-#             post_test = requests.post(
-#                 f"{api_base_url}/login/",
-#                 data={"username": "test_user@test.com", "password": "test_password"},
-#                 headers={"Origin": "http://localhost:3000"},
-#             )
-#             print(f"   POST Status: {post_test.status_code}")
-#             print(f"   POST CORS Headers:")
-#             for header, value in post_test.headers.items():
-#                 if "access-control" in header.lower():
-#                     print(f"      {header}: {value}")
-#
-#             print(f"{'='*80}\n")
-#
-#             print(f"❌ FAILED: Request blocked (status 0)")
-#             print(f"   Error: {result.get('error', 'Unknown')}")
-#             print(f"\n💡 DIAGNOSIS:")
-#             print(f"   - Backend Health: {'✅ OK' if health_result['status_code'] == 200 else '❌ FAILED'}")
-#             print(f"   - Python Request: {'✅ OK' if login_test['status_code'] in [200, 401, 403] else '❌ FAILED'}")
-#             print(f"   - CORS Headers: {'✅ OK' if cors_headers_found else '❌ MISSING'}")
-#             print(f"   - Backend Running: {'✅ YES' if backend_running else '❌ NO'}")
-#
-#             if not cors_headers_found:
-#                 print(f"\n🔍 ROOT CAUSE: CORS headers are missing from backend responses!")
-#                 print(f"   The backend is not returning Access-Control-Allow-Origin headers.")
-#                 print(f"   This causes the browser to block all requests.")
-#         elif result["status"] == 200:
-#             print(f"\n✅ SUCCESS: Login worked!")
-#         else:
-#             print(f"\n⚠️  Request completed with status {result['status']}")
-#
-#         assert result["status"] != 0, f"Request blocked: {result.get('error')}"
-#
-#     finally:
-#         driver.quit()
