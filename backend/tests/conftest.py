@@ -40,9 +40,13 @@ from tests.utils.create_data import (
     create_settings,
 )
 from tests.utils.seed_database import reset_database
+from app.config import settings
 
-DATABASE_NAME = config.settings.database_name + "_test"
-SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
+DATABASE_NAME = "jam_test"
+SQLALCHEMY_DATABASE_URL = (
+    f"postgresql://{settings.database_username}:{settings.database_password}@"
+    f"{settings.database_hostname}:{settings.database_port}/{DATABASE_NAME}"
+)
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
