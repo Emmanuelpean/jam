@@ -802,7 +802,7 @@ class BaseTest:
             }
             chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1920,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
