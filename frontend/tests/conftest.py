@@ -221,18 +221,9 @@ def test_backend_server() -> Generator[str, None, None]:
     print_backend_pid()
     kill_process_on_port(8000)
 
-    # Get the environment from parent process (already has correct GitHub Actions values)
+    # Set environment variables for test database
     env = os.environ.copy()
-
-    # Import your database module to get the correctly configured URL
-    from app import database
-
-    # Use the same approach as backend tests - just append _test
-    SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
     env["SQLALCHEMY_DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
-
-    # DON'T manually set these - they're already correct in database.SQLALCHEMY_DATABASE_URL
-    # The app.config.settings is reading them from environment variables
 
     print(f"Using database URL: {SQLALCHEMY_DATABASE_URL}")
     print(f"Backend path: {backend_path}")
@@ -243,7 +234,7 @@ def test_backend_server() -> Generator[str, None, None]:
     else:
         env["PYTHONPATH"] = backend_path
 
-    # Start the backend server
+    # Start the backend server and capture output
     print("Starting backend subprocess...")
     process = subprocess.Popen(
         [
@@ -260,11 +251,11 @@ def test_backend_server() -> Generator[str, None, None]:
             "--access-log",
         ],
         cwd=backend_path,
-        env=env,  # Pass through the parent environment
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        bufsize=1,
+        bufsize=1,  # Line buffered
     )
 
     print(f"Backend process started with PID: {process.pid}")
