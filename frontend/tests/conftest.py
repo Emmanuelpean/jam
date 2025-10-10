@@ -13,6 +13,7 @@ import threading
 import psutil
 import requests
 from selenium.webdriver import Keys, ActionChains
+from selenium.webdriver.chrome.webdriver import WebDriver
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
@@ -449,6 +450,44 @@ def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_k
     return result
 
 
+def get_all_element_ids(driver) -> list[str]:
+    """Get all element IDs present on the current page
+    :param driver: Selenium WebDriver instance"""
+
+    # Find all elements that have an ID attribute
+    elements_with_id = driver.find_elements(By.XPATH, "//*[@id]")
+
+    # Extract the ID values
+    element_ids = []
+    for element in elements_with_id:
+        element_id = element.get_attribute("id")
+        if element_id:
+            element_ids.append(element_id)
+
+    return sorted(element_ids)
+
+
+def get_element(
+    driver: WebDriver,
+    element_id: str,
+    selector: str = By.ID,
+    timeout: float = 10.0,
+) -> WebElement:
+    """Get an element by its ID.
+    :param driver: Selenium WebDriver instance
+    :param element_id: ID of the element to get
+    :param selector: Selector to use for finding the element
+    :param timeout: How long to wait before raising an error"""
+
+    try:
+        wait = WebDriverWait(driver, timeout)
+        element = wait.until(ec.element_to_be_clickable((selector, element_id)))
+        ActionChains(driver).move_to_element(element).perform()
+        return element
+    except Exception:
+        raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {get_all_element_ids(driver)}")
+
+
 class BaseTest:
     """Base class for selenium tests"""
 
@@ -596,6 +635,8 @@ class BaseTest:
         :param selector: Selector to use for finding the element
         :param timeout: How long to wait before raising an error
         """
+
+        time.sleep(0.1)
         try:
             wait = WebDriverWait(self.driver, timeout)
             element = wait.until(ec.element_to_be_clickable((selector, element_id)))
