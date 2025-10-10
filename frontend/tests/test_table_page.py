@@ -201,8 +201,7 @@ class TablePage(BaseTest):
         """Click on a table row by its index (0-based)"""
 
         element = self.table_row(row_index)
-        self.js_click_at_offset(element, 1, 1)
-        # self.driver.execute_script("arguments[0].click();", element)
+        self.driver.execute_script("arguments[0].click();", element)
 
     # ---------------------------------------------------- UTILITIES ---------------------------------------------------
 
@@ -788,7 +787,7 @@ class TestJobApplicationUpdatesPage(TablePage):
     entry_name = "update"
     required_fields = ["job_id", "type", "date"]
     test_data = {
-        "date": datetime.datetime.now(),
+        "date": datetime.datetime.now(datetime.timezone.utc),
         "job_id": "Senior Python Developer - Tech Corp",
         "note": "Received automated confirmation email",
         "type": "Received",
@@ -809,7 +808,7 @@ class TestInterviewPage(TablePage):
     entry_name = "interview"
     required_fields = ["job_id", "type", "date"]
     test_data = {
-        "date": datetime.datetime.now(),
+        "date": datetime.datetime.now(datetime.timezone.utc),
         "job_id": "Senior Python Developer - Tech Corp",
         "note": "Received automated confirmation email",
         "attendance_type": "On-site",
