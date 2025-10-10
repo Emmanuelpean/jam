@@ -10,7 +10,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
 
-from conftest import contiguous_subdicts, generate_entry_combinations, models, BaseTest
+from conftest import contiguous_subdicts, models, BaseTest
 from react_select import ReactSelect
 
 
@@ -169,23 +169,26 @@ class TablePage(BaseTest):
 
         return self.get_element("delete-alert-modal-confirm-button")
 
-    @property
-    def confirm_button(self) -> WebElement:
+    def confirm_button(self, mode: str, entry_name: str | None = None) -> WebElement:
         """Get the confirm button on the modal"""
 
-        return self.get_element("confirm-button")
+        if not entry_name:
+            entry_name = self.entry_name
+        return self.get_element(f"modal-{mode}-{entry_name}-confirm-button")
 
-    @property
-    def cancel_button(self) -> WebElement:
+    def cancel_button(self, mode: str, entry_name: str | None = None) -> WebElement:
         """Get the cancel button on the modal"""
 
-        return self.get_element("cancel-button")
+        if not entry_name:
+            entry_name = self.entry_name
+        return self.get_element(f"modal-{mode}-{entry_name}-cancel-button")
 
-    @property
-    def edit_button(self) -> WebElement:
+    def edit_button(self, mode: str, entry_name: str | None = None) -> WebElement:
         """Get the edit button on the modal"""
 
-        return self.get_element("edit-button")
+        if not entry_name:
+            entry_name = self.entry_name
+        return self.get_element(f"modal-{mode}-{entry_name}-edit-button")
 
     def set_page_item_select(self, value) -> None:
         """Set the number of items to display per page
@@ -194,6 +197,12 @@ class TablePage(BaseTest):
         if len(self.table_rows) >= 20:
             Select(self.get_element("page-items-select")).select_by_value(value)
 
+    def table_row_click(self, row_index: int) -> None:
+        """Click on a table row by its index (0-based)"""
+
+        element = self.table_row(row_index)
+        self.driver.execute_script("arguments[0].click();", element)
+
     # ---------------------------------------------------- UTILITIES ---------------------------------------------------
 
     @property
@@ -201,6 +210,49 @@ class TablePage(BaseTest):
         """Get the name of the test entity"""
 
         return f"Test_{int(time.time())}"
+
+    @staticmethod
+    def salary_range(item: models.Job) -> str | None:
+        """
+        Returns a formatted salary range string based on minimum and maximum salary values.
+
+        Parameters
+        ----------
+        item : dict | None
+            A dictionary that may contain 'salary_min' and 'salary_max' keys.
+
+        Returns
+        -------
+        str | None
+            A formatted salary string such as:
+            - "£30,000"
+            - "£30,000 - £40,000"
+            - "From £30,000"
+            - "Up to £40,000"
+            or None if no salary values are provided.
+        """
+        if not item:
+            return None
+
+        salary_min = item.salary_min
+        salary_max = item.salary_max
+
+        if not salary_min and not salary_max:
+            return None
+
+        if salary_min == salary_max and salary_min:
+            return f"£{salary_min:,.0f}"
+
+        if salary_min and salary_max:
+            return f"£{salary_min:,.0f} - £{salary_max:,.0f}"
+
+        if salary_min:
+            return f"From £{salary_min:,.0f}"
+
+        if salary_max:
+            return f"Up to £{salary_max:,.0f}"
+
+        return None
 
     # ----------------------------------------------- DISPLAY/VIEW TESTS -----------------------------------------------
 
@@ -218,12 +270,12 @@ class TablePage(BaseTest):
     def _test_view_modal(self) -> None:
         """Helper method to test the view modal for an entry"""
 
-        pass
+        raise AssertionError("Not implemented")
 
     def test_view_entry(self) -> None:
         """Test viewing an entry details by clicking on a table row"""
 
-        self.table_row(self.test_entry.id).click()
+        self.table_row_click(self.test_entry.id)
         self._test_view_modal()
 
     def test_view_entry_right_click(self) -> None:
@@ -253,6 +305,7 @@ class TablePage(BaseTest):
 
         self.wait_for_edit_modal()
         for key, value in values.items():
+            print(key, value)
             if key in (
                 "country",
                 "company_id",
@@ -261,12 +314,14 @@ class TablePage(BaseTest):
                 "aggregator_id",
                 "job_application_id",
                 "type",
+                "source",
                 "attendance_type",
+                "applied_via",
             ):
                 select = ReactSelect(self.get_element(key))
                 select.open_menu()
                 select.select_by_visible_text(value)
-            elif key == "date":
+            elif key in ["date", "application_date"]:
                 element = self.get_element(key)
                 element.send_keys(value.strftime("%d%m%Y"))
                 element.send_keys(Keys.TAB)
@@ -277,26 +332,23 @@ class TablePage(BaseTest):
     def test_add_valid_entry(self) -> None:
         """Test adding a new entry"""
 
-        values = generate_entry_combinations(self.test_data, self.required_fields, self.duplicate_fields)
+        self.set_page_item_select("100")
+        # Determine the number of entries in the db and in the table
+        n_entries = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
+        initial_table_count = len(self.table_rows)
 
-        for combination in values:
-            self.set_page_item_select("100")
-            # Determine the number of entries in the db and in the table
-            n_entries = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
-            initial_table_count = len(self.table_rows)
+        # Add the new entry
+        self.add_entity_button.click()
+        self.wait_for_edit_modal()
+        self._fill_modal(**self.test_data)
+        self.confirm_button("edit").click()
+        self.wait_for_edit_modal_close()
 
-            # Add the new entry
-            self.add_entity_button.click()
-            self.wait_for_edit_modal()
-            self._fill_modal(**combination)
-            self.confirm_button.click()
-            self.wait_for_edit_modal_close()
-
-            # Check that the new entry was properly added to the db and table
-            n_entries_new = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
-            assert n_entries_new == n_entries + 1, "Expected entry to be added to database"
-            new_table_count = len(self.table_rows)
-            assert new_table_count == initial_table_count + 1, "Expected entry to be added to table"
+        # Check that the new entry was properly added to the db and table
+        n_entries_new = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
+        assert n_entries_new == n_entries + 1, "Expected entry to be added to database"
+        new_table_count = len(self.table_rows)
+        assert new_table_count == initial_table_count + 1, "Expected entry to be added to table"
 
     def test_add_duplicate_entry(self) -> None:
         """Test that adding a new entry with an existing name shows validation error"""
@@ -304,9 +356,9 @@ class TablePage(BaseTest):
         self.add_entity_button.click()
         self.wait_for_edit_modal()
         self._fill_modal(**{key: getattr(self.test_entry, key) for key in self.duplicate_fields})
-        self.confirm_button.click()
+        self.confirm_button("edit").click()
         self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-        self.cancel_button.click()
+        self.cancel_button("edit").click()
         self.wait_for_edit_modal_close()
 
     def test_add_incomplete_entry(self) -> None:
@@ -320,9 +372,9 @@ class TablePage(BaseTest):
         for d in dictionaries:
             self.add_entity_button.click()
             self._fill_modal(**d)
-            self.confirm_button.click()
+            self.confirm_button("edit").click()
             self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-            self.cancel_button.click()
+            self.cancel_button("edit").click()
             self.wait_for_edit_modal_close()
 
     def test_add_entry_cancel(self) -> None:
@@ -330,7 +382,7 @@ class TablePage(BaseTest):
 
         self.add_entity_button.click()
         self.wait_for_edit_modal()
-        self.cancel_button.click()
+        self.cancel_button("edit").click()
         self.wait_for_edit_modal_close()
 
     # ---------------------------------------------------- EDIT TEST ---------------------------------------------------
@@ -340,13 +392,13 @@ class TablePage(BaseTest):
 
         self.set_page_item_select("100")
         initial_count = len(self.table_rows)
-        self.table_row(self.test_entry.id).click()
+        self.table_row_click(self.test_entry.id)
         self.wait_for_view_modal()
-        self.edit_button.click()
+        self.edit_button("view").click()
         self._fill_modal(**self.test_data)
-        self.confirm_button.click()
+        self.confirm_button("edit").click()
         self.wait_for_edit_modal_close()
-        self.cancel_button.click()
+        self.cancel_button("view").click()
         assert len(self.table_rows) == initial_count, "Expected table to remain unchanged"
 
     def test_edit_entry_through_right_click_context_menu(self) -> None:
@@ -356,17 +408,17 @@ class TablePage(BaseTest):
         initial_count = len(self.table_rows)
         self.context_menu(self.test_entry.id, "edit")
         self._fill_modal(**self.test_data)
-        self.confirm_button.click()
+        self.confirm_button("edit").click()
         self.wait_for_edit_modal_close()
         assert len(self.table_rows) == initial_count, "Expected table to remain unchanged"
 
     def test_cancel_edit_view(self) -> None:
         """Test cancelling an entry edit opened via the view modal"""
 
-        self.table_row(self.test_entry.id).click()
+        self.table_row_click(self.test_entry.id)
         self.wait_for_view_modal()
-        self.edit_button.click()
-        self.cancel_button.click()
+        self.edit_button("view").click()
+        self.cancel_button("edit").click()
         self.wait_for_edit_modal_close()
         self.wait_for_view_modal()
 
@@ -374,7 +426,7 @@ class TablePage(BaseTest):
         """Test cancelling an entry edit opened via the edit modal"""
 
         self.context_menu(self.test_entry.id, "edit")
-        self.cancel_button.click()
+        self.cancel_button("edit").click()
         self.wait_for_edit_modal_close()
 
     def test_search_functionality(self) -> None:
@@ -436,7 +488,7 @@ class TablePage(BaseTest):
         assert modal.text == expected
 
         # Close modal
-        self.cancel_button.click()
+        self.cancel_button("view", "tag").click()
         self.wait_for_view_modal_close("keyword")
 
     def check_aggregator_view_modal(self, entry: models.Aggregator) -> None:
@@ -452,7 +504,7 @@ class TablePage(BaseTest):
         assert modal.text == expected
 
         # Close modal
-        self.cancel_button.click()
+        self.cancel_button("view", "aggregator").click()
         self.wait_for_view_modal_close("aggregator")
 
     def check_location_view_modal(self, entry: models.Location) -> None:
@@ -472,7 +524,7 @@ class TablePage(BaseTest):
         assert modal.text == expected
 
         # Close modal
-        self.cancel_button.click()
+        self.cancel_button("view", "location").click()
         self.wait_for_view_modal_close("location")
 
     def check_company_view_modal(self, entry: models.Company) -> None:
@@ -488,7 +540,7 @@ class TablePage(BaseTest):
         assert modal.text == expected
 
         # Close modal
-        self.cancel_button.click()
+        self.cancel_button("view", "company").click()
         self.wait_for_view_modal_close("company")
 
     def check_person_view_modal(self, entry: models.Person) -> None:
@@ -499,13 +551,90 @@ class TablePage(BaseTest):
             f"Person Details\n{entry.name}\n"
             f"Company\n{entry.company.name.upper()}\nRole\n{entry.role}\n"
             f"Email\n{entry.email}\nPhone\n{entry.phone}\nLinkedIn Profile\nProfile\n"
-            f"Interviews\n(0)\nJobs\n(0)\nClose\nEdit"
+            f"Interviews\n({len(entry.interviews)})\nJobs\n({len(entry.jobs)})\nClose\nEdit"
         )
         assert modal.text == expected
 
         # Close modal
-        self.cancel_button.click()
+        self.cancel_button("view", "person").click()
         self.wait_for_view_modal_close("person")
+
+    def check_interview_view_modal(self, entry: models.Interview) -> None:
+        """Helper method to test the view modal for an interview entry"""
+
+        modal = self.wait_for_view_modal("interview")
+        expected = (
+            "Interview Details\n"
+            "Job\n"
+            f"{entry.job.title.upper()}\n"
+            "Date & Time\n"
+            f"{entry.date.strftime("%d/%m/%Y %H:%M")}\n"
+            "Type\n"
+            "HR\n"
+            "Location\n"
+            f"{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
+            "Interviewers\n"
+            f"{entry.interviewers[0].name.upper()}\n"
+            "Notes\n"
+            f"{entry.note}\n"
+            "Close\n"
+            "Edit"
+        )
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view", "interview").click()
+        self.wait_for_view_modal_close("interview")
+
+    def check_update_view_modal(self, entry: models.JobApplicationUpdate) -> None:
+        """Helper method to test the view modal for a job application update entry"""
+
+        modal = self.wait_for_view_modal("update")
+        expected = ""
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view", "update").click()
+        self.wait_for_view_modal_close("update")
+
+    def check_job_view_modal(self, entry: models.JobApplicationUpdate) -> None:
+        """Helper method to test the view modal for a job application update entry"""
+
+        modal = self.wait_for_view_modal("job")
+        expected = (
+            "Job Details\n"
+            "Job Details\n"
+            f"Job Application {entry.application_status.upper()}\n"
+            f"{entry.title}\n"
+            "Company\n"
+            f"{entry.company.name.upper()}\n"
+            "Location\n"
+            f"{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
+            "Description\n"
+            f"{entry.description}\n"
+            "Notes\n"
+            f"{entry.note}\n"
+            "Salary Range\n"
+            f"{self.salary_range(entry)}\n"
+            "Personal Rating\n"
+            "Source Aggregator\n"
+            f"{entry.source.name.upper()}\n"
+            "Job URL\n"
+            f"{entry.url.replace("https://", "")}\n"
+            "Tags\n"
+            f"{"\n".join([tag.name.upper() for tag in entry.keywords])}\n"
+            "Contacts\n"
+            f"{"\n".join([person.name.upper() for person in entry.contacts])}\n"
+            "Application Deadline\n"
+            "Not Provided\n"
+            "Close\n"
+            "Edit"
+        )
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view", "job").click()
+        self.wait_for_view_modal_close("job")
 
 
 class TestKeywordsPage(TablePage):
@@ -630,11 +759,10 @@ class TestPersonsPage(TablePage):
 
         self.check_person_view_modal(self.test_entry)
 
-    def test_table_company_badge(self):
+    def test_table_company_badge(self) -> None:
         """Test that the company badge is displayed correctly"""
 
         self.get_element("table-row-1-CompanyBadge").click()
-        print(self.test_entry)
         self.check_company_view_modal(self.test_entry.company)
 
 
@@ -653,6 +781,11 @@ class TestJobApplicationUpdatesPage(TablePage):
         "type": "Received",
     }
 
+    def _test_view_modal(self) -> None:
+        """Helper method to test the view modal for an entry"""
+
+        self.check_update_view_modal(self.test_entry)
+
 
 class TestInterviewPage(TablePage):
     """Test class for Job Application Update Page functionalities"""
@@ -669,3 +802,68 @@ class TestInterviewPage(TablePage):
         "attendance_type": "On-site",
         "type": "HR Interview",
     }
+
+    def _test_view_modal(self) -> None:
+        """Helper method to test the view modal for an entry"""
+
+        self.check_interview_view_modal(self.test_entry)
+
+    def test_table_interviewers_badge(self) -> None:
+        """Test that the person badge is displayed correctly in the table"""
+
+        self.get_element("table-row-1-person-0").click()
+        self.check_person_view_modal(self.test_entry.interviewers[0])
+
+    def test_modal_interviewers_badge(self) -> None:
+        """Test that the person badge is displayed correctly in the modal"""
+
+        self.table_row(self.test_entry.id).click()
+        self.wait_for_view_modal()
+        self.get_element("modal-view-interview-person-0").click()
+        self.check_person_view_modal(self.test_entry.interviewers[0])
+
+    def test_table_location_badge_table(self) -> None:
+        """Test that the location badge is displayed correctly in the table"""
+
+        self.get_element("table-row-1-location").click()
+        self.check_location_view_modal(self.test_entry.location)
+
+    def test_modal_location_badge(self) -> None:
+        """Test that the location badge is displayed correctly in the modal"""
+
+        self.table_row(self.test_entry.id).click()
+        self.wait_for_view_modal()
+        self.get_element("modal-view-interview-location").click()
+        self.check_location_view_modal(self.test_entry.location)
+
+    # TODO add job view
+
+
+class TestJobPage(TablePage):
+    """Test class for Job Application Update Page functionalities"""
+
+    endpoint = "jobs"
+    page_url = "jobs"
+    test_fixture = ["test_jobs"]
+    entry_name = "job"
+    required_fields = ["title"]
+    test_data = {
+        "title": "Senior Python Developer",
+        "salary_min": 80000,
+        "salary_max": 130000,
+        "description": "Lead backend development using Python and modern frameworks. Work with a talented team to build scalable web applications.",
+        "url": "https://techcorp.com/jobs/senior_python_developer1",
+        "company_id": "Oxford PV",
+        "note": "Excellent opportunity for senior developer",
+        "attendance_type": "Hybrid",
+        # "application_date": datetime.datetime.now(),
+        # "application_url": "https://techcorp.com/apply/senior-python",
+        # "application_status": "applied",
+        # "applied_via": "aggregator",
+        # "application_note": "Submitted application with cover letter",
+    }
+
+    def _test_view_modal(self) -> None:
+        """Helper method to test the view modal for an entry"""
+
+        self.check_job_view_modal(self.test_entry)

@@ -646,14 +646,14 @@ const DataModal = ({
 						<div className="d-flex flex-column w-100 gap-2">
 							<div className="modal-buttons-container">
 								<ActionButton
-									id="cancel-button"
+									id={getModalId() + "-cancel-button"}
 									variant="secondary"
 									onClick={handleHideImmediate}
 									defaultText="Cancel"
 									fullWidth={false}
 								/>
 								<ActionButton
-									id="confirm-button"
+									id={getModalId() + "-confirm-button"}
 									type="submit"
 									disabled={submitting || loading}
 									loading={submitting}
@@ -671,6 +671,7 @@ const DataModal = ({
 						<div className="d-flex flex-column w-100 gap-2">
 							<div className="modal-buttons-container">
 								<ActionButton
+									id={getModalId() + "-delete-button"}
 									variant="danger"
 									onClick={handleDeleteClick}
 									className="me-auto"
@@ -678,7 +679,7 @@ const DataModal = ({
 									defaultIcon="bi bi-trash"
 								/>
 								<ActionButton
-									id="import-button"
+									id={getModalId() + "-import-button"}
 									type="submit"
 									disabled={submitting || loading}
 									loading={submitting}
@@ -690,7 +691,7 @@ const DataModal = ({
 							</div>
 							<div className="modal-buttons-container">
 								<ActionButton
-									id="cancel-button"
+									id={getModalId() + "-cancel-button"}
 									variant="secondary"
 									onClick={handleHideImmediate}
 									defaultText="Cancel"
@@ -707,14 +708,14 @@ const DataModal = ({
 							{id ? (
 								<div className="modal-buttons-container">
 									<ActionButton
-										id="cancel-button"
+										id={getModalId() + "-cancel-button"}
 										variant="secondary"
 										onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
 										defaultText={mode === "edit" ? "Close" : "Cancel"}
 										fullWidth={false}
 									/>
 									<ActionButton
-										id="confirm-button"
+										id={getModalId() + "-confirm-button"}
 										type="submit"
 										disabled={submitting}
 										loading={submitting}
@@ -727,6 +728,7 @@ const DataModal = ({
 								<>
 									<div className="modal-buttons-container">
 										<ActionButton
+											id={getModalId() + "-delete-button"}
 											variant="danger"
 											onClick={handleDeleteClick}
 											className="me-auto"
@@ -737,7 +739,7 @@ const DataModal = ({
 										/>
 
 										<ActionButton
-											id="confirm-button"
+											id={getModalId() + "-confirm-button"}
 											type="submit"
 											disabled={submitting}
 											loading={submitting}
@@ -748,7 +750,7 @@ const DataModal = ({
 									</div>
 									<div className="modal-buttons-container">
 										<ActionButton
-											id="cancel-button"
+											id={getModalId() + "-cancel-button"}
 											variant="secondary"
 											onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
 											defaultText={mode === "edit" ? "Close" : "Cancel"}
@@ -766,14 +768,14 @@ const DataModal = ({
 				<Modal.Footer>
 					<div className="modal-buttons-container">
 						<ActionButton
-							id="cancel-button"
+							id={getModalId() + "-cancel-button"}
 							variant="secondary"
 							onClick={handleHideImmediate}
 							defaultText="Close"
 							fullWidth={false}
 						/>
 						<ActionButton
-							id="edit-button"
+							id={getModalId() + "-edit-button"}
 							variant="primary"
 							onClick={handleEdit}
 							defaultText="Edit"
