@@ -27,7 +27,7 @@ import {
 	LocationModalManager,
 	PersonModalManager,
 } from "../../modals/ModalManagers";
-import { formatTimedelta } from "../../../utils/TimeUtils";
+import { formatTimedelta, toDdMmYyyy, toDdMmYyyyHhMm } from "../../../utils/TimeUtils";
 import {
 	getActiveBadge,
 	getAdminIcon,
@@ -197,25 +197,14 @@ export const renderFunctions = {
 
 	_date: (param: RenderParams, key: string): string | null => {
 		const date: Date | undefined | null = param.item?.[key];
-		if (date) {
-			return new Date(date).toLocaleDateString();
-		}
-		return null;
+		if (!date) return null;
+		return toDdMmYyyy(date);
 	},
 
 	datetime: (param: RenderParams): string | null => {
-		const date: Date | undefined | null = param.item?.date;
-		if (date) {
-			return (
-				new Date(date).toLocaleDateString() +
-				" " +
-				new Date(date).toLocaleTimeString([], {
-					hour: "2-digit",
-					minute: "2-digit",
-				})
-			);
-		}
-		return null;
+		const date = param.item?.date ? new Date(param.item.date) : null;
+		if (!date) return null;
+		return toDdMmYyyyHhMm(date);
 	},
 
 	// ----------------------------------------------------- OTHER -----------------------------------------------------

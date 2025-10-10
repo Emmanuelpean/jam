@@ -1,8 +1,33 @@
 import React, { JSX } from "react";
 import { Form } from "react-bootstrap";
-import { formatDate, formatDateTime } from "../../../utils/TimeUtils";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 import "./Datetime.css";
+
+export const formatDateTime = (datetime?: string | Date): string => {
+	if (!datetime) {
+		datetime = new Date();
+	} else {
+		datetime = new Date(datetime);
+	}
+	const year = datetime.getFullYear();
+	const month = String(datetime.getMonth() + 1).padStart(2, "0");
+	const day = String(datetime.getDate()).padStart(2, "0");
+	const hours = String(datetime.getHours()).padStart(2, "0");
+	const minutes = String(datetime.getMinutes()).padStart(2, "0");
+	return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+export const formatDate = (datetime?: string | Date): string => {
+	if (!datetime) {
+		datetime = new Date();
+	} else {
+		datetime = new Date(datetime);
+	}
+	const year = datetime.getFullYear();
+	const month = String(datetime.getMonth() + 1).padStart(2, "0");
+	const day = String(datetime.getDate()).padStart(2, "0");
+	return `${year}-${month}-${day}`;
+};
 
 type LocalInputType = "datetime-local" | "date";
 
