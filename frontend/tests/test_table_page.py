@@ -1,7 +1,6 @@
 """Test the main pages of JAM"""
 
 import datetime
-import os
 import time
 
 from selenium.webdriver import Keys
@@ -13,9 +12,6 @@ from selenium.webdriver.support.select import Select
 
 from conftest import contiguous_subdicts, models, BaseTest
 from react_select import ReactSelect
-
-os.environ["TZ"] = "Europe/London"
-time.tzset()
 
 
 class TablePage(BaseTest):
@@ -572,7 +568,7 @@ class TablePage(BaseTest):
             "Job\n"
             f"{entry.job.title.upper()}\n"
             "Date & Time\n"
-            f"{entry.date.astimezone(datetime.timezone.utc).strftime("%d/%m/%Y %H:%M")}\n"
+            f"{entry.date.strftime("%d/%m/%Y %H:%M")}\n"
             "Type\n"
             "HR\n"
             "Location\n"
@@ -599,7 +595,7 @@ class TablePage(BaseTest):
             "Job\n"
             f"{entry.job.title.upper()}\n"
             "Date & Time\n"
-            f"{entry.date.astimezone(datetime.timezone.utc).strftime("%d/%m/%Y %H:%M")}\n"
+            f"{entry.date.strftime("%d/%m/%Y %H:%M")}\n"
             "Type\n"
             f"{entry.type[0].upper() + entry.type[1:]}\n"
             "Notes\n"
@@ -791,7 +787,7 @@ class TestJobApplicationUpdatesPage(TablePage):
     entry_name = "update"
     required_fields = ["job_id", "type", "date"]
     test_data = {
-        "date": datetime.datetime.now(datetime.timezone.utc),
+        "date": datetime.datetime(year=2025, month=3, day=3, hour=3, minute=30, tzinfo=datetime.timezone.utc),
         "job_id": "Senior Python Developer - Tech Corp",
         "note": "Received automated confirmation email",
         "type": "Received",
@@ -812,7 +808,7 @@ class TestInterviewPage(TablePage):
     entry_name = "interview"
     required_fields = ["job_id", "type", "date"]
     test_data = {
-        "date": datetime.datetime.now(datetime.timezone.utc),
+        "date": datetime.datetime(year=2025, month=3, day=3, hour=3, minute=30, tzinfo=datetime.timezone.utc),
         "job_id": "Senior Python Developer - Tech Corp",
         "note": "Received automated confirmation email",
         "attendance_type": "On-site",
