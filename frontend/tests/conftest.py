@@ -41,6 +41,13 @@ from tests.conftest import (
     DATABASE_NAME,
 )
 from tests.conftest import *
+import os
+
+# Use longer timeouts in CI
+if os.getenv("CI"):  # GitHub Actions sets CI=true
+    DEFAULT_TIMEOUT = 30.0  # Increase from 10.0
+else:
+    DEFAULT_TIMEOUT = 10.0
 
 
 def kill_process_on_port(port) -> bool:
@@ -539,7 +546,7 @@ class BaseTest:
 
             self.driver = webdriver.Chrome(options=chrome_options)
             # self.driver.maximize_window()
-            self.wait = WebDriverWait(self.driver, 10)
+            self.wait = WebDriverWait(self.driver, DEFAULT_TIMEOUT)
 
             # Frontend/Backend
             self.frontend_base_url = frontend_base_url
