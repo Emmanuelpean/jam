@@ -224,16 +224,16 @@ const DataModal = ({
 
 	const handleCloseWithConfirmation = async () => {
 		if (hasUnsavedChanges()) {
-			try {
-				await showDelete({
-					title: "Unsaved Changes",
-					message: "You have unsaved changes. Are you sure you want to close without saving?",
-					confirmText: "Close without saving",
-					cancelText: "Cancel",
-				});
+			const confirmed = await showDelete({
+				title: "Unsaved Changes",
+				message: "You have unsaved changes. Are you sure you want to close without saving?",
+				confirmText: "Close without saving",
+				cancelText: "Cancel",
+			});
+			if (!confirmed) {
+				return false;
+			} else {
 				handleHideImmediate();
-			} catch (error) {
-				// User cancelled, do nothing
 			}
 		} else {
 			handleHideImmediate();

@@ -65,7 +65,10 @@ class TablePage(BaseTest):
 
         if not entry_name:
             entry_name = self.entry_name
-        self._wait_for_modal_close(f"modal-edit-{entry_name}")
+        try:
+            self._wait_for_modal_close(f"modal-edit-{entry_name}")
+        except:
+            raise AssertionError(f"Element in present in: {self.get_all_element_ids()}")
 
     def wait_for_delete_modal_close(self) -> None:
         """Wait for the delete modal to close"""
