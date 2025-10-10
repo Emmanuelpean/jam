@@ -670,3 +670,15 @@ class BaseTest:
         element.send_keys(modifier_key, "a")
         element.send_keys(Keys.DELETE)
         element.send_keys(text)
+
+    def js_click_at_offset(self, element, x_offset: int = 0, y_offset: int = 0):
+        """Click at a specific (x, y) offset inside the element."""
+
+        self.driver.execute_script("""
+            const el = arguments[0];
+            const rect = el.getBoundingClientRect();
+            const x = rect.left + arguments[1];
+            const y = rect.top + arguments[2];
+            const target = document.elementFromPoint(x, y);
+            if (target) target.click();
+        """, element, x_offset, y_offset)

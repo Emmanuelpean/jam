@@ -201,7 +201,8 @@ class TablePage(BaseTest):
         """Click on a table row by its index (0-based)"""
 
         element = self.table_row(row_index)
-        self.driver.execute_script("arguments[0].click();", element)
+        self.js_click_at_offset(element, 1, 1)
+        # self.driver.execute_script("arguments[0].click();", element)
 
     # ---------------------------------------------------- UTILITIES ---------------------------------------------------
 
