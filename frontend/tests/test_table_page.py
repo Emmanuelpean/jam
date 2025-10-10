@@ -1,6 +1,7 @@
 """Test the main pages of JAM"""
 
 import datetime
+import os
 import time
 
 from selenium.webdriver import Keys
@@ -12,6 +13,9 @@ from selenium.webdriver.support.select import Select
 
 from conftest import contiguous_subdicts, models, BaseTest
 from react_select import ReactSelect
+
+os.environ["TZ"] = "Europe/London"
+time.tzset()
 
 
 class TablePage(BaseTest):
