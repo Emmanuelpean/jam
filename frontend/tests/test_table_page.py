@@ -590,7 +590,19 @@ class TablePage(BaseTest):
         """Helper method to test the view modal for a job application update entry"""
 
         modal = self.wait_for_view_modal("update")
-        expected = ""
+        expected = (
+            "Update Details\n"
+            "Job\n"
+            f"{entry.job.title.upper()}\n"
+            "Date & Time\n"
+            f"{entry.date.strftime("%d/%m/%Y %H:%M")}\n"
+            "Type\n"
+            f"{entry.type[0].upper() + entry.type[1:]}\n"
+            "Notes\n"
+            f"{entry.note}\n"
+            "Close\n"
+            "Edit"
+        )
         assert modal.text == expected
 
         # Close modal

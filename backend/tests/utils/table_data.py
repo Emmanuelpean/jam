@@ -27,6 +27,7 @@ USER_DATA = [
     {
         "email": "user3@live.co.uk",
         "password": "password3",
+        "is_active": False,
     },
     {
         "email": "user4@example.com",

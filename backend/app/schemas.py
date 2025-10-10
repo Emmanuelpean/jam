@@ -73,6 +73,7 @@ class UserOut(Out):
 
     email: EmailStr
     theme: str
+    is_active: bool = True
     is_admin: bool = False
     last_login: datetime | None = None
     chase_threshold: int
@@ -95,6 +96,7 @@ class UserUpdate(BaseModel):
     email: EmailStr | None = None
     theme: str | None = None
     password: str | None = None
+    is_active: bool | None = None
     is_admin: bool | None = None
     last_login: datetime | None = None
     chase_threshold: int | None = None

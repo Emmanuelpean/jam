@@ -70,7 +70,7 @@ def session() -> Generator[orm.Session, Any, None]:
     function completes, the session is closed.
     :yield: A new SQLAlchemy session bound to the test database."""
 
-    reset_database(engine)
+    reset_database(engine, False)
     db = TestingSessionLocal()
     try:
         yield db
