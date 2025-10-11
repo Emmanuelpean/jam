@@ -4,6 +4,8 @@ This module contains comprehensive Selenium-based tests for the authentication s
 including login, registration, form validation, and mode switching functionality.
 """
 
+import time
+
 from conftest import models, BaseTest
 
 
@@ -15,7 +17,7 @@ class TestAuthenticationPage(BaseTest):
     - Signup with invalid data
     - Form validation"""
 
-    def verify_user_in_database(self, email: str) -> bool:
+    def verify_user_in_database(self, email: str) -> list[models.User]:
         """Helper method to verify user exists in database"""
 
         return self.db.query(models.User).filter(models.User.email == email).all()
@@ -140,6 +142,20 @@ class TestLogIn(TestAuthenticationPage):
         # Verify error message
         self.assert_error_message("Incorrect email or password")
 
+    def test_inactive_login(self, test_users) -> None:
+        """Test login with invalid credentials"""
+
+        self.go_to_login()
+        test_email, test_password = test_users[2].email, test_users[2].password
+
+        # Fill in login form with invalid credentials
+        self.set_email(test_email)
+        self.set_password(test_password)
+        self.confirm()
+
+        # Verify error message
+        self.assert_error_message("This user account is not active")
+
     def test_login_invalid_email(self) -> None:
         """Test login with invalid credentials"""
 
@@ -192,6 +208,7 @@ class TestSignUp(TestAuthenticationPage):
         self.wait_for_login()
         self.switch_mode()
         self.wait_for_register()
+        time.sleep(0.4)  # Wait for animation
         self.switch_mode()
         self.wait_for_login()
 
@@ -316,7 +333,7 @@ class TestSignUp(TestAuthenticationPage):
         self.assert_password_error_message("Password must be at least 8 characters long.")
         assert not self.verify_user_in_database(test_email)
 
-    def test_signup_no_tc(self):
+    def test_signup_no_tc(self) -> None:
         """Test signup without checking the terms and conditions"""
 
         self.go_to_register()
@@ -332,7 +349,7 @@ class TestSignUp(TestAuthenticationPage):
         self.assert_accept_terms_error_message("You must accept the Terms and Conditions to register")
         assert not self.verify_user_in_database(test_email)
 
-    def test_signup_limited(self, test_settings):
+    def test_signup_limited(self, test_settings) -> None:
         """Test signup when registrations are limited"""
 
         self.go_to_register()

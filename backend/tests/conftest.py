@@ -19,7 +19,7 @@ from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 import os
 
-from app import models, database, schemas
+from app import models, database, schemas, config
 from app.eis import models as eis_models
 from app.main import app
 from app.oauth2 import create_access_token
@@ -40,8 +40,13 @@ from tests.utils.create_data import (
     create_settings,
 )
 from tests.utils.seed_database import reset_database
+from app.config import settings
 
-SQLALCHEMY_DATABASE_URL = database.SQLALCHEMY_DATABASE_URL + "_test"
+DATABASE_NAME = "jam_test"
+SQLALCHEMY_DATABASE_URL = (
+    f"postgresql://{settings.database_username}:{settings.database_password}@"
+    f"{settings.database_hostname}:{settings.database_port}/{DATABASE_NAME}"
+)
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -65,7 +70,7 @@ def session() -> Generator[orm.Session, Any, None]:
     function completes, the session is closed.
     :yield: A new SQLAlchemy session bound to the test database."""
 
-    reset_database(engine)
+    reset_database(engine, False)
     db = TestingSessionLocal()
     try:
         yield db

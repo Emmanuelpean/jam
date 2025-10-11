@@ -133,6 +133,7 @@ export interface JobDataTransform {
 	url: string | null;
 	salary_min: number | null;
 	salary_max: number | null;
+	salary_currency: string | null;
 	personal_rating: number | null;
 	deadline: Date | null;
 	company_id: number | null;
@@ -157,6 +158,7 @@ export interface JobData extends OwnedOut {
 	url: string | null;
 	salary_min: number | null;
 	salary_max: number | null;
+	salary_currency: string | null;
 	personal_rating: number | null;
 	deadline: Date | null;
 	company_id: number | null;
@@ -221,4 +223,5 @@ export interface UserData extends OwnedOut {
 	chase_threshold: number;
 	deadline_threshold: number;
 	update_limit: number;
+	default_currency: string;
 }

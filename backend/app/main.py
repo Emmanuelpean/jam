@@ -5,8 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import data_tables, user, login, export, settings
 from app.eis import routers as eis_routers
+from app import models
+from app.database import engine
 
 app = FastAPI()
+
+models.Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,

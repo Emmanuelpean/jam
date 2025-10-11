@@ -73,12 +73,14 @@ class UserOut(Out):
 
     email: EmailStr
     theme: str
+    is_active: bool = True
     is_admin: bool = False
     last_login: datetime | None = None
     chase_threshold: int
     deadline_threshold: int
     update_limit: int
     toast_active: bool
+    default_currency: str
 
 
 class UserLogin(BaseModel):
@@ -95,12 +97,14 @@ class UserUpdate(BaseModel):
     email: EmailStr | None = None
     theme: str | None = None
     password: str | None = None
+    is_active: bool | None = None
     is_admin: bool | None = None
     last_login: datetime | None = None
     chase_threshold: int | None = None
     deadline_threshold: int | None = None
     update_limit: int | None = None
     toast_active: bool = False
+    default_currency: str | None = None
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------
@@ -278,6 +282,7 @@ class JobCreate(BaseModel):
     description: str | None = None
     salary_min: float | None = None
     salary_max: float | None = None
+    salary_currency: str | None = None
     personal_rating: int | None = None
     url: str | None = None
     deadline: datetime | None = None

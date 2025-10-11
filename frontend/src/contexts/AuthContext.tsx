@@ -49,7 +49,7 @@ const getErrorMessage = (status: number | undefined, action: AuthAction): string
 		case 401:
 			return action === "register"
 				? "Sorry, you are not allowed to sign up for now."
-				: "Incorrect email or password";
+				: "This user account is not active";
 		case 403:
 			return "Incorrect email or password";
 		case 422:
