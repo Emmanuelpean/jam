@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
+import { Currency, DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { Theme, THEMES } from "../../../utils/Theme";
@@ -242,17 +242,21 @@ export const renderFunctions = {
 	salaryRange: (param: RenderParams): string | null => {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
+		const dataContext = param.dataContext;
+		const salaryCurrency: string | undefined | null = dataContext.currencies.find(
+			(currency: Currency) => currency.code === param.item?.salary_currency,
+		)?.symbol;
 		if (!salary_min && !salary_max) {
 			return null;
 		}
 		if (salary_min === salary_max && salary_min) {
-			return `£${salary_min.toLocaleString()}`;
+			return `${salaryCurrency}${salary_min.toLocaleString()}`;
 		}
 		if (salary_min && salary_max) {
-			return `£${salary_min.toLocaleString()} - £${salary_max.toLocaleString()}`;
+			return `${salaryCurrency}${salary_min.toLocaleString()} - ${salaryCurrency}${salary_max.toLocaleString()}`;
 		}
-		if (salary_min) return `From £${salary_min.toLocaleString()}`;
-		if (salary_max) return `Up to £${salary_max.toLocaleString()}`;
+		if (salary_min) return `From ${salaryCurrency}${salary_min.toLocaleString()}`;
+		if (salary_max) return `Up to ${salaryCurrency}${salary_max.toLocaleString()}`;
 		return null;
 	},
 

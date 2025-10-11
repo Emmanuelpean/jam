@@ -22,7 +22,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	size = "xl",
 	defaultActiveTab = "job",
 }) => {
-	const { token } = useAuth();
+	const { token, currentUser } = useAuth();
 	const {
 		companies,
 		locations,
@@ -104,15 +104,14 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	];
 
 	const transformData = (jobData: JobDataTransform): JobDataTransform => {
-		console.log(jobData);
-
 		return {
 			title: jobData.title.trim(),
 			description: jobData.description?.trim() || null,
 			note: jobData.note?.trim() || null,
 			url: jobData.url?.trim() || null,
-			salary_min: jobData.salary_min || null,
-			salary_max: jobData.salary_max || null,
+			salary_min: Number(jobData.salary_min) || null,
+			salary_max: Number(jobData.salary_max) || null,
+			salary_currency: currentUser?.default_currency?.trim() || null,
 			personal_rating: jobData.personal_rating || null,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
@@ -135,6 +134,15 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 		if (!token) {
 			return errors;
 		}
+
+		console.log(formData.salary_min, isNaN(Number(formData.salary_min)));
+		if (formData.salary_min && isNaN(Number(formData.salary_min))) {
+			errors.salary_min = "Minimum Salary must be a valid number";
+		}
+		if (formData.salary_max && isNaN(Number(formData.salary_max))) {
+			errors.salary_max = "Maximum Salary must be a valid number";
+		}
+
 		if (formData.url) {
 			const queryParams = { url: formData.url?.trim() };
 			const matches = await jobsApi.getAll(token, queryParams);

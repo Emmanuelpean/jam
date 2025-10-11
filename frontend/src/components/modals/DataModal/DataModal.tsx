@@ -3,7 +3,7 @@ import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useDataContext } from "../../../contexts/DataContext";
 import "./DataModal.css";
-import { Errors, renderModalFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
+import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
 import { api } from "../../../services/Api";
 import useGenericAlert from "../../../hooks/useGenericAlert";
@@ -344,13 +344,7 @@ const DataModal = ({
 					return (
 						<div key={fieldKey} className={columnClass}>
 							{isFormMode
-								? renderModalFormField(
-										field as ModalFormField,
-										formData,
-										handleChange,
-										errors,
-										currentUser,
-									)
+								? FormField(field as ModalFormField, formData, handleChange, errors, currentUser)
 								: renderModalViewField(field as ModalViewField, effectiveData, getModalId())}
 						</div>
 					);

@@ -155,6 +155,7 @@ class User(CommonBase, Base):
     deadline_threshold = Column(Integer, nullable=False, server_default="30")
     update_limit = Column(Integer, nullable=False, server_default="10")
     toast_active = Column(Boolean, nullable=False, server_default=expression.false())
+    default_currency = Column(String, nullable=False, server_default="GBP")
 
     __table_args__ = (
         CheckConstraint(f"length(password) >= {settings.min_password_length}", name="minimum_password_length"),
@@ -425,6 +426,7 @@ class Job(Owned, Base):
     description = Column(String, nullable=True)
     salary_min = Column(Float, nullable=True)
     salary_max = Column(Float, nullable=True)
+    salary_currency = Column(String, nullable=True)
     url = Column(String, nullable=True)
     personal_rating = Column(Integer, nullable=True)
     note = Column(String, nullable=True)

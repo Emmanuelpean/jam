@@ -5,7 +5,7 @@ import "./Auth.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Card, Form, Spinner, Alert } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
-import { Errors, renderModalFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { Errors, FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
@@ -319,19 +319,19 @@ function AuthForm(): JSX.Element {
 					<Card.Title className="text-primary">{isLogin ? "Login" : "Create Account"}</Card.Title>
 
 					<Form onSubmit={handleSubmit} autoComplete="on">
-						{renderModalFormField(emailField, formData, handleInputChange, fieldErrors)}
+						{FormField(emailField, formData, handleInputChange, fieldErrors)}
 
-						{renderModalFormField(passwordField, formData, handleInputChange, fieldErrors)}
+						{FormField(passwordField, formData, handleInputChange, fieldErrors)}
 
 						<div
 							className={`auth-field-container ${!isLogin ? "auth-field-visible" : "auth-field-hidden"}`}
 						>
-							{renderModalFormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
+							{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
 						</div>
 						<div
 							className={`auth-field-container ${!isLogin ? "auth-field-visible" : "auth-field-hidden"}`}
 						>
-							{renderModalFormField(
+							{FormField(
 								termsField,
 								{ terms: acceptedTerms },
 								//@ts-ignore
