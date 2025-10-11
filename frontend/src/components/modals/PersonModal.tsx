@@ -1,13 +1,10 @@
 import React from "react";
-import DataModal, { DataModalProps } from "./DataModal/DataModal";
+import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { personsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import AlertModal from "./AlertModal";
-import useGenericAlert from "../../hooks/useGenericAlert";
-import { PersonTransform, PersonData } from "../../services/Schemas";
-import { ValidationErrors } from "./DataModal/DataModal";
+import { PersonData, PersonTransform } from "../../services/Schemas";
 import { useFormOptions } from "../rendering/form/FormOptions";
 
 export const PersonModal: React.FC<DataModalProps> = ({
@@ -19,7 +16,6 @@ export const PersonModal: React.FC<DataModalProps> = ({
 	size = "lg",
 }) => {
 	const { companies, openCompanyModal, renderCompanyModal } = useFormOptions(show ? ["companies"] : []);
-	const { alertState, hideAlert } = useGenericAlert();
 	const { token } = useAuth();
 
 	const formFieldsArray = [
@@ -102,7 +98,6 @@ export const PersonModal: React.FC<DataModalProps> = ({
 			/>
 
 			{renderCompanyModal()}
-			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</>
 	);
 };

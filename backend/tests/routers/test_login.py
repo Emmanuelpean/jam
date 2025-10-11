@@ -28,6 +28,16 @@ class TestLogin:
         assert login_response.token_type == "bearer"
         assert response.status_code == 200
 
+    def test_login_inactive_user(self, test_users, client) -> None:
+        """Test successful login for an existing user."""
+
+        user_data = {
+            "username": test_users[2].email,
+            "password": test_users[2].password,
+        }
+        response = client.post("/login", data=user_data)
+        assert response.status_code == 401
+
     @pytest.mark.parametrize(
         "email, password, status_code",
         [

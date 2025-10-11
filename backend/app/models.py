@@ -134,6 +134,7 @@ class User(CommonBase, Base):
     - `email` (str, unique): User's email address.
     - `theme` (str): The theme of the application.
     - `is_admin` (bool): Indicates whether the user is an administrator.
+    - `is_active` (bool): Indicates whether the user account is active.
     - `last_login` (datetime, optional): The timestamp of the last login.
     - `chase_threshold` (int): The threshold for chasing jobs in the dashboard.
     - `deadline_threshold` (int): The threshold for deadlines in the dashboard.
@@ -147,12 +148,14 @@ class User(CommonBase, Base):
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
     theme = Column(String, nullable=False, server_default="mixed-berry")
+    is_active = Column(Boolean, nullable=False, server_default=expression.true())
     is_admin = Column(Boolean, nullable=False, server_default=expression.false())
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
     chase_threshold = Column(Integer, nullable=False, server_default="30")
     deadline_threshold = Column(Integer, nullable=False, server_default="30")
     update_limit = Column(Integer, nullable=False, server_default="10")
     toast_active = Column(Boolean, nullable=False, server_default=expression.false())
+    default_currency = Column(String, nullable=False, server_default="GBP")
 
     __table_args__ = (
         CheckConstraint(f"length(password) >= {settings.min_password_length}", name="minimum_password_length"),
@@ -423,6 +426,7 @@ class Job(Owned, Base):
     description = Column(String, nullable=True)
     salary_min = Column(Float, nullable=True)
     salary_max = Column(Float, nullable=True)
+    salary_currency = Column(String, nullable=True)
     url = Column(String, nullable=True)
     personal_rating = Column(Integer, nullable=True)
     note = Column(String, nullable=True)

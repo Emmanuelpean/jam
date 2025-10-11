@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState, useMemo } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
 	aggregatorsApi,
 	ApiError,
@@ -26,8 +26,6 @@ import {
 	SettingData,
 	UserData,
 } from "../services/Schemas";
-import { SelectOption } from "../utils/Utils";
-import { fetchCountries } from "../utils/CountryUtils";
 import { useLoading } from "./LoadingContext";
 
 export type EntityType =
@@ -42,6 +40,21 @@ export type EntityType =
 	| "settings"
 	| "users";
 
+export interface Currency {
+	symbol: string;
+	name: string;
+	symbol_native: string;
+	decimal_digits: number;
+	rounding: number;
+	code: string;
+	name_plural: string;
+}
+
+export interface Country {
+	name: string;
+	code: string;
+}
+
 export interface DataContextValue {
 	// Data arrays
 	jobs: EnrichedJobData[];
@@ -54,7 +67,6 @@ export interface DataContextValue {
 	locations: LocationData[];
 	settings: SettingData[];
 	users: UserData[];
-	countries: SelectOption[];
 
 	error: ApiError | null;
 	reloadAll: () => void;
@@ -79,7 +91,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [locations, setLocations] = useState<LocationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
-	const [countries, setCountries] = useState<SelectOption[]>([]);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
@@ -160,7 +171,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" },
 			{ promise: keywordsApi.getAll(token), label: "Keywords" },
 			{ promise: locationsApi.getAll(token), label: "Locations" },
-			{ promise: fetchCountries(), label: "Countries" },
 		];
 
 		// Add admin-only calls if user is admin
@@ -200,7 +210,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				aggregatorsData,
 				keywordsData,
 				locationsData,
-				countriesData,
 				...adminData
 			] = results;
 
@@ -212,7 +221,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setAggregators(aggregatorsData || []);
 			setKeywords(keywordsData || []);
 			setLocations(locationsData || []);
-			setCountries(countriesData || []);
 
 			if (currentUser?.is_admin) {
 				setSettings(adminData[0] || []);
@@ -338,7 +346,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				locations,
 				settings,
 				users,
-				countries,
 				error,
 				reloadAll: fetchAllData,
 				updateEntity,

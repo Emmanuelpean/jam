@@ -3,7 +3,7 @@ import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useDataContext } from "../../../contexts/DataContext";
 import "./DataModal.css";
-import { Errors, renderModalFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
+import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
 import { api } from "../../../services/Api";
 import useGenericAlert from "../../../hooks/useGenericAlert";
@@ -224,16 +224,16 @@ const DataModal = ({
 
 	const handleCloseWithConfirmation = async () => {
 		if (hasUnsavedChanges()) {
-			try {
-				await showDelete({
-					title: "Unsaved Changes",
-					message: "You have unsaved changes. Are you sure you want to close without saving?",
-					confirmText: "Close without saving",
-					cancelText: "Cancel",
-				});
+			const confirmed = await showDelete({
+				title: "Unsaved Changes",
+				message: "You have unsaved changes. Are you sure you want to close without saving?",
+				confirmText: "Close without saving",
+				cancelText: "Cancel",
+			});
+			if (!confirmed) {
+				return false;
+			} else {
 				handleHideImmediate();
-			} catch (error) {
-				// User cancelled, do nothing
 			}
 		} else {
 			handleHideImmediate();
@@ -344,13 +344,7 @@ const DataModal = ({
 					return (
 						<div key={fieldKey} className={columnClass}>
 							{isFormMode
-								? renderModalFormField(
-										field as ModalFormField,
-										formData,
-										handleChange,
-										errors,
-										currentUser,
-									)
+								? FormField(field as ModalFormField, formData, handleChange, errors, currentUser)
 								: renderModalViewField(field as ModalViewField, effectiveData, getModalId())}
 						</div>
 					);
@@ -646,14 +640,14 @@ const DataModal = ({
 						<div className="d-flex flex-column w-100 gap-2">
 							<div className="modal-buttons-container">
 								<ActionButton
-									id="cancel-button"
+									id={getModalId() + "-cancel-button"}
 									variant="secondary"
 									onClick={handleHideImmediate}
 									defaultText="Cancel"
 									fullWidth={false}
 								/>
 								<ActionButton
-									id="confirm-button"
+									id={getModalId() + "-confirm-button"}
 									type="submit"
 									disabled={submitting || loading}
 									loading={submitting}
@@ -671,6 +665,7 @@ const DataModal = ({
 						<div className="d-flex flex-column w-100 gap-2">
 							<div className="modal-buttons-container">
 								<ActionButton
+									id={getModalId() + "-delete-button"}
 									variant="danger"
 									onClick={handleDeleteClick}
 									className="me-auto"
@@ -678,7 +673,7 @@ const DataModal = ({
 									defaultIcon="bi bi-trash"
 								/>
 								<ActionButton
-									id="import-button"
+									id={getModalId() + "-import-button"}
 									type="submit"
 									disabled={submitting || loading}
 									loading={submitting}
@@ -690,7 +685,7 @@ const DataModal = ({
 							</div>
 							<div className="modal-buttons-container">
 								<ActionButton
-									id="cancel-button"
+									id={getModalId() + "-cancel-button"}
 									variant="secondary"
 									onClick={handleHideImmediate}
 									defaultText="Cancel"
@@ -707,14 +702,14 @@ const DataModal = ({
 							{id ? (
 								<div className="modal-buttons-container">
 									<ActionButton
-										id="cancel-button"
+										id={getModalId() + "-cancel-button"}
 										variant="secondary"
 										onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
 										defaultText={mode === "edit" ? "Close" : "Cancel"}
 										fullWidth={false}
 									/>
 									<ActionButton
-										id="confirm-button"
+										id={getModalId() + "-confirm-button"}
 										type="submit"
 										disabled={submitting}
 										loading={submitting}
@@ -727,6 +722,7 @@ const DataModal = ({
 								<>
 									<div className="modal-buttons-container">
 										<ActionButton
+											id={getModalId() + "-delete-button"}
 											variant="danger"
 											onClick={handleDeleteClick}
 											className="me-auto"
@@ -737,7 +733,7 @@ const DataModal = ({
 										/>
 
 										<ActionButton
-											id="confirm-button"
+											id={getModalId() + "-confirm-button"}
 											type="submit"
 											disabled={submitting}
 											loading={submitting}
@@ -748,7 +744,7 @@ const DataModal = ({
 									</div>
 									<div className="modal-buttons-container">
 										<ActionButton
-											id="cancel-button"
+											id={getModalId() + "-cancel-button"}
 											variant="secondary"
 											onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
 											defaultText={mode === "edit" ? "Close" : "Cancel"}
@@ -766,14 +762,14 @@ const DataModal = ({
 				<Modal.Footer>
 					<div className="modal-buttons-container">
 						<ActionButton
-							id="cancel-button"
+							id={getModalId() + "-cancel-button"}
 							variant="secondary"
 							onClick={handleHideImmediate}
 							defaultText="Close"
 							fullWidth={false}
 						/>
 						<ActionButton
-							id="edit-button"
+							id={getModalId() + "-edit-button"}
 							variant="primary"
 							onClick={handleEdit}
 							defaultText="Edit"

@@ -1,23 +1,3 @@
-export const formatDateTime = (datetime?: string | Date): string => {
-	if (!datetime) {
-		datetime = new Date();
-	} else {
-		datetime = new Date(datetime);
-	}
-	const year = datetime.getFullYear();
-	const month = String(datetime.getMonth() + 1).padStart(2, "0");
-	const day = String(datetime.getDate()).padStart(2, "0");
-	const hours = String(datetime.getHours()).padStart(2, "0");
-	const minutes = String(datetime.getMinutes()).padStart(2, "0");
-	return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
-export const localeDateOnly = (dateString: string): string => {
-	if (!dateString) return "";
-	const date = new Date(dateString);
-	return date.toLocaleDateString();
-};
-
 export const formatTimeAgo = (dateString: string): string => {
 	const now = new Date();
 	const date = new Date(dateString);
@@ -29,18 +9,6 @@ export const formatTimeAgo = (dateString: string): string => {
 	if (diffHours < 24) return `${diffHours}h ago`;
 	if (diffDays === 1) return "1 day ago";
 	return `${diffDays} days ago`;
-};
-
-export const formatDate = (datetime?: string | Date): string => {
-	if (!datetime) {
-		datetime = new Date();
-	} else {
-		datetime = new Date(datetime);
-	}
-	const year = datetime.getFullYear();
-	const month = String(datetime.getMonth() + 1).padStart(2, "0");
-	const day = String(datetime.getDate()).padStart(2, "0");
-	return `${year}-${month}-${day}`;
 };
 
 export function formatActivityDate(dateString: string | Date): string {
@@ -71,4 +39,23 @@ export function convertToEndOfDay(date: Date): Date {
 	endDate.setHours(23, 59, 59, 0);
 
 	return endDate;
+}
+
+export function toDdMmYyyy(date: Date): string {
+	const dateObj: Date = new Date(date);
+	const day = String(dateObj.getUTCDate()).padStart(2, "0");
+	const month = String(dateObj.getUTCMonth() + 1).padStart(2, "0");
+	const year = dateObj.getUTCFullYear();
+	return `${day}/${month}/${year}`;
+}
+
+export function toDdMmYyyyHhMm(date: Date): string {
+	const dateObj: Date = new Date(date);
+	const dd = String(dateObj.getDate()).padStart(2, "0");
+	const MM = String(dateObj.getMonth() + 1).padStart(2, "0");
+	const yyyy = dateObj.getFullYear();
+	const hh = String(dateObj.getHours()).padStart(2, "0");
+	const mm = String(dateObj.getMinutes()).padStart(2, "0");
+
+	return `${dd}/${MM}/${yyyy} ${hh}:${mm}`;
 }

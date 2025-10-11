@@ -1,4 +1,7 @@
+"""Fixtures and helper functions for integration tests"""
+
 import itertools
+import json
 import os
 import platform
 import queue
@@ -6,10 +9,12 @@ import shutil
 import subprocess
 import sys
 import threading
+from pathlib import Path
 
 import psutil
 import requests
 from selenium.webdriver import Keys, ActionChains
+from selenium.webdriver.chrome.webdriver import WebDriver
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
@@ -25,8 +30,26 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 
 # noinspection PyUnresolvedReferences
-from tests.conftest import session, models, test_users, SQLALCHEMY_DATABASE_URL, authorised_clients, client, tokens
+from tests.conftest import (
+    session,
+    models,
+    test_users,
+    SQLALCHEMY_DATABASE_URL,
+    authorised_clients,
+    client,
+    tokens,
+    test_settings,
+    DATABASE_NAME,
+)
 from tests.conftest import *
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Make test results available to fixtures"""
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, f"rep_{rep.when}", rep)
 
 
 def kill_process_on_port(port) -> bool:
@@ -123,87 +146,92 @@ def test_backend_server() -> Generator[str, None, None]:
     print("=" * 60)
 
     print_backend_pid()
-
-    # Kill any existing process on port 8000
     kill_process_on_port(8000)
 
-    # Set environment variables for test database
     env = os.environ.copy()
-    env["DATABASE_HOSTNAME"] = "localhost"
-    env["DATABASE_PORT"] = "5432"
-    env["DATABASE_NAME"] = "jam_test"
-    env["DATABASE_USERNAME"] = "postgres"
-    env["DATABASE_PASSWORD"] = "db_password"
+    env["DATABASE_NAME"] = DATABASE_NAME
     env["SQLALCHEMY_DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
 
     print(f"Using database URL: {SQLALCHEMY_DATABASE_URL}")
     print(f"Backend path: {backend_path}")
 
-    # Add backend path to PYTHONPATH for proper imports
     if "PYTHONPATH" in env:
         env["PYTHONPATH"] = f"{backend_path}{os.pathsep}{env['PYTHONPATH']}"
     else:
         env["PYTHONPATH"] = backend_path
 
-    # Start the backend server on a different port to avoid conflicts
-    print("Starting backend subprocess...")
-    process = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"],
-        cwd=backend_path,
-        env=env,
-    )
+    # CREATE LOG FILES FOR BACKEND OUTPUT
+    backend_log_file = LOGS_DIR / "backend_server.log"
+    backend_error_file = LOGS_DIR / "backend_errors.log"
 
-    print(f"Backend process started with PID: {process.pid}")
+    with open(backend_log_file, "w") as log_out, open(backend_error_file, "w") as log_err:
+        print(f"Backend logs will be saved to: {backend_log_file}")
 
-    # Wait for server to start
-    api_url = "http://localhost:8000"
-    print(f"Waiting for backend server to be ready at {api_url}...")
+        # Start backend with output redirected to files
+        process = subprocess.Popen(
+            [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"],
+            cwd=backend_path,
+            env=env,
+            stdout=log_out,
+            stderr=log_err,
+            text=True,
+        )
 
-    for attempt in range(30):  # 30 seconds max
-        print(f"Attempt {attempt + 1}/30 - Checking backend server health...")
+        print(f"Backend process started with PID: {process.pid}")
 
-        # Check if process died
-        if process.poll() is not None:
-            stdout, stderr = process.communicate()
-            print(f"❌ Backend process died! Return code: {process.poll()}")
-            print(f"STDOUT: {stdout}")
-            print(f"STDERR: {stderr}")
-            raise Exception(f"Backend server process terminated unexpectedly")
+        # Wait for server to start
+        api_url = "http://localhost:8000"
+        print(f"Waiting for backend server to be ready at {api_url}...")
 
-        try:
-            response = requests.get(f"{api_url}/docs", timeout=3)
-            print(f"✅ Backend response status code: {response.status_code}")
-            if response.status_code == 200:
-                print("✅ Backend server is ready!")
-                break
-        except requests.exceptions.ConnectionError:
-            print("Backend connection refused, still starting...")
-        except requests.exceptions.Timeout:
-            print("Backend request timeout...")
-        except Exception as e:
-            print(f"Backend unexpected error: {e}")
+        for attempt in range(30):
+            print(f"Attempt {attempt + 1}/30 - Checking backend server health...")
 
-        time.sleep(1)
-    else:
-        # Backend failed to start
-        print("❌ Backend server failed to start after 30 seconds")
+            if process.poll() is not None:
+                # Print last lines from error log
+                with open(backend_error_file, "r") as f:
+                    error_content = f.read()
+                print(f"❌ Backend process died! Return code: {process.poll()}")
+                print(f"Last error output:\n{error_content[-1000:]}")  # Last 1000 chars
+                raise Exception(f"Backend server process terminated unexpectedly")
+
+            try:
+                response = requests.get(f"{api_url}/docs", timeout=3)
+                print(f"✅ Backend response status code: {response.status_code}")
+                if response.status_code == 200:
+                    print("✅ Backend server is ready!")
+                    break
+            except requests.exceptions.ConnectionError:
+                print("Backend connection refused, still starting...")
+            except requests.exceptions.Timeout:
+                print("Backend request timeout...")
+            except Exception as e:
+                print(f"Backend unexpected error: {e}")
+
+            time.sleep(1)
+        else:
+            with open(backend_log_file, "r") as f:
+                stdout_content = f.read()
+            with open(backend_error_file, "r") as f:
+                stderr_content = f.read()
+
+            print("❌ Backend server failed to start after 30 seconds")
+            print(f"Backend STDOUT:\n{stdout_content[-1000:]}")
+            print(f"Backend STDERR:\n{stderr_content[-1000:]}")
+            kill_process_tree(process.pid)
+            raise Exception(f"Backend server failed to start")
+
+        print("✅ Backend server startup completed successfully!")
+        yield api_url
+
+        # Cleanup
+        print("Cleaning up backend server...")
         kill_process_tree(process.pid)
-        stdout, stderr = process.communicate(timeout=10)
-        print(f"Backend STDOUT: {stdout}")
-        print(f"Backend STDERR: {stderr}")
-        raise Exception(f"Backend server failed to start. STDERR: {stderr}")
-
-    print("✅ Backend server startup completed successfully!")
-    yield api_url
-
-    # Cleanup
-    print("Cleaning up backend server...")
-    kill_process_tree(process.pid)
-    print("✅ Backend server cleanup completed.")
-    print_backend_pid()
+        print("✅ Backend server cleanup completed.")
+        print(f"Backend logs saved in: {LOGS_DIR}")
+        print_backend_pid()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="class")
 def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
     """Start a test frontend server for integration tests"""
 
@@ -345,7 +373,7 @@ def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
         raise Exception("Frontend server failed to start - see output above")
 
     print("✅ Frontend server startup completed successfully!")
-    yield frontend_url
+    yield frontend_url + "/jam"
 
     # Cleanup - more aggressive process killing
     print("Cleaning up frontend server...")
@@ -360,20 +388,6 @@ def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
         print("Found and killed additional process on port 3000")
 
     print("✅ Frontend server cleanup completed.")
-
-
-@pytest.fixture
-def api_base_url(test_backend_server) -> str:
-    """Base URL for the API"""
-
-    return test_backend_server
-
-
-@pytest.fixture
-def frontend_base_url(test_frontend_server) -> str:
-    """Base URL for the frontend"""
-
-    return test_frontend_server + "/jam"
 
 
 def contiguous_subdicts(dictionary: dict) -> list[dict]:
@@ -424,7 +438,6 @@ def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_k
     keys = list(data_dict.keys())
     i = 0
     result = []
-    print(data_dict, required_keys, duplicate_keys)
 
     # Loop over all possible combination lengths
     for r in range(len(required_keys), len(keys) + 1):
@@ -443,18 +456,46 @@ def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_k
     return result
 
 
-def test_generate_entry_combinations() -> None:
+def get_all_element_ids(driver) -> list[str]:
+    """Get all element IDs present on the current page
+    :param driver: Selenium WebDriver instance"""
 
-    example_dict = {"a": "value1", "b": "value2", "c": "value3", "d": "value4"}
-    keys_A = ["a", "c"]
-    result = generate_entry_combinations(example_dict, keys_A)
-    assert len(result) == 4
-    assert result == [
-        {"a": "value1_0", "c": "value3_1"},
-        {"a": "value1_2", "b": "value2", "c": "value3_3"},
-        {"a": "value1_4", "c": "value3_5", "d": "value4"},
-        {"a": "value1_6", "b": "value2", "c": "value3_7", "d": "value4"},
-    ]
+    # Find all elements that have an ID attribute
+    elements_with_id = driver.find_elements(By.XPATH, "//*[@id]")
+
+    # Extract the ID values
+    element_ids = []
+    for element in elements_with_id:
+        element_id = element.get_attribute("id")
+        if element_id:
+            element_ids.append(element_id)
+
+    return sorted(element_ids)
+
+
+def get_element(
+    driver: WebDriver,
+    element_id: str,
+    selector: str = By.ID,
+    timeout: float = 10.0,
+) -> WebElement:
+    """Get an element by its ID.
+    :param driver: Selenium WebDriver instance
+    :param element_id: ID of the element to get
+    :param selector: Selector to use for finding the element
+    :param timeout: How long to wait before raising an error"""
+
+    try:
+        wait = WebDriverWait(driver, timeout)
+        element = wait.until(ec.element_to_be_clickable((selector, element_id)))
+        ActionChains(driver).move_to_element(element).perform()
+        return element
+    except Exception:
+        raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {get_all_element_ids(driver)}")
+
+
+LOGS_DIR = Path("test_logs")
+LOGS_DIR.mkdir(exist_ok=True)
 
 
 class BaseTest:
@@ -472,17 +513,20 @@ class BaseTest:
     page_url = ""  # url of the page to test (not including the base url)
     user_index = 1  # index of the user to use for the test
 
+    _test_name = ""
+
     @pytest.fixture(autouse=True)
     def setup_method(
         self,
-        frontend_base_url,
-        api_base_url,
+        test_frontend_server,
+        test_backend_server,
         request,
         test_users,
         authorised_clients,
         session,
     ) -> Generator[None, None, None]:
         """Set up the test environment before each test with test data"""
+        self._test_name = request.node.name
         try:
             # Configure Chrome options to disable password prompts
             chrome_options = Options()
@@ -493,14 +537,31 @@ class BaseTest:
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
+            chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--window-size=1960,1080")
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--ignore-certificate-errors")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--lang=en-GB")
+
+            # Enable verbose logging
+            chrome_options.add_argument("--enable-logging")
+            chrome_options.add_argument("--v=1")
+            chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
 
             self.driver = webdriver.Chrome(options=chrome_options)
-            self.driver.maximize_window()
+            # self.driver.maximize_window()
             self.wait = WebDriverWait(self.driver, 10)
+            # Set timezone using CDP
+            self.driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
+
+            # Set locale using CDP
+            self.driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-GB"})
 
             # Frontend/Backend
-            self.frontend_base_url = frontend_base_url
-            self.backend_url = api_base_url
+            self.frontend_base_url = test_frontend_server
+            self.backend_url = test_backend_server
 
             # Client/User
             self.client = authorised_clients[self.user_index]
@@ -512,21 +573,29 @@ class BaseTest:
         except Exception:
             if hasattr(self, "driver"):
                 try:
+                    self._save_browser_logs(failed=True)
                     self.driver.quit()
                 except:
                     pass
             raise
-
         yield  # This allows the test to run
 
         # Teardown
         try:
             if hasattr(self, "driver"):
+                # Check if test failed
+                test_failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False
+
+                # Save logs on failure or in CI (always in CI for debugging)
+                if test_failed or os.getenv("CI"):
+                    self._save_browser_logs(failed=test_failed)
+                    self._save_page_screenshot(failed=test_failed)
                 self.driver.quit()
         except Exception as e:
             print(f"Error during teardown: {e}")
 
-    def setup_function(self, request):
+    def setup_function(self, request) -> None:
+        """Function to run before each test - can be overridden in subclasses"""
         pass
 
     def login(self) -> None:
@@ -537,11 +606,73 @@ class BaseTest:
         self.get_element("email").send_keys(self.user.email)
         self.get_element("password").send_keys(self.user.password)
         self.get_element("confirm-button").click()
-        self.get_element("loading-spinner")
-        self.wait_for_disappear("loading-spinner")
+        try:
+            self.get_element("loading-spinner", timeout=2)
+            self.wait_for_disappear("loading-spinner", timeout=2)
+        except:
+            pass
         self.wait_for_page("dashboard")
         self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
         self.wait_for_table_load()
+
+    def _save_browser_logs(self, failed: bool = False) -> None:
+        """Save browser console logs to file"""
+        try:
+            # Get browser logs
+            browser_logs = self.driver.get_log("browser")
+            performance_logs = self.driver.get_log("performance")
+
+            # Create filename with test name and timestamp
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            status = "FAILED" if failed else "PASSED"
+            safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
+
+            # Save browser console logs
+            browser_log_file = LOGS_DIR / f"{safe_test_name}_{status}_{timestamp}_browser.log"
+            with open(browser_log_file, "w") as f:
+                f.write(f"Test: {self._test_name}\n")
+                f.write(f"Status: {status}\n")
+                f.write(f"Timestamp: {timestamp}\n")
+                f.write(f"URL: {self.driver.current_url}\n")
+                f.write("=" * 80 + "\n\n")
+
+                for entry in browser_logs:
+                    f.write(f"[{entry['level']}] {entry['timestamp']}: {entry['message']}\n")
+
+            # Save performance logs (network requests)
+            perf_log_file = LOGS_DIR / f"{safe_test_name}_{status}_{timestamp}_network.log"
+            with open(perf_log_file, "w") as f:
+                f.write(f"Test: {self._test_name}\n")
+                f.write(f"Network Performance Logs\n")
+                f.write("=" * 80 + "\n\n")
+
+                for entry in performance_logs:
+                    try:
+                        log_entry = json.loads(entry["message"])
+                        # Filter for network events
+                        if "Network" in log_entry.get("message", {}).get("method", ""):
+                            f.write(json.dumps(log_entry, indent=2) + "\n")
+                    except:
+                        pass
+
+            print(f"✅ Saved browser logs to {browser_log_file}")
+
+        except Exception as e:
+            print(f"⚠️ Could not save browser logs: {e}")
+
+    def _save_page_screenshot(self, failed: bool = False) -> None:
+        """Save screenshot of current page"""
+        try:
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            status = "FAILED" if failed else "PASSED"
+            safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
+
+            screenshot_file = LOGS_DIR / f"{safe_test_name}_{status}_{timestamp}.png"
+            self.driver.save_screenshot(str(screenshot_file))
+            print(f"✅ Saved screenshot to {screenshot_file}")
+
+        except Exception as e:
+            print(f"⚠️ Could not save screenshot: {e}")
 
     # ------------------------------------------------ GET/WAIT ELEMENTS -----------------------------------------------
 
@@ -579,29 +710,37 @@ class BaseTest:
         self,
         element_id: str,
         selector: str = By.ID,
+        timeout: float = 10.0,
     ) -> WebElement:
-        """Get an element by its ID
+        """Get an element by its ID.
         :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element"""
+        :param selector: Selector to use for finding the element
+        :param timeout: How long to wait before raising an error
+        """
 
+        time.sleep(0.1)
         try:
-            element = self.wait.until(ec.element_to_be_clickable((selector, element_id)))
+            wait = WebDriverWait(self.driver, timeout)
+            element = wait.until(ec.element_to_be_clickable((selector, element_id)))
             ActionChains(self.driver).move_to_element(element).perform()
             return element
-        except:
+        except Exception:
             raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
 
     def wait_for_disappear(
         self,
         element_id: str,
         selector: str = By.ID,
+        timeout=10.0,
     ) -> None:
         """Wait for an element to disappear from the DOM
         :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element"""
+        :param selector: Selector to use for finding the element
+        :param timeout: How long to wait before raising an error"""
 
         try:
-            self.wait.until(ec.invisibility_of_element_located((selector, element_id)))
+            wait = WebDriverWait(self.driver, timeout)
+            wait.until(ec.invisibility_of_element_located((selector, element_id)))
         except TimeoutException:
             raise AssertionError(f"Element {element_id} did not disappear")
 

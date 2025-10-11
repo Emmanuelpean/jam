@@ -3,7 +3,7 @@ import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { api, ApiError, exportApi } from "../../services/Api";
 import { THEMES } from "../../utils/Theme";
-import { renderModalFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
@@ -11,8 +11,10 @@ import { findByKey } from "../../utils/Utils";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ValidationErrors } from "../../components/modals/DataModal/DataModal";
+import { useFormOptions } from "../../components/rendering/form/FormOptions";
 
 interface FormData {
+	default_currency: string;
 	email: string;
 	current_password?: string;
 	new_password?: string;
@@ -24,6 +26,7 @@ interface FormData {
 
 const UserSettingsPage: React.FC = () => {
 	const { currentUser, token, updateCurrentUser } = useAuth();
+	const { currencyNames } = useFormOptions(["currencyNames"]);
 	const [formData, setFormData] = useState<FormData>(() => ({
 		email: currentUser?.email || "",
 		chase_threshold: currentUser?.chase_threshold || 0,
@@ -32,6 +35,7 @@ const UserSettingsPage: React.FC = () => {
 		current_password: "",
 		new_password: "",
 		confirm_password: "",
+		default_currency: currentUser?.default_currency || "",
 	}));
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [errors, setErrors] = useState<ValidationErrors>({});
@@ -130,7 +134,10 @@ const UserSettingsPage: React.FC = () => {
 				chase_threshold?: number;
 				deadline_threshold?: number;
 				update_limit?: number;
-			} = {};
+				default_currency: string;
+			} = {
+				default_currency: "",
+			};
 
 			// Add account changes if current password is provided
 			if (formData.current_password) {
@@ -155,6 +162,9 @@ const UserSettingsPage: React.FC = () => {
 			if (formData.update_limit !== undefined) {
 				updateData.update_limit = formData.update_limit;
 			}
+
+			// Add currency setting
+			updateData.default_currency = formData.default_currency;
 
 			const response = await api.put("users/me", updateData, token);
 
@@ -236,6 +246,14 @@ const UserSettingsPage: React.FC = () => {
 		helpText: "Maximum number of job updates to show",
 	};
 
+	const currencyField: ModalFormField = {
+		name: "default_currency",
+		type: "select",
+		label: "Preferred Currency",
+		options: currencyNames,
+		isClearable: false,
+	};
+
 	return (
 		<div className="settings-wrapper">
 			<Card className="settings-card border-0 shadow-sm">
@@ -256,7 +274,7 @@ const UserSettingsPage: React.FC = () => {
 						{errors.general && <div className="alert alert-danger mb-4">{errors.general}</div>}
 
 						<Col md={12} className="mb-3">
-							{renderModalFormField(currentPasswordField, formData, handleInputChange, errors)}
+							{FormField(currentPasswordField, formData, handleInputChange, errors)}
 						</Col>
 
 						{/* Account Settings Section */}
@@ -267,7 +285,7 @@ const UserSettingsPage: React.FC = () => {
 									Account Settings
 								</h5>
 							</div>
-							{renderModalFormField(emailField, formData, handleInputChange, errors)}
+							{FormField(emailField, formData, handleInputChange, errors)}
 						</div>
 
 						{/* Security Section */}
@@ -283,10 +301,10 @@ const UserSettingsPage: React.FC = () => {
 
 							<Row>
 								<Col md={6} className="mb-3">
-									{renderModalFormField(newPasswordField, formData, handleInputChange, errors)}
+									{FormField(newPasswordField, formData, handleInputChange, errors)}
 								</Col>
 								<Col md={6} className="mb-3">
-									{renderModalFormField(confirmPasswordField, formData, handleInputChange, errors)}
+									{FormField(confirmPasswordField, formData, handleInputChange, errors)}
 								</Col>
 							</Row>
 						</div>
@@ -301,13 +319,28 @@ const UserSettingsPage: React.FC = () => {
 							</div>
 							<Row>
 								<Col md={4} className="mb-3">
-									{renderModalFormField(chaseThresholdField, formData, handleInputChange, errors)}
+									{FormField(chaseThresholdField, formData, handleInputChange, errors)}
 								</Col>
 								<Col md={4} className="mb-3">
-									{renderModalFormField(deadlineThresholdField, formData, handleInputChange, errors)}
+									{FormField(deadlineThresholdField, formData, handleInputChange, errors)}
 								</Col>
 								<Col md={4} className="mb-3">
-									{renderModalFormField(updateLimitField, formData, handleInputChange, errors)}
+									{FormField(updateLimitField, formData, handleInputChange, errors)}
+								</Col>
+							</Row>
+						</div>
+
+						{/* Currency Section */}
+						<div className="settings-section">
+							<div className="section-header mb-4">
+								<h5 className="section-title">
+									<i className="bi bi-speedometer2 me-2 text-primary"></i>
+									Currency Settings
+								</h5>
+							</div>
+							<Row>
+								<Col md={12} className="mb-3">
+									{FormField(currencyField, formData, handleInputChange, errors)}
 								</Col>
 							</Row>
 						</div>

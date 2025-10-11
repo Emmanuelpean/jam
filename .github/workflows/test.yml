@@ -7,6 +7,9 @@ permissions:
   contents: write
   pull-requests: write
 
+env:
+  TZ: Europe/London
+
 jobs:
   build:
     environment:
@@ -15,7 +18,7 @@ jobs:
       DATABASE_HOSTNAME:  ${{secrets.DATABASE_HOSTNAME}}
       DATABASE_PORT: ${{secrets.DATABASE_PORT}}
       DATABASE_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
-      DATABASE_NAME: ${{secrets.DATABASE_NAME}}
+      DATABASE_NAME: jam_test
       DATABASE_USERNAME: ${{secrets.DATABASE_USERNAME}}
       SECRET_KEY: ${{secrets.SECRET_KEY}}
       ALGORITHM: ${{secrets.ALGORITHM}}
@@ -28,7 +31,7 @@ jobs:
         image: postgres:17
         env:
           POSTGRES_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
-          POSTGRES_DB: ${{secrets.DATABASE_NAME}}_test
+          POSTGRES_DB: jam_test
         ports:
           - 5432:5432
         options: >-
@@ -41,6 +44,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Install Python
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
@@ -54,10 +59,43 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install ./backend[dev]
 
+      - name: Install Node.js and npm dependencies
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: |
+          cd frontend
+          npm install --legacy-peer-deps
+          cd ..
+
       - name: Run Tests with Pytest and Coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
-          coverage run -m pytest backend --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
+          coverage run -m pytest ./ -v --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
+
+#      - name: Upload test logs and screenshots
+#        uses: actions/upload-artifact@v4
+#        if: always() && !contains(github.event.head_commit.message, '[skip tests]')
+#        with:
+#          name: test-logs-${{ github.run_number }}
+#          path: test_logs/
+#          if-no-files-found: ignore
+#          retention-days: 14
+
+      - name: Print log summary
+        if: always() && !contains(github.event.head_commit.message, '[skip tests]')
+        run: |
+          echo "=== Test Log Summary ==="
+          if [ -d "test_logs" ]; then
+            echo "Log directory contents:"
+            ls -lh test_logs/
+            echo ""
+            echo "Failed test browser logs:"
+            find test_logs/ -name "*FAILED*browser.log" -exec echo "  - {}" \; 2>/dev/null || echo "  None found"
+            echo ""
+            echo "Failed test screenshots:"
+            find test_logs/ -name "*FAILED*.png" -exec echo "  - {}" \; 2>/dev/null || echo "  None found"
+          else
+            echo "No logs directory found (all tests may have passed)"
+          fi
 
       - name: Generate badges and coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"

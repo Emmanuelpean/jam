@@ -29,8 +29,17 @@ from tests.utils.create_data import (
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
-def reset_database(db_engine) -> None:
+def reset_database(db_engine, ask_confirmation: bool = True) -> None:
     """Drop ALL tables in the database (including orphaned ones) and recreate from models"""
+
+    if ask_confirmation:
+        ask = input(
+            "WARNING: This will DROP ALL DATA in the database. Press Enter 'Yes' continue or anything else to abort."
+        )
+        if ask.lower() != "yes":
+            print("Aborting.")
+            sys.exit(0)
+
     print("Dropping all tables in the database...")
 
     with db_engine.connect() as conn:

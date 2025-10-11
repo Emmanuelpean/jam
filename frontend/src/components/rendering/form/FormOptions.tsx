@@ -7,6 +7,8 @@ import { KeywordModal } from "../../modals/KeywordModal";
 import { PersonModal } from "../../modals/PersonModal";
 import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobModal } from "../../modals/JobModal";
+import currencies from "../../../data/currencies.json";
+import countries from "../../../data/countries.json";
 
 interface UseFormOptionsReturn {
 	error: Error | null;
@@ -17,6 +19,8 @@ interface UseFormOptionsReturn {
 	aggregators: SelectOption[];
 	jobs: SelectOption[];
 	countries: SelectOption[];
+	currencies: SelectOption[];
+	currencyNames: SelectOption[];
 	openCompanyModal: () => void;
 	renderCompanyModal: () => JSX.Element;
 	openLocationModal: () => void;
@@ -39,7 +43,6 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 		persons: personsData,
 		aggregators: aggregatorsData,
 		jobs: jobsData,
-		countries: countriesData,
 		error,
 	} = useDataContext();
 
@@ -52,13 +55,18 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 	const [showJobModal, setShowJobModal] = useState<boolean>(false);
 
 	// Convert data to SelectOptions and memoize
-	const companies = useMemo(() => toSelectOptions(companiesData), [companiesData]);
-	const locations = useMemo(() => toSelectOptions(locationsData), [locationsData]);
-	const keywords = useMemo(() => toSelectOptions(keywordsData), [keywordsData]);
-	const persons = useMemo(() => toSelectOptions(personsData), [personsData]);
-	const aggregators = useMemo(() => toSelectOptions(aggregatorsData), [aggregatorsData]);
-	const jobs = useMemo(() => toSelectOptions(jobsData, "id", "name"), [jobsData]);
-	const countries = useMemo(() => countriesData, [countriesData]);
+	const companyOptions: SelectOption[] = useMemo(() => toSelectOptions(companiesData), [companiesData]);
+	const locationOptions: SelectOption[] = useMemo(() => toSelectOptions(locationsData), [locationsData]);
+	const keywordOptions: SelectOption[] = useMemo(() => toSelectOptions(keywordsData), [keywordsData]);
+	const personOptions: SelectOption[] = useMemo(() => toSelectOptions(personsData), [personsData]);
+	const aggregatorOptions: SelectOption[] = useMemo(() => toSelectOptions(aggregatorsData), [aggregatorsData]);
+	const jobOptions: SelectOption[] = useMemo(() => toSelectOptions(jobsData, "id", "name"), [jobsData]);
+	const countryOptions: SelectOption[] = useMemo(() => toSelectOptions(countries, "name", "name"), [countries]);
+	const currencyOptions: SelectOption[] = useMemo(() => toSelectOptions(currencies, "code", "symbol"), [currencies]);
+	const currencyNameOptions: SelectOption[] = useMemo(
+		() => toSelectOptions(currencies, "code", "name"),
+		[currencies],
+	);
 
 	// Modal handlers
 	const openCompanyModal = (): void => setShowCompanyModal(true);
@@ -116,13 +124,15 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 
 	return {
 		error: error as Error | null,
-		companies: requiredOptions.includes("companies") ? companies : [],
-		locations: requiredOptions.includes("locations") ? locations : [],
-		keywords: requiredOptions.includes("keywords") ? keywords : [],
-		persons: requiredOptions.includes("persons") ? persons : [],
-		aggregators: requiredOptions.includes("aggregators") ? aggregators : [],
-		jobs: requiredOptions.includes("jobs") ? jobs : [],
-		countries: requiredOptions.includes("countries") ? countries : [],
+		companies: requiredOptions.includes("companies") ? companyOptions : [],
+		locations: requiredOptions.includes("locations") ? locationOptions : [],
+		keywords: requiredOptions.includes("keywords") ? keywordOptions : [],
+		persons: requiredOptions.includes("persons") ? personOptions : [],
+		aggregators: requiredOptions.includes("aggregators") ? aggregatorOptions : [],
+		jobs: requiredOptions.includes("jobs") ? jobOptions : [],
+		countries: requiredOptions.includes("countries") ? countryOptions : [],
+		currencies: requiredOptions.includes("currencies") ? currencyOptions : [],
+		currencyNames: requiredOptions.includes("currencyNames") ? currencyNameOptions : [],
 		openCompanyModal,
 		renderCompanyModal,
 		openLocationModal,
