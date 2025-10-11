@@ -38,6 +38,7 @@ import {
 } from "./Icons";
 import { ensureHttpPrefix } from "../../../utils/StringUtils";
 import { findByKey } from "../../../utils/Utils";
+import currencies from "../../../data/currencies.json";
 
 // Parameters passed to the view render functions
 export interface RenderParams {
@@ -243,7 +244,7 @@ export const renderFunctions = {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
 		const dataContext = param.dataContext;
-		const salaryCurrency: string | undefined | null = dataContext.currencies.find(
+		const salaryCurrency: string | undefined | null = currencies.find(
 			(currency: Currency) => currency.code === param.item?.salary_currency,
 		)?.symbol;
 		if (!salary_min && !salary_max) {

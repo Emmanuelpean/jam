@@ -1,6 +1,4 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import currencies from "../data/currencies.json";
-import countries from "../data/countries.json";
 import {
 	aggregatorsApi,
 	ApiError,
@@ -69,8 +67,6 @@ export interface DataContextValue {
 	locations: LocationData[];
 	settings: SettingData[];
 	users: UserData[];
-	countries: Country[];
-	currencies: Currency[];
 
 	error: ApiError | null;
 	reloadAll: () => void;
@@ -95,8 +91,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [locations, setLocations] = useState<LocationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
-	const [countryData, setCountryData] = useState<Country[]>([]);
-	const [currencyData, setCurrencyData] = useState<Currency[]>([]);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
@@ -227,8 +221,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setAggregators(aggregatorsData || []);
 			setKeywords(keywordsData || []);
 			setLocations(locationsData || []);
-			setCountryData(countries || []);
-			setCurrencyData(currencies || []);
 
 			if (currentUser?.is_admin) {
 				setSettings(adminData[0] || []);
@@ -354,8 +346,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				locations,
 				settings,
 				users,
-				countries: countryData,
-				currencies: currencyData,
 				error,
 				reloadAll: fetchAllData,
 				updateEntity,
