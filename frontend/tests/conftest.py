@@ -554,6 +554,11 @@ class BaseTest:
             self.driver = webdriver.Chrome(options=chrome_options)
             # self.driver.maximize_window()
             self.wait = WebDriverWait(self.driver, 10)
+            # Set timezone using CDP
+            self.driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
+
+            # Set locale using CDP
+            self.driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-GB"})
 
             # Frontend/Backend
             self.frontend_base_url = test_frontend_server
