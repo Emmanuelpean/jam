@@ -35,9 +35,6 @@ interface LocalInputProps extends WidgetProps {
 	inputType: LocalInputType;
 }
 
-/**
- * Generic renderer for datetime-local or date input
- */
 export const renderLocalInput = ({ field, value, handleChange, error, inputType }: LocalInputProps): JSX.Element => {
 	const setCurrentValue = (e: React.MouseEvent<HTMLElement>): void => {
 		e.preventDefault();
