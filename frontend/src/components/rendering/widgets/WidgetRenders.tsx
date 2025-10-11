@@ -33,7 +33,7 @@ export interface WidgetProps {
 	error?: string | null;
 	secondaryValue?: string | null;
 	currentUser?: CurrentUser | null;
-	dataContext?: DataContextValue;
+	// dataContext?: DataContextValue;
 }
 
 export const displayError = (errorMessage: string | null): JSX.Element[] | null => {
@@ -66,7 +66,6 @@ export const FormField = (
 	errors: Errors,
 	currentUser?: CurrentUser | null,
 ) => {
-	const dataContext: DataContextValue = useDataContext();
 	const value: any = formData[field.name];
 	const secondaryValue: any = field.secondaryName ? formData[field.secondaryName] : null;
 	const error: string | null | undefined = errors[field.name];
@@ -78,7 +77,6 @@ export const FormField = (
 		error,
 		secondaryValue,
 		currentUser,
-		dataContext,
 	};
 
 	if (field.type === "checkbox") {
