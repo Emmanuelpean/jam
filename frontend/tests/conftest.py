@@ -453,6 +453,25 @@ def get_all_element_ids(driver) -> list[str]:
     return sorted(element_ids)
 
 
+@pytest.fixture(scope="class", autouse=True)
+def reset_browser_state(self):
+    """Reset browser and React state between test classes"""
+    yield
+    # After all tests in this class complete
+    if hasattr(self, 'driver') and self.driver:
+        # Clear all browser storage
+        self.driver.execute_script("window.localStorage.clear();")
+        self.driver.execute_script("window.sessionStorage.clear();")
+
+        # Force hard reload to reset React state
+        self.driver.execute_cdp_cmd('Network.clearBrowserCache', {})
+        self.driver.execute_cdp_cmd('Network.clearBrowserCookies', {})
+
+        # Navigate away and back to force remount
+        self.driver.get("about:blank")
+        time.sleep(0.5)
+
+
 def get_element(
     driver: WebDriver,
     element_id: str,
@@ -501,6 +520,7 @@ class BaseTest:
     ) -> Generator[None, None, None]:
         """Set up the test environment before each test with test data"""
         user_data_dir = tempfile.mkdtemp()
+        request.addfinalizer(lambda: shutil.rmtree(user_data_dir, ignore_errors=True))
         try:
             # Configure Chrome options to disable password prompts
             chrome_options = Options()
@@ -553,7 +573,14 @@ class BaseTest:
         # Teardown
         try:
             if hasattr(self, "driver"):
+                # Clear all state before quitting
+                try:
+                    self.driver.execute_script("window.localStorage.clear();")
+                    self.driver.execute_script("window.sessionStorage.clear();")
+                except:
+                    pass
                 self.driver.quit()
+                time.sleep(0.5)
         except Exception as e:
             print(f"Error during teardown: {e}")
 
