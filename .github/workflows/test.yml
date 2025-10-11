@@ -62,7 +62,7 @@ jobs:
           cd frontend
           npm install --legacy-peer-deps
           cd ..
-          coverage run -m pytest ./ -v --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
+          coverage run -m pytest ./frontend -v --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
 
       - name: Generate badges and coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
