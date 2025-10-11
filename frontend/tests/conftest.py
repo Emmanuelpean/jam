@@ -128,7 +128,7 @@ def print_backend_pid() -> None:
         print(f"Error checking backend processes: {e}")
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="session")
 def test_backend_server() -> Generator[str, None, None]:
     """Start a test backend server for integration tests"""
 
