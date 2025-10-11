@@ -453,25 +453,6 @@ def get_all_element_ids(driver) -> list[str]:
     return sorted(element_ids)
 
 
-@pytest.fixture(scope="class", autouse=True)
-def reset_browser_state(self):
-    """Reset browser and React state between test classes"""
-    yield
-    # After all tests in this class complete
-    if hasattr(self, 'driver') and self.driver:
-        # Clear all browser storage
-        self.driver.execute_script("window.localStorage.clear();")
-        self.driver.execute_script("window.sessionStorage.clear();")
-
-        # Force hard reload to reset React state
-        self.driver.execute_cdp_cmd('Network.clearBrowserCache', {})
-        self.driver.execute_cdp_cmd('Network.clearBrowserCookies', {})
-
-        # Navigate away and back to force remount
-        self.driver.get("about:blank")
-        time.sleep(0.5)
-
-
 def get_element(
     driver: WebDriver,
     element_id: str,
@@ -507,6 +488,24 @@ class BaseTest:
     # Parameters needed
     page_url = ""  # url of the page to test (not including the base url)
     user_index = 1  # index of the user to use for the test
+
+    @pytest.fixture(scope="class", autouse=True)
+    def reset_browser_state(self):
+        """Reset browser and React state between test classes"""
+        yield
+        # After all tests in this class complete
+        if hasattr(self, 'driver') and self.driver:
+            # Clear all browser storage
+            self.driver.execute_script("window.localStorage.clear();")
+            self.driver.execute_script("window.sessionStorage.clear();")
+
+            # Force hard reload to reset React state
+            self.driver.execute_cdp_cmd('Network.clearBrowserCache', {})
+            self.driver.execute_cdp_cmd('Network.clearBrowserCookies', {})
+
+            # Navigate away and back to force remount
+            self.driver.get("about:blank")
+            time.sleep(0.5)
 
     @pytest.fixture(autouse=True)
     def setup_method(
