@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+from pathlib import Path
 
 import psutil
 import requests
@@ -474,6 +475,10 @@ def get_element(
         raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {get_all_element_ids(driver)}")
 
 
+LOGS_DIR = Path("test_logs")
+LOGS_DIR.mkdir(exist_ok=True)
+
+
 class BaseTest:
     """Base class for selenium tests"""
 
@@ -489,24 +494,6 @@ class BaseTest:
     page_url = ""  # url of the page to test (not including the base url)
     user_index = 1  # index of the user to use for the test
 
-    @pytest.fixture(scope="class", autouse=True)
-    def reset_browser_state(self):
-        """Reset browser and React state between test classes"""
-        yield
-        # After all tests in this class complete
-        if hasattr(self, 'driver') and self.driver:
-            # Clear all browser storage
-            self.driver.execute_script("window.localStorage.clear();")
-            self.driver.execute_script("window.sessionStorage.clear();")
-
-            # Force hard reload to reset React state
-            self.driver.execute_cdp_cmd('Network.clearBrowserCache', {})
-            self.driver.execute_cdp_cmd('Network.clearBrowserCookies', {})
-
-            # Navigate away and back to force remount
-            self.driver.get("about:blank")
-            time.sleep(0.5)
-
     @pytest.fixture(autouse=True)
     def setup_method(
         self,
@@ -518,8 +505,6 @@ class BaseTest:
         session,
     ) -> Generator[None, None, None]:
         """Set up the test environment before each test with test data"""
-        user_data_dir = tempfile.mkdtemp()
-        request.addfinalizer(lambda: shutil.rmtree(user_data_dir, ignore_errors=True))
         try:
             # Configure Chrome options to disable password prompts
             chrome_options = Options()
@@ -529,7 +514,6 @@ class BaseTest:
                 "password_manager_enabled": False,
                 "profile.password_manager_enabled": False,
             }
-            chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
             chrome_options.add_experimental_option("prefs", prefs)
             chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
@@ -563,8 +547,6 @@ class BaseTest:
                     self.driver.quit()
                 except:
                     pass
-                if "user_data_dir" in locals() and os.path.exists(user_data_dir):
-                    shutil.rmtree(user_data_dir, ignore_errors=True)
             raise
 
         yield  # This allows the test to run
@@ -572,12 +554,6 @@ class BaseTest:
         # Teardown
         try:
             if hasattr(self, "driver"):
-                # Clear all state before quitting
-                try:
-                    self.driver.execute_script("window.localStorage.clear();")
-                    self.driver.execute_script("window.sessionStorage.clear();")
-                except:
-                    pass
                 self.driver.quit()
                 time.sleep(0.5)
         except Exception as e:
