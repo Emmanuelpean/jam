@@ -7,6 +7,9 @@ permissions:
   contents: write
   pull-requests: write
 
+env:
+  TZ: Europe/London
+
 jobs:
   build:
     environment:
