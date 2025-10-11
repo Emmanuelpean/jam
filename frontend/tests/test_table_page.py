@@ -325,7 +325,7 @@ class TablePage(BaseTest):
                 select.open_menu()
                 select.select_by_visible_text(value)
             elif key in ["date", "application_date"]:
-                self.get_element(key + "_current_date").click()
+                self.get_element(key + "_set_current").click()
                 # element = self.get_element(key)
                 # element.send_keys(value.strftime("%d%m%Y"))
                 # element.send_keys(Keys.TAB)
