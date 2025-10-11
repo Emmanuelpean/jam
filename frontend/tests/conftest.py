@@ -543,6 +543,8 @@ class BaseTest:
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--ignore-certificate-errors")
             chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--lang=en-GB")
+            chrome_options.add_experimental_option("prefs", {"intl.accept_languages": "en-GB,en"})
 
             # Enable verbose logging
             chrome_options.add_argument("--enable-logging")
