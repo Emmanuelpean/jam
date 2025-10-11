@@ -80,6 +80,7 @@ class UserOut(Out):
     deadline_threshold: int
     update_limit: int
     toast_active: bool
+    default_currency: str
 
 
 class UserLogin(BaseModel):
@@ -103,6 +104,7 @@ class UserUpdate(BaseModel):
     deadline_threshold: int | None = None
     update_limit: int | None = None
     toast_active: bool = False
+    default_currency: str | None = None
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------
@@ -280,6 +282,7 @@ class JobCreate(BaseModel):
     description: str | None = None
     salary_min: float | None = None
     salary_max: float | None = None
+    salary_currency: str | None = None
     personal_rating: int | None = None
     url: str | None = None
     deadline: datetime | None = None

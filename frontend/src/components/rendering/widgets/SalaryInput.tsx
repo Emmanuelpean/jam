@@ -1,15 +1,30 @@
 import React, { JSX } from "react";
 import { Form, InputGroup } from "react-bootstrap";
-import { displayError, WidgetProps } from "./WidgetRenders";
+import { WidgetProps } from "./WidgetRenders";
+import { Currency } from "../../../contexts/DataContext";
 
-export const renderSalaryInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
+export const renderSalaryInput = ({
+	field,
+	value,
+	handleChange,
+	error,
+	currentUser,
+	dataContext,
+	secondaryValue,
+}: WidgetProps): JSX.Element => {
+	const currencyCode: string | undefined = secondaryValue ? secondaryValue : currentUser?.default_currency;
+
+	const currentSymbol: string =
+		dataContext?.currencies.filter((currency: Currency): boolean => currency.code === currencyCode)[0]?.symbol ||
+		"N/A";
+
 	return (
 		<>
 			<InputGroup>
-				<InputGroup.Text>£</InputGroup.Text>
+				<InputGroup.Text>{currentSymbol}</InputGroup.Text>
 				<Form.Control
 					id={field.name}
-					type="number"
+					type="text"
 					name={field.name}
 					value={value || ""}
 					onChange={handleChange}

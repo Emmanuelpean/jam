@@ -17,6 +17,8 @@ interface UseFormOptionsReturn {
 	aggregators: SelectOption[];
 	jobs: SelectOption[];
 	countries: SelectOption[];
+	currencies: SelectOption[];
+	currencyNames: SelectOption[];
 	openCompanyModal: () => void;
 	renderCompanyModal: () => JSX.Element;
 	openLocationModal: () => void;
@@ -40,6 +42,7 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 		aggregators: aggregatorsData,
 		jobs: jobsData,
 		countries: countriesData,
+		currencies: currenciesData,
 		error,
 	} = useDataContext();
 
@@ -52,13 +55,21 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 	const [showJobModal, setShowJobModal] = useState<boolean>(false);
 
 	// Convert data to SelectOptions and memoize
-	const companies = useMemo(() => toSelectOptions(companiesData), [companiesData]);
-	const locations = useMemo(() => toSelectOptions(locationsData), [locationsData]);
-	const keywords = useMemo(() => toSelectOptions(keywordsData), [keywordsData]);
-	const persons = useMemo(() => toSelectOptions(personsData), [personsData]);
-	const aggregators = useMemo(() => toSelectOptions(aggregatorsData), [aggregatorsData]);
-	const jobs = useMemo(() => toSelectOptions(jobsData, "id", "name"), [jobsData]);
-	const countries = useMemo(() => countriesData, [countriesData]);
+	const companies: SelectOption[] = useMemo(() => toSelectOptions(companiesData), [companiesData]);
+	const locations: SelectOption[] = useMemo(() => toSelectOptions(locationsData), [locationsData]);
+	const keywords: SelectOption[] = useMemo(() => toSelectOptions(keywordsData), [keywordsData]);
+	const persons: SelectOption[] = useMemo(() => toSelectOptions(personsData), [personsData]);
+	const aggregators: SelectOption[] = useMemo(() => toSelectOptions(aggregatorsData), [aggregatorsData]);
+	const jobs: SelectOption[] = useMemo(() => toSelectOptions(jobsData, "id", "name"), [jobsData]);
+	const countries: SelectOption[] = useMemo(() => toSelectOptions(countriesData, "name", "name"), [countriesData]);
+	const currencies: SelectOption[] = useMemo(
+		() => toSelectOptions(currenciesData, "code", "symbol"),
+		[currenciesData],
+	);
+	const currencyNames: SelectOption[] = useMemo(
+		() => toSelectOptions(currenciesData, "code", "name"),
+		[currenciesData],
+	);
 
 	// Modal handlers
 	const openCompanyModal = (): void => setShowCompanyModal(true);
@@ -123,6 +134,8 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 		aggregators: requiredOptions.includes("aggregators") ? aggregators : [],
 		jobs: requiredOptions.includes("jobs") ? jobs : [],
 		countries: requiredOptions.includes("countries") ? countries : [],
+		currencies: requiredOptions.includes("currencies") ? currencies : [],
+		currencyNames: requiredOptions.includes("currencyNames") ? currencyNames : [],
 		openCompanyModal,
 		renderCompanyModal,
 		openLocationModal,
