@@ -328,7 +328,7 @@ class TablePage(BaseTest):
                 element = self.get_element(key)
                 element.send_keys(value.strftime("%d%m%Y"))
                 element.send_keys(Keys.TAB)
-                element.send_keys(value.strftime("%H%M"))
+                element.send_keys(value.strftime("%H%M%S"))
             else:
                 self.set_text(self.get_element(key), value)
 
