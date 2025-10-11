@@ -353,7 +353,7 @@ def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
         raise Exception("Frontend server failed to start - see output above")
 
     print("✅ Frontend server startup completed successfully!")
-    yield frontend_url
+    yield frontend_url + "/jam"
 
     # Cleanup - more aggressive process killing
     print("Cleaning up frontend server...")
@@ -368,20 +368,6 @@ def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
         print("Found and killed additional process on port 3000")
 
     print("✅ Frontend server cleanup completed.")
-
-
-@pytest.fixture
-def api_base_url(test_backend_server) -> str:
-    """Base URL for the API"""
-
-    return test_backend_server
-
-
-@pytest.fixture
-def frontend_base_url(test_frontend_server) -> str:
-    """Base URL for the frontend"""
-
-    return test_frontend_server + "/jam"
 
 
 def contiguous_subdicts(dictionary: dict) -> list[dict]:
@@ -506,8 +492,8 @@ class BaseTest:
     @pytest.fixture(autouse=True)
     def setup_method(
         self,
-        frontend_base_url,
-        api_base_url,
+        test_frontend_server,
+        test_backend_server,
         request,
         test_users,
         authorised_clients,
@@ -542,8 +528,8 @@ class BaseTest:
             self.wait = WebDriverWait(self.driver, 10)
 
             # Frontend/Backend
-            self.frontend_base_url = frontend_base_url
-            self.backend_url = api_base_url
+            self.frontend_base_url = test_frontend_server
+            self.backend_url = test_backend_server
 
             # Client/User
             self.client = authorised_clients[self.user_index]
