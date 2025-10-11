@@ -790,7 +790,7 @@ class TestJobApplicationUpdatesPage(TablePage):
     entry_name = "update"
     required_fields = ["job_id", "type", "date"]
     test_data = {
-        "date": datetime.datetime(year=2025, month=3, day=3, hour=3, minute=30, tzinfo=datetime.timezone.utc),
+        "date": datetime.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=datetime.timezone.utc),
         "job_id": "Senior Python Developer - Tech Corp",
         "note": "Received automated confirmation email",
         "type": "Received",
@@ -811,7 +811,7 @@ class TestInterviewPage(TablePage):
     entry_name = "interview"
     required_fields = ["job_id", "type", "date"]
     test_data = {
-        "date": datetime.datetime(year=2025, month=3, day=3, hour=3, minute=30, tzinfo=datetime.timezone.utc),
+        "date": datetime.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=datetime.timezone.utc),
         "job_id": "Senior Python Developer - Tech Corp",
         "note": "Received automated confirmation email",
         "attendance_type": "On-site",
