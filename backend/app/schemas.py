@@ -61,26 +61,11 @@ class SettingUpdate(SettingCreate):
 # -------------------------------------------------------- USER --------------------------------------------------------
 
 
-class UserCreate(BaseModel):
+class UserRegister(BaseModel):
     """User create schema"""
 
     password: str
     email: EmailStr
-
-
-class UserOut(Out):
-    """User output schema"""
-
-    email: EmailStr
-    theme: str
-    is_active: bool = True
-    is_admin: bool = False
-    last_login: datetime | None = None
-    chase_threshold: int
-    deadline_threshold: int
-    update_limit: int
-    toast_active: bool
-    default_currency: str
 
 
 class UserLogin(BaseModel):
@@ -90,21 +75,53 @@ class UserLogin(BaseModel):
     password: str
 
 
-class UserUpdate(BaseModel):
+# -------------------------------------------------------- USERS -------------------------------------------------------
+
+
+class UserCreate(BaseModel):
+    """User create schema"""
+
+    email: EmailStr
+    password: str
+    theme: str = "mixed-berry"
+    is_active: bool = True
+    is_admin: bool = False
+    last_login: datetime | None = None
+    chase_threshold: int = 10
+    deadline_threshold: int = 7
+    update_limit: int = 30
+    toast_active: bool = False
+    default_currency: str = "GBP"
+
+
+class UserOut(Out):
+    """User output schema"""
+
+    email: EmailStr
+    theme: str
+    is_active: bool
+    is_admin: bool
+    last_login: datetime | None
+    chase_threshold: int
+    deadline_threshold: int
+    update_limit: int
+    toast_active: bool
+    default_currency: str
+
+
+class UserUpdate(UserCreate):
     """User update schema"""
 
-    current_password: str | None = None
     email: EmailStr | None = None
-    theme: str | None = None
     password: str | None = None
-    is_active: bool | None = None
-    is_admin: bool | None = None
-    last_login: datetime | None = None
-    chase_threshold: int | None = None
-    deadline_threshold: int | None = None
-    update_limit: int | None = None
-    toast_active: bool = False
-    default_currency: str | None = None
+
+
+class MeUpdate(UserCreate):
+    """User update schema"""
+
+    email: EmailStr | None = None
+    password: str | None = None
+    current_password: str | None = None
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------

@@ -3,7 +3,7 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import data_tables, user, login, export, settings
+from app.routers import data_tables, user, auth, export, settings
 from app.eis import routers as eis_routers
 from app import models
 from app.database import engine
@@ -39,7 +39,9 @@ app.include_router(eis_routers.scraper_router)
 
 # Authentification router
 app.include_router(user.user_router)
-app.include_router(login.router)
+app.include_router(user.current_user_router)
+app.include_router(auth.login_router)
+app.include_router(auth.register_router)
 
 # Export router
 app.include_router(export.router)
