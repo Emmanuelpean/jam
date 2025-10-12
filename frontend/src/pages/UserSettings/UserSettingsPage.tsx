@@ -257,7 +257,7 @@ const UserSettingsPage: React.FC = () => {
 	return (
 		<div className="settings-wrapper">
 			<Card className="settings-card border-0 shadow-sm">
-				<Card.Header className="settings-header border-0 p-0">
+				<Card.Header className="settings-header border-0 p-0 bg-white">
 					<div className="d-flex align-items-center p-4">
 						<div className="header-icon-wrapper me-3">
 							<i className={`bi ${getTableIcon("Users")}`}></i>
