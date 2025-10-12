@@ -186,8 +186,8 @@ const DataModal = ({
 	useEffect(() => {
 		// Initialize modal state when it becomes visible or data changes
 		if (mode === "add") {
-			setFormData({});
-			setOriginalFormData({});
+			setFormData({ ...effectiveData });
+			setOriginalFormData({ ...effectiveData });
 			setIsEditing(true);
 		} else if (mode === "edit") {
 			setFormData({ ...effectiveData });
