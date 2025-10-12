@@ -120,7 +120,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 					);
 					if (new Date(latestInterview.date) > mostRecentDate) {
 						mostRecentDate = new Date(latestInterview.date);
-						lastUpdateType = `Interview (${jobInterviews.length})`;
+						lastUpdateType = `Interview #${jobInterviews.length}`;
 					}
 				}
 
@@ -129,7 +129,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 						new Date(current.date) > new Date(latest.date) ? current : latest,
 					);
 					if (new Date(latestUpdate.date) > mostRecentDate) {
-						lastUpdateType = `Update (${jobUpdates.length})`;
+						lastUpdateType = `Update #${jobUpdates.length}`;
 					}
 				}
 			}
