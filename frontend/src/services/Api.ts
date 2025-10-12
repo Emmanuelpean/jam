@@ -207,7 +207,6 @@ export const interviewsApi: CrudApi = createCrudApi("interviews");
 export const jobApplicationUpdatesApi: CrudApi = createCrudApi("jobapplicationupdates");
 export const serviceLogApi: CrudApi = createCrudApi("eis_service_logs");
 export const userApi: CrudApi = createCrudApi("users");
-export const dashboardApi: CrudApi = createCrudApi("dashboard");
 export const settingsApi: CrudApi = createCrudApi("settings");
 export const scraperApi: CrudApi = createCrudApi("scraper");
 
@@ -240,15 +239,15 @@ export const authApi: AuthApi = {
 	},
 
 	register: async (email: string, password: string) => {
-		return api.post("users/", { email, password });
+		return api.post("register/", { email, password });
 	},
 
 	getCurrentUser: async (token: string) => {
-		return api.get("users/me", token);
+		return api.get("current_user/", token);
 	},
 
 	updateCurrentUser: async (data: any, token: string) => {
-		return api.put("users/me", data, token);
+		return api.put("current_user/", data, token);
 	},
 };
 

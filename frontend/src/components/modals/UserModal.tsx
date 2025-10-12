@@ -12,6 +12,10 @@ import { THEMES } from "../../utils/Theme";
 export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode = "view", size = "lg" }) => {
 	const { token } = useAuth();
 
+	if (submode === "add") {
+		data = { theme: THEMES[0]?.key };
+	}
+
 	const formFieldsArray = [
 		[
 			...(submode === "add"
@@ -19,11 +23,11 @@ export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, id, su
 				: [formFields.email({ required: false })]),
 		],
 		formFields.appTheme(),
-		[formFields.isAdmin(), formFields.toastActive()],
+		[formFields.isAdmin(), formFields.toastActive(), formFields.isActive()],
 	];
 	const viewFieldsArray = [
 		[modalViewFields.email(), modalViewFields.appTheme()],
-		[modalViewFields.isAdmin(), modalViewFields.toastActive()],
+		[modalViewFields.isAdmin(), modalViewFields.toastActive(), modalViewFields.isActive()],
 	];
 
 	const fields = {
@@ -48,12 +52,14 @@ export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, id, su
 		return errors;
 	};
 
-	const transformFormData = (data: UserData): UserDataTransform => {
+	const transformFormData = (formData: UserDataTransform): UserDataTransform => {
 		return {
-			email: data.email?.trim(),
-			theme: data.theme || THEMES[0],
-			is_admin: data.is_admin || false,
-			toast_active: data.toast_active || false,
+			email: formData.email?.trim(),
+			password: formData.password?.trim(),
+			theme: formData.theme || THEMES[0]?.key,
+			is_admin: formData.is_admin || false,
+			toast_active: formData.toast_active || false,
+			is_active: formData.is_active || false,
 		};
 	};
 
