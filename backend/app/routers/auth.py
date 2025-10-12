@@ -7,10 +7,10 @@ from sqlalchemy.orm import Session
 
 from app import utils, models, database, schemas, oauth2
 
-router = APIRouter(prefix="/login", tags=["Authentication"])
+login_router = APIRouter(prefix="/login", tags=["Login"])
 
 
-@router.post("/", status_code=status.HTTP_200_OK, response_model=schemas.Token)
+@login_router.post("/", status_code=status.HTTP_200_OK, response_model=schemas.Token)
 def login(
     user_credentials: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(database.get_db),
@@ -41,3 +41,37 @@ def login(
     # Create an access token and return it
     access_token = oauth2.create_access_token(data={"user_id": user.id})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+register_router = APIRouter(prefix="/register", tags=["Register"])
+
+
+@register_router.post("/", status_code=201, response_model=schemas.UserOut)
+def create_user(
+    user: schemas.UserRegister,
+    db: Session = Depends(database.get_db),
+):
+    """Create a new user.
+    :param user: The user data.
+    :param db: The database session."""
+
+    # Check the user can be created
+    settings = db.query(models.Setting).filter(models.Setting.name == "allowlist").first()
+    if settings:
+        emails_allowed = settings.value.split(",")
+        if user.email not in emails_allowed:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not allowed")
+
+    # Get all users and check if the email is already registered
+    users = db.query(models.User).all()
+    emails = [u.email for u in users]
+    if user.email in emails:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
+    # Hash the password and create the user
+    user.password = utils.hash_password(user.password)
+    new_user = models.User(**user.model_dump())  # noqa
+    db.add(new_user)
+    db.commit()
+
+    return new_user

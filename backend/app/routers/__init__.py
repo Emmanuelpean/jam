@@ -3,19 +3,20 @@
 Provides a factory function to generate FastAPI routers with standard CRUD endpoints,
 including user ownership validation, query filtering, and many-to-many relationship handling."""
 
-from typing import Any
+from typing import Any, Callable
 
-from sqlalchemy.orm import Query
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Query
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.requests import Request
 
 from app import database, models, oauth2
 
-
 NOT_ALLOWED_EXCEPTION = HTTPException(
-    status_code=status.HTTP_403_FORBIDDEN, detail="Not authorised to perform requested action"
+    status_code=status.HTTP_403_FORBIDDEN,
+    detail="Not authorised to perform requested action",
 )
 
 
@@ -150,6 +151,8 @@ def generate_data_table_crud_router(
     router: APIRouter | None = None,
     admin_only: bool = False,
     allowed_actions: list[str] | None = None,
+    transform: None | Callable = None,
+    check_settings: None | Callable = None,
 ) -> APIRouter:
     """Generate a FastAPI router with standard CRUD endpoints for a given table.
     :param table_model: SQLAlchemy model class representing the database table.
@@ -167,6 +170,8 @@ def generate_data_table_crud_router(
     :param router: Optional router to which the endpoints will be added.
     :param admin_only: If True, restrict access to admin users only.
     :param allowed_actions: List of allowed actions (get, post, put, delete). If None, all are allowed.
+    :param transform: Optional function to transform the data before saving.
+    :param check_settings: Optional function to check that the operation is allowed by the settings before create or update.
     :return: Configured APIRouter instance with CRUD endpoints."""
 
     if router is None:
@@ -177,21 +182,21 @@ def generate_data_table_crud_router(
     if allowed_actions is None:
         allowed_actions = ["get", "get_all", "get_one", "post", "put", "delete"]
 
-    def check_authorisation(
-        entry: Any,
-        current_user: models.User,
-    ) -> None:
-        """Check if the user is allowed to perform the action on the entry.
-        Raises HTTPException if not the endpoint is admin only and the user is not an admin or if the entry has an
-        owner_id and it does not match the current user's ID.
-        :param entry: The database entry.
+    def check_admin(current_user: models.User) -> None:
+        """Raise an exception if the table is for admins only and if the user is not an admin.
         :param current_user: The current authenticated user."""
 
-        # Raise the error if the table is admin only and the user is not an admin
         if admin_only and not current_user.is_admin:
             raise NOT_ALLOWED_EXCEPTION
 
-        # Raise the error if the entry has an owner_id, and it does not match the current user's ID
+    def check_ownership(
+        entry: Any,
+        current_user: models.User,
+    ) -> None:
+        """Raise an exception if the user does not own the entry (if the entry has an owner_id field).
+        :param entry: The database entry.
+        :param current_user: The current authenticated user."""
+
         if hasattr(entry, "owner_id") and entry.owner_id != current_user.id:
             raise NOT_ALLOWED_EXCEPTION
 
@@ -234,8 +239,8 @@ def generate_data_table_crud_router(
     # ------------------------------------------------------- GET ------------------------------------------------------
 
     if "get" in allowed_actions or "get_all" in allowed_actions:
-        # noinspection PyTypeHints
-        @router.get("/", response_model=list[out_schema])
+
+        @router.get("/", response_model=list[out_schema])  # noqa
         def get_all(
             request: Request,
             db: Session = Depends(database.get_db),
@@ -249,6 +254,9 @@ def generate_data_table_crud_router(
             :param limit: Maximum number of entries to return.
             :return: List of entries.
             :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
+
+            # Check if admin rights are needed
+            check_admin(current_user)
 
             # Start with base query
             if not admin_only:
@@ -267,7 +275,7 @@ def generate_data_table_crud_router(
             return [filter_out_non_owned(result, current_user.id) for result in results]
 
     if "get" in allowed_actions or "get_one" in allowed_actions:
-        # noinspection PyTypeHints
+
         @router.get("/{entry_id}", response_model=out_schema)
         def get_one(
             entry_id: int,
@@ -282,22 +290,26 @@ def generate_data_table_crud_router(
             :raises: HTTPException with a 404 status code if the entry is not found.
             :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-            entry = db.query(table_model).filter(table_model.id == entry_id).first()
+            # Check if admin rights are needed
+            check_admin(current_user)
 
+            # Get the entry
+            entry = db.query(table_model).filter(table_model.id == entry_id).first()
             if not entry:
                 raise NOT_FOUND_EXCEPTION
 
-            check_authorisation(entry, current_user)
+            # Ensure that the user is authorised to view this entry
+            check_ownership(entry, current_user)
 
             return filter_out_non_owned(entry, current_user.id)
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
     if "post" in allowed_actions:
-        # noinspection PyTypeHints
+
         @router.post("/", status_code=status.HTTP_201_CREATED, response_model=out_schema)
         def create(
-            item: create_schema,
+            item: create_schema,  # noqa
             db: Session = Depends(database.get_db),
             current_user: models.User = Depends(oauth2.get_current_user),
         ):
@@ -308,15 +320,22 @@ def generate_data_table_crud_router(
             :return: The created entry.
             :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
-            if admin_only and not current_user.is_admin:
-                raise NOT_ALLOWED_EXCEPTION
+            # Check if admin rights are needed
+            check_admin(current_user)
 
+            # Check settings if a check function is provided
+            if check_settings:
+                check_settings(db, item)
+
+            # Enforce a maximum of 10,000 entries
             counts = db.query(table_model).count()
-            if counts >= 10000:
+            if counts >= 10_000:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Maximum number of entries reached")
 
             # Extract the item data and exclude many-to-many fields from main creation
             item_dict = item.model_dump()
+            if transform:
+                item_dict = transform(item_dict)
 
             # Remove many-to-many fields from main creation data
             main_data = item_dict.copy()
@@ -334,8 +353,16 @@ def generate_data_table_crud_router(
             # Create the main entry
             new_entry = table_model(**main_data)
             db.add(new_entry)
-            db.commit()
-            db.refresh(new_entry)
+            try:
+                db.commit()
+                db.refresh(new_entry)
+            except IntegrityError as e:
+                db.rollback()
+                if "duplicate key value violates unique constraint" in str(e.orig):
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Update would violate a unique constraint",
+                    )
 
             # Handle many-to-many relationships
             if m2m_data:
@@ -348,11 +375,11 @@ def generate_data_table_crud_router(
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
     if "put" in allowed_actions:
-        # noinspection PyTypeHints
+
         @router.put("/{entry_id}", response_model=out_schema)
         def update(
             entry_id: int,
-            item: update_schema,
+            item: update_schema,  # noqa
             db: Session = Depends(database.get_db),
             current_user: models.User = Depends(oauth2.get_current_user),
         ):
@@ -366,15 +393,20 @@ def generate_data_table_crud_router(
             :raises: HTTPException with a 403 status code if not authorised to perform the requested action.
             :raises: HTTPException with a 400 status code if no field is provided for the update."""
 
-            # Get the entry to update
-            query = db.query(table_model).filter(table_model.id == entry_id)
-            entry = query.first()
+            # Check if admin rights are needed
+            check_admin(current_user)
 
+            # Check settings if a check function is provided
+            if check_settings:
+                check_settings(db, item)
+
+            # Get the entry to update
+            entry = db.query(table_model).filter(table_model.id == entry_id).first()
             if not entry:
                 raise NOT_FOUND_EXCEPTION
 
             # Ensure that the user is authorised to modify this entry
-            check_authorisation(entry, current_user)
+            check_ownership(entry, current_user)
 
             # Extract the item data
             item_dict = item.model_dump(exclude_unset=True)
@@ -399,10 +431,19 @@ def generate_data_table_crud_router(
             if m2m_data:
                 upsert_many_to_many(db, entry_id, m2m_data, current_user.id, True)
 
-            db.commit()
+            try:
+                db.commit()
+                db.refresh(entry)
+            except IntegrityError as e:
+                db.rollback()
+                if "duplicate key value violates unique constraint" in str(e.orig):
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Update would violate a unique constraint",
+                    )
 
             # Return the updated entry
-            return filter_out_non_owned(query.first(), current_user.id)
+            return filter_out_non_owned(entry, current_user.id)
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
@@ -422,15 +463,17 @@ def generate_data_table_crud_router(
             :raises: HTTPException with a 404 status code if an entry is not found.
             :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
 
+            # Check if admin rights are needed
+            check_admin(current_user)
+
             # Get the entry to delete
             query = db.query(table_model).filter(table_model.id == entry_id)
             entry = query.first()
-
             if not entry:
                 raise NOT_FOUND_EXCEPTION
 
             # Ensure that the user is authorised to delete this entry
-            check_authorisation(entry, current_user)
+            check_ownership(entry, current_user)
 
             # Delete many-to-many relationships first if they exist
             if many_to_many_fields:
