@@ -208,7 +208,7 @@ const DataModal = ({
 		if (hasTabs) {
 			setActiveTab(defaultActiveTab || tabs[0]!.key);
 		}
-	}, [show, mode, defaultActiveTab, effectiveData]);
+	}, [show, mode, defaultActiveTab]);
 
 	// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
