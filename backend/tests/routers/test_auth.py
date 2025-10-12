@@ -53,3 +53,36 @@ class TestLogin:
 
         response = client.post("/login/", data={"username": email, "password": password})
         assert response.status_code == status_code
+
+
+class TestRegister:
+
+    def test_register_user(self, client) -> None:
+        """Test successful registration of a new user."""
+
+        user_data = {
+            "email": "test_user@test.com",
+            "password": "testpassword",
+        }
+        response = client.post("/register", json=user_data)
+        assert response.status_code == 201
+
+    def test_register_user_exist(self, client, test_users) -> None:
+        """Test successful registration of a new user."""
+
+        user_data = {
+            "email": test_users[0].email,
+            "password": "testpassword",
+        }
+        response = client.post("/register", json=user_data)
+        assert response.status_code == 400
+
+    def test_register_not_setting_allowed(self, client, test_settings) -> None:
+        """Test successful registration of a new user."""
+
+        user_data = {
+            "email": "test_user1@test.com",
+            "password": "testpassword",
+        }
+        response = client.post("/register", json=user_data)
+        assert response.status_code == 401

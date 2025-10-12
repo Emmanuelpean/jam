@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { api, ApiError, exportApi } from "../../services/Api";
+import { ApiError, authApi, exportApi } from "../../services/Api";
 import { THEMES } from "../../utils/Theme";
 import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
@@ -120,7 +120,7 @@ const UserSettingsPage: React.FC = () => {
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
 		e.preventDefault();
 
-		if (!validateForm()) {
+		if (!validateForm() || !token) {
 			return;
 		}
 
@@ -166,7 +166,7 @@ const UserSettingsPage: React.FC = () => {
 			// Add currency setting
 			updateData.default_currency = formData.default_currency;
 
-			const response = await api.put("users/me", updateData, token);
+			const response = await authApi.updateCurrentUser(updateData, token);
 
 			// Update the context with the API response
 			updateCurrentUser(response);
