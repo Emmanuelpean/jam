@@ -1,11 +1,15 @@
 """Authentication route"""
 
-from datetime import datetime, timezone
+import hashlib
+from datetime import datetime, timezone, timedelta
+from random import randbytes
+from starlette.requests import Request
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app import utils, models, database, schemas, oauth2
+from app.emails.email_service import email_service
 
 login_router = APIRouter(prefix="/login", tags=["Login"])
 
@@ -47,11 +51,13 @@ register_router = APIRouter(prefix="/register", tags=["Register"])
 
 
 @register_router.post("/", status_code=201, response_model=schemas.UserOut)
-def create_user(
+async def create_user(
+    request: Request,
     user: schemas.UserRegister,
     db: Session = Depends(database.get_db),
 ):
     """Create a new user.
+    :param request: The request object to build the verification URL.
     :param user: The user data.
     :param db: The database session."""
 
@@ -70,8 +76,68 @@ def create_user(
 
     # Hash the password and create the user
     user.password = utils.hash_password(user.password)
-    new_user = models.User(**user.model_dump())  # noqa
+
+    # Email verification
+    token = randbytes(10)
+    hashedCode = hashlib.sha256()
+    hashedCode.update(token)
+    verification_code = hashedCode.hexdigest()
+
+    # Create user with verification code
+    user_data = user.model_dump()
+    user_data["verification_code"] = verification_code
+    user_data["is_verified"] = False  # Explicitly set
+
+    new_user = models.User(**user_data)  # noqa
     db.add(new_user)
     db.commit()
+    db.refresh(new_user)  # Get the ID and updated fields
 
-    return new_user
+    try:
+        # Construct verification URL with proper base URL
+        base_url = f"{request.url.scheme}://{request.headers.get('host', request.client.host)}"
+        url = f"{base_url}/verify-email/{token.hex()}"
+
+        await email_service.send_verification_email(new_user.email, url)
+
+        # Return user data, not a message
+        return new_user
+    except Exception as e:
+        # Roll back the user creation if email fails
+        db.delete(new_user)
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error sending verification email: {str(e)}"
+        )
+
+
+@register_router.get("/verify-email/{token}")
+def verify_email(
+    token: str,
+    db: Session = Depends(database.get_db),
+) -> dict:
+    """Verify a user's email address using the provided token.
+    :param token: The verification token from the email.
+    :param db: The database session."""
+
+    hashedCode = hashlib.sha256()
+    hashedCode.update(bytes.fromhex(token))
+    verification_code = hashedCode.hexdigest()
+
+    user = db.query(models.User).filter(models.User.verification_code == verification_code).first()
+
+    if not user:
+        raise HTTPException(status_code=403, detail="Invalid or expired token")
+
+    # Check if token is expired (e.g., 24 hours)
+    if user.verification_code_created_at:
+        expiration_time = user.verification_code_created_at + timedelta(hours=24)  # TODO expirition
+        if datetime.now(timezone.utc) > expiration_time:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Verification token has expired")
+
+    user.verification_code = None
+    user.verification_code_created_at = None
+    user.is_verified = True
+    db.commit()
+
+    return {"message": "Account verified successfully"}

@@ -1,4 +1,3 @@
-// Define types for better type safety
 import { ScrapedJobUpdate } from "./Schemas";
 
 export interface ApiError extends Error {
@@ -35,6 +34,8 @@ interface AuthApi {
 	register: (email: string, password: string) => Promise<any>;
 	getCurrentUser: (token: string) => Promise<any>;
 	updateCurrentUser: (data: any, token: string) => Promise<any>;
+	verifyEmail: (token: string) => Promise<any>;
+	resendVerification: (email: string) => Promise<any>;
 }
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
@@ -248,6 +249,14 @@ export const authApi: AuthApi = {
 
 	updateCurrentUser: async (data: any, token: string) => {
 		return api.put("current_user/", data, token);
+	},
+
+	verifyEmail: async (token: string) => {
+		return api.get(`register/verify-email/${token}`);
+	},
+
+	resendVerification: async (email: string) => {
+		return api.post("register/resend-verification", { email });
 	},
 };
 
