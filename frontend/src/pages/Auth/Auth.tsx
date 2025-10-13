@@ -29,6 +29,7 @@ function AuthForm(): JSX.Element {
 	const location = useLocation();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
+	const verificationMessage = location.state?.message;
 
 	useEffect(() => {
 		// Redirect authenticated users to dashboard
@@ -141,10 +142,12 @@ function AuthForm(): JSX.Element {
 				setIsLogin(true);
 				resetForm();
 				navigate("/login");
-				showToastSuccess("Account created successfully! You can now log in.", "Registration Successful");
+				showToastSuccess(
+					"Account created! Please check your email to verify your account before logging in.",
+					"Registration Successful",
+				);
 			}
 		} else {
-			// Use centralized error messages from AuthContext
 			const title = isLoginAction ? "Login Failed" : "Registration Failed";
 			const message = result.error || "An unknown error occurred";
 			showToastError(message, title);
@@ -277,6 +280,22 @@ function AuthForm(): JSX.Element {
 						JAM is not fully optimized for small screens yet. For the best experience, please use a tablet
 						or desktop device.
 					</p>
+				</Alert>
+			)}
+
+			{verificationMessage && (
+				<Alert
+					variant="success"
+					dismissible
+					onClose={() => window.history.replaceState({}, document.title)}
+					className="mb-3"
+					style={{ maxWidth: "500px" }}
+				>
+					<Alert.Heading className="h6 d-flex align-items-center mb-2">
+						<i className="bi bi-check-circle-fill me-2"></i>
+						Email Verified
+					</Alert.Heading>
+					<p className="mb-0 small">{verificationMessage}</p>
 				</Alert>
 			)}
 

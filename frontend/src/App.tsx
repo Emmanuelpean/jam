@@ -25,6 +25,7 @@ import AboutPage from "./pages/AboutPage/AboutPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import "./Themes.css";
+import EmailVerification from "./pages/Auth/EmailVerification";
 
 export const ToastContext = createContext<UseToastReturn | undefined>(undefined);
 
@@ -107,6 +108,7 @@ interface RouteConfig {
 const routeConfigs: RouteConfig[] = [
 	{ path: "/login", element: <Login /> },
 	{ path: "/register", element: <Login /> },
+	{ path: "/veryfiy-email/:token", element: <EmailVerification /> },
 	{ path: "/", element: <Navigate to="/dashboard" replace /> },
 	{ path: "/about", element: <AboutPage />, protected: true },
 	{ path: "/locations", element: <LocationsPage />, protected: true },
