@@ -186,8 +186,8 @@ const DataModal = ({
 	useEffect(() => {
 		// Initialize modal state when it becomes visible or data changes
 		if (mode === "add") {
-			setFormData({ ...effectiveData });
-			setOriginalFormData({ ...effectiveData });
+			setFormData({ ...(formData || effectiveData) }); // TODO to review
+			setOriginalFormData({ ...(formData || effectiveData) });
 			setIsEditing(true);
 		} else if (mode === "edit") {
 			setFormData({ ...effectiveData });
@@ -208,7 +208,7 @@ const DataModal = ({
 		if (hasTabs) {
 			setActiveTab(defaultActiveTab || tabs[0]!.key);
 		}
-	}, [show, mode, defaultActiveTab]);
+	}, [show, mode, defaultActiveTab, effectiveData]);
 
 	// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
