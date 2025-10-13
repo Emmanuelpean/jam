@@ -63,7 +63,7 @@ async def create_user(
 
     # Check the user can be created
     settings = db.query(models.Setting).filter(models.Setting.name == "allowlist").first()
-    if settings:
+    if settings and settings.is_active:
         emails_allowed = settings.value.split(",")
         if user.email not in emails_allowed:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not allowed")
