@@ -2,8 +2,8 @@
 
 import datetime
 import time
+from typing import Any
 
-from selenium.webdriver import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -399,11 +399,18 @@ class TablePage(BaseTest):
         self.table_row_click(self.test_entry.id)
         self.wait_for_view_modal()
         self.edit_button("view").click()
+        self._check_edit_fields(self.test_entry)
         self._fill_modal(**self.test_data)
         self.confirm_button("edit").click()
         self.wait_for_edit_modal_close()
         self.cancel_button("view").click()
         assert len(self.table_rows) == initial_count, "Expected table to remain unchanged"
+
+    def _check_edit_fields(self, entry: Any) -> None:
+        """Check that the edit modal fields are correctly populated with the entry data"""
+
+        for element in self.required_fields:
+            assert self.get_element(element).get_attribute("value") == getattr(entry, element)
 
     def test_edit_entry_through_right_click_context_menu(self) -> None:
         """Test editing an entry through right-click context menu"""
@@ -411,6 +418,7 @@ class TablePage(BaseTest):
         self.set_page_item_select("100")
         initial_count = len(self.table_rows)
         self.context_menu(self.test_entry.id, "edit")
+        self._check_edit_fields(self.test_entry)
         self._fill_modal(**self.test_data)
         self.confirm_button("edit").click()
         self.wait_for_edit_modal_close()
@@ -780,6 +788,18 @@ class TestPersonsPage(TablePage):
 
         self.get_element("table-row-1-CompanyBadge").click()
         self.check_company_view_modal(self.test_entry.company)
+
+    def test_add_company(self) -> None:
+        """Test adding a new person with a new company"""
+
+        self.add_entity_button.click()
+        self._fill_modal(first_name="John", last_name="Doe")
+        self.get_element("add-button").click()
+        self._fill_modal(name="Company")
+        self.get_element("modal-edit-company-confirm-button").click()
+        self.wait_for_edit_modal()
+        assert self.get_element("first_name").get_attribute("value") == "John"
+        assert self.get_element("last_name").get_attribute("value") == "Doe"
 
 
 class TestJobApplicationUpdatesPage(TablePage):
