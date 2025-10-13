@@ -9,18 +9,6 @@ from app.routers import generate_data_table_crud_router
 
 # -------------------------------------------------------- USERS -------------------------------------------------------
 
-def check_settings(db: Session, user: models.User,) -> None:
-    """Check the settings to see if the user can be created.
-    :param db: The database session
-    :param user: The user to check."""
-
-    # Check the user can be created
-    settings = db.query(models.Setting).filter(models.Setting.name == "allowlist").first()
-    if settings:
-        emails_allowed = settings.value.split(",")
-        if user.email not in emails_allowed:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not allowed")
-
 
 def transform_user_data(data: dict):
     """Transform user data before creating or updating a user.
@@ -41,7 +29,6 @@ user_router = generate_data_table_crud_router(
     not_found_msg="User not found",
     admin_only=True,
     transform=transform_user_data,
-    check_settings=check_settings,
 )
 
 

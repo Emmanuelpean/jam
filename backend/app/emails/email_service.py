@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.header import decode_header
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
 
@@ -48,7 +49,7 @@ class EmailService(object):
             server.login(self.sender, self.password)
             server.sendmail(self.sender, recipient, msg.as_string())
 
-    async def send_verification_email(
+    def send_verification_email(
         self,
         recipient: str,
         verification_url: str,
@@ -57,12 +58,14 @@ class EmailService(object):
         :param recipient: The recipient's email address.
         :param verification_url: The verification URL."""
 
-        with open("email_template.html", "r") as file:
+        current_dir = Path(__file__).parent
+        template_path = current_dir / "confirmation_template.html"
+        with open(template_path, "r") as file:
             html_template = file.read()
         html_content = html_template.replace("{{name}}", "there")
         html_content = html_content.replace("{{verification_url}}", verification_url)
 
-        self.send_email(recipient, "Please verify your email", html_content)
+        self.send_email(recipient, "Please verify your email", html_content, "jam.support@emmanuelpean.me")
 
     def _connect_imap(self) -> imaplib.IMAP4_SSL:
         """Connect to IMAP server and login.
