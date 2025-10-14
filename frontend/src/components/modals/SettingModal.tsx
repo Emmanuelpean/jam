@@ -6,7 +6,7 @@ import { settingsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { SettingData, SettingDataTransform } from "../../services/Schemas";
 
-export const SettingModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode, size = "lg" }) => {
+export const SettingModal: React.FC<DataModalProps> = ({ show, onHide, data, submode, size = "lg" }) => {
 	const { token } = useAuth();
 
 	const fields = {
@@ -58,7 +58,6 @@ export const SettingModal: React.FC<DataModalProps> = ({ show, onHide, data, id,
 			itemName="Setting"
 			size={size}
 			data={data}
-			id={id}
 			fields={fields}
 			endpoint="settings"
 			transformFormData={transformFormData}

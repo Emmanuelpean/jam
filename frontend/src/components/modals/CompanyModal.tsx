@@ -8,7 +8,7 @@ import { ValidationErrors } from "./DataModal/DataModal";
 import { CompanyData, CompanyDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 
-export const CompanyModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode = "view", size = "lg" }) => {
+export const CompanyModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
 	const { token } = useAuth();
 
 	const fields = {
@@ -75,7 +75,6 @@ export const CompanyModal: React.FC<DataModalProps> = ({ show, onHide, data, id,
 			itemName="Company"
 			size={size}
 			data={data}
-			id={id}
 			fields={fields}
 			additionalFields={additionalFields}
 			endpoint="companies"

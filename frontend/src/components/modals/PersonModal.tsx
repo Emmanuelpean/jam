@@ -11,7 +11,6 @@ export const PersonModal: React.FC<DataModalProps> = ({
 	show,
 	onHide,
 	data,
-	id = null,
 	submode = "view",
 	size = "lg",
 }) => {
@@ -88,7 +87,6 @@ export const PersonModal: React.FC<DataModalProps> = ({
 				mode={submode}
 				itemName="Person"
 				size={size}
-				id={id}
 				data={data}
 				fields={fields}
 				endpoint="persons"

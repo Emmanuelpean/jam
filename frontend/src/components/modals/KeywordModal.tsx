@@ -7,7 +7,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { ValidationErrors } from "./DataModal/DataModal";
 import { KeywordData, KeywordDataTransform } from "../../services/Schemas";
 
-export const KeywordModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode, size = "lg" }) => {
+export const KeywordModal: React.FC<DataModalProps> = ({ show, onHide, data, submode, size = "lg" }) => {
 	const { token } = useAuth();
 
 	const fields = {
@@ -52,7 +52,6 @@ export const KeywordModal: React.FC<DataModalProps> = ({ show, onHide, data, id,
 			itemName="Tag"
 			size={size}
 			data={data}
-			id={id}
 			fields={fields}
 			additionalFields={additionalFields}
 			endpoint="keywords"
