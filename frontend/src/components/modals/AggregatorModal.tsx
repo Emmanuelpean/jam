@@ -10,7 +10,6 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 	show,
 	onHide,
 	data,
-	id,
 	submode = "view",
 	size = "lg",
 }) => {
@@ -66,7 +65,6 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 			itemName="Aggregator"
 			size={size}
 			data={data}
-			id={id}
 			fields={fields}
 			endpoint="aggregators"
 			transformFormData={transformFormData}

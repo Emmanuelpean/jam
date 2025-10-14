@@ -1,11 +1,10 @@
 import React, { JSX, ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Alert, Card, Form, Modal, Spinner } from "react-bootstrap";
+import { Alert, Card, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useDataContext } from "../../../contexts/DataContext";
 import "./DataModal.css";
 import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
-import { api } from "../../../services/Api";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import AlertModal from "../AlertModal";
 import { areDifferent, findByKey, flattenArray } from "../../../utils/Utils";
@@ -56,7 +55,6 @@ export interface GenericModalProps {
 	mode?: "view" | "edit" | "add" | "import"; // modal mode
 	fields?: { view: ViewFields; form: FormFields }; // fields to display
 	data?: any; // data to populate the fields (required for import mode)
-	id?: string | number | null; // if id is provided, use the id and endpoint to load the data
 	validation?: ((data: any) => any) | null; // custom validation method before submit
 	transformFormData?: ((data: any) => any) | null; // custom data transformation before submit
 	onFormDataChange?: ((data: any) => void) | null;
@@ -85,7 +83,6 @@ const DataModal = ({
 	mode = "view",
 	additionalFields = [],
 	data = null,
-	id = null,
 	endpoint,
 	validation = null,
 	transformFormData = null,
@@ -101,7 +98,6 @@ const DataModal = ({
 	const [submitting, setSubmitting] = useState(false);
 	const [errors, setErrors] = useState<Errors>({});
 	const [isEditing, setIsEditing] = useState(false);
-	const [loading, setLoading] = useState(false);
 	const { currentUser } = useAuth();
 	const [activeTab, setActiveTab] = useState<string | null>(() => {
 		if (hasTabs) {
@@ -116,31 +112,8 @@ const DataModal = ({
 	// -------------------------------------------------- DATA LOADING -------------------------------------------------
 
 	useEffect(() => {
-		const loadData = async () => {
-			if (show && endpoint && token) {
-				if (id) {
-					setLoading(true);
-					try {
-						const response = await api.get(`${endpoint}/${id}`, token);
-						if (response) {
-							setEffectiveData(response);
-						}
-					} catch (error) {
-						console.error(`Failed to load ${itemName}:`, error);
-						await showError({
-							message: `Failed to load ${itemName}.`,
-						});
-					} finally {
-						setLoading(false);
-					}
-				} else if (data) {
-					setEffectiveData(data);
-				}
-			}
-		};
-
-		loadData().then(() => {});
-	}, [id, endpoint, token, data, mode]);
+		setEffectiveData(data);
+	}, [endpoint, token, data, mode]);
 
 	// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
 
@@ -150,7 +123,7 @@ const DataModal = ({
 	};
 
 	const getCurrentFields = (): { view: ViewFields; form: FormFields } => {
-		const currentTab = getCurrentTabConfig();
+		const currentTab: TabConfig | null = getCurrentTabConfig();
 		if (!currentTab) {
 			return {
 				view: filterConditionalFields(fields!.view),
@@ -172,8 +145,8 @@ const DataModal = ({
 			};
 		} else {
 			return {
-				form: tabs.flatMap((tab) => filterConditionalFields(tab.fields.form)),
-				view: tabs.flatMap((tab) => filterConditionalFields(tab.fields.view)),
+				form: tabs.flatMap((tab: TabConfig) => filterConditionalFields(tab.fields.form)),
+				view: tabs.flatMap((tab: TabConfig) => filterConditionalFields(tab.fields.view)),
 			};
 		}
 	};
@@ -186,20 +159,20 @@ const DataModal = ({
 	useEffect(() => {
 		// Initialize modal state when it becomes visible or data changes
 		if (mode === "add") {
-			setFormData({ ...(formData || effectiveData) }); // TODO to review
-			setOriginalFormData({ ...(formData || effectiveData) });
+			setFormData({ ...data });
+			setOriginalFormData({ ...data });
 			setIsEditing(true);
 		} else if (mode === "edit") {
-			setFormData({ ...effectiveData });
-			setOriginalFormData({ ...effectiveData });
+			setFormData({ ...data });
+			setOriginalFormData({ ...data });
 			setIsEditing(true);
 		} else if (mode === "import") {
-			setFormData({ ...effectiveData });
-			setOriginalFormData({ ...effectiveData });
+			setFormData({ ...data });
+			setOriginalFormData({ ...data });
 			setIsEditing(true);
 		} else {
-			setFormData({ ...effectiveData });
-			setOriginalFormData({ ...effectiveData });
+			setFormData({ ...data });
+			setOriginalFormData({ ...data });
 			setIsEditing(false);
 		}
 		setErrors({});
@@ -208,7 +181,7 @@ const DataModal = ({
 		if (hasTabs) {
 			setActiveTab(defaultActiveTab || tabs[0]!.key);
 		}
-	}, [show, mode, defaultActiveTab, effectiveData]);
+	}, [show, mode, defaultActiveTab]);
 
 	// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
@@ -538,18 +511,6 @@ const DataModal = ({
 	};
 
 	const renderBodyContent = (): JSX.Element => {
-		if (loading) {
-			return (
-				<div
-					className="d-flex justify-content-center align-items-center py-5 modal-content-animated"
-					style={{ height: containerHeight }}
-				>
-					<Spinner animation="border" variant="primary" />
-					<span className="ms-3">Loading {itemName.toLowerCase()}...</span>
-				</div>
-			);
-		}
-
 		const currentFields = getCurrentFields();
 		const currentAdditionalFields = getCurrentAdditionalFields();
 
@@ -649,7 +610,7 @@ const DataModal = ({
 								<ActionButton
 									id={getModalId() + "-confirm-button"}
 									type="submit"
-									disabled={submitting || loading}
+									disabled={submitting}
 									loading={submitting}
 									loadingText="Submitting..."
 									defaultText="Confirm"
@@ -675,7 +636,7 @@ const DataModal = ({
 								<ActionButton
 									id={getModalId() + "-import-button"}
 									type="submit"
-									disabled={submitting || loading}
+									disabled={submitting}
 									loading={submitting}
 									loadingText="Importing..."
 									defaultText="Import"
@@ -699,26 +660,6 @@ const DataModal = ({
 				return (
 					<Modal.Footer>
 						<div className="d-flex flex-column w-100 gap-2">
-							{id ? (
-								<div className="modal-buttons-container">
-									<ActionButton
-										id={getModalId() + "-cancel-button"}
-										variant="secondary"
-										onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
-										defaultText={mode === "edit" ? "Close" : "Cancel"}
-										fullWidth={false}
-									/>
-									<ActionButton
-										id={getModalId() + "-confirm-button"}
-										type="submit"
-										disabled={submitting}
-										loading={submitting}
-										loadingText="Updating..."
-										defaultText="Update"
-										fullWidth={false}
-									/>
-								</div>
-							) : (
 								<>
 									<div className="modal-buttons-container">
 										<ActionButton
@@ -729,7 +670,6 @@ const DataModal = ({
 											defaultText="Delete"
 											defaultIcon="bi bi-trash"
 											fullWidth={false}
-											disabled={typeof id === "number"}
 										/>
 
 										<ActionButton
@@ -752,7 +692,7 @@ const DataModal = ({
 										/>
 									</div>
 								</>
-							)}
+
 						</div>
 					</Modal.Footer>
 				);
@@ -774,7 +714,6 @@ const DataModal = ({
 							onClick={handleEdit}
 							defaultText="Edit"
 							fullWidth={false}
-							disabled={loading}
 						/>
 					</div>
 				</Modal.Footer>
@@ -815,7 +754,6 @@ export interface DataModalProps {
 	onHide: () => void;
 	submode?: "view" | "edit" | "add" | "import";
 	data?: any;
-	id?: number | null;
 	onSuccess?: (data: any) => void;
 	onDelete?: (id: number | string) => void;
 	size?: "sm" | "lg" | "xl";

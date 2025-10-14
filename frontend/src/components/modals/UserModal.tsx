@@ -9,7 +9,7 @@ import { ValidationErrors } from "./DataModal/DataModal";
 import { UserData, UserDataTransform } from "../../services/Schemas";
 import { THEMES } from "../../utils/Theme";
 
-export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode = "view", size = "lg" }) => {
+export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
 	const { token } = useAuth();
 
 	if (submode === "add") {
@@ -71,7 +71,6 @@ export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, id, su
 			itemName="User"
 			size={size}
 			data={data}
-			id={id}
 			fields={fields}
 			endpoint="users"
 			validation={customValidation}

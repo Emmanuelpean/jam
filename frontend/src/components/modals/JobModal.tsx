@@ -17,7 +17,6 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	show,
 	onHide,
 	data,
-	id,
 	submode,
 	size = "xl",
 	defaultActiveTab = "job",
@@ -201,7 +200,6 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 				endpoint="jobs"
 				size={size}
 				tabs={tabs}
-				id={id}
 				defaultActiveTab={defaultActiveTab}
 				validation={customValidation}
 			/>

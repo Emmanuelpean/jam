@@ -9,7 +9,7 @@ import { LocationData, LocationDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { useFormOptions } from "../rendering/form/FormOptions";
 
-export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode = "view", size = "lg" }) => {
+export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
 	const { token } = useAuth();
 	const { countries } = useFormOptions(["countries"]);
 
@@ -93,7 +93,6 @@ export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, id
 			size={size}
 			data={data}
 			additionalFields={additionalFields}
-			id={id}
 			fields={fields}
 			endpoint="locations"
 			validation={customValidation}
