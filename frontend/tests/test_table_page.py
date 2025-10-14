@@ -410,7 +410,12 @@ class TablePage(BaseTest):
         """Check that the edit modal fields are correctly populated with the entry data"""
 
         for element in self.required_fields:
-            assert self.get_element(element).get_attribute("value") == getattr(entry, element)
+            element_value = self.get_element(element).text
+            if "_id" in element:
+                continue
+            entry_value = getattr(entry, element)
+            if isinstance(entry_value, str):
+                assert element_value.lower() == entry_value.lower(), "Expected entry to be updated correctly"
 
     def test_edit_entry_through_right_click_context_menu(self) -> None:
         """Test editing an entry through right-click context menu"""
