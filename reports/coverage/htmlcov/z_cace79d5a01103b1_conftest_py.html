@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for frontend/tests/conftest.py: 68%</title>
+    <title>Coverage for frontend/tests/conftest.py: 65%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_6b508a39.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>frontend/tests/conftest.py</b>:
-            <span class="pc_cov">68%</span>
+            <span class="pc_cov">65%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">459 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">312<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">147<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">300<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">159<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_cace79d5a01103b1_react_select_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.10.7">coverage.py v7.10.7</a>,
-            created at 2025-10-12 16:43 +0100
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
+            created at 2025-10-15 16:50 +0100
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -476,16 +476,16 @@
     <p class="pln"><span class="n"><a id="t394" href="#t394">394</a></span><span class="t">    <span class="str">"""Return a list of all contiguous sub-dictionaries in the given dictionary.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t395" href="#t395">395</a></span><span class="t"><span class="str">    :param dictionary: The dictionary to search."""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t396" href="#t396">396</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t397" href="#t397">397</a></span><span class="t">    <span class="nam">keys</span> <span class="op">=</span> <span class="nam">list</span><span class="op">(</span><span class="nam">dictionary</span><span class="op">.</span><span class="nam">keys</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t398" href="#t398">398</a></span><span class="t">    <span class="nam">n</span> <span class="op">=</span> <span class="nam">len</span><span class="op">(</span><span class="nam">keys</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t399" href="#t399">399</a></span><span class="t">    <span class="nam">results</span> <span class="op">=</span> <span class="op">[</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t400" href="#t400">400</a></span><span class="t">    <span class="key">for</span> <span class="nam">size</span> <span class="key">in</span> <span class="nam">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="nam">n</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">        <span class="key">for</span> <span class="nam">start</span> <span class="key">in</span> <span class="nam">range</span><span class="op">(</span><span class="nam">n</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t397" href="#t397">397</a></span><span class="t">    <span class="nam">keys</span> <span class="op">=</span> <span class="nam">list</span><span class="op">(</span><span class="nam">dictionary</span><span class="op">.</span><span class="nam">keys</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t398" href="#t398">398</a></span><span class="t">    <span class="nam">n</span> <span class="op">=</span> <span class="nam">len</span><span class="op">(</span><span class="nam">keys</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t399" href="#t399">399</a></span><span class="t">    <span class="nam">results</span> <span class="op">=</span> <span class="op">[</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t400" href="#t400">400</a></span><span class="t">    <span class="key">for</span> <span class="nam">size</span> <span class="key">in</span> <span class="nam">range</span><span class="op">(</span><span class="num">1</span><span class="op">,</span> <span class="nam">n</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">        <span class="key">for</span> <span class="nam">start</span> <span class="key">in</span> <span class="nam">range</span><span class="op">(</span><span class="nam">n</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t402" href="#t402">402</a></span><span class="t">            <span class="com"># Generate indices with wrap-around using modulo</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t403" href="#t403">403</a></span><span class="t">            <span class="nam">subkeys</span> <span class="op">=</span> <span class="op">[</span><span class="nam">keys</span><span class="op">[</span><span class="op">(</span><span class="nam">start</span> <span class="op">+</span> <span class="nam">i</span><span class="op">)</span> <span class="op">%</span> <span class="nam">n</span><span class="op">]</span> <span class="key">for</span> <span class="nam">i</span> <span class="key">in</span> <span class="nam">range</span><span class="op">(</span><span class="nam">size</span><span class="op">)</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t">            <span class="nam">subdict</span> <span class="op">=</span> <span class="op">{</span><span class="nam">k</span><span class="op">:</span> <span class="nam">dictionary</span><span class="op">[</span><span class="nam">k</span><span class="op">]</span> <span class="key">for</span> <span class="nam">k</span> <span class="key">in</span> <span class="nam">subkeys</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t405" href="#t405">405</a></span><span class="t">            <span class="nam">results</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">subdict</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t406" href="#t406">406</a></span><span class="t">    <span class="key">return</span> <span class="op">[</span><span class="nam">dict</span><span class="op">(</span><span class="op">)</span><span class="op">]</span> <span class="op">+</span> <span class="nam">results</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t403" href="#t403">403</a></span><span class="t">            <span class="nam">subkeys</span> <span class="op">=</span> <span class="op">[</span><span class="nam">keys</span><span class="op">[</span><span class="op">(</span><span class="nam">start</span> <span class="op">+</span> <span class="nam">i</span><span class="op">)</span> <span class="op">%</span> <span class="nam">n</span><span class="op">]</span> <span class="key">for</span> <span class="nam">i</span> <span class="key">in</span> <span class="nam">range</span><span class="op">(</span><span class="nam">size</span><span class="op">)</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t">            <span class="nam">subdict</span> <span class="op">=</span> <span class="op">{</span><span class="nam">k</span><span class="op">:</span> <span class="nam">dictionary</span><span class="op">[</span><span class="nam">k</span><span class="op">]</span> <span class="key">for</span> <span class="nam">k</span> <span class="key">in</span> <span class="nam">subkeys</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t405" href="#t405">405</a></span><span class="t">            <span class="nam">results</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">subdict</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t406" href="#t406">406</a></span><span class="t">    <span class="key">return</span> <span class="op">[</span><span class="nam">dict</span><span class="op">(</span><span class="op">)</span><span class="op">]</span> <span class="op">+</span> <span class="nam">results</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t407" href="#t407">407</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t408" href="#t408">408</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t409" href="#t409">409</a></span><span class="t"><span class="key">def</span> <span class="nam">contiguous_subdicts_with_required</span><span class="op">(</span><span class="nam">dictionary</span><span class="op">:</span> <span class="nam">dict</span><span class="op">,</span> <span class="nam">required_keys</span><span class="op">:</span> <span class="nam">list</span><span class="op">)</span> <span class="op">-></span> <span class="nam">list</span><span class="op">[</span><span class="nam">dict</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -678,7 +678,7 @@
     <p class="pln"><span class="n"><a id="t596" href="#t596">596</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t597" href="#t597">597</a></span><span class="t">    <span class="key">def</span> <span class="nam">setup_function</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">request</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t598" href="#t598">598</a></span><span class="t">        <span class="str">"""Function to run before each test - can be overridden in subclasses"""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t599" href="#t599">599</a></span><span class="t">        <span class="key">pass</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t599" href="#t599">599</a></span><span class="t">        <span class="key">pass</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t600" href="#t600">600</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t601" href="#t601">601</a></span><span class="t">    <span class="key">def</span> <span class="nam">login</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t602" href="#t602">602</a></span><span class="t">        <span class="str">"""Helper method to log in to the application"""</span>&nbsp;</span><span class="r"></span></p>
@@ -691,8 +691,8 @@
     <p class="run"><span class="n"><a id="t609" href="#t609">609</a></span><span class="t">        <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t610" href="#t610">610</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">get_element</span><span class="op">(</span><span class="str">"loading-spinner"</span><span class="op">,</span> <span class="nam">timeout</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t611" href="#t611">611</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">wait_for_disappear</span><span class="op">(</span><span class="str">"loading-spinner"</span><span class="op">,</span> <span class="nam">timeout</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t612" href="#t612">612</a></span><span class="t">        <span class="key">except</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t613" href="#t613">613</a></span><span class="t">            <span class="key">pass</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t612" href="#t612">612</a></span><span class="t">        <span class="key">except</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t613" href="#t613">613</a></span><span class="t">            <span class="key">pass</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t614" href="#t614">614</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">wait_for_page</span><span class="op">(</span><span class="str">"dashboard"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t615" href="#t615">615</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">driver</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="fst">f"</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">frontend_base_url</span><span class="op">}</span><span class="fst">/</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">page_url</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t616" href="#t616">616</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">wait_for_table_load</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -842,8 +842,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_cace79d5a01103b1_react_select_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.10.7">coverage.py v7.10.7</a>,
-            created at 2025-10-12 16:43 +0100
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
+            created at 2025-10-15 16:50 +0100
         </p>
     </div>
 </footer>
