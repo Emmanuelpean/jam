@@ -11,4 +11,4 @@ osascript -e "tell application \"Terminal\" to do script \"cd '$FRONTEND_DIR' &&
 sleep 1
 
 # Open backend in a new Terminal tab with environment activation
-osascript -e "tell application \"Terminal\" to do script \"cd '$BACKEND_DIR' && conda activate /Users/Emmanuel/miniforge3/envs/jam && python3 -m uvicorn app.main:app --reload\""
+osascript -e "tell application \"Terminal\" to do script \"cd '$BACKEND_DIR' && source /Users/emmanuel/PycharmProjects/jam/.venv/bin/activate && python3 -m uvicorn app.main:app --reload\""

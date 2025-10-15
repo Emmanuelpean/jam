@@ -13,7 +13,6 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	show,
 	onHide,
 	data,
-	id,
 	submode = "view",
 	size = "lg",
 	jobId,
@@ -76,7 +75,6 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 				itemName="Interview"
 				size={size}
 				data={data}
-				id={id}
 				fields={fields}
 				endpoint="interviews"
 				transformFormData={transformFormData}
