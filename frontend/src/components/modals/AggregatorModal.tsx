@@ -2,18 +2,11 @@ import React from "react";
 import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { aggregatorsApi } from "../../services/Api";
-import { useAuth } from "../../contexts/AuthContext";
 import { AggregatorData, AggregatorDataTransform } from "../../services/Schemas";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const AggregatorModal: React.FC<DataModalProps> = ({
-	show,
-	onHide,
-	data,
-	submode = "view",
-	size = "lg",
-}) => {
-	const { token } = useAuth();
+export const AggregatorModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
+	const dataContext: DataContextValue = useDataContext();
 
 	const fields = {
 		form: [
@@ -39,19 +32,20 @@ export const AggregatorModal: React.FC<DataModalProps> = ({
 
 	const customValidation = async (formData: AggregatorData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
+		const nameDuplicates: AggregatorData[] = dataContext.aggregators.filter(
+			(aggregator: AggregatorData): boolean =>
+				aggregator.name.toLowerCase() === formData.name.trim().toLowerCase() && aggregator.id !== formData?.id,
+		);
+		const urlDuplicates: AggregatorData[] = dataContext.aggregators.filter(
+			(aggregator: AggregatorData): boolean =>
+				aggregator.url.toLowerCase() === formData.url.trim().toLowerCase() && aggregator.id !== formData?.id,
+		);
 
-		if (!token) {
-			return errors;
-		}
-
-		const queryParams = { name: formData.name.trim() };
-		const matches = await aggregatorsApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing: { id: number }) => {
-			return formData?.id !== existing.id;
-		});
-
-		if (duplicates.length > 0) {
+		if (nameDuplicates.length > 0) {
 			errors.name = `An aggregator with this name already exists`;
+		}
+		if (urlDuplicates.length > 0) {
+			errors.url = `An aggregator with this URL already exists`;
 		}
 		return errors;
 	};

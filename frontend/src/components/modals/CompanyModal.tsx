@@ -1,15 +1,13 @@
 import React from "react";
-import DataModal, { DataModalProps } from "./DataModal/DataModal";
+import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { companiesApi } from "../../services/Api";
-import { useAuth } from "../../contexts/AuthContext";
-import { ValidationErrors } from "./DataModal/DataModal";
 import { CompanyData, CompanyDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
 export const CompanyModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
-	const { token } = useAuth();
+	const dataContext: DataContextValue = useDataContext();
 
 	const fields = {
 		form: [
@@ -48,19 +46,12 @@ export const CompanyModal: React.FC<DataModalProps> = ({ show, onHide, data, sub
 
 	const customValidation = async (formData: CompanyData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
-		if (!formData.name) {
-			return errors;
-		}
-		if (!token) {
-			return errors;
-		}
-		const queryParams = { name: formData.name.trim() };
-		const matches = await companiesApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing: any) => {
-			return formData?.id !== existing.id;
-		});
+		const nameDuplicates: CompanyData[] = dataContext.companies.filter(
+			(company: CompanyData): boolean =>
+				company.name.toLowerCase() === formData.name.trim().toLowerCase() && company.id !== formData?.id,
+		);
 
-		if (duplicates.length > 0 && formData.name) {
+		if (nameDuplicates.length > 0) {
 			errors.name = `A company with this name already exists`;
 		}
 
