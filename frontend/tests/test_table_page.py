@@ -599,12 +599,13 @@ class TablePage(BaseTest):
         """Helper method to test the view modal for an interview entry"""
 
         modal = self.wait_for_view_modal("interview")
+        display_time = entry.date.astimezone()
         expected = (
             "Interview Details\n"
             "Job\n"
             f"{entry.job.title.upper()}\n"
             "Date & Time\n"
-            f"{entry.date.strftime("%d/%m/%Y %H:%M")}\n"
+            f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
             "Type\n"
             f"{entry.type}\n"
         )
