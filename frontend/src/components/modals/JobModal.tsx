@@ -3,11 +3,11 @@ import DataModal, { DataModalProps, TabConfig, ValidationErrors } from "./DataMo
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
-import { JobData, JobDataTransform } from "../../services/Schemas";
-import { jobsApi } from "../../services/Api";
+import { EnrichedJobData, JobData, JobDataTransform } from "../../services/Schemas";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -21,7 +21,8 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	size = "xl",
 	defaultActiveTab = "job",
 }) => {
-	const { token, currentUser } = useAuth();
+	const { currentUser } = useAuth();
+	const dataContext: DataContextValue = useDataContext();
 	const {
 		companies,
 		locations,
@@ -130,11 +131,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 
 	const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
-		if (!token) {
-			return errors;
-		}
 
-		console.log(formData.salary_min, isNaN(Number(formData.salary_min)));
 		if (formData.salary_min && isNaN(Number(formData.salary_min))) {
 			errors.salary_min = "Minimum Salary must be a valid number";
 		}
@@ -143,13 +140,10 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 		}
 
 		if (formData.url) {
-			const queryParams = { url: formData.url?.trim() };
-			const matches = await jobsApi.getAll(token, queryParams);
-			const duplicates = matches.filter((existing: JobData) => {
-				return formData?.id !== existing.id;
+			const urlDuplicates: EnrichedJobData[] = dataContext.jobs.filter((job: EnrichedJobData): boolean => {
+				return job.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() && job.id !== formData?.id;
 			});
-
-			if (duplicates.length > 0) {
+			if (urlDuplicates.length > 0) {
 				errors.url = `A Job with this URL already exists`;
 			}
 		}
