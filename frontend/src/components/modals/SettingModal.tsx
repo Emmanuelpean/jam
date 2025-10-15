@@ -2,12 +2,11 @@ import React from "react";
 import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { settingsApi } from "../../services/Api";
-import { useAuth } from "../../contexts/AuthContext";
 import { SettingData, SettingDataTransform } from "../../services/Schemas";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const SettingModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode, size = "lg" }) => {
-	const { token } = useAuth();
+export const SettingModal: React.FC<DataModalProps> = ({ show, onHide, data, submode, size = "lg" }) => {
+	const dataContext: DataContextValue = useDataContext();
 
 	const fields = {
 		form: [
@@ -35,15 +34,10 @@ export const SettingModal: React.FC<DataModalProps> = ({ show, onHide, data, id,
 
 	const customValidation = async (formData: SettingData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
-		if (!token) {
-			return errors;
-		}
-		const queryParams = { name: formData.name.trim() };
-		const matches = await settingsApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing: SettingData) => {
-			return formData?.id !== existing.id;
-		});
-
+		const duplicates = dataContext.settings.filter(
+			(setting: SettingData) =>
+				setting.name.trim().toLowerCase() === formData.name.trim().toLowerCase() && setting.id !== formData?.id,
+		);
 		if (duplicates.length > 0) {
 			errors.name = `A setting with this name already exists`;
 		}
@@ -58,7 +52,6 @@ export const SettingModal: React.FC<DataModalProps> = ({ show, onHide, data, id,
 			itemName="Setting"
 			size={size}
 			data={data}
-			id={id}
 			fields={fields}
 			endpoint="settings"
 			transformFormData={transformFormData}

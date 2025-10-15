@@ -47,7 +47,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	return (
 		<div style={{ display: "flex", minHeight: "100vh" }}>
 			{currentUser && <Sidebar />}
-			<div style={{ width: "100%" }}>
+			<div style={{ flex: 1 }}>
 				<div className={!isAuthPage ? `main-content` : ""}>
 					{isLoading && (
 						<div className="global-loading-overlay">
