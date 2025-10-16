@@ -269,7 +269,9 @@ class Location(Owned, Base):
 
     Constraints:
     ------------
-    - At least one of postcode, city, or country must be provided."""
+    - At least one of postcode, city, or country must be provided.
+    - Combination of owner_id, city, postcode, and country must be unique to prevent duplicate locations for the same user.
+    """
 
     postcode = Column(String, nullable=True)
     city = Column(String, nullable=True)
@@ -298,6 +300,7 @@ class Location(Owned, Base):
             "postcode IS NOT NULL OR city IS NOT NULL OR country IS NOT NULL",
             name=f"location_data_required",
         ),
+        UniqueConstraint("owner_id", "city", "postcode", "country", name="uq_owner_location_unique"),
     )
 
 

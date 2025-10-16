@@ -1,16 +1,14 @@
 import React from "react";
-import DataModal, { DataModalProps } from "./DataModal/DataModal";
+import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { userApi } from "../../services/Api";
-import { useAuth } from "../../contexts/AuthContext";
 import "../../pages/Auth/Auth.css";
-import { ValidationErrors } from "./DataModal/DataModal";
 import { UserData, UserDataTransform } from "../../services/Schemas";
 import { THEMES } from "../../utils/Theme";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode = "view", size = "lg" }) => {
-	const { token } = useAuth();
+export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
+	const dataContext: DataContextValue = useDataContext();
 
 	if (submode === "add") {
 		data = { theme: THEMES[0]?.key };
@@ -37,15 +35,10 @@ export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, id, su
 
 	const customValidation = async (formData: UserData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
-		if (!token) {
-			return errors;
-		}
-		const queryParams = { email: formData.email.trim() };
-		const matches = await userApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing: UserData) => {
-			return formData?.id !== existing.id;
-		});
-
+		const duplicates = dataContext.users.filter(
+			(user: UserData): boolean =>
+				user.email.trim().toLowerCase() === formData.email.trim().toLowerCase() && user.id !== formData?.id,
+		);
 		if (duplicates.length > 0) {
 			errors.email = `A user with this email address already exists`;
 		}
@@ -71,7 +64,6 @@ export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, id, su
 			itemName="User"
 			size={size}
 			data={data}
-			id={id}
 			fields={fields}
 			endpoint="users"
 			validation={customValidation}

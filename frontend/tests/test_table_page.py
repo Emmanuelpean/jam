@@ -3,7 +3,6 @@
 import datetime
 import time
 
-from selenium.webdriver import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -33,6 +32,7 @@ class TablePage(BaseTest):
     columns = []  # table column keys user for search and sorting
     sorting_columns = []
     test_entry_index = 0
+    model = None
 
     def setup_function(self, request) -> None:
         """Function called during the setup"""
@@ -270,7 +270,7 @@ class TablePage(BaseTest):
         self.wait_for_table_load()
         assert len(self.table_rows) == min([40, len(self.test_entries)]), "The table rows should match the entries"
 
-    def _test_view_modal(self) -> None:
+    def _test_view_modal(self, entry=None) -> None:
         """Helper method to test the view modal for an entry"""
 
         raise AssertionError("Not implemented")
@@ -308,7 +308,6 @@ class TablePage(BaseTest):
 
         self.wait_for_edit_modal()
         for key, value in values.items():
-            print(key, value)
             if key in (
                 "country",
                 "company_id",
@@ -354,12 +353,45 @@ class TablePage(BaseTest):
         new_table_count = len(self.table_rows)
         assert new_table_count == initial_table_count + 1, "Expected entry to be added to table"
 
+        entries = self.db.query(self.model).all()
+        entry_id = max([entry.id for entry in entries])
+        entry = [entry for entry in entries if entry.id == entry_id][0]
+
+        # Reopen the modal
+        self.table_row(entry_id).click()
+        self.wait_for_view_modal()
+        self._test_view_modal(entry)
+        try:
+            self.cancel_button("view").click()
+        except:
+            pass
+        self.wait_for_view_modal_close()
+
+        # Reopen in edit mode
+        self.context_menu(entry_id, "edit")
+        for key in self.test_data:
+            if "date" in key:
+                continue
+            element = self.get_element(key)
+            if element.tag_name == "input":
+                value = element.get_attribute("value")
+            else:
+                value = element.text
+            assert str(value) == str(self.test_data[key])
+
     def test_add_duplicate_entry(self) -> None:
         """Test that adding a new entry with an existing name shows validation error"""
 
+        # Add the new entry
         self.add_entity_button.click()
         self.wait_for_edit_modal()
-        self._fill_modal(**{key: getattr(self.test_entry, key) for key in self.duplicate_fields})
+        self._fill_modal(**self.test_data)
+        self.confirm_button("edit").click()
+        self.wait_for_edit_modal_close()
+
+        self.add_entity_button.click()
+        self.wait_for_edit_modal()
+        self._fill_modal(**{key: self.test_data[key] for key in self.duplicate_fields})
         self.confirm_button("edit").click()
         self.get_element(".invalid-feedback", By.CSS_SELECTOR)
         self.cancel_button("edit").click()
@@ -567,23 +599,38 @@ class TablePage(BaseTest):
         """Helper method to test the view modal for an interview entry"""
 
         modal = self.wait_for_view_modal("interview")
+        display_time = entry.date.astimezone()
         expected = (
             "Interview Details\n"
             "Job\n"
             f"{entry.job.title.upper()}\n"
             "Date & Time\n"
-            f"{entry.date.strftime("%d/%m/%Y %H:%M")}\n"
+            f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
             "Type\n"
-            "HR\n"
-            "Location\n"
-            f"{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
-            "Interviewers\n"
-            f"{entry.interviewers[0].name.upper()}\n"
-            "Notes\n"
-            f"{entry.note}\n"
-            "Close\n"
-            "Edit"
+            f"{entry.type}\n"
         )
+
+        if entry.attendance_type and not entry.location:
+            expected += f"Location\n{entry.attendance_type.upper()}\n"
+        elif entry.location:
+            expected += "Location\n" f"{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
+        else:
+            expected += "Location\nNot Provided\n"
+
+        if entry.interviewers:
+            expected += (
+                "Interviewers\n" f"{', '.join([interviewer.name.upper() for interviewer in entry.interviewers])}\n"
+            )
+        else:
+            expected += "Interviewers\nNot Provided\n"
+
+        if entry.note:
+            expected += f"Notes\n{entry.note}\n"
+        else:
+            expected += "Notes\nNot Provided\n"
+
+        expected += "Close\nEdit"
+
         assert modal.text == expected
 
         # Close modal
@@ -594,12 +641,13 @@ class TablePage(BaseTest):
         """Helper method to test the view modal for a job application update entry"""
 
         modal = self.wait_for_view_modal("update")
+        display_time = entry.date.astimezone()
         expected = (
             "Update Details\n"
             "Job\n"
             f"{entry.job.title.upper()}\n"
             "Date & Time\n"
-            f"{entry.date.strftime("%d/%m/%Y %H:%M")}\n"
+            f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
             "Type\n"
             f"{entry.type[0].upper() + entry.type[1:]}\n"
             "Notes\n"
@@ -613,39 +661,59 @@ class TablePage(BaseTest):
         self.cancel_button("view", "update").click()
         self.wait_for_view_modal_close("update")
 
-    def check_job_view_modal(self, entry: models.JobApplicationUpdate) -> None:
+    def check_job_view_modal(self, entry: models.Job) -> None:
         """Helper method to test the view modal for a job application update entry"""
 
         modal = self.wait_for_view_modal("job")
-        expected = (
-            "Job Details\n"
-            "Job Details\n"
-            f"Job Application {entry.application_status.upper()}\n"
-            f"{entry.title}\n"
-            "Company\n"
-            f"{entry.company.name.upper()}\n"
-            "Location\n"
-            f"{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
-            "Description\n"
-            f"{entry.description}\n"
-            "Notes\n"
-            f"{entry.note}\n"
-            "Salary Range\n"
-            f"{self.salary_range(entry)}\n"
-            "Personal Rating\n"
-            "Source Aggregator\n"
-            f"{entry.source.name.upper()}\n"
-            "Job URL\n"
-            f"{entry.url.replace("https://", "")}\n"
-            "Tags\n"
-            f"{"\n".join([tag.name.upper() for tag in entry.keywords])}\n"
-            "Contacts\n"
-            f"{"\n".join([person.name.upper() for person in entry.contacts])}\n"
-            "Application Deadline\n"
-            "Not Provided\n"
-            "Close\n"
-            "Edit"
-        )
+        expected = "Job Details\nJob Details\nJob Application"
+        if entry.application_status:
+            expected += f" {entry.application_status.upper()}"
+        expected += f"\n{entry.title}\n"
+        if entry.company:
+            expected += f"Company\n{entry.company.name.upper()}\n"
+        else:
+            expected += "Company\nNot Provided\n"
+        if entry.location:
+            expected += f"Location\n{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
+        else:
+            expected += "Location\nNot Provided\n"
+        if entry.description:
+            expected += f"Description\n{entry.description}\n"
+        else:
+            expected += "Description\nNot Provided\n"
+        if entry.note:
+            expected += f"Notes\n{entry.note}\n"
+        else:
+            expected += "Notes\nNot Provided\n"
+        salary_range = self.salary_range(entry)
+        if salary_range:
+            expected += f"Salary Range\n{salary_range}\n"
+        else:
+            expected += "Salary Range\nNot Provided\n"
+        expected += "Personal Rating\n"
+        if not entry.personal_rating:
+            expected += "Not Provided\n"
+        if entry.source:
+            expected += f"Source Aggregator\n{entry.source.name.upper()}\n"
+        else:
+            expected += "Source Aggregator\nNot Provided\n"
+        if entry.url:
+            expected += f"Job URL\n{entry.url.replace('https://', '')}\n"
+        else:
+            expected += "Job URL\nNot Provided\n"
+        if entry.keywords:
+            expected += f"Tags\n{'\n'.join([tag.name.upper() for tag in entry.keywords])}\n"
+        else:
+            expected += "Tags\nNot Provided\n"
+        if entry.contacts:
+            expected += f"Contacts\n{'\n'.join([person.name.upper() for person in entry.contacts])}\n"
+        else:
+            expected += "Contacts\nNot Provided\n"
+        if entry.deadline:
+            expected += f"Application Deadline\n{entry.deadline.strftime('%d/%m/%Y')}\n"
+        else:
+            expected += "Application Deadline\nNot Provided\n"
+        expected += "Close\nEdit"
         assert modal.text == expected
 
         # Close modal
@@ -669,11 +737,14 @@ class TestKeywordsPage(TablePage):
     required_fields = ["name"]
     duplicate_fields = ["name"]
     test_entry_index = 14
+    model = models.Keyword
 
-    def _test_view_modal(self) -> None:
+    def _test_view_modal(self, entry=None) -> None:
         """Helper method to test the view modal for an entry"""
 
-        self.check_keyword_view_modal(self.test_entry)
+        if not entry:
+            entry = self.test_entry
+        self.check_keyword_view_modal(entry)
 
 
 class TestAggregatorsPage(TablePage):
@@ -692,11 +763,13 @@ class TestAggregatorsPage(TablePage):
     required_fields = ["name", "url"]
     duplicate_fields = ["name"]
     columns = ["name", "url"]
+    model = models.Aggregator
 
-    def _test_view_modal(self) -> None:
+    def _test_view_modal(self, entry=None) -> None:
         """Helper method to test the view modal for an entry"""
-
-        self.check_aggregator_view_modal(self.test_entry)
+        if not entry:
+            entry = self.test_entry
+        self.check_aggregator_view_modal(entry)
 
 
 class TestCompaniesPage(TablePage):
@@ -715,11 +788,13 @@ class TestCompaniesPage(TablePage):
     required_fields = ["name"]
     duplicate_fields = ["name"]
     columns = ["name", "url", "description"]
+    model = models.Company
 
-    def _test_view_modal(self) -> None:
+    def _test_view_modal(self, entry=None) -> None:
         """Helper method to test the view modal for an entry"""
-
-        self.check_company_view_modal(self.test_entry)
+        if not entry:
+            entry = self.test_entry
+        self.check_company_view_modal(entry)
 
 
 class TestLocationsPage(TablePage):
@@ -734,14 +809,16 @@ class TestLocationsPage(TablePage):
     page_url = "locations"
     test_fixture = "test_locations"
     entry_name = "location"
-    test_data = {"city": "Test_City", "postcode": "OX", "country": "United Kingdom"}
+    test_data = {"city": "Oxford", "postcode": "OX1", "country": "United Kingdom"}
     required_fields = []
     columns = ["city", "postcode", "country"]
+    model = models.Location
 
-    def _test_view_modal(self) -> None:
+    def _test_view_modal(self, entry=None) -> None:
         """Helper method to test the view modal for an entry"""
-
-        self.check_location_view_modal(self.test_entry)
+        if not entry:
+            entry = self.test_entry
+        self.check_location_view_modal(entry)
 
 
 class TestPersonsPage(TablePage):
@@ -760,26 +837,40 @@ class TestPersonsPage(TablePage):
         "first_name": "Test_firstname",
         "last_name": "Test_lastname",
         "email": "Test_email@test.com",
-        "company_id": "WebSolutions Ltd",
+        "company_id": "Tech Corp",
         "phone": "000000000",
         "linkedin_url": "https://www.linkedin.com/company/websolutions-ltd/",
         "role": "Test_role",
     }
     required_fields = ["last_name", "first_name"]
-    duplicate_fields = ["last_name", "first_name"]
+    duplicate_fields = ["last_name", "first_name", "company_id"]
     columns = ["last_name", "email", "company", "phone", "linkedin_url", "role"]
     sorting_columns = ["name", "company", "role", "email", "created_at"]
+    model = models.Person
 
-    def _test_view_modal(self) -> None:
+    def _test_view_modal(self, entry=None) -> None:
         """Helper method to test the view modal for an entry"""
-
-        self.check_person_view_modal(self.test_entry)
+        if not entry:
+            entry = self.test_entry
+        self.check_person_view_modal(entry)
 
     def test_table_company_badge(self) -> None:
         """Test that the company badge is displayed correctly"""
 
         self.get_element("table-row-1-CompanyBadge").click()
         self.check_company_view_modal(self.test_entry.company)
+
+    def test_add_company(self) -> None:
+        """Test adding a new person with a new company"""
+
+        self.add_entity_button.click()
+        self._fill_modal(first_name="John", last_name="Doe")
+        self.get_element("add-button").click()
+        self._fill_modal(name="Company")
+        self.get_element("modal-edit-company-confirm-button").click()
+        self.wait_for_edit_modal()
+        assert self.get_element("first_name").get_attribute("value") == "John"
+        assert self.get_element("last_name").get_attribute("value") == "Doe"
 
 
 class TestJobApplicationUpdatesPage(TablePage):
@@ -796,11 +887,13 @@ class TestJobApplicationUpdatesPage(TablePage):
         "note": "Received automated confirmation email",
         "type": "Received",
     }
+    model = models.JobApplicationUpdate
 
-    def _test_view_modal(self) -> None:
+    def _test_view_modal(self, entry=None) -> None:
         """Helper method to test the view modal for an entry"""
-
-        self.check_update_view_modal(self.test_entry)
+        if not entry:
+            entry = self.test_entry
+        self.check_update_view_modal(entry)
 
 
 class TestInterviewPage(TablePage):
@@ -818,11 +911,13 @@ class TestInterviewPage(TablePage):
         "attendance_type": "On-site",
         "type": "HR Interview",
     }
+    model = models.Interview
 
-    def _test_view_modal(self) -> None:
+    def _test_view_modal(self, entry=None) -> None:
         """Helper method to test the view modal for an entry"""
-
-        self.check_interview_view_modal(self.test_entry)
+        if not entry:
+            entry = self.test_entry
+        self.check_interview_view_modal(entry)
 
     def test_table_interviewers_badge(self) -> None:
         """Test that the person badge is displayed correctly in the table"""
@@ -871,15 +966,18 @@ class TestJobPage(TablePage):
         "url": "https://techcorp.com/jobs/senior_python_developer1",
         "company_id": "Oxford PV",
         "note": "Excellent opportunity for senior developer",
-        "attendance_type": "Hybrid",
+        # "attendance_type": "Hybrid",
+        # "location_id": "Oxford, OX1 3PH, United Kingdom",
         # "application_date": datetime.datetime.now(),
         # "application_url": "https://techcorp.com/apply/senior-python",
         # "application_status": "applied",
         # "applied_via": "aggregator",
         # "application_note": "Submitted application with cover letter",
     }
+    model = models.Job
 
-    def _test_view_modal(self) -> None:
+    def _test_view_modal(self, entry=None) -> None:
         """Helper method to test the view modal for an entry"""
-
-        self.check_job_view_modal(self.test_entry)
+        if not entry:
+            entry = self.test_entry
+        self.check_job_view_modal(entry)

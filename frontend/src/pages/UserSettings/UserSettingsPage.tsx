@@ -41,7 +41,7 @@ const UserSettingsPage: React.FC = () => {
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState<boolean>(false);
 
-	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
+	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.MIN_PASSWORD_LENGTH || "8");
 
 	const downloadJobsExport = async (token: string | null) => {
 		if (!token) return;

@@ -46,6 +46,7 @@ const CustomDropdownIndicator = (props: any): JSX.Element => {
 			aria-label="Add new item"
 			role="button"
 			title="Add new item"
+			id="add-button"
 		>
 			<i className="bi bi-plus-circle" style={{ fontSize: "21px" }}></i>
 		</div>
@@ -91,7 +92,7 @@ export const renderSelect = ({ field, value, handleChange, error, secondaryValue
 				_actionMeta: ActionMeta<SelectOption>,
 			) => {
 				if (isMulti) {
-					const ids = Array.isArray(selectedOptions)
+					const ids: string[] = Array.isArray(selectedOptions)
 						? selectedOptions.map((option: SelectOption) => option.value)
 						: [];
 
