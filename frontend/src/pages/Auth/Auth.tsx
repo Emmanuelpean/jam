@@ -1,18 +1,26 @@
 import React, { JSX, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { AuthResponse, FormData, useAuth } from "../../contexts/AuthContext";
 import "./Auth.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
-import { Card, Form, Spinner, Alert } from "react-bootstrap";
+import { Alert, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
 import { Errors, FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { FormData, AuthResponse } from "../../contexts/AuthContext";
+import { ApiError, authApi } from "../../services/Api";
+import { useLoading } from "../../contexts/LoadingContext";
+
+interface VerificationResponse {
+	message: string;
+}
+
+let isVerifying = false;
 
 function AuthForm(): JSX.Element {
 	const [isLogin, setIsLogin] = useState<boolean>(true);
+	const [searchParams, setSearchParams] = useSearchParams();
 	const [formData, setFormData] = useState<FormData>({
 		email: "",
 		password: "",
@@ -29,19 +37,44 @@ function AuthForm(): JSX.Element {
 	const location = useLocation();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
-	const verificationMessage = location.state?.message;
+	const { showLoading, hideLoading } = useLoading();
+
+	document.documentElement.setAttribute("data-theme", "mixed-berry");
 
 	useEffect(() => {
-		// Redirect authenticated users to dashboard
 		if (isAuthenticated) {
 			navigate("/dashboard", { replace: true });
 			return;
 		}
+		setIsLogin(location.pathname.indexOf("login") >= 0);
+	}, [location.pathname, isAuthenticated]);
 
-		document.documentElement.setAttribute("data-theme", "mixed-berry");
-		// Set form mode based on current path
-		setIsLogin(location.pathname === "/login");
-	}, [location.pathname, isAuthenticated, navigate]);
+	useEffect(() => {
+		const verifyToken: string | null = searchParams.get("token");
+
+		if (verifyToken && !isVerifying) {
+			isVerifying = true;
+			showLoading("Verifying email...");
+
+			authApi
+				.verifyEmail(verifyToken)
+				.then((response: VerificationResponse) => {
+					showToastSuccess(response.message, "Email Verified");
+					setSearchParams({});
+				})
+				.catch((err: any) => {
+					const apiError = err as ApiError;
+					showToastError(apiError.message, "Verification Failed");
+					setSearchParams({});
+				})
+				.finally(() => {
+					hideLoading();
+					setTimeout((): void => {
+						isVerifying = false;
+					}, 1000);
+				});
+		}
+	}, []);
 
 	// Detect small screens
 	useEffect(() => {
@@ -241,7 +274,6 @@ function AuthForm(): JSX.Element {
 		),
 	};
 
-	// Show loading state while checking authentication
 	if (isAuthenticated) {
 		return (
 			<div className="auth-container">
@@ -277,29 +309,13 @@ function AuthForm(): JSX.Element {
 						Limited Mobile Support
 					</Alert.Heading>
 					<p className="mb-0 small">
-						JAM is not fully optimized for small screens yet. For the best experience, please use a tablet
+						JAM is not fully optimised for small screens yet. For the best experience, please use a tablet
 						or desktop device.
 					</p>
 				</Alert>
 			)}
 
-			{verificationMessage && (
-				<Alert
-					variant="success"
-					dismissible
-					onClose={() => window.history.replaceState({}, document.title)}
-					className="mb-3"
-					style={{ maxWidth: "500px" }}
-				>
-					<Alert.Heading className="h6 d-flex align-items-center mb-2">
-						<i className="bi bi-check-circle-fill me-2"></i>
-						Email Verified
-					</Alert.Heading>
-					<p className="mb-0 small">{verificationMessage}</p>
-				</Alert>
-			)}
-
-			{showBanner && (
+			{isLogin && showBanner && (
 				<Alert
 					variant="info"
 					dismissible
