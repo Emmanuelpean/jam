@@ -1,15 +1,16 @@
 """Module for sending and reading emails using SMTP and IMAP."""
 
+import email
+import imaplib
 import os
 import smtplib
-import imaplib
-import email
+from datetime import datetime, timedelta
+from email.header import decode_header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.header import decode_header
-from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional
+
 from dotenv import load_dotenv
 
 load_dotenv()

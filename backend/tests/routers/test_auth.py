@@ -4,6 +4,7 @@ import hashlib
 import os
 from datetime import datetime, timezone, timedelta
 from unittest.mock import patch
+
 import pytest
 from jose import jwt
 
@@ -164,7 +165,7 @@ class TestRegister:
 
     @patch("app.routers.auth.email_service.send_verification_email")
     def test_register_user_unverified_exists_rate_limit(
-        self, mock_email, unverified_user, client, session, test_users
+        self, _mock_email, unverified_user, client, session, test_users
     ) -> None:
         """Test rate limiting when re-registering with unverified email."""
 
@@ -193,7 +194,7 @@ class TestRegister:
         assert response.status_code == 401
 
     @patch("app.routers.auth.email_service.send_verification_email", side_effect=Exception("SMTP error"))
-    def test_register_email_sending_failure(self, mock_email, client) -> None:
+    def test_register_email_sending_failure(self, _mock_email, client) -> None:
         """Test handling of email sending failure during registration."""
 
         user_data = {
