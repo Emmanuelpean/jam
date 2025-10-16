@@ -22,7 +22,15 @@ class TestAuthenticationPage(BaseTest):
 
         return self.db.query(models.User).filter(models.User.email == email).all()
 
-    # ---------------------------------------------------- ELEMENTS ----------------------------------------------------
+    def get_verification_token_from_db(self, email: str) -> str:
+        """Helper method to get verification token from database"""
+
+        user = self.db.query(models.User).filter(models.User.email == email).first()
+        token = user.verification_token
+        assert token is not None, "Verification token not found in database"
+        return token
+
+    # ----------------------------------------------------- INPUTS -----------------------------------------------------
 
     def go_to_login(self) -> None:
         """Go to the login page"""
@@ -59,6 +67,8 @@ class TestAuthenticationPage(BaseTest):
 
         self.get_element("terms").click()
 
+    # ----------------------------------------------------- ERRORS -----------------------------------------------------
+
     def _assert_message(self, key: str, message: str) -> None:
         """Assert that the given message is displayed on the page
         :param key: Key to use for finding the error message element
@@ -66,7 +76,7 @@ class TestAuthenticationPage(BaseTest):
 
         assert message in self.get_element(key + "error-message").text, f"Message not found: {message}"
 
-    def assert_error_message(self, error_message: str) -> None:
+    def assert_toast_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
         assert error_message in self.get_element("toast").text, f"Message not found: {error_message}"
@@ -91,6 +101,8 @@ class TestAuthenticationPage(BaseTest):
 
         self._assert_message("terms-", error_message)
 
+    # ------------------------------------------------------ PAGES -----------------------------------------------------
+
     def wait_for_dashboard(self) -> None:
         """Wait for the dashboard to load"""
 
@@ -110,6 +122,11 @@ class TestAuthenticationPage(BaseTest):
         """Switch between login and register modes"""
 
         self.get_element("switch-mode-button").click()
+
+    def go_to_verification_url(self, token: str) -> None:
+        """Navigate to login page with verification token"""
+
+        self.driver.get(f"{self.frontend_base_url}/login/?token={token}")
 
 
 class TestLogIn(TestAuthenticationPage):
@@ -140,7 +157,7 @@ class TestLogIn(TestAuthenticationPage):
         self.confirm()
 
         # Verify error message
-        self.assert_error_message("Incorrect email or password")
+        self.assert_toast_message("Invalid credentials")
 
     def test_inactive_login(self, test_users) -> None:
         """Test login with invalid credentials"""
@@ -154,7 +171,7 @@ class TestLogIn(TestAuthenticationPage):
         self.confirm()
 
         # Verify error message
-        self.assert_error_message("This user account is not active")
+        self.assert_toast_message("This user account is not active")
 
     def test_login_invalid_email(self) -> None:
         """Test login with invalid credentials"""
@@ -228,7 +245,7 @@ class TestSignUp(TestAuthenticationPage):
         # Verify redirect to login page
         self.wait_for_login()
         assert self.verify_user_in_database(test_email)
-        self.assert_error_message("Account created successfully! You can now log in.")
+        self.assert_toast_message("Account created! Please check your email to verify your account before logging in.")
 
     def test_signup_existing_email(self, test_users) -> None:
         """Test signup with an already registered email"""
@@ -244,7 +261,7 @@ class TestSignUp(TestAuthenticationPage):
         self.confirm()
 
         # Verify error message and database
-        self.assert_error_message("Email already registered")
+        self.assert_toast_message("Email already registered")
         assert len(self.verify_user_in_database(test_email)) == 1, "Multiple users with the same email found"
 
     def test_signup_invalid_email(self) -> None:
@@ -360,5 +377,14 @@ class TestSignUp(TestAuthenticationPage):
         self.set_terms()
         self.confirm()
 
-        self.assert_error_message("Sorry, you are not allowed to sign up for now.")
+        self.assert_toast_message("You are not allowed to sign up for now.")
         assert not self.verify_user_in_database(test_email)
+
+
+class TestEmailVerification(TestAuthenticationPage):
+
+    def test_nonverified_login(self, test_unverified_token_user, session) -> None:
+        """Test login with non-verified user"""
+
+        self.go_to_verification_url(test_unverified_token_user.plain_verification_token)
+        self.assert_toast_message("Account verified successfully")

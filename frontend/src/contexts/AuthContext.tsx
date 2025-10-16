@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi, ApiError } from "../services/Api";
+import { ApiError, authApi } from "../services/Api";
 import { UserData } from "../services/Schemas";
 
 export interface CurrentUser extends UserData {
@@ -32,8 +32,6 @@ export interface AuthProviderProps {
 	children: ReactNode;
 }
 
-export type AuthAction = "login" | "register";
-
 export interface FormData {
 	email: string;
 	password: string;
@@ -41,40 +39,6 @@ export interface FormData {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const getErrorMessage = (status: number | undefined, action: AuthAction): string => {
-	switch (status) {
-		case 400:
-			return action === "register" ? "Email already registered" : "Invalid request. Please check your input.";
-		case 401:
-			return action === "register"
-				? "Sorry, you are not allowed to sign up for now."
-				: "This user account is not active";
-		case 403:
-			return "Incorrect email or password";
-		case 422:
-			return "Invalid input data. Please check your information.";
-		case 500:
-			return "Server error. Please try again later.";
-		default:
-			return action === "register"
-				? "Registration failed. Please try again later."
-				: "Login failed. Please check your credentials and try again.";
-	}
-};
-
-const getUserMessage = (status: number | undefined, action: AuthAction): string => {
-	switch (status) {
-		case 400:
-			return action === "register" ? "Registration Failed" : "Login Failed";
-		case 401:
-		case 403:
-		case 404:
-			return action === "register" ? "Registration Failed" : "Login Failed";
-		default:
-			return action === "register" ? "Registration Error" : "Login Error";
-	}
-};
 
 export function useAuth(): AuthContextType {
 	const context = useContext(AuthContext);
@@ -169,8 +133,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			const apiError = error as ApiError;
 			return {
 				success: false,
-				error: getErrorMessage(apiError.status, "login"),
-				userMessage: getUserMessage(apiError.status, "login"),
+				error: apiError.message,
+				userMessage: apiError.message,
 				status: apiError.status,
 			};
 		}
@@ -185,8 +149,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			const apiError = error as ApiError;
 			return {
 				success: false,
-				error: getErrorMessage(apiError.status, "register"),
-				userMessage: getUserMessage(apiError.status, "register"),
+				error: apiError.message,
+				userMessage: apiError.message,
 				status: apiError.status,
 			};
 		}

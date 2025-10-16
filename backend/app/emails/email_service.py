@@ -59,10 +59,12 @@ class EmailService(object):
         self,
         recipient: str,
         verification_url: str,
+        token_expiry_min: int,
     ) -> None:
         """Send a verification email to the specified recipient.
         :param recipient: The recipient's email address.
-        :param verification_url: The verification URL."""
+        :param verification_url: The verification URL.
+        :param token_expiry_min: Token expiry time in minutes."""
 
         current_dir = Path(__file__).parent
         template_path = current_dir / "confirmation_template.html"
@@ -70,6 +72,7 @@ class EmailService(object):
             html_template = file.read()
         html_content = html_template.replace("{{name}}", "there")
         html_content = html_content.replace("{{verification_url}}", verification_url)
+        html_content = html_content.replace("{{token_expiry_min}}", str(token_expiry_min))
 
         self.send_email(recipient, "Please verify your email", html_content, SUPPORT_EMAIL)
 

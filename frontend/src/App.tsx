@@ -25,7 +25,6 @@ import AboutPage from "./pages/AboutPage/AboutPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import "./Themes.css";
-import EmailVerification from "./pages/Auth/EmailVerification";
 
 export const ToastContext = createContext<UseToastReturn | undefined>(undefined);
 
@@ -34,8 +33,8 @@ interface AppLayoutProps {
 }
 
 function composeProviders(...providers: React.ComponentType<{ children: ReactNode }>[]) {
-	return ({ children }: { children: ReactNode }) =>
-		providers.reduceRight((acc, Provider) => <Provider>{acc}</Provider>, children);
+	return ({ children }: { children: ReactNode }): ReactNode =>
+		providers.reduceRight((acc: ReactNode, Provider) => <Provider>{acc}</Provider>, children);
 }
 
 function AppLayout({ children }: AppLayoutProps): JSX.Element {
@@ -57,17 +56,19 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 									<span className="visually-hidden">Loading...</span>
 								</div>
 								<p className="text-muted mb-3">{loadingMessage}</p>
-								<div className="progress" style={{ width: "350px" }}>
-									<div
-										className="progress-bar progress-bar-striped progress-bar-animated"
-										role="progressbar"
-										style={{ width: `${progress}%` }}
-										aria-valuenow={progress}
-										aria-valuemin={0}
-										aria-valuemax={100}
-									/>
-									<span className="progress-text">{progress}%</span>
-								</div>
+								{progress !== undefined && (
+									<div className="progress" style={{ width: "350px" }}>
+										<div
+											className="progress-bar progress-bar-striped progress-bar-animated"
+											role="progressbar"
+											style={{ width: `${progress}%` }}
+											aria-valuenow={progress}
+											aria-valuemin={0}
+											aria-valuemax={100}
+										/>
+										<span className="progress-text">{progress}%</span>
+									</div>
+								)}
 							</div>
 						</div>
 					)}
@@ -108,7 +109,6 @@ interface RouteConfig {
 const routeConfigs: RouteConfig[] = [
 	{ path: "/login", element: <Login /> },
 	{ path: "/register", element: <Login /> },
-	{ path: "/veryfiy-email/:token", element: <EmailVerification /> },
 	{ path: "/", element: <Navigate to="/dashboard" replace /> },
 	{ path: "/about", element: <AboutPage />, protected: true },
 	{ path: "/locations", element: <LocationsPage />, protected: true },

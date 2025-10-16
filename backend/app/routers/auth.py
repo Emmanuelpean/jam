@@ -1,6 +1,5 @@
 """Authentication route"""
 
-import hashlib
 import os
 import secrets
 from datetime import datetime, timezone, timedelta
@@ -28,8 +27,8 @@ def send_verification_with_rate_limit(
 
     # Check if enough time has passed since last email
     min_interval_seconds = int(os.getenv("VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS"))
-    if user.verification_code_created_at:
-        time_since_last_email = datetime.now(timezone.utc) - user.verification_code_created_at
+    if user.verification_token_created_at:
+        time_since_last_email = datetime.now(timezone.utc) - user.verification_token_created_at
         if time_since_last_email < timedelta(seconds=min_interval_seconds):
             seconds_remaining = min_interval_seconds - int(time_since_last_email.total_seconds())
             return {
@@ -40,18 +39,19 @@ def send_verification_with_rate_limit(
 
     # Generate new verification token
     token = secrets.token_urlsafe(32)
-    verification_code = hashlib.sha256(token.encode()).hexdigest()
+    verification_code = utils.hash_token(token)
 
     # Update user with new verification code and timestamp
-    user.verification_code = verification_code
-    user.verification_code_created_at = datetime.now(timezone.utc)
+    user.verification_token = verification_code
+    user.verification_token_created_at = datetime.now(timezone.utc)
     db.commit()
 
     try:
         # Send verification email
+        expiration_min = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_MINUTES"))
         frontend_url = os.getenv("FRONTEND_URL")
-        verification_url = f"{frontend_url}/verify-email/{token}"
-        email_service.send_verification_email(user.email, verification_url)
+        verification_url = f"{frontend_url}/login/?token={token}"
+        email_service.send_verification_email(user.email, verification_url, expiration_min)
 
         return {"success": True, "message": "Verification email sent successfully"}
     except Exception as e:
@@ -82,7 +82,11 @@ def login(
 
     # Check that the user is active
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account is inactive")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="This user account is not active")
+
+    # Check that the password corresponds to that user
+    if not utils.verify_password(user_credentials.password, user.password):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
 
     # Check that the user is verified
     if not user.is_verified:
@@ -98,10 +102,6 @@ def login(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=result["message"],
             )
-
-    # Check that the password corresponds to that user
-    if not utils.verify_password(user_credentials.password, user.password):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
 
     # Update the user last login
     user.last_login = datetime.now(timezone.utc)
@@ -133,7 +133,9 @@ def create_user(
     if settings and settings.is_active:
         emails_allowed = [email.strip().lower() for email in settings.value.split(",")]
         if user.email not in emails_allowed:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not allowed")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not allowed to sign up for now."
+            )
 
     # Check if email already exists
     existing_user = db.query(models.User).filter(models.User.email == user.email).first()
@@ -178,21 +180,26 @@ def verify_email(
     :param token: The verification token from the email.
     :param db: The database session."""
 
-    expiration_hours = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_HOURS"))
-    verification_code = hashlib.sha256(token.encode()).hexdigest()
+    expiration_hours = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_MINUTES"))
+    verification_code = utils.hash_token(token)
+    print(verification_code)
 
-    user = db.query(models.User).filter(models.User.verification_code == verification_code).first()
+    user = db.query(models.User).filter(models.User.verification_token == verification_code).first()
 
     if not user:
         raise HTTPException(status_code=403, detail="Invalid or expired token")
 
     # Check if token is expired (e.g., 24 hours)
-    expiration_time = user.verification_code_created_at + timedelta(hours=expiration_hours)
+    expiration_time = user.verification_token_created_at + timedelta(hours=expiration_hours)
     if datetime.now(timezone.utc) > expiration_time:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Verification token has expired")
+        send_verification_with_rate_limit(user, db)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Verification token has expired. A new one has been sent.",
+        )
 
-    user.verification_code = None
-    user.verification_code_created_at = None
+    user.verification_token = None
+    user.verification_token_created_at = None
     user.is_verified = True
     db.commit()
 

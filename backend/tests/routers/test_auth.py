@@ -12,24 +12,6 @@ from app import schemas, models
 from app.config import settings
 
 
-@pytest.fixture
-def unverified_user(session) -> models.User:
-    """Fixture to create an unverified user."""
-
-    # noinspection PyArgumentList
-    user = models.User(
-        email="unverified@test.com",
-        password="password",
-        is_verified=False,
-        is_active=True,
-    )
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    user.password = "password"
-    return user
-
-
 class TestLogin:
 
     def test_login_user(self, test_users, client) -> None:
@@ -62,12 +44,12 @@ class TestLogin:
         assert response.status_code == 401
 
     @patch("app.routers.auth.email_service.send_verification_email")
-    def test_login_unverified_user_sends_email(self, mock_email, unverified_user, client) -> None:
+    def test_login_unverified_user_sends_email(self, mock_email, test_unverified_user, client) -> None:
         """Test that login for unverified user sends verification email."""
 
         user_data = {
-            "username": unverified_user.email,
-            "password": unverified_user.password,
+            "username": test_unverified_user.email,
+            "password": test_unverified_user.password,
         }
         response = client.post("/login", data=user_data)
 
@@ -76,17 +58,12 @@ class TestLogin:
         assert mock_email.call_count == 1
 
     @patch("app.routers.auth.email_service.send_verification_email")
-    def test_login_unverified_user_rate_limit(self, _mock, unverified_user, client, session) -> None:
+    def test_login_unverified_user_rate_limit(self, _mock, test_unverified_token_user, client, session) -> None:
         """Test rate limiting for unverified user login attempts."""
 
-        # Update unverified user with recent verification email timestamp
-        unverified_user.verification_code = "dummy_code"
-        unverified_user.verification_code_created_at = datetime.now(timezone.utc)
-        session.commit()
-
         user_data = {
-            "username": unverified_user.email,
-            "password": unverified_user.password,
+            "username": test_unverified_token_user.email,
+            "password": test_unverified_token_user.password,
         }
         response = client.post("/login", data=user_data)
 
@@ -126,7 +103,6 @@ class TestRegister:
         assert mock_email.call_count == 1
         call_args = mock_email.call_args[0]
         assert call_args[0] == user_data["email"]
-        assert "verify-email" in call_args[1]
 
     def test_register_user_exist(self, client, test_users) -> None:
         """Test registration attempt with already verified email."""
@@ -149,13 +125,13 @@ class TestRegister:
 
     @patch("app.routers.auth.email_service.send_verification_email")
     def test_register_user_unverified_exists_resends_email(
-        self, mock_email, unverified_user, client, session, test_users
+        self, mock_email, test_unverified_user, client, session, test_users
     ) -> None:
         """Test that registering with unverified email resends verification."""
 
         user_data = {
-            "email": unverified_user.email,
-            "password": unverified_user.password,
+            "email": test_unverified_user.email,
+            "password": test_unverified_user.password,
         }
         response = client.post("/register", json=user_data)
 
@@ -165,18 +141,13 @@ class TestRegister:
 
     @patch("app.routers.auth.email_service.send_verification_email")
     def test_register_user_unverified_exists_rate_limit(
-        self, _mock_email, unverified_user, client, session, test_users
+        self, _mock_email, test_unverified_token_user, client, session, test_users
     ) -> None:
         """Test rate limiting when re-registering with unverified email."""
 
-        # Update unverified user with recent verification email timestamp
-        unverified_user.verification_code = "dummy_code"
-        unverified_user.verification_code_created_at = datetime.now(timezone.utc)
-        session.commit()
-
         user_data = {
-            "email": unverified_user.email,
-            "password": unverified_user.password,
+            "email": test_unverified_token_user.email,
+            "password": test_unverified_token_user.password,
         }
         response = client.post("/register", json=user_data)
 
@@ -209,27 +180,18 @@ class TestRegister:
 
 class TestEmailVerification:
 
-    def test_verify_email_success(self, client, unverified_user, session, test_users) -> None:
+    def test_verify_email_success(self, client, test_unverified_token_user, session, test_users) -> None:
         """Test successful email verification with valid token."""
 
-        token = "test_token_123"
-        verification_code = hashlib.sha256(token.encode()).hexdigest()
-
-        unverified_user.verification_code = verification_code
-        unverified_user.verification_code_created_at = datetime.now(timezone.utc)
-        session.commit()
-        user_id = unverified_user.id
-
-        response = client.get(f"/register/verify-email/{token}")
+        response = client.get(f"/register/verify-email/{test_unverified_token_user.plain_verification_token}")
 
         assert response.status_code == 200
         assert "verified successfully" in response.json()["message"].lower()
 
-        # Query fresh from database instead of refreshing
-        verified_user = session.query(models.User).filter(models.User.id == user_id).first()
+        verified_user = session.query(models.User).filter(models.User.id == test_unverified_token_user.id).first()
         assert verified_user.is_verified is True
-        assert verified_user.verification_code is None
-        assert verified_user.verification_code_created_at is None
+        assert verified_user.verification_token is None
+        assert verified_user.verification_token_created_at is None
 
     def test_verify_email_invalid_token(self, client) -> None:
         """Test email verification with invalid token."""
@@ -239,20 +201,20 @@ class TestEmailVerification:
         assert response.status_code == 403
         assert "invalid" in response.json()["detail"].lower()
 
-    @patch.dict(os.environ, {"VERIFICATION_TOKEN_EXPIRATION_HOURS": "24"})
-    def test_verify_email_expired_token(self, client, unverified_user, session, test_users) -> None:
+    @patch.dict(os.environ, {"VERIFICATION_TOKEN_EXPIRATION_MINUTES": "15"})
+    def test_verify_email_expired_token(self, client, test_unverified_user, session, test_users) -> None:
         """Test email verification with expired token."""
 
         token = "expired_token_123"
         verification_code = hashlib.sha256(token.encode()).hexdigest()
-        expired_time = datetime.now(timezone.utc) - timedelta(hours=25)  # created more than 24 hours ago
+        expired_time = datetime.now(timezone.utc) - timedelta(hours=25)
 
-        unverified_user.verification_code = verification_code
-        unverified_user.verification_code_created_at = expired_time
+        test_unverified_user.verification_token = verification_code
+        test_unverified_user.verification_token_created_at = expired_time
         session.commit()
 
         response = client.get(f"/register/verify-email/{token}")
 
         assert response.status_code == 403
         assert "expired" in response.json()["detail"].lower()
-        assert unverified_user.is_verified is False
+        assert test_unverified_user.is_verified is False
