@@ -4,7 +4,6 @@ import hashlib
 import os
 import secrets
 from datetime import datetime, timezone, timedelta
-from random import randbytes
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -16,13 +15,11 @@ from app.emails.email_service import email_service
 
 load_dotenv()
 
-login_router = APIRouter(prefix="/login", tags=["Login"])
-
 
 def send_verification_with_rate_limit(
     user: models.User,
     db: Session,
-) -> dict:
+) -> dict[str, bool | str]:
     """Send verification email with rate limiting.
     :param user: user entry
     :param db: database session
@@ -61,11 +58,17 @@ def send_verification_with_rate_limit(
         return {"success": False, "message": f"Error sending verification email: {str(e)}"}
 
 
+# -------------------------------------------------------- LOGIN -------------------------------------------------------
+
+
+login_router = APIRouter(prefix="/login", tags=["Login"])
+
+
 @login_router.post("/", status_code=status.HTTP_200_OK, response_model=schemas.Token)
 def login(
     user_credentials: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(database.get_db),
-) -> dict:
+) -> dict[str, str]:
     """Login a user.
     :param user_credentials: The user credentials (note: username is the email field).
     :param db: The database session.
@@ -119,15 +122,16 @@ register_router = APIRouter(prefix="/register", tags=["Register"])
 def create_user(
     user: schemas.UserRegister,
     db: Session = Depends(database.get_db),
-):
+) -> models.User:
     """Create a new user.
     :param user: The user data.
-    :param db: The database session."""
+    :param db: The database session.
+    :returns: The created user."""
 
     # Check the user can be created
     settings = db.query(models.Setting).filter(models.Setting.name == "allowlist").first()
     if settings and settings.is_active:
-        emails_allowed = [email.strip() for email in settings.value.split(",")]
+        emails_allowed = [email.strip().lower() for email in settings.value.split(",")]
         if user.email not in emails_allowed:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not allowed")
 
@@ -169,15 +173,13 @@ def create_user(
 def verify_email(
     token: str,
     db: Session = Depends(database.get_db),
-) -> dict:
+) -> dict[str, str]:
     """Verify a user's email address using the provided token.
     :param token: The verification token from the email.
     :param db: The database session."""
 
     expiration_hours = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_HOURS"))
-    hashedCode = hashlib.sha256()
-    hashedCode.update(bytes.fromhex(token))
-    verification_code = hashedCode.hexdigest()
+    verification_code = hashlib.sha256(token.encode()).hexdigest()
 
     user = db.query(models.User).filter(models.User.verification_code == verification_code).first()
 
@@ -185,10 +187,9 @@ def verify_email(
         raise HTTPException(status_code=403, detail="Invalid or expired token")
 
     # Check if token is expired (e.g., 24 hours)
-    if user.verification_code_created_at:
-        expiration_time = user.verification_code_created_at + timedelta(hours=expiration_hours)
-        if datetime.now(timezone.utc) > expiration_time:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Verification token has expired")
+    expiration_time = user.verification_code_created_at + timedelta(hours=expiration_hours)
+    if datetime.now(timezone.utc) > expiration_time:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Verification token has expired")
 
     user.verification_code = None
     user.verification_code_created_at = None

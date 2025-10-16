@@ -15,6 +15,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+SCRAPER_EMAIL = "jam.jobscraper@emmanuelpean.me"
+INFO_EMAIL = "jam.info@emmanuelpean.me"
+SUPPORT_EMAIL = "jam.support@emmanuelpean.me"
+
+
 class EmailService(object):
     """Email service class for sending and reading emails."""
 
@@ -65,7 +70,7 @@ class EmailService(object):
         html_content = html_template.replace("{{name}}", "there")
         html_content = html_content.replace("{{verification_url}}", verification_url)
 
-        self.send_email(recipient, "Please verify your email", html_content, "jam.support@emmanuelpean.me")
+        self.send_email(recipient, "Please verify your email", html_content, SUPPORT_EMAIL)
 
     def _connect_imap(self) -> imaplib.IMAP4_SSL:
         """Connect to IMAP server and login.
