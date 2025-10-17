@@ -36,6 +36,8 @@ interface AuthApi {
 	updateCurrentUser: (data: any, token: string) => Promise<any>;
 	verifyEmail: (token: string) => Promise<any>;
 	resendVerification: (email: string) => Promise<any>;
+	requestPasswordReset: (email: string) => Promise<any>;
+	resetPassword: (token: string, newPassword: string) => Promise<{ message: string }>;
 }
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
@@ -257,6 +259,19 @@ export const authApi: AuthApi = {
 
 	resendVerification: async (email: string) => {
 		return api.post("register/resend-verification", { email });
+	},
+
+	requestPasswordReset: async (email: string): Promise<{ message: string }> => {
+		const response = await api.post("/password/forgot", { email });
+		return response.data;
+	},
+
+	resetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
+		const response = await api.post("/password/reset", {
+			token,
+			new_password: newPassword,
+		});
+		return response.data;
 	},
 };
 

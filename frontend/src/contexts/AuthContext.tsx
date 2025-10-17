@@ -11,7 +11,6 @@ export interface AuthResponse {
 	success: boolean;
 	status?: number;
 	error?: string;
-	userMessage?: string;
 }
 
 export interface LoginResponse {
@@ -134,7 +133,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			return {
 				success: false,
 				error: apiError.message,
-				userMessage: apiError.message,
 				status: apiError.status,
 			};
 		}
@@ -150,7 +148,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			return {
 				success: false,
 				error: apiError.message,
-				userMessage: apiError.message,
 				status: apiError.status,
 			};
 		}

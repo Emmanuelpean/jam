@@ -76,6 +76,44 @@ class EmailService(object):
 
         self.send_email(recipient, "Please verify your email", html_content, SUPPORT_EMAIL)
 
+    def send_password_reset_email(
+        self,
+        recipient: str,
+        reset_url: str,
+        expiration_minutes: int,
+    ) -> None:
+        """Send a password reset email to the specified recipient.
+        :param recipient: The recipient's email address.
+        :param reset_url: The reset URL.
+        :param expiration_minutes: Token expiry time in minutes."""
+
+        current_dir = Path(__file__).parent
+        template_path = current_dir / "password_reset_template.html"
+        with open(template_path, "r") as file:
+            html_template = file.read()
+        html_template = html_template.replace("{{reset_url}}", reset_url)
+        html_template = html_template.replace("{{token_expiry_min}}", str(expiration_minutes))
+
+        self.send_email(recipient, "Reset your password", html_template, SUPPORT_EMAIL)
+
+    def send_password_changed_notification(
+        self,
+        recipient: str,
+    ) -> None:
+        """Send an email to the specified recipient mentioning that the password was changed.
+        :param recipient: The recipient's email address.
+        :param reset_url: The reset URL.
+        :param expiration_minutes: Token expiry time in minutes."""
+
+        current_dir = Path(__file__).parent
+        template_path = current_dir / "password_changed_template.html"
+        with open(template_path, "r") as file:
+            html_template = file.read()
+        change_date = datetime.now().strftime("%B %d, %Y at %I:%M %p UTC")
+        html_body = html_template.replace("{{change_date}}", change_date)
+        subject = "Your JAM Password Has Been Changed"
+        self.send_email(recipient, subject, html_body)
+
     def _connect_imap(self) -> imaplib.IMAP4_SSL:
         """Connect to IMAP server and login.
         :return: IMAP connection object"""
