@@ -76,7 +76,7 @@ def login(
     :raises HTTPException with a 403 status code if the credentials are invalid."""
 
     # Find the user in the list based on the email provided
-    user = db.query(models.User).filter(user_credentials.username.strip() == models.User.email).first()
+    user = db.query(models.User).filter(user_credentials.username == models.User.email).first()
     if user is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
 
@@ -266,7 +266,7 @@ def request_password_reset(
     :return: Success message (always returns success to prevent email enumeration)"""
 
     # Find user by email
-    user = db.query(models.User).filter(models.User.email == email_data.email.strip().lower()).first()
+    user = db.query(models.User).filter(models.User.email == email_data.email).first()
 
     # Always return success message to prevent email enumeration attacks
     if not user:

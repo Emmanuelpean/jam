@@ -187,11 +187,12 @@ function AuthForm(): JSX.Element {
 
 		try {
 			const result: AuthResponse = await login(formData.email, formData.password);
+			console.log(result);
 
 			if (result.success) {
 				navigate("/dashboard");
 			} else {
-				showToastSuccess(result.error!, "Login Failed");
+				showToastError(result.error!, "Login Failed");
 			}
 		} catch (error) {
 			showToastError("Failed to login. An unknown error occurred", "Login Error");
@@ -257,6 +258,18 @@ function AuthForm(): JSX.Element {
 		}
 	};
 
+	const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+		e.preventDefault();
+
+		if (mode === "forgotPassword") {
+			handleForgotPassword().then(() => {});
+		} else if (mode === "login") {
+			handleLogin().then(() => {});
+		} else {
+			handleRegister().then(() => {});
+		}
+	};
+
 	const handleTermsCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
 		setAcceptedTerms(e.target.checked);
 	};
@@ -282,7 +295,7 @@ function AuthForm(): JSX.Element {
 		icon: "bi bi-lock-fill",
 		placeholder: "Enter your password",
 		autoComplete: mode === "login" ? "current-password" : "new-password",
-		helpText: mode !== "login" ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` : null,
+		helpText: mode === "register" ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` : null,
 	};
 
 	const confirmPasswordField: ModalFormField = {
@@ -401,28 +414,21 @@ function AuthForm(): JSX.Element {
 						</p>
 					)}
 
-					{mode === "forgotPassword" && (
-						<Form onSubmit={handleForgotPassword} autoComplete="on">
-							{FormField(emailField, formData, handleInputChange, fieldErrors)}
-							<div className="d-grid">
-								<ActionButton
-									id="confirm-button"
-									type="submit"
-									disabled={loading}
-									loading={loading}
-									className="fw-semibold"
-									loadingText={"Sending..."}
-									defaultText={"Send Reset Link"}
-									defaultIcon={"bi bi-envelope-paper"}
-								/>
-							</div>
-						</Form>
-					)}
+					<Form onSubmit={handleSubmit} autoComplete="on">
+						{/* Email field - always visible */}
+						{FormField(emailField, formData, handleInputChange, fieldErrors)}
 
-					{mode === "login" && (
-						<Form onSubmit={handleLogin} autoComplete="on">
-							{FormField(emailField, formData, handleInputChange, fieldErrors)}
+						{/* Password field - visible for login and register */}
+						<div
+							className={`auth-field-container ${mode !== "forgotPassword" ? "auth-field-visible" : "auth-field-hidden"}`}
+						>
 							{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+						</div>
+
+						{/* Forgot password link - visible only for login */}
+						<div
+							className={`auth-field-container ${mode === "login" ? "auth-field-visible" : "auth-field-hidden"}`}
+						>
 							<div className="text-end mb-3">
 								<button
 									type="button"
@@ -433,26 +439,19 @@ function AuthForm(): JSX.Element {
 									Forgot your password?
 								</button>
 							</div>
-							<div className="d-grid">
-								<ActionButton
-									id="confirm-button"
-									type="submit"
-									disabled={loading}
-									loading={loading}
-									className="fw-semibold"
-									loadingText={"Logging in..."}
-									defaultText={"Login"}
-									defaultIcon={"bi bi-box-arrow-in-right"}
-								/>
-							</div>
-						</Form>
-					)}
+						</div>
 
-					{mode === "register" && (
-						<Form onSubmit={handleRegister} autoComplete="on">
-							{FormField(emailField, formData, handleInputChange, fieldErrors)}
-							{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+						{/* Confirm password - visible only for register */}
+						<div
+							className={`auth-field-container ${mode === "register" ? "auth-field-visible" : "auth-field-hidden"}`}
+						>
 							{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
+						</div>
+
+						{/* Terms checkbox - visible only for register */}
+						<div
+							className={`auth-field-container ${mode === "register" ? "auth-field-visible" : "auth-field-hidden"}`}
+						>
 							{FormField(
 								termsField,
 								{ terms: acceptedTerms },
@@ -460,22 +459,41 @@ function AuthForm(): JSX.Element {
 								handleTermsCheckboxChange,
 								fieldErrors,
 							)}
-							<div className="d-grid">
-								<ActionButton
-									id="confirm-button"
-									type="submit"
-									disabled={loading}
-									loading={loading}
-									className="fw-semibold"
-									loadingText={"Creating Account..."}
-									defaultText={"Create Account"}
-									defaultIcon={"bi bi-person-plus"}
-								/>
-							</div>
-						</Form>
-					)}
+						</div>
 
-					<Card.Footer className="bg-transparent border-top-0 text-center">
+						<div className="d-grid">
+							<ActionButton
+								id="confirm-button"
+								type="submit"
+								disabled={loading}
+								loading={loading}
+								className="fw-semibold"
+								loadingText={
+									mode === "forgotPassword"
+										? "Sending..."
+										: mode === "login"
+											? "Logging in..."
+											: "Creating Account..."
+								}
+								defaultText={
+									mode === "forgotPassword"
+										? "Send Reset Link"
+										: mode === "login"
+											? "Login"
+											: "Create Account"
+								}
+								defaultIcon={
+									mode === "forgotPassword"
+										? "bi bi-envelope-paper"
+										: mode === "login"
+											? "bi bi-box-arrow-in-right"
+											: "bi bi-person-plus"
+								}
+							/>
+						</div>
+					</Form>
+
+					<Card.Footer className="bg-transparent border-0 text-center">
 						<small className="text-muted">
 							{mode === "forgotPassword" ? (
 								<>
