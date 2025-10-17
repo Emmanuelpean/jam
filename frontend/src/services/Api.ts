@@ -262,12 +262,12 @@ export const authApi: AuthApi = {
 	},
 
 	requestPasswordReset: async (email: string): Promise<{ message: string }> => {
-		const response = await api.post("/password/forgot", { email });
+		const response = await api.post("password/forgot", { email });
 		return response.data;
 	},
 
 	resetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
-		const response = await api.post("/password/reset", {
+		const response = await api.post("password/reset", {
 			token,
 			new_password: newPassword,
 		});
