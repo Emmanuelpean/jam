@@ -16,10 +16,12 @@ interface VerificationResponse {
 	message: string;
 }
 
+type AuthMode = "login" | "register" | "forgotPassword";
+
 let isVerifying = false;
 
 function AuthForm(): JSX.Element {
-	const [isLogin, setIsLogin] = useState<boolean>(true);
+	const [mode, setMode] = useState<AuthMode>("login");
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [formData, setFormData] = useState<FormData>({
 		email: "",
@@ -46,7 +48,14 @@ function AuthForm(): JSX.Element {
 			navigate("/dashboard", { replace: true });
 			return;
 		}
-		setIsLogin(location.pathname.indexOf("login") >= 0);
+
+		if (location.pathname.indexOf("forgot-password") >= 0) {
+			setMode("forgotPassword");
+		} else if (location.pathname.indexOf("login") >= 0) {
+			setMode("login");
+		} else {
+			setMode("register");
+		}
 	}, [location.pathname, isAuthenticated]);
 
 	useEffect(() => {
@@ -82,13 +91,8 @@ function AuthForm(): JSX.Element {
 			setShowMobileWarning(window.innerWidth < 768);
 		};
 
-		// Check on mount
 		checkScreenSize();
-
-		// Add event listener for window resize
 		window.addEventListener("resize", checkScreenSize);
-
-		// Cleanup
 		return () => window.removeEventListener("resize", checkScreenSize);
 	}, []);
 
@@ -101,27 +105,12 @@ function AuthForm(): JSX.Element {
 			}),
 		);
 
-		// Clear field errors when user starts typing
 		if (fieldErrors[name as keyof Errors]) {
 			setFieldErrors((prev: Errors) => ({
 				...prev,
 				[name]: "",
 			}));
 		}
-	};
-
-	const switchMode = (): void => {
-		setIsLogin(!isLogin);
-		setFieldErrors({});
-		if (!isLogin) {
-			setFormData((prev) => ({
-				...prev,
-				confirmPassword: "",
-			}));
-			setAcceptedTerms(false);
-		}
-		// Update URL without navigation
-		window.history.replaceState(null, "", isLogin ? "register" : "login");
 	};
 
 	const resetForm = (): void => {
@@ -134,6 +123,24 @@ function AuthForm(): JSX.Element {
 		setFieldErrors({});
 	};
 
+	const switchToRegister = (): void => {
+		setMode("register");
+		resetForm();
+		window.history.replaceState(null, "", "register");
+	};
+
+	const switchToForgotPassword = (): void => {
+		setMode("forgotPassword");
+		resetForm();
+		window.history.replaceState(null, "", "forgot-password");
+	};
+
+	const switchToLogin = (): void => {
+		setMode("login");
+		resetForm();
+		window.history.replaceState(null, "", "login");
+	};
+
 	const validateForm = (): Errors => {
 		const errors: Errors = {};
 
@@ -142,55 +149,87 @@ function AuthForm(): JSX.Element {
 			errors.email = "Please provide a valid email address.";
 		}
 
-		// Password validation
-		if (!formData.password) {
-			errors.password = "Password is required.";
-		} else if (!isLogin && formData.password.length < MIN_PASSWORD_LENGTH) {
-			errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
-		}
-
-		// Confirm password validation (only for register)
-		if (!isLogin) {
-			if (!formData.confirmPassword) {
-				errors.confirmPassword = "Please confirm your password.";
-			} else if (formData.password !== formData.confirmPassword) {
-				errors.confirmPassword = "Passwords do not match.";
+		if (["login", "register"].includes(mode)) {
+			// Password validation
+			if (!formData.password) {
+				errors.password = "Password is required.";
+			} else if (mode === "register" && formData.password.length < MIN_PASSWORD_LENGTH) {
+				errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
 			}
 
-			// Terms acceptance validation (only for register)
-			if (!acceptedTerms) {
-				errors.terms = "You must accept the Terms and Conditions to register.";
+			// Confirm password validation (only for register)
+			if (mode === "register") {
+				if (!formData.confirmPassword) {
+					errors.confirmPassword = "Please confirm your password.";
+				} else if (formData.password !== formData.confirmPassword) {
+					errors.confirmPassword = "Passwords do not match.";
+				}
+
+				// Terms acceptance validation (only for register)
+				if (!acceptedTerms) {
+					errors.terms = "You must accept the Terms and Conditions to register.";
+				}
 			}
 		}
 
 		return errors;
 	};
 
-	const handleAuthResponse = (result: AuthResponse, isLoginAction: boolean): void => {
-		if (result.success) {
-			if (isLoginAction) {
+	const handleLogin = async (): Promise<void> => {
+		const errors: Errors = validateForm();
+		setFieldErrors(errors);
+
+		if (Object.keys(errors).length > 0) {
+			return;
+		}
+
+		setLoading(true);
+
+		try {
+			const result: AuthResponse = await login(formData.email, formData.password);
+
+			if (result.success) {
 				navigate("/dashboard");
 			} else {
-				// Registration successful
-				setIsLogin(true);
-				resetForm();
-				navigate("/login");
+				showToastSuccess(result.error!, "Login Failed");
+			}
+		} catch (error) {
+			showToastError("Failed to login. An unknown error occurred", "Login Error");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleRegister = async (): Promise<void> => {
+		const errors: Errors = validateForm();
+		setFieldErrors(errors);
+
+		if (Object.keys(errors).length > 0) {
+			return;
+		}
+
+		setLoading(true);
+
+		try {
+			const result: AuthResponse = await register(formData.email, formData.password);
+
+			if (result.success) {
+				switchToLogin();
 				showToastSuccess(
 					"Account created! Please check your email to verify your account before logging in.",
 					"Registration Successful",
 				);
+			} else {
+				showToastError(result.error!, "Registration Failed");
 			}
-		} else {
-			const title = isLoginAction ? "Login Failed" : "Registration Failed";
-			const message = result.error || "An unknown error occurred";
-			showToastError(message, title);
+		} catch (error) {
+			showToastError("Failed to create an account. An unknown error occurred", "Registration Error");
+		} finally {
+			setLoading(false);
 		}
 	};
 
-	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-		e.preventDefault();
-
-		// Validate form
+	const handleForgotPassword = async (): Promise<void> => {
 		const errors = validateForm();
 		setFieldErrors(errors);
 
@@ -201,18 +240,18 @@ function AuthForm(): JSX.Element {
 		setLoading(true);
 
 		try {
-			const result: AuthResponse = isLogin
-				? await login(formData.email, formData.password)
-				: await register(formData.email, formData.password);
-
-			handleAuthResponse(result, isLogin);
+			const response = await authApi.requestPasswordReset(formData.email);
+			showToastSuccess(response.message, "Reset Link Sent");
 		} catch (error) {
-			// Fallback error handling for unexpected errors
-			const title = isLogin ? "Login Error" : "Registration Error";
-			const message = isLogin
-				? "Failed to login. An unknown error occurred"
-				: "Failed to create an account. An unknown error occurred";
-			showToastError(message, title);
+			const apiError = error as ApiError;
+			if (apiError.status === 429) {
+				showToastError(apiError.message, "Too Many Requests");
+			} else {
+				showToastSuccess(
+					"If an account exists with this email, a password reset link has been sent.",
+					"Reset Link Sent",
+				);
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -242,8 +281,8 @@ function AuthForm(): JSX.Element {
 		label: "Password",
 		icon: "bi bi-lock-fill",
 		placeholder: "Enter your password",
-		autoComplete: isLogin ? "current-password" : "new-password",
-		helpText: !isLogin ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` : null,
+		autoComplete: mode === "login" ? "current-password" : "new-password",
+		helpText: mode !== "login" ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` : null,
 	};
 
 	const confirmPasswordField: ModalFormField = {
@@ -253,8 +292,11 @@ function AuthForm(): JSX.Element {
 		icon: "bi bi-lock-fill",
 		placeholder: "Confirm your password",
 		autoComplete: "new-password",
-		tabIndex: isLogin ? -1 : 0,
+		tabIndex: mode === "login" ? -1 : 0,
 	};
+
+	const cardTitle: string =
+		mode === "forgotPassword" ? "Reset Your Password" : mode === "login" ? "Login" : "Create Account";
 
 	const termsField: ModalFormField = {
 		name: "terms",
@@ -315,7 +357,7 @@ function AuthForm(): JSX.Element {
 				</Alert>
 			)}
 
-			{isLogin && showBanner && (
+			{mode === "login" && showBanner && (
 				<Alert
 					variant="info"
 					dismissible
@@ -340,7 +382,7 @@ function AuthForm(): JSX.Element {
 					<p className="mb-0 small text-muted">
 						Found a bug or have feedback?{" "}
 						<a
-							href="mailto:emmanuelpean@gmail.com?subject=JAM Alpha Feedback"
+							href="mailto:jam.support@emmanuelpean.me?subject=JAM Feedback"
 							className="text-decoration-none fw-semibold"
 						>
 							Let me know!
@@ -351,21 +393,66 @@ function AuthForm(): JSX.Element {
 
 			<Card className="auth-card border-0 auth-card-animated">
 				<Card.Body>
-					<Card.Title className="text-primary">{isLogin ? "Login" : "Create Account"}</Card.Title>
+					<Card.Title className="text-primary">{cardTitle}</Card.Title>
 
-					<Form onSubmit={handleSubmit} autoComplete="on">
-						{FormField(emailField, formData, handleInputChange, fieldErrors)}
+					{mode === "forgotPassword" && (
+						<p className="text-muted mb-4">
+							Enter your email address and we'll send you a link to reset your password.
+						</p>
+					)}
 
-						{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+					{mode === "forgotPassword" && (
+						<Form onSubmit={handleForgotPassword} autoComplete="on">
+							{FormField(emailField, formData, handleInputChange, fieldErrors)}
+							<div className="d-grid">
+								<ActionButton
+									id="confirm-button"
+									type="submit"
+									disabled={loading}
+									loading={loading}
+									className="fw-semibold"
+									loadingText={"Sending..."}
+									defaultText={"Send Reset Link"}
+									defaultIcon={"bi bi-envelope-paper"}
+								/>
+							</div>
+						</Form>
+					)}
 
-						<div
-							className={`auth-field-container ${!isLogin ? "auth-field-visible" : "auth-field-hidden"}`}
-						>
+					{mode === "login" && (
+						<Form onSubmit={handleLogin} autoComplete="on">
+							{FormField(emailField, formData, handleInputChange, fieldErrors)}
+							{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+							<div className="text-end mb-3">
+								<button
+									type="button"
+									onClick={switchToForgotPassword}
+									className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent small"
+									style={{ cursor: "pointer" }}
+								>
+									Forgot your password?
+								</button>
+							</div>
+							<div className="d-grid">
+								<ActionButton
+									id="confirm-button"
+									type="submit"
+									disabled={loading}
+									loading={loading}
+									className="fw-semibold"
+									loadingText={"Logging in..."}
+									defaultText={"Login"}
+									defaultIcon={"bi bi-box-arrow-in-right"}
+								/>
+							</div>
+						</Form>
+					)}
+
+					{mode === "register" && (
+						<Form onSubmit={handleRegister} autoComplete="on">
+							{FormField(emailField, formData, handleInputChange, fieldErrors)}
+							{FormField(passwordField, formData, handleInputChange, fieldErrors)}
 							{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
-						</div>
-						<div
-							className={`auth-field-container ${!isLogin ? "auth-field-visible" : "auth-field-hidden"}`}
-						>
 							{FormField(
 								termsField,
 								{ terms: acceptedTerms },
@@ -373,34 +460,62 @@ function AuthForm(): JSX.Element {
 								handleTermsCheckboxChange,
 								fieldErrors,
 							)}
-						</div>
-
-						<div className="d-grid">
-							<ActionButton
-								id="confirm-button"
-								type="submit"
-								disabled={loading}
-								loading={loading}
-								className="fw-semibold"
-								loadingText={isLogin ? "Logging in..." : "Creating Account..."}
-								defaultText={isLogin ? "Login" : "Create Account"}
-								defaultIcon={isLogin ? "bi bi-box-arrow-in-right" : "bi bi-person-plus"}
-							/>
-						</div>
-					</Form>
+							<div className="d-grid">
+								<ActionButton
+									id="confirm-button"
+									type="submit"
+									disabled={loading}
+									loading={loading}
+									className="fw-semibold"
+									loadingText={"Creating Account..."}
+									defaultText={"Create Account"}
+									defaultIcon={"bi bi-person-plus"}
+								/>
+							</div>
+						</Form>
+					)}
 
 					<Card.Footer className="bg-transparent border-top-0 text-center">
 						<small className="text-muted">
-							{isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-							<button
-								type="button"
-								id="switch-mode-button"
-								onClick={switchMode}
-								className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-								style={{ cursor: "pointer" }}
-							>
-								{isLogin ? "Create one here" : "Login here"}
-							</button>
+							{mode === "forgotPassword" ? (
+								<>
+									Remember your password?{" "}
+									<button
+										type="button"
+										onClick={switchToLogin}
+										className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+										style={{ cursor: "pointer" }}
+									>
+										Back to Login
+									</button>
+								</>
+							) : mode === "login" ? (
+								<>
+									Don't have an account?{" "}
+									<button
+										type="button"
+										id="switch-mode-button"
+										onClick={switchToRegister}
+										className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+										style={{ cursor: "pointer" }}
+									>
+										Create one here
+									</button>
+								</>
+							) : (
+								<>
+									Already have an account?{" "}
+									<button
+										type="button"
+										id="switch-mode-button"
+										onClick={switchToLogin}
+										className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+										style={{ cursor: "pointer" }}
+									>
+										Login here
+									</button>
+								</>
+							)}
 						</small>
 					</Card.Footer>
 				</Card.Body>
