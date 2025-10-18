@@ -115,7 +115,7 @@ def send_verification_with_rate_limit(
     """Send verification email with rate limiting.
     :param user: user entry
     :param db: database session
-    :return: Dictionary with success status and message"""
+    :return: Dictionary with success status, message and error code"""
 
     # Check if enough time has passed since last email
     seconds_remaining = get_remaining_seconds(user.verification_token_created_at)
@@ -162,11 +162,11 @@ register_router = APIRouter(prefix="/register", tags=["Register"])
 def create_user(
     user: schemas.UserRegister,
     db: Session = Depends(database.get_db),
-) -> str:
+) -> dict[str, str | bool]:
     """Create a new user
     :param user: The user data
     :param db: The database session
-    :returns: The created user
+    :returns: Dictionary with success status and message
     :raises HTTPException with a 400 status code if the email is already registered
     :raises HTTPException with a 401 status code if the user is not allowed to sign up"""
 
@@ -190,7 +190,8 @@ def create_user(
             if result["success"]:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=f"Email already registered but not verified. A new verification email has been sent to {existing_user.email}.",
+                    detail=f"Email already registered but not verified. "
+                    f"A new verification email has been sent to {existing_user.email}.",
                 )
             else:
                 raise HTTPException(status_code=result["error_code"], detail=result["message"])
@@ -208,11 +209,7 @@ def create_user(
     db.refresh(new_user)
 
     # Add verification code and send the email
-    result = send_verification_with_rate_limit(new_user, db)
-    if not result["success"]:
-        raise HTTPException(status_code=result["error_code"], detail=result["message"])
-    else:
-        return result["message"]
+    return send_verification_with_rate_limit(new_user, db)
 
 
 @register_router.get("/verify-email/{token}")
@@ -262,8 +259,7 @@ def send_password_reset_with_rate_limit(
     """Send password reset email with rate limiting.
     :param user: user entry
     :param db: database session
-    :return: dictionary with success status and message
-    :raises HTTPException if email sending fails"""
+    :return: dictionary with success status, message and error code"""
 
     # Check if enough time has passed since last email
     seconds_remaining = get_remaining_seconds(user.password_reset_token_created_at)
@@ -272,6 +268,7 @@ def send_password_reset_with_rate_limit(
             "success": False,
             "message": f"Please wait {seconds_remaining} seconds before requesting another password reset email",
             "seconds_remaining": seconds_remaining,
+            "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
         }
 
     # Generate new verification token
@@ -287,21 +284,32 @@ def send_password_reset_with_rate_limit(
         user.password_reset_token_created_at = datetime.now(timezone.utc)
         db.commit()
 
-        return {"success": True, "message": "Password reset email sent successfully"}
+        return {
+            "success": True,
+            "message": "Password reset email sent successfully",
+            "error_code": None,
+        }
     except Exception as e:
-        return {"success": False, "message": f"Error sending password reset email: {str(e)}"}
+        db.rollback()
+        return {
+            "success": False,
+            "message": f"Error sending password reset email: {str(e)}",
+            "error_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+        }
 
 
 @password_router.post("/forgot", status_code=status.HTTP_200_OK)
 def request_password_reset(
     email_data: schemas.EmailRequest,
     db: Session = Depends(database.get_db),
-) -> dict[str, str]:
+) -> dict[str, str | bool]:
     """Request a password reset email.
     :param email_data: Schema containing the user's email address
     :param db: The database session
     :return: Success message
-    :raises HTTPException with a 429 status code if rate limit is exceeded"""
+    :raises HTTPException with a 404 status code if user does not exist
+    :raises HTTPException with a 401 status code if user account is not active
+    :raises HTTPException with send_password_reset_with_rate_limit error details"""
 
     # Find user by email
     user = db.query(models.User).filter(models.User.email == email_data.email).first()
@@ -313,25 +321,24 @@ def request_password_reset(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account is not active.")
 
     # Send password reset email with rate limiting
-
     result = send_password_reset_with_rate_limit(user, db)
-
-    if "seconds_remaining" in result:
-        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=result["message"])
+    if result["error_code"]:
+        raise HTTPException(status_code=result["error_code"], detail=result["message"])
     else:
-        return {"message": result["message"]}
+        return {"success": True, "message": result["message"]}
 
 
 @password_router.post("/reset", status_code=status.HTTP_200_OK)
 def reset_password(
     reset_data: schemas.PasswordReset,
     db: Session = Depends(database.get_db),
-) -> dict[str, str]:
+) -> dict[str, str | bool]:
     """Reset a user's password using a valid token.
     :param reset_data: Schema containing token and new password
     :param db: The database session
     :return: Success message
-    :raises HTTPException if token is invalid or expired"""
+    :raises HTTPException with code 403 if token is invalid or expired
+    :raises HTTPException with code 500 if there is an error resetting the password"""
 
     # Hash the token to compare with stored hash
     password_reset_code = utils.hash_token(reset_data.token)
@@ -339,15 +346,8 @@ def reset_password(
     # Find user with matching token
     user = db.query(models.User).filter(models.User.password_reset_token == password_reset_code).first()
 
-    if not user:
+    if not user or check_expiration(user.password_reset_token_created_at):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired password reset token")
-
-    # Check if token is expired
-    if check_expiration(user.password_reset_token_created_at):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Password reset token has expired. Please request a new one.",
-        )
 
     # Hash the new password
     hashed_password = utils.hash_password(reset_data.new_password)
