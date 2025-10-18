@@ -30,6 +30,8 @@ class EmailService(object):
     def __init__(self) -> None:
         """Initialize the EmailService class."""
 
+        self.test_emails = []
+
         # Setup Jinja2 templates using FastAPI's built-in class
         current_dir = Path(__file__).parent
         self.templates = Jinja2Templates(directory=str(current_dir / "templates"))
@@ -46,6 +48,19 @@ class EmailService(object):
         :param subject: The subject of the email.
         :param body: The body of the email in HTML format.
         :param sender: The sender's email address (optional, defaults to configured sender)."""
+
+        if settings.test_mode:
+            self.test_emails.append(
+                {
+                    "recipient": recipient,
+                    "subject": subject,
+                    "body": body,
+                    "sender": sender or self.sender,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
+            print(self.test_emails)
+            return
 
         msg = MIMEMultipart()
         msg["From"] = settings.email_username if sender is None else sender
@@ -102,13 +117,29 @@ class EmailService(object):
         subject = "Your JAM Password Has Been Changed"
         self.send_email(recipient, subject, html_content, settings.support_email)
 
-    def _connect_imap(self) -> imaplib.IMAP4_SSL:
+    @staticmethod
+    def _connect_imap() -> imaplib.IMAP4_SSL:
         """Connect to IMAP server and login.
         :return: IMAP connection object"""
 
         mail = imaplib.IMAP4_SSL(settings.email_imap_host, settings.email_imap_port)
         mail.login(settings.email_username, settings.email_password)
         return mail
+
+    def get_test_emails(self, recipient: str = None) -> List[Dict]:
+        """Get test emails for a specific recipient or all test emails."""
+
+        if not settings.test_mode:
+            raise ValueError("Test mode is not enabled")
+
+        if recipient:
+            return [e for e in self.test_emails if e["recipient"] == recipient]
+        return self.test_emails
+
+    def clear_test_emails(self) -> None:
+        """Clear all stored test emails."""
+        if settings.test_mode:
+            self.test_emails = []
 
     def get_email_ids(
         self,

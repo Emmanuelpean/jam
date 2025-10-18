@@ -6,6 +6,9 @@ including login, registration, form validation, and mode switching functionality
 
 import time
 
+import requests
+
+from app.config import settings
 from conftest import models, BaseTest
 
 
@@ -29,6 +32,29 @@ class TestAuthenticationPage(BaseTest):
         token = user.verification_token
         assert token is not None, "Verification token not found in database"
         return token
+
+    @staticmethod
+    def get_verification_link_from_email(email: str) -> str:
+        """Helper method to get verification link from test email endpoint"""
+
+        response = requests.get(f"{settings.backend_url}/test/verification-link/{email}")
+        assert response.status_code == 200, f"Failed to get verification link: {response.text}"
+        return response.json()["verification_url"]
+
+    @staticmethod
+    def get_reset_link_from_email(email: str) -> str:
+        """Helper method to get password reset link from test email endpoint"""
+
+        response = requests.get(f"{settings.backend_url}/test/reset-link/{email}")
+        assert response.status_code == 200, f"Failed to get reset link: {response.text}"
+        return response.json()["reset_url"]
+
+    @staticmethod
+    def clear_test_emails() -> None:
+        """Helper method to clear all test emails"""
+
+        response = requests.delete(f"{settings.backend_url}/test/emails")
+        assert response.status_code == 200, "Failed to clear test emails"
 
     # ----------------------------------------------------- INPUTS -----------------------------------------------------
 
@@ -171,7 +197,7 @@ class TestLogIn(TestAuthenticationPage):
         self.confirm()
 
         # Verify error message
-        self.assert_toast_message("This user account is not active")
+        self.assert_toast_message("User account is not active.")
 
     def test_login_invalid_email(self) -> None:
         """Test login with invalid credentials"""
@@ -383,8 +409,90 @@ class TestSignUp(TestAuthenticationPage):
 
 class TestEmailVerification(TestAuthenticationPage):
 
+    def test_email_verification_flow(self) -> None:
+        """Test complete email verification flow using test email endpoints"""
+
+        test_email = "newuser@test.com"
+        test_password = "Test123!"
+
+        # Clear any existing test emails
+        self.clear_test_emails()
+
+        # Register new user
+        self.go_to_register()
+        self.set_email(test_email)
+        self.set_password(test_password)
+        self.set_confirm_password(test_password)
+        self.set_terms()
+        self.confirm()
+
+        # Verify redirect to login page
+        self.wait_for_login()
+        self.assert_toast_message("Account created! Please check your email to verify your account before logging in.")
+
+        # Get verification link from test endpoint
+        verification_url = self.get_verification_link_from_email(test_email)
+
+        # Visit verification URL
+        self.driver.get(verification_url)
+        self.assert_toast_message("Account verified successfully")
+
+        # Verify user can now login
+        self.set_email(test_email)
+        self.set_password(test_password)
+        self.confirm()
+        self.wait_for_dashboard()
+
     def test_nonverified_login(self, test_unverified_token_user, session) -> None:
         """Test login with non-verified user"""
-
         self.go_to_verification_url(test_unverified_token_user.plain_verification_token)
         self.assert_toast_message("Account verified successfully")
+
+
+class TestPasswordReset(TestAuthenticationPage):
+
+    def test_password_reset_flow(self, test_users) -> None:
+        """Test complete password reset flow using test email endpoints"""
+
+        test_email = test_users[0].email
+        new_password = "NewPassword123!"
+
+        # Clear any existing test emails
+        self.clear_test_emails()
+
+        # Request password reset
+        self.go_to_login()
+        self.get_element("forgot-password-link").click()  # Adjust selector as needed
+        self.set_email(test_email)
+        self.confirm()
+
+        # Verify success message
+        self.assert_toast_message("Password reset link sent")  # Adjust message as needed
+
+        # Get reset link from test endpoint
+        reset_url = self.get_reset_link_from_email(test_email)
+
+        # Visit reset URL
+        self.driver.get(reset_url)
+
+        # Set new password
+        self.set_password(new_password)
+        self.set_confirm_password(new_password)
+        self.confirm()
+
+        # Verify success message
+        self.assert_toast_message("Password successfully reset")
+
+        # Login with new password
+        self.wait_for_login()
+        self.set_email(test_email)
+        self.set_password(new_password)
+        self.confirm()
+        self.wait_for_dashboard()
+
+    def test_password_reset_invalid_token(self) -> None:
+        """Test password reset with invalid token"""
+        invalid_reset_url = f"{self.frontend_base_url}/reset-password?token=invalid_token"
+
+        self.driver.get(invalid_reset_url)
+        self.assert_toast_message("Invalid or expired reset token")  # Adjust message as needed
