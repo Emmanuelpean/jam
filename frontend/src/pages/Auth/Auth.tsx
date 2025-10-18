@@ -485,6 +485,7 @@ function AuthForm(): JSX.Element {
 									onClick={switchToForgotPassword}
 									className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent small"
 									style={{ cursor: "pointer" }}
+									id="forgot-password-link"
 								>
 									Forgot your password?
 								</button>

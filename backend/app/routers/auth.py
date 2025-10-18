@@ -19,7 +19,6 @@ def get_retry_remaining_seconds(token_created_at: datetime | None) -> int:
 
     if token_created_at:
         time_since_last_email = int((datetime.now(timezone.utc) - token_created_at).total_seconds())
-        print(settings.verification_email_min_interval_seconds)
         return settings.verification_email_min_interval_seconds - time_since_last_email
     return 0
 
@@ -224,7 +223,7 @@ def verify_email(
     user = db.query(models.User).filter(models.User.verification_token == verification_code).first()
 
     if not user:
-        raise HTTPException(status_code=403, detail="Invalid or expired token")
+        raise HTTPException(status_code=403, detail="Invalid or expired token. Please request a new one by logging in.")
 
     # Check if token is expired (e.g., 24 hours)
     if check_token_expiration(user.verification_token_created_at):
