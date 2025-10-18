@@ -2,7 +2,6 @@
 
 import email
 import imaplib
-import os
 import smtplib
 from datetime import datetime, timedelta
 from email.header import decode_header
@@ -11,10 +10,9 @@ from email.mime.text import MIMEText
 from pathlib import Path
 from typing import List, Dict, Optional
 
-from dotenv import load_dotenv
 from fastapi.templating import Jinja2Templates
 
-load_dotenv()
+from app.config import settings
 
 templates = Jinja2Templates(directory="templates")
 
@@ -22,16 +20,12 @@ templates = Jinja2Templates(directory="templates")
 class EmailService(object):
     """Email service class for sending and reading emails."""
 
-    sender = os.getenv("EMAIL_USERNAME")
-    password = os.getenv("EMAIL_PASSWORD")
-    smtp_server = os.getenv("EMAIL_SMTP_HOST")
-    smtp_port = int(os.getenv("EMAIL_SMTP_PORT"))
-    imap_server = os.getenv("EMAIL_IMAP_HOST")
-    imap_port = int(os.getenv("EMAIL_IMAP_PORT"))
-    scraper_email = os.getenv("SCRAPER_EMAIL")
-    support_email = os.getenv("SUPPORT_EMAIL")
-    info_email = os.getenv("INFO_EMAIL")
-    token_expiry_min = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_MINUTES"))
+    sender = settings.email_username
+    password = settings.email_password
+    smtp_server = settings.email_smtp_host
+    smtp_port = settings.email_smtp_port
+    imap_server = settings.email_imap_host
+    imap_port = settings.email_imap_port
 
     def __init__(self) -> None:
         """Initialize the EmailService class."""
@@ -54,15 +48,15 @@ class EmailService(object):
         :param sender: The sender's email address (optional, defaults to configured sender)."""
 
         msg = MIMEMultipart()
-        msg["From"] = self.sender if sender is None else sender
+        msg["From"] = settings.email_username if sender is None else sender
         msg["To"] = recipient
         msg["Subject"] = subject
         msg.attach(MIMEText(body, "html"))
 
-        with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+        with smtplib.SMTP(settings.email_smtp_host, settings.email_smtp_port) as server:
             server.starttls()
-            server.login(self.sender, self.password)
-            server.sendmail(self.sender, recipient, msg.as_string())
+            server.login(settings.email_username, settings.email_password)
+            server.sendmail(settings.email_username, recipient, msg.as_string())
 
     def send_verification_email(
         self,
@@ -75,10 +69,10 @@ class EmailService(object):
         html_content = template.render(
             name="there",
             confirmation_url=verification_url,
-            token_expiry_min=self.token_expiry_min,
+            token_expiry_min=settings.verification_token_expiration_minutes,
         )
 
-        self.send_email(recipient, "Please verify your email", html_content, self.support_email)
+        self.send_email(recipient, "Please verify your email", html_content, settings.support_email)
 
     def send_password_reset_email(
         self,
@@ -88,9 +82,11 @@ class EmailService(object):
         """Send a password reset email to the specified recipient."""
 
         template = self.templates.env.get_template("password_reset.html")
-        html_content = template.render(reset_url=reset_url, token_expiry_min=self.token_expiry_min)
+        html_content = template.render(
+            reset_url=reset_url, token_expiry_min=settings.verification_token_expiration_minutes
+        )
 
-        self.send_email(recipient, "Reset your password", html_content, self.support_email)
+        self.send_email(recipient, "Reset your password", html_content, settings.support_email)
 
     def send_password_changed_notification(
         self,
@@ -101,17 +97,17 @@ class EmailService(object):
         change_date = datetime.now().strftime("%B %d, %Y at %I:%M %p UTC")
 
         template = self.templates.env.get_template("password_changed.html")
-        html_content = template.render(change_date=change_date, support_email=self.support_email)
+        html_content = template.render(change_date=change_date, support_email=settings.support_email)
 
         subject = "Your JAM Password Has Been Changed"
-        self.send_email(recipient, subject, html_content, self.support_email)
+        self.send_email(recipient, subject, html_content, settings.support_email)
 
     def _connect_imap(self) -> imaplib.IMAP4_SSL:
         """Connect to IMAP server and login.
         :return: IMAP connection object"""
 
-        mail = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
-        mail.login(self.sender, self.password)
+        mail = imaplib.IMAP4_SSL(settings.email_imap_host, settings.email_imap_port)
+        mail.login(settings.email_username, settings.email_password)
         return mail
 
     def get_email_ids(
