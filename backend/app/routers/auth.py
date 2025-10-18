@@ -1,22 +1,15 @@
 """Authentication route"""
 
-import os
 import secrets
 from datetime import datetime, timezone, timedelta
 
-from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app import utils, models, database, schemas, oauth2
+from app.config import settings
 from app.emails.email_service import email_service
-
-load_dotenv()
-
-MIN_INTERVAL_SECONDS = int(os.getenv("VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS"))
-EXPIRATION_MINUTES = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_MINUTES"))
-FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 
 def get_retry_remaining_seconds(token_created_at: datetime | None) -> int:
@@ -26,7 +19,8 @@ def get_retry_remaining_seconds(token_created_at: datetime | None) -> int:
 
     if token_created_at:
         time_since_last_email = int((datetime.now(timezone.utc) - token_created_at).total_seconds())
-        return MIN_INTERVAL_SECONDS - time_since_last_email
+        print(settings.verification_email_min_interval_seconds)
+        return settings.verification_email_min_interval_seconds - time_since_last_email
     return 0
 
 
@@ -45,7 +39,7 @@ def check_token_expiration(token_created_at: datetime | None) -> bool:
     :return: True if expired, False otherwise"""
 
     if token_created_at:
-        expiration_time = token_created_at + timedelta(minutes=EXPIRATION_MINUTES)
+        expiration_time = token_created_at + timedelta(minutes=settings.verification_token_expiration_minutes)
         return datetime.now(timezone.utc) > expiration_time
     return True
 
@@ -131,7 +125,7 @@ def send_verification_with_rate_limit(
 
     try:
         # Send the email to the user
-        verification_url = f"{FRONTEND_URL}/login/?token={token}"
+        verification_url = f"{settings.frontend_url}/login/?token={token}"
         email_service.send_verification_email(user.email, verification_url)
 
         # Update user with new verification code and timestamp
@@ -170,9 +164,9 @@ def create_user(
     :raises HTTPException with a 401 status code if the user is not allowed to sign up"""
 
     # Check the user can be created
-    settings = db.query(models.Setting).filter(models.Setting.name == "allowlist").first()
-    if settings and settings.is_active:
-        emails_allowed = [email.strip().lower() for email in settings.value.split(",")]
+    setting = db.query(models.Setting).filter(models.Setting.name == "allowlist").first()
+    if setting and setting.is_active:
+        emails_allowed = [email.strip().lower() for email in setting.value.split(",")]
         if user.email not in emails_allowed:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -277,7 +271,7 @@ def send_password_reset_with_rate_limit(
 
     try:
         # Send verification email
-        url = f"{FRONTEND_URL}/reset-password/?token={token}"
+        url = f"{settings.frontend_url}/reset-password/?token={token}"
         email_service.send_password_reset_email(user.email, url)
 
         # Update user with new verification code and timestamp
