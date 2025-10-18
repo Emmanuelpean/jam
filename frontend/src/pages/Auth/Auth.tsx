@@ -51,7 +51,7 @@ function AuthForm(): JSX.Element {
 		}
 
 		// Check for reset token in URL
-		const token = searchParams.get("token");
+		const token: string | null = searchParams.get("token");
 
 		if (location.pathname.indexOf("reset-password") >= 0 && token) {
 			setMode("resetPassword");
@@ -134,21 +134,25 @@ function AuthForm(): JSX.Element {
 	};
 
 	const switchToRegister = (): void => {
+		setSearchParams({});
 		setMode("register");
 		resetForm();
-		window.history.replaceState(null, "", "register");
+		navigate("/register");
 	};
 
 	const switchToForgotPassword = (): void => {
+		setSearchParams({});
 		setMode("forgotPassword");
 		resetForm();
-		window.history.replaceState(null, "", "forgot-password");
+		navigate("/forgot-password");
 	};
 
 	const switchToLogin = (): void => {
-		setMode("login");
+		setSearchParams({});
+		// setMode("login");
+
+		navigate("/login");
 		resetForm();
-		window.history.replaceState(null, "", "login");
 	};
 
 	const validateForm = (): Errors => {
@@ -199,7 +203,6 @@ function AuthForm(): JSX.Element {
 
 		try {
 			const result: AuthResponse = await login(formData.email, formData.password);
-			console.log(result);
 
 			if (result.success) {
 				navigate("/dashboard");
@@ -207,7 +210,7 @@ function AuthForm(): JSX.Element {
 				showToastError(result.error!, "Login Failed");
 			}
 		} catch (error) {
-			showToastError("Failed to login. An unknown error occurred", "Login Error");
+			showToastError("Failed to login. An unknown error occurred", "Login Failed");
 		} finally {
 			setLoading(false);
 		}
@@ -236,7 +239,7 @@ function AuthForm(): JSX.Element {
 				showToastError(result.error!, "Registration Failed");
 			}
 		} catch (error) {
-			showToastError("Failed to create an account. An unknown error occurred", "Registration Error");
+			showToastError("Failed to create an account. An unknown error occurred", "Registration Failed");
 		} finally {
 			setLoading(false);
 		}
@@ -257,14 +260,7 @@ function AuthForm(): JSX.Element {
 			showToastSuccess(response.message, "Reset Link Sent");
 		} catch (error) {
 			const apiError = error as ApiError;
-			if (apiError.status === 429) {
-				showToastError(apiError.message, "Too Many Requests");
-			} else {
-				showToastSuccess(
-					"If an account exists with this email, a password reset link has been sent.",
-					"Reset Link Sent",
-				);
-			}
+			showToastError(apiError.message, "Error Sending Reset Link");
 		} finally {
 			setLoading(false);
 		}
@@ -278,28 +274,15 @@ function AuthForm(): JSX.Element {
 			return;
 		}
 
-		if (!resetToken) {
-			showToastError("Invalid reset token", "Reset Failed");
-			return;
-		}
-
 		setLoading(true);
 
 		try {
 			const response = await authApi.resetPassword(resetToken, formData.password);
 			showToastSuccess(response.message, "Password Reset Successful");
-
-			// Clear the token from URL and redirect to login
-			setSearchParams({});
 			switchToLogin();
 		} catch (error) {
-			console.log(error);
 			const apiError = error as ApiError;
-			if (apiError.status === 400) {
-				showToastError("Invalid or expired reset token. Please request a new password reset.", "Reset Failed");
-			} else {
-				showToastError(apiError.message, "Reset Failed");
-			}
+			showToastError(apiError.message, "Reset Failed");
 		} finally {
 			setLoading(false);
 		}
