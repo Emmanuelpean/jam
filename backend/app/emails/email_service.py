@@ -59,7 +59,6 @@ class EmailService(object):
                     "timestamp": datetime.now().isoformat(),
                 }
             )
-            print(self.test_emails)
             return
 
         msg = MIMEMultipart()

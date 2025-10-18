@@ -93,6 +93,24 @@ class TestAuthenticationPage(BaseTest):
 
         self.get_element("terms").click()
 
+    def register_user(self, email: str, password: str) -> None:
+        """Register a new user"""
+
+        self.go_to_register()
+        self.set_email(email)
+        self.set_password(password)
+        self.set_confirm_password(password)
+        self.set_terms()
+        self.confirm()
+
+    def login_user(self, email: str, password: str) -> None:
+        """Login with given credentials"""
+
+        self.go_to_login()
+        self.set_email(email)
+        self.set_password(password)
+        self.confirm()
+
     # ----------------------------------------------------- ERRORS -----------------------------------------------------
 
     def _assert_message(self, key: str, message: str) -> None:
@@ -419,12 +437,7 @@ class TestEmailVerification(TestAuthenticationPage):
         self.clear_test_emails()
 
         # Register new user
-        self.go_to_register()
-        self.set_email(test_email)
-        self.set_password(test_password)
-        self.set_confirm_password(test_password)
-        self.set_terms()
-        self.confirm()
+        self.register_user(test_email, test_password)
 
         # Verify redirect to login page
         self.wait_for_login()
@@ -438,15 +451,99 @@ class TestEmailVerification(TestAuthenticationPage):
         self.assert_toast_message("Account verified successfully")
 
         # Verify user can now login
-        self.set_email(test_email)
-        self.set_password(test_password)
-        self.confirm()
+        self.login_user(test_email, test_password)
         self.wait_for_dashboard()
 
     def test_nonverified_login(self, test_unverified_token_user, session) -> None:
         """Test login with non-verified user"""
+
         self.go_to_verification_url(test_unverified_token_user.plain_verification_token)
         self.assert_toast_message("Account verified successfully")
+
+    def test_login_wait(self, session) -> None:
+        """Test complete email verification flow using test email endpoints"""
+
+        test_email = "newuser@test.com"
+        test_password = "Test123!"
+
+        # Clear any existing test emails
+        self.clear_test_emails()
+
+        # Register new user
+        self.register_user(test_email, test_password)
+
+        # Verify redirect to login page
+        self.wait_for_login()
+        self.assert_toast_message("Account created! Please check your email to verify your account before logging in.")
+
+        # Try to log in
+        self.login_user(test_email, test_password)
+        self.assert_toast_message("Please wait")
+
+        # Get verification link from test endpoint
+        verification_url = self.get_verification_link_from_email(test_email)
+
+        # Visit verification URL
+        self.driver.get(verification_url)
+        self.assert_toast_message("Account verified successfully")
+
+        # Verify user can now login
+        self.login_user(test_email, test_password)
+        self.wait_for_dashboard()
+
+    def test_register_wait(self, session) -> None:
+        """Test complete email verification flow using test email endpoints"""
+
+        test_email = "newuser@test.com"
+        test_password = "Test123!"
+
+        # Clear any existing test emails
+        self.clear_test_emails()
+
+        # Register new user
+        self.register_user(test_email, test_password)
+
+        # Verify redirect to login page
+        self.wait_for_login()
+        self.assert_toast_message("Account created! Please check your email to verify your account before logging in.")
+
+        # Try to register again
+        self.register_user(test_email, test_password)
+        self.assert_toast_message("Please wait")
+
+        # Get verification link from test endpoint
+        verification_url = self.get_verification_link_from_email(test_email)
+
+        # Visit verification URL
+        self.driver.get(verification_url)
+        self.assert_toast_message("Account verified successfully")
+
+        # Verify user can now login
+        self.login_user(test_email, test_password)
+        self.wait_for_dashboard()
+
+    def test_incorrect_token(self, session) -> None:
+        """Test complete email verification flow using test email endpoints"""
+
+        test_email = "newuser@test.com"
+        test_password = "Test123!"
+
+        # Clear any existing test emails
+        self.clear_test_emails()
+
+        # Register new user
+        self.register_user(test_email, test_password)
+
+        # Verify redirect to login page
+        self.wait_for_login()
+        self.assert_toast_message("Account created! Please check your email to verify your account before logging in.")
+
+        # Get verification link from test endpoint
+        verification_url = self.get_verification_link_from_email(test_email)[:-4]
+
+        # Visit verification URL
+        self.driver.get(verification_url)
+        self.assert_toast_message("Invalid or expired token")
 
 
 class TestPasswordReset(TestAuthenticationPage):
