@@ -33,6 +33,12 @@ class OwnedOut(Out):
     owner_id: int
 
 
+class VerificationResponse(BaseModel):
+    success: bool
+    message: str
+    error_code: int | None = None
+
+
 # ------------------------------------------------------- SETTINGS ------------------------------------------------------
 
 

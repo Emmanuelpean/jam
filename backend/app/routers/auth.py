@@ -19,7 +19,7 @@ EXPIRATION_MINUTES = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_MINUTES"))
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 
-def get_remaining_seconds(token_created_at: datetime) -> int:
+def get_retry_remaining_seconds(token_created_at: datetime | None) -> int:
     """Calculate how many seconds remain until the next email can be sent.
     :param token_created_at: datetime when the last token was created
     :return: seconds remaining until next email can be sent"""
@@ -39,7 +39,7 @@ def generate_token() -> tuple[str, str]:
     return token, verification_code
 
 
-def check_expiration(token_created_at: datetime) -> bool:
+def check_token_expiration(token_created_at: datetime | None) -> bool:
     """Check if the token has expired.
     :param token_created_at: datetime when the token was created
     :return: True if expired, False otherwise"""
@@ -111,19 +111,18 @@ def login(
 def send_verification_with_rate_limit(
     user: models.User,
     db: Session,
-) -> dict[str, bool | str]:
+) -> dict[str, bool | str | int | None]:
     """Send verification email with rate limiting.
     :param user: user entry
     :param db: database session
     :return: Dictionary with success status, message and error code"""
 
     # Check if enough time has passed since last email
-    seconds_remaining = get_remaining_seconds(user.verification_token_created_at)
+    seconds_remaining = get_retry_remaining_seconds(user.verification_token_created_at)
     if seconds_remaining > 0:
         return {
             "success": False,
             "message": f"Please wait {seconds_remaining} seconds before requesting another verification email",
-            "seconds_remaining": seconds_remaining,
             "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
         }
 
@@ -158,7 +157,7 @@ def send_verification_with_rate_limit(
 register_router = APIRouter(prefix="/register", tags=["Register"])
 
 
-@register_router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
+@register_router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.VerificationResponse)
 def create_user(
     user: schemas.UserRegister,
     db: Session = Depends(database.get_db),
@@ -204,12 +203,15 @@ def create_user(
     # Create user
     user_data = user.model_dump()
     new_user = models.User(**user_data)  # noqa
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    result = send_verification_with_rate_limit(new_user, db)
+    if not result["success"]:
+        raise HTTPException(status_code=result["error_code"], detail=result["message"])
+    else:
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
 
-    # Add verification code and send the email
-    return send_verification_with_rate_limit(new_user, db)
+    return result
 
 
 @register_router.get("/verify-email/{token}")
@@ -231,7 +233,7 @@ def verify_email(
         raise HTTPException(status_code=403, detail="Invalid or expired token")
 
     # Check if token is expired (e.g., 24 hours)
-    if check_expiration(user.verification_token_created_at):
+    if check_token_expiration(user.verification_token_created_at):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Verification token has expired. Please request a new one by logging in.",
@@ -262,12 +264,11 @@ def send_password_reset_with_rate_limit(
     :return: dictionary with success status, message and error code"""
 
     # Check if enough time has passed since last email
-    seconds_remaining = get_remaining_seconds(user.password_reset_token_created_at)
+    seconds_remaining = get_retry_remaining_seconds(user.password_reset_token_created_at)
     if seconds_remaining > 0:
         return {
             "success": False,
             "message": f"Please wait {seconds_remaining} seconds before requesting another password reset email",
-            "seconds_remaining": seconds_remaining,
             "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
         }
 
@@ -346,7 +347,7 @@ def reset_password(
     # Find user with matching token
     user = db.query(models.User).filter(models.User.password_reset_token == password_reset_code).first()
 
-    if not user or check_expiration(user.password_reset_token_created_at):
+    if not user or check_token_expiration(user.password_reset_token_created_at):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired password reset token")
 
     # Hash the new password
