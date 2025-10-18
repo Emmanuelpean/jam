@@ -382,9 +382,17 @@ class TestResetPassword:
 
         token = "reset_token_123"
         reset_code = hashlib.sha256(token.encode()).hexdigest()
-        test_users[0].password_reset_token = reset_code
-        test_users[0].password_reset_token_created_at = datetime.now(timezone.utc)
+
+        # Re-query the user using the test session so modifications persist for the request
+        user = session.query(models.User).filter(models.User.id == test_users[0].id).first()
+
+        # remember current password for later comparison
+        old_password_hash = user.password
+
+        user.password_reset_token = reset_code
+        user.password_reset_token_created_at = datetime.now(timezone.utc)
         session.commit()
+
         new_password_data = {
             "token": token,
             "new_password": "newsecurepassword",
@@ -392,8 +400,9 @@ class TestResetPassword:
         response = client.post("/password/reset", json=new_password_data)
         assert response.status_code == 200
         assert "password has been reset" in response.json()["message"].lower()
+
         updated_user = session.query(models.User).filter(models.User.id == test_users[0].id).first()
-        assert updated_user.password != test_users[0].password
+        assert updated_user.password != old_password_hash
         assert updated_user.password_reset_token is None
         assert updated_user.password_reset_token_created_at is None
 

@@ -264,13 +264,13 @@ def send_password_reset_with_rate_limit(
     :return: dictionary with success status, message and error code"""
 
     # Check if enough time has passed since last email
-    seconds_remaining = get_retry_remaining_seconds(user.password_reset_token_created_at)
-    if seconds_remaining > 0:
-        return {
-            "success": False,
-            "message": f"Please wait {seconds_remaining} seconds before requesting another password reset email",
-            "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
-        }
+    # seconds_remaining = get_retry_remaining_seconds(user.password_reset_token_created_at)
+    # if seconds_remaining > 0:
+    #     return {
+    #         "success": False,
+    #         "message": f"Please wait {seconds_remaining} seconds before requesting another password reset email",
+    #         "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
+    #     }
 
     # Generate new verification token
     token, code = generate_token()

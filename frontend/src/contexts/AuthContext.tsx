@@ -50,7 +50,6 @@ export function useAuth(): AuthContextType {
 export function AuthProvider({ children }: AuthProviderProps) {
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 	const [token, setToken] = useState<string | null>(localStorage.getItem("token") || null);
-	const [loading, setLoading] = useState<boolean>(true);
 	const [userFetched, setUserFetched] = useState<boolean>(false);
 	const navigate = useNavigate();
 
@@ -59,7 +58,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		async (authToken: string): Promise<void> => {
 			// Don't fetch if we already have user data and the token hasn't changed
 			if (userFetched && currentUser && token === authToken) {
-				setLoading(false);
 				return;
 			}
 
@@ -86,8 +84,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 					setCurrentUser(null);
 					setUserFetched(true);
 				}
-			} finally {
-				setLoading(false);
 			}
 		},
 		[userFetched, currentUser, token],
@@ -110,10 +106,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			// Only fetch if not already fetched
 			setToken(storedToken);
 			fetchUserInfo(storedToken).then(() => null);
-		} else {
-			setLoading(false);
 		}
-	}, []); // Remove fetchUserInfo from dependencies to prevent re-runs
+	}, []);
 
 	const login = async (email: string, password: string): Promise<AuthResponse> => {
 		try {
@@ -172,5 +166,5 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		isAuthenticated: !!token,
 	};
 
-	return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -15,18 +15,18 @@ interface RequestOptions {
 
 interface CrudApi {
 	getAll: (token: string, queryParams?: QueryParams | null) => Promise<any>;
-	get: (id: string | number, token: string) => Promise<any>;
+	get: (id: number, token: string) => Promise<any>;
 	create: (data: any, token: string) => Promise<any>;
-	update: (id: string | number, data: any, token: string) => Promise<any>;
-	delete: (id: string | number, token: string) => Promise<any>;
+	update: (id: number, data: any, token: string) => Promise<any>;
+	delete: (id: number, token: string) => Promise<any>;
 }
 
 interface FilesApi extends CrudApi {
-	download: (id: string | number, filename: string, token: string) => Promise<void>;
+	download: (id: number, filename: string, token: string) => Promise<void>;
 }
 
 interface ScrapedJobApi extends CrudApi {
-	setImported: (id: string | number, data: ScrapedJobUpdate, token: string) => void;
+	setImported: (id: number, data: ScrapedJobUpdate, token: string) => void;
 }
 
 interface AuthApi {
@@ -35,12 +35,11 @@ interface AuthApi {
 	getCurrentUser: (token: string) => Promise<any>;
 	updateCurrentUser: (data: any, token: string) => Promise<any>;
 	verifyEmail: (token: string) => Promise<any>;
-	resendVerification: (email: string) => Promise<any>;
 	requestPasswordReset: (email: string) => Promise<any>;
 	resetPassword: (token: string, newPassword: string) => Promise<{ message: string }>;
 }
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 
 const getAuthHeaders = (token: string): HeadersInit => ({
 	"Content-Type": "application/json",
@@ -257,21 +256,15 @@ export const authApi: AuthApi = {
 		return api.get(`register/verify-email/${token}`);
 	},
 
-	resendVerification: async (email: string) => {
-		return api.post("register/resend-verification", { email });
-	},
-
 	requestPasswordReset: async (email: string): Promise<{ message: string }> => {
-		const response = await api.post("password/forgot", { email });
-		return response.data;
+		return api.post("password/forgot", { email });
 	},
 
 	resetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
-		const response = await api.post("password/reset", {
+		return api.post("password/reset", {
 			token,
 			new_password: newPassword,
 		});
-		return response.data;
 	},
 };
 
