@@ -109,6 +109,8 @@ interface RouteConfig {
 const routeConfigs: RouteConfig[] = [
 	{ path: "/login", element: <Login /> },
 	{ path: "/register", element: <Login /> },
+	{ path: "/forgot-password", element: <Login /> },
+	{ path: "/reset-password", element: <Login /> },
 	{ path: "/", element: <Navigate to="/dashboard" replace /> },
 	{ path: "/about", element: <AboutPage />, protected: true },
 	{ path: "/locations", element: <LocationsPage />, protected: true },

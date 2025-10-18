@@ -14,48 +14,40 @@ from app.emails.email_service import email_service
 
 load_dotenv()
 
+MIN_INTERVAL_SECONDS = int(os.getenv("VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS"))
+EXPIRATION_MINUTES = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_MINUTES"))
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 
-def send_verification_with_rate_limit(
-    user: models.User,
-    db: Session,
-) -> dict[str, bool | str]:
-    """Send verification email with rate limiting.
-    :param user: user entry
-    :param db: database session
-    :return: Dictionary with success status and message
-    :raises HTTPException if email sending fails"""
 
-    # Check if enough time has passed since last email
-    min_interval_seconds = int(os.getenv("VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS"))
-    if user.verification_token_created_at:
-        time_since_last_email = datetime.now(timezone.utc) - user.verification_token_created_at
-        if time_since_last_email < timedelta(seconds=min_interval_seconds):
-            seconds_remaining = min_interval_seconds - int(time_since_last_email.total_seconds())
-            return {
-                "success": False,
-                "message": f"Please wait {seconds_remaining} seconds before requesting another verification email",
-                "seconds_remaining": seconds_remaining,
-            }
+def get_remaining_seconds(token_created_at: datetime) -> int:
+    """Calculate how many seconds remain until the next email can be sent.
+    :param token_created_at: datetime when the last token was created
+    :return: seconds remaining until next email can be sent"""
 
-    # Generate new verification token
+    if token_created_at:
+        time_since_last_email = int((datetime.now(timezone.utc) - token_created_at).total_seconds())
+        return MIN_INTERVAL_SECONDS - time_since_last_email
+    return 0
+
+
+def generate_token() -> tuple[str, str]:
+    """Generate a secure random token.
+    :return: tuple containing the token and its hashed verification code"""
+
     token = secrets.token_urlsafe(32)
     verification_code = utils.hash_token(token)
+    return token, verification_code
 
-    # Update user with new verification code and timestamp
-    user.verification_token = verification_code
-    user.verification_token_created_at = datetime.now(timezone.utc)
-    db.commit()
 
-    try:
-        # Send verification email
-        expiration_min = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_MINUTES"))
-        frontend_url = os.getenv("FRONTEND_URL")
-        verification_url = f"{frontend_url}/login/?token={token}"
-        email_service.send_verification_email(user.email, verification_url, expiration_min)
+def check_expiration(token_created_at: datetime) -> bool:
+    """Check if the token has expired.
+    :param token_created_at: datetime when the token was created
+    :return: True if expired, False otherwise"""
 
-        return {"success": True, "message": "Verification email sent successfully"}
-    except Exception as e:
-        return {"success": False, "message": f"Error sending verification email: {str(e)}"}
+    if token_created_at:
+        expiration_time = token_created_at + timedelta(minutes=EXPIRATION_MINUTES)
+        return datetime.now(timezone.utc) > expiration_time
+    return True
 
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
@@ -70,28 +62,29 @@ def login(
     db: Session = Depends(database.get_db),
 ) -> dict[str, str]:
     """Login a user.
-    :param user_credentials: The user credentials (note: username is the email field).
-    :param db: The database session.
-    :returns: The access token.
-    :raises HTTPException with a 403 status code if the credentials are invalid."""
+    :param user_credentials: The user credentials (note: username is the email field)
+    :param db: The database session
+    :returns: The access token dictionary
+    :raises HTTPException with a 403 status code if the credentials are invalid
+    :raises HTTPException with a 401 status code if the user is not active or not verified
+    :raises HTTPException with a 429 status code if verification email rate limit is exceeded"""
 
     # Find the user in the list based on the email provided
     user = db.query(models.User).filter(user_credentials.username == models.User.email).first()
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
+
+    # Check that the user exist and verify the password
+    if user is None or not utils.verify_password(user_credentials.password, user.password):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials.")
 
     # Check that the user is active
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="This user account is not active")
-
-    # Check that the password corresponds to that user
-    if not utils.verify_password(user_credentials.password, user.password):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account is not active.")
 
     # Check that the user is verified
     if not user.is_verified:
         result = send_verification_with_rate_limit(user, db)
 
+        # Raise appropriate exception based on email sending result
         if result["success"]:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -115,6 +108,53 @@ def login(
 # ------------------------------------------------------ REGISTER ------------------------------------------------------
 
 
+def send_verification_with_rate_limit(
+    user: models.User,
+    db: Session,
+) -> dict[str, bool | str]:
+    """Send verification email with rate limiting.
+    :param user: user entry
+    :param db: database session
+    :return: Dictionary with success status and message"""
+
+    # Check if enough time has passed since last email
+    seconds_remaining = get_remaining_seconds(user.verification_token_created_at)
+    if seconds_remaining > 0:
+        return {
+            "success": False,
+            "message": f"Please wait {seconds_remaining} seconds before requesting another verification email",
+            "seconds_remaining": seconds_remaining,
+            "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
+        }
+
+    # Generate new verification token
+    token, verification_code = generate_token()
+
+    try:
+        # Send the email to the user
+        verification_url = f"{FRONTEND_URL}/login/?token={token}"
+        email_service.send_verification_email(user.email, verification_url, EXPIRATION_MINUTES)
+
+        # Update user with new verification code and timestamp
+        user.verification_token = verification_code
+        user.verification_token_created_at = datetime.now(timezone.utc)
+        db.commit()
+
+        return {
+            "success": True,
+            "message": "Verification email sent successfully",
+            "error_code": None,
+        }
+
+    except Exception as e:
+        db.rollback()
+        return {
+            "success": False,
+            "message": f"Error sending verification email: {str(e)}",
+            "error_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+        }
+
+
 register_router = APIRouter(prefix="/register", tags=["Register"])
 
 
@@ -122,11 +162,13 @@ register_router = APIRouter(prefix="/register", tags=["Register"])
 def create_user(
     user: schemas.UserRegister,
     db: Session = Depends(database.get_db),
-) -> models.User:
-    """Create a new user.
-    :param user: The user data.
-    :param db: The database session.
-    :returns: The created user."""
+) -> str:
+    """Create a new user
+    :param user: The user data
+    :param db: The database session
+    :returns: The created user
+    :raises HTTPException with a 400 status code if the email is already registered
+    :raises HTTPException with a 401 status code if the user is not allowed to sign up"""
 
     # Check the user can be created
     settings = db.query(models.Setting).filter(models.Setting.name == "allowlist").first()
@@ -134,7 +176,8 @@ def create_user(
         emails_allowed = [email.strip().lower() for email in settings.value.split(",")]
         if user.email not in emails_allowed:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not allowed to sign up for now."
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="You are not allowed to sign up for now.",
             )
 
     # Check if email already exists
@@ -144,31 +187,32 @@ def create_user(
         # If user exists but is not verified, resend verification email
         if not existing_user.is_verified:
             result = send_verification_with_rate_limit(existing_user, db)
-
             if result["success"]:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email already registered but not verified. A new verification email has been sent.",
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=f"Email already registered but not verified. A new verification email has been sent to {existing_user.email}.",
                 )
             else:
-                raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=result["message"])
+                raise HTTPException(status_code=result["error_code"], detail=result["message"])
         else:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
     # Hash the password and create the user
     user.password = utils.hash_password(user.password)
 
-    # Create user with verification code
+    # Create user
     user_data = user.model_dump()
     new_user = models.User(**user_data)  # noqa
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
+    # Add verification code and send the email
     result = send_verification_with_rate_limit(new_user, db)
     if not result["success"]:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=result["message"])
-    return new_user
+        raise HTTPException(status_code=result["error_code"], detail=result["message"])
+    else:
+        return result["message"]
 
 
 @register_router.get("/verify-email/{token}")
@@ -176,28 +220,27 @@ def verify_email(
     token: str,
     db: Session = Depends(database.get_db),
 ) -> dict[str, str]:
-    """Verify a user's email address using the provided token.
-    :param token: The verification token from the email.
-    :param db: The database session."""
+    """Verify a user's email address using the provided token
+    :param token: The verification token from the email
+    :param db: The database session
+    :raises HTTPException with a 403 status code if the token does not exist
+    :raises HTTPException with a 403 status code if the token has expired
+    :return: Success message upon successful verification"""
 
-    expiration_hours = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_MINUTES"))
     verification_code = utils.hash_token(token)
-    print(verification_code)
-
     user = db.query(models.User).filter(models.User.verification_token == verification_code).first()
 
     if not user:
         raise HTTPException(status_code=403, detail="Invalid or expired token")
 
     # Check if token is expired (e.g., 24 hours)
-    expiration_time = user.verification_token_created_at + timedelta(hours=expiration_hours)
-    if datetime.now(timezone.utc) > expiration_time:
-        send_verification_with_rate_limit(user, db)
+    if check_expiration(user.verification_token_created_at):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Verification token has expired. A new one has been sent.",
+            detail="Verification token has expired. Please request a new one by logging in.",
         )
 
+    # Clear the stored token and mark the user as verified
     user.verification_token = None
     user.verification_token_created_at = None
     user.is_verified = True
@@ -223,32 +266,26 @@ def send_password_reset_with_rate_limit(
     :raises HTTPException if email sending fails"""
 
     # Check if enough time has passed since last email
-    min_interval_seconds = int(os.getenv("VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS"))
-    if user.password_reset_token_created_at:
-        time_since_last_email = datetime.now(timezone.utc) - user.password_reset_token_created_at
-        if time_since_last_email < timedelta(seconds=min_interval_seconds):
-            seconds_remaining = min_interval_seconds - int(time_since_last_email.total_seconds())
-            return {
-                "success": False,
-                "message": f"Please wait {seconds_remaining} seconds before requesting another password reset email",
-                "seconds_remaining": seconds_remaining,
-            }
+    seconds_remaining = get_remaining_seconds(user.password_reset_token_created_at)
+    if seconds_remaining > 0:
+        return {
+            "success": False,
+            "message": f"Please wait {seconds_remaining} seconds before requesting another password reset email",
+            "seconds_remaining": seconds_remaining,
+        }
 
     # Generate new verification token
-    token = secrets.token_urlsafe(32)
-    code = utils.hash_token(token)
-
-    # Update user with new verification code and timestamp
-    user.password_reset_token = code
-    user.password_reset_token_created_at = datetime.now(timezone.utc)
-    db.commit()
+    token, code = generate_token()
 
     try:
         # Send verification email
-        expiration_min = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_MINUTES"))
-        frontend_url = os.getenv("FRONTEND_URL")
-        url = f"{frontend_url}/password/reset/?token={token}"
-        email_service.send_password_reset_email(user.email, url, expiration_min)
+        url = f"{FRONTEND_URL}/reset-password/?token={token}"
+        email_service.send_password_reset_email(user.email, url, EXPIRATION_MINUTES)
+
+        # Update user with new verification code and timestamp
+        user.password_reset_token = code
+        user.password_reset_token_created_at = datetime.now(timezone.utc)
+        db.commit()
 
         return {"success": True, "message": "Password reset email sent successfully"}
     except Exception as e:
@@ -263,27 +300,26 @@ def request_password_reset(
     """Request a password reset email.
     :param email_data: Schema containing the user's email address
     :param db: The database session
-    :return: Success message (always returns success to prevent email enumeration)"""
+    :return: Success message
+    :raises HTTPException with a 429 status code if rate limit is exceeded"""
 
     # Find user by email
     user = db.query(models.User).filter(models.User.email == email_data.email).first()
 
-    # Always return success message to prevent email enumeration attacks
     if not user:
-        return {"message": "If an account exists with this email, a password reset link has been sent"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this email does not exist.")
 
-    # Check if user is active
     if not user.is_active:
-        return {"message": "If an account exists with this email, a password reset link has been sent"}
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account is not active.")
 
     # Send password reset email with rate limiting
+
     result = send_password_reset_with_rate_limit(user, db)
 
-    if not result["success"]:
-        if "seconds_remaining" in result:
-            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=result["message"])
-
-    return {"message": "If an account exists with this email, a password reset link has been sent"}
+    if "seconds_remaining" in result:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=result["message"])
+    else:
+        return {"message": result["message"]}
 
 
 @password_router.post("/reset", status_code=status.HTTP_200_OK)
@@ -307,30 +343,24 @@ def reset_password(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired password reset token")
 
     # Check if token is expired
-    expiration_minutes = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_MINUTES"))
-    if user.password_reset_token_created_at:
-        expiration_time = user.password_reset_token_created_at + timedelta(minutes=expiration_minutes)
-        if datetime.now(timezone.utc) > expiration_time:
-            db.commit()
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Password reset token has expired. Please request a new one.",
-            )
+    if check_expiration(user.password_reset_token_created_at):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Password reset token has expired. Please request a new one.",
+        )
 
     # Hash the new password
     hashed_password = utils.hash_password(reset_data.new_password)
 
     # Update user's password and clear reset token
-    user.password = hashed_password
-    user.password_reset_token = None
-    user.password_reset_token_created_at = None
-    db.commit()
-
-    # Optional: Send confirmation email
     try:
         email_service.send_password_changed_notification(user.email)
-    except Exception as e:
-        # Log but don't fail the request if notification fails
-        print(f"Failed to send password change notification: {str(e)}")
+        user.password = hashed_password
+        user.password_reset_token = None
+        user.password_reset_token_created_at = None
+        db.commit()
+    except:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error resetting password")
 
-    return {"message": "Password has been reset successfully"}
+    return {"success": True, "message": "Password has been reset successfully"}

@@ -16,18 +16,19 @@ interface VerificationResponse {
 	message: string;
 }
 
-type AuthMode = "login" | "register" | "forgotPassword";
+type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword";
 
 let isVerifying = false;
 
 function AuthForm(): JSX.Element {
-	const [mode, setMode] = useState<AuthMode>("login");
+	const [mode, setMode] = useState<AuthMode>("resetPassword");
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [formData, setFormData] = useState<FormData>({
 		email: "",
 		password: "",
 		confirmPassword: "",
 	});
+	const [resetToken, setResetToken] = useState<string>("");
 	const [showBanner, setShowBanner] = useState<boolean>(true);
 	const [showMobileWarning, setShowMobileWarning] = useState<boolean>(false);
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
@@ -49,41 +50,49 @@ function AuthForm(): JSX.Element {
 			return;
 		}
 
-		if (location.pathname.indexOf("forgot-password") >= 0) {
+		// Check for reset token in URL
+		const token = searchParams.get("token");
+
+		if (location.pathname.indexOf("reset-password") >= 0 && token) {
+			setMode("resetPassword");
+			setResetToken(token);
+		} else if (location.pathname.indexOf("forgot-password") >= 0) {
 			setMode("forgotPassword");
 		} else if (location.pathname.indexOf("login") >= 0) {
 			setMode("login");
 		} else {
 			setMode("register");
 		}
-	}, [location.pathname, isAuthenticated]);
+	}, [location.pathname, isAuthenticated, searchParams]);
 
 	useEffect(() => {
-		const verifyToken: string | null = searchParams.get("token");
+		if (mode === "login") {
+			const verifyToken: string | null = searchParams.get("token");
 
-		if (verifyToken && !isVerifying) {
-			isVerifying = true;
-			showLoading("Verifying email...");
+			if (verifyToken && !isVerifying) {
+				isVerifying = true;
+				showLoading("Verifying email...", undefined);
 
-			authApi
-				.verifyEmail(verifyToken)
-				.then((response: VerificationResponse) => {
-					showToastSuccess(response.message, "Email Verified");
-					setSearchParams({});
-				})
-				.catch((err: any) => {
-					const apiError = err as ApiError;
-					showToastError(apiError.message, "Verification Failed");
-					setSearchParams({});
-				})
-				.finally(() => {
-					hideLoading();
-					setTimeout((): void => {
-						isVerifying = false;
-					}, 1000);
-				});
+				authApi
+					.verifyEmail(verifyToken)
+					.then((response: VerificationResponse) => {
+						showToastSuccess(response.message, "Email Verified");
+						setSearchParams({});
+					})
+					.catch((err: any) => {
+						const apiError = err as ApiError;
+						showToastError(apiError.message, "Verification Failed");
+						setSearchParams({});
+					})
+					.finally(() => {
+						hideLoading();
+						setTimeout((): void => {
+							isVerifying = false;
+						}, 1000);
+					});
+			}
 		}
-	}, []);
+	}, [mode]);
 
 	// Detect small screens
 	useEffect(() => {
@@ -121,6 +130,7 @@ function AuthForm(): JSX.Element {
 		});
 		setAcceptedTerms(false);
 		setFieldErrors({});
+		setResetToken("");
 	};
 
 	const switchToRegister = (): void => {
@@ -145,30 +155,32 @@ function AuthForm(): JSX.Element {
 		const errors: Errors = {};
 
 		// Email validation
-		if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-			errors.email = "Please provide a valid email address.";
+		if (["login", "register", "forgotPassword"].includes(mode)) {
+			if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+				errors.email = "Please provide a valid email address.";
+			}
 		}
 
-		if (["login", "register"].includes(mode)) {
-			// Password validation
+		// Password validation
+		if (["login", "register", "resetPassword"].includes(mode)) {
 			if (!formData.password) {
 				errors.password = "Password is required.";
-			} else if (mode === "register" && formData.password.length < MIN_PASSWORD_LENGTH) {
+			} else if (["register", "resetPassword"].includes(mode) && formData.password.length < MIN_PASSWORD_LENGTH) {
 				errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
 			}
 
-			// Confirm password validation (only for register)
-			if (mode === "register") {
+			// Confirm password validation (for register and resetPassword)
+			if (["register", "resetPassword"].includes(mode)) {
 				if (!formData.confirmPassword) {
 					errors.confirmPassword = "Please confirm your password.";
 				} else if (formData.password !== formData.confirmPassword) {
 					errors.confirmPassword = "Passwords do not match.";
 				}
+			}
 
-				// Terms acceptance validation (only for register)
-				if (!acceptedTerms) {
-					errors.terms = "You must accept the Terms and Conditions to register.";
-				}
+			// Terms acceptance validation (only for register)
+			if (mode === "register" && !acceptedTerms) {
+				errors.terms = "You must accept the Terms and Conditions to register.";
 			}
 		}
 
@@ -258,10 +270,47 @@ function AuthForm(): JSX.Element {
 		}
 	};
 
+	const handleResetPassword = async (): Promise<void> => {
+		const errors = validateForm();
+		setFieldErrors(errors);
+
+		if (Object.keys(errors).length > 0) {
+			return;
+		}
+
+		if (!resetToken) {
+			showToastError("Invalid reset token", "Reset Failed");
+			return;
+		}
+
+		setLoading(true);
+
+		try {
+			const response = await authApi.resetPassword(resetToken, formData.password);
+			showToastSuccess(response.message, "Password Reset Successful");
+
+			// Clear the token from URL and redirect to login
+			setSearchParams({});
+			switchToLogin();
+		} catch (error) {
+			console.log(error);
+			const apiError = error as ApiError;
+			if (apiError.status === 400) {
+				showToastError("Invalid or expired reset token. Please request a new password reset.", "Reset Failed");
+			} else {
+				showToastError(apiError.message, "Reset Failed");
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
 		e.preventDefault();
 
-		if (mode === "forgotPassword") {
+		if (mode === "resetPassword") {
+			handleResetPassword().then(() => {});
+		} else if (mode === "forgotPassword") {
 			handleForgotPassword().then(() => {});
 		} else if (mode === "login") {
 			handleLogin().then(() => {});
@@ -291,11 +340,13 @@ function AuthForm(): JSX.Element {
 	const passwordField: ModalFormField = {
 		name: "password",
 		type: "password",
-		label: "Password",
+		label: mode === "resetPassword" ? "New Password" : "Password",
 		icon: "bi bi-lock-fill",
-		placeholder: "Enter your password",
+		placeholder: mode === "resetPassword" ? "Enter your new password" : "Enter your password",
 		autoComplete: mode === "login" ? "current-password" : "new-password",
-		helpText: mode === "register" ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long` : null,
+		helpText: ["register", "resetPassword"].includes(mode)
+			? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`
+			: null,
 	};
 
 	const confirmPasswordField: ModalFormField = {
@@ -303,13 +354,19 @@ function AuthForm(): JSX.Element {
 		type: "password",
 		label: "Confirm Password",
 		icon: "bi bi-lock-fill",
-		placeholder: "Confirm your password",
+		placeholder: mode === "resetPassword" ? "Confirm your new password" : "Confirm your password",
 		autoComplete: "new-password",
 		tabIndex: mode === "login" ? -1 : 0,
 	};
 
 	const cardTitle: string =
-		mode === "forgotPassword" ? "Reset Your Password" : mode === "login" ? "Login" : "Create Account";
+		mode === "resetPassword"
+			? "Set New Password"
+			: mode === "forgotPassword"
+				? "Reset Your Password"
+				: mode === "login"
+					? "Login"
+					: "Create Account";
 
 	const termsField: ModalFormField = {
 		name: "terms",
@@ -414,11 +471,21 @@ function AuthForm(): JSX.Element {
 						</p>
 					)}
 
-					<Form onSubmit={handleSubmit} autoComplete="on">
-						{/* Email field - always visible */}
-						{FormField(emailField, formData, handleInputChange, fieldErrors)}
+					{mode === "resetPassword" && (
+						<p className="text-muted mb-4">
+							Please enter your new password below. Make sure it's strong and secure.
+						</p>
+					)}
 
-						{/* Password field - visible for login and register */}
+					<Form onSubmit={handleSubmit} autoComplete="on">
+						{/* Email field - visible for login, register, and forgotPassword */}
+						<div
+							className={`auth-field-container ${mode !== "resetPassword" ? "auth-field-visible" : "auth-field-hidden"}`}
+						>
+							{FormField(emailField, formData, handleInputChange, fieldErrors)}
+						</div>
+
+						{/* Password field - visible for login, register, and resetPassword */}
 						<div
 							className={`auth-field-container ${mode !== "forgotPassword" ? "auth-field-visible" : "auth-field-hidden"}`}
 						>
@@ -441,9 +508,9 @@ function AuthForm(): JSX.Element {
 							</div>
 						</div>
 
-						{/* Confirm password - visible only for register */}
+						{/* Confirm password - visible for register and resetPassword */}
 						<div
-							className={`auth-field-container ${mode === "register" ? "auth-field-visible" : "auth-field-hidden"}`}
+							className={`auth-field-container ${["register", "resetPassword"].includes(mode) ? "auth-field-visible" : "auth-field-hidden"}`}
 						>
 							{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
 						</div>
@@ -469,25 +536,31 @@ function AuthForm(): JSX.Element {
 								loading={loading}
 								className="fw-semibold"
 								loadingText={
-									mode === "forgotPassword"
-										? "Sending..."
-										: mode === "login"
-											? "Logging in..."
-											: "Creating Account..."
+									mode === "resetPassword"
+										? "Resetting Password..."
+										: mode === "forgotPassword"
+											? "Sending..."
+											: mode === "login"
+												? "Logging in..."
+												: "Creating Account..."
 								}
 								defaultText={
-									mode === "forgotPassword"
-										? "Send Reset Link"
-										: mode === "login"
-											? "Login"
-											: "Create Account"
+									mode === "resetPassword"
+										? "Reset Password"
+										: mode === "forgotPassword"
+											? "Send Reset Link"
+											: mode === "login"
+												? "Login"
+												: "Create Account"
 								}
 								defaultIcon={
-									mode === "forgotPassword"
-										? "bi bi-envelope-paper"
-										: mode === "login"
-											? "bi bi-box-arrow-in-right"
-											: "bi bi-person-plus"
+									mode === "resetPassword"
+										? "bi bi-shield-lock"
+										: mode === "forgotPassword"
+											? "bi bi-envelope-paper"
+											: mode === "login"
+												? "bi bi-box-arrow-in-right"
+												: "bi bi-person-plus"
 								}
 							/>
 						</div>
@@ -495,7 +568,19 @@ function AuthForm(): JSX.Element {
 
 					<Card.Footer className="bg-transparent border-0 text-center">
 						<small className="text-muted">
-							{mode === "forgotPassword" ? (
+							{mode === "resetPassword" ? (
+								<>
+									Remember your password?{" "}
+									<button
+										type="button"
+										onClick={switchToLogin}
+										className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+										style={{ cursor: "pointer" }}
+									>
+										Back to Login
+									</button>
+								</>
+							) : mode === "forgotPassword" ? (
 								<>
 									Remember your password?{" "}
 									<button

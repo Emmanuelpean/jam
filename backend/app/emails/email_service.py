@@ -101,9 +101,7 @@ class EmailService(object):
         recipient: str,
     ) -> None:
         """Send an email to the specified recipient mentioning that the password was changed.
-        :param recipient: The recipient's email address.
-        :param reset_url: The reset URL.
-        :param expiration_minutes: Token expiry time in minutes."""
+        :param recipient: The recipient's email address."""
 
         current_dir = Path(__file__).parent
         template_path = current_dir / "password_changed_template.html"
