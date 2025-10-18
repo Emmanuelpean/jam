@@ -10,6 +10,58 @@ from jose import jwt
 
 from app import schemas, models
 from app.config import settings
+from app.routers import auth
+
+
+# -------------------------------------------------- UTILITY FUNCTIONS -------------------------------------------------
+
+
+class TestGetRemainingSeconds:
+
+    @pytest.mark.parametrize(
+        "dt, expected",
+        [
+            (datetime.now(timezone.utc) - timedelta(minutes=1), 60),
+            (datetime.now(timezone.utc) - timedelta(minutes=2), 0),
+            (datetime.now(timezone.utc) - timedelta(minutes=3), -60),
+            (datetime.now(timezone.utc), 120),
+            (None, 0),
+        ],
+    )
+    def test_get_remaining_seconds(self, dt, expected) -> None:
+        """Test calculation of remaining seconds for rate limiting"""
+
+        assert auth.get_retry_remaining_seconds(dt) == expected
+
+
+class TestGenerateToken:
+
+    def test_generate_token(self) -> None:
+        """Test generation of verification token."""
+
+        token, code = auth.generate_token()
+        assert len(token) == 43
+        assert len(code) == 64
+
+
+class TestCheckTokenExpiration:
+
+    @pytest.mark.parametrize(
+        "created_at, expected",
+        [
+            (datetime.now(timezone.utc) - timedelta(minutes=10), False),
+            (datetime.now(timezone.utc) - timedelta(minutes=20), True),
+            (datetime.now(timezone.utc), False),
+            (None, True),
+        ],
+    )
+    def test_check_token_expiration(self, created_at, expected) -> None:
+        """Test verification token expiration check."""
+
+        assert auth.check_token_expiration(created_at) == expected
+
+
+# -------------------------------------------------------- LOGIN -------------------------------------------------------
 
 
 class TestLogin:
@@ -44,7 +96,7 @@ class TestLogin:
         assert response.status_code == 401
 
     @patch("app.routers.auth.email_service.send_verification_email")
-    def test_login_unverified_user_sends_email(self, mock_email, test_unverified_user, client) -> None:
+    def test_login_unverified_user(self, mock_email, test_unverified_user, client) -> None:
         """Test that login for unverified user sends verification email."""
 
         user_data = {
@@ -85,6 +137,31 @@ class TestLogin:
 
         response = client.post("/login/", data={"username": email, "password": password})
         assert response.status_code == status_code
+
+
+# ------------------------------------------------------ REGISTER ------------------------------------------------------
+
+
+class TestSendVerificationWithRateLimit:
+
+    @patch("app.routers.auth.email_service.send_verification_email")
+    def test_send_verification_email(self, mock_email, test_users, session) -> None:
+        """Test sending of verification email."""
+
+        result = auth.send_verification_with_rate_limit(test_users[0], session)
+        assert result == {"success": True, "message": "Verification email sent successfully", "error_code": None}
+        assert mock_email.call_count == 1
+        assert test_users[0].verification_token is not None
+        assert test_users[0].verification_token_created_at is not None
+
+    @patch("app.routers.auth.email_service.send_verification_email")
+    def test_send_verification_email_rate_limited(self, mock_email, test_unverified_token_user, session) -> None:
+        """Test rate limiting when sending verification email."""
+
+        result = auth.send_verification_with_rate_limit(test_unverified_token_user, session)
+        assert result["success"] is False
+        assert result["error_code"] == 429
+        assert mock_email.call_count == 0
 
 
 class TestRegister:
@@ -135,13 +212,13 @@ class TestRegister:
         }
         response = client.post("/register", json=user_data)
 
-        assert response.status_code == 400
+        assert response.status_code == 401
         assert "not verified" in response.json()["detail"].lower()
         assert mock_email.call_count == 1
 
     @patch("app.routers.auth.email_service.send_verification_email")
     def test_register_user_unverified_exists_rate_limit(
-        self, _mock_email, test_unverified_token_user, client, session, test_users
+        self, mock_email, test_unverified_token_user, client, session, test_users
     ) -> None:
         """Test rate limiting when re-registering with unverified email."""
 
@@ -153,6 +230,7 @@ class TestRegister:
 
         assert response.status_code == 429
         assert "wait" in response.json()["detail"].lower()
+        assert mock_email.call_count == 0
 
     def test_register_not_setting_allowed(self, client, test_settings) -> None:
         """Test registration blocked when email not on allowlist."""
@@ -165,7 +243,7 @@ class TestRegister:
         assert response.status_code == 401
 
     @patch("app.routers.auth.email_service.send_verification_email", side_effect=Exception("SMTP error"))
-    def test_register_email_sending_failure(self, _mock_email, client) -> None:
+    def test_register_email_sending_failure(self, mock_email, client) -> None:
         """Test handling of email sending failure during registration."""
 
         user_data = {
@@ -176,6 +254,7 @@ class TestRegister:
 
         assert response.status_code == 500
         assert "error" in response.json()["detail"].lower()
+        assert mock_email.call_count == 1
 
 
 class TestEmailVerification:
@@ -218,3 +297,113 @@ class TestEmailVerification:
         assert response.status_code == 403
         assert "expired" in response.json()["detail"].lower()
         assert test_unverified_user.is_verified is False
+
+
+# --------------------------------------------------- PASSWORD RESET ---------------------------------------------------
+
+
+class TestSendPasswordResetWithRateLimit:
+
+    @patch("app.routers.auth.email_service.send_password_reset_email")
+    def test_send_verification_email(self, mock_email, test_users, session) -> None:
+        """Test sending of password reset email."""
+
+        result = auth.send_password_reset_with_rate_limit(test_users[0], session)
+        assert result == {"success": True, "message": "Password reset email sent successfully", "error_code": None}
+        assert mock_email.call_count == 1
+        assert test_users[0].password_reset_token is not None
+        assert test_users[0].password_reset_token_created_at is not None
+
+    @patch("app.routers.auth.email_service.send_password_reset_email")
+    def test_send_verification_email_rate_limited(self, mock_email, test_users, session) -> None:
+        """Test rate limiting when sending password reset email."""
+
+        auth.send_password_reset_with_rate_limit(test_users[0], session)
+        result = auth.send_password_reset_with_rate_limit(test_users[0], session)
+        assert result["success"] is False
+        assert result["error_code"] == 429
+        assert mock_email.call_count == 1
+
+
+class TestRequestPasswordReset:
+
+    @patch("app.routers.auth.email_service.send_password_reset_email")
+    def test_request_password_reset(self, mock_email, client, test_users) -> None:
+        """Test successful password reset request."""
+
+        user_data = {
+            "email": test_users[0].email,
+        }
+        response = client.post("/password/forgot", json=user_data)
+
+        assert response.status_code == 200
+        assert response.json()["message"].lower() == "password reset email sent successfully"
+        assert mock_email.call_count == 1
+
+    @patch("app.routers.auth.email_service.send_password_reset_email")
+    def test_request_password_reset_rate_limit(self, mock_email, client, test_users, session) -> None:
+        """Test rate limiting on password reset requests."""
+
+        user_data = {
+            "email": test_users[0].email,
+        }
+        # First request
+        client.post("/password/forgot", json=user_data)
+        response = client.post("/password/forgot", json=user_data)
+
+        assert response.status_code == 429
+        assert "wait" in response.json()["detail"].lower()
+        assert mock_email.call_count == 1
+
+    def test_request_password_reset_nonexistent_email(self, client) -> None:
+        """Test password reset request with non-existent email."""
+
+        user_data = {"email": "test@test.com"}
+        response = client.post("/password/forgot", json=user_data)
+        assert response.status_code == 404
+        assert response.json()["detail"] == "User with this email does not exist."
+
+    def test_request_password_reset_inactive_user(self, client, test_users) -> None:
+        """Test password reset request for inactive user."""
+
+        user_data = {
+            "email": test_users[2].email,
+        }
+        response = client.post("/password/forgot", json=user_data)
+
+        assert response.status_code == 401
+        assert response.json()["detail"] == "User account is not active."
+
+
+class TestResetPassword:
+
+    def test_reset_password_success(self, client, test_users, session) -> None:
+        """Test successful password reset with valid token."""
+
+        token = "reset_token_123"
+        reset_code = hashlib.sha256(token.encode()).hexdigest()
+        test_users[0].password_reset_token = reset_code
+        test_users[0].password_reset_token_created_at = datetime.now(timezone.utc)
+        session.commit()
+        new_password_data = {
+            "token": token,
+            "new_password": "newsecurepassword",
+        }
+        response = client.post("/password/reset", json=new_password_data)
+        assert response.status_code == 200
+        assert "password has been reset" in response.json()["message"].lower()
+        updated_user = session.query(models.User).filter(models.User.id == test_users[0].id).first()
+        assert updated_user.password != test_users[0].password
+        assert updated_user.password_reset_token is None
+        assert updated_user.password_reset_token_created_at is None
+
+    def test_reset_password_invalid_token(self, client) -> None:
+        """Test password reset with invalid token."""
+
+        new_password_data = {
+            "token": "invalid_token_xyz",
+            "new_password": "newsecurepassword",
+        }
+        response = client.post("/password/reset", json=new_password_data)
+        assert response.status_code == 403
+        assert "invalid" in response.json()["detail"].lower()
