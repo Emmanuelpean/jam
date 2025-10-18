@@ -85,7 +85,7 @@ class TestEmailService:
         mock_smtp.return_value.__enter__.return_value = mock_server
 
         verification_url = "https://example.com/verify/abc123"
-        email_svc.send_verification_email("user@example.com", verification_url, 15)
+        email_svc.send_verification_email("user@example.com", verification_url)
 
         # Verify file was opened
         mock_file.assert_called_once()
@@ -105,7 +105,7 @@ class TestEmailService:
         """Test handling of missing email template."""
 
         with pytest.raises(FileNotFoundError):
-            email_svc.send_verification_email("user@example.com", "http://verify.url", 15)
+            email_svc.send_verification_email("user@example.com", "http://verify.url")
 
 
 class TestEmailServiceIMAP:

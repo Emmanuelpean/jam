@@ -12,13 +12,11 @@ from pathlib import Path
 from typing import List, Dict, Optional
 
 from dotenv import load_dotenv
+from fastapi.templating import Jinja2Templates
 
 load_dotenv()
 
-
-SCRAPER_EMAIL = "jam.jobscraper@emmanuelpean.me"
-INFO_EMAIL = "jam.info@emmanuelpean.me"
-SUPPORT_EMAIL = "jam.support@emmanuelpean.me"
+templates = Jinja2Templates(directory="templates")
 
 
 class EmailService(object):
@@ -30,6 +28,17 @@ class EmailService(object):
     smtp_port = int(os.getenv("EMAIL_SMTP_PORT"))
     imap_server = os.getenv("EMAIL_IMAP_HOST")
     imap_port = int(os.getenv("EMAIL_IMAP_PORT"))
+    scraper_email = os.getenv("SCRAPER_EMAIL")
+    support_email = os.getenv("SUPPORT_EMAIL")
+    info_email = os.getenv("INFO_EMAIL")
+    token_expiry_min = int(os.getenv("VERIFICATION_TOKEN_EXPIRATION_MINUTES"))
+
+    def __init__(self) -> None:
+        """Initialize the EmailService class."""
+
+        # Setup Jinja2 templates using FastAPI's built-in class
+        current_dir = Path(__file__).parent
+        self.templates = Jinja2Templates(directory=str(current_dir / "templates"))
 
     def send_email(
         self,
@@ -59,58 +68,43 @@ class EmailService(object):
         self,
         recipient: str,
         verification_url: str,
-        token_expiry_min: int,
     ) -> None:
-        """Send a verification email to the specified recipient.
-        :param recipient: The recipient's email address.
-        :param verification_url: The verification URL.
-        :param token_expiry_min: Token expiry time in minutes."""
+        """Send a verification email to the specified recipient."""
 
-        current_dir = Path(__file__).parent
-        template_path = current_dir / "confirmation_template.html"
-        with open(template_path, "r") as file:
-            html_template = file.read()
-        html_content = html_template.replace("{{name}}", "there")
-        html_content = html_content.replace("{{verification_url}}", verification_url)
-        html_content = html_content.replace("{{token_expiry_min}}", str(token_expiry_min))
+        template = self.templates.env.get_template("email_confirmation.html")
+        html_content = template.render(
+            name="there",
+            confirmation_url=verification_url,
+            token_expiry_min=self.token_expiry_min,
+        )
 
-        self.send_email(recipient, "Please verify your email", html_content, SUPPORT_EMAIL)
+        self.send_email(recipient, "Please verify your email", html_content, self.support_email)
 
     def send_password_reset_email(
         self,
         recipient: str,
         reset_url: str,
-        expiration_minutes: int,
     ) -> None:
-        """Send a password reset email to the specified recipient.
-        :param recipient: The recipient's email address.
-        :param reset_url: The reset URL.
-        :param expiration_minutes: Token expiry time in minutes."""
+        """Send a password reset email to the specified recipient."""
 
-        current_dir = Path(__file__).parent
-        template_path = current_dir / "password_reset_template.html"
-        with open(template_path, "r") as file:
-            html_template = file.read()
-        html_template = html_template.replace("{{reset_url}}", reset_url)
-        html_template = html_template.replace("{{token_expiry_min}}", str(expiration_minutes))
+        template = self.templates.env.get_template("password_reset.html")
+        html_content = template.render(reset_url=reset_url, token_expiry_min=self.token_expiry_min)
 
-        self.send_email(recipient, "Reset your password", html_template, SUPPORT_EMAIL)
+        self.send_email(recipient, "Reset your password", html_content, self.support_email)
 
     def send_password_changed_notification(
         self,
         recipient: str,
     ) -> None:
-        """Send an email to the specified recipient mentioning that the password was changed.
-        :param recipient: The recipient's email address."""
+        """Send an email to the specified recipient mentioning that the password was changed."""
 
-        current_dir = Path(__file__).parent
-        template_path = current_dir / "password_changed_template.html"
-        with open(template_path, "r") as file:
-            html_template = file.read()
         change_date = datetime.now().strftime("%B %d, %Y at %I:%M %p UTC")
-        html_body = html_template.replace("{{change_date}}", change_date)
+
+        template = self.templates.env.get_template("password_changed.html")
+        html_content = template.render(change_date=change_date, support_email=self.support_email)
+
         subject = "Your JAM Password Has Been Changed"
-        self.send_email(recipient, subject, html_body)
+        self.send_email(recipient, subject, html_content, self.support_email)
 
     def _connect_imap(self) -> imaplib.IMAP4_SSL:
         """Connect to IMAP server and login.
