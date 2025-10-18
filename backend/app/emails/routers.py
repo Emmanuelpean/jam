@@ -58,11 +58,12 @@ def get_reset_link(email_address: str) -> dict:
     latest_email = emails[-1]
 
     # Extract reset URL from HTML body
-    url_pattern = r'href="([^"]*reset[^"]*)"'
-    match = re.search(url_pattern, latest_email["body"])
+    base_url = settings.frontend_url + "/reset-password/?token="
+    pattern = re.escape(base_url) + r"([A-Za-z0-9_\-]+)"  # Capture the token (assuming token format)
+    match = re.search(pattern, latest_email["body"])
 
     if match:
-        return {"reset_url": match.group(1)}
+        return {"reset_url": base_url + match.group(1)}
     raise HTTPException(status_code=404, detail="No reset link found")
 
 
