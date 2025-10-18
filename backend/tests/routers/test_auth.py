@@ -19,19 +19,24 @@ from app.routers import auth
 class TestGetRemainingSeconds:
 
     @pytest.mark.parametrize(
-        "dt, expected",
+        "minutes_ago, expected_remaining",
         [
-            (datetime.now(timezone.utc) - timedelta(minutes=1), 60),
-            (datetime.now(timezone.utc) - timedelta(minutes=2), 0),
-            (datetime.now(timezone.utc) - timedelta(minutes=3), -60),
-            (datetime.now(timezone.utc), 120),
-            (None, 0),
+            (1, 60),  # 1 minute ago = 60 seconds remaining
+            (2, 0),  # 2 minutes ago = 0 seconds remaining
+            (3, -60),  # 3 minutes ago = -60 seconds (expired)
+            (0, 120),  # right now = 120 seconds remaining
+            (None, 0),  # None = 0 seconds remaining
         ],
     )
-    def test_get_remaining_seconds(self, dt, expected) -> None:
+    def test_get_remaining_seconds(self, minutes_ago, expected_remaining) -> None:
         """Test calculation of remaining seconds for rate limiting"""
 
-        assert auth.get_retry_remaining_seconds(dt) == expected
+        if minutes_ago is None:
+            dt = None
+        else:
+            dt = datetime.now(timezone.utc) - timedelta(minutes=minutes_ago)
+
+        assert auth.get_retry_remaining_seconds(dt) == expected_remaining
 
 
 class TestGenerateToken:
