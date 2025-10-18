@@ -132,7 +132,7 @@ def send_verification_with_rate_limit(
     try:
         # Send the email to the user
         verification_url = f"{FRONTEND_URL}/login/?token={token}"
-        email_service.send_verification_email(user.email, verification_url, EXPIRATION_MINUTES)
+        email_service.send_verification_email(user.email, verification_url)
 
         # Update user with new verification code and timestamp
         user.verification_token = verification_code
@@ -264,13 +264,13 @@ def send_password_reset_with_rate_limit(
     :return: dictionary with success status, message and error code"""
 
     # Check if enough time has passed since last email
-    # seconds_remaining = get_retry_remaining_seconds(user.password_reset_token_created_at)
-    # if seconds_remaining > 0:
-    #     return {
-    #         "success": False,
-    #         "message": f"Please wait {seconds_remaining} seconds before requesting another password reset email",
-    #         "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
-    #     }
+    seconds_remaining = get_retry_remaining_seconds(user.password_reset_token_created_at)
+    if seconds_remaining > 0:
+        return {
+            "success": False,
+            "message": f"Please wait {seconds_remaining} seconds before requesting another password reset email",
+            "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
+        }
 
     # Generate new verification token
     token, code = generate_token()
@@ -278,7 +278,7 @@ def send_password_reset_with_rate_limit(
     try:
         # Send verification email
         url = f"{FRONTEND_URL}/reset-password/?token={token}"
-        email_service.send_password_reset_email(user.email, url, EXPIRATION_MINUTES)
+        email_service.send_password_reset_email(user.email, url)
 
         # Update user with new verification code and timestamp
         user.password_reset_token = code
