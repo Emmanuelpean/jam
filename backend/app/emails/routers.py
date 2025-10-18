@@ -35,11 +35,12 @@ def get_verification_link(email_address: str) -> dict:
     latest_email = emails[-1]
 
     # Extract verification URL from HTML body
-    url_pattern = r'href="([^"]*verify[^"]*)"'
-    match = re.search(url_pattern, latest_email["body"])
+    base_url = re.escape(settings.frontend_url + "/login/?token=")
+    pattern = base_url + r"([A-Za-z0-9_\-]+)"  # Capture the token (assuming token format)
+    match = re.search(pattern, latest_email["body"])
 
     if match:
-        return {"verification_url": match.group(1)}
+        return {"verification_url": base_url + match.group(1)}
     raise HTTPException(status_code=404, detail="No verification link found")
 
 
