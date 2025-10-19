@@ -16,7 +16,7 @@
 }
 
 .custom-sidebar.expanded {
-    width: 320px;
+    width: 300px !important;
 }
 
 @media (max-width: 990px) {
@@ -40,7 +40,7 @@
 
 /*Header*/
 .sidebar-header {
-    padding-left: 12px;
+    padding-left: 13.5px;
     border-bottom: 1px solid #dee2e6;
     display: flex;
     height: 100px;
@@ -48,7 +48,7 @@
 }
 
 .logo-text {
-    padding-left: 13px;
+    padding-left: 13.5px;
     font-weight: 600;
     font-size: 50px !important;
     color: var(--primary-mid) !important;
@@ -89,7 +89,7 @@
 /* Navigation items */
 .nav-item {
     display: flex;
-    padding: 0.75rem 19px;
+    padding: 0.75rem 20.5px;
     margin: 0.1rem 0.2rem;
     color: #495057;
     text-decoration: none;
@@ -117,7 +117,7 @@
 
 /* Text container with clipping mask */
 .nav-text-container {
-    padding-left: 23.5px;
+    padding-left: 24px;
     align-content: center;
 }
 

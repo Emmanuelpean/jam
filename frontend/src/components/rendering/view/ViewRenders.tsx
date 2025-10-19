@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
+import { Currency, DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { Theme, THEMES } from "../../../utils/Theme";
@@ -27,7 +27,7 @@ import {
 	LocationModalManager,
 	PersonModalManager,
 } from "../../modals/ModalManagers";
-import { formatTimedelta } from "../../../utils/TimeUtils";
+import { formatTimedelta, toDdMmYyyy, toDdMmYyyyHhMm } from "../../../utils/TimeUtils";
 import {
 	getActiveBadge,
 	getAdminIcon,
@@ -38,6 +38,7 @@ import {
 } from "./Icons";
 import { ensureHttpPrefix } from "../../../utils/StringUtils";
 import { findByKey } from "../../../utils/Utils";
+import currencies from "../../../data/currencies.json";
 
 // Parameters passed to the view render functions
 export interface RenderParams {
@@ -197,25 +198,14 @@ export const renderFunctions = {
 
 	_date: (param: RenderParams, key: string): string | null => {
 		const date: Date | undefined | null = param.item?.[key];
-		if (date) {
-			return new Date(date).toLocaleDateString();
-		}
-		return null;
+		if (!date) return null;
+		return toDdMmYyyy(date);
 	},
 
 	datetime: (param: RenderParams): string | null => {
-		const date: Date | undefined | null = param.item?.date;
-		if (date) {
-			return (
-				new Date(date).toLocaleDateString() +
-				" " +
-				new Date(date).toLocaleTimeString([], {
-					hour: "2-digit",
-					minute: "2-digit",
-				})
-			);
-		}
-		return null;
+		const date = param.item?.date ? new Date(param.item.date) : null;
+		if (!date) return null;
+		return toDdMmYyyyHhMm(date);
 	},
 
 	// ----------------------------------------------------- OTHER -----------------------------------------------------
@@ -253,17 +243,21 @@ export const renderFunctions = {
 	salaryRange: (param: RenderParams): string | null => {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
+		const dataContext = param.dataContext;
+		const salaryCurrency: string | undefined | null = currencies.find(
+			(currency: Currency) => currency.code === param.item?.salary_currency,
+		)?.symbol;
 		if (!salary_min && !salary_max) {
 			return null;
 		}
 		if (salary_min === salary_max && salary_min) {
-			return `£${salary_min.toLocaleString()}`;
+			return `${salaryCurrency}${salary_min.toLocaleString()}`;
 		}
 		if (salary_min && salary_max) {
-			return `£${salary_min.toLocaleString()} - £${salary_max.toLocaleString()}`;
+			return `${salaryCurrency}${salary_min.toLocaleString()} - ${salaryCurrency}${salary_max.toLocaleString()}`;
 		}
-		if (salary_min) return `From £${salary_min.toLocaleString()}`;
-		if (salary_max) return `Up to £${salary_max.toLocaleString()}`;
+		if (salary_min) return `From ${salaryCurrency}${salary_min.toLocaleString()}`;
+		if (salary_max) return `Up to ${salaryCurrency}${salary_max.toLocaleString()}`;
 		return null;
 	},
 

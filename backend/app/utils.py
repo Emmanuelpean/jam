@@ -1,5 +1,6 @@
 """Module containing utility functions."""
 
+import hashlib
 import logging
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
@@ -24,6 +25,14 @@ def verify_password(password: str, hashed: str) -> bool:
     :return: boolean indicating whether the passwords matched"""
 
     return bcrypt.checkpw(password.encode("utf-8"), hashed.encode("utf-8"))
+
+
+def hash_token(token: str) -> str:
+    """Hash a token for secure storage.
+    :param token: token to hash
+    :return: hashed token"""
+
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 class AppLogger:

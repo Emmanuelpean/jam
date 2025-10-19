@@ -1,5 +1,3 @@
-import { Theme } from "../utils/Theme";
-
 interface BaseOut {
 	id: number;
 	created_at: string;
@@ -133,6 +131,7 @@ export interface JobDataTransform {
 	url: string | null;
 	salary_min: number | null;
 	salary_max: number | null;
+	salary_currency: string | null;
 	personal_rating: number | null;
 	deadline: Date | null;
 	company_id: number | null;
@@ -157,6 +156,7 @@ export interface JobData extends OwnedOut {
 	url: string | null;
 	salary_min: number | null;
 	salary_max: number | null;
+	salary_currency: string | null;
 	personal_rating: number | null;
 	deadline: Date | null;
 	company_id: number | null;
@@ -207,18 +207,22 @@ export interface InterviewData extends OwnedOut {
 
 export interface UserDataTransform {
 	email: string;
-	theme?: Theme;
+	theme?: string;
 	is_admin: boolean;
+	password: string;
+	is_active: boolean;
 	toast_active: boolean;
 }
 
 export interface UserData extends OwnedOut {
 	email: string;
 	is_admin: boolean;
+	is_active: boolean;
 	toast_active: boolean;
-	theme: Theme;
+	theme: string;
 	last_login: string | null;
 	chase_threshold: number;
 	deadline_threshold: number;
 	update_limit: number;
+	default_currency: string;
 }

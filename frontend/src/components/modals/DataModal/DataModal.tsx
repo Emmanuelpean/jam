@@ -1,9 +1,9 @@
 import React, { JSX, ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
-import { endpointToEntityType, useDataContext } from "../../../contexts/DataContext";
+import { useDataContext } from "../../../contexts/DataContext";
 import "./DataModal.css";
-import { Errors, renderModalFormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
+import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import AlertModal from "../AlertModal";
@@ -26,7 +26,6 @@ export interface GenericModalProps {
 	mode?: "view" | "edit" | "add" | "import"; // modal mode
 	fields?: { view: ViewFields; form: FormFields }; // fields to display
 	data?: any; // data to populate the fields (required for import mode)
-	id?: string | number | null; // if id is provided, use the id and endpoint to load the data
 	validation?: ((data: any) => any) | null; // custom validation method before submit
 	transformFormData?: ((data: any) => any) | null; // custom data transformation before submit
 	onFormDataChange?: ((data: any) => void) | null;
@@ -55,13 +54,13 @@ const DataModal = ({
 	mode = "view",
 	additionalFields = [],
 	data = null,
-	id = null,
 	endpoint,
 	validation = null,
 	transformFormData = null,
 }: GenericModalProps) => {
 	const hasTabs = tabs && tabs.length > 0;
 
+	const { token } = useAuth();
 	const dataContext = useDataContext();
 	const entityType = endpointToEntityType(endpoint)!;
 	const [effectiveData, setEffectiveData] = useState(data);
@@ -84,11 +83,8 @@ const DataModal = ({
 	// -------------------------------------------------- DATA LOADING -------------------------------------------------
 
 	useEffect(() => {
-		const loadData = async () => {
-			setEffectiveData(data);
-		};
-		loadData().then(() => {});
-	}, [id, endpoint, data, mode]);
+		setEffectiveData(data);
+	}, [endpoint, token, data, mode]);
 
 	// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
 
@@ -98,7 +94,7 @@ const DataModal = ({
 	};
 
 	const getCurrentFields = (): { view: ViewFields; form: FormFields } => {
-		const currentTab = getCurrentTabConfig();
+		const currentTab: TabConfig | null = getCurrentTabConfig();
 		if (!currentTab) {
 			return {
 				view: filterConditionalFields(fields!.view),
@@ -120,8 +116,8 @@ const DataModal = ({
 			};
 		} else {
 			return {
-				form: tabs.flatMap((tab) => filterConditionalFields(tab.fields.form)),
-				view: tabs.flatMap((tab) => filterConditionalFields(tab.fields.view)),
+				form: tabs.flatMap((tab: TabConfig) => filterConditionalFields(tab.fields.form)),
+				view: tabs.flatMap((tab: TabConfig) => filterConditionalFields(tab.fields.view)),
 			};
 		}
 	};
@@ -134,20 +130,20 @@ const DataModal = ({
 	useEffect(() => {
 		// Initialize modal state when it becomes visible or data changes
 		if (mode === "add") {
-			setFormData({ ...effectiveData });
-			setOriginalFormData({ ...effectiveData });
+			setFormData({ ...data });
+			setOriginalFormData({ ...data });
 			setIsEditing(true);
 		} else if (mode === "edit") {
-			setFormData({ ...effectiveData });
-			setOriginalFormData({ ...effectiveData });
+			setFormData({ ...data });
+			setOriginalFormData({ ...data });
 			setIsEditing(true);
 		} else if (mode === "import") {
-			setFormData({ ...effectiveData });
-			setOriginalFormData({ ...effectiveData });
+			setFormData({ ...data });
+			setOriginalFormData({ ...data });
 			setIsEditing(true);
 		} else {
-			setFormData({ ...effectiveData });
-			setOriginalFormData({ ...effectiveData });
+			setFormData({ ...data });
+			setOriginalFormData({ ...data });
 			setIsEditing(false);
 		}
 		setErrors({});
@@ -156,7 +152,7 @@ const DataModal = ({
 		if (hasTabs) {
 			setActiveTab(defaultActiveTab || tabs[0]!.key);
 		}
-	}, [show, mode, defaultActiveTab, effectiveData]);
+	}, [show, mode, defaultActiveTab]);
 
 	// ---------------------------------------------------- CLOSING ----------------------------------------------------
 
@@ -172,16 +168,16 @@ const DataModal = ({
 
 	const handleCloseWithConfirmation = async () => {
 		if (hasUnsavedChanges()) {
-			try {
-				await showDelete({
-					title: "Unsaved Changes",
-					message: "You have unsaved changes. Are you sure you want to close without saving?",
-					confirmText: "Close without saving",
-					cancelText: "Cancel",
-				});
+			const confirmed = await showDelete({
+				title: "Unsaved Changes",
+				message: "You have unsaved changes. Are you sure you want to close without saving?",
+				confirmText: "Close without saving",
+				cancelText: "Cancel",
+			});
+			if (!confirmed) {
+				return false;
+			} else {
 				handleHideImmediate();
-			} catch (error) {
-				// User cancelled, do nothing
 			}
 		} else {
 			handleHideImmediate();
@@ -292,13 +288,7 @@ const DataModal = ({
 					return (
 						<div key={fieldKey} className={columnClass}>
 							{isFormMode
-								? renderModalFormField(
-										field as ModalFormField,
-										formData,
-										handleChange,
-										errors,
-										currentUser,
-									)
+								? FormField(field as ModalFormField, formData, handleChange, errors, currentUser)
 								: renderModalViewField(field as ModalViewField, effectiveData, getModalId())}
 						</div>
 					);
@@ -582,14 +572,14 @@ const DataModal = ({
 						<div className="d-flex flex-column w-100 gap-2">
 							<div className="modal-buttons-container">
 								<ActionButton
-									id="cancel-button"
+									id={getModalId() + "-cancel-button"}
 									variant="secondary"
 									onClick={handleHideImmediate}
 									defaultText="Cancel"
 									fullWidth={false}
 								/>
 								<ActionButton
-									id="confirm-button"
+									id={getModalId() + "-confirm-button"}
 									type="submit"
 									disabled={submitting}
 									loading={submitting}
@@ -607,6 +597,7 @@ const DataModal = ({
 						<div className="d-flex flex-column w-100 gap-2">
 							<div className="modal-buttons-container">
 								<ActionButton
+									id={getModalId() + "-delete-button"}
 									variant="danger"
 									onClick={handleDeleteClick}
 									className="me-auto"
@@ -614,7 +605,7 @@ const DataModal = ({
 									defaultIcon="bi bi-trash"
 								/>
 								<ActionButton
-									id="import-button"
+									id={getModalId() + "-import-button"}
 									type="submit"
 									disabled={submitting}
 									loading={submitting}
@@ -626,7 +617,7 @@ const DataModal = ({
 							</div>
 							<div className="modal-buttons-container">
 								<ActionButton
-									id="cancel-button"
+									id={getModalId() + "-cancel-button"}
 									variant="secondary"
 									onClick={handleHideImmediate}
 									defaultText="Cancel"
@@ -640,40 +631,20 @@ const DataModal = ({
 				return (
 					<Modal.Footer>
 						<div className="d-flex flex-column w-100 gap-2">
-							{id ? (
-								<div className="modal-buttons-container">
-									<ActionButton
-										id="cancel-button"
-										variant="secondary"
-										onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
-										defaultText={mode === "edit" ? "Close" : "Cancel"}
-										fullWidth={false}
-									/>
-									<ActionButton
-										id="confirm-button"
-										type="submit"
-										disabled={submitting}
-										loading={submitting}
-										loadingText="Updating..."
-										defaultText="Update"
-										fullWidth={false}
-									/>
-								</div>
-							) : (
 								<>
 									<div className="modal-buttons-container">
 										<ActionButton
+											id={getModalId() + "-delete-button"}
 											variant="danger"
 											onClick={handleDeleteClick}
 											className="me-auto"
 											defaultText="Delete"
 											defaultIcon="bi bi-trash"
 											fullWidth={false}
-											disabled={typeof id === "number"}
 										/>
 
 										<ActionButton
-											id="confirm-button"
+											id={getModalId() + "-confirm-button"}
 											type="submit"
 											disabled={submitting}
 											loading={submitting}
@@ -684,7 +655,7 @@ const DataModal = ({
 									</div>
 									<div className="modal-buttons-container">
 										<ActionButton
-											id="cancel-button"
+											id={getModalId() + "-cancel-button"}
 											variant="secondary"
 											onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
 											defaultText={mode === "edit" ? "Close" : "Cancel"}
@@ -692,7 +663,7 @@ const DataModal = ({
 										/>
 									</div>
 								</>
-							)}
+
 						</div>
 					</Modal.Footer>
 				);
@@ -702,14 +673,14 @@ const DataModal = ({
 				<Modal.Footer>
 					<div className="modal-buttons-container">
 						<ActionButton
-							id="cancel-button"
+							id={getModalId() + "-cancel-button"}
 							variant="secondary"
 							onClick={handleHideImmediate}
 							defaultText="Close"
 							fullWidth={false}
 						/>
 						<ActionButton
-							id="edit-button"
+							id={getModalId() + "-edit-button"}
 							variant="primary"
 							onClick={handleEdit}
 							defaultText="Edit"
@@ -754,7 +725,6 @@ export interface DataModalProps {
 	onHide: () => void;
 	submode?: "view" | "edit" | "add" | "import";
 	data?: any;
-	id?: number | null;
 	onSuccess?: (data: any) => void;
 	onDelete?: (id: number | string) => void;
 	size?: "sm" | "lg" | "xl";

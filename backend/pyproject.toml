@@ -34,7 +34,9 @@ dev = [
     "pytest-html==4.1.1",
     "genbadge[all]==1.1.2",
     "black==25.9.0",
-    "sqlalchemy-stubs==0.4"
+    "sqlalchemy-stubs==0.4",
+    "psutil==7.1.0",
+    "selenium==4.36.0"
 ]
 
 [build-system]

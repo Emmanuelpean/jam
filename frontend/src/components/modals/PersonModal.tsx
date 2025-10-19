@@ -1,26 +1,14 @@
 import React from "react";
-import DataModal, { DataModalProps } from "./DataModal/DataModal";
+import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { personsApi } from "../../services/Api";
-import { useAuth } from "../../contexts/AuthContext";
-import AlertModal from "./AlertModal";
-import useGenericAlert from "../../hooks/useGenericAlert";
-import { PersonTransform, PersonData } from "../../services/Schemas";
-import { ValidationErrors } from "./DataModal/DataModal";
+import { PersonData, PersonTransform } from "../../services/Schemas";
 import { useFormOptions } from "../rendering/form/FormOptions";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const PersonModal: React.FC<DataModalProps> = ({
-	show,
-	onHide,
-	data,
-	id = null,
-	submode = "view",
-	size = "lg",
-}) => {
+export const PersonModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
 	const { companies, openCompanyModal, renderCompanyModal } = useFormOptions(show ? ["companies"] : []);
-	const { alertState, hideAlert } = useGenericAlert();
-	const { token } = useAuth();
+	const dataContext: DataContextValue = useDataContext();
 
 	const formFieldsArray = [
 		[formFields.firstName({ placeholder: "Jane" }), formFields.lastName({ placeholder: "Doe" })],
@@ -49,19 +37,13 @@ export const PersonModal: React.FC<DataModalProps> = ({
 	const customValidation = async (formData: PersonData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
 
-		if (!token) {
-			return errors;
-		}
-
-		const queryParams = {
-			first_name: formData.first_name.trim(),
-			last_name: formData.last_name.trim(),
-			company_id: formData.company_id,
-		};
-		const matches = await personsApi.getAll(token, queryParams);
-		const duplicates = matches.filter((existing: any) => {
-			return formData?.id !== existing.id;
-		});
+		const duplicates: PersonData[] = dataContext.persons.filter(
+			(person: PersonData): boolean =>
+				person.first_name.trim().toLowerCase() === formData.first_name.trim().toLowerCase() &&
+				person.last_name.trim().toLowerCase() === formData.last_name.trim().toLowerCase() &&
+				person.company_id === formData.company_id &&
+				person.id !== formData?.id,
+		);
 
 		if (duplicates.length > 0) {
 			errors.first_name =
@@ -92,7 +74,6 @@ export const PersonModal: React.FC<DataModalProps> = ({
 				mode={submode}
 				itemName="Person"
 				size={size}
-				id={id}
 				data={data}
 				fields={fields}
 				endpoint="persons"
@@ -102,7 +83,6 @@ export const PersonModal: React.FC<DataModalProps> = ({
 			/>
 
 			{renderCompanyModal()}
-			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</>
 	);
 };

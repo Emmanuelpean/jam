@@ -10,8 +10,8 @@ import { ModalFormField } from "../form/FormRenders";
 import React, { JSX } from "react";
 import { HelpBubble } from "./HelpBubble";
 import { renderUrlInputWidget } from "./UrlInput";
-import { UserData } from "../../../services/Schemas";
 import { CurrentUser } from "../../../contexts/AuthContext";
+import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 
 export interface SyntheticEvent {
 	target: {
@@ -33,6 +33,7 @@ export interface WidgetProps {
 	error?: string | null;
 	secondaryValue?: string | null;
 	currentUser?: CurrentUser | null;
+	// dataContext?: DataContextValue;
 }
 
 export const displayError = (errorMessage: string | null): JSX.Element[] | null => {
@@ -58,7 +59,7 @@ export const renderDefaultInput = ({ field, value, handleChange, error }: Widget
 	);
 };
 
-export const renderModalFormField = (
+export const FormField = (
 	field: ModalFormField,
 	formData: any,
 	handleChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,

@@ -1,38 +1,44 @@
 """User route"""
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app import utils, models, oauth2, database, schemas
-from app.routers import filter_query, assert_admin
-
-user_router = APIRouter(prefix="/users", tags=["users"])
+from app.routers import generate_data_table_crud_router
 
 
-@user_router.get("/", response_model=list[schemas.UserOut])
-def get_all_users(
-    request: Request,
-    db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(oauth2.get_current_user),
-):
-    """Retrieve all users.
-    :param request: FastAPI request object to access query parameters
-    :param db: Database session.
-    :param current_user: Authenticated user.
-    :return: List of entries."""
-
-    assert_admin(current_user)
-
-    query = db.query(models.User)
-
-    # Filter the query
-    filter_params = dict(request.query_params)
-    query = filter_query(query, models.User, filter_params)
-
-    return query.all()
+# -------------------------------------------------------- USERS -------------------------------------------------------
 
 
-@user_router.get("/me", response_model=schemas.UserOut)
+def transform_user_data(data: dict):
+    """Transform user data before creating or updating a user.
+    :param data: The user data to transform.
+    :returns: The transformed user data."""
+
+    if "password" in data:
+        data["password"] = utils.hash_password(data["password"])
+    return data
+
+
+user_router = generate_data_table_crud_router(
+    table_model=models.User,
+    create_schema=schemas.UserCreate,
+    update_schema=schemas.UserUpdate,
+    out_schema=schemas.UserOut,
+    endpoint="users",
+    not_found_msg="User not found",
+    admin_only=True,
+    transform=transform_user_data,
+)
+
+
+# ---------------------------------------------------- CURRENT USER ----------------------------------------------------
+
+
+current_user_router = APIRouter(prefix="/current_user", tags=["current_user"])
+
+
+@current_user_router.get("/", response_model=schemas.UserOut)
 def get_current_user_profile(current_user: models.User = Depends(oauth2.get_current_user)):
     """Get the current user's profile.
     :param current_user: The current authenticated user."""
@@ -40,25 +46,9 @@ def get_current_user_profile(current_user: models.User = Depends(oauth2.get_curr
     return current_user
 
 
-@user_router.get("/{entry_id}", response_model=schemas.UserOut)
-def get_one_user(
-    entry_id: int | None,
-    current_user: models.User = Depends(oauth2.get_current_user),
-    db: Session = Depends(database.get_db),
-):
-    """Get a user by ID."""
-
-    assert_admin(current_user)
-
-    user = db.query(models.User).filter(models.User.id == entry_id).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    return user
-
-
-@user_router.put("/me", response_model=schemas.UserOut)
+@current_user_router.put("/", response_model=schemas.UserOut)
 def update_current_user_profile(
-    user_update: schemas.UserUpdate,
+    user_update: schemas.MeUpdate,
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
 ):
@@ -97,70 +87,3 @@ def update_current_user_profile(
     db.commit()
     db.refresh(user_db)
     return user_db
-
-
-@user_router.put("/{entry_id}", response_model=schemas.UserOut)
-def update_user(
-    entry_id: int | None,
-    user_update: schemas.UserUpdate,
-    current_user: models.User = Depends(oauth2.get_current_user),
-    db: Session = Depends(database.get_db),
-):
-    """Update a user by ID."""
-
-    assert_admin(current_user)
-
-    user_update_dict = user_update.model_dump(exclude_unset=True)
-
-    # Hash password if provided
-    if "password" in user_update_dict:
-        user_update_dict["password"] = utils.hash_password(user_update_dict["password"])
-
-    # Get the user record to update
-    user_db = db.query(models.User).filter(models.User.id == entry_id).first()
-
-    # Validate email if provided
-    other_users = db.query(models.User).filter(models.User.id != entry_id).all()
-    emails = [u.email for u in other_users]
-    if "email" in user_update_dict and user_update_dict["email"] in emails:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-
-    # Update the user record
-    print(user_update_dict)
-    for field, value in user_update_dict.items():
-        setattr(user_db, field, value)
-
-    db.commit()
-    db.refresh(user_db)
-    return user_db
-
-
-@user_router.post("/", status_code=201, response_model=schemas.UserOut)
-def create_user(
-    user: schemas.UserCreate,
-    db: Session = Depends(database.get_db),
-):
-    """Create a new user.
-    :param user: The user data.
-    :param db: The database session."""
-
-    # Check the user can be created
-    settings = db.query(models.Setting).filter(models.Setting.name == "allowlist").first()
-    if settings:
-        emails_allowed = settings.value.split(",")
-        if user.email not in emails_allowed:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not allowed")
-
-    # Get all users and check if the email is already registered
-    users = db.query(models.User).all()
-    emails = [u.email for u in users]
-    if user.email in emails:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
-
-    # Hash the password and create the user
-    user.password = utils.hash_password(user.password)
-    new_user = models.User(**user.model_dump())  # noqa
-    db.add(new_user)
-    db.commit()
-
-    return new_user

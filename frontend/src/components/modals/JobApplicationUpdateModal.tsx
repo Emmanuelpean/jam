@@ -1,8 +1,7 @@
-import React, { useMemo } from "react";
+import React from "react";
 import DataModal, { DataModalProps } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { formatDateTime } from "../../utils/TimeUtils";
 import { JobApplicationUpdateData, JobApplicationUpdateDataTransform } from "../../services/Schemas";
 import { useFormOptions } from "../rendering/form/FormOptions";
 
@@ -14,7 +13,6 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 	show,
 	onHide,
 	data,
-	id,
 	submode = "view",
 	size = "lg",
 	jobId,
@@ -64,7 +62,6 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 				itemName="Update"
 				size={size}
 				data={data}
-				id={id}
 				fields={fields}
 				endpoint="jobapplicationupdates"
 				transformFormData={transformFormData}

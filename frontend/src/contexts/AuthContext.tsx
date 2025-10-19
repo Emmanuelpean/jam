@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi, ApiError } from "../services/Api";
+import { ApiError, authApi } from "../services/Api";
 import { UserData } from "../services/Schemas";
 
 export interface CurrentUser extends UserData {
@@ -11,7 +11,6 @@ export interface AuthResponse {
 	success: boolean;
 	status?: number;
 	error?: string;
-	userMessage?: string;
 }
 
 export interface LoginResponse {
@@ -32,8 +31,6 @@ export interface AuthProviderProps {
 	children: ReactNode;
 }
 
-export type AuthAction = "login" | "register";
-
 export interface FormData {
 	email: string;
 	password: string;
@@ -41,40 +38,6 @@ export interface FormData {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const getErrorMessage = (status: number | undefined, action: AuthAction): string => {
-	switch (status) {
-		case 400:
-			return action === "register" ? "Email already registered" : "Invalid request. Please check your input.";
-		case 401:
-			return action === "register"
-				? "Sorry, you are not allowed to sign up for now."
-				: "Incorrect email or password";
-		case 403:
-			return "Incorrect email or password";
-		case 422:
-			return "Invalid input data. Please check your information.";
-		case 500:
-			return "Server error. Please try again later.";
-		default:
-			return action === "register"
-				? "Registration failed. Please try again later."
-				: "Login failed. Please check your credentials and try again.";
-	}
-};
-
-const getUserMessage = (status: number | undefined, action: AuthAction): string => {
-	switch (status) {
-		case 400:
-			return action === "register" ? "Registration Failed" : "Login Failed";
-		case 401:
-		case 403:
-		case 404:
-			return action === "register" ? "Registration Failed" : "Login Failed";
-		default:
-			return action === "register" ? "Registration Error" : "Login Error";
-	}
-};
 
 export function useAuth(): AuthContextType {
 	const context = useContext(AuthContext);
@@ -87,7 +50,6 @@ export function useAuth(): AuthContextType {
 export function AuthProvider({ children }: AuthProviderProps) {
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 	const [token, setToken] = useState<string | null>(localStorage.getItem("token") || null);
-	const [loading, setLoading] = useState<boolean>(true);
 	const [userFetched, setUserFetched] = useState<boolean>(false);
 	const navigate = useNavigate();
 
@@ -96,7 +58,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		async (authToken: string): Promise<void> => {
 			// Don't fetch if we already have user data and the token hasn't changed
 			if (userFetched && currentUser && token === authToken) {
-				setLoading(false);
 				return;
 			}
 
@@ -123,8 +84,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 					setCurrentUser(null);
 					setUserFetched(true);
 				}
-			} finally {
-				setLoading(false);
 			}
 		},
 		[userFetched, currentUser, token],
@@ -147,10 +106,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			// Only fetch if not already fetched
 			setToken(storedToken);
 			fetchUserInfo(storedToken).then(() => null);
-		} else {
-			setLoading(false);
 		}
-	}, []); // Remove fetchUserInfo from dependencies to prevent re-runs
+	}, []);
 
 	const login = async (email: string, password: string): Promise<AuthResponse> => {
 		try {
@@ -169,8 +126,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			const apiError = error as ApiError;
 			return {
 				success: false,
-				error: getErrorMessage(apiError.status, "login"),
-				userMessage: getUserMessage(apiError.status, "login"),
+				error: apiError.message,
 				status: apiError.status,
 			};
 		}
@@ -185,8 +141,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			const apiError = error as ApiError;
 			return {
 				success: false,
-				error: getErrorMessage(apiError.status, "register"),
-				userMessage: getUserMessage(apiError.status, "register"),
+				error: apiError.message,
 				status: apiError.status,
 			};
 		}
@@ -211,5 +166,5 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		isAuthenticated: !!token,
 	};
 
-	return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

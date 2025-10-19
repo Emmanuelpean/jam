@@ -33,7 +33,7 @@ class TestScrapedJobCRUD(CRUDTestBase):
     }
     actions_to_test = ["get", "put"]
 
-    def test_get_all_success(
+    def test_get_all_authorised(
         self,
         test_users,
         authorised_clients,
@@ -42,7 +42,7 @@ class TestScrapedJobCRUD(CRUDTestBase):
         """Test retrieving all scraped jobs for the authorized user that are scraped, not imported, active"""
 
         test_data = self.get_user_data(test_users, test_scraped_jobs)
-        client = self._get_authorized_client(authorised_clients)
+        client = self._get_admin_authorised_client(authorised_clients)
         response = self.get_all(client)
         assert response.status_code == status.HTTP_200_OK
         jobs = []

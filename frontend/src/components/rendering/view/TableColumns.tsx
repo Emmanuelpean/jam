@@ -1,5 +1,5 @@
 import { renderFunctions, RenderParams, ViewField } from "./ViewRenders";
-import { localeDateOnly } from "../../../utils/TimeUtils";
+import { toDdMmYyyy } from "../../../utils/TimeUtils";
 import { CompanyData, JobData, LocationData } from "../../../services/Schemas";
 import { DataContextValue } from "../../../contexts/DataContext";
 
@@ -106,7 +106,7 @@ export const tableColumns = {
 		type: "date",
 		sortable: true,
 		searchable: true,
-		searchFields: (item: any) => localeDateOnly(item.created_at),
+		searchFields: (item: any) => toDdMmYyyy(item.created_at),
 		render: (params: RenderParams) => renderFunctions._date(params, "created_at"),
 		...overrides,
 	}),
@@ -127,7 +127,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "date",
-		searchFields: (item: any) => localeDateOnly(item.date),
+		searchFields: (item: any) => toDdMmYyyy(item.date),
 		render: (params: RenderParams) => renderFunctions._date(params, "date"),
 		...overrides,
 	}),
@@ -157,7 +157,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "date",
-		searchFields: (item: any) => localeDateOnly(item.last_login),
+		searchFields: (item: any) => toDdMmYyyy(item.last_login),
 		render: (params: RenderParams) => renderFunctions._date(params, "last_login"),
 		...overrides,
 	}),
