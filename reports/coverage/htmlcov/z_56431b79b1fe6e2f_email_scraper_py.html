@@ -54,9 +54,9 @@
             </div>
         </aside>
         <h2>
-            <span class="text">338 statements &nbsp;</span>
+            <span class="text">340 statements &nbsp;</span>
             <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">196<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">142<span class="text"> missing</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">144<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_56431b79b1fe6e2f_job_scraper_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
-            created at 2025-10-15 18:05 +0100
+            created at 2025-10-19 12:54 +0100
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -756,12 +756,12 @@
     <p class="pln"><span class="n"><a id="t674" href="#t674">674</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t675" href="#t675">675</a></span><span class="t"><span class="key">if</span> <span class="nam">__name__</span> <span class="op">==</span> <span class="str">"__main__"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t676" href="#t676">676</a></span><span class="t">    <span class="nam">gmail</span> <span class="op">=</span> <span class="nam">GmailScraper</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t677" href="#t677">677</a></span><span class="t">    <span class="com"># emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=2)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t678" href="#t678">678</a></span><span class="t">    <span class="com"># email_d = gmail.get_email_data(emails[2], "")</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t679" href="#t679">679</a></span><span class="t">    <span class="com"># print(email_d.body)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t677" href="#t677">677</a></span><span class="t">    <span class="nam">emails</span> <span class="op">=</span> <span class="nam">gmail</span><span class="op">.</span><span class="nam">get_email_ids</span><span class="op">(</span><span class="str">"emmanuelpean@gmail.com"</span><span class="op">,</span> <span class="nam">inbox_only</span><span class="op">=</span><span class="key">True</span><span class="op">,</span> <span class="nam">timedelta_days</span><span class="op">=</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t678" href="#t678">678</a></span><span class="t">    <span class="nam">email_d</span> <span class="op">=</span> <span class="nam">gmail</span><span class="op">.</span><span class="nam">get_email_data</span><span class="op">(</span><span class="nam">emails</span><span class="op">[</span><span class="num">2</span><span class="op">]</span><span class="op">,</span> <span class="str">""</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t679" href="#t679">679</a></span><span class="t">    <span class="nam">print</span><span class="op">(</span><span class="nam">email_d</span><span class="op">.</span><span class="nam">body</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t680" href="#t680">680</a></span><span class="t">    <span class="com"># print(email_d)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t681" href="#t681">681</a></span><span class="t">    <span class="com"># gmail.save_email_to_db(email_d, next(get_db()))</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t682" href="#t682">682</a></span><span class="t">    <span class="nam">gmail</span><span class="op">.</span><span class="nam">run_scraping</span><span class="op">(</span><span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t682" href="#t682">682</a></span><span class="t">    <span class="com"># gmail.run_scraping(2)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t683" href="#t683">683</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t684" href="#t684">684</a></span><span class="t">    <span class="com"># service = GmailScraperService()</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t685" href="#t685">685</a></span><span class="t">    <span class="com"># service.start()</span>&nbsp;</span><span class="r"></span></p>
@@ -776,7 +776,7 @@
             <a class="nav" href="z_56431b79b1fe6e2f_job_scraper_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
-            created at 2025-10-15 18:05 +0100
+            created at 2025-10-19 12:54 +0100
         </p>
     </div>
 </footer>
