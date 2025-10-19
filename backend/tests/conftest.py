@@ -9,6 +9,7 @@ and providing the necessary utilities for seamless interactions with the applica
 """
 
 import datetime as dt
+import os
 from functools import wraps
 from typing import Any, Generator, Callable
 
@@ -17,9 +18,9 @@ from fastapi import status
 from requests import Response
 from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
-import os
 
-from app import models, database, schemas, config
+from app import models, database, schemas
+from app.config import settings
 from app.eis import models as eis_models
 from app.main import app
 from app.oauth2 import create_access_token
@@ -40,7 +41,7 @@ from tests.utils.create_data import (
     create_settings,
 )
 from tests.utils.seed_database import reset_database
-from app.config import settings
+from app.utils import hash_token
 
 DATABASE_NAME = "jam_test"
 SQLALCHEMY_DATABASE_URL = (
@@ -104,6 +105,49 @@ def test_users(session) -> list[models.User]:
     """Create test user data"""
 
     return create_users(session)
+
+
+@pytest.fixture
+def test_unverified_user(session) -> models.User:
+    """Fixture to create an unverified user."""
+
+    # noinspection PyArgumentList
+    return create_users(
+        session,
+        [
+            dict(
+                email="unverified@test.com",
+                password="password",
+                is_verified=False,
+                is_active=True,
+            )
+        ],
+    )[0]
+
+
+@pytest.fixture
+def test_unverified_token_user(session) -> models.User:
+    """Fixture to create an unverified user."""
+
+    plain_token = "testtoken"
+    hashed_token = hash_token(plain_token)
+
+    # noinspection PyArgumentList
+    user = create_users(
+        session,
+        [
+            dict(
+                email="unverified@test.com",
+                password="password",
+                is_verified=False,
+                is_active=True,
+                verification_token=hashed_token,  # Store hashed version
+                verification_token_created_at=dt.datetime.now(),
+            )
+        ],
+    )[0]
+    user.plain_verification_token = plain_token
+    return user
 
 
 @pytest.fixture

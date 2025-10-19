@@ -66,7 +66,6 @@ const JobSearchDashboard: React.FC = () => {
 
 	// Add interviews as "Interview" updates
 	dataContext.interviews.forEach((interview: InterviewData): void => {
-		console.log(interview.date);
 		if (new Date(interview.date) < now) {
 			allUpdates.push({
 				data: interview,
@@ -88,8 +87,6 @@ const JobSearchDashboard: React.FC = () => {
 			});
 		}
 	});
-
-	console.log(allUpdates);
 
 	allUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 	const recentActivity = allUpdates.slice(0, currentUser.update_limit);

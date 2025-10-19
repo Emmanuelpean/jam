@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 interface LoadingContextType {
 	isLoading: boolean;
 	loadingMessage: string;
-	progress: number;
+	progress: number | undefined;
 	showLoading: (message?: string, progress?: number) => void;
 	hideLoading: () => void;
 	updateProgress: (progress: number, message?: string) => void;
@@ -26,7 +26,7 @@ export const useLoading = (): LoadingContextType => {
 export const LoadingProvider = ({ children }: LoadingProviderProps) => {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [loadingMessage, setLoadingMessage] = useState<string>("Loading...");
-	const [progress, setProgress] = useState<number>(0);
+	const [progress, setProgress] = useState<number | undefined>(undefined);
 
 	const showLoading = (message: string = "Loading...", initialProgress: number = 0): void => {
 		setLoadingMessage(message);

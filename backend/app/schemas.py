@@ -33,6 +33,12 @@ class OwnedOut(Out):
     owner_id: int
 
 
+class VerificationResponse(BaseModel):
+    success: bool
+    message: str
+    error_code: int | None = None
+
+
 # ------------------------------------------------------- SETTINGS ------------------------------------------------------
 
 
@@ -134,6 +140,26 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: str | None = None
+
+
+class EmailRequest(BaseModel):
+    """Schema for email-only requests"""
+
+    email: EmailStr
+
+
+class PasswordReset(BaseModel):
+    """Schema for password reset with token"""
+
+    token: str
+    new_password: str
+
+
+class PasswordChange(BaseModel):
+    """Schema for authenticated password change"""
+
+    current_password: str
+    new_password: str
 
 
 # ------------------------------------------------------- KEYWORD ------------------------------------------------------
