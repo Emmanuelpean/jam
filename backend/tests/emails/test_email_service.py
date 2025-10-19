@@ -10,6 +10,7 @@ from app.emails.email_service import EmailService
 class TestEmailService:
     """Test suite for EmailService class."""
 
+    @patch("app.config.settings.test_mode", False)
     @patch("smtplib.SMTP")
     def test_send_email_success(self, mock_smtp) -> None:
         """Test successful email sending."""
@@ -37,6 +38,7 @@ class TestEmailService:
         assert call_args[0] == email_svc.sender  # From
         assert call_args[1] == "test@example.com"  # To
 
+    @patch("app.config.settings.test_mode", False)
     @patch("smtplib.SMTP")
     def test_send_email_custom_sender(self, mock_smtp) -> None:
         """Test sending email with custom sender."""
@@ -58,6 +60,7 @@ class TestEmailService:
         assert call_args[0] == email_svc.sender  # Still logs in with main sender
         # But message shows custom sender in the From field
 
+    @patch("app.config.settings.test_mode", False)
     @patch("smtplib.SMTP")
     def test_send_email_smtp_failure(self, mock_smtp) -> None:
         """Test handling of SMTP connection failure."""
