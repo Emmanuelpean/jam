@@ -35,7 +35,19 @@ interface UseFormOptionsReturn {
 	renderJobModal: () => JSX.Element;
 }
 
-export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsReturn => {
+interface DataFactories {
+	companies?: () => any;
+	locations?: () => any;
+	keywords?: () => any;
+	persons?: () => any;
+	aggregators?: () => any;
+	jobs?: () => any;
+}
+
+export const useFormOptions = (
+	requiredOptions: string[] = [],
+	dataFactories: DataFactories = {},
+): UseFormOptionsReturn => {
 	const {
 		companies: companiesData,
 		locations: locationsData,

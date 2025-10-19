@@ -268,6 +268,4 @@ export const authApi: AuthApi = {
 	},
 };
 
-export const locationParserApi: CrudApi = createCrudApi("location_parser");
-
 export { api };

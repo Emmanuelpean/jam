@@ -26,6 +26,7 @@ export interface SortConfig {
 export interface DataTableProps {
 	data?: any | null;
 	columns?: TableColumn[];
+	onDataChange?: (data: any[]) => void;
 	error?: string | null;
 	showAdd?: boolean;
 	menuItems?: string[];
@@ -34,11 +35,12 @@ export interface DataTableProps {
 export interface GenericTableProps {
 	// Data source - entity type from DataContext
 	entityType: EntityType;
-	// Override context data with provided data
 	data?: any[];
 
-	// For import mode (scraped jobs, etc.)
+	// Mode
 	mode?: "default" | "import";
+
+	// Optional endpoint when data are not provided or not fetched from context
 	endpoint?: string;
 
 	// Table configuration
