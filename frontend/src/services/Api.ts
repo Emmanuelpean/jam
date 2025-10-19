@@ -39,7 +39,7 @@ interface AuthApi {
 	resetPassword: (token: string, newPassword: string) => Promise<{ message: string }>;
 }
 
-const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL: string = process.env.BACKEND_URL || "http://localhost:8000";
 
 const getAuthHeaders = (token: string): HeadersInit => ({
 	"Content-Type": "application/json",
