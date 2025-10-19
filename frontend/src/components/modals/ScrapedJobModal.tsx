@@ -9,7 +9,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
 import { SelectOption } from "../../utils/Utils";
-import { locationParserApi } from "../../services/Api";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -17,7 +16,6 @@ interface JobAndApplicationProps extends DataModalProps {
 
 export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide, data, submode, size = "xl" }) => {
 	const { token } = useAuth();
-
 	const {
 		companies,
 		locations,

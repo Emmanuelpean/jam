@@ -1,7 +1,7 @@
 import React, { JSX, ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
-import { useDataContext } from "../../../contexts/DataContext";
+import { DataContextValue, endpointToEntityType, EntityType, useDataContext } from "../../../contexts/DataContext";
 import "./DataModal.css";
 import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
@@ -61,8 +61,8 @@ const DataModal = ({
 	const hasTabs = tabs && tabs.length > 0;
 
 	const { token } = useAuth();
-	const dataContext = useDataContext();
-	const entityType = endpointToEntityType(endpoint)!;
+	const dataContext: DataContextValue = useDataContext();
+	const entityType: EntityType = endpointToEntityType(endpoint)!;
 	const [effectiveData, setEffectiveData] = useState(data);
 	const [formData, setFormData] = useState<Record<string, any>>({});
 	const [originalFormData, setOriginalFormData] = useState<Record<string, any>>({});
@@ -631,39 +631,38 @@ const DataModal = ({
 				return (
 					<Modal.Footer>
 						<div className="d-flex flex-column w-100 gap-2">
-								<>
-									<div className="modal-buttons-container">
-										<ActionButton
-											id={getModalId() + "-delete-button"}
-											variant="danger"
-											onClick={handleDeleteClick}
-											className="me-auto"
-											defaultText="Delete"
-											defaultIcon="bi bi-trash"
-											fullWidth={false}
-										/>
+							<>
+								<div className="modal-buttons-container">
+									<ActionButton
+										id={getModalId() + "-delete-button"}
+										variant="danger"
+										onClick={handleDeleteClick}
+										className="me-auto"
+										defaultText="Delete"
+										defaultIcon="bi bi-trash"
+										fullWidth={false}
+									/>
 
-										<ActionButton
-											id={getModalId() + "-confirm-button"}
-											type="submit"
-											disabled={submitting}
-											loading={submitting}
-											loadingText="Updating..."
-											defaultText="Update"
-											fullWidth={false}
-										/>
-									</div>
-									<div className="modal-buttons-container">
-										<ActionButton
-											id={getModalId() + "-cancel-button"}
-											variant="secondary"
-											onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
-											defaultText={mode === "edit" ? "Close" : "Cancel"}
-											fullWidth={false}
-										/>
-									</div>
-								</>
-
+									<ActionButton
+										id={getModalId() + "-confirm-button"}
+										type="submit"
+										disabled={submitting}
+										loading={submitting}
+										loadingText="Updating..."
+										defaultText="Update"
+										fullWidth={false}
+									/>
+								</div>
+								<div className="modal-buttons-container">
+									<ActionButton
+										id={getModalId() + "-cancel-button"}
+										variant="secondary"
+										onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
+										defaultText={mode === "edit" ? "Close" : "Cancel"}
+										fullWidth={false}
+									/>
+								</div>
+							</>
 						</div>
 					</Modal.Footer>
 				);

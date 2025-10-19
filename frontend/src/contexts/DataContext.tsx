@@ -9,6 +9,7 @@ import {
 	keywordsApi,
 	locationsApi,
 	personsApi,
+	scrapedJobApi,
 	settingsApi,
 	userApi,
 } from "../services/Api";
@@ -53,6 +54,7 @@ export const endpointToEntityType = (endpoint: string): EntityType | null => {
 		locations: "locations",
 		settings: "settings",
 		users: "users",
+		scraped_jobs: "scrapedJobs",
 	};
 	return mapping[endpoint.toLowerCase()] || null;
 };
@@ -108,6 +110,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [locations, setLocations] = useState<LocationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
+	const [_scrapedJobs, setScrapedJobs] = useState<any[]>([]);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
@@ -262,6 +265,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			locations: locationsApi,
 			settings: settingsApi,
 			users: userApi,
+			scrapedJobs: scrapedJobApi,
 		};
 		return apiMap[type];
 	};
@@ -279,6 +283,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			locations: setLocations,
 			settings: setSettings,
 			users: setUsers,
+			scrapedJobs: setScrapedJobs,
 		};
 		return setterMap[type];
 	};
