@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for backend/tests/utils/table_data.py: 73%</title>
+    <title>Coverage for backend/tests/utils/table_data.py: 78%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_6b508a39.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>backend/tests/utils/table_data.py</b>:
-            <span class="pc_cov">73%</span>
+            <span class="pc_cov">78%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,17 +55,17 @@
         </aside>
         <h2>
             <span class="text">134 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">98<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">36<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">104<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">30<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
             <a id="prevFileLink" class="nav" href="z_f777a31e4f5212e6_seed_database_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a id="nextFileLink" class="nav" href="index.html">&#xbb; next</a>
+            <a id="nextFileLink" class="nav" href="z_cace79d5a01103b1_conftest_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
-            created at 2025-10-19 12:14 +0100
+            created at 2025-10-19 12:54 +0100
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -2276,13 +2276,13 @@
     <p class="pln"><span class="n"><a id="t2194" href="#t2194">2194</a></span><span class="t"><span class="str">    :param secondary_key: Key name for secondary object IDs in mapping (e.g. "keyword_ids", "person_ids")</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t2195" href="#t2195">2195</a></span><span class="t"><span class="str">    :param relationship_attr: Attribute name on a primary object for the relationship (e.g. "keywords", "contacts")"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t2196" href="#t2196">2196</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t2197" href="#t2197">2197</a></span><span class="t">    <span class="key">for</span> <span class="nam">mapping</span> <span class="key">in</span> <span class="nam">mapping_data</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t2198" href="#t2198">2198</a></span><span class="t">        <span class="nam">primary_obj</span> <span class="op">=</span> <span class="nam">primary_data</span><span class="op">[</span><span class="nam">mapping</span><span class="op">[</span><span class="nam">primary_key</span><span class="op">]</span> <span class="op">-</span> <span class="num">1</span><span class="op">]</span>  <span class="com"># Convert to 0-based index</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t2199" href="#t2199">2199</a></span><span class="t">        <span class="nam">secondary_ids</span> <span class="op">=</span> <span class="nam">mapping</span><span class="op">[</span><span class="nam">secondary_key</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t2197" href="#t2197">2197</a></span><span class="t">    <span class="key">for</span> <span class="nam">mapping</span> <span class="key">in</span> <span class="nam">mapping_data</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t2198" href="#t2198">2198</a></span><span class="t">        <span class="nam">primary_obj</span> <span class="op">=</span> <span class="nam">primary_data</span><span class="op">[</span><span class="nam">mapping</span><span class="op">[</span><span class="nam">primary_key</span><span class="op">]</span> <span class="op">-</span> <span class="num">1</span><span class="op">]</span>  <span class="com"># Convert to 0-based index</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t2199" href="#t2199">2199</a></span><span class="t">        <span class="nam">secondary_ids</span> <span class="op">=</span> <span class="nam">mapping</span><span class="op">[</span><span class="nam">secondary_key</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t2200" href="#t2200">2200</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t2201" href="#t2201">2201</a></span><span class="t">        <span class="key">for</span> <span class="nam">secondary_id</span> <span class="key">in</span> <span class="nam">secondary_ids</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t2202" href="#t2202">2202</a></span><span class="t">            <span class="nam">secondary_obj</span> <span class="op">=</span> <span class="nam">secondary_data</span><span class="op">[</span><span class="nam">secondary_id</span> <span class="op">-</span> <span class="num">1</span><span class="op">]</span>  <span class="com"># Convert to 0-based index</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t2203" href="#t2203">2203</a></span><span class="t">            <span class="nam">getattr</span><span class="op">(</span><span class="nam">primary_obj</span><span class="op">,</span> <span class="nam">relationship_attr</span><span class="op">)</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">secondary_obj</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t2201" href="#t2201">2201</a></span><span class="t">        <span class="key">for</span> <span class="nam">secondary_id</span> <span class="key">in</span> <span class="nam">secondary_ids</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t2202" href="#t2202">2202</a></span><span class="t">            <span class="nam">secondary_obj</span> <span class="op">=</span> <span class="nam">secondary_data</span><span class="op">[</span><span class="nam">secondary_id</span> <span class="op">-</span> <span class="num">1</span><span class="op">]</span>  <span class="com"># Convert to 0-based index</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t2203" href="#t2203">2203</a></span><span class="t">            <span class="nam">getattr</span><span class="op">(</span><span class="nam">primary_obj</span><span class="op">,</span> <span class="nam">relationship_attr</span><span class="op">)</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">secondary_obj</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t2204" href="#t2204">2204</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t2205" href="#t2205">2205</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t2206" href="#t2206">2206</a></span><span class="t"><span class="key">def</span> <span class="nam">validate_ownership_integrity_detailed</span><span class="op">(</span><span class="nam">data_collections</span><span class="op">:</span> <span class="nam">dict</span><span class="op">)</span> <span class="op">-></span> <span class="nam">dict</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -2576,10 +2576,10 @@
         <p>
             <a class="nav" href="z_f777a31e4f5212e6_seed_database_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a class="nav" href="index.html">&#xbb; next</a>
+            <a class="nav" href="z_cace79d5a01103b1_conftest_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
-            created at 2025-10-19 12:14 +0100
+            created at 2025-10-19 12:54 +0100
         </p>
     </div>
 </footer>
