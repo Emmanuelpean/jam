@@ -44,12 +44,14 @@ from tests.conftest import (
 from tests.conftest import *
 
 
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item, call):
-    """Make test results available to fixtures"""
-    outcome = yield
-    rep = outcome.get_result()
-    setattr(item, f"rep_{rep.when}", rep)
+@pytest.fixture(scope="session", autouse=True)
+def set_test_mode() -> Generator[None, None, None]:
+    """Set TEST_MODE to true for all tests"""
+
+    os.environ["TEST_MODE"] = "true"
+    yield
+    # Cleanup after all tests
+    os.environ.pop("TEST_MODE", None)
 
 
 def kill_process_on_port(port) -> bool:
@@ -624,14 +626,14 @@ class BaseTest:
 
             # Create filename with test name and timestamp
             timestamp = time.strftime("%Y%m%d_%H%M%S")
-            status = "FAILED" if failed else "PASSED"
+            status_string = "FAILED" if failed else "PASSED"
             safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
 
             # Save browser console logs
-            browser_log_file = LOGS_DIR / f"{safe_test_name}_{status}_{timestamp}_browser.log"
+            browser_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_browser.log"
             with open(browser_log_file, "w") as f:
                 f.write(f"Test: {self._test_name}\n")
-                f.write(f"Status: {status}\n")
+                f.write(f"Status: {status_string}\n")
                 f.write(f"Timestamp: {timestamp}\n")
                 f.write(f"URL: {self.driver.current_url}\n")
                 f.write("=" * 80 + "\n\n")
@@ -640,7 +642,7 @@ class BaseTest:
                     f.write(f"[{entry['level']}] {entry['timestamp']}: {entry['message']}\n")
 
             # Save performance logs (network requests)
-            perf_log_file = LOGS_DIR / f"{safe_test_name}_{status}_{timestamp}_network.log"
+            perf_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_network.log"
             with open(perf_log_file, "w") as f:
                 f.write(f"Test: {self._test_name}\n")
                 f.write(f"Network Performance Logs\n")
@@ -664,10 +666,10 @@ class BaseTest:
         """Save screenshot of current page"""
         try:
             timestamp = time.strftime("%Y%m%d_%H%M%S")
-            status = "FAILED" if failed else "PASSED"
+            status_string = "FAILED" if failed else "PASSED"
             safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
 
-            screenshot_file = LOGS_DIR / f"{safe_test_name}_{status}_{timestamp}.png"
+            screenshot_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}.png"
             self.driver.save_screenshot(str(screenshot_file))
             print(f"✅ Saved screenshot to {screenshot_file}")
 

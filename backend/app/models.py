@@ -140,6 +140,12 @@ class User(CommonBase, Base):
     - `deadline_threshold` (int): The threshold for deadlines in the dashboard.
     - `update_limit` (int): Max number updates displayed in the dashboard.
     - `toast_active` (bool): Indicates whether the TOAST feature is active.
+    - `default_currency` (str): The default currency for salary fields.
+    - `is_verified` (bool): Indicates whether the user's email is verified.
+    - `verification_token` (str, optional): Token used for email verification.
+    - `verification_token_created_at` (datetime, optional): Timestamp of when the verification token was created.
+    - `password_reset_token` (str, optional, unique): Token used for password reset.
+    - `password_reset_token_created_at` (datetime, optional): Timestamp of when the password reset token was created.
 
     Constraints:
     ------------
@@ -156,6 +162,11 @@ class User(CommonBase, Base):
     update_limit = Column(Integer, nullable=False, server_default="10")
     toast_active = Column(Boolean, nullable=False, server_default=expression.false())
     default_currency = Column(String, nullable=False, server_default="GBP")
+    is_verified = Column(Boolean, nullable=False, server_default=expression.false())
+    verification_token = Column(String, nullable=True)
+    verification_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    password_reset_token = Column(String, nullable=True, unique=True)
+    password_reset_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     __table_args__ = (
         CheckConstraint(f"length(password) >= {settings.min_password_length}", name="minimum_password_length"),

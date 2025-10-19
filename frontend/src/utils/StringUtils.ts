@@ -1,5 +1,3 @@
-import { RenderParams } from "../components/rendering/view/ViewRenders";
-
 export function pluralize(word: string): string {
 	// Handle common irregular nouns
 	const irregulars: { [key: string]: string } = {
