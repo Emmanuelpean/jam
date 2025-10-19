@@ -1,17 +1,15 @@
 import React from "react";
-import DataModal, { DataModalProps } from "./DataModal/DataModal";
+import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { locationsApi } from "../../services/Api";
-import { useAuth } from "../../contexts/AuthContext";
-import { ValidationErrors } from "./DataModal/DataModal";
 import { LocationData, LocationDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { useFormOptions } from "../rendering/form/FormOptions";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, id, submode = "view", size = "lg" }) => {
-	const { token } = useAuth();
+export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
 	const { countries } = useFormOptions(["countries"]);
+	const dataContext: DataContextValue = useDataContext();
 
 	const formFieldsArray = [
 		formFields.city({ placeholder: "Oxford" }),
@@ -38,9 +36,6 @@ export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, id
 
 	const customValidation = async (formData: LocationData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
-		if (!token) {
-			return errors;
-		}
 
 		// Check if any value has been set
 		const hasCity = formData.city && formData.city.trim();
@@ -56,17 +51,17 @@ export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, id
 
 		// Check if the location already exist
 		if (Object.keys(errors).length === 0) {
-			const queryParams: Partial<LocationData> = {};
-			queryParams.city = (formData.city && formData.city.trim()) || null;
-			queryParams.postcode = (formData.postcode && formData.postcode.trim()) || null;
-			queryParams.country = (formData.country && formData.country.trim()) || null;
-			const matchingLocations = await locationsApi.getAll(token, queryParams);
-			const duplicates = matchingLocations.filter((existingLocation: LocationData) => {
-				return formData?.id !== existingLocation.id;
+			const duplicates: LocationData[] = dataContext.locations.filter((location: LocationData): boolean => {
+				const cityMatch: boolean = location.city?.trim().toLowerCase() === formData.city?.trim().toLowerCase();
+				const postcodeMatch: boolean =
+					location.postcode?.trim().toLowerCase() === formData.postcode?.trim().toLowerCase();
+				const countryMatch: boolean =
+					location.country?.trim().toLowerCase() === formData.country?.trim().toLowerCase();
+				return cityMatch && postcodeMatch && countryMatch && formData?.id !== location.id;
 			});
 
 			if (duplicates.length > 0) {
-				const duplicateName = duplicates[0].name;
+				const duplicateName = duplicates[0]!.name;
 				errors.city =
 					errors.postcode =
 					errors.country =
@@ -93,7 +88,6 @@ export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, id
 			size={size}
 			data={data}
 			additionalFields={additionalFields}
-			id={id}
 			fields={fields}
 			endpoint="locations"
 			validation={customValidation}

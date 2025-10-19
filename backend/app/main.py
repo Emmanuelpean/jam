@@ -3,10 +3,16 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import data_tables, user, login, export, settings
+from app.routers import data_tables, user, auth, export, settings
 from app.eis import routers as eis_routers
+from app.emails import routers as email_routers
+from app.config import settings as app_settings
+from app import models
+from app.database import engine
 
 app = FastAPI()
+
+models.Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,13 +41,20 @@ app.include_router(eis_routers.scraper_router)
 
 # Authentification router
 app.include_router(user.user_router)
-app.include_router(login.router)
+app.include_router(user.current_user_router)
+app.include_router(auth.login_router)
+app.include_router(auth.register_router)
+app.include_router(auth.password_router)
 
 # Export router
 app.include_router(export.router)
 
 # Settings router
 app.include_router(settings.settings_router)
+
+# Testing
+if app_settings.test_mode:
+    app.include_router(email_routers.router)
 
 
 @app.get("/")

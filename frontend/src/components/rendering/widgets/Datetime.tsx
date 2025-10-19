@@ -1,8 +1,33 @@
 import React, { JSX } from "react";
 import { Form } from "react-bootstrap";
-import { formatDate, formatDateTime } from "../../../utils/TimeUtils";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 import "./Datetime.css";
+
+export const formatDateTime = (datetime?: string | Date): string => {
+	if (!datetime) {
+		datetime = new Date();
+	} else {
+		datetime = new Date(datetime);
+	}
+	const year = datetime.getFullYear();
+	const month = String(datetime.getMonth() + 1).padStart(2, "0");
+	const day = String(datetime.getDate()).padStart(2, "0");
+	const hours = String(datetime.getHours()).padStart(2, "0");
+	const minutes = String(datetime.getMinutes()).padStart(2, "0");
+	return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+export const formatDate = (datetime?: string | Date): string => {
+	if (!datetime) {
+		datetime = new Date();
+	} else {
+		datetime = new Date(datetime);
+	}
+	const year = datetime.getFullYear();
+	const month = String(datetime.getMonth() + 1).padStart(2, "0");
+	const day = String(datetime.getDate()).padStart(2, "0");
+	return `${year}-${month}-${day}`;
+};
 
 type LocalInputType = "datetime-local" | "date";
 
@@ -10,9 +35,6 @@ interface LocalInputProps extends WidgetProps {
 	inputType: LocalInputType;
 }
 
-/**
- * Generic renderer for datetime-local or date input
- */
 export const renderLocalInput = ({ field, value, handleChange, error, inputType }: LocalInputProps): JSX.Element => {
 	const setCurrentValue = (e: React.MouseEvent<HTMLElement>): void => {
 		e.preventDefault();
@@ -45,6 +67,7 @@ export const renderLocalInput = ({ field, value, handleChange, error, inputType 
 			<i
 				className={`bi bi-clock datetime-embedded-icon`}
 				onClick={setCurrentValue}
+				id={field.name + "_set_current"}
 				title={inputType === "datetime-local" ? "Set to current date and time" : "Set to current date"}
 			></i>
 		</div>

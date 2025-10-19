@@ -33,6 +33,12 @@ class OwnedOut(Out):
     owner_id: int
 
 
+class VerificationResponse(BaseModel):
+    success: bool
+    message: str
+    error_code: int | None = None
+
+
 # ------------------------------------------------------- SETTINGS ------------------------------------------------------
 
 
@@ -61,24 +67,11 @@ class SettingUpdate(SettingCreate):
 # -------------------------------------------------------- USER --------------------------------------------------------
 
 
-class UserCreate(BaseModel):
+class UserRegister(BaseModel):
     """User create schema"""
 
     password: str
     email: EmailStr
-
-
-class UserOut(Out):
-    """User output schema"""
-
-    email: EmailStr
-    theme: str
-    is_admin: bool = False
-    last_login: datetime | None = None
-    chase_threshold: int
-    deadline_threshold: int
-    update_limit: int
-    toast_active: bool
 
 
 class UserLogin(BaseModel):
@@ -88,19 +81,53 @@ class UserLogin(BaseModel):
     password: str
 
 
-class UserUpdate(BaseModel):
+# -------------------------------------------------------- USERS -------------------------------------------------------
+
+
+class UserCreate(BaseModel):
+    """User create schema"""
+
+    email: EmailStr
+    password: str
+    theme: str = "mixed-berry"
+    is_active: bool = True
+    is_admin: bool = False
+    last_login: datetime | None = None
+    chase_threshold: int = 10
+    deadline_threshold: int = 7
+    update_limit: int = 30
+    toast_active: bool = False
+    default_currency: str = "GBP"
+
+
+class UserOut(Out):
+    """User output schema"""
+
+    email: EmailStr
+    theme: str
+    is_active: bool
+    is_admin: bool
+    last_login: datetime | None
+    chase_threshold: int
+    deadline_threshold: int
+    update_limit: int
+    toast_active: bool
+    default_currency: str
+
+
+class UserUpdate(UserCreate):
     """User update schema"""
 
-    current_password: str | None = None
     email: EmailStr | None = None
-    theme: str | None = None
     password: str | None = None
-    is_admin: bool | None = None
-    last_login: datetime | None = None
-    chase_threshold: int | None = None
-    deadline_threshold: int | None = None
-    update_limit: int | None = None
-    toast_active: bool = False
+
+
+class MeUpdate(UserCreate):
+    """User update schema"""
+
+    email: EmailStr | None = None
+    password: str | None = None
+    current_password: str | None = None
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------
@@ -113,6 +140,26 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: str | None = None
+
+
+class EmailRequest(BaseModel):
+    """Schema for email-only requests"""
+
+    email: EmailStr
+
+
+class PasswordReset(BaseModel):
+    """Schema for password reset with token"""
+
+    token: str
+    new_password: str
+
+
+class PasswordChange(BaseModel):
+    """Schema for authenticated password change"""
+
+    current_password: str
+    new_password: str
 
 
 # ------------------------------------------------------- KEYWORD ------------------------------------------------------
@@ -278,6 +325,7 @@ class JobCreate(BaseModel):
     description: str | None = None
     salary_min: float | None = None
     salary_max: float | None = None
+    salary_currency: str | None = None
     personal_rating: int | None = None
     url: str | None = None
     deadline: datetime | None = None

@@ -3,11 +3,11 @@ import DataModal, { DataModalProps, TabConfig, ValidationErrors } from "./DataMo
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
-import { JobData, JobDataTransform } from "../../services/Schemas";
-import { jobsApi } from "../../services/Api";
+import { EnrichedJobData, JobData, JobDataTransform } from "../../services/Schemas";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -17,12 +17,12 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	show,
 	onHide,
 	data,
-	id,
 	submode,
 	size = "xl",
 	defaultActiveTab = "job",
 }) => {
-	const { token } = useAuth();
+	const { currentUser } = useAuth();
+	const dataContext: DataContextValue = useDataContext();
 	const {
 		companies,
 		locations,
@@ -104,15 +104,14 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 	];
 
 	const transformData = (jobData: JobDataTransform): JobDataTransform => {
-		console.log(jobData);
-
 		return {
 			title: jobData.title.trim(),
 			description: jobData.description?.trim() || null,
 			note: jobData.note?.trim() || null,
 			url: jobData.url?.trim() || null,
-			salary_min: jobData.salary_min || null,
-			salary_max: jobData.salary_max || null,
+			salary_min: Number(jobData.salary_min) || null,
+			salary_max: Number(jobData.salary_max) || null,
+			salary_currency: currentUser?.default_currency?.trim() || null,
 			personal_rating: jobData.personal_rating || null,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
@@ -132,17 +131,19 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 
 	const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
-		if (!token) {
-			return errors;
-		}
-		if (formData.url) {
-			const queryParams = { url: formData.url?.trim() };
-			const matches = await jobsApi.getAll(token, queryParams);
-			const duplicates = matches.filter((existing: JobData) => {
-				return formData?.id !== existing.id;
-			});
 
-			if (duplicates.length > 0) {
+		if (formData.salary_min && isNaN(Number(formData.salary_min))) {
+			errors.salary_min = "Minimum Salary must be a valid number";
+		}
+		if (formData.salary_max && isNaN(Number(formData.salary_max))) {
+			errors.salary_max = "Maximum Salary must be a valid number";
+		}
+
+		if (formData.url) {
+			const urlDuplicates: EnrichedJobData[] = dataContext.jobs.filter((job: EnrichedJobData): boolean => {
+				return job.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() && job.id !== formData?.id;
+			});
+			if (urlDuplicates.length > 0) {
 				errors.url = `A Job with this URL already exists`;
 			}
 		}
@@ -189,11 +190,10 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 				data={data}
 				mode={submode}
 				transformFormData={transformData}
-				itemName="Job & Application"
+				itemName="Job"
 				endpoint="jobs"
 				size={size}
 				tabs={tabs}
-				id={id}
 				defaultActiveTab={defaultActiveTab}
 				validation={customValidation}
 			/>

@@ -7,16 +7,8 @@ import { KeywordModal } from "../../modals/KeywordModal";
 import { PersonModal } from "../../modals/PersonModal";
 import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobModal } from "../../modals/JobModal";
-
-// Type for the factory function mapping
-type DataFactoryMap = {
-	companies?: () => any;
-	locations?: () => any;
-	keywords?: () => any;
-	persons?: () => any;
-	aggregators?: () => any;
-	jobs?: () => any;
-};
+import currencies from "../../../data/currencies.json";
+import countries from "../../../data/countries.json";
 
 interface UseFormOptionsReturn {
 	error: Error | null;
@@ -27,6 +19,8 @@ interface UseFormOptionsReturn {
 	aggregators: SelectOption[];
 	jobs: SelectOption[];
 	countries: SelectOption[];
+	currencies: SelectOption[];
+	currencyNames: SelectOption[];
 	openCompanyModal: () => void;
 	renderCompanyModal: () => JSX.Element;
 	openLocationModal: () => void;
@@ -41,10 +35,7 @@ interface UseFormOptionsReturn {
 	renderJobModal: () => JSX.Element;
 }
 
-export const useFormOptions = (
-	requiredOptions: string[] = [],
-	dataFactories?: DataFactoryMap,
-): UseFormOptionsReturn => {
+export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsReturn => {
 	const {
 		companies: companiesData,
 		locations: locationsData,
@@ -52,7 +43,6 @@ export const useFormOptions = (
 		persons: personsData,
 		aggregators: aggregatorsData,
 		jobs: jobsData,
-		countries: countriesData,
 		error,
 	} = useDataContext();
 
@@ -65,13 +55,18 @@ export const useFormOptions = (
 	const [showJobModal, setShowJobModal] = useState<boolean>(false);
 
 	// Convert data to SelectOptions and memoize
-	const companies: SelectOption[] = useMemo(() => toSelectOptions(companiesData), [companiesData]);
-	const locations: SelectOption[] = useMemo(() => toSelectOptions(locationsData), [locationsData]);
-	const keywords: SelectOption[] = useMemo(() => toSelectOptions(keywordsData), [keywordsData]);
-	const persons: SelectOption[] = useMemo(() => toSelectOptions(personsData), [personsData]);
-	const aggregators: SelectOption[] = useMemo(() => toSelectOptions(aggregatorsData), [aggregatorsData]);
-	const jobs: SelectOption[] = useMemo(() => toSelectOptions(jobsData, "id", "name"), [jobsData]);
-	const countries: SelectOption[] = useMemo(() => countriesData, [countriesData]);
+	const companyOptions: SelectOption[] = useMemo(() => toSelectOptions(companiesData), [companiesData]);
+	const locationOptions: SelectOption[] = useMemo(() => toSelectOptions(locationsData), [locationsData]);
+	const keywordOptions: SelectOption[] = useMemo(() => toSelectOptions(keywordsData), [keywordsData]);
+	const personOptions: SelectOption[] = useMemo(() => toSelectOptions(personsData), [personsData]);
+	const aggregatorOptions: SelectOption[] = useMemo(() => toSelectOptions(aggregatorsData), [aggregatorsData]);
+	const jobOptions: SelectOption[] = useMemo(() => toSelectOptions(jobsData, "id", "name"), [jobsData]);
+	const countryOptions: SelectOption[] = useMemo(() => toSelectOptions(countries, "name", "name"), [countries]);
+	const currencyOptions: SelectOption[] = useMemo(() => toSelectOptions(currencies, "code", "symbol"), [currencies]);
+	const currencyNameOptions: SelectOption[] = useMemo(
+		() => toSelectOptions(currencies, "code", "name"),
+		[currencies],
+	);
 
 	// Modal handlers
 	const openCompanyModal = (): void => setShowCompanyModal(true);
@@ -173,13 +168,15 @@ export const useFormOptions = (
 
 	return {
 		error: error as Error | null,
-		companies: requiredOptions.includes("companies") ? companies : [],
-		locations: requiredOptions.includes("locations") ? locations : [],
-		keywords: requiredOptions.includes("keywords") ? keywords : [],
-		persons: requiredOptions.includes("persons") ? persons : [],
-		aggregators: requiredOptions.includes("aggregators") ? aggregators : [],
-		jobs: requiredOptions.includes("jobs") ? jobs : [],
-		countries: requiredOptions.includes("countries") ? countries : [],
+		companies: requiredOptions.includes("companies") ? companyOptions : [],
+		locations: requiredOptions.includes("locations") ? locationOptions : [],
+		keywords: requiredOptions.includes("keywords") ? keywordOptions : [],
+		persons: requiredOptions.includes("persons") ? personOptions : [],
+		aggregators: requiredOptions.includes("aggregators") ? aggregatorOptions : [],
+		jobs: requiredOptions.includes("jobs") ? jobOptions : [],
+		countries: requiredOptions.includes("countries") ? countryOptions : [],
+		currencies: requiredOptions.includes("currencies") ? currencyOptions : [],
+		currencyNames: requiredOptions.includes("currencyNames") ? currencyNameOptions : [],
 		openCompanyModal,
 		renderCompanyModal,
 		openLocationModal,

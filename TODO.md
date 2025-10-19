@@ -27,21 +27,20 @@
 * [X] Fix help bubbles clipping in the user setting page
 * [X] Review T&Cs
 * [X] Add basic data export
-* [ ] Add missing test cases
-* [ ] When deleting an entry through the modal, do not refresh the page, refresh the table.
-* [ ] Update the table data when interviews/updates are added/deleted/edited
-* [ ] Update the table data when accordion table data are changed
-* [ ] Add active state to app settings
-* [ ] Editing twice an entry leads to the validation error causing an error
+* [X] Add missing test cases
+* [X] When deleting an entry through the modal, do not refresh the page, refresh the table.
+* [X] Update the table data when interviews/updates are added/deleted/edited
+* [X] Update the table data when accordion table data are changed
+* [X] Add active state to app settings
+* [X] Editing twice an entry leads to the validation error causing an error
+* [X] Add smooze reminder option
 
 ### Know Issues
 * [ ] Modals darken when a help bubble is displayed.
 * [ ] The theme shown in the user setting page is not updated when changed in the sidebar.
 
-
 ### Version 1.1
 * [ ] Add guided tour for new users
 * [ ] handle duplicate jobs
-* [ ] Add password reset
+* [ ] Add password reset and email confirmation
 * [ ] Add TOAST EIS
-* [ ] Add smooze reminder option

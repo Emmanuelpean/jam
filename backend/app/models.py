@@ -134,11 +134,18 @@ class User(CommonBase, Base):
     - `email` (str, unique): User's email address.
     - `theme` (str): The theme of the application.
     - `is_admin` (bool): Indicates whether the user is an administrator.
+    - `is_active` (bool): Indicates whether the user account is active.
     - `last_login` (datetime, optional): The timestamp of the last login.
     - `chase_threshold` (int): The threshold for chasing jobs in the dashboard.
     - `deadline_threshold` (int): The threshold for deadlines in the dashboard.
     - `update_limit` (int): Max number updates displayed in the dashboard.
     - `toast_active` (bool): Indicates whether the TOAST feature is active.
+    - `default_currency` (str): The default currency for salary fields.
+    - `is_verified` (bool): Indicates whether the user's email is verified.
+    - `verification_token` (str, optional): Token used for email verification.
+    - `verification_token_created_at` (datetime, optional): Timestamp of when the verification token was created.
+    - `password_reset_token` (str, optional, unique): Token used for password reset.
+    - `password_reset_token_created_at` (datetime, optional): Timestamp of when the password reset token was created.
 
     Constraints:
     ------------
@@ -147,12 +154,19 @@ class User(CommonBase, Base):
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
     theme = Column(String, nullable=False, server_default="mixed-berry")
+    is_active = Column(Boolean, nullable=False, server_default=expression.true())
     is_admin = Column(Boolean, nullable=False, server_default=expression.false())
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
     chase_threshold = Column(Integer, nullable=False, server_default="30")
     deadline_threshold = Column(Integer, nullable=False, server_default="30")
     update_limit = Column(Integer, nullable=False, server_default="10")
     toast_active = Column(Boolean, nullable=False, server_default=expression.false())
+    default_currency = Column(String, nullable=False, server_default="GBP")
+    is_verified = Column(Boolean, nullable=False, server_default=expression.false())
+    verification_token = Column(String, nullable=True)
+    verification_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    password_reset_token = Column(String, nullable=True, unique=True)
+    password_reset_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     __table_args__ = (
         CheckConstraint(f"length(password) >= {settings.min_password_length}", name="minimum_password_length"),
@@ -263,7 +277,9 @@ class Location(Owned, Base):
 
     Constraints:
     ------------
-    - At least one of postcode, city, or country must be provided."""
+    - At least one of postcode, city, or country must be provided.
+    - Combination of owner_id, city, postcode, and country must be unique to prevent duplicate locations for the same user.
+    """
 
     postcode = Column(String, nullable=True)
     city = Column(String, nullable=True)
@@ -292,6 +308,7 @@ class Location(Owned, Base):
             "postcode IS NOT NULL OR city IS NOT NULL OR country IS NOT NULL",
             name=f"location_data_required",
         ),
+        UniqueConstraint("owner_id", "city", "postcode", "country", name="uq_owner_location_unique"),
     )
 
 
@@ -423,6 +440,7 @@ class Job(Owned, Base):
     description = Column(String, nullable=True)
     salary_min = Column(Float, nullable=True)
     salary_max = Column(Float, nullable=True)
+    salary_currency = Column(String, nullable=True)
     url = Column(String, nullable=True)
     personal_rating = Column(Integer, nullable=True)
     note = Column(String, nullable=True)
