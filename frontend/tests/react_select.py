@@ -1,6 +1,7 @@
 """Module to interact with react-select components using Selenium"""
 
 import time
+from typing import Any
 
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver import ActionChains
@@ -35,7 +36,7 @@ def get_element(
     timeout: float = 10.0,
     parent: WebElement = None,
     multiple: bool = False,
-) -> WebElement | list[WebElement]:
+) -> None | list[WebElement] | WebElement | Any:
     """Get an element or multiple elements by selector.
     :param driver: Selenium WebDriver instance
     :param element_id: ID/value of the element to get
@@ -155,7 +156,7 @@ class ReactSelect(object):
         match = str(index)
         for opt in self.options:
             if self._get_option_index(opt) == match:
-                self._setSelected(opt)
+                self._set_selected(opt)
                 self._close_menu()
                 return
 
@@ -193,7 +194,7 @@ class ReactSelect(object):
         if len(self.selected_options_on_line) < index:
             raise NoSuchElementException("Could not locate element with index %d %index")
 
-        self._unsetSelected(self.selected_options_on_line[index])
+        self._unset_selected(self.selected_options_on_line[index])
 
     def deselect_by_visible_text(self, text) -> None:
         """Deselect all options that display text matching the argument (only for multi-selects)"""
@@ -205,7 +206,7 @@ class ReactSelect(object):
 
         for opt in self.selected_options_on_line:
             if opt.find_element(By.CLASS_NAME, self.select_value_label).text.strip() == text.strip():
-                self._unsetSelected(opt)
+                self._unset_selected(opt)
                 selected = True
 
         if not selected:
@@ -226,7 +227,7 @@ class ReactSelect(object):
         return option.get_attribute("id").split("option-")[1]
 
     @staticmethod
-    def _setSelected(option) -> None:
+    def _set_selected(option) -> None:
         """Select the given option element"""
 
         if not option.is_selected():
@@ -260,7 +261,7 @@ class ReactSelect(object):
         if self._is_menu_open():
             self._click_select_arrow_button()
 
-    def _unsetSelected(self, selected_option) -> None:
+    def _unset_selected(self, selected_option) -> None:
         """Deselect the given selected option element"""
 
         get_element(self.driver, self.select_value_icon, By.CLASS_NAME, parent=selected_option).click()
