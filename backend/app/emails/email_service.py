@@ -8,7 +8,6 @@ from email.header import decode_header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
-from typing import List, Dict, Optional
 
 from fastapi.templating import Jinja2Templates
 
@@ -125,7 +124,7 @@ class EmailService(object):
         mail.login(settings.email_username, settings.email_password)
         return mail
 
-    def get_test_emails(self, recipient: str = None) -> List[Dict]:
+    def get_test_emails(self, recipient: str = None) -> list[dict]:
         """Get test emails for a specific recipient or all test emails."""
 
         if not settings.test_mode:
@@ -147,7 +146,7 @@ class EmailService(object):
         inbox_only: bool = True,
         timedelta_days: int | float = 1,
         subject_contains: str = "",
-    ) -> List[str]:
+    ) -> list[str]:
         """Search for messages matching a query.
         :param recipient_email: Filter by recipient email address (e.g. jam.jobscraper@emmanuelpean.me)
         :param sender_email: Filter by sender email address (e.g. emmanuelpean@gmail.com)
@@ -202,7 +201,7 @@ class EmailService(object):
     def get_email_content(
         self,
         email_id: str,
-    ) -> Optional[Dict[str, str]]:
+    ) -> dict[str, str | datetime] | None:
         """Get the content of a specific email by ID.
         :param email_id: The email message ID
         :return: Dictionary with email details (subject, from, date, body)"""
@@ -226,7 +225,25 @@ class EmailService(object):
             # Extract headers
             subject = self._decode_header(msg["Subject"])
             from_email = self._decode_header(msg["From"])
+
+            # Extract date
             date = msg["Date"]
+            date_formats = [
+                "%a, %d %b %Y %H:%M:%S %z",  # Standard RFC 2822: "Thu, 14 Aug 2025 02:25:53 +0000"
+                "%a, %d %b %Y %H:%M:%S %z (UTC)",  # Original format with (UTC)
+                "%a, %d %b %Y %H:%M:%S",  # Without timezone
+                "%d %b %Y %H:%M:%S %z",  # Without day name
+                "%a, %d %b %Y %H:%M:%S GMT",  # GMT timezone
+                "%a, %d %b %Y %H:%M:%S UTC",  # UTC timezone
+            ]
+
+            date_received = None
+            for date_format in date_formats:
+                try:
+                    date_received = datetime.strptime(date, date_format)
+                    break
+                except ValueError:
+                    continue
 
             # Extract body
             body_text = ""
@@ -252,8 +269,8 @@ class EmailService(object):
                 "id": email_id,
                 "subject": subject,
                 "from": from_email,
-                "date": date,
-                "body_text": body_text,
+                "date": date_received,
+                "body": body_text,
             }
 
         finally:
@@ -268,7 +285,7 @@ class EmailService(object):
         timedelta_days: int | float = 1,
         subject_contains: str = "",
         limit: int = 10,
-    ) -> List[Dict[str, str]]:
+    ) -> list[dict[str, str]]:
         """Get multiple emails matching criteria.
         :param recipient_email: Filter by recipient email address
         :param sender_email: Filter by sender email address
@@ -322,12 +339,11 @@ email_service = EmailService()
 # # send_email = email_service.send_email("emmanuel.pean@gmail.com", "test", "test body", "jam.info@emmanuelpean.me")
 #
 # # Get multiple emails at once
-# emails = email_service.get_emails(
-#     timedelta_days=1,
-#     limit=5,
-#     recipient_email="jam.jobscraper@emmanuelpean.me",
-#     inbox_only=True,
-#     sender_email="emmanuelpean@gmail.com",
-# )
-# for email in emails:
-#     print(email)
+emails = email_service.get_emails(
+    timedelta_days=1,
+    recipient_email="jam.jobscraper@emmanuelpean.me",
+    inbox_only=True,
+    sender_email="emmanuelpean@gmail.com",
+)
+for email in emails:
+    print(email)

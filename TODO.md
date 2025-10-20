@@ -42,5 +42,7 @@
 ### Version 1.1
 * [ ] Add guided tour for new users
 * [ ] handle duplicate jobs
-* [ ] Add password reset and email confirmation
+* [X] Add password reset and email confirmation
 * [ ] Add TOAST EIS
+* [ ] Add the ability to generate a follow-up email and select the contact to send it to
+* 
