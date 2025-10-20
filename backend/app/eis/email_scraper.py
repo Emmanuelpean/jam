@@ -5,252 +5,85 @@ retrieve email messages, and extract LinkedIn job IDs from email content.
 It offers a complete workflow for accessing Gmail data and parsing job-related
 information from email bodies."""
 
-import base64
-import json
-import os
-import pickle
 import re
 import threading
 import traceback
 from datetime import datetime
-from email.utils import parseaddr
 
 import cloudscraper
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
 
+from app import models
+from app.config import settings
 from app.database import session_local
-from app.eis import schemas
 from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScraper, extract_indeed_jobs_from_email
 from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
-from app.models import User, get_setting
+from app.emails.email_service import EmailService
+from app.emails.utils import get_user_id_from_email, clean_email_address
 from app.utils import get_gmail_logger
 
 logger = get_gmail_logger()
 
 
-def clean_email_address(sender_field: str) -> str:
-    """Extract a clean email address from the sender field
-    Handles formats like:
-    - 'John Doe <john.doe@gmail.com>'
-    - 'john.doe@gmail.com'
-    - '"John Doe" <john.doe@gmail.com>'"""
-
-    name, email = parseaddr(sender_field)
-    return email.lower().strip() if email else sender_field.lower().strip()
-
-
-def get_user_id_from_email(email: str, db) -> None | int:
-    """Get user id from email"""
-
-    entry = db.query(User).filter(User.email == email).first()
-    if entry:
-        return entry.id
-    else:
-        raise AssertionError(f"User with email '{email}' not found in database.")
-
-
-class GmailScraper(object):
+class JobScraper(EmailService):
     """Gmail Scrapper"""
 
-    def __init__(
-        self,
-        token_file: str = "token.pickle",
-        secrets_file: str = "eis_secrets.json",
-    ) -> None:
-        """Object constructor
-        :param token_file: Path to the token pickle file
-        :param secrets_file: Path to the secrets JSON file containing OAuth credentials"""
+    def __init__(self) -> None:
+        """Object constructor"""
 
-        self.token_file = token_file
-        self.secrets_file = secrets_file
-        self.SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
-        self.service = None
-
-        # Load credentials from the external file and authenticate
-        self.credentials_config = self._load_credentials()
-        self.authenticate()
-
-    def _load_credentials(self) -> dict:
-        """Load OAuth credentials from the secrets file"""
-
-        try:
-            with open(self.secrets_file, "r") as f:
-                secrets = json.load(f)
-                return secrets["google_auth"]
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Secrets file '{self.secrets_file}' not found.")
-        except (json.JSONDecodeError, KeyError) as e:
-            raise ValueError(f"Invalid JSON format in secrets file '{self.secrets_file}': {e}")
-
-    def authenticate(self) -> None:
-        """Authenticate and create the Gmail service"""
-
-        credentials: Credentials | None = None
-
-        # Load existing token
-        if os.path.exists(self.token_file):
-            with open(self.token_file, "rb") as token:
-                credentials = pickle.load(token)
-
-        # If there are no valid credentials, request authorisation
-        if not credentials or not credentials.valid:
-            if credentials and credentials.expired and credentials.refresh_token:
-                credentials.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_config(self.credentials_config, self.SCOPES)
-                credentials = flow.run_local_server(port=0)
-
-            # Save the credentials for the next run
-            with open(self.token_file, "wb") as token:
-                # noinspection PyTypeChecker
-                pickle.dump(credentials, token)
-
-        self.service = build("gmail", "v1", credentials=credentials)
+        EmailService.__init__(self)
 
     # ------------------------------------------------- EMAIL READING -------------------------------------------------
 
-    def get_email_ids(
-        self,
-        sender_email: str = "",
-        inbox_only: bool = True,
-        timedelta_days: int | float = 1,
-    ) -> list[str]:
-        """Search for messages matching a query
-        :param sender_email: Sender email address
-        :param inbox_only: Search only in the inbox
-        :param timedelta_days: Number of days to search for emails
-        :return: List of message IDs matching the query"""
-
-        # Build the query
-        query = ""
-        query += f" deliveredto:{sender_email}" if sender_email else ""
-        query += " in:inbox" if inbox_only else ""
-        query += f" newer_than:{timedelta_days}d" if timedelta_days else ""
-        query = query.strip()
-
-        # Execute the query and extract the message IDs
-        result = self.service.users().messages().list(userId="me", q=query).execute()
-        messages = result.get("messages", [])
-        return [msg["id"] for msg in messages]
-
-    @staticmethod
-    def _extract_email_body(payload: dict) -> str:
-        """Extract email body from payload
-        :param payload: Email payload dictionary
-        :return: Email body content as a string"""
-
-        def decode_base64(data_: str) -> str:
-            """Decode base64 URL-safe string"""
-
-            return base64.urlsafe_b64decode(data_).decode("utf-8")
-
-        body = ""
-
-        if "parts" in payload:
-            for part in payload["parts"]:
-                if part["mimeType"] == "text/plain":
-                    data = part["body"]["data"]
-                    body = decode_base64(data)
-                    break
-                elif part["mimeType"] == "text/html":
-                    data = part["body"]["data"]
-                    body = decode_base64(data)
-        else:
-            if payload["mimeType"] == "text/plain":
-                data = payload["body"]["data"]
-                body = decode_base64(data)
-
-        return body
-
-    def get_email_data(
+    def save_email_to_db(
         self,
         message_id: str,
         sender: str,
-    ) -> schemas.JobAlertEmailCreate:
-        """Extract readable content from an email
-        :param message_id: Message ID
-        :param sender: Sender email address
-        :return: JobAlertEmailIn object containing email metadata and body content"""
-
-        message = self.service.users().messages().get(userId="me", id=message_id, format="full").execute()
-
-        payload = message["payload"]
-        headers = payload.get("headers", [])
-
-        # Extract data
-        subject = next((h["value"] for h in headers if h["name"] == "Subject"), "No Subject")
-        date = next((h["value"] for h in headers if h["name"] == "Date"), "Unknown Date")
-        body = self._extract_email_body(payload)
-
-        if "linkedin" in body.lower():
-            platform = "linkedin"
-        elif "indeed" in body.lower():
-            platform = "indeed"  # TODO add veganjobs
-        else:
-            raise ValueError("Email body does not contain a valid platform identifier.")
-
-        # Common email date formats to try
-        date_formats = [
-            "%a, %d %b %Y %H:%M:%S %z",  # Standard RFC 2822: "Thu, 14 Aug 2025 02:25:53 +0000"
-            "%a, %d %b %Y %H:%M:%S %z (UTC)",  # Original format with (UTC)
-            "%a, %d %b %Y %H:%M:%S",  # Without timezone
-            "%d %b %Y %H:%M:%S %z",  # Without day name
-            "%a, %d %b %Y %H:%M:%S GMT",  # GMT timezone
-            "%a, %d %b %Y %H:%M:%S UTC",  # UTC timezone
-        ]
-
-        date_received = None
-        for date_format in date_formats:
-            try:
-                date_received = datetime.strptime(date, date_format)
-                break
-            except ValueError:
-                continue
-
-        return schemas.JobAlertEmailCreate(
-            external_email_id=message_id,
-            subject=subject,
-            sender=clean_email_address(sender),
-            date_received=date_received,
-            body=body,
-            platform=platform,
-        )
-
-    @staticmethod
-    def save_email_to_db(
-        email_data: schemas.JobAlertEmailCreate,
         service_log_id: int,
         db,
     ) -> tuple[JobAlertEmail, bool]:
         """Save email and job IDs to database
-        :param email_data: Dictionary containing email metadata
+        :param message_id: Message ID
+        :param sender: Sender email address
         :param service_log_id: ID of the EisServiceLog instance associated with this email
         :param db: SQLAlchemy database session
         :return: JobEmails instance and whether the record was created or already existing"""
 
-        # Check if email already exists
-        existing_email = (
-            db.query(JobAlertEmail).filter(JobAlertEmail.external_email_id == email_data.external_email_id).first()
-        )
+        message = self.get_email_content(message_id)
 
+        if "linkedin" in message["from"].lower():
+            platform = "linkedin"
+        elif "indeed" in message["from"].lower():
+            platform = "indeed"
+        elif "veganjobs" in message["from"].lower():
+            platform = "veganjobs"
+        else:
+            raise ValueError("Email body does not contain a valid platform identifier.")
+
+        # Check if email already exists
+        existing_email = db.query(JobAlertEmail).filter(JobAlertEmail.external_email_id == message_id).first()
+
+        # Return the existing record
         if existing_email:
             return existing_email, False
 
-        # Create new email record
-        # noinspection PyArgumentList
-        email_record = JobAlertEmail(
-            owner_id=get_user_id_from_email(email_data.sender, db),
-            service_log_id=service_log_id,
-            **email_data.model_dump(exclude_unset=True),
-        )
-        db.add(email_record)
-        db.commit()
-        db.refresh(email_record)
+        # Create a new email record
+        else:
+            # noinspection PyArgumentList
+            email_record = JobAlertEmail(
+                owner_id=get_user_id_from_email(clean_email_address(sender), db),
+                service_log_id=service_log_id,
+                external_email_id=message_id,
+                subject=message["subject"],
+                sender=clean_email_address(sender),
+                date_received=message["date"],
+                body=message["body"],
+                platform=platform,
+            )
+            db.add(email_record)
+            db.commit()
+            db.refresh(email_record)
 
-        return email_record, True
+            return email_record, True
 
     # -------------------------------------------------- JOB SCRAPING --------------------------------------------------
 
@@ -440,7 +273,7 @@ class GmailScraper(object):
         :param timedelta_days: Number of days to search for emails
         :param service_log_entry: Service log entry"""
 
-        users = db.query(User).all()
+        users = db.query(models.User).filter(models.User.toast_active).all()
         logger.info(f"Found {len(users)} users to process")
 
         # For each user...
@@ -450,7 +283,7 @@ class GmailScraper(object):
 
             # Get the list of all emails
             try:
-                email_external_ids = self.get_email_ids(user.email, True, timedelta_days)
+                email_external_ids = self.get_email_ids(settings.scraper_email, user.email, True, timedelta_days)
                 service_log_entry.users_processed_n += 1
                 service_log_entry.emails_found_n += len(email_external_ids)
             except Exception as exception:
@@ -461,8 +294,9 @@ class GmailScraper(object):
             for email_external_id in email_external_ids:
                 logger.info(f"Processing email with ID: {email_external_id}")
                 try:
-                    email_data = self.get_email_data(email_external_id, user.email)
-                    email_record, is_new = self.save_email_to_db(email_data, service_log_entry.id, db)
+                    email_record, is_new = self.save_email_to_db(
+                        email_external_id, user.email, service_log_entry.id, db
+                    )
 
                     # Process jobs if this is a new email
                     if is_new:
@@ -500,7 +334,7 @@ class GmailScraper(object):
         elif email_record.platform == "indeed":
 
             # Use the email body to extract the job information instead of using the Bright API
-            if get_setting(db, "indeed_scraper", "brightapi") == "email":
+            if models.get_setting(db, "indeed_scraper", "brightapi") == "email":
                 jobs = extract_indeed_jobs_from_email(email_record.body)
                 for job in jobs:
                     try:
@@ -555,7 +389,7 @@ class GmailScraper(object):
             if job_record.emails[0].platform == "linkedin":
                 scrapper = LinkedinJobScraper(job_record.external_job_id)
             elif job_record.emails[0].platform == "indeed":
-                if not get_setting(db, "indeed_scraper", "brightapi") == "email":
+                if not models.get_setting(db, "indeed_scraper", "brightapi") == "email":
                     scrapper = IndeedJobScraper(job_record.external_job_id)
                 else:
                     scrapper = None
@@ -599,7 +433,7 @@ class GmailScraperService:
     def __init__(self) -> None:
         """Initialise the service with a GmailScraper instance."""
 
-        self.scraper = GmailScraper()
+        self.scraper = JobScraper()
         self.is_running = False
         self.thread = None
         self.stop_event = threading.Event()
@@ -673,15 +507,13 @@ class GmailScraperService:
 
 
 if __name__ == "__main__":
-    gmail = GmailScraper()
+    gmail = JobScraper()
     emails = gmail.get_email_ids("emmanuelpean@gmail.com", inbox_only=True, timedelta_days=2)
-    email_d = gmail.get_email_data(emails[2], "")
-    print(email_d.body)
+    # email_d = gmail.get_email_data(emails[2], "")
+    print(emails)
     # print(email_d)
     # gmail.save_email_to_db(email_d, next(get_db()))
     # gmail.run_scraping(2)
 
     # service = GmailScraperService()
     # service.start()
-
-    # gmail = GmailScraper()
