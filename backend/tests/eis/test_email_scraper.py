@@ -1,111 +1,77 @@
-"""Test module for email_parser.py functions and GmailScraper class"""
+"""Test module for email_parser.py functions and JobScraper class"""
 
 import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from app.eis import schemas
-from app.models import Setting
-from app.eis.email_scraper import clean_email_address, get_user_id_from_email, JobScraper
+from app.eis.email_scraper import JobScraper
 from app.eis.job_scraper import extract_indeed_jobs_from_email
-from app.eis.models import JobAlertEmail, ScrapedJob
+from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
+from app.models import Setting
 from tests.conftest import open_file
-from tests.eis.test_job_scraper import MockLinkedinJobScraper, MockIndeedJobScraper
+from tests.eis.test_job_scraper import MockLinkedinJobScraper, MockIndeedJobScraper, MockVeganJobsJobScraper
+from tests.utils.table_data import USER_DATA
+from tests.eis import resources
 
 # ------------------------------------------------------ FIXTURES ------------------------------------------------------
 
 
-def create_gmail_scraper() -> JobScraper:
-    """Create a GmailScraper instance for testing with mocked file dependencies"""
+@pytest.fixture
+def test_service_log(session) -> EisServiceLog:
+    """Create a test EisServiceLog record"""
 
-    with (
-        patch("builtins.open", create=True),
-        patch("json.load") as mock_json_load,
-        patch("os.path.exists") as mock_exists,
-        patch("pickle.load"),
-        patch("pickle.dump"),
-        patch("app.eis.email_scraper.build") as mock_build,
-    ):
-
-        # Mock the secrets file reading
-        mock_json_load.return_value = {
-            "google_auth": {
-                "installed": {
-                    "client_id": "test_client_id.apps.googleusercontent.com",
-                    "project_id": "test-project",
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token",
-                    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                    "client_secret": "test_client_secret",
-                    "redirect_uris": ["http://localhost"],
-                }
-            }
-        }
-
-        # Mock token file doesn't exist (fresh authentication)
-        mock_exists.return_value = False
-
-        # Mock Gmail service
-        mock_service = MagicMock()
-        mock_build.return_value = mock_service
-
-        # Mock the OAuth flow
-        with patch("google_auth_oauthlib.flow.InstalledAppFlow.from_client_config") as mock_flow:
-            mock_credentials = MagicMock()
-            mock_credentials.valid = True
-            mock_flow_instance = MagicMock()
-            mock_flow_instance.run_local_server.return_value = mock_credentials
-            mock_flow.return_value = mock_flow_instance
-
-            # Create scraper with mocked dependencies
-            scraper = JobScraper(secrets_file="test_secrets.json", token_file="test_token.json")
-
-            return scraper
-
-
-def mock_get_indeed_redirected_url(url: str) -> str:
-    """Mock function to replace get_indeed_redirected_url"""
-
-    conv = {
-        "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0CaUNNDciQjB8b911OChydWlMiE438Jot_lydiWr9Z7lbj9cwyJAEEXhSuW8SoD7Wz1bcqpb5rq8IzPxIcuirUCwOlLSL9SL1F572G6Ye9pXIlV00tsAM20VfzF1b86kTFEpwUl5cqoBjsMlRudbS30FMebfIGC01chUG_dRw15uQJAniZZ9m2OwXKNijACF8VWjBKulQ_zZI6qbz8kD41WGqtaC6lMPRCw5kXUrJbTDCaqSpugfThHENgjlu3j5DBWMjvzWpApXtcxY1NTDKT2jg6q-Z5ZkxpZFWJpPicGjeEfETjD8De3kM__AclzfTjESmozVOJMXW85h3mgPZ94GIuFEx8ppqwDwLENrDoalprKNGMFQOeZ9u9dMbxUX_RJCqW9z1vgoP6UivsqTanzYlukGXOhEQ6IFVnNvDODivSUcZCpO_yBMmxlJxaYuRjPQmnuvS8CFyF8B-M_msQscB4GMRxaiGJuzie7_iJr6nKUP2O7lo1n69wInEp_MnehsLtxzcDysc6eBzfF4v2KkuXm1RRPbFqeIA7TK2sPoy2Z8b3VGKVcWv8k90XwuftkqxlnbbXeP3t1ygWiIMHdoJNVKkxUu46MZXtM498k9txG9p9ByQhDcOI8_BRoVsP3DM1wQl1ang-WkAVoo2PTwmdtETp3VlZZuUfSGtYYEdj-E9JmOVulmnyjbLfssmM%3D&xkcb=SoB56_M3u5Oxdj0MCJ0ObzkdCdPP&camk=UoKtGZLa3XLCRNJifgWECQ%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "06498cad9de95b12",
-        "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0D_vIW1HWJamhhVblwSY9vEnB3YehQDBaLQWgEpQbAFvEB66TXnGDud1dy-8adNNEA8NkJwfd77g5zBB1ZOXhf8PEjWP1V1-Zs6swoSDNPKB4lvVzHxu1T3qM7FYs12eUEkiIA-iiINRZ_P2VMyvYooQezlTWytMkd2UWxnVCG9a3_m1cyaMA7DTm_syy5wCWCpCUUvgVdIOEOARvgAhUnIIz9x2Chk3LMqtby4HJFP4Jl7C-Vi5YB8H0bSA1FeugROif2FHIwU9gEobz-VsFvEz_Z4cCH3oft61BFqWCWU_wWimKzWAcDGINsjLw9tAunN_xjEdupF33Iwcd77c1urVC1OLKbL3-o2oJRyEPfNL1YN7H5cP_VieI3Fir6psGrVHQv_bNy0yYleEmT0E_DofaYunYAnzMqD_SUhvCDHia8MqrGJkTcgJp16KsMZPr5_mVLck5-3PYB-3khV71Oqfoa7q1yRWl-SN-Qfwc2OdZ8zl9PsK42-6iQ34faa2uibd37I4QFVw_Rwx7r8W-xyXpiwfe4xmkhhRGK1DeiQibftk7Dyp41hCpPZbTW_bL5F98fT1mfh1u1enhw3sXxk_BjcAXS_HZpuWi5zMuwbIztF4a8ZtEo_fNdlevRIwrN-0-0qjuEDoJYSxnY3mvd2WkDit7XyYAQWaCBCtSOLVSvgSDi4pd033dZ1KPZD7a0uFkrEyWaWSQ%3D%3D&xkcb=SoBQ6_M3u5Oxdj0MCJ0MbzkdCdPP&camk=ethIe0s0hedS-FZyNnahJA%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "42b107e214095d56",
-        "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0Cf-siO93BSuJ_a-mQFMzVvPBmFGGJg8IeoYoU7n3Hr-wyttwxtthbeGbpHFYWwmmWPWQtznc_slvzvpsaBmSWUWC64QSSNhEuwuNUWHSLtah1bwBpWniJ8vAR5oqbmqlY296quUSNSViPhje6fSFgDWLhGJWLOZaQ6OJRAp-V8a91no5GJKrUzj_KWnmJKR4rz_W6vZS8NYU5v9qDqx0uOlGmg1BnkC5lIZzyqlYwwOiZdPPVaEKKEr_G0GeQvlH67sGm1xTNyJw8sK6-4jN_ENAf2kd7JTexBVkGw5Mo02tAYXFvdA29R0CGRR0lyQRZtFJjgkhZvLHHLYO8JNjy_mia4G2BQ7Sx4ktyjaStia3kR4-BQNNWnr3k3ocyacfQEMHQlqE-Boaf4mwI0-BtJXesJsw9bvP207NBnfZFLJs1hUmSgvHhdYukY2qIsWXJLUVJgOyjwxdLhap0eFBEyti7g0G0mb3e1eO9ATdBP_e0h_p932Dm6wVyAZEXOddagVLoHFiJWPYnq8BUyKvm_S3vp9I57lYRrxWVTKZve2VIP18Uex6Bz0SozYOEEdgfyqQMBRAcp935Hg8aUW8GrXb3Q-js8GxuFke_S_tiEhCyNOEMjhQ-VRl5QOPdFttLD6e9-WR_H8IFLZUu3KwcfMBy1qEq1Tio%3D&xkcb=SoAk6_M3u5Oxdj0MCJ0AbzkdCdPP&camk=ethIe0s0hedep5fbP4CFtg%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "14a9001ba6ebb965",
-        "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0COSBp8KgMXxewvi58QAG0wwdlVlJfveGrD5vFIguWoXakoblclqS-4T_znVTPKawHOSHZOxsl_jK0JZuGPspNA9roT-uonvDv2P6RZVLNvLfm0KdPGmVMWwoNgo5H64KiIVwOuf_UrhuMQzHBJIgwJkroSRqxeEQ_3FKwvys8bTaQ85PMumf55yR90-LeyTGL3GXnHmXVXSfC1MDn6qf5BpprmfFM-RGc2WNblsNn6hNEtF-n7NfrAi-f-PzOE_Fjwhx-Y50MEMdlex_3U6MgwFpw7CADiD1Fch2HOI_bhNgCdt6qoLUO2qEA1AX1Ax0_pwn33z2XS_4FOGRcb4ZGqTii1rx-Elj6c6n-95wiR2sks-xrI0uMrPaE2w8P5k5v6tx1ixIQT9liqyzcXoSS6vzmARulIHV4NUWn0e_K4EvX-A-zYBjcEGSGUrLelauCc21fXrDww_gNV_ZSmedh1M06WDaPc3K_6WYtv6-_kkYQhQJyLlyW0Ws23VNL5nfJygGuW8pXeZhbniMlcDaavPtyGoDp4EWGOAI45uMzcbnJ0UyZcRPmuQxfCD8cFz-lmNle1TxlSWFB7j5QOAIn1UbXcKS7gdbhBijiUJWdSdzfbaPNHZdIPMBs6CDUZT5dPrhj_mtNopw4DVvv-OUOAzOpx9mlyJpr5aE7ivabt7_V3CMtJpw7ieYZ4UBA5ZQQ%3D&xkcb=SoCq6_M3u5Oxdj0MCJ0HbzkdCdPP&camk=UoKtGZLa3XL6dp7SxnkD1A%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "eafb032fabcd77bc",
-        "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0DUGxYnv6px9uI6dWZhSaSeqMgHWZda7534TRDDAqMKu87sK88i_2Gbq8z1VBS-lbE9HOACaDVAT4jwhaVY_xabO_rq24Y_veJqW-7_usP-_0tRugSmofb5DuxCq5IvmHBw1rNykLW3A5edDY3v_jFGsNtRR7fiXWfgXBO9BJc6FCnwMo2I8cy9hPyydcFqH8iy9UHGKCJzlwGZAiKzNQyLn0rE_XB9MXJX9itgkAFNjlDq17qpEbAnLeIOJCcDXQ03H-DIxBN3ycBF9r29kZ45spvjQItrgoMklzXH3jPwU2j7qTpqQxKVcw5xKYuIWDhM5YqzbSTzr7Z97yKVWDKaB7gM87UyTYdJ32cflCxws1brYrULvaC8SfbTlTbsHvAdrl7BHnq6r6j_pBdFDKWUW-HcBCMgYk3ikg7sr5qwJAmQMqMjyLYUfWLVQ2ouX79v1awn5CT_sz7DqSikuv7MUgfzGrvbjHnov-zAxQfFPwdSmWZkgIz7UdZVOXCV0M6bw-XkaWtkDrGyiJRLOmEPNiiNwLnsKek3SWBSR8qHNbsrDWHz391rS2onjNWfo5gnmims0O-R-8jgV2J2NQyYP0ZNTYquIehRay6WTLbEZRsxgCy4Pgz42H-Z71EnOTwqnZ-8qLPoJRHV0K9oMQL6&xkcb=SoC36_M3u5Oxdj0MCJ0ebzkdCdPP&camk=ethIe0s0hefv8CfXU2K9Rw%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "5aa22054e7a8b76e",
-        "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0BqgWWSVbq3rqstnfUzC8xqhdOuKqZ9Avj77mYlc-g-lgy-1FSdO6PyFnAuQRYfp-JTSxMGeZR4wFhLR1UE4XYsePMvv1exKBMkCeCy9Dh-JYDgYqQLDREEwr5Bfy7uoO_og4WXgkp9rnXdiC6ej8lfOCDGtLs0xpRssH8ApFDX2WPI2WZLU3Dr_bYyzL-F51cHyx5ndFwTEKvG8FqgvbkNe1y7DDUUNUQ1EIdLP4bXw1hDuYRjJm9fbGQDc8LmmrzvdE37KxUZqeU3mzGz2moMrdAZPMufhp93UnQ8QmfOD8uq1LGUenfAtLXc7JvOdVmgZkFtGBtdlJ2Dce9Ty8I9XNaZR1vVTXVwfiM9K6yVwKEH5xhUCsr8a3DFXmcVOrivfiMWlzjRM8Bhtnwff6uJ8CLpNr-VdvfAHJTrsflPiwb6FZFX9sKw1kbd-zDyBDq_vEXiJor5MJKcuzQZ2DH62Tgv_dZllHjmGCWfk5775BFywNThFfEpBqM_-8GhAUHBfb6TSXITGIOiwWH6s7fbs7Fhz8wv20YInHAp2vJ--cjK9uVra5jKMPXk8XB1cUTG-ZWtKfzOtVi4TkT5lfFWC12tyMHgv72MFU3YxnXQZrswfP6D5JhZUJM5toctt1AkDeniJsTqR1-JtOeuQaLjQe7KvUV9qJ_ZUXba6qtMvOfz-BCYBDjc&xkcb=SoAq6_M3u5Oxdj0MCJ0dbzkdCdPP&camk=UoKtGZLa3XJTEZOPwEn50w%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "ae47862d410bbd39",
-    }
-
-    return "https://uk.indeed.com/rc/clk/dl?jk=" + conv[url]
+    # noinspection PyArgumentList
+    service_log = EisServiceLog(run_datetime=datetime.datetime.now())
+    session.add(service_log)
+    session.commit()
+    return service_log
 
 
 @pytest.fixture(autouse=True)
 def patch_get_indeed_redirected_url(monkeypatch) -> None:
     """Automatically patch get_indeed_redirected_url in all tests to avoid real HTTP requests"""
 
-    monkeypatch.setattr(JobScraper, "get_indeed_redirected_url", mock_get_indeed_redirected_url)
+    def mock_get_indeed_redirected_url(url: str) -> str:
+        """Mock function to replace get_indeed_redirected_url"""
+
+        conversion = {
+            "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0CaUNNDciQjB8b911OChydWlMiE438Jot_lydiWr9Z7lbj9cwyJAEEXhSuW8SoD7Wz1bcqpb5rq8IzPxIcuirUCwOlLSL9SL1F572G6Ye9pXIlV00tsAM20VfzF1b86kTFEpwUl5cqoBjsMlRudbS30FMebfIGC01chUG_dRw15uQJAniZZ9m2OwXKNijACF8VWjBKulQ_zZI6qbz8kD41WGqtaC6lMPRCw5kXUrJbTDCaqSpugfThHENgjlu3j5DBWMjvzWpApXtcxY1NTDKT2jg6q-Z5ZkxpZFWJpPicGjeEfETjD8De3kM__AclzfTjESmozVOJMXW85h3mgPZ94GIuFEx8ppqwDwLENrDoalprKNGMFQOeZ9u9dMbxUX_RJCqW9z1vgoP6UivsqTanzYlukGXOhEQ6IFVnNvDODivSUcZCpO_yBMmxlJxaYuRjPQmnuvS8CFyF8B-M_msQscB4GMRxaiGJuzie7_iJr6nKUP2O7lo1n69wInEp_MnehsLtxzcDysc6eBzfF4v2KkuXm1RRPbFqeIA7TK2sPoy2Z8b3VGKVcWv8k90XwuftkqxlnbbXeP3t1ygWiIMHdoJNVKkxUu46MZXtM498k9txG9p9ByQhDcOI8_BRoVsP3DM1wQl1ang-WkAVoo2PTwmdtETp3VlZZuUfSGtYYEdj-E9JmOVulmnyjbLfssmM%3D&xkcb=SoB56_M3u5Oxdj0MCJ0ObzkdCdPP&camk=UoKtGZLa3XLCRNJifgWECQ%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "06498cad9de95b12",
+            "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0D_vIW1HWJamhhVblwSY9vEnB3YehQDBaLQWgEpQbAFvEB66TXnGDud1dy-8adNNEA8NkJwfd77g5zBB1ZOXhf8PEjWP1V1-Zs6swoSDNPKB4lvVzHxu1T3qM7FYs12eUEkiIA-iiINRZ_P2VMyvYooQezlTWytMkd2UWxnVCG9a3_m1cyaMA7DTm_syy5wCWCpCUUvgVdIOEOARvgAhUnIIz9x2Chk3LMqtby4HJFP4Jl7C-Vi5YB8H0bSA1FeugROif2FHIwU9gEobz-VsFvEz_Z4cCH3oft61BFqWCWU_wWimKzWAcDGINsjLw9tAunN_xjEdupF33Iwcd77c1urVC1OLKbL3-o2oJRyEPfNL1YN7H5cP_VieI3Fir6psGrVHQv_bNy0yYleEmT0E_DofaYunYAnzMqD_SUhvCDHia8MqrGJkTcgJp16KsMZPr5_mVLck5-3PYB-3khV71Oqfoa7q1yRWl-SN-Qfwc2OdZ8zl9PsK42-6iQ34faa2uibd37I4QFVw_Rwx7r8W-xyXpiwfe4xmkhhRGK1DeiQibftk7Dyp41hCpPZbTW_bL5F98fT1mfh1u1enhw3sXxk_BjcAXS_HZpuWi5zMuwbIztF4a8ZtEo_fNdlevRIwrN-0-0qjuEDoJYSxnY3mvd2WkDit7XyYAQWaCBCtSOLVSvgSDi4pd033dZ1KPZD7a0uFkrEyWaWSQ%3D%3D&xkcb=SoBQ6_M3u5Oxdj0MCJ0MbzkdCdPP&camk=ethIe0s0hedS-FZyNnahJA%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "42b107e214095d56",
+            "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0Cf-siO93BSuJ_a-mQFMzVvPBmFGGJg8IeoYoU7n3Hr-wyttwxtthbeGbpHFYWwmmWPWQtznc_slvzvpsaBmSWUWC64QSSNhEuwuNUWHSLtah1bwBpWniJ8vAR5oqbmqlY296quUSNSViPhje6fSFgDWLhGJWLOZaQ6OJRAp-V8a91no5GJKrUzj_KWnmJKR4rz_W6vZS8NYU5v9qDqx0uOlGmg1BnkC5lIZzyqlYwwOiZdPPVaEKKEr_G0GeQvlH67sGm1xTNyJw8sK6-4jN_ENAf2kd7JTexBVkGw5Mo02tAYXFvdA29R0CGRR0lyQRZtFJjgkhZvLHHLYO8JNjy_mia4G2BQ7Sx4ktyjaStia3kR4-BQNNWnr3k3ocyacfQEMHQlqE-Boaf4mwI0-BtJXesJsw9bvP207NBnfZFLJs1hUmSgvHhdYukY2qIsWXJLUVJgOyjwxdLhap0eFBEyti7g0G0mb3e1eO9ATdBP_e0h_p932Dm6wVyAZEXOddagVLoHFiJWPYnq8BUyKvm_S3vp9I57lYRrxWVTKZve2VIP18Uex6Bz0SozYOEEdgfyqQMBRAcp935Hg8aUW8GrXb3Q-js8GxuFke_S_tiEhCyNOEMjhQ-VRl5QOPdFttLD6e9-WR_H8IFLZUu3KwcfMBy1qEq1Tio%3D&xkcb=SoAk6_M3u5Oxdj0MCJ0AbzkdCdPP&camk=ethIe0s0hedep5fbP4CFtg%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "14a9001ba6ebb965",
+            "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0COSBp8KgMXxewvi58QAG0wwdlVlJfveGrD5vFIguWoXakoblclqS-4T_znVTPKawHOSHZOxsl_jK0JZuGPspNA9roT-uonvDv2P6RZVLNvLfm0KdPGmVMWwoNgo5H64KiIVwOuf_UrhuMQzHBJIgwJkroSRqxeEQ_3FKwvys8bTaQ85PMumf55yR90-LeyTGL3GXnHmXVXSfC1MDn6qf5BpprmfFM-RGc2WNblsNn6hNEtF-n7NfrAi-f-PzOE_Fjwhx-Y50MEMdlex_3U6MgwFpw7CADiD1Fch2HOI_bhNgCdt6qoLUO2qEA1AX1Ax0_pwn33z2XS_4FOGRcb4ZGqTii1rx-Elj6c6n-95wiR2sks-xrI0uMrPaE2w8P5k5v6tx1ixIQT9liqyzcXoSS6vzmARulIHV4NUWn0e_K4EvX-A-zYBjcEGSGUrLelauCc21fXrDww_gNV_ZSmedh1M06WDaPc3K_6WYtv6-_kkYQhQJyLlyW0Ws23VNL5nfJygGuW8pXeZhbniMlcDaavPtyGoDp4EWGOAI45uMzcbnJ0UyZcRPmuQxfCD8cFz-lmNle1TxlSWFB7j5QOAIn1UbXcKS7gdbhBijiUJWdSdzfbaPNHZdIPMBs6CDUZT5dPrhj_mtNopw4DVvv-OUOAzOpx9mlyJpr5aE7ivabt7_V3CMtJpw7ieYZ4UBA5ZQQ%3D&xkcb=SoCq6_M3u5Oxdj0MCJ0HbzkdCdPP&camk=UoKtGZLa3XL6dp7SxnkD1A%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "eafb032fabcd77bc",
+            "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0DUGxYnv6px9uI6dWZhSaSeqMgHWZda7534TRDDAqMKu87sK88i_2Gbq8z1VBS-lbE9HOACaDVAT4jwhaVY_xabO_rq24Y_veJqW-7_usP-_0tRugSmofb5DuxCq5IvmHBw1rNykLW3A5edDY3v_jFGsNtRR7fiXWfgXBO9BJc6FCnwMo2I8cy9hPyydcFqH8iy9UHGKCJzlwGZAiKzNQyLn0rE_XB9MXJX9itgkAFNjlDq17qpEbAnLeIOJCcDXQ03H-DIxBN3ycBF9r29kZ45spvjQItrgoMklzXH3jPwU2j7qTpqQxKVcw5xKYuIWDhM5YqzbSTzr7Z97yKVWDKaB7gM87UyTYdJ32cflCxws1brYrULvaC8SfbTlTbsHvAdrl7BHnq6r6j_pBdFDKWUW-HcBCMgYk3ikg7sr5qwJAmQMqMjyLYUfWLVQ2ouX79v1awn5CT_sz7DqSikuv7MUgfzGrvbjHnov-zAxQfFPwdSmWZkgIz7UdZVOXCV0M6bw-XkaWtkDrGyiJRLOmEPNiiNwLnsKek3SWBSR8qHNbsrDWHz391rS2onjNWfo5gnmims0O-R-8jgV2J2NQyYP0ZNTYquIehRay6WTLbEZRsxgCy4Pgz42H-Z71EnOTwqnZ-8qLPoJRHV0K9oMQL6&xkcb=SoC36_M3u5Oxdj0MCJ0ebzkdCdPP&camk=ethIe0s0hefv8CfXU2K9Rw%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "5aa22054e7a8b76e",
+            "https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0BqgWWSVbq3rqstnfUzC8xqhdOuKqZ9Avj77mYlc-g-lgy-1FSdO6PyFnAuQRYfp-JTSxMGeZR4wFhLR1UE4XYsePMvv1exKBMkCeCy9Dh-JYDgYqQLDREEwr5Bfy7uoO_og4WXgkp9rnXdiC6ej8lfOCDGtLs0xpRssH8ApFDX2WPI2WZLU3Dr_bYyzL-F51cHyx5ndFwTEKvG8FqgvbkNe1y7DDUUNUQ1EIdLP4bXw1hDuYRjJm9fbGQDc8LmmrzvdE37KxUZqeU3mzGz2moMrdAZPMufhp93UnQ8QmfOD8uq1LGUenfAtLXc7JvOdVmgZkFtGBtdlJ2Dce9Ty8I9XNaZR1vVTXVwfiM9K6yVwKEH5xhUCsr8a3DFXmcVOrivfiMWlzjRM8Bhtnwff6uJ8CLpNr-VdvfAHJTrsflPiwb6FZFX9sKw1kbd-zDyBDq_vEXiJor5MJKcuzQZ2DH62Tgv_dZllHjmGCWfk5775BFywNThFfEpBqM_-8GhAUHBfb6TSXITGIOiwWH6s7fbs7Fhz8wv20YInHAp2vJ--cjK9uVra5jKMPXk8XB1cUTG-ZWtKfzOtVi4TkT5lfFWC12tyMHgv72MFU3YxnXQZrswfP6D5JhZUJM5toctt1AkDeniJsTqR1-JtOeuQaLjQe7KvUV9qJ_ZUXba6qtMvOfz-BCYBDjc&xkcb=SoAq6_M3u5Oxdj0MCJ0dbzkdCdPP&camk=UoKtGZLa3XJTEZOPwEn50w%3D%3D&p=0&jsa=1997&rjs=1&tmtk=1j3p3fhn5gc8r800&gdfvj=1&alid=672a6c661e474561bc946956&fvj=1&g1tAS=true": "ae47862d410bbd39",
+        }
+
+        return "https://uk.indeed.com/rc/clk/dl?jk=" + conversion[url]
+
+    import app.eis.email_parser
+
+    monkeypatch.setattr(app.eis.email_parser, "get_indeed_redirected_url", mock_get_indeed_redirected_url)
 
 
 @pytest.fixture
-def gmail_scraper(session) -> JobScraper:
-    """Create a GmailScraper instance for testing with mocked file dependencies."""
+def test_job_scraper(session) -> JobScraper:
+    """Create a JobScraper instance for testing with mocked file dependencies."""
 
     # noinspection PyArgumentList
     entry = Setting(name="indeed_scraper", value="brightapi")
     session.add(entry)
     session.commit()
-    return create_gmail_scraper()
+    return JobScraper(session)
 
 
 @pytest.fixture
-def gmail_scraper_with_brightapi_skip(session) -> JobScraper:
-    """Create a GmailScraper instance with BrightAPI skip enabled."""
+def job_scraper_with_brightapi_skip(session) -> JobScraper:
+    """Create a JobScraper instance with BrightAPI skip enabled for indeed jobs."""
 
     # noinspection PyArgumentList
     entry = Setting(name="indeed_scraper", value="email")
     session.add(entry)
     session.commit()
-    return create_gmail_scraper()
+    return JobScraper(session)
 
 
 def create_email_data(
@@ -130,16 +96,6 @@ def create_email_data(
         body=ofile,
     )
 
-
-# Job ids extracted from the LinkedIn email body
-LINKEDIN_JOB_IDS = [
-    "4289870503",
-    "4291891707",
-    "4291383265",
-    "4280354992",
-    "4255584864",
-    "4265877117",
-]
 
 # Job ids extracted from the indeed email body
 INDEED_JOB_IDS = [
@@ -168,26 +124,32 @@ INDEED_JOB_IDS = [
     "ae47862d410bbd39",
 ]
 
+# Job ids extracted from the veganjobs email body
+VEGANJOBS_JOB_IDS = [
+    "physicians-committee-for-responsible-medicine-remote-from-anywhere-in-the-united-states-building-healthy-communities-internship",
+    "chill-gelato-canada-water-london-gelato-scooper",
+]
+
 
 @pytest.fixture
 def linkedin_email_data(test_users) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
     """Create a LinkedIn job alert email record for testing."""
 
-    return create_email_data(test_users, "linkedin_email", "linkedin", 0), LINKEDIN_JOB_IDS
+    return create_email_data(test_users, "linkedin_email", "linkedin", 0), resources.LINKEDIN_JOB_IDS_1
 
 
 @pytest.fixture
 def linkedin_email_data_user2(test_users) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
     """Create a LinkedIn job alert email record for testing."""
 
-    return create_email_data(test_users, "linkedin_email", "linkedin", 1), LINKEDIN_JOB_IDS
+    return create_email_data(test_users, "linkedin_email", "linkedin", 1), resources.LINKEDIN_JOB_IDS_1
 
 
 @pytest.fixture
 def indeed_email_data(test_users) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
     """Create an Indeed job alert email record for testing."""
 
-    return create_email_data(test_users, "indeed_email", "indeed", 0), INDEED_JOB_IDS
+    return create_email_data(test_users, "indeed_email", "indeed", 0), resources.INDEED_JOB_IDS_1
 
 
 @pytest.fixture
@@ -195,6 +157,13 @@ def indeed_email_data_user2(session, test_users) -> tuple[schemas.JobAlertEmailC
     """Create an Indeed job alert email record for testing."""
 
     return create_email_data(test_users, "indeed_email", "indeed", 1), INDEED_JOB_IDS
+
+
+@pytest.fixture
+def veganjobs_email_data(test_users) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
+    """Create a VeganJobs job alert email record for testing."""
+
+    return create_email_data(test_users, "veganjobs_email_1", "veganjobs", 0), VEGANJOBS_JOB_IDS
 
 
 def create_email_record(session, test_users, filename: str, platform: str, user_index: int) -> JobAlertEmail:
@@ -217,14 +186,14 @@ def create_email_record(session, test_users, filename: str, platform: str, user_
 def linkedin_email_record(session, test_users) -> tuple[JobAlertEmail, list[str]]:
     """Create a LinkedIn job alert email record for testing."""
 
-    return create_email_record(session, test_users, "linkedin_email", "linkedin", 0), LINKEDIN_JOB_IDS
+    return create_email_record(session, test_users, "linkedin_email", "linkedin", 0), resources.LINKEDIN_JOB_IDS_1
 
 
 @pytest.fixture
 def linkedin_email_record_user2(session, test_users) -> tuple[JobAlertEmail, list[str]]:
     """Create a LinkedIn job alert email record for testing."""
 
-    return create_email_record(session, test_users, "linkedin_email", "linkedin", 1), LINKEDIN_JOB_IDS
+    return create_email_record(session, test_users, "linkedin_email", "linkedin", 1), resources.LINKEDIN_JOB_IDS_1
 
 
 @pytest.fixture
@@ -241,311 +210,93 @@ def indeed_email_record_user2(session, test_users) -> tuple[JobAlertEmail, list[
     return create_email_record(session, test_users, "indeed_email", "indeed", 1), INDEED_JOB_IDS
 
 
-# --------------------------------------------------- BASE FUNCTIONS ---------------------------------------------------
+@pytest.fixture
+def veganjobs_email_record(session, test_users) -> tuple[JobAlertEmail, list[str]]:
+    """Create a VeganJobs job alert email record for testing."""
+
+    return create_email_record(session, test_users, "veganjobs_email_1", "veganjobs", 0), VEGANJOBS_JOB_IDS
 
 
-class TestCleanEmailAddress:
-    """Test class for clean_email_address function"""
-
-    @pytest.mark.parametrize(
-        "sender_field,expected",
-        [
-            ("John Doe <john.doe@gmail.com>", "john.doe@gmail.com"),
-            ("john.doe@gmail.com", "john.doe@gmail.com"),
-            ('"John Doe" <john.doe@gmail.com>', "john.doe@gmail.com"),
-            ("Test User <TEST.USER@EXAMPLE.COM>", "test.user@example.com"),
-            ("  test@example.com  ", "test@example.com"),
-            ("Invalid Format", "invalid"),
-            ("Jane Smith <jane.smith+tag@company.co.uk>", "jane.smith+tag@company.co.uk"),
-            ("Multiple Words Name <multi.word@domain.org>", "multi.word@domain.org"),
-        ],
-    )
-    def test_clean_email_address(self, sender_field, expected) -> None:
-        """Test email address cleaning with various formats"""
-
-        result = clean_email_address(sender_field)
-        assert result == expected
-
-
-class TestGetUserIdFromEmail:
-    """Test class for get_user_id_from_email function"""
-
-    def test_get_user_id_existing_user(self, session, test_users) -> None:
-        """Test getting user ID for existing user"""
-
-        test_user = test_users[0]
-        result = get_user_id_from_email(test_user.email, session)
-        assert result == test_user.id
-
-    def test_get_user_id_non_existing_user(self, session) -> None:
-        """Test getting user ID for non-existing user returns default ID 1"""
-
-        with pytest.raises(AssertionError):
-            get_user_id_from_email("nonexistent@example.com", session)
-
-    def test_get_user_id_empty_email(self, session) -> None:
-        """Test getting user ID with empty email"""
-
-        with pytest.raises(AssertionError):
-            get_user_id_from_email("", session)
-
-    def test_get_user_id_case_sensitivity(self, session, test_users) -> None:
-        """Test that email lookup is case-sensitive (as per database collation)"""
-
-        test_user = test_users[0]
-        upper_email = test_user.email.upper()
-        with pytest.raises(AssertionError):
-            get_user_id_from_email(upper_email, session)
-
-
-# --------------------------------------------- GMAILSCRAPER STATIC METHODS --------------------------------------------
+# ---------------------------------------------------- EMAIL METHODS ---------------------------------------------------
 
 
 class TestSaveEmailToDb:
-    """Test class for GmailScraper.save_email_to_db method"""
+    """Test class for JobScraper.save_email_to_db method"""
 
-    def test_save_new_email_success(self, linkedin_email_data, test_service_logs, session, test_users) -> None:
+    TEST_EMAILS = [
+        resources.INDEED_EMAIL_1,
+        resources.INDEED_EMAIL_2,
+        resources.LINKEDIN_EMAIL_1,
+        resources.LINKEDIN_EMAIL_2,
+        resources.VEGANJOBS_EMAIL_1,
+    ]
+
+    def test_save_new_email_success(self, test_job_scraper, test_users, test_service_log, session) -> None:
         """Test saving a new email successfully"""
 
-        linkedin_email_data = linkedin_email_data[0]
-        result_email, is_created = JobScraper.save_email_to_db(linkedin_email_data, test_service_logs[0].id, session)
+        with (patch.object(test_job_scraper, "get_email_data") as mock_get_email_data,):
 
-        assert is_created is True
-        assert result_email.external_email_id == linkedin_email_data.external_email_id
-        assert result_email.subject == linkedin_email_data.subject
-        assert result_email.sender == linkedin_email_data.sender
-        assert result_email.platform == linkedin_email_data.platform
-        assert result_email.body == linkedin_email_data.body
-        assert result_email.owner_id == test_users[0].id
-        assert result_email.service_log_id == test_service_logs[0].id
+            mock_get_email_data.side_effect = lambda email_id: [e for e in self.TEST_EMAILS if e["id"] == email_id][0]
 
-        # Verify it's actually in the database
-        db_email = (
-            session.query(JobAlertEmail)
-            .filter(JobAlertEmail.external_email_id == linkedin_email_data.external_email_id)
-            .first()
-        )
-        assert db_email is not None
-        assert db_email.id == result_email.id
+            for message in self.TEST_EMAILS:
+                result_email, is_created = test_job_scraper.get_and_save_email_to_db(
+                    message["id"], message["to"], test_service_log.id
+                )
+
+                assert is_created
+                assert result_email.external_email_id == message["id"]
+                assert result_email.subject
+                assert result_email.sender == message["sender"]
+                assert result_email.platform == message["platform"]
+                assert result_email.body == message["body"]
+                assert result_email.owner_id
+                assert result_email.service_log_id == test_service_log.id
 
     def test_save_existing_email_returns_existing(
-        self, linkedin_email_data, test_service_logs, session, test_users
+        self, test_job_scraper, test_service_log, session, test_users
     ) -> None:
         """Test that existing email is returned without creating a new record"""
 
-        # noinspection PyArgumentList
-        existing_email = JobAlertEmail(
-            external_email_id=linkedin_email_data[0].external_email_id,
-            subject="Different Subject",
-            sender="different@example.com",
-            owner_id=test_users[0].id,
-            service_log_id=test_service_logs[0].id,
-        )
-        session.add(existing_email)
-        session.commit()
+        with (patch.object(test_job_scraper, "get_email_data") as mock_get_email_data,):
 
-        result_email, is_created = JobScraper.save_email_to_db(linkedin_email_data[0], test_service_logs[0].id, session)
+            mock_get_email_data.side_effect = lambda email_id: self.TEST_EMAILS[email_id]
 
-        assert is_created is False
-        assert result_email.id == existing_email.id
-        assert result_email.subject == "Different Subject"  # Original data preserved
+            message_id = list(self.TEST_EMAILS.keys())[0]
 
-        # Verify only one record exists
-        email_count = (
-            session.query(JobAlertEmail)
-            .filter(JobAlertEmail.external_email_id == linkedin_email_data[0].external_email_id)
-            .count()
-        )
-        assert email_count == 1
+            # noinspection PyArgumentList
+            existing_email = JobAlertEmail(
+                external_email_id=message_id,
+                subject="Different Subject",
+                sender="different@example.com",
+                owner_id=test_users[0].id,
+                service_log_id=test_service_log.id,
+            )
+            session.add(existing_email)
+            session.commit()
 
+            result_email, is_created = test_job_scraper.get_and_save_email_to_db(message_id, "", test_service_log.id)
 
-class TestExtractLinkedinJobIds:
-    """Test class for GmailScraper.extract_linkedin_job_ids method"""
+            assert is_created is False
+            assert result_email.id == existing_email.id
+            assert result_email.subject == "Different Subject"
 
-    def test_extract_linkedin_job_ids_real_email(self, linkedin_email_data) -> None:
-        """Test extracting LinkedIn job IDs from real LinkedIn email content"""
-
-        job_ids = JobScraper.extract_linkedin_job_ids(linkedin_email_data[0].body)
-
-        assert len(job_ids) == 6
-        assert job_ids == LINKEDIN_JOB_IDS
-
-    def test_extract_linkedin_job_ids_empty_body(self) -> None:
-        """Test extracting job IDs from empty body"""
-
-        job_ids = JobScraper.extract_linkedin_job_ids("")
-        assert job_ids == []
-
-    def test_extract_linkedin_job_ids_no_jobs(self) -> None:
-        """Test extracting job IDs from body with no LinkedIn job URLs"""
-
-        body = """
-        This is a test email with no LinkedIn job URLs.
-        It contains some other URLs like:
-        - https://www.google.com
-        - https://www.example.com
-        - https://www.linkedin.com/profile/some-user
-        But no job view URLs.
-        """
-
-        job_ids = JobScraper.extract_linkedin_job_ids(body)
-        assert job_ids == []
-
-    @pytest.mark.parametrize(
-        "url_pattern,expected_id",
-        [
-            ("https://www.linkedin.com/jobs/view/1234567890", "1234567890"),
-            ("https://www.linkedin.com/comm/jobs/view/9876543210", "9876543210"),
-            ("HTTPS://WWW.LINKEDIN.COM/JOBS/VIEW/5555555555", "5555555555"),
-            ("https://linkedin.com/jobs/view/1111111111", "1111111111"),
-            ("http://www.linkedin.com/jobs/view/2222222222", "2222222222"),
-        ],
-    )
-    def test_extract_linkedin_job_ids_url_variations(self, url_pattern, expected_id) -> None:
-        """Test extracting job IDs from various URL patterns"""
-
-        body = f"Check out this job: {url_pattern}"
-
-        job_ids = JobScraper.extract_linkedin_job_ids(body)
-
-        assert len(job_ids) == 1
-        assert job_ids[0] == expected_id
-
-    def test_extract_linkedin_job_ids_with_duplicate_ids(self) -> None:
-        """Test that duplicate job IDs are removed"""
-
-        body = """
-        Job 1: https://www.linkedin.com/jobs/view/1111111111
-        Job 2: https://www.linkedin.com/jobs/view/2222222222  
-        Job 3: https://www.linkedin.com/jobs/view/1111111111
-        Job 4: https://www.linkedin.com/jobs/view/3333333333
-        Job 5: https://www.linkedin.com/jobs/view/2222222222
-        """
-
-        job_ids = JobScraper.extract_linkedin_job_ids(body)
-
-        assert len(job_ids) == 3
-        assert job_ids == ["1111111111", "2222222222", "3333333333"]
-
-    def test_extract_linkedin_job_ids_with_query_parameters(self) -> None:
-        """Test extracting job IDs from URLs with query parameters (like the real email)"""
-
-        body = """
-        View job: https://www.linkedin.com/comm/jobs/view/4289870503/?trackingId=tt9C%2FzqOXzxRyy9uU5vDOw%3D%3D&refId=something
-        Another job: https://www.linkedin.com/jobs/view/1234567890?ref=email&source=alert
-        """
-
-        job_ids = JobScraper.extract_linkedin_job_ids(body)
-
-        assert len(job_ids) == 2
-        assert "4289870503" in job_ids
-        assert "1234567890" in job_ids
-
-    def test_extract_linkedin_job_ids_malformed_urls(self) -> None:
-        """Test that malformed LinkedIn URLs are ignored"""
-
-        body = """
-        Good URL: https://www.linkedin.com/jobs/view/1111111111
-        Malformed: https://www.linkedin.com/jobs/view/
-        Malformed: https://www.linkedin.com/jobs/view/abcd
-        Another good: https://www.linkedin.com/jobs/view/2222222222
-        """
-
-        job_ids = JobScraper.extract_linkedin_job_ids(body)
-
-        assert len(job_ids) == 2
-        assert job_ids == ["1111111111", "2222222222"]
+            # Verify only one record exists
+            email_count = session.query(JobAlertEmail).count()
+            assert email_count == 1
 
 
-class TestExtractIndeedJobIds:
-    """Test class for GmailScraper.extract_indeed_job_ids method"""
-
-    def test_extract_indeed_job_ids_real_email(self, indeed_email_data) -> None:
-        """Test extracting Indeed job IDs from real Indeed email content"""
-
-        job_ids = JobScraper.extract_indeed_job_ids(indeed_email_data[0].body)
-        assert job_ids == INDEED_JOB_IDS
-
-    def test_extract_indeed_job_ids_empty_body(self) -> None:
-        """Test extracting job IDs from empty body"""
-
-        job_ids = JobScraper.extract_indeed_job_ids("")
-        assert job_ids == []
-
-    def test_extract_indeed_job_ids_no_jobs(self) -> None:
-        """Test extracting job IDs from body with no Indeed job URLs"""
-
-        body = """
-        This is a test email with no Indeed job URLs.
-        It contains some other URLs like:
-        - https://www.google.com
-        - https://www.example.com
-        - https://www.indeed.com/profile/some-user
-        But no job view URLs.
-        """
-
-        job_ids = JobScraper.extract_indeed_job_ids(body)
-        assert job_ids == []
-
-    @pytest.mark.parametrize(
-        "url_pattern,expected_id",
-        [
-            ("https://uk.indeed.com/rc/clk/dl?jk=1234567890abcdef&from=ja", "1234567890abcdef"),
-            ("HTTPS://UK.INDEED.COM/RC/CLK/DL?JK=5555555555AAAA&FROM=JA", "5555555555AAAA"),
-            ("http://indeed.com/rc/clk/dl?jk=1111111111bbbb&other=param", "1111111111bbbb"),
-        ],
-    )
-    def test_extract_indeed_job_ids_url_variations(self, url_pattern, expected_id) -> None:
-        """Test extracting job IDs from various URL patterns"""
-
-        body = f"Check out this job: {url_pattern}"
-
-        job_ids = JobScraper.extract_indeed_job_ids(body)
-
-        assert len(job_ids) == 1
-        assert job_ids[0] == expected_id
-
-    def test_extract_indeed_job_ids_with_duplicate_ids(self) -> None:
-        """Test that duplicate job IDs are removed"""
-
-        body = """
-        Job 1: https://uk.indeed.com/rc/clk/dl?jk=1111111111aaa&from=ja
-        Job 2: https://uk.indeed.com/rc/clk/dl?jk=2222222222bbb&from=ja
-        Job 3: https://uk.indeed.com/rc/clk/dl?jk=1111111111aaa&from=ja
-        Job 4: https://uk.indeed.com/rc/clk/dl?jk=3333333333ccc&from=ja
-        Job 5: https://uk.indeed.com/rc/clk/dl?jk=2222222222bbb&from=ja
-        """
-
-        job_ids = JobScraper.extract_indeed_job_ids(body)
-
-        assert len(job_ids) == 3
-        assert job_ids == ["1111111111aaa", "2222222222bbb", "3333333333ccc"]
-
-    def test_extract_indeed_job_ids_malformed_urls(self) -> None:
-        """Test that malformed Indeed URLs are ignored"""
-
-        body = """
-        Good URL: https://uk.indeed.com/rc/clk/dl?jk=1111111111aaa&from=ja
-        Malformed: https://uk.indeed.com/rc/clk/dl?from=ja
-        Malformed: https://uk.indeed.com/rc/clk/dl?jk=
-        Another good: https://uk.indeed.com/rc/clk/dl?jk=2222222222bbb&from=ja
-        """
-
-        job_ids = JobScraper.extract_indeed_job_ids(body)
-
-        assert len(job_ids) == 2
-        assert job_ids == ["1111111111aaa", "2222222222bbb"]
+# ----------------------------------------------------- JOB METHODS ----------------------------------------------------
 
 
-class TestSaveJobsToDb:
-    """Test class for GmailScraper.save_jobs_to_db method"""
+class TestSaveJobBaseInfoToDb:
+    """Test class for JobScraper.save_job_base_info_to_db method"""
 
-    def test_save_new_jobs_success(self, test_job_alert_emails, session, test_users) -> None:
+    def test_save_new_jobs_success(self, test_job_scraper, test_job_alert_emails, session, test_users) -> None:
         """Test saving new job IDs successfully"""
 
         job_ids = ["job_123", "job_456", "job_789"]
 
-        result = JobScraper.save_jobs_to_db(email_record=test_job_alert_emails[0], job_ids=job_ids, db=session)
+        result = test_job_scraper.save_job_base_info_to_db(email_record=test_job_alert_emails[0], job_ids=job_ids)
 
         # Verify returned list has correct length
         assert len(result) == 3
@@ -556,7 +307,9 @@ class TestSaveJobsToDb:
             assert job_record.external_job_id in job_ids
             assert test_job_alert_emails[0] in job_record.emails
 
-    def test_save_existing_jobs_returns_existing(self, test_job_alert_emails, session, test_users) -> None:
+    def test_save_existing_jobs_returns_existing(
+        self, test_job_scraper, test_job_alert_emails, session, test_users
+    ) -> None:
         """Test that existing jobs are returned without creating duplicates"""
 
         # Create existing jobs
@@ -568,12 +321,12 @@ class TestSaveJobsToDb:
 
         job_ids = ["existing_job_123", "new_job_456"]
 
-        result = JobScraper.save_jobs_to_db(email_record=test_job_alert_emails[0], job_ids=job_ids, db=session)
+        result = test_job_scraper.save_job_base_info_to_db(email_record=test_job_alert_emails[0], job_ids=job_ids)
 
         # Verify returned list has correct length
         assert len(result) == 2
 
-    def test_save_jobs_different_owners(self, test_job_alert_emails, session, test_users) -> None:
+    def test_save_jobs_different_owners(self, test_job_scraper, test_job_alert_emails, session, test_users) -> None:
         """Test that jobs with same external_job_id but different owners are created separately"""
 
         assert test_job_alert_emails[0].owner_id != test_job_alert_emails[-1].owner_id
@@ -581,9 +334,9 @@ class TestSaveJobsToDb:
         # Save same job ID for both users
         job_ids = ["same_job_123"]
 
-        result_1 = JobScraper.save_jobs_to_db(email_record=test_job_alert_emails[0], job_ids=job_ids, db=session)
+        result_1 = test_job_scraper.save_job_base_info_to_db(email_record=test_job_alert_emails[0], job_ids=job_ids)
 
-        result_2 = JobScraper.save_jobs_to_db(email_record=test_job_alert_emails[-1], job_ids=job_ids, db=session)
+        result_2 = test_job_scraper.save_job_base_info_to_db(email_record=test_job_alert_emails[-1], job_ids=job_ids)
 
         # Verify separate job records were created for each owner
         assert len(result_1) == 1
@@ -602,13 +355,26 @@ class TestSaveJobsToDb:
 
 
 class TestSaveJobDataToDb:
-    """Test class for GmailScraper.save_job_data_to_db method"""
+    """Test class for JobScraper.save_job_data_to_db method"""
 
-    @pytest.fixture
-    def sample_job_data(self) -> dict:
-        """Sample job data in the expected format"""
+    def test_save_job_data_single_job_and_data(self, test_job_scraper, session, test_users) -> None:
+        """Test saving job data to a single job record"""
+        # noinspection PyArgumentList
 
-        return {
+        sample_scraped_job = ScrapedJob(
+            external_job_id="test_job_123",
+            owner_id=test_users[0].id,
+        )
+        session.add(sample_scraped_job)
+        session.commit()
+        session.refresh(sample_scraped_job)
+
+        # Verify initial state
+        assert sample_scraped_job.is_scraped is False
+        assert sample_scraped_job.title is None
+        assert sample_scraped_job.company is None
+
+        sample_job_data = {
             "company": "Test Company Ltd",
             "location": "London, UK",
             "job": {
@@ -619,31 +385,11 @@ class TestSaveJobDataToDb:
             },
         }
 
-    @pytest.fixture
-    def sample_scraped_job(self, session, test_users) -> ScrapedJob:
-        """Create a sample scraped job record"""
-
-        # noinspection PyArgumentList
-        job = ScrapedJob(
-            external_job_id="test_job_123",
-            owner_id=test_users[0].id,
-        )
-        session.add(job)
-        session.commit()
-        session.refresh(job)
-        return job
-
-    def test_save_job_data_single_job_and_data(self, sample_scraped_job, sample_job_data, session) -> None:
-        """Test saving job data to a single job record"""
-
-        # Verify initial state
-        assert sample_scraped_job.is_scraped is False
-        assert sample_scraped_job.title is None
-        assert sample_scraped_job.company is None
-
         # Save job data
-        JobScraper.save_job_data_to_db(
-            job_records=sample_scraped_job, job_data=sample_job_data, db=session, scraped_date=datetime.datetime.now()
+        test_job_scraper.update_scraped_job_data(
+            job_records=sample_scraped_job,
+            job_data=sample_job_data,
+            scraped_date=datetime.datetime.now(),
         )
 
         # Refresh the record from database
@@ -659,7 +405,7 @@ class TestSaveJobDataToDb:
         assert sample_scraped_job.salary_min == sample_job_data["job"]["salary"]["min_amount"]
         assert sample_scraped_job.salary_max == sample_job_data["job"]["salary"]["max_amount"]
 
-    def test_save_job_data_multiple_jobs_and_data(self, session, test_users) -> None:
+    def test_save_job_data_multiple_jobs_and_data(self, test_job_scraper, session, test_users) -> None:
         """Test saving job data to multiple job records"""
 
         # Create multiple job records
@@ -704,10 +450,9 @@ class TestSaveJobDataToDb:
         }
 
         # Save job data
-        JobScraper.save_job_data_to_db(
+        test_job_scraper.update_scraped_job_data(
             job_records=[job_1, job_2],
             job_data=[job_data_1, job_data_2],
-            db=session,
             scraped_date=datetime.datetime.now(),
         )
 
@@ -730,89 +475,66 @@ class TestSaveJobDataToDb:
         assert job_2.salary_max == 65000.0
 
 
-# ------------------------------------------------ GMAILSCRAPER METHODS ------------------------------------------------
+# ----------------------------------------------------- RUN METHODS ----------------------------------------------------
 
 
 class TestProcessEmailJobs:
     """Test suite for the _process_email_jobs method."""
 
     def test_process_linkedin_email_jobs_success(
-        self,
-        gmail_scraper,
-        session,
-        linkedin_email_record,
-        test_service_logs,
+        self, test_job_scraper, session, linkedin_email_record, test_service_log
     ) -> None:
         """Test successful processing of LinkedIn email job ids"""
 
-        gmail_scraper._process_email(
-            db=session,
-            email_record=linkedin_email_record[0],
-            service_log_entry=test_service_logs[0],
-        )
+        test_job_scraper.extract_email_data(email_record=linkedin_email_record[0], service_log_entry=test_service_log)
 
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(linkedin_email_record[1])
 
     def test_process_indeed_email_jobs_success(
-        self,
-        gmail_scraper,
-        session,
-        indeed_email_record,
-        test_service_logs,
+        self, test_job_scraper, session, indeed_email_record, test_service_log
     ) -> None:
         """Test successful processing of Indeed email jobs."""
 
-        gmail_scraper._process_email(
-            db=session,
-            email_record=indeed_email_record[0],
-            service_log_entry=test_service_logs[0],
-        )
+        test_job_scraper.extract_email_data(email_record=indeed_email_record[0], service_log_entry=test_service_log)
 
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == indeed_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(indeed_email_record[1])
+
+    def test_process_veganjobs_email_jobs_success(
+        self, test_job_scraper, session, veganjobs_email_record, test_service_log
+    ) -> None:
+        """Test successful processing of VeganJobs email jobs."""
+
+        test_job_scraper.extract_email_data(email_record=veganjobs_email_record[0], service_log_entry=test_service_log)
+
+        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == veganjobs_email_record[0].owner_id).all()
+        assert len(scraped_jobs) == len(veganjobs_email_record[1])
 
     def test_process_indeed_email_jobs_success_no_brightapi(
-        self,
-        gmail_scraper_with_brightapi_skip,
-        session,
-        indeed_email_record,
-        test_service_logs,
+        self, job_scraper_with_brightapi_skip, session, indeed_email_record, test_service_log
     ) -> None:
         """Test successful processing of Indeed email jobs."""
 
-        result = gmail_scraper_with_brightapi_skip._process_email(
-            db=session,
-            email_record=indeed_email_record[0],
-            service_log_entry=test_service_logs[0],
+        result = job_scraper_with_brightapi_skip.extract_email_data(
+            email_record=indeed_email_record[0], service_log_entry=test_service_log
         )
 
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == indeed_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(indeed_email_record[1])
-        assert len(result) == len(indeed_email_record[1])
+        assert len(result["indeed"]) == len(indeed_email_record[1])
 
     def test_process_linkedin_email_jobs_success_duplicates_different_owners(
-        self,
-        gmail_scraper,
-        session,
-        linkedin_email_record,
-        linkedin_email_record_user2,
-        test_service_logs,
+        self, test_job_scraper, session, linkedin_email_record, linkedin_email_record_user2, test_service_log
     ) -> None:
-        """Test successful processing of LinkedIn email job ids"""
+        """Test processing of LinkedIn email job ids for different owners but same data"""
 
-        gmail_scraper._process_email(
-            db=session,
-            email_record=linkedin_email_record[0],
-            service_log_entry=test_service_logs[0],
+        test_job_scraper.extract_email_data(email_record=linkedin_email_record[0], service_log_entry=test_service_log)
+        test_job_scraper.extract_email_data(
+            email_record=linkedin_email_record_user2[0], service_log_entry=test_service_log
         )
 
-        gmail_scraper._process_email(
-            db=session,
-            email_record=linkedin_email_record_user2[0],
-            service_log_entry=test_service_logs[0],
-        )
-
+        # Check that each use has a copy of the jobs
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(linkedin_email_record[1])
         scraped_jobs = (
@@ -820,48 +542,38 @@ class TestProcessEmailJobs:
         )
         assert len(scraped_jobs) == len(linkedin_email_record_user2[1])
 
+        # Check that the jobs unique record
+        assert session.query(ScrapedJob).distinct(ScrapedJob.external_job_id).count() == len(linkedin_email_record[1])
+
     def test_process_linkedin_email_jobs_success_duplicates_same_owner(
-        self,
-        gmail_scraper,
-        session,
-        linkedin_email_record,
-        test_service_logs,
+        self, test_job_scraper, session, linkedin_email_record, test_service_log
     ) -> None:
-        """Test successful processing of LinkedIn email job ids"""
+        """Test successful processing of LinkedIn email for the same user with duplicate job ids"""
 
-        gmail_scraper._process_email(
-            db=session,
-            email_record=linkedin_email_record[0],
-            service_log_entry=test_service_logs[0],
-        )
-
-        gmail_scraper._process_email(
-            db=session,
-            email_record=linkedin_email_record[0],
-            service_log_entry=test_service_logs[0],
-        )
+        test_job_scraper.extract_email_data(email_record=linkedin_email_record[0], service_log_entry=test_service_log)
+        test_job_scraper.extract_email_data(email_record=linkedin_email_record[0], service_log_entry=test_service_log)
 
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record[0].owner_id).all()
         assert len(scraped_jobs) == len(linkedin_email_record[1])
 
 
-class TestProcessUserEmails:
-    """Test class for GmailScraper._process_user_emails method"""
+class TestProcessAllEmails:
+    """Test class for JobScraper._process_user_emails method"""
 
     def test_single_user(
         self,
-        gmail_scraper,
+        test_job_scraper,
         session,
         test_users,
-        test_service_logs,
+        test_service_log,
         linkedin_email_data,
     ) -> None:
         """Test successful processing of emails for a single user with LinkedIn email"""
 
         # Mock get_email_ids to return emails only for first user
         with (
-            patch.object(gmail_scraper, "get_email_ids") as mock_get_email_ids,
-            patch.object(gmail_scraper, "get_email_data") as mock_get_email_data,
+            patch.object(test_job_scraper, "get_email_ids") as mock_get_email_ids,
+            patch.object(test_job_scraper, "get_email_data") as mock_get_email_data,
         ):
 
             # Setup mocks to be user-dependent
@@ -872,24 +584,20 @@ class TestProcessUserEmails:
                 else:
                     return []
 
-            def mock_get_email_data_side_effect(_email_id, user_email) -> schemas.JobAlertEmailCreate:
+            def mock_get_email_data_side_effect(_email_id) -> schemas.JobAlertEmailCreate:
                 """Mock get_email_data to return emails only for first user"""
-                if user_email == test_users[0].email:
-                    return linkedin_email_data[0]
-                raise ValueError(f"Unexpected call for user {user_email}")
+                return linkedin_email_data[0]
 
             mock_get_email_ids.side_effect = mock_get_email_ids_side_effect
             mock_get_email_data.side_effect = mock_get_email_data_side_effect
 
             # Call the method
-            result = gmail_scraper._process_user_emails(
-                db=session, timedelta_days=1, service_log_entry=test_service_logs[0]
-            )
+            result = test_job_scraper.process_emails(timedelta_days=1, service_log_entry=test_service_log)
 
             # Verify service log updates
-            assert test_service_logs[0].users_processed_n == len(test_users)
-            assert test_service_logs[0].emails_found_n == 1
-            assert test_service_logs[0].emails_saved_n == 1
+            assert test_service_log.users_processed_n == 2
+            assert test_service_log.emails_found_n == 1
+            assert test_service_log.emails_saved_n == 1
 
             # Verify email was saved to database
             saved_emails = (
@@ -912,69 +620,9 @@ class TestProcessUserEmails:
             # Verify empty result (no job data for LinkedIn without scraping)
             assert result == {}
 
-    def test_multiple_users(
-        self,
-        gmail_scraper,
-        session,
-        test_users,
-        test_service_logs,
-        linkedin_email_data,
-        indeed_email_data_user2,
-    ) -> None:
-        """Test successful processing of emails for multiple users with different email types"""
-
-        with (
-            patch.object(gmail_scraper, "get_email_ids") as mock_get_email_ids,
-            patch.object(gmail_scraper, "get_email_data") as mock_get_email_data,
-        ):
-
-            # Setup mocks to return different emails for different users
-            def mock_get_email_ids_side_effect(user_email, _inbox_only, _timedelta_days) -> list[str]:
-                """Mock get_email_ids() to return a list of email IDs for each user"""
-                if user_email == test_users[0].email:
-                    return [linkedin_email_data[0].external_email_id]
-                elif user_email == test_users[1].email:
-                    return [indeed_email_data_user2[0].external_email_id]
-                return []
-
-            def mock_get_email_data_side_effect(email_id, user_email) -> schemas.JobAlertEmailCreate:
-                """Mock get_email_data() to return the email data for each user"""
-                if user_email == test_users[0].email:
-                    return linkedin_email_data[0]
-                elif user_email == test_users[1].email:
-                    return indeed_email_data_user2[0]
-                raise ValueError(f"Unexpected call for user {user_email} and email {email_id}")
-
-            mock_get_email_ids.side_effect = mock_get_email_ids_side_effect
-            mock_get_email_data.side_effect = mock_get_email_data_side_effect
-
-            # Call the method
-            gmail_scraper._process_user_emails(db=session, timedelta_days=2, service_log_entry=test_service_logs[0])
-
-            # Verify service log updates
-            assert test_service_logs[0].users_processed_n == len(test_users)
-            assert test_service_logs[0].emails_found_n == 2
-            assert test_service_logs[0].emails_saved_n == 2
-            assert test_service_logs[0].linkedin_job_n == len(linkedin_email_data[1])
-            assert test_service_logs[0].indeed_job_n == len(indeed_email_data_user2[1])
-            assert test_service_logs[0].jobs_extracted_n == len(linkedin_email_data[1]) + len(
-                indeed_email_data_user2[1]
-            )
-
-            # Verify jobs were created for appropriate users
-            user1_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[0].id).all()
-            user2_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[1].id).all()
-            assert len(user1_jobs) == len(linkedin_email_data[1])
-            assert len(user2_jobs) == len(indeed_email_data_user2[1])
-
-            # Verify no jobs for remaining users (if any)
-            for i in range(2, len(test_users)):
-                user_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[i].id).all()
-                assert len(user_jobs) == 0
-
     def test_multiple_users_same_jobs(
         self,
-        gmail_scraper,
+        test_job_scraper,
         session,
         test_users,
         test_service_logs,
@@ -984,8 +632,8 @@ class TestProcessUserEmails:
         """Test successful processing of emails for multiple users with different email types"""
 
         with (
-            patch.object(gmail_scraper, "get_email_ids") as mock_get_email_ids,
-            patch.object(gmail_scraper, "get_email_data") as mock_get_email_data,
+            patch.object(test_job_scraper, "get_email_ids") as mock_get_email_ids,
+            patch.object(test_job_scraper, "get_email_data") as mock_get_email_data,
         ):
 
             # Setup mocks to return different emails for different users
@@ -1009,7 +657,7 @@ class TestProcessUserEmails:
             mock_get_email_data.side_effect = mock_get_email_data_side_effect
 
             # Call the method
-            gmail_scraper._process_user_emails(db=session, timedelta_days=2, service_log_entry=test_service_logs[0])
+            test_job_scraper.process_emails(timedelta_days=2, service_log_entry=test_service_logs[0])
 
             # Verify service log updates
             assert test_service_logs[0].users_processed_n == len(test_users)
@@ -1036,7 +684,7 @@ class TestProcessUserEmails:
 
     def test_skip_brightdata(
         self,
-        gmail_scraper_with_brightapi_skip,
+        job_scraper_with_brightapi_skip,
         session,
         test_users,
         test_service_logs,
@@ -1045,8 +693,8 @@ class TestProcessUserEmails:
         """Test successful processing of emails for multiple users with different email types"""
 
         with (
-            patch.object(gmail_scraper_with_brightapi_skip, "get_email_ids") as mock_get_email_ids,
-            patch.object(gmail_scraper_with_brightapi_skip, "get_email_data") as mock_get_email_data,
+            patch.object(job_scraper_with_brightapi_skip, "get_email_ids") as mock_get_email_ids,
+            patch.object(job_scraper_with_brightapi_skip, "get_email_data") as mock_get_email_data,
         ):
 
             # Setup mocks to return different emails for different users
@@ -1066,9 +714,7 @@ class TestProcessUserEmails:
             mock_get_email_data.side_effect = mock_get_email_data_side_effect
 
             # Call the method
-            result = gmail_scraper_with_brightapi_skip._process_user_emails(
-                db=session, timedelta_days=2, service_log_entry=test_service_logs[0]
-            )
+            result = job_scraper_with_brightapi_skip.process_emails(2, test_service_logs[0])
 
             assert len(result) == 23
 
@@ -1113,7 +759,7 @@ class TestScrapeRemainingJobs:
         self,
         indeed_scraped_jobs,
         test_service_logs,
-        gmail_scraper,
+        test_job_scraper,
         session,
     ) -> None:
         """Test successful processing of Indeed email jobs"""
@@ -1124,7 +770,7 @@ class TestScrapeRemainingJobs:
             mock_scraper_class.return_value = mock_scraper_instance
 
             # Call the method we're testing
-            gmail_scraper._scrape_remaining_jobs(session, test_service_logs[0], {})
+            test_job_scraper.scrape_save_jobs(session, test_service_logs[0], {})
 
             # Verify all jobs are now scraped
             unscraped_jobs_after = session.query(ScrapedJob).filter().all()
@@ -1136,7 +782,7 @@ class TestScrapeRemainingJobs:
         self,
         indeed_scraped_jobs,
         test_service_logs,
-        gmail_scraper_with_brightapi_skip,
+        job_scraper_with_brightapi_skip,
         session,
     ) -> None:
         """Test successful processing of Indeed email jobs"""
@@ -1150,10 +796,10 @@ class TestScrapeRemainingJobs:
             jobs = extract_indeed_jobs_from_email(indeed_scraped_jobs[0].emails[0].body)
             job_data = {}
             for job in jobs:
-                job_ids = gmail_scraper_with_brightapi_skip.extract_indeed_job_ids(job["job"]["url"])
+                job_ids = job_scraper_with_brightapi_skip.extract_indeed_job_ids(job["job"]["url"])
                 if job_ids:  # Make sure we have at least one job ID
                     job_data[job_ids[0]] = job
-            gmail_scraper_with_brightapi_skip._scrape_remaining_jobs(session, test_service_logs[0], job_data)
+            job_scraper_with_brightapi_skip.scrape_save_jobs(session, test_service_logs[0], job_data)
 
             # Verify all jobs are now scraped
             jobs_after = session.query(ScrapedJob).filter().all()
@@ -1165,7 +811,7 @@ class TestScrapeRemainingJobs:
         self,
         indeed_scraped_jobs,
         test_service_logs,
-        gmail_scraper_with_brightapi_skip,
+        job_scraper_with_brightapi_skip,
         session,
     ) -> None:
         """Test successful processing of Indeed email jobs"""
@@ -1176,7 +822,7 @@ class TestScrapeRemainingJobs:
             mock_scraper_class.return_value = mock_scraper_instance
 
             # Call the method we're testing
-            gmail_scraper_with_brightapi_skip._scrape_remaining_jobs(session, test_service_logs[0], {})
+            job_scraper_with_brightapi_skip.scrape_save_jobs(session, test_service_logs[0], {})
 
             # Verify all jobs are now scraped
             jobs_after = session.query(ScrapedJob).filter().all()
@@ -1188,7 +834,7 @@ class TestScrapeRemainingJobs:
         self,
         linkedin_scraped_jobs,
         test_service_logs,
-        gmail_scraper,
+        test_job_scraper,
         session,
     ) -> None:
         """Test successful processing of Indeed email jobs"""
@@ -1199,7 +845,7 @@ class TestScrapeRemainingJobs:
             mock_scraper_class.return_value = mock_scraper_instance
 
             # Call the method we're testing
-            gmail_scraper._scrape_remaining_jobs(session, test_service_logs[0], {})
+            test_job_scraper.scrape_save_jobs(session, test_service_logs[0], {})
 
             # Verify all jobs are now scraped
             jobs_after = session.query(ScrapedJob).filter().all()
@@ -1212,7 +858,7 @@ class TestScrapeRemainingJobs:
         indeed_scraped_jobs,
         indeed_scraped_jobs_user2,
         test_service_logs,
-        gmail_scraper,
+        test_job_scraper,
         session,
     ) -> None:
         """Test successful processing of Indeed email jobs"""
@@ -1229,7 +875,7 @@ class TestScrapeRemainingJobs:
             mock_scraper_class.return_value = mock_scraper_instance
 
             # Call the method we're testing
-            gmail_scraper._scrape_remaining_jobs(session, test_service_logs[0], {})
+            test_job_scraper.scrape_save_jobs(session, test_service_logs[0], {})
 
             # Verify all jobs are now scraped
             jobs_after = session.query(ScrapedJob).filter().all()
