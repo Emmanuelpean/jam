@@ -178,10 +178,10 @@ class AppLogger:
         logger.info("=" * 50)
 
 
-def get_gmail_logger() -> logging.Logger:
-    """Get logger for Gmail scraping service"""
+def get_email_scrapper_logger() -> logging.Logger:
+    """Get logger for email scraping service"""
 
-    return AppLogger.create_service_logger("gmail_scraper", "INFO")
+    return AppLogger.create_service_logger("email_scraper", "INFO")
 
 
 def get_job_scraper_logger() -> logging.Logger:

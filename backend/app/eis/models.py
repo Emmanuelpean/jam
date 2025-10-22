@@ -51,20 +51,21 @@ class JobAlertEmail(Owned, Base):
     - Unique constraint on the combination of `external_email_id` and `owner_id` to ensure uniqueness per user."""
 
     external_email_id = Column(String, unique=True, nullable=False)
-    subject = Column(String, nullable=True)
-    sender = Column(String, nullable=True)
-    date_received = Column(TIMESTAMP(timezone=True), nullable=True)
-    platform = Column(String, nullable=True)
-    body = Column(String, nullable=True)
+    subject = Column(String, nullable=False)
+    sender = Column(String, nullable=False)
+    date_received = Column(TIMESTAMP(timezone=True), nullable=False)
+    job_found_n = Column(Integer, nullable=False, default=0)
+    platform = Column(String, nullable=False)
+    body = Column(String, nullable=False)
 
     # Foreign keys
-    service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="SET NULL"), nullable=True)
+    service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="SET NULL"), nullable=False)
 
     # Relationships
     jobs = relationship("ScrapedJob", secondary=jobalertemail_scrapedjob_mapping, back_populates="emails")
     service_log = relationship("EisServiceLog", back_populates="emails")
 
-    __table_args__ = (UniqueConstraint("external_email_id", "owner_id", name="unique_email_per_owner"),)
+    # __table_args__ = (UniqueConstraint("external_email_id", "owner_id", name="unique_email_per_owner"),)
 
 
 class ScrapedJob(Owned, Base):
@@ -148,7 +149,7 @@ class EisServiceLog(CommonBase, Base):
     run_duration = Column(Float, nullable=True)
     run_datetime = Column(DateTime, nullable=False)
     is_success = Column(Boolean, nullable=True)
-    error_message = Column(String, default=0, nullable=False)
+    error_message = Column(String, nullable=True)
     job_success_n = Column(Integer, default=0, nullable=False)
     job_fail_n = Column(Integer, default=0, nullable=False)
     users_processed_n = Column(Integer, default=0, nullable=False)
@@ -157,5 +158,6 @@ class EisServiceLog(CommonBase, Base):
     jobs_extracted_n = Column(Integer, default=0, nullable=False)
     linkedin_job_n = Column(Integer, default=0, nullable=False)
     indeed_job_n = Column(Integer, default=0, nullable=False)
+    veganjobs_job_n = Column(Integer, default=0, nullable=False)
 
     emails = relationship("JobAlertEmail", back_populates="service_log")

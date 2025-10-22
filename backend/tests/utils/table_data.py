@@ -35,7 +35,14 @@ USER_DATA = [
     {
         "email": "user4@example.com",
         "password": "password4",
+        "toast_active": True,
         "is_verified": True,
+    },
+    {
+        "email": "emmanuelpean@gmail.com",
+        "password": "test_password",
+        "is_verified": True,
+        "toast_active": True,
     },
 ]
 

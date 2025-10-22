@@ -441,7 +441,7 @@ def open_file(filepath: str) -> str:
 
     base_dir = os.path.dirname(__file__)  # directory of this test file
     filepath = os.path.join(base_dir, "resources", filepath)
-    with open(filepath, "r") as ofile:
+    with open(filepath, "r", encoding="utf8") as ofile:
         return ofile.read()
 
 
