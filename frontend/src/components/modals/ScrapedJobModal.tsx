@@ -4,12 +4,11 @@ import React from "react";
 import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { JobData } from "../../services/Schemas";
-import { jobsApi, scrapedJobApi } from "../../services/Api";
+import { jobsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
 import { SelectOption } from "../../utils/Utils";
-import { renderFunctions } from "../rendering/view/ViewRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 
 interface JobAndApplicationProps extends DataModalProps {
@@ -126,11 +125,6 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 	// 	}
 	// };
 
-	const fields = {
-		form: jobFormFields,
-		view: [],
-	};
-
 	return (
 		<>
 			<DataModal
@@ -138,8 +132,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 				onHide={onHide}
 				data={patchedData}
 				mode={submode}
-				// @ts-ignore
-				fields={fields}
+				fields={{ form: jobFormFields, view: [] }}
 				transformFormData={transformData}
 				itemName="Scraped Job"
 				endpoint="jobs"
