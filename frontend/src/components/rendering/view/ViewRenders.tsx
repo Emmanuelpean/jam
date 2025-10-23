@@ -243,7 +243,6 @@ export const renderFunctions = {
 	salaryRange: (param: RenderParams): string | null => {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
-		const dataContext = param.dataContext;
 		const salaryCurrency: string | undefined | null = currencies.find(
 			(currency: Currency) => currency.code === param.item?.salary_currency,
 		)?.symbol;
@@ -301,9 +300,9 @@ export const renderFunctions = {
 
 	scrapedLocationMap: (param: RenderParams): ReactNode => {
 		const location = {
-			postcode: param.item.location_postcode,
-			city: param.item.location_city,
-			country: param.item.location_country,
+			postcode: param.item?.location_postcode,
+			city: param.item?.location_city,
+			country: param.item?.location_country,
 		};
 		const locations = location ? [location] : [];
 		return <LocationMap locations={locations} />;
@@ -637,7 +636,7 @@ export const RenderViewFieldWithContext: React.FC<{
 		rendered = item?.[field.key];
 	}
 
-	if (rendered !== null && rendered !== undefined) {
+	if (rendered !== null && rendered !== undefined && rendered !== "") {
 		return <>{rendered}</>;
 	} else {
 		return <span className="text-muted">Not Provided</span>;

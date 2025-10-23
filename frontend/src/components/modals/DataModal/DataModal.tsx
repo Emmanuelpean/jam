@@ -12,19 +12,19 @@ import { ModalViewField, renderModalViewField } from "../../rendering/view/Modal
 import { ModalFormField } from "../../rendering/form/FormRenders";
 import { useDeleteHandler } from "../../../utils/DeleteHandler";
 
-export type ViewFields = (ModalViewField | ModalViewField[])[];
-export type FormFields = (ModalFormField | ModalFormField[])[];
+export type Field = ModalViewField | ModalFormField;
+export type Fields = (Field | Field[])[];
 
 export interface TabConfig {
 	key: string;
 	title: string | JSX.Element | ((data: any) => ReactNode);
-	fields: { view: ViewFields; form: FormFields };
+	fields: { view: Fields; form: Fields };
 	additionalFields?: ModalViewField[];
 }
 
 export interface GenericModalProps {
 	mode?: "view" | "edit" | "add" | "import"; // modal mode
-	fields?: { view: ViewFields; form: FormFields }; // fields to display
+	fields?: { view: Fields; form: Fields }; // fields to display
 	data?: any; // data to populate the fields (required for import mode)
 	validation?: ((data: any) => any) | null; // custom validation method before submit
 	transformFormData?: ((data: any) => any) | null; // custom data transformation before submit
@@ -93,7 +93,11 @@ const DataModal = ({
 		return findByKey(tabs, activeTab) || tabs[0];
 	};
 
-	const getCurrentFields = (): { view: ViewFields; form: FormFields } => {
+	const isViewField = (field: Field): field is ModalViewField => {
+		return !("name" in field) || "render" in field || "isTitle" in field;
+	};
+
+	const getCurrentFields = (): { view: Fields; form: Fields } => {
 		const currentTab: TabConfig | null = getCurrentTabConfig();
 		if (!currentTab) {
 			return {
@@ -108,7 +112,7 @@ const DataModal = ({
 		}
 	};
 
-	const getAllFields = (): { view: ViewFields; form: FormFields } => {
+	const getAllFields = (): { view: Fields; form: Fields } => {
 		if (!hasTabs || !tabs) {
 			return {
 				form: filterConditionalFields(fields!.form),
@@ -234,18 +238,15 @@ const DataModal = ({
 
 	// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 
-	const renderFieldGroup = (
-		item: ModalViewField | ModalFormField | ModalViewField[] | ModalFormField[],
-		index: number,
-		isFormMode = true,
-	) => {
-		let itemList: ModalViewField[] | ModalFormField[];
+	const renderFieldGroup = (item: Field | Field[], index: number, isFormMode = true) => {
+		let itemList: Field[];
 		if (Array.isArray(item)) {
 			itemList = item;
 		} else {
-			itemList = [item] as ModalViewField[] | ModalFormField[];
+			itemList = [item];
 		}
 
+		// Handle title fields in view mode
 		if (!isEditing && itemList.length === 1) {
 			const firstItem = itemList[0];
 			if (firstItem && "isTitle" in firstItem && firstItem.isTitle) {
@@ -279,17 +280,18 @@ const DataModal = ({
 
 		return (
 			<div key={index} className="row mb-3" style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
-				{itemList.map((field: ModalViewField | ModalFormField, fieldIndex: number) => {
+				{itemList.map((field: Field, fieldIndex: number) => {
 					const fieldKey =
 						("key" in field ? field.key : null) ||
 						("name" in field ? field.name : null) ||
 						`field_${index}_${fieldIndex}`;
 
+					// Always render based on field type, not mode
 					return (
 						<div key={fieldKey} className={columnClass}>
-							{isFormMode
-								? FormField(field as ModalFormField, formData, handleChange, errors, currentUser)
-								: renderModalViewField(field as ModalViewField, effectiveData, getModalId())}
+							{isViewField(field)
+								? renderModalViewField(field as ModalViewField, effectiveData, getModalId())
+								: FormField(field as ModalFormField, formData, handleChange, errors, currentUser)}
 						</div>
 					);
 				})}
@@ -324,9 +326,7 @@ const DataModal = ({
 		}
 	};
 
-	const filterConditionalFields = <T extends ModalViewField | ModalFormField>(
-		fieldsToFilter: (T | T[])[],
-	): (T | T[])[] => {
+	const filterConditionalFields = <T extends Field>(fieldsToFilter: (T | T[])[]): (T | T[])[] => {
 		return fieldsToFilter
 			.map((item) => {
 				if (Array.isArray(item)) {
@@ -425,7 +425,7 @@ const DataModal = ({
 				handleHideImmediate();
 			} else if (mode === "import") {
 				if (entityType && apiResult.id) {
-					dataContext.deleteEntity(entityType, apiResult.id);
+					await dataContext.deleteEntity(entityType, apiResult.id);
 				}
 				handleHideImmediate();
 			} else {
@@ -491,7 +491,7 @@ const DataModal = ({
 					<div>
 						{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
 						<div>
-							{currentFields.form.map((item: ModalFormField | ModalFormField[], index: number) => (
+							{currentFields.form.map((item, index: number) => (
 								<div key={`form-field-${index}`}>{renderFieldGroup(item, index, true)}</div>
 							))}
 						</div>
@@ -502,13 +502,11 @@ const DataModal = ({
 							<Card>
 								<Card.Body>
 									<div>
-										{currentFields.view.map(
-											(item: ModalViewField | ModalViewField[], index: number) => (
-												<div key={`view-field-${index}`}>
-													{renderFieldGroup(item, index, false)}
-												</div>
-											),
-										)}
+										{currentFields.view.map((item, index: number) => (
+											<div key={`view-field-${index}`}>
+												{renderFieldGroup(item, index, false)}
+											</div>
+										))}
 									</div>
 								</Card.Body>
 							</Card>
