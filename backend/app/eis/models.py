@@ -89,7 +89,10 @@ class ScrapedJob(Owned, Base):
     - `url` (str, optional): URL to the job posting.
     - `deadline` (datetime, optional): Deadline for the job.
     - `company` (str, optional): Company name of the job.
-    - `location` (str, optional): Location of the job.
+    - `location_postcode` (str, optional): Postcode of the job location.
+    - `location_city` (str, optional): City of the job location.
+    - `location_country` (str, optional): Country of the job location.
+    - `attendance_type` (str, optional): Attendance type of the job (e.g., remote, on-site).
 
     Relationships:
     --------------
@@ -115,7 +118,10 @@ class ScrapedJob(Owned, Base):
     url = Column(String, nullable=True)
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     company = Column(String, nullable=True)
-    location = Column(String, nullable=True)
+    location_postcode = Column(String, nullable=True)
+    location_city = Column(String, nullable=True)
+    location_country = Column(String, nullable=True)
+    attendance_type = Column(String, nullable=True)
 
     # Relationships
     emails = relationship("JobAlertEmail", secondary=jobalertemail_scrapedjob_mapping, back_populates="jobs")

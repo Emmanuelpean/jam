@@ -1,6 +1,6 @@
 import pytest
 
-from app.eis.email_scraper import clean_email_address, get_user_id_from_email
+from app.emails.utils import clean_email_address, get_user_id_from_email
 
 
 class TestCleanEmailAddress:

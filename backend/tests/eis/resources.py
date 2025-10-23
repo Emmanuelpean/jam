@@ -26,7 +26,6 @@ LINKEDIN_JOB_IDS_1 = [
     "4255584864",
     "4265877117",
 ]
-LINKEDIN_DATA_1 = [LINKEDIN_EMAIL_1_BODY, LINKEDIN_JOB_IDS_1]
 LINKEDIN_EMAIL_1 = {
     "id": "1",
     "subject": "Your job alert for embedded python in United Kingdom",
@@ -44,7 +43,6 @@ LINKEDIN_JOB_IDS_2 = [
     "4218756028",
     "4306284473" "4255739214" "4313361714",
 ]
-LINKEDIN_DATA_2 = [LINKEDIN_EMAIL_2_BODY, LINKEDIN_JOB_IDS_2]
 LINKEDIN_EMAIL_2 = {
     "id": "2",
     "subject": "Your job alert for embedded python in United Kingdom",
@@ -84,7 +82,6 @@ INDEED_JOB_IDS_1 = [
     "5aa22054e7a8b76e",
     "ae47862d410bbd39",
 ]
-INDEED_DATA_1 = [INDEED_EMAIL_1_BODY, INDEED_JOB_IDS_1]
 INDEED_EMAIL_1 = {
     "id": "3",
     "subject": "23 new R&D Development Engineer jobs",
@@ -101,7 +98,6 @@ INDEED_JOB_IDS_2 = [
     "ae868ef5ecdefc01",
     "6c6f8fffaffa1993",
 ]
-INDEED_DATA_2 = [INDEED_EMAIL_2_BODY, INDEED_JOB_IDS_2]
 INDEED_EMAIL_2 = {
     "id": "4",
     "subject": "New jobs at Snap Inc.",
@@ -119,7 +115,6 @@ VEGANJOBS_JOB_IDS_1 = [
     "physicians-committee-for-responsible-medicine-remote-from-anywhere-in-the-united-states-building-healthy-communities-internship",
     "chill-gelato-canada-water-london-gelato-scooper",
 ]
-VEGANJOBS_DATA_1 = [VEGANJOBS_EMAIL_1_BODY, VEGANJOBS_JOB_IDS_1]
 VEGANJOBS_EMAIL_1 = {
     "id": "5",
     "subject": "We have found new job posts that match your job alert",

@@ -421,15 +421,15 @@ def parse_indeed_job_section(section: str) -> dict[str, str] | None:
 # Usage example:
 if __name__ == "__main__":
 
-    # # LinkedIn job scraper example
-    # scraper = LinkedinJobScraper(["4280160167"])
-    # job_data1 = scraper.scrape_job()
-    # print(job_data1)
-    #
-    # # Indeed job scraper example
-    # scraper = IndeedJobScraper("7b9119575c72cb5c")
-    # job_data1 = scraper.scrape_job()
-    # print(job_data1)
+    # LinkedIn job scraper example
+    scraper = LinkedinJobScraper(["4280160167"])
+    job_data1 = scraper.scrape_job()
+    print(job_data1)
+
+    # Indeed job scraper example
+    scraper = IndeedJobScraper("7b9119575c72cb5c")
+    job_data1 = scraper.scrape_job()
+    print(job_data1)
 
     # VeganJobs scraper example
     scraper = VeganJobsScraper("sharpen-strategy-remote-usa-operations-coordinator")
