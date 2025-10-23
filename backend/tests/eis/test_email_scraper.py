@@ -14,7 +14,7 @@ from app.models import Setting
 from tests.conftest import open_file
 from tests.eis import resources
 from tests.eis.test_job_scraper import MockLinkedinJobScraper, MockIndeedJobScraper
-
+import app.eis.email_parser as email_parser
 
 # ------------------------------------------------------ FIXTURES ------------------------------------------------------
 
@@ -49,8 +49,6 @@ def patch_get_indeed_redirected_url(monkeypatch) -> None:
         if jk:
             return f"https://uk.indeed.com/rc/clk/dl?jk={jk}"
         return url
-
-    import app.eis.email_parser as email_parser
 
     monkeypatch.setattr(email_parser, "get_indeed_redirected_url", mock_get_indeed_redirected_url, raising=False)
 
@@ -408,7 +406,7 @@ def create_email_record1(
 
     # noinspection PyArgumentList
     email_record = JobAlertEmail(
-        external_email_id=data["id"],
+        external_email_id=data["id"] + str(user.id),
         subject=data["subject"],
         sender=data["to"],
         body=data["body"],
@@ -422,10 +420,10 @@ def create_email_record1(
     return email_record
 
 
-class TestProcessEmails:
-    """Test suite for the _process_email_jobs method."""
+class TestExtractEmailData:
+    """Test suite for the extract_email_data method."""
 
-    def test_process_linkedin_email_jobs_success(self, test_job_scraper, session, test_service_log, test_users) -> None:
+    def test_linkedin_email_jobs_success(self, test_job_scraper, session, test_service_log, test_users) -> None:
         """Test successful processing of LinkedIn email job ids"""
 
         email_entry = create_email_record1(
@@ -440,10 +438,12 @@ class TestProcessEmails:
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == email_entry.owner_id).all()
         assert len(scraped_jobs) == len(resources.LINKEDIN_JOB_IDS_1)
 
-    def test_process_indeed_email_jobs_success(self, test_job_scraper, session, test_service_log, test_users) -> None:
+    def test_indeed_email_jobs_success(self, test_job_scraper, session, test_service_log, test_users) -> None:
         """Test successful processing of Indeed email jobs."""
 
-        with patch("app.eis.email_scraper.extract_indeed_jobs_from_email") as mock_extract:
+        with patch(
+            "app.eis.email_scraper.extract_indeed_jobs_from_email", wraps=extract_indeed_jobs_from_email
+        ) as mock_extract:
             email_entry = create_email_record1(
                 session,
                 resources.INDEED_EMAIL_1,
@@ -459,9 +459,7 @@ class TestProcessEmails:
             scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == email_entry.owner_id).all()
             assert len(scraped_jobs) == len(resources.INDEED_JOB_IDS_1)
 
-    def test_process_veganjobs_email_jobs_success(
-        self, test_job_scraper, session, test_service_log, test_users
-    ) -> None:
+    def test_veganjobs_email_jobs_success(self, test_job_scraper, session, test_service_log, test_users) -> None:
         """Test successful processing of VeganJobs email jobs."""
 
         email_entry = create_email_record1(
@@ -476,12 +474,14 @@ class TestProcessEmails:
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == email_entry.owner_id).all()
         assert len(scraped_jobs) == len(resources.VEGANJOBS_JOB_IDS_1)
 
-    def test_process_indeed_email_jobs_success_no_brightapi(
+    def test_indeed_email_jobs_success_no_brightapi(
         self, job_scraper_with_brightapi_skip, session, test_service_log, test_users
     ) -> None:
         """Test successful processing of Indeed email jobs."""
 
-        with patch("app.eis.email_scraper.extract_indeed_jobs_from_email") as mock_extract:
+        with patch(
+            "app.eis.email_scraper.extract_indeed_jobs_from_email", wraps=extract_indeed_jobs_from_email
+        ) as mock_extract:
             email_entry = create_email_record1(
                 session,
                 resources.INDEED_EMAIL_1,
@@ -497,44 +497,72 @@ class TestProcessEmails:
             mock_extract.assert_called_once()
 
             scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == email_entry.owner_id).all()
-            # assert len(scraped_jobs) == len(resources.INDEED_JOB_IDS_1)
-            assert len(result) == len(resources.INDEED_EMAIL_1)
+            assert len(scraped_jobs) == len(resources.INDEED_JOB_IDS_1)
+            assert len(result) == len(resources.INDEED_JOB_IDS_1)
 
-    def test_process_linkedin_email_jobs_success_duplicates_different_owners(
-        self, test_job_scraper, session, linkedin_email_record, linkedin_email_record_user2, test_service_log
+    def test_linkedin_email_jobs_success_duplicates_different_owners(
+        self, test_job_scraper, session, test_service_log, test_users
     ) -> None:
         """Test processing of LinkedIn email job ids for different owners but same data"""
 
-        test_job_scraper.extract_email_data(email_record=linkedin_email_record[0], service_log_entry=test_service_log)
-        test_job_scraper.extract_email_data(
-            email_record=linkedin_email_record_user2[0], service_log_entry=test_service_log
+        email_entry_1 = create_email_record1(
+            session,
+            resources.LINKEDIN_EMAIL_1,
+            "linkedin",
+            test_service_log,
+            test_users[0],
         )
+        email_entry_2 = create_email_record1(
+            session,
+            resources.LINKEDIN_EMAIL_1,
+            "linkedin",
+            test_service_log,
+            test_users[1],
+        )
+        test_job_scraper.extract_email_data(email_record=email_entry_1, service_log_entry=test_service_log)
+        test_job_scraper.extract_email_data(email_record=email_entry_2, service_log_entry=test_service_log)
 
         # Check that each use has a copy of the jobs
-        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record[0].owner_id).all()
-        assert len(scraped_jobs) == len(linkedin_email_record[1])
-        scraped_jobs = (
-            session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record_user2[0].owner_id).all()
-        )
-        assert len(scraped_jobs) == len(linkedin_email_record_user2[1])
+        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == email_entry_1.owner_id).all()
+        assert len(scraped_jobs) == len(resources.LINKEDIN_JOB_IDS_1)
+        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == email_entry_2.owner_id).all()
+        assert len(scraped_jobs) == len(resources.LINKEDIN_JOB_IDS_1)
 
         # Check that the jobs unique record
-        assert session.query(ScrapedJob).distinct(ScrapedJob.external_job_id).count() == len(linkedin_email_record[1])
+        assert session.query(ScrapedJob).distinct(ScrapedJob.external_job_id).count() == len(
+            resources.LINKEDIN_JOB_IDS_1
+        )
 
-    def test_process_linkedin_email_jobs_success_duplicates_same_owner(
-        self, test_job_scraper, session, linkedin_email_record, test_service_log
+    def test_linkedin_email_jobs_success_duplicates_same_owner(
+        self, test_job_scraper, session, test_service_log, test_users
     ) -> None:
         """Test successful processing of LinkedIn email for the same user with duplicate job ids"""
 
-        test_job_scraper.extract_email_data(email_record=linkedin_email_record[0], service_log_entry=test_service_log)
-        test_job_scraper.extract_email_data(email_record=linkedin_email_record[0], service_log_entry=test_service_log)
+        email_entry = create_email_record1(
+            session,
+            resources.LINKEDIN_EMAIL_1,
+            "linkedin",
+            test_service_log,
+            test_users[0],
+        )
+        test_job_scraper.extract_email_data(email_record=email_entry, service_log_entry=test_service_log)
+        test_job_scraper.extract_email_data(email_record=email_entry, service_log_entry=test_service_log)
 
-        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == linkedin_email_record[0].owner_id).all()
-        assert len(scraped_jobs) == len(linkedin_email_record[1])
+        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == email_entry.owner_id).all()
+        assert len(scraped_jobs) == len(resources.LINKEDIN_JOB_IDS_1)
 
 
-class TestProcessAllEmails:
-    """Test class for JobScraper._process_user_emails method"""
+class TestProcessEmails:
+    """Test class for JobScraper.process_emails method"""
+
+    TEST_EMAILS = [
+        resources.INDEED_EMAIL_1,
+        resources.INDEED_EMAIL_2,
+        resources.LINKEDIN_EMAIL_1,
+        resources.LINKEDIN_EMAIL_2,
+        resources.VEGANJOBS_EMAIL_1,
+    ]
+    TEST_EMAILS = {email_id["id"]: email_id for email_id in TEST_EMAILS}
 
     def test_single_user(
         self,
@@ -542,7 +570,6 @@ class TestProcessAllEmails:
         session,
         test_users,
         test_service_log,
-        linkedin_email_data,
     ) -> None:
         """Test successful processing of emails for a single user with LinkedIn email"""
 
@@ -552,17 +579,21 @@ class TestProcessAllEmails:
             patch.object(test_job_scraper, "get_email_data") as mock_get_email_data,
         ):
 
+            email_id = resources.LINKEDIN_EMAIL_1["id"]
+
             # Setup mocks to be user-dependent
-            def mock_get_email_ids_side_effect(user_email, _inbox_only, _timedelta_days) -> list[str]:
+            def mock_get_email_ids_side_effect(recipient_email, sender_email, inbox_only, timedelta_days) -> list[str]:
                 """Mock get_email_ids to return emails only for first user"""
-                if user_email == test_users[0].email:
-                    return [linkedin_email_data[0].external_email_id]
+
+                if sender_email == test_users[0].email:
+                    return [email_id]
                 else:
                     return []
 
-            def mock_get_email_data_side_effect(_email_id) -> schemas.JobAlertEmailCreate:
-                """Mock get_email_data to return emails only for first user"""
-                return linkedin_email_data[0]
+            def mock_get_email_data_side_effect(eid) -> dict:
+                """Mock get_email_data"""
+
+                return self.TEST_EMAILS[eid]
 
             mock_get_email_ids.side_effect = mock_get_email_ids_side_effect
             mock_get_email_data.side_effect = mock_get_email_data_side_effect
@@ -571,14 +602,14 @@ class TestProcessAllEmails:
             result = test_job_scraper.process_emails(timedelta_days=1, service_log_entry=test_service_log)
 
             # Verify service log updates
-            assert test_service_log.users_processed_n == 2
+            assert test_service_log.users_processed_n == 3
             assert test_service_log.emails_found_n == 1
             assert test_service_log.emails_saved_n == 1
 
             # Verify email was saved to database
             saved_emails = (
                 session.query(JobAlertEmail)
-                .filter(JobAlertEmail.external_email_id == linkedin_email_data[0].external_email_id)
+                .filter(JobAlertEmail.external_email_id == self.TEST_EMAILS[email_id]["id"])
                 .all()
             )
             assert len(saved_emails) == 1
