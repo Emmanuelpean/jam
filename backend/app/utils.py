@@ -176,39 +176,3 @@ class AppLogger:
                 logger.info(f"{key}: {value}")
 
         logger.info("=" * 50)
-
-
-def get_email_scrapper_logger() -> logging.Logger:
-    """Get logger for email scraping service"""
-
-    return AppLogger.create_service_logger("email_scraper", "INFO")
-
-
-def get_job_scraper_logger() -> logging.Logger:
-    """Get logger for job scraping service"""
-
-    return AppLogger.create_service_logger("job_scraper", "INFO")
-
-
-def get_scheduler_logger() -> logging.Logger:
-    """Get logger for scheduler service"""
-
-    return AppLogger.create_service_logger("scheduler", "INFO")
-
-
-def get_api_logger() -> logging.Logger:
-    """Get logger for API operations"""
-
-    return AppLogger.create_service_logger("api", "INFO")
-
-
-def get_database_logger() -> logging.Logger:
-    """Get logger for database operations"""
-
-    return AppLogger.create_service_logger("database", "WARNING")
-
-
-def get_auth_logger() -> logging.Logger:
-    """Get logger for authentication operations"""
-
-    return AppLogger.create_service_logger("auth", "INFO")

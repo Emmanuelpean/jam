@@ -3,10 +3,7 @@
 Reads job alert emails from a shared inbox, extracts job IDs for supported
 platforms (linkedin, indeed, veganjobs), stores email and job metadata in the
 database, scrapes full job details (via platform scrapers or from email
-content), and records run statistics in an EisServiceLog.
-
-Use JobScraper.run_scraping(...) to run once or JobScraperService to run
-periodically."""
+content), and records run statistics in an EisServiceLog."""
 
 import threading
 import traceback
@@ -19,7 +16,8 @@ from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScraper, VeganJobsS
 from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
 from app.emails.email_service import EmailService
 from app.utils import AppLogger
-from eis.email_parser import extract_linkedin_job_ids, extract_indeed_job_ids, extract_veganjobs_job_ids
+from app.eis.email_parser import extract_linkedin_job_ids, extract_indeed_job_ids, extract_veganjobs_job_ids
+from app.eis.location_parser import LocationParser
 
 PLATFORMS = ["linkedin", "indeed", "veganjobs"]
 
@@ -32,6 +30,7 @@ class JobScraper(EmailService):
         :param db: optional database session"""
 
         EmailService.__init__(self)
+        self.location_parser = LocationParser()
         self.logger = AppLogger.create_service_logger("email_scraper", "INFO")
         self.db = next(get_db()) if db is None else db
 
@@ -161,8 +160,12 @@ class JobScraper(EmailService):
         :param job_record: ScrapedJob instance
         :param job_data: scraped job data"""
 
+        location, attendance_type = self.location_parser.parse_location(job_data["location"])
         job_record.company = job_data["company"]
-        job_record.location = job_data["location"]
+        job_record.location_postcode = location.postcode
+        job_record.location_city = location.city
+        job_record.location_country = location.country
+        job_record.attendance_type = attendance_type
         job_record.salary_min = job_data["job"]["salary"]["min_amount"]
         job_record.salary_max = job_data["job"]["salary"]["max_amount"]
         job_record.title = job_data["job"]["title"]
@@ -182,17 +185,24 @@ class JobScraper(EmailService):
         :param job_record2: Target ScrapedJob instance
         :return: Updated job_record2 instance"""
 
-        job_record2.company = job_record1.company
-        job_record2.location = job_record1.location
-        job_record2.salary_min = job_record1.salary_min
-        job_record2.salary_max = job_record1.salary_max
-        job_record2.title = job_record1.title
-        job_record2.description = job_record1.description
-        job_record2.url = job_record1.url
-        job_record2.scrape_datetime = job_record1.scrape_datetime
-        job_record2.is_scraped = job_record1.is_scraped
-        job_record2.is_failed = job_record1.is_failed
-        job_record2.scrape_error = job_record1.scrape_error
+        columns = [
+            "company",
+            "location_city",
+            "location_country",
+            "location_postcode",
+            "attendance_type",
+            "salary_min",
+            "salary_max",
+            "title",
+            "description",
+            "url",
+            "scrape_datetime",
+            "is_scraped",
+            "is_failed",
+            "scrape_error",
+        ]
+        for key in columns:
+            setattr(job_record2, key, getattr(job_record1, key))
         self.db.commit()
         return job_record2
 
@@ -498,7 +508,7 @@ email_scraper = JobScraper()
 # print(emails)
 # # print(email_d)
 # # scraper.save_email_to_db(email_d, next(get_db()))
-email_scraper.run_scraping(1)
+# email_scraper.run_scraping(1)
 #
 #
 # @patch("app.config.settings.test_mode", True)

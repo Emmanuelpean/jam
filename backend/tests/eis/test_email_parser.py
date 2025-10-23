@@ -1,3 +1,5 @@
+"""Unit tests for email_parser module methods"""
+
 import pytest
 
 from app.eis.email_parser import extract_indeed_job_ids, extract_linkedin_job_ids, extract_veganjobs_job_ids
@@ -10,8 +12,8 @@ class TestExtractLinkedinJobIds:
     def test_extract_linkedin_job_ids_real_email(self) -> None:
         """Test extracting LinkedIn job IDs from real LinkedIn email content"""
 
-        job_ids = extract_linkedin_job_ids(resources.LINKEDIN_DATA_1[0])
-        assert job_ids == resources.LINKEDIN_DATA_1[1]
+        job_ids = extract_linkedin_job_ids(resources.LINKEDIN_EMAIL_1_BODY)
+        assert job_ids == resources.LINKEDIN_JOB_IDS_1
 
     def test_extract_linkedin_job_ids_empty_body(self) -> None:
         """Test extracting job IDs from empty body"""
@@ -97,8 +99,8 @@ class TestExtractIndeedJobIds:
     def test_extract_indeed_job_ids_real_email(self) -> None:
         """Test extracting Indeed job IDs from real Indeed email content"""
 
-        job_ids = extract_indeed_job_ids(resources.INDEED_DATA_1[0])
-        assert job_ids == resources.INDEED_DATA_1[1]
+        job_ids = extract_indeed_job_ids(resources.INDEED_EMAIL_1_BODY)
+        assert job_ids == resources.INDEED_JOB_IDS_1
 
     def test_extract_indeed_job_ids_empty_body(self) -> None:
         """Test extracting job IDs from empty body"""
@@ -177,8 +179,8 @@ class TestExtractVeganJobsJobIds:
     def test_extract_job_ids_real_email(self) -> None:
         """Test extracting LinkedIn job IDs from real LinkedIn email content"""
 
-        job_ids = extract_veganjobs_job_ids(resources.VEGANJOBS_DATA_1[0])
-        assert job_ids == resources.VEGANJOBS_DATA_1[1]
+        job_ids = extract_veganjobs_job_ids(resources.VEGANJOBS_EMAIL_1_BODY)
+        assert job_ids == resources.VEGANJOBS_JOB_IDS_1
 
     def test_extract_job_ids_empty_body(self) -> None:
         """Test extracting job IDs from empty body"""
