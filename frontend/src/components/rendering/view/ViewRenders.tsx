@@ -299,6 +299,16 @@ export const renderFunctions = {
 		return <LocationMap locations={locations} />;
 	},
 
+	scrapedLocationMap: (param: RenderParams): ReactNode => {
+		const location = {
+			postcode: param.item.location_postcode,
+			city: param.item.location_city,
+			country: param.item.location_country,
+		};
+		const locations = location ? [location] : [];
+		return <LocationMap locations={locations} />;
+	},
+
 	lastUpdateDays: (params: RenderParams): ReactNode => {
 		const daysSinceLastUpdate: number | undefined | null = params.item?.days_since_last_update;
 		return <span className={"text-danger"}>{daysSinceLastUpdate} days</span>;

@@ -5,6 +5,7 @@ Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
 from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float, TIMESTAMP, Table, UniqueConstraint
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
@@ -128,6 +129,20 @@ class ScrapedJob(Owned, Base):
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
+
+    @hybrid_property
+    def location_name(self) -> str:
+        """Computed property that combines city, country, and postcode into a readable location name"""
+
+        parts = []
+        if self.location_city:
+            parts.append(self.location_city)
+        if self.location_country:
+            parts.append(self.location_country)
+        if self.location_postcode:
+            parts.append(self.location_postcode)
+
+        return ", ".join(parts)
 
 
 class EisServiceLog(CommonBase, Base):

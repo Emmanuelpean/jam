@@ -33,6 +33,7 @@ LINKEDIN_EMAIL_1 = {
     "to": USER_DATA[0]["email"],
     "date": datetime.datetime.now(),
     "body": LINKEDIN_EMAIL_1_BODY,
+    "platform": "linkedin",
 }
 
 # Email 2
@@ -50,6 +51,7 @@ LINKEDIN_EMAIL_2 = {
     "to": USER_DATA[1]["email"],
     "date": datetime.datetime.now(),
     "body": LINKEDIN_EMAIL_2_BODY,
+    "platform": "linkedin",
 }
 
 
@@ -89,6 +91,7 @@ INDEED_EMAIL_1 = {
     "to": USER_DATA[0]["email"],
     "date": datetime.datetime.now(),
     "body": INDEED_EMAIL_1_BODY,
+    "platform": "indeed",
 }
 
 # Email 2
@@ -105,6 +108,7 @@ INDEED_EMAIL_2 = {
     "to": USER_DATA[1]["email"],
     "date": datetime.datetime.now(),
     "body": INDEED_EMAIL_2_BODY,
+    "platform": "indeed",
 }
 
 # ------------------------------------------------------ VEGANJOBS -----------------------------------------------------
@@ -122,4 +126,15 @@ VEGANJOBS_EMAIL_1 = {
     "to": USER_DATA[0]["email"],
     "date": datetime.datetime.now(),
     "body": VEGANJOBS_EMAIL_1_BODY,
+    "platform": "veganjobs",
 }
+
+
+TEST_EMAILS = [
+    INDEED_EMAIL_1,
+    INDEED_EMAIL_2,
+    LINKEDIN_EMAIL_1,
+    LINKEDIN_EMAIL_2,
+    VEGANJOBS_EMAIL_1,
+]
+TEST_EMAILS = {email["id"]: email for email in TEST_EMAILS}

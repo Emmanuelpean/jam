@@ -4,7 +4,7 @@ import { ProgressBar, Spinner } from "react-bootstrap";
 import L from "leaflet";
 import { geocodeLocationsBatch } from "../../services/GeoCoding";
 import "leaflet/dist/leaflet.css";
-import { LocationData } from "../../services/Schemas";
+import { LocationData, LocationDataTransform } from "../../services/Schemas";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -25,7 +25,7 @@ interface GeocodedLocation extends LocationData {
 }
 
 interface LocationMapProps {
-	locations?: LocationData[];
+	locations?: LocationDataTransform[];
 	height?: string;
 }
 
