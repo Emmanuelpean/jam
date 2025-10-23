@@ -197,39 +197,24 @@ def veganjobs_email_record(session, test_users) -> tuple[JobAlertEmail, list[str
 class TestSaveEmailToDb:
     """Test class for JobScraper.save_email_to_db method"""
 
-    TEST_EMAILS = [
-        resources.INDEED_EMAIL_1,
-        resources.INDEED_EMAIL_2,
-        resources.LINKEDIN_EMAIL_1,
-        resources.LINKEDIN_EMAIL_2,
-        resources.VEGANJOBS_EMAIL_1,
-    ]
-    PLATFORMS = [
-        "indeed",
-        "indeed",
-        "linkedin",
-        "linkedin",
-        "veganjobs",
-    ]
-
     def test_save_new_email_success(self, test_job_scraper, test_users, test_service_log, session) -> None:
         """Test saving a new email successfully"""
 
         with (patch.object(test_job_scraper, "get_email_data") as mock_get_email_data,):
 
-            mock_get_email_data.side_effect = lambda email_id: [e for e in self.TEST_EMAILS if e["id"] == email_id][0]
+            mock_get_email_data.side_effect = lambda eid: resources.TEST_EMAILS[eid]
 
-            for i, message in enumerate(self.TEST_EMAILS):
+            for email_id in resources.TEST_EMAILS:
                 result_email, is_created = test_job_scraper.get_and_save_email_to_db(
-                    message["id"], test_users[0], test_service_log.id
+                    email_id, test_users[0], test_service_log.id
                 )
 
                 assert is_created
-                assert result_email.external_email_id == message["id"]
+                assert result_email.external_email_id == email_id
                 assert result_email.subject
-                assert result_email.sender == message["to"]
-                assert result_email.platform == self.PLATFORMS[i]
-                assert result_email.body == message["body"]
+                assert result_email.sender == resources.TEST_EMAILS[email_id]["to"]
+                assert result_email.platform == resources.TEST_EMAILS[email_id]["platform"]
+                assert result_email.body == resources.TEST_EMAILS[email_id]["body"]
                 assert result_email.owner_id
                 assert result_email.service_log_id == test_service_log.id
 
@@ -240,9 +225,9 @@ class TestSaveEmailToDb:
 
         with (patch.object(test_job_scraper, "get_email_data") as mock_get_email_data,):
 
-            mock_get_email_data.side_effect = lambda email_id: [e for e in self.TEST_EMAILS if e["id"] == email_id][0]
+            mock_get_email_data.side_effect = lambda eid: resources.TEST_EMAILS[eid]
 
-            message_id = self.TEST_EMAILS[0]["id"]
+            message_id = list(resources.TEST_EMAILS.keys())[0]
 
             # noinspection PyArgumentList
             existing_email = JobAlertEmail(

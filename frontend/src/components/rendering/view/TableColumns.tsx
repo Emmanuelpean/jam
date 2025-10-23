@@ -187,11 +187,12 @@ export const tableColumns = {
 	}),
 
 	scrapedLocation: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "location",
+		key: "location_name",
 		label: "Location",
 		sortable: true,
 		searchable: true,
 		type: "text",
+		// render: renderFunctions.scrapedLocationName,
 		...overrides,
 	}),
 

@@ -240,6 +240,14 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	scrapedLocationMap: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "location_map",
+		label: "Location on Map",
+		type: "custom",
+		render: renderFunctions.scrapedLocationMap,
+		...overrides,
+	}),
+
 	phone: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "phone",
 		label: "Phone",

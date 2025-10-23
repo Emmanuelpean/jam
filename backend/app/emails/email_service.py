@@ -14,7 +14,7 @@ from pathlib import Path
 from fastapi.templating import Jinja2Templates
 
 from app.config import settings
-from emails.utils import clean_email_address
+from app.emails.utils import clean_email_address
 
 templates = Jinja2Templates(directory="templates")
 

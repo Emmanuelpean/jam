@@ -434,7 +434,7 @@ export const formFields = {
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
 		name: "location_id",
-		secondaryName: "location",
+		secondaryName: "location_name",
 		label: "Location",
 		type: "select",
 		placeholder: "Select or search location...",

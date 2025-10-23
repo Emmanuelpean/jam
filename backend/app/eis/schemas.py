@@ -20,6 +20,7 @@ class JobAlertEmailCreate(BaseModel):
     platform: str | None = None
     body: str | None = None
     service_log_id: int | None = None
+    job_found_n: int | None = 0
 
 
 class JobAlertEmailUpdate(JobAlertEmailCreate):
@@ -61,8 +62,12 @@ class ScrapedJobCreate(BaseModel):
     salary_max: float | None = None
     url: str | None = None
     deadline: datetime | None = None
+    attendance_type: str | None = None
+    location_name: str | None = None
+    location_city: str | None = None
+    location_postcode: str | None = None
+    location_country: str | None = None
     company: str | None = None
-    location: str | None = None
 
 
 class ScrapedJobUpdate(BaseModel):

@@ -128,16 +128,6 @@ class ApiService {
 		return handleResponse(response);
 	}
 
-	// Generic PATCH request
-	async patch(endpoint: string, data: any, token: string | null = null): Promise<any> {
-		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
-			method: "PATCH",
-			headers: getAuthHeaders(token || ""),
-			body: JSON.stringify(data),
-		});
-		return handleResponse(response);
-	}
-
 	// Generic DELETE request
 	async delete(endpoint: string, token: string | null = null): Promise<any> {
 		const response = await fetch(`${this.baseUrl}/${endpoint}`, {

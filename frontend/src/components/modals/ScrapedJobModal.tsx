@@ -9,6 +9,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
 import { SelectOption } from "../../utils/Utils";
+import { renderFunctions } from "../rendering/view/ViewRenders";
+import { modalViewFields } from "../rendering/view/ModalFields";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -32,6 +34,11 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		renderAggregatorModal,
 	} = useFormOptions(["companies", "locations", "keywords", "persons"], {
 		companies: () => ({ name: data?.company }),
+		locations: () => ({
+			postcode: data?.location_postcode,
+			city: data?.location_city,
+			country: data?.location_country,
+		}),
 	});
 
 	function findClosest(companyOptions: SelectOption[], companyName: string) {
@@ -46,7 +53,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		return {
 			...data,
 			company_id: data.company ? findClosest(companies, data.company) : data.company_id,
-			location_id: data.location ? findClosest(locations, data.location) : data.location_id,
+			location_id: data.location_name ? findClosest(locations, data.location_name) : data.location_id,
 		};
 	}, [data, companies, locations]);
 
@@ -69,6 +76,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 				"This role offers a chance to apply Python expertise to build scalable solutions " +
 				"while exploring opportunities for growth in automation, data analysis, and collaborative software development.",
 		}),
+		modalViewFields.scrapedLocationMap(),
 	];
 
 	const transformData = (jobData: JobData) => {
@@ -130,6 +138,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 				onHide={onHide}
 				data={patchedData}
 				mode={submode}
+				// @ts-ignore
 				fields={fields}
 				transformFormData={transformData}
 				itemName="Scraped Job"
