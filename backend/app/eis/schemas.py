@@ -60,6 +60,7 @@ class ScrapedJobCreate(BaseModel):
     description: str | None = None
     salary_min: float | None = None
     salary_max: float | None = None
+    salary_currency: str | None = None
     url: str | None = None
     deadline: datetime | None = None
     attendance_type: str | None = None

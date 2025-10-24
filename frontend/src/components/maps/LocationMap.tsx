@@ -27,6 +27,7 @@ interface GeocodedLocation extends LocationData {
 interface LocationMapProps {
 	locations?: LocationDataTransform[];
 	height?: string;
+    scrollWheelZoom?: boolean;
 }
 
 interface MapViewUpdaterProps {
@@ -63,7 +64,7 @@ const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpd
 	return null;
 };
 
-const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400px" }) => {
+const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400px", scrollWheelZoom = true }) => {
 	const [geocodedLocations, setGeocodedLocations] = useState<GeocodedLocation[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [progress, setProgress] = useState<Progress>({ current: 0, total: 0 });
@@ -160,7 +161,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 					boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
 				}}
 			>
-				<MapContainer center={[20, 0]} zoom={2} style={{ height: "100%", width: "100%" }}>
+				<MapContainer center={[20, 0]} zoom={2} style={{ height: "100%", width: "100%" }} scrollWheelZoom={scrollWheelZoom}>
 					<TileLayer
 						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 						url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
