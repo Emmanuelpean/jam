@@ -47,3 +47,4 @@
 * [ ] Add the ability to generate a follow-up email and select the contact to send it to
 * [ ] Add email confirmation when user changes email
 * [ ] Ensure that the parsed country matches the list of available countries
+* [ ] Add currency parsing
