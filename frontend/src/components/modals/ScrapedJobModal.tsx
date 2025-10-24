@@ -22,37 +22,52 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		locations,
 		keywords,
 		persons,
+        aggregators,
 		openCompanyModal,
 		openLocationModal,
 		openKeywordModal,
 		openPersonModal,
+        openAggregatorModal,
 		renderCompanyModal,
 		renderLocationModal,
 		renderKeywordModal,
 		renderPersonModal,
 		renderAggregatorModal,
-	} = useFormOptions(["companies", "locations", "keywords", "persons"], {
+	} = useFormOptions(["companies", "locations", "keywords", "persons", "aggregators"], {
 		companies: () => ({ name: data?.company }),
 		locations: () => ({
 			postcode: data?.location_postcode,
 			city: data?.location_city,
 			country: data?.location_country,
 		}),
-	});
+        aggregators: () => ({
+            name: data?.emails?.[0]?.platform
+                ? data.emails[0].platform[0].toUpperCase() + data.emails[0].platform.slice(1)
+                : undefined
+        }),
+    });
 
-	function findClosest(companyOptions: SelectOption[], companyName: string) {
-		if (!companyName || companyOptions.length === 0) return null;
-		const names = companyOptions.map((c: SelectOption): string => c.label);
-		const { bestMatchIndex } = stringSimilarity.findBestMatch(companyName, names);
-		return companyOptions[bestMatchIndex]?.value;
+	function findClosest(options: SelectOption[], name: string): string | null | undefined {
+		if (!name || options.length === 0) return null;
+		const names: string[] = options.map((c: SelectOption): string => c.label);
+		const { bestMatchIndex } = stringSimilarity.findBestMatch(name, names);
+		return options[bestMatchIndex]?.value;
 	}
 
-	const patchedData = React.useMemo(() => {
+    function findExact(options: SelectOption[], name: string): string | null | undefined {
+        console.log(options, name);
+        if (!name || options.length === 0) return null;
+        const match: SelectOption | undefined = options.find((opt: SelectOption): boolean => opt.label.toLowerCase() === name.toLowerCase());
+        return match ? match.value : null;
+    }
+
+    const patchedData = React.useMemo(() => {
 		if (!data) return data;
 		return {
 			...data,
 			company_id: data.company ? findClosest(companies, data.company) : data.company_id,
 			location_id: data.location_name ? findClosest(locations, data.location_name) : data.location_id,
+            aggregator_id: data.emails[0].platform ? findExact(aggregators, data.emails[0].platform ) : data.location_id,
 		};
 	}, [data, companies, locations]);
 
@@ -68,7 +83,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		[formFields.scrapedLocation(locations, openLocationModal), formFields.attendanceType()],
 		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
 		[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
-		[formFields.personalRating(), formFields.deadline()],
+		[formFields.personalRating(), formFields.deadline(), formFields.aggregator(aggregators, openAggregatorModal)],
 
 		formFields.note({
 			placeholder:
@@ -89,6 +104,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 			personal_rating: jobData.personal_rating || null,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
+            source_id: jobData.source_id || null,
 			deadline: jobData.deadline ? jobData.deadline + "T23:59:59" : null,
 			keywords: jobData.keywords || [],
 			contacts: jobData.contacts || [],
