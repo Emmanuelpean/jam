@@ -87,6 +87,7 @@ class ScrapedJob(Owned, Base):
     - `description` (str, optional): Description of the job.
     - `salary_min` (float, optional): Minimum salary of the job.
     - `salary_max` (float, optional): Maximum salary of the job.
+    - `salary_currency` (str, optional): Salary currency
     - `url` (str, optional): URL to the job posting.
     - `deadline` (datetime, optional): Deadline for the job.
     - `company` (str, optional): Company name of the job.
@@ -116,6 +117,7 @@ class ScrapedJob(Owned, Base):
     description = Column(String, nullable=True)
     salary_min = Column(Float, nullable=True)
     salary_max = Column(Float, nullable=True)
+    salary_currency = Column(String, nullable=True)
     url = Column(String, nullable=True)
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     company = Column(String, nullable=True)

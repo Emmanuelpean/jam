@@ -243,6 +243,7 @@ export const renderFunctions = {
 	salaryRange: (param: RenderParams): string | null => {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
+        console.log(param.item)
 		const salaryCurrency: string | undefined | null = currencies.find(
 			(currency: Currency) => currency.code === param.item?.salary_currency,
 		)?.symbol;
@@ -305,7 +306,7 @@ export const renderFunctions = {
 			country: param.item?.location_country,
 		};
 		const locations = location ? [location] : [];
-		return <LocationMap locations={locations} />;
+		return <LocationMap locations={locations} scrollWheelZoom={false} />;
 	},
 
 	lastUpdateDays: (params: RenderParams): ReactNode => {
