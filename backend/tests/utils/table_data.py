@@ -1,5 +1,6 @@
 """Centralised test data for both conftest.py and seed_database.py"""
 
+import random
 from datetime import datetime, timedelta, timezone
 from itertools import groupby
 
@@ -1987,6 +1988,7 @@ JOB_SCRAPED_DATA = [
         "salary_currency": "GBP",
         "title": "Software Engineer",
         "scrape_datetime": "2025-08-30T11:15:22.234567+00:00",
+        "url": "test",
     },
     {
         "external_job_id": "1357924680",
@@ -1995,6 +1997,7 @@ JOB_SCRAPED_DATA = [
         "is_failed": False,
         "title": "Backend Developer",
         "scrape_datetime": "2025-08-25T13:42:17.345678+00:00",
+        "url": "test",
     },
     {
         "external_job_id": "2468135790",
@@ -2005,6 +2008,7 @@ JOB_SCRAPED_DATA = [
         "title": "Data Engineer",
         "scrape_datetime": "2025-08-18T08:30:55.567890+00:00",
         "is_imported": True,
+        "url": "test",
     },
     {
         "external_job_id": "9988776655",
@@ -2015,6 +2019,7 @@ JOB_SCRAPED_DATA = [
         "title": "ML Engineer",
         "scrape_datetime": "2025-08-20T19:25:08.678901+00:00",
         "is_active": False,
+        "url": "test",
     },
     {
         "external_job_id": "4123456789",
@@ -2071,6 +2076,7 @@ JOB_SCRAPED_DATA = [
         "scrape_error": "Access denied - company blocked scraping",
         "title": "Sustainability Software Engineer",
         "scrape_datetime": "2025-09-07T11:45:28.456789+00:00",
+        "url": "test",
     },
     {
         "external_job_id": "jobsite_901234",
@@ -2096,11 +2102,13 @@ JOB_SCRAPED_DATA = [
         "scrape_error": "Rate limit exceeded - retry after 24 hours",
         "title": "Software Engineer",
         "scrape_datetime": "2025-09-11T15:30:42.678901+00:00",
+        "url": "test",
     },
     {
         "external_job_id": "soft1sdf23456789",
         "owner_id": 1,
         "is_scraped": False,
+        "url": "test",
     },
 ]
 
@@ -2194,6 +2202,165 @@ EMAIL_SCRAPEDJOB_MAPPINGS = [
     {"email_id": 10, "scraped_job_ids": [11]},
     {"email_id": 11, "scraped_job_ids": [12]},
 ]
+
+companies = [
+    "TechCorp Inc",
+    "StartupXYZ",
+    "CloudTech Solutions",
+    "DataSoft Ltd",
+    "FinTech Innovations",
+    "HealthTech Solutions",
+    "InnovateTech Solutions",
+    "Digital Dynamics",
+    "Future Systems",
+    "Quantum Labs",
+    "Neural Networks Inc",
+    "CyberSecure Ltd",
+    "GreenTech Energy",
+    "SmartCity Solutions",
+    "BioTech Innovations",
+    "AI Research Corp",
+    "BlockChain Ventures",
+    "CloudScale Systems",
+    "DevOps Masters",
+    "Enterprise Solutions Ltd",
+]
+
+# Job titles pool
+job_titles = [
+    "Senior Python Developer",
+    "Full Stack Engineer",
+    "DevOps Engineer",
+    "Software Engineer",
+    "Backend Developer",
+    "Data Engineer",
+    "ML Engineer",
+    "Senior Java Developer",
+    "Flutter Developer",
+    "Machine Learning Engineer",
+    "Frontend Developer",
+    "React Developer",
+    "Vue.js Developer",
+    "Angular Developer",
+    "Data Scientist",
+    "AI Software Developer",
+    "iOS Developer",
+    "Android Developer",
+    "Sustainability Software Engineer",
+    "Site Reliability Engineer",
+    "Cloud Architect",
+    "Security Engineer",
+    "Blockchain Developer",
+    "QA Engineer",
+    "Technical Lead",
+    "Engineering Manager",
+    "Principal Engineer",
+    "Staff Engineer",
+    "Solutions Architect",
+    "Platform Engineer",
+    "Infrastructure Engineer",
+    "Database Administrator",
+    "Business Intelligence Developer",
+    "ETL Developer",
+    "Big Data Engineer",
+]
+
+# Cities pool
+cities = [
+    "London",
+    "Manchester",
+    "Birmingham",
+    "Edinburgh",
+    "Bristol",
+    "Glasgow",
+    "Leeds",
+    "Liverpool",
+    "Cardiff",
+    "Newcastle",
+    "Nottingham",
+    "Sheffield",
+    "Cambridge",
+    "Oxford",
+    "Reading",
+    "Brighton",
+    "Southampton",
+]
+
+# Job descriptions pool
+descriptions = [
+    "We are looking for an experienced developer to join our growing team...",
+    "Join our innovative startup and help build cutting-edge solutions...",
+    "Exciting opportunity to work with modern technologies in an agile environment...",
+    "Work on challenging projects with a talented team of engineers...",
+    "Build scalable systems that impact millions of users...",
+    "Collaborate with cross-functional teams to deliver high-quality software...",
+    "Help shape the future of our platform with your technical expertise...",
+    "Work remotely with a global team on mission-critical applications...",
+]
+
+# Attendance types
+attendance_types = ["remote", "onsite", "hybrid", None]
+
+# Error messages for failed scrapes
+error_messages = [
+    "Page not found - job posting may have been removed",
+    "Scraping blocked - rate limit exceeded",
+    "Access denied - company blocked scraping",
+    "Rate limit exceeded - retry after 24 hours",
+    "Connection timeout - server not responding",
+    "Invalid job posting format",
+]
+
+# Generate 50 scraped jobs
+scraped_jobs = []
+current_date = datetime.now()
+
+for i in range(50):
+    external_id = f"job_{random.randint(1000000000, 9999999999)}"
+    owner_id = 1
+    is_scraped = True
+    is_failed = random.random() < 0.15  # 15% failure rate
+    is_imported = random.random() < 0.1 if not is_failed else False  # 10% imported
+    is_active = random.random() < 0.95  # 95% active
+
+    job = {
+        "external_job_id": external_id,
+        "owner_id": owner_id,
+        "is_scraped": is_scraped,
+        "is_failed": is_failed,
+        "title": random.choice(job_titles),
+        "scrape_datetime": (current_date - timedelta(days=random.randint(0, 30))).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+        + "+00:00",
+        "url": f"https://linkedin.com/jobs/view/{external_id}" if not is_failed else "test",
+        "is_imported": is_imported,
+        "is_active": is_active,
+    }
+
+    if is_failed:
+        job["scrape_error"] = random.choice(error_messages)
+    else:
+        # Add successful scrape data
+        job["description"] = random.choice(descriptions)
+        job["company"] = random.choice(companies)
+
+        # 70% have location, 30% are remote/unspecified
+        if random.random() < 0.7:
+            job["location_city"] = random.choice(cities)
+            job["location_country"] = "United Kingdom"
+
+        # 60% have attendance type specified
+        if random.random() < 0.6:
+            job["attendance_type"] = random.choice(attendance_types[:3])
+
+        # 80% have salary information
+        if random.random() < 0.8:
+            base_salary = random.randint(40000, 120000)
+            job["salary_min"] = float(base_salary)
+            job["salary_max"] = float(base_salary + random.randint(10000, 40000))
+            job["salary_currency"] = "GBP"
+
+    JOB_SCRAPED_DATA.append(job)
+    EMAIL_SCRAPEDJOB_MAPPINGS[0]["scraped_job_ids"].append(i + 14)
 
 
 def add_mappings(

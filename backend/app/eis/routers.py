@@ -4,8 +4,10 @@ Provides REST API endpoints for managing job alert emails, scraped job postings,
 and service execution logs with CRUD operations and admin access controls."""
 
 from datetime import datetime, timedelta
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
 from starlette.requests import Request
 
@@ -17,7 +19,6 @@ from app.oauth2 import get_current_user
 from app.routers import (
     generate_data_table_crud_router,
     filter_query,
-    filter_out_non_owned,
     assert_admin,
     NOT_ALLOWED_EXCEPTION,
 )
@@ -50,20 +51,27 @@ scrapedjob_router = generate_data_table_crud_router(
 )
 
 
-@scrapedjob_router.get("/", response_model=list[schemas.ScrapedJobOut])
+@scrapedjob_router.get("/", response_model=schemas.PaginatedScrapedJobResponse)
 def get_all(
     request: Request,
     db: Session = Depends(get_db),
     current_user: app_models.User = Depends(get_current_user),
-    limit: int | None = None,
+    page: int = 0,
+    page_size: int = 10,
+    sort_by: str = "scrape_datetime",
+    sort_direction: Literal["asc", "desc"] = "desc",
 ):
-    """Retrieve all scraped jobs for the current user that have not been imported, are active and successfully scraped.
+    """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped.
     :param request: FastAPI request object to access query parameters
     :param db: Database session.
     :param current_user: Authenticated user.
-    :param limit: Maximum number of entries to return.
-    :return: List of entries."""
+    :param page: Page number (0-indexed).
+    :param page_size: Number of items per page.
+    :param sort_by: Column name to sort by.
+    :param sort_direction: Sort direction (asc or desc).
+    :return: Paginated response with items and metadata."""
 
+    # Base query
     query = (
         db.query(models.ScrapedJob)
         .filter(models.ScrapedJob.owner_id == current_user.id)
@@ -71,12 +79,43 @@ def get_all(
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.is_active)
     )
+
+    # Apply filters
     filter_params = dict(request.query_params)
-    filter_params.pop("limit", None)
+    filter_params.pop("page", None)
+    filter_params.pop("page_size", None)
+    filter_params.pop("sort_by", None)
+    filter_params.pop("sort_direction", None)
     query = filter_query(query, models.ScrapedJob, filter_params)
 
-    results = query.limit(limit).all()
-    return [filter_out_non_owned(result, current_user.id) for result in results]
+    # Apply sorting
+    if hasattr(models.ScrapedJob, sort_by):
+        sort_column = getattr(models.ScrapedJob, sort_by)
+        if sort_direction == "desc":
+            query = query.order_by(desc(sort_column))
+        else:
+            query = query.order_by(asc(sort_column))
+    else:
+        # Default sorting if invalid column
+        query = query.order_by(desc(models.ScrapedJob.scrape_datetime))
+
+    # Get total count before pagination
+    total = query.count()
+
+    # Calculate pagination
+    offset = page * page_size
+    total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+
+    # Apply pagination
+    results = query.offset(offset).limit(page_size).all()
+
+    return {
+        "items": results,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }
 
 
 # -------------------------------------------------- EIS SERVICE LOGS --------------------------------------------------

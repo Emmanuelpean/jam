@@ -114,6 +114,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 	const [currentPage, setCurrentPage] = useState<number>(0);
 	const [pageSize, setPageSize] = useState<number>(20);
+	const [totalCount, setTotalCount] = useState<number>(0);
+
+	const isServerPagination = !!endpoint && !providedData;
 
 	const {
 		showModal,
@@ -131,41 +134,51 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		closeImportModal,
 	} = useModalState();
 
-	const fetchData = useCallback(async () => {
-		setIsLoading(true);
-		setLoadError(null);
-
-		try {
-			const response = await api.get(endpoint, token);
-			setFetchedData(response);
-		} catch (error: any) {
-			setLoadError(error.message || "Failed to load data");
-			showToastError(`Failed to load ${itemType}s`);
-		} finally {
-			setIsLoading(false);
-		}
-	}, [endpoint, token, itemType, showToastError]);
-
 	useEffect(() => {
-		if (endpoint && !providedData) {
+		const fetchData = async () => {
+			setIsLoading(true);
+			setLoadError(null);
+
+			try {
+				const params = new URLSearchParams({
+					page: currentPage.toString(), // 0-indexed
+					page_size: pageSize.toString(),
+					sort_by: sortConfig.key,
+					sort_direction: sortConfig.direction,
+				});
+
+				const response = await api.get(`${endpoint}?${params.toString()}`, token);
+				setFetchedData(response.items);
+				setTotalCount(response.total);
+			} catch (error: any) {
+				setLoadError(error.message || "Failed to load data");
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		if (isServerPagination) {
 			fetchData();
 		}
-	}, [endpoint, entityType, providedData]);
+	}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination]);
 
-	// Get data from context based on entityType
 	const getData = (): any[] => {
 		if (providedData !== undefined) {
 			return providedData;
 		}
-
-		if (endpoint) {
+		if (isServerPagination) {
 			return fetchedData;
 		}
-
 		return (dataContext as any)[entityType] || [];
 	};
 
-	const data = getData();
+	useEffect(() => {
+		if (loadError) {
+			showToastError(`Failed to load ${itemType}s`);
+		}
+	}, [loadError, itemType, showToastError]);
+
+	const data: any[] = getData();
 	const { error: contextError } = dataContext;
 
 	// CRUD operations using context methods
@@ -235,13 +248,16 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		// Sort data
 		if (sortConfig.key) {
 			filteredData.sort((a: any, b: any) => {
-				const column = columns.find((col: TableColumn) => col.key === sortConfig.key);
+				const column: TableColumn | undefined = columns.find(
+					(col: TableColumn): boolean => col.key === sortConfig.key,
+				);
 				let aValue: any, bValue: any;
 				if (!column) return 0;
 
 				if (typeof column.sortField === "function") {
 					aValue = column.sortField(a, dataContext);
 					bValue = column.sortField(b, dataContext);
+					// console.log(aValue, bValue);
 				} else if (typeof column.sortField === "string" || Array.isArray(column.sortField)) {
 					const sortFields: string[] = toList(column.sortField);
 					aValue = sortFields
@@ -250,9 +266,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 					bValue = sortFields
 						.map((field: string) => accessAttribute(b, field))
 						.reduce((acc, val) => acc + (val ?? ""), "");
+					console.log(aValue, bValue);
 				} else {
 					aValue = a[column.key];
 					bValue = b[column.key];
+					// console.log(aValue, bValue);
 				}
 
 				if (aValue == null && bValue == null) return 0;
@@ -369,14 +387,32 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		};
 	}, [contextMenu]);
 
-	// Pagination
-	const sortedData = getSortedData();
-	const totalPages = Math.ceil(sortedData.length / pageSize);
-	const startIndex = showAllEntries ? 0 : currentPage * pageSize;
-	const endIndex = showAllEntries ? sortedData.length : startIndex + pageSize;
-	const currentPageData = sortedData.slice(startIndex, endIndex);
+	// Pagination calculations
+	const sortedData = isServerPagination ? data : getSortedData();
+	let currentPageData: any[];
+	let totalPages: number;
+	let displayTotal: number;
 
-	useEffect(() => setCurrentPage(0), [searchTerm, data]);
+	if (isServerPagination) {
+		// Server-side: data already paginated
+		currentPageData = sortedData;
+		displayTotal = totalCount;
+		totalPages = Math.ceil(totalCount / pageSize);
+	} else {
+		// Client-side: do pagination ourselves
+		displayTotal = sortedData.length;
+		totalPages = Math.ceil(displayTotal / pageSize);
+
+		if (showAllEntries) {
+			currentPageData = sortedData;
+		} else {
+			const startIndex = currentPage * pageSize;
+			const endIndex = startIndex + pageSize;
+			currentPageData = sortedData.slice(startIndex, endIndex);
+		}
+	}
+
+	useEffect(() => setCurrentPage(0), [searchTerm]);
 
 	const goToPage = (page: number): void => setCurrentPage(Math.max(0, Math.min(totalPages - 1, page)));
 	const handlePageSizeChange = (newPageSize: number): void => {
@@ -524,7 +560,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 							id="search-input"
 						/>
 						<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
-							Showing {sortedData.length} Entries
+							Showing {displayTotal} Entries
 						</span>
 					</div>
 				)}
@@ -642,30 +678,30 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			</div>
 
 			{/* Pagination */}
-			{!showAllEntries && data.length > 19 && (
+			{!showAllEntries && displayTotal > 20 && (
 				<div className={`d-flex justify-content-between align-items-center mt-0`}>
 					<div className="d-flex align-items-center gap-0">
 						{[
 							{
-								action: () => goToPage(0),
+								action: () => setCurrentPage(0),
 								disabled: currentPage === 0,
 								icon: "chevron-double-left",
 								label: "First",
 							},
 							{
-								action: () => goToPage(currentPage - 1),
+								action: () => setCurrentPage(Math.max(0, currentPage - 1)),
 								disabled: currentPage === 0,
 								icon: "chevron-left",
 								label: "Previous",
 							},
 							{
-								action: () => goToPage(currentPage + 1),
+								action: () => setCurrentPage(Math.min(totalPages - 1, currentPage + 1)),
 								disabled: currentPage >= totalPages - 1,
 								icon: "chevron-right",
 								label: "Next",
 							},
 							{
-								action: () => goToPage(totalPages - 1),
+								action: () => setCurrentPage(totalPages - 1),
 								disabled: currentPage >= totalPages - 1,
 								icon: "chevron-double-right",
 								label: "Last",
@@ -686,20 +722,26 @@ export const DataTable: React.FC<GenericTableProps> = ({
 						))}
 					</div>
 					<div className="d-flex align-items-center gap-2">
+						{isServerPagination && (
+							<span
+								className={`small text-muted text-nowrap`}
+								style={compact ? { fontSize: "0.75rem" } : {}}
+							>
+								{currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalCount)} of{" "}
+								{totalCount}
+							</span>
+						)}
 						<span className={`small text-muted text-nowrap`} style={compact ? { fontSize: "0.75rem" } : {}}>
 							Page {currentPage + 1} of {totalPages || 1}
 						</span>
 						<Form.Select
 							size="sm"
 							id="page-items-select"
-							style={{
-								width: "auto",
-								padding: compact ? "0.125rem 0.25rem" : "0.25rem 0.5rem",
-								textAlign: "center",
-								fontSize: compact ? "0.75rem" : undefined,
-							}}
 							value={pageSize}
-							onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+							onChange={(e) => {
+								setPageSize(Number(e.target.value));
+								setCurrentPage(0); // Reset to first page
+							}}
 						>
 							{[20, 30, 40, 50, 100].map((size) => (
 								<option key={size} value={size}>

@@ -4,7 +4,7 @@ import React from "react";
 import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { JobData } from "../../services/Schemas";
-import { jobsApi } from "../../services/Api";
+import {jobsApi, scrapedJobApi} from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
@@ -17,7 +17,7 @@ interface JobAndApplicationProps extends DataModalProps {
 
 export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide, data, submode, size = "xl" }) => {
 	const { token } = useAuth();
-	const {
+    const {
 		companies,
 		locations,
 		keywords,
@@ -55,7 +55,6 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 	}
 
     function findExact(options: SelectOption[], name: string): string | null | undefined {
-        console.log(options, name);
         if (!name || options.length === 0) return null;
         const match: SelectOption | undefined = options.find((opt: SelectOption): boolean => opt.label.toLowerCase() === name.toLowerCase());
         return match ? match.value : null;
@@ -131,15 +130,12 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		return errors;
 	};
 
-	// const handleOnSuccess = (createdItem: any) => {
-	// 	if (!token) {
-	// 		return;
-	// 	}
-	// 	scrapedJobApi.setImported(data.id, { is_imported: true }, token);
-	// 	if (onSuccess) {
-	// 		onSuccess(createdItem);
-	// 	}
-	// };
+	const handleOnSuccess = (_createdData: any) => {
+		if (!token) {
+			return;
+		}
+		scrapedJobApi.update(data.id, {is_imported: true}, token).then(_r => {});
+	};
 
 	return (
 		<>
@@ -154,6 +150,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 				endpoint="jobs"
 				size={size}
 				validation={customValidation}
+                onSuccess={handleOnSuccess}
 			/>
 
 			{renderCompanyModal()}
