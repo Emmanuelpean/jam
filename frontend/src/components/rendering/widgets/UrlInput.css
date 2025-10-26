@@ -12,7 +12,7 @@
 .url-open-button {
     position: absolute;
     top: 50%;
-    right: 40px; /* Moved left to make room for scrape button */
+    right: 15px;
     transform: translateY(-50%);
     background: none;
     border: none;
@@ -30,39 +30,16 @@
     z-index: 1;
 }
 
-.url-scrape-button {
-    position: absolute;
-    top: 50%;
-    right: 12px; /* Positioned to the right of open button */
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #6c757d;
-    font-size: 16px;
-    padding: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-    z-index: 1;
-}
 
-.url-scrape-button:hover:not(.disabled),
 .url-open-button:hover:not(.disabled) {
     color: #495057;
     background-color: rgba(0, 0, 0, 0.05);
 }
 
-.url-scrape-button:active:not(.disabled),
 .url-open-button:active:not(.disabled) {
     background-color: rgba(0, 0, 0, 0.1);
 }
 
-.url-open-button.disabled,
 .url-scrape-button.disabled {
     color: #ced4da;
 }
