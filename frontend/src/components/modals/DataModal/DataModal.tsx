@@ -37,6 +37,7 @@ export interface GenericModalProps {
 	tabs?: TabConfig[] | null; // optional tabs configuration
 	defaultActiveTab?: string | null; // default active tab key
 	endpoint: string; // API endpoint for CRUD operations
+    onSuccess?: (data: any) => void;  // called when an entry is successfully added/modified
 }
 
 export interface ValidationErrors {
@@ -57,6 +58,7 @@ const DataModal = ({
 	endpoint,
 	validation = null,
 	transformFormData = null,
+    onSuccess = () => {},
 }: GenericModalProps) => {
 	const hasTabs = tabs && tabs.length > 0;
 
@@ -417,21 +419,24 @@ const DataModal = ({
 
 			// Submit to API
 			const apiResult =
-				mode === "add"
+				mode === "add" || "import"
 					? await dataContext.addEntity(entityType, dataToSubmit)
 					: await dataContext.updateEntity(entityType, data.id, dataToSubmit);
-
+            console.log(apiResult, endpoint, entityType);
 			if (mode === "add" || mode === "edit") {
 				handleHideImmediate();
 			} else if (mode === "import") {
-				if (entityType && apiResult.id) {
-					await dataContext.deleteEntity(entityType, apiResult.id);
-				}
+				// if (entityType && apiResult.id) {
+				// 	await dataContext.deleteEntity(entityType, apiResult.id);
+				// }
 				handleHideImmediate();
 			} else {
 				setEffectiveData(apiResult);
 				handleEditToView();
 			}
+            if (onSuccess) {
+                onSuccess(apiResult)
+            }
 		} catch (err: any) {
 			const errorMessage = `Failed to ${mode === "add" || mode === "import" ? "create" : "update"} 
         ${itemName.toLowerCase()} due to the following error: ${err.message}`;

@@ -90,6 +90,14 @@ class ScrapedJobMinOut(ScrapedJobCreate, OwnedOut):
     pass
 
 
+class PaginatedScrapedJobResponse(BaseModel):
+    items: list[ScrapedJobOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
 # ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
 
 

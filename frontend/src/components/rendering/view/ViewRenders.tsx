@@ -243,7 +243,6 @@ export const renderFunctions = {
 	salaryRange: (param: RenderParams): string | null => {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
-        console.log(param.item)
 		const salaryCurrency: string | undefined | null = currencies.find(
 			(currency: Currency) => currency.code === param.item?.salary_currency,
 		)?.symbol;

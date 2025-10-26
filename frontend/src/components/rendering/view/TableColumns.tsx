@@ -231,7 +231,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "text",
-		sortField: "company.name",
+		sortField: getCompanyText,
 		searchFields: getCompanyText,
 		render: renderFunctions.CompanyBadge,
 		...overrides,
