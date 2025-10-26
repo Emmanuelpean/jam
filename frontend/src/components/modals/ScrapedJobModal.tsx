@@ -78,7 +78,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		}),
 		[
 			formFields.scrapedCompany(companies, openCompanyModal),
-			formFields.url({ label: "Job URL", placeholder: "https://linkedin.com/jobs/453635" }),
+			formFields.url({ label: "Job URL", placeholder: "https://linkedin.com/jobs/453635", required: true }),
 		],
 		[formFields.scrapedLocation(locations, openLocationModal), formFields.attendanceType()],
 		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
