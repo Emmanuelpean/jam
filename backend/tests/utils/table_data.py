@@ -1943,6 +1943,7 @@ JOB_SCRAPED_DATA = [
         "title": "Senior Python Developer",
         "description": "We are looking for an experienced Python developer to join our team...",
         "company": "TechCorp Inc",
+        "location": "San Francisco",
         "location_city": "San Francisco",
         "salary_min": 120000.0,
         "salary_max": 160000.0,
@@ -1973,6 +1974,7 @@ JOB_SCRAPED_DATA = [
         "title": "DevOps Engineer",
         "description": "Looking for a DevOps engineer with AWS experience...",
         "company": "CloudTech Solutions",
+        "location": "New York",
         "location_city": "New York",
         "salary_min": 110000.0,
         "salary_max": 150000.0,
@@ -2029,6 +2031,7 @@ JOB_SCRAPED_DATA = [
         "title": "Senior Java Developer",
         "description": "Looking for experienced Java developer with Spring Boot expertise...",
         "company": "FinTech Innovations Ltd",
+        "location": "London, UK",
         "location_city": "London",
         "salary_min": 70000.0,
         "salary_max": 95000.0,
@@ -2045,6 +2048,7 @@ JOB_SCRAPED_DATA = [
         "description": "Join our healthcare tech team to build mobile applications...",
         "company": "HealthTech Solutions",
         "attendance_type": "remote",
+        "location": "UK",
         "location_country": "United Kingdom",
         "salary_min": 50000.0,
         "salary_max": 70000.0,
@@ -2060,6 +2064,7 @@ JOB_SCRAPED_DATA = [
         "title": "Machine Learning Engineer",
         "description": "Build cutting-edge ML solutions for AI startup...",
         "company": "InnovateTech Solutions",
+        "location": "Edinburgh, UK",
         "location_city": "Edinburgh",
         "location_country": "United Kingdom",
         "salary_min": 65000.0,
@@ -2086,6 +2091,7 @@ JOB_SCRAPED_DATA = [
         "title": "Full Stack JavaScript Developer",
         "description": "Work with modern JavaScript frameworks in agile environment...",
         "company": "StartupXYZ",
+        "location": "Manchester, UK",
         "location_city": "Manchester",
         "location_country": "United Kingdom",
         "salary_min": 55000.0,
@@ -2347,6 +2353,7 @@ for i in range(50):
         if random.random() < 0.7:
             job["location_city"] = random.choice(cities)
             job["location_country"] = "United Kingdom"
+            job["location"] = f"{job['location_city']}, UK"
 
         # 60% have attendance type specified
         if random.random() < 0.6:

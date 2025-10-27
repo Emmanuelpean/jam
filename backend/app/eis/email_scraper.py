@@ -162,6 +162,7 @@ class JobScraper(EmailService):
 
         location, attendance_type = self.location_parser.parse_location(job_data["location"])
         job_record.company = job_data["company"]
+        job_record.location = job_data["location"]
         job_record.location_postcode = location.postcode
         job_record.location_city = location.city
         job_record.location_country = location.country
@@ -187,6 +188,7 @@ class JobScraper(EmailService):
 
         columns = [
             "company",
+            "location",
             "location_city",
             "location_country",
             "location_postcode",
