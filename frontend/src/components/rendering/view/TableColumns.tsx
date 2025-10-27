@@ -400,7 +400,7 @@ export const tableColumns = {
 	}),
 
 	salaryRangeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "salary_range",
+		key: "salary_min",
 		label: "Salary",
 		sortable: true,
 		searchable: false,

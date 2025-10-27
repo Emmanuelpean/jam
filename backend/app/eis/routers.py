@@ -92,12 +92,12 @@ def get_all(
     if hasattr(models.ScrapedJob, sort_by):
         sort_column = getattr(models.ScrapedJob, sort_by)
         if sort_direction == "desc":
-            query = query.order_by(desc(sort_column))
+            query = query.order_by(desc(sort_column).nulls_last())
         else:
-            query = query.order_by(asc(sort_column))
+            query = query.order_by(asc(sort_column).nulls_last())
     else:
         # Default sorting if invalid column
-        query = query.order_by(desc(models.ScrapedJob.scrape_datetime))
+        query = query.order_by(desc(models.ScrapedJob.scrape_datetime).nulls_last())
 
     # Get total count before pagination
     total = query.count()
