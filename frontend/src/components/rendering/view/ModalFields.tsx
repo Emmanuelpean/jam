@@ -245,6 +245,7 @@ export const modalViewFields = {
 		label: "Location on Map",
 		type: "custom",
 		render: renderFunctions.scrapedLocationMap,
+		displayCondition: (item) => "location_name" in item && !!item.location_name,
 		...overrides,
 	}),
 
