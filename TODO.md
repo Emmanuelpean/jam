@@ -48,3 +48,4 @@
 * [ ] Add email confirmation when user changes email
 * [ ] Ensure that the parsed country matches the list of available countries
 * [ ] Add currency parsing
+* [ ] Fix the sidebar not expanding properly on small screens on the job page.

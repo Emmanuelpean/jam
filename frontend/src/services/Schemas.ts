@@ -226,3 +226,28 @@ export interface UserData extends OwnedOut {
 	update_limit: number;
 	default_currency: string;
 }
+
+// ---------------------------------------------------- SCRAPED JOB ----------------------------------------------------
+
+export interface ScrapedJobData extends OwnedOut {
+	external_job_id: string;
+	is_scraped: boolean;
+	is_failed: boolean;
+	scrape_error: string;
+	scrape_datetime: Date;
+	is_active: boolean;
+	is_imported: boolean;
+	title: string | null;
+	description: string | null;
+	salary_min: number | null;
+	salary_max: number | null;
+	salary_currency: string | null;
+	url: string | null;
+	deadline: Date | null;
+	company: string | null;
+	location_postcode: string | null;
+	location_city: string | null;
+	location_country: string | null;
+	attendance_type: string | null;
+	location_name: string | null;
+}

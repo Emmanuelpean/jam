@@ -81,6 +81,10 @@ html {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
+.form-select {
+    padding: 0.2rem;
+}
+
 .form-control:focus,
 .form-select:focus {
     border-color: var(--primary-mid);

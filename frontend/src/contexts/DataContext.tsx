@@ -24,6 +24,7 @@ import {
 	KeywordData,
 	LocationData,
 	PersonData,
+	ScrapedJobData,
 	SettingData,
 	UserData,
 } from "../services/Schemas";
@@ -52,7 +53,8 @@ export type JamData =
 	| InterviewData
 	| JobApplicationUpdateData
 	| UserData
-	| SettingData;
+	| SettingData
+	| ScrapedJobData;
 
 export const endpointToEntityType = (endpoint: string): EntityType | null => {
 	const mapping: Record<string, EntityType> = {
