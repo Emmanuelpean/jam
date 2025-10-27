@@ -141,13 +141,14 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 			try {
 				const params = new URLSearchParams({
-					page: currentPage.toString(), // 0-indexed
+					page: currentPage.toString(),
 					page_size: pageSize.toString(),
 					sort_by: sortConfig.key,
 					sort_direction: sortConfig.direction,
 				});
+				console.log(sortConfig);
 
-				const response = await api.get(`${endpoint}?${params.toString()}`, token);
+				const response: any = await api.get(`${endpoint}?${params.toString()}`, token);
 				setFetchedData(response.items);
 				setTotalCount(response.total);
 			} catch (error: any) {
@@ -158,7 +159,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		};
 
 		if (isServerPagination) {
-			fetchData();
+			fetchData().then((_) => null);
 		}
 	}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination]);
 

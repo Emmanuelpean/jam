@@ -121,6 +121,7 @@ class ScrapedJob(Owned, Base):
     url = Column(String, nullable=True)
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     company = Column(String, nullable=True)
+    location = Column(String, nullable=True)
     location_postcode = Column(String, nullable=True)
     location_city = Column(String, nullable=True)
     location_country = Column(String, nullable=True)
@@ -131,20 +132,6 @@ class ScrapedJob(Owned, Base):
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
-
-    @hybrid_property
-    def location_name(self) -> str:
-        """Computed property that combines city, country, and postcode into a readable location name"""
-
-        parts = []
-        if self.location_city:
-            parts.append(self.location_city)
-        if self.location_country:
-            parts.append(self.location_country)
-        if self.location_postcode:
-            parts.append(self.location_postcode)
-
-        return ", ".join(parts)
 
 
 class EisServiceLog(CommonBase, Base):

@@ -4,7 +4,7 @@ import React from "react";
 import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { JobData } from "../../services/Schemas";
-import {jobsApi, scrapedJobApi} from "../../services/Api";
+import { jobsApi, scrapedJobApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
@@ -17,17 +17,17 @@ interface JobAndApplicationProps extends DataModalProps {
 
 export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide, data, submode, size = "xl" }) => {
 	const { token } = useAuth();
-    const {
+	const {
 		companies,
 		locations,
 		keywords,
 		persons,
-        aggregators,
+		aggregators,
 		openCompanyModal,
 		openLocationModal,
 		openKeywordModal,
 		openPersonModal,
-        openAggregatorModal,
+		openAggregatorModal,
 		renderCompanyModal,
 		renderLocationModal,
 		renderKeywordModal,
@@ -40,12 +40,12 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 			city: data?.location_city,
 			country: data?.location_country,
 		}),
-        aggregators: () => ({
-            name: data?.emails?.[0]?.platform
-                ? data.emails[0].platform[0].toUpperCase() + data.emails[0].platform.slice(1)
-                : undefined
-        }),
-    });
+		aggregators: () => ({
+			name: data?.emails?.[0]?.platform
+				? data.emails[0].platform[0].toUpperCase() + data.emails[0].platform.slice(1)
+				: undefined,
+		}),
+	});
 
 	function findClosest(options: SelectOption[], name: string): string | null | undefined {
 		if (!name || options.length === 0) return null;
@@ -54,19 +54,21 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		return options[bestMatchIndex]?.value;
 	}
 
-    function findExact(options: SelectOption[], name: string): string | null | undefined {
-        if (!name || options.length === 0) return null;
-        const match: SelectOption | undefined = options.find((opt: SelectOption): boolean => opt.label.toLowerCase() === name.toLowerCase());
-        return match ? match.value : null;
-    }
+	function findExact(options: SelectOption[], name: string): string | null | undefined {
+		if (!name || options.length === 0) return null;
+		const match: SelectOption | undefined = options.find(
+			(opt: SelectOption): boolean => opt.label.toLowerCase() === name.toLowerCase(),
+		);
+		return match ? match.value : null;
+	}
 
-    const patchedData = React.useMemo(() => {
+	const patchedData = React.useMemo(() => {
 		if (!data) return data;
 		return {
 			...data,
 			company_id: data.company ? findClosest(companies, data.company) : data.company_id,
-			location_id: data.location_name ? findClosest(locations, data.location_name) : data.location_id,
-            aggregator_id: data.emails[0].platform ? findExact(aggregators, data.emails[0].platform ) : data.location_id,
+			location_id: data.location ? findClosest(locations, data.location) : data.location_id,
+			aggregator_id: data.emails[0].platform ? findExact(aggregators, data.emails[0].platform) : data.location_id,
 		};
 	}, [data, companies, locations]);
 
@@ -103,7 +105,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 			personal_rating: jobData.personal_rating || null,
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
-            source_id: jobData.source_id || null,
+			source_id: jobData.source_id || null,
 			deadline: jobData.deadline ? jobData.deadline + "T23:59:59" : null,
 			keywords: jobData.keywords || [],
 			contacts: jobData.contacts || [],
@@ -134,7 +136,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		if (!token) {
 			return;
 		}
-		scrapedJobApi.update(data.id, {is_imported: true}, token).then(_r => {});
+		scrapedJobApi.update(data.id, { is_imported: true }, token).then((_r) => {});
 	};
 
 	return (
@@ -150,7 +152,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 				endpoint="jobs"
 				size={size}
 				validation={customValidation}
-                onSuccess={handleOnSuccess}
+				onSuccess={handleOnSuccess}
 			/>
 
 			{renderCompanyModal()}

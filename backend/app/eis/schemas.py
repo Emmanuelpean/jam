@@ -64,7 +64,7 @@ class ScrapedJobCreate(BaseModel):
     url: str | None = None
     deadline: datetime | None = None
     attendance_type: str | None = None
-    location_name: str | None = None
+    location: str | None = None
     location_city: str | None = None
     location_postcode: str | None = None
     location_country: str | None = None
