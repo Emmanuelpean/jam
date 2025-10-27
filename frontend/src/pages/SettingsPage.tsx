@@ -5,11 +5,11 @@ import { SettingModal } from "../components/modals/SettingModal";
 
 const SettingsPage = () => {
 	const columns = [
-		tableColumns.name(),
-		tableColumns.value(),
-		tableColumns.description(),
-		tableColumns.isActive(),
-		tableColumns.createdAt(),
+		tableColumns.nameColumn(),
+		tableColumns.valueColumn(),
+		tableColumns.descriptionColumn(),
+		tableColumns.isActiveColumn(),
+		tableColumns.createdAtColumn(),
 	];
 
 	return (

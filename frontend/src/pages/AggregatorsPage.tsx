@@ -5,11 +5,11 @@ import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const AggregatorsPage = () => {
 	const columns = [
-		tableColumns.name(),
-		tableColumns.url(),
-		tableColumns.jobCountAggregator(),
-		tableColumns.jobApplicationCountAggregator(),
-		tableColumns.createdAt(),
+		tableColumns.nameColumn(),
+		tableColumns.urlColumn(),
+		tableColumns.jobCountAggregatorColumn(),
+		tableColumns.jobApplicationCountAggregatorColumn(),
+		tableColumns.createdAtColumn(),
 	];
 
 	return (

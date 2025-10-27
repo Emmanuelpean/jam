@@ -26,10 +26,10 @@ export const CompanyModal: React.FC<DataModalProps> = ({ show, onHide, data, sub
 	const additionalFields = [
 		modalViewFields.accordionJobTableCompany({
 			columns: [
-				tableColumns.title!(),
-				tableColumns.location!(),
-				tableColumns.applicationStatus!(),
-				tableColumns.createdAt!(),
+				tableColumns.titleColumn(),
+				tableColumns.locationBadgeColumn(),
+				tableColumns.applicationStatusColumn(),
+				tableColumns.createdAtColumn(),
 			],
 			helpText: "List of jobs from this company.",
 		}),

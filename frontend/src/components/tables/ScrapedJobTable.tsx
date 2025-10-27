@@ -8,13 +8,13 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 		columns.length > 0
 			? columns
 			: [
-					tableColumns.title(),
-					tableColumns.scrapedCompany(),
-					tableColumns.scrapedLocation(),
-					tableColumns.salaryRange(),
-					tableColumns.description(),
-					tableColumns.urlGeneric(),
-					tableColumns.createdAt({ label: "Date Received" }),
+					tableColumns.titleColumn(),
+					tableColumns.scrapedCompanyColumn(),
+					tableColumns.scrapedLocationColumn(),
+					tableColumns.salaryRangeColumn(),
+					tableColumns.descriptionColumn(),
+					tableColumns.urlGenericColumn(),
+					tableColumns.createdAtColumn({ label: "Date Received" }),
 				];
 
 	return (

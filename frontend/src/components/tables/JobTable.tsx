@@ -8,10 +8,10 @@ const JobsTable: React.FC<DataTableProps> = ({ data = [], columns = [] }) => {
 		columns.length > 0
 			? columns
 			: [
-					tableColumns.title(),
-					tableColumns.companyBadge(),
-					tableColumns.applicationStatus(),
-					tableColumns.createdAt(),
+					tableColumns.titleColumn(),
+					tableColumns.companyBadgeColumn(),
+					tableColumns.applicationStatusColumn(),
+					tableColumns.createdAtColumn(),
 				];
 
 	return (

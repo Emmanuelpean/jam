@@ -13,7 +13,12 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({ jobId, data = [], col
 	const defaultColumns =
 		columns.length > 0
 			? columns
-			: [tableColumns.date(), tableColumns.type(), tableColumns.location(), tableColumns.note()];
+			: [
+					tableColumns.dateColumn(),
+					tableColumns.typeColumn(),
+					tableColumns.locationBadgeColumn(),
+					tableColumns.noteColumn(),
+				];
 
 	const ModalWithProps: React.FC<DataModalProps> = (props: InterviewModalProps) => (
 		<InterviewModal {...props} jobId={jobId} />

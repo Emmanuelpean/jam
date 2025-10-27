@@ -4,7 +4,7 @@ import { KeywordModal } from "../components/modals/KeywordModal";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const KeywordsPage = () => {
-	const columns = [tableColumns.name(), tableColumns.jobCountKeyword(), tableColumns.createdAt()];
+	const columns = [tableColumns.nameColumn(), tableColumns.jobCountKeywordColumn(), tableColumns.createdAtColumn()];
 
 	return (
 		<DataTable

@@ -5,13 +5,13 @@ import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const PersonsPage = () => {
 	const columns = [
-		tableColumns.personName(),
-		tableColumns.companyBadge(),
-		tableColumns.role(),
-		tableColumns.email(),
-		tableColumns.phone(),
-		tableColumns.linkedinUrl(),
-		tableColumns.createdAt(),
+		tableColumns.personNameColumn(),
+		tableColumns.companyBadgeColumn(),
+		tableColumns.roleColumn(),
+		tableColumns.emailColumn(),
+		tableColumns.phoneColumn(),
+		tableColumns.linkedinUrlColumn(),
+		tableColumns.createdAtColumn(),
 	];
 
 	return (

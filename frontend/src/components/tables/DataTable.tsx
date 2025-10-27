@@ -1,7 +1,7 @@
 import React, { MouseEvent, ReactNode, useCallback, useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { EntityType, useDataContext } from "../../contexts/DataContext";
+import { EntityType, JamData, useDataContext } from "../../contexts/DataContext";
 import { api } from "../../services/Api";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
@@ -178,7 +178,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		}
 	}, [loadError, itemType, showToastError]);
 
-	const data: any[] = getData();
+	const data: JamData[] = getData();
 	const { error: contextError } = dataContext;
 
 	// CRUD operations using context methods
@@ -217,28 +217,24 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	);
 
 	// Data processing
-	const getSortedData = (): any[] => {
-		let filteredData = [...data];
-		const searchTermLower = searchTerm.toLowerCase();
+	const getSortedData = (): JamData[] => {
+		let filteredData: JamData[] = [...data];
+		const searchTermLower: string = searchTerm.toLowerCase();
 
 		// Filter by search term
-		if (searchTermLower && columns.some((col: TableColumn) => col.searchable)) {
-			filteredData = filteredData.filter((item: any): boolean => {
-				return columns.some((column: TableColumn): boolean => {
+		if (searchTermLower && columns.some((col: TableColumn): boolean | undefined => col.searchable)) {
+			filteredData = filteredData.filter((item: JamData): boolean => {
+				return columns.some((column: TableColumn): boolean | undefined => {
 					if (!column.searchable) return false;
-					let value: string;
+					let value: string | null | Date | number;
 					if (column.searchFields) {
 						if (typeof column.searchFields === "function") {
 							value = column.searchFields(item, dataContext);
 						} else {
-							const fields: string[] = toList(column.searchFields);
-							value = fields
-								.map((field: string): any => accessAttribute(item, field))
-								.filter((val: any): boolean => val != null)
-								.join(" ");
+							value = accessAttribute(item, column.searchFields);
 						}
 					} else {
-						value = item[column.key];
+						value = item[column.key as keyof JamData];
 					}
 					return value?.toString().toLowerCase().includes(searchTermLower);
 				});
@@ -257,20 +253,12 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				if (typeof column.sortField === "function") {
 					aValue = column.sortField(a, dataContext);
 					bValue = column.sortField(b, dataContext);
-					// console.log(aValue, bValue);
-				} else if (typeof column.sortField === "string" || Array.isArray(column.sortField)) {
-					const sortFields: string[] = toList(column.sortField);
-					aValue = sortFields
-						.map((field: string) => accessAttribute(a, field))
-						.reduce((acc, val) => acc + (val ?? ""), "");
-					bValue = sortFields
-						.map((field: string) => accessAttribute(b, field))
-						.reduce((acc, val) => acc + (val ?? ""), "");
-					console.log(aValue, bValue);
+				} else if (typeof column.sortField === "string") {
+					aValue = a[column.sortField];
+					bValue = b[column.sortField];
 				} else {
 					aValue = a[column.key];
 					bValue = b[column.key];
-					// console.log(aValue, bValue);
 				}
 
 				if (aValue == null && bValue == null) return 0;
