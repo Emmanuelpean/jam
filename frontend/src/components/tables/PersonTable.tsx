@@ -8,11 +8,11 @@ const PersonTable: React.FC<DataTableProps> = ({ data = [], columns = [] }) => {
 		columns.length > 0
 			? columns
 			: [
-					tableColumns.personName(),
-					tableColumns.role(),
-					tableColumns.email(),
-					tableColumns.phone(),
-					tableColumns.linkedinUrl(),
+					tableColumns.personNameColumn(),
+					tableColumns.roleColumn(),
+					tableColumns.emailColumn(),
+					tableColumns.phoneColumn(),
+					tableColumns.linkedinUrlColumn(),
 				];
 
 	return (

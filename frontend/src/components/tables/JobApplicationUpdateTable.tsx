@@ -9,7 +9,9 @@ interface JobApplicationUpdatesTableProps extends DataTableProps {
 
 const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({ jobId, data = [], columns = [] }) => {
 	const defaultColumns =
-		columns.length > 0 ? columns : [tableColumns.date(), tableColumns.updateType(), tableColumns.note()];
+		columns.length > 0
+			? columns
+			: [tableColumns.dateColumn(), tableColumns.updateTypeColumn(), tableColumns.noteColumn()];
 
 	const ModalWithProps = (props: JobApplicationUpdateModalProps) => (
 		<JobApplicationUpdateModal {...props} jobId={jobId} />

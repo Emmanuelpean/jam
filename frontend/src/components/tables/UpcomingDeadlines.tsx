@@ -16,10 +16,10 @@ const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], columns =
 		columns.length > 0
 			? columns
 			: [
-					tableColumns.title(),
-					tableColumns.companyBadge(),
-					tableColumns.location(),
-					tableColumns.daysUntilDeadline(),
+					tableColumns.titleColumn(),
+					tableColumns.companyBadgeColumn(),
+					tableColumns.locationBadgeColumn(),
+					tableColumns.daysUntilDeadlineColumn(),
 				];
 
 	if (windowWidth < 1300) {

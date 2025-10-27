@@ -42,6 +42,18 @@ export type EntityType =
 	| "users"
 	| "scrapedJobs";
 
+export type JamData =
+	| KeywordData
+	| LocationData
+	| AggregatorData
+	| PersonData
+	| CompanyData
+	| EnrichedJobData
+	| InterviewData
+	| JobApplicationUpdateData
+	| UserData
+	| SettingData;
+
 export const endpointToEntityType = (endpoint: string): EntityType | null => {
 	const mapping: Record<string, EntityType> = {
 		jobs: "jobs",

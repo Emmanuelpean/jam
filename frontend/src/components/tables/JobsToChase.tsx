@@ -17,11 +17,11 @@ const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], columns = [], me
 		columns.length > 0
 			? columns
 			: [
-					tableColumns.title(),
-					tableColumns.companyBadge(),
-					tableColumns.location(),
-					tableColumns.daysSinceLastUpdate(),
-					tableColumns.lastUpdateType(),
+					tableColumns.titleColumn(),
+					tableColumns.companyBadgeColumn(),
+					tableColumns.locationBadgeColumn(),
+					tableColumns.daysSinceLastUpdateColumn(),
+					tableColumns.lastUpdateTypeColumn(),
 				];
 
 	if (windowWidth < 1300) {

@@ -1,7 +1,7 @@
 interface BaseOut {
 	id: number;
-	created_at: string;
-	modified_at: string;
+	created_at: Date;
+	modified_at: Date;
 }
 
 export interface OwnedOut extends BaseOut {
@@ -220,7 +220,7 @@ export interface UserData extends OwnedOut {
 	is_active: boolean;
 	toast_active: boolean;
 	theme: string;
-	last_login: string | null;
+	last_login: Date | null;
 	chase_threshold: number;
 	deadline_threshold: number;
 	update_limit: number;

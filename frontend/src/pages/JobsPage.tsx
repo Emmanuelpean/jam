@@ -5,14 +5,14 @@ import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const JobsPage = () => {
 	const columns = [
-		tableColumns.title(),
-		tableColumns.companyBadge(),
-		tableColumns.location(),
-		tableColumns.urlGeneric(),
-		tableColumns.salaryRange(),
-		tableColumns.personalRating(),
-		tableColumns.applicationStatus(),
-		tableColumns.createdAt(),
+		tableColumns.titleColumn(),
+		tableColumns.companyBadgeColumn(),
+		tableColumns.locationBadgeColumn(),
+		tableColumns.urlGenericColumn(),
+		tableColumns.salaryRangeColumn(),
+		tableColumns.personalRatingColumn(),
+		tableColumns.applicationStatusColumn(),
+		tableColumns.createdAtColumn(),
 	];
 
 	return (
