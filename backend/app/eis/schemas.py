@@ -49,6 +49,7 @@ class ScrapedJobCreate(BaseModel):
     """Scraped Job create schema"""
 
     external_job_id: str
+    platform: str
     is_scraped: bool = False
     is_failed: bool = False
     scrape_error: str | None = None

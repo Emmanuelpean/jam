@@ -320,6 +320,14 @@ export const renderFunctions = {
 		}
 	},
 
+	capitalise: (param: RenderParams, key: string): ReactNode => {
+		const text: string | undefined | null = param.item?.[key];
+		if (text) {
+			return text.charAt(0).toUpperCase() + text.slice(1);
+		}
+		return null;
+	},
+
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
 
 	_interviewCount: (param: RenderParams, key: keyof InterviewData): number => {

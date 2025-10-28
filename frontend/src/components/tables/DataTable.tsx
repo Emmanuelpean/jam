@@ -5,7 +5,7 @@ import { EntityType, JamData, useDataContext } from "../../contexts/DataContext"
 import { api } from "../../services/Api";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
-import { accessAttribute, toList } from "../../utils/Utils";
+import { accessAttribute } from "../../utils/Utils";
 import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";
 import useGenericAlert from "../../hooks/useGenericAlert";
@@ -134,30 +134,30 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		closeImportModal,
 	} = useModalState();
 
+	const fetchData = async () => {
+		setIsLoading(true);
+		setLoadError(null);
+
+		try {
+			const params = new URLSearchParams({
+				page: currentPage.toString(),
+				page_size: pageSize.toString(),
+				sort_by: sortConfig.key,
+				sort_direction: sortConfig.direction,
+			});
+			console.log(sortConfig);
+
+			const response: any = await api.get(`${endpoint}?${params.toString()}`, token);
+			setFetchedData(response.items);
+			setTotalCount(response.total);
+		} catch (error: any) {
+			setLoadError(error.message || "Failed to load data");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
 	useEffect(() => {
-		const fetchData = async () => {
-			setIsLoading(true);
-			setLoadError(null);
-
-			try {
-				const params = new URLSearchParams({
-					page: currentPage.toString(),
-					page_size: pageSize.toString(),
-					sort_by: sortConfig.key,
-					sort_direction: sortConfig.direction,
-				});
-				console.log(sortConfig);
-
-				const response: any = await api.get(`${endpoint}?${params.toString()}`, token);
-				setFetchedData(response.items);
-				setTotalCount(response.total);
-			} catch (error: any) {
-				setLoadError(error.message || "Failed to load data");
-			} finally {
-				setIsLoading(false);
-			}
-		};
-
 		if (isServerPagination) {
 			fetchData().then((_) => null);
 		}
@@ -349,6 +349,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const handleImportSuccess = (importedItem: any): void => {
 		onImportSuccess?.(importedItem);
 		removeItem?.(importedItem.id);
+		fetchData().then((data) => {});
 		closeImportModal();
 	};
 
@@ -402,12 +403,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	}
 
 	useEffect(() => setCurrentPage(0), [searchTerm]);
-
-	const goToPage = (page: number): void => setCurrentPage(Math.max(0, Math.min(totalPages - 1, page)));
-	const handlePageSizeChange = (newPageSize: number): void => {
-		setPageSize(newPageSize);
-		setCurrentPage(0);
-	};
 
 	const handleSnoozeItem = (weeks: number) => {
 		return async (item: any) => {

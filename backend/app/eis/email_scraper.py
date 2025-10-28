@@ -133,7 +133,7 @@ class JobScraper(EmailService):
 
             if not existing_entry:
                 # Create new job record
-                new_job = ScrapedJob(external_job_id=job_id, owner_id=email_record.owner_id)  # noqa
+                new_job = ScrapedJob(external_job_id=job_id, platform=email_record.platform, owner_id=email_record.owner_id)  # noqa
                 new_job.emails.append(email_record)
                 self.db.add(new_job)
                 job_records.append(new_job)
@@ -188,6 +188,8 @@ class JobScraper(EmailService):
 
         columns = [
             "company",
+            "salary_currency",
+            "platform",
             "location",
             "location_city",
             "location_country",

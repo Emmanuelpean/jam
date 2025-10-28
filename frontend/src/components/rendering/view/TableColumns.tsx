@@ -232,6 +232,16 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	platformColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "platform",
+		label: "Platform",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: (params: RenderParams) => renderFunctions.capitalise(params, "platform"),
+		...overrides,
+	}),
+
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
 	urlColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
