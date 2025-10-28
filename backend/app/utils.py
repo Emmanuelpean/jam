@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import bcrypt
+from pydantic import EmailStr
 
 
 def hash_password(password: str) -> str:
@@ -33,6 +34,14 @@ def hash_token(token: str) -> str:
     :return: hashed token"""
 
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+def clean_email(email: EmailStr | str) -> str:
+    """Normalise the email address by stripping whitespace and converting to lowercase.
+    :param email: The email address to be cleaned
+    :return: Cleaned email address"""
+
+    return str(email).strip().lower()
 
 
 class AppLogger:
