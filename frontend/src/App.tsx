@@ -1,4 +1,4 @@
-import React, { createContext, JSX, ReactNode } from "react";
+import React, { createContext, JSX, ReactNode, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
@@ -26,6 +26,15 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import "./Themes.css";
 
+export function useSwetrixPageViews() {
+	const location = useLocation();
+
+	useEffect(() => {
+		//@ts-ignore
+		window.swetrix?.trackViews();
+	}, [location]);
+}
+
 export const ToastContext = createContext<UseToastReturn | undefined>(undefined);
 
 interface AppLayoutProps {
@@ -41,6 +50,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const { isLoading, loadingMessage, progress } = useLoading();
 	const location = useLocation();
 	const { currentUser } = useAuth();
+	useSwetrixPageViews();
 
 	const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
 
