@@ -75,6 +75,7 @@ class ScrapedJob(Owned, Base):
     Attributes:
     -----------
     - `external_job_id` (str): Unique identifier for the job posting.
+    - `platform` (str): Platform from which the job was scraped (LinkedIn, Indeed, etc.).
     - `is_scraped` (bool): Indicates whether the job has been scraped.
     - `is_failed` (bool): Indicates whether the job scraping failed.
     - `scrape_error` (str, optional): Error message if the job scraping failed.
@@ -105,6 +106,7 @@ class ScrapedJob(Owned, Base):
     - Unique constraint on the combination of `external_job_id` and `owner_id` to ensure uniqueness per user."""
 
     external_job_id = Column(String, nullable=False)
+    platform = Column(String, nullable=False)
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
     is_failed = Column(Boolean, nullable=False, server_default=expression.false())
     scrape_error = Column(String, nullable=True)

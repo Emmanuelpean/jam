@@ -19,13 +19,13 @@ from sqlalchemy import (
     Table,
     func,
     UniqueConstraint,
+    Index,
 )
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.config import settings
 from app.database import Base
 
 # ------------------------------------------------------ MAPPINGS ------------------------------------------------------
@@ -168,9 +168,7 @@ class User(CommonBase, Base):
     password_reset_token = Column(String, nullable=True, unique=True)
     password_reset_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
-    __table_args__ = (
-        CheckConstraint(f"length(password) >= {settings.min_password_length}", name="minimum_password_length"),
-    )
+    __table_args__ = (Index("ix_user_email_lower", func.lower(email), unique=True),)
 
 
 # -------------------------------------------------------- DATA --------------------------------------------------------

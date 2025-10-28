@@ -14,6 +14,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 					tableColumns.salaryRangeColumn(),
 					tableColumns.descriptionColumn(),
 					tableColumns.urlGenericColumn(),
+					tableColumns.platformColumn(),
 					tableColumns.createdAtColumn({ label: "Date Received" }),
 				];
 

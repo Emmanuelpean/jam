@@ -16,7 +16,7 @@ DATE_FORMAT = "%Y-%m-%d"
 
 USER_DATA = [
     {
-        "email": "test_user@test.com",
+        "email": "Test_user@test.com",
         "password": "test_password",
         "toast_active": True,
         "is_verified": True,
@@ -1937,6 +1937,7 @@ JOB_ALERT_EMAIL_DATA = [
 JOB_SCRAPED_DATA = [
     {
         "external_job_id": "3789012345",
+        "platform": "linkedin",
         "owner_id": 1,
         "is_scraped": True,
         "is_failed": False,
@@ -1953,6 +1954,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "987654321",
+        "platform": "indeed",
         "owner_id": 1,
         "is_scraped": True,
         "is_failed": False,
@@ -1968,6 +1970,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "1122334455",
+        "platform": "linkedin",
         "owner_id": 1,
         "is_scraped": True,
         "is_failed": False,
@@ -1984,6 +1987,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "5566778899",
+        "platform": "indeed",
         "owner_id": 1,
         "is_scraped": True,
         "is_failed": False,
@@ -1994,6 +1998,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "1357924680",
+        "platform": "linkedin",
         "owner_id": 1,
         "is_scraped": True,
         "is_failed": False,
@@ -2003,6 +2008,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "2468135790",
+        "platform": "indeed",
         "owner_id": 1,
         "is_scraped": True,
         "is_failed": True,
@@ -2014,6 +2020,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "9988776655",
+        "platform": "indeed",
         "owner_id": 1,
         "is_scraped": True,
         "is_failed": True,
@@ -2025,6 +2032,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "4123456789",
+        "platform": "linkedin",
         "owner_id": 2,
         "is_scraped": True,
         "is_failed": False,
@@ -2041,6 +2049,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "totaljobs_567890",
+        "platform": "totaljobs",
         "owner_id": 2,
         "is_scraped": True,
         "is_failed": False,
@@ -2058,6 +2067,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "reed_345678",
+        "platform": "reed",
         "owner_id": 2,
         "is_scraped": True,
         "is_failed": False,
@@ -2075,6 +2085,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "cvlib_678901",
+        "platform": "cv-library",
         "owner_id": 2,
         "is_scraped": True,
         "is_failed": True,
@@ -2085,6 +2096,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "jobsite_901234",
+        "platform": "jobsite",
         "owner_id": 2,
         "is_scraped": True,
         "is_failed": False,
@@ -2102,6 +2114,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "soft123456789",
+        "platform": "indeed",
         "owner_id": 2,
         "is_scraped": True,
         "is_failed": True,
@@ -2112,6 +2125,7 @@ JOB_SCRAPED_DATA = [
     },
     {
         "external_job_id": "soft1sdf23456789",
+        "platform": "indeed",
         "owner_id": 1,
         "is_scraped": False,
         "url": "test",
@@ -2331,6 +2345,7 @@ for i in range(50):
 
     job = {
         "external_job_id": external_id,
+        "platform": "linkedin",
         "owner_id": owner_id,
         "is_scraped": is_scraped,
         "is_failed": is_failed,

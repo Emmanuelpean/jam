@@ -63,7 +63,7 @@ def login(
     :raises HTTPException with a 429 status code if verification email rate limit is exceeded"""
 
     # Find the user in the list based on the email provided
-    user = db.query(models.User).filter(user_credentials.username == models.User.email).first()
+    user = db.query(models.User).filter(user_credentials.username.lower() == models.User.email).first()
 
     # Check that the user exist and verify the password
     if user is None or not utils.verify_password(user_credentials.password, user.password):
