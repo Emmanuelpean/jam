@@ -90,6 +90,25 @@ class TestLogin:
         assert login_response.token_type == "bearer"
         assert response.status_code == 200
 
+    def test_login_user_different_case(self, test_users, client) -> None:
+        """Test successful login for an existing user."""
+
+        user_data = {
+            "username": test_users[0].email.upper(),
+            "password": test_users[0].password,
+        }
+        response = client.post("/login", data=user_data)
+        assert response.status_code == 200
+        login_response = schemas.Token(**response.json())
+        payload = jwt.decode(
+            login_response.access_token,
+            settings.secret_key,
+            algorithms=[settings.algorithm],
+        )
+        user_id = payload.get("user_id")
+        assert user_id == test_users[0].id
+        assert login_response.token_type == "bearer"
+
     def test_login_inactive_user(self, test_users, client) -> None:
         """Test login attempt for an inactive user."""
 
@@ -172,11 +191,11 @@ class TestSendVerificationWithRateLimit:
 class TestRegister:
 
     @patch("app.routers.auth.email_service.send_verification_email")
-    def test_register_user(self, mock_email, client) -> None:
+    def test_register_user(self, mock_email, client, session) -> None:
         """Test successful registration of a new user."""
 
         user_data = {
-            "email": "test_user@test.com",
+            "email": "Test_user@test.com",
             "password": "testpassword",
         }
         response = client.post("/register", json=user_data)
@@ -184,9 +203,30 @@ class TestRegister:
         assert response.status_code == 201
         assert mock_email.call_count == 1
         call_args = mock_email.call_args[0]
-        assert call_args[0] == user_data["email"]
+        assert call_args[0] == user_data["email"].lower()
+        user = session.query(models.User).first()
+        assert user.email == user_data["email"].lower()
 
     def test_register_user_exist(self, client, test_users) -> None:
+        """Test registration attempt with already verified email."""
+
+        # Incorrect password
+        user_data = {
+            "email": test_users[0].email,
+            "password": test_users[0].password + "123",
+        }
+        response = client.post("/register", json=user_data)
+        assert response.status_code == 400
+
+        # Correct password
+        user_data = {
+            "email": test_users[0].email,
+            "password": test_users[0].password,
+        }
+        response = client.post("/register", json=user_data)
+        assert response.status_code == 400
+
+    def test_register_user_exist_different_case(self, client, test_users) -> None:
         """Test registration attempt with already verified email."""
 
         # Incorrect password
@@ -346,6 +386,19 @@ class TestRequestPasswordReset:
         assert mock_email.call_count == 1
 
     @patch("app.routers.auth.email_service.send_password_reset_email")
+    def test_request_password_reset_different_case(self, mock_email, client, test_users) -> None:
+        """Test successful password reset request."""
+
+        user_data = {
+            "email": test_users[0].email.upper(),
+        }
+        response = client.post("/password/forgot", json=user_data)
+
+        assert response.status_code == 200
+        assert response.json()["message"].lower() == "password reset email sent successfully"
+        assert mock_email.call_count == 1
+
+    @patch("app.routers.auth.email_service.send_password_reset_email")
     def test_request_password_reset_rate_limit(self, mock_email, client, test_users, session) -> None:
         """Test rate limiting on password reset requests."""
 
@@ -378,6 +431,16 @@ class TestRequestPasswordReset:
 
         assert response.status_code == 401
         assert response.json()["detail"] == "User account is not active."
+
+    def test_request_password_reset_no_email(self, client, test_users) -> None:
+        """Test password reset request for inactive user."""
+
+        user_data = {
+            "email": "",
+        }
+        response = client.post("/password/forgot", json=user_data)
+
+        assert response.status_code == 422
 
 
 class TestResetPassword:
