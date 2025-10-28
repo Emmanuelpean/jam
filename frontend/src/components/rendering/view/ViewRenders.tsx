@@ -84,7 +84,7 @@ export const renderFunctions = {
 		const text: string | undefined | null = param.item?.[key];
 		if (text) {
 			if (param.view) {
-				return text;
+				return <p style={{ whiteSpace: "pre-line" }}>{text}</p>;
 			} else {
 				const words = text.split(" ");
 				const truncated = words.slice(0, 12).join(" ");
@@ -243,7 +243,6 @@ export const renderFunctions = {
 	salaryRange: (param: RenderParams): string | null => {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
-		const dataContext = param.dataContext;
 		const salaryCurrency: string | undefined | null = currencies.find(
 			(currency: Currency) => currency.code === param.item?.salary_currency,
 		)?.symbol;
