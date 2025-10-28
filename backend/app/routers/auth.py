@@ -62,8 +62,10 @@ def login(
     :raises HTTPException with a 401 status code if the user is not active or not verified
     :raises HTTPException with a 429 status code if verification email rate limit is exceeded"""
 
+    user_email = utils.clean_email(user_credentials.username)
+
     # Find the user in the list based on the email provided
-    user = db.query(models.User).filter(user_credentials.username == models.User.email).first()
+    user = db.query(models.User).filter(models.User.email == user_email).first()
 
     # Check that the user exist and verify the password
     if user is None or not utils.verify_password(user_credentials.password, user.password):
@@ -163,9 +165,9 @@ def create_user(
     :raises HTTPException with a 401 status code if the user is not allowed to sign up"""
 
     # Check the user can be created
-    setting = db.query(models.Setting).filter(models.Setting.name == "allowlist").first()
-    if setting and setting.is_active:
-        emails_allowed = [email.strip().lower() for email in setting.value.split(",")]
+    setting = db.query(models.Setting).filter(models.Setting.name == "allowlist", models.Setting.is_active).first()
+    if setting:
+        emails_allowed = [utils.clean_email(email) for email in setting.value.split(",")]
         if user.email not in emails_allowed:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
