@@ -141,8 +141,32 @@ def test_unverified_token_user(session) -> models.User:
                 password="password",
                 is_verified=False,
                 is_active=True,
-                verification_token=hashed_token,  # Store hashed version
+                verification_token=hashed_token,
                 verification_token_created_at=dt.datetime.now(),
+            )
+        ],
+    )[0]
+    user.plain_verification_token = plain_token
+    return user
+
+
+@pytest.fixture
+def test_user_change_email_token_user(session) -> models.User:
+    """Fixture to create a user with a change email token."""
+
+    plain_token = "changeemailtoken"
+    hashed_token = hash_token(plain_token)
+    user = create_users(
+        session,
+        [
+            dict(
+                email="test_user@test.com",
+                password="password",
+                is_verified=True,
+                is_active=True,
+                pending_email="newemail@test.com",
+                email_change_token=hashed_token,
+                email_change_token_created_at=dt.datetime.now(),
             )
         ],
     )[0]

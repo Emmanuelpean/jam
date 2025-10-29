@@ -36,6 +36,12 @@ class EmailService(object):
         current_dir = Path(__file__).parent
         self.templates = Jinja2Templates(directory=str(current_dir / "templates"))
 
+    @property
+    def current_datetime(self) -> str:
+        """Get the current date and time formatted as a string."""
+
+        return datetime.now().strftime("%B %d, %Y at %I:%M %p UTC")
+
     def send_email(
         self,
         recipient: str,
@@ -77,9 +83,29 @@ class EmailService(object):
         recipient: str,
         verification_url: str,
     ) -> None:
-        """Send a verification email to the specified recipient."""
+        """Send a verification email to the specified recipient.
+        :param recipient: The recipient's email address.
+        :param verification_url: The email verification URL."""
 
         template = self.templates.env.get_template("email_confirmation.html")
+        html_content = template.render(
+            name="there",
+            confirmation_url=verification_url,
+            token_expiry_min=settings.verification_token_expiration_minutes,
+        )
+
+        self.send_email(recipient, "Please verify your email", html_content, settings.support_email)
+
+    def send_email_change_verification(
+        self,
+        recipient: str,
+        verification_url: str,
+    ) -> None:
+        """Send an email change verification email to the specified recipient.
+        :param recipient: The recipient's email address.
+        :param verification_url: The email change verification URL."""
+
+        template = self.templates.env.get_template("email_change.html")
         html_content = template.render(
             name="there",
             confirmation_url=verification_url,
@@ -93,7 +119,9 @@ class EmailService(object):
         recipient: str,
         reset_url: str,
     ) -> None:
-        """Send a password reset email to the specified recipient."""
+        """Send a password reset email to the specified recipient.
+        :param recipient: The recipient's email address.
+        :param reset_url: The password reset URL."""
 
         template = self.templates.env.get_template("password_reset.html")
         html_content = template.render(
@@ -106,14 +134,26 @@ class EmailService(object):
         self,
         recipient: str,
     ) -> None:
-        """Send an email to the specified recipient mentioning that the password was changed."""
-
-        change_date = datetime.now().strftime("%B %d, %Y at %I:%M %p UTC")
+        """Send an email to the specified recipient mentioning that the password was changed.
+        :param recipient: The recipient's email address."""
 
         template = self.templates.env.get_template("password_changed.html")
-        html_content = template.render(change_date=change_date, support_email=settings.support_email)
+        html_content = template.render(change_date=self.current_datetime, support_email=settings.support_email)
 
         subject = "Your JAM Password Has Been Changed"
+        self.send_email(recipient, subject, html_content, settings.support_email)
+
+    def send_email_change_notification(
+        self,
+        recipient: str,
+    ) -> None:
+        """Send an email to the specified recipient mentioning that the email was changed.
+        :param recipient: The recipient's email address."""
+
+        template = self.templates.env.get_template("email_changed.html")
+        html_content = template.render(change_date=self.current_datetime, support_email=settings.support_email)
+
+        subject = "Your JAM Email Address Has Been Changed"
         self.send_email(recipient, subject, html_content, settings.support_email)
 
     @staticmethod
@@ -319,15 +359,3 @@ class EmailService(object):
 
 
 email_service = EmailService()
-# # send_email = email_service.send_email("emmanuel.pean@gmail.com", "test", "test body", "jam.info@emmanuelpean.me")
-#
-# # Get multiple emails at once
-# emails = email_service.get_emails(
-#     timedelta_days=1,
-#     limit=5,
-#     recipient_email="jam.jobscraper@emmanuelpean.me",
-#     inbox_only=True,
-#     sender_email="emmanuelpean@gmail.com",
-# )
-# for email in emails:
-#     print(email)

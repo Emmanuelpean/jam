@@ -1,10 +1,15 @@
 """User route"""
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app import utils, models, oauth2, database, schemas
+from app.config import settings
+from app.emails.email_service import email_service
 from app.routers import generate_data_table_crud_router
+from app.routers.auth import check_token_expiration, get_retry_remaining_seconds, generate_token
 
 
 # -------------------------------------------------------- USERS -------------------------------------------------------
@@ -39,51 +44,167 @@ current_user_router = APIRouter(prefix="/current_user", tags=["current_user"])
 
 
 @current_user_router.get("/", response_model=schemas.UserOut)
-def get_current_user_profile(current_user: models.User = Depends(oauth2.get_current_user)):
+def get_current_user_profile(
+    current_user: models.User = Depends(oauth2.get_current_user),
+) -> models.User:
     """Get the current user's profile.
-    :param current_user: The current authenticated user."""
+    :param current_user: The current authenticated user.
+    :returns: The current user."""
 
     return current_user
 
 
-@current_user_router.put("/", response_model=schemas.UserOut)
+def send_email_change_with_rate_limit(
+    user: models.User,
+    db: Session,
+    email: str,
+) -> dict[str, bool | str | int | None]:
+    """Send email change email with rate limiting.
+    :param user: user entry
+    :param db: database session
+    :param email: new email address
+    :return: dictionary with success status, message and error code"""
+
+    # Check if enough time has passed since last email
+    seconds_remaining = get_retry_remaining_seconds(user.email_change_token_created_at)
+    if seconds_remaining > 0:
+        return {
+            "success": False,
+            "message": f"Please wait {seconds_remaining} seconds before requesting another verification email",
+            "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
+        }
+
+    # Generate new verification token
+    token, verification_code = generate_token()
+
+    try:
+        # Send the email to the user
+        verification_url = f"{settings.frontend_url}/login/?token={token}"
+        email_service.send_email_change_verification(user.email, verification_url)
+
+        # Update user with new verification code and timestamp
+        user.pending_email = email
+        user.email_change_token = verification_code
+        user.email_change_token_created_at = datetime.now(timezone.utc)
+        db.commit()
+
+        return {
+            "success": True,
+            "message": "Verification email sent successfully",
+            "error_code": None,
+        }
+
+    except Exception as e:
+        db.rollback()
+        return {
+            "success": False,
+            "message": f"Error sending verification email: {str(e)}",
+            "error_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+        }
+
+
+@current_user_router.put("/")
 def update_current_user_profile(
     user_update: schemas.MeUpdate,
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
-):
+) -> dict:
     """Update the current user's profile.
     :param user_update: The user update data.
     :param current_user: The current authenticated user.
-    :param db: The database session."""
+    :param db: The database session.
+    :returns: A dictionary with the result of the update operation."""
 
+    result = {"success": True, "message": "User has been successfully updated"}
     user_update_dict = user_update.model_dump(exclude_defaults=True)
 
     # Hash password if it's being updated
-    if "password" in user_update_dict:
-        user_update_dict["password"] = utils.hash_password(user_update_dict["password"])
+    user_update_dict = transform_user_data(user_update_dict)
 
     # Determine if the user is updating the password or email
     requires_password_check = "password" in user_update_dict or "email" in user_update_dict
 
-    # Get the user record to update
-    user_db = db.query(models.User).filter(models.User.id == current_user.id).first()
-
     # Update password/email
     current_password = user_update_dict.get("current_password", "")
-    if requires_password_check and not utils.verify_password(current_password, user_db.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="The current password is required")
+    if requires_password_check and not utils.verify_password(current_password, current_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The current password is required",
+        )
 
-    # Validate email
-    other_users = db.query(models.User).filter(models.User.id != current_user.id).all()
-    emails = [u.email for u in other_users]
-    if "email" in user_update_dict and user_update_dict["email"] in emails:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+    # Handle email change separately
+    if "email" in user_update_dict:
+        new_email = user_update_dict.pop("email")  # Remove from dict to handle separately
 
-    # Update the user record
+        # Validate email is not already associated with another user
+        other_users = (
+            db.query(models.User)
+            .filter(models.User.id != current_user.id)
+            .filter(models.User.email == new_email)
+            .first()
+        )
+        if other_users:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
+            )
+
+        # Send verification email with rate limiting
+        result = send_email_change_with_rate_limit(current_user, db, new_email)
+        if not result["success"]:
+            raise HTTPException(
+                status_code=result["error_code"],
+                detail=result["message"],
+            )
+
+    # Update other fields normally
     for field, value in user_update_dict.items():
-        setattr(user_db, field, value)
+        setattr(current_user, field, value)
 
     db.commit()
-    db.refresh(user_db)
-    return user_db
+    db.refresh(current_user)
+    return result
+
+
+@current_user_router.get("/verify-email/{token}")
+def verify_email_change(
+    token: str,
+    db: Session = Depends(database.get_db),
+) -> dict[str, str]:
+    """Verify email change using the provided token
+    :param token: The email change verification token.
+    :param db: The database session.
+    :returns: A message indicating the result of the email change verification."""
+
+    verification_code = utils.hash_token(token)
+    user = db.query(models.User).filter(models.User.email_change_token == verification_code).first()
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired token")
+
+    # Check if token is expired
+    if check_token_expiration(user.email_change_token_created_at):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email change token has expired. Please request a new one",
+        )
+
+    # Check if user email does not already exist
+    other_users = (
+        db.query(models.User).filter(models.User.id != user.id).filter(models.User.email == user.pending_email).first()
+    )
+    if other_users:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
+
+    # Update email and clear pending fields
+    user.email = user.pending_email
+    user.pending_email = None
+    user.email_change_token = None
+    user.email_change_token_created_at = None
+    db.commit()
+    email_service.send_email_change_notification(user.email)
+
+    return {"message": "Email address changed successfully"}

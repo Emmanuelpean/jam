@@ -25,7 +25,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.config import settings
 from app.database import Base
 
 # ------------------------------------------------------ MAPPINGS ------------------------------------------------------
@@ -146,6 +145,9 @@ class User(CommonBase, Base):
     - `verification_token_created_at` (datetime, optional): Timestamp of when the verification token was created.
     - `password_reset_token` (str, optional, unique): Token used for password reset.
     - `password_reset_token_created_at` (datetime, optional): Timestamp of when the password reset token was created.
+    - `pending_email` (str, optional): New email address pending verification.
+    - `email_change_token` (str, optional): Token used for email change verification.
+    - `email_change_token_created_at` (datetime, optional): Timestamp of when the email change token was created.
 
     Constraints:
     ------------
@@ -167,10 +169,9 @@ class User(CommonBase, Base):
     verification_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
     password_reset_token = Column(String, nullable=True, unique=True)
     password_reset_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
-
-    __table_args__ = (
-        CheckConstraint(f"length(password) >= {settings.min_password_length}", name="minimum_password_length"),
-    )
+    pending_email = Column(String, nullable=True)
+    email_change_token = Column(String, nullable=True)
+    email_change_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
 
 # -------------------------------------------------------- DATA --------------------------------------------------------
@@ -378,7 +379,7 @@ class Person(Owned, Base):
         """Computed property that combines the first name, last name, and the company name"""
 
         if self.company:
-            return f"{self.first_name} {self.last_name} - {self.company.name}"
+            return f"{self.first_name} {self.last_name} ({self.company.name})"
         else:
             return self.name
 
