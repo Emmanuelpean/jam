@@ -1,7 +1,5 @@
 """Tests for the login/register page of the application."""
 
-import hashlib
-import os
 from datetime import datetime, timezone, timedelta
 from unittest.mock import patch
 
@@ -11,6 +9,7 @@ from jose import jwt
 from app import schemas, models
 from app.config import settings
 from app.routers import auth
+from utils import hash_token
 
 
 # -------------------------------------------------- UTILITY FUNCTIONS -------------------------------------------------
@@ -325,23 +324,30 @@ class TestEmailVerification:
         assert response.status_code == 403
         assert "invalid" in response.json()["detail"].lower()
 
-    @patch.dict(os.environ, {"VERIFICATION_TOKEN_EXPIRATION_MINUTES": "15"})
-    def test_verify_email_expired_token(self, client, test_unverified_user, session, test_users) -> None:
+    def test_verify_email_expired_token(self, client, session, test_users) -> None:
         """Test email verification with expired token."""
 
         token = "expired_token_123"
-        verification_code = hashlib.sha256(token.encode()).hexdigest()
+        verification_code = hash_token(token)
         expired_time = datetime.now(timezone.utc) - timedelta(hours=25)
 
-        test_unverified_user.verification_token = verification_code
-        test_unverified_user.verification_token_created_at = expired_time
+        # noinspection PyArgumentList
+        user = models.User(
+            email="unverified@test.com",
+            password="password",
+            is_verified=False,
+            is_active=True,
+            verification_token=verification_code,
+            verification_token_created_at=expired_time,
+        )
+        session.add(user)
         session.commit()
 
         response = client.get(f"/register/verify-email/{token}")
 
         assert response.status_code == 403
-        assert "expired" in response.json()["detail"].lower()
-        assert test_unverified_user.is_verified is False
+        assert response.json()["detail"] == "Verification token has expired. Please request a new one by logging in."
+        assert user.is_verified is False
 
 
 # --------------------------------------------------- PASSWORD RESET ---------------------------------------------------
@@ -449,7 +455,7 @@ class TestResetPassword:
         """Test successful password reset with valid token."""
 
         token = "reset_token_123"
-        reset_code = hashlib.sha256(token.encode()).hexdigest()
+        reset_code = hash_token(token)
 
         # Re-query the user using the test session so modifications persist for the request
         user = session.query(models.User).filter(models.User.id == test_users[0].id).first()
