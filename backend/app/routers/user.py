@@ -79,8 +79,8 @@ def send_email_change_with_rate_limit(
 
     try:
         # Send the email to the user
-        verification_url = f"{settings.frontend_url}/login/?token={token}"
-        email_service.send_email_change_verification(user.email, verification_url)
+        verification_url = f"{settings.frontend_url}/login/?email_token={token}"
+        email_service.send_email_change_verification(email, verification_url)
 
         # Update user with new verification code and timestamp
         user.pending_email = email
@@ -105,7 +105,7 @@ def send_email_change_with_rate_limit(
 
 @current_user_router.put("/")
 def update_current_user_profile(
-    user_update: schemas.MeUpdate,
+    user_update: schemas.CurrentUserUpdate,
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
 ) -> dict:
@@ -152,10 +152,7 @@ def update_current_user_profile(
         # Send verification email with rate limiting
         result = send_email_change_with_rate_limit(current_user, db, new_email)
         if not result["success"]:
-            raise HTTPException(
-                status_code=result["error_code"],
-                detail=result["message"],
-            )
+            return result
 
     # Update other fields normally
     for field, value in user_update_dict.items():
@@ -208,3 +205,24 @@ def verify_email_change(
     email_service.send_email_change_notification(user.email)
 
     return {"message": "Email address changed successfully"}
+
+
+@current_user_router.get("/check-pending-email")
+def check_email_pending(
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
+) -> bool:
+    """Check if the user has a pending email change and clear it if expired.
+    :param current_user: The current authenticated user.
+    :param db: The database session.
+    :returns: False if no pending email or if the token is expired, True otherwise."""
+
+    # Check if token is expired
+    if check_token_expiration(current_user.email_change_token_created_at):
+        current_user.pending_email = None
+        current_user.email_change_token = None
+        current_user.email_change_token_created_at = None
+        db.commit()
+        return False
+
+    return True

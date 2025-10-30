@@ -66,32 +66,39 @@ function AuthForm(): JSX.Element {
 	}, [location.pathname, isAuthenticated, searchParams]);
 
 	useEffect(() => {
-		if (mode === "login") {
-			const verifyToken: string | null = searchParams.get("token");
+		if (mode !== "login" || isVerifying) return;
 
-			if (verifyToken && !isVerifying) {
-				isVerifying = true;
-				showLoading("Verifying email...", undefined);
+		const verifyToken = searchParams.get("token");
+		const emailVerifyToken = searchParams.get("email_token");
 
-				authApi
-					.verifyEmail(verifyToken)
-					.then((response: VerificationResponse) => {
-						showToastSuccess(response.message, "Email Verified");
-						setSearchParams({});
-					})
-					.catch((err: any) => {
-						const apiError = err as ApiError;
-						showToastError(apiError.message, "Verification Failed");
-						setSearchParams({});
-					})
-					.finally(() => {
-						hideLoading();
-						setTimeout((): void => {
-							isVerifying = false;
-						}, 1000);
-					});
-			}
-		}
+		const tokenConfig = verifyToken
+			? { token: verifyToken, message: "Verifying email...", api: authApi.verifyEmail }
+			: emailVerifyToken
+				? { token: emailVerifyToken, message: "Verifying new email...", api: authApi.checkPendingEmail }
+				: null;
+
+		if (!tokenConfig) return;
+
+		isVerifying = true;
+		showLoading(tokenConfig.message, undefined);
+
+		tokenConfig
+			.api(tokenConfig.token)
+			.then((response: VerificationResponse) => {
+				showToastSuccess(response.message, "Email Verified");
+				setSearchParams({});
+			})
+			.catch((err: any) => {
+				const apiError = err as ApiError;
+				showToastError(apiError.message, "Verification Failed");
+				setSearchParams({});
+			})
+			.finally(() => {
+				hideLoading();
+				setTimeout(() => {
+					isVerifying = false;
+				}, 1000);
+			});
 	}, [mode]);
 
 	// Detect small screens
