@@ -379,14 +379,13 @@ class TestEmailServiceIntegration:
     def test_email_service_initialization(self) -> None:
         """Test email service initializes with environment variables."""
         # Patch the class attributes directly
-        with patch.object(EmailService, "sender", "test@example.com"), patch.object(
-            EmailService, "password", "testpass"
-        ), patch.object(EmailService, "smtp_server", "smtp.example.com"), patch.object(
-            EmailService, "smtp_port", 587
-        ), patch.object(
-            EmailService, "imap_server", "imap.example.com"
-        ), patch.object(
-            EmailService, "imap_port", 993
+        with (
+            patch.object(EmailService, "sender", "test@example.com"),
+            patch.object(EmailService, "password", "testpass"),
+            patch.object(EmailService, "smtp_server", "smtp.example.com"),
+            patch.object(EmailService, "smtp_port", 587),
+            patch.object(EmailService, "imap_server", "imap.example.com"),
+            patch.object(EmailService, "imap_port", 993),
         ):
 
             svc = EmailService()
