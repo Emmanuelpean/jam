@@ -75,7 +75,7 @@ class TestLogin:
 
         user_data = {
             "username": test_users[0].email,
-            "password": test_users[0].password,
+            "password": test_users[0].plain_password,
         }
         response = client.post("/login", data=user_data)
         login_response = schemas.Token(**response.json())
@@ -94,7 +94,7 @@ class TestLogin:
 
         user_data = {
             "username": test_users[0].email.upper(),
-            "password": test_users[0].password,
+            "password": test_users[0].plain_password,
         }
         response = client.post("/login", data=user_data)
         assert response.status_code == 200
@@ -113,7 +113,7 @@ class TestLogin:
 
         user_data = {
             "username": test_users[2].email,
-            "password": test_users[2].password,
+            "password": test_users[2].plain_password,
         }
         response = client.post("/login", data=user_data)
         assert response.status_code == 401
@@ -124,7 +124,7 @@ class TestLogin:
 
         user_data = {
             "username": test_unverified_user.email,
-            "password": test_unverified_user.password,
+            "password": test_unverified_user.plain_password,
         }
         response = client.post("/login", data=user_data)
 
@@ -138,7 +138,7 @@ class TestLogin:
 
         user_data = {
             "username": test_unverified_token_user.email,
-            "password": test_unverified_token_user.password,
+            "password": test_unverified_token_user.plain_password,
         }
         response = client.post("/login", data=user_data)
 
@@ -212,7 +212,7 @@ class TestRegister:
         # Incorrect password
         user_data = {
             "email": test_users[0].email,
-            "password": test_users[0].password + "123",
+            "password": test_users[0].plain_password + "123",
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
@@ -220,7 +220,7 @@ class TestRegister:
         # Correct password
         user_data = {
             "email": test_users[0].email,
-            "password": test_users[0].password,
+            "password": test_users[0].plain_password,
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
@@ -231,7 +231,7 @@ class TestRegister:
         # Incorrect password
         user_data = {
             "email": test_users[0].email,
-            "password": test_users[0].password + "123",
+            "password": test_users[0].plain_password + "123",
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
@@ -239,7 +239,7 @@ class TestRegister:
         # Correct password
         user_data = {
             "email": test_users[0].email,
-            "password": test_users[0].password,
+            "password": test_users[0].plain_password,
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
@@ -252,7 +252,7 @@ class TestRegister:
 
         user_data = {
             "email": test_unverified_user.email,
-            "password": test_unverified_user.password,
+            "password": test_unverified_user.plain_password,
         }
         response = client.post("/register", json=user_data)
 
@@ -268,7 +268,7 @@ class TestRegister:
 
         user_data = {
             "email": test_unverified_token_user.email,
-            "password": test_unverified_token_user.password,
+            "password": test_unverified_token_user.plain_password,
         }
         response = client.post("/register", json=user_data)
 
@@ -306,12 +306,13 @@ class TestEmailVerification:
     def test_verify_email_success(self, client, test_unverified_token_user, session, test_users) -> None:
         """Test successful email verification with valid token."""
 
+        user_id = test_unverified_token_user.id
         response = client.get(f"/register/verify-email/{test_unverified_token_user.plain_verification_token}")
 
         assert response.status_code == 200
         assert "verified successfully" in response.json()["message"].lower()
 
-        verified_user = session.query(models.User).filter(models.User.id == test_unverified_token_user.id).first()
+        verified_user = session.query(models.User).filter(models.User.id == user_id).first()
         assert verified_user.is_verified is True
         assert verified_user.verification_token is None
         assert verified_user.verification_token_created_at is None
@@ -458,10 +459,11 @@ class TestResetPassword:
         reset_code = hash_token(token)
 
         # Re-query the user using the test session so modifications persist for the request
-        user = session.query(models.User).filter(models.User.id == test_users[0].id).first()
+        user_id = test_users[0].id
+        user = session.query(models.User).filter(models.User.id == user_id).first()
 
         # remember current password for later comparison
-        old_password_hash = user.password
+        old_password_hash = test_users[0].plain_password
 
         user.password_reset_token = reset_code
         user.password_reset_token_created_at = datetime.now(timezone.utc)
@@ -475,7 +477,7 @@ class TestResetPassword:
         assert response.status_code == 200
         assert "password has been reset" in response.json()["message"].lower()
 
-        updated_user = session.query(models.User).filter(models.User.id == test_users[0].id).first()
+        updated_user = session.query(models.User).filter(models.User.id == user_id).first()
         assert updated_user.password != old_password_hash
         assert updated_user.password_reset_token is None
         assert updated_user.password_reset_token_created_at is None

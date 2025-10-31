@@ -118,6 +118,9 @@ def update_current_user_profile(
     result = {"success": True, "message": "User has been successfully updated"}
     user_update_dict = user_update.model_dump(exclude_defaults=True)
 
+    # Track if password or email changed
+    password_changed = False
+
     # Hash password if it's being updated
     user_update_dict = transform_user_data(user_update_dict)
 
@@ -132,8 +135,12 @@ def update_current_user_profile(
             detail="The current password is required",
         )
 
+    # Track password change
+    if "password" in user_update_dict:
+        password_changed = True
+
     # Handle email change separately
-    if "email" in user_update_dict:
+    if "email" in user_update_dict and user_update_dict["email"] != current_user.email:
         new_email = user_update_dict.pop("email")  # Remove from dict to handle separately
 
         # Validate email is not already associated with another user
@@ -157,6 +164,12 @@ def update_current_user_profile(
     # Update other fields normally
     for field, value in user_update_dict.items():
         setattr(current_user, field, value)
+
+    # Increment token version if password was changed
+    if password_changed:
+        current_user.token_version += 1
+        result["message"] = "User updated successfully. Please log in again."
+        result["logged_out"] = True
 
     db.commit()
     db.refresh(current_user)
@@ -201,6 +214,7 @@ def verify_email_change(
     user.pending_email = None
     user.email_change_token = None
     user.email_change_token_created_at = None
+    user.token_version += 1
     db.commit()
     email_service.send_email_change_notification(user.email)
 
