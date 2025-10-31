@@ -96,7 +96,10 @@ def login(
     db.commit()
 
     # Create an access token and return it
-    access_token = oauth2.create_access_token(data={"user_id": user.id})
+    access_token = oauth2.create_access_token(
+        data={"user_id": user.id},
+        token_version=user.token_version,
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 

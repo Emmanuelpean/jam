@@ -63,7 +63,7 @@ def find_non_owned(entries: list, owner_id: int) -> int:
     raise AssertionError("No non-owned entry found")
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def session() -> Generator[orm.Session, Any, None]:
     """Fixture that sets up and tears down a new database session for each test function.
     This fixture creates a fresh database session by creating and dropping all tables in the
@@ -132,7 +132,6 @@ def test_unverified_token_user(session) -> models.User:
     plain_token = "testtoken"
     hashed_token = hash_token(plain_token)
 
-    # noinspection PyArgumentList
     user = create_users(
         session,
         [

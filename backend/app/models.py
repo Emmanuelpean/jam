@@ -148,6 +148,7 @@ class User(CommonBase, Base):
     - `pending_email` (str, optional): New email address pending verification.
     - `email_change_token` (str, optional): Token used for email change verification.
     - `email_change_token_created_at` (datetime, optional): Timestamp of when the email change token was created.
+    - `token_version` (int): Version of the token for invalidation purposes.
 
     Constraints:
     ------------
@@ -172,6 +173,7 @@ class User(CommonBase, Base):
     pending_email = Column(String, nullable=True)
     email_change_token = Column(String, nullable=True)
     email_change_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    token_version = Column(Integer, default=0, nullable=False)
 
 
 # -------------------------------------------------------- DATA --------------------------------------------------------
