@@ -79,7 +79,7 @@ def send_email_change_with_rate_limit(
 
     try:
         # Send the email to the user
-        verification_url = f"{settings.frontend_url}/login/?email_token={token}"
+        verification_url = f"{settings.frontend_url}/verify-new-email/?token={token}"
         email_service.send_email_change_verification(email, verification_url)
 
         # Update user with new verification code and timestamp
@@ -176,7 +176,7 @@ def update_current_user_profile(
     return result
 
 
-@current_user_router.get("/verify-email/{token}")
+@current_user_router.get("/verify-new-email/{token}")
 def verify_email_change(
     token: str,
     db: Session = Depends(database.get_db),

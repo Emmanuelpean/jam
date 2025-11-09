@@ -16,12 +16,12 @@ interface VerificationResponse {
 	message: string;
 }
 
-type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword";
+type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
 let isVerifying = false;
 
 function AuthForm(): JSX.Element {
-	const [mode, setMode] = useState<AuthMode>("resetPassword");
+	const [mode, setMode] = useState<AuthMode>("login");
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [formData, setFormData] = useState<FormData>({
 		email: "",
@@ -35,7 +35,7 @@ function AuthForm(): JSX.Element {
 	const [showTerms, setShowTerms] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [fieldErrors, setFieldErrors] = useState<Errors>({});
-	const { login, register, isAuthenticated } = useAuth();
+	const { logout, login, register, isAuthenticated } = useAuth();
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { showToastSuccess, showToastError } = useGlobalToast();
@@ -45,45 +45,49 @@ function AuthForm(): JSX.Element {
 	document.documentElement.setAttribute("data-theme", "mixed-berry");
 
 	useEffect(() => {
-		if (isAuthenticated) {
-			navigate("/dashboard", { replace: true });
-			return;
-		}
-
 		// Check for reset token in URL
 		const token: string | null = searchParams.get("token");
 
 		if (location.pathname.indexOf("reset-password") >= 0 && token) {
 			setMode("resetPassword");
 			setResetToken(token);
+		} else if (location.pathname.indexOf("verify-email") >= 0) {
+			setMode("verifyEmail");
+		} else if (location.pathname.indexOf("verify-new-email") >= 0) {
+			setMode("verifyNewEmail");
 		} else if (location.pathname.indexOf("forgot-password") >= 0) {
 			setMode("forgotPassword");
 		} else if (location.pathname.indexOf("login") >= 0) {
 			setMode("login");
-		} else {
+		} else if (location.pathname.indexOf("register") >= 0) {
 			setMode("register");
+		}
+
+		if (isAuthenticated && (mode == "login" || mode == "register")) {
+			navigate("/dashboard", { replace: true });
+			return;
 		}
 	}, [location.pathname, isAuthenticated, searchParams]);
 
 	useEffect(() => {
-		if (mode !== "login" || isVerifying) return;
+		// Verifies the email
+		if (!["verifyEmail", "verifyNewEmail"].includes(mode) || isVerifying) return;
 
-		const verifyToken = searchParams.get("token");
-		const emailVerifyToken = searchParams.get("email_token");
+		const verifyToken: string | null = searchParams.get("token");
 
-		const tokenConfig = verifyToken
-			? { token: verifyToken, message: "Verifying email...", api: authApi.verifyEmail }
-			: emailVerifyToken
-				? { token: emailVerifyToken, message: "Verifying new email...", api: authApi.checkPendingEmail }
-				: null;
+		let api = null;
+		if (mode == "verifyEmail") {
+			api = authApi.verifyEmail;
+		} else if (mode == "verifyNewEmail") {
+			api = authApi.verifyNewEmail;
+		}
 
-		if (!tokenConfig) return;
+		if (!verifyToken || !api) return;
 
 		isVerifying = true;
-		showLoading(tokenConfig.message, undefined);
+		showLoading("Verifying email...", undefined);
 
-		tokenConfig
-			.api(tokenConfig.token)
+		api(verifyToken)
 			.then((response: VerificationResponse) => {
 				showToastSuccess(response.message, "Email Verified");
 				setSearchParams({});
@@ -99,6 +103,10 @@ function AuthForm(): JSX.Element {
 					isVerifying = false;
 				}, 1000);
 			});
+
+		if (isAuthenticated) {
+			logout();
+		}
 	}, [mode]);
 
 	// Detect small screens
