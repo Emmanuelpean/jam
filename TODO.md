@@ -44,3 +44,5 @@
 * [ ] handle duplicate jobs
 * [ ] Add password reset and email confirmation
 * [ ] Add TOAST EIS
+* [ ] Add option for spontaneous applications
+* [ ] Add option say if a recruiter contacted the user about a job

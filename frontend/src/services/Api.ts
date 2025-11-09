@@ -35,6 +35,7 @@ interface AuthApi {
 	getCurrentUser: (token: string) => Promise<any>;
 	updateCurrentUser: (data: any, token: string) => Promise<any>;
 	verifyEmail: (token: string) => Promise<any>;
+	verifyNewEmail: (token: string) => Promise<any>;
 	checkPendingEmail: (token: string) => Promise<any>;
 	requestPasswordReset: (email: string) => Promise<any>;
 	resetPassword: (token: string, newPassword: string) => Promise<{ message: string }>;
@@ -263,6 +264,10 @@ export const authApi: AuthApi = {
 
 	requestPasswordReset: async (email: string): Promise<{ message: string }> => {
 		return api.post("password/forgot", { email });
+	},
+
+	verifyNewEmail: async (token: string) => {
+		return api.get(`current_user/verify-new-email/${token}`);
 	},
 
 	resetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
