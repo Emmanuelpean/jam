@@ -9,7 +9,7 @@ from jose import jwt
 from app import schemas, models
 from app.config import settings
 from app.routers import auth
-from utils import hash_token
+from app.utils import hash_token
 
 
 # -------------------------------------------------- UTILITY FUNCTIONS -------------------------------------------------
