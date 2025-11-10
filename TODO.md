@@ -46,3 +46,12 @@
 * [ ] Add TOAST EIS
 * [ ] Add option for spontaneous applications
 * [ ] Add option say if a recruiter contacted the user about a job
+
+## Select Widgets
+* [ ] Sort options alphabetically
+* [ ] After adding an option, select it automatically
+
+## Job Modal
+* [ ] Fix bug preventing the source aggregator to be displayed
+* [ ] Add option to select the source (recruiter, aggregator, other)
+* [ ] Add option for application on company website
