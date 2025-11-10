@@ -25,6 +25,8 @@ def upgrade() -> None:
     op.add_column("user", sa.Column("email_change_token", sa.String(), nullable=True))
     op.add_column("user", sa.Column("email_change_token_created_at", sa.TIMESTAMP(timezone=True), nullable=True))
     op.add_column("user", sa.Column("token_version", sa.Integer(), nullable=False, server_default="0"))
+    op.alter_column("setting", "chase_threshold", server_default="14")
+    op.alter_column("setting", "deadline_threshold", server_default="7")
     # ### end Alembic commands ###
 
 
@@ -34,4 +36,6 @@ def downgrade() -> None:
     op.drop_column("user", "email_change_token_created_at")
     op.drop_column("user", "email_change_token")
     op.drop_column("user", "pending_email")
+    op.alter_column("setting", "chase_threshold", server_default="30")
+    op.alter_column("setting", "deadline_threshold", server_default="30")
     # ### end Alembic commands ###
