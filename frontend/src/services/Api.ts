@@ -267,7 +267,7 @@ export const authApi: AuthApi = {
 	},
 
 	verifyNewEmail: async (token: string) => {
-		return api.get(`current_user/verify-new-email/${token}`);
+		return api.get(`current_user/verify-email/${token}`);
 	},
 
 	resetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {

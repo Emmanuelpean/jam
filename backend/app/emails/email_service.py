@@ -216,6 +216,7 @@ class EmailService(object):
 
     def clear_test_emails(self) -> None:
         """Clear all stored test emails."""
+
         if settings.test_mode:
             self.test_emails = []
 
