@@ -40,8 +40,8 @@ class Settings(BaseSettings):
     backend_url: str
 
     # Verification settings
-    verification_token_expiration_minutes: float
-    verification_email_min_interval_seconds: float
+    verification_token_expiration_minutes: int
+    verification_email_min_interval_seconds: int
 
     # Testing
     test_mode: bool

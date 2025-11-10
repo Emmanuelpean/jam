@@ -55,16 +55,37 @@ export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsRe
 	const [showJobModal, setShowJobModal] = useState<boolean>(false);
 
 	// Convert data to SelectOptions and memoize
-	const companyOptions: SelectOption[] = useMemo(() => toSelectOptions(companiesData), [companiesData]);
-	const locationOptions: SelectOption[] = useMemo(() => toSelectOptions(locationsData), [locationsData]);
-	const keywordOptions: SelectOption[] = useMemo(() => toSelectOptions(keywordsData), [keywordsData]);
-	const personOptions: SelectOption[] = useMemo(() => toSelectOptions(personsData), [personsData]);
-	const aggregatorOptions: SelectOption[] = useMemo(() => toSelectOptions(aggregatorsData), [aggregatorsData]);
-	const jobOptions: SelectOption[] = useMemo(() => toSelectOptions(jobsData, "id", "name"), [jobsData]);
-	const countryOptions: SelectOption[] = useMemo(() => toSelectOptions(countries, "name", "name"), [countries]);
-	const currencyOptions: SelectOption[] = useMemo(() => toSelectOptions(currencies, "code", "symbol"), [currencies]);
+	const companyOptions: SelectOption[] = useMemo(
+		(): SelectOption[] => toSelectOptions(companiesData),
+		[companiesData],
+	);
+	const locationOptions: SelectOption[] = useMemo(
+		(): SelectOption[] => toSelectOptions(locationsData),
+		[locationsData],
+	);
+	const keywordOptions: SelectOption[] = useMemo((): SelectOption[] => toSelectOptions(keywordsData), [keywordsData]);
+	const personOptions: SelectOption[] = useMemo(
+		(): SelectOption[] => toSelectOptions(personsData, "id", "name_company"),
+		[personsData],
+	);
+	const aggregatorOptions: SelectOption[] = useMemo(
+		(): SelectOption[] => toSelectOptions(aggregatorsData),
+		[aggregatorsData],
+	);
+	const jobOptions: SelectOption[] = useMemo(
+		(): SelectOption[] => toSelectOptions(jobsData, "id", "name"),
+		[jobsData],
+	);
+	const countryOptions: SelectOption[] = useMemo(
+		(): SelectOption[] => toSelectOptions(countries, "name", "name"),
+		[countries],
+	);
+	const currencyOptions: SelectOption[] = useMemo(
+		(): SelectOption[] => toSelectOptions(currencies, "code", "symbol"),
+		[currencies],
+	);
 	const currencyNameOptions: SelectOption[] = useMemo(
-		() => toSelectOptions(currencies, "code", "name"),
+		(): SelectOption[] => toSelectOptions(currencies, "code", "name"),
 		[currencies],
 	);
 

@@ -96,7 +96,10 @@ def login(
     db.commit()
 
     # Create an access token and return it
-    access_token = oauth2.create_access_token(data={"user_id": user.id})
+    access_token = oauth2.create_access_token(
+        data={"user_id": user.id},
+        token_version=user.token_version,
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -126,7 +129,7 @@ def send_verification_with_rate_limit(
 
     try:
         # Send the email to the user
-        verification_url = f"{settings.frontend_url}/login/?token={token}"
+        verification_url = f"{settings.frontend_url}/verify-email/?token={token}"
         email_service.send_verification_email(user.email, verification_url)
 
         # Update user with new verification code and timestamp
@@ -136,7 +139,7 @@ def send_verification_with_rate_limit(
 
         return {
             "success": True,
-            "message": "Verification email sent successfully",
+            "message": "Verification email sent successfully.",
             "error_code": None,
         }
 

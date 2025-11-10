@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Button, Card, Col, Form, Row } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { Alert, Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ApiError, authApi, exportApi } from "../../services/Api";
 import { THEMES } from "../../utils/Theme";
@@ -42,6 +42,29 @@ const UserSettingsPage: React.FC = () => {
 	const [submitting, setSubmitting] = useState<boolean>(false);
 
 	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.MIN_PASSWORD_LENGTH || "8");
+
+	// Determine if there's a pending email change
+	const hasPendingEmail: boolean = !!currentUser?.pending_email && currentUser.pending_email !== currentUser.email;
+
+	// If user has a pending email, double-check with API whether the pending token is still valid.
+	useEffect(() => {
+		const checkPending = async () => {
+			if (!hasPendingEmail || !token) return;
+			try {
+				const valid = await authApi.checkPendingEmail(token);
+				if (!valid) {
+					showToastError(
+						"Pending email verification token has expired. Please request the email change again.",
+						"Verification Expired",
+					);
+				}
+			} catch (err) {
+				showToastError("Failed to verify pending email status.");
+			}
+		};
+
+		checkPending().then((_) => null);
+	}, [token]);
 
 	const downloadJobsExport = async (token: string | null) => {
 		if (!token) return;
@@ -139,11 +162,13 @@ const UserSettingsPage: React.FC = () => {
 				default_currency: "",
 			};
 
+			const emailChanged: boolean | "" = formData.email && formData.email !== currentUser?.email;
+
 			// Add account changes if current password is provided
 			if (formData.current_password) {
 				updateData.current_password = formData.current_password;
 
-				if (formData.email && formData.email !== currentUser?.email) {
+				if (emailChanged) {
 					updateData.email = formData.email;
 				}
 
@@ -167,11 +192,29 @@ const UserSettingsPage: React.FC = () => {
 			updateData.default_currency = formData.default_currency;
 
 			const response = await authApi.updateCurrentUser(updateData, token);
+			console.log(response);
 
 			// Update the context with the API response
 			updateCurrentUser(response);
 
-			// Success case - clear password fields but keep other data
+			// Show message if the email was changed
+			if (emailChanged) {
+				if (response.success) {
+					showToastSuccess(response.message, "Email Change Pending");
+				} else {
+					showToastError(response.message, "Error Updating Settings");
+				}
+				// Reset the email field back to current email since change is pending
+				setFormData((prev) => ({
+					...prev,
+					email: currentUser?.email || "",
+					current_password: "",
+				}));
+			} else {
+				showToastSuccess("User settings updated successfully.");
+			}
+
+			// Clear password fields
 			if (formData.new_password) {
 				setFormData((prev) => ({
 					...prev,
@@ -179,8 +222,7 @@ const UserSettingsPage: React.FC = () => {
 					confirm_password: "",
 				}));
 			}
-			showToastSuccess("User settings updated successfully.");
-		} catch (error: unknown) {
+		} catch (error) {
 			const apiError = error as ApiError;
 			if (apiError.status === 400) {
 				showToastError("Email is already in use. Please try a different email.");
@@ -198,6 +240,9 @@ const UserSettingsPage: React.FC = () => {
 		label: "Email Address",
 		type: "text",
 		placeholder: "Enter your email address",
+		helpText: hasPendingEmail
+			? `Email change pending verification. Check ${currentUser?.pending_email} for verification link.`
+			: undefined,
 	};
 
 	const currentPasswordField: ModalFormField = {
@@ -272,6 +317,23 @@ const UserSettingsPage: React.FC = () => {
 				<Card.Body className="p-0">
 					<Form onSubmit={handleSubmit} className="p-4">
 						{errors.general && <div className="alert alert-danger mb-4">{errors.general}</div>}
+
+						{/* Pending Email Alert */}
+						{hasPendingEmail && (
+							<Alert variant="warning" className="mb-4">
+								<div className="d-flex align-items-start">
+									<i className="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+									<div>
+										<strong>Email Change Pending</strong>
+										<p className="mb-0 mt-1">
+											A verification email has been sent to{" "}
+											<strong>{currentUser?.pending_email}</strong>. Please check your inbox and
+											click the verification link to complete your email change.
+										</p>
+									</div>
+								</div>
+							</Alert>
+						)}
 
 						<Col md={12} className="mb-3">
 							{FormField(currentPasswordField, formData, handleInputChange, errors)}

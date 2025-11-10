@@ -121,6 +121,8 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/register", element: <Login /> },
 	{ path: "/forgot-password", element: <Login /> },
 	{ path: "/reset-password", element: <Login /> },
+	{ path: "/verify-email", element: <Login /> },
+	{ path: "/verify-new-email", element: <Login /> },
 	{ path: "/", element: <Navigate to="/dashboard" replace /> },
 	{ path: "/about", element: <AboutPage />, protected: true },
 	{ path: "/locations", element: <LocationsPage />, protected: true },

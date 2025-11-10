@@ -4,12 +4,9 @@ This module contains comprehensive Selenium-based tests for the authentication s
 including login, registration, form validation, and mode switching functionality.
 """
 
-from datetime import datetime, timedelta, timezone
 import time
+import datetime as dt
 
-import requests
-
-from app.config import settings
 from conftest import models, BaseTest
 
 
@@ -20,42 +17,6 @@ class TestAuthenticationPage(BaseTest):
     - Signup with valid data
     - Signup with invalid data
     - Form validation"""
-
-    def verify_user_in_database(self, email: str) -> list[models.User]:
-        """Helper method to verify user exists in database"""
-
-        return self.db.query(models.User).filter(models.User.email == email).all()
-
-    def get_verification_token_from_db(self, email: str) -> str:
-        """Helper method to get verification token from database"""
-
-        user = self.db.query(models.User).filter(models.User.email == email).first()
-        token = user.verification_token
-        assert token is not None, "Verification token not found in database"
-        return token
-
-    @staticmethod
-    def get_verification_link_from_email(email: str) -> str:
-        """Helper method to get verification link from test email endpoint"""
-
-        response = requests.get(f"{settings.backend_url}/test/verification-link/{email}")
-        assert response.status_code == 200, f"Failed to get verification link: {response.text}"
-        return response.json()["verification_url"]
-
-    @staticmethod
-    def get_reset_link_from_email(email: str) -> str:
-        """Helper method to get password reset link from test email endpoint"""
-
-        response = requests.get(f"{settings.backend_url}/test/reset-link/{email}")
-        assert response.status_code == 200, f"Failed to get reset link: {response.text}"
-        return response.json()["reset_url"]
-
-    @staticmethod
-    def clear_test_emails() -> None:
-        """Helper method to clear all test emails"""
-
-        response = requests.delete(f"{settings.backend_url}/test/emails")
-        assert response.status_code == 200, "Failed to clear test emails"
 
     # ----------------------------------------------------- INPUTS -----------------------------------------------------
 
@@ -126,11 +87,6 @@ class TestAuthenticationPage(BaseTest):
 
         assert message in self.get_element(key + "error-message").text, f"Message not found: {message}"
 
-    def assert_toast_message(self, error_message: str) -> None:
-        """Assert that the given error message is displayed on the page"""
-
-        assert error_message in self.get_element("toast").text, f"Message not found: {error_message}"
-
     def assert_email_error_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
@@ -176,7 +132,7 @@ class TestAuthenticationPage(BaseTest):
     def go_to_verification_url(self, token: str) -> None:
         """Navigate to login page with verification token"""
 
-        self.driver.get(f"{self.frontend_base_url}/login/?token={token}")
+        self.driver.get(f"{self.frontend_base_url}/verify-email/?token={token}")
 
     def switch_to_forgot_password(self) -> None:
         """Navigate to forgot password page"""
@@ -190,7 +146,7 @@ class TestLogIn(TestAuthenticationPage):
         """Test login with valid credentials"""
 
         self.go_to_login()
-        test_email, test_password = test_users[0].email, test_users[0].password
+        test_email, test_password = test_users[0].email, test_users[0].plain_password
 
         # Fill in login form
         self.set_email(test_email)
@@ -218,7 +174,7 @@ class TestLogIn(TestAuthenticationPage):
         """Test login with invalid credentials"""
 
         self.go_to_login()
-        test_email, test_password = test_users[2].email, test_users[2].password
+        test_email, test_password = test_users[2].email, test_users[2].plain_password
 
         # Fill in login form with invalid credentials
         self.set_email(test_email)
@@ -515,7 +471,7 @@ class TestEmailVerification(TestAuthenticationPage):
         test_password = "Test123!"
         self._register_and_verify_redirect(test_email, test_password)
         user = session.query(models.User).filter(models.User.email == test_email).first()
-        user.verification_token_created_at = datetime.now(timezone.utc) - timedelta(minutes=20)
+        user.verification_token_created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=20)
         session.commit()
         invalid_verification_url = self.get_verification_link_from_email(test_email)
         self.driver.get(invalid_verification_url)

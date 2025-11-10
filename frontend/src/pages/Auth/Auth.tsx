@@ -16,13 +16,27 @@ interface VerificationResponse {
 	message: string;
 }
 
-type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword";
+type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
 let isVerifying = false;
 
+const determineAuthMode = (pathname: string, token: string | null): AuthMode => {
+	// Remove trailing slash for consistent comparison
+	const normalizedPath = pathname.endsWith("/") && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
+
+	if (normalizedPath === "/reset-password" && token) return "resetPassword";
+	if (normalizedPath === "/verify-email") return "verifyEmail";
+	if (normalizedPath === "/verify-new-email") return "verifyNewEmail";
+	if (normalizedPath === "/forgot-password") return "forgotPassword";
+	if (normalizedPath === "/register") return "register";
+	return "login";
+};
+
 function AuthForm(): JSX.Element {
-	const [mode, setMode] = useState<AuthMode>("resetPassword");
+	const location = useLocation();
+	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
+	const [mode, setMode] = useState<AuthMode>(() => determineAuthMode(location.pathname, searchParams.get("token")));
 	const [formData, setFormData] = useState<FormData>({
 		email: "",
 		password: "",
@@ -35,9 +49,7 @@ function AuthForm(): JSX.Element {
 	const [showTerms, setShowTerms] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [fieldErrors, setFieldErrors] = useState<Errors>({});
-	const { login, register, isAuthenticated } = useAuth();
-	const navigate = useNavigate();
-	const location = useLocation();
+	const { logout, login, register, isAuthenticated } = useAuth();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
 	const { showLoading, hideLoading } = useLoading();
@@ -45,54 +57,60 @@ function AuthForm(): JSX.Element {
 	document.documentElement.setAttribute("data-theme", "mixed-berry");
 
 	useEffect(() => {
-		if (isAuthenticated) {
-			navigate("/dashboard", { replace: true });
-			return;
-		}
+		// Update mode based on URL path and query params and redirect if authenticated
+		const token = searchParams.get("token");
+		const newMode = determineAuthMode(location.pathname, token);
 
-		// Check for reset token in URL
-		const token: string | null = searchParams.get("token");
-
-		if (location.pathname.indexOf("reset-password") >= 0 && token) {
-			setMode("resetPassword");
+		if (newMode === "resetPassword" && token) {
 			setResetToken(token);
-		} else if (location.pathname.indexOf("forgot-password") >= 0) {
-			setMode("forgotPassword");
-		} else if (location.pathname.indexOf("login") >= 0) {
-			setMode("login");
-		} else {
-			setMode("register");
 		}
-	}, [location.pathname, isAuthenticated, searchParams]);
+
+		setMode(newMode);
+
+		if (isAuthenticated && (newMode === "login" || newMode === "register")) {
+			navigate("/dashboard", { replace: true });
+		}
+	}, [location.pathname, isAuthenticated, searchParams, navigate]);
 
 	useEffect(() => {
-		if (mode === "login") {
-			const verifyToken: string | null = searchParams.get("token");
+		console.log("Auth mode changed to:", mode);
+		// Verifies the email
+		if (!["verifyEmail", "verifyNewEmail"].includes(mode) || isVerifying) return;
 
-			if (verifyToken && !isVerifying) {
-				isVerifying = true;
-				showLoading("Verifying email...", undefined);
+		const verifyToken: string | null = searchParams.get("token");
 
-				authApi
-					.verifyEmail(verifyToken)
-					.then((response: VerificationResponse) => {
-						showToastSuccess(response.message, "Email Verified");
-						setSearchParams({});
-					})
-					.catch((err: any) => {
-						const apiError = err as ApiError;
-						showToastError(apiError.message, "Verification Failed");
-						setSearchParams({});
-					})
-					.finally(() => {
-						hideLoading();
-						setTimeout((): void => {
-							isVerifying = false;
-						}, 1000);
-					});
-			}
+		let api = null;
+		if (mode == "verifyEmail") {
+			api = authApi.verifyEmail;
+		} else if (mode == "verifyNewEmail") {
+			api = authApi.verifyNewEmail;
 		}
-	}, [mode]);
+
+		if (!verifyToken || !api) return;
+
+		isVerifying = true;
+		if (isAuthenticated) {
+			logout();
+		}
+		showLoading("Verifying email...", undefined);
+
+		api(verifyToken)
+			.then((response: VerificationResponse) => {
+				showToastSuccess(response.message, "Email Verified");
+				setSearchParams({});
+			})
+			.catch((err: any) => {
+				const apiError = err as ApiError;
+				showToastError(apiError.message, "Verification Failed");
+				setSearchParams({});
+			})
+			.finally(() => {
+				hideLoading();
+				setTimeout(() => {
+					isVerifying = false;
+				}, 1000);
+			});
+	}, [mode, location.pathname, searchParams, navigate]);
 
 	// Detect small screens
 	useEffect(() => {
