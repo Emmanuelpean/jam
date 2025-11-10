@@ -4,8 +4,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Coverage for backend/tests/emails/test_email_service.py: 100%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
-    <link rel="stylesheet" href="style_cb_6b508a39.css" type="text/css">
-    <script src="coverage_html_cb_6fb7b396.js" defer></script>
+    <link rel="stylesheet" href="style_cb_a37fa487.css" type="text/css">
+    <script src="coverage_html_cb_cadff66e.js" defer></script>
 </head>
 <body class="pyfile">
 <header>
@@ -62,10 +62,10 @@
         <p class="text">
             <a id="prevFileLink" class="nav" href="z_a7744966626e7b94___init___py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a id="nextFileLink" class="nav" href="z_f777a31e4f5212e6___init___py.html">&#xbb; next</a>
+            <a id="nextFileLink" class="nav" href="z_3cb2634e1112af15___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
-            created at 2025-10-19 12:14 +0100
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.11.3">coverage.py v7.11.3</a>,
+            created at 2025-11-10 22:38 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -461,40 +461,39 @@
     <p class="run"><span class="n"><a id="t379" href="#t379">379</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_email_service_initialization</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t380" href="#t380">380</a></span><span class="t">        <span class="str">"""Test email service initializes with environment variables."""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t381" href="#t381">381</a></span><span class="t">        <span class="com"># Patch the class attributes directly</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t382" href="#t382">382</a></span><span class="t">        <span class="key">with</span> <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span><span class="nam">EmailService</span><span class="op">,</span> <span class="str">"sender"</span><span class="op">,</span> <span class="str">"test@example.com"</span><span class="op">)</span><span class="op">,</span> <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t383" href="#t383">383</a></span><span class="t">            <span class="nam">EmailService</span><span class="op">,</span> <span class="str">"password"</span><span class="op">,</span> <span class="str">"testpass"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t384" href="#t384">384</a></span><span class="t">        <span class="op">)</span><span class="op">,</span> <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span><span class="nam">EmailService</span><span class="op">,</span> <span class="str">"smtp_server"</span><span class="op">,</span> <span class="str">"smtp.example.com"</span><span class="op">)</span><span class="op">,</span> <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t385" href="#t385">385</a></span><span class="t">            <span class="nam">EmailService</span><span class="op">,</span> <span class="str">"smtp_port"</span><span class="op">,</span> <span class="num">587</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t386" href="#t386">386</a></span><span class="t">        <span class="op">)</span><span class="op">,</span> <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t387" href="#t387">387</a></span><span class="t">            <span class="nam">EmailService</span><span class="op">,</span> <span class="str">"imap_server"</span><span class="op">,</span> <span class="str">"imap.example.com"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t388" href="#t388">388</a></span><span class="t">        <span class="op">)</span><span class="op">,</span> <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t389" href="#t389">389</a></span><span class="t">            <span class="nam">EmailService</span><span class="op">,</span> <span class="str">"imap_port"</span><span class="op">,</span> <span class="num">993</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t390" href="#t390">390</a></span><span class="t">        <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t391" href="#t391">391</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t392" href="#t392">392</a></span><span class="t">            <span class="nam">svc</span> <span class="op">=</span> <span class="nam">EmailService</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t393" href="#t393">393</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">sender</span> <span class="op">==</span> <span class="str">"test@example.com"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t394" href="#t394">394</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">password</span> <span class="op">==</span> <span class="str">"testpass"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t395" href="#t395">395</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">smtp_server</span> <span class="op">==</span> <span class="str">"smtp.example.com"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t396" href="#t396">396</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">smtp_port</span> <span class="op">==</span> <span class="num">587</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t397" href="#t397">397</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">imap_server</span> <span class="op">==</span> <span class="str">"imap.example.com"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t398" href="#t398">398</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">imap_port</span> <span class="op">==</span> <span class="num">993</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t399" href="#t399">399</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t400" href="#t400">400</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_email_service_singleton</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">        <span class="str">"""Test that email_service singleton is available."""</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t402" href="#t402">402</a></span><span class="t">        <span class="key">from</span> <span class="nam">app</span><span class="op">.</span><span class="nam">emails</span><span class="op">.</span><span class="nam">email_service</span> <span class="key">import</span> <span class="nam">email_service</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t403" href="#t403">403</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t">        <span class="key">assert</span> <span class="nam">email_service</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t405" href="#t405">405</a></span><span class="t">        <span class="key">assert</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">email_service</span><span class="op">,</span> <span class="nam">EmailService</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t382" href="#t382">382</a></span><span class="t">        <span class="key">with</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t383" href="#t383">383</a></span><span class="t">            <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span><span class="nam">EmailService</span><span class="op">,</span> <span class="str">"sender"</span><span class="op">,</span> <span class="str">"test@example.com"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t384" href="#t384">384</a></span><span class="t">            <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span><span class="nam">EmailService</span><span class="op">,</span> <span class="str">"password"</span><span class="op">,</span> <span class="str">"testpass"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t385" href="#t385">385</a></span><span class="t">            <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span><span class="nam">EmailService</span><span class="op">,</span> <span class="str">"smtp_server"</span><span class="op">,</span> <span class="str">"smtp.example.com"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t386" href="#t386">386</a></span><span class="t">            <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span><span class="nam">EmailService</span><span class="op">,</span> <span class="str">"smtp_port"</span><span class="op">,</span> <span class="num">587</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t387" href="#t387">387</a></span><span class="t">            <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span><span class="nam">EmailService</span><span class="op">,</span> <span class="str">"imap_server"</span><span class="op">,</span> <span class="str">"imap.example.com"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t388" href="#t388">388</a></span><span class="t">            <span class="nam">patch</span><span class="op">.</span><span class="nam">object</span><span class="op">(</span><span class="nam">EmailService</span><span class="op">,</span> <span class="str">"imap_port"</span><span class="op">,</span> <span class="num">993</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t389" href="#t389">389</a></span><span class="t">        <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t390" href="#t390">390</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t391" href="#t391">391</a></span><span class="t">            <span class="nam">svc</span> <span class="op">=</span> <span class="nam">EmailService</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t392" href="#t392">392</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">sender</span> <span class="op">==</span> <span class="str">"test@example.com"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t393" href="#t393">393</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">password</span> <span class="op">==</span> <span class="str">"testpass"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t394" href="#t394">394</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">smtp_server</span> <span class="op">==</span> <span class="str">"smtp.example.com"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t395" href="#t395">395</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">smtp_port</span> <span class="op">==</span> <span class="num">587</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t396" href="#t396">396</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">imap_server</span> <span class="op">==</span> <span class="str">"imap.example.com"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t397" href="#t397">397</a></span><span class="t">            <span class="key">assert</span> <span class="nam">svc</span><span class="op">.</span><span class="nam">imap_port</span> <span class="op">==</span> <span class="num">993</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t398" href="#t398">398</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t399" href="#t399">399</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_email_service_singleton</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t400" href="#t400">400</a></span><span class="t">        <span class="str">"""Test that email_service singleton is available."""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">        <span class="key">from</span> <span class="nam">app</span><span class="op">.</span><span class="nam">emails</span><span class="op">.</span><span class="nam">email_service</span> <span class="key">import</span> <span class="nam">email_service</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t402" href="#t402">402</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t403" href="#t403">403</a></span><span class="t">        <span class="key">assert</span> <span class="nam">email_service</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t">        <span class="key">assert</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">email_service</span><span class="op">,</span> <span class="nam">EmailService</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
         <p>
             <a class="nav" href="z_a7744966626e7b94___init___py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a class="nav" href="z_f777a31e4f5212e6___init___py.html">&#xbb; next</a>
+            <a class="nav" href="z_3cb2634e1112af15___init___py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.11.0">coverage.py v7.11.0</a>,
-            created at 2025-10-19 12:14 +0100
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.11.3">coverage.py v7.11.3</a>,
+            created at 2025-11-10 22:38 +0000
         </p>
     </div>
 </footer>
