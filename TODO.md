@@ -55,3 +55,11 @@
 * [ ] Fix bug preventing the source aggregator to be displayed
 * [ ] Add option to select the source (recruiter, aggregator, other)
 * [ ] Add option for application on company website
+
+
+# Spontaneous Applications
+* [ ] Add spontaneous application table with the following columns:
+  * [ ] Company
+  * [ ] Date Sent
+  * [ ] Notes
+

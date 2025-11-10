@@ -148,6 +148,7 @@ class TestUserSettingsPage(BaseTest):
         self.set_text(self.current_password, self.user.plain_password)
         self.set_text(self.email, new_email)
         self.confirm()
+        self.assert_toast("Verification email sent successfully.")
         invalid_verification_url = self.get_verification_link_from_email(new_email)[:-4]
         self.driver.get(invalid_verification_url)
         self.assert_toast_message(
@@ -162,6 +163,7 @@ class TestUserSettingsPage(BaseTest):
         self.set_text(self.current_password, self.user.plain_password)
         self.set_text(self.email, new_email)
         self.confirm()
+        self.assert_toast("Verification email sent successfully.")
         user = session.query(models.User).filter(models.User.email == self.user.email).first()
         user.verification_token_created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=20)
         invalid_verification_url = self.get_verification_link_from_email(new_email)[:-4]
