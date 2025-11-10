@@ -172,7 +172,7 @@ class TestSendVerificationWithRateLimit:
         """Test sending of verification email."""
 
         result = auth.send_verification_with_rate_limit(test_users[0], session)
-        assert result == {"success": True, "message": "Verification email sent successfully", "error_code": None}
+        assert result == {"success": True, "message": "Verification email sent successfully.", "error_code": None}
         assert mock_email.call_count == 1
         assert test_users[0].verification_token is not None
         assert test_users[0].verification_token_created_at is not None

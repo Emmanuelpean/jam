@@ -90,7 +90,7 @@ def send_email_change_with_rate_limit(
 
         return {
             "success": True,
-            "message": "Verification email sent successfully",
+            "message": "Verification email sent successfully.",
             "error_code": None,
         }
 
@@ -176,7 +176,7 @@ def update_current_user_profile(
     return result
 
 
-@current_user_router.get("/verify-new-email/{token}")
+@current_user_router.get("/verify-email/{token}")
 def verify_email_change(
     token: str,
     db: Session = Depends(database.get_db),
@@ -190,13 +190,16 @@ def verify_email_change(
     user = db.query(models.User).filter(models.User.email_change_token == verification_code).first()
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired token")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid or expired token. Please request a new one by logging in and changing your email address.",
+        )
 
     # Check if token is expired
     if check_token_expiration(user.email_change_token_created_at):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Email change token has expired. Please request a new one",
+            detail="Email change token has expired. Please request a new one by logging in and changing your email address.",
         )
 
     # Check if user email does not already exist
@@ -218,7 +221,7 @@ def verify_email_change(
     db.commit()
     email_service.send_email_change_notification(user.email)
 
-    return {"message": "Email address changed successfully"}
+    return {"message": "Email address changed successfully. You can now log in with your new email."}
 
 
 @current_user_router.get("/check-pending-email")

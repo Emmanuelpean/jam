@@ -166,7 +166,7 @@ class TestSendEmailChangeWithRateLimit:
         """Test sending of email change verification email."""
 
         result = send_email_change_with_rate_limit(test_users[0], session, "newemail@test.com")
-        assert result == {"error_code": None, "message": "Verification email sent successfully", "success": True}
+        assert result == {"error_code": None, "message": "Verification email sent successfully.", "success": True}
         assert mock_email.call_count == 1
         assert test_users[0].email_change_token is not None
         assert test_users[0].email_change_token_created_at is not None

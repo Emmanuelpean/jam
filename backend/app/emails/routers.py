@@ -35,13 +35,14 @@ def get_verification_link(email_address: str) -> dict:
     latest_email = emails[-1]
 
     # Extract verification URL from HTML body
-    base_url = re.escape(settings.frontend_url + "/login/?token=")
-    pattern = base_url + r"([A-Za-z0-9_\-]+)"  # Capture the token (assuming token format)
+    base_url = re.escape(settings.frontend_url + "/") + r"[^/]+"
+    pattern = base_url + r"/\?token=([A-Za-z0-9_\-]+)"
     match = re.search(pattern, latest_email["body"])
 
     if match:
-        return {"verification_url": base_url + match.group(1)}
+        return {"verification_url": match.group(0)}
     raise HTTPException(status_code=404, detail="No verification link found")
+
 
 
 @router.get("/reset-link/{email_address}")

@@ -20,9 +20,23 @@ type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "ver
 
 let isVerifying = false;
 
+const determineAuthMode = (pathname: string, token: string | null): AuthMode => {
+	// Remove trailing slash for consistent comparison
+	const normalizedPath = pathname.endsWith("/") && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
+
+	if (normalizedPath === "/reset-password" && token) return "resetPassword";
+	if (normalizedPath === "/verify-email") return "verifyEmail";
+	if (normalizedPath === "/verify-new-email") return "verifyNewEmail";
+	if (normalizedPath === "/forgot-password") return "forgotPassword";
+	if (normalizedPath === "/register") return "register";
+	return "login";
+};
+
 function AuthForm(): JSX.Element {
-	const [mode, setMode] = useState<AuthMode>("login");
+	const location = useLocation();
+	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
+	const [mode, setMode] = useState<AuthMode>(() => determineAuthMode(location.pathname, searchParams.get("token")));
 	const [formData, setFormData] = useState<FormData>({
 		email: "",
 		password: "",
@@ -36,8 +50,6 @@ function AuthForm(): JSX.Element {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [fieldErrors, setFieldErrors] = useState<Errors>({});
 	const { logout, login, register, isAuthenticated } = useAuth();
-	const navigate = useNavigate();
-	const location = useLocation();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
 	const { showLoading, hideLoading } = useLoading();
@@ -45,31 +57,23 @@ function AuthForm(): JSX.Element {
 	document.documentElement.setAttribute("data-theme", "mixed-berry");
 
 	useEffect(() => {
-		// Check for reset token in URL
-		const token: string | null = searchParams.get("token");
+		// Update mode based on URL path and query params and redirect if authenticated
+		const token = searchParams.get("token");
+		const newMode = determineAuthMode(location.pathname, token);
 
-		if (location.pathname.indexOf("reset-password") >= 0 && token) {
-			setMode("resetPassword");
+		if (newMode === "resetPassword" && token) {
 			setResetToken(token);
-		} else if (location.pathname.indexOf("verify-email") >= 0) {
-			setMode("verifyEmail");
-		} else if (location.pathname.indexOf("verify-new-email") >= 0) {
-			setMode("verifyNewEmail");
-		} else if (location.pathname.indexOf("forgot-password") >= 0) {
-			setMode("forgotPassword");
-		} else if (location.pathname.indexOf("login") >= 0) {
-			setMode("login");
-		} else if (location.pathname.indexOf("register") >= 0) {
-			setMode("register");
 		}
 
-		if (isAuthenticated && (mode == "login" || mode == "register")) {
+		setMode(newMode);
+
+		if (isAuthenticated && (newMode === "login" || newMode === "register")) {
 			navigate("/dashboard", { replace: true });
-			return;
 		}
-	}, [location.pathname, isAuthenticated, searchParams]);
+	}, [location.pathname, isAuthenticated, searchParams, navigate]);
 
 	useEffect(() => {
+		console.log("Auth mode changed to:", mode);
 		// Verifies the email
 		if (!["verifyEmail", "verifyNewEmail"].includes(mode) || isVerifying) return;
 
@@ -85,6 +89,9 @@ function AuthForm(): JSX.Element {
 		if (!verifyToken || !api) return;
 
 		isVerifying = true;
+		if (isAuthenticated) {
+			logout();
+		}
 		showLoading("Verifying email...", undefined);
 
 		api(verifyToken)
@@ -103,11 +110,7 @@ function AuthForm(): JSX.Element {
 					isVerifying = false;
 				}, 1000);
 			});
-
-		if (isAuthenticated) {
-			logout();
-		}
-	}, [mode]);
+	}, [mode, location.pathname, searchParams, navigate]);
 
 	// Detect small screens
 	useEffect(() => {

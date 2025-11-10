@@ -139,7 +139,7 @@ def send_verification_with_rate_limit(
 
         return {
             "success": True,
-            "message": "Verification email sent successfully",
+            "message": "Verification email sent successfully.",
             "error_code": None,
         }
 
