@@ -68,14 +68,14 @@ class SettingUpdate(SettingCreate):
     value: str | None = None
 
 
-# -------------------------------------------------------- USER --------------------------------------------------------
+# -------------------------------------------------------- AUTH --------------------------------------------------------
 
 
 class UserRegister(BaseModel):
     """User create schema"""
 
-    password: str
     email: EmailField
+    password: str
 
 
 class UserLogin(BaseModel):
@@ -117,6 +117,7 @@ class UserOut(Out):
     update_limit: int
     toast_active: bool
     default_currency: str
+    pending_email: EmailField | None = None
 
 
 class UserUpdate(UserCreate):
@@ -126,12 +127,20 @@ class UserUpdate(UserCreate):
     password: str | None = None
 
 
-class MeUpdate(UserCreate):
-    """User update schema"""
+# ---------------------------------------------------- CURRENT USER ----------------------------------------------------
+
+
+class CurrentUserUpdate(BaseModel):
+    """Current user update schema"""
 
     email: EmailField | None = None
     password: str | None = None
     current_password: str | None = None
+    theme: str = "mixed-berry"
+    chase_threshold: int = 10
+    deadline_threshold: int = 7
+    update_limit: int = 30
+    default_currency: str = "GBP"
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------
@@ -144,6 +153,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: str | None = None
+    token_version: int = 0
 
 
 class EmailRequest(BaseModel):
