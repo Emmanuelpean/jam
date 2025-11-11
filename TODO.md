@@ -46,6 +46,7 @@
 * [ ] Add TOAST EIS
 * [ ] Add option for spontaneous applications
 * [ ] Add option say if a recruiter contacted the user about a job
+* [ ] Source aggregator is not shown when editing a job
 
 ## Select Widgets
 * [ ] Sort options alphabetically
@@ -62,4 +63,3 @@
   * [ ] Company
   * [ ] Date Sent
   * [ ] Notes
-
