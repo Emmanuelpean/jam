@@ -36,12 +36,6 @@ def get_indeed_redirected_url(job_url: str, max_attempts: int = 100) -> str:
     :param max_attempts: max number of attempts to get redirected
     :return: redirected URL"""
 
-    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-
     iteration = 0
     url = job_url
     while "indeed.com/viewjob?jk" not in url:

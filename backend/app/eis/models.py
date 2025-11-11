@@ -5,7 +5,6 @@ Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
 from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float, TIMESTAMP, Table, UniqueConstraint
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
@@ -35,6 +34,7 @@ class JobAlertEmail(Owned, Base):
     - `subject` (str): Subject of the email message.
     - `sender` (str): Sender of the email message.
     - `date_received` (datetime): Date and time when the email was received.
+    - 'job_found_n' (int): Number of jobs found in the email
     - `platform` (str): Platform from which the email was received (LinkedIn, Indeed, etc.).
     - `body` (str): Body of the email message.
 
@@ -66,7 +66,7 @@ class JobAlertEmail(Owned, Base):
     jobs = relationship("ScrapedJob", secondary=jobalertemail_scrapedjob_mapping, back_populates="emails")
     service_log = relationship("EisServiceLog", back_populates="emails")
 
-    # __table_args__ = (UniqueConstraint("external_email_id", "owner_id", name="unique_email_per_owner"),)
+    __table_args__ = (UniqueConstraint("external_email_id", "owner_id", name="unique_email_per_owner"),)
 
 
 class ScrapedJob(Owned, Base):
