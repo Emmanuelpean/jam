@@ -836,7 +836,7 @@ class TestPersonsPage(TablePage):
     test_data = {
         "first_name": "Test_firstname",
         "last_name": "Test_lastname",
-        "email": "Test_email@test.com",
+        "email": "test_email@test.com",
         "company_id": "Tech Corp",
         "phone": "000000000",
         "linkedin_url": "https://www.linkedin.com/company/websolutions-ltd/",

@@ -40,10 +40,10 @@ def create_settings(db) -> list[models.Setting]:
 
 
 def create_users(db, user_data: list[dict] = None) -> list[models.User]:
-    """Create sample users and return them with non-hashed passwords but with database IDs"""
+    """Create sample users and return them attached to the session"""
 
     print("Creating users...")
-    users_hash = []
+    users = []
     original_passwords = []
     if not user_data:
         user_data = USER_DATA
@@ -54,20 +54,15 @@ def create_users(db, user_data: list[dict] = None) -> list[models.User]:
         original_passwords.append(user_dict["password"])  # Store original password
         user_dict["password"] = utils.hash_password(user_dict["password"])
         # noinspection PyArgumentList
-        users_hash.append(models.User(**user_dict))
+        users.append(models.User(**user_dict))
 
-    users_hash = add_to_db(db, users_hash)
+    users = add_to_db(db, users)
 
-    # Create new user objects that won't become detached with the original passwords and database attributes
-    result_users = []
-    for i, user in enumerate(users_hash):
-        user_dict = {key: value for key, value in user.__dict__.items() if key != "_sa_instance_state"}
-        user_dict["password"] = original_passwords[i]
-        # noinspection PyArgumentList
-        new_user = models.User(**user_dict)
-        result_users.append(new_user)
+    # Add the plain password as an attribute for test convenience
+    for i, user in enumerate(users):
+        user.plain_password = original_passwords[i]
 
-    return result_users
+    return users
 
 
 def delete_user(db, user_email: str) -> None:

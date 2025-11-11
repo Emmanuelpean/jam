@@ -225,6 +225,8 @@ export interface UserData extends OwnedOut {
 	deadline_threshold: number;
 	update_limit: number;
 	default_currency: string;
+	pending_email: string | null;
+	email_change_token: string | null;
 }
 
 // ---------------------------------------------------- SCRAPED JOB ----------------------------------------------------

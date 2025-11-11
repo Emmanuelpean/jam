@@ -346,3 +346,34 @@ class TestEmailServiceIMAP:
         # noinspection PyTypeChecker
         result = email_svc._decode_header(None)
         assert result == ""
+
+
+class TestEmailServiceIntegration:
+    """Integration tests for email service."""
+
+    def test_email_service_initialization(self) -> None:
+        """Test email service initializes with environment variables."""
+        # Patch the class attributes directly
+        with (
+            patch.object(EmailService, "sender", "test@example.com"),
+            patch.object(EmailService, "password", "testpass"),
+            patch.object(EmailService, "smtp_server", "smtp.example.com"),
+            patch.object(EmailService, "smtp_port", 587),
+            patch.object(EmailService, "imap_server", "imap.example.com"),
+            patch.object(EmailService, "imap_port", 993),
+        ):
+
+            svc = EmailService()
+            assert svc.sender == "test@example.com"
+            assert svc.password == "testpass"
+            assert svc.smtp_server == "smtp.example.com"
+            assert svc.smtp_port == 587
+            assert svc.imap_server == "imap.example.com"
+            assert svc.imap_port == 993
+
+    def test_email_service_singleton(self) -> None:
+        """Test that email_service singleton is available."""
+        from app.emails.email_service import email_service
+
+        assert email_service is not None
+        assert isinstance(email_service, EmailService)

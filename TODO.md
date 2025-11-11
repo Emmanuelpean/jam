@@ -42,8 +42,27 @@
 ### Version 1.1
 * [ ] Add guided tour for new users
 * [ ] handle duplicate jobs
-* [X] Add password reset and email confirmation
+* [ ] Add password reset and email confirmation
 * [ ] Add TOAST EIS
+* [ ] Add option for spontaneous applications
+* [ ] Add option say if a recruiter contacted the user about a job
+* [ ] Source aggregator is not shown when editing a job
+
+## Select Widgets
+* [ ] Sort options alphabetically
+* [ ] After adding an option, select it automatically
+
+## Job Modal
+* [ ] Fix bug preventing the source aggregator to be displayed
+* [ ] Add option to select the source (recruiter, aggregator, other)
+* [ ] Add option for application on company website
+
+
+# Spontaneous Applications
+* [ ] Add spontaneous application table with the following columns:
+  * [ ] Company
+  * [ ] Date Sent
+  * [ ] Notes
 * [ ] Add the ability to generate a follow-up email and select the contact to send it to
 * [ ] Add email confirmation when user changes email
 * [ ] Ensure that the parsed country matches the list of available countries

@@ -54,3 +54,6 @@ output = "reports/coverage/coverage.xml"
 
 [tool.setuptools.packages.find]
 exclude = ["reports*", "resources*"]
+
+[tool.black]
+line-length = 120
