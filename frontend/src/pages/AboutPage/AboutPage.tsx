@@ -19,7 +19,7 @@ const AboutPage = () => {
 			"Application status monitoring",
 		],
 		"1.1.0": ["Added email verification for new user registrations", "Added password reset feature"],
-		"1.2.0": ["Added email verification when changing the user email"],
+		"1.1.1": ["Added email verification when changing the user email"],
 	};
 
 	const features = [
