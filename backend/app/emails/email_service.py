@@ -2,8 +2,6 @@
 
 import email
 import imaplib
-
-# import os
 import smtplib
 from datetime import datetime, timedelta
 from email.header import decode_header
@@ -18,77 +16,6 @@ from app.emails.utils import clean_email_address
 from app.utils import AppLogger
 
 templates = Jinja2Templates(directory="templates")
-
-
-# def open_file(filepath: str) -> str:
-#     """Helper function to open a text file from the resources directory.
-#     :param filepath: The name of the file located in the resources directory"""
-#
-#     base_dir = os.path.dirname(__file__)
-#     filepath = os.path.join(base_dir, "..\\..\\", "tests/resources", filepath)
-#     with open(filepath, "r") as ofile:
-#         return ofile.read()
-#
-
-# def get_test_emails() -> dict:
-#     """Helper function to get test emails from the resources directory."""
-#
-#     if settings.test_mode:
-#         from tests.utils.table_data import USER_DATA
-#
-#         return {
-#             "1": {
-#                 "sender": USER_DATA[0]["email"],
-#                 "content": open_file("indeed_email.txt"),
-#                 "subject": "Indeed 1",
-#                 "from": "alert@indeed.com",
-#                 "platform": "indeed",
-#             },
-#             "2": {
-#                 "sender": USER_DATA[0]["email"],
-#                 "content": open_file("linkedin_email.txt"),
-#                 "subject": "Linkedin 1",
-#                 "from": "jobalerts-noreply@linkedin.com",
-#                 "platform": "linkedin",
-#             },
-#             "5": {
-#                 "sender": USER_DATA[0]["email"],
-#                 "content": open_file("indeed_email_2.txt"),
-#                 "subject": "Indeed 2",
-#                 "from": "alert@indeed.com",
-#                 "platform": "indeed",
-#             },
-#             "6": {
-#                 "sender": USER_DATA[0]["email"],
-#                 "content": open_file("linkedin_email_2.txt"),
-#                 "subject": "Linkedin 2",
-#                 "from": "jobalerts-noreply@linkedin.com",
-#                 "platform": "linkedin",
-#             },
-#             "7": {
-#                 "sender": USER_DATA[0]["email"],
-#                 "content": open_file("veganjobs_email_1.txt"),
-#                 "subject": "VeganJobs 1",
-#                 "from": "info@veganjobs.com",
-#                 "platform": "veganjobs",
-#             },
-#             "3": {
-#                 "sender": USER_DATA[3]["email"],
-#                 "content": open_file("indeed_email.txt"),
-#                 "subject": "Indeed 2",
-#                 "from": "alert@indeed.com",
-#                 "platform": "indeed",
-#             },
-#             "4": {
-#                 "sender": USER_DATA[3]["email"],
-#                 "content": open_file("linkedin_email.txt"),
-#                 "subject": "Linkedin 2",
-#                 "from": "jobalerts-noreply@linkedin.com",
-#                 "platform": "linkedin",
-#             },
-#         }
-#     else:
-#         return {}
 
 
 class EmailService(object):
@@ -309,11 +236,6 @@ class EmailService(object):
         :param subject_contains: Filter by subject content
         :return: List of message IDs matching the query"""
 
-        # # Test mode
-        # if settings.test_mode:
-        #     TEST_EMAILS = get_test_emails()
-        #     return [key for key in TEST_EMAILS if TEST_EMAILS[key]["sender"] == sender_email]
-
         mail = self._connect_imap()
 
         try:
@@ -364,17 +286,6 @@ class EmailService(object):
         """Get the content of a specific email by ID.
         :param email_id: The email message ID
         :return: Dictionary with email details (subject, from, date, body)"""
-
-        # if settings.test_mode:
-        #     TEST_EMAILS = get_test_emails()
-        #     email_data = TEST_EMAILS[email_id]
-        #     return {
-        #         "id": email_id,
-        #         "subject": email_data["subject"],
-        #         "from": email_data["from"],
-        #         "date": datetime.now(),
-        #         "body": email_data["content"],
-        #     }
 
         mail = self._connect_imap()
 
@@ -517,15 +428,3 @@ class EmailService(object):
 
 
 email_service = EmailService()
-# # # # send_email = email_service.send_email("emmanuel.pean@gmail.com", "test", "test body", "jam.info@emmanuelpean.me")
-# # #
-# Get multiple emails at once
-# emails = email_service.get_emails(
-#     timedelta_days=1,
-#     recipient_email="jam.jobscraper@emmanuelpean.me",
-#     inbox_only=True,
-#     sender_email="emmanuelpean@gmail.com",
-#     # subject_contains="Job Alert Results",
-# )
-# for email in emails:
-#     print(email["body"], "\n\n")

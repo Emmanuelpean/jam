@@ -19,7 +19,6 @@ from sqlalchemy import (
     Table,
     func,
     UniqueConstraint,
-    Index,
 )
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
