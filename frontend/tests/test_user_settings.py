@@ -1,5 +1,6 @@
 """Tests for the User Settings Page"""
 
+import datetime as dt
 import time
 
 from selenium.webdriver.remote.webelement import WebElement
@@ -106,12 +107,6 @@ class TestUserSettingsPage(BaseTest):
 
         self._assert_message("confirm_password-", error_message)
 
-    @property
-    def db_user(self) -> models.User:
-        """Get the user from the database"""
-
-        return self.db.query(models.User).filter(models.User.id == self.user.id).first()
-
     # ------------------------------------------------- UPDATING EMAIL -------------------------------------------------
 
     def test_no_password(self) -> None:
@@ -131,19 +126,56 @@ class TestUserSettingsPage(BaseTest):
         self.confirm()
         self.assert_toast("Current password is incorrect. Please try again.")
 
-    def test_change_email_success(self, test_users) -> None:
+    def test_change_email_success(self) -> None:
         """Test changing the email address"""
 
-        self.set_text(self.current_password, test_users[1].password)
-        self.set_text(self.email, "newemail@email.com")
+        new_email = "newemail@email.com"
+        self.clear_test_emails()
+        self.set_text(self.current_password, self.user.plain_password)
+        self.set_text(self.email, new_email)
         self.confirm()
-        self.assert_toast("User settings updated successfully.")
-        assert self.db_user.email == "newemail@email.com"
+        self.assert_toast("Verification email sent successfully.")
+        verification_url = self.get_verification_link_from_email(new_email)
+        self.driver.get(verification_url)
+        self.assert_toast_message("Email address changed successfully. You can now log in with your new email.")
+        self.db_user.email = new_email
+
+    def test_verification_with_invalid_token_shows_error(self, session) -> None:
+        """Test visiting email verification URL with an invalid or expired token shows an error message."""
+
+        new_email = "newuser@test.com"
+        self.clear_test_emails()
+        self.set_text(self.current_password, self.user.plain_password)
+        self.set_text(self.email, new_email)
+        self.confirm()
+        self.assert_toast("Verification email sent successfully.")
+        invalid_verification_url = self.get_verification_link_from_email(new_email)[:-4]
+        self.driver.get(invalid_verification_url)
+        self.assert_toast_message(
+            "Invalid or expired token. Please request a new one by logging in and changing your email address."
+        )
+
+    def test_expired_verification_token(self, session) -> None:
+        """Test email verification with an expired token."""
+
+        new_email = "newuser@test.com"
+        self.clear_test_emails()
+        self.set_text(self.current_password, self.user.plain_password)
+        self.set_text(self.email, new_email)
+        self.confirm()
+        self.assert_toast("Verification email sent successfully.")
+        user = session.query(models.User).filter(models.User.email == self.user.email).first()
+        user.verification_token_created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=20)
+        invalid_verification_url = self.get_verification_link_from_email(new_email)[:-4]
+        self.driver.get(invalid_verification_url)
+        self.assert_toast_message(
+            "Invalid or expired token. Please request a new one by logging in and changing your email address."
+        )
 
     def test_change_email_already_exist(self, test_users) -> None:
         """Test changing the email address"""
 
-        self.set_text(self.current_password, self.user.password)
+        self.set_text(self.current_password, self.user.plain_password)
         self.set_text(self.email, test_users[2].email)
         self.confirm()
         self.assert_toast("Email is already in use. Please try a different email.")
@@ -152,7 +184,7 @@ class TestUserSettingsPage(BaseTest):
     def test_change_email_incorrect_format(self, test_users) -> None:
         """Test changing the email address"""
 
-        self.set_text(self.current_password, self.user.password)
+        self.set_text(self.current_password, self.user.plain_password)
         self.set_text(self.email, "f")
         self.confirm()
         self.assert_email_error_message("Email format is invalid")
@@ -160,35 +192,36 @@ class TestUserSettingsPage(BaseTest):
 
     # ------------------------------------------------ UPDATING PASSWORD -----------------------------------------------
 
-    def test_change_password_success(self, test_users) -> None:
+    def test_change_password_success(self) -> None:
         """Test changing the password"""
 
-        self.current_password.send_keys(test_users[1].password)
-        self.set_text(self.new_password, "newpassword")
-        self.set_text(self.confirm_password, "newpassword")
+        new_password = "newpassword"
+        self.current_password.send_keys(self.user.plain_password)
+        self.set_text(self.new_password, new_password)
+        self.set_text(self.confirm_password, new_password)
         self.confirm()
         self.assert_toast("User settings updated successfully.")
-        assert verify_password("newpassword", self.db_user.password)
+        assert verify_password(new_password, self.db_user.password)
 
-    def test_change_password_invalid(self, test_users) -> None:
+    def test_change_password_invalid(self) -> None:
         """Test changing the password"""
 
-        self.current_password.send_keys(test_users[1].password)
+        self.current_password.send_keys(self.user.plain_password)
         self.set_text(self.new_password, "n")
         self.set_text(self.confirm_password, "n")
         self.confirm()
         self.assert_new_password_error_message("New password must be at least 8 characters long")
-        assert verify_password(self.user.password, self.db_user.password)
+        assert verify_password(self.user.plain_password, self.db_user.password)
 
-    def test_change_password_nonmatching(self, test_users) -> None:
+    def test_change_password_nonmatching(self) -> None:
         """Test changing the password"""
 
-        self.current_password.send_keys(test_users[1].password)
+        self.current_password.send_keys(self.user.plain_password)
         self.set_text(self.new_password, "testpassword")
         self.set_text(self.confirm_password, "n")
         self.confirm()
         self.assert_confirm_password_error_message("Passwords do not match")
-        assert verify_password(self.user.password, self.db_user.password)
+        assert verify_password(self.user.plain_password, self.db_user.password)
 
     # ------------------------------------------------------ THEME -----------------------------------------------------
 
@@ -205,8 +238,8 @@ class TestUserSettingsPage(BaseTest):
     def test_dashboard_settings(self) -> None:
         """Test changing the dashboard settings"""
 
-        assert self.db_user.chase_threshold == 30
-        assert self.db_user.deadline_threshold == 30
+        assert self.db_user.chase_threshold == 14
+        assert self.db_user.deadline_threshold == 7
         assert self.db_user.update_limit == 10
 
         self.set_text(self.chase_threshold, "100")

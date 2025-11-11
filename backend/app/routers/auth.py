@@ -62,8 +62,10 @@ def login(
     :raises HTTPException with a 401 status code if the user is not active or not verified
     :raises HTTPException with a 429 status code if verification email rate limit is exceeded"""
 
+    user_email = utils.clean_email(user_credentials.username)
+
     # Find the user in the list based on the email provided
-    user = db.query(models.User).filter(user_credentials.username.lower() == models.User.email).first()
+    user = db.query(models.User).filter(models.User.email == user_email).first()
 
     # Check that the user exist and verify the password
     if user is None or not utils.verify_password(user_credentials.password, user.password):
@@ -94,7 +96,10 @@ def login(
     db.commit()
 
     # Create an access token and return it
-    access_token = oauth2.create_access_token(data={"user_id": user.id})
+    access_token = oauth2.create_access_token(
+        data={"user_id": user.id},
+        token_version=user.token_version,
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -124,7 +129,7 @@ def send_verification_with_rate_limit(
 
     try:
         # Send the email to the user
-        verification_url = f"{settings.frontend_url}/login/?token={token}"
+        verification_url = f"{settings.frontend_url}/verify-email/?token={token}"
         email_service.send_verification_email(user.email, verification_url)
 
         # Update user with new verification code and timestamp
@@ -134,7 +139,7 @@ def send_verification_with_rate_limit(
 
         return {
             "success": True,
-            "message": "Verification email sent successfully",
+            "message": "Verification email sent successfully.",
             "error_code": None,
         }
 
@@ -163,9 +168,9 @@ def create_user(
     :raises HTTPException with a 401 status code if the user is not allowed to sign up"""
 
     # Check the user can be created
-    setting = db.query(models.Setting).filter(models.Setting.name == "allowlist").first()
-    if setting and setting.is_active:
-        emails_allowed = [email.strip().lower() for email in setting.value.split(",")]
+    setting = db.query(models.Setting).filter(models.Setting.name == "allowlist", models.Setting.is_active).first()
+    if setting:
+        emails_allowed = [utils.clean_email(email) for email in setting.value.split(",")]
         if user.email not in emails_allowed:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

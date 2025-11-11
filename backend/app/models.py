@@ -146,6 +146,10 @@ class User(CommonBase, Base):
     - `verification_token_created_at` (datetime, optional): Timestamp of when the verification token was created.
     - `password_reset_token` (str, optional, unique): Token used for password reset.
     - `password_reset_token_created_at` (datetime, optional): Timestamp of when the password reset token was created.
+    - `pending_email` (str, optional): New email address pending verification.
+    - `email_change_token` (str, optional): Token used for email change verification.
+    - `email_change_token_created_at` (datetime, optional): Timestamp of when the email change token was created.
+    - `token_version` (int): Version of the token for invalidation purposes.
 
     Constraints:
     ------------
@@ -157,8 +161,8 @@ class User(CommonBase, Base):
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
     is_admin = Column(Boolean, nullable=False, server_default=expression.false())
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
-    chase_threshold = Column(Integer, nullable=False, server_default="30")
-    deadline_threshold = Column(Integer, nullable=False, server_default="30")
+    chase_threshold = Column(Integer, nullable=False, server_default="14")
+    deadline_threshold = Column(Integer, nullable=False, server_default="7")
     update_limit = Column(Integer, nullable=False, server_default="10")
     toast_active = Column(Boolean, nullable=False, server_default=expression.false())
     default_currency = Column(String, nullable=False, server_default="GBP")
@@ -167,8 +171,10 @@ class User(CommonBase, Base):
     verification_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
     password_reset_token = Column(String, nullable=True, unique=True)
     password_reset_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
-
-    __table_args__ = (Index("ix_user_email_lower", func.lower(email), unique=True),)
+    pending_email = Column(String, nullable=True)
+    email_change_token = Column(String, nullable=True)
+    email_change_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    token_version = Column(Integer, default=0, nullable=False)
 
 
 # -------------------------------------------------------- DATA --------------------------------------------------------
@@ -376,7 +382,7 @@ class Person(Owned, Base):
         """Computed property that combines the first name, last name, and the company name"""
 
         if self.company:
-            return f"{self.first_name} {self.last_name} - {self.company.name}"
+            return f"{self.first_name} {self.last_name} ({self.company.name})"
         else:
             return self.name
 

@@ -84,7 +84,7 @@ export const renderFunctions = {
 		const text: string | undefined | null = param.item?.[key];
 		if (text) {
 			if (param.view) {
-				return text;
+				return <p style={{ whiteSpace: "pre-line" }}>{text}</p>;
 			} else {
 				const words = text.split(" ");
 				const truncated = words.slice(0, 12).join(" ");

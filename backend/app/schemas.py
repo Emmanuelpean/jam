@@ -6,8 +6,9 @@ contain reference to other tables.
 Update schemas should be used to update existing entries in the database."""
 
 from datetime import datetime
-
-from pydantic import BaseModel, EmailStr, field_validator
+from typing import Annotated
+from app.utils import clean_email
+from pydantic import BaseModel, EmailStr, field_validator, BeforeValidator
 
 
 def serialize_relationships(value) -> list[int]:
@@ -17,6 +18,9 @@ def serialize_relationships(value) -> list[int]:
     if isinstance(value[0], int):
         return value
     return [item.id for item in value]
+
+
+EmailField = Annotated[EmailStr, BeforeValidator(clean_email)]
 
 
 class Out(BaseModel):
@@ -64,20 +68,20 @@ class SettingUpdate(SettingCreate):
     value: str | None = None
 
 
-# -------------------------------------------------------- USER --------------------------------------------------------
+# -------------------------------------------------------- AUTH --------------------------------------------------------
 
 
 class UserRegister(BaseModel):
     """User create schema"""
 
+    email: EmailField
     password: str
-    email: EmailStr
 
 
 class UserLogin(BaseModel):
     """User login schema"""
 
-    email: EmailStr
+    email: EmailField
     password: str
 
 
@@ -87,7 +91,7 @@ class UserLogin(BaseModel):
 class UserCreate(BaseModel):
     """User create schema"""
 
-    email: EmailStr
+    email: EmailField
     password: str
     theme: str = "mixed-berry"
     is_active: bool = True
@@ -103,7 +107,7 @@ class UserCreate(BaseModel):
 class UserOut(Out):
     """User output schema"""
 
-    email: EmailStr
+    email: EmailField
     theme: str
     is_active: bool
     is_admin: bool
@@ -113,21 +117,30 @@ class UserOut(Out):
     update_limit: int
     toast_active: bool
     default_currency: str
+    pending_email: EmailField | None = None
 
 
 class UserUpdate(UserCreate):
     """User update schema"""
 
-    email: EmailStr | None = None
+    email: EmailField | None = None
     password: str | None = None
 
 
-class MeUpdate(UserCreate):
-    """User update schema"""
+# ---------------------------------------------------- CURRENT USER ----------------------------------------------------
 
-    email: EmailStr | None = None
+
+class CurrentUserUpdate(BaseModel):
+    """Current user update schema"""
+
+    email: EmailField | None = None
     password: str | None = None
     current_password: str | None = None
+    theme: str = "mixed-berry"
+    chase_threshold: int = 10
+    deadline_threshold: int = 7
+    update_limit: int = 30
+    default_currency: str = "GBP"
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------
@@ -140,12 +153,13 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: str | None = None
+    token_version: int = 0
 
 
 class EmailRequest(BaseModel):
     """Schema for email-only requests"""
 
-    email: EmailStr
+    email: EmailField
 
 
 class PasswordReset(BaseModel):
@@ -290,7 +304,7 @@ class PersonCreate(BaseModel):
 
     first_name: str
     last_name: str
-    email: EmailStr | None = None
+    email: EmailField | None = None
     phone: str | None = None
     linkedin_url: str | None = None
     role: str | None = None
