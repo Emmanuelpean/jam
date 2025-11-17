@@ -1,5 +1,8 @@
+"""This module contains test email resources for job alert emails from different platforms."""
+
 import datetime
 import os
+
 from tests.utils.table_data import USER_DATA
 
 
@@ -34,6 +37,7 @@ LINKEDIN_EMAIL_1 = {
     "date": datetime.datetime.now(),
     "body": LINKEDIN_EMAIL_1_BODY,
     "platform": "linkedin",
+    "job_ids": LINKEDIN_JOB_IDS_1,
 }
 
 # Email 2
@@ -52,6 +56,7 @@ LINKEDIN_EMAIL_2 = {
     "date": datetime.datetime.now(),
     "body": LINKEDIN_EMAIL_2_BODY,
     "platform": "linkedin",
+    "job_ids": LINKEDIN_JOB_IDS_2,
 }
 
 
@@ -92,6 +97,7 @@ INDEED_EMAIL_1 = {
     "date": datetime.datetime.now(),
     "body": INDEED_EMAIL_1_BODY,
     "platform": "indeed",
+    "job_ids": INDEED_JOB_IDS_1,
 }
 
 # Email 2
@@ -109,6 +115,7 @@ INDEED_EMAIL_2 = {
     "date": datetime.datetime.now(),
     "body": INDEED_EMAIL_2_BODY,
     "platform": "indeed",
+    "job_ids": INDEED_JOB_IDS_2,
 }
 
 # ------------------------------------------------------ VEGANJOBS -----------------------------------------------------
@@ -127,14 +134,22 @@ VEGANJOBS_EMAIL_1 = {
     "date": datetime.datetime.now(),
     "body": VEGANJOBS_EMAIL_1_BODY,
     "platform": "veganjobs",
+    "job_ids": VEGANJOBS_JOB_IDS_1,
 }
 
 
 TEST_EMAILS = [
-    INDEED_EMAIL_1,
-    INDEED_EMAIL_2,
     LINKEDIN_EMAIL_1,
     LINKEDIN_EMAIL_2,
+    INDEED_EMAIL_1,
+    INDEED_EMAIL_2,
     VEGANJOBS_EMAIL_1,
 ]
-TEST_EMAILS = {email["id"]: email for email in TEST_EMAILS}
+NEW_TEST_EMAILS = {}
+for user in USER_DATA:
+    for email in TEST_EMAILS:
+        email = email.copy()
+        email["to"] = user["email"]
+        email["id"] = f"{email['id']}_{user['email']}"
+        NEW_TEST_EMAILS[email["id"]] = email
+TEST_EMAILS = NEW_TEST_EMAILS

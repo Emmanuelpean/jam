@@ -1,15 +1,20 @@
+"""Email parser functions to extract job IDs from email bodies."""
+
 import re
 
 import cloudscraper
 
 
 def pattern_extract(body: str, pattern: str) -> list[str]:
-    """Extract job ids from a job body and return a list of job ids.
+    """Extract matches from an email body.
     :param str body: job body
-    :param str pattern: job ids pattern"""
+    :param str pattern: pattern"""
 
-    job_ids = re.findall(pattern, body, re.IGNORECASE)
-    return list(dict.fromkeys(job_ids))
+    matches = re.findall(pattern, body, re.IGNORECASE)
+    return list(dict.fromkeys(matches))
+
+
+# ------------------------------------------------------ VEGANJOBS -----------------------------------------------------
 
 
 def extract_veganjobs_job_ids(body: str) -> list[str]:
@@ -21,6 +26,9 @@ def extract_veganjobs_job_ids(body: str) -> list[str]:
     return pattern_extract(body, pattern)
 
 
+# ------------------------------------------------------ LINKEDIN ------------------------------------------------------
+
+
 def extract_linkedin_job_ids(body: str) -> list[str]:
     """Extract LinkedIn job IDs from the email body
     :param body: email body content as string
@@ -28,6 +36,9 @@ def extract_linkedin_job_ids(body: str) -> list[str]:
 
     pattern = r"linkedin\.com/(?:comm/)?jobs/view/(\d+)"
     return pattern_extract(body, pattern)
+
+
+# ------------------------------------------------------- INDEED -------------------------------------------------------
 
 
 def get_indeed_redirected_url(job_url: str, max_attempts: int = 100) -> str:

@@ -16,7 +16,7 @@ DATE_FORMAT = "%Y-%m-%d"
 
 USER_DATA = [
     {
-        "email": "Test_user@test.com",
+        "email": "test_user@test.com",
         "password": "test_password",
         "toast_active": True,
         "is_verified": True,

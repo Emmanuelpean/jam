@@ -343,7 +343,6 @@ class Person(Owned, Base):
     - `role` (str, optional): Role or position held by the person within the company.
     - `linkedin_url` (str, optional): LinkedIn profile URL of the person.
     - `name` (str): Computed property combining first and last name.
-    - `name_company` (str): Computed property combining first name, last name, and company name.
 
     Foreign keys:
     -------------
@@ -376,15 +375,6 @@ class Person(Owned, Base):
 
         return f"{self.first_name} {self.last_name}"
 
-    @hybrid_property
-    def name_company(self) -> str:
-        """Computed property that combines the first name, last name, and the company name"""
-
-        if self.company:
-            return f"{self.first_name} {self.last_name} ({self.company.name})"
-        else:
-            return self.name
-
 
 class Job(Owned, Base):
     """Represents job postings within the application.
@@ -401,7 +391,6 @@ class Job(Owned, Base):
     - `deadline` (datetime, optional): Deadline for the job application.
     - `followup_snooze_datetime` (datetime, optional): Date and time to snooze follow-up reminders.
     - `attendance_type` (str, optional): Type of attendance offered for the job (on-site, remote, hybrid).
-    - `name` (str): Computed property combining the job title and company name.
     - `application_date` (datetime, optional): Date when the application was submitted.
     - `application_url` (str, optional): URL used to submit the application.
     - `application_status` (str, optional): Current status of the job application
@@ -482,17 +471,6 @@ class Job(Owned, Base):
     )
     application_cv = relationship("File", foreign_keys=[cv_id], lazy="select")
     application_cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
-
-    @hybrid_property
-    def name(self) -> str | Column[str]:
-        """Computed property that combines the job title and company name"""
-
-        if hasattr(self, "company") and self.title and self.company and self.company.name:
-            return f"{self.title} - {self.company.name}"
-        elif self.title:
-            return self.title
-        else:
-            return "Unknown Job"
 
     __table_args__ = (
         CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name=f"valid_rating_range"),

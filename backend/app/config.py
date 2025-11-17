@@ -46,6 +46,14 @@ class Settings(BaseSettings):
     # Testing
     test_mode: bool
 
+    # BrightAPI
+    brightdata_api_key: str
+    brightdata_linkedin_dataset_id: str
+    brightdata_indeed_dataset_id: str
+
+    # OpenAI
+    openai_api_key: str
+
     model_config = SettingsConfigDict(
         extra="ignore",
         env_file=Path(__file__).parent.parent / ".env",

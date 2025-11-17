@@ -319,7 +319,6 @@ class PersonOut(PersonCreate, OwnedOut):
     interviews: list[OwnedOut] = []
     jobs: list[OwnedOut] = []
     name: str | None = None
-    name_company: str | None = None
 
 
 class PersonUpdate(PersonCreate):
@@ -371,7 +370,6 @@ class JobOut(JobCreate, OwnedOut):
     contacts: list[int] = []
     interviews: list[OwnedOut] = []
     updates: list[OwnedOut] = []
-    name: str
 
     @field_validator("keywords", "contacts", mode="before")
     @classmethod

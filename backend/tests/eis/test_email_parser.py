@@ -6,6 +6,9 @@ from app.eis.email_parser import extract_indeed_job_ids, extract_linkedin_job_id
 from tests.eis import resources
 
 
+# ------------------------------------------------------ LINKEDIN ------------------------------------------------------
+
+
 class TestExtractLinkedinJobIds:
     """Test class for extract_linkedin_job_ids method"""
 
@@ -93,6 +96,9 @@ class TestExtractLinkedinJobIds:
         assert job_ids == ["1111111111", "2222222222"]
 
 
+# ------------------------------------------------------- INDEED -------------------------------------------------------
+
+
 class TestExtractIndeedJobIds:
     """Test class for extract_indeed_job_ids method"""
 
@@ -171,6 +177,9 @@ class TestExtractIndeedJobIds:
 
         assert len(job_ids) == 2
         assert job_ids == ["1111111111aaa", "2222222222bbb"]
+
+
+# ------------------------------------------------------ VEGANJOBS -----------------------------------------------------
 
 
 class TestExtractVeganJobsJobIds:
