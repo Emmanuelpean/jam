@@ -1,6 +1,6 @@
-import { SelectOption, toSelectOptions } from "../../../utils/Utils";
+import { findById, SelectOption, toSelectOptions } from "../../../utils/Utils";
 import React, { JSX, useMemo, useState } from "react";
-import { useDataContext } from "../../../contexts/DataContext";
+import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import { CompanyModal } from "../../modals/CompanyModal";
 import { LocationModal } from "../../modals/LocationModal";
 import { KeywordModal } from "../../modals/KeywordModal";
@@ -9,6 +9,7 @@ import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobModal } from "../../modals/JobModal";
 import currencies from "../../../data/currencies.json";
 import countries from "../../../data/countries.json";
+import { CompanyData, JobData, PersonData } from "../../../services/Schemas";
 
 interface UseFormOptionsReturn {
 	error: Error | null;
@@ -44,6 +45,18 @@ interface DataFactories {
 	jobs?: () => any;
 }
 
+const GetPersonLabel = (person: PersonData): string => {
+	const dataContext: DataContextValue = useDataContext();
+	const company: CompanyData = findById(dataContext.companies, person.company_id);
+	return company ? `${person.name} (${company.name})` : person.name;
+};
+
+const GetJobLabel = (job: JobData): string => {
+	const dataContext: DataContextValue = useDataContext();
+	const company: CompanyData = findById(dataContext.companies, job.company_id);
+	return company ? `${job.title} (${company.name})` : job.title;
+};
+
 export const useFormOptions = (
 	requiredOptions: string[] = [],
 	dataFactories: DataFactories = {},
@@ -77,7 +90,7 @@ export const useFormOptions = (
 	);
 	const keywordOptions: SelectOption[] = useMemo((): SelectOption[] => toSelectOptions(keywordsData), [keywordsData]);
 	const personOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(personsData, "id", "name_company"),
+		(): SelectOption[] => toSelectOptions(personsData, "id", GetPersonLabel),
 		[personsData],
 	);
 	const aggregatorOptions: SelectOption[] = useMemo(
@@ -85,7 +98,7 @@ export const useFormOptions = (
 		[aggregatorsData],
 	);
 	const jobOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(jobsData, "id", "name"),
+		(): SelectOption[] => toSelectOptions(jobsData, "id", GetJobLabel),
 		[jobsData],
 	);
 	const countryOptions: SelectOption[] = useMemo(
