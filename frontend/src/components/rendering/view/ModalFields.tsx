@@ -8,6 +8,8 @@ export interface ModalViewField extends ViewField {
 	displayCondition?: (item: any) => boolean;
 }
 
+export type ModalViewFields = (ModalViewField | ModalViewField[])[];
+
 interface ModalViewFieldOverride extends Partial<ModalViewField> {}
 
 export const renderModalViewField = (field: ModalViewField, item: any, id: string): ReactNode => {
