@@ -20,12 +20,18 @@ export const accessAttribute = (item: any, key: string | null | undefined) => {
 	return obj;
 };
 
-export const toSelectOptions = (data: any[], valueKey = "id", labelKey = "name"): SelectOption[] => {
-	return data.map((item: any) => ({
-		value: accessAttribute(item, valueKey),
-		label: accessAttribute(item, labelKey),
-		data: item,
-	}));
+export const toSelectOptions = (
+	data: any[],
+	valueKey: string | ((item: any) => any) = "id",
+	labelKey: string | ((item: any) => any) = "name",
+): SelectOption[] => {
+	return data.map(
+		(item: any): SelectOption => ({
+			value: typeof valueKey === "function" ? valueKey(item) : accessAttribute(item, valueKey),
+			label: typeof labelKey === "function" ? labelKey(item) : accessAttribute(item, labelKey),
+			data: item,
+		}),
+	);
 };
 
 export const areDifferent = (value1: any, value2: any): boolean => {
@@ -47,6 +53,10 @@ export const areDifferent = (value1: any, value2: any): boolean => {
 
 export const findByKey = (objects: any[], key: any): any => {
 	return objects.find((object) => object.key === key);
+};
+
+export const findById = (objects: any[], key: any): any => {
+	return objects.find((object) => object.id === key);
 };
 
 export function flattenArray(arr: Array<any>): Array<any> {

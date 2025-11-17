@@ -1,7 +1,8 @@
 import { renderFunctions, RenderParams, ViewField } from "./ViewRenders";
 import { toDdMmYyyy } from "../../../utils/TimeUtils";
-import { CompanyData, JobData, LocationData, PersonData } from "../../../services/Schemas";
+import { LocationData, PersonData } from "../../../services/Schemas";
 import { DataContextValue, JamData } from "../../../contexts/DataContext";
+import { findById } from "../../../utils/Utils";
 
 export interface TableColumn extends ViewField {
 	label: string;
@@ -14,23 +15,22 @@ export interface TableColumn extends ViewField {
 
 const getCompanyText = (item: JamData, context: DataContextValue): string | null => {
 	if ("company_id" in item) {
-		return context.companies.find((company: CompanyData): boolean => company.id === item.company_id)?.name ?? null;
+		return findById(context.companies, item.company_id)?.name ?? null;
 	}
 	return null;
 };
+
 const getLocationText = (item: JamData, context: DataContextValue): string | null => {
 	if ("location_id" in item) {
-		const location_name =
-			context.locations.find((location: LocationData): boolean => location.id === item.location_id)?.name ?? "";
-		const attendance_name = item.attendance_type ?? "";
-		return location_name + attendance_name || null;
+		const location: LocationData = findById(context.locations, item.location_id);
+		return location.name + item.attendance_type || null;
 	}
 	return null;
 };
 
 const getJobText = (item: JamData, context: DataContextValue): string | null => {
 	if ("job_id" in item) {
-		return context.jobs.find((job: JobData): boolean => job.id === item.job_id)?.name ?? null;
+		return findById(context.jobs, item.job_id)?.name ?? null;
 	}
 	return null;
 };

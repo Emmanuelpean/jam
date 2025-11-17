@@ -148,11 +148,7 @@ class User(CommonBase, Base):
     - `pending_email` (str, optional): New email address pending verification.
     - `email_change_token` (str, optional): Token used for email change verification.
     - `email_change_token_created_at` (datetime, optional): Timestamp of when the email change token was created.
-    - `token_version` (int): Version of the token for invalidation purposes.
-
-    Constraints:
-    ------------
-    - Minimum password length is enforced based on environment variables."""
+    - `token_version` (int): Version of the token for invalidation purposes."""
 
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
