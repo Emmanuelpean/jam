@@ -7,12 +7,18 @@ import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
 export const PersonModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
-	const { companies, openCompanyModal, renderCompanyModal } = useFormOptions(show ? ["companies"] : []);
+	const { companies, openCompanyModal, renderCompanyModal, getCompanyPreviewConfig } = useFormOptions(
+		show ? ["companies"] : [],
+	);
+	console.log(getCompanyPreviewConfig);
 	const dataContext: DataContextValue = useDataContext();
 
 	const formFieldsArray = [
 		[formFields.firstName({ placeholder: "Jane" }), formFields.lastName({ placeholder: "Doe" })],
-		[formFields.company(companies, openCompanyModal), formFields.role({ placeholder: "Team Leader" })],
+		[
+			formFields.company(companies, openCompanyModal, getCompanyPreviewConfig()),
+			formFields.role({ placeholder: "Team Leader" }),
+		],
 		[formFields.email({ placeholder: "jane.doe@company.com" }), formFields.phone()],
 		[formFields.linkedinUrl({ placeholder: "https://linkedin.com/in/janedoe" })],
 	];

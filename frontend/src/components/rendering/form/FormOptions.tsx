@@ -1,6 +1,6 @@
 import { findById, SelectOption, toSelectOptions } from "../../../utils/Utils";
 import React, { JSX, useMemo, useState } from "react";
-import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
+import { useDataContext } from "../../../contexts/DataContext";
 import { CompanyModal } from "../../modals/CompanyModal";
 import { LocationModal } from "../../modals/LocationModal";
 import { KeywordModal } from "../../modals/KeywordModal";
@@ -9,7 +9,8 @@ import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobModal } from "../../modals/JobModal";
 import currencies from "../../../data/currencies.json";
 import countries from "../../../data/countries.json";
-import { CompanyData, JobData, PersonData } from "../../../services/Schemas";
+import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
+import { modalViewFields } from "../view/ModalFields";
 
 interface UseFormOptionsReturn {
 	error: Error | null;
@@ -34,6 +35,7 @@ interface UseFormOptionsReturn {
 	renderAggregatorModal: () => JSX.Element;
 	openJobModal: () => void;
 	renderJobModal: () => JSX.Element;
+	getCompanyPreviewConfig: () => SelectWidgetPreviewConfig;
 }
 
 interface DataFactories {
@@ -44,18 +46,6 @@ interface DataFactories {
 	aggregators?: () => any;
 	jobs?: () => any;
 }
-
-const GetPersonLabel = (person: PersonData): string => {
-	const dataContext: DataContextValue = useDataContext();
-	const company: CompanyData = findById(dataContext.companies, person.company_id);
-	return company ? `${person.name} (${company.name})` : person.name;
-};
-
-const GetJobLabel = (job: JobData): string => {
-	const dataContext: DataContextValue = useDataContext();
-	const company: CompanyData = findById(dataContext.companies, job.company_id);
-	return company ? `${job.title} (${company.name})` : job.title;
-};
 
 export const useFormOptions = (
 	requiredOptions: string[] = [],
@@ -70,6 +60,12 @@ export const useFormOptions = (
 		jobs: jobsData,
 		error,
 	} = useDataContext();
+
+	const getCompanyPreviewConfig = (): SelectWidgetPreviewConfig => ({
+		enabled: true,
+		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
+		getDataById: (id: string) => findById(companiesData, id),
+	});
 
 	// Modal states
 	const [showCompanyModal, setShowCompanyModal] = useState<boolean>(false);
@@ -90,7 +86,7 @@ export const useFormOptions = (
 	);
 	const keywordOptions: SelectOption[] = useMemo((): SelectOption[] => toSelectOptions(keywordsData), [keywordsData]);
 	const personOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(personsData, "id", GetPersonLabel),
+		(): SelectOption[] => toSelectOptions(personsData, "id", "name"),
 		[personsData],
 	);
 	const aggregatorOptions: SelectOption[] = useMemo(
@@ -98,7 +94,7 @@ export const useFormOptions = (
 		[aggregatorsData],
 	);
 	const jobOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(jobsData, "id", GetJobLabel),
+		(): SelectOption[] => toSelectOptions(jobsData, "id", "title"),
 		[jobsData],
 	);
 	const countryOptions: SelectOption[] = useMemo(
@@ -235,5 +231,6 @@ export const useFormOptions = (
 		renderAggregatorModal,
 		openJobModal,
 		renderJobModal,
+		getCompanyPreviewConfig,
 	};
 };

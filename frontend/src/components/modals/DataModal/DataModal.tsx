@@ -422,7 +422,7 @@ const DataModal = ({
 				mode === "add" || mode == "import"
 					? await dataContext.addEntity(entityType, dataToSubmit)
 					: await dataContext.updateEntity(entityType, data.id, dataToSubmit);
-
+			console.log(apiResult);
 			if (mode === "add" || mode === "edit" || mode == "import") {
 				handleHideImmediate();
 			} else {

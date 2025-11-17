@@ -1,6 +1,7 @@
 import { JSX } from "react";
 import { Theme, THEMES } from "../../../utils/Theme";
 import { SelectOption } from "../../../utils/Utils";
+import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 
 export interface ModalFormField {
 	name: string;
@@ -23,6 +24,7 @@ export interface ModalFormField {
 	addButton?: { onClick?: () => void };
 	tabIndex?: number;
 	displayCondition?: (item: any) => boolean;
+	previewConfig?: SelectWidgetPreviewConfig;
 }
 
 interface FormFieldOverride extends Partial<ModalFormField> {}
@@ -370,6 +372,7 @@ export const formFields = {
 	company: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
+		previewConfig?: SelectWidgetPreviewConfig,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
 		name: "company_id",
@@ -378,6 +381,7 @@ export const formFields = {
 		placeholder: "Select or search company...",
 		isSearchable: true,
 		isClearable: true,
+		previewConfig: previewConfig,
 		options: options,
 		...(onAdd && {
 			addButton: {

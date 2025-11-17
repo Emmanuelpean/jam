@@ -5,13 +5,12 @@ import { renderTextarea } from "./TextArea";
 import { renderDateLocal, renderDateTimeLocal } from "./Datetime";
 import { renderPasswordInput } from "./PasswordInput";
 import { renderCheckbox } from "./Checkbox";
-import { renderSelect } from "./SelectWidget";
+import { RenderSelect, SelectWidgetPreviewConfig } from "./SelectWidget";
 import { ModalFormField } from "../form/FormRenders";
 import React, { JSX } from "react";
 import { HelpBubble } from "./HelpBubble";
 import { renderUrlInputWidget } from "./UrlInput";
 import { CurrentUser } from "../../../contexts/AuthContext";
-import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 
 export interface SyntheticEvent {
 	target: {
@@ -33,7 +32,7 @@ export interface WidgetProps {
 	error?: string | null;
 	secondaryValue?: string | null;
 	currentUser?: CurrentUser | null;
-	// dataContext?: DataContextValue;
+	previewConfig?: SelectWidgetPreviewConfig;
 }
 
 export const displayError = (errorMessage: string | null): JSX.Element[] | null => {
@@ -69,6 +68,7 @@ export const FormField = (
 	const value: any = formData[field.name];
 	const secondaryValue: any = field.secondaryName ? formData[field.secondaryName] : null;
 	const error: string | null | undefined = errors[field.name];
+	const previewConfig = field.previewConfig;
 
 	const widgetProps: WidgetProps = {
 		field,
@@ -77,6 +77,7 @@ export const FormField = (
 		error,
 		secondaryValue,
 		currentUser,
+		previewConfig,
 	};
 
 	if (field.type === "checkbox") {
@@ -107,7 +108,7 @@ export const FormField = (
 
 					case "select":
 					case "multiselect":
-						return renderSelect(widgetProps);
+						return <RenderSelect {...widgetProps} />;
 
 					case "datetime-local":
 						return renderDateTimeLocal(widgetProps);
