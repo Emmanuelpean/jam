@@ -31,7 +31,7 @@ class EmailService(object):
     def __init__(self) -> None:
         """Initialize the EmailService class."""
 
-        self.logger = AppLogger.create_service_logger("EmailService", "INFO")
+        self.logger = AppLogger.create_service_logger("email_service", "INFO")
         self.test_emails = []
 
         # Setup Jinja2 templates using FastAPI's built-in class

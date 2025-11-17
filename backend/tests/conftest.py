@@ -21,9 +21,9 @@ from starlette.testclient import TestClient
 
 from app import models, database, schemas
 from app.config import settings
-from app.eis import models as eis_models
 from app.main import app
 from app.oauth2 import create_access_token
+from app.utils import hash_token
 from tests.utils.create_data import (
     create_users,
     create_companies,
@@ -34,14 +34,13 @@ from tests.utils.create_data import (
     create_jobs,
     create_files,
     create_interviews,
-    create_job_alert_emails,
-    create_scraped_jobs,
-    create_service_logs,
     create_job_application_updates,
     create_settings,
 )
 from tests.utils.seed_database import reset_database
-from app.utils import hash_token
+
+# ---------------------------------------------------- TEST DATABASE ---------------------------------------------------
+
 
 DATABASE_NAME = "jam_test"
 SQLALCHEMY_DATABASE_URL = (
@@ -79,6 +78,16 @@ def session() -> Generator[orm.Session, Any, None]:
         db.close()
 
 
+# ------------------------------------------------------- CLIENTS ------------------------------------------------------
+
+
+@pytest.fixture
+def tokens(test_users) -> list[str]:
+    """Fixture that generates access tokens for the given test users."""
+
+    return [create_access_token({"user_id": user.id}) for user in test_users]
+
+
 @pytest.fixture
 def client(session) -> Generator[TestClient, Any, None]:
     """Fixture that provides a test client with an overridden database dependency.
@@ -95,89 +104,9 @@ def client(session) -> Generator[TestClient, Any, None]:
         finally:
             session.close()
 
-    app.dependency_overrides[database.get_db] = override_get_db
+    app.dependency_overrides[database.get_db] = override_get_db  # noqa
     yield TestClient(app)
-    app.dependency_overrides.pop(database.get_db, None)  # Clean up dependency override
-
-
-@pytest.fixture
-def test_users(session) -> list[models.User]:
-    """Create test user data"""
-
-    return create_users(session)
-
-
-@pytest.fixture
-def test_unverified_user(session) -> models.User:
-    """Fixture to create an unverified user."""
-
-    # noinspection PyArgumentList
-    return create_users(
-        session,
-        [
-            dict(
-                email="unverified@test.com",
-                password="password",
-                is_verified=False,
-                is_active=True,
-            )
-        ],
-    )[0]
-
-
-@pytest.fixture
-def test_unverified_token_user(session) -> models.User:
-    """Fixture to create an unverified user."""
-
-    plain_token = "testtoken"
-    hashed_token = hash_token(plain_token)
-
-    user = create_users(
-        session,
-        [
-            dict(
-                email="unverified@test.com",
-                password="password",
-                is_verified=False,
-                is_active=True,
-                verification_token=hashed_token,
-                verification_token_created_at=dt.datetime.now(),
-            )
-        ],
-    )[0]
-    user.plain_verification_token = plain_token
-    return user
-
-
-@pytest.fixture
-def test_user_change_email_token_user(session) -> models.User:
-    """Fixture to create a user with a change email token."""
-
-    plain_token = "changeemailtoken"
-    hashed_token = hash_token(plain_token)
-    user = create_users(
-        session,
-        [
-            dict(
-                email="test_user@test.com",
-                password="password",
-                is_verified=True,
-                is_active=True,
-                pending_email="newemail@test.com",
-                email_change_token=hashed_token,
-                email_change_token_created_at=dt.datetime.now(),
-            )
-        ],
-    )[0]
-    user.plain_verification_token = plain_token
-    return user
-
-
-@pytest.fixture
-def tokens(test_users) -> list[str]:
-    """Fixture that generates access tokens for the given test users."""
-
-    return [create_access_token({"user_id": user.id}) for user in test_users]
+    app.dependency_overrides.pop(database.get_db, None)  # Clean up dependency override  # noqa
 
 
 @pytest.fixture
@@ -199,25 +128,103 @@ def admin_client(authorised_clients) -> TestClient:
 
 
 @pytest.fixture
+def user_client(authorised_clients) -> TestClient:
+    """Fixture for a non-admin client."""
+    return authorised_clients[0]
+
+
+# -------------------------------------------------------- USERS -------------------------------------------------------
+
+
+@pytest.fixture
+def test_users(session) -> list[models.User]:
+    """Create test user data"""
+
+    return create_users(session)
+
+
+@pytest.fixture
+def test_unverified_user(session) -> models.User:
+    """Fixture to create an unverified user (i.e. is_verified=False)."""
+
+    user_data = dict(
+        email="unverified@test.com",
+        password="password",
+        is_verified=False,
+        is_active=True,
+    )
+    return create_users(session, [user_data])[0]
+
+
+@pytest.fixture
+def test_unverified_token_user(session) -> models.User:
+    """Fixture to create an unverified user with a verification token."""
+
+    plain_token = "testtoken"
+    hashed_token = hash_token(plain_token)
+    user_data = dict(
+        email="unverified@test.com",
+        password="password",
+        is_verified=False,
+        is_active=True,
+        verification_token=hashed_token,
+        verification_token_created_at=dt.datetime.now(),
+    )
+
+    user = create_users(session, [user_data])[0]
+    user.plain_verification_token = plain_token
+    return user
+
+
+@pytest.fixture
+def test_user_change_email_token_user(session) -> models.User:
+    """Fixture to create a user with a change email token."""
+
+    plain_token = "changeemailtoken"
+    hashed_token = hash_token(plain_token)
+    user_data = dict(
+        email="test_user@test.com",
+        password="password",
+        is_verified=True,
+        is_active=True,
+        pending_email="newemail@test.com",
+        email_change_token=hashed_token,
+        email_change_token_created_at=dt.datetime.now(),
+    )
+    user = create_users(session, [user_data])[0]
+    user.plain_verification_token = plain_token
+    return user
+
+
+@pytest.fixture
 def admin_user(test_users) -> models.User:
     """Fixture for an admin user."""
+
     user = test_users[1]
     assert user.is_admin
     return user
 
 
 @pytest.fixture
-def test_client(authorised_clients) -> TestClient:
-    """Fixture for a non-admin client."""
-    return authorised_clients[0]
-
-
-@pytest.fixture
 def test_user(test_users) -> models.User:
     """Fixture for a non-admin user."""
+
     user = test_users[0]
     assert not user.is_admin
     return user
+
+
+# -------------------------------------------------------- OTHER -------------------------------------------------------
+
+
+@pytest.fixture
+def test_settings(session) -> list[models.Setting]:
+    """Create test settings data"""
+
+    return create_settings(session)
+
+
+# ------------------------------------------------------ TEST DATA -----------------------------------------------------
 
 
 @pytest.fixture
@@ -294,14 +301,7 @@ def test_jobs(
 
 @pytest.fixture
 def jobs_unauthorised_data(
-    session,
-    test_users,
-    test_companies,
-    test_locations,
-    test_keywords,
-    test_persons,
-    test_aggregators,
-    test_files,
+    session, test_users, test_companies, test_locations, test_keywords, test_persons, test_aggregators, test_files
 ) -> tuple[list[dict], int, list[dict], list[dict]]:
     """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
 
@@ -427,35 +427,7 @@ def test_job_application_updates_unauthorised(
     return updates, owner_id
 
 
-# ---------------------------------------------------- EIS Fixtures ----------------------------------------------------
-
-
-@pytest.fixture
-def test_job_alert_emails(session, test_users, test_service_logs) -> list[eis_models.JobAlertEmail]:
-    """Create test job alert emails"""
-
-    return create_job_alert_emails(session, test_users, test_service_logs)
-
-
-@pytest.fixture
-def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[eis_models.ScrapedJob]:
-    """Create test job alert email jobs"""
-
-    return create_scraped_jobs(session, test_job_alert_emails, test_users)
-
-
-@pytest.fixture
-def test_service_logs(session) -> list[eis_models.EisServiceLog]:
-    """Create test service logs"""
-
-    return create_service_logs(session)
-
-
-@pytest.fixture
-def test_settings(session) -> list[models.Setting]:
-    """Create test settings data"""
-
-    return create_settings(session)
+# -------------------------------------------------------- UTILS -------------------------------------------------------
 
 
 def open_file(filepath: str) -> str:

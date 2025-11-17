@@ -4,7 +4,7 @@ These tests require valid BrightData credentials in the eis_secrets.json file.""
 
 import pytest
 
-from app.eis.job_scraper import extract_indeed_jobs_from_email, parse_indeed_job_section, JobScrapper
+from app.eis.job_scraper import extract_indeed_jobs_from_email, parse_indeed_job_section, JobScraper
 from tests.eis import resources
 
 # --------------------------------------------- DIRECT EMAIL JOB EXTRACTION --------------------------------------------
@@ -289,7 +289,7 @@ def test_parse_indeed_job_section(job_section, expected) -> None:
 # ---------------------------------------------------- MOCK SCRAPERS ---------------------------------------------------
 
 
-class MockLinkedinJobScraper(JobScrapper):
+class MockLinkedinJobScraper(JobScraper):
     """Mock LinkedIn Scraper that returns fake data"""
 
     base_url = "https://www.linkedin.com/jobs/view/"
@@ -343,7 +343,7 @@ class MockLinkedinJobScraper(JobScrapper):
         return mock_jobs
 
 
-class MockIndeedJobScraper(JobScrapper):
+class MockIndeedJobScraper(JobScraper):
     """Mock Indeed Scraper that returns fake data"""
 
     base_url = "https://www.indeed.com/viewjob?jk="
@@ -393,7 +393,7 @@ class MockIndeedJobScraper(JobScrapper):
         return mock_jobs
 
 
-class MockVeganJobsJobScraper(JobScrapper):
+class MockVeganJobsJobScraper(JobScraper):
     """Mock VeganJobs Scraper that returns fake data"""
 
     base_url = "https://www.veganjobs.com/job/"

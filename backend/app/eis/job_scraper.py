@@ -4,7 +4,6 @@ This module provides functionality to scrape LinkedIn job postings using the Bri
 It offers a complete workflow to trigger data collection, monitor processing status, and
 retrieve scraped job information."""
 
-import json
 import os
 import re
 import time
@@ -14,8 +13,10 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
+from app.config import settings
 
-class JobScrapper(object):
+
+class JobScraper(object):
     """Job Scraper"""
 
     base_url: str = ""
@@ -37,25 +38,8 @@ class JobScrapper(object):
         self.max_attempts *= len(self.job_ids)
 
         # Load credentials from the secrets file
-        credentials = self._load_credentials()
-        self.api_key = credentials["api_key"]
-        self.dataset_id = credentials[f"{self.name}_dataset_id"]
-
-    def _load_credentials(self) -> dict:
-        """Load BrightData credentials from the secrets file"""
-
-        if not os.path.exists(self.secrets_file):
-            raise FileNotFoundError(
-                f"Secrets file '{self.secrets_file}' not found. "
-                "Please create it with your BrightData API credentials."
-            )
-
-        try:
-            with open(self.secrets_file, "r") as f:
-                secrets = json.load(f)
-                return secrets["brightdata"]
-        except (json.JSONDecodeError, KeyError) as e:
-            raise ValueError(f"Invalid secrets file format or missing 'brightdata' section: {e}")
+        self.api_key = settings.brightdata_api_key
+        self.dataset_id = getattr(settings, f"brightdata_{self.name}_dataset_id")
 
     def get_snapshot(self) -> str:
         """Get the snapshot id"""
@@ -146,7 +130,7 @@ class JobScrapper(object):
         return [self.process_job_data(d) for d in data]
 
 
-class IndeedJobScraper(JobScrapper):
+class IndeedJobScraper(JobScraper):
     """LinkedIn Scraper"""
 
     base_url = "https://www.indeed.com/viewjob?jk="
@@ -180,7 +164,7 @@ class IndeedJobScraper(JobScrapper):
         return results
 
 
-class LinkedinJobScraper(JobScrapper):
+class LinkedinJobScraper(JobScraper):
     """LinkedIn Scraper"""
 
     base_url = "https://www.linkedin.com/jobs/view/"
@@ -214,7 +198,7 @@ class LinkedinJobScraper(JobScrapper):
         return results
 
 
-class VeganJobsScraper:
+class VeganJobsJobScraper:
     """Scraper for veganjobs.com job listings."""
 
     def __init__(self, url: str) -> None:
@@ -422,7 +406,7 @@ def parse_indeed_job_section(section: str) -> dict[str, str] | None:
 if __name__ == "__main__":
 
     # LinkedIn job scraper example
-    scraper = LinkedinJobScraper(["4280160167"])
+    scraper = LinkedinJobScraper(["4313361652"])
     job_data1 = scraper.scrape_job()
     print(job_data1)
 
@@ -432,6 +416,6 @@ if __name__ == "__main__":
     print(job_data1)
 
     # VeganJobs scraper example
-    scraper = VeganJobsScraper("sharpen-strategy-remote-usa-operations-coordinator")
+    scraper = VeganJobsJobScraper("sharpen-strategy-remote-usa-operations-coordinator")
     veganjob_data = scraper.scrape_job()
     print(veganjob_data)
