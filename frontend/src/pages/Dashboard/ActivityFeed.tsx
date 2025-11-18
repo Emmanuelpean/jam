@@ -1,4 +1,4 @@
-import React, { JSX } from "react";
+import React, { JSX, ReactNode } from "react";
 import { Card } from "react-bootstrap";
 import "./DashboardPage.css";
 import {
@@ -84,12 +84,24 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 		return colorMap[type] || "#2563eb";
 	};
 
+	type BadgeRenderer = (param: RenderParams) => ReactNode;
+
+	const getActivityBadge = (type: string): BadgeRenderer => {
+		const badgeMap: Record<string, BadgeRenderer> = {
+			Application: renderFunctions.jobBadge,
+			Interview: renderFunctions.interviewBadge,
+			"Job Application Update": renderFunctions.jobApplicationUpdateBadge,
+		};
+		return badgeMap[type] || renderFunctions.jobBadge;
+	};
+
 	const activityColor = getActivityColor(activity.type);
 	const activityIcon = getActivityIcon(activity.type);
+	const activityBadge = getActivityBadge(activity.type);
 
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: (params: RenderParams) => renderFunctions.jobBadge(params, null),
+		render: (params: RenderParams) => activityBadge(params),
 	};
 
 	return (
@@ -130,7 +142,7 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 export const renderUpcomingInterviewItem = (interview: InterviewData, index: number, isLast: boolean): JSX.Element => {
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: (params: RenderParams) => renderFunctions.jobBadge(params, null),
+		render: (params: RenderParams) => renderFunctions.interviewBadge(params),
 	};
 
 	return (

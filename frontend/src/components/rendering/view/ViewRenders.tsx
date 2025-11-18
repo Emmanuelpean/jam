@@ -22,6 +22,8 @@ import { Accordion } from "./Accordion";
 import {
 	AggregatorModalManager,
 	CompanyModalManager,
+	InterviewModalManager,
+	JobApplicationUpdateModalManager,
 	JobModalManager,
 	KeywordModalManager,
 	LocationModalManager,
@@ -352,7 +354,7 @@ export const renderFunctions = {
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
-	jobBadge: (param: RenderParams, text: string | null | undefined): ReactNode => {
+	jobBadge: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const job: EnrichedJobData | undefined = getJamData(ctx.jobs, param.item?.job_id);
 
@@ -366,13 +368,55 @@ export const renderFunctions = {
 							id={param.id}
 						>
 							<i className="bi bi-briefcase me-1"></i>
-							{String(text || job.title)}
+							{job.title}
 						</span>
 					)}
 				</JobModalManager>
 			);
 		}
 		return null;
+	},
+
+	interviewBadge: (param: RenderParams): ReactNode => {
+		if (param.item) {
+			const ctx: DataContextValue = param.dataContext;
+			const job: EnrichedJobData = getJamData(ctx.jobs, param.item.job_id)!;
+			return (
+				<InterviewModalManager>
+					{(handleClick) => (
+						<span
+							className={`badge bg-info clickable-badge`}
+							onClick={() => handleClick(param.item)}
+							id={param.id}
+						>
+							<i className="bi bi-briefcase me-1"></i>
+							{job.title}
+						</span>
+					)}
+				</InterviewModalManager>
+			);
+		}
+	},
+
+	jobApplicationUpdateBadge: (param: RenderParams): ReactNode => {
+		if (param.item) {
+			const ctx: DataContextValue = param.dataContext;
+			const job: EnrichedJobData = getJamData(ctx.jobs, param.item.job_id)!;
+			return (
+				<JobApplicationUpdateModalManager>
+					{(handleClick) => (
+						<span
+							className={`badge bg-info clickable-badge`}
+							onClick={() => handleClick(param.item)}
+							id={param.id}
+						>
+							<i className="bi bi-briefcase me-1"></i>
+							{job.title}
+						</span>
+					)}
+				</JobApplicationUpdateModalManager>
+			);
+		}
 	},
 
 	LocationBadge: (param: RenderParams): ReactNode => {
