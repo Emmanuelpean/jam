@@ -15,6 +15,7 @@ export function formatActivityDate(dateString: string | Date): string {
 	const date = new Date(dateString);
 	const now = new Date();
 	const options: Intl.DateTimeFormatOptions = {
+		weekday: "long",
 		month: "short",
 		day: "numeric",
 		...(now.getFullYear() !== date.getFullYear() && { year: "numeric" }),
