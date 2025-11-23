@@ -3,7 +3,7 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import data_tables, user, auth, export, settings
+from app.routers import data_tables, user, auth, export, settings, others
 from app.eis import routers as eis_routers
 from app.emails import routers as email_routers
 from app.config import settings as app_settings
@@ -51,6 +51,9 @@ app.include_router(export.router)
 
 # Settings router
 app.include_router(settings.settings_router)
+
+# Others
+app.include_router(others.router)
 
 # Testing
 if app_settings.test_mode:

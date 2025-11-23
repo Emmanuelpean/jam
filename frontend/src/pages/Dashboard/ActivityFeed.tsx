@@ -8,7 +8,7 @@ import {
 	ViewField,
 } from "../../components/rendering/view/ViewRenders";
 import { getTableIcon } from "../../components/rendering/view/Icons";
-import { InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
+import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, JobData } from "../../services/Schemas";
 import { formatActivityDate } from "../../utils/TimeUtils";
 import { CardHeader } from "./CardHeader";
 
@@ -59,7 +59,7 @@ export const ActivityFeedCard = <T,>({
 );
 
 export interface RecentActivity {
-	data: JobData | InterviewData | JobApplicationUpdateData;
+	data: JobData | EnrichedInterviewData | EnrichedJobApplicationUpdateData;
 	date: string | Date;
 	type: "Application" | "Interview" | "Job Application Update";
 	job_id: number | null | undefined | string;
@@ -84,15 +84,21 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 		return colorMap[type] || "#2563eb";
 	};
 
-	type BadgeRenderer = (param: RenderParams) => ReactNode;
-
-	const getActivityBadge = (type: string): BadgeRenderer => {
-		const badgeMap: Record<string, BadgeRenderer> = {
+	const getActivityBadge = (type: string): ((param: RenderParams) => ReactNode) => {
+		const badgeMap: Record<string, (param: RenderParams) => ReactNode> = {
 			Application: renderFunctions.jobBadge,
 			Interview: renderFunctions.interviewBadge,
 			"Job Application Update": renderFunctions.jobApplicationUpdateBadge,
 		};
 		return badgeMap[type] || renderFunctions.jobBadge;
+	};
+
+	const getActivityNumber = (activity: RecentActivity): string => {
+		if (activity.type === "Interview" || activity.type === "Job Application Update") {
+			return `#${"number" in activity.data ? activity.data.number : ""}`;
+		} else {
+			return "";
+		}
 	};
 
 	const activityColor = getActivityColor(activity.type);
@@ -128,7 +134,7 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 				<div className="flex-grow-1 min-width-0">
 					<div className="d-flex align-items-start justify-content-between mb-1">
 						<div className="fw-semibold text-dark" style={{ fontSize: "1rem" }}>
-							{activity.type}
+							{activity.type} {getActivityNumber(activity)}
 						</div>
 						<small className="text-muted flex-shrink-0 ms-2">{formatActivityDate(activity.date)}</small>
 					</div>
@@ -139,7 +145,11 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 	);
 };
 
-export const renderUpcomingInterviewItem = (interview: InterviewData, index: number, isLast: boolean): JSX.Element => {
+export const renderUpcomingInterviewItem = (
+	interview: EnrichedInterviewData,
+	index: number,
+	isLast: boolean,
+): JSX.Element => {
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
 		render: (params: RenderParams) => renderFunctions.interviewBadge(params),
@@ -167,7 +177,7 @@ export const renderUpcomingInterviewItem = (interview: InterviewData, index: num
 				<div className="flex-grow-1 min-width-0">
 					<div className="d-flex align-items-start justify-content-between mb-1">
 						<div className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
-							{interview.type}
+							{interview.type} (interview #{interview.number})
 						</div>
 						<small className="text-muted flex-shrink-0 ms-2">{formatActivityDate(interview.date!)}</small>
 					</div>
