@@ -2,17 +2,21 @@ import React from "react";
 import { Card, Col, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import "./DashboardPage.css";
-import { EnrichedJobData, InterviewData, JobApplicationUpdateData, JobData } from "../../services/Schemas";
+import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, EnrichedJobData } from "../../services/Schemas";
 import JobsToChase from "../../components/tables/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/tables/UpcomingDeadlines";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { StatCard } from "./StatCard";
 import { CardHeader } from "./CardHeader";
-import { ActivityFeedCard, renderRecentActivityItem, renderUpcomingInterviewItem } from "./ActivityFeed";
-import { RecentActivity } from "./ActivityFeed";
+import {
+	ActivityFeedCard,
+	RecentActivity,
+	renderRecentActivityItem,
+	renderUpcomingInterviewItem,
+} from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/tables/ScrapedJobTable";
 
-const JobSearchDashboard: React.FC = () => {
+const Dashboard: React.FC = () => {
 	const dataContext: DataContextValue = useDataContext();
 	const { currentUser } = useAuth();
 	if (!currentUser) {
@@ -38,8 +42,8 @@ const JobSearchDashboard: React.FC = () => {
 
 	const thresholdDate = new Date(now.getTime() + currentUser.deadline_threshold * 24 * 60 * 60 * 1000);
 
-	const upcomingDeadlines: JobData[] = dataContext.jobs.filter(
-		(job: JobData): boolean | null | undefined =>
+	const upcomingDeadlines: EnrichedJobData[] = dataContext.jobs.filter(
+		(job: EnrichedJobData): boolean | null | undefined =>
 			!job.application_date &&
 			!job.application_status &&
 			job.deadline &&
@@ -47,14 +51,14 @@ const JobSearchDashboard: React.FC = () => {
 			new Date(job.deadline) <= thresholdDate,
 	);
 
-	const upcomingInterviews: InterviewData[] = dataContext.interviews.filter(
-		(interview: InterviewData): boolean | null | undefined => new Date(interview.date!) >= now,
+	const upcomingInterviews: EnrichedInterviewData[] = dataContext.interviews.filter(
+		(interview: EnrichedInterviewData): boolean | null | undefined => new Date(interview.date!) >= now,
 	);
 
 	const allUpdates: RecentActivity[] = [];
 
 	// Add job applications as "Application" updates
-	jobApplications.forEach((job: JobData): void => {
+	jobApplications.forEach((job: EnrichedJobData): void => {
 		if (job.application_date) {
 			allUpdates.push({
 				data: job,
@@ -66,7 +70,7 @@ const JobSearchDashboard: React.FC = () => {
 	});
 
 	// Add interviews as "Interview" updates
-	dataContext.interviews.forEach((interview: InterviewData): void => {
+	dataContext.interviews.forEach((interview: EnrichedInterviewData): void => {
 		if (new Date(interview.date) < now) {
 			allUpdates.push({
 				data: interview,
@@ -78,7 +82,7 @@ const JobSearchDashboard: React.FC = () => {
 	});
 
 	// Add job application updates
-	dataContext.jobApplicationUpdates.forEach((update: JobApplicationUpdateData): void => {
+	dataContext.jobApplicationUpdates.forEach((update: EnrichedJobApplicationUpdateData): void => {
 		if (new Date(update.date) < now) {
 			allUpdates.push({
 				data: update,
@@ -226,4 +230,4 @@ const JobSearchDashboard: React.FC = () => {
 	);
 };
 
-export default JobSearchDashboard;
+export default Dashboard;

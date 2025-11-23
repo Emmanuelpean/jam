@@ -7,7 +7,7 @@ import { FormField, SyntheticEvent } from "../../components/rendering/widgets/Wi
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
-import { findByKey } from "../../utils/Utils";
+import { findItemByKey } from "../../utils/Utils";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ValidationErrors } from "../../components/modals/DataModal/DataModal";
@@ -26,7 +26,7 @@ interface FormData {
 
 const UserSettingsPage: React.FC = () => {
 	const { currentUser, token, updateCurrentUser } = useAuth();
-	const { currencyNames } = useFormOptions(["currencyNames"]);
+	const { currencyNames } = useFormOptions();
 	const [formData, setFormData] = useState<FormData>(() => ({
 		email: currentUser?.email || "",
 		chase_threshold: currentUser?.chase_threshold || 0,
@@ -191,11 +191,7 @@ const UserSettingsPage: React.FC = () => {
 			// Add currency setting
 			updateData.default_currency = formData.default_currency;
 
-			const response = await authApi.updateCurrentUser(updateData, token);
-			console.log(response);
-
-			// Update the context with the API response
-			updateCurrentUser(response);
+			const response = await updateCurrentUser(updateData);
 
 			// Show message if the email was changed
 			if (emailChanged) {
@@ -418,8 +414,9 @@ const UserSettingsPage: React.FC = () => {
 
 							<div className="form-group-enhanced">
 								<p className="form-label-enhanced" id="theme-hint">
-									{findByKey(THEMES, currentUser?.theme)?.name} is not your favourite flavour of JAM?!
-									You can easily pick another flavour by clicking on the JAM logo in the sidebar.
+									{findItemByKey(THEMES, currentUser?.theme)?.name} is not your favourite flavour of
+									JAM?! You can easily pick another flavour by clicking on the JAM logo in the
+									sidebar.
 								</p>
 							</div>
 						</div>

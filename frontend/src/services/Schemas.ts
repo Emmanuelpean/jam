@@ -116,6 +116,10 @@ export interface JobApplicationUpdateData extends OwnedOut {
 	note: string | null;
 }
 
+export interface EnrichedJobApplicationUpdateData extends JobApplicationUpdateData {
+	number: number;
+}
+
 export interface ScrapedJobUpdate {
 	id?: number;
 	is_imported?: boolean;
@@ -203,6 +207,10 @@ export interface InterviewData extends OwnedOut {
 	attendance_type: string | null;
 }
 
+export interface EnrichedInterviewData extends InterviewData {
+	number: number;
+}
+
 // -------------------------------------------------------- USER -------------------------------------------------------
 
 export interface UserDataTransform {
@@ -252,4 +260,5 @@ export interface ScrapedJobData extends OwnedOut {
 	location_country: string | null;
 	attendance_type: string | null;
 	location: string | null;
+	emails: any;
 }

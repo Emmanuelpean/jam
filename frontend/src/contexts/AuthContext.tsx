@@ -22,7 +22,7 @@ export interface AuthContextType {
 	token: string | null;
 	login: (email: string, password: string) => Promise<AuthResponse>;
 	register: (email: string, password: string) => Promise<AuthResponse>;
-	updateCurrentUser: (userData: Partial<UserData>) => void;
+	updateCurrentUser: (userData: Partial<UserData>) => Promise<any>;
 	logout: () => void;
 	isAuthenticated: boolean;
 }
@@ -53,7 +53,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	const [userFetched, setUserFetched] = useState<boolean>(false);
 	const navigate = useNavigate();
 
-	// Memoize fetchUserInfo to prevent unnecessary re-creation
 	const fetchUserInfo = useCallback(
 		async (authToken: string): Promise<void> => {
 			// Don't fetch if we already have user data and the token hasn't changed
@@ -89,15 +88,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		[userFetched, currentUser, token],
 	);
 
-	const updateCurrentUser = useCallback((userData: Partial<UserData>): void => {
-		setCurrentUser((prev) => {
-			if (!prev) return prev;
-			return {
-				...prev,
-				...userData,
-			};
-		});
-	}, []);
+	const updateCurrentUser = async (userData: Partial<UserData>) => {
+		if (!token) return null;
+		const response = await authApi.updateCurrentUser(userData, token);
+		setCurrentUser((prev: CurrentUser | null) => (prev ? { ...prev, ...userData } : prev));
+		return response;
+	};
 
 	// Check if token exists on load and fetch user info
 	useEffect(() => {
@@ -132,7 +128,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	};
 
-	// Register function
 	const register = async (email: string, password: string): Promise<AuthResponse> => {
 		try {
 			await authApi.register(email, password);
@@ -147,7 +142,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	};
 
-	// Logout function
 	const logout = (): void => {
 		localStorage.removeItem("token");
 		setToken(null);

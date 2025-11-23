@@ -18,6 +18,8 @@ export function formatActivityDate(dateString: string | Date): string {
 		weekday: "long",
 		month: "short",
 		day: "numeric",
+		hour: "2-digit",
+		minute: "2-digit",
 		...(now.getFullYear() !== date.getFullYear() && { year: "numeric" }),
 	};
 	return date.toLocaleDateString("en-UK", options);

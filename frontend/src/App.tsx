@@ -14,7 +14,7 @@ import AggregatorsPage from "./pages/AggregatorsPage";
 import { NotAuthorisedPage, NotFoundPage } from "./pages/NotFoundPage";
 import { Sidebar } from "./components/sidebar/Sidebar";
 import JobApplicationUpdatesPage from "./pages/JobApplicationUpdatesPage";
-import JobSearchDashboard from "./pages/Dashboard/DashboardPage";
+import Dashboard from "./pages/Dashboard/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
@@ -133,7 +133,7 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/interviews", element: <InterviewsPage />, protected: true },
 	{ path: "/aggregators", element: <AggregatorsPage />, protected: true },
 	{ path: "/jobapplicationupdates", element: <JobApplicationUpdatesPage />, protected: true },
-	{ path: "/dashboard", element: <JobSearchDashboard />, protected: true },
+	{ path: "/dashboard", element: <Dashboard />, protected: true },
 	{ path: "/settings", element: <UserSettingsPage />, protected: true },
 	{ path: "/users", element: <UserManagementPage />, protected: true, adminOnly: true },
 	{ path: "/eis_dashboard", element: <DashboardPage />, protected: true, adminOnly: true },

@@ -12,11 +12,15 @@ import {
 	scrapedJobApi,
 	settingsApi,
 	userApi,
+	currenciesApi,
+	countriesApi,
 } from "../services/Api";
 import { useAuth } from "./AuthContext";
 import {
 	AggregatorData,
 	CompanyData,
+	EnrichedInterviewData,
+	EnrichedJobApplicationUpdateData,
 	EnrichedJobData,
 	InterviewData,
 	JobApplicationUpdateData,
@@ -29,6 +33,7 @@ import {
 	UserData,
 } from "../services/Schemas";
 import { useLoading } from "./LoadingContext";
+import { sortByKey } from "../utils/Utils";
 
 export type EntityType =
 	| "jobs"
@@ -93,16 +98,17 @@ export interface DataContextValue {
 	jobs: EnrichedJobData[];
 	companies: CompanyData[];
 	persons: PersonData[];
-	interviews: InterviewData[];
-	jobApplicationUpdates: JobApplicationUpdateData[];
+	interviews: EnrichedInterviewData[];
+	jobApplicationUpdates: EnrichedJobApplicationUpdateData[];
 	aggregators: AggregatorData[];
 	keywords: KeywordData[];
 	locations: LocationData[];
 	settings: SettingData[];
 	users: UserData[];
+	countries: Country[];
+	currencies: Currency[];
 
 	error: ApiError | null;
-	reloadAll: () => void;
 
 	// Generic update functions
 	updateEntity: <T extends EntityType>(type: T, id: number, data: any) => Promise<any>;
@@ -117,20 +123,66 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [rawJobs, setRawJobs] = useState<JobData[]>([]);
 	const [companies, setCompanies] = useState<CompanyData[]>([]);
 	const [persons, setPersons] = useState<PersonData[]>([]);
-	const [interviews, setInterviews] = useState<InterviewData[]>([]);
-	const [jobApplicationUpdates, setJobApplicationUpdates] = useState<JobApplicationUpdateData[]>([]);
+	const [rawInterviews, setRawInterviews] = useState<InterviewData[]>([]);
+	const [rawJobApplicationUpdates, setRawJobApplicationUpdates] = useState<JobApplicationUpdateData[]>([]);
 	const [aggregators, setAggregators] = useState<AggregatorData[]>([]);
 	const [keywords, setKeywords] = useState<KeywordData[]>([]);
 	const [locations, setLocations] = useState<LocationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [_scrapedJobs, setScrapedJobs] = useState<any[]>([]);
+	const [currencies, setCurrencies] = useState<Currency[]>([]);
+	const [countries, setCountries] = useState<Country[]>([]);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
+	const interviews: EnrichedInterviewData[] = useMemo<EnrichedInterviewData[]>((): EnrichedInterviewData[] => {
+		// Enrich interviews with their sequence number per job
+
+		return rawInterviews.map((interview: InterviewData): EnrichedInterviewData => {
+			const job: JobData | undefined = rawJobs.find((j: JobData): boolean => j.id === interview.job_id)!;
+
+			let jobInterviews: InterviewData[] = rawInterviews.filter(
+				(i: InterviewData): boolean => i.job_id === job.id,
+			);
+			jobInterviews = sortByKey(jobInterviews, "date", true);
+
+			const index: number = jobInterviews.findIndex((i: InterviewData): boolean => i.id === interview.id);
+
+			return {
+				...interview,
+				number: index + 1,
+			};
+		});
+	}, [rawInterviews]);
+
+	const jobApplicationUpdates: EnrichedJobApplicationUpdateData[] = useMemo<
+		EnrichedJobApplicationUpdateData[]
+	>((): EnrichedJobApplicationUpdateData[] => {
+		// Enrich updates with their sequence number per job
+
+		return rawJobApplicationUpdates.map((update: JobApplicationUpdateData): EnrichedJobApplicationUpdateData => {
+			const job: JobData | undefined = rawJobs.find((j: JobData): boolean => j.id === update.job_id)!;
+
+			let jobUpdates: JobApplicationUpdateData[] = rawJobApplicationUpdates.filter(
+				(u: JobApplicationUpdateData): boolean => u.job_id === job.id,
+			);
+			jobUpdates = sortByKey(jobUpdates, "date", true);
+
+			const index: number = jobUpdates.findIndex((u: JobApplicationUpdateData): boolean => u.id === update.id);
+
+			return {
+				...update,
+				number: index + 1,
+			};
+		});
+	}, [rawJobApplicationUpdates]);
+
 	const jobs: EnrichedJobData[] = useMemo<EnrichedJobData[]>((): EnrichedJobData[] => {
+		// Enrich jobs with calculated fields
+
 		return rawJobs.map((job: JobData): EnrichedJobData => {
-			const jobInterviews = interviews.filter((i) => i.job_id === job.id);
+			const jobInterviews = rawInterviews.filter((i) => i.job_id === job.id);
 			const jobUpdates = jobApplicationUpdates.filter((u) => u.job_id === job.id);
 
 			// Calculate last_update_date
@@ -190,7 +242,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				days_until_deadline: daysUntilDeadline,
 			};
 		});
-	}, [rawJobs, interviews, jobApplicationUpdates]);
+	}, [rawJobs, rawInterviews, rawJobApplicationUpdates]);
 
 	const fetchAllData = async () => {
 		setError(null);
@@ -205,6 +257,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" },
 			{ promise: keywordsApi.getAll(token), label: "Keywords" },
 			{ promise: locationsApi.getAll(token), label: "Locations" },
+			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" },
+			{ promise: countriesApi.getAll(token), label: "Miscellaneous" },
 		];
 
 		// Add admin-only calls if user is admin
@@ -244,17 +298,21 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				aggregatorsData,
 				keywordsData,
 				locationsData,
+				currenciesData,
+				countriesData,
 				...adminData
 			] = results;
 
 			setRawJobs(jobsData || []);
 			setCompanies(companiesData || []);
 			setPersons(personsData || []);
-			setInterviews(interviewsData || []);
-			setJobApplicationUpdates(jobApplicationUpdatesData || []);
+			setRawInterviews(interviewsData || []);
+			setRawJobApplicationUpdates(jobApplicationUpdatesData || []);
 			setAggregators(aggregatorsData || []);
 			setKeywords(keywordsData || []);
 			setLocations(locationsData || []);
+			setCurrencies(currenciesData || []);
+			setCountries(countriesData || []);
 
 			if (currentUser?.is_admin) {
 				setSettings(adminData[0] || []);
@@ -290,8 +348,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			jobs: setRawJobs,
 			companies: setCompanies,
 			persons: setPersons,
-			interviews: setInterviews,
-			jobApplicationUpdates: setJobApplicationUpdates,
+			interviews: setRawInterviews,
+			jobApplicationUpdates: setRawJobApplicationUpdates,
 			aggregators: setAggregators,
 			keywords: setKeywords,
 			locations: setLocations,
@@ -380,10 +438,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				aggregators,
 				keywords,
 				locations,
+				countries,
+				currencies,
 				settings,
 				users,
 				error,
-				reloadAll: fetchAllData,
 				updateEntity,
 				deleteEntity,
 				addEntity,
