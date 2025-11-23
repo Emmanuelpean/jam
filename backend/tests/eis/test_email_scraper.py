@@ -7,7 +7,7 @@ import pytest
 
 from app.eis.email_parser import extract_indeed_job_ids
 from app.eis.email_scraper import PLATFORMS
-from app.eis.job_scraper import extract_indeed_jobs_from_email
+from app.eis.job_scraper import extract_indeed_jobs_from_email, JobResult
 from app.eis.models import JobAlertEmail, ScrapedJob
 from tests.eis import resources
 
@@ -168,10 +168,13 @@ class TestUpdateScrapedJobData:
                 "url": "https://example.com/job/123",
                 "salary": {"min_amount": 50000.0, "max_amount": 70000.0},
             },
+            "raw": "<html>Raw job posting HTML content</html>",
         }
 
         # Save job data
-        test_job_scraper.update_scraped_job_data(job_record=sample_scraped_job, job_data=sample_job_data)
+        test_job_scraper.update_scraped_job_data(
+            job_record=sample_scraped_job, job_data=JobResult.model_validate(sample_job_data)
+        )
 
         # Refresh the record from database
         session.refresh(sample_scraped_job)
@@ -459,6 +462,13 @@ class TestScrapeJobs:
         email_record, job_ids = email_record_factory("1", user_index=0)
         return self._scraped_jobs(session, email_record, job_ids)
 
+    @pytest.fixture
+    def veganjobs_scraped_jobs(self, test_users, session, email_record_factory) -> list[ScrapedJob]:
+        """Fixture to create VeganJobs scraped jobs for multiple users"""
+
+        email_record, job_ids = email_record_factory("5", user_index=0)
+        return self._scraped_jobs(session, email_record, job_ids)
+
     def test_indeed_success(self, indeed_scraped_jobs, test_service_log, test_job_scraper, session) -> None:
         """Test successful processing of Indeed email jobs"""
 
@@ -479,7 +489,7 @@ class TestScrapeJobs:
         jobs = extract_indeed_jobs_from_email(indeed_scraped_jobs[0].emails[0].body)
         job_data = {key: {} for key in PLATFORMS}
         for job in jobs:
-            job_ids = extract_indeed_job_ids(job["job"]["url"])
+            job_ids = extract_indeed_job_ids(job.job.url)
             if job_ids:
                 job_data["indeed"][job_ids[0]] = job
         job_scraper_with_brightapi_skip.scrape_jobs(test_service_log, job_data)
@@ -491,6 +501,17 @@ class TestScrapeJobs:
             assert not job.is_failed
 
     def test_linkedin_success(self, linkedin_scraped_jobs, test_service_log, test_job_scraper, session) -> None:
+        """Test successful processing of Indeed email jobs"""
+
+        test_job_scraper.scrape_jobs(test_service_log, {})
+
+        # Verify all jobs are now scraped
+        jobs_after = session.query(ScrapedJob).filter().all()
+        for job in jobs_after:
+            assert job.is_scraped
+            assert not job.is_failed
+
+    def test_veganjobs_success(self, veganjobs_scraped_jobs, test_service_log, test_job_scraper, session) -> None:
         """Test successful processing of Indeed email jobs"""
 
         test_job_scraper.scrape_jobs(test_service_log, {})

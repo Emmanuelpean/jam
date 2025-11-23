@@ -11,7 +11,11 @@ from app.eis import schemas, models
 from app.eis.email_scraper import JobEmailScraper
 from app.models import Setting
 from tests.eis import resources
-from tests.eis.test_job_scraper import MockVeganJobsJobScraper, MockIndeedJobScraper, MockLinkedinJobScraper
+from tests.eis.test_job_scraper import (
+    MockVeganJobsBrightdataJobScraper,
+    MockIndeedBrightdataJobScraper,
+    MockLinkedinBrightdataJobScraper,
+)
 from tests.utils.create_data import create_service_logs, create_job_alert_emails, create_scraped_jobs
 
 
@@ -60,26 +64,26 @@ def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[models
 
 
 @pytest.fixture(scope="session", autouse=True)
-def mock_linkedin_job_scrapers() -> Generator[type[MockLinkedinJobScraper], Any, None]:
+def mock_linkedin_job_scrapers() -> Generator[type[MockLinkedinBrightdataJobScraper], Any, None]:
     """Mock LinkedinJobScraper for all tests"""
 
-    with mock.patch("app.eis.email_scraper.LinkedinJobScraper", MockLinkedinJobScraper) as mocked:
+    with mock.patch("app.eis.email_scraper.LinkedinBrightdataJobScraper", MockLinkedinBrightdataJobScraper) as mocked:
         yield mocked
 
 
 @pytest.fixture(scope="session", autouse=True)
-def mock_indeed_job_scrapers() -> Generator[type[MockIndeedJobScraper], Any, None]:
+def mock_indeed_job_scrapers() -> Generator[type[MockIndeedBrightdataJobScraper], Any, None]:
     """Mock IndeedJobScraper for all tests"""
 
-    with mock.patch("app.eis.email_scraper.IndeedJobScraper", MockIndeedJobScraper) as mocked:
+    with mock.patch("app.eis.email_scraper.IndeedBrightdataJobScraper", MockIndeedBrightdataJobScraper) as mocked:
         yield mocked
 
 
 @pytest.fixture(scope="session", autouse=True)
-def mock_veganjobs_job_scrapers() -> Generator[type[MockVeganJobsJobScraper], Any, None]:
+def mock_veganjobs_job_scrapers() -> Generator[type[MockVeganJobsBrightdataJobScraper], Any, None]:
     """Mock VeganJobsJobScraper for all tests"""
 
-    with mock.patch("app.eis.email_scraper.VeganJobsJobScraper", MockVeganJobsJobScraper) as mocked:
+    with mock.patch("app.eis.email_scraper.VeganJobsJobScraper", MockVeganJobsBrightdataJobScraper) as mocked:
         yield mocked
 
 
