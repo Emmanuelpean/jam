@@ -2,6 +2,8 @@
 
 import hashlib
 import logging
+import os
+import json
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -42,6 +44,17 @@ def clean_email(email: EmailStr | str) -> str:
     :return: Cleaned email address"""
 
     return str(email).strip().lower()
+
+
+def open_json(filepath: str) -> list[dict]:
+    """Open a file and return its content
+    :param filepath: The json file to open
+    :return: The contents of the file"""
+
+    BASE_DIR = os.path.dirname(__file__)
+    path = os.path.join(BASE_DIR, "..", filepath)
+    with open(path, "r", encoding="utf8") as ofile:
+        return json.load(ofile)
 
 
 class AppLogger:

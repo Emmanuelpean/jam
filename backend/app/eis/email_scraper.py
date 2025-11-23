@@ -9,15 +9,16 @@ import threading
 import traceback
 from datetime import datetime
 
-from app import models
+from app import models, utils
 from app.config import settings
 from app.database import get_db
 from app.eis.email_parser import extract_linkedin_job_ids, extract_indeed_job_ids, extract_veganjobs_job_ids
 from app.eis.job_scraper import (
-    LinkedinJobScraper,
-    IndeedJobScraper,
+    LinkedinBrightdataJobScraper,
+    IndeedBrightdataJobScraper,
     VeganJobsJobScraper,
     extract_indeed_jobs_from_email,
+    JobResult,
 )
 from app.eis.location_parser import LocationParser
 from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
@@ -32,12 +33,14 @@ class JobEmailScraper(EmailService):
 
     def __init__(self, db=None) -> None:
         """Object constructor
-        :param db: optional database session"""
+        :param db: optional database session for testing"""
 
         EmailService.__init__(self)
         self.location_parser = LocationParser()
         self.logger = AppLogger.create_service_logger("email_scraper", "INFO")
-        self.db = next(get_db()) if db is None else db  # TODO
+        self.db = next(get_db()) if db is None else db
+        self.countries = utils.open_json("app/data/countries.json")
+        self.currencies = utils.open_json("app/data/currencies.json")
 
     @property
     def indeed_brightapi_setting(self):
@@ -162,26 +165,43 @@ class JobEmailScraper(EmailService):
     def update_scraped_job_data(
         self,
         job_record: ScrapedJob,
-        job_data: dict,
+        job_data: JobResult,
     ) -> None:
         """Update the job records with the scraped data
         :param job_record: ScrapedJob instance
         :param job_data: scraped job data"""
 
-        location, attendance_type = self.location_parser.parse_location(job_data["location"])
-        job_record.company = job_data["company"]
-        job_record.location = job_data["location"]
+        # Location & attendance type
+        location, attendance_type = self.location_parser.parse_location(job_data.location)
+        job_record.location = job_data.location
         job_record.location_postcode = location.postcode
         job_record.location_city = location.city
-        job_record.location_country = location.country
         job_record.attendance_type = attendance_type
-        job_record.salary_min = job_data["job"]["salary"]["min_amount"]
-        job_record.salary_max = job_data["job"]["salary"]["max_amount"]
-        job_record.title = job_data["job"]["title"]
-        job_record.description = job_data["job"]["description"]
-        job_record.url = job_data["job"]["url"]
+        if location.country:
+            for country in self.countries:
+                if location.country.lower() == country["name"].lower():
+                    job_record.location_country = country["name"]
+                    break
+
+        # Salary
+        job_record.salary_min = job_data.job.salary.min_amount
+        job_record.salary_max = job_data.job.salary.max_amount
+        currency_code = (job_data.job.salary.currency or "").lower()
+        for currency in self.currencies:
+            if currency_code in (currency["code"].lower(), currency["symbol_native"].lower()):
+                job_record.salary_currency_name = currency["code"]
+                break
+
+        # Job details
+        job_record.title = job_data.job.title
+        job_record.description = job_data.job.description
+        job_record.url = job_data.job.url
+        job_record.company = job_data.company
+
+        # Scraping information
         job_record.scrape_datetime = datetime.now()
         job_record.is_scraped = True
+
         self.db.commit()
 
     def copy_existing_entry(
@@ -306,7 +326,7 @@ class JobEmailScraper(EmailService):
         self,
         email_record: JobAlertEmail,
         service_log_entry: EisServiceLog,
-    ) -> dict[str, dict]:
+    ) -> dict[str, JobResult]:
         """Extract job ids from an email and save them to the database.
         May also extract job data directly from the email for some platforms depending on settings.
         :param email_record: JobAlertEmail record
@@ -330,11 +350,11 @@ class JobEmailScraper(EmailService):
                 # From each job, extract the job ID and add it to the dictionary
                 for job in jobs:
                     try:
-                        job_id = extract_indeed_job_ids(job["job"]["url"])[0]
+                        job_id = extract_indeed_job_ids(job.job.url)[0]
                         jobs_data[job_id] = job
                     except Exception as exception:
                         message = (
-                            f"Failed to extract job ID from email body for job URL {job['job']['url']} "
+                            f"Failed to extract job ID from email body for job URL {job.job.url} "
                             f"due to error: {exception}. Skipping job."
                         )
                         self.logger.exception(message)
@@ -373,7 +393,7 @@ class JobEmailScraper(EmailService):
     def scrape_jobs(
         self,
         service_log_entry: EisServiceLog,
-        jobs_data: dict,
+        jobs_data: dict[str, dict[str, JobResult]],
     ) -> None:
         """Scrape all unscraped jobs
         :param service_log_entry: Service log entry
@@ -404,12 +424,12 @@ class JobEmailScraper(EmailService):
             # Otherwise, scrape the data from the web
             else:
                 if job_record.platform == "linkedin":
-                    scraper = LinkedinJobScraper(job_record.external_job_id)
+                    scraper = LinkedinBrightdataJobScraper(job_record.external_job_id)
                 elif job_record.platform == "indeed":
                     if self.indeed_brightapi_setting == "email":
                         scraper = None
                     else:
-                        scraper = IndeedJobScraper(job_record.external_job_id)
+                        scraper = IndeedBrightdataJobScraper(job_record.external_job_id)
                 elif job_record.platform == "veganjobs":
                     scraper = VeganJobsJobScraper(job_record.external_job_id)
                 else:

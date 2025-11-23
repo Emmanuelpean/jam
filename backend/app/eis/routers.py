@@ -14,7 +14,7 @@ from starlette.requests import Request
 from app import models as app_models
 from app.database import get_db
 from app.eis import models, schemas
-from app.eis.job_scraper import LinkedinJobScraper, IndeedJobScraper, VeganJobsJobScraper
+from app.eis.job_scraper import LinkedinBrightdataJobScraper, IndeedBrightdataJobScraper, VeganJobsJobScraper
 from app.oauth2 import get_current_user
 from app.routers import (
     generate_data_table_crud_router,
@@ -184,7 +184,7 @@ def scrape_job(
     if not current_user.toast_active:
         raise NOT_ALLOWED_EXCEPTION
 
-    scraper = LinkedinJobScraper(external_job_id)
+    scraper = LinkedinBrightdataJobScraper(external_job_id)
     return scraper.scrape_job()
 
 
@@ -200,7 +200,7 @@ def scrape_job(
     if not current_user.toast_active:
         raise NOT_ALLOWED_EXCEPTION
 
-    scraper = IndeedJobScraper(external_job_id)
+    scraper = IndeedBrightdataJobScraper(external_job_id)
     return scraper.scrape_job()
 
 
