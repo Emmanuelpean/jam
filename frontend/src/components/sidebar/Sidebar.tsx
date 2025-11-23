@@ -172,7 +172,7 @@ export const Sidebar = () => {
 							{/*Create the submenus*/}
 							{item.submenu.map((subItem: NavigationSubItem, subIndex: number) => (
 								<Link
-									key={subItem.path}
+									key={subItem.text}
 									to={subItem.path}
 									className={`nav-item submenu-item ${isActive(subItem.path) ? "active" : ""}`}
 									style={{
@@ -196,7 +196,7 @@ export const Sidebar = () => {
 
 			return (
 				<Link
-					key={item.path}
+					key={item.text}
 					to={item.path!}
 					className={`nav-item ${isActive(item.path!) ? "active" : ""} ${item.className || ""}`}
 					onClick={item.onClick}
