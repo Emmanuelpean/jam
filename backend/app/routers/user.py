@@ -103,7 +103,7 @@ def send_email_change_with_rate_limit(
         }
 
 
-@current_user_router.put("/")
+@current_user_router.put("/", response_model=schemas.CurrentUserUpdateResponse)
 def update_current_user_profile(
     user_update: schemas.CurrentUserUpdate,
     current_user: models.User = Depends(oauth2.get_current_user),
@@ -116,7 +116,7 @@ def update_current_user_profile(
     :returns: A dictionary with the result of the update operation."""
 
     result = {"success": True, "message": "User has been successfully updated"}
-    user_update_dict = user_update.model_dump(exclude_defaults=True)
+    user_update_dict = user_update.model_dump(exclude_unset=True)
 
     # Track if password or email changed
     password_changed = False
