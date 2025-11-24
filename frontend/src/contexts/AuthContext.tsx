@@ -2,6 +2,7 @@ import React, { createContext, ReactNode, useCallback, useContext, useEffect, us
 import { useNavigate } from "react-router-dom";
 import { ApiError, authApi } from "../services/Api";
 import { UserData } from "../services/Schemas";
+import { DEFAULT_THEME } from "../utils/Theme";
 
 export interface CurrentUser extends UserData {
 	token: string | null;
@@ -15,6 +16,12 @@ export interface AuthResponse {
 
 export interface LoginResponse {
 	access_token?: string;
+}
+
+interface UpdateCurrentUserResponse {
+	user: UserData;
+	success: boolean;
+	message: string;
 }
 
 export interface AuthContextType {
@@ -49,7 +56,9 @@ export function useAuth(): AuthContextType {
 
 export function AuthProvider({ children }: AuthProviderProps) {
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-	const [token, setToken] = useState<string | null>(localStorage.getItem("token") || null);
+	const [token, setToken] = useState<string | null>(() => {
+		return localStorage.getItem("token");
+	});
 	const [userFetched, setUserFetched] = useState<boolean>(false);
 	const navigate = useNavigate();
 
@@ -90,20 +99,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 	const updateCurrentUser = async (userData: Partial<UserData>) => {
 		if (!token) return null;
-		const response = await authApi.updateCurrentUser(userData, token);
-		setCurrentUser((prev: CurrentUser | null) => (prev ? { ...prev, ...userData } : prev));
+		const response: UpdateCurrentUserResponse = await authApi.updateCurrentUser(userData, token);
+		const userResponse: UserData = await authApi.getCurrentUser(token);
+		setCurrentUser((prev: CurrentUser | null) => (prev ? { ...prev, ...userResponse } : prev));
 		return response;
 	};
 
+	useEffect(() => {
+		document.documentElement.setAttribute("data-theme", currentUser?.theme || DEFAULT_THEME);
+	}, [currentUser]);
+
 	// Check if token exists on load and fetch user info
 	useEffect(() => {
-		const storedToken = localStorage.getItem("token");
-		if (storedToken && !userFetched) {
-			// Only fetch if not already fetched
-			setToken(storedToken);
-			fetchUserInfo(storedToken).then(() => null);
+		// Only fetch user info if we have a token and haven't fetched yet
+		if (token && !userFetched) {
+			fetchUserInfo(token).then(() => null);
 		}
-	}, []);
+	}, [token, userFetched, fetchUserInfo]);
 
 	const login = async (email: string, password: string): Promise<AuthResponse> => {
 		try {

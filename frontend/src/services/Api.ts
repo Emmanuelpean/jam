@@ -38,13 +38,18 @@ const getAuthHeaders = (token: string): HeadersInit => ({
 	...(token && { Authorization: `Bearer ${token}` }),
 });
 
-const handleResponse = async (response: Response): Promise<any> => {
+const handleResponse = async (response: Response, isBlob: boolean = false): Promise<any> => {
+	// Enhanced error handling
 	if (!response.ok) {
 		const errorData = await response.json().catch(() => ({}));
-		const error: ApiError = new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+		const error: ApiError = new Error(errorData.detail);
 		error.status = response.status;
 		error.data = errorData;
 		throw error;
+	}
+
+	if (isBlob) {
+		return response.blob();
 	}
 
 	// Handle empty responses (like DELETE 204 No Content)
@@ -68,41 +73,18 @@ const handleResponse = async (response: Response): Promise<any> => {
 };
 
 class ApiService {
-	private readonly baseUrl: string;
-
-	constructor(baseUrl: string = API_BASE_URL) {
-		this.baseUrl = baseUrl;
-	}
-
 	// Enhanced error handling helper for blob responses
-	async handleResponseWithBlob(response: Response, isBlob: boolean = false): Promise<any> {
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
-			const error: ApiError = new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-			error.status = response.status;
-			error.data = errorData;
-			throw error;
-		}
-
-		if (isBlob) {
-			return response.blob();
-		}
-
-		return handleResponse(response);
-	}
 
 	async get(endpoint: string, token: string | null = null, options: RequestOptions = {}): Promise<any> {
-		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
 			method: "GET",
 			headers: getAuthHeaders(token || ""),
 		});
-
-		return this.handleResponseWithBlob(response, options.responseType === "blob");
+		return handleResponse(response, options.responseType === "blob");
 	}
 
-	// Generic POST request
 	async post(endpoint: string, data: any, token: string | null = null): Promise<any> {
-		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
 			method: "POST",
 			headers: getAuthHeaders(token || ""),
 			body: JSON.stringify(data),
@@ -110,9 +92,8 @@ class ApiService {
 		return handleResponse(response);
 	}
 
-	// Generic PUT request
 	async put(endpoint: string, data: any, token: string | null = null): Promise<any> {
-		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
 			method: "PUT",
 			headers: getAuthHeaders(token || ""),
 			body: JSON.stringify(data),
@@ -120,19 +101,17 @@ class ApiService {
 		return handleResponse(response);
 	}
 
-	// Generic DELETE request
 	async delete(endpoint: string, token: string | null = null): Promise<any> {
-		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
 			method: "DELETE",
 			headers: getAuthHeaders(token || ""),
 		});
 		return handleResponse(response);
 	}
 
-	// Form data POST (for login, etc.)
 	async postFormData(endpoint: string, formData: FormData, token: string | null = null): Promise<any> {
 		const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-		const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
 			method: "POST",
 			headers,
 			body: formData,
@@ -140,14 +119,13 @@ class ApiService {
 		return handleResponse(response);
 	}
 
-	// Simplified download method using existing get method
 	async downloadFile(endpoint: string, filename: string, token: string | null = null): Promise<void> {
 		// Use the existing get method with blob response type
 		const blob = await this.get(endpoint, token, { responseType: "blob" });
 
 		// Create download link and trigger download
-		const url = window.URL.createObjectURL(blob);
-		const link = document.createElement("a");
+		const url: string = window.URL.createObjectURL(blob);
+		const link: HTMLAnchorElement = document.createElement("a");
 		link.href = url;
 		link.download = filename;
 		document.body.appendChild(link);
@@ -160,11 +138,11 @@ class ApiService {
 const api = new ApiService();
 
 const createCrudApi = (endpoint: string): CrudApi => ({
-	getAll: (token: string, queryParams: QueryParams | null = null) => {
-		let url = `${endpoint}/`;
+	getAll: (token: string, queryParams: QueryParams | null = null): Promise<any> => {
+		let url: string = `${endpoint}/`;
 		if (queryParams) {
 			const searchParams = new URLSearchParams();
-			Object.keys(queryParams).forEach((key) => {
+			Object.keys(queryParams).forEach((key: string): void => {
 				if (queryParams[key] !== undefined) {
 					searchParams.append(key, String(queryParams[key]));
 				}
@@ -175,10 +153,10 @@ const createCrudApi = (endpoint: string): CrudApi => ({
 		}
 		return api.get(url, token);
 	},
-	get: (id: string | number, token: string) => api.get(`${endpoint}/${id}`, token),
-	create: (data: any, token: string) => api.post(`${endpoint}/`, data, token),
-	update: (id: string | number, data: any, token: string) => api.put(`${endpoint}/${id}`, data, token),
-	delete: (id: string | number, token: string) => api.delete(`${endpoint}/${id}`, token),
+	get: (id: string | number, token: string): Promise<any> => api.get(`${endpoint}/${id}`, token),
+	create: (data: any, token: string): Promise<any> => api.post(`${endpoint}/`, data, token),
+	update: (id: string | number, data: any, token: string): Promise<any> => api.put(`${endpoint}/${id}`, data, token),
+	delete: (id: string | number, token: string): Promise<any> => api.delete(`${endpoint}/${id}`, token),
 });
 
 export const jobsApi: CrudApi = createCrudApi("jobs");

@@ -127,6 +127,12 @@ class UserUpdate(UserCreate):
     password: str | None = None
 
 
+class CurrentUserUpdateResponse(BaseModel):
+    success: bool
+    message: str
+    logged_out: bool | None = None
+
+
 # ---------------------------------------------------- CURRENT USER ----------------------------------------------------
 
 
