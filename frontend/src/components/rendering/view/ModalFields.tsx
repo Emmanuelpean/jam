@@ -80,9 +80,10 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	type: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	interviewType: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "type",
 		label: "Type",
+		render: renderFunctions.interviewType,
 		...overrides,
 	}),
 

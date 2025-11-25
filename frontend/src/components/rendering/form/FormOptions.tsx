@@ -292,3 +292,47 @@ export const useFormOptions = (dataFactories: DataFactories = {}): UseFormOption
 		getAggregatorPreviewConfig,
 	};
 };
+
+export const appliedViaOptions: SelectOption[] = [
+	{ value: "aggregator", label: "Aggregator" },
+	{ value: "company_website", label: "Company Website" },
+	{ value: "email", label: "Email" },
+	{ value: "phone", label: "Phone" },
+	{ value: "other", label: "Other" },
+];
+
+export const applicationStatusOptions: SelectOption[] = [
+	{ value: "applied", label: "Applied" },
+	{ value: "interview", label: "Interview" },
+	{ value: "rejected", label: "Rejected" },
+	{ value: "offer", label: "Offer" },
+	{ value: "withdrawn", label: "Withdrawn" },
+];
+
+export const attendanceTypeOptions: SelectOption[] = [
+	{ value: "on-site", label: "On-site" },
+	{ value: "hybrid", label: "Hybrid" },
+	{ value: "remote", label: "Remote" },
+];
+
+export const interviewAttendanceOptions: SelectOption[] = [
+	{ value: "on-site", label: "On-site" },
+	{ value: "remote", label: "Remote" },
+];
+
+export const updateTypeOptions: SelectOption[] = [
+	{ value: "received", label: "Received" },
+	{ value: "sent", label: "Sent" },
+];
+
+export const interviewTypeOptions: SelectOption[] = [
+	{ value: "HR", label: "HR Interview" },
+	{ value: "Technical", label: "Technical Interview" },
+	{ value: "Management", label: "Management Interview" },
+	{ value: "Panel", label: "Panel Interview" },
+	{ value: "Phone", label: "Phone Interview" },
+	{ value: "Video", label: "Video Interview" },
+	{ value: "Assessment", label: "Assessment/Test" },
+	{ value: "Final", label: "Final Interview" },
+	{ value: "Other", label: "Other" },
+];
