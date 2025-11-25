@@ -2,12 +2,13 @@
 
 ### Bugs
 * [ ] Modals darken when a help bubble is displayed.
-* [ ] The theme shown in the user setting page is not updated when changed in the sidebar.
+* [X] The theme shown in the user setting page is not updated when changed in the sidebar.
 * [ ] The content of job application update and interview modals are not updated after an edit when opened through the job modal.
 * [ ] the sidebar is not expanding properly on small screens on the job page.
-* [ ] Source aggregator is sometimes not shown when editing a job
+* [X] Source aggregator is sometimes not shown when editing a job
 * [X] Move the logs to an absolute location
-
+* [X] Improve rhe raspberry theme contrast
+* 
 ### TOAST
 * [X] Ensure that the parsed country matches the list of available countries
 * [X] Add currency parsing
