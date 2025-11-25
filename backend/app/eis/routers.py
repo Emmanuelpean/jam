@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import asc, desc
+from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session
 from starlette.requests import Request
 
@@ -60,6 +60,7 @@ def get_all(
     page_size: int = 10,
     sort_by: str = "scrape_datetime",
     sort_direction: Literal["asc", "desc"] = "desc",
+    search: str | None = None,
 ):
     """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped.
     :param request: FastAPI request object to access query parameters
@@ -69,6 +70,7 @@ def get_all(
     :param page_size: Number of items per page.
     :param sort_by: Column name to sort by.
     :param sort_direction: Sort direction (asc or desc).
+    :param search: Search term to filter by title, company, location, description, or platform.
     :return: Paginated response with items and metadata."""
 
     # Base query
@@ -80,12 +82,26 @@ def get_all(
         .filter(models.ScrapedJob.is_active)
     )
 
+    # Apply search filter
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            or_(
+                models.ScrapedJob.title.ilike(search_term),
+                models.ScrapedJob.company.ilike(search_term),
+                models.ScrapedJob.location.ilike(search_term),
+                models.ScrapedJob.description.ilike(search_term),
+                models.ScrapedJob.platform.ilike(search_term),
+            )
+        )
+
     # Apply filters
     filter_params = dict(request.query_params)
     filter_params.pop("page", None)
     filter_params.pop("page_size", None)
     filter_params.pop("sort_by", None)
     filter_params.pop("sort_direction", None)
+    filter_params.pop("search", None)
     query = filter_query(query, models.ScrapedJob, filter_params)
 
     # Apply sorting
@@ -116,6 +132,27 @@ def get_all(
         "page_size": page_size,
         "total_pages": total_pages,
     }
+
+
+@scrapedjob_router.get("/count")
+def get_scraped_job_count(
+    current_user: app_models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get the count of scraped jobs for the current user that are scraped, not imported, and active.
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: Count of scraped jobs"""
+
+    count = (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.is_scraped)
+        .filter(models.ScrapedJob.is_imported.is_(False))
+        .filter(models.ScrapedJob.is_active)
+        .count()
+    )
+    return {"count": count}
 
 
 # -------------------------------------------------- EIS SERVICE LOGS --------------------------------------------------

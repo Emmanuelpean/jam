@@ -30,7 +30,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 			itemType="Scraped Job"
 			modalSize="xl"
 			showAdd={false}
-			showSearch={false}
+			showSearch={true}
 		/>
 	);
 };
