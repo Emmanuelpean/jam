@@ -182,8 +182,12 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		// Enrich jobs with calculated fields
 
 		return rawJobs.map((job: JobData): EnrichedJobData => {
-			const jobInterviews = rawInterviews.filter((i) => i.job_id === job.id);
-			const jobUpdates = jobApplicationUpdates.filter((u) => u.job_id === job.id);
+			const jobInterviews: InterviewData[] = rawInterviews.filter(
+				(i: InterviewData): boolean => i.job_id === job.id,
+			);
+			const jobUpdates: JobApplicationUpdateData[] = rawJobApplicationUpdates.filter(
+				(u: JobApplicationUpdateData): boolean => u.job_id === job.id,
+			);
 
 			// Calculate last_update_date
 			let lastUpdateDate: Date | null = null;
@@ -234,15 +238,27 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				daysUntilDeadline = (deadlineDate.getTime() - now.getTime()) / 1000;
 			}
 
+			// Create the job name from the title and the company name
+			let jobName = job.title;
+			if (job.company_id) {
+				const company: CompanyData | undefined = companies.find(
+					(c: CompanyData): boolean => c.id === job.company_id,
+				);
+				if (company) {
+					jobName = `${job.title} (${company.name})`;
+				}
+			}
+
 			return {
 				...job,
 				last_update_date: lastUpdateDate,
 				last_update_type: lastUpdateType,
 				days_since_last_update: daysSinceLastUpdate,
 				days_until_deadline: daysUntilDeadline,
+				name: jobName,
 			};
 		});
-	}, [rawJobs, rawInterviews, rawJobApplicationUpdates]);
+	}, [rawJobs, rawInterviews, rawJobApplicationUpdates, companies]);
 
 	const fetchAllData = async () => {
 		setError(null);

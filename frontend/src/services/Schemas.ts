@@ -183,6 +183,7 @@ export interface EnrichedJobData extends JobData {
 	last_update_type: string | null;
 	days_since_last_update: number | null;
 	days_until_deadline: number | null;
+	name: string;
 }
 
 // ----------------------------------------------------- INTERVIEW -----------------------------------------------------

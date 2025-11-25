@@ -9,7 +9,7 @@ import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobModal } from "../../modals/JobModal";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import { modalViewFields } from "../view/ModalFields";
-import { JobData, PersonData } from "../../../services/Schemas";
+import { PersonData } from "../../../services/Schemas";
 
 export type SelectOption = {
 	value: string;
@@ -99,16 +99,6 @@ export const useFormOptions = (dataFactories: DataFactories = {}): UseFormOption
 		getDataById: (id: number) => findItemById(contextData.aggregators, id),
 	};
 
-	const getJobLabel = (job: JobData): string => {
-		if (job.company_id) {
-			const company = findItemById(contextData.companies, job.company_id);
-			if (company) {
-				return `${job.title} (${company.name})`;
-			}
-		}
-		return job.title;
-	};
-
 	const getPersonLabel = (person: PersonData): string => {
 		if (person.company_id) {
 			const company = findItemById(contextData.companies, person.company_id);
@@ -149,7 +139,7 @@ export const useFormOptions = (dataFactories: DataFactories = {}): UseFormOption
 		[contextData.aggregators],
 	);
 	const jobOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(contextData.jobs, "id", getJobLabel),
+		(): SelectOption[] => toSelectOptions(contextData.jobs, "id", "name"),
 		[contextData.jobs],
 	);
 	const countryOptions: SelectOption[] = useMemo(
