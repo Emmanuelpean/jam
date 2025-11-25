@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # Application settings
     min_password_length: int
     max_file_size_mb: int
+    log_directory: str
 
     # Email configuration
     email_username: str
@@ -29,8 +30,6 @@ class Settings(BaseSettings):
     email_smtp_host: str
     email_imap_port: int
     email_imap_host: str
-
-    # Email addresses
     scraper_email: str
     info_email: str
     support_email: str
