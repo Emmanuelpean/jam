@@ -40,7 +40,7 @@
 /* Raspberry Jam Theme */
 :root[data-theme="raspberry"] {
     --theme-name: 'Raspberry Jam';
-    --primary-start: #ffecd2;
+    --primary-start: #fde4a3;
     --primary-mid: #fd79a8;
     --primary-end: #e84393;
     --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
