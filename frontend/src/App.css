@@ -361,7 +361,7 @@ textarea.form-control {
     outline: none;
 }
 
-.form-control::placeholder{
+.form-control::placeholder {
     color: rgb(173, 181, 189);
     font-style: italic;
     font-weight: 300;
@@ -375,6 +375,7 @@ textarea.form-control {
     width: 97%;
     margin: 0 auto;
 }
+
 /* ------------------------------------------------- PROGRESS BAR -------------------------------------------------- */
 
 .global-loading-overlay .progress {

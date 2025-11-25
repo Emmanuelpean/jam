@@ -422,9 +422,9 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	);
 
 	useEffect(() => {
-		if (!currentUser) return;
+		if (!token) return;
 		fetchAllData().then(() => {});
-	}, [currentUser]);
+	}, [token]);
 
 	return (
 		<DataContext.Provider

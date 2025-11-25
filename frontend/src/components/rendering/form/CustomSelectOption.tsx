@@ -1,6 +1,7 @@
 import React, { JSX, useRef } from "react";
 import { components, OptionProps } from "react-select";
-import { SelectOption } from "../../../utils/Utils";
+
+import { SelectOption } from "./FormOptions";
 
 interface CustomOptionProps extends OptionProps<SelectOption, boolean> {
 	onHover?: (option: SelectOption, position: { top: number; left: number }) => void;
@@ -13,8 +14,6 @@ export const CustomSelectOption = (props: CustomOptionProps): JSX.Element => {
 	const isClickingRef = useRef(false); // Use ref instead of state for immediate update
 
 	const handleMouseEnter = (e: React.MouseEvent) => {
-		console.log(`[Option ${data.label}] mouseEnter - isClicking:`, isClickingRef.current);
-
 		if (innerProps?.onMouseEnter) {
 			// @ts-ignore
 			innerProps.onMouseEnter(e);

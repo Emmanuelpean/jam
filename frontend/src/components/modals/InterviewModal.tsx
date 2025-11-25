@@ -2,7 +2,7 @@ import React from "react";
 import DataModal, { DataModalProps } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { InterviewData, InterviewDataTransform, JobData } from "../../services/Schemas";
+import { InterviewDataTransform, JobData } from "../../services/Schemas";
 import { useFormOptions } from "../rendering/form/FormOptions";
 
 export interface InterviewModalProps extends DataModalProps {
@@ -18,7 +18,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 	jobId,
 }) => {
 	const { locations, persons, jobs, openLocationModal, openPersonModal, renderLocationModal, renderPersonModal } =
-		useFormOptions(show ? ["locations", "persons", "jobs"] : []);
+		useFormOptions();
 
 	const formFieldsArray = [
 		...(!jobId ? [formFields.job(jobs)] : []),
@@ -30,7 +30,7 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 		],
 		[
 			formFields.interviewAttendanceType(),
-			formFields.location(locations, openLocationModal, {
+			formFields.location(locations, openLocationModal, null, {
 				displayCondition: (formData: JobData): boolean => {
 					return formData.attendance_type === "on-site";
 				},

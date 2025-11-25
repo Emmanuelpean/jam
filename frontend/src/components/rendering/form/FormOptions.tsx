@@ -1,16 +1,21 @@
-import { findById, SelectOption, toSelectOptions } from "../../../utils/Utils";
+import { accessAttribute, findItemById } from "../../../utils/Utils";
 import React, { JSX, useMemo, useState } from "react";
-import { useDataContext } from "../../../contexts/DataContext";
+import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import { CompanyModal } from "../../modals/CompanyModal";
 import { LocationModal } from "../../modals/LocationModal";
 import { KeywordModal } from "../../modals/KeywordModal";
 import { PersonModal } from "../../modals/PersonModal";
 import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobModal } from "../../modals/JobModal";
-import currencies from "../../../data/currencies.json";
-import countries from "../../../data/countries.json";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import { modalViewFields } from "../view/ModalFields";
+import { JobData, PersonData } from "../../../services/Schemas";
+
+export type SelectOption = {
+	value: string;
+	label: string;
+	data?: any;
+};
 
 interface UseFormOptionsReturn {
 	error: Error | null;
@@ -35,7 +40,10 @@ interface UseFormOptionsReturn {
 	renderAggregatorModal: () => JSX.Element;
 	openJobModal: () => void;
 	renderJobModal: () => JSX.Element;
-	getCompanyPreviewConfig: () => SelectWidgetPreviewConfig;
+	getCompanyPreviewConfig: SelectWidgetPreviewConfig;
+	getPersonPreviewConfig: SelectWidgetPreviewConfig;
+	getLocationPreviewConfig: SelectWidgetPreviewConfig;
+	getAggregatorPreviewConfig: SelectWidgetPreviewConfig;
 }
 
 interface DataFactories {
@@ -47,25 +55,69 @@ interface DataFactories {
 	jobs?: () => any;
 }
 
-export const useFormOptions = (
-	requiredOptions: string[] = [],
-	dataFactories: DataFactories = {},
-): UseFormOptionsReturn => {
-	const {
-		companies: companiesData,
-		locations: locationsData,
-		keywords: keywordsData,
-		persons: personsData,
-		aggregators: aggregatorsData,
-		jobs: jobsData,
-		error,
-	} = useDataContext();
+export const toSelectOptions = (
+	data: any[],
+	valueKey: string | ((item: any) => any) = "id",
+	labelKey: string | ((item: any) => any) = "name",
+): SelectOption[] => {
+	return data.map(
+		(item: any): SelectOption => ({
+			value: typeof valueKey === "function" ? valueKey(item) : accessAttribute(item, valueKey),
+			label: typeof labelKey === "function" ? labelKey(item) : accessAttribute(item, labelKey),
+			data: item,
+		}),
+	);
+};
+export const useFormOptions = (dataFactories: DataFactories = {}): UseFormOptionsReturn => {
+	const contextData: DataContextValue = useDataContext();
 
-	const getCompanyPreviewConfig = (): SelectWidgetPreviewConfig => ({
+	const getCompanyPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
 		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
-		getDataById: (id: string) => findById(companiesData, id),
-	});
+		getDataById: (id: number) => findItemById(contextData.companies, id),
+	};
+
+	const getPersonPreviewConfig: SelectWidgetPreviewConfig = {
+		enabled: true,
+		fields: [
+			modalViewFields.name({ isTitle: true }),
+			modalViewFields.email(),
+			[modalViewFields.companyBadge(), modalViewFields.role()],
+		],
+		getDataById: (id: number) => findItemById(contextData.persons, id),
+	};
+
+	const getLocationPreviewConfig: SelectWidgetPreviewConfig = {
+		enabled: true,
+		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.locationMap({ label: "" })],
+		getDataById: (id: number) => findItemById(contextData.locations, id),
+	};
+
+	const getAggregatorPreviewConfig: SelectWidgetPreviewConfig = {
+		enabled: true,
+		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.url()],
+		getDataById: (id: number) => findItemById(contextData.aggregators, id),
+	};
+
+	const getJobLabel = (job: JobData): string => {
+		if (job.company_id) {
+			const company = findItemById(contextData.companies, job.company_id);
+			if (company) {
+				return `${job.title} (${company.name})`;
+			}
+		}
+		return job.title;
+	};
+
+	const getPersonLabel = (person: PersonData): string => {
+		if (person.company_id) {
+			const company = findItemById(contextData.companies, person.company_id);
+			if (company) {
+				return `${person.name} (${company.name})`;
+			}
+		}
+		return person.name;
+	};
 
 	// Modal states
 	const [showCompanyModal, setShowCompanyModal] = useState<boolean>(false);
@@ -77,37 +129,40 @@ export const useFormOptions = (
 
 	// Convert data to SelectOptions and memoize
 	const companyOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(companiesData),
-		[companiesData],
+		(): SelectOption[] => toSelectOptions(contextData.companies),
+		[contextData.companies],
 	);
 	const locationOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(locationsData),
-		[locationsData],
+		(): SelectOption[] => toSelectOptions(contextData.locations),
+		[contextData.locations],
 	);
-	const keywordOptions: SelectOption[] = useMemo((): SelectOption[] => toSelectOptions(keywordsData), [keywordsData]);
+	const keywordOptions: SelectOption[] = useMemo(
+		(): SelectOption[] => toSelectOptions(contextData.keywords),
+		[contextData.keywords],
+	);
 	const personOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(personsData, "id", "name"),
-		[personsData],
+		(): SelectOption[] => toSelectOptions(contextData.persons, "id", getPersonLabel),
+		[contextData.persons],
 	);
 	const aggregatorOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(aggregatorsData),
-		[aggregatorsData],
+		(): SelectOption[] => toSelectOptions(contextData.aggregators),
+		[contextData.aggregators],
 	);
 	const jobOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(jobsData, "id", "title"),
-		[jobsData],
+		(): SelectOption[] => toSelectOptions(contextData.jobs, "id", getJobLabel),
+		[contextData.jobs],
 	);
 	const countryOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(countries, "name", "name"),
-		[countries],
+		(): SelectOption[] => toSelectOptions(contextData.countries, "name", "name"),
+		[contextData.countries],
 	);
 	const currencyOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(currencies, "code", "symbol"),
-		[currencies],
+		(): SelectOption[] => toSelectOptions(contextData.currencies, "code", "symbol"),
+		[contextData.currencies],
 	);
 	const currencyNameOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(currencies, "code", "name"),
-		[currencies],
+		(): SelectOption[] => toSelectOptions(contextData.currencies, "code", "name"),
+		[contextData.currencies],
 	);
 
 	// Modal handlers
@@ -209,16 +264,16 @@ export const useFormOptions = (
 	};
 
 	return {
-		error: error as Error | null,
-		companies: requiredOptions.includes("companies") ? companyOptions : [],
-		locations: requiredOptions.includes("locations") ? locationOptions : [],
-		keywords: requiredOptions.includes("keywords") ? keywordOptions : [],
-		persons: requiredOptions.includes("persons") ? personOptions : [],
-		aggregators: requiredOptions.includes("aggregators") ? aggregatorOptions : [],
-		jobs: requiredOptions.includes("jobs") ? jobOptions : [],
-		countries: requiredOptions.includes("countries") ? countryOptions : [],
-		currencies: requiredOptions.includes("currencies") ? currencyOptions : [],
-		currencyNames: requiredOptions.includes("currencyNames") ? currencyNameOptions : [],
+		error: contextData.error as Error | null,
+		companies: companyOptions,
+		locations: locationOptions,
+		keywords: keywordOptions,
+		persons: personOptions,
+		aggregators: aggregatorOptions,
+		jobs: jobOptions,
+		countries: countryOptions,
+		currencies: currencyOptions,
+		currencyNames: currencyNameOptions,
 		openCompanyModal,
 		renderCompanyModal,
 		openLocationModal,
@@ -232,5 +287,8 @@ export const useFormOptions = (
 		openJobModal,
 		renderJobModal,
 		getCompanyPreviewConfig,
+		getPersonPreviewConfig,
+		getLocationPreviewConfig,
+		getAggregatorPreviewConfig,
 	};
 };

@@ -52,7 +52,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const { currentUser } = useAuth();
 	useSwetrixPageViews();
 
-	const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
+	const isAuthPage: boolean = location.pathname === "/login" || location.pathname === "/register";
 
 	return (
 		<div style={{ display: "flex", minHeight: "100vh" }}>

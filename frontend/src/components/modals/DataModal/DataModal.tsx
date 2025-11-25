@@ -7,7 +7,7 @@ import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/Widge
 import { ActionButton } from "../../rendering/form/ActionButton";
 import useGenericAlert from "../../../hooks/useGenericAlert";
 import AlertModal from "../AlertModal";
-import { areDifferent, findByKey, flattenArray } from "../../../utils/Utils";
+import { areDifferent, findItemByKey, flattenArray, getColumnClass } from "../../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
 import { useDeleteHandler } from "../../../utils/DeleteHandler";
@@ -62,7 +62,6 @@ const DataModal = ({
 }: GenericModalProps) => {
 	const hasTabs = tabs && tabs.length > 0;
 
-	const { token } = useAuth();
 	const dataContext: DataContextValue = useDataContext();
 	const entityType: EntityType = endpointToEntityType(endpoint)!;
 	const [effectiveData, setEffectiveData] = useState(data);
@@ -86,13 +85,13 @@ const DataModal = ({
 
 	useEffect(() => {
 		setEffectiveData(data);
-	}, [endpoint, token, data, mode]);
+	}, [data]);
 
 	// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
 
 	const getCurrentTabConfig = (): TabConfig | null => {
 		if (!hasTabs) return null;
-		return findByKey(tabs, activeTab) || tabs[0];
+		return findItemByKey(tabs, activeTab) || tabs[0]!;
 	};
 
 	const isViewField = (field: Field): field is ModalViewField => {
@@ -135,19 +134,12 @@ const DataModal = ({
 
 	useEffect(() => {
 		// Initialize modal state when it becomes visible or data changes
-		if (mode === "add") {
+		if (!show) return;
+		if (mode === "add" || mode === "edit" || mode === "import") {
 			setFormData({ ...data });
 			setOriginalFormData({ ...data });
 			setIsEditing(true);
-		} else if (mode === "edit") {
-			setFormData({ ...data });
-			setOriginalFormData({ ...data });
-			setIsEditing(true);
-		} else if (mode === "import") {
-			setFormData({ ...data });
-			setOriginalFormData({ ...data });
-			setIsEditing(true);
-		} else {
+		} else if (mode === "view") {
 			setFormData({ ...data });
 			setOriginalFormData({ ...data });
 			setIsEditing(false);
@@ -197,6 +189,7 @@ const DataModal = ({
 	// ---------------------------------------------------- EDITING ----------------------------------------------------
 
 	const handleEditToView = (): void => {
+		console.log("handleEditToView", effectiveData);
 		setIsEditing(false);
 		setFormData({ ...effectiveData });
 		setOriginalFormData({ ...effectiveData });
@@ -264,20 +257,6 @@ const DataModal = ({
 			}
 		}
 
-		const getColumnClass = (count: number): string => {
-			switch (count) {
-				case 1:
-					return "col-md-12";
-				case 2:
-					return "col-md-6";
-				case 3:
-					return "col-md-4";
-				case 4:
-					return "col-md-3";
-				default:
-					return "col-md-6";
-			}
-		};
 		const columnClass = getColumnClass(itemList.length);
 
 		return (
@@ -416,17 +395,17 @@ const DataModal = ({
 
 			// Transform data if needed
 			const dataToSubmit = transformFormData ? transformFormData(formData) : formData;
-			console.log(mode);
 			// Submit to API
 			const apiResult =
 				mode === "add" || mode == "import"
 					? await dataContext.addEntity(entityType, dataToSubmit)
 					: await dataContext.updateEntity(entityType, data.id, dataToSubmit);
-			console.log(apiResult);
 			if (mode === "add" || mode === "edit" || mode == "import") {
 				handleHideImmediate();
 			} else {
+				console.log("api", apiResult);
 				setEffectiveData(apiResult);
+				console.log("effectiveData", effectiveData);
 				handleEditToView();
 			}
 			if (onSuccess) {
@@ -707,6 +686,7 @@ const DataModal = ({
 				backdrop={true}
 				keyboard={true}
 				id={getModalId()}
+				key={getModalId()}
 			>
 				{isEditing ? <Form onSubmit={handleSubmit}>{modalContent}</Form> : modalContent}
 			</Modal>

@@ -39,7 +39,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 		renderKeywordModal,
 		renderPersonModal,
 		renderAggregatorModal,
-	} = useFormOptions(show ? ["companies", "locations", "keywords", "persons", "aggregators"] : []);
+	} = useFormOptions();
 
 	const jobFormFields = [
 		formFields.jobTitle({ placeholder: "Python Software Engineer" }),
@@ -53,7 +53,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 		[
 			formFields.personalRating(),
 			formFields.deadline(),
-			formFields.aggregator(aggregators, openAggregatorModal, { name: "source_id" }),
+			formFields.aggregator(aggregators, openAggregatorModal, null, { name: "source_id" }),
 		],
 		formFields.description({
 			placeholder:
@@ -82,7 +82,12 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 		[formFields.applicationDate(), formFields.applicationStatus()],
 		[
 			formFields.applicationVia(),
-			formFields.aggregator(aggregators, openAggregatorModal, { name: "application_aggregator_id" }),
+			formFields.aggregator(aggregators, openAggregatorModal, null, {
+				name: "application_aggregator_id",
+				displayCondition: (formData: JobDataTransform): boolean => {
+					return formData.applied_via ? formData.applied_via === "aggregator" : true;
+				},
+			}),
 		],
 		formFields.applicationUrl({ placeholder: "https://linkedin.com/application/453635" }),
 		formFields.note({
