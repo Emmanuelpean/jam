@@ -8,7 +8,7 @@ import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
 export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
-	const { countries } = useFormOptions(["countries"]);
+	const { countries } = useFormOptions();
 	const dataContext: DataContextValue = useDataContext();
 
 	const formFieldsArray = [

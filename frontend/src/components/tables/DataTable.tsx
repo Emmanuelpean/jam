@@ -145,7 +145,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				sort_by: sortConfig.key,
 				sort_direction: sortConfig.direction,
 			});
-			console.log(sortConfig);
 
 			const response: any = await api.get(`${endpoint}?${params.toString()}`, token);
 			setFetchedData(response.items);
@@ -349,7 +348,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const handleImportSuccess = (importedItem: any): void => {
 		onImportSuccess?.(importedItem);
 		removeItem?.(importedItem.id);
-		fetchData().then((data) => {});
+		fetchData().then((_) => {});
 		closeImportModal();
 	};
 

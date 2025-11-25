@@ -207,7 +207,7 @@ export const modalViewFields = {
 	jobBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job",
 		label: "Job",
-		render: (params: RenderParams) => renderFunctions.jobBadge(params, null),
+		render: (params: RenderParams) => renderFunctions.jobBadge(params),
 		...overrides,
 	}),
 

@@ -15,7 +15,7 @@ export interface AuthResponse {
 }
 
 export interface LoginResponse {
-	access_token?: string;
+	access_token: string;
 }
 
 interface UpdateCurrentUserResponse {

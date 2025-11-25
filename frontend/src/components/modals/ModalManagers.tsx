@@ -5,6 +5,8 @@ import { PersonModal } from "./PersonModal";
 import { KeywordModal } from "./KeywordModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { JobModal } from "./JobModal";
+import { InterviewModal } from "./InterviewModal";
+import { JobApplicationUpdateModal } from "./JobApplicationUpdateModal";
 
 interface ModalManagerProps {
 	children: (handleClick: (item: any) => void) => ReactNode;
@@ -44,3 +46,5 @@ export const PersonModalManager = createModalManager(PersonModal);
 export const KeywordModalManager = createModalManager(KeywordModal);
 export const JobModalManager = createModalManager(JobModal);
 export const AggregatorModalManager = createModalManager(AggregatorModal);
+export const InterviewModalManager = createModalManager(InterviewModal);
+export const JobApplicationUpdateModalManager = createModalManager(JobApplicationUpdateModal);

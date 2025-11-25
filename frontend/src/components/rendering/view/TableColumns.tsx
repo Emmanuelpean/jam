@@ -1,8 +1,8 @@
 import { renderFunctions, RenderParams, ViewField } from "./ViewRenders";
 import { toDdMmYyyy } from "../../../utils/TimeUtils";
-import { LocationData, PersonData } from "../../../services/Schemas";
+import { PersonData } from "../../../services/Schemas";
 import { DataContextValue, JamData } from "../../../contexts/DataContext";
-import { findById } from "../../../utils/Utils";
+import { findItemById } from "../../../utils/Utils";
 
 export interface TableColumn extends ViewField {
 	label: string;
@@ -14,23 +14,25 @@ export interface TableColumn extends ViewField {
 }
 
 const getCompanyText = (item: JamData, context: DataContextValue): string | null => {
-	if ("company_id" in item) {
-		return findById(context.companies, item.company_id)?.name ?? null;
+	if ("company_id" in item && item.company_id) {
+		return findItemById(context.companies, item.company_id)?.name ?? null;
 	}
 	return null;
 };
 
 const getLocationText = (item: JamData, context: DataContextValue): string | null => {
-	if ("location_id" in item) {
-		const location: LocationData = findById(context.locations, item.location_id);
-		return location.name + item.attendance_type || null;
+	if ("location_id" in item && item.location_id) {
+		const location = findItemById(context.locations, item.location_id);
+		if (location) {
+			return location.name + item.attendance_type;
+		}
 	}
 	return null;
 };
 
 const getJobText = (item: JamData, context: DataContextValue): string | null => {
 	if ("job_id" in item) {
-		return findById(context.jobs, item.job_id)?.name ?? null;
+		return findItemById(context.jobs, item.job_id)?.name ?? null;
 	}
 	return null;
 };
@@ -363,7 +365,7 @@ export const tableColumns = {
 		searchable: true,
 		searchFields: getJobText,
 		sortField: getJobText,
-		render: (params: RenderParams) => renderFunctions.jobBadge(params, null),
+		render: (params: RenderParams) => renderFunctions.jobBadge(params),
 		...overrides,
 	}),
 

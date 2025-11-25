@@ -3,16 +3,16 @@
 import React from "react";
 import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { JobData } from "../../services/Schemas";
+import { JobData, ScrapedJobData } from "../../services/Schemas";
 import { jobsApi, scrapedJobApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import { useFormOptions } from "../rendering/form/FormOptions";
+import { SelectOption, useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
-import { SelectOption } from "../../utils/Utils";
 import { modalViewFields } from "../rendering/view/ModalFields";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
+	data: ScrapedJobData;
 }
 
 export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide, data, submode, size = "xl" }) => {
@@ -33,7 +33,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		renderKeywordModal,
 		renderPersonModal,
 		renderAggregatorModal,
-	} = useFormOptions(["companies", "locations", "keywords", "persons", "aggregators"], {
+	} = useFormOptions({
 		companies: () => ({ name: data?.company }),
 		locations: () => ({
 			postcode: data?.location_postcode,
@@ -66,9 +66,9 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		if (!data) return data;
 		return {
 			...data,
-			company_id: data.company ? findClosest(companies, data.company) : data.company_id,
-			location_id: data.location ? findClosest(locations, data.location) : data.location_id,
-			aggregator_id: data.emails[0].platform ? findExact(aggregators, data.emails[0].platform) : data.location_id,
+			company_id: data.company ? findClosest(companies, data.company) : null,
+			location_id: data.location ? findClosest(locations, data.location) : null,
+			aggregator_id: data.emails[0].platform ? findExact(aggregators, data.emails[0].platform) : null,
 		};
 	}, [data, companies, locations]);
 

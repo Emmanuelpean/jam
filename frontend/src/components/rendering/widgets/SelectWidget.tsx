@@ -1,17 +1,17 @@
-import React, { JSX, useCallback, useState } from "react";
+import React, { JSX, useCallback, useState, useRef } from "react";
 import Select, { ActionMeta, GroupBase, MultiValue, SingleValue } from "react-select";
 import makeAnimated from "react-select/animated";
-import { SelectOption } from "../../../utils/Utils";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 import "./SelectWidget.css";
 import { FloatingPreview } from "../../FloatingPreview/FloatingPreview";
 import { CustomSelectOption } from "../form/CustomSelectOption";
 import { ModalViewFields } from "../view/ModalFields";
+import { SelectOption } from "../form/FormOptions";
 
 export interface SelectWidgetPreviewConfig {
 	enabled: boolean;
 	fields: ModalViewFields;
-	getDataById: (id: string) => any;
+	getDataById: (id: number) => any;
 }
 
 const animatedComponents = makeAnimated();
@@ -68,11 +68,16 @@ export const RenderSelect = ({
 	const [previewData, setPreviewData] = useState<any>(null);
 	const [previewPosition, setPreviewPosition] = useState({ top: 0, left: 0 });
 	const [showPreview, setShowPreview] = useState(false);
+	const lastPreviewIdRef = useRef<string | null>(null);
 
 	const handleHover = useCallback(
 		(option: SelectOption, position: { top: number; left: number }) => {
 			if (previewConfig) {
-				const data = previewConfig.getDataById(option.value);
+				// Only update preview if different option
+				if (lastPreviewIdRef.current === option.value) return;
+				lastPreviewIdRef.current = option.value;
+
+				const data = previewConfig.getDataById(Number(option.value));
 				setPreviewData(data);
 				setPreviewPosition(position);
 				setShowPreview(true);
@@ -82,6 +87,7 @@ export const RenderSelect = ({
 	);
 
 	const handleHoverEnd = useCallback(() => {
+		lastPreviewIdRef.current = null;
 		setShowPreview(false);
 		setPreviewData(null);
 	}, []);

@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import { Currency, DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
-import { Theme, THEMES } from "../../../utils/Theme";
+import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../maps/LocationMap";
 import {
 	AggregatorData,
@@ -39,7 +39,7 @@ import {
 	getUpdateTypeIcon,
 } from "./Icons";
 import { ensureHttpPrefix } from "../../../utils/StringUtils";
-import { findByKey } from "../../../utils/Utils";
+import { findItemByKey } from "../../../utils/Utils";
 import currencies from "../../../data/currencies.json";
 
 // Parameters passed to the view render functions
@@ -70,7 +70,7 @@ function filterByKey<T>(items: T[], key: string, id: number | undefined): T[] {
 	});
 }
 
-function getJamData<T extends { id: number }>(jamData: T[], id: number | undefined): T | undefined {
+function getJamData<T extends { id: number }>(jamData: T[], id: number | undefined | null): T | undefined {
 	return jamData.find((data: T): boolean => data.id === id);
 }
 
@@ -120,9 +120,9 @@ export const renderFunctions = {
 	},
 
 	appTheme: (param: RenderParams): ReactNode => {
-		const themeKey: Theme | undefined = param.item?.theme;
+		const themeKey: string | undefined = param.item?.theme;
 		if (themeKey) {
-			return findByKey(THEMES, themeKey)?.name;
+			return findItemByKey(THEMES, themeKey)?.name;
 		}
 		return null;
 	},
@@ -357,6 +357,8 @@ export const renderFunctions = {
 	jobBadge: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const job: EnrichedJobData | undefined = getJamData(ctx.jobs, param.item?.job_id);
+		const company: CompanyData | undefined = getJamData(ctx.companies, job?.company_id);
+		const text: string = company ? `${job?.title} (${company.name})` : job?.title || "";
 
 		if (job) {
 			return (
@@ -368,7 +370,7 @@ export const renderFunctions = {
 							id={param.id}
 						>
 							<i className="bi bi-briefcase me-1"></i>
-							{job.title}
+							{text}
 						</span>
 					)}
 				</JobModalManager>

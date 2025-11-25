@@ -32,7 +32,7 @@ export interface WidgetProps {
 	error?: string | null;
 	secondaryValue?: string | null;
 	currentUser?: CurrentUser | null;
-	previewConfig?: SelectWidgetPreviewConfig;
+	previewConfig?: SelectWidgetPreviewConfig | null;
 }
 
 export const displayError = (errorMessage: string | null): JSX.Element[] | null => {

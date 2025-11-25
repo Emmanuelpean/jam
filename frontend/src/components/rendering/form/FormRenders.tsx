@@ -1,7 +1,7 @@
 import { JSX } from "react";
 import { Theme, THEMES } from "../../../utils/Theme";
-import { SelectOption } from "../../../utils/Utils";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
+import { SelectOption } from "./FormOptions";
 
 export interface ModalFormField {
 	name: string;
@@ -24,7 +24,7 @@ export interface ModalFormField {
 	addButton?: { onClick?: () => void };
 	tabIndex?: number;
 	displayCondition?: (item: any) => boolean;
-	previewConfig?: SelectWidgetPreviewConfig;
+	previewConfig?: SelectWidgetPreviewConfig | null;
 }
 
 interface FormFieldOverride extends Partial<ModalFormField> {}
@@ -372,7 +372,7 @@ export const formFields = {
 	company: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
-		previewConfig?: SelectWidgetPreviewConfig,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
 		name: "company_id",
@@ -415,6 +415,7 @@ export const formFields = {
 	location: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
 		name: "location_id",
@@ -423,6 +424,7 @@ export const formFields = {
 		placeholder: "Select or search location...",
 		isSearchable: true,
 		isClearable: true,
+		previewConfig: previewConfig,
 		options: options,
 		...(onAdd && {
 			addButton: {
@@ -456,6 +458,7 @@ export const formFields = {
 	keywords: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
 		name: "keywords",
@@ -463,6 +466,7 @@ export const formFields = {
 		type: "multiselect",
 		placeholder: "Select or search tags...",
 		isSearchable: true,
+		previewConfig: previewConfig,
 		options: options,
 		...(onAdd && {
 			addButton: {
@@ -475,6 +479,7 @@ export const formFields = {
 	contacts: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
 		name: "contacts",
@@ -482,6 +487,7 @@ export const formFields = {
 		type: "multiselect",
 		placeholder: "Select or search contacts...",
 		isSearchable: true,
+		previewConfig: previewConfig,
 		options: options,
 		...(onAdd && {
 			addButton: {
@@ -494,12 +500,14 @@ export const formFields = {
 	interviewers: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
 		name: "interviewers",
 		label: "Interviewers",
 		type: "multiselect",
 		isSearchable: true,
+		previewConfig: previewConfig,
 		options: options,
 		...(onAdd && {
 			addButton: {
@@ -524,6 +532,7 @@ export const formFields = {
 	aggregator: (
 		options: SelectOption[] = [],
 		onAdd: (() => void) | null = null,
+		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
 		name: "aggregator_id",
@@ -532,9 +541,7 @@ export const formFields = {
 		placeholder: "Select an aggregator",
 		isSearchable: true,
 		isClearable: true,
-		displayCondition: (formData: any): boolean => {
-			return formData.applied_via ? formData.applied_via === "aggregator" : true;
-		},
+		previewConfig: previewConfig,
 		options: options,
 		...(onAdd && {
 			addButton: {

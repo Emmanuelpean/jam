@@ -1,7 +1,7 @@
 .floating-preview-container {
     animation: fadeIn 0.2s ease-in;
     border-radius: 4px;
-    margin-left: 12px;
+    margin-left: 6px;
     pointer-events: none;
 }
 
