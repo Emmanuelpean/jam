@@ -8,7 +8,8 @@
 * [X] Source aggregator is sometimes not shown when editing a job
 * [X] Move the logs to an absolute location
 * [X] Improve rhe raspberry theme contrast
-* 
+* [ ] Incomplete job application updates are shown in the dashboard
+
 ### TOAST
 * [X] Ensure that the parsed country matches the list of available countries
 * [X] Add currency parsing
@@ -25,7 +26,7 @@
 
 ### Job Modal Improvements
 * [ ] Add option to select the source (recruiter, aggregator, other)
-* [ ] Add option for application on company website
+* [X] Add option for application on company website
 
 ### Spontaneous Applications
 * [ ] Add spontaneous application table with the following columns:

@@ -1,7 +1,15 @@
 import { JSX } from "react";
 import { Theme, THEMES } from "../../../utils/Theme";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
-import { SelectOption } from "./FormOptions";
+import {
+	applicationStatusOptions,
+	appliedViaOptions,
+	attendanceTypeOptions,
+	interviewAttendanceOptions,
+	interviewTypeOptions,
+	SelectOption,
+	updateTypeOptions,
+} from "./FormOptions";
 
 export interface ModalFormField {
 	name: string;
@@ -104,10 +112,7 @@ export const formFields = {
 		label: "Update Type",
 		type: "select",
 		required: true,
-		options: [
-			{ value: "received", label: "Received" },
-			{ value: "sent", label: "Sent" },
-		],
+		options: updateTypeOptions,
 		...overrides,
 	}),
 
@@ -281,11 +286,7 @@ export const formFields = {
 		name: "attendance_type",
 		label: "Attendance Type",
 		type: "select",
-		options: [
-			{ value: "on-site", label: "On-site" },
-			{ value: "hybrid", label: "Hybrid" },
-			{ value: "remote", label: "Remote" },
-		],
+		options: attendanceTypeOptions,
 		...overrides,
 	}),
 
@@ -293,10 +294,7 @@ export const formFields = {
 		name: "attendance_type",
 		label: "Attendance Type",
 		type: "select",
-		options: [
-			{ value: "on-site", label: "On-site" },
-			{ value: "remote", label: "Remote" },
-		],
+		options: interviewAttendanceOptions,
 		...overrides,
 	}),
 
@@ -307,17 +305,7 @@ export const formFields = {
 		label: "Interview Type",
 		type: "select",
 		required: true,
-		options: [
-			{ value: "HR", label: "HR Interview" },
-			{ value: "Technical", label: "Technical Interview" },
-			{ value: "Management", label: "Management Interview" },
-			{ value: "Panel", label: "Panel Interview" },
-			{ value: "Phone", label: "Phone Interview" },
-			{ value: "Video", label: "Video Interview" },
-			{ value: "Assessment", label: "Assessment/Test" },
-			{ value: "Final", label: "Final Interview" },
-			{ value: "Other", label: "Other" },
-		],
+		options: interviewTypeOptions,
 		placeholder: "Select interview type",
 		...overrides,
 	}),
@@ -336,13 +324,7 @@ export const formFields = {
 		name: "application_status",
 		label: "Application Status",
 		type: "select",
-		options: [
-			{ value: "applied", label: "Applied" },
-			{ value: "interview", label: "Interview" },
-			{ value: "rejected", label: "Rejected" },
-			{ value: "offer", label: "Offer" },
-			{ value: "withdrawn", label: "Withdrawn" },
-		],
+		options: applicationStatusOptions,
 		...overrides,
 	}),
 
@@ -358,12 +340,7 @@ export const formFields = {
 		name: "applied_via",
 		label: "Application Via",
 		type: "select",
-		options: [
-			{ value: "aggregator", label: "Aggregator" },
-			{ value: "email", label: "Email" },
-			{ value: "phone", label: "Phone" },
-			{ value: "other", label: "Other" },
-		],
+		options: appliedViaOptions,
 		...overrides,
 	}),
 

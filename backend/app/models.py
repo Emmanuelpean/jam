@@ -476,7 +476,10 @@ class Job(Owned, Base):
             "application_status IN ('applied', 'interview', 'offer', 'rejected', 'withdrawn')",
             name="valid_application_status_values",
         ),
-        CheckConstraint("applied_via IN ('aggregator', 'email', 'phone', 'other')", name="valid_applied_via_values"),
+        CheckConstraint(
+            "applied_via IN ('aggregator', 'email', 'company_website', 'phone', 'other')",
+            name="valid_applied_via_values",
+        ),
     )
 
 

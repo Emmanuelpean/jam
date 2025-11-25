@@ -41,6 +41,14 @@ import {
 import { ensureHttpPrefix } from "../../../utils/StringUtils";
 import { findItemByKey } from "../../../utils/Utils";
 import currencies from "../../../data/currencies.json";
+import {
+	applicationStatusOptions,
+	appliedViaOptions,
+	attendanceTypeOptions,
+	interviewTypeOptions,
+	SelectOption,
+	updateTypeOptions,
+} from "../form/FormOptions";
 
 // Parameters passed to the view render functions
 export interface RenderParams {
@@ -128,19 +136,26 @@ export const renderFunctions = {
 	},
 
 	updateType: (param: RenderParams): ReactNode => {
-		const updateType: string | undefined | null = param.item?.type;
+		const updateType: string | null =
+			updateTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]?.label ||
+			null;
 		if (updateType) {
-			const capitalizedType = updateType.charAt(0).toUpperCase() + updateType.slice(1);
 			const icon = getUpdateTypeIcon(updateType);
-
 			return (
 				<span>
 					{icon && <i className={`${icon} me-1`}></i>}
-					{capitalizedType}
+					{updateType}
 				</span>
 			);
 		}
 		return null;
+	},
+
+	interviewType: (param: RenderParams): ReactNode => {
+		return (
+			interviewTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]
+				?.label || null
+		);
 	},
 
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
@@ -288,7 +303,10 @@ export const renderFunctions = {
 	},
 
 	applicationStatus: (param: RenderParams): ReactNode => {
-		const status: string | undefined | null = param.item?.application_status;
+		const status: string =
+			applicationStatusOptions.filter(
+				(option: SelectOption): boolean => option.value === param.item?.application_status,
+			)[0]?.label || "Unknown";
 		if (status) {
 			return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
 		}
@@ -435,14 +453,9 @@ export const renderFunctions = {
 			icon = "bi-house";
 		}
 
-		let attendanceString: string | null = null;
-		if (attendanceType === "on-site") {
-			attendanceString = "On-site";
-		} else if (attendanceType === "hybrid") {
-			attendanceString = "Hybrid";
-		} else if (attendanceType === "remote") {
-			attendanceString = "Remote";
-		}
+		let attendanceString: string | null =
+			attendanceTypeOptions.filter((option: SelectOption): boolean => option.value === attendanceType)[0]
+				?.label || null;
 
 		let displayText: string | null = null;
 		if (location && attendanceString) {
@@ -527,9 +540,12 @@ export const renderFunctions = {
 			return renderFunctions._aggregatorBadge(param, "application_aggregator_id");
 		}
 		if (appliedVia) {
+			const text: string =
+				appliedViaOptions.filter((option: SelectOption): boolean => option.value === appliedVia)[0]?.label ||
+				appliedVia;
 			return (
 				<span className={"badge bg-info"} id={param.id}>
-					{appliedVia}
+					{text}
 				</span>
 			);
 		}
