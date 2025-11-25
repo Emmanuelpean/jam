@@ -43,7 +43,7 @@ class TestScrapedJobCRUD(CRUDTestBase):
 
         test_data = self.get_user_data(test_users, test_scraped_jobs)
         client = self._get_admin_authorised_client(authorised_clients)
-        response = client.get(self.endpoint + "?page=1&page_size=20")
+        response = client.get(self.endpoint + "?page=1&page_size=20&search=Test")
         assert response.status_code == status.HTTP_200_OK
         # jobs = []
         # for job in test_data:

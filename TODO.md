@@ -41,3 +41,6 @@
 
 ### Active Jobs Widget
 * [ ] Add a "active jobs" log showing jobs with the most activity
+
+### Tables
+* [ ] Move the scrollbar inside the tables so that the header is always visible

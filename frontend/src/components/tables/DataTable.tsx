@@ -101,6 +101,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [loadError, setLoadError] = useState<string | null>(null);
 	const [fetchedData, setFetchedData] = useState<any[]>([]);
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
 
 	// Search and sort
 	const [sortConfig, setSortConfig] = useState<SortConfig>(
@@ -134,6 +135,21 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		closeImportModal,
 	} = useModalState();
 
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 300); // Wait 300ms after user stops typing
+
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
+
+	// Reset page when debounced search changes
+	useEffect(() => {
+		if (isServerPagination) {
+			setCurrentPage(0);
+		}
+	}, [debouncedSearchTerm, isServerPagination]);
+
 	const fetchData = async () => {
 		setIsLoading(true);
 		setLoadError(null);
@@ -144,6 +160,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				page_size: pageSize.toString(),
 				sort_by: sortConfig.key,
 				sort_direction: sortConfig.direction,
+				search: debouncedSearchTerm,
 			});
 
 			const response: any = await api.get(`${endpoint}?${params.toString()}`, token);
@@ -160,7 +177,13 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		if (isServerPagination) {
 			fetchData().then((_) => null);
 		}
-	}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination]);
+	}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination, debouncedSearchTerm]);
+
+	useEffect(() => {
+		if (!isServerPagination) {
+			setCurrentPage(0);
+		}
+	}, [searchTerm, isServerPagination, sortConfig]);
 
 	const getData = (): any[] => {
 		if (providedData !== undefined) {
@@ -492,17 +515,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		return <div className="alert alert-danger mt-3">{contextError.message}</div>;
 	}
 
-	if (isLoading) {
-		return (
-			<div className="d-flex justify-content-center align-items-center py-5">
-				<div className="spinner-border text-primary" role="status">
-					<span className="visually-hidden">Loading...</span>
-				</div>
-				<span className="ms-3">Loading {itemType}s...</span>
-			</div>
-		);
-	}
-
 	if (loadError) {
 		return (
 			<div className="alert alert-danger mt-3">
@@ -533,13 +545,13 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				style={{ gap: compact ? "0.5rem" : "1rem" }}
 			>
 				{showSearch && !compact && (
-					<div className="d-flex align-items-center gap-3" style={{ width: "40%" }}>
+					<div className="d-flex align-items-center gap-3" style={{ width: showAdd ? "40%" : "100%" }}>
 						<input
 							type="text"
 							className="form-control"
 							placeholder="Search..."
 							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
+							onChange={(e): void => setSearchTerm(e.target.value)}
 							id="search-input"
 						/>
 						<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
@@ -568,172 +580,186 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			</div>
 
 			{/* Table */}
-			<div className="table-responsive">
-				<table
-					className={`table table-striped table-hover rounded-3 overflow-hidden ${compact ? "table-sm" : ""}`}
-					style={compact ? { fontSize: "0.875rem" } : {}}
-				>
-					<thead className="custom-header">
-						<tr>
-							{columns.map((column) => (
-								<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
-									<div className="d-flex align-items-center justify-content-between">
-										<div
-											className={column.sortable ? "cursor-pointer user-select-none" : ""}
-											onClick={() => column.sortable && handleSort(column.key)}
-											id={`table-header-${column.key}`}
-											style={compact ? { fontSize: "0.875rem" } : {}}
-										>
-											{column.label}
-											{column.sortable && (
-												<span className="ms-1">
-													<i
-														className={`bi bi-arrow-${
-															sortConfig.key === column.key
-																? sortConfig.direction === "asc"
-																	? "up"
-																	: "down"
-																: "down-up"
-														}`}
-														style={compact ? { fontSize: "0.75rem" } : {}}
-													></i>
-												</span>
-											)}
-										</div>
-									</div>
-								</th>
-							))}
-						</tr>
-					</thead>
-					<tbody>
-						{currentPageData.map((item, index) => (
-							<tr
-								key={item.id || index}
-								id={`table-row-${item.id}`}
-								className={`table-row-clickable`}
-								onClick={(e) => handleRowClick(e, item)}
-								onContextMenu={(e) => handleRowRightClick(item, e)}
-								style={{ cursor: "pointer" }}
-							>
-								{columns.map((column, columnIndex) => (
-									<td
-										key={column.key}
-										className="align-middle"
-										style={{
-											...(columnIndex === 0 ? { fontWeight: "bold" } : {}),
-											...(compact
-												? {
-														padding: "0.5rem",
-														fontSize: "0.875rem",
-													}
-												: {}),
-										}}
-									>
-										<RenderViewFieldWithContext
-											field={column}
-											item={item}
-											id={`table-row-${item.id}`}
-										/>
-									</td>
-								))}
-							</tr>
-						))}
-						{currentPageData.length === 0 && (
-							<tr>
-								<td
-									colSpan={columns.length}
-									className="text-center py-4 text-muted"
-									style={
-										compact
-											? {
-													padding: "1rem",
-													fontSize: "0.875rem",
-												}
-											: {}
-									}
-								>
-									{emptyMessage || `No ${pluralize(itemType)} found`}
-								</td>
-							</tr>
-						)}
-					</tbody>
-				</table>
-			</div>
-
-			{/* Pagination */}
-			{!showAllEntries && displayTotal > 20 && (
-				<div className={`d-flex justify-content-between align-items-center mt-0`}>
-					<div className="d-flex align-items-center gap-0">
-						{[
-							{
-								action: () => setCurrentPage(0),
-								disabled: currentPage === 0,
-								icon: "chevron-double-left",
-								label: "First",
-							},
-							{
-								action: () => setCurrentPage(Math.max(0, currentPage - 1)),
-								disabled: currentPage === 0,
-								icon: "chevron-left",
-								label: "Previous",
-							},
-							{
-								action: () => setCurrentPage(Math.min(totalPages - 1, currentPage + 1)),
-								disabled: currentPage >= totalPages - 1,
-								icon: "chevron-right",
-								label: "Next",
-							},
-							{
-								action: () => setCurrentPage(totalPages - 1),
-								disabled: currentPage >= totalPages - 1,
-								icon: "chevron-double-right",
-								label: "Last",
-							},
-						].map(({ action, disabled, icon, label }) => (
-							<Button
-								key={label}
-								variant="outline-secondary"
-								size="sm"
-								className={compact ? "py-0 px-1" : "py-0 px-2"}
-								onClick={action}
-								disabled={disabled}
-								aria-label={label}
-								style={compact ? { fontSize: "0.75rem" } : {}}
-							>
-								<i className={`bi bi-${icon}`} aria-hidden="true"></i>
-							</Button>
-						))}
+			{isLoading ? (
+				<div className="d-flex justify-content-center align-items-center py-5">
+					<div className="spinner-border text-primary" role="status">
+						<span className="visually-hidden">Loading...</span>
 					</div>
-					<div className="d-flex align-items-center gap-2">
-						{isServerPagination && (
-							<span
-								className={`small text-muted text-nowrap`}
-								style={compact ? { fontSize: "0.75rem" } : {}}
-							>
-								{currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalCount)} of{" "}
-								{totalCount}
-							</span>
-						)}
-						<span className={`small text-muted text-nowrap`} style={compact ? { fontSize: "0.75rem" } : {}}>
-							Page {currentPage + 1} of {totalPages || 1}
-						</span>
-						<Form.Select
-							size="sm"
-							id="page-items-select"
-							value={pageSize}
-							onChange={(e) => {
-								setPageSize(Number(e.target.value));
-								setCurrentPage(0); // Reset to first page
-							}}
-						>
-							{[20, 30, 40, 50, 100].map((size) => (
-								<option key={size} value={size}>
-									Show {size} Entries
-								</option>
-							))}
-						</Form.Select>
-					</div>
+					<span className="ms-3">Loading {itemType}s...</span>
 				</div>
+			) : (
+				<>
+					<div className="table-responsive">
+						<table
+							className={`table table-striped table-hover rounded-3 overflow-hidden ${compact ? "table-sm" : ""}`}
+							style={compact ? { fontSize: "0.875rem" } : {}}
+						>
+							<thead className="custom-header">
+								<tr>
+									{columns.map((column) => (
+										<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
+											<div className="d-flex align-items-center justify-content-between">
+												<div
+													className={column.sortable ? "cursor-pointer user-select-none" : ""}
+													onClick={() => column.sortable && handleSort(column.key)}
+													id={`table-header-${column.key}`}
+													style={compact ? { fontSize: "0.875rem" } : {}}
+												>
+													{column.label}
+													{column.sortable && (
+														<span className="ms-1">
+															<i
+																className={`bi bi-arrow-${
+																	sortConfig.key === column.key
+																		? sortConfig.direction === "asc"
+																			? "up"
+																			: "down"
+																		: "down-up"
+																}`}
+																style={compact ? { fontSize: "0.75rem" } : {}}
+															></i>
+														</span>
+													)}
+												</div>
+											</div>
+										</th>
+									))}
+								</tr>
+							</thead>
+							<tbody>
+								{currentPageData.map((item, index) => (
+									<tr
+										key={item.id || index}
+										id={`table-row-${item.id}`}
+										className={`table-row-clickable`}
+										onClick={(e) => handleRowClick(e, item)}
+										onContextMenu={(e) => handleRowRightClick(item, e)}
+										style={{ cursor: "pointer" }}
+									>
+										{columns.map((column, columnIndex) => (
+											<td
+												key={column.key}
+												className="align-middle"
+												style={{
+													...(columnIndex === 0 ? { fontWeight: "bold" } : {}),
+													...(compact
+														? {
+																padding: "0.5rem",
+																fontSize: "0.875rem",
+															}
+														: {}),
+												}}
+											>
+												<RenderViewFieldWithContext
+													field={column}
+													item={item}
+													id={`table-row-${item.id}`}
+												/>
+											</td>
+										))}
+									</tr>
+								))}
+								{currentPageData.length === 0 && (
+									<tr>
+										<td
+											colSpan={columns.length}
+											className="text-center py-4 text-muted"
+											style={
+												compact
+													? {
+															padding: "1rem",
+															fontSize: "0.875rem",
+														}
+													: {}
+											}
+										>
+											{emptyMessage || `No ${pluralize(itemType)} found`}
+										</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
+
+					{/* Pagination */}
+					{!showAllEntries && displayTotal > 20 && (
+						<div className={`d-flex justify-content-between align-items-center mt-0`}>
+							<div className="d-flex align-items-center gap-0">
+								{[
+									{
+										action: () => setCurrentPage(0),
+										disabled: currentPage === 0,
+										icon: "chevron-double-left",
+										label: "First",
+									},
+									{
+										action: () => setCurrentPage(Math.max(0, currentPage - 1)),
+										disabled: currentPage === 0,
+										icon: "chevron-left",
+										label: "Previous",
+									},
+									{
+										action: () => setCurrentPage(Math.min(totalPages - 1, currentPage + 1)),
+										disabled: currentPage >= totalPages - 1,
+										icon: "chevron-right",
+										label: "Next",
+									},
+									{
+										action: () => setCurrentPage(totalPages - 1),
+										disabled: currentPage >= totalPages - 1,
+										icon: "chevron-double-right",
+										label: "Last",
+									},
+								].map(({ action, disabled, icon, label }) => (
+									<Button
+										key={label}
+										variant="outline-secondary"
+										size="sm"
+										className={compact ? "py-0 px-1" : "py-0 px-2"}
+										onClick={action}
+										disabled={disabled}
+										aria-label={label}
+										style={compact ? { fontSize: "0.75rem" } : {}}
+									>
+										<i className={`bi bi-${icon}`} aria-hidden="true"></i>
+									</Button>
+								))}
+							</div>
+							<div className="d-flex align-items-center gap-2">
+								{isServerPagination && (
+									<span
+										className={`small text-muted text-nowrap`}
+										style={compact ? { fontSize: "0.75rem" } : {}}
+									>
+										{currentPage * pageSize + 1} to{" "}
+										{Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount}
+									</span>
+								)}
+								<span
+									className={`small text-muted text-nowrap`}
+									style={compact ? { fontSize: "0.75rem" } : {}}
+								>
+									Page {currentPage + 1} of {totalPages || 1}
+								</span>
+								<Form.Select
+									size="sm"
+									id="page-items-select"
+									value={pageSize}
+									onChange={(e) => {
+										setPageSize(Number(e.target.value));
+										setCurrentPage(0); // Reset to first page
+									}}
+								>
+									{[20, 30, 40, 50, 100].map((size) => (
+										<option key={size} value={size}>
+											Show {size} Entries
+										</option>
+									))}
+								</Form.Select>
+							</div>
+						</div>
+					)}
+				</>
 			)}
 
 			{/* Context Menu */}
