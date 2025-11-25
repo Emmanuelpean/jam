@@ -101,9 +101,10 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 		}
 	};
 
-	const activityColor = getActivityColor(activity.type);
-	const activityIcon = getActivityIcon(activity.type);
+	const activityColor: string = getActivityColor(activity.type);
+	const activityIcon: string = getActivityIcon(activity.type);
 	const activityBadge = getActivityBadge(activity.type);
+	const activityData = activity.type === "Application" ? activity : activity.data;
 
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
@@ -138,7 +139,7 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 						</div>
 						<small className="text-muted flex-shrink-0 ms-2">{formatActivityDate(activity.date)}</small>
 					</div>
-					<RenderViewFieldWithContext field={jobField} item={activity} id={index.toString()} />
+					<RenderViewFieldWithContext field={jobField} item={activityData} id={index.toString()} />
 				</div>
 			</div>
 		</div>

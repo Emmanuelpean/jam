@@ -401,6 +401,8 @@ export const renderFunctions = {
 		if (param.item) {
 			const ctx: DataContextValue = param.dataContext;
 			const job: EnrichedJobData = getJamData(ctx.jobs, param.item.job_id)!;
+			const company: CompanyData | undefined = getJamData(ctx.companies, job?.company_id);
+			const text: string = company ? `${job?.title} (${company.name})` : job?.title || "";
 			return (
 				<InterviewModalManager>
 					{(handleClick) => (
@@ -410,7 +412,7 @@ export const renderFunctions = {
 							id={param.id}
 						>
 							<i className="bi bi-briefcase me-1"></i>
-							{job.title}
+							{text}
 						</span>
 					)}
 				</InterviewModalManager>
@@ -422,6 +424,8 @@ export const renderFunctions = {
 		if (param.item) {
 			const ctx: DataContextValue = param.dataContext;
 			const job: EnrichedJobData = getJamData(ctx.jobs, param.item.job_id)!;
+			const company: CompanyData | undefined = getJamData(ctx.companies, job?.company_id); // TODO move to datacontext
+			const text: string = company ? `${job?.title} (${company.name})` : job?.title || "";
 			return (
 				<JobApplicationUpdateModalManager>
 					{(handleClick) => (
@@ -431,7 +435,7 @@ export const renderFunctions = {
 							id={param.id}
 						>
 							<i className="bi bi-briefcase me-1"></i>
-							{job.title}
+							{text}
 						</span>
 					)}
 				</JobApplicationUpdateModalManager>

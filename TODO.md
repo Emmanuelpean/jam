@@ -8,7 +8,7 @@
 * [X] Source aggregator is sometimes not shown when editing a job
 * [X] Move the logs to an absolute location
 * [X] Improve rhe raspberry theme contrast
-* [ ] Incomplete job application updates are shown in the dashboard
+* [X] Incomplete job application updates are shown in the dashboard
 
 ### TOAST
 * [X] Ensure that the parsed country matches the list of available countries
@@ -17,6 +17,7 @@
 * [ ] Add frontend tests
 * [X] Load the currencies and countries from the backend instead of the frontend
 * [ ] Add search box
+* [ ] If the company/location match is not good enough, do not suggest it
 
 ### Select Widgets Improvements
 * [ ] Sort options alphabetically
