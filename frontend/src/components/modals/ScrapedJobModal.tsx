@@ -1,10 +1,8 @@
-// noinspection DuplicatedCode
-
 import React from "react";
 import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { JobData, ScrapedJobData } from "../../services/Schemas";
-import { jobsApi, scrapedJobApi } from "../../services/Api";
+import { jobsApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import { SelectOption, useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
@@ -16,7 +14,14 @@ interface JobAndApplicationProps extends DataModalProps {
 	data: ScrapedJobData;
 }
 
-export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide, data, submode, size = "xl" }) => {
+export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
+	show,
+	onHide,
+	data,
+	submode,
+	size = "xl",
+	onSuccess,
+}) => {
 	const { token } = useAuth();
 	const {
 		companies,
@@ -115,6 +120,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 			keywords: jobData.keywords || [],
 			contacts: jobData.contacts || [],
 			attendance_type: jobData.attendance_type?.trim() || null,
+			id: jobData.id,
 		};
 	};
 
@@ -137,13 +143,6 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 		return errors;
 	};
 
-	const handleOnSuccess = (_createdData: any) => {
-		if (!token) {
-			return;
-		}
-		scrapedJobApi.update(data.id, { is_imported: true }, token).then((_r) => {});
-	};
-
 	return (
 		<>
 			<DataModal
@@ -157,7 +156,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 				endpoint="jobs"
 				size={size}
 				validation={customValidation}
-				onSuccess={handleOnSuccess}
+				onSuccess={onSuccess}
 			/>
 
 			{renderCompanyModal()}

@@ -2319,7 +2319,7 @@ descriptions = [
 ]
 
 # Attendance types
-attendance_types = ["remote", "onsite", "hybrid", None]
+attendance_types = ["remote", "on-site", "hybrid", None]
 
 # Error messages for failed scrapes
 error_messages = [

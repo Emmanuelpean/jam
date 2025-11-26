@@ -58,7 +58,7 @@ const DataModal = ({
 	endpoint,
 	validation = null,
 	transformFormData = null,
-	onSuccess = () => {},
+	onSuccess,
 }: GenericModalProps) => {
 	const hasTabs = tabs && tabs.length > 0;
 
@@ -189,7 +189,6 @@ const DataModal = ({
 	// ---------------------------------------------------- EDITING ----------------------------------------------------
 
 	const handleEditToView = (): void => {
-		console.log("handleEditToView", effectiveData);
 		setIsEditing(false);
 		setFormData({ ...effectiveData });
 		setOriginalFormData({ ...effectiveData });
@@ -403,12 +402,12 @@ const DataModal = ({
 			if (mode === "add" || mode === "edit" || mode == "import") {
 				handleHideImmediate();
 			} else {
-				console.log("api", apiResult);
 				setEffectiveData(apiResult);
-				console.log("effectiveData", effectiveData);
 				handleEditToView();
 			}
-			if (onSuccess) {
+			if (mode === "import" && onSuccess) {
+				onSuccess(dataToSubmit);
+			} else if (onSuccess) {
 				onSuccess(apiResult);
 			}
 		} catch (err: any) {
