@@ -260,9 +260,8 @@ export const renderFunctions = {
 	salaryRange: (param: RenderParams): string | null => {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
-		const salaryCurrency: string | undefined | null = currencies.find(
-			(currency: Currency) => currency.code === param.item?.salary_currency,
-		)?.symbol;
+		const salaryCurrency: string | undefined | null =
+			currencies.find((currency: Currency) => currency.code === param.item?.salary_currency)?.symbol || "";
 		if (!salary_min && !salary_max) {
 			return null;
 		}
@@ -303,10 +302,10 @@ export const renderFunctions = {
 	},
 
 	applicationStatus: (param: RenderParams): ReactNode => {
-		const status: string =
+		const status: string | null =
 			applicationStatusOptions.filter(
 				(option: SelectOption): boolean => option.value === param.item?.application_status,
-			)[0]?.label || "Unknown";
+			)[0]?.label || null;
 		if (status) {
 			return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
 		}
