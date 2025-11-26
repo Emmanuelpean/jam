@@ -170,13 +170,17 @@ export const jobApplicationUpdatesApi: CrudApi = createCrudApi("jobapplicationup
 export const serviceLogApi: CrudApi = createCrudApi("eis_service_logs");
 export const userApi: CrudApi = createCrudApi("users");
 export const settingsApi: CrudApi = createCrudApi("settings");
-export const scrapedJobApi: CrudApi = createCrudApi("scraped_jobs");
 export const countriesApi: CrudApi = createCrudApi("others/countries");
 export const currenciesApi: CrudApi = createCrudApi("others/currencies");
 
 export const exportApi: CrudApi & { download: (filename: string, token: string) => Promise<void> } = {
 	...createCrudApi("export"),
 	download: (filename: string, token: string) => api.downloadFile("export/", filename, token),
+};
+
+export const scrapedJobApi: CrudApi & { getCount: (token: string) => Promise<any> } = {
+	...createCrudApi("scraped_jobs"),
+	getCount: (token: string): Promise<any> => api.get("scraped_jobs/count", token),
 };
 
 export const authApi: AuthApi = {

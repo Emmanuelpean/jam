@@ -42,7 +42,7 @@ class TestScrapedJobCRUD(CRUDTestBase):
         """Test retrieving all scraped jobs for the authorized user that are scraped, not imported, active"""
 
         test_data = self.get_user_data(test_users, test_scraped_jobs)
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = client.get(self.endpoint + "?page=1&page_size=20&search=Test")
         assert response.status_code == status.HTTP_200_OK
         # jobs = []
@@ -51,3 +51,11 @@ class TestScrapedJobCRUD(CRUDTestBase):
         #         jobs.append(job)
         # assert len(response.json()) == len(jobs)
         # # self.check_output(jobs, response.json())
+
+    def test_get_count(self, test_users, authorised_clients, test_scraped_jobs):
+        """Test retrieving count of scraped jobs for the authorized user that are scraped, not imported, active"""
+
+        client = self._get_authorised_client(authorised_clients)
+        response = client.get(self.endpoint + "/count")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["count"] == 49

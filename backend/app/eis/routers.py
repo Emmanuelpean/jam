@@ -39,16 +39,7 @@ email_router = generate_data_table_crud_router(
 
 # ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
 
-
-scrapedjob_router = generate_data_table_crud_router(
-    table_model=models.ScrapedJob,
-    create_schema=schemas.ScrapedJobCreate,
-    update_schema=schemas.ScrapedJobUpdate,
-    out_schema=schemas.ScrapedJobOut,
-    endpoint="scraped_jobs",
-    not_found_msg="Scraped Job not found",
-    allowed_actions=["get_one", "put"],
-)
+scrapedjob_router = APIRouter(prefix="/scraped_jobs", tags=["scraped_jobs"])
 
 
 @scrapedjob_router.get("/", response_model=schemas.PaginatedScrapedJobResponse)
@@ -153,6 +144,18 @@ def get_scraped_job_count(
         .count()
     )
     return {"count": count}
+
+
+generate_data_table_crud_router(
+    table_model=models.ScrapedJob,
+    create_schema=schemas.ScrapedJobCreate,
+    update_schema=schemas.ScrapedJobUpdate,
+    out_schema=schemas.ScrapedJobOut,
+    endpoint="scraped_jobs",
+    not_found_msg="Scraped Job not found",
+    allowed_actions=["get_one", "put"],
+    router=scrapedjob_router,
+)
 
 
 # -------------------------------------------------- EIS SERVICE LOGS --------------------------------------------------
