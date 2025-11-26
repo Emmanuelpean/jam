@@ -331,17 +331,17 @@ class LinkedinBrightdataJobScraper(BrightdataJobScraper):
         :param job_data: job data json
         :return: dictionary containing job information"""
 
-        base_salary = job_data.get("base_salary", {})
-        currency = base_salary.get("currency")
+        min_amount = max_amount = None
+        salary_currency = None
+        base_salary = job_data.get("base_salary")
+        if base_salary:
+            currency = base_salary.get("currency")
 
-        # Only extract salary if it's yearly
-        if base_salary.get("payment_period", "").lower() == "yr":
-            min_amount = base_salary.get("min_amount")
-            max_amount = base_salary.get("max_amount")
-            salary_currency = currency
-        else:
-            min_amount = max_amount = None
-            salary_currency = None
+            # Only extract salary if it's yearly
+            if base_salary.get("payment_period", "").lower() == "yr":
+                min_amount = base_salary.get("min_amount")
+                max_amount = base_salary.get("max_amount")
+                salary_currency = currency
 
         return JobResult(
             company=job_data.get("company_name"),

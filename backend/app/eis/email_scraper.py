@@ -43,7 +43,7 @@ class JobEmailScraper(EmailService):
         self.currencies = utils.open_json("app/data/currencies.json")
 
     @property
-    def indeed_brightapi_setting(self):
+    def indeed_brightapi_setting(self) -> str:
         """Get the Indeed BrightAPI setting from the database"""
 
         return models.get_setting(self.db, "indeed_scraper", "email")
@@ -52,6 +52,7 @@ class JobEmailScraper(EmailService):
         """Create a new service log entry
         :param kwargs: EisServiceLog keyword arguments"""
 
+        # noinspection PyArgumentList
         service_log_entry = EisServiceLog(**kwargs)
         self.db.add(service_log_entry)
         self.db.commit()
@@ -93,6 +94,7 @@ class JobEmailScraper(EmailService):
                 raise ValueError("Email body does not contain a valid platform identifier.")
 
             # Create a new email record
+            # noinspection PyArgumentList
             email_record = JobAlertEmail(
                 owner_id=user.id,
                 service_log_id=service_log_id,
@@ -139,6 +141,7 @@ class JobEmailScraper(EmailService):
 
             # Create new job record if it doesn't exist
             if not existing_entry:
+                # noinspection PyArgumentList
                 new_job = ScrapedJob(
                     external_job_id=job_id,
                     platform=email_record.platform,
@@ -401,6 +404,8 @@ class JobEmailScraper(EmailService):
 
         # List all unique job records that haven't been scraped yet
         job_records = self.db.query(ScrapedJob).filter(ScrapedJob.is_scraped.is_(False)).all()
+        service_log_entry.job_total_n = len(job_records)
+        self.db.commit()
 
         # For each job record, scrape the data
         for job_record in job_records:
@@ -458,7 +463,7 @@ class JobEmailScraper(EmailService):
                     service_log_entry.job_fail_n += 1
 
 
-class JobScraperService:
+class EmailScraperService:
     """Service wrapper for JobScraper with start/stop functionality"""
 
     def __init__(self) -> None:
@@ -525,7 +530,3 @@ class JobScraperService:
             "thread_alive": self.thread.is_alive() if self.thread else False,
             "thread_name": self.thread.name if self.thread else None,
         }
-
-
-email_scraper = JobEmailScraper()
-# email_scraper.run_scraping(1)

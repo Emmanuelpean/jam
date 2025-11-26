@@ -3,17 +3,21 @@
 Provides REST API endpoints for managing job alert emails, scraped job postings,
 and service execution logs with CRUD operations and admin access controls."""
 
+import os
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session
+from starlette import status
 from starlette.requests import Request
 
 from app import models as app_models
 from app.database import get_db
 from app.eis import models, schemas
+from app.eis.email_scraper import EmailScraperService
 from app.eis.job_scraper import LinkedinBrightdataJobScraper, IndeedBrightdataJobScraper, VeganJobsJobScraper
 from app.oauth2 import get_current_user
 from app.routers import (
@@ -22,6 +26,7 @@ from app.routers import (
     assert_admin,
     NOT_ALLOWED_EXCEPTION,
 )
+from app.config import settings
 
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
 
@@ -206,6 +211,27 @@ def get_service_logs_by_date_range(
     return query.all()
 
 
+@eis_servicelog_router.get("/latest", response_model=schemas.EisServiceLogOut)
+def get_latest(
+    current_user: app_models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get the latest service log entry. Admin access required.
+    :param current_user: Current authenticated admin user
+    :param db: Database session
+    :return: Latest service log entry"""
+
+    assert_admin(current_user)
+
+    latest_log = db.query(models.EisServiceLog).order_by(models.EisServiceLog.run_datetime.desc()).first()
+    if not latest_log:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No service logs found",
+        )
+    return latest_log
+
+
 # ------------------------------------------------------ SCRAPING ------------------------------------------------------
 
 
@@ -259,3 +285,91 @@ def scrape_job(
 
     scraper = VeganJobsJobScraper(external_job_id)
     return scraper.scrape_job()
+
+
+# ------------------------------------------------------ EMAIL SCRAPER SERVICE ------------------------------------------------------
+
+
+email_scraper_service_router = APIRouter(prefix="/email_scraper_service", tags=["email_scraper_service"])
+scraper_service = EmailScraperService()
+
+
+@email_scraper_service_router.post("/start")
+def start_scraper(
+    request: schemas.StartRequest,
+    current_user: app_models.User = Depends(get_current_user),
+) -> dict:
+    """Start the email scraping service with the specified period.
+    :param request: StartRequest object containing period_hours
+    :param current_user: Current authenticated user"""
+
+    assert_admin(current_user)
+    if scraper_service.is_running:
+        return {"detail": "Scraping service already running"}
+    try:
+        scraper_service.start(period_hours=request.period_hours)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to start service: {str(e)}",
+        )
+    return {"detail": f"Scraping service started (period_hours={request.period_hours})"}
+
+
+@email_scraper_service_router.post("/stop")
+def stop_scraper(
+    current_user: app_models.User = Depends(get_current_user),
+) -> dict:
+    """Stop the email scraping service.
+    :param current_user: Current authenticated user"""
+
+    assert_admin(current_user)
+    if not scraper_service.is_running:
+        return {"detail": "Service already stopped"}
+    try:
+        scraper_service.stop()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to stop service: {str(e)}",
+        )
+    return {"detail": "Scraping service stopped"}
+
+
+@email_scraper_service_router.get("/status")
+def scraper_status(
+    current_user: app_models.User = Depends(get_current_user),
+) -> dict:
+    """Get the current status of the email scraping service.
+    :param current_user: Current authenticated user"""
+
+    assert_admin(current_user)
+    return scraper_service.status()
+
+
+@email_scraper_service_router.get("/logs")
+async def get_scraper_logs(
+    lines: int = Query(100, ge=1, le=10000),
+    current_user: app_models.User = Depends(get_current_user),
+):
+    """Get the last N lines from the scraper log file
+    :param lines: Number of lines to retrieve (default 100, max 10000)
+    :param current_user: Current authenticated user"""
+
+    assert_admin(current_user)
+
+    log_file_path = Path(os.path.join(settings.log_directory, "email_scraper.log"))
+
+    if not log_file_path.exists():
+        return {"lines": [], "total_lines": 0}
+
+    try:
+        with open(log_file_path, "r") as f:
+            all_lines = f.readlines()
+
+        total_lines = len(all_lines)
+        log_lines = all_lines[-lines:] if lines < total_lines else all_lines
+
+        return {"lines": [line.rstrip() for line in log_lines], "total_lines": total_lines}
+    except Exception as e:
+        return {"lines": [f"Error reading log file: {str(e)}"], "total_lines": 0}

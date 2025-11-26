@@ -1,3 +1,5 @@
+import { ServiceLog } from "./Schemas";
+
 export interface ApiError extends Error {
 	status?: number;
 	data?: any;
@@ -167,7 +169,6 @@ export const personsApi: CrudApi = createCrudApi("persons");
 export const aggregatorsApi: CrudApi = createCrudApi("aggregators");
 export const interviewsApi: CrudApi = createCrudApi("interviews");
 export const jobApplicationUpdatesApi: CrudApi = createCrudApi("jobapplicationupdates");
-export const serviceLogApi: CrudApi = createCrudApi("eis_service_logs");
 export const userApi: CrudApi = createCrudApi("users");
 export const settingsApi: CrudApi = createCrudApi("settings");
 export const countriesApi: CrudApi = createCrudApi("others/countries");
@@ -181,6 +182,11 @@ export const exportApi: CrudApi & { download: (filename: string, token: string) 
 export const scrapedJobApi: CrudApi & { getCount: (token: string) => Promise<any> } = {
 	...createCrudApi("scraped_jobs"),
 	getCount: (token: string): Promise<any> => api.get("scraped_jobs/count", token),
+};
+
+export const serviceLogApi: CrudApi & { getLatest: (token: string) => Promise<any> } = {
+	...createCrudApi("eis_service_logs"),
+	getLatest: (token: string): Promise<ServiceLog> => api.get("eis_service_logs/latest", token),
 };
 
 export const authApi: AuthApi = {
@@ -224,6 +230,51 @@ export const authApi: AuthApi = {
 			token,
 			new_password: newPassword,
 		});
+	},
+};
+
+export interface ScraperStatus {
+	is_running: boolean;
+	thread_alive: boolean;
+	thread_name: string | null;
+}
+
+interface StartScraperRequest {
+	period_hours: number;
+}
+
+interface ScraperResponse {
+	detail: string;
+}
+
+export interface LogResponse {
+	lines: string[];
+	total_lines: number;
+}
+
+interface JobScraperApi {
+	getStatus: (token: string) => Promise<ScraperStatus>;
+	start: (periodHours: number, token: string) => Promise<ScraperResponse>;
+	stop: (token: string) => Promise<ScraperResponse>;
+	getLogs: (lines: number, token: string) => Promise<LogResponse>;
+}
+
+export const jobScraperApi: JobScraperApi = {
+	getStatus: async (token: string): Promise<ScraperStatus> => {
+		return api.get("email_scraper_service/status", token);
+	},
+
+	start: async (periodHours: number, token: string): Promise<ScraperResponse> => {
+		const data: StartScraperRequest = { period_hours: periodHours };
+		return api.post("email_scraper_service/start", data, token);
+	},
+
+	stop: async (token: string): Promise<ScraperResponse> => {
+		return api.post("email_scraper_service/stop", {}, token);
+	},
+
+	getLogs: async (lines: number, token: string): Promise<LogResponse> => {
+		return api.get(`email_scraper_service/logs?lines=${lines}`, token);
 	},
 };
 

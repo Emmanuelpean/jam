@@ -40,7 +40,7 @@ export function getTableIcon(title: string): string {
 		Users: "bi-person-lines-fill",
 		Settings: "bi-database-gear",
 		"User Settings": "bi-gear",
-		"EIS Dashboard": "bi-envelope-arrow-down",
+		"TOAST Dashboard": "bi-envelope-arrow-down",
 		About: "bi-info-circle",
 		Admin: "bi-person-gear",
 	};

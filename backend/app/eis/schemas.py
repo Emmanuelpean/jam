@@ -111,6 +111,14 @@ class EisServiceLogCreate(BaseModel):
     error_message: str | None = None
     job_success_n: int | None = None
     job_fail_n: int | None = None
+    job_total_n: int | None = None
+    users_processed_n: int | None = None
+    emails_found_n: int | None = None
+    emails_saved_n: int | None = None
+    jobs_extracted_n: int | None = None
+    linkedin_job_n: int | None = None
+    indeed_job_n: int | None = None
+    veganjobs_job_n: int | None = None
 
 
 class EisServiceLogUpdate(EisServiceLogCreate):
@@ -129,3 +137,10 @@ class EisServiceLogMinOut(EisServiceLogCreate, Out):
     """EIS Service Log minimal output schema"""
 
     pass
+
+
+# ------------------------------------------------ EMAIL SCRAPER SERVICE -----------------------------------------------
+
+
+class StartRequest(BaseModel):
+    period_hours: float | None = 3.0
