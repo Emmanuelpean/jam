@@ -16,8 +16,9 @@
 * [ ] Add admin control and monitoring page
 * [ ] Add frontend tests
 * [X] Load the currencies and countries from the backend instead of the frontend
-* [ ] Add search box
-* [ ] If the company/location match is not good enough, do not suggest it
+* [X] Add search box
+* [X] If the company/location match is not good enough, do not suggest it
+* [X] Add the total number of scraped jobs
 
 ### Select Widgets Improvements
 * [ ] Sort options alphabetically
@@ -41,6 +42,7 @@
 
 ### Active Jobs Widget
 * [ ] Add a "active jobs" log showing jobs with the most activity
+* [ ] Add a "favourite" column to the job table
 
 ### Tables
 * [ ] Move the scrollbar inside the tables so that the header is always visible

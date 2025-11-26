@@ -73,13 +73,20 @@ export const Sidebar = () => {
 		{ icon: "bi-box-arrow-right", text: "Logout", position: "bottom", onClick: logout, className: "logout-item" },
 	];
 
-	const topNavigationItems: NavigationItem[] = navigationItems.filter(
-		(item: NavigationItem): boolean => item.position === "top",
-	);
+	const getFilteredNavigationItems = (position: string): NavigationItem[] => {
+		let filteredItems: NavigationItem[] = navigationItems.filter(
+			(item: NavigationItem): boolean => item.position === position,
+		);
+		if (currentUser?.is_admin) {
+			return filteredItems;
+		} else {
+			return filteredItems.filter((item: NavigationItem): boolean => !item.adminOnly);
+		}
+	};
 
-	const bottomNavigationItems: NavigationItem[] = navigationItems.filter(
-		(item: NavigationItem): boolean => item.position === "bottom",
-	);
+	const topNavigationItems = getFilteredNavigationItems("top");
+
+	const bottomNavigationItems = getFilteredNavigationItems("bottom");
 
 	const handleThemeChange = (): void => {
 		setShowDropdown(false);

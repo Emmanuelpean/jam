@@ -9,6 +9,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { SelectOption, useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
 import { modalViewFields } from "../rendering/view/ModalFields";
+import { capitalise } from "../../utils/Utils";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -40,18 +41,22 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide
 			city: data?.location_city,
 			country: data?.location_country,
 		}),
-		aggregators: () => ({
-			name: data?.emails?.[0]?.platform
-				? data.emails[0].platform[0].toUpperCase() + data.emails[0].platform.slice(1)
-				: undefined,
-		}),
+		aggregators: () => ({ name: data?.platform ? capitalise(data?.platform) : undefined }),
 	});
 
-	function findClosest(options: SelectOption[], name: string): string | null | undefined {
+	function findClosest(options: SelectOption[], name: string): string | null {
 		if (!name || options.length === 0) return null;
 		const names: string[] = options.map((c: SelectOption): string => c.label);
-		const { bestMatchIndex } = stringSimilarity.findBestMatch(name, names);
-		return options[bestMatchIndex]?.value;
+		const result = stringSimilarity.findBestMatch(name, names);
+
+		// Define a minimum threshold (e.g., 0.3 or 0.4)
+		const MIN_SIMILARITY_THRESHOLD = 0.4;
+
+		if (result.bestMatch.rating < MIN_SIMILARITY_THRESHOLD) {
+			return null;
+		}
+
+		return options[result.bestMatchIndex]?.value || null;
 	}
 
 	function findExact(options: SelectOption[], name: string): string | null | undefined {
