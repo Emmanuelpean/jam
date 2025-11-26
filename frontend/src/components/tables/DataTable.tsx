@@ -66,7 +66,7 @@ export interface GenericTableProps {
 	showAdd?: boolean;
 
 	// Import mode configuration
-	onImportSuccess?: (importedItem: any) => void;
+	onImportSuccess?: (importedItem: any) => Promise<any>;
 
 	// Additional content
 	children?: (data: any[]) => ReactNode;
@@ -369,10 +369,13 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	};
 
 	const handleImportSuccess = (importedItem: any): void => {
-		onImportSuccess?.(importedItem);
-		removeItem?.(importedItem.id);
-		fetchData().then((_) => {});
-		closeImportModal();
+		console.log("A", importedItem);
+		onImportSuccess?.(importedItem).then((_) => {
+			fetchData().then((_) => {
+				showToastSuccess("Job imported successfully.");
+				closeImportModal();
+			});
+		});
 	};
 
 	// Close context menu on outside click or escape

@@ -73,7 +73,6 @@ function AuthForm(): JSX.Element {
 	}, [location.pathname, isAuthenticated, searchParams, navigate]);
 
 	useEffect(() => {
-		console.log("Auth mode changed to:", mode);
 		// Verifies the email
 		if (!["verifyEmail", "verifyNewEmail"].includes(mode) || isVerifying) return;
 
