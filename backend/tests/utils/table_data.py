@@ -7,7 +7,7 @@ from itertools import groupby
 from tests.utils.files import load_all_resource_files
 
 RESOURCE_FILES = load_all_resource_files()
-
+random.seed(153625)
 
 current_date = datetime.now(timezone.utc)
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
@@ -2371,8 +2371,7 @@ for i in range(50):
             job["location"] = f"{job['location_city']}, UK"
 
         # 60% have attendance type specified
-        if random.random() < 0.6:
-            job["attendance_type"] = random.choice(attendance_types[:3])
+        job["attendance_type"] = random.choice(attendance_types)
 
         # 80% have salary information
         if random.random() < 0.8:

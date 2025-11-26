@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, Col, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import "./DashboardPage.css";
@@ -15,10 +15,13 @@ import {
 	renderUpcomingInterviewItem,
 } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/tables/ScrapedJobTable";
+import { scrapedJobApi } from "../../services/Api";
 
 const Dashboard: React.FC = () => {
 	const dataContext: DataContextValue = useDataContext();
+	const { token } = useAuth();
 	const { currentUser } = useAuth();
+	const [scrapedJobCount, setScrapedJobCount] = useState<number>(0);
 	if (!currentUser) {
 		return null;
 	}
@@ -95,6 +98,11 @@ const Dashboard: React.FC = () => {
 
 	allUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 	const recentActivity = allUpdates.slice(0, currentUser.update_limit);
+
+	scrapedJobApi.getCount(token || "").then((count) => {
+		console.log(count);
+		setScrapedJobCount(count.count);
+	});
 
 	return (
 		<>
@@ -211,6 +219,7 @@ const Dashboard: React.FC = () => {
 								icon="inbox"
 								title="Job Alerts"
 								subtitle="Jobs that you received from job boards"
+								badgeValue={scrapedJobCount}
 							/>
 							<Card.Body
 								className="p-0 flex-grow-1 d-flex flex-column"

@@ -584,7 +584,7 @@ class CRUDTestBase:
 
     # ----------------------------------------------------- CLIENTS ----------------------------------------------------
 
-    def _get_admin_authorised_client(self, authorised_clients) -> TestClient:
+    def _get_authorised_client(self, authorised_clients) -> TestClient:
         """Get the appropriate authorised client based on admin_only setting."""
 
         if self.admin_only:
@@ -656,7 +656,7 @@ class CRUDTestBase:
         For admin only endpoints, uses admin user; otherwise regular user.
         Verifies 200 OK response and validates the returned data matches expected test data."""
 
-        client = self._get_admin_authorised_client(authorised_clients)  # admin user for admin_only endpoints
+        client = self._get_authorised_client(authorised_clients)  # admin user for admin_only endpoints
         response = self.get_all(client)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
@@ -717,7 +717,7 @@ class CRUDTestBase:
         For admin only endpoints, uses admin user; otherwise regular user.
         Verifies 200 OK response and validates the returned data matches the requested item."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data[0], response.json())
@@ -755,7 +755,7 @@ class CRUDTestBase:
         """Test that requests for non-existent items return a 404 error.
         Verifies proper handling when the requested item ID doesn't exist in the database."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.get_one(client, 0)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -771,7 +771,7 @@ class CRUDTestBase:
         For admin only endpoints, uses admin user; otherwise regular user.
         Iterates through create_data examples, verifies 201 Created responses and validates returned data."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         for create_data in self.get_user_data(test_users, self.create_data):
             create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
             response = self.post(client, create_data)
@@ -834,7 +834,7 @@ class CRUDTestBase:
         For admin only endpoints, uses admin user; otherwise regular user.
         Verifies 200 OK response and validates the returned data matches the update_data."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.put(client, self.update_data.get("id"), self.update_data)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(self.update_data, response.json())
@@ -848,7 +848,7 @@ class CRUDTestBase:
         """Test that PUT requests with empty request bodies are rejected.
         Verifies 400 Bad Request response when no update data is provided."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.put(client, test_data[0].id, {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -857,7 +857,7 @@ class CRUDTestBase:
         """Test that PUT requests for non-existent items return a 404 error.
         Verifies proper handling when attempting to update an item that doesn't exist."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.put(client, 0, {})
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -893,7 +893,7 @@ class CRUDTestBase:
         """Test that authorised users can successfully delete existing items.
         Verifies 204 No Content response indicating successful deletion."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -905,7 +905,7 @@ class CRUDTestBase:
         """Test that DELETE requests for non-existent items return a 404 error.
         Verifies proper handling when attempting to delete an item that doesn't exist."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.delete(client, 0)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
