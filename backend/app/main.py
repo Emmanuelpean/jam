@@ -38,6 +38,7 @@ app.include_router(eis_routers.scrapedjob_router)
 app.include_router(eis_routers.email_router)
 app.include_router(eis_routers.eis_servicelog_router)
 app.include_router(eis_routers.scraper_router)
+app.include_router(eis_routers.email_scraper_service_router)
 
 # Authentification router
 app.include_router(user.user_router)

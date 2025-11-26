@@ -62,3 +62,10 @@ export function toDdMmYyyyHhMm(date: Date): string {
 
 	return `${dd}/${MM}/${yyyy} ${hh}:${mm}`;
 }
+
+export const formatDuration = (seconds: number | null): string => {
+	if (!seconds) return "N/A";
+	const mins = Math.floor(seconds / 60);
+	const secs = Math.floor(seconds % 60);
+	return `${mins}m ${secs}s`;
+};

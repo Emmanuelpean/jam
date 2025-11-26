@@ -9,7 +9,7 @@ import JobsPage from "./pages/JobsPage";
 import PersonPage from "./pages/PersonPage";
 import KeywordsPage from "./pages/KeywordsPage";
 import InterviewsPage from "./pages/InterviewsPage";
-import DashboardPage from "./pages/EISDashboardPage";
+import DashboardPage from "./pages/EISDashboardPage/EISDashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
 import { NotAuthorisedPage, NotFoundPage } from "./pages/NotFoundPage";
 import { Sidebar } from "./components/sidebar/Sidebar";

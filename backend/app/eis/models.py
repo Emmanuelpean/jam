@@ -145,6 +145,7 @@ class EisServiceLog(CommonBase, Base):
     - `run_datetime` (datetime): Date and time of the service run.
     - `is_success` (bool): Indicates whether the service run was successful.
     - `error_message` (str, optional): Error message if the service run failed.
+    - `job_total_n` (int, optional): Total number of jobs to scrape.
     - `job_success_n` (int, optional): Number of successful jobs scraped.
     - `job_fail_n` (int, optional): Number of failed jobs scraped.
     - `users_processed_n` (int, optional): Number of users processed.
@@ -162,6 +163,7 @@ class EisServiceLog(CommonBase, Base):
     run_datetime = Column(DateTime, nullable=False)
     is_success = Column(Boolean, nullable=True)
     error_message = Column(String, nullable=True)
+    job_total_n = Column(Integer, default=0, nullable=False)
     job_success_n = Column(Integer, default=0, nullable=False)
     job_fail_n = Column(Integer, default=0, nullable=False)
     users_processed_n = Column(Integer, default=0, nullable=False)

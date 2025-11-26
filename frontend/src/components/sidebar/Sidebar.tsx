@@ -65,7 +65,7 @@ export const Sidebar = () => {
 			adminOnly: true,
 			position: "bottom",
 			submenu: [
-				{ path: "/eis_dashboard", text: "EIS Dashboard" },
+				{ path: "/eis_dashboard", text: "TOAST Dashboard" },
 				{ path: "/users", text: "Users" },
 				{ path: "/app_settings", text: "Settings" },
 			],

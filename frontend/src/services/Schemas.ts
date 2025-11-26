@@ -264,3 +264,21 @@ export interface ScrapedJobData extends OwnedOut {
 	location: string | null;
 	emails: any;
 }
+
+export interface ServiceLog {
+	id: number;
+	run_datetime: string;
+	run_duration: number | null;
+	is_success: boolean | null;
+	error_message: string | null;
+	users_processed_n: number;
+	emails_found_n: number;
+	emails_saved_n: number;
+	jobs_extracted_n: number;
+	job_success_n: number;
+	job_fail_n: number;
+	job_total_n: number;
+	linkedin_job_n: number;
+	indeed_job_n: number;
+	veganjobs_job_n: number;
+}

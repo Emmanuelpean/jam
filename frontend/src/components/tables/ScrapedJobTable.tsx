@@ -1,10 +1,10 @@
 import React, { JSX } from "react";
-import { DataTableProps, DataTable } from "./DataTable";
+import { DataTable, DataTableProps } from "./DataTable";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../modals/ScrapedJobModal";
 import { scrapedJobApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
-import { JobData, ScrapedJobData } from "../../services/Schemas";
+import { ScrapedJobData } from "../../services/Schemas";
 
 const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableProps): JSX.Element => {
 	const { token } = useAuth();
