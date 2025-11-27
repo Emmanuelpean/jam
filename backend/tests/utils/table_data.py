@@ -2136,11 +2136,19 @@ JOB_SCRAPED_DATA = [
 SERVICE_LOG_DATA = [
     {
         "run_duration": 45.2,
-        "run_datetime": "2024-01-15 08:30:00",
+        "run_datetime": "2025-01-15 08:30:00",
         "is_success": True,
         "error_message": None,
         "job_success_n": 25,
         "job_fail_n": 2,
+        "users_processed_n": 4,
+        "users_found_n": 10,
+        "linkedin_job_n": 15,
+        "indeed_job_n": 12,
+        "veganjobs_job_n": 0,
+        "jobs_extracted_n": 50,
+        "emails_found_n": 40,
+        "emails_saved_n": 34,
     },
     {
         "run_duration": 123.8,

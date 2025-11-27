@@ -271,6 +271,7 @@ export interface ServiceLog {
 	run_duration: number | null;
 	is_success: boolean | null;
 	error_message: string | null;
+	users_found_n: number;
 	users_processed_n: number;
 	emails_found_n: number;
 	emails_saved_n: number;
