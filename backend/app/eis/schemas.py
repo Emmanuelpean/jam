@@ -109,16 +109,17 @@ class EisServiceLogCreate(BaseModel):
     run_duration: float | None = None
     is_success: bool | None = None
     error_message: str | None = None
-    job_success_n: int | None = None
-    job_fail_n: int | None = None
-    job_total_n: int | None = None
-    users_processed_n: int | None = None
-    emails_found_n: int | None = None
-    emails_saved_n: int | None = None
-    jobs_extracted_n: int | None = None
-    linkedin_job_n: int | None = None
-    indeed_job_n: int | None = None
-    veganjobs_job_n: int | None = None
+    job_success_n: int = 0
+    job_fail_n: int = 0
+    job_total_n: int = 0
+    users_found_n: int = 0
+    users_processed_n: int = 0
+    emails_found_n: int = 0
+    emails_saved_n: int = 0
+    jobs_extracted_n: int = 0
+    linkedin_job_n: int = 0
+    indeed_job_n: int = 0
+    veganjobs_job_n: int = 0
 
 
 class EisServiceLogUpdate(EisServiceLogCreate):

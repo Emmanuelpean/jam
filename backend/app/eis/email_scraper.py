@@ -283,6 +283,8 @@ class JobEmailScraper(EmailService):
         # Get the list of active users with TOAST active
         users = self.db.query(models.User).filter(models.User.toast_active, models.User.is_active).all()
         self.logger.info(f"Found {len(users)} users to process.")
+        service_log_entry.users_found_n = len(users)
+        self.db.commit()
         jobs_data = {platform: {} for platform in PLATFORMS}
 
         # For each user...

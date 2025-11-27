@@ -148,6 +148,7 @@ class EisServiceLog(CommonBase, Base):
     - `job_total_n` (int, optional): Total number of jobs to scrape.
     - `job_success_n` (int, optional): Number of successful jobs scraped.
     - `job_fail_n` (int, optional): Number of failed jobs scraped.
+    - `users_found_n` (int, optional): Number of users found.
     - `users_processed_n` (int, optional): Number of users processed.
     - `emails_found_n` (int, optional): Number of email messages found.
     - `emails_saved_n` (int, optional): Number of email messages saved.
@@ -160,18 +161,25 @@ class EisServiceLog(CommonBase, Base):
     - `emails` (list of JobAlertEmail): List of email messages associated with the service."""
 
     run_duration = Column(Float, nullable=True)
-    run_datetime = Column(DateTime, nullable=False)
+    run_datetime = Column(TIMESTAMP(timezone=True), nullable=False)
     is_success = Column(Boolean, nullable=True)
     error_message = Column(String, nullable=True)
+
+    # Jobs
     job_total_n = Column(Integer, default=0, nullable=False)
     job_success_n = Column(Integer, default=0, nullable=False)
     job_fail_n = Column(Integer, default=0, nullable=False)
-    users_processed_n = Column(Integer, default=0, nullable=False)
-    emails_found_n = Column(Integer, default=0, nullable=False)
-    emails_saved_n = Column(Integer, default=0, nullable=False)
     jobs_extracted_n = Column(Integer, default=0, nullable=False)
     linkedin_job_n = Column(Integer, default=0, nullable=False)
     indeed_job_n = Column(Integer, default=0, nullable=False)
     veganjobs_job_n = Column(Integer, default=0, nullable=False)
+
+    # Users
+    users_found_n = Column(Integer, default=0, nullable=False)
+    users_processed_n = Column(Integer, default=0, nullable=False)
+
+    # Emails
+    emails_found_n = Column(Integer, default=0, nullable=False)
+    emails_saved_n = Column(Integer, default=0, nullable=False)
 
     emails = relationship("JobAlertEmail", back_populates="service_log")

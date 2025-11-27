@@ -48,6 +48,7 @@ const JobScraperDashboard = (): JSX.Element => {
 			const log: ServiceLog = await serviceLogApi.getLatest(token);
 			if (log) {
 				setLatestLog(log);
+				console.log(log);
 			}
 		} catch (err: any) {
 			console.error("Failed to fetch latest log:", err);
@@ -183,40 +184,61 @@ const JobScraperDashboard = (): JSX.Element => {
 				)}
 			</div>
 			{/* Email Progress Bar */}
-			<div className="metric-group">
-				<p className="metric-item">
-					<span className="status-label">Email Processing Progress</span>
-				</p>
-				<div className="progress-bar-container">
-					<div
-						className="progress-bar-fill"
-						style={{
-							width: `${latestLog?.emails_found_n && latestLog.emails_found_n > 0 ? (latestLog.emails_saved_n / latestLog.emails_found_n) * 100 : 0}%`,
-						}}
-					/>
-				</div>
-				<p className="metric-item progress-text">
-					{latestLog?.emails_saved_n ?? 0} / {latestLog?.emails_found_n ?? 0} emails saved
-				</p>
-			</div>
+			{latestLog && (
+				<>
+					<div className="metric-group">
+						<p className="metric-item">
+							<span className="status-label">Users Processing Progress</span>
+						</p>
+						<div className="progress-bar-container">
+							<div
+								className="progress-bar-fill"
+								style={{
+									width: `${latestLog.users_found_n > 0 ? (latestLog.users_processed_n / latestLog.users_found_n) * 100 : 0}%`,
+								}}
+							/>
+						</div>
+						<p className="metric-item progress-text">
+							{latestLog?.emails_saved_n ?? 0} / {latestLog?.emails_found_n ?? 0} emails saved
+						</p>
+					</div>
+					<div className="metric-group">
+						<p className="metric-item">
+							<span className="status-label">Email Processing Progress</span>
+						</p>
+						<div className="progress-bar-container">
+							<div
+								className="progress-bar-fill"
+								style={{
+									width: `${latestLog?.emails_found_n && latestLog.emails_found_n > 0 ? (latestLog.emails_saved_n / latestLog.emails_found_n) * 100 : 0}%`,
+								}}
+							/>
+						</div>
+						<p className="metric-item progress-text">
+							{latestLog?.emails_saved_n ?? 0} / {latestLog?.emails_found_n ?? 0} emails saved
+						</p>
+					</div>
 
-			{/* Job Scraping Progress Bar */}
-			<div className="metric-group">
-				<p className="metric-item">
-					<span className="status-label">Job Scraping Progress</span>
-				</p>
-				<div className="progress-bar-container">
-					<div
-						className="progress-bar-fill"
-						style={{
-							width: `${latestLog?.jobs_extracted_n && latestLog.jobs_extracted_n > 0 ? (calculateJobTotal(latestLog) / latestLog.jobs_extracted_n) * 100 : 0}%`,
-						}}
-					/>
-				</div>
-				<p className="metric-item progress-text">
-					{latestLog ? calculateJobTotal(latestLog) : 0} / {latestLog?.jobs_extracted_n ?? 0} jobs scraped
-				</p>
-			</div>
+					{/* Job Scraping Progress Bar */}
+					<div className="metric-group">
+						<p className="metric-item">
+							<span className="status-label">Job Scraping Progress</span>
+						</p>
+						<div className="progress-bar-container">
+							<div
+								className="progress-bar-fill"
+								style={{
+									width: `${latestLog?.jobs_extracted_n && latestLog.jobs_extracted_n > 0 ? (calculateJobTotal(latestLog) / latestLog.jobs_extracted_n) * 100 : 0}%`,
+								}}
+							/>
+						</div>
+						<p className="metric-item progress-text">
+							{latestLog ? calculateJobTotal(latestLog) : 0} / {latestLog?.jobs_extracted_n ?? 0} jobs
+							scraped
+						</p>
+					</div>
+				</>
+			)}
 
 			{/* Progress Display */}
 			{latestLog && (
