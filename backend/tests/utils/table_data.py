@@ -2127,7 +2127,7 @@ JOB_SCRAPED_DATA = [
         "external_job_id": "soft1sdf23456789",
         "platform": "indeed",
         "owner_id": 1,
-        "is_scraped": False,
+        "is_scraped": True,
         "url": "test",
     },
 ]

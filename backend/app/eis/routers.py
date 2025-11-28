@@ -304,8 +304,6 @@ def start_scraper(
     :param current_user: Current authenticated user"""
 
     assert_admin(current_user)
-    if scraper_service.is_running:
-        return {"detail": "Scraping service already running"}
     try:
         scraper_service.start(period_hours=request.period_hours, timedelta_days=request.timedelta_days)
     except Exception as e:
@@ -324,8 +322,6 @@ def stop_scraper(
     :param current_user: Current authenticated user"""
 
     assert_admin(current_user)
-    if not scraper_service.is_running:
-        return {"detail": "Service already stopped"}
     try:
         scraper_service.stop()
     except Exception as e:
