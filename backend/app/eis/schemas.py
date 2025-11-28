@@ -120,6 +120,7 @@ class EisServiceLogCreate(BaseModel):
     linkedin_job_n: int = 0
     indeed_job_n: int = 0
     veganjobs_job_n: int = 0
+    emails_skipped_n: int = 0
 
 
 class EisServiceLogUpdate(EisServiceLogCreate):

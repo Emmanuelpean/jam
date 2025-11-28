@@ -43,10 +43,11 @@ const LogViewer = ({ isServiceRunning }: LogViewerProps): JSX.Element => {
 
 		fetchLogs().then(); // Initial fetch
 
-		const pollInterval: 3000 | 10000 = isServiceRunning ? 3000 : 10000;
-		const interval = setInterval(fetchLogs, pollInterval);
-
-		return (): void => clearInterval(interval);
+		const pollInterval: 3000 | null = isServiceRunning ? 3000 : null;
+		if (pollInterval !== null) {
+			const interval = setInterval(fetchLogs, pollInterval);
+			return (): void => clearInterval(interval);
+		}
 	}, [logsExpanded, token, logLines, isServiceRunning]);
 
 	return (

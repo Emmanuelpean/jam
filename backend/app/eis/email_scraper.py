@@ -8,7 +8,7 @@ content), and records run statistics in an EisServiceLog."""
 import threading
 import traceback
 from datetime import datetime
-
+import time
 from app import models, utils
 from app.config import settings
 from app.database import get_db
@@ -267,6 +267,8 @@ class JobEmailScraper(EmailService):
             service_log.run_duration = (datetime.now() - start_time).total_seconds()
             service_log.is_success = False
             service_log.error_message = str(exception)
+        finally:
+            self.logger.info("Finished email scraping workflow")
 
         self.db.commit()
         return service_log
@@ -284,7 +286,6 @@ class JobEmailScraper(EmailService):
         users = self.db.query(models.User).filter(models.User.toast_active, models.User.is_active).all()
         self.logger.info(f"Found {len(users)} users to process.")
         service_log_entry.users_found_n = len(users)
-        self.db.commit()
         jobs_data = {platform: {} for platform in PLATFORMS}
 
         # For each user...
@@ -318,6 +319,7 @@ class JobEmailScraper(EmailService):
                         email_job_data = self.extract_email_data(email_record, service_log_entry)
                         jobs_data[email_record.platform].update(email_job_data)
                     else:
+                        service_log_entry.emails_skipped_n += 1
                         self.logger.info("Email already exists in database. Skipping email.")
 
                 except Exception as exception:
@@ -449,6 +451,10 @@ class JobEmailScraper(EmailService):
                     if scraper is not None:
                         job_data = scraper.scrape_job()[0]
                     else:
+                        if job_record.external_job_id not in jobs_data[job_record.platform]:
+                            raise ValueError(
+                                f"Job data not found in email content for job ID {job_record.external_job_id}"
+                            )
                         job_data = jobs_data[job_record.platform][job_record.external_job_id]
                     self.update_scraped_job_data(job_record, job_data)
                     service_log_entry.job_success_n += 1
@@ -472,65 +478,94 @@ class EmailScraperService:
         """Initialise the service with a JobScraper instance."""
 
         self.scraper = JobEmailScraper()
-        self.is_running = False
         self.thread = None
         self.stop_event = threading.Event()
+        self.period_hours = 3.0
+        self.timedelta_days = 1
+        self.thread_status = "stopped"
+        self.scraper_running = False
+        self.sleep_until = None
+        self.sleep_start = None
 
     def start(self, period_hours: float = 3.0, timedelta_days: int = 1) -> None:
         """Start the scraping service
         :param period_hours: Hours between each scraping run
         :param timedelta_days: Number of days to search for emails"""
 
-        if self.is_running:
+        if self.thread_status in ("started", "starting", "stopping"):
             return
+        self.thread_status = "starting"
 
-        self.is_running = True
+        # Store parameters
+        self.period_hours = period_hours
+        self.timedelta_days = timedelta_days
+
+        # Clear the stop event
         self.stop_event.clear()
 
         # Start the service in a separate thread
         self.thread = threading.Thread(target=self._run_service, args=(period_hours, timedelta_days))
-        self.thread.daemon = False
+        self.thread.daemon = True
         self.thread.start()
 
     def stop(self) -> None:
         """Stop the scraping service"""
 
-        if not self.is_running:
+        if self.thread_status in ("stopped", "starting", "stopping"):
             return
+        self.thread_status = "stopping"
 
-        self.is_running = False
         self.stop_event.set()
-
-        if self.thread:
-            while self.thread.is_alive():
-                self.thread.join(timeout=5)  # Wait up to 5 seconds for clean shutdown
 
     def _run_service(self, period_hours: float, timedelta_days: int) -> None:
         """Internal method that runs the scraping loop
         :param period_hours: Hours between each scraping run
         :param timedelta_days: Number of days to search for emails"""
 
-        while self.is_running and not self.stop_event.is_set():
-            try:
+        try:
+            self.thread_status = "started"
+            while not self.stop_event.is_set():
+                try:
+                    # Run the scraping
+                    self.scraper_running = True
+                    result = self.scraper.run_scraping(timedelta_days=timedelta_days)
+                    self.scraper_running = False
 
-                # Run the scraping
-                result = self.scraper.run_scraping(timedelta_days=timedelta_days)
+                    duration = result.run_duration
+                    sleep_time = max([0, period_hours * 3600 - duration])
 
-                duration = result.run_duration
-                sleep_time = max([0, period_hours * 3600 - duration])
-                if self.stop_event.wait(timeout=sleep_time):
-                    break
+                    # Track sleep timing
+                    self.sleep_start = time.time()
+                    self.sleep_until = self.sleep_start + sleep_time
 
-            except Exception:
-                # Sleep for a shorter time on error to retry sooner
-                if self.stop_event.wait(timeout=300):  # 5 minutes
-                    break
+                    if self.stop_event.wait(timeout=sleep_time):
+                        break
+
+                    # Clear sleep tracking after waking
+                    self.sleep_start = None
+                    self.sleep_until = None
+
+                except Exception:
+                    self.sleep_start = time.time()
+                    self.sleep_until = self.sleep_start + 300
+
+                    if self.stop_event.wait(timeout=300):  # 5 minutes
+                        break
+
+                    self.sleep_start = None
+                    self.sleep_until = None
+        finally:
+            self.thread_status = "stopped"
+            self.sleep_start = None
+            self.sleep_until = None
 
     def status(self) -> dict:
         """Get the current status of the service"""
 
         return {
-            "is_running": self.is_running,
-            "thread_alive": self.thread.is_alive() if self.thread else False,
-            "thread_name": self.thread.name if self.thread else None,
+            "thread_status": self.thread_status,
+            "scraper_running": self.scraper_running,
+            "period_hours": self.period_hours,
+            "timedelta_days": self.timedelta_days,
+            "sleep_until": self.sleep_until,
         }

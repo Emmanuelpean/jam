@@ -181,5 +181,6 @@ class EisServiceLog(CommonBase, Base):
     # Emails
     emails_found_n = Column(Integer, default=0, nullable=False)
     emails_saved_n = Column(Integer, default=0, nullable=False)
+    emails_skipped_n = Column(Integer, default=0, nullable=False)
 
     emails = relationship("JobAlertEmail", back_populates="service_log")

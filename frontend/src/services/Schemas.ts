@@ -275,6 +275,7 @@ export interface ServiceLog {
 	users_processed_n: number;
 	emails_found_n: number;
 	emails_saved_n: number;
+	emails_skipped_n: number;
 	jobs_extracted_n: number;
 	job_success_n: number;
 	job_fail_n: number;

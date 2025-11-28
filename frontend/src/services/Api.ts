@@ -233,14 +233,19 @@ export const authApi: AuthApi = {
 	},
 };
 
+export type ThreadStatus = "started" | "stopped" | "starting" | "stopping";
+
 export interface ScraperStatus {
-	is_running: boolean;
-	thread_alive: boolean;
-	thread_name: string | null;
+	thread_status: ThreadStatus;
+	scraper_running: boolean;
+	period_hours: number | null;
+	timedelta_days: number | null;
+	sleep_until: Date | null;
 }
 
-interface StartScraperRequest {
+export interface StartScraperRequest {
 	period_hours: number;
+	timedelta_days: number;
 }
 
 interface ScraperResponse {
@@ -265,7 +270,7 @@ export const jobScraperApi: JobScraperApi = {
 	},
 
 	start: async (periodHours: number, timedeltaDays: number, token: string): Promise<ScraperResponse> => {
-		const data: StartScraperRequest = { period_hours: periodHours };
+		const data: StartScraperRequest = { period_hours: periodHours, timedelta_days: timedeltaDays };
 		return api.post("email_scraper_service/start", data, token);
 	},
 

@@ -14,6 +14,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 	total,
 	width = "350px",
 }: ProgressBarProps): JSX.Element => {
+	const percentage: number = total > 0 ? (current / total) * 100 : 0;
 	return (
 		<div style={{ flex: 1, minWidth: 0 }}>
 			<span style={{ fontWeight: "bold" }}>{title}</span>
@@ -22,8 +23,8 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 					<div
 						className="progress-bar"
 						role="progressbar"
-						style={{ width: `${(current / total) * 100}%` }}
-						aria-valuenow={(current / total) * 100}
+						style={{ width: `${percentage}%` }}
+						aria-valuenow={percentage}
 						aria-valuemin={0}
 						aria-valuemax={100}
 					/>

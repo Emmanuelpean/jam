@@ -1,5 +1,6 @@
+import { Form, InputGroup } from "react-bootstrap";
 import React, { JSX, useEffect, useState } from "react";
-import { jobScraperApi, ScraperStatus, serviceLogApi } from "../../services/Api";
+import { jobScraperApi, ScraperStatus, serviceLogApi, ThreadStatus } from "../../services/Api";
 import { ServiceLog } from "../../services/Schemas";
 import { useAuth } from "../../contexts/AuthContext";
 import "./EisDashboardPage.css";
@@ -7,27 +8,29 @@ import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { formatDuration } from "../../utils/TimeUtils";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import ProgressBar from "./ProgressBar";
-import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { Errors, FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import LogViewer from "./LogViewer";
+import { HelpBubble } from "../../components/rendering/widgets/HelpBubble";
+import Spinner from "../../components/spinner/Spinner";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
 
 export interface FormData {
-	period: number;
+	period_hours: number;
 	timedelta_days: number;
 }
 
 const JobScraperDashboard = (): JSX.Element => {
 	const { token } = useAuth();
+	const { showToastSuccess } = useGlobalToast();
+	const [remainingTime, setRemainingTime] = useState<number | null>(null);
 	const [status, setStatus] = useState<ScraperStatus | null>(null);
 	const [latestLog, setLatestLog] = useState<ServiceLog | null>(null);
-	const [fieldErrors, setFieldErrors] = useState<Errors>({});
 	const [formData, setFormData] = useState<FormData>({
-		period: 0,
+		period_hours: 0,
 		timedelta_days: 0,
 	});
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
-	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
 	// Fetch the scraper service status
 	const fetchStatus = async (): Promise<void> => {
@@ -35,6 +38,10 @@ const JobScraperDashboard = (): JSX.Element => {
 		try {
 			const data: ScraperStatus = await jobScraperApi.getStatus(token);
 			setStatus(data);
+			setFormData({
+				period_hours: data.period_hours || 3,
+				timedelta_days: data.timedelta_days || 1,
+			});
 			setError(null);
 		} catch (err: any) {
 			setError(err.message || "Failed to fetch scraper status");
@@ -42,12 +49,29 @@ const JobScraperDashboard = (): JSX.Element => {
 		}
 	};
 
+	// Calculate and update remaining time every second
+	useEffect(() => {
+		if (!status?.sleep_until) {
+			setRemainingTime(null);
+			return;
+		}
+
+		const updateTimer = () => {
+			if (!status.sleep_until) return;
+			const remaining = new Date(status.sleep_until).getTime() - Date.now() / 1000;
+			setRemainingTime(remaining > 0 ? Math.round(remaining) : 0);
+		};
+
+		updateTimer();
+		const interval = setInterval(updateTimer, 1000);
+		return () => clearInterval(interval);
+	}, [status?.sleep_until]);
+
 	// Fetch the scraper service status every 5 seconds
 	useEffect(() => {
-		fetchStatus().then((_: void) => {
-			const interval = setInterval(fetchStatus, 5000);
-			return (): void => clearInterval(interval);
-		});
+		fetchStatus().then();
+		const interval = setInterval(fetchStatus, 5000);
+		return (): void => clearInterval(interval);
 	}, [token]);
 
 	// Fetch the latest service log
@@ -64,26 +88,29 @@ const JobScraperDashboard = (): JSX.Element => {
 		}
 	};
 
-	// Fetch latest service log ever 2/10 s
+	// Fetch latest service log ever 2s
 	useEffect(() => {
-		fetchLatestLog().then((_: void) => {
-			const pollInterval: 2000 | 10000 = status?.is_running ? 2000 : 10000;
-			const interval = setInterval(fetchLatestLog, pollInterval);
-			return (): void => clearInterval(interval);
-		});
-	}, [status?.is_running, token]);
+		if (!status?.scraper_running) return;
+		fetchLatestLog().then();
+		const interval = setInterval(fetchLatestLog, 2000);
+		return (): void => clearInterval(interval);
+	}, [status?.scraper_running, token]);
+
+	// Fetch the latest service log on component mount
+	useEffect(() => {
+		fetchLatestLog().then();
+	}, [token]);
 
 	// Handle start button click
 	const handleStart = async (): Promise<void> => {
 		if (!token) return;
 		setLoading(true);
 		setError(null);
-		setSuccessMessage(null);
 		try {
-			const response = await jobScraperApi.start(formData.period, formData.timedelta_days, token);
-			setSuccessMessage(response.detail);
+			await jobScraperApi.start(formData.period_hours, formData.timedelta_days, token);
 			await fetchStatus();
 			await fetchLatestLog();
+			showToastSuccess("Scraper started successfully");
 		} catch (err: any) {
 			setError(err.message || "Failed to start scraper");
 		} finally {
@@ -96,12 +123,11 @@ const JobScraperDashboard = (): JSX.Element => {
 		if (!token) return;
 		setLoading(true);
 		setError(null);
-		setSuccessMessage(null);
 		try {
-			const response = await jobScraperApi.stop(token);
-			setSuccessMessage(response.detail);
+			await jobScraperApi.stop(token);
 			await fetchStatus();
 			await fetchLatestLog();
+			showToastSuccess("Scraper stopped successfully");
 		} catch (err: any) {
 			setError(err.message || "Failed to stop scraper");
 		} finally {
@@ -109,55 +135,74 @@ const JobScraperDashboard = (): JSX.Element => {
 		}
 	};
 
-	const calculateJobTotal = (log: ServiceLog): number => {
-		return log.job_success_n + log.job_fail_n;
+	const threadStatusIcons: Record<ThreadStatus, string> = {
+		started: "bi-check-circle-fill",
+		stopped: "bi-x-circle-fill",
+		starting: "bi-play-circle-fill",
+		stopping: "bi-dash-circle-fill",
 	};
 
-	const getStatusIcon = (isRunning: boolean): string => {
+	const getScraperStatus = (isRunning: boolean): string => {
 		return isRunning ? "bi-check-circle-fill" : "bi-x-circle-fill";
 	};
 
-	function createStatusItem(label: string, isAlive: boolean): JSX.Element {
-		return (
-			<p className="status-item">
-				<span className="status-label">{label}:</span>
-				<span className={isAlive ? "status-badge badge-success" : "status-badge badge-danger"}>
-					<i className={`bi ${getStatusIcon(isAlive)}`}></i> {isAlive ? "Alive" : "Dead"}
-				</span>
-			</p>
-		);
-	}
-
-	// Define field configurations
-	const periodField: ModalFormField = {
-		name: "period",
-		type: "text",
-		label: "Scraping Period (hours)",
-		helpText: "Time between scraping runs (can only be changed when service is stopped)",
+	const threadStatusLabels: Record<string, string> = {
+		started: "Active",
+		starting: "Starting",
+		stopping: "Stopping",
+		stopped: "Inactive",
 	};
 
-	const timedeltaField: ModalFormField = {
-		name: "timedelta",
-		type: "text",
-		label: "Time Delta (days)",
-		helpText: "Number of days back to scrape job postings for each run",
+	const threadButtonLabels: Record<string, string> = {
+		started: "Stop Service",
+		stopping: "Service Stopping",
+		starting: "Service Starting",
+		stopped: "Start Service",
 	};
 
-	const handleInputChange = (e: SyntheticEvent): void => {
-		const { name, value } = e.target;
-		setFormData(
-			(prev: FormData): FormData => ({
-				...prev,
-				[name]: value,
-			}),
-		);
-
-		if (fieldErrors[name as keyof Errors]) {
-			setFieldErrors((prev: Errors) => ({
-				...prev,
-				[name]: "",
-			}));
+	const getScraperStatusMessage = (status: ScraperStatus): string => {
+		if (status.thread_status === "stopped") {
+			return "Stopped";
 		}
+		if (status.scraper_running) {
+			return "Running";
+		}
+		return `Stopped (${formatDuration(remainingTime)} s before next run)`;
+	};
+
+	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
+		const target = event.target as HTMLInputElement;
+		const { name, value } = target;
+		setFormData((prevData) => ({
+			...prevData,
+			[name]: Number(value),
+		}));
+	};
+
+	const RenderLabeledInput = (
+		id: string,
+		label: string,
+		help: string,
+		value: number,
+		unitText: string = "",
+		isRequired: boolean = false,
+		onChange?: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
+	) => {
+		return (
+			<Form.Group id={id}>
+				<InputGroup>
+					<InputGroup.Text className="d-flex align-items-center">
+						<span>{label}</span>
+						{isRequired && <span className="text-danger">*</span>}
+						{help && <HelpBubble helpText={help} />}
+					</InputGroup.Text>
+
+					<Form.Control type="text" value={value} onChange={onChange} />
+
+					{unitText && <InputGroup.Text>{unitText}</InputGroup.Text>}
+				</InputGroup>
+			</Form.Group>
+		);
 	};
 
 	return (
@@ -175,52 +220,83 @@ const JobScraperDashboard = (): JSX.Element => {
 
 			{/* Status Display */}
 			<div className="status-card">
-				<h2 className="card-title">Service Status</h2>
+				<h2 className="card-title">
+					<i className="bi bi-activity me-2"></i>
+					Service Status
+				</h2>
 				{status ? (
-					<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-						<div>
-							{createStatusItem("Service Status", status.is_running)}
-							{createStatusItem("Thread Status", status.thread_alive)}
+					<div className="status-content">
+						<div className="status-indicators">
+							<div className="indicator-item">
+								<span className="indicator-label">Scraper Service</span>
+								<span
+									className={`status-badge ${status.scraper_running ? "badge-success" : "badge-danger"}`}
+								>
+									<i className={`bi ${getScraperStatus(status.scraper_running)} me-2`}></i>
+									{getScraperStatusMessage(status)}
+								</span>
+							</div>
+							<div className="indicator-item">
+								<span className="indicator-label">Service</span>
+								<span
+									className={`status-badge ${["started", "starting"].includes(status.thread_status) ? "badge-success" : "badge-danger"}`}
+								>
+									<i className={`bi ${threadStatusIcons[status.thread_status]} me-2`}></i>
+									{threadStatusLabels[status.thread_status]}
+								</span>
+							</div>
 						</div>
+
 						<div>
-							{FormField(periodField, formData, handleInputChange, fieldErrors)}
-							{FormField(timedeltaField, formData, handleInputChange, fieldErrors)}
+							<div className="config-fields">
+								{RenderLabeledInput(
+									"period_hours",
+									"Scraping Period",
+									"Time between scraping runs.",
+									formData.period_hours,
+									"Hour(s)",
+									status.thread_status === "stopped",
+									onChangeFormField,
+								)}
+								{RenderLabeledInput(
+									"timedelta_days",
+									"Time Delta",
+									"Number of days back to scrape job postings for each run.",
+									formData.timedelta_days,
+									"Day(s)",
+									status.thread_status === "stopped",
+									onChangeFormField,
+								)}
+							</div>
 						</div>
-						<div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+
+						<div className="actions-section">
 							<ActionButton
 								id="confirm-start-button"
-								disabled={loading || status?.is_running}
+								disabled={loading || status?.scraper_running}
 								loading={loading}
-								loadingText="Starting Service..."
-								defaultText="Start Service"
+								loadingText={
+									status?.thread_status === "stopping" ? "Stopping Service..." : "Starting Service..."
+								}
+								defaultText={threadButtonLabels[status.thread_status]}
 								fullWidth={true}
-								onClick={handleStart}
-							/>
-							<ActionButton
-								id="confirm-stop-button"
-								variant="secondary"
-								disabled={loading || !status?.is_running}
-								loading={loading}
-								loadingText="Stopping Service..."
-								defaultText="Stop Service"
-								fullWidth={true}
-								onClick={handleStop}
+								onClick={status?.thread_status === "started" ? handleStop : handleStart}
 							/>
 						</div>
 					</div>
 				) : (
-					<p className="loading-text">Loading status...</p>
+					<Spinner text={"Loading status..."} />
 				)}
 			</div>
 
 			{/* Progress Display */}
 			{latestLog && (
-				<div className="progress-card">
-					<div className="progress-header">
-						<h2 className="card-title">Latest Run Progress</h2>
-						{status?.is_running && <span className="live-indicator" title="Live updates"></span>}
-					</div>
-
+				<div className="status-card">
+					<h2 className="card-title">
+						<i className="bi bi-clock-history me-2"></i>
+						Latest Run Progress
+						{status?.scraper_running && <span className="live-indicator ms-2"></span>}
+					</h2>
 					<div className="metrics-grid">
 						<div className="metric-group">
 							<p className="metric-item">
@@ -238,7 +314,7 @@ const JobScraperDashboard = (): JSX.Element => {
 								<span className="status-label">Jobs Extracted:</span> {latestLog.jobs_extracted_n}
 							</p>
 							<p className="metric-item">
-								<span className="status-label">Jobs Scraped:</span> {calculateJobTotal(latestLog)}
+								<span className="status-label">Jobs Scraped:</span> {latestLog.job_total_n}
 							</p>
 							<p className="metric-item">
 								<span className="status-label">Success:</span> {latestLog.job_success_n}
@@ -274,7 +350,7 @@ const JobScraperDashboard = (): JSX.Element => {
 						/>
 						<ProgressBar
 							title="Emails Processed"
-							current={latestLog.emails_saved_n}
+							current={latestLog.emails_saved_n + latestLog.emails_skipped_n}
 							total={latestLog.emails_found_n}
 							width="100%"
 						/>
@@ -295,13 +371,7 @@ const JobScraperDashboard = (): JSX.Element => {
 					{error}
 				</div>
 			)}
-			{successMessage && (
-				<div className="alert alert-success">
-					<span className="alert-icon">✓</span>
-					{successMessage}
-				</div>
-			)}
-			<LogViewer isServiceRunning={status?.is_running ?? false} />
+			<LogViewer isServiceRunning={status?.scraper_running || false} />
 		</div>
 	);
 };
