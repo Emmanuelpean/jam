@@ -254,7 +254,7 @@ export interface LogResponse {
 
 interface JobScraperApi {
 	getStatus: (token: string) => Promise<ScraperStatus>;
-	start: (periodHours: number, token: string) => Promise<ScraperResponse>;
+	start: (periodHours: number, timedeltaDays: number, token: string) => Promise<ScraperResponse>;
 	stop: (token: string) => Promise<ScraperResponse>;
 	getLogs: (lines: number, token: string) => Promise<LogResponse>;
 }
@@ -264,7 +264,7 @@ export const jobScraperApi: JobScraperApi = {
 		return api.get("email_scraper_service/status", token);
 	},
 
-	start: async (periodHours: number, token: string): Promise<ScraperResponse> => {
+	start: async (periodHours: number, timedeltaDays: number, token: string): Promise<ScraperResponse> => {
 		const data: StartScraperRequest = { period_hours: periodHours };
 		return api.post("email_scraper_service/start", data, token);
 	},

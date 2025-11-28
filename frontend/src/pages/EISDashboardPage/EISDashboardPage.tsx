@@ -1,23 +1,33 @@
 import React, { JSX, useEffect, useState } from "react";
-import { jobScraperApi, LogResponse, ScraperStatus, serviceLogApi } from "../../services/Api";
+import { jobScraperApi, ScraperStatus, serviceLogApi } from "../../services/Api";
 import { ServiceLog } from "../../services/Schemas";
 import { useAuth } from "../../contexts/AuthContext";
 import "./EisDashboardPage.css";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { formatDuration } from "../../utils/TimeUtils";
 import { getTableIcon } from "../../components/rendering/view/Icons";
+import ProgressBar from "./ProgressBar";
+import { ModalFormField } from "../../components/rendering/form/FormRenders";
+import { Errors, FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import LogViewer from "./LogViewer";
+
+export interface FormData {
+	period: number;
+	timedelta_days: number;
+}
 
 const JobScraperDashboard = (): JSX.Element => {
 	const { token } = useAuth();
 	const [status, setStatus] = useState<ScraperStatus | null>(null);
 	const [latestLog, setLatestLog] = useState<ServiceLog | null>(null);
-	const [periodHours, setPeriodHours] = useState<number>(3.0);
+	const [fieldErrors, setFieldErrors] = useState<Errors>({});
+	const [formData, setFormData] = useState<FormData>({
+		period: 0,
+		timedelta_days: 0,
+	});
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
-	const [logs, setLogs] = useState<LogResponse | null>(null);
-	const [logsExpanded, setLogsExpanded] = useState<boolean>(false);
-	const [logLines, setLogLines] = useState<number>(100);
 
 	// Fetch the scraper service status
 	const fetchStatus = async (): Promise<void> => {
@@ -48,7 +58,6 @@ const JobScraperDashboard = (): JSX.Element => {
 			const log: ServiceLog = await serviceLogApi.getLatest(token);
 			if (log) {
 				setLatestLog(log);
-				console.log(log);
 			}
 		} catch (err: any) {
 			console.error("Failed to fetch latest log:", err);
@@ -71,7 +80,7 @@ const JobScraperDashboard = (): JSX.Element => {
 		setError(null);
 		setSuccessMessage(null);
 		try {
-			const response = await jobScraperApi.start(periodHours, token);
+			const response = await jobScraperApi.start(formData.period, formData.timedelta_days, token);
 			setSuccessMessage(response.detail);
 			await fetchStatus();
 			await fetchLatestLog();
@@ -100,37 +109,55 @@ const JobScraperDashboard = (): JSX.Element => {
 		}
 	};
 
-	// Fetch logs
-	const fetchLogs = async (): Promise<void> => {
-		if (!token) return;
-		try {
-			const data = await jobScraperApi.getLogs(logLines, token);
-			setLogs(data);
-		} catch (err: any) {
-			console.error("Failed to fetch logs:", err);
-		}
-	};
-
-	// Handle show more logs
-	const handleShowMoreLogs = (): void => {
-		setLogLines((prev) => Math.min(prev + 100, logs?.total_lines || prev));
-	};
-
-	useEffect(() => {
-		if (logsExpanded) {
-			fetchLogs().then((_) => {
-				const interval = setInterval(fetchLogs, 3000);
-				return () => clearInterval(interval);
-			});
-		}
-	}, [logsExpanded, logLines, token]);
-
 	const calculateJobTotal = (log: ServiceLog): number => {
 		return log.job_success_n + log.job_fail_n;
 	};
 
 	const getStatusIcon = (isRunning: boolean): string => {
 		return isRunning ? "bi-check-circle-fill" : "bi-x-circle-fill";
+	};
+
+	function createStatusItem(label: string, isAlive: boolean): JSX.Element {
+		return (
+			<p className="status-item">
+				<span className="status-label">{label}:</span>
+				<span className={isAlive ? "status-badge badge-success" : "status-badge badge-danger"}>
+					<i className={`bi ${getStatusIcon(isAlive)}`}></i> {isAlive ? "Alive" : "Dead"}
+				</span>
+			</p>
+		);
+	}
+
+	// Define field configurations
+	const periodField: ModalFormField = {
+		name: "period",
+		type: "text",
+		label: "Scraping Period (hours)",
+		helpText: "Time between scraping runs (can only be changed when service is stopped)",
+	};
+
+	const timedeltaField: ModalFormField = {
+		name: "timedelta",
+		type: "text",
+		label: "Time Delta (days)",
+		helpText: "Number of days back to scrape job postings for each run",
+	};
+
+	const handleInputChange = (e: SyntheticEvent): void => {
+		const { name, value } = e.target;
+		setFormData(
+			(prev: FormData): FormData => ({
+				...prev,
+				[name]: value,
+			}),
+		);
+
+		if (fieldErrors[name as keyof Errors]) {
+			setFieldErrors((prev: Errors) => ({
+				...prev,
+				[name]: "",
+			}));
+		}
 	};
 
 	return (
@@ -147,98 +174,44 @@ const JobScraperDashboard = (): JSX.Element => {
 			</div>
 
 			{/* Status Display */}
-			<div className={`status-card ${status?.is_running ? "status-running" : "status-stopped"}`}>
+			<div className="status-card">
 				<h2 className="card-title">Service Status</h2>
 				{status ? (
-					<div className="status-grid">
-						<p className="status-item">
-							<span className="status-label">Service Status:</span>
-							<span
-								className={
-									status.is_running ? "status-badge badge-success" : "status-badge badge-danger"
-								}
-							>
-								<i className={`bi ${getStatusIcon(status.is_running)}`}></i>{" "}
-								{status.is_running ? "Active" : "Inactive"}
-							</span>
-						</p>
-						<p className="status-item">
-							<span className="status-label">Thread Status:</span>
-							<span
-								className={
-									status.thread_alive ? "status-badge badge-success" : "status-badge badge-danger"
-								}
-							>
-								<i className={`bi ${getStatusIcon(status.thread_alive)}`}></i>{" "}
-								{status.thread_alive ? "Alive" : "Dead"}
-							</span>
-						</p>
-						{status.thread_name && (
-							<p className="status-item">
-								<span className="status-label">Thread Name:</span> {status.thread_name}
-							</p>
-						)}
+					<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+						<div>
+							{createStatusItem("Service Status", status.is_running)}
+							{createStatusItem("Thread Status", status.thread_alive)}
+						</div>
+						<div>
+							{FormField(periodField, formData, handleInputChange, fieldErrors)}
+							{FormField(timedeltaField, formData, handleInputChange, fieldErrors)}
+						</div>
+						<div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+							<ActionButton
+								id="confirm-start-button"
+								disabled={loading || status?.is_running}
+								loading={loading}
+								loadingText="Starting Service..."
+								defaultText="Start Service"
+								fullWidth={true}
+								onClick={handleStart}
+							/>
+							<ActionButton
+								id="confirm-stop-button"
+								variant="secondary"
+								disabled={loading || !status?.is_running}
+								loading={loading}
+								loadingText="Stopping Service..."
+								defaultText="Stop Service"
+								fullWidth={true}
+								onClick={handleStop}
+							/>
+						</div>
 					</div>
 				) : (
 					<p className="loading-text">Loading status...</p>
 				)}
 			</div>
-			{/* Email Progress Bar */}
-			{latestLog && (
-				<>
-					<div className="metric-group">
-						<p className="metric-item">
-							<span className="status-label">Users Processing Progress</span>
-						</p>
-						<div className="progress-bar-container">
-							<div
-								className="progress-bar-fill"
-								style={{
-									width: `${latestLog.users_found_n > 0 ? (latestLog.users_processed_n / latestLog.users_found_n) * 100 : 0}%`,
-								}}
-							/>
-						</div>
-						<p className="metric-item progress-text">
-							{latestLog?.emails_saved_n ?? 0} / {latestLog?.emails_found_n ?? 0} emails saved
-						</p>
-					</div>
-					<div className="metric-group">
-						<p className="metric-item">
-							<span className="status-label">Email Processing Progress</span>
-						</p>
-						<div className="progress-bar-container">
-							<div
-								className="progress-bar-fill"
-								style={{
-									width: `${latestLog?.emails_found_n && latestLog.emails_found_n > 0 ? (latestLog.emails_saved_n / latestLog.emails_found_n) * 100 : 0}%`,
-								}}
-							/>
-						</div>
-						<p className="metric-item progress-text">
-							{latestLog?.emails_saved_n ?? 0} / {latestLog?.emails_found_n ?? 0} emails saved
-						</p>
-					</div>
-
-					{/* Job Scraping Progress Bar */}
-					<div className="metric-group">
-						<p className="metric-item">
-							<span className="status-label">Job Scraping Progress</span>
-						</p>
-						<div className="progress-bar-container">
-							<div
-								className="progress-bar-fill"
-								style={{
-									width: `${latestLog?.jobs_extracted_n && latestLog.jobs_extracted_n > 0 ? (calculateJobTotal(latestLog) / latestLog.jobs_extracted_n) * 100 : 0}%`,
-								}}
-							/>
-						</div>
-						<p className="metric-item progress-text">
-							{latestLog ? calculateJobTotal(latestLog) : 0} / {latestLog?.jobs_extracted_n ?? 0} jobs
-							scraped
-						</p>
-					</div>
-				</>
-			)}
 
 			{/* Progress Display */}
 			{latestLog && (
@@ -257,18 +230,6 @@ const JobScraperDashboard = (): JSX.Element => {
 							</p>
 							<p className="metric-item">
 								<span className="status-label">Duration:</span> {formatDuration(latestLog.run_duration)}
-							</p>
-						</div>
-
-						<div className="metric-group">
-							<p className="metric-item">
-								<span className="status-label">Users Processed:</span> {latestLog.users_processed_n}
-							</p>
-							<p className="metric-item">
-								<span className="status-label">Emails Found:</span> {latestLog.emails_found_n}
-							</p>
-							<p className="metric-item">
-								<span className="status-label">Emails Saved:</span> {latestLog.emails_saved_n}
 							</p>
 						</div>
 
@@ -304,51 +265,28 @@ const JobScraperDashboard = (): JSX.Element => {
 							<strong>Error:</strong> {latestLog.error_message}
 						</div>
 					)}
+					<div style={{ display: "flex", width: "100%", gap: "20px", marginBottom: "20px" }}>
+						<ProgressBar
+							title="Users Processed"
+							current={latestLog.users_processed_n}
+							total={latestLog.users_found_n}
+							width="100%"
+						/>
+						<ProgressBar
+							title="Emails Processed"
+							current={latestLog.emails_saved_n}
+							total={latestLog.emails_found_n}
+							width="100%"
+						/>
+						<ProgressBar
+							title="Jobs Scraped"
+							current={latestLog.job_success_n + latestLog.job_fail_n}
+							total={latestLog.job_total_n}
+							width="100%"
+						/>
+					</div>
 				</div>
 			)}
-
-			{/* Configuration */}
-			<div className="config-section">
-				<label htmlFor="period-hours" className="config-label">
-					Scraping Period (hours)
-				</label>
-				<input
-					id="period-hours"
-					type="number"
-					min="0.5"
-					step="0.5"
-					value={periodHours}
-					onChange={(e) => setPeriodHours(parseFloat(e.target.value))}
-					disabled={status?.is_running || loading}
-					className="config-input"
-				/>
-				<small className="config-hint">
-					Time between scraping runs (can only be changed when service is stopped)
-				</small>
-			</div>
-
-			{/* Control Buttons */}
-			<div className="button-group">
-				<ActionButton
-					id="confirm-start-button"
-					disabled={loading || status?.is_running}
-					loading={loading}
-					loadingText="Starting Service..."
-					defaultText="Start Service"
-					fullWidth={true}
-					onClick={handleStart}
-				/>
-				<ActionButton
-					id="confirm-stop-button"
-					variant="secondary"
-					disabled={loading || !status?.is_running}
-					loading={loading}
-					loadingText="Stopping Service..."
-					defaultText="Stop Service"
-					fullWidth={true}
-					onClick={handleStop}
-				/>
-			</div>
 
 			{/* Messages */}
 			{error && (
@@ -363,40 +301,7 @@ const JobScraperDashboard = (): JSX.Element => {
 					{successMessage}
 				</div>
 			)}
-			<div className="log-section">
-				<button className="log-toggle" onClick={() => setLogsExpanded(!logsExpanded)}>
-					{logsExpanded ? "▼" : "▶"} View Log File
-					{logs && <span className="log-count"> ({logs.total_lines} total lines)</span>}
-				</button>
-
-				{logsExpanded && (
-					<div className="log-viewer">
-						{logs ? (
-							<>
-								<div className="log-header">
-									<span>
-										Showing last {logs.lines.length} of {logs.total_lines} lines
-									</span>
-									{logs.lines.length < logs.total_lines && (
-										<button className="log-load-more" onClick={handleShowMoreLogs}>
-											Load 100 More
-										</button>
-									)}
-								</div>
-								<pre className="log-content">
-									{logs.lines.map((line, idx) => (
-										<div key={idx} className="log-line">
-											{line}
-										</div>
-									))}
-								</pre>
-							</>
-						) : (
-							<p className="loading-text">Loading logs...</p>
-						)}
-					</div>
-				)}
-			</div>
+			<LogViewer isServiceRunning={status?.is_running ?? false} />
 		</div>
 	);
 };

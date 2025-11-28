@@ -145,3 +145,4 @@ class EisServiceLogMinOut(EisServiceLogCreate, Out):
 
 class StartRequest(BaseModel):
     period_hours: float | None = 3.0
+    timedelta_days: int | None = 1

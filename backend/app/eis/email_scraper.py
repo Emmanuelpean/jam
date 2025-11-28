@@ -476,9 +476,10 @@ class EmailScraperService:
         self.thread = None
         self.stop_event = threading.Event()
 
-    def start(self, period_hours: float = 3.0) -> None:
+    def start(self, period_hours: float = 3.0, timedelta_days: int = 1) -> None:
         """Start the scraping service
-        :param period_hours: Hours between each scraping run"""
+        :param period_hours: Hours between each scraping run
+        :param timedelta_days: Number of days to search for emails"""
 
         if self.is_running:
             return
@@ -487,7 +488,7 @@ class EmailScraperService:
         self.stop_event.clear()
 
         # Start the service in a separate thread
-        self.thread = threading.Thread(target=self._run_service, args=(period_hours,))
+        self.thread = threading.Thread(target=self._run_service, args=(period_hours, timedelta_days))
         self.thread.daemon = False
         self.thread.start()
 
@@ -504,15 +505,16 @@ class EmailScraperService:
             while self.thread.is_alive():
                 self.thread.join(timeout=5)  # Wait up to 5 seconds for clean shutdown
 
-    def _run_service(self, period_hours: float) -> None:
+    def _run_service(self, period_hours: float, timedelta_days: int) -> None:
         """Internal method that runs the scraping loop
-        :param period_hours: Hours between each scraping run"""
+        :param period_hours: Hours between each scraping run
+        :param timedelta_days: Number of days to search for emails"""
 
         while self.is_running and not self.stop_event.is_set():
             try:
 
                 # Run the scraping
-                result = self.scraper.run_scraping(timedelta_days=2)
+                result = self.scraper.run_scraping(timedelta_days=timedelta_days)
 
                 duration = result.run_duration
                 sleep_time = max([0, period_hours * 3600 - duration])
