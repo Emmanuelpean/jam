@@ -307,7 +307,7 @@ def start_scraper(
     if scraper_service.is_running:
         return {"detail": "Scraping service already running"}
     try:
-        scraper_service.start(period_hours=request.period_hours)
+        scraper_service.start(period_hours=request.period_hours, timedelta_days=request.timedelta_days)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

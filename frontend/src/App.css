@@ -378,7 +378,7 @@ textarea.form-control {
 
 /* ------------------------------------------------- PROGRESS BAR -------------------------------------------------- */
 
-.global-loading-overlay .progress {
+.progress {
     background: linear-gradient(145deg, #e9ecef 0%, #dee2e6 100%);
     border-radius: 12px;
     height: 20px;
@@ -386,7 +386,7 @@ textarea.form-control {
     border: 1px solid #dee2e6;
 }
 
-.global-loading-overlay .progress-bar {
+.progress-bar {
     background: var(--primary-mid);
     font-size: 0.875rem;
     font-weight: 600;

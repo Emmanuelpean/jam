@@ -15,6 +15,7 @@ import { useActiveHandler, useDeleteHandler } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
 import "./DataTable.css";
+import LoadingSpinner from "../spinner/Spinner";
 
 export type Direction = "asc" | "desc";
 
@@ -369,7 +370,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	};
 
 	const handleImportSuccess = (importedItem: any): void => {
-		console.log("A", importedItem);
 		onImportSuccess?.(importedItem).then((_) => {
 			fetchData().then((_) => {
 				showToastSuccess("Job imported successfully.");
@@ -584,12 +584,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 			{/* Table */}
 			{isLoading ? (
-				<div className="d-flex justify-content-center align-items-center py-5">
-					<div className="spinner-border text-primary" role="status">
-						<span className="visually-hidden">Loading...</span>
-					</div>
-					<span className="ms-3">Loading {itemType}s...</span>
-				</div>
+				<LoadingSpinner text="Loading..." />
 			) : (
 				<>
 					<div className="table-responsive">
