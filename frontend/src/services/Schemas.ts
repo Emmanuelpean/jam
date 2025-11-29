@@ -1,7 +1,7 @@
 interface BaseOut {
 	id: number;
-	created_at: Date;
-	modified_at: Date;
+	created_at: Date | string;
+	modified_at: Date | string;
 }
 
 export interface OwnedOut extends BaseOut {
@@ -103,14 +103,14 @@ export interface PersonData extends OwnedOut {
 // ----------------------------------------------- JOB APPLICATION UPDATE ----------------------------------------------
 
 export interface JobApplicationUpdateDataTransform {
-	date: Date;
+	date: Date | string;
 	type: string;
 	job_id: number;
 	note: string | null;
 }
 
 export interface JobApplicationUpdateData extends OwnedOut {
-	date: Date;
+	date: Date | string;
 	type: string;
 	job_id: number;
 	note: string | null;
@@ -118,12 +118,6 @@ export interface JobApplicationUpdateData extends OwnedOut {
 
 export interface EnrichedJobApplicationUpdateData extends JobApplicationUpdateData {
 	number: number;
-}
-
-export interface ScrapedJobUpdate {
-	id?: number;
-	is_imported?: boolean;
-	is_active?: boolean;
 }
 
 // -------------------------------------------------------- JOB --------------------------------------------------------
@@ -137,11 +131,11 @@ export interface JobDataTransform {
 	salary_max: number | null;
 	salary_currency: string | null;
 	personal_rating: number | null;
-	deadline: Date | null;
+	deadline: Date | string | null;
 	company_id: number | null;
 	source_id: number | null;
 	location_id: number | null;
-	application_date: Date | null;
+	application_date: Date | string | null;
 	application_status: string | null;
 	applied_via: string | null;
 	application_note: string | null;
@@ -162,12 +156,12 @@ export interface JobData extends OwnedOut {
 	salary_max: number | null;
 	salary_currency: string | null;
 	personal_rating: number | null;
-	deadline: Date | null;
+	deadline: Date | string | null;
 	company_id: number | null;
 	source_id: number | null;
 	location_id: number | null;
-	followup_snooze_datetime: Date | null;
-	application_date: Date | null;
+	followup_snooze_datetime: Date | string | null;
+	application_date: Date | string | null;
 	application_status: string | null;
 	applied_via: string | null;
 	application_note: string | null;
@@ -179,7 +173,7 @@ export interface JobData extends OwnedOut {
 }
 
 export interface EnrichedJobData extends JobData {
-	last_update_date: Date | null;
+	last_update_date: Date | string | null;
 	last_update_type: string | null;
 	days_since_last_update: number | null;
 	days_until_deadline: number | null;
@@ -189,7 +183,7 @@ export interface EnrichedJobData extends JobData {
 // ----------------------------------------------------- INTERVIEW -----------------------------------------------------
 
 export interface InterviewDataTransform {
-	date: Date;
+	date: Date | string;
 	type: string;
 	location_id: number | null;
 	job_id: number;
@@ -199,7 +193,7 @@ export interface InterviewDataTransform {
 }
 
 export interface InterviewData extends OwnedOut {
-	date: Date;
+	date: Date | string;
 	type: string;
 	location_id: number | null;
 	job_id: number;
@@ -229,7 +223,7 @@ export interface UserData extends OwnedOut {
 	is_active: boolean;
 	toast_active: boolean;
 	theme: string;
-	last_login: Date | null;
+	last_login: Date | string | null;
 	chase_threshold: number;
 	deadline_threshold: number;
 	update_limit: number;
@@ -245,7 +239,7 @@ export interface ScrapedJobData extends OwnedOut {
 	is_scraped: boolean;
 	is_failed: boolean;
 	scrape_error: string;
-	scrape_datetime: Date;
+	scrape_datetime: Date | string;
 	is_active: boolean;
 	is_imported: boolean;
 	title: string | null;
@@ -255,7 +249,7 @@ export interface ScrapedJobData extends OwnedOut {
 	salary_currency: string | null;
 	platform: string | null;
 	url: string | null;
-	deadline: Date | null;
+	deadline: Date | string | null;
 	company: string | null;
 	location_postcode: string | null;
 	location_city: string | null;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, JSX } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { ProgressBar, Spinner } from "react-bootstrap";
 import L from "leaflet";
@@ -27,7 +27,7 @@ interface GeocodedLocation extends LocationData {
 interface LocationMapProps {
 	locations?: LocationDataTransform[];
 	height?: string;
-    scrollWheelZoom?: boolean;
+	scrollWheelZoom?: boolean;
 }
 
 interface MapViewUpdaterProps {
@@ -161,21 +161,31 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 					boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
 				}}
 			>
-				<MapContainer center={[20, 0]} zoom={2} style={{ height: "100%", width: "100%" }} scrollWheelZoom={scrollWheelZoom}>
+				<MapContainer
+					center={[20, 0]}
+					zoom={2}
+					style={{ height: "100%", width: "100%" }}
+					scrollWheelZoom={scrollWheelZoom}
+				>
 					<TileLayer
 						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 						url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
 					/>
 					<MapViewUpdater locations={geocodedLocations} />
-					{geocodedLocations.map((location) => (
-						<Marker key={location.id} position={[location.geocoded.latitude, location.geocoded.longitude]}>
-							<Popup>
-								<div>
-									<strong>{formatLocationName(location)}</strong>
-								</div>
-							</Popup>
-						</Marker>
-					))}
+					{geocodedLocations.map(
+						(location: GeocodedLocation): JSX.Element => (
+							<Marker
+								key={`${location.id}-${location.geocoded.latitude}-${location.geocoded.longitude}`}
+								position={[location.geocoded.latitude, location.geocoded.longitude]}
+							>
+								<Popup>
+									<div>
+										<strong>{formatLocationName(location)}</strong>
+									</div>
+								</Popup>
+							</Marker>
+						),
+					)}
 				</MapContainer>
 			</div>
 		</div>
