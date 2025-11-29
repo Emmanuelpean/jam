@@ -190,7 +190,7 @@ def get_service_logs_by_date_range(
 
     assert_admin(current_user)
 
-    query = db.query(models.EisServiceLog)
+    query = db.query(models.EisServiceLog).filter(models.EisServiceLog.run_datetime.is_not(None))
 
     # Apply date filters
     if start_date:

@@ -13,6 +13,7 @@ import LogViewer from "./LogViewer";
 import { HelpBubble } from "../../components/rendering/widgets/HelpBubble";
 import Spinner from "../../components/spinner/Spinner";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { LineChart, SeriesData } from "../../components/charts/LineChart";
 
 export interface FormData {
 	period_hours: number;
@@ -25,12 +26,63 @@ const JobScraperDashboard = (): JSX.Element => {
 	const [remainingTime, setRemainingTime] = useState<number | null>(null);
 	const [status, setStatus] = useState<ScraperStatus | null>(null);
 	const [latestLog, setLatestLog] = useState<ServiceLog | null>(null);
+	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: 0,
 		timedelta_days: 0,
 	});
 	const [loading, setLoading] = useState<boolean>(false);
-	const [error, setError] = useState<string | null>(null);
+
+	// Fet the 10 latest logs
+	useEffect(() => {
+		const fetchLatestLogs = async (): Promise<void> => {
+			if (!token) return;
+			try {
+				const logs: ServiceLog[] = await serviceLogApi.getAll(token, { limit: 10 });
+				// Prepare data for chart
+				const successSeries: SeriesData = {
+					id: "Successful Jobs",
+					color: "#22c55e",
+					data: logs
+						.slice()
+						.reverse()
+						.map((log) => ({
+							x: new Date(log.run_datetime),
+							y: log.job_success_n,
+						})),
+				};
+
+				const failSeries: SeriesData = {
+					id: "Failed Jobs",
+					color: "#ef4444",
+					data: logs
+						.slice()
+						.reverse()
+						.map((log) => ({
+							x: new Date(log.run_datetime),
+							y: log.job_fail_n,
+						})),
+				};
+
+				const runDurationSeries: SeriesData = {
+					id: "Run Duration (s)",
+					color: "#3b82f6",
+					data: logs
+						.slice()
+						.reverse()
+						.map((log) => ({
+							x: new Date(log.run_datetime),
+							y: log.run_duration ? log.run_duration / 3600 : 0,
+						})),
+				};
+
+				setLogData([[successSeries, failSeries], [runDurationSeries]]);
+			} catch (err: any) {
+				console.error("Failed to fetch latest logs:", err);
+			}
+		};
+		fetchLatestLogs().then();
+	}, [token]);
 
 	// Fetch the scraper service status
 	const fetchStatus = async (): Promise<void> => {
@@ -42,9 +94,7 @@ const JobScraperDashboard = (): JSX.Element => {
 				period_hours: data.period_hours || 3,
 				timedelta_days: data.timedelta_days || 1,
 			});
-			setError(null);
 		} catch (err: any) {
-			setError(err.message || "Failed to fetch scraper status");
 			console.error(err);
 		}
 	};
@@ -105,14 +155,13 @@ const JobScraperDashboard = (): JSX.Element => {
 	const handleStart = async (): Promise<void> => {
 		if (!token) return;
 		setLoading(true);
-		setError(null);
 		try {
 			await jobScraperApi.start(formData.period_hours, formData.timedelta_days, token);
 			await fetchStatus();
 			await fetchLatestLog();
 			showToastSuccess("Scraper started successfully");
 		} catch (err: any) {
-			setError(err.message || "Failed to start scraper");
+			console.log(err.message || "Failed to start scraper");
 		} finally {
 			setLoading(false);
 		}
@@ -122,14 +171,13 @@ const JobScraperDashboard = (): JSX.Element => {
 	const handleStop = async (): Promise<void> => {
 		if (!token) return;
 		setLoading(true);
-		setError(null);
 		try {
 			await jobScraperApi.stop(token);
 			await fetchStatus();
 			await fetchLatestLog();
 			showToastSuccess("Scraper stopped successfully");
 		} catch (err: any) {
-			setError(err.message || "Failed to stop scraper");
+			console.log(err.message || "Failed to stop scraper");
 		} finally {
 			setLoading(false);
 		}
@@ -364,14 +412,27 @@ const JobScraperDashboard = (): JSX.Element => {
 				</div>
 			)}
 
-			{/* Messages */}
-			{error && (
-				<div className="alert alert-error">
-					<span className="alert-icon">⚠️</span>
-					{error}
-				</div>
-			)}
 			<LogViewer isServiceRunning={status?.scraper_running || false} />
+
+			<div className="status-card mt-4">
+				<h2 className="card-title">
+					<i className="bi bi-clock-history me-2"></i>
+					Latest Run Progress
+					{status?.scraper_running && <span className="live-indicator ms-2"></span>}
+				</h2>
+				<div style={{ display: "flex" }}>
+					{logData && logData[0] && (
+						<LineChart
+							data={logData[0]}
+							xAxisLabel="Run date"
+							yAxisLabel="Number of scraped jobs"
+						></LineChart>
+					)}
+					{logData && logData[1] && (
+						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]"></LineChart>
+					)}
+				</div>
+			</div>
 		</div>
 	);
 };

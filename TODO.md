@@ -13,12 +13,19 @@
 ### TOAST
 * [X] Ensure that the parsed country matches the list of available countries
 * [X] Add currency parsing
-* [ ] Add admin control and monitoring page
+* [X] Add admin control and monitoring page
+* [ ] Add graphs showing the results of previous service logs
 * [ ] Add frontend tests
+* [ ] Deleting/deactivating is not working
+* [ ] If no currency is found, use the default currencty
 * [X] Load the currencies and countries from the backend instead of the frontend
 * [X] Add search box
 * [X] If the company/location match is not good enough, do not suggest it
 * [X] Add the total number of scraped jobs
+* [ ] Display the most common failures
+* [ ] Display critical failures
+* [ ] Add AI rating for the jobs
+* [ ] Add the ability to filter out jobs (extract the job title when extracting the job ids)
 
 ### Select Widgets Improvements
 * [ ] Sort options alphabetically
@@ -46,3 +53,4 @@
 
 ### Tables
 * [ ] Move the scrollbar inside the tables so that the header is always visible
+* [ ] Add the ability to filter by columns and hide rejected jobs
