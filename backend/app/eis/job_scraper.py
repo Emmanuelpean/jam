@@ -368,12 +368,14 @@ class LinkedinBrightdataJobScraper(BrightdataJobScraper):
 class VeganJobsJobScraper:
     """Scraper for veganjobs.com job listings."""
 
+    base_url = "https://veganjobs.com/job/"
+
     def __init__(self, url: str) -> None:
         """Initialize the scraper with headers and delay settings.
         :param url: The job listing URL"""
 
         self.scraper = cloudscraper.create_scraper()
-        self.url = "https://veganjobs.com/job/" + url
+        self.url = self.base_url + url
 
     def scrape_job_listing(self) -> JobResult:
         """Scrape job data from a specific veganjobs.com job listing URL"""

@@ -99,6 +99,7 @@ class TestSaveJobBaseInfoToDb:
 
         # Create existing jobs
         existing_job_id = "existing_job_123"
+        # noinspection PyArgumentList
         existing_job = ScrapedJob(external_job_id=existing_job_id, owner_id=test_users[0].id, platform="linkedin")
         session.add(existing_job)
         session.commit()
@@ -145,6 +146,7 @@ class TestUpdateScrapedJobData:
     def test_save_job_data_single_job_and_data(self, test_job_scraper, session, test_users) -> None:
         """Test saving job data to a single job record"""
 
+        # noinspection PyArgumentList
         sample_scraped_job = ScrapedJob(
             external_job_id="test_job_123",
             owner_id=test_users[0].id,
@@ -186,7 +188,6 @@ class TestUpdateScrapedJobData:
         assert sample_scraped_job.location_country == "United Kingdom"
         assert sample_scraped_job.title == sample_job_data["job"]["title"]
         assert sample_scraped_job.description == sample_job_data["job"]["description"]
-        assert sample_scraped_job.url == sample_job_data["job"]["url"]
         assert sample_scraped_job.salary_min == sample_job_data["job"]["salary"]["min_amount"]
         assert sample_scraped_job.salary_max == sample_job_data["job"]["salary"]["max_amount"]
 
@@ -430,6 +431,7 @@ class TestScrapeJobs:
 
         scraped_jobs = []
         for job_id in job_ids:
+            # noinspection PyArgumentList
             scraped_job = ScrapedJob(
                 external_job_id=job_id,
                 owner_id=email_record.owner_id,

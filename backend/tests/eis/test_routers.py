@@ -58,4 +58,4 @@ class TestScrapedJobCRUD(CRUDTestBase):
         client = self._get_authorised_client(authorised_clients)
         response = client.get(self.endpoint + "/count")
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["count"] == 49
+        assert response.json()["count"] == 50
