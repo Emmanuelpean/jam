@@ -80,3 +80,15 @@ def extract_indeed_job_ids(body: str) -> list[str]:
             job_ids.append(jk_match.group(1))
 
     return list(dict.fromkeys(job_ids))
+
+
+# ------------------------------------------------------- INDEED -------------------------------------------------------
+
+
+def extract_nhs_job_ids(body: str) -> list[str]:
+    """Extract NHS job IDs from the email body
+    :param body: email body content as string
+    :return: list of unique NHS job IDs"""
+
+    pattern = r"https://beta.jobs.nhs.uk/candidate/jobadvert\/([A-Z0-9\-]+)"
+    return pattern_extract(body, pattern)
