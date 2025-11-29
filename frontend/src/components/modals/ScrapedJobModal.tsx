@@ -8,6 +8,7 @@ import { SelectOption, useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { capitalise } from "../../utils/Utils";
+import { convertToEndOfDay } from "../../utils/TimeUtils";
 
 interface JobAndApplicationProps extends DataModalProps {
 	data: ScrapedJobData;
@@ -115,11 +116,11 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 			company_id: jobData.company_id || null,
 			location_id: jobData.location_id || null,
 			source_id: jobData.source_id || null,
-			deadline: jobData.deadline ? jobData.deadline + "T23:59:59" : null,
+			deadline: jobData.deadline ? convertToEndOfDay(jobData.deadline) : null,
 			keywords: jobData.keywords || [],
 			contacts: jobData.contacts || [],
 			attendance_type: jobData.attendance_type?.trim() || null,
-			id: jobData.id,
+			id: jobData.id, // required for updating the scraped job after import
 		};
 	};
 

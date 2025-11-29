@@ -46,7 +46,7 @@ const Dashboard: React.FC = () => {
 	const thresholdDate = new Date(now.getTime() + currentUser.deadline_threshold * 24 * 60 * 60 * 1000);
 
 	const upcomingDeadlines: EnrichedJobData[] = dataContext.jobs.filter(
-		(job: EnrichedJobData): boolean | null | undefined =>
+		(job: EnrichedJobData) =>
 			!job.application_date &&
 			!job.application_status &&
 			job.deadline &&
