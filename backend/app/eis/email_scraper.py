@@ -141,11 +141,21 @@ class JobEmailScraper(EmailService):
 
             # Create new job record if it doesn't exist
             if not existing_entry:
+                if email_record.platform == "linkedin":
+                    base_url = LinkedinBrightdataJobScraper.base_url
+                elif email_record.platform == "indeed":
+                    base_url = IndeedBrightdataJobScraper.base_url
+                elif email_record.platform == "veganjobs":
+                    base_url = VeganJobsJobScraper.base_url
+                else:
+                    raise AssertionError("Unknown platform")
+
                 # noinspection PyArgumentList
                 new_job = ScrapedJob(
                     external_job_id=job_id,
                     platform=email_record.platform,
                     owner_id=email_record.owner_id,
+                    url=base_url + job_id,
                 )
                 new_job.emails.append(email_record)
                 self.db.add(new_job)
@@ -198,7 +208,6 @@ class JobEmailScraper(EmailService):
         # Job details
         job_record.title = job_data.job.title
         job_record.description = job_data.job.description
-        job_record.url = job_data.job.url
         job_record.company = job_data.company
 
         # Scraping information
@@ -230,7 +239,6 @@ class JobEmailScraper(EmailService):
             "salary_max",
             "title",
             "description",
-            "url",
             "scrape_datetime",
             "is_scraped",
             "is_failed",

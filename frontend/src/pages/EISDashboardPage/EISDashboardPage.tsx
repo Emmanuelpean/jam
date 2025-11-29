@@ -273,7 +273,7 @@ const JobScraperDashboard = (): JSX.Element => {
 						<div className="actions-section">
 							<ActionButton
 								id="confirm-start-button"
-								disabled={loading || status?.scraper_running}
+								disabled={loading || ["stopping", "starting"].includes(status?.thread_status)}
 								loading={loading}
 								loadingText={
 									status?.thread_status === "stopping" ? "Stopping Service..." : "Starting Service..."
