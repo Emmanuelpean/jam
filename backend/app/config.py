@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str
 
+    # Apify
+    apify_api_key: str
+
     model_config = SettingsConfigDict(
         extra="ignore",
         env_file=Path(__file__).parent.parent / ".env",

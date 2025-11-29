@@ -341,7 +341,13 @@ class EmailService(object):
 
                     # Get email body
                     if content_type == "text/plain":
-                        body_text = part.get_payload(decode=True).decode()
+                        payload = part.get_payload(decode=True)
+                        charset = part.get_content_charset() or "utf-8"
+
+                        try:
+                            body_text = payload.decode(charset)
+                        except UnicodeDecodeError:
+                            body_text = payload.decode("windows-1252", errors="replace")
 
             else:
                 # Not multipart - simple email
@@ -428,3 +434,5 @@ class EmailService(object):
 
 
 email_service = EmailService()
+emails = email_service.get_emails(subject_contains="NHS job alerts for Jessica")
+print(emails)

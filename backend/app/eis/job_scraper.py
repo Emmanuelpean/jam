@@ -6,12 +6,14 @@ retrieve scraped job information."""
 
 import re
 import time
+import datetime as dt
 
 import cloudscraper
 import requests
 from bs4 import BeautifulSoup
 from pydantic import BaseModel, Field
 from tqdm import tqdm
+from apify_client import ApifyClient
 
 from app.config import settings
 
@@ -30,6 +32,7 @@ class JobInfo(BaseModel):
     description: str | None = None
     url: str | None = None
     salary: Salary = Field(default_factory=Salary)
+    deadline: dt.datetime | None = None
 
 
 class JobResult(BaseModel):
@@ -161,7 +164,7 @@ class BrightdataJobScraper(object):
         return [self._process_job_data(d) for d in data]
 
 
-# ------------------------------------------------- INDEED SCRAPER -------------------------------------------------
+# --------------------------------------------------- INDEED SCRAPER ---------------------------------------------------
 
 
 class IndeedBrightdataJobScraper(BrightdataJobScraper):
@@ -315,7 +318,7 @@ def parse_indeed_job_section(section: str) -> JobResult | None:
         )
 
 
-# ------------------------------------------------- LINKEDIN SCRAPER -------------------------------------------------
+# -------------------------------------------------- LINKEDIN SCRAPER -------------------------------------------------
 
 
 class LinkedinBrightdataJobScraper(BrightdataJobScraper):
@@ -362,7 +365,7 @@ class LinkedinBrightdataJobScraper(BrightdataJobScraper):
         )
 
 
-# ------------------------------------------------- VEGANJOBS SCRAPER -------------------------------------------------
+# -------------------------------------------------- VEGANJOBS SCRAPER -------------------------------------------------
 
 
 class VeganJobsJobScraper:
@@ -446,21 +449,103 @@ class VeganJobsJobScraper:
         raise AssertionError()
 
 
+# ----------------------------------------------------- NHS SCRAPER ----------------------------------------------------
+
+
+class NhsJobScraper:
+    """Scraper for NHS job listings."""
+
+    base_url = "https://beta.jobs.nhs.uk/candidate/jobadvert/"
+
+    def __init__(self, job_id: str) -> None:
+        """Initialize the scraper with headers and delay settings.
+        :param job_id: The job listing ID"""
+
+        self.url = self.base_url + job_id
+
+    def scrape_job(self) -> JobResult:
+        """Scrape job data from a specific NHS job listing URL"""
+
+        client = ApifyClient(settings.apify_api_key)
+
+        run_input = {
+            "proxy": {
+                "useApifyProxy": True,
+                "apifyProxyGroups": ["RESIDENTIAL"],
+            },
+            "startUrls": [self.url],
+        }
+
+        actor_id = "memo23/nhs-scraper"
+
+        run = client.actor(actor_id).call(run_input=run_input)
+
+        # Get results (dataset items)
+        job_data = client.dataset(run["defaultDatasetId"]).list_items().items[0]
+        if not job_data:
+            raise Exception("No job data found.")
+
+        # Deadline
+        if job_data.get("closingDate"):
+            deadline = dt.datetime.strptime(job_data.get("closingDate"), "%d %B %Y")
+        else:
+            deadline = None
+
+        # Salary
+        pattern = r"(?P<currency>£)\s*(?P<min>[\d,]+)\s*to\s*(?P=currency)\s*(?P<max>[\d,]+).*?(?P<frequency>a year|per annum)"
+        match = re.search(pattern, job_data.get("salary"), re.IGNORECASE)
+
+        min_salary = max_salary = None
+        currency = None
+        if match:
+            frequency = match.group("frequency").lower()
+            if "year" in frequency or "annum" in frequency:
+                currency = match.group("currency")
+                min_salary = int(match.group("min").replace(",", ""))
+                max_salary = int(match.group("max").replace(",", ""))
+
+        # Description
+        description = [job_data.get("jobSummaryText"), job_data.get("mainDutiesText"), job_data.get("aboutUsText")]
+        description = "\n\n".join([d for d in description if d])
+
+        return JobResult(
+            company=job_data.get("employer") or None,
+            location=" ".join(job_data.get("employerAddress", "")) or None,
+            job=JobInfo(
+                title=job_data.get("title") or None,
+                description=description or None,
+                url=self.url,
+                deadline=deadline,
+                salary=Salary(
+                    min_amount=min_salary,
+                    max_amount=max_salary,
+                    currency=currency,
+                ),
+            ),
+            raw=job_data,
+        )
+
+
 # Usage example:
 if __name__ == "__main__":
     # Note: These test job ids may not be valid any more.
 
-    # # LinkedIn job scraper example
-    # scraper = LinkedinBrightdataJobScraper(["4313361652"])
-    # job_data1 = scraper.scrape_job()
-    # print(job_data1[0])
-    #
+    # LinkedIn job scraper example
+    scraper = LinkedinBrightdataJobScraper(["4313361652"])
+    job_data1 = scraper.scrape_job()
+    print(job_data1[0])
+
     # Indeed job scraper example
     scraper = IndeedBrightdataJobScraper("a6c3277c505f0629")
     job_data1 = scraper.scrape_job()
     print(job_data1)
-    #
-    # # # VeganJobs scraper example
-    # scraper = VeganJobsJobScraper("sharpen-strategy-remote-usa-operations-coordinator")
-    # veganjob_data = scraper.scrape_job()
-    # print(veganjob_data)
+
+    # VeganJobs scraper example
+    scraper = VeganJobsJobScraper("sharpen-strategy-remote-usa-operations-coordinator")
+    veganjob_data = scraper.scrape_job()
+    print(veganjob_data)
+
+    # NHS job scraper example
+    scraper = NhsJobScraper("M9043-25-0282")
+    nhsjob_data = scraper.scrape_job()
+    print(nhsjob_data)
