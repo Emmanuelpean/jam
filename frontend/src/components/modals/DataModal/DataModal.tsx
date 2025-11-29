@@ -38,6 +38,8 @@ export interface GenericModalProps {
 	defaultActiveTab?: string | null; // default active tab key
 	endpoint: string; // API endpoint for CRUD operations
 	onSuccess?: (data: any) => void; // called when an entry is successfully added/modified
+	warningMessage?: string | ReactNode; // optional warning message to display
+	warningVariant?: "warning" | "danger" | "info" | "primary" | "secondary" | "success";
 }
 
 export interface ValidationErrors {
@@ -59,6 +61,8 @@ const DataModal = ({
 	validation = null,
 	transformFormData = null,
 	onSuccess,
+	warningMessage,
+	warningVariant = "warning",
 }: GenericModalProps) => {
 	const hasTabs = tabs && tabs.length > 0;
 
@@ -465,6 +469,11 @@ const DataModal = ({
 
 		const renderContentInner = () => (
 			<div className={`modal-content-visible`}>
+				{warningMessage && (
+					<Alert variant={warningVariant} className="mb-3">
+						{warningMessage}
+					</Alert>
+				)}
 				{isEditing ? (
 					<div>
 						{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}

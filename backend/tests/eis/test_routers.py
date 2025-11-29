@@ -52,7 +52,7 @@ class TestScrapedJobCRUD(CRUDTestBase):
         # assert len(response.json()) == len(jobs)
         # # self.check_output(jobs, response.json())
 
-    def test_get_count(self, test_users, authorised_clients, test_scraped_jobs):
+    def test_get_count(self, test_users, authorised_clients, test_scraped_jobs) -> None:
         """Test retrieving count of scraped jobs for the authorized user that are scraped, not imported, active"""
 
         client = self._get_authorised_client(authorised_clients)

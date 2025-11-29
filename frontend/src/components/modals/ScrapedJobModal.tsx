@@ -10,7 +10,6 @@ import { modalViewFields } from "../rendering/view/ModalFields";
 import { capitalise } from "../../utils/Utils";
 
 interface JobAndApplicationProps extends DataModalProps {
-	defaultActiveTab?: "job" | "application";
 	data: ScrapedJobData;
 }
 
@@ -143,6 +142,8 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 		return errors;
 	};
 
+	const warningMessage: string | null = data?.is_failed ? "This job could not be scraped properly." : null;
+
 	return (
 		<>
 			<DataModal
@@ -157,6 +158,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 				size={size}
 				validation={customValidation}
 				onSuccess={onSuccess}
+				warningMessage={warningMessage}
 			/>
 
 			{renderCompanyModal()}
