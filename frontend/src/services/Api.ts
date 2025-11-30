@@ -184,7 +184,7 @@ export const scrapedJobApi: CrudApi & { getCount: (token: string) => Promise<any
 	getCount: (token: string): Promise<any> => api.get("scraped_jobs/count", token),
 };
 
-export const serviceLogApi: CrudApi & { getLatest: (token: string) => Promise<any> } = {
+export const serviceLogApi: CrudApi & { getLatest: (token: string) => Promise<ServiceLog> } = {
 	...createCrudApi("eis_service_logs"),
 	getLatest: (token: string): Promise<ServiceLog> => api.get("eis_service_logs/latest", token),
 };
@@ -282,5 +282,7 @@ export const jobScraperApi: JobScraperApi = {
 		return api.get(`email_scraper_service/logs?lines=${lines}`, token);
 	},
 };
+
+export const jobAlertEmailApi: CrudApi = createCrudApi("job_alert_emails");
 
 export { api };

@@ -28,13 +28,12 @@ from app.routers import (
 )
 from app.config import settings
 
+
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
 
 
 email_router = generate_data_table_crud_router(
     table_model=models.JobAlertEmail,
-    create_schema=schemas.JobAlertEmailCreate,
-    update_schema=schemas.JobAlertEmailUpdate,
     out_schema=schemas.JobAlertEmailOut,
     endpoint="job_alert_emails",
     not_found_msg="Job alert email not found",
@@ -44,10 +43,11 @@ email_router = generate_data_table_crud_router(
 
 # ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
 
-scrapedjob_router = APIRouter(prefix="/scraped_jobs", tags=["scraped_jobs"])
+
+scraped_job_router = APIRouter(prefix="/scraped_jobs", tags=["scraped_jobs"])
 
 
-@scrapedjob_router.get("/", response_model=schemas.PaginatedScrapedJobResponse)
+@scraped_job_router.get("/", response_model=schemas.PaginatedScrapedJobResponse)
 def get_all(
     request: Request,
     db: Session = Depends(get_db),
@@ -130,7 +130,7 @@ def get_all(
     }
 
 
-@scrapedjob_router.get("/count")
+@scraped_job_router.get("/count")
 def get_scraped_job_count(
     current_user: app_models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -153,13 +153,22 @@ def get_scraped_job_count(
 
 generate_data_table_crud_router(
     table_model=models.ScrapedJob,
-    create_schema=schemas.ScrapedJobCreate,
+    out_schema=schemas.ScrapedJobOut,
+    endpoint="scraped_jobs",
+    not_found_msg="Scraped Job not found",
+    allowed_actions=["get_one"],
+    router=scraped_job_router,
+    admin_only=True,
+)
+
+generate_data_table_crud_router(
+    table_model=models.ScrapedJob,
     update_schema=schemas.ScrapedJobUpdate,
     out_schema=schemas.ScrapedJobOut,
     endpoint="scraped_jobs",
     not_found_msg="Scraped Job not found",
-    allowed_actions=["get_one", "put"],
-    router=scrapedjob_router,
+    allowed_actions=["put"],
+    router=scraped_job_router,
 )
 
 
@@ -344,7 +353,7 @@ def scraper_status(
 
 
 @email_scraper_service_router.get("/logs")
-async def get_scraper_logs(
+def get_scraper_logs(
     lines: int = Query(100, ge=1, le=10000),
     current_user: app_models.User = Depends(get_current_user),
 ):

@@ -78,7 +78,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 			...data,
 			company_id: data.company ? findClosest(companies, data.company) : null,
 			location_id: data.location ? findClosest(locations, data.location) : null,
-			aggregator_id: data.emails[0].platform ? findExact(aggregators, data.emails[0].platform) : null,
+			aggregator_id: data.platform ? findExact(aggregators, data.platform) : null,
 		};
 	}, [data, companies, locations]);
 

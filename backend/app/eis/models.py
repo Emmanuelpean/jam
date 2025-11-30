@@ -4,12 +4,11 @@ Defines SQLAlchemy ORM models for email-based job scraping functionality.
 Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
-from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, DateTime, Float, TIMESTAMP, Table, UniqueConstraint
+from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, Float, TIMESTAMP, Table, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
 from app.models import Base, CommonBase, Owned
-
 
 # ------------------------------------------------------ MAPPINGS ------------------------------------------------------
 
@@ -129,8 +128,12 @@ class ScrapedJob(Owned, Base):
     location_country = Column(String, nullable=True)
     attendance_type = Column(String, nullable=True)
 
+    # Foreign keys
+    service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="SET NULL"), nullable=False)
+
     # Relationships
     emails = relationship("JobAlertEmail", secondary=jobalertemail_scrapedjob_mapping, back_populates="jobs")
+    service_log = relationship("EisServiceLog", back_populates="scraped_jobs")
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
@@ -145,16 +148,24 @@ class EisServiceLog(CommonBase, Base):
     - `run_datetime` (datetime): Date and time of the service run.
     - `is_success` (bool): Indicates whether the service run was successful.
     - `error_message` (str, optional): Error message if the service run failed.
+
+    # Jobs
     - `job_total_n` (int, optional): Total number of jobs to scrape.
     - `job_success_n` (int, optional): Number of successful jobs scraped.
     - `job_fail_n` (int, optional): Number of failed jobs scraped.
-    - `users_found_n` (int, optional): Number of users found.
-    - `users_processed_n` (int, optional): Number of users processed.
-    - `emails_found_n` (int, optional): Number of email messages found.
-    - `emails_saved_n` (int, optional): Number of email messages saved.
     - `jobs_extracted_n` (int, optional): Number of jobs extracted.
     - `linkedin_job_n` (int, optional): Number of LinkedIn jobs extracted.
     - `indeed_job_n` (int, optional): Number of Indeed jobs extracted.
+    - `veganjobs_job_n` (int, optional): Number of VeganJobs jobs extracted.
+
+    # Users
+    - `users_found_n` (int, optional): Number of users found.
+    - `users_processed_n` (int, optional): Number of users processed.
+
+    # Emails
+    - `emails_found_n` (int, optional): Number of email messages found.
+    - `emails_saved_n` (int, optional): Number of email messages saved.
+    - `emails_skipped_n` (int, optional): Number of email messages skipped.
 
     Relationships:
     --------------
@@ -183,4 +194,6 @@ class EisServiceLog(CommonBase, Base):
     emails_saved_n = Column(Integer, default=0, nullable=False)
     emails_skipped_n = Column(Integer, default=0, nullable=False)
 
+    # Relationships
     emails = relationship("JobAlertEmail", back_populates="service_log")
+    scraped_jobs = relationship("ScrapedJob", back_populates="service_log")

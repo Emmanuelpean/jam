@@ -1,7 +1,7 @@
 import { Form, InputGroup } from "react-bootstrap";
 import React, { JSX, useEffect, useState } from "react";
-import { jobScraperApi, ScraperStatus, serviceLogApi, ThreadStatus } from "../../services/Api";
-import { ServiceLog } from "../../services/Schemas";
+import { jobScraperApi, scrapedJobApi, ScraperStatus, serviceLogApi, ThreadStatus } from "../../services/Api";
+import { ScrapedJobData, ServiceLog } from "../../services/Schemas";
 import { useAuth } from "../../contexts/AuthContext";
 import "./EisDashboardPage.css";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
@@ -27,6 +27,8 @@ const JobScraperDashboard = (): JSX.Element => {
 	const [status, setStatus] = useState<ScraperStatus | null>(null);
 	const [latestLog, setLatestLog] = useState<ServiceLog | null>(null);
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
+	const [serviceLogData, setServiceLogData] = useState<ServiceLog[] | null>(null);
+	const [scraperErrors, setScraperErrors] = useState<Record<string, number>>({});
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: 0,
 		timedelta_days: 0,
@@ -39,6 +41,7 @@ const JobScraperDashboard = (): JSX.Element => {
 			if (!token) return;
 			try {
 				const logs: ServiceLog[] = await serviceLogApi.getAll(token, { limit: 10 });
+				setServiceLogData(logs);
 				// Prepare data for chart
 				const successSeries: SeriesData = {
 					id: "Successful Jobs",
@@ -105,7 +108,6 @@ const JobScraperDashboard = (): JSX.Element => {
 			setRemainingTime(null);
 			return;
 		}
-
 		const updateTimer = () => {
 			if (!status.sleep_until) return;
 			const remaining = new Date(status.sleep_until).getTime() - Date.now() / 1000;
@@ -150,6 +152,31 @@ const JobScraperDashboard = (): JSX.Element => {
 	useEffect(() => {
 		fetchLatestLog().then();
 	}, [token]);
+
+	useEffect(() => {
+		if (!latestLog || !token) return;
+		const fetchEmails = async (): Promise<void> => {
+			try {
+				const ids: number[] = latestLog.scraped_jobs;
+				const scraped_jobs: ScrapedJobData[] = await Promise.all(
+					ids.map((id: number): Promise<ScrapedJobData> => scrapedJobApi.get(id, token)),
+				);
+				// Count errors
+				const errorCounts: Record<string, number> = {};
+				scraped_jobs.forEach((job: ScrapedJobData): void => {
+					if (job.is_failed && job.scrape_error) {
+						const errorMsg: string = job.scrape_error.trim();
+						errorCounts[errorMsg] = (errorCounts[errorMsg] || 0) + 1;
+					}
+				});
+				setScraperErrors(errorCounts);
+			} catch (err: any) {
+				console.error("Failed to fetch alert emails:", err);
+			}
+		};
+
+		fetchEmails().then();
+	}, [latestLog, token]);
 
 	// Handle start button click
 	const handleStart = async (): Promise<void> => {
@@ -417,7 +444,7 @@ const JobScraperDashboard = (): JSX.Element => {
 			<div className="status-card mt-4">
 				<h2 className="card-title">
 					<i className="bi bi-clock-history me-2"></i>
-					Latest Run Progress
+					Run History
 					{status?.scraper_running && <span className="live-indicator ms-2"></span>}
 				</h2>
 				<div style={{ display: "flex" }}>
@@ -431,6 +458,84 @@ const JobScraperDashboard = (): JSX.Element => {
 					{logData && logData[1] && (
 						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]"></LineChart>
 					)}
+				</div>
+			</div>
+			<div className="status-card mt-4">
+				<h2 className="card-title">
+					<i className="bi bi-exclamation-triangle me-2"></i>
+					Error Summary
+					{status?.scraper_running && <span className="live-indicator ms-2"></span>}
+				</h2>
+
+				<div style={{ display: "flex", gap: "20px", height: "600px", overflow: "auto" }}>
+					{/* Critical Errors Column */}
+					<div style={{ flex: 1 }}>
+						<h5 className="mb-3">
+							Critical Errors (
+							{serviceLogData
+								? serviceLogData.filter(
+										(l: ServiceLog): string | null => l.error_message && l.error_message.trim(),
+									).length
+								: 0}
+							)
+						</h5>
+						{!serviceLogData ||
+						serviceLogData.filter(
+							(l: ServiceLog): string | null => l.error_message && l.error_message.trim(),
+						).length === 0 ? (
+							<div className="text-muted">No critical errors</div>
+						) : (
+							<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
+								{serviceLogData
+									.slice()
+									.sort(
+										(a: ServiceLog, b: ServiceLog): number =>
+											new Date(b.run_datetime).getTime() - new Date(a.run_datetime).getTime(),
+									)
+									.filter(
+										(log: ServiceLog): string | null =>
+											log.error_message && log.error_message.trim(),
+									)
+									.map(
+										(log: ServiceLog, idx: number): JSX.Element => (
+											<div key={idx} className="alert alert-danger">
+												<div className="small mb-1">
+													{new Date(log.run_datetime).toLocaleString()}
+												</div>
+												<div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+													{log.error_message}
+												</div>
+											</div>
+										),
+									)}
+							</div>
+						)}
+					</div>
+
+					{/* Scrape Errors Column */}
+					<div style={{ flex: 1 }}>
+						<h5 className="mb-3">Scrape Errors ({Object.keys(scraperErrors).length} unique)</h5>
+						{Object.keys(scraperErrors).length === 0 ? (
+							<div className="text-muted">No scrape errors during the latest run</div>
+						) : (
+							<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
+								{Object.entries(scraperErrors)
+									.sort((a, b) => b[1] - a[1])
+									.map(([errorMsg, count], idx) => (
+										<div key={idx} className="alert alert-warning">
+											<div className="d-flex justify-content-between align-items-start mb-1">
+												<span className="badge bg-warning">
+													{count} {count > 1 ? `occurrences` : `occurrence`}
+												</span>
+											</div>
+											<div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+												{errorMsg}
+											</div>
+										</div>
+									))}
+							</div>
+						)}
+					</div>
 				</div>
 			</div>
 		</div>

@@ -142,9 +142,9 @@ def assert_admin(user: models.User) -> None:
 def generate_data_table_crud_router(
     *,
     table_model,
-    create_schema,
-    update_schema,
-    out_schema,
+    create_schema=None,
+    update_schema=None,
+    out_schema=None,
     endpoint: str,
     not_found_msg: str = "Entry not found",
     many_to_many_fields: dict | None = None,

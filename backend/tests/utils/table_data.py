@@ -45,6 +45,12 @@ USER_DATA = [
         "is_verified": True,
         "toast_active": True,
     },
+    {
+        "email": "jessicaaggood@live.co.uk",
+        "password": "test_password",
+        "is_verified": True,
+        "toast_active": True,
+    },
 ]
 
 
@@ -1951,6 +1957,7 @@ JOB_SCRAPED_DATA = [
         "salary_currency": "GBP",
         "url": "https://linkedin.com/jobs/view/3789012345",
         "scrape_datetime": "2025-08-15T14:32:18.123456+00:00",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "987654321",
@@ -1967,6 +1974,7 @@ JOB_SCRAPED_DATA = [
         "salary_currency": "GBP",
         "url": "https://indeed.com/viewjob?jk=987654321",
         "scrape_datetime": "2025-08-22T09:45:32.789012+00:00",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "1122334455",
@@ -1984,6 +1992,7 @@ JOB_SCRAPED_DATA = [
         "salary_currency": "GBP",
         "url": "https://linkedin.com/jobs/view/1122334455",
         "scrape_datetime": "2025-08-28T16:20:45.456789+00:00",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "5566778899",
@@ -1995,6 +2004,7 @@ JOB_SCRAPED_DATA = [
         "title": "Software Engineer",
         "scrape_datetime": "2025-08-30T11:15:22.234567+00:00",
         "url": "test",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "1357924680",
@@ -2005,6 +2015,7 @@ JOB_SCRAPED_DATA = [
         "title": "Backend Developer",
         "scrape_datetime": "2025-08-25T13:42:17.345678+00:00",
         "url": "test",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "2468135790",
@@ -2017,6 +2028,7 @@ JOB_SCRAPED_DATA = [
         "scrape_datetime": "2025-08-18T08:30:55.567890+00:00",
         "is_imported": True,
         "url": "test",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "9988776655",
@@ -2029,6 +2041,7 @@ JOB_SCRAPED_DATA = [
         "scrape_datetime": "2025-08-20T19:25:08.678901+00:00",
         "is_active": False,
         "url": "test",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "4123456789",
@@ -2046,6 +2059,7 @@ JOB_SCRAPED_DATA = [
         "salary_currency": "GBP",
         "url": "https://linkedin.com/jobs/view/4123456789",
         "scrape_datetime": "2025-09-01T10:15:30.123456+00:00",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "totaljobs_567890",
@@ -2064,6 +2078,7 @@ JOB_SCRAPED_DATA = [
         "salary_currency": "GBP",
         "url": "https://totaljobs.com/job/flutter-healthcare-567890",
         "scrape_datetime": "2025-09-03T14:22:45.789012+00:00",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "reed_345678",
@@ -2082,6 +2097,7 @@ JOB_SCRAPED_DATA = [
         "salary_currency": "GBP",
         "url": "https://reed.co.uk/jobs/ml-engineer-edinburgh/345678",
         "scrape_datetime": "2025-09-05T09:33:12.345678+00:00",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "cvlib_678901",
@@ -2093,6 +2109,7 @@ JOB_SCRAPED_DATA = [
         "title": "Sustainability Software Engineer",
         "scrape_datetime": "2025-09-07T11:45:28.456789+00:00",
         "url": "test",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "jobsite_901234",
@@ -2111,6 +2128,7 @@ JOB_SCRAPED_DATA = [
         "salary_currency": "GBP",
         "url": "https://jobsite.co.uk/job/fullstack-js-manchester-901234",
         "scrape_datetime": "2025-09-09T13:20:15.567890+00:00",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "soft123456789",
@@ -2122,6 +2140,7 @@ JOB_SCRAPED_DATA = [
         "title": "Software Engineer",
         "scrape_datetime": "2025-09-11T15:30:42.678901+00:00",
         "url": "test",
+        "service_log_id": 1,
     },
     {
         "external_job_id": "soft1sdf23456789",
@@ -2129,6 +2148,7 @@ JOB_SCRAPED_DATA = [
         "owner_id": 1,
         "is_scraped": True,
         "url": "test",
+        "service_log_id": 1,
     },
 ]
 
@@ -2363,6 +2383,7 @@ for i in range(50):
         "url": f"https://linkedin.com/jobs/view/{external_id}" if not is_failed else "test",
         "is_imported": is_imported,
         "is_active": is_active,
+        "service_log_id": 1,
     }
 
     if is_failed:
