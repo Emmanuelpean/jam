@@ -236,9 +236,12 @@ const UserSettingsPage: React.FC = () => {
 		label: "Email Address",
 		type: "text",
 		placeholder: "Enter your email address",
-		helpText: hasPendingEmail
-			? `Email change pending verification. Check ${currentUser?.pending_email} for verification link.`
-			: undefined,
+		helpText: currentUser?.is_demo
+			? `This is a test account. Email changes are disabled.`
+			: hasPendingEmail
+				? `Email change pending verification. Check ${currentUser?.pending_email} for verification link.`
+				: undefined,
+		isDisabled: currentUser?.is_demo,
 	};
 
 	const currentPasswordField: ModalFormField = {
@@ -246,7 +249,10 @@ const UserSettingsPage: React.FC = () => {
 		type: "password",
 		label: "Current Password",
 		placeholder: "Enter your current password",
-		helpText: "Required to change your email or password",
+		helpText: currentUser?.is_demo
+			? `This is a test account. Email and password changes are disabled.`
+			: `Required to change your email or password`,
+		isDisabled: currentUser?.is_demo,
 	};
 
 	const newPasswordField: ModalFormField = {
@@ -254,6 +260,8 @@ const UserSettingsPage: React.FC = () => {
 		type: "password",
 		label: "New Password",
 		placeholder: "Enter new password",
+		isDisabled: currentUser?.is_demo,
+		helpText: currentUser?.is_demo ? `This is a test account. Password changes are disabled.` : null,
 	};
 
 	const confirmPasswordField: ModalFormField = {
@@ -261,6 +269,8 @@ const UserSettingsPage: React.FC = () => {
 		type: "password",
 		label: "Confirm New Password",
 		placeholder: "Confirm new password",
+		isDisabled: currentUser?.is_demo,
+		helpText: currentUser?.is_demo ? `This is a test account. Password changes are disabled.` : null,
 	};
 
 	const chaseThresholdField: ModalFormField = {

@@ -102,6 +102,7 @@ class UserCreate(BaseModel):
     update_limit: int = 30
     toast_active: bool = False
     default_currency: str = "GBP"
+    is_demo: bool = False
 
 
 class UserOut(Out):
@@ -111,6 +112,7 @@ class UserOut(Out):
     theme: str
     is_active: bool
     is_admin: bool
+    is_demo: bool
     last_login: datetime | None
     chase_threshold: int
     deadline_threshold: int

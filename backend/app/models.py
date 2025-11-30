@@ -133,6 +133,7 @@ class User(CommonBase, Base):
     - `email` (str, unique): User's email address.
     - `theme` (str): The theme of the application.
     - `is_admin` (bool): Indicates whether the user is an administrator.
+    - `is_demo` (bool): Indicates whether the user is a demo account.
     - `is_active` (bool): Indicates whether the user account is active.
     - `last_login` (datetime, optional): The timestamp of the last login.
     - `chase_threshold` (int): The threshold for chasing jobs in the dashboard.
@@ -155,6 +156,7 @@ class User(CommonBase, Base):
     theme = Column(String, nullable=False, server_default="mixed-berry")
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
     is_admin = Column(Boolean, nullable=False, server_default=expression.false())
+    is_demo = Column(Boolean, nullable=False, server_default=expression.false())
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
     chase_threshold = Column(Integer, nullable=False, server_default="14")
     deadline_threshold = Column(Integer, nullable=False, server_default="7")

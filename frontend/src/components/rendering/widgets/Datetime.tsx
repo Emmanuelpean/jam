@@ -63,6 +63,7 @@ export const renderLocalInput = ({ field, value, handleChange, error, inputType 
 				onChange={handleChange}
 				isInvalid={!!error}
 				className="datetime-input-with-icon"
+				disabled={field.isDisabled}
 			/>
 			<i
 				className={`bi bi-clock datetime-embedded-icon`}

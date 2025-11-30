@@ -177,6 +177,7 @@ export const RenderSelect = ({
 				classNamePrefix="react-select"
 				components={selectComponents}
 				hideSelectedOptions={false}
+				isDisabled={field.isDisabled}
 				controlShouldRenderValue={true}
 				// @ts-ignore
 				onAddButtonClick={field.addButton?.onClick}

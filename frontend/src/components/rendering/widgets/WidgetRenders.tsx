@@ -53,6 +53,7 @@ export const renderDefaultInput = ({ field, value, handleChange, error }: Widget
 				isInvalid={!!error}
 				step={field.step}
 				autoComplete={field.autoComplete}
+				disabled={field.isDisabled}
 			/>
 		</>
 	);

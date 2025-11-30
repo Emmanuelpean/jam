@@ -108,6 +108,7 @@ function AuthForm(): JSX.Element {
 				setTimeout(() => {
 					isVerifying = false;
 				}, 1000);
+				switchToLogin();
 			});
 	}, [mode, location.pathname, searchParams, navigate]);
 

@@ -127,12 +127,19 @@ def update_current_user_profile(
     # Determine if the user is updating the password or email
     requires_password_check = "password" in user_update_dict or "email" in user_update_dict
 
+    # Prevent test users from changing password or email
+    if current_user.is_demo and requires_password_check:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Test users cannot change their password or email address.",
+        )
+
     # Update password/email
     current_password = user_update_dict.get("current_password", "")
     if requires_password_check and not utils.verify_password(current_password, current_user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="The current password is required",
+            detail="The current password is incorrect.",
         )
 
     # Track password change
@@ -195,6 +202,13 @@ def verify_email_change(
             detail="Invalid or expired token. Please request a new one by logging in and changing your email address.",
         )
 
+    # Check if demo user
+    if user.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Test users cannot change their password or email address.",
+        )
+
     # Check if token is expired
     if check_token_expiration(user.email_change_token_created_at):
         raise HTTPException(
@@ -213,13 +227,14 @@ def verify_email_change(
         )
 
     # Update email and clear pending fields
+    old_email = user.email
     user.email = user.pending_email
     user.pending_email = None
     user.email_change_token = None
     user.email_change_token_created_at = None
     user.token_version += 1
     db.commit()
-    email_service.send_email_change_notification(user.email)
+    email_service.send_email_change_notification(user.email, old_email)
 
     return {"message": "Email address changed successfully. You can now log in with your new email."}
 
