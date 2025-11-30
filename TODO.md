@@ -26,6 +26,7 @@
 * [ ] Display critical failures
 * [ ] Add AI rating for the jobs
 * [ ] Add the ability to filter out jobs (extract the job title when extracting the job ids)
+* [ ] Add NHS job alert support
 
 ### Select Widgets Improvements
 * [ ] Sort options alphabetically

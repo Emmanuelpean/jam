@@ -93,14 +93,19 @@ class TestSaveJobBaseInfoToDb:
             assert test_job_alert_emails[0] in job_record.emails
 
     def test_save_existing_jobs_returns_existing(
-        self, test_job_scraper, test_job_alert_emails, session, test_users
+        self, test_job_scraper, test_job_alert_emails, session, test_users, test_service_log
     ) -> None:
         """Test that existing jobs are returned without creating duplicates"""
 
         # Create existing jobs
         existing_job_id = "existing_job_123"
         # noinspection PyArgumentList
-        existing_job = ScrapedJob(external_job_id=existing_job_id, owner_id=test_users[0].id, platform="linkedin")
+        existing_job = ScrapedJob(
+            external_job_id=existing_job_id,
+            owner_id=test_users[0].id,
+            platform="linkedin",
+            service_log_id=test_service_log.id,
+        )
         session.add(existing_job)
         session.commit()
         session.refresh(existing_job)
@@ -143,7 +148,7 @@ class TestSaveJobBaseInfoToDb:
 class TestUpdateScrapedJobData:
     """Test class for JobScraper.update_scraped_job_data method"""
 
-    def test_save_job_data_single_job_and_data(self, test_job_scraper, session, test_users) -> None:
+    def test_save_job_data_single_job_and_data(self, test_job_scraper, session, test_users, test_service_log) -> None:
         """Test saving job data to a single job record"""
 
         # noinspection PyArgumentList
@@ -151,6 +156,7 @@ class TestUpdateScrapedJobData:
             external_job_id="test_job_123",
             owner_id=test_users[0].id,
             platform="indeed",
+            service_log_id=test_service_log.id,
         )
         session.add(sample_scraped_job)
         session.commit()
@@ -322,7 +328,7 @@ class TestProcessEmails:
             result = test_job_scraper.process_emails(timedelta_days=1, service_log_entry=test_service_log)
 
             # Verify service log updates
-            assert test_service_log.users_processed_n == 3
+            assert test_service_log.users_processed_n == 4
             assert test_service_log.emails_found_n == 1
             assert test_service_log.emails_saved_n == 1
 
@@ -378,7 +384,7 @@ class TestProcessEmails:
 
             # Verify service log updates
             n_job = len(resources.TEST_EMAILS[email_id + "_" + str(test_users[0].email)]["job_ids"])
-            assert test_service_log.users_processed_n == 3
+            assert test_service_log.users_processed_n == 4
             assert test_service_log.emails_found_n == 2
             assert test_service_log.emails_saved_n == 2
             assert test_service_log.linkedin_job_n == n_job * 2
@@ -426,7 +432,7 @@ class TestScrapeJobs:
     """Test cases for the scrape_jobs method"""
 
     @staticmethod
-    def _scraped_jobs(session, email_record, job_ids) -> list[ScrapedJob]:
+    def _scraped_jobs(session, email_record, job_ids, test_service_log) -> list[ScrapedJob]:
         """Fixture to create Indeed scraped jobs for multiple users"""
 
         scraped_jobs = []
@@ -436,6 +442,7 @@ class TestScrapeJobs:
                 external_job_id=job_id,
                 owner_id=email_record.owner_id,
                 platform=email_record.platform,
+                service_log_id=test_service_log.id,
             )
             scraped_job.emails.append(email_record)
             session.add(scraped_job)
@@ -444,32 +451,34 @@ class TestScrapeJobs:
         return scraped_jobs
 
     @pytest.fixture
-    def indeed_scraped_jobs(self, test_users, session, email_record_factory) -> list[ScrapedJob]:
+    def indeed_scraped_jobs(self, test_users, session, email_record_factory, test_service_log) -> list[ScrapedJob]:
         """Fixture to create Indeed scraped jobs for multiple users"""
 
         email_record, job_ids = email_record_factory("3", user_index=0)
-        return self._scraped_jobs(session, email_record, job_ids)
+        return self._scraped_jobs(session, email_record, job_ids, test_service_log)
 
     @pytest.fixture
-    def indeed_scraped_jobs_user2(self, test_users, session, email_record_factory) -> list[ScrapedJob]:
+    def indeed_scraped_jobs_user2(
+        self, test_users, session, email_record_factory, test_service_log
+    ) -> list[ScrapedJob]:
         """Fixture to create Indeed scraped jobs for multiple users"""
 
         email_record, job_ids = email_record_factory("3", user_index=3)
-        return self._scraped_jobs(session, email_record, job_ids)
+        return self._scraped_jobs(session, email_record, job_ids, test_service_log)
 
     @pytest.fixture
-    def linkedin_scraped_jobs(self, test_users, session, email_record_factory) -> list[ScrapedJob]:
+    def linkedin_scraped_jobs(self, test_users, session, email_record_factory, test_service_log) -> list[ScrapedJob]:
         """Fixture to create Indeed scraped jobs for multiple users"""
 
         email_record, job_ids = email_record_factory("1", user_index=0)
-        return self._scraped_jobs(session, email_record, job_ids)
+        return self._scraped_jobs(session, email_record, job_ids, test_service_log)
 
     @pytest.fixture
-    def veganjobs_scraped_jobs(self, test_users, session, email_record_factory) -> list[ScrapedJob]:
+    def veganjobs_scraped_jobs(self, test_users, session, email_record_factory, test_service_log) -> list[ScrapedJob]:
         """Fixture to create VeganJobs scraped jobs for multiple users"""
 
         email_record, job_ids = email_record_factory("5", user_index=0)
-        return self._scraped_jobs(session, email_record, job_ids)
+        return self._scraped_jobs(session, email_record, job_ids, test_service_log)
 
     def test_indeed_success(self, indeed_scraped_jobs, test_service_log, test_job_scraper, session) -> None:
         """Test successful processing of Indeed email jobs"""

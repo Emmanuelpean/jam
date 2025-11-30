@@ -156,6 +156,7 @@ class JobEmailScraper(EmailService):
                     platform=email_record.platform,
                     owner_id=email_record.owner_id,
                     url=base_url + job_id,
+                    service_log_id=email_record.service_log_id,
                 )
                 new_job.emails.append(email_record)
                 self.db.add(new_job)
@@ -291,7 +292,11 @@ class JobEmailScraper(EmailService):
         :param service_log_entry: EIS Service log entry"""
 
         # Get the list of active users with TOAST active
-        users = self.db.query(models.User).filter(models.User.toast_active, models.User.is_active).all()
+        users = (
+            self.db.query(models.User)
+            .filter(models.User.toast_active, models.User.is_active, models.User.is_verified)
+            .all()
+        )
         self.logger.info(f"Found {len(users)} users to process.")
         service_log_entry.users_found_n = len(users)
         jobs_data = {platform: {} for platform in PLATFORMS}

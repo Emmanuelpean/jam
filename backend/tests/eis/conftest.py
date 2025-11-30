@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 
 from app.eis import email_parser
-from app.eis import schemas, models
+from app.eis import models
 from app.eis.email_scraper import JobEmailScraper
 from app.models import Setting
 from tests.eis import resources
@@ -91,6 +91,7 @@ def mock_veganjobs_job_scrapers() -> Generator[type[MockVeganJobsBrightdataJobSc
 def test_service_log(session) -> models.EisServiceLog:
     """Create a test EisServiceLog record"""
 
+    # noinspection PyArgumentList
     service_log = models.EisServiceLog(run_datetime=dt.datetime.now())
     session.add(service_log)
     session.commit()
@@ -101,6 +102,7 @@ def test_service_log(session) -> models.EisServiceLog:
 def test_job_scraper(session) -> JobEmailScraper:
     """Create a JobScraper instance for testing with mocked file dependencies."""
 
+    # noinspection PyArgumentList
     entry = Setting(name="indeed_scraper", value="brightapi")
     session.add(entry)
     session.commit()
@@ -111,6 +113,7 @@ def test_job_scraper(session) -> JobEmailScraper:
 def job_scraper_with_brightapi_skip(session) -> JobEmailScraper:
     """Create a JobScraper instance with BrightAPI skip enabled for indeed jobs."""
 
+    # noinspection PyArgumentList
     entry = Setting(name="indeed_scraper", value="email")
     session.add(entry)
     session.commit()
@@ -118,13 +121,13 @@ def job_scraper_with_brightapi_skip(session) -> JobEmailScraper:
 
 
 @pytest.fixture
-def email_data_factory(test_users, test_service_log):
-    """Factory fixture for creating email data from resources"""
+def email_record_factory(session, test_users, test_service_log) -> Any:
+    """Factory fixture for creating email records in the database."""
 
-    def _create(email_id: str, user_index: int = 0) -> tuple[schemas.JobAlertEmailCreate, list[str]]:
+    def _create(email_id: str, user_index: int = 0) -> tuple[models.JobAlertEmail, list[str]]:
         email_resource = resources.TEST_EMAILS.get(email_id + "_" + test_users[user_index].email)
 
-        email_data = schemas.JobAlertEmailCreate(
+        email_data = dict(
             external_email_id=str(email_resource["id"]),
             subject=email_resource["subject"],
             sender=email_resource["from"],
@@ -134,28 +137,18 @@ def email_data_factory(test_users, test_service_log):
             service_log_id=test_service_log.id,
         )
 
-        return email_data, email_resource["job_ids"]
-
-    return _create
-
-
-@pytest.fixture
-def email_record_factory(session, test_users, email_data_factory):
-    """Factory fixture for creating email records in the database."""
-
-    def _create(email_id: str, user_index: int = 0) -> tuple[models.JobAlertEmail, list[str]]:
-        email_data, job_ids = email_data_factory(email_id, user_index)
-        email_record = models.JobAlertEmail(**email_data.model_dump(), owner_id=test_users[user_index].id)
+        # noinspection PyArgumentList
+        email_record = models.JobAlertEmail(**email_data, owner_id=test_users[user_index].id)
         session.add(email_record)
         session.commit()
 
-        return email_record, job_ids
+        return email_record, email_resource["job_ids"]
 
     return _create
 
 
 @pytest.fixture(autouse=True)
-def mock_get_email_data():
+def mock_get_email_data() -> Generator[mock.MagicMock, Any, None]:
     """Auto-applied mock for get_email_data across all tests in module"""
     with mock.patch(
         "app.emails.email_service.EmailService.get_email_data", side_effect=lambda eid: resources.NEW_TEST_EMAILS[eid]

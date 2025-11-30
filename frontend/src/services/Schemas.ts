@@ -256,7 +256,7 @@ export interface ScrapedJobData extends OwnedOut {
 	location_country: string | null;
 	attendance_type: string | null;
 	location: string | null;
-	emails: any;
+	emails: number[];
 }
 
 export interface ServiceLog {
@@ -277,4 +277,6 @@ export interface ServiceLog {
 	linkedin_job_n: number;
 	indeed_job_n: number;
 	veganjobs_job_n: number;
+	emails: number[];
+	scraped_jobs: number[];
 }
