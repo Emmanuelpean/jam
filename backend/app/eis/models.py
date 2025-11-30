@@ -157,6 +157,7 @@ class EisServiceLog(CommonBase, Base):
     - `linkedin_job_n` (int, optional): Number of LinkedIn jobs extracted.
     - `indeed_job_n` (int, optional): Number of Indeed jobs extracted.
     - `veganjobs_job_n` (int, optional): Number of VeganJobs jobs extracted.
+    - `nhs_job_n` (int, optional): Number of NHS jobs extracted.
 
     # Users
     - `users_found_n` (int, optional): Number of users found.
@@ -184,6 +185,7 @@ class EisServiceLog(CommonBase, Base):
     linkedin_job_n = Column(Integer, default=0, nullable=False)
     indeed_job_n = Column(Integer, default=0, nullable=False)
     veganjobs_job_n = Column(Integer, default=0, nullable=False)
+    nhs_job_n = Column(Integer, default=0, nullable=False)
 
     # Users
     users_found_n = Column(Integer, default=0, nullable=False)

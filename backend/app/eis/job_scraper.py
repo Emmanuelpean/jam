@@ -438,12 +438,12 @@ class VeganJobsJobScraper:
             raw=soup.text,
         )
 
-    def scrape_job(self) -> JobResult:
+    def scrape_job(self) -> list[JobResult]:
         """Scrape a single job listing from the given URL."""
 
         for i in range(10):
             try:
-                return self.scrape_job_listing()
+                return [self.scrape_job_listing()]
             except:
                 pass
         raise AssertionError()
@@ -463,7 +463,7 @@ class NhsJobScraper:
 
         self.url = self.base_url + job_id
 
-    def scrape_job(self) -> JobResult:
+    def scrape_job(self) -> list[JobResult]:
         """Scrape job data from a specific NHS job listing URL"""
 
         client = ApifyClient(settings.apify_api_key)
@@ -508,22 +508,24 @@ class NhsJobScraper:
         description = [job_data.get("jobSummaryText"), job_data.get("mainDutiesText"), job_data.get("aboutUsText")]
         description = "\n\n".join([d for d in description if d])
 
-        return JobResult(
-            company=job_data.get("employer") or None,
-            location=" ".join(job_data.get("employerAddress", "")) or None,
-            job=JobInfo(
-                title=job_data.get("title") or None,
-                description=description or None,
-                url=self.url,
-                deadline=deadline,
-                salary=Salary(
-                    min_amount=min_salary,
-                    max_amount=max_salary,
-                    currency=currency,
+        return [
+            JobResult(
+                company=job_data.get("employer") or None,
+                location=" ".join(job_data.get("employerAddress", "")) or None,
+                job=JobInfo(
+                    title=job_data.get("title") or None,
+                    description=description or None,
+                    url=self.url,
+                    deadline=deadline,
+                    salary=Salary(
+                        min_amount=min_salary,
+                        max_amount=max_salary,
+                        currency=currency,
+                    ),
                 ),
-            ),
-            raw=job_data,
-        )
+                raw=job_data,
+            )
+        ]
 
 
 # Usage example:

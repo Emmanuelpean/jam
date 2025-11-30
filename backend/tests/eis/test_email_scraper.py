@@ -243,6 +243,16 @@ class TestExtractEmailData:
         scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == email_entry.owner_id).all()
         assert len(scraped_jobs) == len(expected_job_ids)
 
+    def test_nhs_email_jobs_success(self, test_job_scraper, session, test_service_log, email_record_factory) -> None:
+        """Test successful processing of VeganJobs email jobs."""
+
+        email_entry, expected_job_ids = email_record_factory("6", user_index=0)
+        assert email_entry.platform == "nhs"
+        test_job_scraper.extract_email_data(email_record=email_entry, service_log_entry=test_service_log)
+
+        scraped_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == email_entry.owner_id).all()
+        assert len(scraped_jobs) == len(expected_job_ids)
+
     def test_indeed_email_jobs_success_no_brightapi(
         self, job_scraper_with_brightapi_skip, session, test_service_log, email_record_factory
     ) -> None:
@@ -351,7 +361,7 @@ class TestProcessEmails:
                 assert len(user_jobs) == 0
 
             # Verify empty result (no job data for LinkedIn without scraping)
-            assert result == {"indeed": {}, "linkedin": {}, "veganjobs": {}}
+            assert result == {"indeed": {}, "linkedin": {}, "veganjobs": {}, "nhs": {}}
 
     def test_multiple_users_same_jobs(
         self,
@@ -464,6 +474,7 @@ class TestScrapeJobs:
         """Fixture to create Indeed scraped jobs for multiple users"""
 
         email_record, job_ids = email_record_factory("3", user_index=3)
+        assert email_record.platform == "indeed"
         return self._scraped_jobs(session, email_record, job_ids, test_service_log)
 
     @pytest.fixture
@@ -471,6 +482,7 @@ class TestScrapeJobs:
         """Fixture to create Indeed scraped jobs for multiple users"""
 
         email_record, job_ids = email_record_factory("1", user_index=0)
+        assert email_record.platform == "linkedin"
         return self._scraped_jobs(session, email_record, job_ids, test_service_log)
 
     @pytest.fixture
@@ -478,6 +490,15 @@ class TestScrapeJobs:
         """Fixture to create VeganJobs scraped jobs for multiple users"""
 
         email_record, job_ids = email_record_factory("5", user_index=0)
+        assert email_record.platform == "veganjobs"
+        return self._scraped_jobs(session, email_record, job_ids, test_service_log)
+
+    @pytest.fixture
+    def nhs_scraped_jobs(self, test_users, session, email_record_factory, test_service_log) -> list[ScrapedJob]:
+        """Fixture to create VeganJobs scraped jobs for multiple users"""
+
+        email_record, job_ids = email_record_factory("6", user_index=0)
+        assert email_record.platform == "nhs"
         return self._scraped_jobs(session, email_record, job_ids, test_service_log)
 
     def test_indeed_success(self, indeed_scraped_jobs, test_service_log, test_job_scraper, session) -> None:
@@ -512,7 +533,7 @@ class TestScrapeJobs:
             assert not job.is_failed
 
     def test_linkedin_success(self, linkedin_scraped_jobs, test_service_log, test_job_scraper, session) -> None:
-        """Test successful processing of Indeed email jobs"""
+        """Test successful processing of LinkedIn email jobs"""
 
         test_job_scraper.scrape_jobs(test_service_log, {})
 
@@ -523,7 +544,18 @@ class TestScrapeJobs:
             assert not job.is_failed
 
     def test_veganjobs_success(self, veganjobs_scraped_jobs, test_service_log, test_job_scraper, session) -> None:
-        """Test successful processing of Indeed email jobs"""
+        """Test successful processing of VeganJobs email jobs"""
+
+        test_job_scraper.scrape_jobs(test_service_log, {})
+
+        # Verify all jobs are now scraped
+        jobs_after = session.query(ScrapedJob).filter().all()
+        for job in jobs_after:
+            assert job.is_scraped
+            assert not job.is_failed
+
+    def test_nhs_success(self, nhs_scraped_jobs, test_service_log, test_job_scraper, session) -> None:
+        """Test successful processing of NHS email jobs"""
 
         test_job_scraper.scrape_jobs(test_service_log, {})
 

@@ -125,6 +125,7 @@ class EisServiceLog(BaseModel):
     linkedin_job_n: int = 0
     indeed_job_n: int = 0
     veganjobs_job_n: int = 0
+    nhs_job_n: int = 0
 
     # Users
     users_found_n: int = 0

@@ -294,7 +294,7 @@ def test_parse_indeed_job_section(job_section, expected) -> None:
 # ---------------------------------------------------- MOCK SCRAPERS ---------------------------------------------------
 
 
-class MockLinkedinBrightdataJobScraper(BrightdataJobScraper):
+class MockLinkedinBrightdataJobScraper(object):
     """Mock LinkedIn Scraper that returns fake data"""
 
     base_url = "https://www.linkedin.com/jobs/view/"
@@ -312,7 +312,7 @@ class MockLinkedinBrightdataJobScraper(BrightdataJobScraper):
         self.job_ids = [job_ids] if isinstance(job_ids, str) else job_ids
         self.simulate_exception = simulate_exception
 
-    def scrape_job(self) -> list[dict]:
+    def scrape_job(self) -> list[JobResult]:
         """Return mock LinkedIn job data"""
 
         mock_jobs = []
@@ -350,7 +350,7 @@ class MockLinkedinBrightdataJobScraper(BrightdataJobScraper):
         return mock_jobs
 
 
-class MockIndeedBrightdataJobScraper(BrightdataJobScraper):
+class MockIndeedBrightdataJobScraper(object):
     """Mock Indeed Scraper that returns fake data"""
 
     base_url = "https://www.indeed.com/viewjob?jk="
@@ -368,7 +368,7 @@ class MockIndeedBrightdataJobScraper(BrightdataJobScraper):
         self.job_ids = [job_ids] if isinstance(job_ids, str) else job_ids
         self.simulate_exception = simulate_exception
 
-    def scrape_job(self) -> list[dict]:
+    def scrape_job(self) -> list[JobResult]:
         """Return mock Indeed job data"""
 
         mock_jobs = []
@@ -402,29 +402,27 @@ class MockIndeedBrightdataJobScraper(BrightdataJobScraper):
         return mock_jobs
 
 
-class MockVeganJobsBrightdataJobScraper(BrightdataJobScraper):
+class MockVeganJobsBrightdataJobScraper(object):
     """Mock VeganJobs Scraper that returns fake data"""
 
     base_url = "https://www.veganjobs.com/job/"
     name = "veganjobs"
 
     # noinspection PyMissingConstructor
-    def __init__(self, job_ids: str | list[str], simulate_exception: bool = False) -> None:
+    def __init__(self, job_id: str, simulate_exception: bool = False) -> None:
         """Initialise mock scraper without API credentials"""
 
         # Store job IDs without calling parent constructor to avoid API setup
-        self.job_ids = [job_ids] if isinstance(job_ids, str) else job_ids
+        self.job_id = job_id
         self.simulate_exception = simulate_exception
 
-    def scrape_job(self) -> list[dict]:
-        """Return mock Indeed job data"""
+    def scrape_job(self) -> list[JobResult]:
+        """Return mock VeganJobs job data"""
 
-        mock_jobs = []
-
-        for i, job_id in enumerate(self.job_ids):
-            mock_job = JobResult.model_validate(
+        return [
+            JobResult.model_validate(
                 {
-                    "company": f"Sharpen Strategy + {i}",
+                    "company": "Sharpen Strategy",
                     "company_id": None,
                     "location": "Remote (USA)",
                     "job": {
@@ -436,6 +434,39 @@ class MockVeganJobsBrightdataJobScraper(BrightdataJobScraper):
                     "raw": "raw data",
                 }
             )
-            mock_jobs.append(mock_job)
+        ]
 
-        return mock_jobs
+
+class MockNhsBrightdataJobScraper(object):
+    """Mock NHS Scraper that returns fake data"""
+
+    base_url = "https://beta.jobs.nhs.uk/candidate/jobadvert/"
+    name = "nhs"
+
+    # noinspection PyMissingConstructor
+    def __init__(self, job_id: str, simulate_exception: bool = False) -> None:
+        """Initialise mock scraper without API credentials"""
+
+        # Store job IDs without calling parent constructor to avoid API setup
+        self.job_id = job_id
+        self.simulate_exception = simulate_exception
+
+    def scrape_job(self) -> list[JobResult]:
+        """Return mock NHS job data"""
+
+        return [
+            JobResult.model_validate(
+                {
+                    "company": "Sharpen Strategy",
+                    "company_id": None,
+                    "location": "Remote (USA)",
+                    "job": {
+                        "title": "Operations Coordinator",
+                        "description": "The deadline to apply for this position is September 30, 2025.\nSharpen Strategy is hiring an Operations Coordinator to help keep our operations and programs running smoothly.",
+                        "url": "https://veganjobs.com/job/sharpen-strategy-remote-usa-operations-coordinator",
+                        "salary": {"min_amount": None, "max_amount": None},
+                    },
+                    "raw": "raw data",
+                }
+            )
+        ]
