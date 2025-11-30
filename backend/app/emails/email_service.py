@@ -82,7 +82,7 @@ class EmailService(object):
                 server.starttls()
                 server.login(settings.email_username, settings.email_password)
                 server.sendmail(settings.email_username, recipient, msg.as_string())
-            self.logger.info(f"{message_type} email sent to %s with subject: %s", recipient, subject)
+                self.logger.info(f"{message_type} email sent to %s with subject: %s", recipient, subject)
         except Exception as e:
             self.logger.error(f"Failed to send {message_type} email to %s: %s", recipient, str(e))
             raise e
