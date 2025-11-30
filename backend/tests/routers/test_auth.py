@@ -464,7 +464,8 @@ class TestRequestPasswordReset:
 
 class TestResetPassword:
 
-    def test_reset_password_success(self, client, test_regular_user, session) -> None:
+    @patch("app.routers.auth.email_service.send_password_changed_notification")
+    def test_reset_password_success(self, mock_email, client, test_regular_user, session) -> None:
         """Test successful password reset with valid token."""
 
         token = "reset_token_123"
@@ -493,7 +494,7 @@ class TestResetPassword:
         assert updated_user.password != old_password_hash
         assert updated_user.password_reset_token is None
         assert updated_user.password_reset_token_created_at is None
-
+        assert mock_email.call_count == 1
 
     def test_reset_password_demo_fail(self, client, test_demo_user, session) -> None:
         """Test successful password reset with valid token."""
