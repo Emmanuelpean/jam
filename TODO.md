@@ -26,7 +26,8 @@
 * [ ] Display critical failures
 * [ ] Add AI rating for the jobs
 * [ ] Add the ability to filter out jobs (extract the job title when extracting the job ids)
-* [ ] Add NHS job alert support
+* [X] Add NHS job alert support
+* [ ] Fix the issue where admin cannot query non owned data
 
 ### Select Widgets Improvements
 * [ ] Sort options alphabetically
