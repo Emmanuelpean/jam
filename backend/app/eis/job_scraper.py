@@ -4,16 +4,16 @@ This module provides functionality to scrape LinkedIn job postings using the Bri
 It offers a complete workflow to trigger data collection, monitor processing status, and
 retrieve scraped job information."""
 
+import datetime as dt
 import re
 import time
-import datetime as dt
 
 import cloudscraper
 import requests
+from apify_client import ApifyClient
 from bs4 import BeautifulSoup
 from pydantic import BaseModel, Field
 from tqdm import tqdm
-from apify_client import ApifyClient
 
 from app.config import settings
 
@@ -373,17 +373,19 @@ class VeganJobsJobScraper:
 
     base_url = "https://veganjobs.com/job/"
 
-    def __init__(self, url: str) -> None:
+    def __init__(self, job_ids: str | list[str]) -> None:
         """Initialize the scraper with headers and delay settings.
-        :param url: The job listing URL"""
+        :param job_ids: The job ID(s)"""
 
         self.scraper = cloudscraper.create_scraper()
-        self.url = self.base_url + url
+        self.job_ids = [job_ids] if isinstance(job_ids, str) else job_ids
+        self.job_urls = [f"{self.base_url}{job_id}" for job_id in self.job_ids]
 
-    def scrape_job_listing(self) -> JobResult:
-        """Scrape job data from a specific veganjobs.com job listing URL"""
+    def scrape_job_listing(self, job_url: str) -> JobResult:
+        """Scrape job data from a specific veganjobs.com job listing URL
+        :param job_url: The URL of the job listing to scrape"""
 
-        response = self.scraper.get(self.url)
+        response = self.scraper.get(job_url)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.content, "html.parser")
@@ -428,7 +430,6 @@ class VeganJobsJobScraper:
             job=JobInfo(
                 title=title,
                 description=description,
-                url=self.url,
                 salary=Salary(
                     min_amount=None,
                     max_amount=None,
@@ -441,12 +442,17 @@ class VeganJobsJobScraper:
     def scrape_job(self) -> list[JobResult]:
         """Scrape a single job listing from the given URL."""
 
-        for i in range(10):
-            try:
-                return [self.scrape_job_listing()]
-            except:
-                pass
-        raise AssertionError()
+        job_data = []
+        for job_url in self.job_urls:
+            for i in range(10):
+                try:
+                    job_data.append(self.scrape_job_listing(job_url))
+                    break
+                except:
+                    pass
+            else:
+                raise AssertionError("Failed to scrape job listing after multiple attempts.")
+        return job_data
 
 
 # ----------------------------------------------------- NHS SCRAPER ----------------------------------------------------
@@ -457,11 +463,12 @@ class NhsJobScraper:
 
     base_url = "https://beta.jobs.nhs.uk/candidate/jobadvert/"
 
-    def __init__(self, job_id: str) -> None:
+    def __init__(self, job_ids: str | list[str]) -> None:
         """Initialize the scraper with headers and delay settings.
-        :param job_id: The job listing ID"""
+        :param job_ids: The job listing ID(s)"""
 
-        self.url = self.base_url + job_id
+        self.job_ids = [job_ids] if isinstance(job_ids, str) else job_ids
+        self.job_urls = [f"{self.base_url}{job_id}" for job_id in self.job_ids]
 
     def scrape_job(self) -> list[JobResult]:
         """Scrape job data from a specific NHS job listing URL"""
@@ -473,74 +480,76 @@ class NhsJobScraper:
                 "useApifyProxy": True,
                 "apifyProxyGroups": ["RESIDENTIAL"],
             },
-            "startUrls": [self.url],
+            "startUrls": self.job_urls,
         }
 
         actor_id = "memo23/nhs-scraper"
 
         run = client.actor(actor_id).call(run_input=run_input)
-
-        # Get results (dataset items)
-        job_data = client.dataset(run["defaultDatasetId"]).list_items().items[0]
+        job_data = client.dataset(run["defaultDatasetId"]).list_items().items
         if not job_data:
             raise Exception("No job data found.")
 
-        # Deadline
-        if job_data.get("closingDate"):
-            deadline = dt.datetime.strptime(job_data.get("closingDate"), "%d %B %Y")
-        else:
-            deadline = None
+        processed_job_data = []
+        for job in job_data:
 
-        # Salary
-        pattern = r"(?P<currency>£)\s*(?P<min>[\d,]+)\s*to\s*(?P=currency)\s*(?P<max>[\d,]+).*?(?P<frequency>a year|per annum)"
-        match = re.search(pattern, job_data.get("salary"), re.IGNORECASE)
+            # Deadline
+            if job.get("closingDate"):
+                deadline = dt.datetime.strptime(job.get("closingDate"), "%d %B %Y")
+            else:
+                deadline = None
 
-        min_salary = max_salary = None
-        currency = None
-        if match:
-            frequency = match.group("frequency").lower()
-            if "year" in frequency or "annum" in frequency:
-                currency = match.group("currency")
-                min_salary = int(match.group("min").replace(",", ""))
-                max_salary = int(match.group("max").replace(",", ""))
+            # Salary
+            pattern = r"(?P<currency>£)\s*(?P<min>[\d,]+)\s*to\s*(?P=currency)\s*(?P<max>[\d,]+).*?(?P<frequency>a year|per annum)"
+            match = re.search(pattern, job.get("salary"), re.IGNORECASE)
 
-        # Description
-        description = [job_data.get("jobSummaryText"), job_data.get("mainDutiesText"), job_data.get("aboutUsText")]
-        description = "\n\n".join([d for d in description if d])
+            min_salary = max_salary = None
+            currency = None
+            if match:
+                frequency = match.group("frequency").lower()
+                if "year" in frequency or "annum" in frequency:
+                    currency = match.group("currency")
+                    min_salary = int(match.group("min").replace(",", ""))
+                    max_salary = int(match.group("max").replace(",", ""))
 
-        return [
-            JobResult(
-                company=job_data.get("employer") or None,
-                location=" ".join(job_data.get("employerAddress", "")) or None,
-                job=JobInfo(
-                    title=job_data.get("title") or None,
-                    description=description or None,
-                    url=self.url,
-                    deadline=deadline,
-                    salary=Salary(
-                        min_amount=min_salary,
-                        max_amount=max_salary,
-                        currency=currency,
+            # Description
+            description = [job.get("jobSummaryText"), job.get("mainDutiesText"), job.get("aboutUsText")]
+            description = "\n\n".join([d for d in description if d])
+
+            processed_job_data.append(
+                JobResult(
+                    company=job.get("employer") or None,
+                    location=" ".join(job.get("employerAddress", "")) or None,
+                    job=JobInfo(
+                        title=job.get("title") or None,
+                        description=description or None,
+                        deadline=deadline,
+                        salary=Salary(
+                            min_amount=min_salary,
+                            max_amount=max_salary,
+                            currency=currency,
+                        ),
                     ),
-                ),
-                raw=job_data,
+                    raw=job,
+                )
             )
-        ]
+
+        return processed_job_data
 
 
 # Usage example:
 if __name__ == "__main__":
     # Note: These test job ids may not be valid any more.
 
-    # LinkedIn job scraper example
-    scraper = LinkedinBrightdataJobScraper(["4313361652"])
-    job_data1 = scraper.scrape_job()
-    print(job_data1[0])
-
-    # Indeed job scraper example
-    scraper = IndeedBrightdataJobScraper("a6c3277c505f0629")
-    job_data1 = scraper.scrape_job()
-    print(job_data1)
+    # # LinkedIn job scraper example
+    # scraper = LinkedinBrightdataJobScraper(["4313361652"])
+    # job_data1 = scraper.scrape_job()
+    # print(job_data1[0])
+    #
+    # # Indeed job scraper example
+    # scraper = IndeedBrightdataJobScraper("a6c3277c505f0629")
+    # job_data1 = scraper.scrape_job()
+    # print(job_data1)
 
     # VeganJobs scraper example
     scraper = VeganJobsJobScraper("sharpen-strategy-remote-usa-operations-coordinator")
