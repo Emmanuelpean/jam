@@ -221,6 +221,7 @@ export interface UserData extends OwnedOut {
 	email: string;
 	is_admin: boolean;
 	is_active: boolean;
+	is_demo: boolean;
 	toast_active: boolean;
 	theme: string;
 	last_login: Date | string | null;

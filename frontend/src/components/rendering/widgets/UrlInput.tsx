@@ -28,6 +28,7 @@ export const renderUrlInputWidget = ({ field, value, handleChange, error }: Widg
 				step={field.step}
 				autoComplete={field.autoComplete}
 				className="url-input-field"
+				disabled={field.isDisabled}
 			/>
 			<button
 				type="button"

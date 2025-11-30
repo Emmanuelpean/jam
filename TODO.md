@@ -14,10 +14,10 @@
 * [X] Ensure that the parsed country matches the list of available countries
 * [X] Add currency parsing
 * [X] Add admin control and monitoring page
-* [ ] Add graphs showing the results of previous service logs
+* [X] Add graphs showing the results of previous service logs
 * [ ] Add frontend tests
 * [ ] Deleting/deactivating is not working
-* [ ] If no currency is found, use the default currencty
+* [ ] If no currency is found, use the default currency
 * [X] Load the currencies and countries from the backend instead of the frontend
 * [X] Add search box
 * [X] If the company/location match is not good enough, do not suggest it
@@ -56,3 +56,7 @@
 ### Tables
 * [ ] Move the scrollbar inside the tables so that the header is always visible
 * [ ] Add the ability to filter by columns and hide rejected jobs
+
+### Users
+* [ ] Add test user setting and prevent update of email and password
+* [ ] Make sure the user is reloaded properly when the settings are changed

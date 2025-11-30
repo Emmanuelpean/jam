@@ -33,6 +33,7 @@ export interface ModalFormField {
 	tabIndex?: number;
 	displayCondition?: (item: any) => boolean;
 	previewConfig?: SelectWidgetPreviewConfig | null;
+	isDisabled?: boolean;
 }
 
 interface FormFieldOverride extends Partial<ModalFormField> {}

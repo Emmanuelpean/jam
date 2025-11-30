@@ -38,6 +38,13 @@ from tests.utils.create_data import (
     create_settings,
 )
 from tests.utils.seed_database import reset_database
+from tests.utils.table_data import (
+    DEMO_USER_INDEX,
+    ADMIN_USER_INDEX,
+    INACTIVE_USER_INDEX,
+    REGULAR_USER_INDEX,
+    UNVERIFIED_USER_INDEX,
+)
 
 # ---------------------------------------------------- TEST DATABASE ---------------------------------------------------
 
@@ -124,13 +131,22 @@ def authorised_clients(client: TestClient, tokens: list[str]) -> list[TestClient
 @pytest.fixture
 def admin_client(authorised_clients) -> TestClient:
     """Fixture for an admin client."""
-    return authorised_clients[1]
+
+    return authorised_clients[ADMIN_USER_INDEX]
 
 
 @pytest.fixture
-def user_client(authorised_clients) -> TestClient:
+def regular_user_client(authorised_clients) -> TestClient:
     """Fixture for a non-admin client."""
-    return authorised_clients[0]
+
+    return authorised_clients[REGULAR_USER_INDEX]
+
+
+@pytest.fixture
+def demo_user_client(authorised_clients) -> TestClient:
+    """Fixture for a demo user client"""
+
+    return authorised_clients[DEMO_USER_INDEX]
 
 
 # -------------------------------------------------------- USERS -------------------------------------------------------
@@ -144,16 +160,39 @@ def test_users(session) -> list[models.User]:
 
 
 @pytest.fixture
-def test_unverified_user(session) -> models.User:
+def test_admin_user(test_users) -> models.User:
+    """Fixture for an admin user."""
+
+    return test_users[ADMIN_USER_INDEX]
+
+
+@pytest.fixture
+def test_demo_user(test_users) -> models.User:
+    """Fixture for a non-admin user."""
+
+    return test_users[DEMO_USER_INDEX]
+
+
+@pytest.fixture
+def test_regular_user(test_users) -> models.User:
+    """Fixture for a non-admin user."""
+
+    return test_users[REGULAR_USER_INDEX]
+
+
+@pytest.fixture
+def test_inactive_user(test_users) -> models.User:
+    """Fixture for an inactive user."""
+
+    return test_users[INACTIVE_USER_INDEX]
+
+
+
+@pytest.fixture
+def test_unverified_user(test_users) -> models.User:
     """Fixture to create an unverified user (i.e. is_verified=False)."""
 
-    user_data = dict(
-        email="unverified@test.com",
-        password="password",
-        is_verified=False,
-        is_active=True,
-    )
-    return create_users(session, [user_data])[0]
+    return test_users[UNVERIFIED_USER_INDEX]
 
 
 @pytest.fixture
@@ -193,24 +232,6 @@ def test_user_change_email_token_user(session) -> models.User:
     )
     user = create_users(session, [user_data])[0]
     user.plain_verification_token = plain_token
-    return user
-
-
-@pytest.fixture
-def admin_user(test_users) -> models.User:
-    """Fixture for an admin user."""
-
-    user = test_users[1]
-    assert user.is_admin
-    return user
-
-
-@pytest.fixture
-def test_user(test_users) -> models.User:
-    """Fixture for a non-admin user."""
-
-    user = test_users[0]
-    assert not user.is_admin
     return user
 
 
@@ -588,25 +609,25 @@ class CRUDTestBase:
         """Get the appropriate authorised client based on admin_only setting."""
 
         if self.admin_only:
-            return authorised_clients[1]  # admin_client
+            return authorised_clients[ADMIN_USER_INDEX]
         else:
-            return authorised_clients[0]  # regular user client
+            return authorised_clients[REGULAR_USER_INDEX]
 
     def _get_admin_unauthorised_client(self, authorised_clients) -> TestClient:
         """Get a client that should be denied access."""
 
         if self.admin_only:
-            return authorised_clients[0]  # non-admin client
+            return authorised_clients[REGULAR_USER_INDEX]
         else:
-            return authorised_clients[1]  # different user client
+            return authorised_clients[ADMIN_USER_INDEX]
 
     def _get_admin_authorised_user(self, test_users) -> models.User:
         """Get the appropriate authorised user based on admin_only setting."""
 
         if self.admin_only:
-            return test_users[1]  # admin_user
+            return test_users[ADMIN_USER_INDEX]
         else:
-            return test_users[0]  # regular user
+            return test_users[REGULAR_USER_INDEX]
 
     def get_user_data(self, test_users, data: list) -> list:
         """Get create_data filtered by owner_id based on admin_only setting."""
@@ -614,7 +635,6 @@ class CRUDTestBase:
         user = self._get_admin_authorised_user(test_users)
         filtered_data = []
         for d in data:
-
             # Determine if the user owns the data
             if isinstance(d, dict):
                 owner_condition = "owner_id" in d and d["owner_id"] == user.id

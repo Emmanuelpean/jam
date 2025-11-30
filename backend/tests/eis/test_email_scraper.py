@@ -10,6 +10,7 @@ from app.eis.email_scraper import PLATFORMS
 from app.eis.job_scraper import extract_indeed_jobs_from_email, JobResult
 from app.eis.models import JobAlertEmail, ScrapedJob
 from tests.eis import resources
+from tests.utils.table_data import TOAST_USER_1_INDEX
 
 
 # ---------------------------------------------------- EMAIL METHODS ---------------------------------------------------
@@ -338,7 +339,7 @@ class TestProcessEmails:
             result = test_job_scraper.process_emails(timedelta_days=1, service_log_entry=test_service_log)
 
             # Verify service log updates
-            assert test_service_log.users_processed_n == 4
+            assert test_service_log.users_processed_n == 3
             assert test_service_log.emails_found_n == 1
             assert test_service_log.emails_saved_n == 1
 
@@ -382,8 +383,8 @@ class TestProcessEmails:
 
                 if sender_email == test_users[0].email:
                     return [email_id + "_" + str(test_users[0].email)]
-                elif sender_email == test_users[3].email:
-                    return [email_id + "_" + str(test_users[3].email)]
+                elif sender_email == test_users[TOAST_USER_1_INDEX].email:
+                    return [email_id + "_" + str(test_users[TOAST_USER_1_INDEX].email)]
                 else:
                     return []
 
@@ -394,7 +395,7 @@ class TestProcessEmails:
 
             # Verify service log updates
             n_job = len(resources.TEST_EMAILS[email_id + "_" + str(test_users[0].email)]["job_ids"])
-            assert test_service_log.users_processed_n == 4
+            assert test_service_log.users_processed_n == 3
             assert test_service_log.emails_found_n == 2
             assert test_service_log.emails_saved_n == 2
             assert test_service_log.linkedin_job_n == n_job * 2
@@ -403,7 +404,9 @@ class TestProcessEmails:
 
             # Verify jobs were created for appropriate users
             user1_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[0].id).all()
-            user2_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[3].id).all()
+            user2_jobs = (
+                session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[TOAST_USER_1_INDEX].id).all()
+            )
             assert len(user1_jobs) == n_job
             assert len(user2_jobs) == n_job
 

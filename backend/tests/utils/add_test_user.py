@@ -42,6 +42,7 @@ def seed_database() -> None:
                 {
                     "email": "test_user@test.com",
                     "password": "test_password",
+                    "is_demo": True,
                 }
             ],
         )

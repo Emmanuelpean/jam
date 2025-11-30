@@ -179,12 +179,19 @@ class EmailService(object):
     def send_email_change_notification(
         self,
         recipient: str,
+        old_email: str,
     ) -> None:
         """Send an email to the specified recipient mentioning that the email was changed.
-        :param recipient: The recipient's email address."""
+        :param recipient: The recipient's email address.
+        :param old_email: The old email address before the change."""
 
         template = self.templates.env.get_template("email_changed.html")
-        html_content = template.render(change_date=self.current_datetime, support_email=settings.support_email)
+        html_content = template.render(
+            change_date=self.current_datetime,
+            support_email=settings.support_email,
+            old_email=old_email,
+            new_email=recipient,
+        )
 
         subject = "Your JAM Email Address Has Been Changed"
         self.send_email(
@@ -434,5 +441,3 @@ class EmailService(object):
 
 
 email_service = EmailService()
-emails = email_service.get_emails(subject_contains="NHS job alerts for Jessica")
-print(emails)

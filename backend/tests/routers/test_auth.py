@@ -70,12 +70,12 @@ class TestCheckTokenExpiration:
 
 class TestLogin:
 
-    def test_login_user(self, test_users, client) -> None:
+    def test_login_user(self, test_regular_user, client) -> None:
         """Test successful login for an existing user."""
 
         user_data = {
-            "username": test_users[0].email,
-            "password": test_users[0].plain_password,
+            "username": test_regular_user.email,
+            "password": test_regular_user.plain_password,
         }
         response = client.post("/login", data=user_data)
         login_response = schemas.Token(**response.json())
@@ -85,16 +85,16 @@ class TestLogin:
             algorithms=[settings.algorithm],
         )
         user_id = payload.get("user_id")
-        assert user_id == test_users[0].id
+        assert user_id == test_regular_user.id
         assert login_response.token_type == "bearer"
         assert response.status_code == 200
 
-    def test_login_user_different_case(self, test_users, client) -> None:
+    def test_login_user_different_case(self, test_regular_user, client) -> None:
         """Test successful login for an existing user."""
 
         user_data = {
-            "username": test_users[0].email.upper(),
-            "password": test_users[0].plain_password,
+            "username": test_regular_user.email.upper(),
+            "password": test_regular_user.plain_password,
         }
         response = client.post("/login", data=user_data)
         assert response.status_code == 200
@@ -105,15 +105,15 @@ class TestLogin:
             algorithms=[settings.algorithm],
         )
         user_id = payload.get("user_id")
-        assert user_id == test_users[0].id
+        assert user_id == test_regular_user.id
         assert login_response.token_type == "bearer"
 
-    def test_login_inactive_user(self, test_users, client) -> None:
+    def test_login_inactive_user(self, test_inactive_user, client) -> None:
         """Test login attempt for an inactive user."""
 
         user_data = {
-            "username": test_users[2].email,
-            "password": test_users[2].plain_password,
+            "username": test_inactive_user.email,
+            "password": test_inactive_user.plain_password,
         }
         response = client.post("/login", data=user_data)
         assert response.status_code == 401
@@ -168,14 +168,14 @@ class TestLogin:
 class TestSendVerificationWithRateLimit:
 
     @patch("app.routers.auth.email_service.send_verification_email")
-    def test_send_verification_email(self, mock_email, test_users, session) -> None:
+    def test_send_verification_email(self, mock_email, test_regular_user, session) -> None:
         """Test sending of verification email."""
 
-        result = auth.send_verification_with_rate_limit(test_users[0], session)
+        result = auth.send_verification_with_rate_limit(test_regular_user, session)
         assert result == {"success": True, "message": "Verification email sent successfully.", "error_code": None}
         assert mock_email.call_count == 1
-        assert test_users[0].verification_token is not None
-        assert test_users[0].verification_token_created_at is not None
+        assert test_regular_user.verification_token is not None
+        assert test_regular_user.verification_token_created_at is not None
 
     @patch("app.routers.auth.email_service.send_verification_email")
     def test_send_verification_email_rate_limited(self, mock_email, test_unverified_token_user, session) -> None:
@@ -206,47 +206,47 @@ class TestRegister:
         user = session.query(models.User).first()
         assert user.email == user_data["email"].lower()
 
-    def test_register_user_exist(self, client, test_users) -> None:
+    def test_register_user_exist(self, client, test_regular_user) -> None:
         """Test registration attempt with already verified email."""
 
         # Incorrect password
         user_data = {
-            "email": test_users[0].email,
-            "password": test_users[0].plain_password + "123",
+            "email": test_regular_user.email,
+            "password": test_regular_user.plain_password + "123",
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
 
         # Correct password
         user_data = {
-            "email": test_users[0].email,
-            "password": test_users[0].plain_password,
+            "email": test_regular_user.email,
+            "password": test_regular_user.plain_password,
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
 
-    def test_register_user_exist_different_case(self, client, test_users) -> None:
+    def test_register_user_exist_different_case(self, client, test_regular_user) -> None:
         """Test registration attempt with already verified email."""
 
         # Incorrect password
         user_data = {
-            "email": test_users[0].email,
-            "password": test_users[0].plain_password + "123",
+            "email": test_regular_user.email,
+            "password": test_regular_user.plain_password + "123",
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
 
         # Correct password
         user_data = {
-            "email": test_users[0].email,
-            "password": test_users[0].plain_password,
+            "email": test_regular_user.email,
+            "password": test_regular_user.plain_password,
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
 
     @patch("app.routers.auth.email_service.send_verification_email")
     def test_register_user_unverified_exists_resends_email(
-        self, mock_email, test_unverified_user, client, session, test_users
+        self, mock_email, test_unverified_user, client, session, test_regular_user
     ) -> None:
         """Test that registering with unverified email resends verification."""
 
@@ -262,7 +262,7 @@ class TestRegister:
 
     @patch("app.routers.auth.email_service.send_verification_email")
     def test_register_user_unverified_exists_rate_limit(
-        self, mock_email, test_unverified_token_user, client, session, test_users
+        self, mock_email, test_unverified_token_user, client, session, test_regular_user
     ) -> None:
         """Test rate limiting when re-registering with unverified email."""
 
@@ -303,7 +303,7 @@ class TestRegister:
 
 class TestEmailVerification:
 
-    def test_verify_email_success(self, client, test_unverified_token_user, session, test_users) -> None:
+    def test_verify_email_success(self, client, test_unverified_token_user, session) -> None:
         """Test successful email verification with valid token."""
 
         user_id = test_unverified_token_user.id
@@ -325,7 +325,7 @@ class TestEmailVerification:
         assert response.status_code == 403
         assert "invalid" in response.json()["detail"].lower()
 
-    def test_verify_email_expired_token(self, client, session, test_users) -> None:
+    def test_verify_email_expired_token(self, client, session) -> None:
         """Test email verification with expired token."""
 
         token = "expired_token_123"
@@ -357,21 +357,21 @@ class TestEmailVerification:
 class TestSendPasswordResetWithRateLimit:
 
     @patch("app.routers.auth.email_service.send_password_reset_email")
-    def test_send_verification_email(self, mock_email, test_users, session) -> None:
+    def test_send_verification_email(self, mock_email, test_regular_user, session) -> None:
         """Test sending of password reset email."""
 
-        result = auth.send_password_reset_with_rate_limit(test_users[0], session)
+        result = auth.send_password_reset_with_rate_limit(test_regular_user, session)
         assert result == {"success": True, "message": "Password reset email sent successfully", "error_code": None}
         assert mock_email.call_count == 1
-        assert test_users[0].password_reset_token is not None
-        assert test_users[0].password_reset_token_created_at is not None
+        assert test_regular_user.password_reset_token is not None
+        assert test_regular_user.password_reset_token_created_at is not None
 
     @patch("app.routers.auth.email_service.send_password_reset_email")
-    def test_send_verification_email_rate_limited(self, mock_email, test_users, session) -> None:
+    def test_send_verification_email_rate_limited(self, mock_email, test_regular_user, session) -> None:
         """Test rate limiting when sending password reset email."""
 
-        auth.send_password_reset_with_rate_limit(test_users[0], session)
-        result = auth.send_password_reset_with_rate_limit(test_users[0], session)
+        auth.send_password_reset_with_rate_limit(test_regular_user, session)
+        result = auth.send_password_reset_with_rate_limit(test_regular_user, session)
         assert result["success"] is False
         assert result["error_code"] == 429
         assert mock_email.call_count == 1
@@ -380,11 +380,11 @@ class TestSendPasswordResetWithRateLimit:
 class TestRequestPasswordReset:
 
     @patch("app.routers.auth.email_service.send_password_reset_email")
-    def test_request_password_reset(self, mock_email, client, test_users) -> None:
+    def test_request_password_reset(self, mock_email, client, test_regular_user) -> None:
         """Test successful password reset request."""
 
         user_data = {
-            "email": test_users[0].email,
+            "email": test_regular_user.email,
         }
         response = client.post("/password/forgot", json=user_data)
 
@@ -393,11 +393,23 @@ class TestRequestPasswordReset:
         assert mock_email.call_count == 1
 
     @patch("app.routers.auth.email_service.send_password_reset_email")
-    def test_request_password_reset_different_case(self, mock_email, client, test_users) -> None:
+    def test_request_password_reset_fail_demo(self, mock_email, client, test_demo_user) -> None:
         """Test successful password reset request."""
 
         user_data = {
-            "email": test_users[0].email.upper(),
+            "email": test_demo_user.email,
+        }
+        response = client.post("/password/forgot", json=user_data)
+
+        assert response.status_code == 403
+        assert mock_email.call_count == 0
+
+    @patch("app.routers.auth.email_service.send_password_reset_email")
+    def test_request_password_reset_different_case(self, mock_email, client, test_regular_user) -> None:
+        """Test successful password reset request."""
+
+        user_data = {
+            "email": test_regular_user.email.upper(),
         }
         response = client.post("/password/forgot", json=user_data)
 
@@ -406,11 +418,11 @@ class TestRequestPasswordReset:
         assert mock_email.call_count == 1
 
     @patch("app.routers.auth.email_service.send_password_reset_email")
-    def test_request_password_reset_rate_limit(self, mock_email, client, test_users, session) -> None:
+    def test_request_password_reset_rate_limit(self, mock_email, client, test_regular_user, session) -> None:
         """Test rate limiting on password reset requests."""
 
         user_data = {
-            "email": test_users[0].email,
+            "email": test_regular_user.email,
         }
         # First request
         client.post("/password/forgot", json=user_data)
@@ -428,18 +440,18 @@ class TestRequestPasswordReset:
         assert response.status_code == 404
         assert response.json()["detail"] == "User with this email does not exist."
 
-    def test_request_password_reset_inactive_user(self, client, test_users) -> None:
+    def test_request_password_reset_inactive_user(self, client, test_inactive_user) -> None:
         """Test password reset request for inactive user."""
 
         user_data = {
-            "email": test_users[2].email,
+            "email": test_inactive_user.email,
         }
         response = client.post("/password/forgot", json=user_data)
 
         assert response.status_code == 401
         assert response.json()["detail"] == "User account is not active."
 
-    def test_request_password_reset_no_email(self, client, test_users) -> None:
+    def test_request_password_reset_no_email(self, client, test_regular_user) -> None:
         """Test password reset request for inactive user."""
 
         user_data = {
@@ -452,18 +464,18 @@ class TestRequestPasswordReset:
 
 class TestResetPassword:
 
-    def test_reset_password_success(self, client, test_users, session) -> None:
+    def test_reset_password_success(self, client, test_regular_user, session) -> None:
         """Test successful password reset with valid token."""
 
         token = "reset_token_123"
         reset_code = hash_token(token)
 
         # Re-query the user using the test session so modifications persist for the request
-        user_id = test_users[0].id
+        user_id = test_regular_user.id
         user = session.query(models.User).filter(models.User.id == user_id).first()
 
         # remember current password for later comparison
-        old_password_hash = test_users[0].plain_password
+        old_password_hash = test_regular_user.plain_password
 
         user.password_reset_token = reset_code
         user.password_reset_token_created_at = datetime.now(timezone.utc)
@@ -481,6 +493,28 @@ class TestResetPassword:
         assert updated_user.password != old_password_hash
         assert updated_user.password_reset_token is None
         assert updated_user.password_reset_token_created_at is None
+
+
+    def test_reset_password_demo_fail(self, client, test_demo_user, session) -> None:
+        """Test successful password reset with valid token."""
+
+        token = "reset_token_123"
+        reset_code = hash_token(token)
+
+        # Re-query the user using the test session so modifications persist for the request
+        user_id = test_demo_user.id
+        user = session.query(models.User).filter(models.User.id == user_id).first()
+
+        user.password_reset_token = reset_code
+        user.password_reset_token_created_at = datetime.now(timezone.utc)
+        session.commit()
+
+        new_password_data = {
+            "token": token,
+            "new_password": "newsecurepassword",
+        }
+        response = client.post("/password/reset", json=new_password_data)
+        assert response.status_code == 403
 
     def test_reset_password_invalid_token(self, client) -> None:
         """Test password reset with invalid token."""

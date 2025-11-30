@@ -32,6 +32,7 @@ export const renderSalaryInput = ({
 					step={field.step}
 					min="0"
 					className={error ? "is-invalid" : ""}
+					disabled={field.isDisabled}
 				/>
 				<InputGroup.Text>/Year</InputGroup.Text>
 			</InputGroup>
