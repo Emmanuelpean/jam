@@ -6,26 +6,39 @@ database, scrapes full job details (via platform scrapers or from email
 content), and records run statistics in an EisServiceLog."""
 
 import threading
+import time
 import traceback
 from datetime import datetime
-import time
+
 from app import models, utils
 from app.config import settings
 from app.database import get_db
-from app.eis.email_parser import extract_linkedin_job_ids, extract_indeed_job_ids, extract_veganjobs_job_ids
+from app.eis.email_parser import (
+    extract_linkedin_job_ids,
+    extract_indeed_job_ids,
+    extract_veganjobs_job_ids,
+    extract_nhs_job_ids,
+)
 from app.eis.job_scraper import (
     LinkedinBrightdataJobScraper,
     IndeedBrightdataJobScraper,
     VeganJobsJobScraper,
     extract_indeed_jobs_from_email,
     JobResult,
+    NhsJobScraper,
 )
 from app.eis.location_parser import LocationParser
 from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog
 from app.emails.email_service import EmailService
 from app.utils import AppLogger
 
-PLATFORMS = ["linkedin", "indeed", "veganjobs"]
+PLATFORMS = ["linkedin", "indeed", "veganjobs", "nhs"]
+BASE_URLS = {
+    "linkedin": LinkedinBrightdataJobScraper.base_url,
+    "indeed": IndeedBrightdataJobScraper.base_url,
+    "veganjobs": VeganJobsJobScraper.base_url,
+    "nhs": NhsJobScraper.base_url,
+}
 
 
 class JobEmailScraper(EmailService):
@@ -140,15 +153,9 @@ class JobEmailScraper(EmailService):
             )
 
             # Create new job record if it doesn't exist
+
             if not existing_entry:
-                if email_record.platform == "linkedin":
-                    base_url = LinkedinBrightdataJobScraper.base_url
-                elif email_record.platform == "indeed":
-                    base_url = IndeedBrightdataJobScraper.base_url
-                elif email_record.platform == "veganjobs":
-                    base_url = VeganJobsJobScraper.base_url
-                else:
-                    raise AssertionError("Unknown platform")
+                base_url = BASE_URLS[email_record.platform]
 
                 # noinspection PyArgumentList
                 new_job = ScrapedJob(
@@ -392,6 +399,10 @@ class JobEmailScraper(EmailService):
             job_ids = extract_veganjobs_job_ids(email_record.body)
             service_log_entry.veganjobs_job_n += len(job_ids)
 
+        elif email_record.platform == "nhs":
+            job_ids = extract_nhs_job_ids(email_record.body)
+            service_log_entry.nhs_job_n += len(job_ids)
+
         else:
             self.logger.info(f"No job IDs found in email: {email_record.external_email_id}. Skipping email.")
             return jobs_data
@@ -431,6 +442,7 @@ class JobEmailScraper(EmailService):
             existing_data = (
                 self.db.query(ScrapedJob)
                 .filter(ScrapedJob.external_job_id == job_record.external_job_id)
+                .filter(ScrapedJob.platform == job_record.platform)
                 .filter(ScrapedJob.is_scraped)
                 .first()
             )
@@ -454,6 +466,8 @@ class JobEmailScraper(EmailService):
                         scraper = IndeedBrightdataJobScraper(job_record.external_job_id)
                 elif job_record.platform == "veganjobs":
                     scraper = VeganJobsJobScraper(job_record.external_job_id)
+                elif job_record.platform == "nhs":
+                    scraper = NhsJobScraper(job_record.external_job_id)
                 else:
                     self.logger.info(f"Unknown platform for job {job_record.external_job_id}. Skipping job.")
                     continue  # next job record

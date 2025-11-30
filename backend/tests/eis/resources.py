@@ -137,6 +137,53 @@ VEGANJOBS_EMAIL_1 = {
     "job_ids": VEGANJOBS_JOB_IDS_1,
 }
 
+# --------------------------------------------------------- NHS --------------------------------------------------------
+
+# Email 1
+NHS_EMAIL_1_BODY = open_file("nhs_email_1.txt")
+NHS_JOB_IDS_1 = [
+    "C9342-25-1080",
+    "H9110-25-1767",
+    "H9040-25-1678",
+    "H9110-25-1768",
+    "H9110-25-1773",
+    "M9043-25-0282",
+]
+NHS_EMAIL_1 = {
+    "id": "6",
+    "subject": "NHS job alerts for X",
+    "from": "nhs.jobs.job.alerts@notifications.service.gov.uk",
+    "to": USER_DATA[0]["email"],
+    "date": datetime.datetime.now(),
+    "body": NHS_EMAIL_1_BODY,
+    "platform": "nhs",
+    "job_ids": NHS_JOB_IDS_1,
+}
+
+# Email 2
+NHS_EMAIL_2_BODY = open_file("nhs_email_2.txt")
+NHS_JOB_IDS_2 = [
+    "H9110-25-1765",
+    "H9001-25-0803",
+    "M9043-25-0287",
+    "C9028-25-0356",
+    "H9001-25-0804",
+    "C9342-25-1098",
+    "M9043-25-0284",
+    "H9110-25-1772",
+    "C8120-25-0101",
+    "H9110-25-1777",
+]
+NHS_EMAIL_2 = {
+    "id": "7",
+    "subject": "NHS job alerts for X",
+    "from": "nhs.jobs.job.alerts@notifications.service.gov.uk",
+    "to": USER_DATA[0]["email"],
+    "date": datetime.datetime.now(),
+    "body": NHS_EMAIL_2_BODY,
+    "platform": "nhs",
+    "job_ids": NHS_JOB_IDS_2,
+}
 
 TEST_EMAILS = [
     LINKEDIN_EMAIL_1,
@@ -144,6 +191,8 @@ TEST_EMAILS = [
     INDEED_EMAIL_1,
     INDEED_EMAIL_2,
     VEGANJOBS_EMAIL_1,
+    NHS_EMAIL_1,
+    NHS_EMAIL_2,
 ]
 NEW_TEST_EMAILS = {}
 for user in USER_DATA:

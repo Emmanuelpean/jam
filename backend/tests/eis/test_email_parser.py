@@ -2,7 +2,12 @@
 
 import pytest
 
-from app.eis.email_parser import extract_indeed_job_ids, extract_linkedin_job_ids, extract_veganjobs_job_ids
+from app.eis.email_parser import (
+    extract_indeed_job_ids,
+    extract_linkedin_job_ids,
+    extract_veganjobs_job_ids,
+    extract_nhs_job_ids,
+)
 from tests.eis import resources
 
 
@@ -227,3 +232,53 @@ class TestExtractVeganJobsJobIds:
 
         assert len(job_ids) == 3
         assert job_ids == ["1111111111", "2222222222", "3333333333"]
+
+
+# --------------------------------------------------------- NHS --------------------------------------------------------
+
+
+class TestExtractNhsJobIds:
+    """Test class for extract_nhs_job_ids method"""
+
+    def test_extract_nhs_job_ids_real_email(self) -> None:
+        """Test extracting Indeed job IDs from real Indeed email content"""
+
+        job_ids = extract_nhs_job_ids(resources.NHS_EMAIL_1_BODY)
+        assert job_ids == resources.NHS_JOB_IDS_1
+
+    def test_extract_nhs_job_ids_empty_body(self) -> None:
+        """Test extracting job IDs from empty body"""
+
+        job_ids = extract_nhs_job_ids("")
+        assert job_ids == []
+
+    def test_extract_nhs_job_ids_no_jobs(self) -> None:
+        """Test extracting job IDs from body with no Indeed job URLs"""
+
+        body = """
+        This is a test email with no Indeed job URLs.
+        It contains some other URLs like:
+        - https://www.google.com
+        - https://www.example.com
+        - https://www.indeed.com/profile/some-user
+        But no job view URLs.
+        """
+
+        job_ids = extract_nhs_job_ids(body)
+        assert job_ids == []
+
+    def test_extract_nhs_job_ids_with_duplicate_ids(self) -> None:
+        """Test that duplicate job IDs are removed"""
+
+        body = """
+        Job 1: https://beta.jobs.nhs.uk/candidate/jobadvert/1111111111aaa
+        Job 2: https://beta.jobs.nhs.uk/candidate/jobadvert/2222222222bbb
+        Job 3: https://beta.jobs.nhs.uk/candidate/jobadvert/1111111111aaa
+        Job 4: https://beta.jobs.nhs.uk/candidate/jobadvert/3333333333ccc
+        Job 5: https://beta.jobs.nhs.uk/candidate/jobadvert/2222222222bbb
+        """
+
+        job_ids = extract_nhs_job_ids(body)
+
+        assert len(job_ids) == 3
+        assert job_ids == ["1111111111aaa", "2222222222bbb", "3333333333ccc"]

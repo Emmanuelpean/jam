@@ -15,6 +15,7 @@ from tests.eis.test_job_scraper import (
     MockVeganJobsBrightdataJobScraper,
     MockIndeedBrightdataJobScraper,
     MockLinkedinBrightdataJobScraper,
+    MockNhsBrightdataJobScraper,
 )
 from tests.utils.create_data import create_service_logs, create_job_alert_emails, create_scraped_jobs
 
@@ -84,6 +85,14 @@ def mock_veganjobs_job_scrapers() -> Generator[type[MockVeganJobsBrightdataJobSc
     """Mock VeganJobsJobScraper for all tests"""
 
     with mock.patch("app.eis.email_scraper.VeganJobsJobScraper", MockVeganJobsBrightdataJobScraper) as mocked:
+        yield mocked
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_nhs_job_scrapers() -> Generator[type[MockNhsBrightdataJobScraper], Any, None]:
+    """Mock NhsJobScraper for all tests"""
+
+    with mock.patch("app.eis.email_scraper.NhsJobScraper", MockNhsBrightdataJobScraper) as mocked:
         yield mocked
 
 
