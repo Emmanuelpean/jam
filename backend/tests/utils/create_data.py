@@ -1,7 +1,6 @@
 """Functions for creating test data in the database"""
 
 import copy
-import datetime as dt
 import random
 
 import app.eis.models as eis_models

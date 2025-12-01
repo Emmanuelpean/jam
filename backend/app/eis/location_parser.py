@@ -182,6 +182,9 @@ class LocationParser:
         :param location_str: Raw location string from the job posting
         :return: Tuple of (LocationCreate object, attendance_type string or None)"""
 
+        if not location_str:
+            return LocationCreate(), None
+
         location_str = location_str.strip()
 
         if not location_str:

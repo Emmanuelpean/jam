@@ -1,3 +1,5 @@
+"""Tests for email utility functions"""
+
 import pytest
 
 from app.emails.utils import clean_email_address, get_user_id_from_email

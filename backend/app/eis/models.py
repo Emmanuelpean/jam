@@ -54,7 +54,7 @@ class JobAlertEmail(Owned, Base):
     subject = Column(String, nullable=False)
     sender = Column(String, nullable=False)
     date_received = Column(TIMESTAMP(timezone=True), nullable=False)
-    job_found_n = Column(Integer, nullable=False, default=0)
+    jobs_found_n = Column(Integer, nullable=False, default=0)
     platform = Column(String, nullable=False)
     body = Column(String, nullable=False)
 
@@ -89,6 +89,7 @@ class ScrapedJob(Owned, Base):
     - `salary_max` (float, optional): Maximum salary of the job.
     - `salary_currency` (str, optional): Salary currency
     - `url` (str, optional): URL to the job posting.
+    - `raw_url` (str, optional): Raw URL to the job posting.
     - `deadline` (datetime, optional): Deadline for the job.
     - `company` (str, optional): Company name of the job.
     - `location_postcode` (str, optional): Postcode of the job location.
@@ -120,6 +121,7 @@ class ScrapedJob(Owned, Base):
     salary_max = Column(Float, nullable=True)
     salary_currency = Column(String, nullable=True)
     url = Column(String, nullable=True)
+    raw_url = Column(String, nullable=True)
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     company = Column(String, nullable=True)
     location = Column(String, nullable=True)
@@ -149,16 +151,6 @@ class EisServiceLog(CommonBase, Base):
     - `is_success` (bool): Indicates whether the service run was successful.
     - `error_message` (str, optional): Error message if the service run failed.
 
-    # Jobs
-    - `job_total_n` (int, optional): Total number of jobs to scrape.
-    - `job_success_n` (int, optional): Number of successful jobs scraped.
-    - `job_fail_n` (int, optional): Number of failed jobs scraped.
-    - `jobs_extracted_n` (int, optional): Number of jobs extracted.
-    - `linkedin_job_n` (int, optional): Number of LinkedIn jobs extracted.
-    - `indeed_job_n` (int, optional): Number of Indeed jobs extracted.
-    - `veganjobs_job_n` (int, optional): Number of VeganJobs jobs extracted.
-    - `nhs_job_n` (int, optional): Number of NHS jobs extracted.
-
     # Users
     - `users_found_n` (int, optional): Number of users found.
     - `users_processed_n` (int, optional): Number of users processed.
@@ -177,16 +169,6 @@ class EisServiceLog(CommonBase, Base):
     is_success = Column(Boolean, nullable=True)
     error_message = Column(String, nullable=True)
 
-    # Jobs
-    job_total_n = Column(Integer, default=0, nullable=False)
-    job_success_n = Column(Integer, default=0, nullable=False)
-    job_fail_n = Column(Integer, default=0, nullable=False)
-    jobs_extracted_n = Column(Integer, default=0, nullable=False)
-    linkedin_job_n = Column(Integer, default=0, nullable=False)
-    indeed_job_n = Column(Integer, default=0, nullable=False)
-    veganjobs_job_n = Column(Integer, default=0, nullable=False)
-    nhs_job_n = Column(Integer, default=0, nullable=False)
-
     # Users
     users_found_n = Column(Integer, default=0, nullable=False)
     users_processed_n = Column(Integer, default=0, nullable=False)
@@ -199,3 +181,36 @@ class EisServiceLog(CommonBase, Base):
     # Relationships
     emails = relationship("JobAlertEmail", back_populates="service_log")
     scraped_jobs = relationship("ScrapedJob", back_populates="service_log")
+    platform_stats = relationship("PlatformStat", back_populates="service_log")
+
+
+class PlatformStat(CommonBase, Base):
+    """Per-platform stats for a service run linked to an EisServiceLog.
+
+    Attributes
+    ----------
+    - `name` (str): Platform name (e.g. LinkedIn, Indeed).
+    - `jobs_found_n` (int): Number of jobs found for this platform.
+    - `jobs_scraped_n` (int): Number of jobs scraped for this platform.
+    - `jobs_failed_n` (int): Number of jobs that failed scraping for this platform.
+    - `jobs_copied_n` (int): Number of jobs copied for this platform.
+    - `service_log_id` (int): FK to `eis_service_log.id`.
+    - `emails_saved_n` (int): Number of emails saved for this platform.
+    - `emails_skipped_n` (int): Number of emails skipped for this platform."""
+
+    name = Column(String, nullable=False)
+
+    # Jobs
+    jobs_found_n = Column(Integer, default=0, nullable=False)
+    jobs_scraped_n = Column(Integer, default=0, nullable=False)
+    jobs_failed_n = Column(Integer, default=0, nullable=False)
+    jobs_copied_n = Column(Integer, default=0, nullable=False)
+
+    # Emails
+    emails_saved_n = Column(Integer, default=0, nullable=False)
+    emails_skipped_n = Column(Integer, default=0, nullable=False)
+
+    service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="CASCADE"), nullable=False)
+    service_log = relationship("EisServiceLog", back_populates="platform_stats")
+
+    __table_args__ = (UniqueConstraint("service_log_id", "name", name="unique_platform_per_service_log"),)
