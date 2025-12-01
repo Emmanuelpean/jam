@@ -3,202 +3,1218 @@
 import datetime
 import os
 
+from eis.job_scrapers import JobResult, JobInfo, Salary
 from tests.utils.table_data import USER_DATA
 
 
-def open_file(file: str) -> str:
+def open_file(file: str, **kwargs) -> str:
     """Open a file and return its content
     :param file: The file to open
     :return: The contents of the file"""
 
     BASE_DIR = os.path.dirname(__file__)
     filepath = os.path.join(BASE_DIR, "../resources/job_alert_emails", file)
-    with open(filepath, "r", encoding="utf8") as ofile:
+    with open(filepath, "r", **kwargs) as ofile:
         return ofile.read()
 
 
 # ------------------------------------------------------ LINKEDIN ------------------------------------------------------
 
-# Email 1
-LINKEDIN_EMAIL_1_BODY = open_file("linkedin_email_1.txt")
-LINKEDIN_JOB_IDS_1 = [
-    "4289870503",
-    "4291891707",
-    "4291383265",
-    "4280354992",
-    "4255584864",
-    "4265877117",
+# Email 3
+LINKEDIN_EMAIL_3_BODY = open_file("linkedin_email_3.html", encoding="utf8")
+LINKEDIN_EMAIL_3_EXTRACTED = [
+    JobResult(
+        platform="linkedin",
+        job_id="4339420822",
+        company="Noir",
+        company_id=None,
+        location="Oxford (Hybrid)",
+        job=JobInfo(
+            title="Data Engineer",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4339420822",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4339420822/?trackingId=ZyiTOhfbUonDyQl30%2By%2B%2Fw%3D%3D&refId=svLn3ibJR58e0F4TdY6pHQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BuQIPEGWUREO4%2FfYu80Gw3Q%3D%3D&midToken=AQEY2-uznQHXMw&midSig=2LIpA-1uOZKs01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034-null-3apm7f~mikybqhy~m4-null-null&eid=3apm7f-mikybqhy-m4&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWUzYjI4ZmM4ZDc0MTlmYTc4ZTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjk2NjhmYWRhZGI3MTg3ZTI5Mzk2ODE5NzUyYWNlNjM4MTFkODIzYmQ2OTRjMzA5YiwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=45000.0, max_amount=70000.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4339430886",
+        company="Dexory",
+        company_id=None,
+        location="Oxfordshire (Hybrid)",
+        job=JobInfo(
+            title="Robotics Engineer",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4339430886",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4339430886/?trackingId=hwkpJwsaIZdDvBuKDZ%2BH5g%3D%3D&refId=svLn3ibJR58e0F4TdY6pHQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BuQIPEGWUREO4%2FfYu80Gw3Q%3D%3D&midToken=AQEY2-uznQHXMw&midSig=2LIpA-1uOZKs01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034-null-3apm7f~mikybqhy~m4-null-null&eid=3apm7f-mikybqhy-m4&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWUzYjI4ZmM4ZDc0MTlmYTc4ZTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjk2NjhmYWRhZGI3MTg3ZTI5Mzk2ODE5NzUyYWNlNjM4MTFkODIzYmQ2OTRjMzA5YiwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=50000.0, max_amount=100000.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4324538424",
+        company="Quantum Computing Jobs UK",
+        company_id=None,
+        location="Oxford (On-site)",
+        job=JobInfo(
+            title="Senior DevOps Engineer",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4324538424",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4324538424/?trackingId=EIW9WXBjLjfLVfEaGJb0cA%3D%3D&refId=svLn3ibJR58e0F4TdY6pHQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BuQIPEGWUREO4%2FfYu80Gw3Q%3D%3D&midToken=AQEY2-uznQHXMw&midSig=2LIpA-1uOZKs01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034-null-3apm7f~mikybqhy~m4-null-null&eid=3apm7f-mikybqhy-m4&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWUzYjI4ZmM4ZDc0MTlmYTc4ZTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjk2NjhmYWRhZGI3MTg3ZTI5Mzk2ODE5NzUyYWNlNjM4MTFkODIzYmQ2OTRjMzA5YiwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4339840546",
+        company="Dexory",
+        company_id=None,
+        location="Oxfordshire (Remote)",
+        job=JobInfo(
+            title="Senior Perception Engineer",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4339840546",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4339840546/?trackingId=JU8%2Bn7bBwltDsnhyzMmvgg%3D%3D&refId=svLn3ibJR58e0F4TdY6pHQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BuQIPEGWUREO4%2FfYu80Gw3Q%3D%3D&midToken=AQEY2-uznQHXMw&midSig=2LIpA-1uOZKs01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034-null-3apm7f~mikybqhy~m4-null-null&eid=3apm7f-mikybqhy-m4&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWUzYjI4ZmM4ZDc0MTlmYTc4ZTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjk2NjhmYWRhZGI3MTg3ZTI5Mzk2ODE5NzUyYWNlNjM4MTFkODIzYmQ2OTRjMzA5YiwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=60000.0, max_amount=200000.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4339882261",
+        company="KDR Talent Solutions",
+        company_id=None,
+        location="Oxford (Hybrid)",
+        job=JobInfo(
+            title="Principal Data Engineer",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4339882261",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4339882261/?trackingId=gHHTn%2Bd7KHpzt2nOTedYQg%3D%3D&refId=svLn3ibJR58e0F4TdY6pHQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BuQIPEGWUREO4%2FfYu80Gw3Q%3D%3D&midToken=AQEY2-uznQHXMw&midSig=2LIpA-1uOZKs01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034-null-3apm7f~mikybqhy~m4-null-null&eid=3apm7f-mikybqhy-m4&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWUzYjI4ZmM4ZDc0MTlmYTc4ZTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjk2NjhmYWRhZGI3MTg3ZTI5Mzk2ODE5NzUyYWNlNjM4MTFkODIzYmQ2OTRjMzA5YiwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=170000.0, max_amount=200000.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4340140356",
+        company="Bibby Financial Services",
+        company_id=None,
+        location="Banbury (Hybrid)",
+        job=JobInfo(
+            title="Senior Databricks Engineer",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4340140356",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4340140356/?trackingId=UA%2F9jVa85w6%2FrLMw7vREPg%3D%3D&refId=svLn3ibJR58e0F4TdY6pHQ%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BuQIPEGWUREO4%2FfYu80Gw3Q%3D%3D&midToken=AQEY2-uznQHXMw&midSig=2LIpA-1uOZKs01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7561449034-null-3apm7f~mikybqhy~m4-null-null&eid=3apm7f-mikybqhy-m4&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWUzYjI4ZmM4ZDc0MTlmYTc4ZTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjk2NjhmYWRhZGI3MTg3ZTI5Mzk2ODE5NzUyYWNlNjM4MTFkODIzYmQ2OTRjMzA5YiwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=65000.0, max_amount=75000.0, currency="£"),
+        ),
+    ),
 ]
-LINKEDIN_EMAIL_1 = {
-    "id": "1",
-    "subject": "Your job alert for embedded python in United Kingdom",
+LINKEDIN_EMAIL_3 = {
+    "id": "linkedin_3",
+    "subject": "“scientific software python”: Noir - Data Engineer and more",
     "from": "jobalerts-noreply@linkedin.com",
-    "to": USER_DATA[0]["email"],
+    "to": "",
     "date": datetime.datetime.now(),
-    "body": LINKEDIN_EMAIL_1_BODY,
+    "body": LINKEDIN_EMAIL_3_BODY,
     "platform": "linkedin",
-    "job_ids": LINKEDIN_JOB_IDS_1,
+    "parsed_output": LINKEDIN_EMAIL_3_EXTRACTED,
 }
 
-# Email 2
-LINKEDIN_EMAIL_2_BODY = open_file("linkedin_email_2.txt")
-LINKEDIN_JOB_IDS_2 = [
-    "4313354836",
-    "4303488973",
-    "4218756028",
-    "4306284473" "4255739214" "4313361714",
+# Email 4
+LINKEDIN_EMAIL_4_BODY = open_file("linkedin_email_4.html", encoding="utf8")
+LINKEDIN_EMAIL_4_EXTRACTED = [
+    JobResult(
+        platform="linkedin",
+        job_id="4324591445",
+        company="Cellular Origins",
+        company_id=None,
+        location="Cambridge",
+        job=JobInfo(
+            title="Software Engineer",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4324591445",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4324591445/?trackingId=g%2FqHi56o5LYIEA77MXB2gg%3D%3D&refId=ukGpoeZ70aYBzjc8uqhGYg%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BMmxwdnHLSweAGqLV8NoLlg%3D%3D&midToken=AQEY2-uznQHXMw&midSig=0iqkPTf0GuHc01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234-null-3apm7f~mihmare6~hl-null-null&eid=3apm7f-mihmare6-hl&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWU1YjE4NmNlZDg0OTk5YWI4OTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjgwMWFmNmVhZjkwMWI4Y2RmYTE1MzYyNmQ2YTQ1NDI0ZTAwMGNhODc0YmQ0NjM2MSwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4288249629",
+        company="Awerian Ltd",
+        company_id=None,
+        location="Cambridge",
+        job=JobInfo(
+            title="Embedded Software Engineer - Consultant",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4288249629",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4288249629/?trackingId=fTznB1cfw%2BrSiU9fipcX%2BQ%3D%3D&refId=ukGpoeZ70aYBzjc8uqhGYg%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BMmxwdnHLSweAGqLV8NoLlg%3D%3D&midToken=AQEY2-uznQHXMw&midSig=0iqkPTf0GuHc01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234-null-3apm7f~mihmare6~hl-null-null&eid=3apm7f-mihmare6-hl&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWU1YjE4NmNlZDg0OTk5YWI4OTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjgwMWFmNmVhZjkwMWI4Y2RmYTE1MzYyNmQ2YTQ1NDI0ZTAwMGNhODc0YmQ0NjM2MSwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4347644763",
+        company="Platform Recruitment",
+        company_id=None,
+        location="Oxford (On-site)",
+        job=JobInfo(
+            title="Instrumentation Engineer",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4347644763",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4347644763/?trackingId=9dxdX3cJ7upO3zIojxvzvw%3D%3D&refId=ukGpoeZ70aYBzjc8uqhGYg%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BMmxwdnHLSweAGqLV8NoLlg%3D%3D&midToken=AQEY2-uznQHXMw&midSig=0iqkPTf0GuHc01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234-null-3apm7f~mihmare6~hl-null-null&eid=3apm7f-mihmare6-hl&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWU1YjE4NmNlZDg0OTk5YWI4OTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjgwMWFmNmVhZjkwMWI4Y2RmYTE1MzYyNmQ2YTQ1NDI0ZTAwMGNhODc0YmQ0NjM2MSwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=55000.0, max_amount=65000.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4339005375",
+        company="Mercor",
+        company_id=None,
+        location="United Kingdom (Remote)",
+        job=JobInfo(
+            title="Remote Python Engineer - Open-Source",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4339005375",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4339005375/?trackingId=KbwdjHeNpTk5xKcvqAJiOg%3D%3D&refId=ukGpoeZ70aYBzjc8uqhGYg%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BMmxwdnHLSweAGqLV8NoLlg%3D%3D&midToken=AQEY2-uznQHXMw&midSig=0iqkPTf0GuHc01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234-null-3apm7f~mihmare6~hl-null-null&eid=3apm7f-mihmare6-hl&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWU1YjE4NmNlZDg0OTk5YWI4OTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjgwMWFmNmVhZjkwMWI4Y2RmYTE1MzYyNmQ2YTQ1NDI0ZTAwMGNhODc0YmQ0NjM2MSwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4339016093",
+        company="Taskify AI",
+        company_id=None,
+        location="United Kingdom (Remote)",
+        job=JobInfo(
+            title="Backend Software Engineer (Python)",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4339016093",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4339016093/?trackingId=M4K3RoXao1nMsEOjWMEDZw%3D%3D&refId=ukGpoeZ70aYBzjc8uqhGYg%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BMmxwdnHLSweAGqLV8NoLlg%3D%3D&midToken=AQEY2-uznQHXMw&midSig=0iqkPTf0GuHc01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234-null-3apm7f~mihmare6~hl-null-null&eid=3apm7f-mihmare6-hl&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWU1YjE4NmNlZDg0OTk5YWI4OTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjgwMWFmNmVhZjkwMWI4Y2RmYTE1MzYyNmQ2YTQ1NDI0ZTAwMGNhODc0YmQ0NjM2MSwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4347585744",
+        company="Humanoid",
+        company_id=None,
+        location="Greater London (On-site)",
+        job=JobInfo(
+            title="Senior Robotics Software Engineer",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4347585744",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4347585744/?trackingId=tnIs5%2BfFR4qhNSzBDCnLeg%3D%3D&refId=ukGpoeZ70aYBzjc8uqhGYg%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BMmxwdnHLSweAGqLV8NoLlg%3D%3D&midToken=AQEY2-uznQHXMw&midSig=0iqkPTf0GuHc01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_7662471234-null-3apm7f~mihmare6~hl-null-null&eid=3apm7f-mihmare6-hl&otpToken=MTMwYzE3ZTMxYTI3YzFjMmIzMjQwNGVkNDAxYWU1YjE4NmNlZDg0OTk5YWI4OTYxNmNjZjA1NmI0OTVjNWJmYWYwZDdkZjgwMWFmNmVhZjkwMWI4Y2RmYTE1MzYyNmQ2YTQ1NDI0ZTAwMGNhODc0YmQ0NjM2MSwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
 ]
-LINKEDIN_EMAIL_2 = {
-    "id": "2",
-    "subject": "Your job alert for embedded python in United Kingdom",
+
+LINKEDIN_EMAIL_4 = {
+    "id": "linkedin_4",
+    "subject": "“embedded python”: Cellular Origins - Software Engineer and more",
     "from": "jobalerts-noreply@linkedin.com",
-    "to": USER_DATA[1]["email"],
+    "to": "",
     "date": datetime.datetime.now(),
-    "body": LINKEDIN_EMAIL_2_BODY,
+    "body": LINKEDIN_EMAIL_4_BODY,
     "platform": "linkedin",
-    "job_ids": LINKEDIN_JOB_IDS_2,
+    "parsed_output": LINKEDIN_EMAIL_4_EXTRACTED,
 }
 
 
 # ------------------------------------------------------- INDEED -------------------------------------------------------
 
-# Email 1
-INDEED_EMAIL_1_BODY = open_file("indeed_email_1.txt")
-INDEED_JOB_IDS_1 = [
-    "8799a57d87058103",
-    "d489097ca0fb185f",
-    "7f9c701ebf265b69",
-    "0537336f99ba1650",
-    "312725e138947a4b",
-    "06498cad9de95b12",
-    "bd60005166216639",
-    "42b107e214095d56",
-    "d30493c008b601e3",
-    "da413431a0c55ec7",
-    "2ed37852402643ab",
-    "14a9001ba6ebb965",
-    "eafb032fabcd77bc",
-    "6838e604ddffd5ac",
-    "227d4ccd0823fc96",
-    "804b940d2d96b30b",
-    "f9aafc9ba4c31c6d",
-    "e034f0b761e410ea",
-    "37cdb0ba59e12295",
-    "7b272f46e4e46a14",
-    "d6110bfb54bdeddb",
-    "5aa22054e7a8b76e",
-    "ae47862d410bbd39",
+# Email 3
+INDEED_EMAIL_3_BODY = open_file("indeed_email_3.html", encoding="utf8")
+INDEED_EMAIL_3_EXTRACTED = [
+    JobResult(
+        platform="indeed",
+        job_id="1a3ede29656bf7dc",
+        company="AWS EMEA SARL (UK Branch) - F93",
+        company_id=None,
+        location="Cambridge",
+        job=JobInfo(
+            title="2026 Applied Scientist Intern, Amazon University Talent Acquisition",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=1a3ede29656bf7dc",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=1a3ede29656bf7dc&from=ja&qd=RnZhMybXSk4M3QtTVGXWod2Nw0g-D_G8xnrvAHoIyk5On2ZSIjNIVO0NSLtwn9o_OcABN_l3Y-9incm9yQtxU2tTImtpYFdFOTQk7Ll3wF8&rd=1UWbyJbyL-Nrf99Zcgw1T5DlyR0NaIqzsclscbZAExU&tk=1jba9gso3jat7800&alid=673f848ab1dadb7545004995&bb=UTghKqQ9IXULc83-HF4jtkjekAyOYH10B7aajUEDJ7tU2wGRw9V9QA-m7EoYXBF7sId3-yBSbCTjSpdt2mIWS8eRhBLOjISjgbRT0pfKG3VaRkpTsrOsMUn2utezoLkeVPYzMW8t0zCcqXzwKoM4Wg%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="48a549d344f27bc2",
+        company="Vertex Pharmaceuticals",
+        company_id=None,
+        location="Oxford",
+        job=JobInfo(
+            title="Vertex Fellow Oxford",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=48a549d344f27bc2",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=48a549d344f27bc2&from=ja&qd=RnZhMybXSk4M3QtTVGXWod2Nw0g-D_G8xnrvAHoIyk5On2ZSIjNIVO0NSLtwn9o_OcABN_l3Y-9incm9yQtxU2tTImtpYFdFOTQk7Ll3wF8&rd=4ZrZ-vtiYwdobVTLuwlSBHEwqdD0vnOb9P51Phyha6c&tk=1jba9gso3jat7800&alid=673f848ab1dadb7545004995&bb=UTghKqQ9IXULc83-HF4jtkjekAyOYH10q06Knrp3QkjWDVQhJbX_UiugdKFAYfxf9Y_nAW4RIWcOD0zj3BrJiyII--af-KszmLZ-fdsSE68zDDKHgRpR_bFG-kYOUfVaApi8qAeL-rt0CdssWny6kKxQboR3jPJJ&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="8e59a4e076587543",
+        company="Liverpool School of Tropical Medicine",
+        company_id=None,
+        location="Liverpool",
+        job=JobInfo(
+            title="Applied Machine Learning Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=8e59a4e076587543",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=8e59a4e076587543&from=ja&qd=RnZhMybXSk4M3QtTVGXWod2Nw0g-D_G8xnrvAHoIyk5On2ZSIjNIVO0NSLtwn9o_OcABN_l3Y-9incm9yQtxU2tTImtpYFdFOTQk7Ll3wF8&rd=MS1XhwPLX376n54shWSjvpDlyR0NaIqzsclscbZAExU&tk=1jba9gso3jat7800&alid=673f848ab1dadb7545004995&bb=BDpehxEczjmofPF6qVDvdx8xmNN8BGMTt-Kavgj9-gndZxS34moNDyF10avIevPFgK-PvKB601xIk721VKx3EB_dQLbts4ZHzV2C_nSlyFJLpkATCvcptVXWGGRE51Hb54G0J84VjgB2dOA9_Y9vRg%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=39906.0, max_amount=42254.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="e4367403c9073b78",
+        company="Thames Water Utilites",
+        company_id=None,
+        location="Reading",
+        job=JobInfo(
+            title="Research Scientist/Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=e4367403c9073b78",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=e4367403c9073b78&from=ja&qd=RnZhMybXSk4M3QtTVGXWod2Nw0g-D_G8xnrvAHoIyk5On2ZSIjNIVO0NSLtwn9o_OcABN_l3Y-9incm9yQtxU2tTImtpYFdFOTQk7Ll3wF8&rd=F-EaRGHMzpZKxB2tk3D1Mn2LhTYP0op_TBenMVhVTPM&tk=1jba9gso3jat7800&alid=673f848ab1dadb7545004995&bb=BDpehxEczjmofPF6qVDvdx8xmNN8BGMTjfH2lcFPz9Qajht4Co6GehbR7qUvMmgRneV0EXwNoZzVjK979FxK6hYX7dexiECu4wkLI2tEI8LBu2RKhlK5OwIGlXIQjhhtVCGS_SHkOBoU7iqznQAWrg%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=41000.0, max_amount=51000.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="69dc0e80e86c41fd",
+        company="Skills 4 Group",
+        company_id=None,
+        location="Remote",
+        job=JobInfo(
+            title="Data & AI Transformation Director",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=69dc0e80e86c41fd",
+            raw_url="https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0BqHw2Kdabow-zaZerv7IYvcs9NXwgGXCQ4Yq9ZuNDUZupX_PjHHQtlBSgsuvZxmuMvOmrGU-_LFM84aMj8DWumNAKURYRrRrrmecvJeZ0Q0_2SytDuZDaOgG1PREvGWfL9yQKky5AIoUi5FKM3kEd1e3SHIPJZy3krBF8wS5EsnipP3maoH4hONlbhhNXpXHq3Btzs3Ro1hQLlXSnhfqBSh6Kt26MDCw06ur6mnq1d1wr1taSjAYznYN9bJuwetdYvZLVX9IY8i7m7v5HGTQ0tqQtcyZAIwHbYZuRdZ5XuuRfxIA92LCLPgAi8xya8JrmOYHxjegboMJqmKBEzk3hmhyWPlc7FnMw4KoIVGu_IrLpmI6zk5GfXH7K8kWfs0XuVcnumnQk_iC2Z42jN_ZP2LcZVHGbKepkK_RoPtbbz1WqjZ3p-gJpFLurNnR8r79PafoAW02WtBPRW3FfTDXosdUdc0BwP1T9a3LvWAX3mZd1HdfpphyvfC717SR3Ugi2HcwIGG0GahBezatLZIpoaBOAq3J9Ss-lJNaiShJowpBIa8K7sATH-OMbM6XurFuXOamoPaOdPeYwmk1-pEIJKfr-R5js3i0gLyt0jhmbf_S6_rR7NkhxRplH1zyiUTlNMWCRIb3t9GIVx5ZnYwrc8D5ofb94ipolHl0pPjwPlrr_oO49xs-Szxs-WD4AelPRZhr_kDszXFJhTPdIzF709zPMf0aNOVy8%3D&xkcb=SoBc6_M3qqbMHd70qJ0UbzkdCdPP&camk=UoKtGZLa3XLcsBzeqbBEJw%3D%3D&p=0&jsa=3136&rjs=1&tmtk=1jba9gso3jat7800&gdfvj=1&plid=indeed-jobalert&alid=673f848ab1dadb7545004995&fvj=1&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="8f7fe18c8f4229ca",
+        company="PerkinElmer",
+        company_id=None,
+        location="Edinburgh",
+        job=JobInfo(
+            title="Account Manager (12 month mat. cover)",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=8f7fe18c8f4229ca",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=8f7fe18c8f4229ca&from=ja&qd=RnZhMybXSk4M3QtTVGXWod2Nw0g-D_G8xnrvAHoIyk5On2ZSIjNIVO0NSLtwn9o_OcABN_l3Y-9incm9yQtxU2tTImtpYFdFOTQk7Ll3wF8&rd=eavxBocA1KKXTkYJKc4ML3pHiNhXzRhj_cnpiDh5URU&tk=1jba9gso3jat7800&alid=673f848ab1dadb7545004995&bb=BDpehxEczjmofPF6qVDvdx8xmNN8BGMTEFicfXREw8jo2fEPPGpocCT22bznEWXhaK6FQgIYvUq3bxVFHzggv-M2fK38zp4Y5I3TlMHCI6APTDIBZerbZJYqr7DV4vdcp2HjnwabjZJJ44cvv76AHg%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="4e908679f1907104",
+        company="AWS EMEA SARL (UK Branch)",
+        company_id=None,
+        location="Thames Valley",
+        job=JobInfo(
+            title="Senior Security Engineer, AWS Security",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=4e908679f1907104",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=4e908679f1907104&from=ja&qd=RnZhMybXSk4M3QtTVGXWod2Nw0g-D_G8xnrvAHoIyk5On2ZSIjNIVO0NSLtwn9o_OcABN_l3Y-9incm9yQtxU2tTImtpYFdFOTQk7Ll3wF8&rd=ImGoVo9ulPBproJP8FA10pDlyR0NaIqzsclscbZAExU&tk=1jba9gso3jat7800&alid=673f848ab1dadb7545004995&bb=BDpehxEczjmofPF6qVDvdx8xmNN8BGMTQKyum7N_Ht94Pk2gQ8zbtAaB67aVC1RXCKW0GIKUncLMijDon2_qtE_EHfPvrayJ8342oMH4zRA3EPS_txzyzYnzZa87VOUqNLmlOWQbaUY-Cd7yiWC8dg%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="c60a03a7c36863e0",
+        company="South East Water",
+        company_id=None,
+        location="Polegate",
+        job=JobInfo(
+            title="Catchment Advisor",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=c60a03a7c36863e0",
+            raw_url="https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0CL1bq_XcmbMJxyFrECa_KvguSmCDjHlqIXbxc4E8cdcCc-X5a-3G8Dvc8o_tbC5rkvfHkxvK9FxryQx_wDKnayxKZY1xbx4Z2VdsoELeiU_Sa8uqE3WnMv28uW8wRfxnXcenjh-BNC6Sz9MCajAmNbs0h5HqkUpcmhpM4ykZDkMOToHATd6oydyjUM_JdjqWzDID7FvN6TkdqHbximVwFnqVDgHDb7voKPM7aw6531m-oLZTYk9U6fTK_QK0JgnYzu8k0F4oHhQFGkX7cVUpmhw2GIBMnhI39xKPPEyBILvG2s9ddcJh90PmK_zuwma0tktHJGD0JKKm90Gk60yNas6U4VAb6gAVNpEAKl-erTBYsJ4lySlBVQ4TkcIC4KK0tuYlvYR3UlWTCoCH02pcmk7EGv8-iJpLNrJYSFA5mKoInJaKeiqTSamwFT9AKwoHb9MGKoCfWq8gh8-5Ek4xFNsO3ipAnthHe9iUcb0NQbt2UJMsVoSgW6VBiNkixwLjoj_j169xT3N0DIUCBI7NWHZu-qmt4-VC3BruR1U5-ouTr6juWc479wGUfcQPfNq0YXjoW50T1sycvl_3rKDdDfXjKXuIguf9Rw-jA67nhRjunQ_rnhdjb0QRPB4hJsqyTRXF3F6AhDAVCOM_XFuHiUQE1uKw1RJXcGewSZ296TKzdudj9vpjjSle-DcC2exUF-BeXFRPzpKZh5BhlR7vwScnhXjA4WGd_E0rD5pfcjiox3-LspDjb3Vj5QT2Ywq8WSrr1IaM1yFce0XUVIBHeRtWPK5l50zvs%3D&xkcb=SoAd6_M3qqbMHd70qJ0gbzkdCdPP&camk=UoKtGZLa3XJXNLYW0dNy-Q%3D%3D&p=0&jsa=3136&rjs=1&tmtk=1jba9gso3jat7800&gdfvj=1&plid=indeed-jobalert&alid=673f848ab1dadb7545004995&fvj=1&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="5905c38dc605509f",
+        company="Grant Instruments",
+        company_id=None,
+        location="Royston",
+        job=JobInfo(
+            title="Marketing Assistant",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=5905c38dc605509f",
+            raw_url="https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0BmPNLmPDCqdSYNUCTKgszmmOXenJJM-5zhk3Y4TZkJd6YIeUOCKkFXLkW5oKxIjfe60bhsRacnvgafjcBI7Rx6xZztqOXWG9-m70aoRvT9wn4Fu-gAymWWo88BF2ts_mtciL7Uwxvh5xqhUUElc8atMx-Pn3fEzmT3WQJv3uf9HhCYxkwcIAnllbsgIdfcp1Er7fqrGqZgS06qXteUfUZBXe8zF7rVchypdR8RfeFfj3YPsZIy3AyDUfu5MGSc5UfYi6783RLxBKu8AjOAGsbS3i1VoE9pCidgdUpE_An_hOdIqJAI7iXsQYIKQRR-M5W221Q6Bt7cUVJ51uI522_slUezhsM4heR3DeAr71iLLvKIts6-z9ClHQAVZPiFCLRj1yRZXI9w3Os-l5276PAcDrpgJJeykaI14LG9x83d28-fqKpMXJnL5xz7zrfaa0S7-t1EDYtKZk9Z2XfIbtskmcJdhFafKSC2bI-EJ5XBYMjTie7oLOUecDL2nBkbnHB22nQBPjEiXZ0tVJT4WXI1AWDfvoybyNbmE55jiqGPCvwRaRjuFfR3LmKujUMCa9rlF-PB0MxvJlTno2UCKRPStqMS_C8PpaP6-1xo-jznwar9TfMOSAhhKQ771V-sDM9Ln3xJcyNO16Y1s3UbR9O3eq1h4GEbFJ1IDDqwKHwUDTR2zPbyvSmtfpPlU7MTHQNk1nlqaCxpsRyyvaf4kcFb&xkcb=SoDm6_M3qqbMHcb0qJ0PbzkdCdPP&camk=UoKtGZLa3XKY29MlAqlVBQ%3D%3D&p=0&jsa=3136&rjs=1&tmtk=1jba9gso3jat7800&gdfvj=1&plid=indeed-jobalert&alid=673f848ab1dadb7545004995&fvj=1&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=25000.0, max_amount=30000.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="4ca213d195153cac",
+        company="Element Materials Technology",
+        company_id=None,
+        location="Hitchin",
+        job=JobInfo(
+            title="Test Technician",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=4ca213d195153cac",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=4ca213d195153cac&from=ja&qd=RnZhMybXSk4M3QtTVGXWod2Nw0g-D_G8xnrvAHoIyk5On2ZSIjNIVO0NSLtwn9o_OcABN_l3Y-9incm9yQtxU2tTImtpYFdFOTQk7Ll3wF8&rd=mlcWWhoEB84Ug9aTgB647rPZZoiRMyXsCX_uWSkaIYo&tk=1jba9gso3jat7800&alid=673f848ab1dadb7545004995&bb=iPJTlrTXqA8cLw5hi6JXIPA2w3bPSuZUJhbroVw0qu3K_uz__HgvTHV1Bw0Bmlk9MCcAZjLlX8SlKT0yF8F-KxeqGEPSFZmdAGqb6kqqPEqbUa6J9pQffgH4K817S7MjL1YnY1cshhi2OtOtSlSE4g%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="995e08bb529563bf",
+        company="McCloy Consulting Ltd",
+        company_id=None,
+        location="Newtownabbey",
+        job=JobInfo(
+            title="Landscape Architect",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=995e08bb529563bf",
+            raw_url="https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0AC1TTQBgD1ihv5Ah-0XElhog-c4C718UNMoShFurW3J70yntcGk-hqygBCs_b93-UhJDyMteycp9xg1SL1VAhSIovk9h8o2Mwu5UGDHgF7-GwnTh5266v09jNIdrAvWug_LaONoQpPj41sraKXxMAzxvhGDROWDfJMw7s-Lyi3qJMQlZ4m-vPtDlDKhFsRcMfjJYcZ69UlLmob1j2Fdyn9wL71qo9dhB5W3L_hisSoony42TNMpTxjrPO6JyWtg8hExLSiArlTX5a-8QIaA_scMH75Mr9hP4zEl6UvqX6_xzbe6HmVrtD-h2IXsZaKcPxC8VFVEoLi4EZM0dmdVIEiov0bRDcxuESapomH4ViLs_Ksyd19atVh46wNyYjhtG60D9KO_AzOvvKKYz03vv8V07mZJeY75S9331UCqII4-gmkno_qfEW8uXdN8g-eHXDdPvMNOKc2cCCrQLBo1_SfRXaCh3VZiXvyrr-97j9j7AF5-15NRlda4FnZjC_ahNwCIpJfFbDQvlNQaOTa30FK5-RAw7lbLtKmVx82P9qMBizIizfC2bQfNqJEXH_v00q8evfZybnfggr0IYzLRhrQiAvBQZ1ZuubT-G4cL6qcnUk0jc9dEHqqBo3JeNu1foM6XmGRtJSdGMSCaQL1RhLHUtxQN1EGQuUthE7Bg2MlfeEToarS8Z5S1DQPrd1gKoHcWcvoxPIpeA%3D%3D&xkcb=SoCB6_M3qqbMHcb0qJ0HbzkdCdPP&camk=UoKtGZLa3XK9vA_O1mPLrA%3D%3D&p=0&jsa=3136&rjs=1&tmtk=1jba9gso3jat7800&gdfvj=1&plid=indeed-jobalert&alid=673f848ab1dadb7545004995&fvj=1&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=30000.0, max_amount=50000.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="01d9b888da4655ae",
+        company="3D Bio-Tissues Ltd",
+        company_id=None,
+        location=None,
+        job=JobInfo(
+            title="Lab Technician",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=01d9b888da4655ae",
+            raw_url="https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0AyB6-03b0maBjwOYRHed0zGdKYeeDUcmdmD572RvVaIz0Bz4szoCM7RDvw8GIkuB21ZuZBRuTw3LQVDOTf5j_XJ05E2yUuzJt8RFi9CZ4gMvKeqTzphLlNNXHzolszGy80mwULwL2dQXQFbd7V2Y8mH9MbrP-M3JIyH-pyMU08QymJQOn7sO1si_ufoL1R7ZVgD7llO2T-RSxuuKmiIYJpmr4lRLuazzU2AByagsNaY4SSJMkd64xcbx4Qq7ARLtzL-Hx2KlmP1GrQkP2S-F_vTbVZm8iIEJVS1faWvloGXvpFsEtTQ2RE4od4ygT0eY8ML0hmaPKqv6wYLm71nf8juBa6IjoOAvF59gQKz0IEMB3GFfRqRGTJ2nU9nbJj7pRBvTFKS75ib6wsAS7plm0wpYJd16NxzZGHOxy-jLmyxdpaWuAOs_PR8xOImaFNkWThnXnoCZPqe9EnLQq5MhCh62r5_7Vo6r5LI7D7vbRnjJrDOKyIlKiqoYy4gP32eZE-G1KTmkPiALEUbHxqTVQv5Q0yFa0J6My5PvJaZRHfETODvvK8EormSzNM84HtrzVpV2cVb7UA4H7TBfdq_8DVgAQ2ClhxcsTinPo6BXmIH1q_36ZuA4tq5a-9dFozz1TFo3HMlOETSAc-UxLlzne-T47dTQ_APtA8UVPUEZTQk_R9HPHOkipOYvW7HsfRhRI%3D&xkcb=SoCP6_M3qqbMHcb0qJ0abzkdCdPP&camk=UoKtGZLa3XJRCZiT9osVjw%3D%3D&p=0&jsa=3136&rjs=1&tmtk=1jba9gso3jat7800&gdfvj=1&plid=indeed-jobalert&alid=673f848ab1dadb7545004995&fvj=1&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="f956884733eeef61",
+        company="McCloy Consulting Ltd",
+        company_id=None,
+        location="Derry",
+        job=JobInfo(
+            title="Landscape Architect",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=f956884733eeef61",
+            raw_url="https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0AC1TTQBgD1ihv5Ah-0XElhog-c4C718UNMoShFurW3J70yntcGk-hq3y7qr9o2vrEUoV4EluMkPUhets4tuVS7pPkkvdIeUIZxrivHwmP0AV7ioNGxEdGnUebRi7n6iu486R8fO-zAJ-9j4Px7nL1C2HQPOn8l57JOt3tYqh1k-ea9AQw40JxoEskE8s2bul-fnhpX_d-dCuWF9ivd8X8M5oG3W2oRF2yrkkY84fyaWV7Hfs6ti1NYIjb4sC2d7gz3baIZcZyVEBy6prb7MuHfKF3HnzhRSCB03WryWDOD-hrf3v33O-nHoIQilkatAxB2wmSBpyOjVQCQT5XLLbcZKST-4tOUWD4NRkZnHCVah2dFSqtSJ12_TgPGVYgbBXxhzmKLuXttJhXO7SDNYceEhQvXrbGhqyztK4IRpJa84PpB519UKMqleJG-B90Ql5Ei0dU7Z_AioGsqIZdCiwgy1-yWhntmeZXw6BK_Ujuo5u65wUzd6EXg8a1YCXXEmlz5J_BbWuR17cA7y28R_1x_cKCA3392Boft0TARIv3cylmv-iS2aTjh9iNjIAY6GtYVC29vRI7ka30gwX1C1E_t197AvC1TBSnCxyFWxkfcYMT9QHuQckvQVMqWt03jxdaNWJxo30lF5XEVRWbNcBOsFcLGYvgdg-D-v-NuGMp5pnylxCs25coxChHhI7Ml3kgAc3Qxz_Xz3g%3D%3D&xkcb=SoCc6_M3qqbMHcb0qJ0ebzkdCdPP&camk=UoKtGZLa3XIBTnXoXRt3Ew%3D%3D&p=0&jsa=3136&rjs=1&tmtk=1jba9gso3jat7800&gdfvj=1&plid=indeed-jobalert&alid=673f848ab1dadb7545004995&fvj=1&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=30000.0, max_amount=50000.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="2763488177ff4bbc",
+        company="3D Bio-Tissues Ltd",
+        company_id=None,
+        location=None,
+        job=JobInfo(
+            title="Manufacturing Lab Technician",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=2763488177ff4bbc",
+            raw_url="https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0AyB6-03b0maBjwOYRHed0zGdKYeeDUcmdmD572RvVaIz0Bz4szoCM7LTAxS4WBsK0POCGtq0FH2CDSCJ8P0kkcc3y-JDs9IjzPl9Tgk0555ZxZy5vBm9TbiuIiVAY6t4v_6h0n6Y0D3K3zTeRre8wQDTAe6Cw2_TnyzjzcN2JcV6WDdRluKOoyMXrYTLkmqmgjFbWVzyR0DJxr_yQJw27BE1mnJYqu6bib8kTOsDKn8m-Y2FGJtj3MIj6tDKmjCdrJlwRRcmNZE7SOpruFqs7QtFGry6XL4JD6WGpitcIxjxVSnOkeOSyhnmJlfpsPlY_qpiII8qD5YeisTi87ayNWraenY2YhDNTqUDKSwXhy4vTY4vduZuCFO8KtmLiZ-xQza_7n3nHuuTgeFP8528e6lvmqMMDhJsQhkabbfLiPJwm6iq5KUl2-5udOQh6F0tuYFUWKR2p85rsW1ymrJ8OOxYScKHQVUSfTgIwYLOXAqRDOgQXqmQgRxe2-O9BCWYKxLuXy-P37M6ov6pWra0BmOhHH33_dyyXtP0pJ_x_rgjonDoaDrLp3Lokyp2YZROVVEJnj02agt_kfTEV-oePJ_8oP81s0bPBR6mopfrx9wAIUqSFLFguOlAaBe9FsVQGaNXyqVfCGuIr4qBH_RQYFzVrbmELCj0q4OymNlTSJGpyCy9vwfR0LoT4mbYSAs6Fbak3hZP2dqkuPhmRdG5SC&xkcb=SoDo6_M3qqbMHcb0qJ0SbzkdCdPP&camk=UoKtGZLa3XLF8DIo2Ny9ew%3D%3D&p=0&jsa=3136&rjs=1&tmtk=1jba9gso3jat7800&gdfvj=1&plid=indeed-jobalert&alid=673f848ab1dadb7545004995&fvj=1&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=25000.0, max_amount=28000.0, currency="£"),
+        ),
+    ),
 ]
-INDEED_EMAIL_1 = {
-    "id": "3",
-    "subject": "23 new R&D Development Engineer jobs",
+INDEED_EMAIL_3 = {
+    "id": "indeed_3",
+    "subject": "AWS EMEA SARL (UK Branch) - F93 is hiring for 2026 Applied Scientist Intern, Amazon University Talent Acquisition + 14 new application scientist jobs",
     "from": "alert@indeed.com",
-    "to": USER_DATA[0]["email"],
+    "to": "",
     "date": datetime.datetime.now(),
-    "body": INDEED_EMAIL_1_BODY,
+    "body": INDEED_EMAIL_3_BODY,
     "platform": "indeed",
-    "job_ids": INDEED_JOB_IDS_1,
+    "parsed_output": INDEED_EMAIL_3_EXTRACTED,
 }
 
-# Email 2
-INDEED_EMAIL_2_BODY = open_file("indeed_email_2.txt")
-INDEED_JOB_IDS_2 = [
-    "77fb4f3c42ebc7c2",
-    "ae868ef5ecdefc01",
-    "6c6f8fffaffa1993",
+# Email 4
+INDEED_EMAIL_4_BODY = open_file("indeed_email_4.html", encoding="utf8", errors="replace")
+INDEED_EMAIL_4_EXTRACTED = [
+    JobResult(
+        platform="indeed",
+        job_id="c8515384b9497149",
+        company="Faculty",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="Learning Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=c8515384b9497149",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=c8515384b9497149&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=fqiY8RJDvosIMzxD6v1HZV_MKnaSAFGAsD6kfERFt3g&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=34FinBztkLCsj8PN2GUyU8Fu0tSHQTyFvECzpVYokgAbGybcoscJziwM6JloMFKOZ11Tb1lGvKu_AcmA29AKuix1d12KbpWRKfrIbAJhV48S7nfow_hkrNRiCAZdmIW1LGTvYUUGfo_tj8GqVVquKw%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="dc24b199eac6ae2d",
+        company="Faculty",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="Lead Learning Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=dc24b199eac6ae2d",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=dc24b199eac6ae2d&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=KaXlx5fp5X_mVf8_2PYUAl_MKnaSAFGAsD6kfERFt3g&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=34FinBztkLCsj8PN2GUyU8Fu0tSHQTyFcTGXUExoVn3sL6FeqYvlTdiPqUXlyE67_U8Ry_vZ9sZTnEH30Cv-eCDJmipo0ExbQ5KMW2a0CsjdDJBadw9mWbe6bbRkPPRvaA9Lpzbz6dUYin880TzR9Q%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="b7eebcd8fe8c1098",
+        company="Thermo Fisher Scientific",
+        company_id=None,
+        location=None,
+        job=JobInfo(
+            title="Field Service Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=b7eebcd8fe8c1098",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=b7eebcd8fe8c1098&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=MS1XhwPLX376n54shWSjvpDlyR0NaIqzsclscbZAExU&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=KinfGh0bQsDe57h9DJtAzHoDPdy9mij906rc5MdZOf5u_VNNP-Lldcu8mDDJZaRXhqw3dPOVUJKudKWOD1BIgd07A5qmv3Hsfmno-sMkSnpcDh6r2Gxw6czXuZI5RNBcscMg8SOiDvmCkYTJjK8PpA%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="afb8ec2adf45c34b",
+        company="Pion",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="Senior Product Analyst",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=afb8ec2adf45c34b",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=afb8ec2adf45c34b&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=Xz_BPd8uwD7p5SZJpoZayl_MKnaSAFGAsD6kfERFt3g&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=KinfGh0bQsDe57h9DJtAzHoDPdy9mij9AMGFTGmxHUyfguF0iu2xhJ4cLd7iM_BqVnNaS9k0LKp4NoDbSsCly6etvjVZovwovhbU9Av4bfSjrlsJOQMwMncEvctV07K2ProemfrBZmRcO3bULfgh5A%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="4a05c3ef450f6704",
+        company="Total Recruitment Group",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="EICA Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=4a05c3ef450f6704",
+            raw_url="https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0Bi6A_Oun8FvQAAhpPq3O2DMYREfOL2TH_q05cd5kTje9bY_9-jo-D2lZBLx7t6YgDMkbz4UY3UzZ8oVvPVxSnR1U60rOkTrBM-ACR4qHhPjGZ2pUAPGLMDsIn9S9c725fIaqJuRFxLjlVqy0nnH3Zup8h37OYcbiFxh84F2d-nE2c2xrwxV-NPVtEddSf2WBczlH0-6sL1rqo6XJtocw9fQWN8pRCQopHmHvEqQRdMmxlKYIViyPQTqRQcOWPnVGrjE2KUS_HX5jWxQPZZFJ5MXJEkucGunPHUVqlZ6009rqaZcdIZu84hMbBr6vsC_W4-kJjhMR1uXwzk9wVf0sY4CNIbKzQ0zXBJCl4JU4hMP04rnr54c4goN7glFoCPH4cgzDcIRQOhIMBEG4fnIIcolhRx9zC1Cd86YTAsezYVviejlEG5p5MAROqIOJGH--kNyzw3S26dYwZu_12_n7PvkiKGoGycm6ssNp8GYLCJcHAPdXAYSxBfwKSROzuAdMkTbgcJWsXqMSKq8Z0Bupr5IWATKO593RDY8ES1Vokk2tFSNlFZ1VUq2-yuV0qU_OfY1rc7gbQ5lkYuEi7c0YK4BFi5cc4VLmtTiLcBBZbLyV-yn-S1krNtjNaJNQeWRjPvy3zH-4mS0sbbMiRBPavBLyMWO0ZBy2_XM8ieRpff3InQJRgW2e5m1hxPDpffJfkA_lIbdXBwgHJNVo_snFgE5gmJ5fQP9Fw%3D&xkcb=SoCk6_M3qSSPJE3cXR0DbzkdCdPP&camk=UoKtGZLa3XIp0HpG1Wa7rA%3D%3D&p=0&jsa=3695&rjs=1&tmtk=1jaid05i1hghb800&gdfvj=1&plid=indeed-jobalert&alid=68c494f3aacfa1792822774c&fvj=1&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=45000.0, max_amount=80000.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="3bcb4bf856efd997",
+        company="Sakura Finetek Europe BV",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="Jr. Field Service Engineer UK (London region)",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=3bcb4bf856efd997",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=3bcb4bf856efd997&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=S-68c07Poy-gqQdxtJ8OnF_MKnaSAFGAsD6kfERFt3g&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=KinfGh0bQsDe57h9DJtAzHoDPdy9mij9bhMTdyeogp-0gLgLZnoRuIU41qkB4jL4frBohPphNCx5rAtEGxSuxo7h9hXHqqGVocE7dx8dPgqooSrjNSzdw9Ixz6UsJZbrThjnaqvgb9fW2hCdGT8esQ%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=29137.0, max_amount=38461.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="b196fc962a9a8e26",
+        company="GE Vernova",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="HVDC & FACTS Field Service Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=b196fc962a9a8e26",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=b196fc962a9a8e26&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=ImGoVo9ulPBproJP8FA10s_GpDQUpdPT4XwZZ0YIiXc&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=KinfGh0bQsDe57h9DJtAzHoDPdy9mij9q_Vn8vwQ9-wdZ5OwKxjvK7_Gyd2TQjp7EEZf6bbJTNZARDhrs0RkoQYDV3zwV4cjowyUAc0qugKMXgMLorthuFzOJYjncdGcII3kMD1-dgVSOUQkPJBFHw%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="7a1b91874bb2f973",
+        company="OP",
+        company_id=None,
+        location="Slough",
+        job=JobInfo(
+            title="Hardware Test Engineer (Mechanical/Electrical)",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=7a1b91874bb2f973",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=7a1b91874bb2f973&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=gy7MCxDMWln4LWQRywCz51_MKnaSAFGAsD6kfERFt3g&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=KinfGh0bQsDe57h9DJtAzHoDPdy9mij9eWLuzDjycLeEyhrUbIjCqICjVDsFEUoX9RTClHBFxybVBTBifgv9GRENG2ZbvmBEmEif4sNoJSsFobkQBH_4ryK_p5pKox-jRdEzDUWLcLT7vno29sshUA%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="5e4604bffd431628",
+        company="CAPGEMINI ENGINEERING",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="Senior Thermal Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=5e4604bffd431628",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=5e4604bffd431628&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=5AzIPX6IdAOv59BwOZqkFsoNBk--8gR6CvhRrl83wHU&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=ot27o3FgxwqqnHJ58FtP82FjXKZWPT_5khuL8lQ_m_ae_E_4FTmopvCio-EZ0irtSregu0mNwQbqqE_-tH__f-tnTb6Eh-0fxokkvV4o5A9372-WP5lqFee3dkobMkkqGsLAW6-8JOQCcK_AXO0fxA%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="b78d53f1a67d1f1b",
+        company="DNV",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="Graduate Technical Safety / Process Engineers",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=b78d53f1a67d1f1b",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=b78d53f1a67d1f1b&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=BJMmApqLf7EDBTY5CIqAvM_GpDQUpdPT4XwZZ0YIiXc&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=ot27o3FgxwqqnHJ58FtP82FjXKZWPT_5jee_rsB8rVI08hd5cjkD4Ds_FMgE1ZljFdIHuxH9cMY3bKqEjaz53nusDnHpScpdGvV6NwnAVEqEKY3muR-PLZNekZU9uIyAeZHQm2x6Mq0V8lQLq5n_Jw%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="8a5f720667be6dc8",
+        company="Plowman Craven Ltd",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="Project Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=8a5f720667be6dc8",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=8a5f720667be6dc8&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=1Mu1vBDY1ZCXlf8teQydT3pHiNhXzRhj_cnpiDh5URU&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=ot27o3FgxwqqnHJ58FtP82FjXKZWPT_5WrCBrjRidVgyLai4lzSNBaq1NTA_qGnSY3Q5fM-nM0aGZRos5_3H4MqKZJ9IdYwceVu6LZi1RLzV8XPRHnW92xZWEpxjHTO1GY6Lk_V1DB2bKxcUex523A%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="5373d93059fe902d",
+        company="Elite Sourcing",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="Senior Controls and Instrumental Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=5373d93059fe902d",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=5373d93059fe902d&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=v1-HcdjGhgpDNCskhCHpOQbXCHXgJEVMrHKBS2mW9rM&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=ot27o3FgxwqqnHJ58FtP82FjXKZWPT_5leyIcm5y5bujeG7vNMzCXERAEhsjzTfT98uFESxjm2vOXv7M3wwk72UM4OyVS6nYq9b6CxTHYblM1mKHBhSbAEbo9XQCzlL9x2ObcIdh0qo_CxHyTie4Uw%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=50000.0, max_amount=70000.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="6b89529805e60f45",
+        company="ETL Systems Ltd",
+        company_id=None,
+        location="Rickmansworth",
+        job=JobInfo(
+            title="Principal RF Engineer - Q&V Band Specialist",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=6b89529805e60f45",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=6b89529805e60f45&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=9Ue7nJzDr-PGnuMaD_AnAWW4xXBGTIWlVfOl08776OE&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=ot27o3FgxwqqnHJ58FtP82FjXKZWPT_5TTi89_QCFOCihOfAik6xBsMlOb6haZcoRH_byfdK40-w8ZfefyRdNfE9EUOLb_4ipO1FyaoH6Zqxd07EV2qyfwCZmbz-gb2I160Ly1uyDp8JXJatkHBAzQ%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="18fcef299b7a0072",
+        company="Pioneer Selection Ltd",
+        company_id=None,
+        location="Stanford-le-Hope",
+        job=JobInfo(
+            title="Electrical Automation Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=18fcef299b7a0072",
+            raw_url="https://uk.indeed.com/pagead/clk/dl?mo=r&ad=-6NYlbfkN0D7aWMMTiD0MLUf8BGBBaTXYC_8rjZJSU5Qoa0D94Bkf5Zt2NKKkklcd83_UZUJoz_-oQCk4kQXB1mNnlYWcS-BJjShtIpjmDU7UR71Nz8zgqqVCDwjzmY0F9a-w5mI5sDobfFGUaflaoS48TYZ2Z5kSrQU_A80quVGPA_Ki4WGP02kud1AQ0Kuqv2xsnxF2QMy8opd5X6oCy5yiUCpvWB2NcqMYvo-2JvWiyUf_dc29o484SIiRBMptobBI8YIOr8QaPbNwQ0Ya2QBitT5YqC50r1DnSh_4ntdweQdiDr3vVgZvCeuRK16pkkAJfT2_vqZNFfocr3Y6EyWtIAd9Vho7p-7HC_IlwRbVncGj5VwrFVwBvAal2M4qzJaqsBgJy3FlUOupgrfU1zEPTOjy2lhN_HuNRDzf3UOyOWOW5LZf4dmXrg_h7bsdnsbe2ga8SARADJqazk3rrtg7NHycEfrVtCUt4oZFuJldvWUACDRYWjDZcltQur4v-OxtNk2nHZh2gg5gQneS49ug-fVwwuII3dFtlabVb8VKIr5wpGITaXaUFT7mQyZZfLN_3fvxbktzsDEU9gEX6SYuscWpWtL0eMOHp-x5yggWbG2wy86w4jHrNc2Y7uhHpREWALYvKclubZ6Sy-0EWLVCTSHo2B_zm03DR7WE_0bk94fN96tGg%3D%3D&xkcb=SoBJ6_M3qSSPJHXcXR0CbzkdCdPP&camk=4HOcmqOLYrBpUxr5z1JeNg%3D%3D&p=0&jsa=3695&rjs=1&tmtk=1jaid05i1hghb800&gdfvj=1&plid=indeed-jobalert&alid=68c494f3aacfa1792822774c&fvj=1&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="8340505e9c6ecaea",
+        company="Trapeze Software",
+        company_id=None,
+        location="Loughton",
+        job=JobInfo(
+            title="Electronics Bench Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=8340505e9c6ecaea",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=8340505e9c6ecaea&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=GGJojhUryd6ZkiohIwIyugbXCHXgJEVMrHKBS2mW9rM&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=ot27o3FgxwqqnHJ58FtP82FjXKZWPT_5y0YAIzzJiMPgfjVsB8z4B0zYo9f0HBxsMgJzHJrjtdgPucvJA1_nPeTqZVgR4FVCgcCtuUlc89lm1fca8MmaJmGiHbxA1poNG4IQxusPcFZN3-DrqhweDA%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="876f724d62707fc5",
+        company="Kier Group",
+        company_id=None,
+        location="Isleworth",
+        job=JobInfo(
+            title="Project Manager (MEICA)",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=876f724d62707fc5",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=876f724d62707fc5&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=7cirY-xwcXV7HnfrzfUNqh0LXlTnqJu9xBoiZnP_1pQ&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=ot27o3FgxwqqnHJ58FtP82FjXKZWPT_595pkUwBQVd-xnVbkkJqrwQ_9OW8vXHtill0gVoouUCjwS0sBAjUXNmL1JpuCi9iqfM1snsSlypoJL8ozJEB9ieD60j-wLelQDhMI1EIJjULswSZXTxPYtg%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="4c08bf41487dcdb4",
+        company="Process Instrument Solutions Ltd",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="Approved Service Partner (C&I) - Process Instrument Solutions Ltd - London area",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=4c08bf41487dcdb4",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=4c08bf41487dcdb4&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=qtKc8zzwFCUusoKbqZh6lwbXCHXgJEVMrHKBS2mW9rM&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=ot27o3FgxwqqnHJ58FtP82FjXKZWPT_5WeRLk9il-7JsnV7SMwSn0lb8qsuyS-NadkAqzMuMqsjyYKj-XRdqxo46gq9tIuBy3Wb6XQm5jJ9j9QhO6j9msmMl7beGQiQzYMoWj81sSwrA4RsKD01sMA%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="2d38335ec2ef72b3",
+        company="RSE",
+        company_id=None,
+        location=None,
+        job=JobInfo(
+            title="Commissioning Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=2d38335ec2ef72b3",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=2d38335ec2ef72b3&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=pE1c8_K5BTDq2aqbOgultNsOwAAefBnS4uT4BNwtXiI&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=HEWYzGXXS0DNRg1g_eQlPxtup3UVTdZaX5h5PI2B_VbxfcRf5Vhd7VmsbZ97gzCziR5ixDEPYnKt0RGU5eDCAdbpdFOWp22Z70ZlqcwcMtKtKl9uwoc-eK3m8AN2KSfD0HyenLNQiNDivtdFItLH6w%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="a75b298b39fa8360",
+        company="Mitie",
+        company_id=None,
+        location="London",
+        job=JobInfo(
+            title="Multi Skilled Shift Engineer - Electrical Engineer Bias",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=a75b298b39fa8360",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=a75b298b39fa8360&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=ITVvqQ61vE4UHbTgxwGCVNsOwAAefBnS4uT4BNwtXiI&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=HEWYzGXXS0DNRg1g_eQlPxtup3UVTdZaishcFnH9lGVJgfyCBs1pvFJPXzEx3VgYHyad1l_mSpg2x3cMXgrBXpjZCR6DXKA3BPZ9mYhMWOYjuyj1xOBuqHnMpld0q1hXh3qTrFVpRyKzJ5_B6FmXHQ%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="indeed",
+        job_id="dc1ad9d2abd2f849",
+        company="Intech Calibration Ltd",
+        company_id=None,
+        location="Borehamwood",
+        job=JobInfo(
+            title="Calibration Engineer",
+            description=None,
+            url="https://www.indeed.com/viewjob?jk=dc1ad9d2abd2f849",
+            raw_url="https://uk.indeed.com/rc/clk/dl?jk=dc1ad9d2abd2f849&from=ja&qd=RnZhMybXSk4M3QtTVGXWoYUt8x9gzHfJ0W0sIgqvbzHrdqE6Q9x-WyxroZlVBhf8SC0KN0Cje9vlc4gnPmIdJmVNSCEfjM6w0_U0Y4RjoII&rd=wTJdmxtSZ735tL2kBfpxxAbXCHXgJEVMrHKBS2mW9rM&tk=1jaid05i1hghb800&alid=68c494f3aacfa1792822774c&bb=HEWYzGXXS0DNRg1g_eQlPxtup3UVTdZa0S0sc3ZLUxBbbPzrP7U_cbz99-QDwh5eou9jicFJ4ZKeXKdFdBYuppLRgo4FFcV8-9uR99u3ABAloOP11pzLU-0JdIO5k7SPSXs1jmVhw0pytmgtN-1elg%3D%3D&g1tAS=true",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
 ]
-INDEED_EMAIL_2 = {
-    "id": "4",
-    "subject": "New jobs at Snap Inc.",
+INDEED_EMAIL_4 = {
+    "id": "indeed_4",
+    "subject": "Faculty is hiring for Learning Engineer + 20 new instrumentation engineer jobs in London",
     "from": "alert@indeed.com",
-    "to": USER_DATA[1]["email"],
+    "to": "",
     "date": datetime.datetime.now(),
-    "body": INDEED_EMAIL_2_BODY,
+    "body": INDEED_EMAIL_4_BODY,
     "platform": "indeed",
-    "job_ids": INDEED_JOB_IDS_2,
+    "parsed_output": INDEED_EMAIL_4_EXTRACTED,
 }
 
 # ------------------------------------------------------ VEGANJOBS -----------------------------------------------------
 
-# Email 1
-VEGANJOBS_EMAIL_1_BODY = open_file("veganjobs_email_1.txt")
-VEGANJOBS_JOB_IDS_1 = [
-    "physicians-committee-for-responsible-medicine-remote-from-anywhere-in-the-united-states-building-healthy-communities-internship",
-    "chill-gelato-canada-water-london-gelato-scooper",
+# Email 2
+VEGANJOBS_EMAIL_2_BODY = open_file("veganjobs_email_2.txt", encoding="utf8")
+VEGANJOBS_EMAIL_2_EXTRACTED = [
+    JobResult(
+        platform="veganjobs",
+        job_id="vervet-monkey-foundation-tzaneen-south-africa-vegan-chef-2",
+        company="Vervet Monkey Foundation",
+        company_id=None,
+        location="Tzaneen, South Africa",
+        job=JobInfo(
+            title="Vegan Chef",
+            description=None,
+            url="https://veganjobs.com/job/vervet-monkey-foundation-tzaneen-south-africa-vegan-chef-2",
+            raw_url="https://veganjobs.com/job/vervet-monkey-foundation-tzaneen-south-africa-vegan-chef-2/",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="veganjobs",
+        job_id="vervet-monkey-foundation-tzaneen-south-africa-volunteer-coordinator",
+        company="Vervet Monkey Foundation",
+        company_id=None,
+        location="Tzaneen, South Africa",
+        job=JobInfo(
+            title="Volunteer Coordinator",
+            description=None,
+            url="https://veganjobs.com/job/vervet-monkey-foundation-tzaneen-south-africa-volunteer-coordinator",
+            raw_url="https://veganjobs.com/job/vervet-monkey-foundation-tzaneen-south-africa-volunteer-coordinator/",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="veganjobs",
+        job_id="health-plus-wellness-centers-marietta-ga-front-desk-at-a-very-busy-health-clinic",
+        company="Health Plus Wellness Centers",
+        company_id=None,
+        location="Marietta, Gorgia",
+        job=JobInfo(
+            title="Front desk at a very busy health clinic",
+            description=None,
+            url="https://veganjobs.com/job/health-plus-wellness-centers-marietta-ga-front-desk-at-a-very-busy-health-clinic",
+            raw_url="https://veganjobs.com/job/health-plus-wellness-centers-marietta-ga-front-desk-at-a-very-busy-health-clinic/",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="veganjobs",
+        job_id="verify-humanity-uk-remote-volunteer-legal-consultant",
+        company="Verify Humanity",
+        company_id=None,
+        location="Remote",
+        job=JobInfo(
+            title="Volunteer Legal Consultant (UK-Based)",
+            description=None,
+            url="https://veganjobs.com/job/verify-humanity-uk-remote-volunteer-legal-consultant",
+            raw_url="https://veganjobs.com/job/verify-humanity-uk-remote-volunteer-legal-consultant/",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="veganjobs",
+        job_id="the-vegan-society-birmingham-uk-campaigns-and-policy-assistant",
+        company="The Vegan Society",
+        company_id=None,
+        location="Birmingham, UK",
+        job=JobInfo(
+            title="Campaigns and Policy Assistant",
+            description=None,
+            url="https://veganjobs.com/job/the-vegan-society-birmingham-uk-campaigns-and-policy-assistant",
+            raw_url="https://veganjobs.com/job/the-vegan-society-birmingham-uk-campaigns-and-policy-assistant/",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="veganjobs",
+        job_id="brave-new-life-project-remote-united-states-volunteer-needed-for-website-creation",
+        company="Brave New Life Project",
+        company_id=None,
+        location="Remote (United States)",
+        job=JobInfo(
+            title="Volunteer Needed for Website Creation",
+            description=None,
+            url="https://veganjobs.com/job/brave-new-life-project-remote-united-states-volunteer-needed-for-website-creation",
+            raw_url="https://veganjobs.com/job/brave-new-life-project-remote-united-states-volunteer-needed-for-website-creation/",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
 ]
-VEGANJOBS_EMAIL_1 = {
-    "id": "5",
+VEGANJOBS_EMAIL_2 = {
+    "id": "veganjobs_2",
     "subject": "We have found new job posts that match your job alert",
     "from": "info@veganjobs.com",
-    "to": USER_DATA[0]["email"],
+    "to": "",
     "date": datetime.datetime.now(),
-    "body": VEGANJOBS_EMAIL_1_BODY,
+    "body": VEGANJOBS_EMAIL_2_BODY,
     "platform": "veganjobs",
-    "job_ids": VEGANJOBS_JOB_IDS_1,
+    "parsed_output": VEGANJOBS_EMAIL_2_EXTRACTED,
 }
+
+# Email 3
+VEGANJOBS_EMAIL_3_BODY = open_file("veganjobs_email_1.txt", encoding="utf8")
+VEGANJOBS_EMAIL_3_EXTRACTED = [
+    JobResult(
+        platform="veganjobs",
+        job_id="physicians-committee-for-responsible-medicine-remote-from-anywhere-in-the-united-states-building-healthy-communities-internship",
+        company="Physicians Committee for Responsible Medicine",
+        company_id=None,
+        location="Remote (United States)",
+        job=JobInfo(
+            title="Building Healthy Communities Internship",
+            description=None,
+            url="https://veganjobs.com/job/physicians-committee-for-responsible-medicine-remote-from-anywhere-in-the-united-states-building-healthy-communities-internship",
+            raw_url="https://veganjobs.com/job/physicians-committee-for-responsible-medicine-remote-from-anywhere-in-the-united-states-building-healthy-communities-internship/",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="veganjobs",
+        job_id="chill-gelato-canada-water-london-gelato-scooper",
+        company="Chill Gelato",
+        company_id=None,
+        location="Canada Water, London",
+        job=JobInfo(
+            title="Gelato Scooper",
+            description=None,
+            url="https://veganjobs.com/job/chill-gelato-canada-water-london-gelato-scooper",
+            raw_url="https://veganjobs.com/job/chill-gelato-canada-water-london-gelato-scooper/",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+]
+VEGANJOBS_EMAIL_3 = {
+    "id": "veganjobs_3",
+    "subject": "We have found new job posts that match your job alert",
+    "from": "info@veganjobs.com",
+    "to": "",
+    "date": datetime.datetime.now(),
+    "body": VEGANJOBS_EMAIL_3_BODY,
+    "platform": "veganjobs",
+    "parsed_output": VEGANJOBS_EMAIL_3_EXTRACTED,
+}
+
 
 # --------------------------------------------------------- NHS --------------------------------------------------------
 
-# Email 1
-NHS_EMAIL_1_BODY = open_file("nhs_email_1.txt")
-NHS_JOB_IDS_1 = [
-    "C9342-25-1080",
-    "H9110-25-1767",
-    "H9040-25-1678",
-    "H9110-25-1768",
-    "H9110-25-1773",
-    "M9043-25-0282",
+
+NHS_EMAIL_3_BODY = open_file("nhs_email_3.html")
+NHS_EMAIL_3_EXTRACTED = [
+    JobResult(
+        platform="nhs",
+        job_id="C9342-25-1080",
+        company="NHS",
+        company_id=None,
+        location="Weston-Super-Mare",
+        job=JobInfo(
+            title="Band 6 Mental Health Practitioner – Weston-Super-Mare",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/C9342-25-1080",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/C9342-25-1080",
+            deadline=datetime.datetime(2025, 12, 8, 0, 0),
+            salary=Salary(min_amount=38682.0, max_amount=46580.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9110-25-1767",
+        company="NHS",
+        company_id=None,
+        location="Llantrisant",
+        job=JobInfo(
+            title="Point of Care Practitioner",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1767",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1767",
+            deadline=datetime.datetime(2025, 12, 3, 0, 0),
+            salary=Salary(min_amount=27898.0, max_amount=30615.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9040-25-1678",
+        company="NHS",
+        company_id=None,
+        location="Bargoed",
+        job=JobInfo(
+            title="Assistant Practitioner Community Nursing",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9040-25-1678",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9040-25-1678",
+            deadline=datetime.datetime(2025, 12, 4, 0, 0),
+            salary=Salary(min_amount=27898.0, max_amount=30615.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9110-25-1768",
+        company="NHS",
+        company_id=None,
+        location="Gilfach Goch",
+        job=JobInfo(
+            title="Community Nursery Nurse",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1768",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1768",
+            deadline=datetime.datetime(2025, 12, 3, 0, 0),
+            salary=Salary(min_amount=27898.0, max_amount=30615.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9110-25-1773",
+        company="NHS",
+        company_id=None,
+        location="Bridgend",
+        job=JobInfo(
+            title="Registered Perioperative Care Practitioner – Day Surgery Unit POW",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1773",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1773",
+            deadline=datetime.datetime(2025, 12, 11, 0, 0),
+            salary=Salary(min_amount=31516.0, max_amount=38364.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="M9043-25-0282",
+        company="NHS",
+        company_id=None,
+        location="Bridgend",
+        job=JobInfo(
+            title="Biological Testing Technician",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/M9043-25-0282",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/M9043-25-0282",
+            deadline=datetime.datetime(2025, 12, 11, 0, 0),
+            salary=Salary(min_amount=31516.0, max_amount=38364.0, currency="£"),
+        ),
+    ),
 ]
-NHS_EMAIL_1 = {
-    "id": "6",
+
+NHS_EMAIL_3 = {
+    "id": "nhs_3",
     "subject": "NHS job alerts for X",
     "from": "nhs.jobs.job.alerts@notifications.service.gov.uk",
     "to": USER_DATA[0]["email"],
     "date": datetime.datetime.now(),
-    "body": NHS_EMAIL_1_BODY,
+    "body": NHS_EMAIL_3_BODY,
     "platform": "nhs",
-    "job_ids": NHS_JOB_IDS_1,
+    "parsed_output": NHS_EMAIL_3_EXTRACTED,
 }
 
-# Email 2
-NHS_EMAIL_2_BODY = open_file("nhs_email_2.txt")
-NHS_JOB_IDS_2 = [
-    "H9110-25-1765",
-    "H9001-25-0803",
-    "M9043-25-0287",
-    "C9028-25-0356",
-    "H9001-25-0804",
-    "C9342-25-1098",
-    "M9043-25-0284",
-    "H9110-25-1772",
-    "C8120-25-0101",
-    "H9110-25-1777",
+NHS_EMAIL_4_BODY = open_file("nhs_email_4.html")
+NHS_EMAIL_4_EXTRACTED = [
+    JobResult(
+        platform="nhs",
+        job_id="H9110-25-1765",
+        company="NHS",
+        company_id=None,
+        location="Bridgend",
+        job=JobInfo(
+            title="Specialist Community Public Health Nurse (Health Visitor)",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1765",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1765",
+            deadline=datetime.datetime(2025, 12, 3, 0, 0),
+            salary=Salary(min_amount=39263.0, max_amount=47280.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9001-25-0803",
+        company="NHS",
+        company_id=None,
+        location="Cardiff",
+        job=JobInfo(
+            title="Health & Safety Trainer",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9001-25-0803",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9001-25-0803",
+            deadline=datetime.datetime(2025, 12, 11, 0, 0),
+            salary=Salary(min_amount=31516.0, max_amount=38364.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="M9043-25-0287",
+        company="NHS",
+        company_id=None,
+        location="Cardiff",
+        job=JobInfo(
+            title="Application Support Analyst",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/M9043-25-0287",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/M9043-25-0287",
+            deadline=datetime.datetime(2025, 12, 7, 0, 0),
+            salary=Salary(min_amount=31516.0, max_amount=38364.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="C9028-25-0356",
+        company="NHS",
+        company_id=None,
+        location="Pencoed",
+        job=JobInfo(
+            title="Project Manager",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/C9028-25-0356",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/C9028-25-0356",
+            deadline=datetime.datetime(2025, 12, 11, 0, 0),
+            salary=Salary(min_amount=39263.0, max_amount=47280.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9001-25-0804",
+        company="NHS",
+        company_id=None,
+        location="Cardiff",
+        job=JobInfo(
+            title="Project Support Officer",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9001-25-0804",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9001-25-0804",
+            deadline=datetime.datetime(2025, 12, 10, 0, 0),
+            salary=Salary(min_amount=31516.0, max_amount=38364.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="C9342-25-1098",
+        company="NHS",
+        company_id=None,
+        location="Kenn, Clevedon",
+        job=JobInfo(
+            title="Band 4 Clinical Services Lead Administrator – Clevedon",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/C9342-25-1098",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/C9342-25-1098",
+            deadline=datetime.datetime(2025, 12, 14, 0, 0),
+            salary=Salary(min_amount=27485.0, max_amount=30162.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="M9043-25-0284",
+        company="NHS",
+        company_id=None,
+        location="Cardiff",
+        job=JobInfo(
+            title="Category Officer",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/M9043-25-0284",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/M9043-25-0284",
+            deadline=datetime.datetime(2025, 12, 8, 0, 0),
+            salary=Salary(min_amount=27898.0, max_amount=30615.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9110-25-1772",
+        company="NHS",
+        company_id=None,
+        location="Bridgend",
+        job=JobInfo(
+            title="Personal Assistant/Administrative Officer",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1772",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1772",
+            deadline=datetime.datetime(2025, 11, 30, 0, 0),
+            salary=Salary(min_amount=27898.0, max_amount=30615.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="C8120-25-0101",
+        company="NHS",
+        company_id=None,
+        location="Cardiff",
+        job=JobInfo(
+            title="Digital Clinical Specialist (ePMA)",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/C8120-25-0101",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/C8120-25-0101",
+            deadline=datetime.datetime(2025, 11, 30, 0, 0),
+            salary=Salary(min_amount=39263.0, max_amount=47280.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9110-25-1777",
+        company="NHS",
+        company_id=None,
+        location="Llantrisant",
+        job=JobInfo(
+            title="Staff Nurse – PICU",
+            description=None,
+            url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1777",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1777",
+            deadline=datetime.datetime(2025, 12, 11, 0, 0),
+            salary=Salary(min_amount=31516.0, max_amount=38364.0, currency="£"),
+        ),
+    ),
 ]
-NHS_EMAIL_2 = {
-    "id": "7",
+NHS_EMAIL_4 = {
+    "id": "nhs_3",
     "subject": "NHS job alerts for X",
     "from": "nhs.jobs.job.alerts@notifications.service.gov.uk",
     "to": USER_DATA[0]["email"],
     "date": datetime.datetime.now(),
-    "body": NHS_EMAIL_2_BODY,
+    "body": NHS_EMAIL_4_BODY,
     "platform": "nhs",
-    "job_ids": NHS_JOB_IDS_2,
+    "parsed_output": NHS_EMAIL_4_EXTRACTED,
 }
+
 
 TEST_EMAILS = [
-    LINKEDIN_EMAIL_1,
-    LINKEDIN_EMAIL_2,
-    INDEED_EMAIL_1,
-    INDEED_EMAIL_2,
-    VEGANJOBS_EMAIL_1,
-    NHS_EMAIL_1,
-    NHS_EMAIL_2,
+    LINKEDIN_EMAIL_3,
+    LINKEDIN_EMAIL_4,
+    INDEED_EMAIL_3,
+    INDEED_EMAIL_4,
+    VEGANJOBS_EMAIL_2,
+    VEGANJOBS_EMAIL_3,
+    NHS_EMAIL_3,
+    NHS_EMAIL_4,
 ]
-NEW_TEST_EMAILS = {}
+NEW_TEST_EMAILS_2 = {}
 for user in USER_DATA:
     for email in TEST_EMAILS:
         email = email.copy()
         email["to"] = user["email"]
         email["id"] = f"{email['id']}_{user['email']}"
-        NEW_TEST_EMAILS[email["id"]] = email
-TEST_EMAILS = NEW_TEST_EMAILS
+        NEW_TEST_EMAILS_2[email["id"]] = email
+TEST_EMAILS = NEW_TEST_EMAILS_2

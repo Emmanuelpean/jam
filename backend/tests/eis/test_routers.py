@@ -39,7 +39,7 @@ class TestScrapedJobCRUD(CRUDTestBase):
     ) -> None:
         """Test retrieving all scraped jobs for the authorized user that are scraped, not imported, active"""
 
-        test_data = self.get_user_data(test_users, test_scraped_jobs)
+        self.get_user_data(test_users, test_scraped_jobs)
         client = self._get_authorised_client(authorised_clients)
         response = client.get(self.endpoint + "?page=1&page_size=20&search=Test")
         assert response.status_code == status.HTTP_200_OK

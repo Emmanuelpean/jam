@@ -15,10 +15,14 @@ from starlette import status
 from starlette.requests import Request
 
 from app import models as app_models
+from app.config import settings
 from app.database import get_db
 from app.eis import models, schemas
 from app.eis.email_scraper import EmailScraperService
-from app.eis.job_scraper import LinkedinBrightdataJobScraper, IndeedBrightdataJobScraper, VeganJobsJobScraper
+from app.eis.job_scrapers.indeed import IndeedBrightdataJobScraper
+from app.eis.job_scrapers.linkedin import LinkedinBrightdataJobScraper
+from app.eis.job_scrapers.nhs import NhsJobScraper
+from app.eis.job_scrapers.veganjobs import VeganJobsJobScraper
 from app.oauth2 import get_current_user
 from app.routers import (
     generate_data_table_crud_router,
@@ -26,8 +30,6 @@ from app.routers import (
     assert_admin,
     NOT_ALLOWED_EXCEPTION,
 )
-from app.config import settings
-
 
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
 
@@ -260,7 +262,7 @@ def scrape_job(
         raise NOT_ALLOWED_EXCEPTION
 
     scraper = LinkedinBrightdataJobScraper(external_job_id)
-    return scraper.scrape_job()
+    return scraper.scrape_job()[0]
 
 
 @scraper_router.get("/indeed/{external_job_id}")
@@ -276,7 +278,7 @@ def scrape_job(
         raise NOT_ALLOWED_EXCEPTION
 
     scraper = IndeedBrightdataJobScraper(external_job_id)
-    return scraper.scrape_job()
+    return scraper.scrape_job()[0]
 
 
 @scraper_router.get("/veganjobs/{external_job_id}")
@@ -293,7 +295,24 @@ def scrape_job(
         raise NOT_ALLOWED_EXCEPTION
 
     scraper = VeganJobsJobScraper(external_job_id)
-    return scraper.scrape_job()
+    return scraper.scrape_job()[0]
+
+
+@scraper_router.get("/nhs/{external_job_id}")
+def scrape_job(
+    external_job_id: str,
+    current_user: app_models.User = Depends(get_current_user),
+):
+    """Trigger scraping of a job posting from the NHS website by job ID.
+    :param external_job_id: LinkedIn job ID to scrape
+    :param current_user: Current authenticated user
+    :return: Success message or error"""
+
+    if not current_user.toast_active:
+        raise NOT_ALLOWED_EXCEPTION
+
+    scraper = NhsJobScraper(external_job_id)
+    return scraper.scrape_job()[0]
 
 
 # ------------------------------------------------------ EMAIL SCRAPER SERVICE ------------------------------------------------------

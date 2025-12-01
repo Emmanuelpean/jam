@@ -2197,89 +2197,81 @@ JOB_SCRAPED_DATA = [
     },
 ]
 
-
+# python
 SERVICE_LOG_DATA = [
     {
         "run_duration": 45.2,
         "run_datetime": "2025-01-15 08:30:00",
         "is_success": True,
         "error_message": None,
-        "job_success_n": 25,
-        "job_fail_n": 2,
         "users_processed_n": 4,
         "users_found_n": 10,
-        "linkedin_job_n": 15,
-        "indeed_job_n": 12,
-        "veganjobs_job_n": 0,
-        "jobs_extracted_n": 50,
-        "emails_found_n": 40,
-        "emails_saved_n": 34,
     },
     {
         "run_duration": 123.8,
         "run_datetime": "2024-01-15 09:15:00",
         "is_success": True,
         "error_message": None,
-        "job_success_n": 89,
-        "job_fail_n": 5,
     },
     {
         "run_duration": 67.4,
         "run_datetime": "2024-01-15 10:00:00",
         "is_success": False,
         "error_message": "Rate limit exceeded after 30 requests",
-        "job_success_n": 15,
-        "job_fail_n": 45,
     },
     {
         "run_duration": 89.1,
         "run_datetime": "2024-01-15 11:30:00",
         "is_success": True,
         "error_message": None,
-        "job_success_n": 73,
-        "job_fail_n": 8,
     },
     {
         "run_duration": 12.3,
         "run_datetime": "2024-01-15 12:00:00",
         "is_success": True,
         "error_message": None,
-        "job_success_n": None,
-        "job_fail_n": None,
     },
     {
         "run_duration": 3.7,
         "run_datetime": "2024-01-15 13:45:00",
         "is_success": False,
         "error_message": "SMTP server connection timeout",
-        "job_success_n": 0,
-        "job_fail_n": 12,
     },
     {
         "run_duration": 156.9,
         "run_datetime": "2024-01-15 14:20:00",
         "is_success": True,
         "error_message": None,
-        "job_success_n": 234,
-        "job_fail_n": 18,
     },
     {
         "run_duration": 78.5,
         "run_datetime": "2024-01-15 15:30:00",
         "is_success": False,
         "error_message": "PDF parsing library crashed on corrupted file",
-        "job_success_n": 45,
-        "job_fail_n": 67,
     },
     {
         "run_duration": 34.2,
         "run_datetime": "2024-01-16 08:00:00",
         "is_success": True,
         "error_message": None,
-        "job_success_n": 156,
-        "job_fail_n": 3,
     },
 ]
+
+PLATFORM_STAT_DATA = [
+    {"platform": "linkedin", "jobs_found_n": 15, "jobs_scraped_n": 11, "jobs_failed_n": 2, "service_log_id": 1},
+    {"platform": "indeed", "jobs_found_n": 12, "jobs_scraped_n": 9, "jobs_failed_n": 2, "service_log_id": 1},
+    {"platform": "veganjobs", "jobs_found_n": 0, "jobs_scraped_n": 0, "jobs_failed_n": 0, "service_log_id": 1},
+    {"platform": "linkedin", "jobs_found_n": 40, "jobs_scraped_n": 35, "jobs_failed_n": 1, "service_log_id": 2},
+    {"platform": "indeed", "jobs_found_n": 8, "jobs_scraped_n": 6, "jobs_failed_n": 2, "service_log_id": 3},
+    {"platform": "linkedin", "jobs_found_n": 22, "jobs_scraped_n": 20, "jobs_failed_n": 0, "service_log_id": 4},
+    {"platform": "indeed", "jobs_found_n": 10, "jobs_scraped_n": 9, "jobs_failed_n": 1, "service_log_id": 4},
+    {"platform": "linkedin", "jobs_found_n": 5, "jobs_scraped_n": 4, "jobs_failed_n": 0, "service_log_id": 5},
+    {"platform": "totaljobs", "jobs_found_n": 3, "jobs_scraped_n": 3, "jobs_failed_n": 0, "service_log_id": 6},
+    {"platform": "linkedin", "jobs_found_n": 6, "jobs_scraped_n": 5, "jobs_failed_n": 1, "service_log_id": 7},
+    {"platform": "cv-library", "jobs_found_n": 4, "jobs_scraped_n": 0, "jobs_failed_n": 4, "service_log_id": 8},
+    {"platform": "jobsite", "jobs_found_n": 7, "jobs_scraped_n": 7, "jobs_failed_n": 0, "service_log_id": 9},
+]
+
 SERVICE_LOG_DATETIME = [current_date - timedelta(days=i) for i in range(len(SERVICE_LOG_DATA))]
 for service_log, date in zip(SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
     service_log["run_datetime"] = date.strftime(DATETIME_FORMAT)

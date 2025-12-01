@@ -1,3 +1,5 @@
+"""Utility functions for email processing"""
+
 from email.utils import parseaddr
 from app import models
 

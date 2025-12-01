@@ -334,31 +334,40 @@ class EmailService(object):
                 except ValueError:
                     continue
 
-            # Extract body
             body_text = ""
+            html_text = ""
 
             if msg.is_multipart():
                 for part in msg.walk():
                     content_type = part.get_content_type()
                     content_disposition = str(part.get("Content-Disposition"))
 
-                    # Skip attachments
                     if "attachment" in content_disposition:
                         continue
 
-                    # Get email body
-                    if content_type == "text/plain":
-                        payload = part.get_payload(decode=True)
-                        charset = part.get_content_charset() or "utf-8"
+                    payload = part.get_payload(decode=True)
+                    charset = part.get_content_charset() or "utf-8"
 
+                    if content_type == "text/plain":
                         try:
                             body_text = payload.decode(charset)
                         except UnicodeDecodeError:
                             body_text = payload.decode("windows-1252", errors="replace")
 
+                    elif content_type == "text/html":
+                        try:
+                            html_text = payload.decode(charset)
+                        except UnicodeDecodeError:
+                            html_text = payload.decode("windows-1252", errors="replace")
             else:
-                # Not multipart - simple email
+                # single-part message
+                content_type = msg.get_content_type()
                 body_text = msg.get_payload(decode=True).decode()
+                if content_type == "text/html":
+                    html_text = body_text
+
+            # Prefer text, but fallback to HTML if needed
+            final_body = html_text or body_text
 
             return {
                 "id": email_id,
@@ -366,7 +375,7 @@ class EmailService(object):
                 "from": from_email,
                 "to": to_email,
                 "date": date_received,
-                "body": body_text,
+                "body": final_body,
             }
 
         finally:
