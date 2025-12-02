@@ -28,7 +28,8 @@
 * [ ] Add the ability to filter out jobs (extract the job title when extracting the job ids)
 * [X] Add NHS job alert support
 * [ ] Fix the issue where admin cannot query non owned data
-
+* [ ] Add the ability to display the results for the selected platform only
+* [ ] Add new endpoint for admin only that allows to query specific job ids (as a list)
 ### Select Widgets Improvements
 * [ ] Sort options alphabetically
 * [ ] After adding an option, select it automatically

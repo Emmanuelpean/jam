@@ -1,7 +1,7 @@
 import { Form, InputGroup } from "react-bootstrap";
 import React, { JSX, useEffect, useState } from "react";
 import { jobScraperApi, scrapedJobApi, ScraperStatus, serviceLogApi, ThreadStatus } from "../../services/Api";
-import { ScrapedJobData, ServiceLog } from "../../services/Schemas";
+import { PlatformStat, ScrapedJobData, ServiceLog } from "../../services/Schemas";
 import { useAuth } from "../../contexts/AuthContext";
 import "./EisDashboardPage.css";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
@@ -49,7 +49,7 @@ const JobScraperDashboard = (): JSX.Element => {
 					data: logs
 						.slice()
 						.reverse()
-						.map((log) => ({
+						.map((log: ServiceLog) => ({
 							x: new Date(log.run_datetime),
 							y: log.job_success_n,
 						})),
@@ -61,9 +61,21 @@ const JobScraperDashboard = (): JSX.Element => {
 					data: logs
 						.slice()
 						.reverse()
-						.map((log) => ({
+						.map((log: ServiceLog) => ({
 							x: new Date(log.run_datetime),
 							y: log.job_fail_n,
+						})),
+				};
+
+				const copiedSeries: SeriesData = {
+					id: "Failed Jobs",
+					color: "#ef4444",
+					data: logs
+						.slice()
+						.reverse()
+						.map((log: ServiceLog) => ({
+							x: new Date(log.run_datetime),
+							y: log.job_copied_n,
 						})),
 				};
 
@@ -79,7 +91,7 @@ const JobScraperDashboard = (): JSX.Element => {
 						})),
 				};
 
-				setLogData([[successSeries, failSeries], [runDurationSeries]]);
+				setLogData([[successSeries, failSeries, copiedSeries], [runDurationSeries]]);
 			} catch (err: any) {
 				console.error("Failed to fetch latest logs:", err);
 			}
@@ -280,6 +292,10 @@ const JobScraperDashboard = (): JSX.Element => {
 		);
 	};
 
+	const getPlatformStat = (log: ServiceLog, platform: string, attribute: keyof PlatformStat) => {
+		return log.platform_stats.filter((ps: PlatformStat): boolean => ps.name === platform)[0]?.[attribute] || 0;
+	};
+
 	return (
 		<div>
 			<div className="table-header-section mb-4">
@@ -386,13 +402,10 @@ const JobScraperDashboard = (): JSX.Element => {
 
 						<div className="metric-group">
 							<p className="metric-item">
-								<span className="status-label">Jobs Extracted:</span> {latestLog.jobs_extracted_n}
+								<span className="status-label">Jobs Found:</span> {latestLog.job_total_n}
 							</p>
 							<p className="metric-item">
-								<span className="status-label">Jobs Scraped:</span> {latestLog.job_total_n}
-							</p>
-							<p className="metric-item">
-								<span className="status-label">Success:</span> {latestLog.job_success_n}
+								<span className="status-label">Successlly Scraped:</span> {latestLog.job_success_n}
 								<span className="metric-divider">|</span>
 								<span className="status-label">Failed:</span> {latestLog.job_fail_n}
 							</p>
@@ -400,13 +413,16 @@ const JobScraperDashboard = (): JSX.Element => {
 
 						<div className="metric-group">
 							<p className="metric-item">
-								<span className="status-label">LinkedIn:</span> {latestLog.linkedin_job_n}
+								<span className="status-label">LinkedIn:</span>{" "}
+								{getPlatformStat(latestLog, "linkedin", "job_scraped_n")}
 							</p>
 							<p className="metric-item">
-								<span className="status-label">Indeed:</span> {latestLog.indeed_job_n}
+								<span className="status-label">Indeed:</span>{" "}
+								{getPlatformStat(latestLog, "indeed", "job_scraped_n")}
 							</p>
 							<p className="metric-item">
-								<span className="status-label">VeganJobs:</span> {latestLog.veganjobs_job_n}
+								<span className="status-label">VeganJobs:</span>{" "}
+								{getPlatformStat(latestLog, "veganjobs", "job_scraped_n")}
 							</p>
 						</div>
 					</div>
@@ -419,14 +435,14 @@ const JobScraperDashboard = (): JSX.Element => {
 					<div style={{ display: "flex", width: "100%", gap: "20px", marginBottom: "20px" }}>
 						<ProgressBar
 							title="Users Processed"
-							current={latestLog.users_processed_n}
-							total={latestLog.users_found_n}
+							current={latestLog.user_processed_n}
+							total={latestLog.user_found_n}
 							width="100%"
 						/>
 						<ProgressBar
 							title="Emails Processed"
-							current={latestLog.emails_saved_n + latestLog.emails_skipped_n}
-							total={latestLog.emails_found_n}
+							current={latestLog.email_saved_n + latestLog.email_skipped_n}
+							total={latestLog.email_found_n}
 							width="100%"
 						/>
 						<ProgressBar

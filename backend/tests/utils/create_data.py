@@ -25,6 +25,7 @@ from tests.utils.table_data import (
     EMAIL_SCRAPEDJOB_MAPPINGS,
     SERVICE_LOG_DATA,
     JOB_APPLICATION_UPDATE_DATA,
+    PLATFORM_STAT_DATA,
 )
 
 
@@ -378,3 +379,13 @@ def create_service_logs(db) -> list[eis_models.EisServiceLog]:
     logs = [eis_models.EisServiceLog(**log) for log in SERVICE_LOG_DATA]
 
     return add_to_db(db, logs)
+
+
+def create_platform_stats(db) -> list[eis_models.PlatformStat]:
+    """Create sample platform stats"""
+
+    print("Creating platform stats...")
+    # noinspection PyArgumentList
+    stats = [eis_models.PlatformStat(**data) for data in PLATFORM_STAT_DATA]
+
+    return add_to_db(db, stats)

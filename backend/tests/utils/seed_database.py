@@ -24,6 +24,7 @@ from tests.utils.create_data import (
     create_scraped_jobs,
     create_service_logs,
     create_job_application_updates,
+    create_platform_stats,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -81,6 +82,7 @@ def seed_database() -> None:
         interviews = create_interviews(db, people, users, locations, jobs)
         job_application_updates = create_job_application_updates(db, users, jobs)
         service_logs = create_service_logs(db)
+        platform_stats = create_platform_stats(db)
         alert_emails = create_job_alert_emails(db, users, service_logs)
         scraped_jobs = create_scraped_jobs(db, alert_emails, users)
 
@@ -101,6 +103,7 @@ def seed_database() -> None:
         print(f"Job Alert Emails: {len(alert_emails)}")
         print(f"Scraped Jobs: {len(scraped_jobs)}")
         print(f"Job Application Updates: {len(job_application_updates)}")
+        print(f"Platform Stats: {len(platform_stats)}")
         print("=" * 50)
 
     except Exception as e:

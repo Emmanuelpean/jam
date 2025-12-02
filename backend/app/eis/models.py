@@ -5,6 +5,7 @@ Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
 from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, Float, TIMESTAMP, Table, UniqueConstraint
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
@@ -152,13 +153,13 @@ class EisServiceLog(CommonBase, Base):
     - `error_message` (str, optional): Error message if the service run failed.
 
     # Users
-    - `users_found_n` (int, optional): Number of users found.
-    - `users_processed_n` (int, optional): Number of users processed.
+    - `user_found_n` (int, optional): Number of users found.
+    - `user_processed_n` (int, optional): Number of users processed.
 
     # Emails
-    - `emails_found_n` (int, optional): Number of email messages found.
-    - `emails_saved_n` (int, optional): Number of email messages saved.
-    - `emails_skipped_n` (int, optional): Number of email messages skipped.
+    - `email_found_n` (int, optional): Number of email messages found.
+    - `email_saved_n` (int, optional): Number of email messages saved.
+    - `email_skipped_n` (int, optional): Number of email messages skipped.
 
     Relationships:
     --------------
@@ -170,18 +171,38 @@ class EisServiceLog(CommonBase, Base):
     error_message = Column(String, nullable=True)
 
     # Users
-    users_found_n = Column(Integer, default=0, nullable=False)
-    users_processed_n = Column(Integer, default=0, nullable=False)
+    user_found_n = Column(Integer, default=0, nullable=False)
+    user_processed_n = Column(Integer, default=0, nullable=False)
 
     # Emails
-    emails_found_n = Column(Integer, default=0, nullable=False)
-    emails_saved_n = Column(Integer, default=0, nullable=False)
-    emails_skipped_n = Column(Integer, default=0, nullable=False)
+    email_found_n = Column(Integer, default=0, nullable=False)
+    email_saved_n = Column(Integer, default=0, nullable=False)
+    email_skipped_n = Column(Integer, default=0, nullable=False)
 
     # Relationships
     emails = relationship("JobAlertEmail", back_populates="service_log")
     scraped_jobs = relationship("ScrapedJob", back_populates="service_log")
     platform_stats = relationship("PlatformStat", back_populates="service_log")
+
+    @hybrid_property
+    def job_success_n(self) -> int:
+        """Total successful jobs across all platforms."""
+        return sum(stat.jobs_scraped_n for stat in self.platform_stats)
+
+    @hybrid_property
+    def job_fail_n(self) -> int:
+        """Total failed jobs across all platforms."""
+        return sum(stat.jobs_failed_n for stat in self.platform_stats)
+
+    @hybrid_property
+    def job_total_n(self) -> int:
+        """Total jobs found across all platforms."""
+        return sum(stat.jobs_found_n for stat in self.platform_stats)
+
+    @hybrid_property
+    def jobs_copied_n(self) -> int:
+        """Total jobs copied/skipped across all platforms."""
+        return sum(stat.jobs_copied_n for stat in self.platform_stats)
 
 
 class PlatformStat(CommonBase, Base):
@@ -190,25 +211,25 @@ class PlatformStat(CommonBase, Base):
     Attributes
     ----------
     - `name` (str): Platform name (e.g. LinkedIn, Indeed).
-    - `jobs_found_n` (int): Number of jobs found for this platform.
-    - `jobs_scraped_n` (int): Number of jobs scraped for this platform.
-    - `jobs_failed_n` (int): Number of jobs that failed scraping for this platform.
-    - `jobs_copied_n` (int): Number of jobs copied for this platform.
+    - `job_found_n` (int): Number of jobs found for this platform.
+    - `job_scraped_n` (int): Number of jobs scraped for this platform.
+    - `job_failed_n` (int): Number of jobs that failed scraping for this platform.
+    - `job_copied_n` (int): Number of jobs copied for this platform.
     - `service_log_id` (int): FK to `eis_service_log.id`.
-    - `emails_saved_n` (int): Number of emails saved for this platform.
-    - `emails_skipped_n` (int): Number of emails skipped for this platform."""
+    - `email_saved_n` (int): Number of emails saved for this platform.
+    - `email_skipped_n` (int): Number of emails skipped for this platform."""
 
     name = Column(String, nullable=False)
 
     # Jobs
-    jobs_found_n = Column(Integer, default=0, nullable=False)
-    jobs_scraped_n = Column(Integer, default=0, nullable=False)
-    jobs_failed_n = Column(Integer, default=0, nullable=False)
-    jobs_copied_n = Column(Integer, default=0, nullable=False)
+    job_found_n = Column(Integer, default=0, nullable=False)
+    job_scraped_n = Column(Integer, default=0, nullable=False)
+    job_failed_n = Column(Integer, default=0, nullable=False)
+    job_copied_n = Column(Integer, default=0, nullable=False)
 
     # Emails
-    emails_saved_n = Column(Integer, default=0, nullable=False)
-    emails_skipped_n = Column(Integer, default=0, nullable=False)
+    email_saved_n = Column(Integer, default=0, nullable=False)
+    email_skipped_n = Column(Integer, default=0, nullable=False)
 
     service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="CASCADE"), nullable=False)
     service_log = relationship("EisServiceLog", back_populates="platform_stats")

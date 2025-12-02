@@ -266,18 +266,28 @@ export interface ServiceLog {
 	run_duration: number | null;
 	is_success: boolean | null;
 	error_message: string | null;
-	users_found_n: number;
-	users_processed_n: number;
-	emails_found_n: number;
-	emails_saved_n: number;
-	emails_skipped_n: number;
-	jobs_extracted_n: number;
+	user_found_n: number;
+	user_processed_n: number;
+	email_found_n: number;
+	email_saved_n: number;
+	email_skipped_n: number;
+	emails: number[];
+	scraped_jobs: number[];
+	platform_stats: PlatformStat[];
 	job_success_n: number;
 	job_fail_n: number;
 	job_total_n: number;
-	linkedin_job_n: number;
-	indeed_job_n: number;
-	veganjobs_job_n: number;
-	emails: number[];
-	scraped_jobs: number[];
+	job_copied_n: number;
+}
+
+export interface PlatformStat {
+	id: number;
+	name: string;
+	job_found_n: number;
+	job_scraped_n: number;
+	job_failed_n: number;
+	job_copied_n: number;
+	email_saved_n: number;
+	email_skipped_n: number;
+	service_log_id: number;
 }

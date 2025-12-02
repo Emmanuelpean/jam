@@ -222,8 +222,8 @@ class TestExtractEmailData:
         # Verify platform stats updated
         platform_stat = session.query(PlatformStat).first()
         assert platform_stat.name == email_entry.platform
-        assert platform_stat.jobs_found_n == len(expected_jobs)
-        assert platform_stat.jobs_failed_n == platform_stat.jobs_scraped_n == 0
+        assert platform_stat.job_found_n == len(expected_jobs)
+        assert platform_stat.job_failed_n == platform_stat.job_scraped_n == 0
 
         # Verify email record updated
         email_record = session.query(JobAlertEmail).filter(JobAlertEmail.id == email_entry.id).first()
@@ -242,8 +242,8 @@ class TestExtractEmailData:
         # Verify platform stats updated
         platform_stat = session.query(PlatformStat).first()
         assert platform_stat.name == email_entry.platform
-        assert platform_stat.jobs_found_n == len(expected_jobs)
-        assert platform_stat.jobs_failed_n == platform_stat.jobs_scraped_n == 0
+        assert platform_stat.job_found_n == len(expected_jobs)
+        assert platform_stat.job_failed_n == platform_stat.job_scraped_n == 0
 
         # Verify email record updated
         email_record = session.query(JobAlertEmail).filter(JobAlertEmail.id == email_entry.id).first()
@@ -264,8 +264,8 @@ class TestExtractEmailData:
         # Verify platform stats updated
         platform_stat = session.query(PlatformStat).first()
         assert platform_stat.name == email_entry.platform
-        assert platform_stat.jobs_found_n == len(expected_jobs)
-        assert platform_stat.jobs_failed_n == platform_stat.jobs_scraped_n == 0
+        assert platform_stat.job_found_n == len(expected_jobs)
+        assert platform_stat.job_failed_n == platform_stat.job_scraped_n == 0
 
         # Verify email record updated
         email_record = session.query(JobAlertEmail).filter(JobAlertEmail.id == email_entry.id).first()
@@ -284,8 +284,8 @@ class TestExtractEmailData:
         # Verify platform stats updated
         platform_stat = session.query(PlatformStat).first()
         assert platform_stat.name == email_entry.platform
-        assert platform_stat.jobs_found_n == len(expected_jobs)
-        assert platform_stat.jobs_failed_n == platform_stat.jobs_scraped_n == 0
+        assert platform_stat.job_found_n == len(expected_jobs)
+        assert platform_stat.job_failed_n == platform_stat.job_scraped_n == 0
 
         # Verify email record updated
         email_record = session.query(JobAlertEmail).filter(JobAlertEmail.id == email_entry.id).first()
@@ -351,19 +351,19 @@ class TestProcessEmails:
             test_job_scraper.process_emails(timedelta_days=1, service_log_entry=test_service_log)
 
             # Verify service log updates
-            assert test_service_log.users_processed_n == 3
-            assert test_service_log.emails_found_n == 1
-            assert test_service_log.emails_saved_n == 1
-            assert test_service_log.emails_skipped_n == 0
+            assert test_service_log.user_processed_n == 3
+            assert test_service_log.email_found_n == 1
+            assert test_service_log.email_saved_n == 1
+            assert test_service_log.email_skipped_n == 0
 
             # Verify the platform stats
             platform_stat = session.query(PlatformStat).filter(PlatformStat.name == email["platform"]).first()
             assert platform_stat is not None
-            assert platform_stat.emails_saved_n == 1
-            assert platform_stat.emails_skipped_n == 0
-            assert platform_stat.jobs_found_n == len(email["parsed_output"])
-            assert platform_stat.jobs_scraped_n == 0
-            assert platform_stat.jobs_failed_n == 0
+            assert platform_stat.email_saved_n == 1
+            assert platform_stat.email_skipped_n == 0
+            assert platform_stat.job_found_n == len(email["parsed_output"])
+            assert platform_stat.job_scraped_n == 0
+            assert platform_stat.job_failed_n == 0
 
             # Verify email was saved to database
             saved_emails = session.query(JobAlertEmail).filter(JobAlertEmail.external_email_id == email["id"]).all()
@@ -403,19 +403,19 @@ class TestProcessEmails:
             test_job_scraper.process_emails(timedelta_days=1, service_log_entry=test_service_log)
 
             # Verify service log updates
-            assert test_service_log.users_processed_n == 3
-            assert test_service_log.emails_found_n == 2
-            assert test_service_log.emails_saved_n == 1
-            assert test_service_log.emails_skipped_n == 1
+            assert test_service_log.user_processed_n == 3
+            assert test_service_log.email_found_n == 2
+            assert test_service_log.email_saved_n == 1
+            assert test_service_log.email_skipped_n == 1
 
             # Verify the platform stats
             platform_stat = session.query(PlatformStat).filter(PlatformStat.name == email["platform"]).first()
             assert platform_stat is not None
-            assert platform_stat.emails_saved_n == 1
-            assert platform_stat.emails_skipped_n == 1
-            assert platform_stat.jobs_found_n == len(email["parsed_output"])
-            assert platform_stat.jobs_scraped_n == 0
-            assert platform_stat.jobs_failed_n == 0
+            assert platform_stat.email_saved_n == 1
+            assert platform_stat.email_skipped_n == 1
+            assert platform_stat.job_found_n == len(email["parsed_output"])
+            assert platform_stat.job_scraped_n == 0
+            assert platform_stat.job_failed_n == 0
 
             # Verify email was saved to database
             saved_emails = session.query(JobAlertEmail).filter(JobAlertEmail.external_email_id == email["id"]).all()
@@ -463,18 +463,18 @@ class TestProcessEmails:
 
             # Verify service log updates
             n_job = len(email["parsed_output"])
-            assert test_service_log.users_processed_n == 3
-            assert test_service_log.emails_found_n == 2
-            assert test_service_log.emails_saved_n == 2
+            assert test_service_log.user_processed_n == 3
+            assert test_service_log.email_found_n == 2
+            assert test_service_log.email_saved_n == 2
 
             # Verify the platform stats
             platform_stat = session.query(PlatformStat).filter(PlatformStat.name == email["platform"]).first()
             assert platform_stat is not None
-            assert platform_stat.emails_saved_n == 2
-            assert platform_stat.emails_skipped_n == 0
-            assert platform_stat.jobs_found_n == n_job * 2
-            assert platform_stat.jobs_scraped_n == 0
-            assert platform_stat.jobs_failed_n == 0
+            assert platform_stat.email_saved_n == 2
+            assert platform_stat.email_skipped_n == 0
+            assert platform_stat.job_found_n == n_job * 2
+            assert platform_stat.job_scraped_n == 0
+            assert platform_stat.job_failed_n == 0
 
             # Verify jobs were created for appropriate users
             user1_jobs = session.query(ScrapedJob).filter(ScrapedJob.owner_id == test_users[0].id).all()
@@ -564,8 +564,8 @@ class TestScrapeJobs:
         # Verify the platform stats
         platform_stat = session.query(PlatformStat).filter(PlatformStat.name == Platform.INDEED.value).first()
         assert platform_stat is not None
-        assert platform_stat.jobs_scraped_n == len(indeed_scraped_jobs)
-        assert platform_stat.jobs_failed_n == 0
+        assert platform_stat.job_scraped_n == len(indeed_scraped_jobs)
+        assert platform_stat.job_failed_n == 0
 
     def test_indeed_nobrightapi_success(
         self, indeed_scraped_jobs, test_service_log, job_scraper_with_brightapi_skip, session
@@ -583,8 +583,8 @@ class TestScrapeJobs:
         # Verify the platform stats
         platform_stat = session.query(PlatformStat).filter(PlatformStat.name == Platform.INDEED.value).first()
         assert platform_stat is not None
-        assert platform_stat.jobs_scraped_n == len(indeed_scraped_jobs)
-        assert platform_stat.jobs_failed_n == 0
+        assert platform_stat.job_scraped_n == len(indeed_scraped_jobs)
+        assert platform_stat.job_failed_n == 0
 
     def test_linkedin_success(self, linkedin_scraped_jobs, test_service_log, test_job_scraper, session) -> None:
         """Test successful processing of LinkedIn email jobs"""
@@ -600,8 +600,8 @@ class TestScrapeJobs:
         # Verify the platform stats
         platform_stat = session.query(PlatformStat).filter(PlatformStat.name == Platform.LINKEDIN.value).first()
         assert platform_stat is not None
-        assert platform_stat.jobs_scraped_n == len(linkedin_scraped_jobs)
-        assert platform_stat.jobs_failed_n == 0
+        assert platform_stat.job_scraped_n == len(linkedin_scraped_jobs)
+        assert platform_stat.job_failed_n == 0
 
     def test_veganjobs_success(self, veganjobs_scraped_jobs, test_service_log, test_job_scraper, session) -> None:
         """Test successful processing of VeganJobs email jobs"""
@@ -617,8 +617,8 @@ class TestScrapeJobs:
         # Verify the platform stats
         platform_stat = session.query(PlatformStat).filter(PlatformStat.name == Platform.VEGANJOBS.value).first()
         assert platform_stat is not None
-        assert platform_stat.jobs_scraped_n == len(veganjobs_scraped_jobs)
-        assert platform_stat.jobs_failed_n == 0
+        assert platform_stat.job_scraped_n == len(veganjobs_scraped_jobs)
+        assert platform_stat.job_failed_n == 0
 
     def test_nhs_success(self, nhs_scraped_jobs, test_service_log, test_job_scraper, session) -> None:
         """Test successful processing of NHS email jobs"""
@@ -634,8 +634,8 @@ class TestScrapeJobs:
         # Verify the platform stats
         platform_stat = session.query(PlatformStat).filter(PlatformStat.name == Platform.NHS.value).first()
         assert platform_stat is not None
-        assert platform_stat.jobs_scraped_n == len(nhs_scraped_jobs)
-        assert platform_stat.jobs_failed_n == 0
+        assert platform_stat.job_scraped_n == len(nhs_scraped_jobs)
+        assert platform_stat.job_failed_n == 0
 
     def test_indeed_multiple_users_shared_jobs_success(
         self, indeed_scraped_jobs, indeed_scraped_jobs_user2, test_service_log, test_job_scraper, session
@@ -664,6 +664,6 @@ class TestScrapeJobs:
             # Verify the platform stats
             platform_stat = session.query(PlatformStat).filter(PlatformStat.name == Platform.INDEED.value).first()
             assert platform_stat is not None
-            assert platform_stat.jobs_scraped_n == len(indeed_scraped_jobs)
-            assert platform_stat.jobs_copied_n == len(indeed_scraped_jobs_user2)
-            assert platform_stat.jobs_failed_n == 0
+            assert platform_stat.job_scraped_n == len(indeed_scraped_jobs)
+            assert platform_stat.job_copied_n == len(indeed_scraped_jobs_user2)
+            assert platform_stat.job_failed_n == 0
