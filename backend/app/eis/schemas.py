@@ -109,45 +109,33 @@ class PaginatedScrapedJobResponse(BaseModel):
 # ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
 
 
-class EisServiceLog(BaseModel):
-    """EIS Service Log base schema"""
+class EisServiceLogOut(Out):
+    """EIS Service Log output schema"""
 
     run_datetime: datetime | None = None
     run_duration: float | None = None
     is_success: bool | None = None
     error_message: str | None = None
 
-    # Jobs
-    job_total_n: int = 0
-    job_success_n: int = 0
-    job_fail_n: int = 0
-    jobs_extracted_n: int = 0
-    linkedin_job_n: int = 0
-    indeed_job_n: int = 0
-    veganjobs_job_n: int = 0
-    nhs_job_n: int = 0
-
     # Users
-    users_found_n: int = 0
-    users_processed_n: int = 0
+    user_found_n: int = 0
+    user_processed_n: int = 0
 
     # Emails
-    emails_found_n: int = 0
-    emails_saved_n: int = 0
-    emails_skipped_n: int = 0
+    email_found_n: int = 0
+    email_saved_n: int = 0
+    email_skipped_n: int = 0
 
-
-class EisServiceLogUpdate(EisServiceLog):
-    """EIS Service Log update schema"""
-
-    run_datetime: datetime | None = None
-
-
-class EisServiceLogOut(EisServiceLog, Out):
-    """EIS Service Log output schema"""
-
+    # Relationships
     emails: list[int]
     scraped_jobs: list[int]
+    platform_stats: list["PlatformStatOut"]
+
+    # Dynamic fields
+    jobs_found_n: int = 0
+    jobs_scraped_n: int = 0
+    jobs_failed_n: int = 0
+    jobs_copied_n: int = 0
 
     @field_validator("emails", "scraped_jobs", mode="before")
     @classmethod
@@ -155,6 +143,27 @@ class EisServiceLogOut(EisServiceLog, Out):
         """Serialize relationships to list of IDs"""
 
         return serialize_relationships(value)
+
+
+# --------------------------------------------------- PLATFORM STATS ---------------------------------------------------
+
+
+class PlatformStatOut(Out):
+    """Platform Stat output schema"""
+
+    name: str | None = None
+
+    # Jobs
+    job_found_n: int = 0
+    job_scraped_n: int = 0
+    job_failed_n: int = 0
+    job_copied_n: int = 0
+
+    # Emails
+    email_saved_n: int = 0
+    email_skipped_n: int = 0
+
+    service_log_id: int | None = None
 
 
 # ------------------------------------------------ EMAIL SCRAPER SERVICE -----------------------------------------------

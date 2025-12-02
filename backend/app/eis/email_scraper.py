@@ -351,7 +351,7 @@ class JobEmailScraper(EmailService):
             .all()
         )
         self.logger.info(f"Found {len(users)} users to process.")
-        service_log_entry.users_found_n = len(users)
+        service_log_entry.user_found_n = len(users)
 
         # For each user...
         for user in users:
@@ -365,7 +365,7 @@ class JobEmailScraper(EmailService):
                     inbox_only=True,
                     timedelta_days=timedelta_days,
                 )
-                service_log_entry.emails_found_n += len(email_ids)
+                service_log_entry.email_found_n += len(email_ids)
                 self.logger.info(f"Found {len(email_ids)} emails")
             except Exception as exception:
                 self.logger.exception(f"Failed to search messages due to error: {exception}. Skipping user.")
@@ -379,12 +379,12 @@ class JobEmailScraper(EmailService):
 
                     # Extract jobs if this is a new email
                     if is_new:
-                        service_log_entry.emails_saved_n += 1
-                        self.upsert_platform_stat(service_log_entry, email_record.platform, emails_saved_n=1)
+                        service_log_entry.email_saved_n += 1
+                        self.upsert_platform_stat(service_log_entry, email_record.platform, email_saved_n=1)
                         self.extract_email_data(email_record, service_log_entry)
                     else:
-                        service_log_entry.emails_skipped_n += 1
-                        self.upsert_platform_stat(service_log_entry, email_record.platform, emails_skipped_n=1)
+                        service_log_entry.email_skipped_n += 1
+                        self.upsert_platform_stat(service_log_entry, email_record.platform, email_skipped_n=1)
                         self.logger.info("Email already exists in database. Skipping email.")
 
                 except Exception as exception:
@@ -392,7 +392,7 @@ class JobEmailScraper(EmailService):
                     self.logger.exception(message)
                     continue  # next email
 
-            service_log_entry.users_processed_n += 1
+            service_log_entry.user_processed_n += 1
 
     def extract_email_data(
         self,
@@ -417,13 +417,13 @@ class JobEmailScraper(EmailService):
             self.logger.info(f"No job IDs found in email: {email_record.external_email_id}. Skipping email.")
             return None
 
-        email_record.jobs_found_n = len(jobs)
+        email_record.job_found_n = len(jobs)
         self.db.commit()
 
         # Save the extracted job ids to the database
         try:
             self.save_job_base_info_to_db(email_record, jobs)
-            self.upsert_platform_stat(service_log_entry, platform=email_record.platform, jobs_found_n=len(jobs))
+            self.upsert_platform_stat(service_log_entry, platform=email_record.platform, job_found_n=len(jobs))
             self.logger.info(f"Extracted and saved {len(jobs)} job IDs from {email_record.platform}")
         except Exception as exception:
             message = f"Failed to save job IDs for email ID {email_record.external_email_id} due to error: {exception}. Skipping email."
@@ -455,7 +455,7 @@ class JobEmailScraper(EmailService):
                     f"Copying data to unscraped record."
                 )
                 self.copy_existing_entry(existing_data, job_record)
-                self.upsert_platform_stat(service_log_entry, job_record.platform, jobs_copied_n=1)
+                self.upsert_platform_stat(service_log_entry, job_record.platform, job_copied_n=1)
 
             # Otherwise, scrape the data from the web
             else:
@@ -482,7 +482,7 @@ class JobEmailScraper(EmailService):
                         self.update_scraped_job_data(job_record, job_data)
                     else:
                         self.update_scraped_job_data(job_record, None)
-                    self.upsert_platform_stat(service_log_entry, job_record.platform, jobs_scraped_n=1)
+                    self.upsert_platform_stat(service_log_entry, job_record.platform, job_scraped_n=1)
                 except:
                     message = (
                         f"Failed to scrape job data for job ID {job_record.external_job_id} due to error: "
@@ -493,7 +493,7 @@ class JobEmailScraper(EmailService):
                     job_record.is_failed = True
                     job_record.scrape_error = f"{traceback.format_exc()}"
                     self.db.commit()
-                    self.upsert_platform_stat(service_log_entry, job_record.platform, jobs_failed_n=1)
+                    self.upsert_platform_stat(service_log_entry, job_record.platform, job_failed_n=1)
 
 
 class EmailScraperService:

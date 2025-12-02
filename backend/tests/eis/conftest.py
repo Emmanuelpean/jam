@@ -17,7 +17,12 @@ from tests.eis.test_job_scrapers import (
     MockLinkedinBrightdataJobScraper,
     MockNhsBrightdataJobScraper,
 )
-from tests.utils.create_data import create_service_logs, create_job_alert_emails, create_scraped_jobs
+from tests.utils.create_data import (
+    create_service_logs,
+    create_job_alert_emails,
+    create_scraped_jobs,
+    create_platform_stats,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -58,6 +63,13 @@ def test_service_logs(session) -> list[models.EisServiceLog]:
     """Create test service logs"""
 
     return create_service_logs(session)
+
+
+@pytest.fixture
+def test_platform_stats(session, test_service_logs) -> list[models.PlatformStat]:
+    """Create test platform stats"""
+
+    return create_platform_stats(session)
 
 
 @pytest.fixture
