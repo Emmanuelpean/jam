@@ -91,8 +91,13 @@ def parse_nhs_job_email(body: str) -> list[JobResult]:
         if next_table:
             raw_html += str(next_table)
 
+        # If no job id, the processed_url is None
+        if not job_id:
+            processed_url = None
+        else:
+            processed_url = BASE_URL + job_id
+
         # Create Pydantic objects
-        processed_url = BASE_URL + job_id
         salary = Salary(min_amount=salary_min, max_amount=salary_max, currency=salary_currency)
         job_info = JobInfo(title=title, url=processed_url, raw_url=url, salary=salary, deadline=deadline)
         job_result = JobResult(company="NHS", job_id=job_id, location=location, job=job_info, platform=Platform.NHS)
