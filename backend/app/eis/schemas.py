@@ -118,30 +118,28 @@ class EisServiceLogOut(Out):
     error_message: str | None = None
 
     # Users
-    user_found_n: int = 0
-    user_processed_n: int = 0
+    user_found_ids: list[int] = []
+    user_processed_ids: list[int] = []
 
     # Emails
-    email_found_n: int = 0
     email_saved_n: int = 0
     email_skipped_n: int = 0
+
+    # Jobs
+    job_found_n: int = 0
+    job_scrape_succeeded_n: int = 0
+    job_scrape_failed_n: int = 0
+    job_scrape_copied_n: int = 0
 
     # Relationships
     emails: list[int]
     scraped_jobs: list[int]
     platform_stats: list["PlatformStatOut"]
 
-    # Dynamic fields
-    jobs_found_n: int = 0
-    jobs_scraped_n: int = 0
-    jobs_failed_n: int = 0
-    jobs_copied_n: int = 0
-
     @field_validator("emails", "scraped_jobs", mode="before")
     @classmethod
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
-
         return serialize_relationships(value)
 
 
@@ -154,14 +152,14 @@ class PlatformStatOut(Out):
     name: str | None = None
 
     # Jobs
-    job_found_n: int = 0
-    job_scraped_n: int = 0
-    job_failed_n: int = 0
-    job_copied_n: int = 0
+    job_found_ids: list[int] = []
+    job_scrape_succeeded_ids: list[int] = []
+    job_scrape_failed_ids: list[int] = []
+    job_scrape_copied_ids: list[int] = []
 
     # Emails
-    email_saved_n: int = 0
-    email_skipped_n: int = 0
+    email_saved_ids: list[int] = []
+    email_skipped_ids: list[int] = []
 
     service_log_id: int | None = None
 

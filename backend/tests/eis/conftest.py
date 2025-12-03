@@ -22,6 +22,7 @@ from tests.utils.create_data import (
     create_job_alert_emails,
     create_scraped_jobs,
     create_platform_stats,
+    create_eis_service_errors,
 )
 
 
@@ -70,6 +71,13 @@ def test_platform_stats(session, test_service_logs) -> list[models.PlatformStat]
     """Create test platform stats"""
 
     return create_platform_stats(session)
+
+
+@pytest.fixture
+def test_eis_service_errors(session, test_service_logs) -> list[models.EisServiceError]:
+    """Create test eis service errors"""
+
+    return create_eis_service_errors(session)
 
 
 @pytest.fixture

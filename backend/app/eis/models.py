@@ -5,6 +5,7 @@ Includes models for job alert emails, extracted job IDs, and scraped job data
 with associated companies and locations from external sources."""
 
 from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, Float, TIMESTAMP, Table, UniqueConstraint
+from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
@@ -55,7 +56,7 @@ class JobAlertEmail(Owned, Base):
     subject = Column(String, nullable=False)
     sender = Column(String, nullable=False)
     date_received = Column(TIMESTAMP(timezone=True), nullable=False)
-    jobs_found_n = Column(Integer, nullable=False, default=0)
+    job_found_n = Column(Integer, nullable=False, default=0)
     platform = Column(String, nullable=False)
     body = Column(String, nullable=False)
 
@@ -151,19 +152,24 @@ class EisServiceLog(CommonBase, Base):
     - `run_datetime` (datetime): Date and time of the service run.
     - `is_success` (bool): Indicates whether the service run was successful.
     - `error_message` (str, optional): Error message if the service run failed.
-
-    # Users
-    - `user_found_n` (int, optional): Number of users found.
-    - `user_processed_n` (int, optional): Number of users processed.
-
-    # Emails
-    - `email_found_n` (int, optional): Number of email messages found.
-    - `email_saved_n` (int, optional): Number of email messages saved.
-    - `email_skipped_n` (int, optional): Number of email messages skipped.
+    - `user_found_ids` (list of int): List of user IDs found during the service run.
+    - `user_processed_ids` (list of int): List of user IDs processed during the service run.
 
     Relationships:
     --------------
-    - `emails` (list of JobAlertEmail): List of email messages associated with the service."""
+    - `emails` (list of JobAlertEmail): List of email messages associated with the service.
+    - `scraped_jobs` (list of ScrapedJob): List of scraped jobs associated with the service.
+    - `platform_stats` (list of PlatformStat): List of platform statistics associated with the service.
+    - `errors` (list of EisServiceError): List of errors associated with the service.
+
+    Properties:
+    -----------
+    - `job_scrape_succeeded_n` (int): Total successfully scraped jobs across all platforms.
+    - `job_scrape_failed_n` (int): Total failed scraped jobs across all platforms.
+    - `job_scrape_copied_n` (int): Total copied scraped jobs found across all platforms.
+    - `job_found_n` (int): Total jobs found (copied + skipped) across all platforms.
+    - `email_saved_n` (int): Total emails saved across all platforms.
+    - `email_skipped_n` (int): Total emails skipped across all platforms."""
 
     run_duration = Column(Float, nullable=True)
     run_datetime = Column(TIMESTAMP(timezone=True), nullable=False)
@@ -171,67 +177,127 @@ class EisServiceLog(CommonBase, Base):
     error_message = Column(String, nullable=True)
 
     # Users
-    user_found_n = Column(Integer, default=0, nullable=False)
-    user_processed_n = Column(Integer, default=0, nullable=False)
-
-    # Emails
-    email_found_n = Column(Integer, default=0, nullable=False)
-    email_saved_n = Column(Integer, default=0, nullable=False)
-    email_skipped_n = Column(Integer, default=0, nullable=False)
+    user_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    user_processed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
 
     # Relationships
     emails = relationship("JobAlertEmail", back_populates="service_log")
     scraped_jobs = relationship("ScrapedJob", back_populates="service_log")
     platform_stats = relationship("PlatformStat", back_populates="service_log")
+    errors = relationship("EisServiceError", back_populates="service_log")
+
+    def __init__(self, **kwargs):
+        """Initialise array fields with empty lists if not provided"""
+        kwargs.setdefault("user_found_ids", [])
+        kwargs.setdefault("user_processed_ids", [])
+        super().__init__(**kwargs)
 
     @hybrid_property
-    def job_success_n(self) -> int:
-        """Total successful jobs across all platforms."""
-        return sum(stat.jobs_scraped_n for stat in self.platform_stats)
+    def job_scrape_succeeded_n(self) -> int:
+        """Total successfully scraped jobs across all platforms."""
+        return sum(len(stat.job_scrape_succeeded_ids) for stat in self.platform_stats)
 
     @hybrid_property
-    def job_fail_n(self) -> int:
-        """Total failed jobs across all platforms."""
-        return sum(stat.jobs_failed_n for stat in self.platform_stats)
+    def job_scrape_failed_n(self) -> int:
+        """Total failed scraped jobs across all platforms."""
+        return sum(len(stat.job_scrape_failed_ids) for stat in self.platform_stats)
 
     @hybrid_property
-    def job_total_n(self) -> int:
-        """Total jobs found across all platforms."""
-        return sum(stat.jobs_found_n for stat in self.platform_stats)
+    def job_scrape_copied_n(self) -> int:
+        """Total copied scraped jobs found across all platforms."""
+        return sum(len(stat.job_scrape_copied_ids) for stat in self.platform_stats)
 
     @hybrid_property
-    def jobs_copied_n(self) -> int:
+    def job_scrape_skipped_n(self) -> int:
+        """Total skipped scraped jobs found across all platforms."""
+        return sum(len(stat.job_scrape_skipped_ids) for stat in self.platform_stats)
+
+    @hybrid_property
+    def job_found_n(self) -> int:
         """Total jobs copied/skipped across all platforms."""
-        return sum(stat.jobs_copied_n for stat in self.platform_stats)
+        return sum(len(stat.job_found_ids) for stat in self.platform_stats)
+
+    @hybrid_property
+    def email_saved_n(self) -> int:
+        """Total emails saved across all platforms."""
+        return sum(len(stat.email_saved_ids) for stat in self.platform_stats)
+
+    @hybrid_property
+    def email_skipped_n(self) -> int:
+        """Total emails saved across all platforms."""
+        return sum(len(stat.email_skipped_ids) for stat in self.platform_stats)
 
 
 class PlatformStat(CommonBase, Base):
     """Per-platform stats for a service run linked to an EisServiceLog.
 
-    Attributes
-    ----------
+    Attributes:
+    -----------
     - `name` (str): Platform name (e.g. LinkedIn, Indeed).
-    - `job_found_n` (int): Number of jobs found for this platform.
-    - `job_scraped_n` (int): Number of jobs scraped for this platform.
-    - `job_failed_n` (int): Number of jobs that failed scraping for this platform.
-    - `job_copied_n` (int): Number of jobs copied for this platform.
-    - `service_log_id` (int): FK to `eis_service_log.id`.
-    - `email_saved_n` (int): Number of emails saved for this platform.
-    - `email_skipped_n` (int): Number of emails skipped for this platform."""
+
+    # Emails
+    - `email_saved_ids` (list of int): List of saved email IDs.
+    - `email_skipped_ids` (list of int): List of skipped email IDs.
+
+    # Jobs
+    - `job_found_ids` (list of int): List of found job IDs from the emails.
+    - `job_scrape_failed_ids` (list of int): List of failed job scrape IDs.
+    - `job_scrape_success_ids` (list of int): List of successful job scrape IDs.
+    - `job_scrape_copied_ids` (list of int): List of copied job scrape IDs.
+
+    # Service Log
+    - `service_log_id` (int): Foreign key to the associated EisServiceLog.
+    - `service_log` (EisServiceLog): Relationship to the associated EisServiceLog.
+
+    Constraints:
+    ------------
+    - Unique constraint on the combination of `service_log_id` and `name` to ensure uniqueness per platform per service log.
+    """
 
     name = Column(String, nullable=False)
 
-    # Jobs
-    job_found_n = Column(Integer, default=0, nullable=False)
-    job_scraped_n = Column(Integer, default=0, nullable=False)
-    job_failed_n = Column(Integer, default=0, nullable=False)
-    job_copied_n = Column(Integer, default=0, nullable=False)
-
     # Emails
-    email_saved_n = Column(Integer, default=0, nullable=False)
-    email_skipped_n = Column(Integer, default=0, nullable=False)
+    email_saved_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    email_skipped_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+
+    # Jobs
+    job_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_scrape_failed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_scrape_succeeded_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_scrape_copied_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_scrape_skipped_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
 
     service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="CASCADE"), nullable=False)
     service_log = relationship("EisServiceLog", back_populates="platform_stats")
 
     __table_args__ = (UniqueConstraint("service_log_id", "name", name="unique_platform_per_service_log"),)
+
+    def __init__(self, **kwargs):
+        """Initialise array fields with empty lists if not provided"""
+        kwargs.setdefault("email_saved_ids", [])
+        kwargs.setdefault("email_skipped_ids", [])
+        kwargs.setdefault("job_found_ids", [])
+        kwargs.setdefault("job_scrape_failed_ids", [])
+        kwargs.setdefault("job_scrape_succeeded_ids", [])
+        kwargs.setdefault("job_scrape_copied_ids", [])
+        kwargs.setdefault("job_scrape_skipped_ids", [])
+        super().__init__(**kwargs)
+
+
+class EisServiceError(CommonBase, Base):
+    """Records unexpected/unhandled errors raised during a service run.
+
+    Fields:
+    - error_type: short label/class name of the error
+    - message: error message
+    - traceback: full traceback / details
+    - occurred_at: timestamp when the error occurred
+    - service_log_id: FK to EisServiceLog
+    """
+
+    error_type = Column(String, nullable=False)
+    message = Column(String, nullable=True)
+    traceback = Column(String, nullable=True)
+
+    service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="CASCADE"), nullable=False)
+    service_log = relationship("EisServiceLog", back_populates="errors")
