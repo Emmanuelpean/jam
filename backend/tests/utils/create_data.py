@@ -26,6 +26,7 @@ from tests.utils.table_data import (
     SERVICE_LOG_DATA,
     JOB_APPLICATION_UPDATE_DATA,
     PLATFORM_STAT_DATA,
+    SERVICE_ERROR_DATA,
 )
 
 
@@ -389,3 +390,13 @@ def create_platform_stats(db) -> list[eis_models.PlatformStat]:
     stats = [eis_models.PlatformStat(**data) for data in PLATFORM_STAT_DATA]
 
     return add_to_db(db, stats)
+
+
+def create_eis_service_errors(db) -> list[eis_models.EisServiceError]:
+    """Create sample EIS service errors"""
+
+    print("Creating EIS service errors...")
+    # noinspection PyArgumentList
+    errors = [eis_models.EisServiceError(**data) for data in SERVICE_ERROR_DATA]
+
+    return add_to_db(db, errors)

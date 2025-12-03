@@ -2196,186 +2196,200 @@ JOB_SCRAPED_DATA = [
         "service_log_id": 1,
     },
 ]
-
-# python
 SERVICE_LOG_DATA = [
     {
         "run_duration": 45.2,
         "run_datetime": "2025-01-15 08:30:00",
         "is_success": True,
         "error_message": None,
-        "user_processed_n": 4,
-        "user_found_n": 10,
+        "user_processed_ids": [1, 2, 3, 4],
+        "user_found_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     },
     {
         "run_duration": 123.8,
         "run_datetime": "2024-01-15 09:15:00",
         "is_success": True,
         "error_message": None,
+        "user_processed_ids": [],
+        "user_found_ids": [],
     },
     {
         "run_duration": 67.4,
         "run_datetime": "2024-01-15 10:00:00",
         "is_success": False,
         "error_message": "Rate limit exceeded after 30 requests",
+        "user_processed_ids": [],
+        "user_found_ids": [],
     },
     {
         "run_duration": 89.1,
         "run_datetime": "2024-01-15 11:30:00",
         "is_success": True,
         "error_message": None,
+        "user_processed_ids": [],
+        "user_found_ids": [],
     },
     {
         "run_duration": 12.3,
         "run_datetime": "2024-01-15 12:00:00",
         "is_success": True,
         "error_message": None,
+        "user_processed_ids": [],
+        "user_found_ids": [],
     },
     {
         "run_duration": 3.7,
         "run_datetime": "2024-01-15 13:45:00",
         "is_success": False,
         "error_message": "SMTP server connection timeout",
+        "user_processed_ids": [],
+        "user_found_ids": [],
     },
     {
         "run_duration": 156.9,
         "run_datetime": "2024-01-15 14:20:00",
         "is_success": True,
         "error_message": None,
+        "user_processed_ids": [],
+        "user_found_ids": [],
     },
     {
         "run_duration": 78.5,
         "run_datetime": "2024-01-15 15:30:00",
         "is_success": False,
         "error_message": "PDF parsing library crashed on corrupted file",
+        "user_processed_ids": [],
+        "user_found_ids": [],
     },
     {
         "run_duration": 34.2,
         "run_datetime": "2024-01-16 08:00:00",
         "is_success": True,
         "error_message": None,
+        "user_processed_ids": [],
+        "user_found_ids": [],
     },
 ]
 
 PLATFORM_STAT_DATA = [
     {
         "name": "linkedin",
-        "job_found_n": 15,
-        "job_scraped_n": 11,
-        "job_failed_n": 2,
-        "job_copied_n": 3,
-        "email_saved_n": 5,
-        "email_skipped_n": 1,
+        "job_found_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "job_scrape_succeeded_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        "job_scrape_failed_ids": [12, 13],
+        "job_scrape_copied_ids": [14, 15, 16],
+        "email_saved_ids": [1, 2, 3, 4, 5],
+        "email_skipped_ids": [6],
         "service_log_id": 1,
     },
     {
         "name": "indeed",
-        "job_found_n": 12,
-        "job_scraped_n": 9,
-        "job_failed_n": 2,
-        "job_copied_n": 1,
-        "email_saved_n": 2,
-        "email_skipped_n": 0,
+        "job_found_ids": [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28],
+        "job_scrape_succeeded_ids": [17, 18, 19, 20, 21, 22, 23, 24, 25],
+        "job_scrape_failed_ids": [26, 27],
+        "job_scrape_copied_ids": [28],
+        "email_saved_ids": [7, 8],
+        "email_skipped_ids": [],
         "service_log_id": 1,
     },
     {
         "name": "veganjobs",
-        "job_found_n": 0,
-        "job_scraped_n": 0,
-        "job_failed_n": 0,
-        "job_copied_n": 0,
-        "email_saved_n": 0,
-        "email_skipped_n": 0,
+        "job_found_ids": [],
+        "job_scrape_succeeded_ids": [],
+        "job_scrape_failed_ids": [],
+        "job_scrape_copied_ids": [],
+        "email_saved_ids": [],
+        "email_skipped_ids": [],
         "service_log_id": 1,
     },
     {
         "name": "linkedin",
-        "job_found_n": 40,
-        "job_scraped_n": 35,
-        "job_failed_n": 1,
-        "job_copied_n": 10,
-        "email_saved_n": 12,
-        "email_skipped_n": 3,
+        "job_found_ids": list(range(29, 69)),
+        "job_scrape_succeeded_ids": list(range(29, 64)),
+        "job_scrape_failed_ids": [64],
+        "job_scrape_copied_ids": list(range(65, 75)),
+        "email_saved_ids": list(range(9, 21)),
+        "email_skipped_ids": [21, 22, 23],
         "service_log_id": 2,
     },
     {
         "name": "indeed",
-        "job_found_n": 8,
-        "job_scraped_n": 6,
-        "job_failed_n": 2,
-        "job_copied_n": 2,
-        "email_saved_n": 1,
-        "email_skipped_n": 1,
+        "job_found_ids": list(range(75, 83)),
+        "job_scrape_succeeded_ids": list(range(75, 81)),
+        "job_scrape_failed_ids": [81, 82],
+        "job_scrape_copied_ids": [83, 84],
+        "email_saved_ids": [24],
+        "email_skipped_ids": [25],
         "service_log_id": 3,
     },
     {
         "name": "linkedin",
-        "job_found_n": 22,
-        "job_scraped_n": 20,
-        "job_failed_n": 0,
-        "job_copied_n": 4,
-        "email_saved_n": 7,
-        "email_skipped_n": 0,
+        "job_found_ids": list(range(85, 107)),
+        "job_scrape_succeeded_ids": list(range(85, 105)),
+        "job_scrape_failed_ids": [],
+        "job_scrape_copied_ids": list(range(105, 109)),
+        "email_saved_ids": list(range(26, 33)),
+        "email_skipped_ids": [],
         "service_log_id": 4,
     },
     {
         "name": "indeed",
-        "job_found_n": 10,
-        "job_scraped_n": 9,
-        "job_failed_n": 1,
-        "job_copied_n": 1,
-        "email_saved_n": 3,
-        "email_skipped_n": 2,
+        "job_found_ids": list(range(109, 119)),
+        "job_scrape_succeeded_ids": list(range(109, 118)),
+        "job_scrape_failed_ids": [118],
+        "job_scrape_copied_ids": [119],
+        "email_saved_ids": [33, 34, 35],
+        "email_skipped_ids": [36, 37],
         "service_log_id": 4,
     },
     {
         "name": "linkedin",
-        "job_found_n": 5,
-        "job_scraped_n": 4,
-        "job_failed_n": 0,
-        "job_copied_n": 0,
-        "email_saved_n": 1,
-        "email_skipped_n": 0,
+        "job_found_ids": list(range(120, 125)),
+        "job_scrape_succeeded_ids": list(range(120, 124)),
+        "job_scrape_failed_ids": [],
+        "job_scrape_copied_ids": [],
+        "email_saved_ids": [38],
+        "email_skipped_ids": [],
         "service_log_id": 5,
     },
     {
         "name": "totaljobs",
-        "job_found_n": 3,
-        "job_scraped_n": 3,
-        "job_failed_n": 0,
-        "job_copied_n": 1,
-        "email_saved_n": 0,
-        "email_skipped_n": 0,
+        "job_found_ids": [125, 126, 127],
+        "job_scrape_succeeded_ids": [125, 126, 127],
+        "job_scrape_failed_ids": [],
+        "job_scrape_copied_ids": [128],
+        "email_saved_ids": [],
+        "email_skipped_ids": [],
         "service_log_id": 6,
     },
     {
         "name": "linkedin",
-        "job_found_n": 6,
-        "job_scraped_n": 5,
-        "job_failed_n": 1,
-        "job_copied_n": 2,
-        "email_saved_n": 4,
-        "email_skipped_n": 1,
+        "job_found_ids": list(range(129, 135)),
+        "job_scrape_succeeded_ids": list(range(129, 134)),
+        "job_scrape_failed_ids": [134],
+        "job_scrape_copied_ids": [135, 136],
+        "email_saved_ids": [39, 40, 41, 42],
+        "email_skipped_ids": [43],
         "service_log_id": 7,
     },
     {
         "name": "cv-library",
-        "job_found_n": 4,
-        "job_scraped_n": 0,
-        "job_failed_n": 4,
-        "job_copied_n": 0,
-        "email_saved_n": 0,
-        "email_skipped_n": 2,
+        "job_found_ids": [137, 138, 139, 140],
+        "job_scrape_succeeded_ids": [],
+        "job_scrape_failed_ids": [137, 138, 139, 140],
+        "job_scrape_copied_ids": [],
+        "email_saved_ids": [],
+        "email_skipped_ids": [44, 45],
         "service_log_id": 8,
     },
     {
         "name": "jobsite",
-        "job_found_n": 7,
-        "job_scraped_n": 7,
-        "job_failed_n": 0,
-        "job_copied_n": 3,
-        "email_saved_n": 2,
-        "email_skipped_n": 0,
+        "job_found_ids": list(range(141, 148)),
+        "job_scrape_succeeded_ids": list(range(141, 148)),
+        "job_scrape_failed_ids": [],
+        "job_scrape_copied_ids": [148, 149, 150],
+        "email_saved_ids": [46, 47],
+        "email_skipped_ids": [],
         "service_log_id": 9,
     },
 ]
@@ -2384,6 +2398,148 @@ SERVICE_LOG_DATETIME = [current_date - timedelta(days=i) for i in range(len(SERV
 for service_log, date in zip(SERVICE_LOG_DATA, SERVICE_LOG_DATETIME):
     service_log["run_datetime"] = date.strftime(DATETIME_FORMAT)
 
+
+SERVICE_ERROR_DATA = [
+    {
+        "error_type": "ConnectionError",
+        "message": "Failed to connect to LinkedIn API: Connection timeout after 30 seconds",
+        "traceback": """Traceback (most recent call last):
+  File "/app/scrapers/linkedin_scraper.py", line 145, in scrape_job
+    response = requests.get(url, timeout=30)
+  File "/usr/local/lib/python3.11/site-packages/requests/api.py", line 73, in get
+    return request("get", url, **kwargs)
+  File "/usr/local/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='www.linkedin.com', port=443): Max retries exceeded with url: /jobs/view/12345678""",
+        "service_log_id": 3,
+    },
+    {
+        "error_type": "SMTPAuthenticationError",
+        "message": "SMTP authentication failed: Invalid credentials",
+        "traceback": """Traceback (most recent call last):
+  File "/app/email/gmail_client.py", line 89, in connect
+    server.login(self.username, self.password)
+  File "/usr/local/lib/python3.11/smtplib.py", line 750, in login
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted')""",
+        "service_log_id": 6,
+    },
+    {
+        "error_type": "PDFParseError",
+        "message": "Failed to parse PDF: File appears to be corrupted",
+        "traceback": """Traceback (most recent call last):
+  File "/app/parsers/pdf_parser.py", line 56, in extract_text
+    doc = fitz.open(pdf_path)
+  File "/usr/local/lib/python3.11/site-packages/fitz/fitz.py", line 2156, in __init__
+    _fitz.Document_swiginit(self, _fitz.new_Document(filename, stream, filetype, rect, width, height, fontsize))
+RuntimeError: cannot open document: cannot recognize version""",
+        "service_log_id": 8,
+    },
+    {
+        "error_type": "RateLimitError",
+        "message": "Rate limit exceeded: 429 Too Many Requests",
+        "traceback": """Traceback (most recent call last):
+  File "/app/scrapers/base_scraper.py", line 203, in fetch_page
+    response = self.session.get(url)
+  File "/usr/local/lib/python3.11/site-packages/requests/sessions.py", line 600, in get
+    return self.request("GET", url, **kwargs)
+  File "/app/scrapers/base_scraper.py", line 178, in request
+    raise RateLimitError(f"Rate limit exceeded after {attempt_count} requests")
+app.exceptions.RateLimitError: Rate limit exceeded after 30 requests""",
+        "service_log_id": 3,
+    },
+    {
+        "error_type": "DatabaseError",
+        "message": "Failed to commit transaction: Deadlock detected",
+        "traceback": """Traceback (most recent call last):
+  File "/app/db/session.py", line 67, in save_jobs
+    session.commit()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1451, in commit
+    self._transaction.commit(_to_root=self.future)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 844, in commit
+    self._prepare_impl()
+sqlalchemy.exc.OperationalError: (psycopg2.errors.DeadlockDetected) deadlock detected
+DETAIL:  Process 12345 waits for ShareLock on transaction 67890""",
+        "service_log_id": 7,
+    },
+    {
+        "error_type": "ParserError",
+        "message": "Failed to parse job details: Missing required field 'job_title'",
+        "traceback": """Traceback (most recent call last):
+  File "/app/parsers/job_parser.py", line 112, in parse_job_data
+    title = soup.find("h1", class_="job-title").text.strip()
+AttributeError: 'NoneType' object has no attribute 'text'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/app/scrapers/indeed_scraper.py", line 234, in scrape_job
+    job_data = self.parser.parse_job_data(html)
+  File "/app/parsers/job_parser.py", line 115, in parse_job_data
+    raise ParserError("Missing required field 'job_title'")
+app.exceptions.ParserError: Missing required field 'job_title'""",
+        "service_log_id": 8,
+    },
+    {
+        "error_type": "ValidationError",
+        "message": "Job data validation failed: Invalid salary format",
+        "traceback": """Traceback (most recent call last):
+  File "/app/models/job.py", line 89, in validate_salary
+    return self._parse_salary_string(salary_str)
+  File "/app/models/job.py", line 103, in _parse_salary_string
+    raise ValueError(f"Unable to parse salary: {salary_str}")
+ValueError: Unable to parse salary: £competitive + benefits
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/app/services/job_service.py", line 178, in create_job
+    validated_job = Job.validate(job_data)
+  File "/app/models/job.py", line 45, in validate
+    raise ValidationError(f"Job data validation failed: {str(e)}")
+app.exceptions.ValidationError: Job data validation failed: Invalid salary format""",
+        "service_log_id": 8,
+    },
+    {
+        "error_type": "TimeoutError",
+        "message": "Selenium webdriver timeout: Page load exceeded 60 seconds",
+        "traceback": """Traceback (most recent call last):
+  File "/app/scrapers/selenium_scraper.py", line 156, in load_page
+    WebDriverWait(self.driver, 60).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "job-details"))
+    )
+  File "/usr/local/lib/python3.11/site-packages/selenium/webdriver/support/wait.py", line 95, in until
+    raise TimeoutException(message, screen, stacktrace)
+selenium.common.exceptions.TimeoutException: Message: Timeout waiting for job-details element""",
+        "service_log_id": 3,
+    },
+    {
+        "error_type": "JSONDecodeError",
+        "message": "Failed to parse API response: Invalid JSON",
+        "traceback": """Traceback (most recent call last):
+  File "/app/scrapers/api_scraper.py", line 201, in fetch_jobs
+    data = response.json()
+  File "/usr/local/lib/python3.11/site-packages/requests/models.py", line 975, in json
+    return complexjson.loads(self.text, **kwargs)
+  File "/usr/local/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+  File "/usr/local/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)""",
+        "service_log_id": 8,
+    },
+    {
+        "error_type": "MemoryError",
+        "message": "Out of memory while processing large dataset",
+        "traceback": """Traceback (most recent call last):
+  File "/app/services/batch_processor.py", line 145, in process_jobs
+    all_jobs = session.query(Job).all()
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2893, in all
+    return self._iter().all()
+MemoryError: Unable to allocate 2.5 GiB for an array with shape (50000, 100) and data type object""",
+        "service_log_id": 7,
+    },
+]
 
 EMAIL_SCRAPEDJOB_MAPPINGS = [
     {"email_id": 1, "scraped_job_ids": [1, 2, 4]},
