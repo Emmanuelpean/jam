@@ -53,12 +53,7 @@ def parse_veganjobs_email(body: str) -> list[JobResult]:
         if id_match:
             job_id = id_match.group(1)
 
-        # If no job id, the processed_url is None
-        if not job_id:
-            processed_url = None
-        else:
-            processed_url = BASE_URL + job_id
-
+        processed_url = BASE_URL + job_id
         job_info = JobInfo(title=title, raw_url=url, url=processed_url)
         job_result = JobResult(
             company=company, job_id=job_id, location=location, job=job_info, platform=Platform.VEGANJOBS
