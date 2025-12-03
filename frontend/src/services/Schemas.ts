@@ -266,28 +266,39 @@ export interface ServiceLog {
 	run_duration: number | null;
 	is_success: boolean | null;
 	error_message: string | null;
-	user_found_n: number;
-	user_processed_n: number;
-	email_found_n: number;
-	email_saved_n: number;
-	email_skipped_n: number;
+	user_found_ids: number[];
+	user_processed_ids: number[];
 	emails: number[];
 	scraped_jobs: number[];
 	platform_stats: PlatformStat[];
-	job_success_n: number;
-	job_fail_n: number;
-	job_total_n: number;
-	job_copied_n: number;
+	errors: ServiceError[];
+	job_scrape_succeeded_n: number;
+	job_scrape_failed_n: number;
+	job_scrape_copied_n: number;
+	job_scrape_skipped_n: number;
+	job_found_n: number;
+	email_found_n: number;
+	email_saved_n: number;
+	email_skipped_n: number;
 }
 
 export interface PlatformStat {
 	id: number;
 	name: string;
-	job_found_n: number;
-	job_scraped_n: number;
-	job_failed_n: number;
-	job_copied_n: number;
-	email_saved_n: number;
-	email_skipped_n: number;
+	email_saved_ids: number[];
+	email_skipped_ids: number[];
+	job_found_ids: number[];
+	job_scrape_failed_ids: number[];
+	job_scrape_succeeded_ids: number[];
+	job_scrape_copied_ids: number[];
+	job_scrape_skipped_ids: number[];
+	service_log_id: number;
+}
+
+export interface ServiceError {
+	id: number;
+	error_type: string;
+	message: string | null;
+	traceback: string | null;
 	service_log_id: number;
 }

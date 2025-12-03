@@ -388,6 +388,7 @@ class JobEmailScraper(EmailService):
                     inbox_only=True,
                     timedelta_days=timedelta_days,
                 )
+                service_log.email_found_n += len(email_ids)
                 self.logger.info(f"Found {len(email_ids)} emails")
             except Exception as exception:
                 self.log_eis_service_error(service_log, exception)

@@ -41,6 +41,7 @@ const JobScraperDashboard = (): JSX.Element => {
 			if (!token) return;
 			try {
 				const logs: ServiceLog[] = await serviceLogApi.getAll(token, { limit: 10 });
+				console.log(logs);
 				setServiceLogData(logs);
 				// Prepare data for chart
 				const successSeries: SeriesData = {
@@ -51,7 +52,7 @@ const JobScraperDashboard = (): JSX.Element => {
 						.reverse()
 						.map((log: ServiceLog) => ({
 							x: new Date(log.run_datetime),
-							y: log.job_success_n,
+							y: log.job_scrape_succeeded_n,
 						})),
 				};
 
@@ -63,19 +64,19 @@ const JobScraperDashboard = (): JSX.Element => {
 						.reverse()
 						.map((log: ServiceLog) => ({
 							x: new Date(log.run_datetime),
-							y: log.job_fail_n,
+							y: log.job_scrape_failed_n,
 						})),
 				};
 
 				const copiedSeries: SeriesData = {
-					id: "Failed Jobs",
-					color: "#ef4444",
+					id: "Copied Jobs",
+					color: "#0d38e3",
 					data: logs
 						.slice()
 						.reverse()
 						.map((log: ServiceLog) => ({
 							x: new Date(log.run_datetime),
-							y: log.job_copied_n,
+							y: log.job_scrape_copied_n,
 						})),
 				};
 
@@ -402,27 +403,34 @@ const JobScraperDashboard = (): JSX.Element => {
 
 						<div className="metric-group">
 							<p className="metric-item">
-								<span className="status-label">Jobs Found:</span> {latestLog.job_total_n}
+								<span className="status-label">Jobs Found:</span> {latestLog.job_found_n}
 							</p>
 							<p className="metric-item">
-								<span className="status-label">Successlly Scraped:</span> {latestLog.job_success_n}
-								<span className="metric-divider">|</span>
-								<span className="status-label">Failed:</span> {latestLog.job_fail_n}
+								<span className="status-label">Successfully Scraped:</span>{" "}
+								{latestLog.job_scrape_succeeded_n}
+							</p>
+							<p className="metric-item">
+								<span className="status-label">Successfully Scraped:</span>{" "}
+								{latestLog.job_scrape_failed_n}
+							</p>
+							<p className="metric-item">
+								<span className="status-label">Successfully Scraped:</span>{" "}
+								{latestLog.job_scrape_copied_n}
 							</p>
 						</div>
 
 						<div className="metric-group">
 							<p className="metric-item">
 								<span className="status-label">LinkedIn:</span>{" "}
-								{getPlatformStat(latestLog, "linkedin", "job_scraped_n")}
+								{getPlatformStat(latestLog, "linkedin", "job_found_ids")}
 							</p>
 							<p className="metric-item">
 								<span className="status-label">Indeed:</span>{" "}
-								{getPlatformStat(latestLog, "indeed", "job_scraped_n")}
+								{getPlatformStat(latestLog, "indeed", "job_found_ids")}
 							</p>
 							<p className="metric-item">
 								<span className="status-label">VeganJobs:</span>{" "}
-								{getPlatformStat(latestLog, "veganjobs", "job_scraped_n")}
+								{getPlatformStat(latestLog, "veganjobs", "job_found_ids")}
 							</p>
 						</div>
 					</div>
@@ -435,8 +443,8 @@ const JobScraperDashboard = (): JSX.Element => {
 					<div style={{ display: "flex", width: "100%", gap: "20px", marginBottom: "20px" }}>
 						<ProgressBar
 							title="Users Processed"
-							current={latestLog.user_processed_n}
-							total={latestLog.user_found_n}
+							current={latestLog.user_processed_ids.length}
+							total={latestLog.user_found_ids.length}
 							width="100%"
 						/>
 						<ProgressBar
@@ -447,8 +455,12 @@ const JobScraperDashboard = (): JSX.Element => {
 						/>
 						<ProgressBar
 							title="Jobs Scraped"
-							current={latestLog.job_success_n + latestLog.job_fail_n}
-							total={latestLog.job_total_n}
+							current={
+								latestLog.job_scrape_succeeded_n +
+								latestLog.job_scrape_skipped_n +
+								latestLog.job_scrape_copied_n
+							}
+							total={latestLog.job_found_n}
 							width="100%"
 						/>
 					</div>

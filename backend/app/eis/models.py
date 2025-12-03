@@ -180,6 +180,9 @@ class EisServiceLog(CommonBase, Base):
     user_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     user_processed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
 
+    # Emails
+    email_found_n = Column(Integer, nullable=False, default=0)
+
     # Relationships
     emails = relationship("JobAlertEmail", back_populates="service_log")
     scraped_jobs = relationship("ScrapedJob", back_populates="service_log")

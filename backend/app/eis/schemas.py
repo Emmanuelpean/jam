@@ -122,6 +122,7 @@ class EisServiceLogOut(Out):
     user_processed_ids: list[int] = []
 
     # Emails
+    email_found_n: int = 0
     email_saved_n: int = 0
     email_skipped_n: int = 0
 
