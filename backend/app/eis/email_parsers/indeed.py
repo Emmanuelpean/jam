@@ -117,7 +117,12 @@ def parse_indeed_job_email(body: str) -> list[JobResult]:
                         salary_currency = match.group(1)
                         salary_min = salary_max = process_salary(match.group(2))
 
-        processed_url = BASE_URL + job_id
+        # If no job id, the processed_url is None
+        if not job_id:
+            processed_url = None
+        else:
+            processed_url = BASE_URL + job_id
+
         salary = Salary(min_amount=salary_min, max_amount=salary_max, currency=salary_currency)
         job_info = JobInfo(title=title, url=processed_url, salary=salary, raw_url=url)
         job_result = JobResult(

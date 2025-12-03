@@ -105,9 +105,9 @@ class ScrapedJob(Owned, Base):
 
     Constraints:
     ------------
-    - Unique constraint on the combination of `external_job_id` and `owner_id` to ensure uniqueness per user."""
+    - Unique constraint on the combination of `raw_url` and `owner_id` to ensure uniqueness per user."""
 
-    external_job_id = Column(String, nullable=False)
+    external_job_id = Column(String, nullable=True)
     platform = Column(String, nullable=False)
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
     is_failed = Column(Boolean, nullable=False, server_default=expression.false())
@@ -123,7 +123,7 @@ class ScrapedJob(Owned, Base):
     salary_max = Column(Float, nullable=True)
     salary_currency = Column(String, nullable=True)
     url = Column(String, nullable=True)
-    raw_url = Column(String, nullable=True)
+    raw_url = Column(String, nullable=False)
     deadline = Column(TIMESTAMP(timezone=True), nullable=True)
     company = Column(String, nullable=True)
     location = Column(String, nullable=True)
@@ -140,7 +140,7 @@ class ScrapedJob(Owned, Base):
     service_log = relationship("EisServiceLog", back_populates="scraped_jobs")
 
     # Constraints
-    __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
+    __table_args__ = (UniqueConstraint("raw_url", "owner_id", name="unique_job_per_owner"),)
 
 
 class EisServiceLog(CommonBase, Base):

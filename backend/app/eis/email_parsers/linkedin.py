@@ -70,8 +70,13 @@ def parse_linkedin_job_email(body: str) -> list[JobResult]:
                     salary_min = process_salary(match.group(2))
                     salary_max = process_salary(match.group(4))
 
+        # If no job id, the processed_url is None
+        if not job_id:
+            processed_url = None
+        else:
+            processed_url = BASE_URL + job_id
+
         # Create Pydantic objects
-        processed_url = BASE_URL + job_id
         salary = Salary(min_amount=salary_min, max_amount=salary_max, currency=salary_currency)
         job_info = JobInfo(title=title, url=processed_url, raw_url=url, salary=salary)
         job_result = JobResult(
