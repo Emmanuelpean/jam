@@ -39,7 +39,7 @@ email_router = generate_data_table_crud_router(
     out_schema=schemas.JobAlertEmailOut,
     endpoint="job_alert_emails",
     not_found_msg="Job alert email not found",
-    allowed_actions=["get"],
+    allowed_actions=["get_bulk"],
 )
 
 
@@ -49,6 +49,7 @@ email_router = generate_data_table_crud_router(
 scraped_job_router = APIRouter(prefix="/scraped_jobs", tags=["scraped_jobs"])
 
 
+# GET endpoint for regular user to get all scraped jobs
 @scraped_job_router.get("/", response_model=schemas.PaginatedScrapedJobResponse)
 def get_all(
     request: Request,
@@ -132,6 +133,7 @@ def get_all(
     }
 
 
+# GET endpoint for regular user to get the number of scraped jobs
 @scraped_job_router.get("/count")
 def get_scraped_job_count(
     current_user: app_models.User = Depends(get_current_user),
@@ -153,16 +155,19 @@ def get_scraped_job_count(
     return {"count": count}
 
 
+# GET endpoint for admin user to get multiple entries
 generate_data_table_crud_router(
     table_model=models.ScrapedJob,
     out_schema=schemas.ScrapedJobOut,
     endpoint="scraped_jobs",
     not_found_msg="Scraped Job not found",
-    allowed_actions=["get_one"],
+    allowed_actions=["get_bulk"],
     router=scraped_job_router,
     admin_only=True,
 )
 
+
+# PUT endpoint for regular users to update the entries
 generate_data_table_crud_router(
     table_model=models.ScrapedJob,
     update_schema=schemas.ScrapedJobUpdate,
@@ -178,10 +183,11 @@ generate_data_table_crud_router(
 
 
 # Email Ingestion Service Log router
-eis_servicelog_router = APIRouter(prefix="/eis_service_logs", tags=["eis_service_logs"])
+eis_service_log_router = APIRouter(prefix="/eis_service_logs", tags=["eis_service_logs"])
 
 
-@eis_servicelog_router.get("/", response_model=list[schemas.EisServiceLogOut])
+# GET endpoint for admins to get the service logs
+@eis_service_log_router.get("/", response_model=list[schemas.EisServiceLogOut])
 def get_service_logs_by_date_range(
     start_date: datetime | None = Query(None, description="Start date for filtering (ISO format)"),
     end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
@@ -222,7 +228,8 @@ def get_service_logs_by_date_range(
     return query.all()
 
 
-@eis_servicelog_router.get("/latest", response_model=schemas.EisServiceLogOut)
+# GET endpoint for admin user to get the latest service log
+@eis_service_log_router.get("/latest", response_model=schemas.EisServiceLogOut)
 def get_latest(
     current_user: app_models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -315,7 +322,7 @@ def scrape_job(
     return scraper.scrape_job()[0]
 
 
-# ------------------------------------------------------ EMAIL SCRAPER SERVICE ------------------------------------------------------
+# ------------------------------------------------ EMAIL SCRAPER SERVICE -----------------------------------------------
 
 
 email_scraper_service_router = APIRouter(prefix="/email_scraper_service", tags=["email_scraper_service"])

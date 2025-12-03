@@ -22,7 +22,7 @@ dependencies = [
     "tqdm==4.67.1",
     "gunicorn==23.0.0",
     "beautifulsoup4==4.14.2",
-    "apify-client==2.3.0",
+    "apify-client==2.3.0"
 ]
 
 [project.optional-dependencies]

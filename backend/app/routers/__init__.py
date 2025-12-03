@@ -180,7 +180,7 @@ def generate_data_table_crud_router(
     NOT_FOUND_EXCEPTION = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=not_found_msg)
 
     if allowed_actions is None:
-        allowed_actions = ["get", "get_all", "get_one", "post", "put", "delete"]
+        allowed_actions = ["get", "post", "put", "delete"]
 
     def check_admin(current_user: models.User) -> None:
         """Raise an exception if the table is for admins only and if the user is not an admin.
@@ -302,6 +302,35 @@ def generate_data_table_crud_router(
             check_ownership(entry, current_user)
 
             return filter_out_non_owned(entry, current_user.id)
+
+    if "get" in allowed_actions or "get_bulk" in allowed_actions:
+
+        @router.post("/bulk", response_model=list[out_schema])
+        def get_bulk(
+            ids: list[int],
+            db: Session = Depends(database.get_db),
+            current_user: models.User = Depends(oauth2.get_current_user),
+        ):
+            """Retrieve multiple entries by their IDs.
+            :param ids: List of entry IDs to retrieve.
+            :param db: Database session.
+            :param current_user: Authenticated user.
+            :return: List of entries matching the provided IDs.
+            :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
+
+            # Check if admin rights are needed
+            check_admin(current_user)
+
+            # Query entries with the provided IDs
+            if not admin_only:
+                query = db.query(table_model).filter(table_model.id.in_(ids), table_model.owner_id == current_user.id)
+            elif current_user.is_admin:
+                query = db.query(table_model).filter(table_model.id.in_(ids))
+            else:
+                raise NOT_ALLOWED_EXCEPTION
+
+            results = query.all()
+            return [filter_out_non_owned(result, current_user.id) for result in results]
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 

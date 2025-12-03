@@ -36,7 +36,7 @@ app.include_router(data_tables.job_application_update_router)
 # EIS routers
 app.include_router(eis_routers.scraped_job_router)
 app.include_router(eis_routers.email_router)
-app.include_router(eis_routers.eis_servicelog_router)
+app.include_router(eis_routers.eis_service_log_router)
 app.include_router(eis_routers.scraper_router)
 app.include_router(eis_routers.email_scraper_service_router)
 
