@@ -16,6 +16,7 @@ interface RequestOptions {
 interface CrudApi {
 	getAll: (token: string, queryParams?: QueryParams | null) => Promise<any>;
 	get: (id: number, token: string) => Promise<any>;
+	getBulk: (ids: number[], token: string) => Promise<any>;
 	create: (data: any, token: string) => Promise<any>;
 	update: (id: number, data: any, token: string) => Promise<any>;
 	delete: (id: number, token: string) => Promise<any>;
@@ -155,6 +156,14 @@ const createCrudApi = (endpoint: string): CrudApi => ({
 		}
 		return api.get(url, token);
 	},
+	getBulk: (ids: number[], token: string): Promise<any> => {
+		const queryParams = new URLSearchParams();
+		ids.forEach((id: number): void => {
+			queryParams.append("ids", id.toString());
+		});
+		const url: string = `${endpoint}/bulk/?${queryParams.toString()}`;
+		return api.get(url, token);
+	},
 	get: (id: string | number, token: string): Promise<any> => api.get(`${endpoint}/${id}`, token),
 	create: (data: any, token: string): Promise<any> => api.post(`${endpoint}/`, data, token),
 	update: (id: string | number, data: any, token: string): Promise<any> => api.put(`${endpoint}/${id}`, data, token),
@@ -173,6 +182,7 @@ export const userApi: CrudApi = createCrudApi("users");
 export const settingsApi: CrudApi = createCrudApi("settings");
 export const countriesApi: CrudApi = createCrudApi("others/countries");
 export const currenciesApi: CrudApi = createCrudApi("others/currencies");
+export const serviceErrorApi: CrudApi = createCrudApi("eis_service_errors");
 
 export const exportApi: CrudApi & { download: (filename: string, token: string) => Promise<void> } = {
 	...createCrudApi("export"),

@@ -5,7 +5,7 @@ including user ownership validation, query filtering, and many-to-many relations
 
 from typing import Any, Callable
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query as FastAPIQuery
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Query
 from sqlalchemy.orm import Session
@@ -305,9 +305,10 @@ def generate_data_table_crud_router(
 
     if "get" in allowed_actions or "get_bulk" in allowed_actions:
 
-        @router.post("/bulk", response_model=list[out_schema])
+        # noinspection PyTypeHints
+        @router.get("/bulk", response_model=list[out_schema])
         def get_bulk(
-            ids: list[int],
+            ids: list[int] = FastAPIQuery(...),
             db: Session = Depends(database.get_db),
             current_user: models.User = Depends(oauth2.get_current_user),
         ):

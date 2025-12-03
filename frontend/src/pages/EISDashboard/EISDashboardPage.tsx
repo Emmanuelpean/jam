@@ -1,256 +1,67 @@
-import { Form, InputGroup, Table } from "react-bootstrap";
-import React, { JSX, useEffect, useState } from "react";
-import { jobScraperApi, scrapedJobApi, ScraperStatus, serviceLogApi, ThreadStatus } from "../../services/Api";
-import { PlatformStat, ScrapedJobData, ServiceLog } from "../../services/Schemas";
+import React, { JSX, useState } from "react";
+import { jobScraperApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import "./EisDashboardPage.css";
-import { ActionButton } from "../../components/rendering/form/ActionButton";
-import { formatDuration } from "../../utils/TimeUtils";
-import { getTableIcon } from "../../components/rendering/view/Icons";
-import ProgressBar from "./ProgressBar";
 import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import LogViewer from "./LogViewer";
-import { HelpBubble } from "../../components/rendering/widgets/HelpBubble";
-import Spinner from "../../components/spinner/Spinner";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
-import { LineChart, SeriesData } from "../../components/charts/LineChart";
-import { SelectOption } from "../../components/rendering/form/FormOptions";
-import { RenderSelect } from "../../components/rendering/widgets/SelectWidget";
-import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { capitalise } from "../../utils/Utils";
+import { ServiceStatusCard } from "./ServiceStatusCard";
+import { LatestRunProgress } from "./LatestRunProgress";
+import { RunHistoryChart } from "./RunHistoryChart";
+import { ErrorSummaryCard } from "./ErrorSummaryCard";
+import { useScraperStatus } from "../../hooks/useScraperStatus";
+import { useServiceLogs } from "../../hooks/useServiceLogs";
+import { useScraperErrors } from "../../hooks/useScraperErrors";
+import { getTableIcon } from "../../components/rendering/view/Icons";
+import { useServiceErrors } from "../../hooks/useServiceErrors";
 
 export interface FormData {
 	period_hours: number;
 	timedelta_days: number;
 }
 
-const successColor = "#22c55e";
-const failureColor = "#ef4444";
-const infoColor = "#0d38e3";
-
 const JobScraperDashboard = (): JSX.Element => {
 	const { token } = useAuth();
 	const { showToastSuccess } = useGlobalToast();
-	const [remainingTime, setRemainingTime] = useState<number | null>(null);
-	const [status, setStatus] = useState<ScraperStatus | null>(null);
-	const [latestLog, setLatestLog] = useState<ServiceLog | null>(null);
-	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
-	const [serviceLogData, setServiceLogData] = useState<ServiceLog[] | null>(null);
-	const [scraperErrors, setScraperErrors] = useState<Record<string, number>>({});
-	const [platformOptions, setPlatformOptions] = useState<SelectOption[]>([]);
+	const { status, remainingTime, fetchStatus } = useScraperStatus(token);
+	const { serviceLogs, latestLog, platformOptions, fetchLatestLog } = useServiceLogs(
+		token,
+		status?.scraper_running || false,
+	);
 	const [selectedPlatform, setSelectedPlatform] = useState("all");
+	const { scraperErrors } = useScraperErrors(latestLog, token, selectedPlatform);
+	const { scraperErrors: latestScraperErrors } = useScraperErrors(serviceLogs, token, selectedPlatform);
+	const { serviceErrors } = useServiceErrors(latestLog, token);
+	const { serviceErrors: latestServiceErrors } = useServiceErrors(serviceLogs, token);
 	const [formData, setFormData] = useState<FormData>({
-		period_hours: 0,
-		timedelta_days: 0,
+		period_hours: status?.period_hours || 0,
+		timedelta_days: status?.timedelta_days || 0,
 	});
 	const [loading, setLoading] = useState<boolean>(false);
 
-	const createSeries = (
-		logs: ServiceLog[],
-		id: string,
-		color: string,
-		getValue: (log: ServiceLog) => number,
-	): SeriesData => ({
-		id,
-		color,
-		data: logs
-			.slice()
-			.reverse()
-			.map((log) => ({
-				x: new Date(log.run_datetime),
-				y: getValue(log),
-			})),
-	});
-
-	// Fet the 10 latest logs
-	useEffect(() => {
-		const fetchLatestLogs = async (): Promise<void> => {
-			if (!token) return;
-			try {
-				const logs: ServiceLog[] = await serviceLogApi.getAll(token, { limit: 10 });
-				console.log(logs);
-				setServiceLogData(logs);
-
-				// Extract unique platforms from logs
-				const platformOptions: SelectOption[] = [
-					{ value: "all", label: "All Platforms" },
-					...Array.from(
-						new Set(
-							logs.flatMap((log: ServiceLog): string[] =>
-								log.platform_stats
-									? log.platform_stats.map((stat: PlatformStat): string => stat.name)
-									: [],
-							),
-						),
-					).map((platform) => ({
-						value: platform,
-						label: capitalise(platform),
-					})),
-				];
-				setPlatformOptions(platformOptions);
-			} catch (err: any) {
-				console.error("Failed to fetch latest logs:", err);
-			}
-		};
-		fetchLatestLogs().then();
-	}, [token]);
-
-	useEffect(() => {
-		if (!serviceLogData) return;
-		// Prepare data for charts
-		const durationSeries: SeriesData[] = [
-			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: ServiceLog): number =>
-				log.run_duration ? log.run_duration / 3600 : 0,
-			),
-		];
-		if (selectedPlatform === "all") {
-			// Show service-level data
-			const jobSeries: SeriesData[] = [
-				createSeries(
-					serviceLogData,
-					"Successful Jobs",
-					successColor,
-					(log: ServiceLog): number => log.job_scrape_succeeded_n,
-				),
-				createSeries(
-					serviceLogData,
-					"Failed Jobs",
-					failureColor,
-					(log: ServiceLog): number => log.job_scrape_failed_n,
-				),
-				createSeries(
-					serviceLogData,
-					"Copied Jobs",
-					infoColor,
-					(log: ServiceLog): number => log.job_scrape_copied_n,
-				),
-			];
-			setLogData([jobSeries, durationSeries]);
-		} else {
-			// Show platform-specific data
-			const platformSeries: SeriesData[] = [
-				createSeries(
-					serviceLogData,
-					`${selectedPlatform} Jobs Found`,
-					successColor,
-					(log: ServiceLog): number => getPlatformStat(log, selectedPlatform, "job_found_ids"),
-				),
-				createSeries(
-					serviceLogData,
-					`${selectedPlatform} Jobs Scraped`,
-					failureColor,
-					(log: ServiceLog): number => getPlatformStat(log, selectedPlatform, "job_scraped_n"),
-				),
-				createSeries(serviceLogData, `${selectedPlatform} Failed`, infoColor, (log: ServiceLog): number =>
-					getPlatformStat(log, selectedPlatform, "job_failed_n"),
-				),
-			];
-			setLogData([platformSeries, durationSeries]);
+	// Update formData when status changes
+	React.useEffect(() => {
+		if (status) {
+			setFormData({
+				period_hours: status.period_hours || 3,
+				timedelta_days: status.timedelta_days || 1,
+			});
 		}
-	}, [serviceLogData, selectedPlatform]);
-
-	const platformField: ModalFormField = {
-		name: "platform-select",
-		type: "select",
-		label: "Select Platform",
-		options: platformOptions,
-	};
+	}, [status]);
 
 	const onChangePlatform = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
 		const target = event.target as HTMLInputElement;
 		setSelectedPlatform(target.value as string);
 	};
 
-	// Fetch the scraper service status
-	const fetchStatus = async (): Promise<void> => {
-		if (!token) return;
-		try {
-			const data: ScraperStatus = await jobScraperApi.getStatus(token);
-			setStatus(data);
-			setFormData({
-				period_hours: data.period_hours || 3,
-				timedelta_days: data.timedelta_days || 1,
-			});
-		} catch (err: any) {
-			console.error(err);
-		}
+	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
+		const target = event.target as HTMLInputElement;
+		const { name, value } = target;
+		setFormData((prevData) => ({
+			...prevData,
+			[name]: Number(value),
+		}));
 	};
-
-	// Calculate and update remaining time every second
-	useEffect(() => {
-		if (!status?.sleep_until) {
-			setRemainingTime(null);
-			return;
-		}
-		const updateTimer = () => {
-			if (!status.sleep_until) return;
-			const remaining = new Date(status.sleep_until).getTime() - Date.now() / 1000;
-			setRemainingTime(remaining > 0 ? Math.round(remaining) : 0);
-		};
-
-		updateTimer();
-		const interval = setInterval(updateTimer, 1000);
-		return () => clearInterval(interval);
-	}, [status?.sleep_until]);
-
-	// Fetch the scraper service status every 5 seconds
-	useEffect(() => {
-		fetchStatus().then();
-		const interval = setInterval(fetchStatus, 5000);
-		return (): void => clearInterval(interval);
-	}, [token]);
-
-	// Fetch the latest service log
-	const fetchLatestLog = async (): Promise<void> => {
-		if (!token) return;
-		try {
-			// Fetch all logs and get the most recent one
-			const log: ServiceLog = await serviceLogApi.getLatest(token);
-			if (log) {
-				setLatestLog(log);
-			}
-		} catch (err: any) {
-			console.error("Failed to fetch latest log:", err);
-		}
-	};
-
-	// Fetch latest service log ever 2s
-	useEffect(() => {
-		if (!status?.scraper_running) return;
-		fetchLatestLog().then();
-		const interval = setInterval(fetchLatestLog, 2000);
-		return (): void => clearInterval(interval);
-	}, [status?.scraper_running, token]);
-
-	// Fetch the latest service log on component mount
-	useEffect(() => {
-		fetchLatestLog().then();
-	}, [token]);
-
-	useEffect(() => {
-		if (!latestLog || !token) return;
-		const fetchEmails = async (): Promise<void> => {
-			try {
-				const ids: number[] = latestLog.scraped_jobs;
-				const scraped_jobs: ScrapedJobData[] = await Promise.all(
-					ids.map((id: number): Promise<ScrapedJobData> => scrapedJobApi.get(id, token)),
-				);
-				// Count errors
-				const errorCounts: Record<string, number> = {};
-				scraped_jobs.forEach((job: ScrapedJobData): void => {
-					if (job.is_failed && job.scrape_error) {
-						const errorMsg: string = job.scrape_error.trim();
-						errorCounts[errorMsg] = (errorCounts[errorMsg] || 0) + 1;
-					}
-				});
-				setScraperErrors(errorCounts);
-			} catch (err: any) {
-				console.error("Failed to fetch alert emails:", err);
-			}
-		};
-
-		fetchEmails().then();
-	}, [latestLog, token]);
 
 	// Handle start button click
 	const handleStart = async (): Promise<void> => {
@@ -284,96 +95,6 @@ const JobScraperDashboard = (): JSX.Element => {
 		}
 	};
 
-	const threadStatusIcons: Record<ThreadStatus, string> = {
-		started: "bi-check-circle-fill",
-		stopped: "bi-x-circle-fill",
-		starting: "bi-play-circle-fill",
-		stopping: "bi-dash-circle-fill",
-	};
-
-	const getScraperStatus = (isRunning: boolean): string => {
-		return isRunning ? "bi-check-circle-fill" : "bi-x-circle-fill";
-	};
-
-	const threadStatusLabels: Record<string, string> = {
-		started: "Active",
-		starting: "Starting",
-		stopping: "Stopping",
-		stopped: "Inactive",
-	};
-
-	const threadButtonLabels: Record<string, string> = {
-		started: "Stop Service",
-		stopping: "Service Stopping",
-		starting: "Service Starting",
-		stopped: "Start Service",
-	};
-
-	const getScraperStatusMessage = (status: ScraperStatus): string => {
-		if (status.thread_status === "stopped") {
-			return "Stopped";
-		}
-		if (status.scraper_running) {
-			return "Running";
-		}
-		return `Stopped (${formatDuration(remainingTime)} s before next run)`;
-	};
-
-	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
-		const target = event.target as HTMLInputElement;
-		const { name, value } = target;
-		setFormData((prevData) => ({
-			...prevData,
-			[name]: Number(value),
-		}));
-	};
-
-	const RenderLabeledInput = (
-		id: string,
-		label: string,
-		help: string,
-		value: number,
-		unitText: string = "",
-		isRequired: boolean = false,
-		onChange?: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
-	) => {
-		return (
-			<Form.Group id={id}>
-				<InputGroup>
-					<InputGroup.Text className="d-flex align-items-center">
-						<span>{label}</span>
-						{isRequired && <span className="text-danger">*</span>}
-						{help && <HelpBubble helpText={help} />}
-					</InputGroup.Text>
-
-					<Form.Control type="text" value={value} onChange={onChange} />
-
-					{unitText && <InputGroup.Text>{unitText}</InputGroup.Text>}
-				</InputGroup>
-			</Form.Group>
-		);
-	};
-
-	const getPlatformStat = (log: ServiceLog, platform: string, key: string): number => {
-		const stat = log.platform_stats.find((p) => p.name === platform);
-		if (!stat) return 0;
-
-		const value = (stat as any)[key];
-
-		if (Array.isArray(value)) {
-			return value.length; // ✅ convert arrays → number
-		}
-
-		if (typeof value === "string") {
-			const parsed = Number(value);
-			return isNaN(parsed) ? 0 : parsed; // optional safety
-		}
-
-		return typeof value === "number" ? value : 0;
-	};
-
-	console.log(latestLog);
-
 	return (
 		<div>
 			<div className="table-header-section mb-4">
@@ -382,291 +103,41 @@ const JobScraperDashboard = (): JSX.Element => {
 						<div className="header-icon-wrapper me-3">
 							<i className={getTableIcon("TOAST Dashboard")}></i>
 						</div>
-						<h4 className="mb-0 fw-bold text-dark">{"TOAST Dashboard"}</h4>
+						<h4 className="mb-0 fw-bold text-dark">TOAST Dashboard</h4>
 					</div>
 				</div>
 			</div>
 
-			{/* Status Display */}
-			<div className="status-card">
-				<h2 className="card-title">
-					<i className="bi bi-activity me-2"></i>
-					Service Status
-				</h2>
-				{status ? (
-					<div className="status-content">
-						<div className="status-indicators">
-							<div className="indicator-item">
-								<span className="indicator-label">Scraper Service</span>
-								<span
-									className={`status-badge ${status.scraper_running ? "badge-success" : "badge-danger"}`}
-								>
-									<i className={`bi ${getScraperStatus(status.scraper_running)} me-2`}></i>
-									{getScraperStatusMessage(status)}
-								</span>
-							</div>
-							<div className="indicator-item">
-								<span className="indicator-label">Service</span>
-								<span
-									className={`status-badge ${["started", "starting"].includes(status.thread_status) ? "badge-success" : "badge-danger"}`}
-								>
-									<i className={`bi ${threadStatusIcons[status.thread_status]} me-2`}></i>
-									{threadStatusLabels[status.thread_status]}
-								</span>
-							</div>
-						</div>
+			<ServiceStatusCard
+				status={status}
+				remainingTime={remainingTime}
+				formData={formData}
+				loading={loading}
+				onFormChange={onChangeFormField}
+				onStart={handleStart}
+				onStop={handleStop}
+			/>
 
-						<div>
-							<div className="config-fields">
-								{RenderLabeledInput(
-									"period_hours",
-									"Scraping Period",
-									"Time between scraping runs.",
-									formData.period_hours,
-									"Hour(s)",
-									status.thread_status === "stopped",
-									onChangeFormField,
-								)}
-								{RenderLabeledInput(
-									"timedelta_days",
-									"Time Delta",
-									"Number of days back to scrape job postings for each run.",
-									formData.timedelta_days,
-									"Day(s)",
-									status.thread_status === "stopped",
-									onChangeFormField,
-								)}
-							</div>
-						</div>
-
-						<div className="actions-section">
-							<ActionButton
-								id="confirm-start-button"
-								disabled={loading || ["stopping", "starting"].includes(status?.thread_status)}
-								loading={loading}
-								loadingText={
-									status?.thread_status === "stopping" ? "Stopping Service..." : "Starting Service..."
-								}
-								defaultText={threadButtonLabels[status.thread_status]}
-								fullWidth={true}
-								onClick={status?.thread_status === "started" ? handleStop : handleStart}
-							/>
-						</div>
-					</div>
-				) : (
-					<Spinner text={"Loading status..."} />
-				)}
-			</div>
-
-			{/* Progress Display */}
-			{latestLog && (
-				<div className="status-card">
-					<h2 className="card-title">
-						<i className="bi bi-clock-history me-2"></i>
-						Latest Run Progress
-						{status?.scraper_running && <span className="live-indicator ms-2"></span>}
-					</h2>
-					<div className="metrics-grid">
-						<div className="metric-group">
-							<p className="metric-item">
-								<span className="status-label">Run Time:</span>
-								<br />
-								{new Date(latestLog.run_datetime).toLocaleString()}
-							</p>
-							<p className="metric-item">
-								<span className="status-label">Duration:</span> {formatDuration(latestLog.run_duration)}
-							</p>
-						</div>
-
-						<div className="metric-group">
-							<p className="metric-item">
-								<span className="status-label">Jobs Found:</span> {latestLog.job_found_n}
-							</p>
-							<p className="metric-item">
-								<span className="status-label">Scraping Succeeded:</span>{" "}
-								{latestLog.job_scrape_succeeded_n}
-							</p>
-							<p className="metric-item">
-								<span className="status-label">Scraping Failed:</span> {latestLog.job_scrape_failed_n}
-							</p>
-							<p className="metric-item"></p>
-						</div>
-
-						<div className="metric-group">
-							<Table striped bordered hover size="sm">
-								<thead>
-									<tr>
-										<th>Platform</th>
-										<th>Found</th>
-										<th>Succeeded</th>
-										<th>Failed</th>
-										<th>Skipped</th>
-									</tr>
-								</thead>
-								<tbody>
-									{latestLog.platform_stats.map((platformStat: PlatformStat) => (
-										<tr key={platformStat.name}>
-											<td>{capitalise(platformStat.name)}</td>
-											<td>{getPlatformStat(latestLog, platformStat.name, "job_found_ids")}</td>
-											<td>
-												{getPlatformStat(
-													latestLog,
-													platformStat.name,
-													"job_scrape_succeeded_ids",
-												)}
-											</td>
-											<td>
-												{getPlatformStat(latestLog, platformStat.name, "job_scrape_failed_ids")}
-											</td>
-											<td>
-												{getPlatformStat(
-													latestLog,
-													platformStat.name,
-													"job_scrape_skipped_ids",
-												)}
-											</td>
-										</tr>
-									))}
-								</tbody>
-							</Table>
-						</div>
-					</div>
-
-					{latestLog.error_message && (
-						<div className="error-message">
-							<strong>Error:</strong> {latestLog.error_message}
-						</div>
-					)}
-					<div style={{ display: "flex", width: "100%", gap: "20px", marginBottom: "20px" }}>
-						<ProgressBar
-							title="Users Processed"
-							current={latestLog.user_processed_ids.length}
-							total={latestLog.user_found_ids.length}
-						/>
-						<ProgressBar
-							title="Emails Processed"
-							current={latestLog.email_saved_n + latestLog.email_skipped_n}
-							total={latestLog.email_found_n}
-						/>
-						<ProgressBar
-							title="Jobs Scraped"
-							current={
-								latestLog.job_scrape_succeeded_n +
-								latestLog.job_scrape_copied_n +
-								latestLog.job_scrape_failed_n
-							}
-							total={latestLog.job_found_n}
-						/>
-					</div>
-				</div>
-			)}
+			<LatestRunProgress latestLog={latestLog} isRunning={status?.scraper_running || false} />
 
 			<LogViewer isServiceRunning={status?.scraper_running || false} />
 
-			<div className="status-card mt-4">
-				<h2 className="card-title">
-					<i className="bi bi-clock-history me-2"></i>
-					Run History
-					{status?.scraper_running && <span className="live-indicator ms-2"></span>}
-				</h2>
-				<div className="mb-4">
-					<RenderSelect
-						field={platformField}
-						value={selectedPlatform}
-						handleChange={onChangePlatform}
-					></RenderSelect>
-				</div>
-				<div style={{ display: "flex" }}>
-					{logData && logData[0] && (
-						<LineChart
-							data={logData[0]}
-							xAxisLabel="Run date"
-							yAxisLabel="Number of scraped jobs"
-						></LineChart>
-					)}
-					{logData && logData[1] && (
-						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]"></LineChart>
-					)}
-				</div>
-			</div>
-			<div className="status-card mt-4">
-				<h2 className="card-title">
-					<i className="bi bi-exclamation-triangle me-2"></i>
-					Error Summary
-					{status?.scraper_running && <span className="live-indicator ms-2"></span>}
-				</h2>
+			<RunHistoryChart
+				serviceLogData={serviceLogs}
+				selectedPlatform={selectedPlatform}
+				platformOptions={platformOptions}
+				onPlatformChange={onChangePlatform}
+				isRunning={status?.scraper_running || false}
+			/>
 
-				<div style={{ display: "flex", gap: "20px", height: "600px", overflow: "auto" }}>
-					{/* Critical Errors Column */}
-					<div style={{ flex: 1 }}>
-						<h5 className="mb-3">
-							Critical Errors (
-							{serviceLogData
-								? serviceLogData.filter(
-										(l: ServiceLog): string | null => l.error_message && l.error_message.trim(),
-									).length
-								: 0}
-							)
-						</h5>
-						{!serviceLogData ||
-						serviceLogData.filter(
-							(l: ServiceLog): string | null => l.error_message && l.error_message.trim(),
-						).length === 0 ? (
-							<div className="text-muted">No critical errors</div>
-						) : (
-							<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
-								{serviceLogData
-									.slice()
-									.sort(
-										(a: ServiceLog, b: ServiceLog): number =>
-											new Date(b.run_datetime).getTime() - new Date(a.run_datetime).getTime(),
-									)
-									.filter(
-										(log: ServiceLog): string | null =>
-											log.error_message && log.error_message.trim(),
-									)
-									.map(
-										(log: ServiceLog, idx: number): JSX.Element => (
-											<div key={idx} className="alert alert-danger">
-												<div className="small mb-1">
-													{new Date(log.run_datetime).toLocaleString()}
-												</div>
-												<div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-													{log.error_message}
-												</div>
-											</div>
-										),
-									)}
-							</div>
-						)}
-					</div>
-
-					{/* Scrape Errors Column */}
-					<div style={{ flex: 1 }}>
-						<h5 className="mb-3">Scrape Errors ({Object.keys(scraperErrors).length} unique)</h5>
-						{Object.keys(scraperErrors).length === 0 ? (
-							<div className="text-muted">No scrape errors during the latest run</div>
-						) : (
-							<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
-								{Object.entries(scraperErrors)
-									.sort((a, b) => b[1] - a[1])
-									.map(([errorMsg, count], idx) => (
-										<div key={idx} className="alert alert-warning">
-											<div className="d-flex justify-content-between align-items-start mb-1">
-												<span className="badge bg-warning">
-													{count} {count > 1 ? `occurrences` : `occurrence`}
-												</span>
-											</div>
-											<div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-												{errorMsg}
-											</div>
-										</div>
-									))}
-							</div>
-						)}
-					</div>
-				</div>
-			</div>
+			<ErrorSummaryCard
+				latestServiceLogs={serviceLogs}
+				lastScraperErrors={scraperErrors}
+				latestScraperErrors={latestScraperErrors}
+				lastServiceErrors={serviceErrors}
+				latestServiceErrors={latestServiceErrors}
+				isRunning={status?.scraper_running || false}
+			/>
 		</div>
 	);
 };

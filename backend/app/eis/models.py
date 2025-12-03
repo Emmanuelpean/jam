@@ -290,17 +290,17 @@ class PlatformStat(CommonBase, Base):
 class EisServiceError(CommonBase, Base):
     """Records unexpected/unhandled errors raised during a service run.
 
-    Fields:
-    - error_type: short label/class name of the error
-    - message: error message
-    - traceback: full traceback / details
-    - occurred_at: timestamp when the error occurred
-    - service_log_id: FK to EisServiceLog
-    """
+    Attributes:
+    -----------
+    - `error_type` (str): Type of the error.
+    - `message` (str, optional): Error message.
+    - `traceback` (str, optional): Traceback of the error.
+    - `service_log_id` (int): Foreign key to the associated EisServiceLog.
+    - `service_log` (EisServiceLog): Relationship to the associated EisServiceLog"""
 
     error_type = Column(String, nullable=False)
-    message = Column(String, nullable=True)
-    traceback = Column(String, nullable=True)
+    message = Column(String, nullable=False)
+    traceback = Column(String, nullable=False)
 
     service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="CASCADE"), nullable=False)
     service_log = relationship("EisServiceLog", back_populates="errors")
