@@ -29,6 +29,7 @@ const JobScraperDashboard = (): JSX.Element => {
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
 	const [serviceLogData, setServiceLogData] = useState<ServiceLog[] | null>(null);
 	const [scraperErrors, setScraperErrors] = useState<Record<string, number>>({});
+	const [selectedPlatform, setSelectedPlatform] = useState("linkedin");
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: 0,
 		timedelta_days: 0,
@@ -99,6 +100,39 @@ const JobScraperDashboard = (): JSX.Element => {
 		};
 		fetchLatestLogs().then();
 	}, [token]);
+
+	const buildPlatformSeries = (logs: ServiceLog[], platform: string): SeriesData[] => {
+		const reversedLogs: ServiceLog[] = logs.slice().reverse();
+
+		const foundSeries: SeriesData = {
+			id: `${platform} Jobs Found`,
+			color: "#0d38e3",
+			data: reversedLogs.map((log: ServiceLog) => ({
+				x: new Date(log.run_datetime),
+				y: getPlatformStat(log, platform, "job_found_ids"),
+			})),
+		};
+
+		const scrapedSeries: SeriesData = {
+			id: `${platform} Jobs Scraped`,
+			color: "#22c55e",
+			data: reversedLogs.map((log: ServiceLog) => ({
+				x: new Date(log.run_datetime),
+				y: getPlatformStat(log, platform, "job_scraped_n"),
+			})),
+		};
+
+		const failedSeries: SeriesData = {
+			id: `${platform} Failed`,
+			color: "#ef4444",
+			data: reversedLogs.map((log: ServiceLog) => ({
+				x: new Date(log.run_datetime),
+				y: getPlatformStat(log, platform, "job_failed_n"),
+			})),
+		};
+
+		return [foundSeries, scrapedSeries, failedSeries];
+	};
 
 	// Fetch the scraper service status
 	const fetchStatus = async (): Promise<void> => {
@@ -293,8 +327,22 @@ const JobScraperDashboard = (): JSX.Element => {
 		);
 	};
 
-	const getPlatformStat = (log: ServiceLog, platform: string, attribute: keyof PlatformStat) => {
-		return log.platform_stats.filter((ps: PlatformStat): boolean => ps.name === platform)[0]?.[attribute] || 0;
+	const getPlatformStat = (log: ServiceLog, platform: string, key: string): number => {
+		const stat = log.platform_stats.find((p) => p.name === platform);
+		if (!stat) return 0;
+
+		const value = (stat as any)[key];
+
+		if (Array.isArray(value)) {
+			return value.length; // ✅ convert arrays → number
+		}
+
+		if (typeof value === "string") {
+			const parsed = Number(value);
+			return isNaN(parsed) ? 0 : parsed; // optional safety
+		}
+
+		return typeof value === "number" ? value : 0;
 	};
 
 	return (
@@ -488,6 +536,36 @@ const JobScraperDashboard = (): JSX.Element => {
 					)}
 				</div>
 			</div>
+			{serviceLogData && (
+				<div className="status-card mt-4">
+					<h2 className="card-title">
+						<i className="bi bi-bar-chart-line me-2"></i>
+						Platform Statistics
+					</h2>
+
+					{/* SELECT BOX */}
+					<div className="mb-3">
+						<label htmlFor="platform-select" className="form-label fw-semibold">
+							Select platform
+						</label>
+						<select
+							id="platform-select"
+							className="form-select"
+							value={selectedPlatform}
+							onChange={(e) => setSelectedPlatform(e.target.value)}
+						>
+							<option value="linkedin">LinkedIn</option>
+							<option value="indeed">Indeed</option>
+							<option value="veganjobs">VeganJobs</option>
+						</select>
+					</div>
+					{(() => {
+						const series = buildPlatformSeries(serviceLogData, selectedPlatform);
+
+						return <LineChart data={series} xAxisLabel="Run date" yAxisLabel="Jobs count" />;
+					})()}
+				</div>
+			)}
 			<div className="status-card mt-4">
 				<h2 className="card-title">
 					<i className="bi bi-exclamation-triangle me-2"></i>
