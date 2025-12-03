@@ -12,7 +12,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
 	title,
 	current,
 	total,
-	width = "350px",
+	width = "100%",
 }: ProgressBarProps): JSX.Element => {
 	const percentage: number = total > 0 ? (current / total) * 100 : 0;
 	return (

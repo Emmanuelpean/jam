@@ -1,4 +1,4 @@
-import { Form, InputGroup } from "react-bootstrap";
+import { Form, InputGroup, Table } from "react-bootstrap";
 import React, { JSX, useEffect, useState } from "react";
 import { jobScraperApi, scrapedJobApi, ScraperStatus, serviceLogApi, ThreadStatus } from "../../services/Api";
 import { PlatformStat, ScrapedJobData, ServiceLog } from "../../services/Schemas";
@@ -14,11 +14,19 @@ import { HelpBubble } from "../../components/rendering/widgets/HelpBubble";
 import Spinner from "../../components/spinner/Spinner";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { LineChart, SeriesData } from "../../components/charts/LineChart";
+import { SelectOption } from "../../components/rendering/form/FormOptions";
+import { RenderSelect } from "../../components/rendering/widgets/SelectWidget";
+import { ModalFormField } from "../../components/rendering/form/FormRenders";
+import { capitalise } from "../../utils/Utils";
 
 export interface FormData {
 	period_hours: number;
 	timedelta_days: number;
 }
+
+const successColor = "#22c55e";
+const failureColor = "#ef4444";
+const infoColor = "#0d38e3";
 
 const JobScraperDashboard = (): JSX.Element => {
 	const { token } = useAuth();
@@ -29,12 +37,30 @@ const JobScraperDashboard = (): JSX.Element => {
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
 	const [serviceLogData, setServiceLogData] = useState<ServiceLog[] | null>(null);
 	const [scraperErrors, setScraperErrors] = useState<Record<string, number>>({});
-	const [selectedPlatform, setSelectedPlatform] = useState("linkedin");
+	const [platformOptions, setPlatformOptions] = useState<SelectOption[]>([]);
+	const [selectedPlatform, setSelectedPlatform] = useState("all");
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: 0,
 		timedelta_days: 0,
 	});
 	const [loading, setLoading] = useState<boolean>(false);
+
+	const createSeries = (
+		logs: ServiceLog[],
+		id: string,
+		color: string,
+		getValue: (log: ServiceLog) => number,
+	): SeriesData => ({
+		id,
+		color,
+		data: logs
+			.slice()
+			.reverse()
+			.map((log) => ({
+				x: new Date(log.run_datetime),
+				y: getValue(log),
+			})),
+	});
 
 	// Fet the 10 latest logs
 	useEffect(() => {
@@ -44,56 +70,24 @@ const JobScraperDashboard = (): JSX.Element => {
 				const logs: ServiceLog[] = await serviceLogApi.getAll(token, { limit: 10 });
 				console.log(logs);
 				setServiceLogData(logs);
-				// Prepare data for chart
-				const successSeries: SeriesData = {
-					id: "Successful Jobs",
-					color: "#22c55e",
-					data: logs
-						.slice()
-						.reverse()
-						.map((log: ServiceLog) => ({
-							x: new Date(log.run_datetime),
-							y: log.job_scrape_succeeded_n,
-						})),
-				};
 
-				const failSeries: SeriesData = {
-					id: "Failed Jobs",
-					color: "#ef4444",
-					data: logs
-						.slice()
-						.reverse()
-						.map((log: ServiceLog) => ({
-							x: new Date(log.run_datetime),
-							y: log.job_scrape_failed_n,
-						})),
-				};
-
-				const copiedSeries: SeriesData = {
-					id: "Copied Jobs",
-					color: "#0d38e3",
-					data: logs
-						.slice()
-						.reverse()
-						.map((log: ServiceLog) => ({
-							x: new Date(log.run_datetime),
-							y: log.job_scrape_copied_n,
-						})),
-				};
-
-				const runDurationSeries: SeriesData = {
-					id: "Run Duration (s)",
-					color: "#3b82f6",
-					data: logs
-						.slice()
-						.reverse()
-						.map((log) => ({
-							x: new Date(log.run_datetime),
-							y: log.run_duration ? log.run_duration / 3600 : 0,
-						})),
-				};
-
-				setLogData([[successSeries, failSeries, copiedSeries], [runDurationSeries]]);
+				// Extract unique platforms from logs
+				const platformOptions: SelectOption[] = [
+					{ value: "all", label: "All Platforms" },
+					...Array.from(
+						new Set(
+							logs.flatMap((log: ServiceLog): string[] =>
+								log.platform_stats
+									? log.platform_stats.map((stat: PlatformStat): string => stat.name)
+									: [],
+							),
+						),
+					).map((platform) => ({
+						value: platform,
+						label: capitalise(platform),
+					})),
+				];
+				setPlatformOptions(platformOptions);
 			} catch (err: any) {
 				console.error("Failed to fetch latest logs:", err);
 			}
@@ -101,37 +95,70 @@ const JobScraperDashboard = (): JSX.Element => {
 		fetchLatestLogs().then();
 	}, [token]);
 
-	const buildPlatformSeries = (logs: ServiceLog[], platform: string): SeriesData[] => {
-		const reversedLogs: ServiceLog[] = logs.slice().reverse();
+	useEffect(() => {
+		if (!serviceLogData) return;
+		// Prepare data for charts
+		const durationSeries: SeriesData[] = [
+			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: ServiceLog): number =>
+				log.run_duration ? log.run_duration / 3600 : 0,
+			),
+		];
+		if (selectedPlatform === "all") {
+			// Show service-level data
+			const jobSeries: SeriesData[] = [
+				createSeries(
+					serviceLogData,
+					"Successful Jobs",
+					successColor,
+					(log: ServiceLog): number => log.job_scrape_succeeded_n,
+				),
+				createSeries(
+					serviceLogData,
+					"Failed Jobs",
+					failureColor,
+					(log: ServiceLog): number => log.job_scrape_failed_n,
+				),
+				createSeries(
+					serviceLogData,
+					"Copied Jobs",
+					infoColor,
+					(log: ServiceLog): number => log.job_scrape_copied_n,
+				),
+			];
+			setLogData([jobSeries, durationSeries]);
+		} else {
+			// Show platform-specific data
+			const platformSeries: SeriesData[] = [
+				createSeries(
+					serviceLogData,
+					`${selectedPlatform} Jobs Found`,
+					successColor,
+					(log: ServiceLog): number => getPlatformStat(log, selectedPlatform, "job_found_ids"),
+				),
+				createSeries(
+					serviceLogData,
+					`${selectedPlatform} Jobs Scraped`,
+					failureColor,
+					(log: ServiceLog): number => getPlatformStat(log, selectedPlatform, "job_scraped_n"),
+				),
+				createSeries(serviceLogData, `${selectedPlatform} Failed`, infoColor, (log: ServiceLog): number =>
+					getPlatformStat(log, selectedPlatform, "job_failed_n"),
+				),
+			];
+			setLogData([platformSeries, durationSeries]);
+		}
+	}, [serviceLogData, selectedPlatform]);
 
-		const foundSeries: SeriesData = {
-			id: `${platform} Jobs Found`,
-			color: "#0d38e3",
-			data: reversedLogs.map((log: ServiceLog) => ({
-				x: new Date(log.run_datetime),
-				y: getPlatformStat(log, platform, "job_found_ids"),
-			})),
-		};
+	const platformField: ModalFormField = {
+		name: "platform-select",
+		type: "select",
+		label: "Select Platform",
+		options: platformOptions,
+	};
 
-		const scrapedSeries: SeriesData = {
-			id: `${platform} Jobs Scraped`,
-			color: "#22c55e",
-			data: reversedLogs.map((log: ServiceLog) => ({
-				x: new Date(log.run_datetime),
-				y: getPlatformStat(log, platform, "job_scraped_n"),
-			})),
-		};
-
-		const failedSeries: SeriesData = {
-			id: `${platform} Failed`,
-			color: "#ef4444",
-			data: reversedLogs.map((log: ServiceLog) => ({
-				x: new Date(log.run_datetime),
-				y: getPlatformStat(log, platform, "job_failed_n"),
-			})),
-		};
-
-		return [foundSeries, scrapedSeries, failedSeries];
+	const onChangePlatform = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
+		const target = event.target as HTMLInputElement;
+		setSelectedPlatform(target.value as string);
 	};
 
 	// Fetch the scraper service status
@@ -345,6 +372,8 @@ const JobScraperDashboard = (): JSX.Element => {
 		return typeof value === "number" ? value : 0;
 	};
 
+	console.log(latestLog);
+
 	return (
 		<div>
 			<div className="table-header-section mb-4">
@@ -454,32 +483,52 @@ const JobScraperDashboard = (): JSX.Element => {
 								<span className="status-label">Jobs Found:</span> {latestLog.job_found_n}
 							</p>
 							<p className="metric-item">
-								<span className="status-label">Successfully Scraped:</span>{" "}
+								<span className="status-label">Scraping Succeeded:</span>{" "}
 								{latestLog.job_scrape_succeeded_n}
 							</p>
 							<p className="metric-item">
-								<span className="status-label">Successfully Scraped:</span>{" "}
-								{latestLog.job_scrape_failed_n}
+								<span className="status-label">Scraping Failed:</span> {latestLog.job_scrape_failed_n}
 							</p>
-							<p className="metric-item">
-								<span className="status-label">Successfully Scraped:</span>{" "}
-								{latestLog.job_scrape_copied_n}
-							</p>
+							<p className="metric-item"></p>
 						</div>
 
 						<div className="metric-group">
-							<p className="metric-item">
-								<span className="status-label">LinkedIn:</span>{" "}
-								{getPlatformStat(latestLog, "linkedin", "job_found_ids")}
-							</p>
-							<p className="metric-item">
-								<span className="status-label">Indeed:</span>{" "}
-								{getPlatformStat(latestLog, "indeed", "job_found_ids")}
-							</p>
-							<p className="metric-item">
-								<span className="status-label">VeganJobs:</span>{" "}
-								{getPlatformStat(latestLog, "veganjobs", "job_found_ids")}
-							</p>
+							<Table striped bordered hover size="sm">
+								<thead>
+									<tr>
+										<th>Platform</th>
+										<th>Found</th>
+										<th>Succeeded</th>
+										<th>Failed</th>
+										<th>Skipped</th>
+									</tr>
+								</thead>
+								<tbody>
+									{latestLog.platform_stats.map((platformStat: PlatformStat) => (
+										<tr key={platformStat.name}>
+											<td>{capitalise(platformStat.name)}</td>
+											<td>{getPlatformStat(latestLog, platformStat.name, "job_found_ids")}</td>
+											<td>
+												{getPlatformStat(
+													latestLog,
+													platformStat.name,
+													"job_scrape_succeeded_ids",
+												)}
+											</td>
+											<td>
+												{getPlatformStat(latestLog, platformStat.name, "job_scrape_failed_ids")}
+											</td>
+											<td>
+												{getPlatformStat(
+													latestLog,
+													platformStat.name,
+													"job_scrape_skipped_ids",
+												)}
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</Table>
 						</div>
 					</div>
 
@@ -493,23 +542,20 @@ const JobScraperDashboard = (): JSX.Element => {
 							title="Users Processed"
 							current={latestLog.user_processed_ids.length}
 							total={latestLog.user_found_ids.length}
-							width="100%"
 						/>
 						<ProgressBar
 							title="Emails Processed"
 							current={latestLog.email_saved_n + latestLog.email_skipped_n}
 							total={latestLog.email_found_n}
-							width="100%"
 						/>
 						<ProgressBar
 							title="Jobs Scraped"
 							current={
 								latestLog.job_scrape_succeeded_n +
-								latestLog.job_scrape_skipped_n +
-								latestLog.job_scrape_copied_n
+								latestLog.job_scrape_copied_n +
+								latestLog.job_scrape_failed_n
 							}
 							total={latestLog.job_found_n}
-							width="100%"
 						/>
 					</div>
 				</div>
@@ -523,6 +569,13 @@ const JobScraperDashboard = (): JSX.Element => {
 					Run History
 					{status?.scraper_running && <span className="live-indicator ms-2"></span>}
 				</h2>
+				<div className="mb-4">
+					<RenderSelect
+						field={platformField}
+						value={selectedPlatform}
+						handleChange={onChangePlatform}
+					></RenderSelect>
+				</div>
 				<div style={{ display: "flex" }}>
 					{logData && logData[0] && (
 						<LineChart
@@ -536,36 +589,6 @@ const JobScraperDashboard = (): JSX.Element => {
 					)}
 				</div>
 			</div>
-			{serviceLogData && (
-				<div className="status-card mt-4">
-					<h2 className="card-title">
-						<i className="bi bi-bar-chart-line me-2"></i>
-						Platform Statistics
-					</h2>
-
-					{/* SELECT BOX */}
-					<div className="mb-3">
-						<label htmlFor="platform-select" className="form-label fw-semibold">
-							Select platform
-						</label>
-						<select
-							id="platform-select"
-							className="form-select"
-							value={selectedPlatform}
-							onChange={(e) => setSelectedPlatform(e.target.value)}
-						>
-							<option value="linkedin">LinkedIn</option>
-							<option value="indeed">Indeed</option>
-							<option value="veganjobs">VeganJobs</option>
-						</select>
-					</div>
-					{(() => {
-						const series = buildPlatformSeries(serviceLogData, selectedPlatform);
-
-						return <LineChart data={series} xAxisLabel="Run date" yAxisLabel="Jobs count" />;
-					})()}
-				</div>
-			)}
 			<div className="status-card mt-4">
 				<h2 className="card-title">
 					<i className="bi bi-exclamation-triangle me-2"></i>

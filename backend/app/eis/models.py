@@ -189,7 +189,7 @@ class EisServiceLog(CommonBase, Base):
     platform_stats = relationship("PlatformStat", back_populates="service_log")
     errors = relationship("EisServiceError", back_populates="service_log")
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""
         kwargs.setdefault("user_found_ids", [])
         kwargs.setdefault("user_processed_ids", [])
@@ -275,7 +275,7 @@ class PlatformStat(CommonBase, Base):
 
     __table_args__ = (UniqueConstraint("service_log_id", "name", name="unique_platform_per_service_log"),)
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""
         kwargs.setdefault("email_saved_ids", [])
         kwargs.setdefault("email_skipped_ids", [])
