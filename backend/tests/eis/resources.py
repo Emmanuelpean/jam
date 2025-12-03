@@ -230,6 +230,8 @@ LINKEDIN_EMAIL_4 = {
     "parsed_output": LINKEDIN_EMAIL_4_EXTRACTED,
 }
 
+LINKEDIN_EMAIL_5_BODY = open_file("linkedin_email_malformed.html", encoding="utf8")
+
 
 # Email 5
 LINKEDIN_EMAIL_5_BODY = open_file("linkedin_email_noJobId.html", encoding="utf8")

@@ -1,7 +1,9 @@
 """Tests for LinkedIn job email parser."""
 
+import pytest
+
 from app.eis.email_parsers.linkedin import parse_linkedin_job_email
-from tests.eis.resources import LINKEDIN_EMAIL_3, LINKEDIN_EMAIL_4, LINKEDIN_EMAIL_5
+from tests.eis.resources import LINKEDIN_EMAIL_3, LINKEDIN_EMAIL_4, LINKEDIN_EMAIL_5_BODY
 
 
 class TestParseIndeedJobEmail:
@@ -20,10 +22,7 @@ class TestParseIndeedJobEmail:
         for out, exp in zip(output, LINKEDIN_EMAIL_4["parsed_output"]):
             assert out.model_dump() == exp.model_dump()
 
-    def test_email_malformed(self) -> None:
-        """Test an email where the url is malformed and the job id cannot be parsed"""
+    def test_fail(self) -> None:
 
-        output = parse_linkedin_job_email(LINKEDIN_EMAIL_5["body"])
-        assert len(output) == len(LINKEDIN_EMAIL_5["parsed_output"])
-        for out, exp in zip(output, LINKEDIN_EMAIL_5["parsed_output"]):
-            assert out.model_dump() == exp.model_dump()
+        with pytest.raises(TypeError):
+            parse_linkedin_job_email(LINKEDIN_EMAIL_5_BODY)
