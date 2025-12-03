@@ -7,7 +7,7 @@ from starlette import status
 
 from app.eis import schemas
 from tests.conftest import CRUDTestBase
-from tests.utils.table_data import JOB_ALERT_EMAIL_DATA
+from tests.utils.table_data import JOB_ALERT_EMAIL_DATA, SERVICE_ERROR_DATA
 
 
 class TestJobAlertEmailCRUD(CRUDTestBase):
@@ -21,6 +21,15 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
     }
     required_fixture = ["test_service_logs"]
     actions_to_test = ["get"]
+
+
+# class TestEisServiceErrorCRUD(CRUDTestBase):
+#     endpoint = "/eis_service_errors"
+#     out_schema = schemas.EisServiceErrorOut
+#     test_data_ref = "test_eis_service_errors"
+#     create_data = SERVICE_ERROR_DATA
+#     required_fixture = ["test_service_logs"]
+#     actions_to_test = ["get"]
 
 
 class TestScrapedJobCRUD(CRUDTestBase):

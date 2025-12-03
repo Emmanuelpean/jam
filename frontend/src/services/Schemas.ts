@@ -298,7 +298,7 @@ export interface PlatformStat {
 export interface ServiceError {
 	id: number;
 	error_type: string;
-	message: string | null;
-	traceback: string | null;
+	message: string;
+	traceback: string;
 	service_log_id: number;
 }

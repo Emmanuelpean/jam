@@ -250,6 +250,18 @@ def get_latest(
     return latest_log
 
 
+# ------------------------------------------------- EIS SERVICE ERRORS -------------------------------------------------
+
+
+service_error_router = generate_data_table_crud_router(
+    table_model=models.EisServiceError,
+    out_schema=schemas.EisServiceErrorOut,
+    endpoint="eis_service_errors",
+    not_found_msg="EIS Service errors not found",
+    allowed_actions=["get"],
+    admin_only=True,
+)
+
 # ------------------------------------------------------ SCRAPING ------------------------------------------------------
 
 

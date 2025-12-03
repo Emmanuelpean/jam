@@ -522,7 +522,7 @@ class CRUDTestBase:
     get_unauthorised_fixture: str = None
     unauthorised_data_fixture = None
     admin_only: bool = False
-    actions_to_test: list[str] = ["get", "post", "put", "delete"]
+    actions_to_test: list[str] = ["get", "get_bulk", "post", "put", "delete"]
 
     def check_output(
         self,
@@ -582,6 +582,12 @@ class CRUDTestBase:
         """Helper method to get all items from the endpoint."""
 
         return client.get(self.endpoint)
+
+    def get_bulk(self, client, item_ids) -> Response:
+        """Helper method to get bulk items from the endpoint."""
+
+        strings = ["ids=" + str(i) for i in item_ids]
+        return client.get(f"{self.endpoint}/?{'&'.join(strings)}")
 
     def get_one(self, client, item_id) -> Response:
         """Helper method to get one item from the endpoint."""
@@ -724,6 +730,23 @@ class CRUDTestBase:
             print(data)
             if data:
                 assert_ownership(data, owner_id)
+
+    # ---------------------------------------------------- GET BULK ----------------------------------------------------
+
+    @skip_if_action_not_enabled("get_bulk")
+    def test_get_bulk_authorised(
+        self,
+        authorised_clients,
+        test_data,
+    ) -> None:
+        """Test that an authorised users can successfully retrieve all items from the endpoint.
+        For admin only endpoints, uses admin user; otherwise regular user.
+        Verifies 200 OK response and validates the returned data matches expected test data."""
+
+        client = self._get_authorised_client(authorised_clients)
+        response = self.get_bulk(client, [item.id for item in test_data])
+        assert response.status_code == status.HTTP_200_OK
+        self.check_output(test_data, response.json())
 
     # ----------------------------------------------------- GET ONE ----------------------------------------------------
 

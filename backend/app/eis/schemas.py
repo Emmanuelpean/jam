@@ -164,6 +164,15 @@ class PlatformStatOut(Out):
 
     service_log_id: int | None = None
 
+# -------------------------------------------------- EIS SERVICE ERROR -------------------------------------------------
+
+
+class EisServiceErrorOut(Out):
+    """EIS Service Error output schema"""
+
+    error_type: str
+    message: str
+    traceback: str
 
 # ------------------------------------------------ EMAIL SCRAPER SERVICE -----------------------------------------------
 
