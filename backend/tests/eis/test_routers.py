@@ -10,6 +10,9 @@ from tests.conftest import CRUDTestBase
 from tests.utils.table_data import JOB_ALERT_EMAIL_DATA, SERVICE_ERROR_DATA
 
 
+# --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
+
+
 class TestJobAlertEmailCRUD(CRUDTestBase):
     endpoint = "/job_alert_emails"
     out_schema = schemas.JobAlertEmailOut
@@ -19,20 +22,15 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
         "id": 1,
         "subject": "Updated Python",
     }
-    required_fixture = ["test_service_logs"]
-    actions_to_test = ["get"]
+    required_fixture = ["test_eis_service_logs"]
+    actions_to_test = ["get_all"]
+    admin_only = True
 
 
-# class TestEisServiceErrorCRUD(CRUDTestBase):
-#     endpoint = "/eis_service_errors"
-#     out_schema = schemas.EisServiceErrorOut
-#     test_data_ref = "test_eis_service_errors"
-#     create_data = SERVICE_ERROR_DATA
-#     required_fixture = ["test_service_logs"]
-#     actions_to_test = ["get"]
+# ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
 
 
-class TestScrapedJobCRUD(CRUDTestBase):
+class TestScrapedJobCRUDRegularUser(CRUDTestBase):
 
     endpoint = "/scraped_jobs"
     out_schema = schemas.ScrapedJobOut
@@ -53,14 +51,11 @@ class TestScrapedJobCRUD(CRUDTestBase):
 
         self.get_user_data(test_users, test_scraped_jobs)
         client = self._get_authorised_client(authorised_clients)
-        response = client.get(self.endpoint + "?page=1&page_size=20&search=Test")
+        response = client.get(self.endpoint + "/paged/?page=1&page_size=5")
         assert response.status_code == status.HTTP_200_OK
-        # jobs = []
-        # for job in test_data:
-        #     if job.is_scraped and not job.is_imported and job.owner_id == 1 and job.is_active:
-        #         jobs.append(job)
-        # assert len(response.json()) == len(jobs)
-        # # self.check_output(jobs, response.json())
+        scraped_jobs = response.json()
+        assert scraped_jobs["total"] == 50
+        assert len(scraped_jobs["items"]) == 5
 
     def test_get_count(self, test_users, authorised_clients, test_scraped_jobs) -> None:
         """Test retrieving count of scraped jobs for the authorized user that are scraped, not imported, active"""
@@ -71,17 +66,16 @@ class TestScrapedJobCRUD(CRUDTestBase):
         assert response.json()["count"] == 50
 
 
-class TestScrapedJobCRUDGetOne(CRUDTestBase):  # TODO
+class TestScrapedJobCRUDAdminUser(CRUDTestBase):
 
     endpoint = "/scraped_jobs"
     out_schema = schemas.ScrapedJobOut
     test_data_ref = "test_scraped_jobs"
-    update_data = {
-        "id": 1,
-        "is_imported": True,
-    }
-    actions_to_test = ["get_one"]
+    actions_to_test = ["get_all"]
     admin_only = True
+
+
+# -------------------------------------------------- EIS SERVICE LOGS --------------------------------------------------
 
 
 class TestEisServiceLog:

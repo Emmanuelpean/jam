@@ -187,7 +187,6 @@ def test_inactive_user(test_users) -> models.User:
     return test_users[INACTIVE_USER_INDEX]
 
 
-
 @pytest.fixture
 def test_unverified_user(test_users) -> models.User:
     """Fixture to create an unverified user (i.e. is_verified=False)."""
@@ -476,7 +475,7 @@ def assert_ownership(item: list | dict, owner_id: int) -> None:
             assert_ownership(subitem, owner_id)
 
 
-def skip_if_action_not_enabled(action: str) -> Any:
+def skip_if_action_not_enabled(*action: str | list[str]) -> Any:
     """Decorator to skip a test if the specified action is not enabled in the actions_to_test list."""
 
     def decorator(func: Callable) -> Any:
@@ -486,8 +485,12 @@ def skip_if_action_not_enabled(action: str) -> Any:
         def wrapper(self, *args, **kwargs) -> Any:
             """Wrapper function to check if the action is enabled."""
 
-            if action not in self.actions_to_test:
-                pytest.skip(f"Skipping {action.upper()} tests as per actions_to_test setting")
+            if isinstance(action, str):
+                action_list = [action]
+            else:
+                action_list = action
+            if all(a not in self.actions_to_test for a in action_list):
+                pytest.skip(f"Skipping tests as per actions_to_test setting")
             return func(self, *args, **kwargs)
 
         return wrapper
@@ -522,7 +525,7 @@ class CRUDTestBase:
     get_unauthorised_fixture: str = None
     unauthorised_data_fixture = None
     admin_only: bool = False
-    actions_to_test: list[str] = ["get", "get_bulk", "post", "put", "delete"]
+    actions_to_test: list[str] = ["get", "post", "put", "delete"]
 
     def check_output(
         self,
@@ -672,7 +675,7 @@ class CRUDTestBase:
 
     # ----------------------------------------------------- GET ALL ----------------------------------------------------
 
-    @skip_if_action_not_enabled("get")
+    @skip_if_action_not_enabled("get", "get_all")
     def test_get_all_authorised(
         self,
         authorised_clients,
@@ -687,7 +690,7 @@ class CRUDTestBase:
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
 
-    @skip_if_action_not_enabled("get")
+    @skip_if_action_not_enabled("get", "get_all")
     def test_get_all_unauthenticated(
         self,
         client: TestClient,
@@ -699,7 +702,7 @@ class CRUDTestBase:
         response = self.get_all(client)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("get")
+    @skip_if_action_not_enabled("get", "get_all")
     def test_get_all_non_admin(
         self,
         authorised_clients,
@@ -713,7 +716,7 @@ class CRUDTestBase:
             response = self.get_all(client)
             assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @skip_if_action_not_enabled("get")
+    @skip_if_action_not_enabled("get", "get_all")
     def test_get_all_data_only_authorised(
         self,
         authorised_clients,
@@ -731,26 +734,9 @@ class CRUDTestBase:
             if data:
                 assert_ownership(data, owner_id)
 
-    # ---------------------------------------------------- GET BULK ----------------------------------------------------
-
-    @skip_if_action_not_enabled("get_bulk")
-    def test_get_bulk_authorised(
-        self,
-        authorised_clients,
-        test_data,
-    ) -> None:
-        """Test that an authorised users can successfully retrieve all items from the endpoint.
-        For admin only endpoints, uses admin user; otherwise regular user.
-        Verifies 200 OK response and validates the returned data matches expected test data."""
-
-        client = self._get_authorised_client(authorised_clients)
-        response = self.get_bulk(client, [item.id for item in test_data])
-        assert response.status_code == status.HTTP_200_OK
-        self.check_output(test_data, response.json())
-
     # ----------------------------------------------------- GET ONE ----------------------------------------------------
 
-    @skip_if_action_not_enabled("get")
+    @skip_if_action_not_enabled("get", "get_one")
     def test_get_one_success(
         self,
         authorised_clients,
@@ -765,7 +751,7 @@ class CRUDTestBase:
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data[0], response.json())
 
-    @skip_if_action_not_enabled("get")
+    @skip_if_action_not_enabled("get", "get_one")
     def test_get_one_unauthenticated(
         self,
         client,
@@ -777,7 +763,7 @@ class CRUDTestBase:
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("get")
+    @skip_if_action_not_enabled("get", "get_one")
     def test_get_one_incorrect_user(
         self,
         authorised_clients,
@@ -790,7 +776,7 @@ class CRUDTestBase:
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @skip_if_action_not_enabled("get")
+    @skip_if_action_not_enabled("get", "get_one")
     def test_get_one_non_exist(
         self,
         authorised_clients,

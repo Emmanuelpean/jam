@@ -183,7 +183,7 @@ class MockNhsBrightdataJobScraper(object):
                         "title": "Operations Coordinator",
                         "description": "The deadline to apply for this position is September 30, 2025.\nSharpen Strategy is hiring an Operations Coordinator to help keep our operations and programs running smoothly.",
                         "url": f"https://beta.jobs.nhs.uk/candidate/jobadvert/{self.job_id}",
-                        "url": f"https://beta.jobs.nhs.uk/candidate/jobadvert/{self.job_id}?ref=api",
+                        "raw_url": f"https://beta.jobs.nhs.uk/candidate/jobadvert/{self.job_id}?ref=api",
                         "salary": {"min_amount": None, "max_amount": None},
                     },
                     "raw": "raw data",

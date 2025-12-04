@@ -18,7 +18,7 @@ from app import models as app_models
 from app.config import settings
 from app.database import get_db
 from app.eis import models, schemas
-from app.eis.email_scraper import EmailScraperService
+from app.eis.email_scraper import scraper_service
 from app.eis.job_scrapers.indeed import IndeedBrightdataJobScraper
 from app.eis.job_scrapers.linkedin import LinkedinBrightdataJobScraper
 from app.eis.job_scrapers.nhs import NhsJobScraper
@@ -35,7 +35,7 @@ from app.routers import (
 
 
 # GET endpoint for admin user to get all job alert emails
-email_router = generate_data_table_crud_router(
+job_alert_email_router = generate_data_table_crud_router(
     table_model=models.JobAlertEmail,
     out_schema=schemas.JobAlertEmailOut,
     endpoint="job_alert_emails",
@@ -165,18 +165,6 @@ def get_scraped_job_count(
     return {"count": count}
 
 
-# GET endpoint for admin user to get multiple entries
-# generate_data_table_crud_router(
-#     table_model=models.ScrapedJob,
-#     out_schema=schemas.ScrapedJobOut,
-#     endpoint="scraped_jobs",
-#     not_found_msg="Scraped Job not found",
-#     allowed_actions=["get_bulk"],
-#     router=scraped_job_router,
-#     admin_only=True,
-# )
-
-
 # PUT endpoint for regular users to update the entries
 generate_data_table_crud_router(
     table_model=models.ScrapedJob,
@@ -260,18 +248,6 @@ def get_latest(
     return latest_log
 
 
-# ------------------------------------------------- EIS SERVICE ERRORS -------------------------------------------------
-
-
-service_error_router = generate_data_table_crud_router(
-    table_model=models.EisServiceError,
-    out_schema=schemas.EisServiceErrorOut,
-    endpoint="eis_service_errors",
-    not_found_msg="EIS Service errors not found",
-    allowed_actions=["get"],
-    admin_only=True,
-)
-
 # ------------------------------------------------------ SCRAPING ------------------------------------------------------
 
 
@@ -348,7 +324,6 @@ def scrape_job(
 
 
 email_scraper_service_router = APIRouter(prefix="/email_scraper_service", tags=["email_scraper_service"])
-scraper_service = EmailScraperService()
 
 
 @email_scraper_service_router.post("/start")

@@ -11,7 +11,7 @@ from app.eis.email_parsers import indeed
 from app.eis.email_scraper import JobEmailScraper
 from app.models import Setting
 from tests.eis import resources
-from tests.eis.test_job_scrapers import (
+from tests.eis.mock_job_scrapers import (
     MockVeganJobsBrightdataJobScraper,
     MockIndeedBrightdataJobScraper,
     MockLinkedinBrightdataJobScraper,

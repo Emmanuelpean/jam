@@ -22,13 +22,14 @@
 * [X] Add search box
 * [X] If the company/location match is not good enough, do not suggest it
 * [X] Add the total number of scraped jobs
-* [ ] Display the most common failures
-* [ ] Display critical failures
+* [X] Display the most common failures
+* [X] Display critical failures
 * [ ] Add AI rating for the jobs
 * [ ] Add the ability to filter out jobs (extract the job title when extracting the job ids)
 * [X] Add NHS job alert support
-* [ ] Add the ability to display the results for the selected platform only
-* [ ] Add new endpoint for admin only that allows to query specific job ids (as a list)
+* [X] Add the ability to display the results for the selected platform only
+* [X] Add new endpoint for admin only that allows to query specific job ids (as a list)
+
 ### Select Widgets Improvements
 * [ ] Sort options alphabetically
 * [ ] After adding an option, select it automatically
