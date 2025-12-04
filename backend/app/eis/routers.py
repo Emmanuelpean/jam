@@ -34,12 +34,14 @@ from app.routers import (
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
 
 
+# GET endpoint for admin user to get all job alert emails
 email_router = generate_data_table_crud_router(
     table_model=models.JobAlertEmail,
     out_schema=schemas.JobAlertEmailOut,
     endpoint="job_alert_emails",
     not_found_msg="Job alert email not found",
-    allowed_actions=["get_bulk"],
+    allowed_actions=["get_all"],
+    admin_only=True,
 )
 
 
@@ -215,7 +217,7 @@ def get_service_logs_by_date_range(
 
     assert_admin(current_user)
 
-    query = db.query(models.EisServiceLog).filter(models.EisServiceLog.run_datetime.is_not(None))
+    query = db.query(models.EisServiceLog).filter(models.EisServiceLog.run_duration.is_not(None))
 
     # Apply date filters
     if start_date:

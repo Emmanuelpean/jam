@@ -49,7 +49,6 @@ export const useScraperErrors = (
 				}
 
 				const scraped_jobs: ScrapedJobData[] = await scrapedJobApi.getAll(token, { id: ids });
-				console.log(ids, logs);
 
 				// Count errors
 				const errorCounts: Record<string, number> = {};
