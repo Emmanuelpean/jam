@@ -554,6 +554,8 @@ class EmailScraperService:
         self.scraper_running = False
         self.sleep_until = None
         self.sleep_start = None
+        self.logger = AppLogger.create_service_logger("email_scraper_service", "INFO")
+        self.logger.info("EmailScraperService initialized")
 
     def start(self, period_hours: float = 3.0, timedelta_days: int = 1) -> None:
         """Start the scraping service
@@ -561,7 +563,10 @@ class EmailScraperService:
         :param timedelta_days: Number of days to search for emails"""
 
         if self.thread_status in ("started", "starting", "stopping"):
+            self.logger.warning(f"Cannot start service - current status: {self.thread_status}")
             return
+
+        self.logger.info(f"Starting email scraper service (period: {period_hours}h, timedelta: {timedelta_days}d)")
         self.thread_status = "starting"
 
         # Store parameters
@@ -575,14 +580,17 @@ class EmailScraperService:
         self.thread = threading.Thread(target=self._run_service, args=(period_hours, timedelta_days))
         self.thread.daemon = True
         self.thread.start()
+        self.logger.info("Service thread started successfully")
 
     def stop(self) -> None:
         """Stop the scraping service"""
 
         if self.thread_status in ("stopped", "starting", "stopping"):
+            self.logger.warning(f"Cannot stop service - current status: {self.thread_status}")
             return
-        self.thread_status = "stopping"
 
+        self.logger.info("Stopping email scraper service")
+        self.thread_status = "stopping"
         self.stop_event.set()
 
     def _run_service(self, period_hours: float, timedelta_days: int) -> None:
@@ -592,12 +600,17 @@ class EmailScraperService:
 
         try:
             self.thread_status = "started"
+            self.logger.info("Service loop started")
+
             while not self.stop_event.is_set():
                 try:
                     # Run the scraping
+                    self.logger.info(f"Starting scraping run (timedelta: {timedelta_days}d)")
                     self.scraper_running = True
                     result = self.scraper.run_scraping(timedelta_days=timedelta_days)
                     self.scraper_running = False
+
+                    self.logger.info(f"Scraping completed - duration: {result.run_duration:.2f}s")
 
                     duration = result.run_duration
                     sleep_time = max([0, period_hours * 3600 - duration])
@@ -606,23 +619,33 @@ class EmailScraperService:
                     self.sleep_start = time.time()
                     self.sleep_until = self.sleep_start + sleep_time
 
+                    self.logger.info(f"Sleeping for {sleep_time:.2f}s until next run")
+
                     if self.stop_event.wait(timeout=sleep_time):
+                        self.logger.info("Stop event received during sleep")
                         break
 
                     # Clear sleep tracking after waking
                     self.sleep_start = None
                     self.sleep_until = None
 
-                except Exception:
+                except Exception as e:
+                    self.logger.exception(f"Error during scraping run: {e}")
+                    self.scraper_running = False
+
                     self.sleep_start = time.time()
                     self.sleep_until = self.sleep_start + 300
 
+                    self.logger.info("Waiting 5 minutes before retry after error")
+
                     if self.stop_event.wait(timeout=300):  # 5 minutes
+                        self.logger.info("Stop event received during error recovery")
                         break
 
                     self.sleep_start = None
                     self.sleep_until = None
         finally:
+            self.logger.info("Service loop ended")
             self.thread_status = "stopped"
             self.sleep_start = None
             self.sleep_until = None
@@ -639,5 +662,4 @@ class EmailScraperService:
         }
 
 
-# self = JobEmailScraper()
-# self.run_scraping()
+scraper_service = EmailScraperService()

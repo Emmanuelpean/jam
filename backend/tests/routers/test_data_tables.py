@@ -65,11 +65,19 @@ class TestCompanyCRUD(CRUDTestBase):
     def test_get_all_specific_company(self, authorised_clients, test_companies) -> None:
         response = authorised_clients[0].get(f"{self.endpoint}/?url=https://techcorp.com")
         assert response.status_code == 200
-
-        # The response should be a list, so check the first item
         companies = response.json()
         assert len(companies) > 0
         assert companies[0]["name"] == "Tech Corp"
+
+    def test_get_all_with_list(self, authorised_clients, test_companies, test_users) -> None:
+
+        test_data = self.get_user_data(test_users, test_companies)
+        response = authorised_clients[0].get(f"{self.endpoint}/?id={test_data[0].id}&id={test_data[1].id}")
+        assert response.status_code == 200
+        companies = response.json()
+        assert len(companies) == 2
+        assert companies[0]["id"] == test_data[0].id
+        assert companies[0]["id"] == test_data[0].id
 
     def test_get_all_specific_id_not_owned(self, authorised_clients, test_companies) -> None:
         response = authorised_clients[1].get(f"{self.endpoint}/?id=1")
