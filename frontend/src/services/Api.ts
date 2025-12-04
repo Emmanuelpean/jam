@@ -16,10 +16,21 @@ interface RequestOptions {
 interface CrudApi {
 	getAll: (token: string, queryParams?: QueryParams | null) => Promise<any>;
 	get: (id: number, token: string) => Promise<any>;
-	getBulk: (ids: number[], token: string) => Promise<any>;
 	create: (data: any, token: string) => Promise<any>;
 	update: (id: number, data: any, token: string) => Promise<any>;
 	delete: (id: number, token: string) => Promise<any>;
+}
+
+interface ScrapedJobCrudApi extends CrudApi {
+	getCount: (token: string) => Promise<any>;
+}
+
+interface ExportCrudApi {
+	download: (filename: string, token: string) => Promise<void>;
+}
+
+interface EisServiceLogCrudApi extends CrudApi {
+	getLatest: (token: string) => Promise<ServiceLog>;
 }
 
 interface AuthApi {
@@ -76,8 +87,6 @@ const handleResponse = async (response: Response, isBlob: boolean = false): Prom
 };
 
 class ApiService {
-	// Enhanced error handling helper for blob responses
-
 	async get(endpoint: string, token: string | null = null, options: RequestOptions = {}): Promise<any> {
 		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
 			method: "GET",
@@ -146,15 +155,13 @@ const createCrudApi = (endpoint: string): CrudApi => ({
 		if (queryParams) {
 			const searchParams = new URLSearchParams();
 			Object.keys(queryParams).forEach((key: string): void => {
-				const value = queryParams[key];
+				const value: any = queryParams[key];
 				if (value !== undefined) {
-					// Handle array values - append each value separately
 					if (Array.isArray(value)) {
 						value.forEach((item): void => {
 							searchParams.append(key, String(item));
 						});
 					} else {
-						// Handle single values
 						searchParams.append(key, String(value));
 					}
 				}
@@ -163,15 +170,6 @@ const createCrudApi = (endpoint: string): CrudApi => ({
 				url += `?${searchParams.toString()}`;
 			}
 		}
-		return api.get(url, token);
-	},
-
-	getBulk: (ids: number[], token: string): Promise<any> => {
-		const queryParams = new URLSearchParams();
-		ids.forEach((id: number): void => {
-			queryParams.append("ids", id.toString());
-		});
-		const url: string = `${endpoint}/bulk/?${queryParams.toString()}`;
 		return api.get(url, token);
 	},
 	get: (id: string | number, token: string): Promise<any> => api.get(`${endpoint}/${id}`, token),
@@ -193,17 +191,16 @@ export const settingsApi: CrudApi = createCrudApi("settings");
 export const countriesApi: CrudApi = createCrudApi("others/countries");
 export const currenciesApi: CrudApi = createCrudApi("others/currencies");
 
-export const exportApi: CrudApi & { download: (filename: string, token: string) => Promise<void> } = {
-	...createCrudApi("export"),
+export const exportApi: ExportCrudApi = {
 	download: (filename: string, token: string) => api.downloadFile("export/", filename, token),
 };
 
-export const scrapedJobApi: CrudApi & { getCount: (token: string) => Promise<any> } = {
+export const scrapedJobApi: ScrapedJobCrudApi = {
 	...createCrudApi("scraped_jobs"),
 	getCount: (token: string): Promise<any> => api.get("scraped_jobs/count", token),
 };
 
-export const serviceLogApi: CrudApi & { getLatest: (token: string) => Promise<ServiceLog> } = {
+export const eisServiceLogApi: EisServiceLogCrudApi = {
 	...createCrudApi("eis_service_logs"),
 	getLatest: (token: string): Promise<ServiceLog> => api.get("eis_service_logs/latest", token),
 };
@@ -283,7 +280,7 @@ interface JobScraperApi {
 	getLogs: (lines: number, token: string) => Promise<LogResponse>;
 }
 
-export const jobScraperApi: JobScraperApi = {
+export const jobScraperServiceApi: JobScraperApi = {
 	getStatus: async (token: string): Promise<ScraperStatus> => {
 		return api.get("email_scraper_service/status", token);
 	},

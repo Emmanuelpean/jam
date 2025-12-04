@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { jobScraperApi, ScraperStatus } from "../services/Api";
+import { jobScraperServiceApi, ScraperStatus } from "../services/Api";
 
 export const useScraperStatus = (token: string | null) => {
 	const [status, setStatus] = useState<ScraperStatus | null>(null);
@@ -8,7 +8,7 @@ export const useScraperStatus = (token: string | null) => {
 	const fetchStatus = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const data: ScraperStatus = await jobScraperApi.getStatus(token);
+			const data: ScraperStatus = await jobScraperServiceApi.getStatus(token);
 			setStatus(data);
 		} catch (err: any) {
 			console.error("An error occured while fetching the service status", err);

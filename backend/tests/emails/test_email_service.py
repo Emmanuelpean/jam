@@ -240,7 +240,7 @@ class TestEmailServiceIMAP:
         content = email_svc.get_email_data("2")
 
         assert content is not None
-        assert "Plain text body" in content["body"]
+        assert "<html>HTML body</html>" in content["body"]
 
     @patch("imaplib.IMAP4_SSL")
     def test_get_email_data_not_found(self, mock_imap) -> None:

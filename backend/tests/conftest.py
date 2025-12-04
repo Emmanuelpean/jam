@@ -10,8 +10,7 @@ and providing the necessary utilities for seamless interactions with the applica
 
 import datetime as dt
 import os
-from functools import wraps
-from typing import Any, Generator, Callable
+from typing import Any, Generator
 
 import pytest
 from fastapi import status
@@ -475,27 +474,28 @@ def assert_ownership(item: list | dict, owner_id: int) -> None:
             assert_ownership(subitem, owner_id)
 
 
-def skip_if_action_not_enabled(*action: str | list[str]) -> Any:
-    """Decorator to skip a test if the specified action is not enabled in the actions_to_test list."""
+def pytest_configure(config) -> None:
+    """Configure pytest to add custom markers."""
 
-    def decorator(func: Callable) -> Any:
-        """Decorator to skip a test if the specified action is not enabled in the actions_to_test list."""
+    config.addinivalue_line(
+        "markers",
+        "requires_actions(*actions): mark test as requiring certain CRUD actions",
+    )
 
-        @wraps(func)
-        def wrapper(self, *args, **kwargs) -> Any:
-            """Wrapper function to check if the action is enabled."""
 
-            if isinstance(action, str):
-                action_list = [action]
-            else:
-                action_list = action
-            if all(a not in self.actions_to_test for a in action_list):
-                pytest.skip(f"Skipping tests as per actions_to_test setting")
-            return func(self, *args, **kwargs)
+def pytest_collection_modifyitems(config, items) -> None:
+    """Modify collected test items to skip tests based on actions_to_test setting in test classes."""
 
-        return wrapper
-
-    return decorator
+    _ = config
+    for item in items:
+        mark = item.get_closest_marker("requires_actions")
+        if not mark:
+            continue
+        required_actions = set(mark.args)
+        cls = getattr(item, "cls", None)
+        actions_to_test = getattr(cls, "actions_to_test", [])
+        if required_actions.isdisjoint(actions_to_test):
+            item.add_marker(pytest.mark.skip(reason="Skipping tests as per actions_to_test setting"))
 
 
 class CRUDTestBase:
@@ -675,7 +675,7 @@ class CRUDTestBase:
 
     # ----------------------------------------------------- GET ALL ----------------------------------------------------
 
-    @skip_if_action_not_enabled("get", "get_all")
+    @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_authorised(
         self,
         authorised_clients,
@@ -690,7 +690,7 @@ class CRUDTestBase:
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
 
-    @skip_if_action_not_enabled("get", "get_all")
+    @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_unauthenticated(
         self,
         client: TestClient,
@@ -702,7 +702,7 @@ class CRUDTestBase:
         response = self.get_all(client)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("get", "get_all")
+    @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_non_admin(
         self,
         authorised_clients,
@@ -716,7 +716,7 @@ class CRUDTestBase:
             response = self.get_all(client)
             assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @skip_if_action_not_enabled("get", "get_all")
+    @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_data_only_authorised(
         self,
         authorised_clients,
@@ -736,7 +736,7 @@ class CRUDTestBase:
 
     # ----------------------------------------------------- GET ONE ----------------------------------------------------
 
-    @skip_if_action_not_enabled("get", "get_one")
+    @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_success(
         self,
         authorised_clients,
@@ -751,7 +751,7 @@ class CRUDTestBase:
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data[0], response.json())
 
-    @skip_if_action_not_enabled("get", "get_one")
+    @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_unauthenticated(
         self,
         client,
@@ -763,7 +763,7 @@ class CRUDTestBase:
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("get", "get_one")
+    @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_incorrect_user(
         self,
         authorised_clients,
@@ -776,7 +776,7 @@ class CRUDTestBase:
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @skip_if_action_not_enabled("get", "get_one")
+    @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_non_exist(
         self,
         authorised_clients,
@@ -790,7 +790,7 @@ class CRUDTestBase:
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
-    @skip_if_action_not_enabled("post")
+    @pytest.mark.requires_actions("post")
     def test_post_success(
         self,
         authorised_clients,
@@ -807,7 +807,7 @@ class CRUDTestBase:
             assert response.status_code == status.HTTP_201_CREATED
             self.check_output(create_data, response.json())
 
-    @skip_if_action_not_enabled("post")
+    @pytest.mark.requires_actions("post")
     def test_post_unauthenticated(
         self,
         client,
@@ -818,7 +818,7 @@ class CRUDTestBase:
         response = self.post(client, {})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("post")
+    @pytest.mark.requires_actions("post")
     def test_post_non_admin(
         self,
         authorised_clients,
@@ -834,7 +834,7 @@ class CRUDTestBase:
                 response = self.post(client, create_data)
                 assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @skip_if_action_not_enabled("post")
+    @pytest.mark.requires_actions("post")
     def test_post_data_only_authorised(
         self,
         authorised_clients,
@@ -853,7 +853,7 @@ class CRUDTestBase:
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
-    @skip_if_action_not_enabled("put")
+    @pytest.mark.requires_actions("put")
     def test_put_success(
         self,
         authorised_clients,
@@ -868,7 +868,7 @@ class CRUDTestBase:
         assert response.status_code == status.HTTP_200_OK
         self.check_output(self.update_data, response.json())
 
-    @skip_if_action_not_enabled("put")
+    @pytest.mark.requires_actions("put")
     def test_put_empty_body(
         self,
         authorised_clients,
@@ -881,7 +881,7 @@ class CRUDTestBase:
         response = self.put(client, test_data[0].id, {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    @skip_if_action_not_enabled("put")
+    @pytest.mark.requires_actions("put")
     def test_put_non_exist(self, authorised_clients) -> None:
         """Test that PUT requests for non-existent items return a 404 error.
         Verifies proper handling when attempting to update an item that doesn't exist."""
@@ -890,7 +890,7 @@ class CRUDTestBase:
         response = self.put(client, 0, {})
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    @skip_if_action_not_enabled("put")
+    @pytest.mark.requires_actions("put")
     def test_put_unauthenticated(
         self,
         client,
@@ -902,7 +902,7 @@ class CRUDTestBase:
         response = self.put(client, test_data[0].id, {"name": "Test"})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("put")
+    @pytest.mark.requires_actions("put")
     def test_put_forbidden(self, authorised_clients, test_data) -> None:
         """Test that users are denied access to update items they don't have permission to modify.
         For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
@@ -913,7 +913,7 @@ class CRUDTestBase:
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
-    @skip_if_action_not_enabled("delete")
+    @pytest.mark.requires_actions("delete")
     def test_delete_success(
         self,
         authorised_clients,
@@ -926,7 +926,7 @@ class CRUDTestBase:
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    @skip_if_action_not_enabled("delete")
+    @pytest.mark.requires_actions("delete")
     def test_delete_non_exist(
         self,
         authorised_clients,
@@ -938,7 +938,7 @@ class CRUDTestBase:
         response = self.delete(client, 0)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    @skip_if_action_not_enabled("delete")
+    @pytest.mark.requires_actions("delete")
     def test_delete_unauthenticated(
         self,
         client,
@@ -950,7 +950,7 @@ class CRUDTestBase:
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("delete")
+    @pytest.mark.requires_actions("delete")
     def test_delete_forbidden(
         self,
         authorised_clients,
