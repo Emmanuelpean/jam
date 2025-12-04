@@ -269,7 +269,7 @@ export interface ServiceLog {
 	user_found_ids: number[];
 	user_processed_ids: number[];
 	emails: number[];
-	scraped_jobs: number[];
+	scraped_jobs: ScrapedJobData[];
 	platform_stats: PlatformStat[];
 	errors: ServiceError[];
 	job_scrape_succeeded_n: number;
@@ -280,6 +280,7 @@ export interface ServiceLog {
 	email_found_n: number;
 	email_saved_n: number;
 	email_skipped_n: number;
+	service_errors: ServiceError[];
 }
 
 export interface PlatformStat {

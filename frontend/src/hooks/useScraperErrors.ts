@@ -49,6 +49,7 @@ export const useScraperErrors = (
 				}
 
 				const scraped_jobs: ScrapedJobData[] = await scrapedJobApi.getBulk(ids, token);
+				console.log(ids, scraped_jobs);
 
 				// Count errors
 				const errorCounts: Record<string, number> = {};

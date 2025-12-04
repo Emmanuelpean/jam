@@ -187,7 +187,7 @@ class EisServiceLog(CommonBase, Base):
     emails = relationship("JobAlertEmail", back_populates="service_log")
     scraped_jobs = relationship("ScrapedJob", back_populates="service_log")
     platform_stats = relationship("PlatformStat", back_populates="service_log")
-    errors = relationship("EisServiceError", back_populates="service_log")
+    service_errors = relationship("EisServiceError", back_populates="service_log")
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""
@@ -303,4 +303,4 @@ class EisServiceError(CommonBase, Base):
     traceback = Column(String, nullable=False)
 
     service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="CASCADE"), nullable=False)
-    service_log = relationship("EisServiceLog", back_populates="errors")
+    service_log = relationship("EisServiceLog", back_populates="service_errors")

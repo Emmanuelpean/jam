@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import { ServiceLog, ServiceError } from "../services/Schemas";
-import { serviceErrorApi } from "../services/Api";
+import { useEffect, useState } from "react";
+import { ServiceError, ServiceLog } from "../services/Schemas";
 
 export const useServiceErrors = (latestLog: ServiceLog | ServiceLog[] | null, token: string | null) => {
 	const [serviceErrors, setServiceErrors] = useState<Record<string, number>>({});
@@ -13,13 +12,7 @@ export const useServiceErrors = (latestLog: ServiceLog | ServiceLog[] | null, to
 				// Normalize input to array
 				const logs: ServiceLog[] = Array.isArray(latestLog) ? latestLog : [latestLog];
 
-				// Collect all service log IDs
-				const logIds: number[] = logs.map((log: ServiceLog): number => log.id);
-
-				// Fetch all service errors for these log IDs
-				const allErrors: ServiceError[] = await serviceErrorApi.getAll(token, {
-					service_log_ids: logIds,
-				});
+				const allErrors: ServiceError[] = logs.flatMap((log: ServiceLog): ServiceError[] => log.service_errors);
 
 				// Count errors by message
 				const errorCounts: Record<string, number> = {};

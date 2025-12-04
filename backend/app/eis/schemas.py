@@ -136,6 +136,7 @@ class EisServiceLogOut(Out):
     emails: list[int]
     scraped_jobs: list[int]
     platform_stats: list["PlatformStatOut"]
+    service_errors: list["EisServiceErrorOut"]
 
     @field_validator("emails", "scraped_jobs", mode="before")
     @classmethod
@@ -163,6 +164,7 @@ class PlatformStatOut(Out):
     email_skipped_ids: list[int] = []
 
     service_log_id: int | None = None
+
 
 # -------------------------------------------------- EIS SERVICE ERROR -------------------------------------------------
 
