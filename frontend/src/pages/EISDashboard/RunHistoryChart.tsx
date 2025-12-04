@@ -1,16 +1,17 @@
 import React, { JSX, useEffect, useState } from "react";
-import { ServiceLog } from "../../services/Schemas";
+import { PlatformStat, ServiceLog } from "../../services/Schemas";
 import { SelectOption } from "../../components/rendering/form/FormOptions";
-import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { LineChart, SeriesData } from "../../components/charts/LineChart";
-import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { RenderSelect } from "../../components/rendering/widgets/SelectWidget";
+import TimeSelection from "../../components/TimeSelection/TimeSelection";
+import { DateRange } from "../../utils/TimeUtils";
+import Select from "react-select";
 
 interface RunHistoryChartProps {
 	serviceLogData: ServiceLog[] | null;
 	selectedPlatform: string;
 	platformOptions: SelectOption[];
-	onPlatformChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void;
+	onPlatformChange: (value: string) => void;
+	onDateRangeChange: (dateRange: DateRange) => void;
 	isRunning: boolean;
 }
 
@@ -36,7 +37,7 @@ const createSeries = (
 });
 
 const getPlatformStat = (log: ServiceLog, platform: string, key: string): number => {
-	const stat = log.platform_stats.find((p) => p.name === platform);
+	const stat: PlatformStat | undefined = log.platform_stats.find((p: PlatformStat): boolean => p.name === platform);
 	if (!stat) return 0;
 
 	const value = (stat as any)[key];
@@ -58,20 +59,27 @@ export const RunHistoryChart = ({
 	selectedPlatform,
 	platformOptions,
 	onPlatformChange,
+	onDateRangeChange,
 	isRunning,
 }: RunHistoryChartProps): JSX.Element => {
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
 
+	const handlePlatformChange = (option: SelectOption | null): void => {
+		if (option) {
+			onPlatformChange(option.value);
+		}
+	};
+
 	useEffect(() => {
 		if (!serviceLogData) return;
-		// Prepare data for charts
+
 		const durationSeries: SeriesData[] = [
 			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: ServiceLog): number =>
 				log.run_duration ? log.run_duration / 3600 : 0,
 			),
 		];
+
 		if (selectedPlatform === "all") {
-			// Show service-level data
 			const jobSeries: SeriesData[] = [
 				createSeries(
 					serviceLogData,
@@ -94,7 +102,6 @@ export const RunHistoryChart = ({
 			];
 			setLogData([jobSeries, durationSeries]);
 		} else {
-			// Show platform-specific data
 			const platformSeries: SeriesData[] = [
 				createSeries(
 					serviceLogData,
@@ -116,12 +123,9 @@ export const RunHistoryChart = ({
 		}
 	}, [serviceLogData, selectedPlatform]);
 
-	const platformField: ModalFormField = {
-		name: "platform-select",
-		type: "select",
-		label: "Select Platform",
-		options: platformOptions,
-	};
+	const selectedOption: SelectOption | undefined = platformOptions.find(
+		(opt: SelectOption): boolean => opt.value === selectedPlatform,
+	);
 
 	return (
 		<div className="status-card mt-4">
@@ -130,8 +134,19 @@ export const RunHistoryChart = ({
 				Run History
 				{isRunning && <span className="live-indicator ms-2"></span>}
 			</h2>
-			<div className="mb-4">
-				<RenderSelect field={platformField} value={selectedPlatform} handleChange={onPlatformChange} />
+			<div style={{ display: "flex", justifyContent: "space-between" }}>
+				<TimeSelection onDateRangeChange={onDateRangeChange} defaultMode="period" />
+				<div className="mb-4">
+					<div style={{ minWidth: "250px" }}>
+						<Select
+							classNamePrefix="react-select"
+							value={selectedOption}
+							onChange={handlePlatformChange}
+							options={platformOptions}
+							isSearchable={false}
+						/>
+					</div>
+				</div>
 			</div>
 			<div style={{ display: "flex" }}>
 				{logData && logData[0] && (

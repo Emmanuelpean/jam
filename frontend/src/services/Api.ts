@@ -302,6 +302,4 @@ export const jobScraperApi: JobScraperApi = {
 	},
 };
 
-export const jobAlertEmailApi: CrudApi = createCrudApi("job_alert_emails");
-
 export { api };

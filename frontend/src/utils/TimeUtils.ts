@@ -55,3 +55,35 @@ export const formatDuration = (seconds: number | null): string => {
 		return `${mins}m ${secs}s`;
 	}
 };
+
+export const periodToDays = (amount: number, unit: "days" | "weeks" | "months" | "years"): number => {
+	switch (unit) {
+		case "days":
+			return amount;
+		case "weeks":
+			return amount * 7;
+		case "months":
+			return amount * 30;
+		case "years":
+			return amount * 365;
+		default:
+			return amount;
+	}
+};
+
+export interface DateRange {
+	start: Date | string;
+	end: Date | string;
+}
+
+export const getDateRange = (amount: number, unit: "days" | "weeks" | "months" | "years"): DateRange => {
+	const days: number = periodToDays(amount, unit);
+
+	const end = new Date();
+	const start = new Date();
+	start.setDate(start.getDate() - days);
+
+	return { start, end };
+};
+
+export type TimeUnit = "days" | "weeks" | "months" | "years";

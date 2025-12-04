@@ -2411,7 +2411,7 @@ SERVICE_ERROR_DATA = [
   File "/usr/local/lib/python3.11/site-packages/requests/sessions.py", line 589, in request
     resp = self.send(prep, **send_kwargs)
 requests.exceptions.ConnectionError: HTTPSConnectionPool(host='www.linkedin.com', port=443): Max retries exceeded with url: /jobs/view/12345678""",
-        "service_log_id": 3,
+        "service_log_id": 1,
     },
     {
         "error_type": "SMTPAuthenticationError",
@@ -2422,7 +2422,7 @@ requests.exceptions.ConnectionError: HTTPSConnectionPool(host='www.linkedin.com'
   File "/usr/local/lib/python3.11/smtplib.py", line 750, in login
     raise SMTPAuthenticationError(code, resp)
 smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted')""",
-        "service_log_id": 6,
+        "service_log_id": 1,
     },
     {
         "error_type": "PDFParseError",
@@ -2433,7 +2433,7 @@ smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepte
   File "/usr/local/lib/python3.11/site-packages/fitz/fitz.py", line 2156, in __init__
     _fitz.Document_swiginit(self, _fitz.new_Document(filename, stream, filetype, rect, width, height, fontsize))
 RuntimeError: cannot open document: cannot recognize version""",
-        "service_log_id": 8,
+        "service_log_id": 1,
     },
     {
         "error_type": "RateLimitError",
@@ -2446,7 +2446,7 @@ RuntimeError: cannot open document: cannot recognize version""",
   File "/app/scrapers/base_scraper.py", line 178, in request
     raise RateLimitError(f"Rate limit exceeded after {attempt_count} requests")
 app.exceptions.RateLimitError: Rate limit exceeded after 30 requests""",
-        "service_log_id": 3,
+        "service_log_id": 1,
     },
     {
         "error_type": "DatabaseError",
@@ -2460,7 +2460,7 @@ app.exceptions.RateLimitError: Rate limit exceeded after 30 requests""",
     self._prepare_impl()
 sqlalchemy.exc.OperationalError: (psycopg2.errors.DeadlockDetected) deadlock detected
 DETAIL:  Process 12345 waits for ShareLock on transaction 67890""",
-        "service_log_id": 7,
+        "service_log_id": 2,
     },
     {
         "error_type": "ParserError",
@@ -2478,7 +2478,7 @@ Traceback (most recent call last):
   File "/app/parsers/job_parser.py", line 115, in parse_job_data
     raise ParserError("Missing required field 'job_title'")
 app.exceptions.ParserError: Missing required field 'job_title'""",
-        "service_log_id": 8,
+        "service_log_id": 3,
     },
     {
         "error_type": "ValidationError",
@@ -2498,7 +2498,7 @@ Traceback (most recent call last):
   File "/app/models/job.py", line 45, in validate
     raise ValidationError(f"Job data validation failed: {str(e)}")
 app.exceptions.ValidationError: Job data validation failed: Invalid salary format""",
-        "service_log_id": 8,
+        "service_log_id": 4,
     },
     {
         "error_type": "TimeoutError",

@@ -22,9 +22,10 @@ from tests.utils.create_data import (
     create_interviews,
     create_job_alert_emails,
     create_scraped_jobs,
-    create_service_logs,
+    create_eis_service_logs,
     create_job_application_updates,
     create_platform_stats,
+    create_eis_service_errors,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -69,9 +70,11 @@ def seed_database() -> None:
     db = session_local()
 
     try:
-        # Create data in order of dependencies
+        # App data
         users = create_users(db)
         settings = create_settings(db)
+
+        # Table data
         keywords = create_keywords(db, users)
         aggregators = create_aggregators(db, users)
         locations = create_locations(db, users)
@@ -81,9 +84,11 @@ def seed_database() -> None:
         jobs = create_jobs(db, keywords, people, users, companies, locations, aggregators, files)
         interviews = create_interviews(db, people, users, locations, jobs)
         job_application_updates = create_job_application_updates(db, users, jobs)
-        service_logs = create_service_logs(db)
-        platform_stats = create_platform_stats(db)
-        eis_service_errors = create_service_logs(db)
+
+        # EIS data
+        service_logs = create_eis_service_logs(db)
+        platform_stats = create_platform_stats(db, service_logs)
+        eis_service_errors = create_eis_service_errors(db, service_logs)
         alert_emails = create_job_alert_emails(db, users, service_logs)
         scraped_jobs = create_scraped_jobs(db, alert_emails, users)
 

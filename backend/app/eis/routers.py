@@ -46,11 +46,19 @@ email_router = generate_data_table_crud_router(
 # ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
 
 
-scraped_job_router = APIRouter(prefix="/scraped_jobs", tags=["scraped_jobs"])
+# GET endpoint for admin user to get all scraped jobs
+scraped_job_router = generate_data_table_crud_router(
+    table_model=models.ScrapedJob,
+    out_schema=schemas.ScrapedJobOut,
+    endpoint="scraped_jobs",
+    not_found_msg="Scraped Job not found",
+    allowed_actions=["get_all"],
+    admin_only=True,
+)
 
 
-# GET endpoint for regular user to get all scraped jobs
-@scraped_job_router.get("/", response_model=schemas.PaginatedScrapedJobResponse)
+# GET endpoint for regular user to get paged scraped jobs
+@scraped_job_router.get("/paged", response_model=schemas.PaginatedScrapedJobResponse)
 def get_all(
     request: Request,
     db: Session = Depends(get_db),
@@ -156,15 +164,15 @@ def get_scraped_job_count(
 
 
 # GET endpoint for admin user to get multiple entries
-generate_data_table_crud_router(
-    table_model=models.ScrapedJob,
-    out_schema=schemas.ScrapedJobOut,
-    endpoint="scraped_jobs",
-    not_found_msg="Scraped Job not found",
-    allowed_actions=["get_bulk"],
-    router=scraped_job_router,
-    admin_only=True,
-)
+# generate_data_table_crud_router(
+#     table_model=models.ScrapedJob,
+#     out_schema=schemas.ScrapedJobOut,
+#     endpoint="scraped_jobs",
+#     not_found_msg="Scraped Job not found",
+#     allowed_actions=["get_bulk"],
+#     router=scraped_job_router,
+#     admin_only=True,
+# )
 
 
 # PUT endpoint for regular users to update the entries

@@ -3,8 +3,9 @@ import { PlatformStat, ServiceLog } from "../services/Schemas";
 import { SelectOption } from "../components/rendering/form/FormOptions";
 import { serviceLogApi } from "../services/Api";
 import { capitalise } from "../utils/Utils";
+import { DateRange } from "../utils/TimeUtils";
 
-export const useServiceLogs = (token: string | null, isScraperRunning: boolean) => {
+export const useServiceLogs = (token: string | null, isScraperRunning: boolean, dateRange: DateRange) => {
 	const [serviceLogs, setServiceLogs] = useState<ServiceLog[] | null>(null);
 	const [latestLog, setLatestLog] = useState<ServiceLog | null>(null);
 	const [platformOptions, setPlatformOptions] = useState<SelectOption[]>([]);
@@ -24,7 +25,10 @@ export const useServiceLogs = (token: string | null, isScraperRunning: boolean) 
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const logs: ServiceLog[] = await serviceLogApi.getAll(token, { limit: 10 });
+			const logs: ServiceLog[] = await serviceLogApi.getAll(token, {
+				start_date: new Date(dateRange.start).toISOString(),
+				end_date: new Date(dateRange.end).toISOString(),
+			});
 			setServiceLogs(logs);
 
 			// Extract unique platforms from logs
@@ -51,7 +55,7 @@ export const useServiceLogs = (token: string | null, isScraperRunning: boolean) 
 
 	useEffect(() => {
 		fetchLatestLogs().then();
-	}, [token]);
+	}, [token, dateRange]);
 
 	// Fetch latest service log every 2s when scraper is running
 	useEffect(() => {

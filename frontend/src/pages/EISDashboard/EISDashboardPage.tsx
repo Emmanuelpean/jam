@@ -14,6 +14,7 @@ import { useServiceLogs } from "../../hooks/useServiceLogs";
 import { useScraperErrors } from "../../hooks/useScraperErrors";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import { useServiceErrors } from "../../hooks/useServiceErrors";
+import { DateRange } from "../../utils/TimeUtils";
 
 export interface FormData {
 	period_hours: number;
@@ -22,24 +23,28 @@ export interface FormData {
 
 const JobScraperDashboard = (): JSX.Element => {
 	const { token } = useAuth();
-	const { showToastSuccess } = useGlobalToast();
-	const { status, remainingTime, fetchStatus } = useScraperStatus(token);
-	const { serviceLogs, latestLog, platformOptions, fetchLatestLog } = useServiceLogs(
-		token,
-		status?.scraper_running || false,
-	);
+	const [dateRange, setDateRange] = useState<DateRange>({
+		start: new Date(),
+		end: new Date(),
+	});
 	const [selectedPlatform, setSelectedPlatform] = useState("all");
-	const { scraperErrors } = useScraperErrors(latestLog, token, selectedPlatform);
-	const { scraperErrors: latestScraperErrors } = useScraperErrors(serviceLogs, token, selectedPlatform);
-	const { serviceErrors } = useServiceErrors(latestLog, token);
-	const { serviceErrors: latestServiceErrors } = useServiceErrors(serviceLogs, token);
+	const { status, remainingTime, fetchStatus } = useScraperStatus(token);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: status?.period_hours || 0,
 		timedelta_days: status?.timedelta_days || 0,
 	});
 	const [loading, setLoading] = useState<boolean>(false);
+	const { showToastSuccess } = useGlobalToast();
+	const { serviceLogs, latestLog, platformOptions, fetchLatestLog } = useServiceLogs(
+		token,
+		status?.scraper_running || false,
+		dateRange,
+	);
+	const { scraperErrors } = useScraperErrors(latestLog, token, selectedPlatform);
+	const { scraperErrors: latestScraperErrors } = useScraperErrors(serviceLogs, token, selectedPlatform);
+	const { serviceErrors } = useServiceErrors(latestLog, token);
+	const { serviceErrors: latestServiceErrors } = useServiceErrors(serviceLogs, token);
 
-	// Update formData when status changes
 	React.useEffect(() => {
 		if (status) {
 			setFormData({
@@ -47,12 +52,7 @@ const JobScraperDashboard = (): JSX.Element => {
 				timedelta_days: status.timedelta_days || 1,
 			});
 		}
-	}, [status]);
-
-	const onChangePlatform = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
-		const target = event.target as HTMLInputElement;
-		setSelectedPlatform(target.value as string);
-	};
+	}, [status?.period_hours, status?.timedelta_days]);
 
 	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
 		const target = event.target as HTMLInputElement;
@@ -63,7 +63,6 @@ const JobScraperDashboard = (): JSX.Element => {
 		}));
 	};
 
-	// Handle start button click
 	const handleStart = async (): Promise<void> => {
 		if (!token) return;
 		setLoading(true);
@@ -79,7 +78,6 @@ const JobScraperDashboard = (): JSX.Element => {
 		}
 	};
 
-	// Handle stop button click
 	const handleStop = async (): Promise<void> => {
 		if (!token) return;
 		setLoading(true);
@@ -126,7 +124,8 @@ const JobScraperDashboard = (): JSX.Element => {
 				serviceLogData={serviceLogs}
 				selectedPlatform={selectedPlatform}
 				platformOptions={platformOptions}
-				onPlatformChange={onChangePlatform}
+				onPlatformChange={setSelectedPlatform}
+				onDateRangeChange={setDateRange}
 				isRunning={status?.scraper_running || false}
 			/>
 

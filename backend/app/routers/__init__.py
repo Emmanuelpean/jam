@@ -101,32 +101,44 @@ def filter_query(
     :param filter_params: Dict of parameters to filter by (e.g., from request query).
     :return: The filtered query object."""
 
+    def convert_value(value, column) -> Any:
+        """Convert a single value to the appropriate type based on column type."""
+        # Handle null values
+        if isinstance(value, str) and value.lower() == "null":
+            return None
+
+        # Try to convert to appropriate type based on column type
+        try:
+            if hasattr(column.type, "python_type"):
+                python_type = column.type.python_type
+                if python_type == int:
+                    return int(value)
+                elif python_type == float:
+                    return float(value)
+                elif python_type == bool:
+                    return value.lower() in ("true", "1", "yes", "on")
+            return value
+        except (ValueError, TypeError, AttributeError):
+            return value
+
     for param_name, param_value in filter_params.items():
-        if hasattr(table_model, param_name):
-            column = getattr(table_model, param_name)
+        if not hasattr(table_model, param_name):
+            continue
 
-            # Handle null values - convert string "null" to actual None/NULL
-            if param_value.lower() == "null":
-                query = query.filter(column.is_(None))
-                continue
+        col = getattr(table_model, param_name)
 
-            # Handle different data types
-            try:
-                # Try to convert to appropriate type based on column type
-                if hasattr(column.type, "python_type"):
-                    if column.type.python_type == int:
-                        param_value = int(param_value)
-                    elif column.type.python_type == float:
-                        param_value = float(param_value)
-                    elif column.type.python_type == bool:
-                        param_value = param_value.lower() in ("true", "1", "yes", "on")
+        # Handle list values
+        if isinstance(param_value, list):
+            converted_values = [convert_value(val, col) for val in param_value]
+            query = query.filter(col.in_(converted_values))
 
-                # Add filter to query
-                query = query.filter(column == param_value)
-
-            except (ValueError, TypeError):
-                # If conversion fails, treat as string comparison
-                query = query.filter(column == param_value)
+        # Handle single values
+        else:
+            converted_value = convert_value(param_value, col)
+            if converted_value is None:
+                query = query.filter(col.is_(None))
+            else:
+                query = query.filter(col == converted_value)
 
     return query
 
@@ -266,9 +278,14 @@ def generate_data_table_crud_router(
             else:
                 raise NOT_ALLOWED_EXCEPTION
 
-            # Get all query parameters except 'limit'
-            filter_params = dict(request.query_params)
-            filter_params.pop("limit", None)  # Remove limit from filters
+            # Get all query parameters and handle multiple values
+            filter_params = {}
+            for key in request.query_params.keys():
+                if key != "limit":  # Skip limit parameter
+                    values = request.query_params.getlist(key)
+                    # If only one value, store as single value; otherwise store as list
+                    filter_params[key] = values[0] if len(values) == 1 else values
+
             query = filter_query(query, table_model, filter_params)
 
             results = query.limit(limit).all()
