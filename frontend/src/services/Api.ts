@@ -146,8 +146,17 @@ const createCrudApi = (endpoint: string): CrudApi => ({
 		if (queryParams) {
 			const searchParams = new URLSearchParams();
 			Object.keys(queryParams).forEach((key: string): void => {
-				if (queryParams[key] !== undefined) {
-					searchParams.append(key, String(queryParams[key]));
+				const value = queryParams[key];
+				if (value !== undefined) {
+					// Handle array values - append each value separately
+					if (Array.isArray(value)) {
+						value.forEach((item): void => {
+							searchParams.append(key, String(item));
+						});
+					} else {
+						// Handle single values
+						searchParams.append(key, String(value));
+					}
 				}
 			});
 			if (searchParams.toString()) {
@@ -156,6 +165,7 @@ const createCrudApi = (endpoint: string): CrudApi => ({
 		}
 		return api.get(url, token);
 	},
+
 	getBulk: (ids: number[], token: string): Promise<any> => {
 		const queryParams = new URLSearchParams();
 		ids.forEach((id: number): void => {
@@ -182,7 +192,6 @@ export const userApi: CrudApi = createCrudApi("users");
 export const settingsApi: CrudApi = createCrudApi("settings");
 export const countriesApi: CrudApi = createCrudApi("others/countries");
 export const currenciesApi: CrudApi = createCrudApi("others/currencies");
-export const serviceErrorApi: CrudApi = createCrudApi("eis_service_errors");
 
 export const exportApi: CrudApi & { download: (filename: string, token: string) => Promise<void> } = {
 	...createCrudApi("export"),
