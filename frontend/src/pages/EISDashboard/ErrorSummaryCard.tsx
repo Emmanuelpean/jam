@@ -1,7 +1,5 @@
 import React, { JSX, useState } from "react";
 import { ServiceLog } from "../../services/Schemas";
-import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { RenderSelect } from "../../components/rendering/widgets/SelectWidget";
 
 interface ErrorSummaryCardProps {
 	latestServiceLogs: ServiceLog[] | null;
@@ -12,7 +10,7 @@ interface ErrorSummaryCardProps {
 	isRunning: boolean;
 }
 
-type ErrorView = "latest" | "last";
+type ErrorView = "current" | "last";
 
 export const ErrorSummaryCard = ({
 	latestServiceLogs,
@@ -22,16 +20,20 @@ export const ErrorSummaryCard = ({
 	latestServiceErrors,
 	isRunning,
 }: ErrorSummaryCardProps): JSX.Element => {
-	const [errorView, setErrorView] = useState<ErrorView>("latest");
+	const [errorView, setErrorView] = useState<ErrorView>("current");
 
 	// Select data based on view
 	const criticalErrorLogs: ServiceLog[] = latestServiceLogs || [];
-	const scrapeErrors = errorView === "latest" ? latestScraperErrors : lastScraperErrors;
-	const serviceErrors = errorView === "latest" ? latestServiceErrors : lastServiceErrors;
+	const scrapeErrors = errorView === "current" ? latestScraperErrors : lastScraperErrors;
+	const serviceErrors = errorView === "current" ? latestServiceErrors : lastServiceErrors;
 
 	const criticalErrorCount = criticalErrorLogs.filter(
 		(l: ServiceLog): boolean => !!(l.error_message && l.error_message.trim()),
 	).length;
+
+	const handleViewToggle = (e: React.ChangeEvent<HTMLInputElement>): void => {
+		setErrorView(e.target.checked ? "last" : "current");
+	};
 
 	return (
 		<div className="status-card mt-4">
@@ -40,6 +42,19 @@ export const ErrorSummaryCard = ({
 				Error Summary
 				{isRunning && <span className="live-indicator ms-2"></span>}
 			</h2>
+
+			<div className="form-check mb-3">
+				<input
+					type="checkbox"
+					className="form-check-input"
+					id="errorViewToggle"
+					checked={errorView === "last"}
+					onChange={handleViewToggle}
+				/>
+				<label className="form-check-label" htmlFor="errorViewToggle">
+					Show previous run errors
+				</label>
+			</div>
 
 			<div style={{ display: "flex", gap: "20px", height: "600px", overflow: "auto" }}>
 				{/* Critical Errors Column */}

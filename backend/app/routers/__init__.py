@@ -5,7 +5,7 @@ including user ownership validation, query filtering, and many-to-many relations
 
 from typing import Any, Callable
 
-from fastapi import APIRouter, Depends, HTTPException, Query as FastAPIQuery
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Query
 from sqlalchemy.orm import Session
@@ -319,36 +319,6 @@ def generate_data_table_crud_router(
             check_ownership(entry, current_user)
 
             return filter_out_non_owned(entry, current_user.id)
-
-    if "get" in allowed_actions or "get_bulk" in allowed_actions:
-
-        # noinspection PyTypeHints
-        @router.get("/bulk", response_model=list[out_schema])
-        def get_bulk(
-            ids: list[int] = FastAPIQuery(...),
-            db: Session = Depends(database.get_db),
-            current_user: models.User = Depends(oauth2.get_current_user),
-        ):
-            """Retrieve multiple entries by their IDs.
-            :param ids: List of entry IDs to retrieve.
-            :param db: Database session.
-            :param current_user: Authenticated user.
-            :return: List of entries matching the provided IDs.
-            :raises: HTTPException with a 403 status code if not authorised to perform the requested action."""
-
-            # Check if admin rights are needed
-            check_admin(current_user)
-
-            # Query entries with the provided IDs
-            if not admin_only:
-                query = db.query(table_model).filter(table_model.id.in_(ids), table_model.owner_id == current_user.id)
-            elif current_user.is_admin:
-                query = db.query(table_model).filter(table_model.id.in_(ids))
-            else:
-                raise NOT_ALLOWED_EXCEPTION
-
-            results = query.all()
-            return [filter_out_non_owned(result, current_user.id) for result in results]
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
