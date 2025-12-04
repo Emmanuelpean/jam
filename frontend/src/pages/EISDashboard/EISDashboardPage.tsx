@@ -1,5 +1,5 @@
 import React, { JSX, useState } from "react";
-import { jobScraperApi } from "../../services/Api";
+import { jobScraperServiceApi } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import "./EisDashboardPage.css";
 import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
@@ -67,7 +67,7 @@ const JobScraperDashboard = (): JSX.Element => {
 		if (!token) return;
 		setLoading(true);
 		try {
-			await jobScraperApi.start(formData.period_hours, formData.timedelta_days, token);
+			await jobScraperServiceApi.start(formData.period_hours, formData.timedelta_days, token);
 			await fetchStatus();
 			await fetchLatestLog();
 			showToastSuccess("Scraper started successfully");
@@ -82,7 +82,7 @@ const JobScraperDashboard = (): JSX.Element => {
 		if (!token) return;
 		setLoading(true);
 		try {
-			await jobScraperApi.stop(token);
+			await jobScraperServiceApi.stop(token);
 			await fetchStatus();
 			await fetchLatestLog();
 			showToastSuccess("Scraper stopped successfully");

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { PlatformStat, ServiceLog } from "../services/Schemas";
 import { SelectOption } from "../components/rendering/form/FormOptions";
-import { serviceLogApi } from "../services/Api";
+import { eisServiceLogApi } from "../services/Api";
 import { capitalise } from "../utils/Utils";
 import { DateRange } from "../utils/TimeUtils";
 
@@ -13,7 +13,7 @@ export const useServiceLogs = (token: string | null, isScraperRunning: boolean, 
 	const fetchLatestLog = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const log: ServiceLog = await serviceLogApi.getLatest(token);
+			const log: ServiceLog = await eisServiceLogApi.getLatest(token);
 			if (log) {
 				setLatestLog(log);
 			}
@@ -25,7 +25,7 @@ export const useServiceLogs = (token: string | null, isScraperRunning: boolean, 
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const logs: ServiceLog[] = await serviceLogApi.getAll(token, {
+			const logs: ServiceLog[] = await eisServiceLogApi.getAll(token, {
 				start_date: new Date(dateRange.start).toISOString(),
 				end_date: new Date(dateRange.end).toISOString(),
 			});

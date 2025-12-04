@@ -164,7 +164,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				search: debouncedSearchTerm,
 			});
 
-			const response: any = await api.get(`${endpoint}?${params.toString()}`, token);
+			const response: any = await api.get(`${endpoint}/paged?${params.toString()}`, token);
 			setFetchedData(response.items);
 			setTotalCount(response.total);
 		} catch (error: any) {

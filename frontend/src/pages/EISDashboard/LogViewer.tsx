@@ -1,5 +1,5 @@
 import React, { JSX, useEffect, useState, useRef } from "react";
-import { jobScraperApi, LogResponse } from "../../services/Api";
+import { jobScraperServiceApi, LogResponse } from "../../services/Api";
 import { useAuth } from "../../contexts/AuthContext";
 import "./LogViewer.css";
 import LoadingSpinner from "../../components/spinner/Spinner";
@@ -26,7 +26,7 @@ const LogViewer = ({ isServiceRunning }: LogViewerProps): JSX.Element => {
 		if (!token) return;
 		setError(null);
 		try {
-			const data: LogResponse = await jobScraperApi.getLogs(logLinesRef.current, token);
+			const data: LogResponse = await jobScraperServiceApi.getLogs(logLinesRef.current, token);
 			setLogs(data);
 		} catch (err: any) {
 			setError(err?.message || "Failed to fetch logs");
