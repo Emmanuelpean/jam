@@ -6,8 +6,8 @@ from unittest import mock
 
 import pytest
 
-from app.eis.email_parsers import indeed
 from app.eis import models
+from app.eis.email_parsers import indeed
 from app.eis.email_scraper import JobEmailScraper
 from app.models import Setting
 from tests.eis import resources
@@ -18,7 +18,7 @@ from tests.eis.test_job_scrapers import (
     MockNhsBrightdataJobScraper,
 )
 from tests.utils.create_data import (
-    create_service_logs,
+    create_eis_service_logs,
     create_job_alert_emails,
     create_scraped_jobs,
     create_platform_stats,
@@ -60,31 +60,31 @@ def patch_get_indeed_redirected_url(monkeypatch) -> None:
 
 
 @pytest.fixture
-def test_service_logs(session) -> list[models.EisServiceLog]:
+def test_eis_service_logs(session) -> list[models.EisServiceLog]:
     """Create test service logs"""
 
-    return create_service_logs(session)
+    return create_eis_service_logs(session)
 
 
 @pytest.fixture
-def test_platform_stats(session, test_service_logs) -> list[models.PlatformStat]:
+def test_platform_stats(session, test_eis_service_logs) -> list[models.PlatformStat]:
     """Create test platform stats"""
 
-    return create_platform_stats(session)
+    return create_platform_stats(session, test_eis_service_logs)
 
 
 @pytest.fixture
-def test_eis_service_errors(session, test_service_logs) -> list[models.EisServiceError]:
+def test_eis_service_errors(session, test_eis_service_logs) -> list[models.EisServiceError]:
     """Create test eis service errors"""
 
-    return create_eis_service_errors(session)
+    return create_eis_service_errors(session, test_eis_service_logs)
 
 
 @pytest.fixture
-def test_job_alert_emails(session, test_users, test_service_logs) -> list[models.JobAlertEmail]:
+def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[models.JobAlertEmail]:
     """Create test job alert emails"""
 
-    return create_job_alert_emails(session, test_users, test_service_logs)
+    return create_job_alert_emails(session, test_users, test_eis_service_logs)
 
 
 @pytest.fixture
@@ -127,7 +127,7 @@ def mock_nhs_job_scrapers() -> Generator[type[MockNhsBrightdataJobScraper], Any,
 
 
 @pytest.fixture
-def test_service_log(session) -> models.EisServiceLog:
+def test_eis_service_log(session) -> models.EisServiceLog:
     """Create a test EisServiceLog record"""
 
     # noinspection PyArgumentList
@@ -160,7 +160,7 @@ def job_scraper_with_brightapi_skip(session) -> JobEmailScraper:
 
 
 @pytest.fixture
-def email_record_factory(session, test_users, test_service_log) -> Any:
+def email_record_factory(session, test_users, test_eis_service_log) -> Any:
     """Factory fixture for creating email records in the database."""
 
     def _create(email_id: str, user_index: int = 0) -> tuple[models.JobAlertEmail, list[str]]:
@@ -173,7 +173,7 @@ def email_record_factory(session, test_users, test_service_log) -> Any:
             date_received=email_resource["date"],
             platform=email_resource["platform"],
             body=email_resource["body"],
-            service_log_id=test_service_log.id,
+            service_log_id=test_eis_service_log.id,
         )
 
         # noinspection PyArgumentList
@@ -189,6 +189,7 @@ def email_record_factory(session, test_users, test_service_log) -> Any:
 @pytest.fixture(autouse=True)
 def mock_get_email_data() -> Generator[mock.MagicMock, Any, None]:
     """Auto-applied mock for get_email_data across all tests in module"""
+
     with mock.patch(
         "app.emails.email_service.EmailService.get_email_data", side_effect=lambda eid: resources.TEST_EMAILS[eid]
     ) as email_mock:

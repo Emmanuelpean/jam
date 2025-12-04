@@ -33,16 +33,6 @@ export const ErrorSummaryCard = ({
 		(l: ServiceLog): boolean => !!(l.error_message && l.error_message.trim()),
 	).length;
 
-	const platformField: ModalFormField = {
-		name: "time-select",
-		type: "select",
-		label: "Select View",
-		options: [
-			{ value: "latest", label: "Latest 10 Run" },
-			{ value: "last", label: "Last run" },
-		],
-	};
-
 	return (
 		<div className="status-card mt-4">
 			<h2 className="card-title">
@@ -50,15 +40,6 @@ export const ErrorSummaryCard = ({
 				Error Summary
 				{isRunning && <span className="live-indicator ms-2"></span>}
 			</h2>
-
-			{/* Error View Selector */}
-			<div className="mb-3">
-				<RenderSelect
-					field={platformField}
-					value={errorView}
-					handleChange={(e) => setErrorView(e.target.value as ErrorView)}
-				></RenderSelect>
-			</div>
 
 			<div style={{ display: "flex", gap: "20px", height: "600px", overflow: "auto" }}>
 				{/* Critical Errors Column */}

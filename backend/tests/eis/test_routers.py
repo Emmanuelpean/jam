@@ -87,17 +87,17 @@ class TestScrapedJobCRUDGetOne(CRUDTestBase):  # TODO
 class TestEisServiceLog:
     """Test suite for Email Ingestion Service log endpoints"""
 
-    def test_get_service_logs_no_filters(self, admin_client, test_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_no_filters(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
         """Test retrieving all service logs without filters"""
 
         response = admin_client.get("/eis_service_logs/")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert len(data) == len(test_service_logs)
+        assert len(data) == len(test_eis_service_logs)
         assert data[0]["run_datetime"] >= data[-1]["run_datetime"]
 
-    def test_get_service_logs_with_start_date(self, admin_client, test_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_with_start_date(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
         """Test filtering logs by start date"""
 
         start_date = (dt.datetime.now() - dt.timedelta(days=5)).isoformat()
@@ -108,7 +108,7 @@ class TestEisServiceLog:
         for log in data:
             assert log["run_datetime"] >= start_date
 
-    def test_get_service_logs_with_end_date(self, admin_client, test_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_with_end_date(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
         """Test filtering logs by end date"""
 
         end_date = (dt.datetime.now() - dt.timedelta(days=2)).isoformat()
@@ -120,7 +120,7 @@ class TestEisServiceLog:
         for log in data:
             assert log["run_datetime"] <= end_date
 
-    def test_get_service_logs_with_date_range(self, admin_client, test_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_with_date_range(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
         """Test filtering logs by date range"""
 
         start_date = (dt.datetime.now() - dt.timedelta(days=7)).isoformat()
@@ -133,9 +133,24 @@ class TestEisServiceLog:
         for log in data:
             assert start_date <= log["run_datetime"] <= end_date
 
+    def test_get_service_logs_with_date_range_in_url(
+        self, admin_client, test_eis_service_logs, test_platform_stats
+    ) -> None:
+        """Test filtering logs by date range"""
+
+        start_date = (dt.datetime.now() - dt.timedelta(days=7)).isoformat()
+        end_date = (dt.datetime.now() - dt.timedelta(days=1)).isoformat()
+        response = admin_client.get(f"/eis_service_logs/?start_date={start_date}&end_date={end_date}")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        # Verify all logs are within range
+        for log in data:
+            assert start_date <= log["run_datetime"] <= end_date
+
     @pytest.mark.parametrize("limit", [1, 5, 10])
     def test_get_service_logs_with_limit(
-        self, admin_client, test_service_logs, test_platform_stats, limit: int
+        self, admin_client, test_eis_service_logs, test_platform_stats, limit: int
     ) -> None:
         """Test limiting number of returned logs"""
 
@@ -145,7 +160,7 @@ class TestEisServiceLog:
         data = response.json()
         assert len(data) <= limit
 
-    def test_get_service_logs_combined_params(self, admin_client, test_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_combined_params(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
         """Test combining multiple query parameters"""
 
         response = admin_client.get("/eis_service_logs/", params={"delta_days": 30, "limit": 5})
@@ -155,20 +170,20 @@ class TestEisServiceLog:
         assert len(data) <= 5
 
     def test_get_service_logs_non_admin_forbidden(
-        self, regular_user_client, test_service_logs, test_platform_stats
+        self, regular_user_client, test_eis_service_logs, test_platform_stats
     ) -> None:
         """Test that non-admin users cannot access service logs"""
 
         response = regular_user_client.get("/eis_service_logs/")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_get_service_logs_unauthenticated(self, client, test_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_unauthenticated(self, client, test_eis_service_logs, test_platform_stats) -> None:
         """Test that unauthenticated requests are rejected"""
 
         response = client.get("/eis_service_logs/")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_get_latest_log_success(self, admin_client, test_service_logs, test_platform_stats) -> None:
+    def test_get_latest_log_success(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
         """Test retrieving the latest service log"""
 
         response = admin_client.get("/eis_service_logs/latest")
@@ -190,13 +205,13 @@ class TestEisServiceLog:
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "No service logs found" in response.json()["detail"]
 
-    def test_get_latest_log_non_admin_forbidden(self, regular_user_client, test_service_logs) -> None:
+    def test_get_latest_log_non_admin_forbidden(self, regular_user_client, test_eis_service_logs) -> None:
         """Test that non-admin users cannot access latest log"""
         response = regular_user_client.get("/eis_service_logs/latest")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_get_latest_log_unauthenticated(self, client, test_service_logs) -> None:
+    def test_get_latest_log_unauthenticated(self, client, test_eis_service_logs) -> None:
         """Test that unauthenticated requests to latest are rejected"""
 
         response = client.get("/eis_service_logs/latest")

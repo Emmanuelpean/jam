@@ -48,8 +48,8 @@ export const useScraperErrors = (
 					return;
 				}
 
-				const scraped_jobs: ScrapedJobData[] = await scrapedJobApi.getBulk(ids, token);
-				console.log(ids, scraped_jobs);
+				const scraped_jobs: ScrapedJobData[] = await scrapedJobApi.getAll(token, { id: ids });
+				console.log(ids, logs);
 
 				// Count errors
 				const errorCounts: Record<string, number> = {};

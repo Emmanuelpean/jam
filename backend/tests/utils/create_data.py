@@ -372,7 +372,7 @@ def create_scraped_jobs(db, emails, users: list[models.User]) -> list[eis_models
     return add_to_db(db, scraped_jobs)
 
 
-def create_service_logs(db) -> list[eis_models.EisServiceLog]:
+def create_eis_service_logs(db) -> list[eis_models.EisServiceLog]:
     """Create sample service logs"""
 
     print("Creating service logs...")
@@ -382,21 +382,33 @@ def create_service_logs(db) -> list[eis_models.EisServiceLog]:
     return add_to_db(db, logs)
 
 
-def create_platform_stats(db) -> list[eis_models.PlatformStat]:
+def create_platform_stats(db, service_logs) -> list[eis_models.PlatformStat]:
     """Create sample platform stats"""
 
     print("Creating platform stats...")
     # noinspection PyArgumentList
-    stats = [eis_models.PlatformStat(**data) for data in PLATFORM_STAT_DATA]
+    stats = [
+        eis_models.PlatformStat(**data)
+        for data in override_entries_properties(
+            PLATFORM_STAT_DATA,
+            ("service_log_id", service_logs),
+        )
+    ]
 
     return add_to_db(db, stats)
 
 
-def create_eis_service_errors(db) -> list[eis_models.EisServiceError]:
+def create_eis_service_errors(db, service_logs) -> list[eis_models.EisServiceError]:
     """Create sample EIS service errors"""
 
     print("Creating EIS service errors...")
     # noinspection PyArgumentList
-    errors = [eis_models.EisServiceError(**data) for data in SERVICE_ERROR_DATA]
+    errors = [
+        eis_models.EisServiceError(**data)
+        for data in override_entries_properties(
+            SERVICE_ERROR_DATA,
+            ("service_log_id", service_logs),
+        )
+    ]
 
     return add_to_db(db, errors)
