@@ -5,12 +5,11 @@ import { DataContextValue, endpointToEntityType, EntityType, useDataContext } fr
 import "./DataModal.css";
 import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
-import useGenericAlert from "../../../hooks/useGenericAlert";
-import AlertModal from "../AlertModal";
 import { areDifferent, findItemByKey, flattenArray, getColumnClass } from "../../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
 import { useDeleteHandler } from "../../../utils/DeleteHandler";
+import { useAlert } from "../../../contexts/AlertContext";
 
 export type Field = ModalViewField | ModalFormField;
 export type Fields = (Field | Field[])[];
@@ -83,7 +82,7 @@ const DataModal = ({
 	});
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef<HTMLDivElement>(null);
-	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
+	const { showDelete } = useAlert();
 
 	// -------------------------------------------------- DATA LOADING -------------------------------------------------
 
@@ -287,8 +286,6 @@ const DataModal = ({
 
 	const handleDelete = useDeleteHandler({
 		entityType: entityType,
-		showDelete: showDelete,
-		showError: showError,
 		itemType: itemName,
 	});
 
@@ -698,7 +695,6 @@ const DataModal = ({
 			>
 				{isEditing ? <Form onSubmit={handleSubmit}>{modalContent}</Form> : modalContent}
 			</Modal>
-			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</>
 	);
 };
