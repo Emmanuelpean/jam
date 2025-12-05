@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { PlatformStat, ServiceLog } from "../services/Schemas";
 import { SelectOption } from "../components/rendering/form/FormOptions";
 import { eisServiceLogApi } from "../services/Api";
-import { capitalise } from "../utils/Utils";
 import { DateRange } from "../utils/TimeUtils";
+import { capitalise } from "../utils/StringUtils";
 
 export const useServiceLogs = (token: string | null, isScraperRunning: boolean, dateRange: DateRange) => {
 	const [serviceLogs, setServiceLogs] = useState<ServiceLog[] | null>(null);

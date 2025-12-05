@@ -1,7 +1,7 @@
-import React, { MouseEvent, ReactNode, useCallback, useEffect, useState } from "react";
+import React, { MouseEvent, ReactNode, useCallback, useEffect, useState, JSX } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { EntityType, JamData, useDataContext } from "../../contexts/DataContext";
+import { DataContextValue, EntityType, JamData, useDataContext } from "../../contexts/DataContext";
 import { api } from "../../services/Api";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
@@ -92,11 +92,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	onImportSuccess,
 	children,
 	menuItems,
-}: GenericTableProps) => {
+}: GenericTableProps): JSX.Element => {
 	const { token } = useAuth();
 
 	// Data management
-	const dataContext = useDataContext();
+	const dataContext: DataContextValue = useDataContext();
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [loadError, setLoadError] = useState<string | null>(null);
 	const [fetchedData, setFetchedData] = useState<any[]>([]);
@@ -115,7 +115,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const [pageSize, setPageSize] = useState<number>(20);
 	const [totalCount, setTotalCount] = useState<number>(0);
 
-	const isServerPagination = !!endpoint && !providedData;
+	const isServerPagination: boolean = !!endpoint && !providedData;
 
 	const {
 		showModal,
@@ -205,7 +205,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	// CRUD operations using context methods
 	const addItem = useCallback(
 		(newItem: any) => {
-			dataContext.addEntity(entityType, newItem);
+			dataContext.addEntity(entityType, newItem).then((_) => {});
 		},
 		[dataContext, entityType],
 	);
@@ -213,7 +213,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const updateItem = useCallback(
 		(updatedItem: any) => {
 			if (updatedItem) {
-				dataContext.updateEntity(entityType, updatedItem.id, updatedItem);
+				dataContext.updateEntity(entityType, updatedItem.id, updatedItem).then((_) => {});
 			}
 		},
 		[dataContext, entityType],
@@ -221,7 +221,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 	const removeItem = useCallback(
 		(itemId: number) => {
-			dataContext.deleteEntity(entityType, itemId);
+			dataContext.deleteEntity(entityType, itemId).then((_) => {});
 		},
 		[dataContext, entityType],
 	);
@@ -337,16 +337,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		setContextMenu({ item, x: event.clientX, y: event.clientY, show: true });
 	};
 
-	const activeHandler = useActiveHandler({
-		entityType,
-		nameKey,
-		itemType,
-	});
-	const deleteHandler = useDeleteHandler({
-		entityType,
-		nameKey,
-		itemType,
-	});
+	const activeHandler = useActiveHandler(entityType, nameKey, itemType);
+	const deleteHandler = useDeleteHandler(entityType, nameKey, itemType);
 
 	// Select the handler based on mode
 	const handleDelete = mode === "import" ? activeHandler : deleteHandler;
@@ -491,7 +483,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	};
 
 	// Get button text based on mode
-	const getAddButtonText = () => {
+	const getAddButtonText = (): string => {
 		if (mode === "import") {
 			return `Import ${itemType}`;
 		} else {
@@ -701,20 +693,22 @@ export const DataTable: React.FC<GenericTableProps> = ({
 										icon: "chevron-double-right",
 										label: "Last",
 									},
-								].map(({ action, disabled, icon, label }) => (
-									<Button
-										key={label}
-										variant="outline-secondary"
-										size="sm"
-										className={compact ? "py-0 px-1" : "py-0 px-2"}
-										onClick={action}
-										disabled={disabled}
-										aria-label={label}
-										style={compact ? { fontSize: "0.75rem" } : {}}
-									>
-										<i className={`bi bi-${icon}`} aria-hidden="true"></i>
-									</Button>
-								))}
+								].map(
+									({ action, disabled, icon, label }): JSX.Element => (
+										<Button
+											key={label}
+											variant="outline-secondary"
+											size="sm"
+											className={compact ? "py-0 px-1" : "py-0 px-2"}
+											onClick={action}
+											disabled={disabled}
+											aria-label={label}
+											style={compact ? { fontSize: "0.75rem" } : {}}
+										>
+											<i className={`bi bi-${icon}`} aria-hidden="true"></i>
+										</Button>
+									),
+								)}
 							</div>
 							<div className="d-flex align-items-center gap-2">
 								{isServerPagination && (
@@ -736,16 +730,18 @@ export const DataTable: React.FC<GenericTableProps> = ({
 									size="sm"
 									id="page-items-select"
 									value={pageSize}
-									onChange={(e) => {
+									onChange={(e): void => {
 										setPageSize(Number(e.target.value));
 										setCurrentPage(0); // Reset to first page
 									}}
 								>
-									{[20, 30, 40, 50, 100].map((size) => (
-										<option key={size} value={size}>
-											Show {size} Entries
-										</option>
-									))}
+									{[20, 30, 40, 50, 100].map(
+										(size): JSX.Element => (
+											<option key={size} value={size}>
+												Show {size} Entries
+											</option>
+										),
+									)}
 								</Form.Select>
 							</div>
 						</div>
@@ -753,14 +749,13 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				</>
 			)}
 
-			{/* Context Menu */}
 			{contextMenu?.show && (
 				<ContextMenu
 					position={{ x: contextMenu.x, y: contextMenu.y }}
 					items={getContextMenuItems()}
 					selectedItem={contextMenu.item}
 					onClose={() => setContextMenu(null)}
-					onItemClick={(menuItem, item) => {
+					onItemClick={(menuItem: MenuItem, item: any): void => {
 						if (menuItem.function) {
 							menuItem.function(item);
 						}

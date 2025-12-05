@@ -7,7 +7,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { SelectOption, useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { capitalise } from "../../utils/Utils";
+
+import { capitalise } from "../../utils/StringUtils";
 
 interface JobAndApplicationProps extends DataModalProps {
 	data: ScrapedJobData;

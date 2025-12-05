@@ -285,15 +285,8 @@ const DataModal = ({
 
 	// ----------------------------------------------------- DELETE ----------------------------------------------------
 
-	const handleDelete = useDeleteHandler({
-		entityType: entityType,
-		itemType: itemName,
-	});
-
-	const handleDeActivate = useActiveHandler({
-		entityType: entityType,
-		itemType: itemName,
-	});
+	const handleDelete = useDeleteHandler(entityType, null, itemName);
+	const handleDeActivate = useActiveHandler(entityType, null, itemName);
 
 	const handleDeleteClick = async () => {
 		if (mode === "import") {
@@ -309,22 +302,22 @@ const DataModal = ({
 		}
 	};
 
-	const handleChange = (e: SyntheticEvent) => {
+	const handleChange = (e: SyntheticEvent): void => {
 		const { name, type, checked, value } = e.target;
 		setFormData((prev) => ({
 			...prev,
 			[name]: type === "checkbox" ? checked : value,
 		}));
 		if (errors[name]) {
-			setErrors((prev) => ({ ...prev, [name]: "" }));
+			setErrors((prev: Errors) => ({ ...prev, [name]: "" }));
 		}
 	};
 
 	const filterConditionalFields = <T extends Field>(fieldsToFilter: (T | T[])[]): (T | T[])[] => {
 		return fieldsToFilter
-			.map((item) => {
+			.map((item: T | T[]): T | T[] | null => {
 				if (Array.isArray(item)) {
-					const filteredArray = item.filter((field) => {
+					const filteredArray: T[] = item.filter((field: T): boolean => {
 						if (!field.displayCondition) {
 							return true;
 						} else {
@@ -340,7 +333,7 @@ const DataModal = ({
 					}
 				}
 			})
-			.filter((item) => item !== null) as (T | T[])[];
+			.filter((item: T | T[] | null): boolean => item !== null) as (T | T[])[];
 	};
 
 	const validateFormFields = async (): Promise<Errors> => {
@@ -389,7 +382,6 @@ const DataModal = ({
 				}
 			}
 		}
-
 		return newErrors;
 	};
 
