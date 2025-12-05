@@ -25,6 +25,7 @@ import AboutPage from "./pages/AboutPage/AboutPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import "./Themes.css";
+import { AlertProvider } from "./contexts/AlertContext";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -172,12 +173,14 @@ function App(): JSX.Element {
 	return (
 		<BrowserRouter basename="/jam">
 			<AllProviders>
-				<ToastContext.Provider value={toastMethods}>
-					<AppLayout>
-						<AppRoutes />
-					</AppLayout>
-					<ToastStack toasts={toastMethods.toasts} onClose={toastMethods.hideToast} position="top-end" />
-				</ToastContext.Provider>
+				<AlertProvider>
+					<ToastContext.Provider value={toastMethods}>
+						<AppLayout>
+							<AppRoutes />
+						</AppLayout>
+						<ToastStack toasts={toastMethods.toasts} onClose={toastMethods.hideToast} position="top-end" />
+					</ToastContext.Provider>
+				</AlertProvider>
 			</AllProviders>
 		</BrowserRouter>
 	);

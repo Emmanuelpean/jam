@@ -6,9 +6,7 @@ import { api } from "../../services/Api";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";
-import AlertModal from "../modals/AlertModal";
 import useModalState from "../../hooks/useModalState";
-import useGenericAlert from "../../hooks/useGenericAlert";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
 import { useActiveHandler, useDeleteHandler } from "../../utils/DeleteHandler";
@@ -111,7 +109,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const [searchTerm, setSearchTerm] = useState<string>("");
 
 	// UI state
-	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 	const [currentPage, setCurrentPage] = useState<number>(0);
@@ -342,15 +339,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 	const activeHandler = useActiveHandler({
 		entityType,
-		showDelete,
-		showError,
 		nameKey,
 		itemType,
 	});
 	const deleteHandler = useDeleteHandler({
 		entityType,
-		showDelete,
-		showError,
 		nameKey,
 		itemType,
 	});
@@ -830,8 +823,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 					{...modalProps}
 				/>
 			)}
-
-			<AlertModal alertState={alertState} hideAlert={hideAlert} />
 		</div>
 	);
 };
