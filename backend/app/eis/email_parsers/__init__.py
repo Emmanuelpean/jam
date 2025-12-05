@@ -1,46 +1,26 @@
 """Email parsers package for processing job-related emails."""
 
-from bs4 import BeautifulSoup
-from enum import Enum
+from app.eis.email_parsers import indeed, linkedin, nhs, veganjobs
+from app.eis.email_parsers.utils import Platform
 
 
-def remove_style_tags(body: str) -> str:
-    """Remove <style> tags from HTML content.
-    :param str body: HTML content
-    :return: HTML content without <style> tags"""
+JOB_PARSERS = {
+    Platform.LINKEDIN: linkedin.parse_linkedin_job_email,
+    Platform.INDEED: indeed.parse_indeed_job_email,
+    Platform.VEGANJOBS: veganjobs.parse_veganjobs_email,
+    Platform.NHS: nhs.parse_nhs_job_email,
+}
 
-    soup = BeautifulSoup(body, "html.parser", from_encoding="utf-8")
-    for style in soup.find_all("style"):
-        style.decompose()
-    return str(soup)
+ALERT_NAME_EXTRACTORS = {
+    Platform.LINKEDIN: lambda subject, body: linkedin.extract_alert_name(subject),
+    Platform.INDEED: lambda subject, body: indeed.extract_alert_name(subject),
+    Platform.VEGANJOBS: lambda subject, body: veganjobs.extract_alert_name(subject),
+    Platform.NHS: lambda subject, body: nhs.extract_alert_name(body),
+}
 
-
-def process_salary(salary_str: str) -> int | None:
-    """Convert salary string with K/M suffix to numeric value.
-    :param salary_str: Salary string with optional K/M suffix
-    :return: Numeric salary value or None"""
-
-    if not salary_str:
-        return None
-
-    # Remove any whitespace and commas
-    salary_str = salary_str.strip().replace(",", "")
-
-    # Check for K (thousands)
-    if salary_str.endswith("K"):
-        return int(float(salary_str[:-1]) * 1000)
-    else:
-        # Already a plain number
-        try:
-            return int(float(salary_str))
-        except:
-            return None
-
-
-class Platform(str, Enum):
-    """Platform Enum for job sources."""
-
-    INDEED = "indeed"
-    LINKEDIN = "linkedin"
-    VEGANJOBS = "veganjobs"
-    NHS = "nhs"
+PLATFORM_SENDER_EMAILS = {
+    "jobalerts-noreply@linkedin.com": Platform.LINKEDIN,
+    "alert@indeed.com": Platform.INDEED,
+    "nhs.jobs.job.alerts@notifications.service.gov.uk": Platform.NHS,
+    "info@veganjobs.com": Platform.VEGANJOBS,
+}

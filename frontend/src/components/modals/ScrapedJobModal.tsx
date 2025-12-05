@@ -8,7 +8,6 @@ import { SelectOption, useFormOptions } from "../rendering/form/FormOptions";
 import stringSimilarity from "string-similarity";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { capitalise } from "../../utils/Utils";
-import { convertToEndOfDay } from "../../utils/TimeUtils";
 
 interface JobAndApplicationProps extends DataModalProps {
 	data: ScrapedJobData;
@@ -104,26 +103,6 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 		modalViewFields.scrapedLocationMap(),
 	];
 
-	const transformData = (jobData: JobData) => {
-		return {
-			title: jobData.title.trim(),
-			description: jobData.description?.trim() || null,
-			note: jobData.note?.trim() || null,
-			url: jobData.url?.trim() || null,
-			salary_min: jobData.salary_min || null,
-			salary_max: jobData.salary_max || null,
-			personal_rating: jobData.personal_rating || null,
-			company_id: jobData.company_id || null,
-			location_id: jobData.location_id || null,
-			source_id: jobData.source_id || null,
-			deadline: jobData.deadline ? convertToEndOfDay(jobData.deadline) : null,
-			keywords: jobData.keywords || [],
-			contacts: jobData.contacts || [],
-			attendance_type: jobData.attendance_type?.trim() || null,
-			id: jobData.id, // required for updating the scraped job after import
-		};
-	};
-
 	const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
 		if (!token) {
@@ -145,6 +124,10 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 
 	const warningMessage: string | null = data?.is_failed ? "This job could not be scraped properly." : null;
 
+	const transformData = (_scrapedJob: ScrapedJobData) => {
+		return { is_imported: true };
+	};
+
 	return (
 		<>
 			<DataModal
@@ -155,7 +138,7 @@ export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({
 				fields={{ form: jobFormFields, view: [] }}
 				transformFormData={transformData}
 				itemName="Scraped Job"
-				endpoint="jobs"
+				endpoint="scraped_jobs"
 				size={size}
 				validation={customValidation}
 				onSuccess={onSuccess}

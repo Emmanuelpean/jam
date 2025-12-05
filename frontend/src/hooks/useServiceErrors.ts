@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ServiceError, ServiceLog } from "../services/Schemas";
+import { normaliseArray } from "../utils/Utils";
 
 export const useServiceErrors = (latestLog: ServiceLog | ServiceLog[] | null, token: string | null) => {
 	const [serviceErrors, setServiceErrors] = useState<Record<string, number>>({});
@@ -9,9 +10,7 @@ export const useServiceErrors = (latestLog: ServiceLog | ServiceLog[] | null, to
 
 		const fetchErrors = async (): Promise<void> => {
 			try {
-				// Normalize input to array
-				const logs: ServiceLog[] = Array.isArray(latestLog) ? latestLog : [latestLog];
-
+				const logs: ServiceLog[] = normaliseArray(latestLog);
 				const allErrors: ServiceError[] = logs.flatMap((log: ServiceLog): ServiceError[] => log.service_errors);
 
 				// Count errors by message

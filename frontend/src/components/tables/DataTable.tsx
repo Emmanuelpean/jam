@@ -363,8 +363,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	};
 
 	const handleImportSuccess = (importedItem: any): void => {
-		onImportSuccess?.(importedItem).then((_) => {
-			fetchData().then((_) => {
+		onImportSuccess?.(importedItem).then((_): void => {
+			fetchData().then((_): void => {
 				showToastSuccess("Job imported successfully.");
 				closeImportModal();
 			});

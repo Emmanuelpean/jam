@@ -86,3 +86,7 @@ export const capitalise = (str: string): string => {
 		return "";
 	}
 };
+
+export const normaliseArray = <T>(item: T | T[] | null | undefined): T[] => {
+	return Array.isArray(item) ? item : item ? [item] : [];
+};

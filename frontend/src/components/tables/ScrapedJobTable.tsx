@@ -1,14 +1,14 @@
 import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
-import { tableColumns } from "../rendering/view/TableColumns";
+import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../modals/ScrapedJobModal";
-import { scrapedJobApi } from "../../services/Api";
-import { useAuth } from "../../contexts/AuthContext";
-import { ScrapedJobData } from "../../services/Schemas";
+import { JobData, JobDataTransform } from "../../services/Schemas";
+import { convertToEndOfDay } from "../../utils/TimeUtils";
+import { useDataContext } from "../../contexts/DataContext";
 
 const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableProps): JSX.Element => {
-	const { token } = useAuth();
-	const defaultColumns =
+	const { addEntity } = useDataContext();
+	const defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
 			: [
@@ -22,12 +22,24 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 					tableColumns.createdAtColumn({ label: "Date Received" }),
 				];
 
-	const onImportSuccess = (importedData: ScrapedJobData): Promise<any> => {
-		if (token) {
-			return scrapedJobApi.update(importedData.id, { is_imported: true }, token);
-		} else {
-			return Promise.reject("No auth token available");
-		}
+	const onImportSuccess = (formData: JobData): Promise<any> => {
+		const jobData: Partial<JobDataTransform> = {
+			title: formData.title.trim(),
+			description: formData.description?.trim() || null,
+			note: formData.note?.trim() || null,
+			url: formData.url?.trim() || null,
+			salary_min: formData.salary_min || null,
+			salary_max: formData.salary_max || null,
+			personal_rating: formData.personal_rating || null,
+			company_id: formData.company_id || null,
+			location_id: formData.location_id || null,
+			source_id: formData.source_id || null,
+			deadline: formData.deadline ? convertToEndOfDay(formData.deadline) : null,
+			keywords: formData.keywords || [],
+			contacts: formData.contacts || [],
+			attendance_type: formData.attendance_type?.trim() || null,
+		};
+		return addEntity("jobs", jobData);
 	};
 
 	return (

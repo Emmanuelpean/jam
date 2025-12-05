@@ -59,6 +59,7 @@ class JobAlertEmail(Owned, Base):
     job_found_n = Column(Integer, nullable=False, default=0)
     platform = Column(String, nullable=False)
     body = Column(String, nullable=False)
+    alert_name = Column(String, nullable=True)
 
     # Foreign keys
     service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="SET NULL"), nullable=False)

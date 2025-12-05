@@ -1,11 +1,12 @@
 """NHS Jobs email parser"""
 
 import datetime as dt
+import html
 import re
 
 from bs4 import BeautifulSoup
 
-from app.eis.email_parsers import process_salary, Platform
+from app.eis.email_parsers.utils import process_salary, Platform
 from app.eis.job_scrapers import Salary, JobInfo, JobResult
 
 BASE_URL = "https://beta.jobs.nhs.uk/candidate/jobadvert/"
@@ -99,3 +100,43 @@ def parse_nhs_job_email(body: str) -> list[JobResult]:
         jobs.append(job_result)
 
     return jobs
+
+
+def extract_alert_name(body: str) -> str | None:
+    """Extract keywords and location from job alert settings HTML and concatenate them.
+    :param body: job alert body
+    :return: concatenated keywords and location or None if not found"""
+
+    soup = BeautifulSoup(body, "html.parser", from_encoding="utf-8")
+
+    # Find the heading with "Your job alert settings" text
+    heading = soup.find(string=re.compile(r"Your job alert settings", re.IGNORECASE))
+    if not heading:
+        return None
+
+    # Get the parent td element
+    content_td = heading.find_parent("td")
+    if not content_td:
+        return None
+
+    # Convert Tag to string for regex matching
+    content_str = html.unescape(str(content_td))
+
+    keywords = None
+    location = None
+
+    # Extract keywords
+    keywords_pattern = r"Your keywords:\s*([^<]+)"
+    keywords_match = re.search(keywords_pattern, content_str, re.IGNORECASE)
+    if keywords_match:
+        keywords = keywords_match.group(1).strip()
+
+    # Extract location
+    location_pattern = r"Your location:\s*([^<]+)"
+    location_match = re.search(location_pattern, content_str, re.IGNORECASE)
+    if location_match:
+        location = location_match.group(1).strip()
+
+    # Concatenate with space
+    parts = [part for part in [keywords, location] if part]
+    return " ".join(parts) if parts else None

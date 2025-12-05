@@ -23,6 +23,7 @@ class JobAlertEmail(BaseModel):
     body: str | None = None
     service_log_id: int | None = None
     job_found_n: int | None = 0
+    alert_name: str | None = None
 
 
 class JobAlertEmailUpdate(JobAlertEmail):
@@ -175,6 +176,7 @@ class EisServiceErrorOut(Out):
     error_type: str
     message: str
     traceback: str
+
 
 # ------------------------------------------------ EMAIL SCRAPER SERVICE -----------------------------------------------
 

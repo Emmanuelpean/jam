@@ -2,7 +2,7 @@
 
 import re
 
-from app.eis.email_parsers import Platform
+from app.eis.email_parsers.utils import Platform
 from app.eis.job_scrapers import JobInfo, JobResult
 
 BASE_URL = "https://veganjobs.com/job/"
@@ -61,3 +61,17 @@ def parse_veganjobs_email(body: str) -> list[JobResult]:
         jobs.append(job_result)
 
     return jobs
+
+
+def extract_alert_name(alert_string: str) -> str | None:
+    """Extract alert title from VeganJobs job alert email strings.
+    :param str alert_string: alert string from email
+    :return: extracted job title or None if not found"""
+
+    # Pattern: Extract text between quotes
+    pattern = r'"([^"]+)"'
+    match = re.search(pattern, alert_string)
+    if match:
+        return match.group(1).strip()
+
+    return None

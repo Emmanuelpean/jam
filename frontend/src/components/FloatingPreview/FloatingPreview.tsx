@@ -2,7 +2,7 @@ import React, { JSX, useEffect, useRef, useState } from "react";
 import { Card } from "react-bootstrap";
 import { ModalViewField, ModalViewFields, renderModalViewField } from "../rendering/view/ModalFields";
 import "./FloatingPreview.css";
-import { getColumnClass } from "../../utils/Utils";
+import { getColumnClass, normaliseArray } from "../../utils/Utils";
 
 export interface FloatingPreviewProps {
 	data: any;
@@ -52,7 +52,7 @@ export const FloatingPreview = ({ data, fields, position, show }: FloatingPrevie
 	if (!show || !data) return null;
 
 	const renderFieldGroup = (item: ModalViewField | ModalViewField[], index: number): JSX.Element => {
-		const itemList: ModalViewField[] = Array.isArray(item) ? item : [item];
+		const itemList: ModalViewField[] = normaliseArray(item);
 		const columnClass = getColumnClass(itemList.length);
 
 		return (
