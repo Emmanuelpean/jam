@@ -41,3 +41,11 @@ export const ensureHttpPrefix = (url: string): string => {
 	if (url.match(/^https?:\/\//)) return url;
 	return `https://${url}`;
 };
+
+export const capitalise = (str: string): string => {
+	if (str[0]) {
+		return str[0].toUpperCase() + str.slice(1);
+	} else {
+		return "";
+	}
+};

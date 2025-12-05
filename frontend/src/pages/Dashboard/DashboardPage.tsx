@@ -16,6 +16,7 @@ import {
 } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/tables/ScrapedJobTable";
 import { scrapedJobApi } from "../../services/Api";
+import { sortByKey } from "../../utils/Utils";
 
 const Dashboard: React.FC = () => {
 	const dataContext: DataContextValue = useDataContext();
@@ -54,12 +55,12 @@ const Dashboard: React.FC = () => {
 			new Date(job.deadline) <= thresholdDate,
 	);
 
-	const upcomingInterviews: EnrichedInterviewData[] = dataContext.interviews
-		.filter((interview: EnrichedInterviewData): boolean | null | undefined => new Date(interview.date!) >= now)
-		.sort(
-			(a: EnrichedInterviewData, b: EnrichedInterviewData): number =>
-				new Date(a.date).getTime() - new Date(b.date).getTime(),
-		);
+	const upcomingInterviews: EnrichedInterviewData[] = sortByKey(
+		dataContext.interviews.filter(
+			(interview: EnrichedInterviewData): boolean | null | undefined => new Date(interview.date!) >= now,
+		),
+		"date",
+	);
 
 	const allUpdates: RecentActivity[] = [];
 

@@ -69,7 +69,7 @@ export const getColumnClass = (count: number): string => {
 };
 
 export const sortByKey = <T extends Record<string, any>>(array: T[], key: keyof T, ascending: boolean = true): T[] => {
-	return array.sort((a, b) => {
+	return array.sort((a: T, b: T) => {
 		const valueA = a[key];
 		const valueB = b[key];
 
@@ -77,14 +77,6 @@ export const sortByKey = <T extends Record<string, any>>(array: T[], key: keyof 
 		if (valueA > valueB) return ascending ? 1 : -1;
 		return 0;
 	});
-};
-
-export const capitalise = (str: string): string => {
-	if (str[0]) {
-		return str[0].toUpperCase() + str.slice(1);
-	} else {
-		return "";
-	}
 };
 
 export const normaliseArray = <T>(item: T | T[] | null | undefined): T[] => {

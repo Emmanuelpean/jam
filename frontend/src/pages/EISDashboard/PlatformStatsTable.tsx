@@ -1,7 +1,8 @@
 import React, { JSX } from "react";
 import { Table } from "react-bootstrap";
 import { PlatformStat, ServiceLog } from "../../services/Schemas";
-import { capitalise } from "../../utils/Utils";
+
+import { capitalise } from "../../utils/StringUtils";
 
 interface PlatformStatsTableProps {
 	platformStats: PlatformStat[];
