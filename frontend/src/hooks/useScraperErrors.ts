@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { PlatformStat, ScrapedJobData, ServiceLog } from "../services/Schemas";
 import { scrapedJobApi } from "../services/Api";
+import { normaliseArray } from "../utils/Utils";
 
 export const useScraperErrors = (
 	latestLog: ServiceLog | ServiceLog[] | null,
@@ -15,7 +16,7 @@ export const useScraperErrors = (
 		const fetchErrors = async (): Promise<void> => {
 			try {
 				// Normalize input to array
-				const logs: ServiceLog[] = Array.isArray(latestLog) ? latestLog : [latestLog];
+				const logs: ServiceLog[] = normaliseArray(latestLog);
 
 				let ids: number[] = [];
 

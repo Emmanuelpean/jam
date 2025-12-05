@@ -123,6 +123,7 @@ LINKEDIN_EMAIL_3 = {
     "body": LINKEDIN_EMAIL_3_BODY,
     "platform": "linkedin",
     "parsed_output": LINKEDIN_EMAIL_3_EXTRACTED,
+    "alert_name": "scientific software python",
 }
 
 # Email 4
@@ -228,12 +229,14 @@ LINKEDIN_EMAIL_4 = {
     "body": LINKEDIN_EMAIL_4_BODY,
     "platform": "linkedin",
     "parsed_output": LINKEDIN_EMAIL_4_EXTRACTED,
+    "alert_name": "embedded python",
 }
 
 LINKEDIN_EMAIL_5_BODY = open_file("linkedin_email_malformed.html", encoding="utf8")
 
 
 # ------------------------------------------------------- INDEED -------------------------------------------------------
+
 
 # Email 3
 INDEED_EMAIL_3_BODY = open_file("indeed_email_3.html", encoding="utf8")
@@ -458,6 +461,7 @@ INDEED_EMAIL_3 = {
     "body": INDEED_EMAIL_3_BODY,
     "platform": "indeed",
     "parsed_output": INDEED_EMAIL_3_EXTRACTED,
+    "alert_name": "application scientist",
 }
 
 # Email 4
@@ -773,9 +777,12 @@ INDEED_EMAIL_4 = {
     "body": INDEED_EMAIL_4_BODY,
     "platform": "indeed",
     "parsed_output": INDEED_EMAIL_4_EXTRACTED,
+    "alert_name": "instrumentation engineer",
 }
 
+
 # ------------------------------------------------------ VEGANJOBS -----------------------------------------------------
+
 
 # Email 2
 VEGANJOBS_EMAIL_2_BODY = open_file("veganjobs_email_2.txt", encoding="utf8")
@@ -873,13 +880,14 @@ VEGANJOBS_EMAIL_2_EXTRACTED = [
 ]
 VEGANJOBS_EMAIL_2 = {
     "id": "veganjobs_2",
-    "subject": "We have found new job posts that match your job alert",
+    "subject": 'Job Alert Results Matching "Jobs"',
     "from": "info@veganjobs.com",
     "to": "",
     "date": datetime.datetime.now(),
     "body": VEGANJOBS_EMAIL_2_BODY,
     "platform": "veganjobs",
     "parsed_output": VEGANJOBS_EMAIL_2_EXTRACTED,
+    "alert_name": "Jobs",
 }
 
 # Email 3
@@ -918,13 +926,14 @@ VEGANJOBS_EMAIL_3_EXTRACTED = [
 ]
 VEGANJOBS_EMAIL_3 = {
     "id": "veganjobs_3",
-    "subject": "We have found new job posts that match your job alert",
+    "subject": 'Job Alert Results Matching "Jobs"',
     "from": "info@veganjobs.com",
     "to": "",
     "date": datetime.datetime.now(),
     "body": VEGANJOBS_EMAIL_3_BODY,
     "platform": "veganjobs",
     "parsed_output": VEGANJOBS_EMAIL_3_EXTRACTED,
+    "alert_name": "Jobs",
 }
 
 
@@ -1034,6 +1043,7 @@ NHS_EMAIL_3 = {
     "body": NHS_EMAIL_3_BODY,
     "platform": "nhs",
     "parsed_output": NHS_EMAIL_3_EXTRACTED,
+    "alert_name": "public health Cardiff (Caerdydd)",
 }
 
 NHS_EMAIL_4_BODY = open_file("nhs_email_4.html", encoding="cp1252")
@@ -1198,6 +1208,7 @@ NHS_EMAIL_4 = {
     "body": NHS_EMAIL_4_BODY,
     "platform": "nhs",
     "parsed_output": NHS_EMAIL_4_EXTRACTED,
+    "alert_name": "public health Cardiff (Caerdydd)",
 }
 
 

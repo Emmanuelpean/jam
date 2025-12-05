@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app.eis.email_parsers import Platform
+from app.eis.email_parsers.utils import Platform, remove_style_tags
 from app.eis.job_scrapers import JobResult
 from app.eis.models import JobAlertEmail, ScrapedJob, PlatformStat, EisServiceLog, EisServiceError
 from tests.eis import resources
@@ -31,8 +31,9 @@ class TestSaveEmailToDb:
             assert result_email.subject
             assert result_email.sender == resources.TEST_EMAILS[email_id]["to"]
             assert result_email.platform == resources.TEST_EMAILS[email_id]["platform"]
-            assert result_email.body == resources.TEST_EMAILS[email_id]["body"]
+            assert result_email.body == remove_style_tags(resources.TEST_EMAILS[email_id]["body"])
             assert result_email.owner_id
+            assert result_email.alert_name == resources.TEST_EMAILS[email_id]["alert_name"]
             assert result_email.service_log_id == test_eis_service_log.id
 
     def test_save_existing_email_returns_existing(

@@ -54,9 +54,12 @@ const Dashboard: React.FC = () => {
 			new Date(job.deadline) <= thresholdDate,
 	);
 
-	const upcomingInterviews: EnrichedInterviewData[] = dataContext.interviews.filter(
-		(interview: EnrichedInterviewData): boolean | null | undefined => new Date(interview.date!) >= now,
-	);
+	const upcomingInterviews: EnrichedInterviewData[] = dataContext.interviews
+		.filter((interview: EnrichedInterviewData): boolean | null | undefined => new Date(interview.date!) >= now)
+		.sort(
+			(a: EnrichedInterviewData, b: EnrichedInterviewData): number =>
+				new Date(a.date).getTime() - new Date(b.date).getTime(),
+		);
 
 	const allUpdates: RecentActivity[] = [];
 

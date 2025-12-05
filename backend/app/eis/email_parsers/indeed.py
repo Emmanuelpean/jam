@@ -5,7 +5,7 @@ import re
 import cloudscraper
 from bs4 import BeautifulSoup
 
-from app.eis.email_parsers import process_salary, Platform
+from app.eis.email_parsers.utils import process_salary, Platform
 from app.eis.job_scrapers import Salary, JobInfo, JobResult
 
 BASE_URL = "https://www.indeed.com/viewjob?jk="
@@ -126,3 +126,27 @@ def parse_indeed_job_email(body: str) -> list[JobResult]:
         jobs.append(job_result)
 
     return jobs
+
+
+def extract_alert_name(title: str) -> str | None:
+    """Parse Indeed email alert name from email title.
+    :param str title: email title
+    :return: email alert name or None if not found"""
+
+    # Pattern 1: "X more [job title] job" or "X new [job title] job"
+    pattern1 = r"(?:\d+\s+(?:more|new)\s+)([\w\s&/\-]+?)\s+jobs?"
+
+    # Pattern 2: "+ X new [job title] jobs" (after "hiring for")
+    pattern2 = r"\+\s+\d+\s+new\s+([\w\s&/\-]+?)\s+jobs?"
+
+    # Try pattern 2 first (more specific)
+    match = re.search(pattern2, title, re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+
+    # Try pattern 1
+    match = re.search(pattern1, title, re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+
+    return None

@@ -27,14 +27,12 @@ export const useDeleteHandler = ({ entityType, nameKey, itemType = "item" }: Cre
 		const itemName = getItemName(item, nameKey, itemType);
 
 		try {
-			console.log("Herer");
 			const confirmed = await showDelete({
 				title: `Delete ${itemType}`,
 				message: `Are you sure you want to delete ${itemName}? This action cannot be undone.`,
 				confirmText: "Delete",
 				cancelText: "Cancel",
 			});
-			console.log("Confirmed:", confirmed);
 
 			if (!confirmed) {
 				return false;

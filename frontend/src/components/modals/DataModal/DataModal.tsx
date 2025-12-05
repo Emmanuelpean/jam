@@ -1,14 +1,20 @@
 import React, { JSX, ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
-import { DataContextValue, endpointToEntityType, EntityType, useDataContext } from "../../../contexts/DataContext";
+import {
+	DataContextValue,
+	endpointToEntityType,
+	EntityType,
+	JamData,
+	useDataContext,
+} from "../../../contexts/DataContext";
 import "./DataModal.css";
 import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
-import { areDifferent, findItemByKey, flattenArray, getColumnClass } from "../../../utils/Utils";
+import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArray } from "../../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
-import { useDeleteHandler } from "../../../utils/DeleteHandler";
+import { useActiveHandler, useDeleteHandler } from "../../../utils/DeleteHandler";
 import { useAlert } from "../../../contexts/AlertContext";
 
 export type Field = ModalViewField | ModalFormField;
@@ -62,7 +68,7 @@ const DataModal = ({
 	onSuccess,
 	warningMessage,
 	warningVariant = "warning",
-}: GenericModalProps) => {
+}: GenericModalProps): JSX.Element => {
 	const hasTabs = tabs && tabs.length > 0;
 
 	const dataContext: DataContextValue = useDataContext();
@@ -235,13 +241,8 @@ const DataModal = ({
 
 	// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 
-	const renderFieldGroup = (item: Field | Field[], index: number, isFormMode = true) => {
-		let itemList: Field[];
-		if (Array.isArray(item)) {
-			itemList = item;
-		} else {
-			itemList = [item];
-		}
+	const renderFieldGroup = (item: Field | Field[], index: number, isFormMode = true): JSX.Element => {
+		const itemList: Field[] = normaliseArray(item);
 
 		// Handle title fields in view mode
 		if (!isEditing && itemList.length === 1) {
@@ -289,10 +290,22 @@ const DataModal = ({
 		itemType: itemName,
 	});
 
+	const handleDeActivate = useActiveHandler({
+		entityType: entityType,
+		itemType: itemName,
+	});
+
 	const handleDeleteClick = async () => {
-		const confirm = await handleDelete(effectiveData);
-		if (confirm) {
-			handleHideImmediate();
+		if (mode === "import") {
+			const confirm: boolean = await handleDeActivate(effectiveData);
+			if (confirm) {
+				handleHideImmediate();
+			}
+		} else {
+			const confirm: boolean = await handleDelete(effectiveData);
+			if (confirm) {
+				handleHideImmediate();
+			}
 		}
 	};
 
@@ -394,10 +407,10 @@ const DataModal = ({
 			}
 
 			// Transform data if needed
-			const dataToSubmit = transformFormData ? transformFormData(formData) : formData;
+			const dataToSubmit: any = transformFormData ? transformFormData(formData) : formData;
 			// Submit to API
-			const apiResult =
-				mode === "add" || mode == "import"
+			const apiResult: JamData =
+				mode === "add"
 					? await dataContext.addEntity(entityType, dataToSubmit)
 					: await dataContext.updateEntity(entityType, data.id, dataToSubmit);
 			if (mode === "add" || mode === "edit" || mode == "import") {
@@ -407,7 +420,7 @@ const DataModal = ({
 				handleEditToView();
 			}
 			if (mode === "import" && onSuccess) {
-				onSuccess(dataToSubmit);
+				onSuccess(formData);
 			} else if (onSuccess) {
 				onSuccess(apiResult);
 			}

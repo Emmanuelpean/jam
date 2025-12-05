@@ -13,11 +13,8 @@ from datetime import datetime
 from app import models, utils
 from app.config import settings
 from app.database import get_db
-from app.eis.email_parsers import Platform
-from app.eis.email_parsers.indeed import parse_indeed_job_email
-from app.eis.email_parsers.linkedin import parse_linkedin_job_email
-from app.eis.email_parsers.nhs import parse_nhs_job_email
-from app.eis.email_parsers.veganjobs import parse_veganjobs_email
+from app.eis.email_parsers.utils import Platform, remove_style_tags
+from app.eis.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
 from app.eis.job_scrapers import JobResult
 from app.eis.job_scrapers.indeed import IndeedBrightdataJobScraper
 from app.eis.job_scrapers.linkedin import LinkedinBrightdataJobScraper
@@ -145,12 +142,10 @@ class JobEmailScraper(EmailService):
             message = self.get_email_data(email_id)
 
             # Determine the platform
-            platform = None
-            for plat in Platform:
-                if plat.lower() in message["from"].lower():  # TODO improve platform detection
-                    platform = plat
+            platform = PLATFORM_SENDER_EMAILS.get(message["from"].lower())
             if not platform:
                 raise ValueError("Email body does not contain a valid platform identifier.")
+            alert_name = ALERT_NAME_EXTRACTORS[platform](message["subject"], message["body"])
 
             # Create a new email record
             # noinspection PyArgumentList
@@ -161,8 +156,9 @@ class JobEmailScraper(EmailService):
                 subject=message["subject"],
                 sender=message["to"],
                 date_received=message["date"],
-                body=message["body"],
+                body=remove_style_tags(message["body"]),
                 platform=platform,
+                alert_name=alert_name,
             )
             self.db.add(email_record)
             self.db.commit()
@@ -431,17 +427,7 @@ class JobEmailScraper(EmailService):
         :return: Dictionary of jobs data if the job data were directly extracted from the email"""
 
         try:
-            if email_record.platform == Platform.LINKEDIN:
-                jobs = parse_linkedin_job_email(email_record.body)
-            elif email_record.platform == Platform.INDEED:
-                jobs = parse_indeed_job_email(email_record.body)
-            elif email_record.platform == Platform.VEGANJOBS:
-                jobs = parse_veganjobs_email(email_record.body)
-            elif email_record.platform == Platform.NHS:
-                jobs = parse_nhs_job_email(email_record.body)
-            else:
-                self.logger.info(f"No job IDs found in email: {email_record.external_email_id}. Skipping email.")
-                return None  # skip the email parsing
+            jobs = JOB_PARSERS[email_record.platform](email_record.body)
         except Exception as exception:
             self.log_eis_service_error(service_log, exception)
             self.logger.exception(
