@@ -1,15 +1,19 @@
-import React from "react";
+import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
-import { tableColumns } from "../rendering/view/TableColumns";
-import { InterviewModal, InterviewModalProps } from "../modals/InterviewModal";
-import { DataModalProps } from "../modals/DataModal/DataModal";
+import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
+import { InterviewModal } from "../modals/InterviewModal";
 
 interface InterviewsTableProps extends DataTableProps {
 	jobId?: number;
 }
 
-const InterviewsTable: React.FC<InterviewsTableProps> = ({ jobId, data = [], columns = [], showAdd = true }) => {
-	const defaultColumns =
+const InterviewsTable: React.FC<InterviewsTableProps> = ({
+	jobId,
+	data = [],
+	columns = [],
+	showAdd = true,
+}: InterviewsTableProps): JSX.Element => {
+	const defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
 			: [
@@ -19,17 +23,14 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({ jobId, data = [], col
 					tableColumns.noteColumn(),
 				];
 
-	const ModalWithProps: React.FC<DataModalProps> = (props: InterviewModalProps) => (
-		<InterviewModal {...props} jobId={jobId} />
-	);
-
 	return (
 		<DataTable
 			entityType="interviews"
 			data={data}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}
-			Modal={ModalWithProps}
+			Modal={InterviewModal}
+			modalProps={{ jobId }}
 			nameKey="date"
 			itemType="Interview"
 			modalSize="lg"

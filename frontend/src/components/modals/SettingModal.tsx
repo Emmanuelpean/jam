@@ -5,7 +5,7 @@ import { modalViewFields } from "../rendering/view/ModalFields";
 import { SettingData, SettingDataTransform } from "../../services/Schemas";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const SettingModal: React.FC<DataModalProps> = ({ show, onHide, data, submode, size = "lg" }) => {
+export const SettingModal: React.FC<DataModalProps> = ({ size = "lg" }) => {
 	const dataContext: DataContextValue = useDataContext();
 
 	const fields = {
@@ -46,12 +46,8 @@ export const SettingModal: React.FC<DataModalProps> = ({ show, onHide, data, sub
 
 	return (
 		<DataModal
-			show={show}
-			onHide={onHide}
-			mode={submode}
 			itemName="Setting"
 			size={size}
-			data={data}
 			fields={fields}
 			endpoint="settings"
 			transformFormData={transformFormData}

@@ -1,24 +1,22 @@
-import React from "react";
-import DataModal, { DataModalProps } from "./DataModal/DataModal";
+import React, { forwardRef, useRef } from "react";
+import DataModal, { DataModalHandle, DataModalProps, GenericModalProps } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { InterviewDataTransform, JobData } from "../../services/Schemas";
 import { useFormOptions } from "../rendering/form/FormOptions";
+import { LocationModal } from "./LocationModal";
+import { PersonModal } from "./PersonModal";
 
 export interface InterviewModalProps extends DataModalProps {
 	jobId?: number;
 }
-
-export const InterviewModal: React.FC<InterviewModalProps> = ({
-	show,
-	onHide,
-	data,
-	submode = "view",
-	size = "lg",
-	jobId,
-}) => {
-	const { locations, persons, jobs, openLocationModal, openPersonModal, renderLocationModal, renderPersonModal } =
-		useFormOptions();
+export const InterviewModal = forwardRef<
+	DataModalHandle,
+	Omit<GenericModalProps, "endpoint" | "fields" | "transformFormData"> & { jobId?: number }
+>(({ size = "lg", jobId, onSuccess }, ref) => {
+	const locationModalRef = useRef<DataModalHandle>(null);
+	const personModalRef = useRef<DataModalHandle>(null);
+	const { locations, persons, jobs } = useFormOptions();
 
 	const formFieldsArray = [
 		...(!jobId ? [formFields.job(jobs)] : []),
@@ -30,13 +28,13 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 		],
 		[
 			formFields.interviewAttendanceType(),
-			formFields.location(locations, openLocationModal, null, {
+			formFields.location(locations, locationModalRef, null, null, {
 				displayCondition: (formData: JobData): boolean => {
 					return formData.attendance_type === "on-site";
 				},
 			}),
 		],
-		formFields.interviewers(persons, openPersonModal),
+		formFields.interviewers(persons, personModalRef),
 		formFields.note({
 			placeholder: "Add notes about the interview, questions asked, impressions, etc...",
 		}),
@@ -68,20 +66,17 @@ export const InterviewModal: React.FC<InterviewModalProps> = ({
 
 	return (
 		<>
+			<LocationModal ref={locationModalRef} />
+			<PersonModal ref={personModalRef} />
 			<DataModal
-				show={show}
-				onHide={onHide}
-				mode={submode}
-				itemName="Interview"
+				ref={ref}
 				size={size}
-				data={data}
 				fields={fields}
 				endpoint="interviews"
+				itemName="Interview"
 				transformFormData={transformFormData}
+				onSuccess={onSuccess}
 			/>
-
-			{renderLocationModal()}
-			{renderPersonModal()}
 		</>
 	);
-};
+});

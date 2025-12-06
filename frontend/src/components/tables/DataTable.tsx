@@ -1,4 +1,4 @@
-import React, { MouseEvent, ReactNode, useCallback, useEffect, useState, JSX } from "react";
+import React, { JSX, MouseEvent, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { DataContextValue, EntityType, JamData, useDataContext } from "../../contexts/DataContext";
@@ -6,7 +6,6 @@ import { api } from "../../services/Api";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";
-import useModalState from "../../hooks/useModalState";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
 import { useActiveHandler, useDeleteHandler } from "../../utils/DeleteHandler";
@@ -14,6 +13,7 @@ import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
 import "./DataTable.css";
 import LoadingSpinner from "../spinner/Spinner";
+import { DataModalHandle } from "../modals/DataModal/DataModal";
 
 export type Direction = "asc" | "desc";
 
@@ -94,6 +94,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	menuItems,
 }: GenericTableProps): JSX.Element => {
 	const { token } = useAuth();
+	const modalRef = useRef<DataModalHandle>(null);
+	const openViewModal = (item: any) => modalRef.current?.showView(item);
+	const openEditModal = (item: any) => modalRef.current?.showEdit(item);
+	const openAddModal = () => modalRef.current?.showAdd({});
+	const openImportModal = (item: any) => modalRef.current?.showImport(item);
 
 	// Data management
 	const dataContext: DataContextValue = useDataContext();
@@ -116,22 +121,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const [totalCount, setTotalCount] = useState<number>(0);
 
 	const isServerPagination: boolean = !!endpoint && !providedData;
-
-	const {
-		showModal,
-		showViewModal,
-		showEditModal,
-		showImportModal,
-		selectedItem,
-		openAddModal,
-		closeAddModal,
-		openViewModal,
-		closeViewModal,
-		openEditModal,
-		closeEditModal,
-		openImportModal,
-		closeImportModal,
-	} = useModalState();
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
@@ -327,7 +316,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		if (mode === "import") {
 			openImportModal(item);
 		} else {
-			openViewModal(item);
+			modalRef.current?.showView(item);
 		}
 	};
 
@@ -343,26 +332,20 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	// Select the handler based on mode
 	const handleDelete = mode === "import" ? activeHandler : deleteHandler;
 
-	// Success handlers
-	const handleEditSuccess = (updatedItem: any): void => {
-		updateItem(updatedItem);
-		closeEditModal();
-	};
-
-	const handleAddSuccess = (newItem: any): void => {
-		addItem(newItem);
-		closeAddModal();
+	const handleSuccess = (item: any): void => {
+		if (isServerPagination) {
+			fetchData().then((data: any) => {});
+		}
 	};
 
 	const handleImportSuccess = (importedItem: any): void => {
-		onImportSuccess?.(importedItem).then((_): void => {
-			fetchData().then((_): void => {
-				showToastSuccess("Job imported successfully.");
-				closeImportModal();
-			});
+		onImportSuccess?.(importedItem).then(() => {
+			if (isServerPagination) {
+				fetchData().then();
+			}
+			showToastSuccess("Job imported successfully.");
 		});
 	};
-
 	// Close context menu on outside click or escape
 	useEffect(() => {
 		const handleGlobalClick = (): void => {
@@ -438,8 +421,20 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	// Get context menu items based on mode
 	const getContextMenuItems = () => {
 		let baseItems: MenuItem[] = [
-			{ action: "view", icon: "eye", text: "View", id: "context-menu-view", function: openViewModal },
-			{ action: "edit", icon: "pencil", text: "Edit", id: "context-menu-edit", function: openEditModal },
+			{
+				action: "view",
+				icon: "eye",
+				text: "View",
+				id: "context-menu-view",
+				function: openViewModal,
+			},
+			{
+				action: "edit",
+				icon: "pencil",
+				text: "Edit",
+				id: "context-menu-edit",
+				function: openEditModal,
+			},
 			{
 				action: "snooze",
 				icon: "alarm",
@@ -765,59 +760,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			)}
 
 			{children ? children(data) : null}
-
-			{mode !== "import" && (
-				<>
-					<Modal
-						show={showModal}
-						onHide={closeAddModal}
-						onSuccess={handleAddSuccess}
-						size={modalSize}
-						data={{}}
-						submode="add"
-						{...modalProps}
-					/>
-
-					<Modal
-						show={showEditModal}
-						onHide={closeEditModal}
-						onSuccess={handleEditSuccess}
-						data={selectedItem || {}}
-						submode="edit"
-						onDelete={removeItem}
-						size={modalSize}
-						{...modalProps}
-					/>
-
-					<Modal
-						show={showViewModal}
-						onHide={closeViewModal}
-						onSuccess={updateItem}
-						data={selectedItem}
-						submode="view"
-						onDelete={removeItem}
-						onEdit={() => {
-							closeViewModal();
-							openEditModal(selectedItem);
-						}}
-						size={modalSize}
-						{...modalProps}
-					/>
-				</>
-			)}
-
-			{mode === "import" && (
-				<Modal
-					show={showImportModal}
-					onHide={closeImportModal}
-					onSuccess={handleImportSuccess}
-					onDelete={removeItem}
-					data={selectedItem}
-					submode="import"
-					size={modalSize}
-					{...modalProps}
-				/>
-			)}
+			<Modal ref={modalRef} onSuccess={handleSuccess} size={modalSize} {...modalProps} />
 		</div>
 	);
 };

@@ -1,5 +1,5 @@
-import React from "react";
-import DataModal, { DataModalProps } from "./DataModal/DataModal";
+import React, { forwardRef } from "react";
+import DataModal, { DataModalHandle, DataModalProps, GenericModalProps } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { JobApplicationUpdateData, JobApplicationUpdateDataTransform } from "../../services/Schemas";
@@ -9,14 +9,10 @@ export interface JobApplicationUpdateModalProps extends DataModalProps {
 	jobId?: number;
 }
 
-export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps> = ({
-	show,
-	onHide,
-	data,
-	submode = "view",
-	size = "lg",
-	jobId,
-}) => {
+export const JobApplicationUpdateModal = forwardRef<
+	DataModalHandle,
+	Omit<GenericModalProps, "endpoint" | "fields" | "transformFormData"> & { jobId?: number }
+>(({ size = "lg", jobId }, ref) => {
 	const { jobs } = useFormOptions();
 
 	const formFieldsArray = [
@@ -56,16 +52,13 @@ export const JobApplicationUpdateModal: React.FC<JobApplicationUpdateModalProps>
 	return (
 		<>
 			<DataModal
-				show={show}
-				onHide={onHide}
-				mode={submode}
+				ref={ref}
 				itemName="Update"
 				size={size}
-				data={data}
 				fields={fields}
 				endpoint="jobapplicationupdates"
 				transformFormData={transformFormData}
 			/>
 		</>
 	);
-};
+});

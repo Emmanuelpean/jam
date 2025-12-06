@@ -1,11 +1,14 @@
-import React from "react";
-import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
+import React, { forwardRef } from "react";
+import DataModal, { DataModalHandle, DataModalProps, GenericModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { AggregatorData, AggregatorDataTransform } from "../../services/Schemas";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const AggregatorModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
+export const AggregatorModal = forwardRef<
+	DataModalHandle,
+	Omit<GenericModalProps, "endpoint" | "fields" | "additionalFields" | "validation" | "transformFormData">
+>(({ size = "lg" }, ref) => {
 	const dataContext: DataContextValue = useDataContext();
 
 	const fields = {
@@ -52,17 +55,14 @@ export const AggregatorModal: React.FC<DataModalProps> = ({ show, onHide, data, 
 
 	return (
 		<DataModal
-			show={show}
-			onHide={onHide}
-			mode={submode}
+			ref={ref}
 			additionalFields={additionalFields}
 			itemName="Aggregator"
 			size={size}
-			data={data}
 			fields={fields}
 			endpoint="aggregators"
 			transformFormData={transformFormData}
 			validation={customValidation}
 		/>
 	);
-};
+});

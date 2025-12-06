@@ -17,7 +17,7 @@ export interface SelectWidgetPreviewConfig {
 const animatedComponents = makeAnimated();
 
 const CustomDropdownIndicator = (props: any): JSX.Element => {
-	const [hover, setHover] = useState<boolean>(false);
+	const [hover, setHover] = useState(false);
 	const menuIsOpen = props.selectProps.menuIsOpen;
 	const isActive = hover || menuIsOpen;
 	const customProps = props.selectProps;
@@ -36,8 +36,14 @@ const CustomDropdownIndicator = (props: any): JSX.Element => {
 			onMouseDown={(e: React.MouseEvent) => {
 				e.preventDefault();
 				e.stopPropagation();
-				if (customProps.onAddButtonClick) {
-					customProps.onAddButtonClick(e);
+				if (customProps.addButtonModalRef) {
+					let defaultData = customProps.addButtonDefaultData;
+					console.log(customProps.transformParentData);
+					if (customProps.transformParentData && customProps.parentData) {
+						defaultData = customProps.transformParentData(customProps.parentData);
+						console.log(defaultData);
+					}
+					customProps.addButtonModalRef.current?.showAdd(defaultData);
 				}
 			}}
 			onClick={(e: React.MouseEvent) => {
@@ -64,6 +70,7 @@ export const RenderSelect = ({
 	error,
 	secondaryValue,
 	previewConfig,
+	data,
 }: WidgetProps): JSX.Element => {
 	const [previewData, setPreviewData] = useState<any>(null);
 	const [previewPosition, setPreviewPosition] = useState({ top: 0, left: 0 });
@@ -77,8 +84,8 @@ export const RenderSelect = ({
 				if (lastPreviewIdRef.current === option.value) return;
 				lastPreviewIdRef.current = option.value;
 
-				const data = previewConfig.getDataById(Number(option.value));
-				setPreviewData(data);
+				const selectedData = previewConfig.getDataById(Number(option.value));
+				setPreviewData(selectedData);
 				setPreviewPosition(position);
 				setShowPreview(true);
 			}
@@ -120,7 +127,7 @@ export const RenderSelect = ({
 
 	const selectComponents = { ...animatedComponents };
 
-	if (field.addButton?.onClick) {
+	if (field.addButton?.modalRef) {
 		selectComponents.DropdownIndicator = CustomDropdownIndicator;
 	} else {
 		selectComponents.DropdownIndicator = undefined;
@@ -180,7 +187,12 @@ export const RenderSelect = ({
 				isDisabled={field.isDisabled}
 				controlShouldRenderValue={true}
 				// @ts-ignore
-				onAddButtonClick={field.addButton?.onClick}
+				addButtonModalRef={field.addButton?.modalRef}
+				// @ts-ignore
+				addButtonDefaultData={field.addButton?.defaultData}
+				// @ts-ignore
+				parentData={data}
+				transformParentData={field.addButton?.transformParentData}
 				styles={{
 					control: (base, state) => ({
 						...base,

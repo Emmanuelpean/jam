@@ -10,6 +10,7 @@ import {
 	SelectOption,
 	updateTypeOptions,
 } from "./FormOptions";
+import { DataModalHandle } from "../../modals/DataModal/DataModal";
 
 export interface ModalFormField {
 	name: string;
@@ -29,7 +30,10 @@ export interface ModalFormField {
 	maxRating?: number;
 	autoComplete?: string;
 	helpText?: string | null;
-	addButton?: { onClick?: () => void };
+	addButton?: {
+		modalRef: React.RefObject<DataModalHandle | null>;
+		transformParentData?: ((parentData: any) => any) | null;
+	};
 	tabIndex?: number;
 	displayCondition?: (item: any) => boolean;
 	previewConfig?: SelectWidgetPreviewConfig | null;
@@ -349,7 +353,8 @@ export const formFields = {
 
 	company: (
 		options: SelectOption[] = [],
-		onAdd: (() => void) | null = null,
+		modalRef: React.RefObject<DataModalHandle | null>,
+		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
@@ -361,17 +366,14 @@ export const formFields = {
 		isClearable: true,
 		previewConfig: previewConfig,
 		options: options,
-		...(onAdd && {
-			addButton: {
-				onClick: onAdd,
-			},
-		}),
+		addButton: { modalRef, transformParentData },
 		...overrides,
 	}),
 
 	scrapedCompany: (
 		options: SelectOption[] = [],
-		onAdd: (() => void) | null = null,
+		modalRef: React.RefObject<DataModalHandle | null>,
+		transformParentData?: ((parentData: any) => any) | null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
 		name: "company_id",
@@ -382,17 +384,14 @@ export const formFields = {
 		isSearchable: true,
 		isClearable: true,
 		options: options,
-		...(onAdd && {
-			addButton: {
-				onClick: onAdd,
-			},
-		}),
+		addButton: { modalRef, transformParentData },
 		...overrides,
 	}),
 
 	location: (
 		options: SelectOption[] = [],
-		onAdd: (() => void) | null = null,
+		modalRef: React.RefObject<DataModalHandle | null>,
+		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
@@ -404,17 +403,14 @@ export const formFields = {
 		isClearable: true,
 		previewConfig: previewConfig,
 		options: options,
-		...(onAdd && {
-			addButton: {
-				onClick: onAdd,
-			},
-		}),
+		addButton: { modalRef, transformParentData },
 		...overrides,
 	}),
 
 	scrapedLocation: (
 		options: SelectOption[] = [],
-		onAdd: (() => void) | null = null,
+		modalRef: React.RefObject<DataModalHandle | null>,
+		transformParentData?: ((parentData: any) => any) | null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
 		name: "location_id",
@@ -425,17 +421,14 @@ export const formFields = {
 		isSearchable: true,
 		isClearable: true,
 		options: options,
-		...(onAdd && {
-			addButton: {
-				onClick: onAdd,
-			},
-		}),
+		addButton: { modalRef, transformParentData },
 		...overrides,
 	}),
 
 	keywords: (
 		options: SelectOption[] = [],
-		onAdd: (() => void) | null = null,
+		modalRef: React.RefObject<DataModalHandle | null>,
+		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
@@ -446,17 +439,14 @@ export const formFields = {
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
-		...(onAdd && {
-			addButton: {
-				onClick: onAdd,
-			},
-		}),
+		addButton: { modalRef, transformParentData },
 		...overrides,
 	}),
 
 	contacts: (
 		options: SelectOption[] = [],
-		onAdd: (() => void) | null = null,
+		modalRef: React.RefObject<DataModalHandle | null>,
+		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
@@ -467,17 +457,14 @@ export const formFields = {
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
-		...(onAdd && {
-			addButton: {
-				onClick: onAdd,
-			},
-		}),
+		addButton: { modalRef, transformParentData },
 		...overrides,
 	}),
 
 	interviewers: (
 		options: SelectOption[] = [],
-		onAdd: (() => void) | null = null,
+		modalRef: React.RefObject<DataModalHandle | null>,
+		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
@@ -487,11 +474,7 @@ export const formFields = {
 		isSearchable: true,
 		previewConfig: previewConfig,
 		options: options,
-		...(onAdd && {
-			addButton: {
-				onClick: onAdd,
-			},
-		}),
+		addButton: { modalRef, transformParentData },
 		...overrides,
 	}),
 
@@ -509,7 +492,8 @@ export const formFields = {
 
 	aggregator: (
 		options: SelectOption[] = [],
-		onAdd: (() => void) | null = null,
+		modalRef: React.RefObject<DataModalHandle | null>,
+		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
 		overrides: FormFieldOverride = {},
 	): ModalFormField => ({
@@ -521,11 +505,7 @@ export const formFields = {
 		isClearable: true,
 		previewConfig: previewConfig,
 		options: options,
-		...(onAdd && {
-			addButton: {
-				onClick: onAdd,
-			},
-		}),
+		addButton: { modalRef, transformParentData },
 		...overrides,
 	}),
 };

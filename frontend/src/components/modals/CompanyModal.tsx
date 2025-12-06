@@ -1,12 +1,15 @@
-import React from "react";
-import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
+import React, { forwardRef } from "react";
+import DataModal, { DataModalHandle, GenericModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { CompanyData, CompanyDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const CompanyModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
+export const CompanyModal = forwardRef<
+	DataModalHandle,
+	Omit<GenericModalProps, "endpoint" | "fields" | "additionalFields" | "validation" | "transformFormData">
+>(({ size = "lg" }, ref) => {
 	const dataContext: DataContextValue = useDataContext();
 
 	const fields = {
@@ -60,12 +63,9 @@ export const CompanyModal: React.FC<DataModalProps> = ({ show, onHide, data, sub
 
 	return (
 		<DataModal
-			show={show}
-			onHide={onHide}
-			mode={submode}
+			ref={ref}
 			itemName="Company"
 			size={size}
-			data={data}
 			fields={fields}
 			additionalFields={additionalFields}
 			endpoint="companies"
@@ -73,4 +73,4 @@ export const CompanyModal: React.FC<DataModalProps> = ({ show, onHide, data, sub
 			validation={customValidation}
 		/>
 	);
-};
+});
