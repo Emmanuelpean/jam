@@ -7,7 +7,7 @@ import { UserData, UserDataTransform } from "../../services/Schemas";
 import { THEMES } from "../../utils/Theme";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
+export const UserModal: React.FC<DataModalProps> = ({ data, submode = "view", size = "lg" }) => {
 	const dataContext: DataContextValue = useDataContext();
 
 	if (submode === "add") {
@@ -58,12 +58,8 @@ export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, submod
 
 	return (
 		<DataModal
-			show={show}
-			onHide={onHide}
-			mode={submode}
 			itemName="User"
 			size={size}
-			data={data}
 			fields={fields}
 			endpoint="users"
 			validation={customValidation}

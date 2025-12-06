@@ -1,5 +1,5 @@
-import React from "react";
-import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
+import React, { forwardRef } from "react";
+import DataModal, { DataModalHandle, GenericModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { LocationData, LocationDataTransform } from "../../services/Schemas";
@@ -7,7 +7,10 @@ import { tableColumns } from "../rendering/view/TableColumns";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
+export const LocationModal = forwardRef<
+	DataModalHandle,
+	Omit<GenericModalProps, "endpoint" | "fields" | "additionalFields" | "validation" | "transformFormData">
+>(({ size = "lg" }, ref) => {
 	const { countries } = useFormOptions();
 	const dataContext: DataContextValue = useDataContext();
 
@@ -86,12 +89,9 @@ export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, su
 
 	return (
 		<DataModal
-			show={show}
-			onHide={onHide}
-			mode={submode}
+			ref={ref}
 			itemName="Location"
 			size={size}
-			data={data}
 			additionalFields={additionalFields}
 			fields={fields}
 			endpoint="locations"
@@ -99,4 +99,4 @@ export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, su
 			transformFormData={transformFormData}
 		/>
 	);
-};
+});

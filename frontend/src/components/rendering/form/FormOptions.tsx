@@ -1,15 +1,10 @@
 import { accessAttribute, findItemById } from "../../../utils/Utils";
-import React, { JSX, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
-import { CompanyModal } from "../../modals/CompanyModal";
-import { LocationModal } from "../../modals/LocationModal";
-import { KeywordModal } from "../../modals/KeywordModal";
-import { PersonModal } from "../../modals/PersonModal";
-import { AggregatorModal } from "../../modals/AggregatorModal";
-import { JobModal } from "../../modals/JobModal";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import { modalViewFields } from "../view/ModalFields";
 import { PersonData } from "../../../services/Schemas";
+import stringSimilarity from "string-similarity";
 
 export type SelectOption = {
 	value: string;
@@ -17,8 +12,29 @@ export type SelectOption = {
 	data?: any;
 };
 
+export function findClosestOption(options: SelectOption[], name: string): string | null {
+	if (!name || options.length === 0) return null;
+	const names: string[] = options.map((c: SelectOption): string => c.label);
+	const result = stringSimilarity.findBestMatch(name, names);
+
+	const MIN_SIMILARITY_THRESHOLD = 0.4;
+
+	if (result.bestMatch.rating < MIN_SIMILARITY_THRESHOLD) {
+		return null;
+	}
+
+	return options[result.bestMatchIndex]?.value || null;
+}
+
+export function findExactOption(options: SelectOption[], name: string): string | null | undefined {
+	if (!name || options.length === 0) return null;
+	const match: SelectOption | undefined = options.find(
+		(opt: SelectOption): boolean => opt.label.toLowerCase() === name.toLowerCase(),
+	);
+	return match ? match.value : null;
+}
+
 interface UseFormOptionsReturn {
-	error: Error | null;
 	companies: SelectOption[];
 	locations: SelectOption[];
 	keywords: SelectOption[];
@@ -28,31 +44,10 @@ interface UseFormOptionsReturn {
 	countries: SelectOption[];
 	currencies: SelectOption[];
 	currencyNames: SelectOption[];
-	openCompanyModal: () => void;
-	renderCompanyModal: () => JSX.Element;
-	openLocationModal: () => void;
-	renderLocationModal: () => JSX.Element;
-	openKeywordModal: () => void;
-	renderKeywordModal: () => JSX.Element;
-	openPersonModal: () => void;
-	renderPersonModal: () => JSX.Element;
-	openAggregatorModal: () => void;
-	renderAggregatorModal: () => JSX.Element;
-	openJobModal: () => void;
-	renderJobModal: () => JSX.Element;
 	getCompanyPreviewConfig: SelectWidgetPreviewConfig;
 	getPersonPreviewConfig: SelectWidgetPreviewConfig;
 	getLocationPreviewConfig: SelectWidgetPreviewConfig;
 	getAggregatorPreviewConfig: SelectWidgetPreviewConfig;
-}
-
-interface DataFactories {
-	companies?: () => any;
-	locations?: () => any;
-	keywords?: () => any;
-	persons?: () => any;
-	aggregators?: () => any;
-	jobs?: () => any;
 }
 
 export const toSelectOptions = (
@@ -68,7 +63,7 @@ export const toSelectOptions = (
 		}),
 	);
 };
-export const useFormOptions = (dataFactories: DataFactories = {}): UseFormOptionsReturn => {
+export const useFormOptions = (): UseFormOptionsReturn => {
 	const contextData: DataContextValue = useDataContext();
 
 	const getCompanyPreviewConfig: SelectWidgetPreviewConfig = {
@@ -109,14 +104,6 @@ export const useFormOptions = (dataFactories: DataFactories = {}): UseFormOption
 		return person.name;
 	};
 
-	// Modal states
-	const [showCompanyModal, setShowCompanyModal] = useState<boolean>(false);
-	const [showLocationModal, setShowLocationModal] = useState<boolean>(false);
-	const [showKeywordModal, setShowKeywordModal] = useState<boolean>(false);
-	const [showPersonModal, setShowPersonModal] = useState<boolean>(false);
-	const [showAggregatorModal, setShowAggregatorModal] = useState<boolean>(false);
-	const [showJobModal, setShowJobModal] = useState<boolean>(false);
-
 	// Convert data to SelectOptions and memoize
 	const companyOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(contextData.companies),
@@ -155,106 +142,7 @@ export const useFormOptions = (dataFactories: DataFactories = {}): UseFormOption
 		[contextData.currencies],
 	);
 
-	// Modal handlers
-	const openCompanyModal = (): void => setShowCompanyModal(true);
-	const closeCompanyModal = (): void => setShowCompanyModal(false);
-
-	const openLocationModal = (): void => setShowLocationModal(true);
-	const closeLocationModal = (): void => setShowLocationModal(false);
-
-	const openKeywordModal = (): void => setShowKeywordModal(true);
-	const closeKeywordModal = (): void => setShowKeywordModal(false);
-
-	const openPersonModal = (): void => setShowPersonModal(true);
-	const closePersonModal = (): void => setShowPersonModal(false);
-
-	const openAggregatorModal = (): void => setShowAggregatorModal(true);
-	const closeAggregatorModal = (): void => setShowAggregatorModal(false);
-
-	const openJobModal = (): void => setShowJobModal(true);
-	const closeJobModal = (): void => setShowJobModal(false);
-
-	// Render modal functions with factory data support
-	const renderCompanyModal = (): JSX.Element => {
-		const initialData = dataFactories?.companies?.();
-		return (
-			<CompanyModal
-				show={showCompanyModal}
-				onHide={closeCompanyModal}
-				onSuccess={closeCompanyModal}
-				submode="add"
-				data={initialData}
-			/>
-		);
-	};
-
-	const renderLocationModal = (): JSX.Element => {
-		const initialData = dataFactories?.locations?.();
-		return (
-			<LocationModal
-				show={showLocationModal}
-				onHide={closeLocationModal}
-				onSuccess={closeLocationModal}
-				submode="add"
-				data={initialData}
-			/>
-		);
-	};
-
-	const renderKeywordModal = (): JSX.Element => {
-		const initialData = dataFactories?.keywords?.();
-		return (
-			<KeywordModal
-				show={showKeywordModal}
-				onHide={closeKeywordModal}
-				onSuccess={closeKeywordModal}
-				submode="add"
-				data={initialData}
-			/>
-		);
-	};
-
-	const renderPersonModal = (): JSX.Element => {
-		const initialData = dataFactories?.persons?.();
-		return (
-			<PersonModal
-				show={showPersonModal}
-				onHide={closePersonModal}
-				onSuccess={closePersonModal}
-				submode="add"
-				data={initialData}
-			/>
-		);
-	};
-
-	const renderAggregatorModal = (): JSX.Element => {
-		const initialData = dataFactories?.aggregators?.();
-		return (
-			<AggregatorModal
-				show={showAggregatorModal}
-				onHide={closeAggregatorModal}
-				onSuccess={closeAggregatorModal}
-				submode="add"
-				data={initialData}
-			/>
-		);
-	};
-
-	const renderJobModal = (): JSX.Element => {
-		const initialData = dataFactories?.jobs?.();
-		return (
-			<JobModal
-				show={showJobModal}
-				onHide={closeJobModal}
-				onSuccess={closeJobModal}
-				submode="add"
-				data={initialData}
-			/>
-		);
-	};
-
 	return {
-		error: contextData.error as Error | null,
 		companies: companyOptions,
 		locations: locationOptions,
 		keywords: keywordOptions,
@@ -264,18 +152,6 @@ export const useFormOptions = (dataFactories: DataFactories = {}): UseFormOption
 		countries: countryOptions,
 		currencies: currencyOptions,
 		currencyNames: currencyNameOptions,
-		openCompanyModal,
-		renderCompanyModal,
-		openLocationModal,
-		renderLocationModal,
-		openKeywordModal,
-		renderKeywordModal,
-		openPersonModal,
-		renderPersonModal,
-		openAggregatorModal,
-		renderAggregatorModal,
-		openJobModal,
-		renderJobModal,
 		getCompanyPreviewConfig,
 		getPersonPreviewConfig,
 		getLocationPreviewConfig,

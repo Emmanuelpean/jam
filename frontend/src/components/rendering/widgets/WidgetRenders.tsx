@@ -33,6 +33,7 @@ export interface WidgetProps {
 	secondaryValue?: string | null;
 	currentUser?: CurrentUser | null;
 	previewConfig?: SelectWidgetPreviewConfig | null;
+	data?: any;
 }
 
 export const displayError = (errorMessage: string | null): JSX.Element[] | null => {
@@ -79,6 +80,7 @@ export const FormField = (
 		secondaryValue,
 		currentUser,
 		previewConfig,
+		data: formData,
 	};
 
 	if (field.type === "checkbox") {

@@ -1,5 +1,11 @@
-import React, { ReactNode } from "react";
-import DataModal, { DataModalProps, TabConfig, ValidationErrors } from "./DataModal/DataModal";
+import React, { ReactNode, forwardRef, useRef } from "react";
+import DataModal, {
+	DataModalHandle,
+	DataModalProps,
+	GenericModalProps,
+	TabConfig,
+	ValidationErrors,
+} from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
@@ -8,52 +14,42 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
+import { CompanyModal } from "./CompanyModal";
+import { PersonModal } from "./PersonModal";
+import { AggregatorModal } from "./AggregatorModal";
+import { KeywordModal } from "./KeywordModal";
+import { LocationModal } from "./LocationModal";
 
 interface JobAndApplicationProps extends DataModalProps {
 	defaultActiveTab?: "job" | "application";
 }
 
-export const JobModal: React.FC<JobAndApplicationProps> = ({
-	show,
-	onHide,
-	data,
-	submode,
-	size = "xl",
-	defaultActiveTab = "job",
-}) => {
+export const JobModal = forwardRef<
+	DataModalHandle,
+	Omit<GenericModalProps, "endpoint" | "fields" | "additionalFields" | "validation" | "transformFormData">
+>(({ size = "lg" }, ref) => {
+	const locationModalRef = useRef<DataModalHandle>(null);
+	const personModalRef = useRef<DataModalHandle>(null);
+	const companyModalRef = useRef<DataModalHandle>(null);
+	const aggregatorModalRef = useRef<DataModalHandle>(null);
+	const keywordModalRef = useRef<DataModalHandle>(null);
 	const { currentUser } = useAuth();
 	const dataContext: DataContextValue = useDataContext();
-	const {
-		companies,
-		locations,
-		keywords,
-		persons,
-		aggregators,
-		openCompanyModal,
-		openLocationModal,
-		openKeywordModal,
-		openPersonModal,
-		openAggregatorModal,
-		renderCompanyModal,
-		renderLocationModal,
-		renderKeywordModal,
-		renderPersonModal,
-		renderAggregatorModal,
-	} = useFormOptions();
+	const { companies, locations, keywords, persons, aggregators } = useFormOptions();
 
 	const jobFormFields = [
 		formFields.jobTitle({ placeholder: "Python Software Engineer" }),
 		[
-			formFields.company(companies, openCompanyModal),
+			formFields.company(companies, companyModalRef),
 			formFields.url({ label: "Job URL", placeholder: "https://linkedin.com/jobs/453635" }),
 		],
-		[formFields.attendanceType(), formFields.location(locations, openLocationModal)],
-		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
+		[formFields.attendanceType(), formFields.location(locations, locationModalRef)],
+		[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
 		[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
 		[
 			formFields.personalRating(),
 			formFields.deadline(),
-			formFields.aggregator(aggregators, openAggregatorModal, null, { name: "source_id" }),
+			formFields.aggregator(aggregators, aggregatorModalRef, null, null, { name: "source_id" }),
 		],
 		formFields.description({
 			placeholder:
@@ -82,7 +78,7 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 		[formFields.applicationDate(), formFields.applicationStatus()],
 		[
 			formFields.applicationVia(),
-			formFields.aggregator(aggregators, openAggregatorModal, null, {
+			formFields.aggregator(aggregators, aggregatorModalRef, null, null, {
 				name: "application_aggregator_id",
 				displayCondition: (formData: JobDataTransform): boolean => {
 					return formData.applied_via ? formData.applied_via === "aggregator" : true;
@@ -189,25 +185,21 @@ export const JobModal: React.FC<JobAndApplicationProps> = ({
 
 	return (
 		<>
+			<CompanyModal ref={companyModalRef} />
+			<PersonModal ref={personModalRef} />
+			<AggregatorModal ref={aggregatorModalRef} />
+			<KeywordModal ref={keywordModalRef} />
+			<LocationModal ref={locationModalRef} />
 			<DataModal
-				show={show}
-				onHide={onHide}
-				data={data}
-				mode={submode}
+				ref={ref}
 				transformFormData={transformData}
 				itemName="Job"
 				endpoint="jobs"
 				size={size}
 				tabs={tabs}
-				defaultActiveTab={defaultActiveTab}
+				// defaultActiveTab={defaultActiveTab}
 				validation={customValidation}
 			/>
-
-			{renderCompanyModal()}
-			{renderLocationModal()}
-			{renderKeywordModal()}
-			{renderPersonModal()}
-			{renderAggregatorModal()}
 		</>
 	);
-};
+});
