@@ -24,26 +24,28 @@ const CustomDropdownIndicator = (props: any): JSX.Element => {
 
 	return (
 		<div
-			style={{
-				display: "flex",
-				alignItems: "center",
-				marginLeft: 11,
-				boxSizing: "border-box",
-				cursor: "pointer",
-				color: isActive ? "hsl(0, 0%, 60%)" : "hsl(0, 0%, 80%)",
-				transition: "color 150ms",
-			}}
+			className={`custom-dropdown-indicator ${isActive ? "active" : ""}`}
 			onMouseDown={(e: React.MouseEvent) => {
 				e.preventDefault();
 				e.stopPropagation();
 				if (customProps.addButtonModalRef) {
-					let defaultData = customProps.addButtonDefaultData;
-					console.log(customProps.transformParentData);
 					if (customProps.transformParentData && customProps.parentData) {
-						defaultData = customProps.transformParentData(customProps.parentData);
-						console.log(defaultData);
+						const defaultData = customProps.transformParentData(customProps.parentData);
+						customProps.addButtonModalRef.current?.showAdd(defaultData, (newData: any) => {
+							if (customProps.onAddSuccess) {
+								customProps.onAddSuccess(newData);
+							}
+						});
+					} else {
+						console.log("A");
+						customProps.addButtonModalRef.current?.showAdd({}, (newData: any) => {
+							console.log(newData);
+							if (customProps.onAddSuccess) {
+								console.log("here");
+								customProps.onAddSuccess(newData);
+							}
+						});
 					}
-					customProps.addButtonModalRef.current?.showAdd(defaultData);
 				}
 			}}
 			onClick={(e: React.MouseEvent) => {
@@ -58,7 +60,7 @@ const CustomDropdownIndicator = (props: any): JSX.Element => {
 			title="Add new item"
 			id="add-button"
 		>
-			<i className="bi bi-plus-circle" style={{ fontSize: "21px" }}></i>
+			<i className="bi bi-plus-circle"></i>
 		</div>
 	);
 };
@@ -76,6 +78,37 @@ export const RenderSelect = ({
 	const [previewPosition, setPreviewPosition] = useState({ top: 0, left: 0 });
 	const [showPreview, setShowPreview] = useState(false);
 	const lastPreviewIdRef = useRef<string | null>(null);
+	const isMulti: boolean = field.type === "multiselect";
+	let selectedValue: SelectOption | SelectOption[] | null = null;
+
+	const handleAddSuccess = useCallback(
+		(newData: any) => {
+			// Auto-select the newly added item
+			const newId = String(newData.id);
+
+			if (isMulti) {
+				// For multi-select, add to existing values
+				const currentIds = Array.isArray(value) ? value : [];
+				const syntheticEvent: SyntheticEvent = {
+					target: {
+						name: field.name,
+						value: [...currentIds, newId],
+					},
+				};
+				handleChange(syntheticEvent);
+			} else {
+				// For single select, replace value
+				const syntheticEvent: SyntheticEvent = {
+					target: {
+						name: field.name,
+						value: newId,
+					},
+				};
+				handleChange(syntheticEvent);
+			}
+		},
+		[field.name, handleChange, isMulti, value],
+	);
 
 	const handleHover = useCallback(
 		(option: SelectOption, position: { top: number; left: number }) => {
@@ -104,9 +137,6 @@ export const RenderSelect = ({
 		setShowPreview(false);
 		setPreviewData(null);
 	}, []);
-
-	const isMulti = field.type === "multiselect";
-	let selectedValue: SelectOption | SelectOption[] | null = null;
 
 	if (isMulti) {
 		if (Array.isArray(value) && value.length > 0 && field.options && field.options.length > 0) {
@@ -188,11 +218,9 @@ export const RenderSelect = ({
 				controlShouldRenderValue={true}
 				// @ts-ignore
 				addButtonModalRef={field.addButton?.modalRef}
-				// @ts-ignore
-				addButtonDefaultData={field.addButton?.defaultData}
-				// @ts-ignore
 				parentData={data}
 				transformParentData={field.addButton?.transformParentData}
+				onAddSuccess={handleAddSuccess}
 				styles={{
 					control: (base, state) => ({
 						...base,
@@ -217,43 +245,10 @@ export const RenderSelect = ({
 
 	if (secondaryValue && secondaryValue.trim() !== "") {
 		return (
-			<div
-				className="select-widget-with-secondary"
-				style={{
-					display: "flex",
-					alignItems: "center",
-					gap: "12px",
-					width: "100%",
-				}}
-			>
-				<div
-					className="secondary-value"
-					style={{
-						padding: "8px 12px",
-						backgroundColor: "#f5f5f5",
-						border: "1px solid #ccc",
-						borderRadius: "4px",
-						fontSize: "14px",
-						color: "#333",
-						whiteSpace: "nowrap",
-						minWidth: "fit-content",
-					}}
-				>
-					{secondaryValue}
-				</div>
-				<div
-					className="arrow-indicator"
-					style={{
-						fontSize: "18px",
-						color: "#666",
-						userSelect: "none",
-						minWidth: "20px",
-						textAlign: "center",
-					}}
-				>
-					→
-				</div>
-				<div style={{ flex: 1, minWidth: 0 }}>{selectElement}</div>
+			<div className="select-widget-with-secondary">
+				<div className="secondary-value">{secondaryValue}</div>
+				<div className="arrow-indicator">→</div>
+				<div className="select-wrapper">{selectElement}</div>
 			</div>
 		);
 	}
