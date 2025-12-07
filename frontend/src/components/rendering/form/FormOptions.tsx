@@ -1,4 +1,4 @@
-import { accessAttribute, findItemById } from "../../../utils/Utils";
+import { findItemById } from "../../../utils/Utils";
 import { useMemo } from "react";
 import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
@@ -50,19 +50,26 @@ interface UseFormOptionsReturn {
 	getAggregatorPreviewConfig: SelectWidgetPreviewConfig;
 }
 
-export const toSelectOptions = (
-	data: any[],
-	valueKey: string | ((item: any) => any) = "id",
-	labelKey: string | ((item: any) => any) = "name",
+export const toSelectOptions = <T extends Record<string, any>>(
+	data: T[],
+	valueKey: keyof T | ((item: T) => any) = "id",
+	labelKey: keyof T | ((item: T) => any) = "name",
 ): SelectOption[] => {
-	return data.map(
-		(item: any): SelectOption => ({
-			value: typeof valueKey === "function" ? valueKey(item) : accessAttribute(item, valueKey),
-			label: typeof labelKey === "function" ? labelKey(item) : accessAttribute(item, labelKey),
+	const sorted = [...data].sort((a, b) => {
+		const aLabel = typeof labelKey === "function" ? labelKey(a) : a[labelKey];
+		const bLabel = typeof labelKey === "function" ? labelKey(b) : b[labelKey];
+		return String(aLabel).localeCompare(String(bLabel));
+	});
+
+	return sorted.map(
+		(item): SelectOption => ({
+			value: typeof valueKey === "function" ? valueKey(item) : item[valueKey],
+			label: typeof labelKey === "function" ? labelKey(item) : item[labelKey],
 			data: item,
 		}),
 	);
 };
+
 export const useFormOptions = (): UseFormOptionsReturn => {
 	const contextData: DataContextValue = useDataContext();
 

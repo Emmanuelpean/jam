@@ -32,7 +32,7 @@
 * [X] Add job alert name extraction
 
 ### Select Widgets Improvements
-* [ ] Sort options alphabetically
+* [X] Sort options alphabetically
 * [ ] After adding an option, select it automatically
 * [ ] Display the entry associated with the hovered option
 * [X] Show the company name in job and person selects
@@ -60,10 +60,9 @@
 * [ ] Add the ability to filter by columns and hide rejected jobs
 
 ### Users
-* [ ] Add test user setting and prevent update of email and password
-* [ ] Make sure the user is reloaded properly when the settings are changed
+* [X] Add test user setting and prevent update of email and password
+* [X] Make sure the user is reloaded properly when the settings are changed
 
 ### New Modals
-* [ ] Interview modals should show the edited value after being edited from the job modal
-* [ ] Multiple modals of the same type should be able to be opened at the same time
-* [ ] 
+* [X] Interview modals should show the edited value after being edited from the job modal
+* [X] Multiple modals of the same type should be able to be opened at the same time 
