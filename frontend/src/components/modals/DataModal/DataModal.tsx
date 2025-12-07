@@ -461,18 +461,18 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 					handleEditToView();
 				}
 
-				if (onSuccess) {
-					if (mode === "import") {
-						onSuccess(formData);
-					} else {
-						onSuccess(apiResult);
-					}
-				}
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						// Call callbacks after 2 animation frames - ensures all renders are complete
+						if (onSuccess) {
+							onSuccess(mode === "import" ? formData : apiResult);
+						}
 
-				if (onSuccessCallback) {
-					console.log("here1");
-					onSuccessCallback(apiResult);
-				}
+						if (onSuccessCallback) {
+							onSuccessCallback(apiResult);
+						}
+					});
+				});
 			} catch (err: any) {
 				const errorMessage = `Failed to ${mode === "add" || mode === "import" ? "create" : "update"} 
         ${itemName.toLowerCase()} due to the following error: ${err.message}`;

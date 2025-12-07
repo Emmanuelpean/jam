@@ -33,7 +33,7 @@
 
 ### Select Widgets Improvements
 * [X] Sort options alphabetically
-* [ ] After adding an option, select it automatically
+* [X] After adding an option, select it automatically
 * [ ] Display the entry associated with the hovered option
 * [X] Show the company name in job and person selects
 
