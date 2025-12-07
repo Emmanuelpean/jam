@@ -49,7 +49,7 @@ export interface GenericModalProps {
 	tabs?: TabConfig[] | null; // optional tabs configuration
 	defaultActiveTab?: string | null; // default active tab key
 	endpoint: string; // API endpoint for CRUD operations
-	onSuccess?: (data: any) => void; // called when an entry is successfully added/modified
+	onSuccess?: (data: any, onSuccess?: (newData: any) => void) => void; // called when an entry is successfully added/modified
 	onDelete?: () => void; // called when an entry is successfully deleted
 	warningMessage?: (data: any) => string | ReactNode | null; // optional warning message to display
 	warningVariant?: "warning" | "danger" | "info" | "primary" | "secondary" | "success";
@@ -101,9 +101,10 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 				setMode("edit");
 				setInternalShow(true);
 			},
-			showAdd: (data: JamData) => {
+			showAdd: (data: JamData, successCallback?: (newData: JamData) => void) => {
 				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
 				setMode("add");
+				setOnSuccessCallback(() => successCallback || null);
 				setInternalShow(true);
 			},
 			showImport: (data: JamData) => {
@@ -114,6 +115,7 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 			hide: () => setInternalShow(false),
 		}));
 
+		const [onSuccessCallback, setOnSuccessCallback] = useState<((data: any) => void) | null>(null);
 		const [mode, setMode] = useState<"view" | "edit" | "add" | "import">("view");
 		const dataContext: DataContextValue = useDataContext();
 		const entityType: EntityType = endpointToEntityType(endpoint)!;
@@ -336,13 +338,13 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 			if (mode === "import") {
 				const confirm: boolean = await handleDeActivate(effectiveData);
 				if (confirm) {
-					onDelete ? onDelete() : null;
+					onDelete?.();
 					handleHideImmediate();
 				}
 			} else {
 				const confirm: boolean = await handleDelete(effectiveData);
 				if (confirm) {
-					onDelete ? onDelete() : null;
+					onDelete?.();
 					handleHideImmediate();
 				}
 			}
@@ -466,6 +468,11 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 						onSuccess(apiResult);
 					}
 				}
+
+				if (onSuccessCallback) {
+					console.log("here1");
+					onSuccessCallback(apiResult);
+				}
 			} catch (err: any) {
 				const errorMessage = `Failed to ${mode === "add" || mode === "import" ? "create" : "update"} 
         ${itemName.toLowerCase()} due to the following error: ${err.message}`;
@@ -521,7 +528,7 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 
 			const renderContentInner = () => (
 				<div className={`modal-content-visible`}>
-					{warningMessage && (
+					{warningMessage && warningMessage(effectiveData) && (
 						<Alert variant={warningVariant} className="mb-3">
 							{warningMessage(effectiveData)}
 						</Alert>
