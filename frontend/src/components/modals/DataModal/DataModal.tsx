@@ -592,6 +592,7 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 								return (
 									<button
 										key={tab.key}
+										id={tab.key + "-tab"}
 										type="button"
 										className={`custom-tab-button ${activeTab === tab.key ? "active" : ""}`}
 										onClick={() => setActiveTab(tab.key)}

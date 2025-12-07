@@ -438,7 +438,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	);
 
 	useEffect(() => {
-		if (!token) return;
+		if (!token || !currentUser) return;
 		fetchAllData().then(() => {});
 	}, [token, currentUser?.is_admin]);
 

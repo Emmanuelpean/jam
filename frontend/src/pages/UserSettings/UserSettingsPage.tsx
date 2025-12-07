@@ -162,7 +162,8 @@ const UserSettingsPage: React.FC = () => {
 				default_currency: "",
 			};
 
-			const emailChanged: boolean | "" = formData.email && formData.email !== currentUser?.email;
+			const emailChanged: boolean = !!(formData.email && formData.email !== currentUser?.email);
+			const passwordChanged: boolean = !!(formData.new_password && formData.confirm_password);
 
 			// Add account changes if current password is provided
 			if (formData.current_password) {
@@ -206,6 +207,8 @@ const UserSettingsPage: React.FC = () => {
 					email: currentUser?.email || "",
 					current_password: "",
 				}));
+			} else if (response.logged_out) {
+				showToastSuccess("Password updated successfully. Please log in again.", "Password Changed");
 			} else {
 				showToastSuccess("User settings updated successfully.");
 			}

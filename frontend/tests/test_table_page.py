@@ -600,14 +600,15 @@ class TablePage(BaseTest):
 
         modal = self.wait_for_view_modal("interview")
         display_time = entry.date.astimezone()
+        entry_type = {"HR": "HR Interview"}[entry.type]
         expected = (
             "Interview Details\n"
             "Job\n"
-            f"{entry.job.title.upper()}\n"
+            f"{entry.job.title.upper()} ({entry.job.company.name.upper()})\n"
             "Date & Time\n"
             f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
             "Type\n"
-            f"{entry.type}\n"
+            f"{entry_type}\n"
         )
 
         if entry.attendance_type and not entry.location:
@@ -637,24 +638,37 @@ class TablePage(BaseTest):
         self.cancel_button("view", "interview").click()
         self.wait_for_view_modal_close("interview")
 
-    def check_update_view_modal(self, entry: models.JobApplicationUpdate) -> None:
+    def check_update_view_modal(self, entry: models.JobApplicationUpdate, standalone: bool = True) -> None:
         """Helper method to test the view modal for a job application update entry"""
 
         modal = self.wait_for_view_modal("update")
         display_time = entry.date.astimezone()
-        expected = (
-            "Update Details\n"
-            "Job\n"
-            f"{entry.job.title.upper()}\n"
-            "Date & Time\n"
-            f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
-            "Type\n"
-            f"{entry.type[0].upper() + entry.type[1:]}\n"
-            "Notes\n"
-            f"{entry.note}\n"
-            "Close\n"
-            "Edit"
-        )
+        if standalone:
+            expected = (
+                "Update Details\n"
+                "Job\n"
+                f"{entry.job.title.upper()} ({entry.job.company.name.upper()})\n"
+                "Date & Time\n"
+                f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
+                "Type\n"
+                f"{entry.type[0].upper() + entry.type[1:]}\n"
+                "Notes\n"
+                f"{entry.note}\n"
+                "Close\n"
+                "Edit"
+            )
+        else:
+            expected = (
+                "Update Details\n"
+                "Date & Time\n"
+                f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
+                "Type\n"
+                f"{entry.type[0].upper() + entry.type[1:]}\n"
+                "Notes\n"
+                f"{entry.note}\n"
+                "Close\n"
+                "Edit"
+            )
         assert modal.text == expected
 
         # Close modal
@@ -714,6 +728,49 @@ class TablePage(BaseTest):
         else:
             expected += "Application Deadline\nNot Provided\n"
         expected += "Close\nEdit"
+        assert modal.text == expected
+
+        # Job Application
+        self.get_element("application-tab").click()
+        expected = f"Job Details\nJob Details\nJob Application {entry.application_status.upper()}\n"
+        if entry.application_date:
+            display_time = entry.application_date.astimezone()
+            expected += f"Application Date\n{display_time.strftime("%d/%m/%Y")}\n"
+        else:
+            expected += "Date\nNot Provided\n"
+        if entry.application_status:
+            expected += f"Status\n{entry.application_status.upper()}\n"
+        else:
+            expected += "Status\nNot Provided\n"
+        if entry.applied_via == "aggregator" and entry.application_aggregator:
+            expected += f"Applied Via\n{entry.application_aggregator.name.upper()}\n"
+        elif entry.applied_via:
+            expected += f"Applied Via\n{entry.applied_via.capitalize()}\n"
+        else:
+            expected += "Applied Via\nNot Provided\n"
+        if entry.application_url:
+            expected += f"Application URL\n{entry.application_url.replace("https://", "")}\n"
+        else:
+            expected += "Application URL\nNot Provided\n"
+        if entry.note:
+            expected += f"Notes\n{entry.application_note}\n"
+        else:
+            expected += "Notes\nNot Provided\n"
+        expected += (
+            "Add Interview\n"
+            "Date\n"
+            "Type\n"
+            "Location\n"
+            "Notes\n"
+            "No Interviews found\n"
+            "Add Update\n"
+            "Date\n"
+            "Type\n"
+            "Notes\n"
+            "No Updates found\n"
+            "Close\n"
+            "Edit"
+        )
         assert modal.text == expected
 
         # Close modal
@@ -871,6 +928,7 @@ class TestPersonsPage(TablePage):
         self.wait_for_edit_modal()
         assert self.get_element("first_name").get_attribute("value") == "John"
         assert self.get_element("last_name").get_attribute("value") == "Doe"
+        assert self.get_element("company_id").text == "Company"
 
 
 class TestJobApplicationUpdatesPage(TablePage):
@@ -883,7 +941,7 @@ class TestJobApplicationUpdatesPage(TablePage):
     required_fields = ["job_id", "type", "date"]
     test_data = {
         "date": datetime.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=datetime.timezone.utc),
-        "job_id": "Senior Python Developer - Tech Corp",
+        "job_id": "Senior Python Developer (Tech Corp)",
         "note": "Received automated confirmation email",
         "type": "Received",
     }
@@ -981,3 +1039,5 @@ class TestJobPage(TablePage):
         if not entry:
             entry = self.test_entry
         self.check_job_view_modal(entry)
+
+    # def test_job_application_view(self) -> None:
