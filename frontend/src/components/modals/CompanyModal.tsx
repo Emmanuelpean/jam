@@ -1,15 +1,12 @@
 import React, { forwardRef } from "react";
-import DataModal, { DataModalHandle, GenericModalProps, ValidationErrors } from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { modalViewFields } from "../rendering/view/ModalFields";
+import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { CompanyData, CompanyDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const CompanyModal = forwardRef<
-	DataModalHandle,
-	Omit<GenericModalProps, "endpoint" | "fields" | "additionalFields" | "validation" | "transformFormData">
->(({ size = "lg" }, ref) => {
+export const CompanyModal = forwardRef<DataModalHandle, DataModalProps>(({ size = "lg" }: DataModalProps, ref) => {
 	const dataContext: DataContextValue = useDataContext();
 
 	const fields = {
@@ -26,7 +23,7 @@ export const CompanyModal = forwardRef<
 		view: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
 	};
 
-	const additionalFields = [
+	const additionalFields: ModalViewField[] = [
 		modalViewFields.accordionJobTableCompany({
 			columns: [
 				tableColumns.titleColumn(),

@@ -38,12 +38,11 @@ export interface TabConfig {
 
 export interface GenericModalProps {
 	mode?: "view" | "edit" | "add" | "import"; // modal mode
-	fields?: { view: Fields; form: Fields }; // fields to display
+	fields?: { view: Fields; form: Fields } | ((data: any, mode: string) => { view: Fields; form: Fields }); // fields to display
 	data?: any; // data to populate the fields (required for import mode)
 	validation?: ((data: any) => any) | null; // custom validation method before submit
 	transformFormData?: ((data: any) => any) | null; // custom data transformation before submit
 	transformInputData?: ((data: any) => any) | null; // custom data transformation when loading data into the form
-	onFormDataChange?: ((data: any) => void) | null;
 	additionalFields?: ModalViewField[]; // additional fields displayed outside the card in view mode
 	itemName?: string; // name of the item being managed, used in titles and messages
 	size?: "sm" | "lg" | "xl"; // modal size
@@ -51,7 +50,7 @@ export interface GenericModalProps {
 	defaultActiveTab?: string | null; // default active tab key
 	endpoint: string; // API endpoint for CRUD operations
 	onSuccess?: (data: any) => void; // called when an entry is successfully added/modified
-	warningMessage?: string | ReactNode; // optional warning message to display
+	warningMessage?: (data: any) => string | ReactNode | null; // optional warning message to display
 	warningVariant?: "warning" | "danger" | "info" | "primary" | "secondary" | "success";
 }
 
@@ -146,10 +145,14 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 
 		const getCurrentFields = (): { view: Fields; form: Fields } => {
 			const currentTab: TabConfig | null = getCurrentTabConfig();
+
+			// Handle fields as function or object
+			const fieldsConfig = typeof fields === "function" ? fields(effectiveData, mode) : fields;
+
 			if (!currentTab) {
 				return {
-					view: filterConditionalFields(fields!.view),
-					form: filterConditionalFields(fields!.form),
+					view: filterConditionalFields(fieldsConfig!.view),
+					form: filterConditionalFields(fieldsConfig!.form),
 				};
 			} else {
 				return {
@@ -160,10 +163,12 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 		};
 
 		const getAllFields = (): { view: Fields; form: Fields } => {
+			const fieldsConfig = typeof fields === "function" ? fields(effectiveData, mode) : fields;
+
 			if (!hasTabs || !tabs) {
 				return {
-					form: filterConditionalFields(fields!.form),
-					view: filterConditionalFields(fields!.view),
+					form: filterConditionalFields(fieldsConfig!.form),
+					view: filterConditionalFields(fieldsConfig!.view),
 				};
 			} else {
 				return {
@@ -437,6 +442,7 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 
 				// Transform data if needed
 				const dataToSubmit: any = transformFormData ? transformFormData(formData) : formData;
+
 				// Submit to API
 				const apiResult: JamData =
 					mode === "add"
@@ -448,10 +454,13 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 					setEffectiveData(apiResult);
 					handleEditToView();
 				}
-				if (mode === "import" && onSuccess) {
-					onSuccess(formData);
-				} else if (onSuccess) {
-					onSuccess(apiResult);
+
+				if (onSuccess) {
+					if (mode === "import") {
+						onSuccess(formData);
+					} else {
+						onSuccess(apiResult);
+					}
 				}
 			} catch (err: any) {
 				const errorMessage = `Failed to ${mode === "add" || mode === "import" ? "create" : "update"} 
@@ -510,7 +519,7 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 				<div className={`modal-content-visible`}>
 					{warningMessage && (
 						<Alert variant={warningVariant} className="mb-3">
-							{warningMessage}
+							{warningMessage(effectiveData)}
 						</Alert>
 					)}
 					{isEditing ? (
@@ -744,9 +753,6 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 export default DataModal;
 
 export interface DataModalProps {
-	submode?: "view" | "edit" | "add" | "import";
-	data?: any;
 	onSuccess?: (data: any) => void;
-	onDelete?: (id: number | string) => void;
 	size?: "sm" | "lg" | "xl";
 }

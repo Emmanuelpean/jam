@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, JSX } from "react";
 import { DataTableProps, DataTable } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
-const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], columns = [] }) => {
+const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
 	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
 	useEffect(() => {
-		const handleResize = () => setWindowWidth(window.innerWidth);
+		const handleResize = (): void => setWindowWidth(window.innerWidth);
 		window.addEventListener("resize", handleResize);
 		return () => window.removeEventListener("resize", handleResize);
 	}, []);
 
-	let defaultColumns =
+	let defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
 			: [
