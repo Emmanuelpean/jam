@@ -298,8 +298,14 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const activeHandler = useActiveHandler(entityType, nameKey, itemType);
 	const deleteHandler = useDeleteHandler(entityType, nameKey, itemType);
 
-	// Select the handler based on mode
-	const handleDelete = mode === "import" ? activeHandler : deleteHandler;
+	const handleDelete = (item: JamData) => {
+		const result = mode === "import" ? activeHandler : deleteHandler;
+		result(item).then((r: boolean) => {
+			if (r && isServerPagination) {
+				fetchData().then((_): null => null);
+			}
+		});
+	};
 
 	const handleSuccess = (importedItem: any): void => {
 		onImportSuccess?.(importedItem).then((): void => {
@@ -308,6 +314,12 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			}
 			showToastSuccess("Job imported successfully.");
 		});
+	};
+
+	const handleModalDelete = (): void => {
+		if (isServerPagination) {
+			fetchData().then((): null => null);
+		}
 	};
 
 	// Close context menu on outside click or escape

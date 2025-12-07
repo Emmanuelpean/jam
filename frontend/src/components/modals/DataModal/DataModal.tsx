@@ -50,6 +50,7 @@ export interface GenericModalProps {
 	defaultActiveTab?: string | null; // default active tab key
 	endpoint: string; // API endpoint for CRUD operations
 	onSuccess?: (data: any) => void; // called when an entry is successfully added/modified
+	onDelete?: () => void; // called when an entry is successfully deleted
 	warningMessage?: (data: any) => string | ReactNode | null; // optional warning message to display
 	warningVariant?: "warning" | "danger" | "info" | "primary" | "secondary" | "success";
 }
@@ -80,6 +81,7 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 			transformFormData = null,
 			transformInputData = null,
 			onSuccess,
+			onDelete,
 			warningMessage,
 			warningVariant = "warning",
 		},
@@ -334,11 +336,13 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 			if (mode === "import") {
 				const confirm: boolean = await handleDeActivate(effectiveData);
 				if (confirm) {
+					onDelete ? onDelete() : null;
 					handleHideImmediate();
 				}
 			} else {
 				const confirm: boolean = await handleDelete(effectiveData);
 				if (confirm) {
+					onDelete ? onDelete() : null;
 					handleHideImmediate();
 				}
 			}
