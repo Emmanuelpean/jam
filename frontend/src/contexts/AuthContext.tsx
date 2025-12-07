@@ -22,6 +22,7 @@ interface UpdateCurrentUserResponse {
 	user: UserData;
 	success: boolean;
 	message: string;
+	logged_out: boolean;
 }
 
 export interface AuthContextType {
@@ -100,6 +101,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	const updateCurrentUser = async (userData: Partial<UserData>) => {
 		if (!token) return null;
 		const response: UpdateCurrentUserResponse = await authApi.updateCurrentUser(userData, token);
+		if (response.logged_out) {
+			logout();
+			return response;
+		}
 		const userResponse: UserData = await authApi.getCurrentUser(token);
 		setCurrentUser((prev: CurrentUser | null) => (prev ? { ...prev, ...userResponse } : prev));
 		return response;

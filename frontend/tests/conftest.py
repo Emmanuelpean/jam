@@ -1,6 +1,5 @@
 """Fixtures and helper functions for integration tests"""
 
-import itertools
 import json
 import os
 import platform
@@ -408,56 +407,6 @@ def contiguous_subdicts(dictionary: dict) -> list[dict]:
     return [dict()] + results
 
 
-def contiguous_subdicts_with_required(dictionary: dict, required_keys: list) -> list[dict]:
-    """Return a list of all contiguous sub-dictionaries in the given dictionary,
-    :param dictionary: The dictionary to search.
-    :param required_keys: A list of required keys."""
-
-    keys = list(dictionary.keys())
-    n = len(keys)
-    seen = set()
-    results = []
-    for size in range(1, n + 1):
-        for start in range(n):
-            subkeys = [keys[(start + i) % n] for i in range(size)]
-            # Only filter if required_keys is not empty
-            if not required_keys or all(k in subkeys for k in required_keys):
-                subdict = {k: dictionary[k] for k in subkeys}
-                # Use sorted items as a hashable representation:
-                key_tuple = tuple(sorted(subdict.items()))
-                if key_tuple not in seen:
-                    seen.add(key_tuple)
-                    results.append(subdict)
-    return results
-
-
-def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_keys: list[str]) -> list[dict]:
-    """Generate all possible combinations of entries in the given dictionary,
-    :param data_dict: The dictionary to search.
-    :param required_keys: A list of required keys.
-    :param duplicate_keys: A list of duplicate keys."""
-
-    keys = list(data_dict.keys())
-    i = 0
-    result = []
-
-    # Loop over all possible combination lengths
-    for r in range(len(required_keys), len(keys) + 1):
-        for combo in itertools.combinations(keys, r):
-            # Only keep dicts that contain all keys in A
-            if all(a in combo for a in required_keys):
-                d = {}
-                for k in combo:
-                    if k in duplicate_keys:
-                        d[k] = f"{data_dict[k]}_{i}"
-                        i += 1
-                    else:
-                        d[k] = data_dict[k]
-                if d:
-                    result.append(d)
-    return result
-
-
 def get_all_element_ids(driver) -> list[str]:
     """Get all element IDs present on the current page
     :param driver: Selenium WebDriver instance"""
@@ -539,7 +488,7 @@ class BaseTest:
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")

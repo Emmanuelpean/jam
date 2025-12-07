@@ -9,6 +9,7 @@
 * [X] Move the logs to an absolute location
 * [X] Improve rhe raspberry theme contrast
 * [X] Incomplete job application updates are shown in the dashboard
+* [ ] Log out the user when their token expires
 
 ### TOAST
 * [X] Ensure that the parsed country matches the list of available countries
