@@ -84,7 +84,7 @@ export const RenderSelect = ({
 	const handleAddSuccess = useCallback(
 		(newData: any) => {
 			// Auto-select the newly added item
-			const newId = String(newData.id);
+			const newId = newData.id;
 
 			if (isMulti) {
 				// For multi-select, add to existing values
@@ -213,9 +213,7 @@ export const RenderSelect = ({
 				className={`react-select-container ${field.required ? "required" : ""} ${error ? "error" : ""}`}
 				classNamePrefix="react-select"
 				components={selectComponents}
-				hideSelectedOptions={false}
 				isDisabled={field.isDisabled}
-				controlShouldRenderValue={true}
 				// @ts-ignore
 				addButtonModalRef={field.addButton?.modalRef}
 				parentData={data}
