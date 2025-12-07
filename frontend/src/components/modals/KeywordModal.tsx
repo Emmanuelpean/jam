@@ -1,14 +1,11 @@
 import React, { forwardRef } from "react";
-import DataModal, { DataModalHandle, DataModalProps, GenericModalProps, ValidationErrors } from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { modalViewFields } from "../rendering/view/ModalFields";
+import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { KeywordData, KeywordDataTransform } from "../../services/Schemas";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const KeywordModal = forwardRef<
-	DataModalHandle,
-	Omit<GenericModalProps, "endpoint" | "fields" | "additionalFields" | "validation" | "transformFormData">
->(({ size = "lg" }, ref) => {
+export const KeywordModal = forwardRef<DataModalHandle, DataModalProps>(({ size = "lg" }: DataModalProps, ref) => {
 	const dataContext: DataContextValue = useDataContext();
 
 	const fields = {
@@ -16,7 +13,7 @@ export const KeywordModal = forwardRef<
 		view: [modalViewFields.name({ isTitle: true })],
 	};
 
-	const additionalFields = [
+	const additionalFields: ModalViewField[] = [
 		modalViewFields.accordionJobTableKeyword({
 			helpText: "List of jobs associated with this tag.",
 		}),

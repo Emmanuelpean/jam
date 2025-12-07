@@ -1,9 +1,7 @@
-import React, { forwardRef, useRef, JSX } from "react";
-import DataModal, { DataModalHandle, Fields, GenericModalProps, ValidationErrors } from "./DataModal/DataModal";
+import React, { forwardRef, JSX, useRef } from "react";
+import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { JobData, ScrapedJobData } from "../../services/Schemas";
-import { jobsApi } from "../../services/Api";
-import { useAuth } from "../../contexts/AuthContext";
+import { EnrichedJobData, JobData, ScrapedJobData } from "../../services/Schemas";
 import { findClosestOption, findExactOption, useFormOptions } from "../rendering/form/FormOptions";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { capitalise } from "../../utils/StringUtils";
@@ -12,15 +10,11 @@ import { LocationModal } from "./LocationModal";
 import { KeywordModal } from "./KeywordModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-interface ScrapedJobModalProps
-	extends Omit<GenericModalProps, "endpoint" | "fields" | "validation" | "transformFormData" | "itemName"> {
-	data: ScrapedJobData;
-}
-
-export const ScrapedJobModal = forwardRef<DataModalHandle, ScrapedJobModalProps>(
-	({ data, size = "xl", onSuccess }, ref): JSX.Element => {
-		const { token } = useAuth();
+export const ScrapedJobModal = forwardRef<DataModalHandle, DataModalProps>(
+	({ size = "xl", onSuccess }: DataModalProps, ref): JSX.Element => {
+		const dataContext: DataContextValue = useDataContext();
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const locationModalRef = useRef<DataModalHandle>(null);
 		const keywordModalRef = useRef<DataModalHandle>(null);
@@ -80,24 +74,18 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, ScrapedJobModalProps>
 
 		const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
 			const errors: ValidationErrors = {};
-			if (!token) {
-				return errors;
-			}
-			if (formData.url) {
-				const queryParams = { url: formData.url?.trim() };
-				const matches = await jobsApi.getAll(token, queryParams);
-				const duplicates = matches.filter((existing: JobData) => {
-					return formData?.id !== existing.id;
-				});
-
-				if (duplicates.length > 0) {
-					errors.url = `A Job with this URL already exists`;
-				}
+			const duplicates: EnrichedJobData[] = dataContext.jobs.filter(
+				(job: EnrichedJobData): boolean =>
+					job.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() && job.id !== formData?.id,
+			);
+			if (duplicates.length > 0) {
+				errors.name = `A Job with this URL already exists`;
 			}
 			return errors;
 		};
 
-		const warningMessage: string | null = data?.is_failed ? "This job could not be scraped properly." : null;
+		const warningMessage = (data: ScrapedJobData): string | null =>
+			data?.is_failed ? "This job could not be scraped properly." : null;
 
 		const transformData = (_scrapedJob: ScrapedJobData) => {
 			return { is_imported: true };

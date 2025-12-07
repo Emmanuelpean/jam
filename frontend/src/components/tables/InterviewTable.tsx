@@ -11,7 +11,6 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 	jobId,
 	data = [],
 	columns = [],
-	showAdd = true,
 }: InterviewsTableProps): JSX.Element => {
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
@@ -36,7 +35,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 			modalSize="lg"
 			showAllEntries={true}
 			compact={true}
-			showAdd={showAdd}
+			showAdd={true}
 		/>
 	);
 };

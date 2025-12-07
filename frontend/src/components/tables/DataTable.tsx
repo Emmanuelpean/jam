@@ -14,6 +14,7 @@ import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
 import "./DataTable.css";
 import LoadingSpinner from "../spinner/Spinner";
 import { DataModalHandle } from "../modals/DataModal/DataModal";
+import { EnrichedJobData, JobData } from "../../services/Schemas";
 
 export type Direction = "asc" | "desc";
 
@@ -95,10 +96,10 @@ export const DataTable: React.FC<GenericTableProps> = ({
 }: GenericTableProps): JSX.Element => {
 	const { token } = useAuth();
 	const modalRef = useRef<DataModalHandle>(null);
-	const openViewModal = (item: any) => modalRef.current?.showView(item);
-	const openEditModal = (item: any) => modalRef.current?.showEdit(item);
+	const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
+	const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
 	const openAddModal = () => modalRef.current?.showAdd({});
-	const openImportModal = (item: any) => modalRef.current?.showImport(item);
+	const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
 
 	// Data management
 	const dataContext: DataContextValue = useDataContext();
@@ -123,21 +124,20 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const isServerPagination: boolean = !!endpoint && !providedData;
 
 	useEffect(() => {
-		const timer = setTimeout(() => {
+		const timer = setTimeout((): void => {
 			setDebouncedSearchTerm(searchTerm);
 		}, 300); // Wait 300ms after user stops typing
-
-		return () => clearTimeout(timer);
+		return (): void => clearTimeout(timer);
 	}, [searchTerm]);
 
 	// Reset page when debounced search changes
-	useEffect(() => {
+	useEffect((): void => {
 		if (isServerPagination) {
 			setCurrentPage(0);
 		}
 	}, [debouncedSearchTerm, isServerPagination]);
 
-	const fetchData = async () => {
+	const fetchData = async (): Promise<void> => {
 		setIsLoading(true);
 		setLoadError(null);
 
@@ -160,9 +160,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		}
 	};
 
-	useEffect(() => {
+	useEffect((): void => {
 		if (isServerPagination) {
-			fetchData().then((_) => null);
+			fetchData().then((_): null => null);
 		}
 	}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination, debouncedSearchTerm]);
 
@@ -172,7 +172,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		}
 	}, [searchTerm, isServerPagination, sortConfig]);
 
-	const getData = (): any[] => {
+	const getData = (): JamData[] => {
 		if (providedData !== undefined) {
 			return providedData;
 		}
@@ -182,41 +182,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		return (dataContext as any)[entityType] || [];
 	};
 
-	useEffect(() => {
-		if (loadError) {
-			showToastError(`Failed to load ${itemType}s`);
-		}
-	}, [loadError, itemType, showToastError]);
-
 	const data: JamData[] = getData();
 	const { error: contextError } = dataContext;
 
-	// CRUD operations using context methods
-	const addItem = useCallback(
-		(newItem: any) => {
-			dataContext.addEntity(entityType, newItem).then((_) => {});
-		},
-		[dataContext, entityType],
-	);
-
-	const updateItem = useCallback(
-		(updatedItem: any) => {
-			if (updatedItem) {
-				dataContext.updateEntity(entityType, updatedItem.id, updatedItem).then((_) => {});
-			}
-		},
-		[dataContext, entityType],
-	);
-
-	const removeItem = useCallback(
-		(itemId: number) => {
-			dataContext.deleteEntity(entityType, itemId).then((_) => {});
-		},
-		[dataContext, entityType],
-	);
-
 	const handleSort = useCallback(
-		(key: string) => {
+		(key: string): void => {
 			let direction: Direction = "asc";
 			if (sortConfig.key === key && sortConfig.direction === "asc") {
 				direction = "desc";
@@ -253,7 +223,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 		// Sort data
 		if (sortConfig.key) {
-			filteredData.sort((a: any, b: any) => {
+			filteredData.sort((a: any, b: any): 0 | 1 | -1 => {
 				const column: TableColumn | undefined = columns.find(
 					(col: TableColumn): boolean => col.key === sortConfig.key,
 				);
@@ -312,7 +282,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			currentElement = currentElement.parentElement;
 		}
 
-		// Different behavior based on mode
 		if (mode === "import") {
 			openImportModal(item);
 		} else {
@@ -332,20 +301,15 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	// Select the handler based on mode
 	const handleDelete = mode === "import" ? activeHandler : deleteHandler;
 
-	const handleSuccess = (item: any): void => {
-		if (isServerPagination) {
-			fetchData().then((data: any) => {});
-		}
-	};
-
-	const handleImportSuccess = (importedItem: any): void => {
-		onImportSuccess?.(importedItem).then(() => {
+	const handleSuccess = (importedItem: any): void => {
+		onImportSuccess?.(importedItem).then((): void => {
 			if (isServerPagination) {
-				fetchData().then();
+				fetchData().then((): null => null);
 			}
 			showToastSuccess("Job imported successfully.");
 		});
 	};
+
 	// Close context menu on outside click or escape
 	useEffect(() => {
 		const handleGlobalClick = (): void => {
@@ -371,7 +335,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	}, [contextMenu]);
 
 	// Pagination calculations
-	const sortedData = isServerPagination ? data : getSortedData();
+	const sortedData: JamData[] = isServerPagination ? data : getSortedData();
 	let currentPageData: any[];
 	let totalPages: number;
 	let displayTotal: number;
@@ -398,18 +362,15 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	useEffect(() => setCurrentPage(0), [searchTerm]);
 
 	const handleSnoozeItem = (weeks: number) => {
-		return async (item: any) => {
+		return async (item: EnrichedJobData): Promise<void> => {
 			try {
 				const snoozeDate = new Date();
 				snoozeDate.setDate(snoozeDate.getDate() + weeks * 7);
-
-				const updatedItem = await api.put(
-					`${endpoint || entityType}/${item.id}`,
-					{ followup_snooze_datetime: snoozeDate.toISOString() },
-					token,
-				);
-				updateItem(updatedItem);
-				showToastSuccess(`${item.title} was snoozed for ${weeks} week(s).`);
+				dataContext
+					.updateEntity(entityType, item.id, { followup_snooze_datetime: snoozeDate.toISOString() })
+					.then((job: JobData): void => {
+						showToastSuccess(`${job.title} was snoozed for ${weeks} week(s).`);
+					});
 			} catch (error) {
 				showToastError(`Failed to snooze ${item.title}. Please try again.`);
 			} finally {
@@ -419,7 +380,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	};
 
 	// Get context menu items based on mode
-	const getContextMenuItems = () => {
+	const getContextMenuItems = (): MenuItem[] => {
 		let baseItems: MenuItem[] = [
 			{
 				action: "view",

@@ -1,25 +1,22 @@
 import React, { forwardRef } from "react";
-import DataModal, { DataModalHandle, GenericModalProps, ValidationErrors } from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { modalViewFields } from "../rendering/view/ModalFields";
+import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { LocationData, LocationDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const LocationModal = forwardRef<
-	DataModalHandle,
-	Omit<GenericModalProps, "endpoint" | "fields" | "additionalFields" | "validation" | "transformFormData">
->(({ size = "lg" }, ref) => {
+export const LocationModal = forwardRef<DataModalHandle, DataModalProps>(({ size = "lg" }: DataModalProps, ref) => {
 	const { countries } = useFormOptions();
 	const dataContext: DataContextValue = useDataContext();
 
-	const formFieldsArray = [
+	const formFieldsArray: Fields = [
 		formFields.city({ placeholder: "Oxford" }),
 		formFields.postcode({ placeholder: "OX1 1AA" }),
 		formFields.country(countries),
 	];
-	const viewFieldsArray = [
+	const viewFieldsArray: Fields = [
 		[modalViewFields.city(), modalViewFields.postcode(), modalViewFields.country()],
 		modalViewFields.locationMap(),
 	];
@@ -29,7 +26,7 @@ export const LocationModal = forwardRef<
 		view: viewFieldsArray,
 	};
 
-	const additionalFields = [
+	const additionalFields: ModalViewField[] = [
 		modalViewFields.accordionJobTableLocation({ helpText: "List of jobs at this location." }),
 		modalViewFields.accordionInterviewTable({
 			columns: [
@@ -46,10 +43,10 @@ export const LocationModal = forwardRef<
 		const errors: ValidationErrors = {};
 
 		// Check if any value has been set
-		const hasCity = formData.city && formData.city.trim();
-		const hasPostcode = formData.postcode && formData.postcode.trim();
-		const hasCountry = formData.country && formData.country.trim();
-		const hasAnyValue = hasCity || hasPostcode || hasCountry;
+		const hasCity: string | null | undefined = formData.city && formData.city.trim();
+		const hasPostcode: string | null | undefined = formData.postcode && formData.postcode.trim();
+		const hasCountry: string | null | undefined = formData.country && formData.country.trim();
+		const hasAnyValue: boolean = !!(hasCity || hasPostcode || hasCountry);
 		if (!hasAnyValue) {
 			errors.city =
 				errors.country =

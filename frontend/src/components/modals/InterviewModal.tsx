@@ -1,5 +1,5 @@
 import React, { forwardRef, useRef } from "react";
-import DataModal, { DataModalHandle, DataModalProps, GenericModalProps } from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, DataModalProps, Fields } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { InterviewDataTransform, JobData } from "../../services/Schemas";
@@ -10,73 +10,72 @@ import { PersonModal } from "./PersonModal";
 export interface InterviewModalProps extends DataModalProps {
 	jobId?: number;
 }
-export const InterviewModal = forwardRef<
-	DataModalHandle,
-	Omit<GenericModalProps, "endpoint" | "fields" | "transformFormData"> & { jobId?: number }
->(({ size = "lg", jobId, onSuccess }, ref) => {
-	const locationModalRef = useRef<DataModalHandle>(null);
-	const personModalRef = useRef<DataModalHandle>(null);
-	const { locations, persons, jobs } = useFormOptions();
+export const InterviewModal = forwardRef<DataModalHandle, InterviewModalProps>(
+	({ size = "lg", jobId }: InterviewModalProps, ref) => {
+		const locationModalRef = useRef<DataModalHandle>(null);
+		const personModalRef = useRef<DataModalHandle>(null);
+		const { locations, persons, jobs } = useFormOptions();
 
-	const formFieldsArray = [
-		...(!jobId ? [formFields.job(jobs)] : []),
-		[
-			formFields.datetime({
-				required: true,
+		const formFieldsArray: Fields = [
+			...(!jobId ? [formFields.job(jobs)] : []),
+			[
+				formFields.datetime({
+					required: true,
+				}),
+				formFields.interviewType(),
+			],
+			[
+				formFields.interviewAttendanceType(),
+				formFields.location(locations, locationModalRef, null, null, {
+					displayCondition: (formData: JobData): boolean => {
+						return formData.attendance_type === "on-site";
+					},
+				}),
+			],
+			formFields.interviewers(persons, personModalRef),
+			formFields.note({
+				placeholder: "Add notes about the interview, questions asked, impressions, etc...",
 			}),
-			formFields.interviewType(),
-		],
-		[
-			formFields.interviewAttendanceType(),
-			formFields.location(locations, locationModalRef, null, null, {
-				displayCondition: (formData: JobData): boolean => {
-					return formData.attendance_type === "on-site";
-				},
-			}),
-		],
-		formFields.interviewers(persons, personModalRef),
-		formFields.note({
-			placeholder: "Add notes about the interview, questions asked, impressions, etc...",
-		}),
-	];
+		];
 
-	const viewFieldsArray = [
-		...(!jobId ? [modalViewFields.jobBadge()] : []),
-		[modalViewFields.datetime(), modalViewFields.interviewType()],
-		[modalViewFields.locationBadge(), modalViewFields.interviewerBadges()],
-		modalViewFields.note(),
-	];
+		const viewFieldsArray: Fields = [
+			...(!jobId ? [modalViewFields.jobBadge()] : []),
+			[modalViewFields.datetime(), modalViewFields.interviewType()],
+			[modalViewFields.locationBadge(), modalViewFields.interviewerBadges()],
+			modalViewFields.note(),
+		];
 
-	const fields = {
-		form: formFieldsArray,
-		view: viewFieldsArray,
-	};
-
-	const transformFormData = (data: InterviewDataTransform): InterviewDataTransform => {
-		return {
-			date: new Date(data.date),
-			type: data.type,
-			location_id: data.location_id,
-			job_id: jobId || data.job_id,
-			attendance_type: data.attendance_type,
-			interviewers: data.interviewers || [],
-			note: data.note?.trim() || null,
+		const fields = {
+			form: formFieldsArray,
+			view: viewFieldsArray,
 		};
-	};
 
-	return (
-		<>
-			<LocationModal ref={locationModalRef} />
-			<PersonModal ref={personModalRef} />
-			<DataModal
-				ref={ref}
-				size={size}
-				fields={fields}
-				endpoint="interviews"
-				itemName="Interview"
-				transformFormData={transformFormData}
-				onSuccess={onSuccess}
-			/>
-		</>
-	);
-});
+		const transformFormData = (data: InterviewDataTransform): InterviewDataTransform => {
+			return {
+				date: new Date(data.date),
+				type: data.type,
+				location_id: data.location_id,
+				job_id: jobId || data.job_id,
+				attendance_type: data.attendance_type,
+				interviewers: data.interviewers || [],
+				note: data.note?.trim() || null,
+			};
+		};
+
+		return (
+			<>
+				<DataModal
+					ref={ref}
+					size={size}
+					fields={fields}
+					endpoint="interviews"
+					itemName="Interview"
+					transformFormData={transformFormData}
+				/>
+
+				<LocationModal ref={locationModalRef} />
+				<PersonModal ref={personModalRef} />
+			</>
+		);
+	},
+);
