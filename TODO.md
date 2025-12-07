@@ -3,7 +3,7 @@
 ### Bugs
 * [ ] Modals darken when a help bubble is displayed.
 * [X] The theme shown in the user setting page is not updated when changed in the sidebar.
-* [ ] The content of job application update and interview modals are not updated after an edit when opened through the job modal.
+* [X] The content of job application update and interview modals are not updated after an edit when opened through the job modal.
 * [ ] the sidebar is not expanding properly on small screens on the job page.
 * [X] Source aggregator is sometimes not shown when editing a job
 * [X] Move the logs to an absolute location
@@ -16,7 +16,7 @@
 * [X] Add admin control and monitoring page
 * [X] Add graphs showing the results of previous service logs
 * [ ] Add frontend tests
-* [ ] Deleting/deactivating is not working
+* [X] Deleting/deactivating is not working
 * [ ] If no currency is found, use the default currency
 * [X] Load the currencies and countries from the backend instead of the frontend
 * [X] Add search box
