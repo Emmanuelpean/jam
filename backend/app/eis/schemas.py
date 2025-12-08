@@ -132,6 +132,7 @@ class EisServiceLogOut(Out):
     job_scrape_succeeded_n: int = 0
     job_scrape_failed_n: int = 0
     job_scrape_copied_n: int = 0
+    job_scrape_skipped_n: int = 0
 
     # Relationships
     emails: list[int]
@@ -159,6 +160,7 @@ class PlatformStatOut(Out):
     job_scrape_succeeded_ids: list[int] = []
     job_scrape_failed_ids: list[int] = []
     job_scrape_copied_ids: list[int] = []
+    job_scrape_skipped_ids: list[int] = []
 
     # Emails
     email_saved_ids: list[int] = []

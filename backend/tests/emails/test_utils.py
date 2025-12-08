@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.emails.utils import clean_email_address, get_user_id_from_email
+from app.emails.utils import clean_email_address, get_user_id_from_email, build_multi_from_query
 
 
 class TestCleanEmailAddress:
@@ -57,3 +57,77 @@ class TestGetUserIdFromEmail:
         upper_email = test_user.email.upper()
         with pytest.raises(AssertionError):
             get_user_id_from_email(upper_email, session)
+
+
+class TestBuildMultiFromQuery:
+    """Test suite for build_multi_from_query function"""
+
+    @pytest.mark.parametrize(
+        "input_emails, expected_output",
+        [
+            # Single email as string
+            ("alert@indeed.com", 'FROM "alert@indeed.com"'),
+            # Single email as list
+            (["alert@indeed.com"], 'FROM "alert@indeed.com"'),
+            # Two emails
+            (["alert@indeed.com", "noreply@indeed.com"], 'OR FROM "alert@indeed.com" FROM "noreply@indeed.com"'),
+            # Three emails - nested OR
+            (
+                ["email1@domain.com", "email2@domain.com", "email3@domain.com"],
+                'OR OR FROM "email1@domain.com" FROM "email2@domain.com" FROM "email3@domain.com"',
+            ),
+            # Four emails - double nested OR
+            (
+                ["a@test.com", "b@test.com", "c@test.com", "d@test.com"],
+                'OR OR OR FROM "a@test.com" FROM "b@test.com" FROM "c@test.com" FROM "d@test.com"',
+            ),
+        ],
+        ids=[
+            "single_email_string",
+            "single_email_list",
+            "two_emails",
+            "three_emails",
+            "four_emails",
+        ],
+    )
+    def test_valid_email_queries(self, input_emails, expected_output) -> None:
+        """Test that valid email inputs produce correct IMAP query strings"""
+        result = build_multi_from_query(input_emails)
+        assert result == expected_output
+
+    def test_empty_list_raises_index_error(self) -> None:
+        """Test that empty list raises IndexError"""
+        with pytest.raises(IndexError):
+            build_multi_from_query([])
+
+    def test_string_with_special_characters(self) -> None:
+        """Test email addresses with special characters"""
+        result = build_multi_from_query("user+tag@example.com")
+        assert result == 'FROM "user+tag@example.com"'
+
+    def test_preserves_email_case(self) -> None:
+        """Test that email address case is preserved"""
+        result = build_multi_from_query("Alert@Indeed.COM")
+        assert result == 'FROM "Alert@Indeed.COM"'
+
+    @pytest.mark.parametrize(
+        "input_emails",
+        [
+            ["email@domain.com", "another@domain.com", "third@domain.com", "fourth@domain.com", "fifth@domain.com"],
+        ],
+        ids=["five_emails"],
+    )
+    def test_large_email_list(self, input_emails) -> None:
+        """Test that larger lists produce correct nested OR structure"""
+        result = build_multi_from_query(input_emails)
+
+        # Verify structure
+        assert result.startswith("OR " * (len(input_emails) - 1))
+        for email in input_emails:
+            assert f'FROM "{email}"' in result
+
+    def test_whitespace_in_emails(self) -> None:
+        """Test emails with leading/trailing whitespace are handled"""
+        result = build_multi_from_query([" email@domain.com ", "test@domain.com"])
+        # Note: Function doesn't strip whitespace - test actual behavior
+        assert 'FROM " email@domain.com "' in result

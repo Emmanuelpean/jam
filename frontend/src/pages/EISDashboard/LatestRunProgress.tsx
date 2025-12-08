@@ -11,6 +11,7 @@ interface LatestRunProgressProps {
 
 export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressProps): JSX.Element | null => {
 	if (!latestLog) return null;
+	console.log(latestLog);
 
 	return (
 		<div className="status-card">
@@ -68,7 +69,10 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 				<ProgressBar
 					title="Jobs Scraped"
 					current={
-						latestLog.job_scrape_succeeded_n + latestLog.job_scrape_copied_n + latestLog.job_scrape_failed_n
+						latestLog.job_scrape_succeeded_n +
+						latestLog.job_scrape_copied_n +
+						latestLog.job_scrape_failed_n +
+						latestLog.job_scrape_skipped_n
 					}
 					total={latestLog.job_found_n}
 				/>
