@@ -39,6 +39,12 @@ jobs:
       VERIFICATION_TOKEN_EXPIRATION_MINUTES: ${{ secrets.VERIFICATION_TOKEN_EXPIRATION_MINUTES }}
       VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS: ${{ secrets.VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS }}
       TEST_MODE: true
+      log_directory: ${{ secrets.LOG_DIRECTORY }}
+      brightdata_api_key: ${{ secrets.BRIGHTDATA_API_KEY }}
+      brightdata_linkedin_dataset_id: ${{ secrets.BRIGHTDATA_LINKEDIN_DATASET_ID }}
+      brightdata_indeed_dataset_id: ${{ secrets.BRIGHTDATA_INDEED_DATASET_ID }}
+      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+      apify_api_key: ${{ secrets.APIFY_API_KEY }}
 
     services:
       postgres:
