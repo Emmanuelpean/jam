@@ -445,7 +445,7 @@ def get_element(
         raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {get_all_element_ids(driver)}")
 
 
-LOGS_DIR = Path("test_logs")
+LOGS_DIR = Path(os.path.join(os.path.dirname(settings.log_directory), "test_logs"))
 LOGS_DIR.mkdir(exist_ok=True)
 
 
