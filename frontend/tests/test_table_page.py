@@ -307,31 +307,36 @@ class TablePage(BaseTest):
     def _fill_modal(self, entry_name: str = "", **values) -> None:
         """Fill the modal with the given values  (key: key of the input elements, value: value to set)."""
 
-        self.wait_for_edit_modal(entry_name)
-        for key, value in values.items():
-            if key in (
-                "country",
-                "company_id",
-                "location_id",
-                "job_id",
-                "aggregator_id",
-                "job_application_id",
-                "type",
-                "source",
-                "attendance_type",
-                "applied_via",
-            ):
-                select = ReactSelect(self.get_element(key))
-                select.open_menu()
-                select.select_by_visible_text(value)
-            elif key in ["date", "application_date"]:
-                self.get_element(key + "_set_current").click()
-                # element = self.get_element(key)
-                # element.send_keys(value.strftime("%d%m%Y"))
-                # element.send_keys(Keys.TAB)
-                # element.send_keys(value.strftime("%H%M%S"))
-            else:
-                self.set_text(self.get_element(key), value)
+        if any(isinstance(v, dict) for v in values.values()):
+            for tab_key in values:
+                self.get_element(f"{tab_key}-tab").click()
+                self._fill_modal(entry_name, **values[tab_key])
+        else:
+            self.wait_for_edit_modal(entry_name)
+            for key, value in values.items():
+                if key in (
+                    "country",
+                    "company_id",
+                    "location_id",
+                    "job_id",
+                    "aggregator_id",
+                    "job_application_id",
+                    "type",
+                    "source",
+                    "attendance_type",
+                    "applied_via",
+                ):
+                    select = ReactSelect(self.get_element(key))
+                    select.open_menu()
+                    select.select_by_visible_text(value)
+                elif key in ["date", "application_date"]:
+                    self.get_element(key + "_set_current").click()
+                    # element = self.get_element(key)
+                    # element.send_keys(value.strftime("%d%m%Y"))
+                    # element.send_keys(Keys.TAB)
+                    # element.send_keys(value.strftime("%H%M%S"))
+                else:
+                    self.set_text(self.get_element(key), value)
 
     def test_add_valid_entry(self) -> None:
         """Test adding a new entry"""
@@ -1035,21 +1040,25 @@ class TestJobPage(TablePage):
     test_fixture = ["test_jobs"]
     entry_name = "job"
     required_fields = ["title"]
-    test_data = {"job": {
-        "title": "Senior Python Developer",
-        "salary_min": 80000,
-        "salary_max": 130000,
-        "description": "Lead backend development using Python and modern frameworks. Work with a talented team to build scalable web applications.",
-        "url": "https://techcorp.com/jobs/senior_python_developer1",
-        "company_id": "Oxford PV",
-        "note": "Excellent opportunity for senior developer",
-    }, "application": {"attendance_type": "Hybrid",
-        "location_id": "Oxford, OX1 3PH, United Kingdom",
-        "application_date": datetime.datetime.now(),
-        "application_url": "https://techcorp.com/apply/senior-python",
-        "application_status": "applied",
-        "applied_via": "aggregator",
-        "application_note": "Submitted application with cover letter",}}
+    test_data = {
+        "job": {
+            "title": "Senior Python Developer",
+            "salary_min": 80000,
+            "salary_max": 130000,
+            "description": "Lead backend development using Python and modern frameworks. Work with a talented team to build scalable web applications.",
+            "url": "https://techcorp.com/jobs/senior_python_developer1",
+            "company_id": "Oxford PV",
+            "note": "Excellent opportunity for senior developer",
+            "attendance_type": "Hybrid",
+        },
+        "application": {
+            "application_date": datetime.datetime.now(),
+            "application_url": "https://techcorp.com/apply/senior-python",
+            "application_status": "applied",
+            "applied_via": "aggregator",
+            "application_note": "Submitted application with cover letter",
+        },
+    }
     model = models.Job
 
     def _test_view_modal(self, entry=None) -> None:
