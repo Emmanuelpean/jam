@@ -1035,7 +1035,7 @@ class TestJobPage(TablePage):
     test_fixture = ["test_jobs"]
     entry_name = "job"
     required_fields = ["title"]
-    test_data = {
+    test_data = {"job": {
         "title": "Senior Python Developer",
         "salary_min": 80000,
         "salary_max": 130000,
@@ -1043,18 +1043,18 @@ class TestJobPage(TablePage):
         "url": "https://techcorp.com/jobs/senior_python_developer1",
         "company_id": "Oxford PV",
         "note": "Excellent opportunity for senior developer",
-        # "attendance_type": "Hybrid",
-        # "location_id": "Oxford, OX1 3PH, United Kingdom",
-        # "application_date": datetime.datetime.now(),
-        # "application_url": "https://techcorp.com/apply/senior-python",
-        # "application_status": "applied",
-        # "applied_via": "aggregator",
-        # "application_note": "Submitted application with cover letter",
-    }
+    }, "application": {"attendance_type": "Hybrid",
+        "location_id": "Oxford, OX1 3PH, United Kingdom",
+        "application_date": datetime.datetime.now(),
+        "application_url": "https://techcorp.com/apply/senior-python",
+        "application_status": "applied",
+        "applied_via": "aggregator",
+        "application_note": "Submitted application with cover letter",}}
     model = models.Job
 
     def _test_view_modal(self, entry=None) -> None:
         """Helper method to test the view modal for an entry"""
+
         if not entry:
             entry = self.test_entry
         self.check_job_view_modal(entry)

@@ -1,9 +1,10 @@
-"""Indeed Job Scraper using Brightdata"""
+"""Indeed Job Scrapers"""
 
 import re
 
 from app.eis.job_scrapers import JobResult, JobInfo, Salary
 from app.eis.job_scrapers.brightdata import BrightdataJobScraper
+from app.eis.job_scrapers.apify import ApifyJobScraper
 
 
 class IndeedBrightdataJobScraper(BrightdataJobScraper):
@@ -51,8 +52,44 @@ class IndeedBrightdataJobScraper(BrightdataJobScraper):
         )
 
 
+class IndeedApifyJobScraper(ApifyJobScraper):
+    """Indeed Scraper using Apify"""
+
+    base_url = "https://www.indeed.com/viewjob?jk="
+    name = "indeed"
+    actor_id = "memo23/apify-indeed-cheerio-ppr"
+    poll_interval: int | float = 10
+    max_attempts: int = 100
+
+    def _process_job_data(self, job_data: dict) -> JobResult:
+        """Process job data to extract relevant information
+        :param job_data: Job data dictionary from Apify Indeed actor
+        :return: JobResult containing job information"""
+
+        # Extract job info from nested structure
+        title = job_data["jobInfoModel"]["jobInfoHeaderModel"]["jobTitle"]
+        location = job_data["jobInfoModel"]["location"]["fullAddress"]
+        company = job_data["jobInfoModel"]["jobInfoHeaderModel"]["companyName"]
+        description = job_data["jobInfoModel"]["description"]["text"]
+
+        return JobResult(
+            company=company,
+            location=location,
+            job=JobInfo(
+                title=title,
+                description=description,
+            ),
+            raw=str(job_data),
+        )
+
+
 if __name__ == "__main__":
-    # Indeed job scraper example
+    # Indeed job scraper example with Brightdata
     scraper = IndeedBrightdataJobScraper("a6c3277c505f0629")
-    job_data1 = scraper.scrape_job()
-    print(job_data1)
+    data = scraper.scrape_job()
+    print(data)
+
+    # Indeed job scraper example with Apify
+    scraper = IndeedApifyJobScraper("758f2768706ab970")
+    data = scraper.scrape_job()
+    print(data)
