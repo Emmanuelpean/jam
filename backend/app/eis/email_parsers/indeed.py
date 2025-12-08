@@ -25,7 +25,7 @@ def get_indeed_redirected_url(job_url: str, max_attempts: int = 100) -> str:
         url = response.url
         iteration += 1
         if iteration > max_attempts:
-            break
+            raise AssertionError(f"Too many attempts to get redirect for url {job_url}")
     return url
 
 
@@ -117,6 +117,8 @@ def parse_indeed_job_email(body: str) -> list[JobResult]:
                         salary_currency = match.group(1)
                         salary_min = salary_max = process_salary(match.group(2))
 
+        if job_id is None:
+            raise AssertionError(f"Job id not found for url {url}")
         processed_url = BASE_URL + job_id
         salary = Salary(min_amount=salary_min, max_amount=salary_max, currency=salary_currency)
         job_info = JobInfo(title=title, url=processed_url, salary=salary, raw_url=url)

@@ -3,6 +3,7 @@
 import datetime
 import time
 
+import pytest
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -303,10 +304,10 @@ class TablePage(BaseTest):
 
     # ----------------------------------------------------- ADD TEST ---------------------------------------------------
 
-    def _fill_modal(self, **values) -> None:
+    def _fill_modal(self, entry_name: str = "", **values) -> None:
         """Fill the modal with the given values  (key: key of the input elements, value: value to set)."""
 
-        self.wait_for_edit_modal()
+        self.wait_for_edit_modal(entry_name)
         for key, value in values.items():
             if key in (
                 "country",
@@ -382,20 +383,23 @@ class TablePage(BaseTest):
     def test_add_duplicate_entry(self) -> None:
         """Test that adding a new entry with an existing name shows validation error"""
 
-        # Add the new entry
-        self.add_entity_button.click()
-        self.wait_for_edit_modal()
-        self._fill_modal(**self.test_data)
-        self.confirm_button("edit").click()
-        self.wait_for_edit_modal_close()
+        if self.duplicate_fields:
+            # Add the new entry
+            self.add_entity_button.click()
+            self.wait_for_edit_modal()
+            self._fill_modal(**self.test_data)
+            self.confirm_button("edit").click()
+            self.wait_for_edit_modal_close()
 
-        self.add_entity_button.click()
-        self.wait_for_edit_modal()
-        self._fill_modal(**{key: self.test_data[key] for key in self.duplicate_fields})
-        self.confirm_button("edit").click()
-        self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-        self.cancel_button("edit").click()
-        self.wait_for_edit_modal_close()
+            self.add_entity_button.click()
+            self.wait_for_edit_modal()
+            self._fill_modal(**{key: self.test_data[key] for key in self.duplicate_fields})
+            self.confirm_button("edit").click()
+            self.get_element(".invalid-feedback", By.CSS_SELECTOR)
+            self.cancel_button("edit").click()
+            self.wait_for_edit_modal_close()
+        else:
+            pytest.skip("Duplicate entries are allowed")
 
     def test_add_incomplete_entry(self) -> None:
         """Test that adding a new entry without all required information shows an error"""
@@ -732,7 +736,8 @@ class TablePage(BaseTest):
 
         # Job Application
         self.get_element("application-tab").click()
-        expected = f"Job Details\nJob Details\nJob Application {entry.application_status.upper()}\n"
+        status = entry.application_status.upper() if entry.application_status else None  # TODO
+        expected = f"Job Details\nJob Details\nJob Application {status}\n"
         if entry.application_date:
             display_time = entry.application_date.astimezone()
             expected += f"Application Date\n{display_time.strftime("%d/%m/%Y")}\n"
@@ -930,6 +935,20 @@ class TestPersonsPage(TablePage):
         assert self.get_element("last_name").get_attribute("value") == "Doe"
         assert self.get_element("company_id").text == "Company"
 
+    def test_modify_company(self) -> None:
+        """Test modifying the company of an existing person"""
+
+        self.table_row_click(self.test_entry.id)
+        self.get_element("modal-view-person-CompanyBadge").click()
+        self.get_element("modal-view-company-edit-button").click()
+        self.wait_for_edit_modal("company")
+        assert self.get_element("name").get_attribute("value") == self.test_entry.company.name
+        self._fill_modal("company", name="New Company Name")
+        self.get_element("modal-edit-company-confirm-button").click()
+        assert "New Company Name" in self.wait_for_view_modal("company").text
+        self.get_element("modal-view-company-cancel-button").click()
+        assert self.get_element("modal-view-person-CompanyBadge").text == "New Company Name".upper()
+
 
 class TestJobApplicationUpdatesPage(TablePage):
     """Test class for Job Application Update Page functionalities"""
@@ -964,7 +983,7 @@ class TestInterviewPage(TablePage):
     required_fields = ["job_id", "type", "date"]
     test_data = {
         "date": datetime.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=datetime.timezone.utc),
-        "job_id": "Senior Python Developer - Tech Corp",
+        "job_id": "Senior Python Developer (Tech Corp)",
         "note": "Received automated confirmation email",
         "attendance_type": "On-site",
         "type": "HR Interview",
@@ -980,7 +999,7 @@ class TestInterviewPage(TablePage):
     def test_table_interviewers_badge(self) -> None:
         """Test that the person badge is displayed correctly in the table"""
 
-        self.get_element("table-row-1-person-0").click()
+        self.get_element("table-row-1-interviewers-0").click()
         self.check_person_view_modal(self.test_entry.interviewers[0])
 
     def test_modal_interviewers_badge(self) -> None:

@@ -99,6 +99,12 @@ export const RunHistoryChart = ({
 					infoColor,
 					(log: ServiceLog): number => log.job_scrape_copied_n,
 				),
+				createSeries(
+					serviceLogData,
+					"Skipped Jobs",
+					"#fbbf24",
+					(log: ServiceLog): number => log.job_scrape_skipped_n,
+				),
 			];
 			setLogData([jobSeries, durationSeries]);
 		} else {

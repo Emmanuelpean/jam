@@ -96,7 +96,7 @@ class JobEmailScraper(EmailService):
     def log_eis_service_error(
         self,
         service_log: EisServiceLog,
-        exc: Exception,
+        exc: Exception | str,
     ) -> EisServiceError:
         """Create an EisServiceError for a caught exception.
         :param service_log: associated EisServiceLog instance
@@ -383,6 +383,7 @@ class JobEmailScraper(EmailService):
                     sender_email=user.email,
                     inbox_only=True,
                     timedelta_days=timedelta_days,
+                    from_email=list(PLATFORM_SENDER_EMAILS.items()),
                 )
                 service_log.email_found_n += len(email_ids)
                 self.logger.info(f"Found {len(email_ids)} emails")
@@ -446,11 +447,9 @@ class JobEmailScraper(EmailService):
             self.upsert_platform_stat(service_log, email_record.platform, job_found_ids=[j.id for j in scraped_jobs])
             self.logger.info(f"Extracted and saved {len(jobs)} job IDs from {email_record.platform}")
         except Exception as exception:
-            self.log_eis_service_error(service_log, exception)
-            self.logger.exception(
-                f"Failed to save job IDs for email ID {email_record.external_email_id} due to error: "
-                f"{exception}. Skipping email."
-            )
+            error = f"Failed to save job IDs for email ID {email_record.external_email_id} due to error: {exception}. Skipping email."
+            self.log_eis_service_error(service_log, error)
+            self.logger.exception(error)
 
     def scrape_jobs(self, service_log: EisServiceLog) -> None:
         """Scrape all unscraped jobs

@@ -12,7 +12,7 @@ from pathlib import Path
 from fastapi.templating import Jinja2Templates
 
 from app.config import settings
-from app.emails.utils import clean_email_address
+from app.emails.utils import clean_email_address, build_multi_from_query
 from app.utils import AppLogger
 
 templates = Jinja2Templates(directory="templates")
@@ -234,6 +234,7 @@ class EmailService(object):
         inbox_only: bool = True,
         timedelta_days: int | float = 1,
         subject_contains: str = "",
+        from_email: list[str] | str = "",
     ) -> list[str]:
         """Search for messages matching a query.
         :param recipient_email: Filter by recipient email address (e.g. jam.jobscraper@emmanuelpean.me)
@@ -241,6 +242,7 @@ class EmailService(object):
         :param inbox_only: Search only in the inbox (True) or all folders (False)
         :param timedelta_days: Number of days to search for emails
         :param subject_contains: Filter by subject content
+        :param from_email: Filter by 'From' email address
         :return: List of message IDs matching the query"""
 
         mail = self._connect_imap()
@@ -268,6 +270,10 @@ class EmailService(object):
             # Subject filter
             if subject_contains:
                 search_criteria.append(f'SUBJECT "{subject_contains}"')
+
+            # From email filter
+            if from_email:
+                search_criteria.append(build_multi_from_query(from_email))
 
             # Default to all if no criteria
             search_query = " ".join(search_criteria) if search_criteria else "ALL"
