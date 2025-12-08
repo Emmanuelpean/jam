@@ -1,4 +1,4 @@
-import { LocationData, LocationDataTransform } from "./Schemas";
+import { LocationDataTransform } from "./Schemas";
 
 type ProgressCallback = (current: number, total: number) => void;
 
