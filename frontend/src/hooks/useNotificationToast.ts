@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { ToastContext } from "../App";
 
 // Define the toast variant types

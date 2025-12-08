@@ -7,7 +7,7 @@ from starlette import status
 
 from app.eis import schemas
 from tests.conftest import CRUDTestBase
-from tests.utils.table_data import JOB_ALERT_EMAIL_DATA, SERVICE_ERROR_DATA
+from tests.utils.table_data import JOB_ALERT_EMAIL_DATA
 
 
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------

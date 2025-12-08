@@ -163,7 +163,6 @@ const UserSettingsPage: React.FC = () => {
 			};
 
 			const emailChanged: boolean = !!(formData.email && formData.email !== currentUser?.email);
-			const passwordChanged: boolean = !!(formData.new_password && formData.confirm_password);
 
 			// Add account changes if current password is provided
 			if (formData.current_password) {
