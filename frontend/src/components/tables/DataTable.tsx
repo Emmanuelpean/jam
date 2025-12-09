@@ -527,7 +527,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 							padding: compact ? "0.25rem 0.5rem" : undefined,
 							height: compact ? "2rem" : undefined,
 						}}
-						id="add-entity-button"
+						id={`add-${entityType}-button`}
 					>
 						<i className={`${getAddButtonIcon()} me-2`} style={{ fontSize: "1.1rem" }}></i>
 						{getAddButtonText()}
@@ -581,7 +581,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 								{currentPageData.map((item, index) => (
 									<tr
 										key={item.id || index}
-										id={`table-row-${item.id}`}
+										id={`table-row-${entityType}-${item.id}`}
 										className={`table-row-clickable`}
 										onClick={(e) => handleRowClick(e, item)}
 										onContextMenu={(e) => handleRowRightClick(item, e)}
