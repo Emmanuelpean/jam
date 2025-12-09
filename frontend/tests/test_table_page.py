@@ -325,6 +325,7 @@ class TablePage(BaseTest):
                     "source",
                     "attendance_type",
                     "applied_via",
+                    "application_status",
                 ):
                     select = ReactSelect(self.get_element(key))
                     select.open_menu()
@@ -367,23 +368,30 @@ class TablePage(BaseTest):
         self.table_row(entry_id).click()
         self.wait_for_view_modal()
         self._test_view_modal(entry)
-        try:
-            self.cancel_button("view").click()
-        except:
-            pass
-        self.wait_for_view_modal_close()
 
         # Reopen in edit mode
         self.context_menu(entry_id, "edit")
-        for key in self.test_data:
-            if "date" in key:
-                continue
-            element = self.get_element(key)
-            if element.tag_name == "input":
-                value = element.get_attribute("value")
-            else:
-                value = element.text
-            assert str(value) == str(self.test_data[key])
+        self.check_edit_modal(entry_id, **self.test_data)
+
+    def check_edit_modal(self, entry_id: int, **values) -> None:
+        """Check that the modal in edit mode contains the expected data
+        :param entry_id: entry ID
+        :param values: values to check"""
+
+        if any(isinstance(v, dict) for v in values.values()):
+            for tab_key in values:
+                self.get_element(f"{tab_key}-tab").click()
+                self.check_edit_modal(entry_id, **values[tab_key])
+        else:
+            for key in values:
+                if "date" in key:
+                    continue
+                element = self.get_element(key)
+                if element.tag_name == "input":
+                    value = element.get_attribute("value")
+                else:
+                    value = element.text
+                assert str(value) == str(values[key])
 
     def test_add_duplicate_entry(self) -> None:
         """Test that adding a new entry with an existing name shows validation error"""
@@ -696,8 +704,13 @@ class TablePage(BaseTest):
             expected += f"Company\n{entry.company.name.upper()}\n"
         else:
             expected += "Company\nNot Provided\n"
-        if entry.location:
+        expected += "Location\n"
+        if entry.attendance_type and not entry.location:
+            expected += f"{entry.attendance_type.upper()}\n"
+        elif entry.attendance_type and entry.location:
             expected += f"Location\n{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
+        elif not entry.attendance_type and entry.location:
+            expected += f"Location\n{entry.location.name.upper()}\n"
         else:
             expected += "Location\nNot Provided\n"
         if entry.description:
@@ -741,8 +754,11 @@ class TablePage(BaseTest):
 
         # Job Application
         self.get_element("application-tab").click()
-        status = entry.application_status.upper() if entry.application_status else None  # TODO
-        expected = f"Job Details\nJob Details\nJob Application {status}\n"
+        expected = "Job Details\nJob Details\n"
+        if entry.application_status:
+            expected += f"Job Application {entry.application_status.upper()}\n"
+        else:
+            expected += "Job Application\n"
         if entry.application_date:
             display_time = entry.application_date.astimezone()
             expected += f"Application Date\n{display_time.strftime("%d/%m/%Y")}\n"
@@ -755,7 +771,7 @@ class TablePage(BaseTest):
         if entry.applied_via == "aggregator" and entry.application_aggregator:
             expected += f"Applied Via\n{entry.application_aggregator.name.upper()}\n"
         elif entry.applied_via:
-            expected += f"Applied Via\n{entry.applied_via.capitalize()}\n"
+            expected += f"Applied Via\n{entry.applied_via.upper()}\n"
         else:
             expected += "Applied Via\nNot Provided\n"
         if entry.application_url:
@@ -1054,8 +1070,8 @@ class TestJobPage(TablePage):
         "application": {
             "application_date": datetime.datetime.now(),
             "application_url": "https://techcorp.com/apply/senior-python",
-            "application_status": "applied",
-            "applied_via": "aggregator",
+            "application_status": "Applied",
+            "applied_via": "Aggregator",
             "application_note": "Submitted application with cover letter",
         },
     }
