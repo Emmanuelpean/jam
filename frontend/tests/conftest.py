@@ -39,6 +39,8 @@ from tests.conftest import (
     tokens,
     test_settings,
     DATABASE_NAME,
+    test_interviews,
+    test_job_application_updates,
 )
 from tests.conftest import *
 
@@ -488,7 +490,7 @@ class BaseTest:
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
