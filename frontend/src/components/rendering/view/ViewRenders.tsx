@@ -534,7 +534,8 @@ export const renderFunctions = {
 
 	AppliedViaBadge: (param: RenderParams): ReactNode => {
 		const appliedVia: string | null = param.item?.applied_via;
-		if (appliedVia === "aggregator") {
+		const applicationAggregatorId: string | null = param.item?.application_aggregator_id;
+		if (appliedVia === "aggregator" && applicationAggregatorId) {
 			return renderFunctions._aggregatorBadge(param, "application_aggregator_id");
 		}
 		if (appliedVia) {

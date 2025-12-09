@@ -390,7 +390,7 @@ class JobEmailScraper(EmailService):
             except Exception as exception:
                 self.log_eis_service_error(service_log, exception)
                 self.logger.exception(f"Failed to search messages due to error: {exception}. Skipping user.")
-                continue  # next user
+                email_ids = []
 
             # For each email...
             for email_id in email_ids:
