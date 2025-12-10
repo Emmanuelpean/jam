@@ -625,10 +625,8 @@ class TablePage(BaseTest):
         if standalone:
             expected = "Interview Details\n" "Job\n" f"{entry.job.title.upper()} ({entry.job.company.name.upper()})\n"
         else:
-            expected = ""
-        expected += (
-            "Interview Details\nDate & Time\n" f"{display_time.strftime("%d/%m/%Y %H:%M")}\n" "Type\n" f"{entry_type}\n"
-        )
+            expected = "Interview Details\n"
+        expected += "Date & Time\n" f"{display_time.strftime("%d/%m/%Y %H:%M")}\n" "Type\n" f"{entry_type}\n"
 
         if entry.attendance_type and not entry.location:
             expected += f"Location\n{entry.attendance_type.upper()}\n"
