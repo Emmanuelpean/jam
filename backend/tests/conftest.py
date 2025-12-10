@@ -19,6 +19,7 @@ from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
 from app import models, database, schemas
+from app.eis import models as eis_models
 from app.config import settings
 from app.main import app
 from app.oauth2 import create_access_token
@@ -35,6 +36,11 @@ from tests.utils.create_data import (
     create_interviews,
     create_job_application_updates,
     create_settings,
+    create_scraped_jobs,
+    create_eis_service_logs,
+    create_platform_stats,
+    create_eis_service_errors,
+    create_job_alert_emails,
 )
 from tests.utils.seed_database import reset_database
 from tests.utils.table_data import (
@@ -444,6 +450,41 @@ def test_job_application_updates_unauthorised(
     data, owner_id = job_application_updates_unauthorised_data
     updates = create_job_application_updates(session, test_users, test_jobs, data)
     return updates, owner_id
+
+
+@pytest.fixture
+def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[eis_models.ScrapedJob]:
+    """Create test job alert email jobs"""
+
+    return create_scraped_jobs(session, test_job_alert_emails, test_users)
+
+
+@pytest.fixture
+def test_eis_service_logs(session) -> list[eis_models.EisServiceLog]:
+    """Create test service logs"""
+
+    return create_eis_service_logs(session)
+
+
+@pytest.fixture
+def test_platform_stats(session, test_eis_service_logs) -> list[eis_models.PlatformStat]:
+    """Create test platform stats"""
+
+    return create_platform_stats(session, test_eis_service_logs)
+
+
+@pytest.fixture
+def test_eis_service_errors(session, test_eis_service_logs) -> list[eis_models.EisServiceError]:
+    """Create test eis service errors"""
+
+    return create_eis_service_errors(session, test_eis_service_logs)
+
+
+@pytest.fixture
+def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[eis_models.JobAlertEmail]:
+    """Create test job alert emails"""
+
+    return create_job_alert_emails(session, test_users, test_eis_service_logs)
 
 
 # -------------------------------------------------------- UTILS -------------------------------------------------------
