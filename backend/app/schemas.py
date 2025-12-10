@@ -135,6 +135,25 @@ class CurrentUserUpdateResponse(BaseModel):
     logged_out: bool | None = None
 
 
+# ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------
+
+
+class UserQualificationUpsert(BaseModel):
+    """User qualification create schema"""
+
+    id: int | None = None
+    experience: str | None = None
+    skills: str | None = None
+    education: str | None = None
+    qualities: str | None = None
+
+
+class UserQualificationOut(UserQualificationUpsert, OwnedOut):
+    """User qualification output schema"""
+
+    pass
+
+
 # ---------------------------------------------------- CURRENT USER ----------------------------------------------------
 
 

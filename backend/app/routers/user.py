@@ -36,6 +36,42 @@ user_router = generate_data_table_crud_router(
     transform=transform_user_data,
 )
 
+# ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------
+
+user_qualification_router = generate_data_table_crud_router(
+    table_model=models.UserQualification,
+    out_schema=schemas.UserQualificationOut,
+    endpoint="user_qualifications",
+    not_found_msg="User Qualification not found",
+    allowed_actions=["get_all"],
+)
+
+
+@user_qualification_router.post("/", response_model=schemas.UserQualificationOut)
+def upsert_user_qualification(
+    qualification: schemas.UserQualificationUpsert,
+    db: Session = Depends(database.get_db),
+    user: models.User = Depends(oauth2.get_current_user),
+):
+    """Create or update a user qualification."""
+
+    entry = db.query(models.UserQualification).filter(models.UserQualification.id == qualification.id).first()
+    if entry:
+        # Determine if the qualification was used to rate jobs
+        if len(entry.job_ratings):
+            # noinspection PyArgumentList
+            entry = models.UserQualification(**qualification.model_dump(), owner_id=user.id)
+            db.add(entry)
+        else:
+            for field, value in qualification.model_dump(exclude_unset=True).items():
+                setattr(entry, field, value)
+    else:
+        # noinspection PyArgumentList
+        entry = models.UserQualification(**qualification.model_dump(), owner_id=user.id)
+        db.add(entry)
+    db.commit()
+    db.refresh(entry)
+
 
 # ---------------------------------------------------- CURRENT USER ----------------------------------------------------
 

@@ -174,6 +174,30 @@ class User(CommonBase, Base):
     token_version = Column(Integer, default=0, nullable=False)
 
 
+class UserQualification(Owned, Base):
+    """User qualifications for job matching
+
+    Attributes:
+    -----------
+    - `experience` (str): User's experience details.
+    - `skills` (str): User's skills details.
+    - `qualities` (str): User's personal qualities.
+    - `education` (str): User's education details.
+    - `is_active` (bool): Indicates whether the qualification is active.
+
+    Relationships:
+    --------------
+    - `job_ratings` (list of JobRating): List of job ratings associated with the user qualification."""
+
+    experience = Column(String, nullable=False)
+    skills = Column(String, nullable=False)
+    qualities = Column(String, nullable=False)
+    education = Column(String, nullable=False)
+    is_active = Column(Boolean, nullable=False, server_default=expression.true())
+
+    job_ratings = relationship("JobRating", back_populates="user_qualification")
+
+
 # -------------------------------------------------------- DATA --------------------------------------------------------
 
 
@@ -559,3 +583,31 @@ class JobApplicationUpdate(Owned, Base):
     job = relationship("Job", back_populates="updates")
 
     __table_args__ = (CheckConstraint("type IN ('received', 'sent')", name="valid_update_type_values"),)
+
+
+class JobRating(Owned, Base):
+    """Represents user ratings for jobs.
+
+    Attributes:
+    -----------
+    - `rating` (int): The rating given to the job application (1-5).
+
+    Foreign keys:
+    -------------
+    - `job_id` (int): Identifier for the job application being rated.
+    - `user_qualification_id` (int): Identifier for the user qualification entry used to rate the job
+
+    Relationships:
+    --------------
+    - `job` (Job): Job object related to the rating.
+    - `use_qualification` (UserQualification): UserQualification object related to the rating."""
+
+    job_id = Column(Integer, ForeignKey("job.id", ondelete="CASCADE"), nullable=False)
+    user_qualification_id = Column(Integer, ForeignKey("user_qualification.id", ondelete="CASCADE"), nullable=False)
+    rating = Column(Integer, nullable=False)
+
+    # Relationships
+    job = relationship("Job")
+    user_qualification = relationship("UserQualification")
+
+    __table_args__ = (CheckConstraint("rating >= 1 AND rating <= 10", name=f"valid_rating_range"),)
