@@ -8,7 +8,6 @@ import pytest
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
 
 from conftest import contiguous_subdicts, models, BaseTest
@@ -50,11 +49,6 @@ class TablePage(BaseTest):
         self.login()
 
     # ----------------------------------------------------- MODALS -----------------------------------------------------
-
-    def _wait_for_modal_close(self, name: str) -> None:
-        """Wait for the modal to close"""
-
-        self.wait.until(ec.invisibility_of_element_located((By.ID, name)))
 
     def wait_for_view_modal_close(self, entry_name: str = "") -> None:
         """Wait for the view modal to close"""

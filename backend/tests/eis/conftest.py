@@ -17,13 +17,6 @@ from tests.eis.mock_job_scrapers import (
     MockLinkedinBrightdataJobScraper,
     MockNhsBrightdataJobScraper,
 )
-from tests.utils.create_data import (
-    create_eis_service_logs,
-    create_job_alert_emails,
-    create_scraped_jobs,
-    create_platform_stats,
-    create_eis_service_errors,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -57,41 +50,6 @@ def patch_get_indeed_redirected_url(monkeypatch) -> None:
         return url
 
     monkeypatch.setattr(indeed, "get_indeed_redirected_url", mock_get_indeed_redirected_url, raising=False)
-
-
-@pytest.fixture
-def test_eis_service_logs(session) -> list[models.EisServiceLog]:
-    """Create test service logs"""
-
-    return create_eis_service_logs(session)
-
-
-@pytest.fixture
-def test_platform_stats(session, test_eis_service_logs) -> list[models.PlatformStat]:
-    """Create test platform stats"""
-
-    return create_platform_stats(session, test_eis_service_logs)
-
-
-@pytest.fixture
-def test_eis_service_errors(session, test_eis_service_logs) -> list[models.EisServiceError]:
-    """Create test eis service errors"""
-
-    return create_eis_service_errors(session, test_eis_service_logs)
-
-
-@pytest.fixture
-def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[models.JobAlertEmail]:
-    """Create test job alert emails"""
-
-    return create_job_alert_emails(session, test_users, test_eis_service_logs)
-
-
-@pytest.fixture
-def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[models.ScrapedJob]:
-    """Create test job alert email jobs"""
-
-    return create_scraped_jobs(session, test_job_alert_emails, test_users)
 
 
 @pytest.fixture(scope="session", autouse=True)

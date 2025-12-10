@@ -41,6 +41,7 @@ from tests.conftest import (
     DATABASE_NAME,
     test_interviews,
     test_job_application_updates,
+    test_jobs,
 )
 from tests.conftest import *
 
@@ -490,7 +491,7 @@ class BaseTest:
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -550,6 +551,12 @@ class BaseTest:
     def setup_function(self, request) -> None:
         """Function to run before each test - can be overridden in subclasses"""
         pass
+
+    def go_to(self, page) -> None:
+        """Helper method to go to a specific page"""
+
+        self.driver.get(f"{self.frontend_base_url}/{page}")
+        self.wait_for_page(page)
 
     def login(self) -> None:
         """Helper method to log in to the application"""
@@ -707,6 +714,11 @@ class BaseTest:
         element.send_keys(text)
 
     # ---------------------------------------------------- UTILITIES ---------------------------------------------------
+
+    def _wait_for_modal_close(self, name: str) -> None:
+        """Wait for the modal to close"""
+
+        self.wait.until(ec.invisibility_of_element_located((By.ID, name)))
 
     @property
     def db_user(self) -> models.User:
