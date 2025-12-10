@@ -36,15 +36,32 @@ user_router = generate_data_table_crud_router(
     transform=transform_user_data,
 )
 
+
 # ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------
 
-user_qualification_router = generate_data_table_crud_router(
-    table_model=models.UserQualification,
-    out_schema=schemas.UserQualificationOut,
-    endpoint="user_qualifications",
-    not_found_msg="User Qualification not found",
-    allowed_actions=["get_all"],
-)
+
+user_qualification_router = APIRouter(prefix="/user_qualifications", tags=["user_qualifications"])
+
+
+@user_qualification_router.get("/latest", response_model=schemas.UserQualificationOut)
+def get_latest_user_qualification(
+    db: Session = Depends(database.get_db),
+    user: models.User = Depends(oauth2.get_current_user),
+):
+    """Get the latest user qualification for the current user."""
+
+    entry = (
+        db.query(models.UserQualification)
+        .filter(models.UserQualification.owner_id == user.id)
+        .order_by(models.UserQualification.modified_at.desc())
+        .first()
+    )
+    if not entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User Qualification not found",
+        )
+    return entry
 
 
 @user_qualification_router.post("/", response_model=schemas.UserQualificationOut)
@@ -55,22 +72,31 @@ def upsert_user_qualification(
 ):
     """Create or update a user qualification."""
 
-    entry = db.query(models.UserQualification).filter(models.UserQualification.id == qualification.id).first()
+    entry = (
+        db.query(models.UserQualification)
+        .filter(models.UserQualification.owner_id == user.id, models.UserQualification.id == qualification.id)
+        .first()
+    )
     if entry:
         # Determine if the qualification was used to rate jobs
         if len(entry.job_ratings):
             # noinspection PyArgumentList
-            entry = models.UserQualification(**qualification.model_dump(), owner_id=user.id)
+            entry = models.UserQualification(
+                **qualification.model_dump(exclude_unset=True, exclude=["id"]), owner_id=user.id
+            )
             db.add(entry)
         else:
             for field, value in qualification.model_dump(exclude_unset=True).items():
                 setattr(entry, field, value)
     else:
         # noinspection PyArgumentList
-        entry = models.UserQualification(**qualification.model_dump(), owner_id=user.id)
+        entry = models.UserQualification(
+            **qualification.model_dump(exclude_unset=True, exclude=["id"]), owner_id=user.id
+        )
         db.add(entry)
     db.commit()
     db.refresh(entry)
+    return entry
 
 
 # ---------------------------------------------------- CURRENT USER ----------------------------------------------------

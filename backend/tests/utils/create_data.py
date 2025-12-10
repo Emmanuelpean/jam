@@ -27,6 +27,8 @@ from tests.utils.table_data import (
     JOB_APPLICATION_UPDATE_DATA,
     PLATFORM_STAT_DATA,
     SERVICE_ERROR_DATA,
+    USER_QUALIFICATION_DATA,
+    JOB_RATING_DATA,
 )
 
 
@@ -412,3 +414,32 @@ def create_eis_service_errors(db, service_logs) -> list[eis_models.EisServiceErr
     ]
 
     return add_to_db(db, errors)
+
+
+def create_user_qualifications(db, users) -> list[models.UserQualification]:
+    """Create sample user qualifications"""
+
+    print("Creating user qualifications...")
+    # noinspection PyArgumentList
+    keywords = [
+        models.UserQualification(**kwargs)
+        for kwargs in override_entries_properties(USER_QUALIFICATION_DATA, ("owner_id", users))
+    ]
+    return add_to_db(db, keywords)
+
+
+def create_job_ratings(db, users, use_qualifications, scraped_jobs) -> list[models.JobRating]:
+    """Create sample job ratings"""
+
+    print("Creating job ratings...")
+    # noinspection PyArgumentList
+    keywords = [
+        models.JobRating(**kwargs)
+        for kwargs in override_entries_properties(
+            JOB_RATING_DATA,
+            ("owner_id", users),
+            ("job_id", scraped_jobs),
+            ("user_qualification_id", use_qualifications),
+        )
+    ]
+    return add_to_db(db, keywords)

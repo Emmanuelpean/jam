@@ -1,68 +1,84 @@
-import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Form, Button, Card } from "react-bootstrap";
-import { jobQualificationApi } from "../../services/Api";
+import React, { JSX, useEffect, useState } from "react";
+import { Card, Col, Container, Form, Row } from "react-bootstrap";
+import { userQualificationApi } from "../../services/Api";
+import { UserQualification, UserQualificationDataTransform } from "../../services/Schemas";
+import { useAuth } from "../../contexts/AuthContext";
+import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { ActionButton } from "../../components/rendering/form/ActionButton";
 
-const UserQualifications = () => {
-	const [qualifications, setQualifications] = useState({
-		experience: "",
-		skills: "",
-		qualities: "",
-		education: "",
-	});
+const defaultUserQualification: UserQualificationDataTransform = {
+	id: null,
+	experience: "",
+	skills: "",
+	qualities: "",
+	education: "",
+	modified_at: null,
+	created_at: null,
+};
 
-	const [savedQualifications, setSavedQualifications] = useState(null);
+const UserQualifications = (): JSX.Element => {
+	const { token } = useAuth();
+	const { showToastSuccess, showToastError } = useGlobalToast();
+	const [userQualification, setUserQualification] =
+		useState<UserQualificationDataTransform>(defaultUserQualification);
 	const [loading, setLoading] = useState(false);
 
-	// Fetch existing qualifications on component mount
-	useEffect(() => {
-		fetchQualifications();
-	}, []);
+	const fetchLatestQualification = async (): Promise<void> => {
+		if (!token) return;
 
-	const fetchQualifications = async () => {
 		try {
-			const response = await fetch("/api/user/qualifications", {
-				headers: {
-					Authorization: `Bearer ${localStorage.getItem("token")}`,
-				},
-			});
-			if (response.ok) {
-				const data = await response.json();
-				setSavedQualifications(data);
-				setQualifications({
+			const data: UserQualification = await userQualificationApi.getLatest(token);
+
+			if (data) {
+				setUserQualification({
+					id: data.id,
 					experience: data.experience || "",
 					skills: data.skills || "",
 					qualities: data.qualities || "",
 					education: data.education || "",
+					modified_at: data.modified_at || null,
+					created_at: data.created_at || null,
 				});
+			} else {
+				setUserQualification(defaultUserQualification);
 			}
 		} catch (error) {
-			console.error("Error fetching qualifications:", error);
+			console.error("Error fetching qualification:", error);
+			setUserQualification(defaultUserQualification);
 		}
 	};
 
-	const handleChange = (e) => {
+	useEffect((): void => {
+		fetchLatestQualification().then((_): void => {});
+	}, [token]);
+
+	const handleChange = (e: SyntheticEvent) => {
 		const { name, value } = e.target;
-		setQualifications((prev) => ({
+		setUserQualification((prev) => ({
 			...prev,
 			[name]: value,
 		}));
 	};
 
-	const handleSubmit = async (e) => {
+	const handleSubmit = async (e: any) => {
+		if (!token) return;
 		e.preventDefault();
 		setLoading(true);
 
 		try {
-			const response = await jobQualificationApi.upsert();
-
-			if (response.ok) {
-				const data = await response.json();
-				setSavedQualifications(data);
-				alert("Qualifications saved successfully!");
-			}
+			const userQualificationToSave = {
+				id: userQualification.id,
+				experience: userQualification.experience || "",
+				skills: userQualification.skills || "",
+				qualities: userQualification.qualities || "",
+				education: userQualification.education || "",
+			};
+			await userQualificationApi.upsert(userQualificationToSave, token);
+			showToastSuccess("Qualifications saved successfully.");
 		} catch (error) {
 			console.error("Error saving qualifications:", error);
-			alert("Failed to save qualifications");
+			showToastError("Failed to save qualifications.");
 		} finally {
 			setLoading(false);
 		}
@@ -73,54 +89,9 @@ const UserQualifications = () => {
 			<h2 className="mb-4">User Qualifications</h2>
 
 			<Row>
-				{/* Left side - Saved qualifications */}
-				<Col md={6}>
+				{/* Main form */}
+				<Col md={12}>
 					<Card>
-						<Card.Header>
-							<h5>Current Qualifications</h5>
-						</Card.Header>
-						<Card.Body>
-							{savedQualifications ? (
-								<>
-									<div className="mb-3">
-										<strong>Experience:</strong>
-										<p className="mt-1">{savedQualifications.experience || "Not provided"}</p>
-									</div>
-
-									<div className="mb-3">
-										<strong>Skills:</strong>
-										<p className="mt-1">{savedQualifications.skills || "Not provided"}</p>
-									</div>
-
-									<div className="mb-3">
-										<strong>Qualities:</strong>
-										<p className="mt-1">{savedQualifications.qualities || "Not provided"}</p>
-									</div>
-
-									<div className="mb-3">
-										<strong>Education:</strong>
-										<p className="mt-1">{savedQualifications.education || "Not provided"}</p>
-									</div>
-
-									{savedQualifications.updated_at && (
-										<small className="text-muted">
-											Last updated: {new Date(savedQualifications.updated_at).toLocaleString()}
-										</small>
-									)}
-								</>
-							) : (
-								<p className="text-muted">No qualifications saved yet</p>
-							)}
-						</Card.Body>
-					</Card>
-				</Col>
-
-				{/* Right side - Input form */}
-				<Col md={6}>
-					<Card>
-						<Card.Header>
-							<h5>Edit Qualifications</h5>
-						</Card.Header>
 						<Card.Body>
 							<Form onSubmit={handleSubmit}>
 								<Form.Group className="mb-3">
@@ -129,10 +100,9 @@ const UserQualifications = () => {
 										as="textarea"
 										rows={3}
 										name="experience"
-										value={qualifications.experience}
+										value={userQualification.experience}
 										onChange={handleChange}
 										placeholder="Describe your work experience..."
-										required
 									/>
 								</Form.Group>
 
@@ -142,10 +112,9 @@ const UserQualifications = () => {
 										as="textarea"
 										rows={3}
 										name="skills"
-										value={qualifications.skills}
+										value={userQualification.skills}
 										onChange={handleChange}
 										placeholder="List your technical skills..."
-										required
 									/>
 								</Form.Group>
 
@@ -155,10 +124,9 @@ const UserQualifications = () => {
 										as="textarea"
 										rows={3}
 										name="qualities"
-										value={qualifications.qualities}
+										value={userQualification.qualities}
 										onChange={handleChange}
 										placeholder="Describe your professional qualities..."
-										required
 									/>
 								</Form.Group>
 
@@ -168,16 +136,28 @@ const UserQualifications = () => {
 										as="textarea"
 										rows={3}
 										name="education"
-										value={qualifications.education}
+										value={userQualification.education}
 										onChange={handleChange}
 										placeholder="Describe your educational background..."
-										required
 									/>
 								</Form.Group>
 
-								<Button variant="primary" type="submit" disabled={loading} className="w-100">
-									{loading ? "Saving..." : "Save Qualifications"}
-								</Button>
+								<div className="d-flex justify-content-between align-items-center mb-3">
+									{userQualification.modified_at && (
+										<small className="text-muted">
+											Last updated: {new Date(userQualification.modified_at).toLocaleString()}
+										</small>
+									)}
+								</div>
+
+								<ActionButton
+									variant="primary"
+									type="submit"
+									disabled={loading}
+									className="w-100"
+									loadingText={"Saving..."}
+									defaultText={"Save Qualifications"}
+								></ActionButton>
 							</Form>
 						</Card.Body>
 					</Card>

@@ -389,3 +389,109 @@ class TestTokenVersioning:
         # Verify token still works
         response = regular_user_client.get("/current_user")
         assert response.status_code == 200
+
+
+class TestUserQualificationsCRUD(CRUDTestBase):
+
+    endpoint = "user_qualifications"
+    actions_to_test = []
+
+    def test_get_latest_user_qualification(self, authorised_clients, test_users, test_user_qualifications) -> None:
+        """Test retrieving the latest user qualification for a user."""
+
+        response = authorised_clients[0].get(f"{self.endpoint}/latest")
+        qualifications = [uq for uq in test_user_qualifications if uq.owner_id == test_users[0].id]
+        latest_qualification = max(qualifications, key=lambda uq: uq.created_at)
+        assert response.json()["id"] == latest_qualification.id
+        assert response.status_code == 200
+
+    def test_upsert_new(self, authorised_clients, test_users, session) -> None:
+        """Try to upsert a new user qualification."""
+
+        # Without an ID
+        new_qualification_data = {
+            "experience": "Some stuff",
+            "id": None,
+        }
+        response = authorised_clients[0].post(f"{self.endpoint}", json=new_qualification_data)
+        assert response.status_code == 200
+        entry = session.query(models.UserQualification).all()
+        assert len(entry) == 1
+
+        # With an ID
+        new_qualification_data = {
+            "experience": "Some stuff",
+            "id": 1,
+        }
+        response = authorised_clients[0].post(f"{self.endpoint}", json=new_qualification_data)
+        assert response.status_code == 200
+        entry = session.query(models.UserQualification).all()
+        assert len(entry) == 1
+
+    def test_upsert_with_existing(
+        self, authorised_clients, test_users, test_user_qualifications, test_scraped_jobs, session
+    ) -> None:
+        """Try to upsert a new user qualification when not linked to a job rating"""
+
+        # noinspection PyArgumentList
+        job_rating = models.JobRating(
+            owner_id=test_users[0].id,
+            scraped_job_id=test_scraped_jobs[0].id,
+            rating=10,
+            user_qualification_id=test_user_qualifications[0].id,
+        )
+        session.add(job_rating)
+        session.commit()
+
+        new_qualification_data = {
+            "experience": "Some stuff",
+            "id": 2,
+        }
+        response = authorised_clients[0].post(f"{self.endpoint}", json=new_qualification_data)
+        assert response.status_code == 200
+        assert response.json()["id"] == 2
+
+    def test_upsert_with_job_rating(
+        self, authorised_clients, test_users, test_user_qualifications, test_scraped_jobs, session
+    ) -> None:
+        """Try to upsert a new user qualification when not linked to a job rating"""
+
+        # noinspection PyArgumentList
+        job_rating = models.JobRating(
+            owner_id=test_users[0].id,
+            scraped_job_id=test_scraped_jobs[0].id,
+            rating=10,
+            user_qualification_id=test_user_qualifications[0].id,
+        )
+        session.add(job_rating)
+        session.commit()
+        # noinspection PyArgumentList
+        job_rating = models.JobRating(
+            owner_id=test_users[0].id,
+            scraped_job_id=test_scraped_jobs[0].id,
+            rating=10,
+            user_qualification_id=test_user_qualifications[1].id,
+        )
+        session.add(job_rating)
+        session.commit()
+
+        new_qualification_data = {
+            "experience": "Some stuff",
+            "id": 2,
+        }
+        response = authorised_clients[0].post(f"{self.endpoint}", json=new_qualification_data)
+        assert response.status_code == 200
+        assert response.json()["id"] == 8
+
+    def test_upsert_incorrect_user(
+        self, authorised_clients, test_users, test_user_qualifications, test_scraped_jobs, session
+    ) -> None:
+        """Try to upsert a new user qualification when not linked to a job rating"""
+
+        new_qualification_data = {
+            "experience": "Some stuff",
+            "id": 2,
+        }
+        response = authorised_clients[1].post(f"{self.endpoint}", json=new_qualification_data)
+        assert response.status_code == 200
+        assert response.json()["id"] == 8
