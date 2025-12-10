@@ -26,6 +26,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import "./Themes.css";
 import { AlertProvider } from "./contexts/AlertContext";
+import UserQualifications from "./pages/UserQualifications/UserQualificationPage";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -139,6 +140,7 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/users", element: <UserManagementPage />, protected: true, adminOnly: true },
 	{ path: "/eis_dashboard", element: <DashboardPage />, protected: true, adminOnly: true },
 	{ path: "/app_settings", element: <SettingsPage />, protected: true, adminOnly: true },
+	{ path: "user_qualifications", element: <UserQualifications />, protected: true, adminOnly: false },
 	{ path: "*", element: <NotFoundPage /> },
 ];
 

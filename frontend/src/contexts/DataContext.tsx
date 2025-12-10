@@ -3,6 +3,8 @@ import {
 	aggregatorsApi,
 	ApiError,
 	companiesApi,
+	countriesApi,
+	currenciesApi,
 	interviewsApi,
 	jobApplicationUpdatesApi,
 	jobsApi,
@@ -12,8 +14,6 @@ import {
 	scrapedJobApi,
 	settingsApi,
 	userApi,
-	currenciesApi,
-	countriesApi,
 } from "../services/Api";
 import { useAuth } from "./AuthContext";
 import {

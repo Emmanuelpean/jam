@@ -46,6 +46,7 @@ app.include_router(user.current_user_router)
 app.include_router(auth.login_router)
 app.include_router(auth.register_router)
 app.include_router(auth.password_router)
+app.include_router(user.user_qualification_router)
 
 # Export router
 app.include_router(export.router)

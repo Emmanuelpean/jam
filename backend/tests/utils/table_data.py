@@ -2714,6 +2714,24 @@ for i in range(50):
     EMAIL_SCRAPEDJOB_MAPPINGS[0]["scraped_job_ids"].append(i + 14)
 
 
+# User Qualifications
+USER_QUALIFICATION_DATA = [
+    {"owner_id": 1, "education": "BSc Computer Science"},
+    {"owner_id": 1, "education": "BSc Computer Science + PhD Artificial Intelligence"},
+    {"owner_id": 2, "education": "BSc Computer Science"},
+    {"owner_id": 2, "education": "MSc Computer Science"},
+    {"owner_id": 4, "education": "BSc Computer Science"},
+    {"owner_id": 3, "education": "BSc Computer Science"},
+    {"owner_id": 5, "education": "BSc Computer Science"},
+]
+
+
+JOB_RATING_DATA = [
+    {"scraped_job_id": 1, "rating": 4, "user_qualification_id": 1, "owner_id": 1},
+    {"scraped_job_id": 2, "rating": 8, "user_qualification_id": 2, "owner_id": 1},
+]
+
+
 def add_mappings(
     primary_data: list,
     secondary_data: list,

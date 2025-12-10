@@ -1,4 +1,4 @@
-import { ServiceLog } from "./Schemas";
+import { ServiceLog, UserQualification } from "./Schemas";
 
 export interface ApiError extends Error {
 	status?: number;
@@ -33,8 +33,9 @@ interface EisServiceLogCrudApi extends CrudApi {
 	getLatest: (token: string) => Promise<ServiceLog>;
 }
 
-interface JobQualificationApi extends CrudApi {
-	upsert: (data: any, token: string) => Promise<any>;
+interface UserQualificationApi {
+	getLatest: (token: string) => Promise<UserQualification>;
+	upsert: (data: any, token: string) => Promise<UserQualification>;
 }
 
 interface AuthApi {
@@ -195,9 +196,9 @@ export const settingsApi: CrudApi = createCrudApi("settings");
 export const countriesApi: CrudApi = createCrudApi("others/countries");
 export const currenciesApi: CrudApi = createCrudApi("others/currencies");
 
-export const jobQualificationApi: JobQualificationApi = {
-	...createCrudApi("user_qualifications"),
-	upsert: (data: any, token: string): Promise<any> => api.post("user_qualifications", data, token),
+export const userQualificationApi: UserQualificationApi = {
+	getLatest: (token: string): Promise<UserQualification> => api.get("user_qualifications/latest", token),
+	upsert: (data: any, token: string): Promise<UserQualification> => api.post("user_qualifications", data, token),
 };
 
 export const exportApi: ExportCrudApi = {
