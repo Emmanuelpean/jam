@@ -67,3 +67,13 @@
 ### New Modals
 * [X] Interview modals should show the edited value after being edited from the job modal
 * [X] Multiple modals of the same type should be able to be opened at the same time 
+
+
+### AI Rating
+* [ ] User Qualification table
+  * [ ] If no entry, then create a new entry. If a user modifies an entry either
+    * [ ] Create a new entry if the current entry has been used to rate a job
+    * [ ] Update the current entry if it has not been used to rate a job
+  * [ ] Show the list of qualifications in the user settings page
+* [ ] Create the service that will rate the jobs based on the user qualifications
+* 

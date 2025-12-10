@@ -33,6 +33,10 @@ interface EisServiceLogCrudApi extends CrudApi {
 	getLatest: (token: string) => Promise<ServiceLog>;
 }
 
+interface JobQualificationApi extends CrudApi {
+	upsert: (data: any, token: string) => Promise<any>;
+}
+
 interface AuthApi {
 	login: (email: string, password: string) => Promise<any>;
 	register: (email: string, password: string) => Promise<any>;
@@ -190,6 +194,11 @@ export const userApi: CrudApi = createCrudApi("users");
 export const settingsApi: CrudApi = createCrudApi("settings");
 export const countriesApi: CrudApi = createCrudApi("others/countries");
 export const currenciesApi: CrudApi = createCrudApi("others/currencies");
+
+export const jobQualificationApi: JobQualificationApi = {
+	...createCrudApi("user_qualifications"),
+	upsert: (data: any, token: string): Promise<any> => api.post("user_qualifications", data, token),
+};
 
 export const exportApi: ExportCrudApi = {
 	download: (filename: string, token: string) => api.downloadFile("export/", filename, token),

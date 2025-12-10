@@ -303,3 +303,10 @@ export interface ServiceError {
 	traceback: string;
 	service_log_id: number;
 }
+
+export interface UserQualification {
+	experience: string | null;
+	skills: string | null;
+	qualities: string | null;
+	education: string | null;
+}
