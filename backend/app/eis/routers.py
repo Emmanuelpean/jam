@@ -3,22 +3,19 @@
 Provides REST API endpoints for managing job alert emails, scraped job postings,
 and service execution logs with CRUD operations and admin access controls."""
 
-import os
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session
-from starlette import status
 from starlette.requests import Request
 
 from app import models as app_models
-from app.config import settings
+from app import service_runner
 from app.database import get_db
 from app.eis import models, schemas
-from app.eis.email_scraper import scraper_service
+from app.eis.email_scraper import scraper_service, SERVICE_NAME
 from app.eis.job_scrapers.indeed import IndeedBrightdataJobScraper
 from app.eis.job_scrapers.linkedin import LinkedinBrightdataJobScraper
 from app.eis.job_scrapers.nhs import NhsJobScraper
@@ -27,7 +24,6 @@ from app.oauth2 import get_current_user
 from app.routers import (
     generate_data_table_crud_router,
     filter_query,
-    assert_admin,
     NOT_ALLOWED_EXCEPTION,
 )
 
@@ -203,27 +199,15 @@ def get_service_logs_by_date_range(
     :param db: Database session
     :return: list of service logs within the date range ordered by run_datetime descending"""
 
-    assert_admin(current_user)
-
-    query = db.query(models.EisServiceLog).filter(models.EisServiceLog.run_duration.is_not(None))
-
-    # Apply date filters
-    if start_date:
-        query = query.filter(models.EisServiceLog.run_datetime >= start_date)
-    if end_date:
-        query = query.filter(models.EisServiceLog.run_datetime <= end_date)
-    if delta_days:
-        start_date = datetime.now() - timedelta(days=delta_days)
-        query = query.filter(models.EisServiceLog.run_datetime >= start_date)
-
-    # Order by run_datetime descending (most recent first)
-    query = query.order_by(models.EisServiceLog.run_datetime.desc())
-
-    # Apply limit if specified
-    if limit:
-        query = query.limit(limit)
-
-    return query.all()
+    return service_runner.get_service_logs_by_date_range(
+        start_date,
+        end_date,
+        delta_days,
+        limit,
+        current_user,
+        db,
+        models.EisServiceLog,
+    )
 
 
 # GET endpoint for admin user to get the latest service log
@@ -237,15 +221,7 @@ def get_latest(
     :param db: Database session
     :return: Latest service log entry"""
 
-    assert_admin(current_user)
-
-    latest_log = db.query(models.EisServiceLog).order_by(models.EisServiceLog.run_datetime.desc()).first()
-    if not latest_log:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No service logs found",
-        )
-    return latest_log
+    return service_runner.get_latest(current_user, db, models.EisServiceLog)
 
 
 # ------------------------------------------------------ SCRAPING ------------------------------------------------------
@@ -331,50 +307,29 @@ def start_scraper(
     request: schemas.StartRequest,
     current_user: app_models.User = Depends(get_current_user),
 ) -> dict:
-    """Start the email scraping service with the specified period.
+    """Start the service runner with the specified period.
     :param request: StartRequest object containing period_hours
     :param current_user: Current authenticated user"""
 
-    assert_admin(current_user)
-    try:
-        scraper_service.start_runner(period_hours=request.period_hours, timedelta_days=request.timedelta_days)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start service: {str(e)}",
-        )
-    return {"detail": f"Scraping service started (period_hours={request.period_hours})"}
+    return service_runner.start_scraper(scraper_service, current_user, request.period_hours)
 
 
 @email_scraper_service_router.post("/stop")
-def stop_scraper(
-    current_user: app_models.User = Depends(get_current_user),
-) -> dict:
-    """Stop the email scraping service.
+def stop_scraper(current_user: app_models.User = Depends(get_current_user)) -> dict:
+    """Stop the service runner.
     :param current_user: Current authenticated user"""
 
-    assert_admin(current_user)
-    try:
-        scraper_service.stop_runner()
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to stop service: {str(e)}",
-        )
-    return {"detail": "Scraping service stopped"}
+    return service_runner.stop_scraper(scraper_service, current_user)
 
 
 @email_scraper_service_router.get("/status")
 def scraper_status(
     current_user: app_models.User = Depends(get_current_user),
 ) -> dict:
-    """Get the current status of the email scraping service.
+    """Get the current status of the service.
     :param current_user: Current authenticated user"""
 
-    assert_admin(current_user)
-    stat = scraper_service.status()
-    stat["timedelta_days"] = stat["service_kwargs"]["timedelta_days"]
-    return stat
+    return service_runner.scraper_status(scraper_service, current_user)
 
 
 @email_scraper_service_router.get("/logs")
@@ -382,24 +337,8 @@ def get_scraper_logs(
     lines: int = Query(100, ge=1, le=10000),
     current_user: app_models.User = Depends(get_current_user),
 ):
-    """Get the last N lines from the scraper log file
+    """Get the last N lines from the service log file
     :param lines: Number of lines to retrieve (default 100, max 10000)
     :param current_user: Current authenticated user"""
 
-    assert_admin(current_user)
-
-    log_file_path = Path(os.path.join(settings.log_directory, "email_scraper.log"))
-
-    if not log_file_path.exists():
-        return {"lines": [], "total_lines": 0}
-
-    try:
-        with open(log_file_path, "r") as f:
-            all_lines = f.readlines()
-
-        total_lines = len(all_lines)
-        log_lines = all_lines[-lines:] if lines < total_lines else all_lines
-
-        return {"lines": [line.rstrip() for line in log_lines], "total_lines": total_lines}
-    except Exception as e:
-        return {"lines": [f"Error reading log file: {str(e)}"], "total_lines": 0}
+    return service_runner.get_service_logs(SERVICE_NAME, lines, current_user)

@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import data_tables, user, auth, export, settings, others
 from app.eis import routers as eis_routers
+from app.job_rating import routers as job_rating_routers
 from app.emails import routers as email_routers
 from app.config import settings as app_settings
 from app import models
@@ -39,6 +40,10 @@ app.include_router(eis_routers.job_alert_email_router)
 app.include_router(eis_routers.eis_service_log_router)
 app.include_router(eis_routers.scraper_router)
 app.include_router(eis_routers.email_scraper_service_router)
+
+# Job Rating routers
+app.include_router(job_rating_routers.job_rating_service_router)
+app.include_router(job_rating_routers.service_log_router)
 
 # Authentification router
 app.include_router(user.user_router)

@@ -135,3 +135,15 @@ def ai_score_job(
         response_text = "\n".join(lines[1:-1])  # Remove first and last lines
 
     return json.loads(response_text)
+
+
+if __name__ == "__main__":
+    title = "Software Engineer"
+    company = "Tech Corp"
+    description = "We are looking for a Software Engineer with experience in Python and web development."
+    experience = "3 years as a backend developer using Python and Django."
+    education = "Bachelor's degree in Computer Science."
+    skills = "Python, Django, REST APIs, SQL"
+    qualities = "Team player, problem solver, quick learner"
+    interests = "Not interested in software engineer roles"
+    print(ai_score_job(experience, education, skills, qualities, None, title, company, description))

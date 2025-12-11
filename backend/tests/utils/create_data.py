@@ -5,6 +5,7 @@ import random
 
 import app.eis.models as eis_models
 from app import models, utils
+import app.job_rating.models as job_rating_models
 from tests.utils.table_data import (
     USER_DATA,
     SETTINGS_DATA,
@@ -428,13 +429,13 @@ def create_user_qualifications(db, users) -> list[models.UserQualification]:
     return add_to_db(db, keywords)
 
 
-def create_job_ratings(db, users, use_qualifications, scraped_jobs) -> list[models.JobRating]:
+def create_job_ratings(db, users, use_qualifications, scraped_jobs) -> list[job_rating_models.JobRating]:
     """Create sample job ratings"""
 
     print("Creating job ratings...")
     # noinspection PyArgumentList
     keywords = [
-        models.JobRating(**kwargs)
+        job_rating_models.JobRating(**kwargs)
         for kwargs in override_entries_properties(
             JOB_RATING_DATA,
             ("owner_id", users),
