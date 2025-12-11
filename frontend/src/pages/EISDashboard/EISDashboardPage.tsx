@@ -54,14 +54,15 @@ const JobScraperDashboard = (): JSX.Element => {
 		}
 	}, [status?.period_hours, status?.timedelta_days]);
 
-	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
-		const target = event.target as HTMLInputElement;
-		const { name, value } = target;
-		setFormData((prevData) => ({
-			...prevData,
-			[name]: Number(value),
-		}));
-	};
+    const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
+        const target = event.target as HTMLInputElement;
+        const { name, value } = target;
+
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value === '' ? '' : Number(value) || 3,
+        }));
+    };
 
 	const handleStart = async (): Promise<void> => {
 		if (!token) return;

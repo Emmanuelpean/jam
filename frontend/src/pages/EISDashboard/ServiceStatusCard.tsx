@@ -71,7 +71,7 @@ const RenderLabeledInput = (
 					{help && <HelpBubble helpText={help} />}
 				</InputGroup.Text>
 
-				<Form.Control type="text" value={value} onChange={onChange} />
+				<Form.Control name={id} type="text" value={value} onChange={onChange} />
 
 				{unitText && <InputGroup.Text>{unitText}</InputGroup.Text>}
 			</InputGroup>
