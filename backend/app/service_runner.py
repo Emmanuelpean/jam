@@ -3,7 +3,7 @@
 import threading
 import time
 
-from utils import AppLogger
+from app.utils import AppLogger
 
 
 class ServiceRunner:
@@ -54,12 +54,11 @@ class ServiceRunner:
         self.service_runner_thread = threading.Thread(
             target=self._run_service,
             args=(period_hours,),
-            kwargs=self.service_kwargs,
         )
         self.service_runner_thread.daemon = True
         self.service_runner_thread.start()
 
-    def stop(self) -> None:
+    def stop_runner(self) -> None:
         """Stop the scraping service"""
 
         if self.service_runner_thread_status in ("stopped", "starting", "stopping"):
