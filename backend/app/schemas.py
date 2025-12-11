@@ -146,6 +146,7 @@ class UserQualificationUpsert(BaseModel):
     skills: str | None = None
     education: str | None = None
     qualities: str | None = None
+    interests: str | None = None
 
 
 class UserQualificationOut(UserQualificationUpsert, OwnedOut):
