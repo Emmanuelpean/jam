@@ -337,7 +337,7 @@ def start_scraper(
 
     assert_admin(current_user)
     try:
-        scraper_service.start(period_hours=request.period_hours, timedelta_days=request.timedelta_days)
+        scraper_service.start_runner(period_hours=request.period_hours, timedelta_days=request.timedelta_days)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -355,7 +355,7 @@ def stop_scraper(
 
     assert_admin(current_user)
     try:
-        scraper_service.stop()
+        scraper_service.stop_runner()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -372,7 +372,9 @@ def scraper_status(
     :param current_user: Current authenticated user"""
 
     assert_admin(current_user)
-    return scraper_service.status()
+    stat = scraper_service.status()
+    stat["timedelta_days"] = stat["service_kwargs"]["timedelta_days"]
+    return stat
 
 
 @email_scraper_service_router.get("/logs")

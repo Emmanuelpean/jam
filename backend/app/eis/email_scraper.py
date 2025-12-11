@@ -5,16 +5,14 @@ platforms (linkedin, indeed, veganjobs), stores email and job metadata in the
 database, scrapes full job details (via platform scrapers or from email
 content), and records run statistics in an EisServiceLog."""
 
-import threading
-import time
 import traceback
 from datetime import datetime
 
 from app import models, utils
 from app.config import settings
 from app.database import get_db
-from app.eis.email_parsers.utils import Platform, remove_style_tags
 from app.eis.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
+from app.eis.email_parsers.utils import Platform, remove_style_tags
 from app.eis.job_scrapers import JobResult
 from app.eis.job_scrapers.indeed import IndeedBrightdataJobScraper
 from app.eis.job_scrapers.linkedin import LinkedinBrightdataJobScraper
@@ -23,6 +21,7 @@ from app.eis.job_scrapers.veganjobs import VeganJobsJobScraper
 from app.eis.location_parser import LocationParser
 from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog, PlatformStat, EisServiceError
 from app.emails.email_service import EmailService
+from app.service_runner import ServiceRunner
 from app.utils import AppLogger
 
 
@@ -524,127 +523,12 @@ class JobEmailScraper(EmailService):
                     self.upsert_platform_stat(service_log, job_record.platform, job_scrape_failed_ids=job_record.id)
 
 
-class EmailScraperService:
-    """Service wrapper for JobScraper with start/stop functionality"""
+class EmailScraperService(ServiceRunner):
+    """Service runner for the EmailScraperService"""
 
-    def __init__(self) -> None:
-        """Initialise the service with a JobScraper instance."""
-
-        self.scraper = JobEmailScraper()
-        self.thread = None
-        self.stop_event = threading.Event()
-        self.period_hours = 3.0
-        self.timedelta_days = 1
-        self.thread_status = "stopped"
-        self.scraper_running = False
-        self.sleep_until = None
-        self.sleep_start = None
-        self.logger = AppLogger.create_service_logger("email_scraper_service", "INFO")
-        self.logger.info("EmailScraperService initialized")
-
-    def start(self, period_hours: float = 3.0, timedelta_days: int = 1) -> None:
-        """Start the scraping service
-        :param period_hours: Hours between each scraping run
-        :param timedelta_days: Number of days to search for emails"""
-
-        if self.thread_status in ("started", "starting", "stopping"):
-            self.logger.warning(f"Cannot start service - current status: {self.thread_status}")
-            return
-
-        self.logger.info(f"Starting email scraper service (period: {period_hours}h, timedelta: {timedelta_days}d)")
-        self.thread_status = "starting"
-
-        # Store parameters
-        self.period_hours = period_hours
-        self.timedelta_days = timedelta_days
-
-        # Clear the stop event
-        self.stop_event.clear()
-
-        # Start the service in a separate thread
-        self.thread = threading.Thread(target=self._run_service, args=(period_hours, timedelta_days))
-        self.thread.daemon = True
-        self.thread.start()
-        self.logger.info("Service thread started successfully")
-
-    def stop(self) -> None:
-        """Stop the scraping service"""
-
-        if self.thread_status in ("stopped", "starting", "stopping"):
-            self.logger.warning(f"Cannot stop service - current status: {self.thread_status}")
-            return
-
-        self.logger.info("Stopping email scraper service")
-        self.thread_status = "stopping"
-        self.stop_event.set()
-
-    def _run_service(self, period_hours: float, timedelta_days: int) -> None:
-        """Internal method that runs the scraping loop
-        :param period_hours: Hours between each scraping run
-        :param timedelta_days: Number of days to search for emails"""
-
-        try:
-            self.thread_status = "started"
-            self.logger.info("Service loop started")
-
-            while not self.stop_event.is_set():
-                try:
-                    # Run the scraping
-                    self.logger.info(f"Starting scraping run (timedelta: {timedelta_days}d)")
-                    self.scraper_running = True
-                    result = self.scraper.run_scraping(timedelta_days=timedelta_days)
-                    self.scraper_running = False
-
-                    self.logger.info(f"Scraping completed - duration: {result.run_duration:.2f}s")
-
-                    duration = result.run_duration
-                    sleep_time = max([0, period_hours * 3600 - duration])
-
-                    # Track sleep timing
-                    self.sleep_start = time.time()
-                    self.sleep_until = self.sleep_start + sleep_time
-
-                    self.logger.info(f"Sleeping for {sleep_time:.2f}s until next run")
-
-                    if self.stop_event.wait(timeout=sleep_time):
-                        self.logger.info("Stop event received during sleep")
-                        break
-
-                    # Clear sleep tracking after waking
-                    self.sleep_start = None
-                    self.sleep_until = None
-
-                except Exception as e:
-                    self.logger.exception(f"Error during scraping run: {e}")
-                    self.scraper_running = False
-
-                    self.sleep_start = time.time()
-                    self.sleep_until = self.sleep_start + 300
-
-                    self.logger.info("Waiting 5 minutes before retry after error")
-
-                    if self.stop_event.wait(timeout=300):  # 5 minutes
-                        self.logger.info("Stop event received during error recovery")
-                        break
-
-                    self.sleep_start = None
-                    self.sleep_until = None
-        finally:
-            self.logger.info("Service loop ended")
-            self.thread_status = "stopped"
-            self.sleep_start = None
-            self.sleep_until = None
-
-    def status(self) -> dict:
-        """Get the current status of the service"""
-
-        return {
-            "thread_status": self.thread_status,
-            "scraper_running": self.scraper_running,
-            "period_hours": self.period_hours,
-            "timedelta_days": self.timedelta_days,
-            "sleep_until": self.sleep_until,
-        }
+    service_name = "email_scraper_service"
+    service_kwargs = dict(timedelta_days=3)
+    service_function = JobEmailScraper().run_scraping
 
 
 scraper_service = EmailScraperService()

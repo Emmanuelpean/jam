@@ -456,3 +456,4 @@ class EmailService(object):
 
 
 email_service = EmailService()
+print(email_service.get_email_ids(sender_email="emmanuelpean@gmail.com"))
