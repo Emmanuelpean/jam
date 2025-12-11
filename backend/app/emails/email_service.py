@@ -14,6 +14,7 @@ from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.emails.utils import clean_email_address, build_multi_from_query
 from app.utils import AppLogger
+from eis.email_parsers import PLATFORM_SENDER_EMAILS
 
 templates = Jinja2Templates(directory="templates")
 
@@ -456,4 +457,3 @@ class EmailService(object):
 
 
 email_service = EmailService()
-print(email_service.get_email_ids(sender_email="emmanuelpean@gmail.com"))
