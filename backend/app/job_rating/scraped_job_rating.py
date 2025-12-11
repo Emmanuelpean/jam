@@ -5,7 +5,8 @@ import traceback
 
 from sqlalchemy import func
 
-from app import models
+from app.job_rating import models
+from app import models as app_models
 from app import utils
 from app.database import get_db
 from app.eis import models as eis_models
@@ -13,12 +14,15 @@ from app.job_rating.gemini import ai_score_job, __version__
 from app.service_runner import ServiceRunner
 
 
+SERVICE_NAME = "job_rating_service"
+
+
 def score_scraped_jobs(min_description_length: int = 10) -> models.JobRatingServiceLog:
     """Score all scraped jobs using Gemini LLM.
     :param min_description_length: Minimum job description length to consider"""
 
     db = next(get_db())
-    logger = utils.AppLogger.create_service_logger("llm_job_rating")
+    logger = utils.AppLogger.create_service_logger(SERVICE_NAME, "INFO")
     start_time = dt.datetime.now()
     service_log = models.JobRatingServiceLog(run_datetime=start_time)
 
@@ -38,9 +42,9 @@ def score_scraped_jobs(min_description_length: int = 10) -> models.JobRatingServ
         for scraped_job in scraped_jobs:
             owner_id = scraped_job.owner_id
             owner_qualifications = (
-                db.query(models.UserQualification)
-                .filter(models.UserQualification.owner_id == owner_id)
-                .order_by(models.UserQualification.modified_at.desc())
+                db.query(app_models.UserQualification)
+                .filter(app_models.UserQualification.owner_id == owner_id)
+                .order_by(app_models.UserQualification.modified_at.desc())
                 .first()
             )
             kwargs = dict(
@@ -113,21 +117,14 @@ class LlmJobRatingServiceRunner(ServiceRunner):
     """Service runner for the LLM job rating service."""
 
     service_function = score_scraped_jobs
-    service_name = "llm_job_rating"
+    service_name = SERVICE_NAME
     period_hours = 6.0
 
 
+job_rating_service_runner = LlmJobRatingServiceRunner()
+
+
 if __name__ == "__main__":
-    # title = "Software Engineer"
-    # company = "Tech Corp"
-    # description = "We are looking for a Software Engineer with experience in Python and web development."
-    # experience = "3 years as a backend developer using Python and Django."
-    # education = "Bachelor's degree in Computer Science."
-    # skills = "Python, Django, REST APIs, SQL"
-    # qualities = "Team player, problem solver, quick learner"
-    # interests = "Not interested in software engineer roles"
-    # print(ai_score_job(experience, education, skills, qualities, None, title, company, description))
-    #
     # service_runner = LlmJobRatingServiceRunner()
     # service_runner.start_runner(1)
 

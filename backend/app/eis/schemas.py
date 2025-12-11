@@ -7,6 +7,7 @@ from datetime import datetime
 from pydantic import field_validator
 
 from app.schemas import BaseModel, OwnedOut, Out, serialize_relationships
+from app.job_rating.schemas import JobRatingOut
 
 
 # --------------------------------------------------- JOB ALERT EMAIL --------------------------------------------------
@@ -88,6 +89,7 @@ class ScrapedJobOut(ScrapedJob, OwnedOut):
     """Scraped Job output schema"""
 
     emails: list[int]
+    job_rating: JobRatingOut | None
 
     @field_validator("emails", mode="before")
     @classmethod

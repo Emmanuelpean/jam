@@ -24,6 +24,8 @@ from app.emails.email_service import EmailService
 from app.service_runner import ServiceRunner
 from app.utils import AppLogger
 
+SERVICE_NAME = "email_scraper_service"
+
 
 class JobEmailScraper(EmailService):
     """Job Email Alert Scraper"""
@@ -34,7 +36,7 @@ class JobEmailScraper(EmailService):
 
         EmailService.__init__(self)
         self.location_parser = LocationParser()
-        self.logger = AppLogger.create_service_logger("email_scraper", "INFO")
+        self.logger = AppLogger.create_service_logger(SERVICE_NAME, "INFO")
         self.db = next(get_db()) if db is None else db
         self.countries = utils.open_json("app/data/countries.json")
         self.currencies = utils.open_json("app/data/currencies.json")
@@ -526,7 +528,7 @@ class JobEmailScraper(EmailService):
 class EmailScraperService(ServiceRunner):
     """Service runner for the EmailScraperService"""
 
-    service_name = "email_scraper_service"
+    service_name = SERVICE_NAME
     service_kwargs = dict(timedelta_days=3)
     service_function = JobEmailScraper().run_scraping
 
