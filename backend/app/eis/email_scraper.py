@@ -382,7 +382,7 @@ class JobEmailScraper(EmailService):
                     sender_email=user.email,
                     inbox_only=True,
                     timedelta_days=timedelta_days,
-                    from_email=list(PLATFORM_SENDER_EMAILS.items()),
+                    from_email=list(PLATFORM_SENDER_EMAILS.keys()),
                 )
                 service_log.email_found_n += len(email_ids)
                 self.logger.info(f"Found {len(email_ids)} emails")
