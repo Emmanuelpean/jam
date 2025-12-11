@@ -184,7 +184,7 @@ class UserQualification(Owned, Base):
     - `skills` (str): User's skills details.
     - `qualities` (str): User's personal qualities.
     - `education` (str): User's education details.
-    - `interest` (str): User's job interests.
+    - `interests` (str): User's job interests.
     - `is_active` (bool): Indicates whether the qualification is active.
 
     Relationships:
@@ -195,7 +195,7 @@ class UserQualification(Owned, Base):
     skills = Column(String, nullable=True)
     qualities = Column(String, nullable=True)
     education = Column(String, nullable=True)
-    interest = Column(String, nullable=True)
+    interests = Column(String, nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
 
     job_ratings = relationship("JobRating", back_populates="user_qualification")
@@ -600,6 +600,8 @@ class JobRating(Owned, Base):
     - `interest_score` (int, optional): Interest score for the job.
     - `feedback` (str, optional): Additional feedback or comments about the job rating.
     - `script_version` (int, optional): Version of the rating script used.
+    - `is_success` (bool, optional): Indicates whether the rating process was successful.
+    - `error` (str, optional): Error message if the rating process failed.
 
     Foreign keys:
     -------------
@@ -611,13 +613,15 @@ class JobRating(Owned, Base):
     - `scraped_job` (ScrapedJob): ScrapedJob object related to the rating.
     - `use_qualification` (UserQualification): UserQualification object related to the rating."""
 
-    overall_score = Column(Integer, nullable=False)
+    overall_score = Column(Integer, nullable=True)
     technical_score = Column(Integer, nullable=True)
     experience_score = Column(Integer, nullable=True)
     educational_score = Column(Integer, nullable=True)
     interest_score = Column(Integer, nullable=True)
     feedback = Column(String, nullable=True)
     script_version = Column(Integer, nullable=True)
+    is_success = Column(Boolean, nullable=True)
+    error = Column(String, nullable=True)
 
     # Foreign keys
     scraped_job_id = Column(Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), nullable=False)
@@ -626,8 +630,6 @@ class JobRating(Owned, Base):
     # Relationships
     scraped_job = relationship("ScrapedJob")
     user_qualification = relationship("UserQualification")
-
-    __table_args__ = (CheckConstraint("rating >= 0 AND rating <= 10", name=f"valid_rating_range"),)
 
 
 class JobRatingServiceLog(Owned, Base):
@@ -662,22 +664,3 @@ class JobRatingServiceLog(Owned, Base):
         kwargs.setdefault("job_rating_ids", [])
         kwargs.setdefault("scraped_job_ids", [])
         super().__init__(**kwargs)
-
-
-class JobRaringServiceError(CommonBase, Base):  # TODO create common base for service errors
-    """Records unexpected/unhandled errors raised during a service run.
-
-    Attributes:
-    -----------
-    - `error_type` (str): Type of the error.
-    - `message` (str, optional): Error message.
-    - `traceback` (str, optional): Traceback of the error.
-    - `service_log_id` (int): Foreign key to the associated EisServiceLog.
-    - `service_log` (EisServiceLog): Relationship to the associated EisServiceLog"""
-
-    error_type = Column(String, nullable=False)
-    message = Column(String, nullable=False)
-    traceback = Column(String, nullable=False)
-
-    service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="CASCADE"), nullable=False)
-    service_log = relationship("EisServiceLog", back_populates="service_errors")

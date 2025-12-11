@@ -2723,12 +2723,19 @@ USER_QUALIFICATION_DATA = [
     {"owner_id": 4, "education": "BSc Computer Science"},
     {"owner_id": 3, "education": "BSc Computer Science"},
     {"owner_id": 5, "education": "BSc Computer Science"},
+    {
+        "owner_id": 6,
+        "education": "BSc in physics; MSc in Nanosciences; PhD in photochemistry of perovksite solar cells",
+        "experience": "12 years Python",
+        "skills": "3D printing",
+        "interests": "software engineering",
+    },
 ]
 
 
 JOB_RATING_DATA = [
-    {"scraped_job_id": 1, "rating": 4, "user_qualification_id": 1, "owner_id": 1},
-    {"scraped_job_id": 2, "rating": 8, "user_qualification_id": 2, "owner_id": 1},
+    {"scraped_job_id": 1, "overall_score": 4, "user_qualification_id": 1, "owner_id": 1},
+    {"scraped_job_id": 2, "overall_score": 8, "user_qualification_id": 2, "owner_id": 1},
 ]
 
 
