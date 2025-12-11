@@ -139,6 +139,7 @@ class ScrapedJob(Owned, Base):
     # Relationships
     emails = relationship("JobAlertEmail", secondary=jobalertemail_scrapedjob_mapping, back_populates="jobs")
     service_log = relationship("EisServiceLog", back_populates="scraped_jobs")
+    job_rating = relationship("JobRating", back_populates="scraped_job")
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)

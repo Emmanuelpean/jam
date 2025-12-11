@@ -20,6 +20,7 @@ from sqlalchemy import (
     func,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
@@ -183,6 +184,7 @@ class UserQualification(Owned, Base):
     - `skills` (str): User's skills details.
     - `qualities` (str): User's personal qualities.
     - `education` (str): User's education details.
+    - `interest` (str): User's job interests.
     - `is_active` (bool): Indicates whether the qualification is active.
 
     Relationships:
@@ -193,6 +195,7 @@ class UserQualification(Owned, Base):
     skills = Column(String, nullable=True)
     qualities = Column(String, nullable=True)
     education = Column(String, nullable=True)
+    interest = Column(String, nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
 
     job_ratings = relationship("JobRating", back_populates="user_qualification")
@@ -590,7 +593,13 @@ class JobRating(Owned, Base):
 
     Attributes:
     -----------
-    - `rating` (int): The rating given to the job (1-10).
+    - `overall_score` (int): Overall score for the job.
+    - `technical_score` (int, optional): Technical score for the job.
+    - `experience_score` (int, optional): Experience score for the job.
+    - `educational_score` (int, optional): Educational score for the job.
+    - `interest_score` (int, optional): Interest score for the job.
+    - `feedback` (str, optional): Additional feedback or comments about the job rating.
+    - `script_version` (int, optional): Version of the rating script used.
 
     Foreign keys:
     -------------
@@ -602,12 +611,73 @@ class JobRating(Owned, Base):
     - `scraped_job` (ScrapedJob): ScrapedJob object related to the rating.
     - `use_qualification` (UserQualification): UserQualification object related to the rating."""
 
+    overall_score = Column(Integer, nullable=False)
+    technical_score = Column(Integer, nullable=True)
+    experience_score = Column(Integer, nullable=True)
+    educational_score = Column(Integer, nullable=True)
+    interest_score = Column(Integer, nullable=True)
+    feedback = Column(String, nullable=True)
+    script_version = Column(Integer, nullable=True)
+
+    # Foreign keys
     scraped_job_id = Column(Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), nullable=False)
     user_qualification_id = Column(Integer, ForeignKey("user_qualification.id", ondelete="CASCADE"), nullable=False)
-    rating = Column(Integer, nullable=False)
 
     # Relationships
     scraped_job = relationship("ScrapedJob")
     user_qualification = relationship("UserQualification")
 
-    __table_args__ = (CheckConstraint("rating >= 1 AND rating <= 10", name=f"valid_rating_range"),)
+    __table_args__ = (CheckConstraint("rating >= 0 AND rating <= 10", name=f"valid_rating_range"),)
+
+
+class JobRatingServiceLog(Owned, Base):
+    """Represents service logs for job ratings.
+
+    Attributes:
+    -----------
+    - `request_payload` (str): The request payload sent to the rating service.
+    - `response_payload` (str): The response payload received from the rating service.
+    - `status_code` (int): The HTTP status code of the response.
+    - `error_message` (str, optional): Any error message returned by the service.
+
+    Foreign keys:
+    -------------
+    - `job_rating_id` (int): Identifier for the job rating associated with the log.
+
+    Relationships:
+    --------------
+    - `job_rating` (JobRating): JobRating object related to the service log."""
+
+    run_duration = Column(Float, nullable=True)
+    run_datetime = Column(TIMESTAMP(timezone=True), nullable=False)
+    is_success = Column(Boolean, nullable=True)
+    error_message = Column(String, nullable=True)
+
+    job_rating_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    scraped_job_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+
+    def __init__(self, **kwargs) -> None:
+        """Initialise array fields with empty lists if not provided"""
+
+        kwargs.setdefault("job_rating_ids", [])
+        kwargs.setdefault("scraped_job_ids", [])
+        super().__init__(**kwargs)
+
+
+class JobRaringServiceError(CommonBase, Base):  # TODO create common base for service errors
+    """Records unexpected/unhandled errors raised during a service run.
+
+    Attributes:
+    -----------
+    - `error_type` (str): Type of the error.
+    - `message` (str, optional): Error message.
+    - `traceback` (str, optional): Traceback of the error.
+    - `service_log_id` (int): Foreign key to the associated EisServiceLog.
+    - `service_log` (EisServiceLog): Relationship to the associated EisServiceLog"""
+
+    error_type = Column(String, nullable=False)
+    message = Column(String, nullable=False)
+    traceback = Column(String, nullable=False)
+
+    service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="CASCADE"), nullable=False)
+    service_log = relationship("EisServiceLog", back_populates="service_errors")

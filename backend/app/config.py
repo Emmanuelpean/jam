@@ -50,8 +50,9 @@ class Settings(BaseSettings):
     brightdata_linkedin_dataset_id: str
     brightdata_indeed_dataset_id: str
 
-    # OpenAI
+    # AI Keys
     openai_api_key: str
+    gemini_api_key: str
 
     # Apify
     apify_api_key: str
