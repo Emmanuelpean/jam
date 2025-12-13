@@ -36,10 +36,10 @@ def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
         collection = data_collections.get(collection_name, [])
         if isinstance(entry_id, (int, float)) and 1 <= entry_id <= len(collection):
             entry_ = collection[int(entry_id) - 1]  # Convert to 0-based index
-            owner_id = entry_.get("owner_id")
-            if owner_id is not None:
-                results["statistics"]["users_found"].add(owner_id)
-            return owner_id
+            ownerid = entry_.get("owner_id")
+            if ownerid is not None:
+                results["statistics"]["users_found"].add(ownerid)
+            return ownerid
         return None
 
     def log_edge_case(case_type: str, description: str, details: dict) -> None:
