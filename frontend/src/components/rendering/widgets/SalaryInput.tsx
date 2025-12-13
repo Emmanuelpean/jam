@@ -1,10 +1,9 @@
 import React, { JSX } from "react";
 import { Form, InputGroup } from "react-bootstrap";
 import { WidgetProps } from "./WidgetRenders";
-import { Currency } from "../../../contexts/DataContext";
-import currencies from "../../../data/currencies.json";
+import { Currency, DataContextValue, useDataContext } from "../../../contexts/DataContext";
 
-export const renderSalaryInput = ({
+export const RenderSalaryInput = ({
 	field,
 	value,
 	handleChange,
@@ -12,10 +11,12 @@ export const renderSalaryInput = ({
 	currentUser,
 	secondaryValue,
 }: WidgetProps): JSX.Element => {
+	const dataContext: DataContextValue = useDataContext();
 	const currencyCode: string | undefined = secondaryValue ? secondaryValue : currentUser?.default_currency;
 
 	const currentSymbol: string =
-		currencies.filter((currency: Currency): boolean => currency.code === currencyCode)[0]?.symbol || "N/A";
+		dataContext.currencies.filter((currency: Currency): boolean => currency.code === currencyCode)[0]?.symbol ||
+		"N/A";
 
 	return (
 		<>

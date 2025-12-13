@@ -1,6 +1,6 @@
 import { Form } from "react-bootstrap";
 import { renderStarRating } from "./StarRating";
-import { renderSalaryInput } from "./SalaryInput";
+import { RenderSalaryInput } from "./SalaryInput";
 import { renderTextarea } from "./TextArea";
 import { renderDateLocal, renderDateTimeLocal } from "./Datetime";
 import { renderPasswordInput } from "./PasswordInput";
@@ -123,7 +123,7 @@ export const FormField = (
 						return renderPasswordInput(widgetProps);
 
 					case "salary":
-						return renderSalaryInput(widgetProps);
+						return <RenderSalaryInput {...widgetProps} />;
 
 					case "rating":
 						return renderStarRating(widgetProps);

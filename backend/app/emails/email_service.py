@@ -462,11 +462,3 @@ class EmailService(object):
 
 
 email_service = EmailService()
-print(
-    email_service.get_email_ids(
-        from_email="jessicaAGgood@live.co.uk",
-        to_email="jam.jobscraper@emmanuelpean.me",
-        subject_contains="Threadneedle Partners - Policy Expert",
-    )
-)
-print(email_service.get_email_data("647")["body"])
