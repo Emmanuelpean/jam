@@ -36,8 +36,10 @@ class JobRatingServiceLogOut(Out):
     run_duration: float | None = None
     is_success: bool | None = None
     error_message: str | None = None
-    job_rating_ids: list[int] = []
-    scrape_job_ids: list[int] = []
+    rated_job_found_ids: list[int] = []
+    rated_job_succeeded_ids: list[int] = []
+    rated_job_failed_ids: list[int] = []
+    rated_job_skipped_ids: list[int] = []
 
 
 class JobRatingServiceLogStartRequest(BaseModel):

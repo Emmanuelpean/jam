@@ -1,14 +1,15 @@
-import React, { JSX, useEffect, useState, useRef } from "react";
-import { jobScraperServiceApi, LogResponse } from "../../services/Api";
-import { useAuth } from "../../contexts/AuthContext";
+import React, { JSX, useEffect, useRef, useState } from "react";
+import { BaseServiceApi, LogResponse } from "../../../services/api/Services";
+import { useAuth } from "../../../contexts/AuthContext";
+import LoadingSpinner from "../../../components/spinner/Spinner";
 import "./LogViewer.css";
-import LoadingSpinner from "../../components/spinner/Spinner";
 
 interface LogViewerProps {
+	api: BaseServiceApi;
 	isServiceRunning: boolean;
 }
 
-const LogViewer = ({ isServiceRunning }: LogViewerProps): JSX.Element => {
+const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
 	const { token } = useAuth();
 	const [logs, setLogs] = useState<LogResponse | null>(null);
 	const [logsExpanded, setLogsExpanded] = useState<boolean>(false);
@@ -26,7 +27,7 @@ const LogViewer = ({ isServiceRunning }: LogViewerProps): JSX.Element => {
 		if (!token) return;
 		setError(null);
 		try {
-			const data: LogResponse = await jobScraperServiceApi.getLogs(logLinesRef.current, token);
+			const data: LogResponse = await api.getLogs(logLinesRef.current, token);
 			setLogs(data);
 		} catch (err: any) {
 			setError(err?.message || "Failed to fetch logs");

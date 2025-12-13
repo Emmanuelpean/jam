@@ -9,7 +9,7 @@ import JobsPage from "./pages/JobsPage";
 import PersonPage from "./pages/PersonPage";
 import KeywordsPage from "./pages/KeywordsPage";
 import InterviewsPage from "./pages/InterviewsPage";
-import DashboardPage from "./pages/EISDashboard/EISDashboardPage";
+import JobScraperDashboard from "./pages/Services/JobScraperDashboard/JobScraperDashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
 import { NotAuthorisedPage, NotFoundPage } from "./pages/NotFoundPage";
 import { Sidebar } from "./components/sidebar/Sidebar";
@@ -27,6 +27,7 @@ import "./App.css";
 import "./Themes.css";
 import { AlertProvider } from "./contexts/AlertContext";
 import UserQualifications from "./pages/UserQualifications/UserQualificationPage";
+import JobRatingDashboard from "./pages/Services/JobRatingDashboard/JobRatingDashboardPage";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -138,7 +139,8 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/dashboard", element: <Dashboard />, protected: true },
 	{ path: "/settings", element: <UserSettingsPage />, protected: true },
 	{ path: "/users", element: <UserManagementPage />, protected: true, adminOnly: true },
-	{ path: "/eis_dashboard", element: <DashboardPage />, protected: true, adminOnly: true },
+	{ path: "/eis_dashboard", element: <JobScraperDashboard />, protected: true, adminOnly: true },
+	{ path: "/job_rating_dashboard", element: <JobRatingDashboard />, protected: true, adminOnly: true },
 	{ path: "/app_settings", element: <SettingsPage />, protected: true, adminOnly: true },
 	{ path: "user_qualifications", element: <UserQualifications />, protected: true, adminOnly: false },
 	{ path: "*", element: <NotFoundPage /> },

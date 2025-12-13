@@ -15,7 +15,7 @@ import {
 	renderUpcomingInterviewItem,
 } from "./ActivityFeed";
 import ScrapedJobsTable from "../../components/tables/ScrapedJobTable";
-import { scrapedJobApi } from "../../services/Api";
+import { scrapedJobApi } from "../../services/api/Services";
 import { sortByKey } from "../../utils/Utils";
 
 const Dashboard: React.FC = () => {

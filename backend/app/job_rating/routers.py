@@ -1,7 +1,4 @@
-"""FastAPI routers for the email ingestion service (EIS) endpoints.
-
-Provides REST API endpoints for managing job alert emails, scraped job postings,
-and service execution logs with CRUD operations and admin access controls."""
+"""Routers for Job Rating related endpoints."""
 
 from datetime import datetime
 
@@ -13,11 +10,25 @@ from app.database import get_db
 from app.job_rating import models, schemas
 from app.job_rating.scraped_job_rating import job_rating_service_runner, SERVICE_NAME
 from app.oauth2 import get_current_user
+from app.routers import generate_data_table_crud_router
+
+# ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
+
+
+scraped_job_router = generate_data_table_crud_router(
+    table_model=models.JobRating,
+    out_schema=schemas.JobRatingOut,
+    endpoint="job_ratings",
+    not_found_msg="Job Rating not found",
+    allowed_actions=["get_all"],
+    admin_only=True,
+)
+
 
 # ---------------------------------------------------- SERVICE LOGS ----------------------------------------------------
 
 
-# Email Ingestion Service Log router
+# Service Log router
 service_log_router = APIRouter(prefix="/job_rating_service_logs", tags=["job_rating_service_logs"])
 
 

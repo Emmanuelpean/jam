@@ -1,7 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
 	aggregatorsApi,
-	ApiError,
 	companiesApi,
 	countriesApi,
 	currenciesApi,
@@ -11,10 +10,11 @@ import {
 	keywordsApi,
 	locationsApi,
 	personsApi,
-	scrapedJobApi,
 	settingsApi,
-	userApi,
-} from "../services/Api";
+} from "../services/api/DataTables";
+import { ApiError } from "../services/api/Base";
+import { userApi } from "../services/api/Users";
+import { scrapedJobApi } from "../services/api/Services";
 import { useAuth } from "./AuthContext";
 import {
 	AggregatorData,

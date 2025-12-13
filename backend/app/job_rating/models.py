@@ -83,12 +83,16 @@ class JobRatingServiceLog(Owned, Base):
     is_success = Column(Boolean, nullable=True)
     error_message = Column(String, nullable=True)
 
-    job_rating_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
-    scraped_job_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    rated_job_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    rated_job_succeeded_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    rated_job_failed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    rated_job_skipped_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""
 
-        kwargs.setdefault("job_rating_ids", [])
-        kwargs.setdefault("scraped_job_ids", [])
+        kwargs.setdefault("rated_job_found_ids", [])
+        kwargs.setdefault("rated_job_succeeded_ids", [])
+        kwargs.setdefault("rated_job_failed_ids", [])
+        kwargs.setdefault("rated_job_skipped_ids", [])
         super().__init__(**kwargs)

@@ -1,11 +1,11 @@
 import React, { JSX } from "react";
-import { ServiceLog } from "../../services/Schemas";
-import { formatDuration } from "../../utils/TimeUtils";
-import ProgressBar from "./ProgressBar";
+import { JobScraperServiceLog } from "../../../services/Schemas";
+import { formatDuration } from "../../../utils/TimeUtils";
+import ProgressBar from "../ProgressBar/ProgressBar";
 import { PlatformStatsTable } from "./PlatformStatsTable";
 
 interface LatestRunProgressProps {
-	latestLog: ServiceLog | null;
+	latestLog: JobScraperServiceLog | null;
 	isRunning: boolean;
 }
 

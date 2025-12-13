@@ -1,8 +1,8 @@
 import React, { JSX, useState } from "react";
-import { ServiceLog } from "../../services/Schemas";
+import { JobScraperServiceLog } from "../../../services/Schemas";
 
 interface ErrorSummaryCardProps {
-	latestServiceLogs: ServiceLog[] | null;
+	latestServiceLogs: JobScraperServiceLog[] | null;
 	lastScraperErrors: Record<string, number>;
 	latestScraperErrors: Record<string, number>;
 	lastServiceErrors: Record<string, number>;
@@ -23,12 +23,12 @@ export const ErrorSummaryCard = ({
 	const [errorView, setErrorView] = useState<ErrorView>("current");
 
 	// Select data based on view
-	const criticalErrorLogs: ServiceLog[] = latestServiceLogs || [];
+	const criticalErrorLogs: JobScraperServiceLog[] = latestServiceLogs || [];
 	const scrapeErrors = errorView === "current" ? latestScraperErrors : lastScraperErrors;
 	const serviceErrors = errorView === "current" ? latestServiceErrors : lastServiceErrors;
 
-	const criticalErrorCount = criticalErrorLogs.filter(
-		(l: ServiceLog): boolean => !!(l.error_message && l.error_message.trim()),
+	const criticalErrorCount: number = criticalErrorLogs.filter(
+		(l: JobScraperServiceLog): boolean => !!(l.error_message && l.error_message.trim()),
 	).length;
 
 	const handleViewToggle = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -67,12 +67,15 @@ export const ErrorSummaryCard = ({
 							{criticalErrorLogs
 								.slice()
 								.sort(
-									(a: ServiceLog, b: ServiceLog): number =>
+									(a: JobScraperServiceLog, b: JobScraperServiceLog): number =>
 										new Date(b.run_datetime).getTime() - new Date(a.run_datetime).getTime(),
 								)
-								.filter((log: ServiceLog): boolean => !!(log.error_message && log.error_message.trim()))
+								.filter(
+									(log: JobScraperServiceLog): boolean =>
+										!!(log.error_message && log.error_message.trim()),
+								)
 								.map(
-									(log: ServiceLog, idx: number): JSX.Element => (
+									(log: JobScraperServiceLog, idx: number): JSX.Element => (
 										<div key={idx} className="alert alert-danger">
 											<div className="small mb-1">
 												{new Date(log.run_datetime).toLocaleString()}

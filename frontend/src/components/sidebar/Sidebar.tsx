@@ -66,6 +66,7 @@ export const Sidebar = () => {
 			position: "bottom",
 			submenu: [
 				{ path: "/eis_dashboard", text: "TOAST Dashboard" },
+				{ path: "/job_rating_dashboard", text: "Job Rating Dashboard" },
 				{ path: "/users", text: "Users" },
 				{ path: "/app_settings", text: "Settings" },
 			],

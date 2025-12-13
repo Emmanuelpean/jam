@@ -1,6 +1,7 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ApiError, authApi } from "../services/Api";
+import { authApi } from "../services/api/Users";
+import { ApiError } from "../services/api/Base";
 import { UserData } from "../services/Schemas";
 import { DEFAULT_THEME } from "../utils/Theme";
 

@@ -9,7 +9,8 @@ import { Errors, FormField, SyntheticEvent } from "../../components/rendering/wi
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { ApiError, authApi } from "../../services/Api";
+import { authApi } from "../../services/api/Users";
+import { ApiError } from "../../services/api/Base";
 import { useLoading } from "../../contexts/LoadingContext";
 
 interface VerificationResponse {

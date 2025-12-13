@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { ApiError, authApi, exportApi } from "../../services/Api";
+import { authApi, exportApi } from "../../services/api/Users";
+import { ApiError } from "../../services/api/Base";
 import { THEMES } from "../../utils/Theme";
 import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
