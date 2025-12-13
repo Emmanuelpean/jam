@@ -113,9 +113,9 @@ def ai_score_job_mock(
 def test_ai_score_job_mock_monkeypatch(monkeypatch) -> None:
     """Test ai_score_job using a deterministic mock via monkeypatching."""
 
-    monkeypatch.setattr(gemini, "ai_score_job", ai_score_job_mock)
+    monkeypatch.setattr(ai_rating, "ai_score_job", ai_score_job_mock)
 
-    result = gemini.ai_score_job(
+    result = ai_rating.ai_score_job(
         user_experience="3 years as a backend developer",
         user_education="Bachelor of Science in Computer Science",
         user_skills="Python, Django, REST APIs, SQL",
