@@ -1,6 +1,6 @@
 import React, { JSX, useEffect, useState } from "react";
 import { Card, Col, Container, Form, Row } from "react-bootstrap";
-import { userQualificationApi } from "../../services/Api";
+import { userQualificationApi } from "../../services/api/Users";
 import { UserQualification, UserQualificationDataTransform } from "../../services/Schemas";
 import { useAuth } from "../../contexts/AuthContext";
 import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";

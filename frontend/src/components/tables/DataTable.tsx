@@ -2,7 +2,7 @@ import React, { JSX, MouseEvent, ReactNode, useCallback, useEffect, useRef, useS
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { DataContextValue, EntityType, JamData, useDataContext } from "../../contexts/DataContext";
-import { api } from "../../services/Api";
+import { api } from "../../services/api/Base";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";

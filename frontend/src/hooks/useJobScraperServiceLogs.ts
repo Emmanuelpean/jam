@@ -1,23 +1,25 @@
 import { useState, useEffect } from "react";
-import { PlatformStat, ServiceLog } from "../services/Schemas";
+import { PlatformStat, JobScraperServiceLog } from "../services/Schemas";
 import { SelectOption } from "../components/rendering/form/FormOptions";
-import { eisServiceLogApi } from "../services/Api";
+import { jobScraperServiceLogApi } from "../services/api/Services";
 import { DateRange } from "../utils/TimeUtils";
 import { capitalise } from "../utils/StringUtils";
 
-export const useServiceLogs = (token: string | null, isScraperRunning: boolean, dateRange: DateRange) => {
-	const [serviceLogs, setServiceLogs] = useState<ServiceLog[] | null>(null);
-	const [latestLog, setLatestLog] = useState<ServiceLog | null>(null);
+export const useJobScraperServiceLogs = (token: string | null, isScraperRunning: boolean, dateRange: DateRange) => {
+	const [serviceLogs, setServiceLogs] = useState<JobScraperServiceLog[] | null>(null);
+	const [latestLog, setLatestLog] = useState<JobScraperServiceLog | null>(null);
 	const [platformOptions, setPlatformOptions] = useState<SelectOption[]>([]);
+	const [error, setError] = useState<string | null>(null);
 
 	const fetchLatestLog = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const log: ServiceLog = await eisServiceLogApi.getLatest(token);
+			const log: JobScraperServiceLog = await jobScraperServiceLogApi.getLatest(token);
 			if (log) {
 				setLatestLog(log);
 			}
 		} catch (err: any) {
+			setError(err.message || "An error occurred while fetching the latest log.");
 			console.error("Failed to fetch latest log:", err);
 		}
 	};
@@ -25,7 +27,7 @@ export const useServiceLogs = (token: string | null, isScraperRunning: boolean, 
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const logs: ServiceLog[] = await eisServiceLogApi.getAll(token, {
+			const logs: JobScraperServiceLog[] = await jobScraperServiceLogApi.getAll(token, {
 				start_date: new Date(dateRange.start).toISOString(),
 				end_date: new Date(dateRange.end).toISOString(),
 			});
@@ -36,7 +38,7 @@ export const useServiceLogs = (token: string | null, isScraperRunning: boolean, 
 				{ value: "all", label: "All Platforms" },
 				...Array.from(
 					new Set(
-						logs.flatMap((log: ServiceLog): string[] =>
+						logs.flatMap((log: JobScraperServiceLog): string[] =>
 							log.platform_stats ? log.platform_stats.map((stat: PlatformStat): string => stat.name) : [],
 						),
 					),
@@ -49,6 +51,7 @@ export const useServiceLogs = (token: string | null, isScraperRunning: boolean, 
 			];
 			setPlatformOptions(platformOptions);
 		} catch (err: any) {
+			setError(err.message || "An error occurred while fetching the logs.");
 			console.error("Failed to fetch latest logs:", err);
 		}
 	};
@@ -70,5 +73,5 @@ export const useServiceLogs = (token: string | null, isScraperRunning: boolean, 
 		fetchLatestLog().then();
 	}, [token]);
 
-	return { serviceLogs, latestLog, platformOptions, fetchLatestLog };
+	return { serviceLogs, latestLog, platformOptions, fetchLatestLog, error };
 };

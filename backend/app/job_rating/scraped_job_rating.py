@@ -38,6 +38,8 @@ def score_scraped_jobs(min_description_length: int = 10) -> models.JobRatingServ
             .filter(func.length(eis_models.ScrapedJob.description) > min_description_length)  # description length
             .all()
         )
+        service_log.scraped_job_found_ids = [job.id for job in scraped_jobs]
+        logger.info(f"Found {len(scraped_jobs)} scraped jobs to rate")
 
         for scraped_job in scraped_jobs:
             owner_id = scraped_job.owner_id
@@ -85,6 +87,7 @@ def score_scraped_jobs(min_description_length: int = 10) -> models.JobRatingServ
                     )
                     db.add(job_rating)
                     db.commit()
+                    service_log.scraped_job_succeeded_ids.append(scraped_job.id)
                 except Exception as exception:
                     tb = traceback.format_exc()
                     logger.exception(f"Error in rating workflow: {exception}")
@@ -96,6 +99,12 @@ def score_scraped_jobs(min_description_length: int = 10) -> models.JobRatingServ
                     )
                     db.add(job_rating)
                     db.commit()
+                    service_log.scraped_job_failed_ids.append(scraped_job.id)
+            else:
+                logger.info(
+                    f"Skipping job ID {scraped_job.id} for owner ID {owner_id} due to missing qualifications"
+                )
+                service_log.scraped_job_skipped_ids.append(scraped_job.id)
 
         # Log final statistics
         service_log.run_duration = (dt.datetime.now() - start_time).total_seconds()

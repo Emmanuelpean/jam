@@ -260,12 +260,30 @@ export interface ScrapedJobData extends OwnedOut {
 	emails: number[];
 }
 
-export interface ServiceLog {
-	id: number;
+export interface JobRating extends BaseOut {
+	overall_score: number | null;
+	technical_score: number | null;
+	experience_score: number | null;
+	educational_score: number | null;
+	interest_score: number | null;
+	feedback: string | null;
+	script_version: number | null;
+	is_success: boolean | null;
+	error: string | null;
+	scraped_job_id: number | null;
+	user_qualification_id: number | null;
+}
+
+// ---------------------------------------------------- SERVICE LOGS ---------------------------------------------------
+
+export interface ServiceLog extends BaseOut {
 	run_datetime: string;
 	run_duration: number | null;
 	is_success: boolean | null;
 	error_message: string | null;
+}
+
+export interface JobScraperServiceLog extends ServiceLog {
 	user_found_ids: number[];
 	user_processed_ids: number[];
 	emails: number[];
@@ -281,6 +299,13 @@ export interface ServiceLog {
 	email_saved_n: number;
 	email_skipped_n: number;
 	service_errors: ServiceError[];
+}
+
+export interface JobRatingServiceLog extends ServiceLog {
+	rated_job_found_ids: number[];
+	rated_job_succeeded_ids: number[];
+	rated_job_failed_ids: number[];
+	rated_job_skipped_ids: number[];
 }
 
 export interface PlatformStat {
@@ -303,6 +328,8 @@ export interface ServiceError {
 	traceback: string;
 	service_log_id: number;
 }
+
+// ------------------------------------------------ USER QUALIFICATIONS ------------------------------------------------
 
 export interface UserQualification extends OwnedOut {
 	experience: string | null;

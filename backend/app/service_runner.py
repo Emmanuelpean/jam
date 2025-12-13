@@ -138,10 +138,10 @@ class ServiceRunner:
         """Get the current status of the service"""
 
         return {
-            "thread_status": self.service_runner_thread_status,
-            "scraper_running": self.service_running,
-            "period_hours": self.period_hours,
+            "service_runner_status": self.service_runner_thread_status,
+            "service_running": self.service_running,
             "service_kwargs": self.service_kwargs,
+            "period_hours": self.period_hours,
             "sleep_until": self.sleep_until,
         }
 
