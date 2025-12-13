@@ -10,7 +10,7 @@ validation, and error handling. Additional custom endpoint tests are included wh
 
 from app import schemas
 from tests.conftest import CRUDTestBase
-from tests.utils.table_data import (
+from tests.utils.test_data import (
     COMPANY_DATA,
     LOCATION_DATA,
     PERSON_DATA,

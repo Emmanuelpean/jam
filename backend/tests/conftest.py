@@ -20,6 +20,7 @@ from starlette.testclient import TestClient
 
 from app import models, database, schemas
 from app.eis import models as eis_models
+from app.job_rating import models as rating_models
 from app.config import settings
 from app.main import app
 from app.oauth2 import create_access_token
@@ -37,15 +38,15 @@ from tests.utils.create_data import (
     create_job_application_updates,
     create_settings,
     create_scraped_jobs,
-    create_eis_service_logs,
-    create_platform_stats,
-    create_eis_service_errors,
+    create_job_scraping_service_logs,
+    create_job_scraping_platform_stats,
+    create_job_scraping_service_errors,
     create_job_alert_emails,
     create_user_qualifications,
     create_job_ratings,
 )
 from tests.utils.seed_database import reset_database
-from tests.utils.table_data import (
+from tests.utils.test_data import (
     DEMO_USER_INDEX,
     ADMIN_USER_INDEX,
     INACTIVE_USER_INDEX,
@@ -239,6 +240,13 @@ def test_user_change_email_token_user(session) -> models.User:
     user = create_users(session, [user_data])[0]
     user.plain_verification_token = plain_token
     return user
+
+
+@pytest.fixture
+def test_user_qualifications(session, test_users) -> list[models.UserQualification]:
+    """Create test user qualifications"""
+
+    return create_user_qualifications(session, test_users)
 
 
 # -------------------------------------------------------- OTHER -------------------------------------------------------
@@ -465,21 +473,21 @@ def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[eis_mo
 def test_eis_service_logs(session) -> list[eis_models.EisServiceLog]:
     """Create test service logs"""
 
-    return create_eis_service_logs(session)
+    return create_job_scraping_service_logs(session)
 
 
 @pytest.fixture
 def test_platform_stats(session, test_eis_service_logs) -> list[eis_models.PlatformStat]:
     """Create test platform stats"""
 
-    return create_platform_stats(session, test_eis_service_logs)
+    return create_job_scraping_platform_stats(session, test_eis_service_logs)
 
 
 @pytest.fixture
 def test_eis_service_errors(session, test_eis_service_logs) -> list[eis_models.EisServiceError]:
     """Create test eis service errors"""
 
-    return create_eis_service_errors(session, test_eis_service_logs)
+    return create_job_scraping_service_errors(session, test_eis_service_logs)
 
 
 @pytest.fixture
@@ -490,14 +498,7 @@ def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[ei
 
 
 @pytest.fixture
-def test_user_qualifications(session, test_users) -> list[models.UserQualification]:
-    """Create test user qualifications"""
-
-    return create_user_qualifications(session, test_users)
-
-
-@pytest.fixture
-def test_job_ratings(session, test_users, test_scraped_jobs, test_user_qualifications) -> list[models.JobRating]:
+def test_job_ratings(session, test_users, test_scraped_jobs, test_user_qualifications) -> list[rating_models.JobRating]:
     """Create test job ratings"""
 
     return create_job_ratings(session, test_users, test_scraped_jobs, test_user_qualifications)

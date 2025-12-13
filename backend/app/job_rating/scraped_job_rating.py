@@ -10,14 +10,14 @@ from app import models as app_models
 from app import utils
 from app.database import get_db
 from app.eis import models as eis_models
-from app.job_rating.gemini import ai_score_job, __version__
+from app.job_rating.ai_rating import ai_score_job, __version__
 from app.service_runner import ServiceRunner
 
 
 SERVICE_NAME = "job_rating_service"
 
 
-def score_scraped_jobs(min_description_length: int = 10) -> models.JobRatingServiceLog:
+def score_scraped_jobs(min_description_length: int = 100) -> models.JobRatingServiceLog:
     """Score all scraped jobs using Gemini LLM.
     :param min_description_length: Minimum job description length to consider"""
 
@@ -101,9 +101,7 @@ def score_scraped_jobs(min_description_length: int = 10) -> models.JobRatingServ
                     db.commit()
                     service_log.scraped_job_failed_ids.append(scraped_job.id)
             else:
-                logger.info(
-                    f"Skipping job ID {scraped_job.id} for owner ID {owner_id} due to missing qualifications"
-                )
+                logger.info(f"Skipping job ID {scraped_job.id} for owner ID {owner_id} due to missing qualifications")
                 service_log.scraped_job_skipped_ids.append(scraped_job.id)
 
         # Log final statistics
@@ -122,15 +120,15 @@ def score_scraped_jobs(min_description_length: int = 10) -> models.JobRatingServ
     return service_log
 
 
-class LlmJobRatingServiceRunner(ServiceRunner):
+class JobRatingServiceRunner(ServiceRunner):
     """Service runner for the LLM job rating service."""
 
     service_function = score_scraped_jobs
     service_name = SERVICE_NAME
-    period_hours = 6.0
+    period_hours = 3.0
 
 
-job_rating_service_runner = LlmJobRatingServiceRunner()
+job_rating_service_runner = JobRatingServiceRunner()
 
 
 if __name__ == "__main__":

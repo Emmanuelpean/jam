@@ -2,7 +2,7 @@
 
 from app import schemas
 from tests.conftest import CRUDTestBase
-from tests.utils.table_data import SETTINGS_DATA
+from tests.utils.test_data import SETTINGS_DATA
 
 
 class TestSettingsCRUD(CRUDTestBase):

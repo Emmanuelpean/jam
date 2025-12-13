@@ -85,9 +85,9 @@ export const Sidebar = () => {
 		}
 	};
 
-	const topNavigationItems = getFilteredNavigationItems("top");
+	const topNavigationItems: NavigationItem[] = getFilteredNavigationItems("top");
 
-	const bottomNavigationItems = getFilteredNavigationItems("bottom");
+	const bottomNavigationItems: NavigationItem[] = getFilteredNavigationItems("bottom");
 
 	const handleThemeChange = (): void => {
 		setShowDropdown(false);

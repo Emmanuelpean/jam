@@ -20,7 +20,7 @@ from tests.utils.create_data import (
     create_interviews,
     create_job_alert_emails,
     create_scraped_jobs,
-    create_eis_service_logs,
+    create_job_scraping_service_logs,
     create_job_application_updates,
 )
 
@@ -55,7 +55,7 @@ def seed_database() -> None:
         jobs = create_jobs(db, keywords, people, users, companies, locations, aggregators, files)
         interviews = create_interviews(db, people, users, locations, jobs)
         job_application_updates = create_job_application_updates(db, users, jobs)
-        service_logs = create_eis_service_logs(db)
+        service_logs = create_job_scraping_service_logs(db)
         alert_emails = create_job_alert_emails(db, users, service_logs)
         scraped_jobs = create_scraped_jobs(db, alert_emails, users)
 

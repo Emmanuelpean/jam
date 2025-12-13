@@ -8,6 +8,7 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import patch
 
 from app import schemas, models, utils, oauth2
+import app.job_rating.models as job_rating_models
 from tests.conftest import CRUDTestBase
 from app.routers.user import send_email_change_with_rate_limit
 
@@ -400,18 +401,17 @@ class TestUserQualificationsCRUD(CRUDTestBase):
         """Test retrieving the latest user qualification for a user."""
 
         response = authorised_clients[0].get(f"{self.endpoint}/latest")
-        qualifications = [uq for uq in test_user_qualifications if uq.owner_id == test_users[0].id]
+        qualifications = self.get_user_data(test_users, test_user_qualifications)
         latest_qualification = max(qualifications, key=lambda uq: uq.created_at)
         assert response.json()["id"] == latest_qualification.id
         assert response.status_code == 200
 
     def test_upsert_new(self, authorised_clients, test_users, session) -> None:
-        """Try to upsert a new user qualification."""
+        """Try to insert a new user qualification."""
 
         # Without an ID
         new_qualification_data = {
             "experience": "Some stuff",
-            "id": None,
         }
         response = authorised_clients[0].post(f"{self.endpoint}", json=new_qualification_data)
         assert response.status_code == 200
@@ -428,28 +428,19 @@ class TestUserQualificationsCRUD(CRUDTestBase):
         entry = session.query(models.UserQualification).all()
         assert len(entry) == 1
 
-    def test_upsert_with_existing(
+    def test_upsert_with_existing_qualification(
         self, authorised_clients, test_users, test_user_qualifications, test_scraped_jobs, session
     ) -> None:
         """Try to upsert a new user qualification when not linked to a job rating"""
 
-        # noinspection PyArgumentList
-        job_rating = models.JobRating(
-            owner_id=test_users[0].id,
-            scraped_job_id=test_scraped_jobs[0].id,
-            rating=10,
-            user_qualification_id=test_user_qualifications[0].id,
-        )
-        session.add(job_rating)
-        session.commit()
-
-        new_qualification_data = {
+        qualifications = self.get_user_data(test_users, test_user_qualifications)
+        qualification_data = {
             "experience": "Some stuff",
-            "id": 2,
+            "id": qualifications[0].id,
         }
-        response = authorised_clients[0].post(f"{self.endpoint}", json=new_qualification_data)
+        response = authorised_clients[0].post(f"{self.endpoint}", json=qualification_data)
         assert response.status_code == 200
-        assert response.json()["id"] == 2
+        assert response.json()["id"] == qualifications[0].id
 
     def test_upsert_with_job_rating(
         self, authorised_clients, test_users, test_user_qualifications, test_scraped_jobs, session
@@ -457,31 +448,22 @@ class TestUserQualificationsCRUD(CRUDTestBase):
         """Try to upsert a new user qualification when not linked to a job rating"""
 
         # noinspection PyArgumentList
-        job_rating = models.JobRating(
+        job_rating = job_rating_models.JobRating(
             owner_id=test_users[0].id,
             scraped_job_id=test_scraped_jobs[0].id,
-            rating=10,
+            overall_score=10,
             user_qualification_id=test_user_qualifications[0].id,
-        )
-        session.add(job_rating)
-        session.commit()
-        # noinspection PyArgumentList
-        job_rating = models.JobRating(
-            owner_id=test_users[0].id,
-            scraped_job_id=test_scraped_jobs[0].id,
-            rating=10,
-            user_qualification_id=test_user_qualifications[1].id,
         )
         session.add(job_rating)
         session.commit()
 
         new_qualification_data = {
             "experience": "Some stuff",
-            "id": 2,
+            "id": test_user_qualifications[0].id,
         }
         response = authorised_clients[0].post(f"{self.endpoint}", json=new_qualification_data)
         assert response.status_code == 200
-        assert response.json()["id"] == 8
+        assert response.json()["id"] == len(test_user_qualifications) + 1
 
     def test_upsert_incorrect_user(
         self, authorised_clients, test_users, test_user_qualifications, test_scraped_jobs, session
@@ -490,8 +472,8 @@ class TestUserQualificationsCRUD(CRUDTestBase):
 
         new_qualification_data = {
             "experience": "Some stuff",
-            "id": 2,
+            "id": test_user_qualifications[0].id,
         }
         response = authorised_clients[1].post(f"{self.endpoint}", json=new_qualification_data)
         assert response.status_code == 200
-        assert response.json()["id"] == 8
+        assert response.json()["id"] == len(test_user_qualifications) + 1
