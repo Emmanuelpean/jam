@@ -12,14 +12,51 @@ BASE_URL = "https://www.linkedin.com/jobs/view/"
 
 def parse_linkedin_job_email(body: str) -> list[JobResult]:
     """Parse LinkedIn job alert email and extract job information.
+    Compatible with both regular and forwarded email formats.
+
     :param str body: email body
-    :return: list of JobResult objects containing job information"""
+    :return: list of JobResult objects containing job information
+    """
 
     # Parse with BeautifulSoup
     soup = BeautifulSoup(body, "html.parser", from_encoding="utf-8")
 
-    # Find all job cards
+    # Try primary method: Find all job cards with data-test-id (regular emails)
     job_cards = soup.find_all("td", {"data-test-id": "job-card"})
+
+    # Fallback: If no job cards found, traverse up from title links (forwarded emails)
+    if not job_cards:
+        title_links = soup.find_all("a", class_="font-bold text-md leading-regular text-system-blue-50")
+
+        # For each title link, find the parent TD that contains all job info
+        seen_cards = set()
+        for link in title_links:
+            current = link
+            # Traverse up the tree to find the job card container
+            for _ in range(20):  # Max 20 levels up
+                current = current.parent
+                if current is None:
+                    break
+
+                if current.name == "td":
+                    # Check if this TD contains both title and company info
+                    has_title = (
+                        current.find("a", class_="font-bold text-md leading-regular text-system-blue-50") is not None
+                    )
+                    has_company = (
+                        current.find(
+                            "p", class_="text-system-gray-100 text-xs leading-regular mt-0.5 line-clamp-1 text-ellipsis"
+                        )
+                        is not None
+                    )
+
+                    if has_title and has_company:
+                        # Use id() to avoid duplicates
+                        card_id = id(current)
+                        if card_id not in seen_cards:
+                            job_cards.append(current)
+                            seen_cards.add(card_id)
+                        break
 
     # Extract information from each job card
     jobs = []
@@ -42,10 +79,15 @@ def parse_linkedin_job_email(body: str) -> list[JobResult]:
             url = title_tag.get("href", None)
 
             if url:
-                jobid_pattern = r"linkedin\.com/(?:comm/)?jobs/view/(\d+)"
+                # Extract job ID - handle both normal integers and scientific notation
+                jobid_pattern = r"linkedin\.com/(?:comm/)?jobs/view/([\d.e+]+)"
                 matches = re.findall(jobid_pattern, url, re.IGNORECASE)
                 if matches:
-                    job_id = matches[0]
+                    try:
+                        # Convert scientific notation to integer string
+                        job_id = str(int(float(matches[0])))
+                    except (ValueError, OverflowError):
+                        job_id = matches[0]
 
         # Extract company name and location
         company_location_tag = card.find(

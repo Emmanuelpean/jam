@@ -359,10 +359,16 @@ class TestProcessEmails:
 
             # Setup mocks to be user-dependent
             def mock_get_email_ids_side_effect(
-                recipient_email, sender_email, inbox_only, timedelta_days, from_email
+                recipient_email: str = "",
+                sender_email: str = "",
+                inbox_only: bool = True,
+                timedelta_days: int | float = 1,
+                subject_contains: str = "",
+                from_email: list[str] | str = "",
+                to_email: str = "",
             ) -> list[str]:
                 """Mock get_email_ids to return emails only for first user"""
-                _ = recipient_email, inbox_only, timedelta_days, from_email
+                _ = recipient_email, inbox_only, timedelta_days, from_email, to_email, subject_contains
                 if sender_email == test_users[0].email:
                     return [email_id]
                 else:
@@ -414,10 +420,16 @@ class TestProcessEmails:
 
             # Setup mocks to be user-dependent
             def mock_get_email_ids_side_effect(
-                recipient_email, sender_email, inbox_only, timedelta_days, from_email
+                recipient_email: str = "",
+                sender_email: str = "",
+                inbox_only: bool = True,
+                timedelta_days: int | float = 1,
+                subject_contains: str = "",
+                from_email: list[str] | str = "",
+                to_email: str = "",
             ) -> list[str]:
                 """Mock get_email_ids to return emails only for first user"""
-                _ = recipient_email, inbox_only, timedelta_days, from_email
+                _ = recipient_email, inbox_only, timedelta_days, from_email, to_email, subject_contains
                 if sender_email == test_users[0].email:
                     return [email_id, email_id]
                 else:
@@ -472,10 +484,16 @@ class TestProcessEmails:
 
             # Setup mocks to return different emails for different users
             def mock_get_email_ids_side_effect(
-                recipient_email, sender_email, inbox_only, timedelta_days, from_email
+                recipient_email: str = "",
+                sender_email: str = "",
+                inbox_only: bool = True,
+                timedelta_days: int | float = 1,
+                subject_contains: str = "",
+                from_email: list[str] | str = "",
+                to_email: str = "",
             ) -> list[str]:
                 """Mock function to return different emails for different users"""
-                _ = recipient_email, inbox_only, timedelta_days, from_email
+                _ = recipient_email, inbox_only, timedelta_days, from_email, to_email, subject_contains
                 if sender_email == test_users[0].email:
                     return [email_id + "_" + str(test_users[0].email)]
                 elif sender_email == test_users[TOAST_USER_1_INDEX].email:

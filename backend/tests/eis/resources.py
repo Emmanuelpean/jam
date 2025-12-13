@@ -232,7 +232,119 @@ LINKEDIN_EMAIL_4 = {
     "alert_name": "embedded python",
 }
 
-LINKEDIN_EMAIL_5_BODY = open_file("linkedin_email_malformed.html", encoding="utf8")
+LINKEDIN_EMAIL_MALFORMED_BODY = open_file("linkedin_email_malformed.html", encoding="utf8")
+
+# Email 5
+LINKEDIN_EMAIL_5_BODY = open_file("linkedin_email_5_FW.html", encoding="utf8")
+LINKEDIN_EMAIL_5_EXTRACTED = [
+    JobResult(
+        platform="linkedin",
+        job_id="4343106150",
+        company="Cardiff and Vale University Health Board",
+        company_id=None,
+        location="Cardiff (On-site)",
+        raw=None,
+        job=JobInfo(
+            title="Clinical Research Nurse- INTERNAL",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4343106150",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4343106150/?trackingId=oMWt%2F31Dldah1s5u2k72rA%3D%3D&refId=IJr%2BgAEXCK1Je8bAJst7Xg%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BAZhCmRZNRsGDf4hojH2f%2FQ%3D%3D&midToken=AQEfx9iW2R4awg&midSig=1hpj0gr5Vw_Y01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_8095682530&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_8095682530-null-e0ok41~mj2n56vg~ku-null-null&eid=e0ok41-mj2n56vg-ku&otpToken=MWEwMTE5ZTYxNTJjY2JjM2I3MjQwNGVkNDAxYmUyYjc4ZmNjZDg0NDkxYTg4ODYxNzljNjAwNmQ0ZDUzNWFmNGZlZGRkZmJkNjRiNmQzZmM0YzllZjNlYWVkMmYxYjhmZGIxMDM3ZTU5Mzc0MDgwNTE3M2E4MCwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4337211668",
+        company="CCH Group",
+        company_id=None,
+        location="Cardiff (On-site)",
+        raw=None,
+        job=JobInfo(
+            title="Care Coordinator",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4337211668",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4337211668/?trackingId=UezbMgk%2Fq6EqMZ9zUUd8NA%3D%3D&refId=IJr%2BgAEXCK1Je8bAJst7Xg%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BAZhCmRZNRsGDf4hojH2f%2FQ%3D%3D&midToken=AQEfx9iW2R4awg&midSig=1hpj0gr5Vw_Y01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_8095682530&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_8095682530-null-e0ok41~mj2n56vg~ku-null-null&eid=e0ok41-mj2n56vg-ku&otpToken=MWEwMTE5ZTYxNTJjY2JjM2I3MjQwNGVkNDAxYmUyYjc4ZmNjZDg0NDkxYTg4ODYxNzljNjAwNmQ0ZDUzNWFmNGZlZGRkZmJkNjRiNmQzZmM0YzllZjNlYWVkMmYxYjhmZGIxMDM3ZTU5Mzc0MDgwNTE3M2E4MCwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4343254170",
+        company="MacIntyre Academies",
+        company_id=None,
+        location="Cardiff (On-site)",
+        raw=None,
+        job=JobInfo(
+            title="Health and Safety Manager ( St David's Catholic Sixth Form College)",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4343254170",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4343254170/?trackingId=ft9zbed9eXlELOdAkOw9sA%3D%3D&refId=IJr%2BgAEXCK1Je8bAJst7Xg%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BAZhCmRZNRsGDf4hojH2f%2FQ%3D%3D&midToken=AQEfx9iW2R4awg&midSig=1hpj0gr5Vw_Y01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_8095682530&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_8095682530-null-e0ok41~mj2n56vg~ku-null-null&eid=e0ok41-mj2n56vg-ku&otpToken=MWEwMTE5ZTYxNTJjY2JjM2I3MjQwNGVkNDAxYmUyYjc4ZmNjZDg0NDkxYTg4ODYxNzljNjAwNmQ0ZDUzNWFmNGZlZGRkZmJkNjRiNmQzZmM0YzllZjNlYWVkMmYxYjhmZGIxMDM3ZTU5Mzc0MDgwNTE3M2E4MCwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+    JobResult(
+        platform="linkedin",
+        job_id="4343116193",
+        company="Cardiff and Vale University Health Board",
+        company_id=None,
+        location="Cardiff (On-site)",
+        raw=None,
+        job=JobInfo(
+            title="Senior Clinical Fellow in Glaucoma Ophthalmology",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4343116193",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4343116193/?trackingId=AME8p%2FJNYMo4YR7Mo9BDhw%3D%3D&refId=IJr%2BgAEXCK1Je8bAJst7Xg%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BAZhCmRZNRsGDf4hojH2f%2FQ%3D%3D&midToken=AQEfx9iW2R4awg&midSig=1hpj0gr5Vw_Y01&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_8095682530&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_8095682530-null-e0ok41~mj2n56vg~ku-null-null&eid=e0ok41-mj2n56vg-ku&otpToken=MWEwMTE5ZTYxNTJjY2JjM2I3MjQwNGVkNDAxYmUyYjc4ZmNjZDg0NDkxYTg4ODYxNzljNjAwNmQ0ZDUzNWFmNGZlZGRkZmJkNjRiNmQzZmM0YzllZjNlYWVkMmYxYjhmZGIxMDM3ZTU5Mzc0MDgwNTE3M2E4MCwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    ),
+]
+LINKEDIN_EMAIL_5 = {
+    "id": "linkedin_5",
+    "subject": "FW: “health improvement”: Cardiff and Vale University Health Board - Clinical Research Nurse- INTERNAL and more",
+    "from": "emmanuelpean@gmail.com",
+    "to": "",
+    "date": datetime.datetime.now(),
+    "body": LINKEDIN_EMAIL_5_BODY,
+    "platform": "linkedin",
+    "parsed_output": LINKEDIN_EMAIL_5_EXTRACTED,
+    "alert_name": "health improvement",
+}
+
+# Email 6
+LINKEDIN_EMAIL_6_BODY = open_file("linkedin_email_6_FW.html", encoding="utf8")
+LINKEDIN_EMAIL_6_EXTRACTED = [
+    JobResult(
+        platform="linkedin",
+        job_id="4343099826",
+        company="Threadneedle Partners",
+        company_id=None,
+        location="United Kingdom (Remote)",
+        raw=None,
+        job=JobInfo(
+            title="Policy Expert",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/4343099826",
+            raw_url="https://www.linkedin.com/comm/jobs/view/4343099826/?trackingId=%2BHacNM%2BDFzYcnomYI5I35A%3D%3D&refId=fLujIJ6CH%2BlSA0TqQqfQsA%3D%3D&lipi=urn%3Ali%3Apage%3Aemail_email_job_alert_digest_01%3BWxZfZ5y7Q6u070SuaIGACA%3D%3D&midToken=AQEfx9iW2R4awg&midSig=2Zace77_JU1s41&trk=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_8096440954&trkEmail=eml-email_job_alert_digest_01-primary_job_list-0-jobcard_body_8096440954-null-e0ok41~mj46vct8~t4-null-null&eid=e0ok41-mj46vct8-t4&otpToken=MWEwMTE5ZTYxNTJjY2JjM2I3MjQwNGVkNDAxYmUxYjY4Y2M2ZDg0NDk4YWQ4ODYxNzljNjAwNmQ0ZDUzNWFmNGZlZGRkZmI0MWJmM2ZiYzYwNDg5ZThhYzE1Y2RkYmE2N2VhY2U3ZjYyMWUxZTU2ZDcwMWZhNSwxLDE%3D",
+            deadline=None,
+            salary=Salary(min_amount=None, max_amount=None, currency=None),
+        ),
+    )
+]
+LINKEDIN_EMAIL_6 = {
+    "id": "linkedin_6",
+    "subject": "FW: “health policy”: Threadneedle Partners - Policy Expert",
+    "from": "emmanuelpean@gmail.com",
+    "to": "",
+    "date": datetime.datetime.now(),
+    "body": LINKEDIN_EMAIL_6_BODY,
+    "platform": "linkedin",
+    "parsed_output": LINKEDIN_EMAIL_6_EXTRACTED,
+    "alert_name": "health policy",
+}
 
 
 # ------------------------------------------------------- INDEED -------------------------------------------------------
@@ -940,6 +1052,7 @@ VEGANJOBS_EMAIL_3 = {
 # --------------------------------------------------------- NHS --------------------------------------------------------
 
 
+# Email 3
 NHS_EMAIL_3_BODY = open_file("nhs_email_3.html", encoding="cp1252")
 NHS_EMAIL_3_EXTRACTED = [
     JobResult(
@@ -1046,6 +1159,7 @@ NHS_EMAIL_3 = {
     "alert_name": "public health Cardiff (Caerdydd)",
 }
 
+# Email 4
 NHS_EMAIL_4_BODY = open_file("nhs_email_4.html", encoding="cp1252")
 NHS_EMAIL_4_EXTRACTED = [
     JobResult(
@@ -1200,7 +1314,7 @@ NHS_EMAIL_4_EXTRACTED = [
     ),
 ]
 NHS_EMAIL_4 = {
-    "id": "nhs_3",
+    "id": "nhs_4",
     "subject": "NHS job alerts for X",
     "from": "nhs.jobs.job.alerts@notifications.service.gov.uk",
     "to": "",
@@ -1211,16 +1325,195 @@ NHS_EMAIL_4 = {
     "alert_name": "public health Cardiff (Caerdydd)",
 }
 
+# Email 5
+NHS_EMAIL_5_BODY = open_file("nhs_email_5_FW.html", encoding="cp1252")
+NHS_EMAIL_5_EXTRACTED = [
+    JobResult(
+        platform="nhs",
+        job_id="H9040-25-1735",
+        company="NHS",
+        company_id=None,
+        location="Caerleon",
+        raw=None,
+        job=JobInfo(
+            title="Mental Health Clinician – Core Eating Disorders Team, CAMHS",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/H9040-25-1735",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9040-25-1735",
+            deadline=datetime.datetime(2025, 12, 28, 0, 0),
+            salary=Salary(min_amount=39263.0, max_amount=47280.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="C9028-25-0366",
+        company="NHS",
+        company_id=None,
+        location="Cardiff",
+        raw=None,
+        job=JobInfo(
+            title="Healthcare Scientist Assistant",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/C9028-25-0366",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/C9028-25-0366",
+            deadline=datetime.datetime(2025, 12, 21, 0, 0),
+            salary=Salary(min_amount=27898.0, max_amount=30615.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9110-25-1848",
+        company="NHS",
+        company_id=None,
+        location="Bridgend",
+        raw=None,
+        job=JobInfo(
+            title="Registered Nurse",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/H9110-25-1848",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1848",
+            deadline=datetime.datetime(2025, 12, 21, 0, 0),
+            salary=Salary(min_amount=31516.0, max_amount=38364.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9110-25-1846",
+        company="NHS",
+        company_id=None,
+        location="Abercynon",
+        raw=None,
+        job=JobInfo(
+            title="Bank MHLD Registered Nurse Band 5/6",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/H9110-25-1846",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1846",
+            deadline=datetime.datetime(2025, 12, 28, 0, 0),
+            salary=Salary(min_amount=31516.0, max_amount=47280.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9001-25-0839",
+        company="NHS",
+        company_id=None,
+        location="Cardiff",
+        raw=None,
+        job=JobInfo(
+            title="Biomedical Scientist",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/H9001-25-0839",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9001-25-0839",
+            deadline=datetime.datetime(2025, 12, 23, 0, 0),
+            salary=Salary(min_amount=31516.0, max_amount=38364.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9110-25-1847",
+        company="NHS",
+        company_id=None,
+        location="Ynysmaerdy",
+        raw=None,
+        job=JobInfo(
+            title="Medical Secretary, General Surgery",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/H9110-25-1847",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1847",
+            deadline=datetime.datetime(2025, 12, 18, 0, 0),
+            salary=Salary(min_amount=27898.0, max_amount=30615.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9001-25-0852",
+        company="NHS",
+        company_id=None,
+        location="Cardiff",
+        raw=None,
+        job=JobInfo(
+            title="Rehabilitation Coach",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/H9001-25-0852",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9001-25-0852",
+            deadline=datetime.datetime(2025, 12, 17, 0, 0),
+            salary=Salary(min_amount=27898.0, max_amount=30615.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9110-25-1843",
+        company="NHS",
+        company_id=None,
+        location="Tonypandy",
+        raw=None,
+        job=JobInfo(
+            title="Speech and Language Therapy Associate Practitioner",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/H9110-25-1843",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1843",
+            deadline=datetime.datetime(2025, 12, 23, 0, 0),
+            salary=Salary(min_amount=27898.0, max_amount=30615.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9110-25-1842",
+        company="NHS",
+        company_id=None,
+        location="Llantrisant",
+        raw=None,
+        job=JobInfo(
+            title="Specialist Physiotherapist, Rotational Neurological/Rehabilitation",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/H9110-25-1842",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9110-25-1842",
+            deadline=datetime.datetime(2025, 12, 23, 0, 0),
+            salary=Salary(min_amount=39263.0, max_amount=47280.0, currency="£"),
+        ),
+    ),
+    JobResult(
+        platform="nhs",
+        job_id="H9001-25-0854",
+        company="NHS",
+        company_id=None,
+        location="Cardiff",
+        raw=None,
+        job=JobInfo(
+            title="Pharmacy Technician",
+            description=None,
+            url="https://www.linkedin.com/jobs/view/H9001-25-0854",
+            raw_url="https://beta.jobs.nhs.uk/candidate/jobadvert/H9001-25-0854",
+            deadline=datetime.datetime(2025, 12, 23, 0, 0),
+            salary=Salary(min_amount=31516.0, max_amount=38364.0, currency="£"),
+        ),
+    ),
+]
+NHS_EMAIL_5 = {
+    "id": "nhs_5",
+    "subject": "FW: NHS job alerts for X",
+    "from": "emmanuelpean@gmail.com",
+    "to": "",
+    "date": datetime.datetime.now(),
+    "body": NHS_EMAIL_5_BODY,
+    "platform": "nhs",
+    "parsed_output": NHS_EMAIL_5_EXTRACTED,
+    "alert_name": "public health Cardiff (Caerdydd)",
+}
+
 
 TEST_EMAILS = [
     LINKEDIN_EMAIL_3,
     LINKEDIN_EMAIL_4,
+    LINKEDIN_EMAIL_5,
+    LINKEDIN_EMAIL_6,
     INDEED_EMAIL_3,
     INDEED_EMAIL_4,
     VEGANJOBS_EMAIL_2,
     VEGANJOBS_EMAIL_3,
     NHS_EMAIL_3,
     NHS_EMAIL_4,
+    NHS_EMAIL_5,
 ]
 NEW_TEST_EMAILS_2 = {}
 for user in USER_DATA:

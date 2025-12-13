@@ -235,6 +235,7 @@ class EmailService(object):
         timedelta_days: int | float = 1,
         subject_contains: str = "",
         from_email: list[str] | str = "",
+        to_email: str = "",
     ) -> list[str]:
         """Search for messages matching a query.
         :param recipient_email: Filter by recipient email address (e.g. jam.jobscraper@emmanuelpean.me)
@@ -243,6 +244,7 @@ class EmailService(object):
         :param timedelta_days: Number of days to search for emails
         :param subject_contains: Filter by subject content
         :param from_email: Filter by 'From' email address
+        :param to_email: Filter by 'To' email address
         :return: List of message IDs matching the query"""
 
         mail = self._connect_imap()
@@ -274,6 +276,10 @@ class EmailService(object):
             # From email filter
             if from_email:
                 search_criteria.append(build_multi_from_query(from_email))
+
+            # To email filter
+            if to_email:
+                search_criteria.append(f'HEADER To "{to_email}"')
 
             # Default to all if no criteria
             search_query = " ".join(search_criteria) if search_criteria else "ALL"
@@ -456,3 +462,11 @@ class EmailService(object):
 
 
 email_service = EmailService()
+print(
+    email_service.get_email_ids(
+        from_email="jessicaAGgood@live.co.uk",
+        to_email="jam.jobscraper@emmanuelpean.me",
+        subject_contains="Threadneedle Partners - Policy Expert",
+    )
+)
+print(email_service.get_email_data("647")["body"])
