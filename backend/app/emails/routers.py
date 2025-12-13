@@ -44,7 +44,6 @@ def get_verification_link(email_address: str) -> dict:
     raise HTTPException(status_code=404, detail="No verification link found")
 
 
-
 @router.get("/reset-link/{email_address}")
 def get_reset_link(email_address: str) -> dict:
     """Extract password reset link from the most recent email."""
