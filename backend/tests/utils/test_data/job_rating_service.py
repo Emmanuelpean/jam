@@ -7,7 +7,6 @@ JOB_RATING_DATA = [
 
 JOB_RATING_SERVICE_LOG_DATA = [
     {
-        "job_rating_id": 1,
         "run_duration": 0.85,
         "run_datetime": "2025-01-15T12:34:56+00:00",
         "is_success": True,
@@ -18,7 +17,6 @@ JOB_RATING_SERVICE_LOG_DATA = [
         "rated_job_skipped_ids": [],
     },
     {
-        "job_rating_id": 2,
         "run_duration": 1.23,
         "run_datetime": "2025-02-01T09:00:00+00:00",
         "is_success": False,
@@ -29,8 +27,7 @@ JOB_RATING_SERVICE_LOG_DATA = [
         "rated_job_skipped_ids": [],
     },
     {
-        "job_rating_id": 3,
-        "run_duration": None,
+        "run_duration": 3,
         "run_datetime": "2025-03-10T18:00:00+00:00",
         "is_success": None,
         "error_message": None,

@@ -104,7 +104,6 @@ USER_QUALIFICATION_DATA = [
     {"owner_id": 2, "education": "BSc Computer Science"},
     {"owner_id": 2, "education": "MSc Computer Science"},
     {"owner_id": 4, "education": "BSc Computer Science"},
-    {"owner_id": 3, "education": "BSc Computer Science"},
     {"owner_id": 5, "education": "BSc Computer Science"},
     {
         "owner_id": 6,

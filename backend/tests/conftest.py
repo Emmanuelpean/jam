@@ -44,6 +44,7 @@ from tests.utils.create_data import (
     create_job_alert_emails,
     create_user_qualifications,
     create_job_ratings,
+    create_job_rating_service_logs,
 )
 from tests.utils.seed_database import reset_database
 from tests.utils.test_data import (
@@ -498,10 +499,21 @@ def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[ei
 
 
 @pytest.fixture
-def test_job_ratings(session, test_users, test_scraped_jobs, test_user_qualifications) -> list[rating_models.JobRating]:
+def test_job_rating_service_logs(session) -> list[rating_models.JobRatingServiceLog]:
+    """Create test job rating service logs"""
+
+    return create_job_rating_service_logs(session)
+
+
+@pytest.fixture
+def test_job_ratings(
+    session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
+) -> list[rating_models.JobRating]:
     """Create test job ratings"""
 
-    return create_job_ratings(session, test_users, test_scraped_jobs, test_user_qualifications)
+    return create_job_ratings(
+        session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
+    )
 
 
 # -------------------------------------------------------- UTILS -------------------------------------------------------
