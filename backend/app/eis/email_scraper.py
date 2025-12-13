@@ -145,6 +145,11 @@ class JobEmailScraper(EmailService):
             # Determine the platform
             platform = PLATFORM_SENDER_EMAILS.get(message["from"].lower())
             if not platform:
+                for plat in PLATFORM_SENDER_EMAILS:
+                    if plat in message["body"].lower():
+                        platform = PLATFORM_SENDER_EMAILS[plat]
+                        break
+            if not platform:
                 raise ValueError("Email body does not contain a valid platform identifier.")
             alert_name = ALERT_NAME_EXTRACTORS[platform](message["subject"], message["body"])
 
@@ -382,10 +387,18 @@ class JobEmailScraper(EmailService):
                 email_ids = self.get_email_ids(
                     recipient_email=settings.scraper_email,
                     sender_email=user.email,
-                    inbox_only=True,
+                    inbox_only=False,
                     timedelta_days=timedelta_days,
                     from_email=list(PLATFORM_SENDER_EMAILS.keys()),
                 )
+                # If no emails found, look for forwarded emails
+                if not email_ids:
+                    email_ids = self.get_email_ids(
+                        from_email=user.email,
+                        to_email=settings.scraper_email,
+                        inbox_only=False,
+                        timedelta_days=timedelta_days,
+                    )
                 service_log.email_found_n += len(email_ids)
                 self.logger.info(f"Found {len(email_ids)} emails")
             except Exception as exception:
