@@ -1,7 +1,5 @@
-"""
-Database seeding script for development.
-This script will drop all data and repopulate with hard-coded sample data.
-"""
+"""Database seeding script for development.
+This script will drop all data and repopulate with hard-coded sample data."""
 
 import os
 import sys
@@ -22,10 +20,10 @@ from tests.utils.create_data import (
     create_interviews,
     create_job_alert_emails,
     create_scraped_jobs,
-    create_eis_service_logs,
+    create_job_scraping_service_logs,
     create_job_application_updates,
-    create_platform_stats,
-    create_eis_service_errors,
+    create_job_scraping_platform_stats,
+    create_job_scraping_service_errors,
     create_user_qualifications,
     create_job_ratings,
 )
@@ -89,9 +87,9 @@ def seed_database() -> None:
         user_qualifications = create_user_qualifications(db, users)
 
         # EIS data
-        service_logs = create_eis_service_logs(db)
-        platform_stats = create_platform_stats(db, service_logs)
-        eis_service_errors = create_eis_service_errors(db, service_logs)
+        service_logs = create_job_scraping_service_logs(db)
+        platform_stats = create_job_scraping_platform_stats(db, service_logs)
+        eis_service_errors = create_job_scraping_service_errors(db, service_logs)
         alert_emails = create_job_alert_emails(db, users, service_logs)
         scraped_jobs = create_scraped_jobs(db, alert_emails, users)
         job_ratings = create_job_ratings(db, users, scraped_jobs, user_qualifications)

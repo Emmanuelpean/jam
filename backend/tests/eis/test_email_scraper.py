@@ -9,7 +9,7 @@ from app.eis.email_parsers.utils import Platform, remove_style_tags
 from app.eis.job_scrapers import JobResult
 from app.eis.models import JobAlertEmail, ScrapedJob, PlatformStat, EisServiceLog, EisServiceError
 from tests.eis import resources
-from tests.utils.table_data import TOAST_USER_1_INDEX
+from tests.utils.test_data import TOAST_USER_1_INDEX
 
 
 # ---------------------------------------------------- EMAIL METHODS ---------------------------------------------------

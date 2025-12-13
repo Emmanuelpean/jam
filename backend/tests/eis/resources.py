@@ -4,7 +4,7 @@ import datetime
 import os
 
 from app.eis.job_scrapers import JobResult, JobInfo, Salary
-from tests.utils.table_data import USER_DATA
+from tests.utils.test_data import USER_DATA
 
 
 def open_file(file: str, **kwargs) -> str:
