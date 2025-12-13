@@ -40,7 +40,6 @@ import {
 } from "./Icons";
 import { ensureHttpPrefix } from "../../../utils/StringUtils";
 import { findItemByKey } from "../../../utils/Utils";
-import currencies from "../../../data/currencies.json";
 import {
 	applicationStatusOptions,
 	appliedViaOptions,
@@ -261,7 +260,8 @@ export const renderFunctions = {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
 		const salaryCurrency: string | undefined | null =
-			currencies.find((currency: Currency) => currency.code === param.item?.salary_currency)?.symbol || "";
+			param.dataContext.currencies.find((currency: Currency) => currency.code === param.item?.salary_currency)
+				?.symbol || "";
 		if (!salary_min && !salary_max) {
 			return null;
 		}
