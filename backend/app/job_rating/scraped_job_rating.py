@@ -4,6 +4,7 @@ import datetime as dt
 import traceback
 
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.job_rating import models
 from app import models as app_models
@@ -17,14 +18,16 @@ from app.service_runner import ServiceRunner
 SERVICE_NAME = "job_rating_service"
 
 
-def score_scraped_jobs(min_description_length: int = 100) -> models.JobRatingServiceLog:
+def score_scraped_jobs(min_description_length: int = 100, db: Session | None = None) -> models.JobRatingServiceLog:
     """Score all scraped jobs using Gemini LLM.
-    :param min_description_length: Minimum job description length to consider"""
+    :param min_description_length: Minimum job description length to consider
+    :param db: Database session"""
 
-    db = next(get_db())
+    db = next(get_db()) if db is None else db
     logger = utils.AppLogger.create_service_logger(SERVICE_NAME, "INFO")
     start_time = dt.datetime.now()
     service_log = models.JobRatingServiceLog(run_datetime=start_time)
+    db.add(service_log)
 
     try:
         # noinspection PyComparisonWithNone
@@ -38,7 +41,7 @@ def score_scraped_jobs(min_description_length: int = 100) -> models.JobRatingSer
             .filter(func.length(eis_models.ScrapedJob.description) > min_description_length)  # description length
             .all()
         )
-        service_log.scraped_job_found_ids = [job.id for job in scraped_jobs]
+        service_log.rated_job_found_ids = [job.id for job in scraped_jobs]
         logger.info(f"Found {len(scraped_jobs)} scraped jobs to rate")
 
         for scraped_job in scraped_jobs:
@@ -49,18 +52,18 @@ def score_scraped_jobs(min_description_length: int = 100) -> models.JobRatingSer
                 .order_by(app_models.UserQualification.modified_at.desc())
                 .first()
             )
-            kwargs = dict(
-                scraped_job_id=scraped_job.id,
-                owner_id=owner_id,
-                script_version=__version__,
-                user_qualification_id=owner_qualifications.id,
-            )
             if owner_qualifications and (
                 owner_qualifications.experience
                 or owner_qualifications.education
                 or owner_qualifications.skills
                 or owner_qualifications.qualities
             ):
+                kwargs = dict(
+                    scraped_job_id=scraped_job.id,
+                    owner_id=owner_id,
+                    script_version=__version__,
+                    user_qualification_id=owner_qualifications.id,
+                )
                 score = None
                 try:
                     logger.info(f"Scoring job ID {scraped_job.id} for owner ID {owner_id}")
@@ -87,7 +90,8 @@ def score_scraped_jobs(min_description_length: int = 100) -> models.JobRatingSer
                     )
                     db.add(job_rating)
                     db.commit()
-                    service_log.scraped_job_succeeded_ids.append(scraped_job.id)
+                    # noinspection PyAugmentAssignment
+                    service_log.rated_job_succeeded_ids = service_log.rated_job_succeeded_ids + [scraped_job.id]
                 except Exception as exception:
                     tb = traceback.format_exc()
                     logger.exception(f"Error in rating workflow: {exception}")
@@ -99,10 +103,12 @@ def score_scraped_jobs(min_description_length: int = 100) -> models.JobRatingSer
                     )
                     db.add(job_rating)
                     db.commit()
-                    service_log.scraped_job_failed_ids.append(scraped_job.id)
+                    # noinspection PyAugmentAssignment
+                    service_log.rated_job_failed_ids = service_log.rated_job_failed_ids + [scraped_job.id]
             else:
                 logger.info(f"Skipping job ID {scraped_job.id} for owner ID {owner_id} due to missing qualifications")
-                service_log.scraped_job_skipped_ids.append(scraped_job.id)
+                # noinspection PyAugmentAssignment
+                service_log.rated_job_skipped_ids = service_log.rated_job_skipped_ids + [scraped_job.id]
 
         # Log final statistics
         service_log.run_duration = (dt.datetime.now() - start_time).total_seconds()

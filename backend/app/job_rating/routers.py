@@ -15,7 +15,7 @@ from app.routers import generate_data_table_crud_router
 # ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
 
 
-scraped_job_router = generate_data_table_crud_router(
+job_rating_router = generate_data_table_crud_router(
     table_model=models.JobRating,
     out_schema=schemas.JobRatingOut,
     endpoint="job_ratings",
@@ -29,11 +29,11 @@ scraped_job_router = generate_data_table_crud_router(
 
 
 # Service Log router
-service_log_router = APIRouter(prefix="/job_rating_service_logs", tags=["job_rating_service_logs"])
+job_rating_service_log_router = APIRouter(prefix="/job_rating_service_logs", tags=["job_rating_service_logs"])
 
 
 # GET endpoint for admins to get the service logs
-@service_log_router.get("/", response_model=list[schemas.JobRatingServiceLogOut])
+@job_rating_service_log_router.get("/", response_model=list[schemas.JobRatingServiceLogOut])
 def get_service_logs_by_date_range(
     start_date: datetime | None = Query(None, description="Start date for filtering (ISO format)"),
     end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
@@ -63,7 +63,7 @@ def get_service_logs_by_date_range(
 
 
 # GET endpoint for admin user to get the latest service log
-@service_log_router.get("/latest", response_model=schemas.JobRatingServiceLogOut)
+@job_rating_service_log_router.get("/latest", response_model=schemas.JobRatingServiceLogOut)
 def get_latest(
     current_user: app_models.User = Depends(get_current_user),
     db: Session = Depends(get_db),

@@ -401,7 +401,17 @@ def create_job_scraping_service_errors(db, service_logs) -> list[eis_models.EisS
 # ----------------------------------------------- JOB RATING SERVICE LOGS ----------------------------------------------
 
 
-def create_job_ratings(db, users, use_qualifications, scraped_jobs) -> list[job_rating_models.JobRating]:
+def create_job_rating_service_logs(db) -> list[job_rating_models.JobRatingServiceLog]:
+    """Create sample scraped job service logs"""
+
+    print("Creating Job Rating service logs...")
+    # noinspection PyArgumentList
+    logs = [job_rating_models.JobRatingServiceLog(**log) for log in job_rating_service.JOB_RATING_SERVICE_LOG_DATA]
+
+    return add_to_db(db, logs)
+
+
+def create_job_ratings(db, users, use_qualifications, scraped_jobs, service_logs) -> list[job_rating_models.JobRating]:
     """Create sample job ratings"""
 
     print("Creating job ratings...")
@@ -413,16 +423,7 @@ def create_job_ratings(db, users, use_qualifications, scraped_jobs) -> list[job_
             ("owner_id", users),
             ("job_id", scraped_jobs),
             ("user_qualification_id", use_qualifications),
+            ("service_log_id", service_logs),
         )
     ]
     return add_to_db(db, keywords)
-
-
-def create_job_rating_service_logs(db) -> list[job_rating_models.JobRatingServiceLog]:
-    """Create sample scraped job service logs"""
-
-    print("Creating Job Rating service logs...")
-    # noinspection PyArgumentList
-    logs = [job_rating_models.JobRatingServiceLog(**log) for log in job_rating_service.JOB_RATING_SERVICE_LOG_DATA]
-
-    return add_to_db(db, logs)

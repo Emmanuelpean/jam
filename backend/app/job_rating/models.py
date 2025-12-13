@@ -13,7 +13,7 @@ from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.orm import relationship
 
 from app.database import Base
-from app.models import Owned
+from app.models import Owned, CommonBase
 
 
 class JobRating(Owned, Base):
@@ -60,7 +60,7 @@ class JobRating(Owned, Base):
     user_qualification = relationship("UserQualification")
 
 
-class JobRatingServiceLog(Owned, Base):
+class JobRatingServiceLog(CommonBase, Base):
     """Represents service logs for job ratings.
 
     Attributes:
