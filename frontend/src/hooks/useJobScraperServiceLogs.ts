@@ -4,22 +4,24 @@ import { SelectOption } from "../components/rendering/form/FormOptions";
 import { jobScraperServiceLogApi } from "../services/api/Services";
 import { DateRange } from "../utils/TimeUtils";
 import { capitalise } from "../utils/StringUtils";
+import { useAuth } from "../contexts/AuthContext";
 
-export const useJobScraperServiceLogs = (token: string | null, isScraperRunning: boolean, dateRange: DateRange) => {
-	const [serviceLogs, setServiceLogs] = useState<JobScraperServiceLog[] | null>(null);
-	const [latestLog, setLatestLog] = useState<JobScraperServiceLog | null>(null);
+export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: DateRange) => {
+	const { token } = useAuth();
+	const [previousServiceLogs, setPreviousServiceLogs] = useState<JobScraperServiceLog[] | null>(null);
+	const [latestServiceLog, setLatestServiceLog] = useState<JobScraperServiceLog | null>(null);
 	const [platformOptions, setPlatformOptions] = useState<SelectOption[]>([]);
-	const [error, setError] = useState<string | null>(null);
+	const [serviceLogError, setServiceLogError] = useState<string | null>(null);
 
-	const fetchLatestLog = async (): Promise<void> => {
+	const fetchLatestServiceLog = async (): Promise<void> => {
 		if (!token) return;
 		try {
 			const log: JobScraperServiceLog = await jobScraperServiceLogApi.getLatest(token);
 			if (log) {
-				setLatestLog(log);
+				setLatestServiceLog(log);
 			}
 		} catch (err: any) {
-			setError(err.message || "An error occurred while fetching the latest log.");
+			setServiceLogError(err.message || "An error occurred while fetching the latest log.");
 			console.error("Failed to fetch latest log:", err);
 		}
 	};
@@ -31,7 +33,7 @@ export const useJobScraperServiceLogs = (token: string | null, isScraperRunning:
 				start_date: new Date(dateRange.start).toISOString(),
 				end_date: new Date(dateRange.end).toISOString(),
 			});
-			setServiceLogs(logs);
+			setPreviousServiceLogs(logs);
 
 			// Extract unique platforms from logs
 			const platformOptions: SelectOption[] = [
@@ -51,7 +53,7 @@ export const useJobScraperServiceLogs = (token: string | null, isScraperRunning:
 			];
 			setPlatformOptions(platformOptions);
 		} catch (err: any) {
-			setError(err.message || "An error occurred while fetching the logs.");
+			setServiceLogError(err.message || "An error occurred while fetching the logs.");
 			console.error("Failed to fetch latest logs:", err);
 		}
 	};
@@ -63,15 +65,15 @@ export const useJobScraperServiceLogs = (token: string | null, isScraperRunning:
 	// Fetch latest service log every 2s when scraper is running
 	useEffect(() => {
 		if (!isScraperRunning) return;
-		fetchLatestLog().then();
-		const interval = setInterval(fetchLatestLog, 2000);
+		fetchLatestServiceLog().then();
+		const interval = setInterval(fetchLatestServiceLog, 2000);
 		return (): void => clearInterval(interval);
 	}, [isScraperRunning, token]);
 
 	// Fetch the latest service log on component mount
 	useEffect(() => {
-		fetchLatestLog().then();
+		fetchLatestServiceLog().then();
 	}, [token]);
 
-	return { serviceLogs, latestLog, platformOptions, fetchLatestLog, error };
+	return { previousServiceLogs, latestServiceLog, platformOptions, fetchLatestServiceLog, serviceLogError };
 };

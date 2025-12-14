@@ -1,4 +1,4 @@
-import React, { JSX, useState } from "react";
+import React, { JSX, useState, useEffect } from "react";
 import { jobScraperServiceApi } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import { SyntheticEvent } from "../../../components/rendering/widgets/WidgetRenders";
@@ -28,32 +28,28 @@ const JobScraperDashboard = (): JSX.Element => {
 		end: new Date(),
 	});
 	const [selectedPlatform, setSelectedPlatform] = useState("all");
-	const {
-		serviceStatus,
-		remainingTime,
-		fetchStatus,
-		error: statusError,
-	} = useServiceRunnerStatus(jobScraperServiceApi, token);
+	const { serviceStatus, remainingTime, fetchStatus, statusError } = useServiceRunnerStatus(jobScraperServiceApi);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: serviceStatus?.period_hours || 0,
 		timedelta_days: serviceStatus?.service_kwargs.timedelta_days || 0,
 	});
 	const [loading, setLoading] = useState<boolean>(false);
 	const { showToastSuccess } = useGlobalToast();
-	const {
-		serviceLogs,
-		latestLog,
-		platformOptions,
-		fetchLatestLog,
-		error: serviceLogError,
-	} = useJobScraperServiceLogs(token, serviceStatus?.service_running || false, dateRange);
-	const { scraperErrors } = useJobScraperErrors(latestLog, token, selectedPlatform);
-	const { scraperErrors: latestScraperErrors } = useJobScraperErrors(serviceLogs, token, selectedPlatform);
-	const { serviceErrors } = useServiceErrors(latestLog, token);
-	const { serviceErrors: latestServiceErrors } = useServiceErrors(serviceLogs, token);
+	const { previousServiceLogs, latestServiceLog, platformOptions, fetchLatestServiceLog, serviceLogError } =
+		useJobScraperServiceLogs(serviceStatus?.service_running || false, dateRange);
+	const { scraperErrors: latestScraperErrors, error: lastestScraperRequestError } = useJobScraperErrors(
+		latestServiceLog,
+		selectedPlatform,
+	);
+	const { scraperErrors: previousScraperErrors, error: previousScraperRequestError } = useJobScraperErrors(
+		previousServiceLogs,
+		selectedPlatform,
+	);
+	const { serviceErrors: lastServiceErrors } = useServiceErrors(latestServiceLog);
+	const { serviceErrors: previousServiceErrors } = useServiceErrors(previousServiceLogs);
 
-	React.useEffect(() => {
-		if (serviceStatus) {
+	useEffect((): void => {
+		if (serviceStatus?.service_runner_status === "stopped") {
 			setFormData({
 				period_hours: serviceStatus.period_hours || 3,
 				timedelta_days: serviceStatus.service_kwargs.timedelta_days || 1,
@@ -77,7 +73,7 @@ const JobScraperDashboard = (): JSX.Element => {
 		try {
 			await jobScraperServiceApi.start(formData.period_hours, formData.timedelta_days, token);
 			await fetchStatus();
-			await fetchLatestLog();
+			await fetchLatestServiceLog();
 			showToastSuccess("Scraper started successfully");
 		} catch (err: any) {
 			console.log(err.message || "Failed to start scraper");
@@ -92,7 +88,7 @@ const JobScraperDashboard = (): JSX.Element => {
 		try {
 			await jobScraperServiceApi.stop(token);
 			await fetchStatus();
-			await fetchLatestLog();
+			await fetchLatestServiceLog();
 			showToastSuccess("Scraper stopped successfully");
 		} catch (err: any) {
 			console.log(err.message || "Failed to stop scraper");
@@ -100,6 +96,24 @@ const JobScraperDashboard = (): JSX.Element => {
 			setLoading(false);
 		}
 	};
+
+	const formatErrorMessage = (err: unknown): string => {
+		if (!err) return "";
+		if (typeof err === "string") return err;
+		if (err instanceof Error) return err.message;
+		try {
+			return JSON.stringify(err);
+		} catch {
+			return String(err);
+		}
+	};
+
+	const collectedErrors = [
+		{ key: "status", label: "Service status", value: statusError },
+		{ key: "serviceLogs", label: "Service logs", value: serviceLogError },
+		{ key: "lastestScraperRequestError", label: "Last rating error", value: lastestScraperRequestError },
+		{ key: "previousScraperRequestError", label: "Latest rating error", value: previousScraperRequestError },
+	].filter((e) => e.value);
 
 	return (
 		<div>
@@ -114,6 +128,24 @@ const JobScraperDashboard = (): JSX.Element => {
 				</div>
 			</div>
 
+			{collectedErrors.length > 0 && (
+				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
+					<div className="d-flex align-items-start">
+						<i className="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
+						<div className="flex-grow-1">
+							<h5 className="alert-heading mb-2">System Errors Detected</h5>
+							<ul className="mb-0">
+								{collectedErrors.map((error) => (
+									<li key={error.key}>
+										<strong>{error.label}:</strong> {formatErrorMessage(error.value)}
+									</li>
+								))}
+							</ul>
+						</div>
+					</div>
+				</div>
+			)}
+
 			<ServiceStatusCard
 				status={serviceStatus}
 				remainingTime={remainingTime}
@@ -124,12 +156,12 @@ const JobScraperDashboard = (): JSX.Element => {
 				onStop={handleStop}
 			/>
 
-			<LatestRunProgress latestLog={latestLog} isRunning={serviceStatus?.service_running || false} />
+			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
 
 			<LogViewer api={jobScraperServiceApi} isServiceRunning={serviceStatus?.service_running || false} />
 
 			<RunHistoryChart
-				serviceLogData={serviceLogs}
+				serviceLogData={previousServiceLogs}
 				selectedPlatform={selectedPlatform}
 				platformOptions={platformOptions}
 				onPlatformChange={setSelectedPlatform}
@@ -138,11 +170,11 @@ const JobScraperDashboard = (): JSX.Element => {
 			/>
 
 			<ErrorSummaryCard
-				latestServiceLogs={serviceLogs}
-				lastScraperErrors={scraperErrors}
-				latestScraperErrors={latestScraperErrors}
-				lastServiceErrors={serviceErrors}
-				latestServiceErrors={latestServiceErrors}
+				latestServiceLogs={previousServiceLogs}
+				lastScraperErrors={latestScraperErrors}
+				latestScraperErrors={previousScraperErrors}
+				lastServiceErrors={lastServiceErrors}
+				latestServiceErrors={previousServiceErrors}
 				isRunning={serviceStatus?.service_running || false}
 			/>
 		</div>

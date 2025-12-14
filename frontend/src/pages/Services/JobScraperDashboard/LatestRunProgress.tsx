@@ -11,7 +11,6 @@ interface LatestRunProgressProps {
 
 export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressProps): JSX.Element | null => {
 	if (!latestLog) return null;
-	console.log(latestLog);
 
 	return (
 		<div className="status-card">

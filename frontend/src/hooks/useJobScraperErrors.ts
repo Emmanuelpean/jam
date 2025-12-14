@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import { PlatformStat, ScrapedJobData, JobScraperServiceLog } from "../services/Schemas";
 import { scrapedJobApi } from "../services/api/Services";
 import { normaliseArray } from "../utils/Utils";
+import { useAuth } from "../contexts/AuthContext";
 
 export const useJobScraperErrors = (
 	latestLog: JobScraperServiceLog | JobScraperServiceLog[] | null,
-	token: string | null,
 	platform: string,
 ) => {
+	const { token } = useAuth();
 	const [scraperErrors, setScraperErrors] = useState<Record<string, number>>({});
+	const [error, setError] = useState<Error | null>(null);
 
 	useEffect(() => {
 		if (!latestLog || !token) return;
@@ -61,6 +63,7 @@ export const useJobScraperErrors = (
 				});
 				setScraperErrors(errorCounts);
 			} catch (err: any) {
+				setError(err || new Error("Failed to fetch scraper errors"));
 				console.error("Failed to fetch scraper errors:", err);
 			}
 		};
@@ -68,5 +71,5 @@ export const useJobScraperErrors = (
 		fetchErrors().then();
 	}, [latestLog, token, platform]);
 
-	return { scraperErrors };
+	return { scraperErrors, error };
 };

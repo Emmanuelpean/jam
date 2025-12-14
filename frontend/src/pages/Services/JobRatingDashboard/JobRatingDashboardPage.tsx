@@ -1,4 +1,4 @@
-import React, { JSX, useState } from "react";
+import React, { JSX, useState, useEffect } from "react";
 import { jobRatingServiceRunnerApi } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import { SyntheticEvent } from "../../../components/rendering/widgets/WidgetRenders";
@@ -25,28 +25,23 @@ const JobRatingDashboard = (): JSX.Element => {
 		start: new Date(),
 		end: new Date(),
 	});
-	const {
-		serviceStatus,
-		remainingTime,
-		fetchStatus,
-		error: statusError,
-	} = useServiceRunnerStatus(jobRatingServiceRunnerApi, token);
+	const { serviceStatus, remainingTime, fetchStatus, statusError } =
+		useServiceRunnerStatus(jobRatingServiceRunnerApi);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: serviceStatus?.period_hours || 0,
 	});
 	const [loading, setLoading] = useState<boolean>(false);
 	const { showToastSuccess } = useGlobalToast();
-	const {
-		serviceLogs,
-		latestLog,
-		fetchLatestLog,
-		error: serviceLogError,
-	} = useJobRatingServiceLogs(token, serviceStatus?.service_running || false, dateRange);
-	const { scraperErrors: lastRatingErrors, error: lastRatingError } = useJobRatingErrors(latestLog, token);
-	const { scraperErrors: latestRatingErrors, error: latestRatingError } = useJobRatingErrors(serviceLogs, token);
+	const { previousServiceLogs, latestServiceLog, fetchLatestServiceLog, serviceLogError } = useJobRatingServiceLogs(
+		serviceStatus?.service_running || false,
+		dateRange,
+	);
+	const { scraperErrors: previousRatingErrors, error: previousRatingRequestError } =
+		useJobRatingErrors(previousServiceLogs);
+	const { scraperErrors: lastRatingErrors, error: latestRatingRequestError } = useJobRatingErrors(latestServiceLog);
 
-	React.useEffect(() => {
-		if (serviceStatus) {
+	useEffect((): void => {
+		if (serviceStatus && serviceStatus?.service_runner_status === "stopped") {
 			setFormData({
 				period_hours: serviceStatus.period_hours || 3,
 			});
@@ -69,7 +64,7 @@ const JobRatingDashboard = (): JSX.Element => {
 		try {
 			await jobRatingServiceRunnerApi.start(formData.period_hours, token);
 			await fetchStatus();
-			await fetchLatestLog();
+			await fetchLatestServiceLog();
 			showToastSuccess("Service runner started successfully");
 		} catch (err: any) {
 			console.log(err.message || "Failed to start service runner");
@@ -84,7 +79,7 @@ const JobRatingDashboard = (): JSX.Element => {
 		try {
 			await jobRatingServiceRunnerApi.stop(token);
 			await fetchStatus();
-			await fetchLatestLog();
+			await fetchLatestServiceLog();
 			showToastSuccess("Service runner stopped successfully");
 		} catch (err: any) {
 			console.log(err.message || "Failed to stop service runner");
@@ -107,8 +102,8 @@ const JobRatingDashboard = (): JSX.Element => {
 	const collectedErrors = [
 		{ key: "status", label: "Service status", value: statusError },
 		{ key: "serviceLogs", label: "Service logs", value: serviceLogError },
-		{ key: "lastRatingError", label: "Last rating error", value: lastRatingError },
-		{ key: "latestRatingError", label: "Latest rating error", value: latestRatingError },
+		{ key: "lastRatingError", label: "Last rating error", value: latestRatingRequestError },
+		{ key: "latestRatingError", label: "Latest rating error", value: previousRatingRequestError },
 	].filter((e) => e.value);
 
 	return (
@@ -117,12 +112,30 @@ const JobRatingDashboard = (): JSX.Element => {
 				<div className="d-flex align-items-center justify-content-between p-4 border-0 bg-white shadow-sm rounded-3">
 					<div className="d-flex align-items-center">
 						<div className="header-icon-wrapper me-3">
-							<i className={getTableIcon("TOAST Dashboard")}></i>
+							<i className={getTableIcon("Job Rating Dashboard")}></i>
 						</div>
-						<h4 className="mb-0 fw-bold text-dark">TOAST Dashboard</h4>
+						<h4 className="mb-0 fw-bold text-dark">Job Rating Dashboard</h4>
 					</div>
 				</div>
 			</div>
+
+			{collectedErrors.length > 0 && (
+				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
+					<div className="d-flex align-items-start">
+						<i className="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
+						<div className="flex-grow-1">
+							<h5 className="alert-heading mb-2">System Errors Detected</h5>
+							<ul className="mb-0">
+								{collectedErrors.map((error) => (
+									<li key={error.key}>
+										<strong>{error.label}:</strong> {formatErrorMessage(error.value)}
+									</li>
+								))}
+							</ul>
+						</div>
+					</div>
+				</div>
+			)}
 
 			<ServiceStatusCard
 				status={serviceStatus}
@@ -134,20 +147,20 @@ const JobRatingDashboard = (): JSX.Element => {
 				onStop={handleStop}
 			/>
 
-			<LatestRunProgress latestLog={latestLog} isRunning={serviceStatus?.service_running || false} />
+			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
 
 			<LogViewer api={jobRatingServiceRunnerApi} isServiceRunning={serviceStatus?.service_running || false} />
 
 			<RunHistoryChart
-				serviceLogData={serviceLogs}
+				serviceLogData={previousServiceLogs}
 				onDateRangeChange={setDateRange}
 				isRunning={serviceStatus?.service_running || false}
 			/>
 
 			<ErrorSummaryCard
-				latestServiceLogs={serviceLogs}
+				latestServiceLogs={previousServiceLogs}
 				lastRatingErrors={lastRatingErrors}
-				latestRatingErrors={latestRatingErrors}
+				latestRatingErrors={previousRatingErrors}
 				isRunning={serviceStatus?.service_running || false}
 			/>
 		</div>

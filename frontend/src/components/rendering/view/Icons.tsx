@@ -43,6 +43,7 @@ export function getTableIcon(title: string): string {
 		"TOAST Dashboard": "bi-envelope-arrow-down",
 		About: "bi-info-circle",
 		Admin: "bi-person-gear",
+		"Job Rating Dashboard": "bi-star-half",
 	};
 	return iconMap[title] || "bi-table";
 }

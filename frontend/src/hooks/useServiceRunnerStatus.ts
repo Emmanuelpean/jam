@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { BaseServiceApi, ServiceStatus } from "../services/api/Services";
+import { useAuth } from "../contexts/AuthContext";
 
-export const useServiceRunnerStatus = (api: BaseServiceApi, token: string | null) => {
+export const useServiceRunnerStatus = (api: BaseServiceApi) => {
+	const { token } = useAuth();
 	const [status, setStatus] = useState<ServiceStatus | null>(null);
 	const [remainingTime, setRemainingTime] = useState<number | null>(null);
-	const [error, setError] = useState<string | null>(null);
+	const [statusError, setStatusError] = useState<string | null>(null);
 
 	const fetchStatus = async (): Promise<void> => {
 		if (!token) return;
@@ -12,7 +14,7 @@ export const useServiceRunnerStatus = (api: BaseServiceApi, token: string | null
 			const data: ServiceStatus = await api.getStatus(token);
 			setStatus(data);
 		} catch (err: any) {
-			setError(err.message || "Failed to fetch service status");
+			setStatusError(err.message || "Failed to fetch service status");
 			console.error("An error occurred while fetching the service status", err);
 		}
 	};
@@ -41,5 +43,5 @@ export const useServiceRunnerStatus = (api: BaseServiceApi, token: string | null
 		return (): void => clearInterval(interval);
 	}, [status?.sleep_until]);
 
-	return { serviceStatus: status, remainingTime, fetchStatus, error };
+	return { serviceStatus: status, remainingTime, fetchStatus, statusError };
 };

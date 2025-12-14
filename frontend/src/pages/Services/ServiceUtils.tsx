@@ -5,6 +5,7 @@ import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders
 import { formatDuration } from "../../utils/TimeUtils";
 import { HelpBubble } from "../../components/rendering/widgets/HelpBubble";
 import { SeriesData } from "../../components/charts/LineChart";
+import { ServiceLog } from "../../services/Schemas";
 
 export const successColor = "#22c55e";
 export const failureColor = "#ef4444";
@@ -86,7 +87,7 @@ export const createSeries = (logs: any[], id: string, color: string, getValue: (
 	data: logs
 		.slice()
 		.reverse()
-		.map((log) => ({
+		.map((log: any): { x: Date; y: number } => ({
 			x: new Date(log.run_datetime),
 			y: getValue(log),
 		})),

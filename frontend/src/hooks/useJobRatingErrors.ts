@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { JobRating, JobRatingServiceLog } from "../services/Schemas";
 import { jobRatingApi } from "../services/api/Services";
 import { normaliseArray } from "../utils/Utils";
+import { useAuth } from "../contexts/AuthContext";
 
-export const useJobRatingErrors = (
-	latestLog: JobRatingServiceLog | JobRatingServiceLog[] | null,
-	token: string | null,
-) => {
+export const useJobRatingErrors = (latestLog: JobRatingServiceLog | JobRatingServiceLog[] | null) => {
+	const { token } = useAuth();
 	const [scraperErrors, setScraperErrors] = useState<Record<string, number>>({});
 	const [error, setError] = useState<Error | null>(null);
 
