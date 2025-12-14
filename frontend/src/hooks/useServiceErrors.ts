@@ -1,15 +1,12 @@
 import { useEffect, useState } from "react";
-import { ServiceError, JobScraperServiceLog } from "../services/Schemas";
+import { JobScraperServiceLog, ServiceError } from "../services/Schemas";
 import { normaliseArray } from "../utils/Utils";
 
-export const useServiceErrors = (
-	latestLog: JobScraperServiceLog | JobScraperServiceLog[] | null,
-	token: string | null,
-) => {
+export const useServiceErrors = (latestLog: JobScraperServiceLog | JobScraperServiceLog[] | null) => {
 	const [serviceErrors, setServiceErrors] = useState<Record<string, number>>({});
 
 	useEffect(() => {
-		if (!latestLog || !token) return;
+		if (!latestLog) return;
 
 		const fetchErrors = async (): Promise<void> => {
 			try {
@@ -32,7 +29,7 @@ export const useServiceErrors = (
 		};
 
 		fetchErrors().then();
-	}, [latestLog, token]);
+	}, [latestLog]);
 
 	return { serviceErrors: serviceErrors };
 };

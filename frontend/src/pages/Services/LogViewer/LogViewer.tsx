@@ -18,7 +18,7 @@ const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
 	const [error, setError] = useState<string | null>(null);
 
 	// Update ref whenever logLines changes
-	useEffect(() => {
+	useEffect((): void => {
 		logLinesRef.current = logLines;
 	}, [logLines]);
 
@@ -31,6 +31,7 @@ const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
 			setLogs(data);
 		} catch (err: any) {
 			setError(err?.message || "Failed to fetch logs");
+			console.error(err);
 		}
 	};
 
@@ -71,7 +72,7 @@ const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
 							<span className="log-error-message">{error}</span>
 							<button
 								className="log-retry"
-								onClick={() => {
+								onClick={(): void => {
 									setError(null);
 									fetchLogs().then();
 								}}

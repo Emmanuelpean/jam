@@ -337,13 +337,3 @@ export interface UserQualification extends OwnedOut {
 	qualities: string | null;
 	education: string | null;
 }
-
-export interface UserQualificationDataTransform {
-	id: number | null;
-	experience: string;
-	skills: string;
-	qualities: string;
-	education: string;
-	modified_at: null | Date | string;
-	created_at: null | Date | string;
-}
