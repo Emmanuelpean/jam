@@ -84,7 +84,7 @@ class VeganJobsJobScraper:
 
         job_data = []
         for job_url in self.job_urls:
-            for i in range(10):
+            for i in range(50):
                 try:
                     job_data.append(self.scrape_job_listing(job_url))
                     break

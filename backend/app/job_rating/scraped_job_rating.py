@@ -129,9 +129,10 @@ def score_scraped_jobs(min_description_length: int = 100, db: Session | None = N
 class JobRatingServiceRunner(ServiceRunner):
     """Service runner for the LLM job rating service."""
 
-    service_function = score_scraped_jobs
-    service_name = SERVICE_NAME
-    period_hours = 3.0
+    def __init__(self) -> None:
+        """Object constructor"""
+
+        ServiceRunner.__init__(self, SERVICE_NAME, dict(), score_scraped_jobs, 3.0)
 
 
 job_rating_service_runner = JobRatingServiceRunner()

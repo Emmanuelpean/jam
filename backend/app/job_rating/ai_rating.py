@@ -1,14 +1,8 @@
 """Use Gemini LLM to rate how well scraped jobs match user qualifications."""
 
-import json
-
-from google import genai
-
-from app.config import settings
+from app.job_rating.chatgpt import openai_query
 
 __version__ = 1
-
-client = genai.Client(api_key=settings.gemini_api_key)
 
 
 def ai_score_job(
@@ -128,13 +122,7 @@ def ai_score_job(
     - Return ONLY valid JSON, no additional text before or after
     """
 
-    response = client.models.generate_content(model="gemini-2.5-flash", contents=llm_prompt)
-    response_text = response.text
-    if response_text.startswith("```"):
-        lines = response_text.split("\n")
-        response_text = "\n".join(lines[1:-1])  # Remove first and last lines
-
-    return json.loads(response_text)
+    return openai_query(llm_prompt)
 
 
 if __name__ == "__main__":
