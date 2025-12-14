@@ -65,7 +65,7 @@ const CustomDropdownIndicator = (props: any): JSX.Element => {
 	);
 };
 
-export const RenderSelect = ({
+export const SelectInput = ({
 	field,
 	value,
 	handleChange,

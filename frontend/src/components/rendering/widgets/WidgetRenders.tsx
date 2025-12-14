@@ -1,15 +1,15 @@
 import { Form } from "react-bootstrap";
-import { renderStarRating } from "./StarRating";
-import { RenderSalaryInput } from "./SalaryInput";
-import { renderTextarea } from "./TextArea";
-import { renderDateLocal, renderDateTimeLocal } from "./Datetime";
-import { renderPasswordInput } from "./PasswordInput";
-import { renderCheckbox } from "./Checkbox";
-import { RenderSelect, SelectWidgetPreviewConfig } from "./SelectWidget";
+import { StarRating } from "./StarRating";
+import { SalaryInput } from "./SalaryInput";
+import { Textarea } from "./TextArea";
+import { LocalDatetimeInput } from "./Datetime";
+import { PasswordInput } from "./PasswordInput";
+import { Checkbox } from "./Checkbox";
+import { SelectInput, SelectWidgetPreviewConfig } from "./SelectWidget";
 import { ModalFormField } from "../form/FormRenders";
 import React, { JSX } from "react";
 import { HelpBubble } from "./HelpBubble";
-import { renderUrlInputWidget } from "./UrlInput";
+import { UrlInput } from "./UrlInput";
 import { CurrentUser } from "../../../contexts/AuthContext";
 
 export interface SyntheticEvent {
@@ -41,7 +41,7 @@ export const displayError = (errorMessage: string | null): JSX.Element[] | null 
 	return errorMessage.split("\n").map((line: string, index: number): JSX.Element => <div key={index}>{line}</div>);
 };
 
-export const renderDefaultInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
+export const DefaultInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
 	return (
 		<>
 			<Form.Control
@@ -86,7 +86,7 @@ export const FormField = (
 	if (field.type === "checkbox") {
 		return (
 			<Form.Group className="mb-4" id={`${field.name}-form-group`}>
-				{renderCheckbox(widgetProps)}
+				<Checkbox {...widgetProps} />
 				{error && (
 					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
 						{displayError(error)}
@@ -107,32 +107,32 @@ export const FormField = (
 			{(() => {
 				switch (field.type) {
 					case "textarea":
-						return renderTextarea(widgetProps);
+						return <Textarea {...widgetProps} />;
 
 					case "select":
 					case "multiselect":
-						return <RenderSelect {...widgetProps} />;
+						return <SelectInput {...widgetProps} />;
 
 					case "datetime-local":
-						return renderDateTimeLocal(widgetProps);
+						return <LocalDatetimeInput {...widgetProps} inputType="datetime-local" />;
 
 					case "date":
-						return renderDateLocal(widgetProps);
+						return <LocalDatetimeInput {...widgetProps} inputType="date" />;
 
 					case "password":
-						return renderPasswordInput(widgetProps);
+						return <PasswordInput {...widgetProps} />;
 
 					case "salary":
-						return <RenderSalaryInput {...widgetProps} />;
+						return <SalaryInput {...widgetProps} />;
 
 					case "rating":
-						return renderStarRating(widgetProps);
+						return <StarRating {...widgetProps} />;
 
 					case "url":
-						return renderUrlInputWidget(widgetProps);
+						return <UrlInput {...widgetProps} />;
 
 					default:
-						return renderDefaultInput(widgetProps);
+						return <DefaultInput {...widgetProps} />;
 				}
 			})()}
 			{error && (

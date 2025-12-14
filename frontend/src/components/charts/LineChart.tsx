@@ -1,14 +1,14 @@
 import { JSX, useState } from "react";
 import {
-	LineChart as RechartsLineChart,
+	CartesianGrid,
+	Label,
+	Legend,
 	Line,
+	LineChart as RechartsLineChart,
+	ResponsiveContainer,
+	Tooltip,
 	XAxis,
 	YAxis,
-	CartesianGrid,
-	Tooltip,
-	Legend,
-	ResponsiveContainer,
-	Label,
 } from "recharts";
 import { toDdMmYyyyHhMm } from "../../utils/TimeUtils";
 

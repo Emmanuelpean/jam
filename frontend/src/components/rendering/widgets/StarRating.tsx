@@ -2,7 +2,7 @@ import React, { JSX, useState } from "react";
 import "./StarRating.css";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 
-const StarRating = ({ field, value, handleChange }: WidgetProps): JSX.Element => {
+export const StarRating = ({ field, value, handleChange }: WidgetProps): JSX.Element => {
 	const [hoverRating, setHoverRating] = useState<number>(0);
 	const maxRating = field.maxRating || 5;
 	const currentRating = parseInt(String(value)) || 0;
@@ -52,8 +52,4 @@ const StarRating = ({ field, value, handleChange }: WidgetProps): JSX.Element =>
 			</div>
 		</>
 	);
-};
-
-export const renderStarRating = ({ field, value, handleChange }: WidgetProps): JSX.Element => {
-	return <StarRating field={field} value={value} handleChange={handleChange} />;
 };
