@@ -3,7 +3,7 @@ import "./UrlInput.css";
 import { WidgetProps } from "./WidgetRenders";
 import React, { JSX } from "react";
 
-export const renderUrlInputWidget = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
+export const UrlInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
 	const handleOpenUrl = () => {
 		if (value && value.trim()) {
 			// Add protocol if missing

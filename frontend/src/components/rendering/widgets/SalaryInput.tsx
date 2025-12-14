@@ -3,7 +3,7 @@ import { Form, InputGroup } from "react-bootstrap";
 import { WidgetProps } from "./WidgetRenders";
 import { Currency, DataContextValue, useDataContext } from "../../../contexts/DataContext";
 
-export const RenderSalaryInput = ({
+export const SalaryInput = ({
 	field,
 	value,
 	handleChange,

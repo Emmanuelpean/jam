@@ -3,7 +3,7 @@ import { Form } from "react-bootstrap";
 import { WidgetProps } from "./WidgetRenders";
 import "./TextArea.css";
 
-export const renderTextarea = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
+export const Textarea = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
 	return (
 		<>
 			<Form.Control

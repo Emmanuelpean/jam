@@ -316,12 +316,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		});
 	};
 
-	const handleModalDelete = (): void => {
-		if (isServerPagination) {
-			fetchData().then((): null => null);
-		}
-	};
-
 	// Close context menu on outside click or escape
 	useEffect(() => {
 		const handleGlobalClick = (): void => {

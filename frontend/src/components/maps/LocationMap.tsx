@@ -1,4 +1,4 @@
-import React, { useEffect, useState, JSX } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { ProgressBar, Spinner } from "react-bootstrap";
 import L from "leaflet";

@@ -2,7 +2,7 @@ import React, { JSX } from "react";
 import { Form } from "react-bootstrap";
 import { WidgetProps } from "./WidgetRenders";
 
-export const renderCheckbox = ({ field, value, handleChange }: WidgetProps): JSX.Element => {
+export const Checkbox = ({ field, value, handleChange }: WidgetProps): JSX.Element => {
 	return (
 		<Form.Check
 			type="checkbox"

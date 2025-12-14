@@ -8,19 +8,19 @@ import Card from "react-bootstrap/Card";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.css";
 import { Accordion } from "react-bootstrap";
+import v100 from "../../releaseNotes/V1_0_0";
+import v101 from "../../releaseNotes/V1_0_1";
+import v102 from "../../releaseNotes/V1_0_2";
+import v110 from "../../releaseNotes/V1_1_0";
 
 const AboutPage = () => {
-	const releaseNotes = {
-		"1.0.0": [
-			"Initial release of Jam, the Job Application Manager",
-			"Job application tracking",
-			"Interview scheduling",
-			"Company and contact management",
-			"Application status monitoring",
-		],
-		"1.1.0": ["Added email verification for new user registrations", "Added password reset feature"],
-		"1.1.1": ["Added email verification when changing the user email"],
+	const releaseNotes: Record<string, any> = {
+		"1.1.0": v110,
+		"1.0.2": v102,
+		"1.0.1": v101,
+		"1.0.0": v100,
 	};
+	const versions: string[] = Object.keys(releaseNotes);
 
 	const features = [
 		{
@@ -157,15 +157,14 @@ const AboutPage = () => {
 						<Col lg={10}>
 							<div style={{ width: "100%", marginTop: "10px" }}>
 								<Accordion>
-									{Object.entries(releaseNotes).map(([version, changes], idx) => (
+									{versions.map((version, idx) => (
 										<Accordion.Item eventKey={String(idx)} key={version}>
 											<Accordion.Header>V{version}</Accordion.Header>
 											<Accordion.Body style={{ margin: "10px" }}>
-												<ul style={{ marginBottom: 0, paddingLeft: "20px" }}>
-													{changes.map((change, changeIdx) => (
-														<li key={changeIdx}>{change}</li>
-													))}
-												</ul>
+												<div
+													className="release-notes-content"
+													dangerouslySetInnerHTML={{ __html: releaseNotes[version] }}
+												/>
 											</Accordion.Body>
 										</Accordion.Item>
 									))}
