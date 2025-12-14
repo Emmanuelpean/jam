@@ -231,7 +231,7 @@ class EmailService(object):
         self,
         recipient_email: str = "",
         sender_email: str = "",
-        inbox_only: bool = True,
+        inbox: str = "INBOX",
         timedelta_days: int | float = 1,
         subject_contains: str = "",
         from_email: list[str] | str = "",
@@ -240,7 +240,7 @@ class EmailService(object):
         """Search for messages matching a query.
         :param recipient_email: Filter by recipient email address (e.g. jam.jobscraper@emmanuelpean.me)
         :param sender_email: Filter by sender email address (e.g. emmanuelpean@gmail.com)
-        :param inbox_only: Search only in the inbox (True) or all folders (False)
+        :param inbox: Mailbox to search in (default is INBOX)
         :param timedelta_days: Number of days to search for emails
         :param subject_contains: Filter by subject content
         :param from_email: Filter by 'From' email address
@@ -251,8 +251,7 @@ class EmailService(object):
 
         try:
             # Select mailbox
-            mailbox = "INBOX" if inbox_only else "ALL"
-            mail.select(mailbox)
+            mail.select(inbox)
 
             # Build IMAP search criteria
             search_criteria = []

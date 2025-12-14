@@ -148,7 +148,6 @@ class TestEmailServiceIMAP:
             sender_email="sender@example.com",
             subject_contains="Test Subject",
             timedelta_days=1,
-            inbox_only=True,
         )
 
         # Verify search was called with combined criteria

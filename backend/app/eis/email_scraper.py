@@ -8,7 +8,7 @@ content), and records run statistics in an EisServiceLog."""
 import traceback
 from datetime import datetime
 
-from app import models, utils
+from app import utils, model_registry as models
 from app.config import settings
 from app.database import get_db
 from app.eis.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
@@ -387,7 +387,6 @@ class JobEmailScraper(EmailService):
                 email_ids = self.get_email_ids(
                     recipient_email=settings.scraper_email,
                     sender_email=user.email,
-                    inbox_only=False,
                     timedelta_days=timedelta_days,
                     from_email=list(PLATFORM_SENDER_EMAILS.keys()),
                 )
@@ -396,7 +395,6 @@ class JobEmailScraper(EmailService):
                     email_ids = self.get_email_ids(
                         from_email=user.email,
                         to_email=settings.scraper_email,
-                        inbox_only=False,
                         timedelta_days=timedelta_days,
                     )
                 service_log.email_found_n += len(email_ids)

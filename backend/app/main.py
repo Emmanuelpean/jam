@@ -8,12 +8,12 @@ from app.eis import routers as eis_routers
 from app.job_rating import routers as job_rating_routers
 from app.emails import routers as email_routers
 from app.config import settings as app_settings
-from app import models
 from app.database import engine
+from app.model_registry import Base
 
 app = FastAPI()
 
-models.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
