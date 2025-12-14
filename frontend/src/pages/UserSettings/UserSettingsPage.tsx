@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { authApi, exportApi } from "../../services/api/Users";
+import { authApi, exportApi, userQualificationApi } from "../../services/api/Users";
 import { ApiError } from "../../services/api/Base";
 import { THEMES } from "../../utils/Theme";
 import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
@@ -13,8 +13,9 @@ import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ValidationErrors } from "../../components/modals/DataModal/DataModal";
 import { useFormOptions } from "../../components/rendering/form/FormOptions";
+import { UserQualification } from "../../services/Schemas";
 
-interface FormData {
+interface UserFormData {
 	default_currency: string;
 	email: string;
 	current_password?: string;
@@ -23,12 +24,17 @@ interface FormData {
 	chase_threshold?: number;
 	deadline_threshold?: number;
 	update_limit?: number;
+	qualification_id?: number;
+	experience?: string;
+	skills?: string;
+	qualities?: string;
+	education?: string;
 }
 
 const UserSettingsPage: React.FC = () => {
 	const { currentUser, token, updateCurrentUser } = useAuth();
 	const { currencyNames } = useFormOptions();
-	const [formData, setFormData] = useState<FormData>(() => ({
+	const [formData, setFormData] = useState<UserFormData>(() => ({
 		email: currentUser?.email || "",
 		chase_threshold: currentUser?.chase_threshold || 0,
 		deadline_threshold: currentUser?.deadline_threshold || 0,
@@ -37,22 +43,51 @@ const UserSettingsPage: React.FC = () => {
 		new_password: "",
 		confirm_password: "",
 		default_currency: currentUser?.default_currency || "",
+		qualification_id: undefined,
+		experience: "",
+		skills: "",
+		qualities: "",
+		education: "",
 	}));
+	const [activeTab, setActiveTab] = useState<string>("settings");
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [errors, setErrors] = useState<ValidationErrors>({});
-	const [submitting, setSubmitting] = useState<boolean>(false);
-
+	const [submitting, setSubmitting] = useState(false);
 	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.MIN_PASSWORD_LENGTH || "8");
 
-	// Determine if there's a pending email change
 	const hasPendingEmail: boolean = !!currentUser?.pending_email && currentUser.pending_email !== currentUser.email;
 
-	// If user has a pending email, double-check with API whether the pending token is still valid.
+	// Fetch user qualifications
 	useEffect(() => {
-		const checkPending = async () => {
+		const fetchQualifications = async (): Promise<void> => {
+			if (!token) return;
+			try {
+				const data: UserQualification = await userQualificationApi.getLatest(token);
+				if (data) {
+					setFormData(
+						(prev: UserFormData): UserFormData => ({
+							...prev,
+							qualification_id: data.id,
+							experience: data.experience || "",
+							skills: data.skills || "",
+							qualities: data.qualities || "",
+							education: data.education || "",
+						}),
+					);
+				}
+			} catch (error) {
+				console.error("Error fetching qualification:", error);
+			}
+		};
+
+		fetchQualifications().then((_) => null);
+	}, [token]);
+
+	useEffect(() => {
+		const checkPending = async (): Promise<void> => {
 			if (!hasPendingEmail || !token) return;
 			try {
-				const valid = await authApi.checkPendingEmail(token);
+				const valid: boolean = await authApi.checkPendingEmail(token);
 				if (!valid) {
 					showToastError(
 						"Pending email verification token has expired. Please request the email change again.",
@@ -63,14 +98,13 @@ const UserSettingsPage: React.FC = () => {
 				showToastError("Failed to verify pending email status.");
 			}
 		};
-
 		checkPending().then((_) => null);
 	}, [token]);
 
-	const downloadJobsExport = async (token: string | null) => {
+	const downloadJobsExport = async (token: string | null): Promise<void> => {
 		if (!token) return;
 		try {
-			await exportApi.download("jobs_export.zip", token);
+			await exportApi.download("jam_export.zip", token);
 			showToastSuccess("Data downloaded");
 		} catch (e) {
 			showToastError("Failed to download data");
@@ -79,38 +113,40 @@ const UserSettingsPage: React.FC = () => {
 
 	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
-		setFormData((prev) => ({
-			...prev,
-			[name]: value,
-		}));
-
-		// Clear specific field errors when user starts typing
-		if (errors[name]) {
-			setErrors((prev) => ({
+		setFormData(
+			(prev: UserFormData): UserFormData => ({
 				...prev,
-				[name]: "",
-			}));
+				[name]: value,
+			}),
+		);
+
+		if (errors[name]) {
+			setErrors(
+				(prev: ValidationErrors): ValidationErrors => ({
+					...prev,
+					[name]: "",
+				}),
+			);
 		}
 	};
 
 	const validateForm = (): boolean => {
 		const newErrors: ValidationErrors = {};
 
-		// Check if any changes were made
-		const hasAccountChanges =
-			formData.email !== currentUser?.email || formData.new_password || formData.confirm_password;
+		const hasAccountChanges: boolean = !!(
+			formData.email !== currentUser?.email ||
+			formData.new_password ||
+			formData.confirm_password
+		);
 
-		// If making account changes, current password is required
 		if (hasAccountChanges && !formData.current_password) {
 			newErrors.current_password = "Current password is required to update email or password";
 		}
 
-		// Email validation
 		if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
 			newErrors.email = "Email format is invalid";
 		}
 
-		// New password validation (only if changing password)
 		if (formData.new_password || formData.confirm_password) {
 			if (formData.new_password && formData.new_password.length < MIN_PASSWORD_LENGTH) {
 				newErrors.new_password = `New password must be at least ${MIN_PASSWORD_LENGTH} characters long`;
@@ -120,19 +156,20 @@ const UserSettingsPage: React.FC = () => {
 			}
 		}
 
-		// Dashboard settings validation
 		if (
 			formData.chase_threshold !== undefined &&
 			(formData.chase_threshold < 1 || formData.chase_threshold > 365)
 		) {
 			newErrors.chase_threshold = "Chase threshold must be between 1 and 365 days";
 		}
+
 		if (
 			formData.deadline_threshold !== undefined &&
 			(formData.deadline_threshold < 1 || formData.deadline_threshold > 365)
 		) {
 			newErrors.deadline_threshold = "Deadline threshold must be between 1 and 365 days";
 		}
+
 		if (formData.update_limit !== undefined && (formData.update_limit < 1 || formData.update_limit > 1000)) {
 			newErrors.update_limit = "Update limit must be between 1 and 1000";
 		}
@@ -141,15 +178,13 @@ const UserSettingsPage: React.FC = () => {
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+	const handleSubmitSettings = async (e: React.FormEvent): Promise<void> => {
 		e.preventDefault();
-
 		if (!validateForm() || !token) {
 			return;
 		}
 
 		setSubmitting(true);
-
 		try {
 			const updateData: {
 				current_password?: string;
@@ -165,20 +200,16 @@ const UserSettingsPage: React.FC = () => {
 
 			const emailChanged: boolean = !!(formData.email && formData.email !== currentUser?.email);
 
-			// Add account changes if current password is provided
 			if (formData.current_password) {
 				updateData.current_password = formData.current_password;
-
 				if (emailChanged) {
 					updateData.email = formData.email;
 				}
-
 				if (formData.new_password) {
 					updateData.password = formData.new_password;
 				}
 			}
 
-			// Add dashboard settings
 			if (formData.chase_threshold !== undefined) {
 				updateData.chase_threshold = formData.chase_threshold;
 			}
@@ -189,19 +220,16 @@ const UserSettingsPage: React.FC = () => {
 				updateData.update_limit = formData.update_limit;
 			}
 
-			// Add currency setting
 			updateData.default_currency = formData.default_currency;
 
 			const response = await updateCurrentUser(updateData);
 
-			// Show message if the email was changed
 			if (emailChanged) {
 				if (response.success) {
 					showToastSuccess(response.message, "Email Change Pending");
 				} else {
 					showToastError(response.message, "Error Updating Settings");
 				}
-				// Reset the email field back to current email since change is pending
 				setFormData((prev) => ({
 					...prev,
 					email: currentUser?.email || "",
@@ -213,13 +241,14 @@ const UserSettingsPage: React.FC = () => {
 				showToastSuccess("User settings updated successfully.");
 			}
 
-			// Clear password fields
 			if (formData.new_password) {
-				setFormData((prev) => ({
-					...prev,
-					new_password: "",
-					confirm_password: "",
-				}));
+				setFormData(
+					(prev: UserFormData): UserFormData => ({
+						...prev,
+						new_password: "",
+						confirm_password: "",
+					}),
+				);
 			}
 		} catch (error) {
 			const apiError = error as ApiError;
@@ -230,10 +259,35 @@ const UserSettingsPage: React.FC = () => {
 			} else {
 				showToastError("An unknown error occurred. Please try again later.");
 			}
+		} finally {
+			setSubmitting(false);
 		}
-		setSubmitting(false);
 	};
 
+	const handleQualificationSubmit = async (e: React.FormEvent): Promise<void> => {
+		e.preventDefault();
+		if (!token) return;
+
+		setSubmitting(true);
+		try {
+			const qualificationData = {
+				id: formData.qualification_id,
+				experience: formData.experience || "",
+				skills: formData.skills || "",
+				qualities: formData.qualities || "",
+				education: formData.education || "",
+			};
+			await userQualificationApi.upsert(qualificationData, token);
+			showToastSuccess("Qualifications saved successfully.");
+		} catch (error) {
+			console.error("Error saving qualifications:", error);
+			showToastError("Failed to save qualifications.");
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
+	// Field definitions
 	const emailField: ModalFormField = {
 		name: "email",
 		label: "Email Address",
@@ -308,6 +362,38 @@ const UserSettingsPage: React.FC = () => {
 		isClearable: false,
 	};
 
+	const experienceField: ModalFormField = {
+		name: "experience",
+		type: "textarea",
+		label: "Experience",
+		placeholder: "Describe your work experience...",
+		rows: 4,
+	};
+
+	const skillsField: ModalFormField = {
+		name: "skills",
+		type: "textarea",
+		label: "Skills",
+		placeholder: "List your skills...",
+		rows: 4,
+	};
+
+	const qualitiesField: ModalFormField = {
+		name: "qualities",
+		type: "textarea",
+		label: "Qualities",
+		placeholder: "Describe your qualities...",
+		rows: 4,
+	};
+
+	const educationField: ModalFormField = {
+		name: "education",
+		type: "textarea",
+		label: "Education",
+		placeholder: "Describe your education...",
+		rows: 4,
+	};
+
 	return (
 		<div className="settings-wrapper">
 			<Card className="settings-card border-0 shadow-sm">
@@ -323,147 +409,203 @@ const UserSettingsPage: React.FC = () => {
 					</div>
 				</Card.Header>
 
-				<Card.Body className="p-0">
-					<Form onSubmit={handleSubmit} className="p-4">
-						{errors.general && <div className="alert alert-danger mb-4">{errors.general}</div>}
+				<div className="custom-tab-nav" style={{ padding: "1rem 1rem" }}>
+					<button
+						key="settings"
+						id="settings-tab"
+						type="button"
+						className={`custom-tab-button ${activeTab === "settings" ? "active" : ""}`}
+						onClick={() => setActiveTab("settings")}
+					>
+						Settings
+					</button>
+					<button
+						key="qualifications"
+						id="qualifications-tab"
+						type="button"
+						className={`custom-tab-button ${activeTab === "qualifications" ? "active" : ""}`}
+						onClick={() => setActiveTab("qualifications")}
+					>
+						Qualifications
+					</button>
+				</div>
+				<div className="custom-tab-content">
+					{activeTab === "settings" && (
+						<Card.Body className="p-0">
+							<Form onSubmit={handleSubmitSettings} className="p-4">
+								{errors.general && <div className="alert alert-danger mb-4">{errors.general}</div>}
 
-						{/* Pending Email Alert */}
-						{hasPendingEmail && (
-							<Alert variant="warning" className="mb-4">
-								<div className="d-flex align-items-start">
-									<i className="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
-									<div>
-										<strong>Email Change Pending</strong>
-										<p className="mb-0 mt-1">
-											A verification email has been sent to{" "}
-											<strong>{currentUser?.pending_email}</strong>. Please check your inbox and
-											click the verification link to complete your email change.
+								{/* Pending Email Alert */}
+								{hasPendingEmail && (
+									<Alert variant="warning" className="mb-4">
+										<div className="d-flex align-items-start">
+											<i className="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+											<div>
+												<strong>Email Change Pending</strong>
+												<p className="mb-0 mt-1">
+													A verification email has been sent to{" "}
+													<strong>{currentUser?.pending_email}</strong>. Please check your
+													inbox and click the verification link to complete your email change.
+												</p>
+											</div>
+										</div>
+									</Alert>
+								)}
+
+								<Col md={12} className="mb-3">
+									{FormField(currentPasswordField, formData, handleInputChange, errors)}
+								</Col>
+
+								{/* Account Settings Section */}
+								<div className="settings-section">
+									<div className="section-header mb-4">
+										<h5 className="section-title">
+											<i className="bi bi-envelope me-2 text-primary"></i>
+											Account Settings
+										</h5>
+									</div>
+									{FormField(emailField, formData, handleInputChange, errors)}
+								</div>
+
+								{/* Security Section */}
+								<div className="settings-section">
+									<div className="section-header mb-4">
+										<h5 className="section-title">
+											<i className="bi bi-shield-lock me-2 text-primary"></i>
+											Security
+										</h5>
+									</div>
+
+									<div className="password-hint mb-4"></div>
+
+									<Row>
+										<Col md={6} className="mb-3">
+											{FormField(newPasswordField, formData, handleInputChange, errors)}
+										</Col>
+										<Col md={6} className="mb-3">
+											{FormField(confirmPasswordField, formData, handleInputChange, errors)}
+										</Col>
+									</Row>
+								</div>
+
+								{/* Dashboard Section */}
+								<div className="settings-section">
+									<div className="section-header mb-4">
+										<h5 className="section-title">
+											<i className="bi bi-speedometer2 me-2 text-primary"></i>
+											Dashboard Settings
+										</h5>
+									</div>
+									<Row>
+										<Col md={4} className="mb-3">
+											{FormField(chaseThresholdField, formData, handleInputChange, errors)}
+										</Col>
+										<Col md={4} className="mb-3">
+											{FormField(deadlineThresholdField, formData, handleInputChange, errors)}
+										</Col>
+										<Col md={4} className="mb-3">
+											{FormField(updateLimitField, formData, handleInputChange, errors)}
+										</Col>
+									</Row>
+								</div>
+
+								{/* Currency Section */}
+								<div className="settings-section">
+									<div className="section-header mb-4">
+										<h5 className="section-title">
+											<i className="bi bi-speedometer2 me-2 text-primary"></i>
+											Currency Settings
+										</h5>
+									</div>
+									<Row>
+										<Col md={12} className="mb-3">
+											{FormField(currencyField, formData, handleInputChange, errors)}
+										</Col>
+									</Row>
+								</div>
+
+								{/* Appearance Section */}
+								<div className="settings-section">
+									<div className="section-header mb-4">
+										<h5 className="section-title">
+											<i className="bi bi-palette me-2 text-primary"></i>
+											Appearance
+										</h5>
+									</div>
+
+									<div className="form-group-enhanced">
+										<p className="form-label-enhanced" id="theme-hint">
+											{findItemByKey(THEMES, currentUser?.theme)?.name} is not your favourite
+											flavour of JAM?! You can easily pick another flavour by clicking on the JAM
+											logo in the sidebar.
 										</p>
 									</div>
 								</div>
-							</Alert>
-						)}
 
-						<Col md={12} className="mb-3">
-							{FormField(currentPasswordField, formData, handleInputChange, errors)}
-						</Col>
+								{/* Download Section */}
+								<div className="settings-section">
+									<div className="section-header mb-4">
+										<h5 className="section-title">
+											<i className="bi bi-palette me-2 text-primary"></i>
+											Download Data
+										</h5>
+									</div>
 
-						{/* Account Settings Section */}
-						<div className="settings-section">
-							<div className="section-header mb-4">
-								<h5 className="section-title">
-									<i className="bi bi-envelope me-2 text-primary"></i>
-									Account Settings
-								</h5>
-							</div>
-							{FormField(emailField, formData, handleInputChange, errors)}
-						</div>
+									<Button className="w-100" onClick={() => downloadJobsExport(token)}>
+										<i className="bi bi-download me-2"></i>
+										Download Data
+									</Button>
+								</div>
 
-						{/* Security Section */}
-						<div className="settings-section">
-							<div className="section-header mb-4">
-								<h5 className="section-title">
-									<i className="bi bi-shield-lock me-2 text-primary"></i>
-									Security
-								</h5>
-							</div>
-
-							<div className="password-hint mb-4"></div>
-
-							<Row>
-								<Col md={6} className="mb-3">
-									{FormField(newPasswordField, formData, handleInputChange, errors)}
-								</Col>
-								<Col md={6} className="mb-3">
-									{FormField(confirmPasswordField, formData, handleInputChange, errors)}
-								</Col>
-							</Row>
-						</div>
-
-						{/* Dashboard Section */}
-						<div className="settings-section">
-							<div className="section-header mb-4">
-								<h5 className="section-title">
-									<i className="bi bi-speedometer2 me-2 text-primary"></i>
-									Dashboard Settings
-								</h5>
-							</div>
-							<Row>
-								<Col md={4} className="mb-3">
-									{FormField(chaseThresholdField, formData, handleInputChange, errors)}
-								</Col>
-								<Col md={4} className="mb-3">
-									{FormField(deadlineThresholdField, formData, handleInputChange, errors)}
-								</Col>
-								<Col md={4} className="mb-3">
-									{FormField(updateLimitField, formData, handleInputChange, errors)}
-								</Col>
-							</Row>
-						</div>
-
-						{/* Currency Section */}
-						<div className="settings-section">
-							<div className="section-header mb-4">
-								<h5 className="section-title">
-									<i className="bi bi-speedometer2 me-2 text-primary"></i>
-									Currency Settings
-								</h5>
-							</div>
-							<Row>
+								<div className="settings-actions">
+									<div className="horizontal-bar mb-3"></div>
+									<ActionButton
+										id="confirm-button"
+										type="submit"
+										disabled={submitting}
+										loading={submitting}
+										className="save-button"
+										loadingText="Saving Changes..."
+										defaultText="Save Changes"
+										defaultIcon="bi bi-check-circle"
+									/>
+								</div>
+							</Form>
+						</Card.Body>
+					)}
+					{activeTab === "qualifications" && (
+						<Card.Body className="p-0">
+							<Form onSubmit={handleQualificationSubmit} className="p-4">
 								<Col md={12} className="mb-3">
-									{FormField(currencyField, formData, handleInputChange, errors)}
+									{FormField(experienceField, formData, handleInputChange, errors)}
 								</Col>
-							</Row>
-						</div>
+								<Col md={12} className="mb-3">
+									{FormField(skillsField, formData, handleInputChange, errors)}
+								</Col>
+								<Col md={12} className="mb-3">
+									{FormField(qualitiesField, formData, handleInputChange, errors)}
+								</Col>
+								<Col md={12} className="mb-3">
+									{FormField(educationField, formData, handleInputChange, errors)}
+								</Col>
 
-						{/* Appearance Section */}
-						<div className="settings-section">
-							<div className="section-header mb-4">
-								<h5 className="section-title">
-									<i className="bi bi-palette me-2 text-primary"></i>
-									Appearance
-								</h5>
-							</div>
-
-							<div className="form-group-enhanced">
-								<p className="form-label-enhanced" id="theme-hint">
-									{findItemByKey(THEMES, currentUser?.theme)?.name} is not your favourite flavour of
-									JAM?! You can easily pick another flavour by clicking on the JAM logo in the
-									sidebar.
-								</p>
-							</div>
-						</div>
-
-						{/* Download Section */}
-						<div className="settings-section">
-							<div className="section-header mb-4">
-								<h5 className="section-title">
-									<i className="bi bi-palette me-2 text-primary"></i>
-									Download Data
-								</h5>
-							</div>
-
-							<Button className="w-100" onClick={() => downloadJobsExport(token)}>
-								<i className="bi bi-download me-2"></i>
-								Download Data
-							</Button>
-						</div>
-
-						<div className="settings-actions">
-							<div className="horizontal-bar mb-3"></div>
-							<ActionButton
-								id="confirm-button"
-								type="submit"
-								disabled={submitting}
-								loading={submitting}
-								className="save-button"
-								loadingText="Saving Changes..."
-								defaultText="Save Changes"
-								defaultIcon="bi bi-check-circle"
-							/>
-						</div>
-					</Form>
-				</Card.Body>
+								<div className="settings-actions">
+									<div className="horizontal-bar mb-3"></div>
+									<ActionButton
+										id="confirm-button"
+										type="submit"
+										disabled={submitting}
+										loading={submitting}
+										className="save-button"
+										loadingText="Saving Qualifications..."
+										defaultText="Save Qualifications"
+										defaultIcon="bi bi-check-circle"
+									/>
+								</div>
+							</Form>
+						</Card.Body>
+					)}
+				</div>
 			</Card>
 		</div>
 	);

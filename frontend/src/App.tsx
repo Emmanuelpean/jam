@@ -26,7 +26,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import "./Themes.css";
 import { AlertProvider } from "./contexts/AlertContext";
-import UserQualifications from "./pages/UserQualifications/UserQualificationPage";
 import JobRatingDashboard from "./pages/Services/JobRatingDashboard/JobRatingDashboardPage";
 
 export function useSwetrixPageViews() {
@@ -142,7 +141,6 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/eis_dashboard", element: <JobScraperDashboard />, protected: true, adminOnly: true },
 	{ path: "/job_rating_dashboard", element: <JobRatingDashboard />, protected: true, adminOnly: true },
 	{ path: "/app_settings", element: <SettingsPage />, protected: true, adminOnly: true },
-	{ path: "user_qualifications", element: <UserQualifications />, protected: true, adminOnly: false },
 	{ path: "*", element: <NotFoundPage /> },
 ];
 
