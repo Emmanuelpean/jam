@@ -4,6 +4,7 @@ import datetime as dt
 import os
 import threading
 import time
+from typing import Callable
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -16,19 +17,21 @@ from app.utils import AppLogger
 
 
 class ServiceRunner:
-    """Class to run a generic service periodically in a separate thread.
-    :ivar service_name: name of the service to run
-    :ivar service_kwargs: keyword arguments passed to the service_function
-    :ivar service_function: function to run periodically"""
+    """Class to run a generic service periodically in a separate thread"""
 
-    service_name = ""
-    service_kwargs = dict()
-    service_function = None
-    period_hours = 3.0
-
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        service_name: str,
+        service_kwargs: dict,
+        service_function: Callable,
+        period_hours: int | float = 3,
+    ) -> None:
         """Initialise the service runner instance."""
 
+        self.service_name = service_name
+        self.service_kwargs = service_kwargs
+        self.service_function = service_function
+        self.period_hours = period_hours
         self.service_runner_name = self.service_name + "_runner"
         self.service_runner_thread = None
         self.stop_event = threading.Event()

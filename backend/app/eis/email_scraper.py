@@ -539,9 +539,10 @@ class JobEmailScraper(EmailService):
 class EmailScraperService(ServiceRunner):
     """Service runner for the EmailScraperService"""
 
-    service_name = SERVICE_NAME
-    service_kwargs = dict(timedelta_days=3)
-    service_function = JobEmailScraper().run_scraping
+    def __init__(self) -> None:
+        """Object constructor"""
+
+        ServiceRunner.__init__(self, SERVICE_NAME, dict(timedelta_days=3), JobEmailScraper().run_scraping)
 
 
 scraper_service = EmailScraperService()
