@@ -56,8 +56,8 @@ class JobRating(Owned, Base):
     user_qualification_id = Column(Integer, ForeignKey("user_qualification.id", ondelete="CASCADE"), nullable=False)
 
     # Relationships
-    scraped_job = relationship("ScrapedJob")
-    user_qualification = relationship("UserQualification")
+    scraped_job = relationship("ScrapedJob", back_populates="job_rating")
+    user_qualification = relationship("UserQualification", back_populates="job_ratings")
 
 
 class JobRatingServiceLog(CommonBase, Base):
