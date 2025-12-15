@@ -51,7 +51,7 @@ class JobEmailScraper(EmailService):
     def indeed_brightapi_setting(self) -> str:
         """Get the Indeed BrightAPI setting from the database"""
 
-        return models.get_setting(self.db, "indeed_scraper", "email")
+        return models.get_setting(self.db, "indeed_scraper", "scraper")
 
     def create_service_log(self, **kwargs) -> JobEmailScrapingServiceLog:
         """Create a new service log entry
