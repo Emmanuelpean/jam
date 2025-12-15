@@ -1,5 +1,11 @@
 import React, { forwardRef, JSX, useRef } from "react";
-import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
+import DataModal, {
+	DataModalHandle,
+	DataModalProps,
+	Fields,
+	ValidationErrors,
+	WarningConfig,
+} from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { EnrichedJobData, JobData, ScrapedJobData } from "../../services/Schemas";
 import { findClosestOption, findExactOption, useFormOptions } from "../rendering/form/FormOptions";
@@ -85,8 +91,27 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, DataModalProps>(
 			return errors;
 		};
 
-		const warningMessage = (data: ScrapedJobData): string | null =>
-			data?.is_failed ? "This job could not be scraped properly." : null;
+		const warningMessage = (data: ScrapedJobData) => {
+			const result: WarningConfig[] = [];
+
+			if (data?.is_failed) {
+				result.push({
+					key: "inactive",
+					message: "This job could not be scraped properly.",
+					variant: "warning",
+				});
+			}
+
+			if (data?.job_rating?.is_success === false) {
+				result.push({
+					key: "no_rating",
+					message: "This job could not be rated automatically.",
+					variant: "warning",
+				});
+			}
+
+			return result.length ? result : null;
+		};
 
 		const transformData = (_scrapedJob: ScrapedJobData) => {
 			return { is_imported: true };

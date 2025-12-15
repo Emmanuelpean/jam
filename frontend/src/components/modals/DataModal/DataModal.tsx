@@ -36,6 +36,12 @@ export interface TabConfig {
 	additionalFields?: ModalViewField[];
 }
 
+export interface WarningConfig {
+	key?: string;
+	message: ReactNode;
+	variant?: "warning" | "danger" | "info" | "primary" | "secondary" | "success";
+}
+
 export interface GenericModalProps {
 	mode?: "view" | "edit" | "add" | "import"; // modal mode
 	fields?: { view: Fields; form: Fields } | ((data: any, mode: string) => { view: Fields; form: Fields }); // fields to display
@@ -51,8 +57,7 @@ export interface GenericModalProps {
 	endpoint: string; // API endpoint for CRUD operations
 	onSuccess?: (data: any, onSuccess?: (newData: any) => void) => void; // called when an entry is successfully added/modified
 	onDelete?: () => void; // called when an entry is successfully deleted
-	warningMessage?: (data: any) => string | ReactNode | null; // optional warning message to display
-	warningVariant?: "warning" | "danger" | "info" | "primary" | "secondary" | "success";
+	warningMessage?: (data: any) => WarningConfig[] | null; // optional warning message to display
 }
 
 export interface ValidationErrors {
@@ -83,7 +88,6 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 			onSuccess,
 			onDelete,
 			warningMessage,
-			warningVariant = "warning",
 		},
 		ref,
 	) => {
@@ -525,13 +529,18 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 		const renderBodyContent = (): JSX.Element => {
 			const currentFields = getCurrentFields();
 			const currentAdditionalFields = getCurrentAdditionalFields();
+			const warnings = warningMessage ? warningMessage(effectiveData) : null;
 
 			const renderContentInner = () => (
 				<div className={`modal-content-visible`}>
-					{warningMessage && warningMessage(effectiveData) && (
-						<Alert variant={warningVariant} className="mb-3">
-							{warningMessage(effectiveData)}
-						</Alert>
+					{warnings && warnings.length > 0 && (
+						<>
+							{warnings.map(({ key, message, variant }, idx) => (
+								<Alert key={key ?? idx} variant={variant} className="mb-3">
+									{message}
+								</Alert>
+							))}
+						</>
 					)}
 					{isEditing ? (
 						<div>
