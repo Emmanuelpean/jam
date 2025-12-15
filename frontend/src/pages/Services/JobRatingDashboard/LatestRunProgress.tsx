@@ -54,7 +54,7 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 			)}
 			<div style={{ display: "flex", width: "100%", gap: "20px", marginBottom: "20px" }}>
 				<ProgressBar
-					title="Users Processed"
+					title="Jobs Processed"
 					current={
 						latestLog.rated_job_succeeded_ids.length +
 						latestLog.rated_job_skipped_ids.length +

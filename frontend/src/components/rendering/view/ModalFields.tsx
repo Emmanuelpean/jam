@@ -6,6 +6,7 @@ export interface ModalViewField extends ViewField {
 	type?: string;
 	isTitle?: boolean;
 	displayCondition?: (item: any) => boolean;
+	icon?: string;
 }
 
 export type ModalViewFields = (ModalViewField | ModalViewField[])[];
@@ -28,7 +29,10 @@ export const renderModalViewField = (field: ModalViewField, item: any, id: strin
 	} else if (field.label) {
 		return (
 			<>
-				<h6 className="mb-2 fw-bold">{field.label}</h6>
+				<h6 className="mb-2 fw-bold">
+					{field.icon && <i className={`bi ${field.icon} me-2`} />}
+					{field.label}
+				</h6>
 				<div className="mb-3">{output}</div>
 			</>
 		);
@@ -284,6 +288,14 @@ export const modalViewFields = {
 		key: "is_active",
 		label: "Active",
 		render: (params: RenderParams) => renderFunctions.isActive({ ...params, view: true }),
+		...overrides,
+	}),
+
+	jobRating: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "job_rating",
+		label: "Job Rating",
+		icon: "bi-stars",
+		render: (params: RenderParams) => renderFunctions.jobRating({ ...params, view: true }),
 		...overrides,
 	}),
 

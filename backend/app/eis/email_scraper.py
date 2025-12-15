@@ -187,6 +187,7 @@ class JobEmailScraper(EmailService):
         # Location & attendance type
         raw_location = job_result.location
         parsed_location, attendance_type = self.location_parser.parse_location(raw_location)
+        result["location"] = raw_location
         result["location_postcode"] = parsed_location.postcode
         result["location_city"] = parsed_location.city
         result["attendance_type"] = attendance_type

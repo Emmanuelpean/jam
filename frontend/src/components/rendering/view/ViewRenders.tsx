@@ -11,6 +11,7 @@ import {
 	InterviewData,
 	JobApplicationUpdateData,
 	JobData,
+	JobRating,
 	KeywordData,
 	LocationData,
 	PersonData,
@@ -38,7 +39,7 @@ import {
 	getToastIcon,
 	getUpdateTypeIcon,
 } from "./Icons";
-import { ensureHttpPrefix } from "../../../utils/StringUtils";
+import { capitalise, ensureHttpPrefix } from "../../../utils/StringUtils";
 import { findItemByKey } from "../../../utils/Utils";
 import {
 	applicationStatusOptions,
@@ -155,6 +156,10 @@ export const renderFunctions = {
 			interviewTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]
 				?.label || null
 		);
+	},
+
+	overallScore: (param: RenderParams): number | null => {
+		return param.item?.job_rating?.overall_score;
 	},
 
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
@@ -342,9 +347,43 @@ export const renderFunctions = {
 	capitalise: (param: RenderParams, key: string): ReactNode => {
 		const text: string | undefined | null = param.item?.[key];
 		if (text) {
-			return text.charAt(0).toUpperCase() + text.slice(1);
+			return capitalise(text);
 		}
 		return null;
+	},
+
+	jobRating: (param: RenderParams): ReactNode => {
+		const job_rating: JobRating | undefined | null = param.item?.job_rating;
+		if (!job_rating) return null;
+
+		return (
+			<div className="card shadow-sm">
+				<div className="card-body p-3">
+					<table className="table table-sm table-striped table-hover mb-2">
+						<thead className="table-light">
+							<tr>
+								<th className="text-center">Overall</th>
+								<th className="text-center">Educational</th>
+								<th className="text-center">Experience</th>
+								<th className="text-center">Interest</th>
+								<th className="text-center">Technical</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td className="text-center fw-semibold">{job_rating.overall_score}</td>
+								<td className="text-center">{job_rating.educational_score}</td>
+								<td className="text-center">{job_rating.experience_score}</td>
+								<td className="text-center">{job_rating.interest_score}</td>
+								<td className="text-center">{job_rating.technical_score}</td>
+							</tr>
+						</tbody>
+					</table>
+
+					{job_rating.feedback && <div className="small">{job_rating.feedback}</div>}
+				</div>
+			</div>
+		);
 	},
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
