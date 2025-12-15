@@ -28,6 +28,8 @@ def score_scraped_jobs(min_description_length: int = 100, db: Session | None = N
     start_time = dt.datetime.now()
     service_log = models.JobRatingServiceLog(run_datetime=start_time)
     db.add(service_log)
+    db.commit()
+    db.refresh(service_log)
 
     try:
         # noinspection PyComparisonWithNone
@@ -123,6 +125,7 @@ def score_scraped_jobs(min_description_length: int = 100, db: Session | None = N
         logger.info("Finished workflow")
 
     db.commit()
+    db.refresh(service_log)
     return service_log
 
 

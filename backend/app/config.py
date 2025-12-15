@@ -52,7 +52,6 @@ class Settings(BaseSettings):
 
     # AI Keys
     openai_api_key: str
-    gemini_api_key: str
 
     # Apify
     apify_api_key: str

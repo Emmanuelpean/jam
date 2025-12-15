@@ -59,6 +59,30 @@ def open_json(filepath: str) -> list[dict]:
         return json.load(ofile)
 
 
+def super_getattr(obj: object, attr: str) -> object:
+    """Get nested attributes from an object using dot notation.
+    :param obj: The object to get attributes from
+    :param attr: The attribute path in dot notation"""
+
+    attrs = attr.split(".")
+    for a in attrs:
+        obj = getattr(obj, a)
+    return obj
+
+
+def super_hasattr(obj: object, attr: str) -> bool:
+    """Check if nested attributes exist in an object using dot notation.
+    :param obj: The object to check attributes from
+    :param attr: The attribute path in dot notation"""
+
+    attrs = attr.split(".")
+    for a in attrs:
+        if not hasattr(obj, a):
+            return False
+        obj = getattr(obj, a)
+    return True
+
+
 class AppLogger:
     """Centralised logging utility"""
 

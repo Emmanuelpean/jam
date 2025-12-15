@@ -244,6 +244,16 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	overallScore: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "job_rating.overall_score",
+		label: "AI Score",
+		sortable: true,
+		searchable: false,
+		type: "number",
+		render: renderFunctions.overallScore,
+		...overrides,
+	}),
+
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
 	urlColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({

@@ -17,8 +17,9 @@ class OpenAiError(Exception):
     """Raised when AI query fails."""
 
 
-def openai_query(llm_prompt: str) -> dict[str, Any]:
+def openai_query(system_prompt: str, llm_prompt: str) -> dict[str, Any]:
     """Query openai chat completions API with constructed prompt.
+    :param system_prompt: System prompt defining the AI's role.
     :param llm_prompt: Fully constructed prompt describing the job.
     return: parsed JSON output."""
 
@@ -26,17 +27,8 @@ def openai_query(llm_prompt: str) -> dict[str, Any]:
         response = client.chat.completions.create(
             model="gpt-4.1-mini",
             messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are an expert job application assistant. "
-                        "Return ONLY valid JSON. Do not include explanations."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": llm_prompt,
-                },
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": llm_prompt},
             ],
             response_format={"type": "json_object"},
             temperature=0.2,

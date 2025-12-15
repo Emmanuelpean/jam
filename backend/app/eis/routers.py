@@ -8,13 +8,13 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import asc, desc, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from starlette.requests import Request
 
-from app import models as app_models
+from app import model_registry as models
 from app import service_runner
 from app.database import get_db
-from app.eis import models, schemas
+from app.eis import schemas
 from app.eis.email_scraper import scraper_service, SERVICE_NAME
 from app.eis.job_scrapers.indeed import IndeedBrightdataJobScraper
 from app.eis.job_scrapers.linkedin import LinkedinBrightdataJobScraper
@@ -60,27 +60,19 @@ scraped_job_router = generate_data_table_crud_router(
 def get_all(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
     page: int = 0,
     page_size: int = 10,
     sort_by: str = "scrape_datetime",
     sort_direction: Literal["asc", "desc"] = "desc",
     search: str | None = None,
 ):
-    """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped.
-    :param request: FastAPI request object to access query parameters
-    :param db: Database session.
-    :param current_user: Authenticated user.
-    :param page: Page number (0-indexed).
-    :param page_size: Number of items per page.
-    :param sort_by: Column name to sort by.
-    :param sort_direction: Sort direction (asc or desc).
-    :param search: Search term to filter by title, company, location, description, or platform.
-    :return: Paginated response with items and metadata."""
+    """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped."""
 
-    # Base query
+    # Base query with eager loading of job_rating
     query = (
         db.query(models.ScrapedJob)
+        .options(joinedload(models.ScrapedJob.job_rating))  # Always load rating
         .filter(models.ScrapedJob.owner_id == current_user.id)
         .filter(models.ScrapedJob.is_scraped)
         .filter(models.ScrapedJob.is_imported.is_(False))
@@ -110,7 +102,23 @@ def get_all(
     query = filter_query(query, models.ScrapedJob, filter_params)
 
     # Apply sorting
-    if hasattr(models.ScrapedJob, sort_by):
+    if sort_by.startswith("job_rating."):
+        # Handle sorting by job_rating relationship attributes
+        rating_attribute = sort_by.split(".", 1)[1]  # e.g., "overall_score"
+
+        if hasattr(models.JobRating, rating_attribute):
+            # Need explicit join for ORDER BY to work
+            query = query.outerjoin(models.JobRating)
+            sort_column = getattr(models.JobRating, rating_attribute)
+
+            if sort_direction == "desc":
+                query = query.order_by(desc(sort_column).nulls_last())
+            else:
+                query = query.order_by(asc(sort_column).nulls_last())
+        else:
+            # Default sorting if invalid column
+            query = query.order_by(desc(models.ScrapedJob.scrape_datetime).nulls_last())
+    elif hasattr(models.ScrapedJob, sort_by):
         sort_column = getattr(models.ScrapedJob, sort_by)
         if sort_direction == "desc":
             query = query.order_by(desc(sort_column).nulls_last())
@@ -142,7 +150,7 @@ def get_all(
 # GET endpoint for regular user to get the number of scraped jobs
 @scraped_job_router.get("/count")
 def get_scraped_job_count(
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get the count of scraped jobs for the current user that are scraped, not imported, and active.
@@ -187,7 +195,7 @@ def get_service_logs_by_date_range(
     end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
     delta_days: int | None = Query(None, description="Number of days to go back in time"),
     limit: int | None = Query(None, description="Maximum number of logs to return"),
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get service logs within a specified date range. Admin access required.
@@ -213,7 +221,7 @@ def get_service_logs_by_date_range(
 # GET endpoint for admin user to get the latest service log
 @eis_service_log_router.get("/latest", response_model=schemas.EisServiceLogOut)
 def get_latest(
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Get the latest service log entry. Admin access required.
@@ -233,7 +241,7 @@ scraper_router = APIRouter(prefix="/scraper", tags=["scraper"])
 @scraper_router.get("/linkedin/{external_job_id}")
 def scrape_job(
     external_job_id: str,
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ):
     """Trigger scraping of a job posting from LinkedIn by job ID.
     :param external_job_id: LinkedIn job ID to scrape
@@ -249,7 +257,7 @@ def scrape_job(
 @scraper_router.get("/indeed/{external_job_id}")
 def scrape_job(
     external_job_id: str,
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ):
     """Trigger scraping of a job posting from Indeed by job ID.
     :param external_job_id: Indeed job ID to scrape
@@ -265,7 +273,7 @@ def scrape_job(
 @scraper_router.get("/veganjobs/{external_job_id}")
 def scrape_job(
     external_job_id: str,
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ):
     """Trigger scraping of a job posting from Vegan Jobs by job ID.
     :param external_job_id: LinkedIn job ID to scrape
@@ -282,7 +290,7 @@ def scrape_job(
 @scraper_router.get("/nhs/{external_job_id}")
 def scrape_job(
     external_job_id: str,
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ):
     """Trigger scraping of a job posting from the NHS website by job ID.
     :param external_job_id: LinkedIn job ID to scrape
@@ -305,7 +313,7 @@ email_scraper_service_router = APIRouter(prefix="/email_scraper_service", tags=[
 @email_scraper_service_router.post("/start")
 def start_scraper(
     request: schemas.StartRequest,
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ) -> dict:
     """Start the service runner with the specified period.
     :param request: StartRequest object containing period_hours
@@ -315,7 +323,7 @@ def start_scraper(
 
 
 @email_scraper_service_router.post("/stop")
-def stop_scraper(current_user: app_models.User = Depends(get_current_user)) -> dict:
+def stop_scraper(current_user: models.User = Depends(get_current_user)) -> dict:
     """Stop the service runner.
     :param current_user: Current authenticated user"""
 
@@ -324,7 +332,7 @@ def stop_scraper(current_user: app_models.User = Depends(get_current_user)) -> d
 
 @email_scraper_service_router.get("/status")
 def scraper_status(
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ) -> dict:
     """Get the current status of the service.
     :param current_user: Current authenticated user"""
@@ -335,7 +343,7 @@ def scraper_status(
 @email_scraper_service_router.get("/logs")
 def get_scraper_logs(
     lines: int = Query(100, ge=1, le=10000),
-    current_user: app_models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_user),
 ):
     """Get the last N lines from the service log file
     :param lines: Number of lines to retrieve (default 100, max 10000)

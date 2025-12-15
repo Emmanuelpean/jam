@@ -65,64 +65,52 @@ def ai_score_job(
         job_sections.append(f"- **Description**: {job_description}")
 
     job_details = "\n".join(job_sections) if job_sections else "- **No job information provided**"
+    system_prompt = """
+    You are a career–job matching agent.
+    
+    Evaluate how well a candidate matches a specific job across the dimensions below.
+    Score ONLY when the required data is provided; otherwise return null.
+    
+    Scoring dimensions (0–10):
+    - technical_fit: candidate skills vs job requirements (null if Skills = "Not provided")
+    - experience_alignment: relevance of past roles (null if Experience = "Not provided")
+    - educational_match: degree and academic alignment (null if Education = "Not provided")
+    - interest_match: alignment of interests with role/company (null if Interests = "Not provided")
+    
+    overall_score:
+    - A holistic judgement of candidate–job fit
+    - NOT a mathematical average of the other scores
+    - Should be broadly consistent with the available dimension scores
+    - May weight dimensions unevenly based on job importance
+    - If all dimensions are null, set overall_score to null
+    
+    Rules:
+    - 0 = poor fit, null = insufficient information
+    - Consider must-haves, nice-to-haves, and transferable skills
+    - Be objective and evidence-based
+    - Do not invent or infer missing data
+    
+    Output:
+    Return ONLY valid JSON matching this exact schema:
+    
+    {
+      "overall_score": <integer 0–10 or null>,
+      "technical_fit": <integer 0–10 or null>,
+      "experience_alignment": <integer 0–10 or null>,
+      "educational_match": <integer 0–10 or null>,
+      "interest_match": <integer 0–10 or null>,
+      "explanation": "2–3 concise sentences summarising the assessment and noting any missing data"
+    }"""
 
-    llm_prompt = f"""
-    You are an expert career matching agent specializing in evaluating candidate-job compatibility. Your task is to analyze how well a candidate matches a specific job opportunity across multiple dimensions.
-    
-    ## Input Information
-    
+    user_prompt = f"""
     ### Candidate Profile
     {candidate_profile}
     
     ### Job Details
     {job_details}
-    
-    ## Evaluation Framework
-    
-    Assess the candidate across these dimensions and provide a score (0-10) for each dimension **WHERE DATA IS AVAILABLE**:
-    
-    1. **Technical Fit** (0-10): Match between candidate's technical skills and job requirements
-       - Set to `null` if Skills are "Not provided"
-       
-    2. **Experience Alignment** (0-10): Relevance of past roles to the position's responsibilities
-       - Set to `null` if Experience is "Not provided"
-       
-    3. **Educational Match** (0-10): Degree requirements and academic background alignment
-       - Set to `null` if Education is "Not provided"
-       
-    4. **Interest Match** (0-10): Alignment of candidate's interests with job role and company culture
-       - Set to `null` if Interests are "Not provided"
-    
-    5. **Overall Score** (0-10): Holistic assessment of candidate-job fit
-       - Calculate based ONLY on the dimensions that have scores (exclude null values from average)
-       - If ALL dimensions are null, set overall_score to `null` as well
-    
-    ## Output Format
-    
-    Return your assessment as valid JSON with this exact structure (ALL fields must be present):
-    
-    {{
-        "overall_score": <integer 0-10 or null>,
-        "technical_fit": <integer 0-10 or null>,
-        "experience_alignment": <integer 0-10 or null>,
-        "educational_match": <integer 0-10 or null>,
-        "interest_match": <integer 0-10 or null>,
-        "explanation": "<2-3 sentences explaining your recommendation, noting any missing information that limited the assessment>"
-    }}
-    
-    ## Evaluation Guidelines
-    
-    - **Return null (not 0) for dimensions where candidate information is marked "Not provided"**
-    - A score of 0 means poor fit; null means cannot evaluate
-    - Base the overall score on the average of NON-NULL dimension scores only
-    - Be objective and evidence-based in your scoring
-    - Consider both hard requirements (must-haves) and soft preferences (nice-to-haves)
-    - Account for transferable skills and adaptability potential
-    - In the explanation, mention which dimensions could not be evaluated due to missing data
-    - Return ONLY valid JSON, no additional text before or after
     """
 
-    return openai_query(llm_prompt)
+    return openai_query(system_prompt, user_prompt)
 
 
 if __name__ == "__main__":
@@ -134,4 +122,4 @@ if __name__ == "__main__":
     skills = "Python, Django, REST APIs, SQL"
     qualities = "Team player, problem solver, quick learner"
     interests = "Not interested in software engineer roles"
-    print(ai_score_job(experience, education, skills, qualities, None, title, company, description))
+    print(ai_score_job(experience, education, skills, qualities, interests, title, company, description))

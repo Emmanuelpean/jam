@@ -33,6 +33,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, DataModalProps>(
 		};
 
 		const jobFormFields: Fields = [
+			modalViewFields.jobRating(),
 			formFields.jobTitle({ placeholder: "Python Software Engineer" }),
 			formFields.description({
 				placeholder: "",

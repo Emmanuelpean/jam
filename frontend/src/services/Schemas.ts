@@ -258,6 +258,7 @@ export interface ScrapedJobData extends OwnedOut {
 	attendance_type: string | null;
 	location: string | null;
 	emails: number[];
+	job_rating: JobRating | null;
 }
 
 export interface JobRating extends BaseOut {
