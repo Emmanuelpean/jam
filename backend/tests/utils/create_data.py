@@ -3,7 +3,7 @@
 import copy
 import random
 
-import app.eis.models as eis_models
+import app.job_email_scraping.models as eis_models
 import app.job_rating.models as job_rating_models
 from app import models, utils
 from tests.utils.test_data import basics
@@ -311,14 +311,14 @@ def create_job_application_updates(
 
 
 def create_job_alert_emails(
-    db, users: list[models.User], service_logs: list[eis_models.EisServiceLog]
-) -> list[eis_models.JobAlertEmail]:
+    db, users: list[models.User], service_logs: list[eis_models.JobEmailScrapingServiceLog]
+) -> list[eis_models.JobEmail]:
     """Create sample job alert emails"""
 
     print("Creating job alert emails...")
     # noinspection PyArgumentList
     emails = [
-        eis_models.JobAlertEmail(**email)
+        eis_models.JobEmail(**email)
         for email in override_entries_properties(
             job_scraping_service.JOB_ALERT_EMAIL_DATA,
             ("owner_id", users),
@@ -356,23 +356,23 @@ def create_scraped_jobs(db, emails, users: list[models.User]) -> list[eis_models
     return add_to_db(db, scraped_jobs)
 
 
-def create_job_scraping_service_logs(db) -> list[eis_models.EisServiceLog]:
+def create_job_scraping_service_logs(db) -> list[eis_models.JobEmailScrapingServiceLog]:
     """Create sample scraped job service logs"""
 
     print("Creating Job Scraping service logs...")
     # noinspection PyArgumentList
-    logs = [eis_models.EisServiceLog(**log) for log in job_scraping_service.JOB_SCRAPING_SERVICE_LOG_DATA]
+    logs = [eis_models.JobEmailScrapingServiceLog(**log) for log in job_scraping_service.JOB_SCRAPING_SERVICE_LOG_DATA]
 
     return add_to_db(db, logs)
 
 
-def create_job_scraping_platform_stats(db, service_logs) -> list[eis_models.PlatformStat]:
+def create_job_scraping_platform_stats(db, service_logs) -> list[eis_models.JobEmailScrapingPlatformStat]:
     """Create sample platform stats"""
 
     print("Creating platform stats...")
     # noinspection PyArgumentList
     stats = [
-        eis_models.PlatformStat(**data)
+        eis_models.JobEmailScrapingPlatformStat(**data)
         for data in override_entries_properties(
             job_scraping_service.PLATFORM_STAT_DATA,
             ("service_log_id", service_logs),
@@ -382,13 +382,13 @@ def create_job_scraping_platform_stats(db, service_logs) -> list[eis_models.Plat
     return add_to_db(db, stats)
 
 
-def create_job_scraping_service_errors(db, service_logs) -> list[eis_models.EisServiceError]:
+def create_job_scraping_service_errors(db, service_logs) -> list[eis_models.JobEmailScrapingServiceError]:
     """Create sample EIS service errors"""
 
     print("Creating EIS service errors...")
     # noinspection PyArgumentList
     errors = [
-        eis_models.EisServiceError(**data)
+        eis_models.JobEmailScrapingServiceError(**data)
         for data in override_entries_properties(
             job_scraping_service.SERVICE_ERROR_DATA,
             ("service_log_id", service_logs),

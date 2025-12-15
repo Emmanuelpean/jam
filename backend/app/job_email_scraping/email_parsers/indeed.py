@@ -5,8 +5,8 @@ import re
 import cloudscraper
 from bs4 import BeautifulSoup
 
-from app.eis.email_parsers.utils import process_salary, Platform
-from app.eis.job_scrapers import Salary, JobInfo, JobResult
+from app.job_email_scraping.email_parsers.utils import process_salary, Platform
+from app.job_email_scraping.job_scrapers import Salary, JobInfo, JobResult
 
 BASE_URL = "https://www.indeed.com/viewjob?jk="
 

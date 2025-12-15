@@ -19,7 +19,7 @@ from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
 from app import models, database, schemas
-from app.eis import models as eis_models
+from app.job_email_scraping import models as eis_models
 from app.job_rating import models as rating_models
 from app.config import settings
 from app.main import app
@@ -471,28 +471,28 @@ def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[eis_mo
 
 
 @pytest.fixture
-def test_eis_service_logs(session) -> list[eis_models.EisServiceLog]:
+def test_eis_service_logs(session) -> list[eis_models.JobEmailScrapingServiceLog]:
     """Create test service logs"""
 
     return create_job_scraping_service_logs(session)
 
 
 @pytest.fixture
-def test_platform_stats(session, test_eis_service_logs) -> list[eis_models.PlatformStat]:
+def test_platform_stats(session, test_eis_service_logs) -> list[eis_models.JobEmailScrapingPlatformStat]:
     """Create test platform stats"""
 
     return create_job_scraping_platform_stats(session, test_eis_service_logs)
 
 
 @pytest.fixture
-def test_eis_service_errors(session, test_eis_service_logs) -> list[eis_models.EisServiceError]:
-    """Create test eis service errors"""
+def test_eis_service_errors(session, test_eis_service_logs) -> list[eis_models.JobEmailScrapingServiceError]:
+    """Create test job_email_scraping service errors"""
 
     return create_job_scraping_service_errors(session, test_eis_service_logs)
 
 
 @pytest.fixture
-def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[eis_models.JobAlertEmail]:
+def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[eis_models.JobEmail]:
     """Create test job alert emails"""
 
     return create_job_alert_emails(session, test_users, test_eis_service_logs)

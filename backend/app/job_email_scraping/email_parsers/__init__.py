@@ -1,7 +1,7 @@
 """Email parsers package for processing job-related emails."""
 
-from app.eis.email_parsers import indeed, linkedin, nhs, veganjobs
-from app.eis.email_parsers.utils import Platform
+from app.job_email_scraping.email_parsers import indeed, linkedin, nhs, veganjobs
+from app.job_email_scraping.email_parsers.utils import Platform
 
 
 JOB_PARSERS = {

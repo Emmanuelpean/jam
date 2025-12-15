@@ -2,9 +2,9 @@
 
 import re
 
-from app.eis.job_scrapers import JobResult, JobInfo, Salary
-from app.eis.job_scrapers.brightdata import BrightdataJobScraper
-from app.eis.job_scrapers.apify import ApifyJobScraper
+from app.job_email_scraping.job_scrapers import JobResult, JobInfo, Salary
+from app.job_email_scraping.job_scrapers.brightdata import BrightdataJobScraper
+from app.job_email_scraping.job_scrapers.apify import ApifyJobScraper
 
 
 class IndeedBrightdataJobScraper(BrightdataJobScraper):
@@ -85,11 +85,11 @@ class IndeedApifyJobScraper(ApifyJobScraper):
 
 if __name__ == "__main__":
     # Indeed job scraper example with Brightdata
-    scraper = IndeedBrightdataJobScraper("a6c3277c505f0629")
+    scraper = IndeedBrightdataJobScraper("758f2768706ab970")
     data = scraper.scrape_job()
     print(data)
 
-    # Indeed job scraper example with Apify
+    # # Indeed job scraper example with Apify
     scraper = IndeedApifyJobScraper("758f2768706ab970")
     data = scraper.scrape_job()
     print(data)

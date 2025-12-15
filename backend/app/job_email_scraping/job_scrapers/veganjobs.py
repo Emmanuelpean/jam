@@ -5,7 +5,7 @@ import re
 import cloudscraper
 from bs4 import BeautifulSoup
 
-from app.eis.job_scrapers import JobResult, JobInfo, Salary
+from app.job_email_scraping.job_scrapers import JobResult, JobInfo, Salary
 
 
 class VeganJobsJobScraper:

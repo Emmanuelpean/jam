@@ -2,7 +2,7 @@
 Integration tests that use real job IDs and make actual API calls to test the scraping functionality.
 These tests require valid BrightData credentials in the eis_secrets.json file."""
 
-from app.eis.job_scrapers import JobResult
+from app.job_email_scraping.job_scrapers import JobResult
 
 
 class MockLinkedinBrightdataJobScraper(object):

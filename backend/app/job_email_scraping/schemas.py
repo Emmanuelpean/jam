@@ -1,4 +1,4 @@
-"""Pydantic schemas for the email ingestion service.
+"""Pydantic schemas for the Job Email Scraping.
 Contains data models for job alert emails, scraped job postings, and service logs
 used in the external job scraping and notification system."""
 
@@ -13,7 +13,7 @@ from app.job_rating.schemas import JobRatingOut
 # --------------------------------------------------- JOB ALERT EMAIL --------------------------------------------------
 
 
-class JobAlertEmail(BaseModel):
+class JobEmail(BaseModel):
     """Job Alert Email base schema"""
 
     external_email_id: str | None
@@ -27,13 +27,13 @@ class JobAlertEmail(BaseModel):
     alert_name: str | None = None
 
 
-class JobAlertEmailUpdate(JobAlertEmail):
+class JobEmailUpdate(JobEmail):
     """Job Alert Email update schema"""
 
     pass
 
 
-class JobAlertEmailOut(JobAlertEmail, OwnedOut):
+class JobEmailOut(JobEmail, OwnedOut):
     """Job Alert Email output schema"""
 
     jobs: list[int]
@@ -112,8 +112,8 @@ class PaginatedScrapedJobResponse(BaseModel):
 # ----------------------------------------------------- SERVICE LOG ----------------------------------------------------
 
 
-class EisServiceLogOut(Out):
-    """EIS Service Log output schema"""
+class JobEmailScrapingServiceLogOut(Out):
+    """Job Email Scraping Service Log output schema"""
 
     run_datetime: datetime | None = None
     run_duration: float | None = None
@@ -139,8 +139,8 @@ class EisServiceLogOut(Out):
     # Relationships
     emails: list[int]
     scraped_jobs: list[int]
-    platform_stats: list["PlatformStatOut"]
-    service_errors: list["EisServiceErrorOut"]
+    platform_stats: list["JobEmailScrapingPlatformStatOut"]
+    service_errors: list["JobEmailScrapingServiceErrorOut"]
 
     @field_validator("emails", "scraped_jobs", mode="before")
     @classmethod
@@ -152,8 +152,8 @@ class EisServiceLogOut(Out):
 # --------------------------------------------------- PLATFORM STATS ---------------------------------------------------
 
 
-class PlatformStatOut(Out):
-    """Platform Stat output schema"""
+class JobEmailScrapingPlatformStatOut(Out):
+    """Job Email Scraping Platform Stat output schema"""
 
     name: str | None = None
 
@@ -174,8 +174,8 @@ class PlatformStatOut(Out):
 # -------------------------------------------------- EIS SERVICE ERROR -------------------------------------------------
 
 
-class EisServiceErrorOut(Out):
-    """EIS Service Error output schema"""
+class JobEmailScrapingServiceErrorOut(Out):
+    """Job Email Scraping Service Error output schema"""
 
     error_type: str
     message: str
@@ -185,7 +185,7 @@ class EisServiceErrorOut(Out):
 # ------------------------------------------------ EMAIL SCRAPER SERVICE -----------------------------------------------
 
 
-class StartRequest(BaseModel):
+class JobEmailScrapingStartRequest(BaseModel):
     """Start Request schema for email scraper service"""
 
     period_hours: float | None = 3.0

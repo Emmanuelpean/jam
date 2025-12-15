@@ -1,4 +1,4 @@
-"""Email Ingestion System (EIS) Database Models
+"""Job Email Scraper Database Models
 
 Defines SQLAlchemy ORM models for email-based job scraping functionality.
 Includes models for job alert emails, extracted job IDs, and scraped job data
@@ -10,15 +10,15 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.models import Base, CommonBase, Owned
+from app.models import Base, CommonBase, Owned, ServiceLog
 
 # ------------------------------------------------------ MAPPINGS ------------------------------------------------------
 
 
-jobalertemail_scrapedjob_mapping = Table(
-    "jobalertemail_scrapedjob_mapping",
+jobemail_scrapedjob_mapping = Table(
+    "jobemail_scrapedjob_mapping",
     Base.metadata,
-    Column("email_id", Integer, ForeignKey("job_alert_email.id", ondelete="CASCADE"), primary_key=True),
+    Column("email_id", Integer, ForeignKey("job_email.id", ondelete="CASCADE"), primary_key=True),
     Column("job_id", Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), primary_key=True),
 )
 
@@ -26,7 +26,7 @@ jobalertemail_scrapedjob_mapping = Table(
 # -------------------------------------------------------- DATA --------------------------------------------------------
 
 
-class JobAlertEmail(Owned, Base):
+class JobEmail(Owned, Base):
     """Represents email messages containing job information like LinkedIn and Indeed job alerts
 
     Attributes:
@@ -38,15 +38,16 @@ class JobAlertEmail(Owned, Base):
     - 'job_found_n' (int): Number of jobs found in the email
     - `platform` (str): Platform from which the email was received (LinkedIn, Indeed, etc.).
     - `body` (str): Body of the email message.
+    - `alert_name` (str, optional): Name of the job alert associated with the email.
 
     Foreign keys:
     -------------
-    - `service_log_id` (int, optional): Identifier for the EisServiceLog associated with the email.
+    - `service_log_id` (int, optional): Identifier for the JobEmailScrapingServiceLog associated with the email.
 
     Relationships:
     --------------
     - `jobs` (list of ScrapedJob): List of scraped jobs associated with the email.
-    - `service_log` (EisServiceLog): EisServiceLog object associated with the email.
+    - `service_log` (JobEmailScrapingServiceLog): JobEmailScrapingServiceLog object associated with the email.
 
     Constraints:
     ------------
@@ -62,11 +63,13 @@ class JobAlertEmail(Owned, Base):
     alert_name = Column(String, nullable=True)
 
     # Foreign keys
-    service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="SET NULL"), nullable=False)
+    service_log_id = Column(
+        Integer, ForeignKey("job_email_scraping_service_log.id", ondelete="SET NULL"), nullable=False
+    )
 
     # Relationships
-    jobs = relationship("ScrapedJob", secondary=jobalertemail_scrapedjob_mapping, back_populates="emails")
-    service_log = relationship("EisServiceLog", back_populates="emails")
+    jobs = relationship("ScrapedJob", secondary=jobemail_scrapedjob_mapping, back_populates="emails")
+    service_log = relationship("JobEmailScrapingServiceLog", back_populates="emails")
 
     __table_args__ = (UniqueConstraint("external_email_id", "owner_id", name="unique_email_per_owner"),)
 
@@ -100,9 +103,15 @@ class ScrapedJob(Owned, Base):
     - `location_country` (str, optional): Country of the job location.
     - `attendance_type` (str, optional): Attendance type of the job (e.g., remote, on-site).
 
+    Foreign keys:
+    -------------
+    - `service_log_id` (int): Identifier for the JobEmailScrapingServiceLog associated with the job.
+
     Relationships:
     --------------
-    - `emails` (list of JobAlertEmail): List of email messages associated with the job.
+    - `emails` (list of JobEmail): List of email messages associated with the job.
+    - `service_log` (JobEmailScrapingServiceLog): JobEmailScrapingServiceLog object associated with the job.
+    - `job_rating` (JobRating): JobRating object associated with the job.
 
     Constraints:
     ------------
@@ -134,49 +143,44 @@ class ScrapedJob(Owned, Base):
     attendance_type = Column(String, nullable=True)
 
     # Foreign keys
-    service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="SET NULL"), nullable=False)
+    service_log_id = Column(
+        Integer, ForeignKey("job_email_scraping_service_log.id", ondelete="SET NULL"), nullable=False
+    )
 
     # Relationships
-    emails = relationship("JobAlertEmail", secondary=jobalertemail_scrapedjob_mapping, back_populates="jobs")
-    service_log = relationship("EisServiceLog", back_populates="scraped_jobs")
+    emails = relationship("JobEmail", secondary=jobemail_scrapedjob_mapping, back_populates="jobs")
+    service_log = relationship("JobEmailScrapingServiceLog", back_populates="scraped_jobs")
     job_rating = relationship("JobRating", back_populates="scraped_job", uselist=False)
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
 
 
-class EisServiceLog(CommonBase, Base):
+class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
     """Represents logs of service operations and their status.
 
     Attributes:
     -----------
-    - `run_duration` (float, optional): Duration of the service run.
-    - `run_datetime` (datetime): Date and time of the service run.
-    - `is_success` (bool): Indicates whether the service run was successful.
-    - `error_message` (str, optional): Error message if the service run failed.
     - `user_found_ids` (list of int): List of user IDs found during the service run.
     - `user_processed_ids` (list of int): List of user IDs processed during the service run.
+    - `email_found_n` (int): Number of emails found during the service run.
 
     Relationships:
     --------------
-    - `emails` (list of JobAlertEmail): List of email messages associated with the service.
-    - `scraped_jobs` (list of ScrapedJob): List of scraped jobs associated with the service.
-    - `platform_stats` (list of PlatformStat): List of platform statistics associated with the service.
-    - `errors` (list of EisServiceError): List of errors associated with the service.
+    - `emails` (list of JobEmail): List of email messages associated with the service log.
+    - `scraped_jobs` (list of ScrapedJob): List of scraped jobs associated with the service log.
+    - `platform_stats` (list of JobEmailScrapingPlatformStat): List of platform statistics associated with the service log.
+    - `errors` (list of JobEmailScrapingServiceError): List of errors associated with the service log.
 
     Properties:
     -----------
     - `job_scrape_succeeded_n` (int): Total successfully scraped jobs across all platforms.
     - `job_scrape_failed_n` (int): Total failed scraped jobs across all platforms.
     - `job_scrape_copied_n` (int): Total copied scraped jobs found across all platforms.
+    - `job_scrape_skipped_n` (int): Total skipped scraped jobs found across all platforms.
     - `job_found_n` (int): Total jobs found (copied + skipped) across all platforms.
     - `email_saved_n` (int): Total emails saved across all platforms.
     - `email_skipped_n` (int): Total emails skipped across all platforms."""
-
-    run_duration = Column(Float, nullable=True)
-    run_datetime = Column(TIMESTAMP(timezone=True), nullable=False)
-    is_success = Column(Boolean, nullable=True)
-    error_message = Column(String, nullable=True)
 
     # Users
     user_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
@@ -186,10 +190,10 @@ class EisServiceLog(CommonBase, Base):
     email_found_n = Column(Integer, nullable=False, default=0)
 
     # Relationships
-    emails = relationship("JobAlertEmail", back_populates="service_log")
+    emails = relationship("JobEmail", back_populates="service_log")
     scraped_jobs = relationship("ScrapedJob", back_populates="service_log")
-    platform_stats = relationship("PlatformStat", back_populates="service_log")
-    service_errors = relationship("EisServiceError", back_populates="service_log")
+    platform_stats = relationship("JobEmailScrapingPlatformStat", back_populates="service_log")
+    service_errors = relationship("JobEmailScrapingServiceError", back_populates="service_log")
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""
@@ -233,8 +237,8 @@ class EisServiceLog(CommonBase, Base):
         return sum(len(stat.email_skipped_ids) for stat in self.platform_stats)
 
 
-class PlatformStat(CommonBase, Base):
-    """Per-platform stats for a service run linked to an EisServiceLog.
+class JobEmailScrapingPlatformStat(CommonBase, Base):
+    """Per-platform stats for a service run linked to an JobEmailScrapingServiceLog.
 
     Attributes:
     -----------
@@ -247,12 +251,17 @@ class PlatformStat(CommonBase, Base):
     # Jobs
     - `job_found_ids` (list of int): List of found job IDs from the emails.
     - `job_scrape_failed_ids` (list of int): List of failed job scrape IDs.
-    - `job_scrape_success_ids` (list of int): List of successful job scrape IDs.
+    - `job_scrape_succeeded_ids` (list of int): List of successful job scrape IDs.
     - `job_scrape_copied_ids` (list of int): List of copied job scrape IDs.
+    - `job_scrape_skipped_ids` (list of int): List of skipped job scrape IDs.
 
-    # Service Log
-    - `service_log_id` (int): Foreign key to the associated EisServiceLog.
-    - `service_log` (EisServiceLog): Relationship to the associated EisServiceLog.
+    Foreign keys:
+    -------------
+    - `service_log_id` (int): Foreign key to the associated JobEmailScrapingServiceLog.
+
+    Relationships:
+    --------------
+    - `service_log` (JobEmailScrapingServiceLog): Relationship to the associated JobEmailScrapingServiceLog.
 
     Constraints:
     ------------
@@ -272,9 +281,15 @@ class PlatformStat(CommonBase, Base):
     job_scrape_copied_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_scrape_skipped_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
 
-    service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="CASCADE"), nullable=False)
-    service_log = relationship("EisServiceLog", back_populates="platform_stats")
+    # Foreign keys
+    service_log_id = Column(
+        Integer, ForeignKey("job_email_scraping_service_log.id", ondelete="CASCADE"), nullable=False
+    )
 
+    # Relationships
+    service_log = relationship("JobEmailScrapingServiceLog", back_populates="platform_stats")
+
+    # Constraints
     __table_args__ = (UniqueConstraint("service_log_id", "name", name="unique_platform_per_service_log"),)
 
     def __init__(self, **kwargs) -> None:
@@ -289,7 +304,7 @@ class PlatformStat(CommonBase, Base):
         super().__init__(**kwargs)
 
 
-class EisServiceError(CommonBase, Base):
+class JobEmailScrapingServiceError(CommonBase, Base):
     """Records unexpected/unhandled errors raised during a service run.
 
     Attributes:
@@ -297,12 +312,23 @@ class EisServiceError(CommonBase, Base):
     - `error_type` (str): Type of the error.
     - `message` (str, optional): Error message.
     - `traceback` (str, optional): Traceback of the error.
-    - `service_log_id` (int): Foreign key to the associated EisServiceLog.
-    - `service_log` (EisServiceLog): Relationship to the associated EisServiceLog"""
+
+    Foreign keys:
+    -------------
+    - `service_log_id` (int): Foreign key to the associated JobEmailScrapingServiceLog.
+
+    Relationships:
+    --------------
+    - `service_log` (JobEmailScrapingServiceLog): Relationship to the associated JobEmailScrapingServiceLog"""
 
     error_type = Column(String, nullable=False)
     message = Column(String, nullable=False)
     traceback = Column(String, nullable=False)
 
-    service_log_id = Column(Integer, ForeignKey("eis_service_log.id", ondelete="CASCADE"), nullable=False)
-    service_log = relationship("EisServiceLog", back_populates="service_errors")
+    # Foreign keys
+    service_log_id = Column(
+        Integer, ForeignKey("job_email_scraping_service_log.id", ondelete="CASCADE"), nullable=False
+    )
+
+    # Relationships
+    service_log = relationship("JobEmailScrapingServiceLog", back_populates="service_errors")

@@ -12,4 +12,4 @@ from app.models import *
 from app.job_rating.models import *
 
 # noinspection PyUnusedImports
-from app.eis.models import *
+from app.job_email_scraping.models import *

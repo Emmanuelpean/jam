@@ -6,7 +6,7 @@ and full location string parsing with various real-world scenarios."""
 
 import pytest
 
-from app.eis.location_parser import LocationParser
+from app.job_email_scraping.location_parser import LocationParser
 from app.schemas import LocationCreate
 
 

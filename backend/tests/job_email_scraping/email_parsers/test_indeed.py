@@ -2,8 +2,8 @@
 
 import pytest
 
-from app.eis.email_parsers.indeed import parse_indeed_job_email, extract_alert_name
-from tests.eis.resources import INDEED_EMAIL_3, INDEED_EMAIL_4
+from app.job_email_scraping.email_parsers.indeed import parse_indeed_job_email, extract_alert_name
+from tests.job_email_scraping.resources import INDEED_EMAIL_3, INDEED_EMAIL_4
 
 
 class TestParseIndeedJobEmail:
