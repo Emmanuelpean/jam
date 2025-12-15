@@ -85,7 +85,7 @@ export const FormField = (
 
 	if (field.type === "checkbox") {
 		return (
-			<Form.Group className="mb-4" id={`${field.name}-form-group`}>
+			<Form.Group className="mb-3" id={`${field.name}-form-group`}>
 				<Checkbox {...widgetProps} />
 				{error && (
 					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
@@ -97,7 +97,7 @@ export const FormField = (
 	}
 
 	return (
-		<Form.Group className="mb-4" id={`${field.name}-form-group`}>
+		<Form.Group className="mb-3" id={`${field.name}-form-group`}>
 			<Form.Label>
 				{field.icon && <i className={`${field.icon} me-2 text-muted`}></i>}
 				{field.label}
