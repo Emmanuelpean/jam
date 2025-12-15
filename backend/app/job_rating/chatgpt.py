@@ -24,6 +24,7 @@ def openai_query(system_prompt: str, llm_prompt: str) -> dict[str, Any]:
     return: parsed JSON output."""
 
     try:
+        # noinspection PyTypeChecker
         response = client.chat.completions.create(
             model="gpt-4.1-mini",
             messages=[
@@ -39,11 +40,12 @@ def openai_query(system_prompt: str, llm_prompt: str) -> dict[str, Any]:
         if not content:
             raise OpenAiError("Empty response from OpenAI")
 
-        return json.loads(content)
+        try:
+            return json.loads(content)
 
-    except json.JSONDecodeError as exc:
-        logger.error("Invalid JSON returned by OpenAI: %s", content)
-        raise OpenAiError("Invalid JSON from OpenAI") from exc
+        except json.JSONDecodeError as exc:
+            logger.error("Invalid JSON returned by OpenAI: %s", content)
+            raise OpenAiError("Invalid JSON from OpenAI") from exc
 
     except Exception as exc:
         logger.exception("OpenAI query failed")
