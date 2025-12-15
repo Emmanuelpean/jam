@@ -1,10 +1,10 @@
 """Tests for scoring scraped jobs"""
 
 from app.job_rating.scraped_job_rating import score_scraped_jobs
-from app.eis.models import ScrapedJob
+from app.job_email_scraping.models import ScrapedJob
 from app import models as app_models
 from app.job_rating import models
-from app.eis.email_parsers import Platform
+from app.job_email_scraping.email_parsers import Platform
 
 
 class TestScoreScrapedJobs(object):

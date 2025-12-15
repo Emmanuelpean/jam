@@ -11,15 +11,21 @@ from datetime import datetime
 from app import utils, model_registry as models
 from app.config import settings
 from app.database import get_db
-from app.eis.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
-from app.eis.email_parsers.utils import Platform, remove_style_tags
-from app.eis.job_scrapers import JobResult
-from app.eis.job_scrapers.indeed import IndeedBrightdataJobScraper
-from app.eis.job_scrapers.linkedin import LinkedinBrightdataJobScraper
-from app.eis.job_scrapers.nhs import NhsJobScraper
-from app.eis.job_scrapers.veganjobs import VeganJobsJobScraper
-from app.eis.location_parser import LocationParser
-from app.eis.models import JobAlertEmail, ScrapedJob, EisServiceLog, PlatformStat, EisServiceError
+from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
+from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
+from app.job_email_scraping.job_scrapers import JobResult
+from app.job_email_scraping.job_scrapers.indeed import IndeedApifyJobScraper
+from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
+from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
+from app.job_email_scraping.job_scrapers.veganjobs import VeganJobsJobScraper
+from app.job_email_scraping.location_parser import LocationParser
+from app.job_email_scraping.models import (
+    JobEmail,
+    ScrapedJob,
+    JobEmailScrapingServiceLog,
+    JobEmailScrapingPlatformStat,
+    JobEmailScrapingServiceError,
+)
 from app.emails.email_service import EmailService
 from app.service_runner import ServiceRunner
 from app.utils import AppLogger
@@ -47,12 +53,12 @@ class JobEmailScraper(EmailService):
 
         return models.get_setting(self.db, "indeed_scraper", "email")
 
-    def create_service_log(self, **kwargs) -> EisServiceLog:
+    def create_service_log(self, **kwargs) -> JobEmailScrapingServiceLog:
         """Create a new service log entry
         :param kwargs: EisServiceLog keyword arguments"""
 
         # noinspection PyArgumentList
-        service_log_entry = EisServiceLog(**kwargs)
+        service_log_entry = JobEmailScrapingServiceLog(**kwargs)
         self.db.add(service_log_entry)
         self.db.commit()
         self.db.refresh(service_log_entry)
@@ -60,10 +66,10 @@ class JobEmailScraper(EmailService):
 
     def upsert_platform_stat(
         self,
-        service_log: EisServiceLog,
+        service_log: JobEmailScrapingServiceLog,
         platform: Platform,
         **kwargs,
-    ) -> PlatformStat:
+    ) -> JobEmailScrapingPlatformStat:
         """Create a new platform statistics entry
         :param service_log: associated EisServiceLog instance
         :param platform: Platform enum value
@@ -71,16 +77,16 @@ class JobEmailScraper(EmailService):
 
         # Check the platform_stats entry exists
         platform_stats = (
-            self.db.query(PlatformStat)
-            .join(EisServiceLog)
-            .filter(EisServiceLog.id == service_log.id)
-            .filter(PlatformStat.name == platform)
+            self.db.query(JobEmailScrapingPlatformStat)
+            .join(JobEmailScrapingServiceLog)
+            .filter(JobEmailScrapingServiceLog.id == service_log.id)
+            .filter(JobEmailScrapingPlatformStat.name == platform)
             .first()
         )
 
         # Update existing entry by adding the new values
         if not platform_stats:
-            platform_stats = PlatformStat(service_log_id=service_log.id, name=platform)
+            platform_stats = JobEmailScrapingPlatformStat(service_log_id=service_log.id, name=platform)
             self.db.add(platform_stats)
 
         for key in kwargs:
@@ -96,9 +102,9 @@ class JobEmailScraper(EmailService):
 
     def log_eis_service_error(
         self,
-        service_log: EisServiceLog,
+        service_log: JobEmailScrapingServiceLog,
         exc: Exception | str,
-    ) -> EisServiceError:
+    ) -> JobEmailScrapingServiceError:
         """Create an EisServiceError for a caught exception.
         :param service_log: associated EisServiceLog instance
         :param exc: the caught exception
@@ -106,7 +112,7 @@ class JobEmailScraper(EmailService):
 
         tb = traceback.format_exc()
         # noinspection PyArgumentList
-        err = EisServiceError(
+        err = JobEmailScrapingServiceError(
             error_type=type(exc).__name__,
             message=str(exc),
             traceback=tb,
@@ -123,7 +129,7 @@ class JobEmailScraper(EmailService):
         email_id: str,
         user: models.User,
         service_log_id: int,
-    ) -> tuple[JobAlertEmail, bool]:
+    ) -> tuple[JobEmail, bool]:
         """Read and save an email to the database
         :param email_id: Email ID
         :param user: User entry associated with this email
@@ -131,7 +137,7 @@ class JobEmailScraper(EmailService):
         :return: JobEmails instance and whether the record was created or already existing"""
 
         # Check if the email already exists and return it if it does
-        existing_email = self.db.query(JobAlertEmail).filter(JobAlertEmail.external_email_id == email_id).first()
+        existing_email = self.db.query(JobEmail).filter(JobEmail.external_email_id == email_id).first()
 
         # Return the existing email
         if existing_email:
@@ -155,7 +161,7 @@ class JobEmailScraper(EmailService):
 
             # Create a new email record
             # noinspection PyArgumentList
-            email_record = JobAlertEmail(
+            email_record = JobEmail(
                 owner_id=user.id,
                 service_log_id=service_log_id,
                 external_email_id=email_id,
@@ -222,7 +228,7 @@ class JobEmailScraper(EmailService):
 
     def save_job_base_info_to_db(
         self,
-        email_record: JobAlertEmail,
+        email_record: JobEmail,
         job_results: list[JobResult],
     ) -> list[ScrapedJob]:
         """Save extracted job IDs from an email to the database and link them to the email.
@@ -331,7 +337,7 @@ class JobEmailScraper(EmailService):
 
     # ----------------------------------------------------- RUNNER -----------------------------------------------------
 
-    def run_scraping(self, timedelta_days: int | float = 1) -> EisServiceLog:
+    def run_scraping(self, timedelta_days: int | float = 1) -> JobEmailScrapingServiceLog:
         """Run the email scraping workflow
         :param timedelta_days: Number of days to search for emails"""
 
@@ -364,7 +370,7 @@ class JobEmailScraper(EmailService):
     def process_emails(
         self,
         timedelta_days: int | float,
-        service_log: EisServiceLog,
+        service_log: JobEmailScrapingServiceLog,
     ) -> None:
         """For each user, get and save each new email, then extract the job ids and job data.
         :param timedelta_days: Number of days to search for emails
@@ -431,12 +437,12 @@ class JobEmailScraper(EmailService):
 
     def extract_email_data(
         self,
-        email_record: JobAlertEmail,
-        service_log: EisServiceLog,
+        email_record: JobEmail,
+        service_log: JobEmailScrapingServiceLog,
     ) -> None:
         """Extract job ids from an email and save them to the database.
         May also extract job data directly from the email for some platforms depending on settings.
-        :param email_record: JobAlertEmail record
+        :param email_record: JobEmail record
         :param service_log: Service log entry
         :return: Dictionary of jobs data if the job data were directly extracted from the email"""
 
@@ -464,7 +470,7 @@ class JobEmailScraper(EmailService):
             self.log_eis_service_error(service_log, error)
             self.logger.exception(error)
 
-    def scrape_jobs(self, service_log: EisServiceLog) -> None:
+    def scrape_jobs(self, service_log: JobEmailScrapingServiceLog) -> None:
         """Scrape all unscraped jobs
         :param service_log: Service log entry"""
 
@@ -500,7 +506,7 @@ class JobEmailScraper(EmailService):
                     if self.indeed_brightapi_setting == "email":
                         scraper = None
                     else:
-                        scraper = IndeedBrightdataJobScraper(job_record.external_job_id)
+                        scraper = IndeedApifyJobScraper(job_record.external_job_id)
                 elif job_record.platform == Platform.VEGANJOBS:
                     scraper = VeganJobsJobScraper(job_record.external_job_id)
                 elif job_record.platform == Platform.NHS:

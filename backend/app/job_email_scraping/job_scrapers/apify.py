@@ -8,7 +8,7 @@ from apify_client import ApifyClient
 from tqdm import tqdm
 
 from app.config import settings
-from app.eis.job_scrapers import JobResult
+from app.job_email_scraping.job_scrapers import JobResult
 
 
 class ApifyJobScraper(object):

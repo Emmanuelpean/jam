@@ -3,7 +3,7 @@
 import datetime
 import os
 
-from app.eis.job_scrapers import JobResult, JobInfo, Salary
+from app.job_email_scraping.job_scrapers import JobResult, JobInfo, Salary
 from tests.utils.test_data import USER_DATA
 
 

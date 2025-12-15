@@ -9,9 +9,9 @@ from app.models import UserQualification
 
 db = next(get_db())
 db.query(model_registry.ScrapedJob).delete()
-db.query(model_registry.JobAlertEmail).delete()
-db.query(model_registry.EisServiceLog).delete()
-db.query(model_registry.EisServiceError).delete()
+db.query(model_registry.JobEmail).delete()
+db.query(model_registry.JobEmailScrapingServiceLog).delete()
+db.query(model_registry.JobEmailScrapingServiceError).delete()
 db.query(model_registry.JobRating).delete()
 db.query(model_registry.JobRatingServiceLog).delete()
 db.commit()

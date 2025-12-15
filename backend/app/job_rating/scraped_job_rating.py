@@ -10,7 +10,7 @@ from app.job_rating import models
 from app import models as app_models
 from app import utils
 from app.database import get_db
-from app.eis import models as eis_models
+from app.job_email_scraping import models as eis_models
 from app.job_rating.ai_rating import ai_score_job, __version__
 from app.service_runner import ServiceRunner
 

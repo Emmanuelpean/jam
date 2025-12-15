@@ -5,15 +5,13 @@ from sqlalchemy import (
     Integer,
     String,
     ForeignKey,
-    Float,
     Boolean,
-    TIMESTAMP,
 )
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.orm import relationship
 
 from app.database import Base
-from app.models import Owned, CommonBase
+from app.models import Owned, CommonBase, ServiceLog
 
 
 class JobRating(Owned, Base):
@@ -60,28 +58,15 @@ class JobRating(Owned, Base):
     user_qualification = relationship("UserQualification", back_populates="job_ratings")
 
 
-class JobRatingServiceLog(CommonBase, Base):
+class JobRatingServiceLog(ServiceLog, CommonBase, Base):
     """Represents service logs for job ratings.
 
     Attributes:
     -----------
-    - `request_payload` (str): The request payload sent to the rating service.
-    - `response_payload` (str): The response payload received from the rating service.
-    - `status_code` (int): The HTTP status code of the response.
-    - `error_message` (str, optional): Any error message returned by the service.
-
-    Foreign keys:
-    -------------
-    - `job_rating_id` (int): Identifier for the job rating associated with the log.
-
-    Relationships:
-    --------------
-    - `job_rating` (JobRating): JobRating object related to the service log."""
-
-    run_duration = Column(Float, nullable=True)
-    run_datetime = Column(TIMESTAMP(timezone=True), nullable=False)
-    is_success = Column(Boolean, nullable=True)
-    error_message = Column(String, nullable=True)
+    - `rated_job_found_ids` (List[int]): List of job IDs that were found during the rating process.
+    - `rated_job_succeeded_ids` (List[int]): List of job IDs that were successfully rated.
+    - `rated_job_failed_ids` (List[int]): List of job IDs that failed to be rated.
+    - `rated_job_skipped_ids` (List[int]): List of job IDs that were skipped during the rating process."""
 
     rated_job_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     rated_job_succeeded_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)

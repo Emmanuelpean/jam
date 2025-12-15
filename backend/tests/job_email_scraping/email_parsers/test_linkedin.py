@@ -2,8 +2,8 @@
 
 import pytest
 
-from app.eis.email_parsers.linkedin import parse_linkedin_job_email, extract_alert_name
-from tests.eis.resources import (
+from app.job_email_scraping.email_parsers.linkedin import parse_linkedin_job_email, extract_alert_name
+from tests.job_email_scraping.resources import (
     LINKEDIN_EMAIL_3,
     LINKEDIN_EMAIL_4,
     LINKEDIN_EMAIL_5,

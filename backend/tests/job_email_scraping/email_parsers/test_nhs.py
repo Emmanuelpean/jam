@@ -2,8 +2,8 @@
 
 import pytest
 
-from app.eis.email_parsers.nhs import parse_nhs_job_email, extract_alert_name
-from tests.eis.resources import NHS_EMAIL_3, NHS_EMAIL_4
+from app.job_email_scraping.email_parsers.nhs import parse_nhs_job_email, extract_alert_name
+from tests.job_email_scraping.resources import NHS_EMAIL_3, NHS_EMAIL_4
 
 
 class TestParseIndeedJobEmail:

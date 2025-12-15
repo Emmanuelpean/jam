@@ -14,12 +14,12 @@ from starlette.requests import Request
 from app import model_registry as models
 from app import service_runner
 from app.database import get_db
-from app.eis import schemas
-from app.eis.email_scraper import scraper_service, SERVICE_NAME
-from app.eis.job_scrapers.indeed import IndeedBrightdataJobScraper
-from app.eis.job_scrapers.linkedin import LinkedinBrightdataJobScraper
-from app.eis.job_scrapers.nhs import NhsJobScraper
-from app.eis.job_scrapers.veganjobs import VeganJobsJobScraper
+from app.job_email_scraping import schemas
+from app.job_email_scraping.email_scraper import scraper_service, SERVICE_NAME
+from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScraper
+from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
+from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
+from app.job_email_scraping.job_scrapers.veganjobs import VeganJobsJobScraper
 from app.oauth2 import get_current_user
 from app.routers import (
     generate_data_table_crud_router,
@@ -32,8 +32,8 @@ from app.routers import (
 
 # GET endpoint for admin user to get all job alert emails
 job_alert_email_router = generate_data_table_crud_router(
-    table_model=models.JobAlertEmail,
-    out_schema=schemas.JobAlertEmailOut,
+    table_model=models.JobEmail,
+    out_schema=schemas.JobEmailOut,
     endpoint="job_alert_emails",
     not_found_msg="Job alert email not found",
     allowed_actions=["get_all"],
@@ -189,7 +189,7 @@ eis_service_log_router = APIRouter(prefix="/eis_service_logs", tags=["eis_servic
 
 
 # GET endpoint for admins to get the service logs
-@eis_service_log_router.get("/", response_model=list[schemas.EisServiceLogOut])
+@eis_service_log_router.get("/", response_model=list[schemas.JobEmailScrapingServiceLogOut])
 def get_service_logs_by_date_range(
     start_date: datetime | None = Query(None, description="Start date for filtering (ISO format)"),
     end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
@@ -214,12 +214,12 @@ def get_service_logs_by_date_range(
         limit,
         current_user,
         db,
-        models.EisServiceLog,
+        models.JobEmailScrapingServiceLog,
     )
 
 
 # GET endpoint for admin user to get the latest service log
-@eis_service_log_router.get("/latest", response_model=schemas.EisServiceLogOut)
+@eis_service_log_router.get("/latest", response_model=schemas.JobEmailScrapingServiceLogOut)
 def get_latest(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -229,7 +229,7 @@ def get_latest(
     :param db: Database session
     :return: Latest service log entry"""
 
-    return service_runner.get_latest(current_user, db, models.EisServiceLog)
+    return service_runner.get_latest(current_user, db, models.JobEmailScrapingServiceLog)
 
 
 # ------------------------------------------------------ SCRAPING ------------------------------------------------------
@@ -312,7 +312,7 @@ email_scraper_service_router = APIRouter(prefix="/email_scraper_service", tags=[
 
 @email_scraper_service_router.post("/start")
 def start_scraper(
-    request: schemas.StartRequest,
+    request: schemas.JobEmailScrapingStartRequest,
     current_user: models.User = Depends(get_current_user),
 ) -> dict:
     """Start the service runner with the specified period.
