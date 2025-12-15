@@ -131,11 +131,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	}, [searchTerm]);
 
 	// Reset page when debounced search changes
-	useEffect((): void => {
-		if (isServerPagination) {
-			setCurrentPage(0);
-		}
-	}, [debouncedSearchTerm, isServerPagination]);
+	useEffect(() => {
+		setCurrentPage(0);
+	}, [debouncedSearchTerm, sortConfig, pageSize]);
 
 	const fetchData = async (): Promise<void> => {
 		setIsLoading(true);
@@ -165,12 +163,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			fetchData().then((_): null => null);
 		}
 	}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination, debouncedSearchTerm]);
-
-	useEffect(() => {
-		if (!isServerPagination) {
-			setCurrentPage(0);
-		}
-	}, [searchTerm, isServerPagination, sortConfig]);
 
 	const getData = (): JamData[] => {
 		if (providedData !== undefined) {
@@ -364,8 +356,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			currentPageData = sortedData.slice(startIndex, endIndex);
 		}
 	}
-
-	useEffect(() => setCurrentPage(0), [searchTerm]);
 
 	const handleSnoozeItem = (weeks: number) => {
 		return async (item: EnrichedJobData): Promise<void> => {
@@ -694,7 +684,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 									value={pageSize}
 									onChange={(e): void => {
 										setPageSize(Number(e.target.value));
-										setCurrentPage(0); // Reset to first page
 									}}
 								>
 									{[20, 30, 40, 50, 100].map(

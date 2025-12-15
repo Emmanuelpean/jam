@@ -892,6 +892,7 @@ class TestLocationsPage(TablePage):
     test_data = {"city": "Oxford", "postcode": "OX1", "country": "United Kingdom"}
     required_fields = []
     columns = ["city", "postcode", "country"]
+    duplicate_fields = ["city", "postcode", "country"]
     model = models.Location
 
     def _test_view_modal(self, entry=None) -> None:
