@@ -9,6 +9,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
+from selenium.webdriver.support.wait import WebDriverWait
 
 from conftest import contiguous_subdicts, models, BaseTest
 from react_select import ReactSelect
@@ -560,7 +561,7 @@ class TablePage(BaseTest):
         """Helper method to test the view modal for a location entry"""
 
         modal = self.wait_for_view_modal("location")
-        self.wait.until(lambda d: "Finding location on map..." not in modal.text)
+        WebDriverWait(self.driver, 30).until(lambda d: "Finding location on map..." not in modal.text)
 
         # Verify modal contains the entry information
         expected = (
