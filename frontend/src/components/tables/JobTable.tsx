@@ -1,17 +1,17 @@
-import React from "react";
-import { DataTableProps, DataTable } from "./DataTable";
-import { tableColumns } from "../rendering/view/TableColumns";
+import React, { JSX } from "react";
+import { DataTable, DataTableProps } from "./DataTable";
+import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
-const JobsTable: React.FC<DataTableProps> = ({ data = [], columns = [] }) => {
-	const defaultColumns =
+const JobsTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
+	const defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
 			: [
-					tableColumns.title(),
-					tableColumns.companyBadge(),
-					tableColumns.applicationStatus(),
-					tableColumns.createdAt(),
+					tableColumns.titleColumn(),
+					tableColumns.companyBadgeColumn(),
+					tableColumns.applicationStatusColumn(),
+					tableColumns.createdAtColumn(),
 				];
 
 	return (
@@ -21,7 +21,6 @@ const JobsTable: React.FC<DataTableProps> = ({ data = [], columns = [] }) => {
 			columns={defaultColumns}
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			Modal={JobModal}
-			endpoint="jobs"
 			nameKey="title"
 			itemType="Job"
 			modalSize="xl"

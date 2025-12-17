@@ -3,29 +3,14 @@
 import copy
 import random
 
-import app.eis.models as eis_models
+import app.job_email_scraping.models as eis_models
+import app.job_rating.models as job_rating_models
 from app import models, utils
-from tests.utils.table_data import (
-    USER_DATA,
-    SETTINGS_DATA,
-    COMPANY_DATA,
-    LOCATION_DATA,
-    AGGREGATOR_DATA,
-    KEYWORD_DATA,
-    PERSON_DATA,
-    JOB_DATA,
-    add_mappings,
-    JOB_KEYWORD_MAPPINGS,
-    JOB_CONTACT_MAPPINGS,
-    FILE_DATA,
-    INTERVIEW_DATA,
-    INTERVIEW_INTERVIEWER_MAPPINGS,
-    JOB_ALERT_EMAIL_DATA,
-    JOB_SCRAPED_DATA,
-    EMAIL_SCRAPEDJOB_MAPPINGS,
-    SERVICE_LOG_DATA,
-    JOB_APPLICATION_UPDATE_DATA,
-)
+from tests.utils.test_data import basics
+from tests.utils.test_data import data_tables
+from tests.utils.test_data import job_rating_service
+from tests.utils.test_data import job_scraping_service
+from tests.utils.test_data import utils as test_data_utils
 
 
 def create_settings(db) -> list[models.Setting]:
@@ -33,7 +18,7 @@ def create_settings(db) -> list[models.Setting]:
 
     print("Creating settings...")
     # noinspection PyArgumentList
-    settings = [models.Setting(**data) for data in SETTINGS_DATA]
+    settings = [models.Setting(**data) for data in basics.SETTINGS_DATA]
     db.add_all(settings)
     db.commit()
     return db.query(models.Setting).all()
@@ -46,7 +31,7 @@ def create_users(db, user_data: list[dict] = None) -> list[models.User]:
     users = []
     original_passwords = []
     if not user_data:
-        user_data = USER_DATA
+        user_data = basics.USER_DATA
 
     # Store the original password and hash it for database storage
     for user in user_data:
@@ -74,6 +59,18 @@ def delete_user(db, user_email: str) -> None:
     if user:
         db.delete(user)
         db.commit()
+
+
+def create_user_qualifications(db, users) -> list[models.UserQualification]:
+    """Create sample user qualifications"""
+
+    print("Creating user qualifications...")
+    # noinspection PyArgumentList
+    keywords = [
+        models.UserQualification(**kwargs)
+        for kwargs in override_entries_properties(basics.USER_QUALIFICATION_DATA, ("owner_id", users))
+    ]
+    return add_to_db(db, keywords)
 
 
 def override_entries_properties(data: list[dict], *args) -> list[dict]:
@@ -113,10 +110,7 @@ def create_keywords(db, users: list[models.User]) -> list[models.Keyword]:
     # noinspection PyArgumentList
     keywords = [
         models.Keyword(**keyword)
-        for keyword in override_entries_properties(
-            KEYWORD_DATA,
-            ("owner_id", users),
-        )
+        for keyword in override_entries_properties(data_tables.KEYWORD_DATA, ("owner_id", users))
     ]
     return add_to_db(db, keywords)
 
@@ -128,10 +122,7 @@ def create_aggregators(db, users: list[models.User]) -> list[models.Aggregator]:
     # noinspection PyArgumentList
     aggregators = [
         models.Aggregator(**aggregator)
-        for aggregator in override_entries_properties(
-            AGGREGATOR_DATA,
-            ("owner_id", users),
-        )
+        for aggregator in override_entries_properties(data_tables.AGGREGATOR_DATA, ("owner_id", users))
     ]
     return add_to_db(db, aggregators)
 
@@ -143,10 +134,7 @@ def create_companies(db, users: list[models.User]) -> list[models.Company]:
     # noinspection PyArgumentList
     companies = [
         models.Company(**company)
-        for company in override_entries_properties(
-            COMPANY_DATA,
-            ("owner_id", users),
-        )
+        for company in override_entries_properties(data_tables.COMPANY_DATA, ("owner_id", users))
     ]
     return add_to_db(db, companies)
 
@@ -158,10 +146,7 @@ def create_locations(db, users: list[models.User]) -> list[models.Location]:
     # noinspection PyArgumentList
     locations = [
         models.Location(**location)
-        for location in override_entries_properties(
-            LOCATION_DATA,
-            ("owner_id", users),
-        )
+        for location in override_entries_properties(data_tables.LOCATION_DATA, ("owner_id", users))
     ]
     return add_to_db(db, locations)
 
@@ -176,7 +161,7 @@ def create_people(
 
     print("Creating people...")
     if not data:
-        data = PERSON_DATA
+        data = data_tables.PERSON_DATA
     # noinspection PyArgumentList
     persons = [
         models.Person(**person)
@@ -205,9 +190,8 @@ def create_jobs(
     """Create sample jobs"""
 
     print("Creating jobs...")
-
     if job_data is None:
-        job_data = JOB_DATA
+        job_data = data_tables.JOB_DATA
     # noinspection PyArgumentList
     jobs = [
         models.Job(**job)
@@ -225,8 +209,8 @@ def create_jobs(
 
     # Add keywords to jobs
     if job_keyword_mappings is None:
-        job_keyword_mappings = JOB_KEYWORD_MAPPINGS
-    add_mappings(
+        job_keyword_mappings = data_tables.JOB_KEYWORD_MAPPINGS
+    test_data_utils.add_mappings(
         primary_data=jobs,
         secondary_data=keywords,
         mapping_data=job_keyword_mappings,
@@ -237,8 +221,8 @@ def create_jobs(
 
     # Add contacts to jobs
     if job_contact_mappings is None:
-        job_contact_mappings = JOB_CONTACT_MAPPINGS
-    add_mappings(
+        job_contact_mappings = data_tables.JOB_CONTACT_MAPPINGS
+    test_data_utils.add_mappings(
         primary_data=jobs,
         secondary_data=persons,
         mapping_data=job_contact_mappings,
@@ -255,7 +239,7 @@ def create_files(db, users: list[models.User]) -> list[models.File]:
 
     print("Creating files...")
     # noinspection PyArgumentList
-    files = [models.File(**file) for file in override_entries_properties(FILE_DATA, ("owner_id", users))]
+    files = [models.File(**file) for file in override_entries_properties(data_tables.FILE_DATA, ("owner_id", users))]
     return add_to_db(db, files)
 
 
@@ -272,7 +256,7 @@ def create_interviews(
 
     print("Creating interviews...")
     if interview_data is None:
-        interview_data = INTERVIEW_DATA
+        interview_data = data_tables.INTERVIEW_DATA
     # noinspection PyArgumentList
     interviews = [
         models.Interview(**interview)
@@ -286,8 +270,8 @@ def create_interviews(
 
     # Add interviewers to interviews
     if interview_interviewer_mappings is None:
-        interview_interviewer_mappings = INTERVIEW_INTERVIEWER_MAPPINGS
-    add_mappings(
+        interview_interviewer_mappings = data_tables.INTERVIEW_INTERVIEWER_MAPPINGS
+    test_data_utils.add_mappings(
         primary_data=interviews,
         secondary_data=persons,
         mapping_data=interview_interviewer_mappings,
@@ -309,7 +293,7 @@ def create_job_application_updates(
 
     print("Creating job application updates...")
     if update_data is None:
-        update_data = JOB_APPLICATION_UPDATE_DATA
+        update_data = data_tables.JOB_APPLICATION_UPDATE_DATA
     # noinspection PyArgumentList
     updates = [
         models.JobApplicationUpdate(**update)
@@ -323,17 +307,20 @@ def create_job_application_updates(
     return add_to_db(db, updates)
 
 
+# ------------------------------------------------ JOB SCRAPING SERVICE ------------------------------------------------
+
+
 def create_job_alert_emails(
-    db, users: list[models.User], service_logs: list[eis_models.EisServiceLog]
-) -> list[eis_models.JobAlertEmail]:
+    db, users: list[models.User], service_logs: list[eis_models.JobEmailScrapingServiceLog]
+) -> list[eis_models.JobEmail]:
     """Create sample job alert emails"""
 
     print("Creating job alert emails...")
     # noinspection PyArgumentList
     emails = [
-        eis_models.JobAlertEmail(**email)
+        eis_models.JobEmail(**email)
         for email in override_entries_properties(
-            JOB_ALERT_EMAIL_DATA,
+            job_scraping_service.JOB_ALERT_EMAIL_DATA,
             ("owner_id", users),
             ("service_log_id", service_logs),
         )
@@ -352,16 +339,15 @@ def create_scraped_jobs(db, emails, users: list[models.User]) -> list[eis_models
     scraped_jobs = [
         eis_models.ScrapedJob(**job_data)
         for job_data in override_entries_properties(
-            JOB_SCRAPED_DATA,
-            ("owner_id", users),
+            job_scraping_service.JOB_SCRAPED_DATA, ("owner_id", users), ("service_log_id", emails)
         )
     ]
 
     # Add email mappings to scraped jobs
-    add_mappings(
+    test_data_utils.add_mappings(
         primary_data=emails,
         secondary_data=scraped_jobs,
-        mapping_data=EMAIL_SCRAPEDJOB_MAPPINGS,
+        mapping_data=job_scraping_service.EMAIL_SCRAPEDJOB_MAPPINGS,
         primary_key="email_id",
         secondary_key="scraped_job_ids",
         relationship_attr="jobs",
@@ -370,11 +356,74 @@ def create_scraped_jobs(db, emails, users: list[models.User]) -> list[eis_models
     return add_to_db(db, scraped_jobs)
 
 
-def create_service_logs(db) -> list[eis_models.EisServiceLog]:
-    """Create sample service logs"""
+def create_job_scraping_service_logs(db) -> list[eis_models.JobEmailScrapingServiceLog]:
+    """Create sample scraped job service logs"""
 
-    print("Creating service logs...")
+    print("Creating Job Scraping service logs...")
     # noinspection PyArgumentList
-    logs = [eis_models.EisServiceLog(**log) for log in SERVICE_LOG_DATA]
+    logs = [eis_models.JobEmailScrapingServiceLog(**log) for log in job_scraping_service.JOB_SCRAPING_SERVICE_LOG_DATA]
 
     return add_to_db(db, logs)
+
+
+def create_job_scraping_platform_stats(db, service_logs) -> list[eis_models.JobEmailScrapingPlatformStat]:
+    """Create sample platform stats"""
+
+    print("Creating platform stats...")
+    # noinspection PyArgumentList
+    stats = [
+        eis_models.JobEmailScrapingPlatformStat(**data)
+        for data in override_entries_properties(
+            job_scraping_service.PLATFORM_STAT_DATA,
+            ("service_log_id", service_logs),
+        )
+    ]
+
+    return add_to_db(db, stats)
+
+
+def create_job_scraping_service_errors(db, service_logs) -> list[eis_models.JobEmailScrapingServiceError]:
+    """Create sample EIS service errors"""
+
+    print("Creating EIS service errors...")
+    # noinspection PyArgumentList
+    errors = [
+        eis_models.JobEmailScrapingServiceError(**data)
+        for data in override_entries_properties(
+            job_scraping_service.SERVICE_ERROR_DATA,
+            ("service_log_id", service_logs),
+        )
+    ]
+
+    return add_to_db(db, errors)
+
+
+# ----------------------------------------------- JOB RATING SERVICE LOGS ----------------------------------------------
+
+
+def create_job_rating_service_logs(db) -> list[job_rating_models.JobRatingServiceLog]:
+    """Create sample scraped job service logs"""
+
+    print("Creating Job Rating service logs...")
+    # noinspection PyArgumentList
+    logs = [job_rating_models.JobRatingServiceLog(**log) for log in job_rating_service.JOB_RATING_SERVICE_LOG_DATA]
+
+    return add_to_db(db, logs)
+
+
+def create_job_ratings(db, users, use_qualifications, scraped_jobs, service_logs) -> list[job_rating_models.JobRating]:
+    """Create sample job ratings"""
+
+    print("Creating job ratings...")
+    # noinspection PyArgumentList
+    keywords = [
+        job_rating_models.JobRating(**kwargs)
+        for kwargs in override_entries_properties(
+            job_rating_service.JOB_RATING_DATA,
+            ("owner_id", users),
+            ("job_id", scraped_jobs),
+            ("user_qualification_id", use_qualifications),
+            ("service_log_id", service_logs),
+        )
+    ]
+    return add_to_db(db, keywords)

@@ -35,7 +35,13 @@ interface LocalInputProps extends WidgetProps {
 	inputType: LocalInputType;
 }
 
-export const renderLocalInput = ({ field, value, handleChange, error, inputType }: LocalInputProps): JSX.Element => {
+export const LocalDatetimeInput = ({
+	field,
+	value,
+	handleChange,
+	error,
+	inputType = "datetime-local",
+}: LocalInputProps): JSX.Element => {
 	const setCurrentValue = (e: React.MouseEvent<HTMLElement>): void => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -63,6 +69,7 @@ export const renderLocalInput = ({ field, value, handleChange, error, inputType 
 				onChange={handleChange}
 				isInvalid={!!error}
 				className="datetime-input-with-icon"
+				disabled={field.isDisabled}
 			/>
 			<i
 				className={`bi bi-clock datetime-embedded-icon`}
@@ -73,8 +80,3 @@ export const renderLocalInput = ({ field, value, handleChange, error, inputType 
 		</div>
 	);
 };
-
-export const renderDateTimeLocal = (props: WidgetProps): JSX.Element =>
-	renderLocalInput({ ...props, inputType: "datetime-local" });
-
-export const renderDateLocal = (props: WidgetProps): JSX.Element => renderLocalInput({ ...props, inputType: "date" });

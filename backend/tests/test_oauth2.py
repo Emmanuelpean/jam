@@ -16,7 +16,7 @@ from app.config import settings
 class TestCreateAccessToken:
     """Test suite for create_access_token function."""
 
-    def test_create_access_token_success(self):
+    def test_create_access_token_success(self) -> None:
         """Test successful creation of JWT access token."""
 
         user_data = {"user_id": 1}
@@ -34,7 +34,7 @@ class TestCreateAccessToken:
         assert payload["token_version"] == 5
         assert "exp" in payload
 
-    def test_create_access_token_default_token_version(self):
+    def test_create_access_token_default_token_version(self) -> None:
         """Test token creation with default token version (0)."""
 
         user_data = {"user_id": 456}
@@ -44,7 +44,7 @@ class TestCreateAccessToken:
 
         assert payload["token_version"] == 0
 
-    def test_create_access_token_expiration(self):
+    def test_create_access_token_expiration(self) -> None:
         """Test that token has correct expiration time."""
 
         user_data = {"user_id": 1}
@@ -61,7 +61,7 @@ class TestCreateAccessToken:
         # Allow 5 second tolerance for test execution time
         assert abs((exp_time - expected_exp).total_seconds()) < 5
 
-    def test_create_access_token_preserves_original_data(self):
+    def test_create_access_token_preserves_original_data(self) -> None:
         """Test that original data dictionary is not modified."""
 
         original_data = {"user_id": 1, "email": "test@test.com"}
@@ -78,7 +78,7 @@ class TestCreateAccessToken:
 class TestVerifyAccessToken:
     """Test suite for verify_access_token function."""
 
-    def test_verify_access_token_success(self):
+    def test_verify_access_token_success(self) -> None:
         """Test successful token verification."""
 
         user_data = {"user_id": 1}
@@ -91,7 +91,7 @@ class TestVerifyAccessToken:
         assert token_data.id == "1"
         assert token_data.token_version == 2
 
-    def test_verify_access_token_invalid_token(self):
+    def test_verify_access_token_invalid_token(self) -> None:
         """Test verification fails with invalid token."""
 
         invalid_token = "invalid.token.here"
@@ -103,7 +103,7 @@ class TestVerifyAccessToken:
         assert exc_info.value.status_code == 401
         assert exc_info.value.detail == "Invalid token"
 
-    def test_verify_access_token_missing_user_id(self):
+    def test_verify_access_token_missing_user_id(self) -> None:
         """Test verification fails when user_id is missing from payload."""
 
         # Create token without user_id
@@ -117,7 +117,7 @@ class TestVerifyAccessToken:
         assert exc_info.value.status_code == 401
         assert exc_info.value.detail == "No user ID"
 
-    def test_verify_access_token_expired(self):
+    def test_verify_access_token_expired(self) -> None:
         """Test verification fails with expired token."""
 
         # Create expired token
@@ -133,7 +133,7 @@ class TestVerifyAccessToken:
 
         assert exc_info.value.status_code == 401
 
-    def test_verify_access_token_wrong_secret(self):
+    def test_verify_access_token_wrong_secret(self) -> None:
         """Test verification fails with token signed with different secret."""
 
         user_data = {"user_id": 1}
@@ -145,7 +145,7 @@ class TestVerifyAccessToken:
 
         assert exc_info.value.status_code == 401
 
-    def test_verify_access_token_default_token_version(self):
+    def test_verify_access_token_default_token_version(self) -> None:
         """Test token verification handles missing token_version (defaults to 0)."""
 
         # Create token without token_version
@@ -158,7 +158,7 @@ class TestVerifyAccessToken:
 
         assert token_data.token_version == 0
 
-    def test_verify_access_token_malformed(self):
+    def test_verify_access_token_malformed(self) -> None:
         """Test verification fails with malformed token."""
 
         malformed_tokens = [
@@ -179,21 +179,23 @@ class TestVerifyAccessToken:
 class TestGetCurrentUser:
     """Test suite for get_current_user function."""
 
-    def test_get_current_user_success(self, test_user, session):
+    def test_get_current_user_success(self, test_regular_user, session) -> None:
         """Test successful retrieval of current user."""
 
         # Create valid token for test user
-        token = oauth2.create_access_token({"user_id": test_user.id}, token_version=test_user.token_version)
+        token = oauth2.create_access_token(
+            {"user_id": test_regular_user.id}, token_version=test_regular_user.token_version
+        )
 
         # Retrieve current user from the token
         user = oauth2.get_current_user(token=token, db=session)
 
         # Verify returned user matches test user
         assert user is not None
-        assert user.id == test_user.id
-        assert user.email == test_user.email
+        assert user.id == test_regular_user.id
+        assert user.email == test_regular_user.email
 
-    def test_get_current_user_invalid_token(self, session):
+    def test_get_current_user_invalid_token(self, session) -> None:
         """Test get_current_user raises exception with invalid token."""
 
         invalid_token = "invalid.token.here"
@@ -204,7 +206,7 @@ class TestGetCurrentUser:
         assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
         assert "could not validate credentials" in exc_info.value.detail.lower()
 
-    def test_get_current_user_nonexistent_user(self, session):
+    def test_get_current_user_nonexistent_user(self, session) -> None:
         """Test get_current_user raises exception when user doesn't exist."""
 
         # Create token for non-existent user
@@ -216,14 +218,14 @@ class TestGetCurrentUser:
         assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
         assert "could not validate credentials" in exc_info.value.detail.lower()
 
-    def test_get_current_user_token_version_mismatch(self, test_user, session):
+    def test_get_current_user_token_version_mismatch(self, test_regular_user, session) -> None:
         """Test get_current_user rejects token with outdated version."""
 
         token_version = 1
-        assert test_user.token_version != token_version
+        assert test_regular_user.token_version != token_version
 
         # Create token with new token version
-        token = oauth2.create_access_token({"user_id": test_user.id}, token_version=token_version)
+        token = oauth2.create_access_token({"user_id": test_regular_user.id}, token_version=token_version)
 
         # Try to use old token
         with pytest.raises(HTTPException) as exc_info:
@@ -233,27 +235,33 @@ class TestGetCurrentUser:
         assert "revoked" in exc_info.value.detail.lower()
         assert "log in again" in exc_info.value.detail.lower()
 
-    def test_get_current_user_token_version_matches(self, test_user, session):
+    def test_get_current_user_token_version_matches(self, test_regular_user, session) -> None:
         """Test get_current_user succeeds when token version matches."""
 
-        test_user.token_version = 5
+        test_regular_user.token_version = 5
         session.commit()
 
         # Create token with matching version
-        token = oauth2.create_access_token({"user_id": test_user.id}, token_version=test_user.token_version)
+        token = oauth2.create_access_token(
+            {"user_id": test_regular_user.id}, token_version=test_regular_user.token_version
+        )
 
         user = oauth2.get_current_user(token=token, db=session)
 
         assert user is not None
-        assert user.id == test_user.id
-        assert user.token_version == test_user.token_version
+        assert user.id == test_regular_user.id
+        assert user.token_version == test_regular_user.token_version
 
-    def test_get_current_user_expired_token(self, test_user, session):
+    def test_get_current_user_expired_token(self, test_regular_user, session) -> None:
         """Test get_current_user rejects expired token."""
 
         # Create expired token
         expired_time = datetime.now(timezone.utc) - timedelta(hours=1)
-        payload = {"user_id": test_user.id, "exp": expired_time, "token_version": test_user.token_version}
+        payload = {
+            "user_id": test_regular_user.id,
+            "exp": expired_time,
+            "token_version": test_regular_user.token_version,
+        }
         expired_token = jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
         with pytest.raises(HTTPException) as exc_info:
@@ -261,7 +269,7 @@ class TestGetCurrentUser:
 
         assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_get_current_user_www_authenticate_header(self, session):
+    def test_get_current_user_www_authenticate_header(self, session) -> None:
         """Test get_current_user includes WWW-Authenticate header in error."""
 
         invalid_token = "invalid.token"
@@ -272,7 +280,7 @@ class TestGetCurrentUser:
         assert "WWW-Authenticate" in exc_info.value.headers
         assert exc_info.value.headers["WWW-Authenticate"] == "Bearer"
 
-    def test_get_current_user_multiple_users_correct_one_returned(self, test_users, session):
+    def test_get_current_user_multiple_users_correct_one_returned(self, test_users, session) -> None:
         """Test get_current_user returns correct user when multiple exist."""
 
         # Create tokens for different users
@@ -292,34 +300,34 @@ class TestGetCurrentUser:
         assert user1.email == test_users[0].email
         assert user2.email == test_users[1].email
 
-    def test_get_current_user_admin_user(self, admin_user, session):
+    def test_get_current_user_admin_user(self, test_admin_user, session) -> None:
         """Test get_current_user works with admin users."""
 
-        token = oauth2.create_access_token({"user_id": admin_user.id}, token_version=admin_user.token_version)
+        token = oauth2.create_access_token({"user_id": test_admin_user.id}, token_version=test_admin_user.token_version)
 
         user = oauth2.get_current_user(token=token, db=session)
 
         assert user is not None
-        assert user.id == admin_user.id
+        assert user.id == test_admin_user.id
         assert user.is_admin is True
 
 
 class TestTokenVersioning:
     """Test suite for token versioning security feature."""
 
-    def test_token_version_incremented_invalidates_old_tokens(self, test_user, session):
+    def test_token_version_incremented_invalidates_old_tokens(self, test_regular_user, session) -> None:
         """Test that incrementing token version invalidates old tokens."""
 
         # Create token with current version
-        initial_version = test_user.token_version
-        token = oauth2.create_access_token({"user_id": test_user.id}, token_version=initial_version)
+        initial_version = test_regular_user.token_version
+        token = oauth2.create_access_token({"user_id": test_regular_user.id}, token_version=initial_version)
 
         # Verify old token works
         user = oauth2.get_current_user(token=token, db=session)
         assert user is not None
 
         # Simulate password change - increment token version
-        test_user.token_version += 1
+        test_regular_user.token_version += 1
         session.commit()
 
         # Old token should now be invalid
@@ -329,36 +337,38 @@ class TestTokenVersioning:
         assert exc_info.value.status_code == 401
         assert "revoked" in exc_info.value.detail.lower()
 
-    def test_new_token_works_after_version_increment(self, test_user, session):
+    def test_new_token_works_after_version_increment(self, test_regular_user, session) -> None:
         """Test that new token with updated version works after increment."""
 
         # Increment token version
-        test_user.token_version = 10
+        test_regular_user.token_version = 10
         session.commit()
 
         # Create new token with new version
-        new_token = oauth2.create_access_token({"user_id": test_user.id}, token_version=test_user.token_version)
+        new_token = oauth2.create_access_token(
+            {"user_id": test_regular_user.id}, token_version=test_regular_user.token_version
+        )
 
         # New token should work
         user = oauth2.get_current_user(token=new_token, db=session)
         assert user is not None
-        assert user.token_version == test_user.token_version
+        assert user.token_version == test_regular_user.token_version
 
-    def test_multiple_version_increments(self, test_user, session):
+    def test_multiple_version_increments(self, test_regular_user, session) -> None:
         """Test multiple token version increments invalidate all old tokens."""
 
         # Create tokens at different versions
         tokens = []
         for version in range(5):
-            test_user.token_version = version
+            test_regular_user.token_version = version
             session.commit()
-            token = oauth2.create_access_token({"user_id": test_user.id}, token_version=version)
+            token = oauth2.create_access_token({"user_id": test_regular_user.id}, token_version=version)
             tokens.append(token)
 
         # Set final version
-        test_user.token_version = 5
+        test_regular_user.token_version = 5
         session.commit()
-        session.refresh(test_user)
+        session.refresh(test_regular_user)
 
         # All old tokens should be invalid
         for old_token in tokens:
@@ -370,36 +380,40 @@ class TestTokenVersioning:
 class TestIntegrationScenarios:
     """Integration tests for complete authentication workflows."""
 
-    def test_complete_auth_flow(self, test_user, session):
+    def test_complete_auth_flow(self, test_regular_user, session) -> None:
         """Test complete authentication flow from token creation to user retrieval."""
 
         # 1. Create access token
-        token = oauth2.create_access_token({"user_id": test_user.id}, token_version=test_user.token_version)
+        token = oauth2.create_access_token(
+            {"user_id": test_regular_user.id}, token_version=test_regular_user.token_version
+        )
 
         # 2. Verify token is valid
         credentials_exception = HTTPException(status_code=401, detail="Invalid")
         token_data = oauth2.verify_access_token(token, credentials_exception)
-        assert token_data.id == str(test_user.id)
+        assert token_data.id == str(test_regular_user.id)
 
         # 3. Get current user
         user = oauth2.get_current_user(token=token, db=session)
-        assert user.id == test_user.id
-        assert user.email == test_user.email
+        assert user.id == test_regular_user.id
+        assert user.email == test_regular_user.email
 
-    def test_password_change_flow(self, test_user, session):
+    def test_password_change_flow(self, test_regular_user, session) -> None:
         """Test token invalidation after password change."""
 
         # 1. User logs in (token created)
-        old_token = oauth2.create_access_token({"user_id": test_user.id}, token_version=test_user.token_version)
+        old_token = oauth2.create_access_token(
+            {"user_id": test_regular_user.id}, token_version=test_regular_user.token_version
+        )
 
         # 2. Verify token works
         user = oauth2.get_current_user(token=old_token, db=session)
         assert user is not None
 
         # 3. User changes password (version incremented)
-        test_user.token_version += 1
+        test_regular_user.token_version += 1
         session.commit()
-        session.refresh(test_user)
+        session.refresh(test_regular_user)
 
         # 4. Old token no longer works
         with pytest.raises(HTTPException) as exc_info:
@@ -407,7 +421,9 @@ class TestIntegrationScenarios:
         assert "revoked" in exc_info.value.detail.lower()
 
         # 5. User logs in again with new token
-        new_token = oauth2.create_access_token({"user_id": test_user.id}, token_version=test_user.token_version)
+        new_token = oauth2.create_access_token(
+            {"user_id": test_regular_user.id}, token_version=test_regular_user.token_version
+        )
 
         # 6. New token works
         user = oauth2.get_current_user(token=new_token, db=session)

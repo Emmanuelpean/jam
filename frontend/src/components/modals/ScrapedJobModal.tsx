@@ -1,146 +1,142 @@
-// noinspection DuplicatedCode
-
-import React from "react";
-import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
+import React, { forwardRef, JSX, useRef } from "react";
+import DataModal, {
+	DataModalHandle,
+	DataModalProps,
+	Fields,
+	ValidationErrors,
+	WarningConfig,
+} from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { JobData } from "../../services/Schemas";
-import { jobsApi, scrapedJobApi } from "../../services/Api";
-import { useAuth } from "../../contexts/AuthContext";
-import { useFormOptions } from "../rendering/form/FormOptions";
-import stringSimilarity from "string-similarity";
-import { SelectOption } from "../../utils/Utils";
+import { EnrichedJobData, JobData, ScrapedJobData } from "../../services/Schemas";
+import { findClosestOption, findExactOption, useFormOptions } from "../rendering/form/FormOptions";
+import { modalViewFields } from "../rendering/view/ModalFields";
+import { capitalise } from "../../utils/StringUtils";
+import { CompanyModal } from "./CompanyModal";
+import { LocationModal } from "./LocationModal";
+import { KeywordModal } from "./KeywordModal";
+import { PersonModal } from "./PersonModal";
+import { AggregatorModal } from "./AggregatorModal";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-interface JobAndApplicationProps extends DataModalProps {
-	defaultActiveTab?: "job" | "application";
-}
+export const ScrapedJobModal = forwardRef<DataModalHandle, DataModalProps>(
+	({ size = "xl", onSuccess }: DataModalProps, ref): JSX.Element => {
+		const dataContext: DataContextValue = useDataContext();
+		const companyModalRef = useRef<DataModalHandle>(null);
+		const locationModalRef = useRef<DataModalHandle>(null);
+		const keywordModalRef = useRef<DataModalHandle>(null);
+		const personModalRef = useRef<DataModalHandle>(null);
+		const aggregatorModalRef = useRef<DataModalHandle>(null);
+		const { companies, locations, keywords, persons, aggregators } = useFormOptions();
 
-export const ScrapedJobModal: React.FC<JobAndApplicationProps> = ({ show, onHide, data, submode, size = "xl" }) => {
-	const { token } = useAuth();
-	const {
-		companies,
-		locations,
-		keywords,
-		persons,
-		openCompanyModal,
-		openLocationModal,
-		openKeywordModal,
-		openPersonModal,
-		renderCompanyModal,
-		renderLocationModal,
-		renderKeywordModal,
-		renderPersonModal,
-		renderAggregatorModal,
-	} = useFormOptions(show ? ["companies", "locations", "keywords", "persons"] : []);
-
-	function findClosest(companyOptions: SelectOption[], companyName: string) {
-		if (!companyName || companyOptions.length === 0) return null;
-		const names = companyOptions.map((c: SelectOption): string => c.label);
-		const { bestMatchIndex } = stringSimilarity.findBestMatch(companyName, names);
-		return companyOptions[bestMatchIndex]?.value;
-	}
-
-	const patchedData = React.useMemo(() => {
-		if (!data) return data;
-		return {
-			...data,
-			company_id: data.company ? findClosest(companies, data.company) : data.company_id,
-			location_id: data.location ? findClosest(locations, data.location) : data.location_id,
+		const transformInputData = (data: ScrapedJobData) => {
+			if (!data) return data;
+			return {
+				...data,
+				company_id: data.company ? findClosestOption(companies, data.company) : null,
+				location_id: data.location ? findClosestOption(locations, data.location) : null,
+				aggregator_id: data.platform ? findExactOption(aggregators, data.platform) : null,
+			};
 		};
-	}, [data, companies, locations]);
 
-	const jobFormFields = [
-		formFields.jobTitle({ placeholder: "Python Software Engineer" }),
-		formFields.description({
-			placeholder: "",
-		}),
-		[
-			formFields.scrapedCompany(companies, openCompanyModal),
-			formFields.url({ label: "Job URL", placeholder: "https://linkedin.com/jobs/453635" }),
-		],
-		[formFields.scrapedLocation(locations, openLocationModal), formFields.attendanceType()],
-		[formFields.keywords(keywords, openKeywordModal), formFields.contacts(persons, openPersonModal)],
-		[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
-		[formFields.personalRating(), formFields.deadline()],
+		const jobFormFields: Fields = [
+			modalViewFields.jobRating(),
+			formFields.jobTitle({ placeholder: "Python Software Engineer" }),
+			formFields.description({
+				placeholder: "",
+			}),
+			[
+				formFields.scrapedCompany(companies, companyModalRef, (scrapedJob: ScrapedJobData) => ({
+					name: scrapedJob.company,
+				})),
+				formFields.url({
+					label: "Job URL",
+					placeholder: "https://linkedin.com/jobs/453635",
+					required: true,
+				}),
+			],
+			[
+				formFields.scrapedLocation(locations, locationModalRef, (scrapedJob: ScrapedJobData) => ({
+					postcode: scrapedJob.location_postcode,
+					city: scrapedJob.location_city,
+					country: scrapedJob.location_country,
+				})),
+				formFields.attendanceType(),
+			],
+			[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
+			[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
+			[
+				formFields.personalRating(),
+				formFields.deadline(),
+				formFields.aggregator(aggregators, aggregatorModalRef, (scrapedJob: ScrapedJobData) => ({
+					name: scrapedJob.platform ? capitalise(scrapedJob.platform) : undefined,
+				})),
+			],
+			formFields.note({
+				placeholder:
+					"This role offers a chance to apply Python expertise to build scalable solutions " +
+					"while exploring opportunities for growth in automation, data analysis, and collaborative software development.",
+			}),
+			modalViewFields.scrapedLocationMap(),
+		];
 
-		formFields.note({
-			placeholder:
-				"This role offers a chance to apply Python expertise to build scalable solutions " +
-				"while exploring opportunities for growth in automation, data analysis, and collaborative software development.",
-		}),
-	];
-
-	const transformData = (jobData: JobData) => {
-		return {
-			title: jobData.title.trim(),
-			description: jobData.description?.trim() || null,
-			note: jobData.note?.trim() || null,
-			url: jobData.url?.trim() || null,
-			salary_min: jobData.salary_min || null,
-			salary_max: jobData.salary_max || null,
-			personal_rating: jobData.personal_rating || null,
-			company_id: jobData.company_id || null,
-			location_id: jobData.location_id || null,
-			deadline: jobData.deadline ? jobData.deadline + "T23:59:59" : null,
-			keywords: jobData.keywords || [],
-			contacts: jobData.contacts || [],
-			attendance_type: jobData.attendance_type?.trim() || null,
-		};
-	};
-
-	const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
-		const errors: ValidationErrors = {};
-		if (!token) {
-			return errors;
-		}
-		if (formData.url) {
-			const queryParams = { url: formData.url?.trim() };
-			const matches = await jobsApi.getAll(token, queryParams);
-			const duplicates = matches.filter((existing: JobData) => {
-				return formData?.id !== existing.id;
-			});
-
+		const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
+			const errors: ValidationErrors = {};
+			const duplicates: EnrichedJobData[] = dataContext.jobs.filter(
+				(job: EnrichedJobData): boolean =>
+					job.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() && job.id !== formData?.id,
+			);
 			if (duplicates.length > 0) {
-				errors.url = `A Job with this URL already exists`;
+				errors.name = `A Job with this URL already exists`;
 			}
-		}
-		return errors;
-	};
+			return errors;
+		};
 
-	// const handleOnSuccess = (createdItem: any) => {
-	// 	if (!token) {
-	// 		return;
-	// 	}
-	// 	scrapedJobApi.setImported(data.id, { is_imported: true }, token);
-	// 	if (onSuccess) {
-	// 		onSuccess(createdItem);
-	// 	}
-	// };
+		const warningMessage = (data: ScrapedJobData) => {
+			const result: WarningConfig[] = [];
 
-	const fields = {
-		form: jobFormFields,
-		view: [],
-	};
+			if (data?.is_failed) {
+				result.push({
+					key: "inactive",
+					message: "This job could not be scraped properly.",
+					variant: "warning",
+				});
+			}
 
-	return (
-		<>
-			<DataModal
-				show={show}
-				onHide={onHide}
-				data={patchedData}
-				mode={submode}
-				fields={fields}
-				transformFormData={transformData}
-				itemName="Scraped Job"
-				endpoint="jobs"
-				size={size}
-				validation={customValidation}
-			/>
+			if (data?.job_rating?.is_success === false) {
+				result.push({
+					key: "no_rating",
+					message: "This job could not be rated automatically.",
+					variant: "warning",
+				});
+			}
 
-			{renderCompanyModal()}
-			{renderLocationModal()}
-			{renderKeywordModal()}
-			{renderPersonModal()}
-			{renderAggregatorModal()}
-		</>
-	);
-};
+			return result.length ? result : null;
+		};
+
+		const transformData = (_scrapedJob: ScrapedJobData) => {
+			return { is_imported: true };
+		};
+
+		return (
+			<>
+				<DataModal
+					ref={ref}
+					fields={{ form: jobFormFields, view: [] }}
+					transformFormData={transformData}
+					transformInputData={transformInputData}
+					itemName="Scraped Job"
+					endpoint="scraped_jobs"
+					size={size}
+					validation={customValidation}
+					onSuccess={onSuccess}
+					warningMessage={warningMessage}
+				/>
+				<CompanyModal ref={companyModalRef} />
+				<LocationModal ref={locationModalRef} />
+				<KeywordModal ref={keywordModalRef} />
+				<PersonModal ref={personModalRef} />
+				<AggregatorModal ref={aggregatorModalRef} />
+			</>
+		);
+	},
+);

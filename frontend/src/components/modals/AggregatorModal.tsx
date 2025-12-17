@@ -1,11 +1,11 @@
-import React from "react";
-import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
+import React, { forwardRef } from "react";
+import DataModal, { DataModalHandle, DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { modalViewFields } from "../rendering/view/ModalFields";
+import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { AggregatorData, AggregatorDataTransform } from "../../services/Schemas";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const AggregatorModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
+export const AggregatorModal = forwardRef<DataModalHandle, DataModalProps>(({ size = "lg" }: DataModalProps, ref) => {
 	const dataContext: DataContextValue = useDataContext();
 
 	const fields = {
@@ -16,7 +16,7 @@ export const AggregatorModal: React.FC<DataModalProps> = ({ show, onHide, data, 
 		view: [modalViewFields.name({ isTitle: true }), modalViewFields.url()],
 	};
 
-	const additionalFields = [
+	const additionalFields: ModalViewField[] = [
 		modalViewFields.accordionJobTableAggregator({ helpText: "List of jobs found with this job aggregator." }),
 		modalViewFields.accordionJobApplicationTable({
 			helpText: "List of job applications made using this job aggregator.",
@@ -52,17 +52,14 @@ export const AggregatorModal: React.FC<DataModalProps> = ({ show, onHide, data, 
 
 	return (
 		<DataModal
-			show={show}
-			onHide={onHide}
-			mode={submode}
+			ref={ref}
 			additionalFields={additionalFields}
 			itemName="Aggregator"
 			size={size}
-			data={data}
 			fields={fields}
 			endpoint="aggregators"
 			transformFormData={transformFormData}
 			validation={customValidation}
 		/>
 	);
-};
+});

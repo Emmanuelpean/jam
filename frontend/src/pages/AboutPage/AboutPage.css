@@ -80,3 +80,31 @@
 .link-gradient-purple:hover {
     color: #7c3aed;
 }
+
+.release-notes-content h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--text-dark);
+}
+
+.release-notes-content h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--primary-mid);
+}
+
+.release-notes-content ul {
+    list-style: disc outside none;
+    padding-left: 20px;
+    margin-bottom: 1em;
+}
+
+.release-notes-content li {
+    margin-bottom: 0.5em;
+    line-height: 1.6;
+}
+
+.release-notes-content p {
+    margin-bottom: 1em;
+    line-height: 1.6;
+}

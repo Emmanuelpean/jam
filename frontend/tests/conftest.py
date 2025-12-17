@@ -1,6 +1,5 @@
 """Fixtures and helper functions for integration tests"""
 
-import itertools
 import json
 import os
 import platform
@@ -40,6 +39,9 @@ from tests.conftest import (
     tokens,
     test_settings,
     DATABASE_NAME,
+    test_interviews,
+    test_job_application_updates,
+    test_jobs,
 )
 from tests.conftest import *
 
@@ -408,56 +410,6 @@ def contiguous_subdicts(dictionary: dict) -> list[dict]:
     return [dict()] + results
 
 
-def contiguous_subdicts_with_required(dictionary: dict, required_keys: list) -> list[dict]:
-    """Return a list of all contiguous sub-dictionaries in the given dictionary,
-    :param dictionary: The dictionary to search.
-    :param required_keys: A list of required keys."""
-
-    keys = list(dictionary.keys())
-    n = len(keys)
-    seen = set()
-    results = []
-    for size in range(1, n + 1):
-        for start in range(n):
-            subkeys = [keys[(start + i) % n] for i in range(size)]
-            # Only filter if required_keys is not empty
-            if not required_keys or all(k in subkeys for k in required_keys):
-                subdict = {k: dictionary[k] for k in subkeys}
-                # Use sorted items as a hashable representation:
-                key_tuple = tuple(sorted(subdict.items()))
-                if key_tuple not in seen:
-                    seen.add(key_tuple)
-                    results.append(subdict)
-    return results
-
-
-def generate_entry_combinations(data_dict, required_keys: list[str], duplicate_keys: list[str]) -> list[dict]:
-    """Generate all possible combinations of entries in the given dictionary,
-    :param data_dict: The dictionary to search.
-    :param required_keys: A list of required keys.
-    :param duplicate_keys: A list of duplicate keys."""
-
-    keys = list(data_dict.keys())
-    i = 0
-    result = []
-
-    # Loop over all possible combination lengths
-    for r in range(len(required_keys), len(keys) + 1):
-        for combo in itertools.combinations(keys, r):
-            # Only keep dicts that contain all keys in A
-            if all(a in combo for a in required_keys):
-                d = {}
-                for k in combo:
-                    if k in duplicate_keys:
-                        d[k] = f"{data_dict[k]}_{i}"
-                        i += 1
-                    else:
-                        d[k] = data_dict[k]
-                if d:
-                    result.append(d)
-    return result
-
-
 def get_all_element_ids(driver) -> list[str]:
     """Get all element IDs present on the current page
     :param driver: Selenium WebDriver instance"""
@@ -496,7 +448,7 @@ def get_element(
         raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {get_all_element_ids(driver)}")
 
 
-LOGS_DIR = Path("test_logs")
+LOGS_DIR = Path(os.path.join(os.path.dirname(settings.log_directory), "test_logs"))
 LOGS_DIR.mkdir(exist_ok=True)
 
 
@@ -599,6 +551,12 @@ class BaseTest:
     def setup_function(self, request) -> None:
         """Function to run before each test - can be overridden in subclasses"""
         pass
+
+    def go_to(self, page) -> None:
+        """Helper method to go to a specific page"""
+
+        self.driver.get(f"{self.frontend_base_url}/{page}")
+        self.wait_for_page(page)
 
     def login(self) -> None:
         """Helper method to log in to the application"""
@@ -756,6 +714,11 @@ class BaseTest:
         element.send_keys(text)
 
     # ---------------------------------------------------- UTILITIES ---------------------------------------------------
+
+    def _wait_for_modal_close(self, name: str) -> None:
+        """Wait for the modal to close"""
+
+        self.wait.until(ec.invisibility_of_element_located((By.ID, name)))
 
     @property
     def db_user(self) -> models.User:

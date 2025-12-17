@@ -2,20 +2,23 @@ import React from "react";
 import DataTable from "../components/tables/DataTable";
 import { KeywordModal } from "../components/modals/KeywordModal";
 import { tableColumns } from "../components/rendering/view/TableColumns";
+import { useDataContext } from "../contexts/DataContext";
 
 const KeywordsPage = () => {
-	const columns = [tableColumns.name(), tableColumns.jobCountKeyword(), tableColumns.createdAt()];
+	const dataContext = useDataContext();
+	const columns = [tableColumns.nameColumn(), tableColumns.jobCountKeywordColumn(), tableColumns.createdAtColumn()];
 
 	return (
 		<DataTable
 			entityType="keywords"
-			endpoint="keywords"
+			data={dataContext.keywords}
+			endpoint="/keywords"
+			columns={columns}
+			itemType="Tag"
+			nameKey="name"
+			Modal={KeywordModal}
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			title="Tags"
-			columns={columns}
-			Modal={KeywordModal}
-			nameKey="name"
-			itemType="Tag"
 		/>
 	);
 };

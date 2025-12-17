@@ -1,38 +1,32 @@
-import React, { ReactElement, ReactNode, useState } from "react";
+import React, { ReactElement, ReactNode, useRef } from "react";
 import { LocationModal } from "./LocationModal";
 import { CompanyModal } from "./CompanyModal";
 import { PersonModal } from "./PersonModal";
 import { KeywordModal } from "./KeywordModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { JobModal } from "./JobModal";
+import { InterviewModal } from "./InterviewModal";
+import { JobApplicationUpdateModal } from "./JobApplicationUpdateModal";
+import { DataModalHandle } from "./DataModal/DataModal";
 
 interface ModalManagerProps {
 	children: (handleClick: (item: any) => void) => ReactNode;
 }
 
-type FlexibleModalComponent = React.ComponentType<any>;
+type FlexibleModalComponent = React.ForwardRefExoticComponent<React.RefAttributes<DataModalHandle>>;
 
 const createModalManager = (ModalComponent: FlexibleModalComponent) => {
 	return ({ children }: ModalManagerProps): ReactElement => {
-		const [showModal, setShowModal] = useState<boolean>(false);
-		const [selectedItem, setSelectedItem] = useState<any>(null);
+		const modalRef = useRef<DataModalHandle>(null);
 
 		const handleClick = (item: any): void => {
-			setSelectedItem(item);
-			setShowModal(true);
-		};
-
-		const handleHide = () => {
-			setShowModal(false);
-			setTimeout(() => {
-				setSelectedItem(null);
-			}, 300);
+			modalRef.current?.showView(item);
 		};
 
 		return (
 			<>
 				{children(handleClick)}
-				<ModalComponent show={showModal} onHide={handleHide} data={selectedItem} submode="view" />
+				<ModalComponent ref={modalRef} />
 			</>
 		);
 	};
@@ -44,3 +38,5 @@ export const PersonModalManager = createModalManager(PersonModal);
 export const KeywordModalManager = createModalManager(KeywordModal);
 export const JobModalManager = createModalManager(JobModal);
 export const AggregatorModalManager = createModalManager(AggregatorModal);
+export const InterviewModalManager = createModalManager(InterviewModal);
+export const JobApplicationUpdateModalManager = createModalManager(JobApplicationUpdateModal);

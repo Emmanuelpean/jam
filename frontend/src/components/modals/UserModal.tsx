@@ -1,5 +1,5 @@
-import React from "react";
-import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
+import React, { forwardRef, JSX } from "react";
+import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import "../../pages/Auth/Auth.css";
@@ -7,35 +7,32 @@ import { UserData, UserDataTransform } from "../../services/Schemas";
 import { THEMES } from "../../utils/Theme";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
+export const UserModal = forwardRef<DataModalHandle, DataModalProps>(({ size = "lg" }, ref): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 
-	if (submode === "add") {
-		data = { theme: THEMES[0]?.key };
-	}
+	const createFields = (data: any, mode: string): { form: Fields; view: Fields } => {
+		const isAddMode: boolean = mode === "add" || !data?.id;
 
-	const formFieldsArray = [
-		[
-			...(submode === "add"
-				? [formFields.email({ required: true }), formFields.password({ required: true })]
-				: [formFields.email({ required: false })]),
-		],
-		formFields.appTheme(),
-		[formFields.isAdmin(), formFields.toastActive(), formFields.isActive()],
-	];
-	const viewFieldsArray = [
-		[modalViewFields.email(), modalViewFields.appTheme()],
-		[modalViewFields.isAdmin(), modalViewFields.toastActive(), modalViewFields.isActive()],
-	];
+		const formFieldsArray: Fields = [
+			[formFields.email({ required: true }), ...(isAddMode ? [formFields.password({ required: true })] : [])],
+			formFields.appTheme(),
+			[formFields.isAdmin(), formFields.toastActive(), formFields.isActive()],
+		];
 
-	const fields = {
-		form: formFieldsArray,
-		view: viewFieldsArray,
+		const viewFieldsArray: Fields = [
+			[modalViewFields.email(), modalViewFields.appTheme()],
+			[modalViewFields.isAdmin(), modalViewFields.toastActive(), modalViewFields.isActive()],
+		];
+
+		return {
+			form: formFieldsArray,
+			view: viewFieldsArray,
+		};
 	};
 
 	const customValidation = async (formData: UserData): Promise<ValidationErrors> => {
 		const errors: ValidationErrors = {};
-		const duplicates = dataContext.users.filter(
+		const duplicates: UserData[] = dataContext.users.filter(
 			(user: UserData): boolean =>
 				user.email.trim().toLowerCase() === formData.email.trim().toLowerCase() && user.id !== formData?.id,
 		);
@@ -58,16 +55,13 @@ export const UserModal: React.FC<DataModalProps> = ({ show, onHide, data, submod
 
 	return (
 		<DataModal
-			show={show}
-			onHide={onHide}
-			mode={submode}
+			ref={ref}
 			itemName="User"
 			size={size}
-			data={data}
-			fields={fields}
+			fields={createFields}
 			endpoint="users"
 			validation={customValidation}
 			transformFormData={transformFormData}
 		/>
 	);
-};
+});

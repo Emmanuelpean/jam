@@ -1,8 +1,9 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
 	aggregatorsApi,
-	ApiError,
 	companiesApi,
+	countriesApi,
+	currenciesApi,
 	interviewsApi,
 	jobApplicationUpdatesApi,
 	jobsApi,
@@ -10,12 +11,16 @@ import {
 	locationsApi,
 	personsApi,
 	settingsApi,
-	userApi,
-} from "../services/Api";
+} from "../services/api/DataTables";
+import { ApiError } from "../services/api/Base";
+import { userApi } from "../services/api/Users";
+import { scrapedJobApi } from "../services/api/Services";
 import { useAuth } from "./AuthContext";
 import {
 	AggregatorData,
 	CompanyData,
+	EnrichedInterviewData,
+	EnrichedJobApplicationUpdateData,
 	EnrichedJobData,
 	InterviewData,
 	JobApplicationUpdateData,
@@ -23,10 +28,12 @@ import {
 	KeywordData,
 	LocationData,
 	PersonData,
+	ScrapedJobData,
 	SettingData,
 	UserData,
 } from "../services/Schemas";
 import { useLoading } from "./LoadingContext";
+import { sortByKey } from "../utils/Utils";
 
 export type EntityType =
 	| "jobs"
@@ -38,7 +45,38 @@ export type EntityType =
 	| "keywords"
 	| "locations"
 	| "settings"
-	| "users";
+	| "users"
+	| "scrapedJobs";
+
+export type JamData =
+	| KeywordData
+	| LocationData
+	| AggregatorData
+	| PersonData
+	| CompanyData
+	| EnrichedJobData
+	| InterviewData
+	| JobApplicationUpdateData
+	| UserData
+	| SettingData
+	| ScrapedJobData;
+
+export const endpointToEntityType = (endpoint: string): EntityType | null => {
+	const mapping: Record<string, EntityType> = {
+		jobs: "jobs",
+		companies: "companies",
+		persons: "persons",
+		interviews: "interviews",
+		jobapplicationupdates: "jobApplicationUpdates",
+		aggregators: "aggregators",
+		keywords: "keywords",
+		locations: "locations",
+		settings: "settings",
+		users: "users",
+		scraped_jobs: "scrapedJobs",
+	};
+	return mapping[endpoint.toLowerCase()] || null;
+};
 
 export interface Currency {
 	symbol: string;
@@ -60,16 +98,17 @@ export interface DataContextValue {
 	jobs: EnrichedJobData[];
 	companies: CompanyData[];
 	persons: PersonData[];
-	interviews: InterviewData[];
-	jobApplicationUpdates: JobApplicationUpdateData[];
+	interviews: EnrichedInterviewData[];
+	jobApplicationUpdates: EnrichedJobApplicationUpdateData[];
 	aggregators: AggregatorData[];
 	keywords: KeywordData[];
 	locations: LocationData[];
 	settings: SettingData[];
 	users: UserData[];
+	countries: Country[];
+	currencies: Currency[];
 
 	error: ApiError | null;
-	reloadAll: () => void;
 
 	// Generic update functions
 	updateEntity: <T extends EntityType>(type: T, id: number, data: any) => Promise<any>;
@@ -84,20 +123,71 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [rawJobs, setRawJobs] = useState<JobData[]>([]);
 	const [companies, setCompanies] = useState<CompanyData[]>([]);
 	const [persons, setPersons] = useState<PersonData[]>([]);
-	const [interviews, setInterviews] = useState<InterviewData[]>([]);
-	const [jobApplicationUpdates, setJobApplicationUpdates] = useState<JobApplicationUpdateData[]>([]);
+	const [rawInterviews, setRawInterviews] = useState<InterviewData[]>([]);
+	const [rawJobApplicationUpdates, setRawJobApplicationUpdates] = useState<JobApplicationUpdateData[]>([]);
 	const [aggregators, setAggregators] = useState<AggregatorData[]>([]);
 	const [keywords, setKeywords] = useState<KeywordData[]>([]);
 	const [locations, setLocations] = useState<LocationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
+	const [_scrapedJobs, setScrapedJobs] = useState<any[]>([]);
+	const [currencies, setCurrencies] = useState<Currency[]>([]);
+	const [countries, setCountries] = useState<Country[]>([]);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
+	const interviews: EnrichedInterviewData[] = useMemo<EnrichedInterviewData[]>((): EnrichedInterviewData[] => {
+		// Enrich interviews with their sequence number per job
+
+		return rawInterviews.map((interview: InterviewData): EnrichedInterviewData => {
+			const job: JobData | undefined = rawJobs.find((j: JobData): boolean => j.id === interview.job_id)!;
+
+			let jobInterviews: InterviewData[] = rawInterviews.filter(
+				(i: InterviewData): boolean => i.job_id === job.id,
+			);
+			jobInterviews = sortByKey(jobInterviews, "date", true);
+
+			const index: number = jobInterviews.findIndex((i: InterviewData): boolean => i.id === interview.id);
+
+			return {
+				...interview,
+				number: index + 1,
+			};
+		});
+	}, [rawInterviews]);
+
+	const jobApplicationUpdates: EnrichedJobApplicationUpdateData[] = useMemo<
+		EnrichedJobApplicationUpdateData[]
+	>((): EnrichedJobApplicationUpdateData[] => {
+		// Enrich updates with their sequence number per job
+
+		return rawJobApplicationUpdates.map((update: JobApplicationUpdateData): EnrichedJobApplicationUpdateData => {
+			const job: JobData | undefined = rawJobs.find((j: JobData): boolean => j.id === update.job_id)!;
+
+			let jobUpdates: JobApplicationUpdateData[] = rawJobApplicationUpdates.filter(
+				(u: JobApplicationUpdateData): boolean => u.job_id === job.id,
+			);
+			jobUpdates = sortByKey(jobUpdates, "date", true);
+
+			const index: number = jobUpdates.findIndex((u: JobApplicationUpdateData): boolean => u.id === update.id);
+
+			return {
+				...update,
+				number: index + 1,
+			};
+		});
+	}, [rawJobApplicationUpdates]);
+
 	const jobs: EnrichedJobData[] = useMemo<EnrichedJobData[]>((): EnrichedJobData[] => {
+		// Enrich jobs with calculated fields
+
 		return rawJobs.map((job: JobData): EnrichedJobData => {
-			const jobInterviews = interviews.filter((i) => i.job_id === job.id);
-			const jobUpdates = jobApplicationUpdates.filter((u) => u.job_id === job.id);
+			const jobInterviews: InterviewData[] = rawInterviews.filter(
+				(i: InterviewData): boolean => i.job_id === job.id,
+			);
+			const jobUpdates: JobApplicationUpdateData[] = rawJobApplicationUpdates.filter(
+				(u: JobApplicationUpdateData): boolean => u.job_id === job.id,
+			);
 
 			// Calculate last_update_date
 			let lastUpdateDate: Date | null = null;
@@ -120,7 +210,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 					);
 					if (new Date(latestInterview.date) > mostRecentDate) {
 						mostRecentDate = new Date(latestInterview.date);
-						lastUpdateType = `Interview #${jobInterviews.length}`;
+						lastUpdateType = `Interview (${jobInterviews.length})`;
 					}
 				}
 
@@ -129,7 +219,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 						new Date(current.date) > new Date(latest.date) ? current : latest,
 					);
 					if (new Date(latestUpdate.date) > mostRecentDate) {
-						lastUpdateType = `Update #${jobUpdates.length}`;
+						lastUpdateType = `Update (${jobUpdates.length})`;
 					}
 				}
 			}
@@ -148,15 +238,27 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				daysUntilDeadline = (deadlineDate.getTime() - now.getTime()) / 1000;
 			}
 
+			// Create the job name from the title and the company name
+			let jobName = job.title;
+			if (job.company_id) {
+				const company: CompanyData | undefined = companies.find(
+					(c: CompanyData): boolean => c.id === job.company_id,
+				);
+				if (company) {
+					jobName = `${job.title} (${company.name})`;
+				}
+			}
+
 			return {
 				...job,
 				last_update_date: lastUpdateDate,
 				last_update_type: lastUpdateType,
 				days_since_last_update: daysSinceLastUpdate,
 				days_until_deadline: daysUntilDeadline,
+				name: jobName,
 			};
 		});
-	}, [rawJobs, interviews, jobApplicationUpdates]);
+	}, [rawJobs, rawInterviews, rawJobApplicationUpdates, companies]);
 
 	const fetchAllData = async () => {
 		setError(null);
@@ -171,6 +273,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" },
 			{ promise: keywordsApi.getAll(token), label: "Keywords" },
 			{ promise: locationsApi.getAll(token), label: "Locations" },
+			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" },
+			{ promise: countriesApi.getAll(token), label: "Miscellaneous" },
 		];
 
 		// Add admin-only calls if user is admin
@@ -210,17 +314,21 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				aggregatorsData,
 				keywordsData,
 				locationsData,
+				currenciesData,
+				countriesData,
 				...adminData
 			] = results;
 
 			setRawJobs(jobsData || []);
 			setCompanies(companiesData || []);
 			setPersons(personsData || []);
-			setInterviews(interviewsData || []);
-			setJobApplicationUpdates(jobApplicationUpdatesData || []);
+			setRawInterviews(interviewsData || []);
+			setRawJobApplicationUpdates(jobApplicationUpdatesData || []);
 			setAggregators(aggregatorsData || []);
 			setKeywords(keywordsData || []);
 			setLocations(locationsData || []);
+			setCurrencies(currenciesData || []);
+			setCountries(countriesData || []);
 
 			if (currentUser?.is_admin) {
 				setSettings(adminData[0] || []);
@@ -245,6 +353,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			locations: locationsApi,
 			settings: settingsApi,
 			users: userApi,
+			scrapedJobs: scrapedJobApi,
 		};
 		return apiMap[type];
 	};
@@ -255,13 +364,14 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			jobs: setRawJobs,
 			companies: setCompanies,
 			persons: setPersons,
-			interviews: setInterviews,
-			jobApplicationUpdates: setJobApplicationUpdates,
+			interviews: setRawInterviews,
+			jobApplicationUpdates: setRawJobApplicationUpdates,
 			aggregators: setAggregators,
 			keywords: setKeywords,
 			locations: setLocations,
 			settings: setSettings,
 			users: setUsers,
+			scrapedJobs: setScrapedJobs,
 		};
 		return setterMap[type];
 	};
@@ -328,10 +438,9 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	);
 
 	useEffect(() => {
-		if (!currentUser) return;
-
+		if (!token || !currentUser) return;
 		fetchAllData().then(() => {});
-	}, [token, currentUser?.token, currentUser?.is_admin]);
+	}, [token, currentUser?.is_admin]);
 
 	return (
 		<DataContext.Provider
@@ -344,10 +453,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				aggregators,
 				keywords,
 				locations,
+				countries,
+				currencies,
 				settings,
 				users,
 				error,
-				reloadAll: fetchAllData,
 				updateEntity,
 				deleteEntity,
 				addEntity,

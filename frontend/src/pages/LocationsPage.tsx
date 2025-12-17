@@ -7,13 +7,13 @@ import { LocationData } from "../services/Schemas";
 
 const LocationsPage = () => {
 	const columns = [
-		tableColumns.name(),
-		tableColumns.city(),
-		tableColumns.postcode(),
-		tableColumns.country(),
-		tableColumns.jobCountLocation(),
-		tableColumns.interviewCountLocation(),
-		tableColumns.createdAt(),
+		tableColumns.nameColumn(),
+		tableColumns.cityColumn(),
+		tableColumns.postcodeColumn(),
+		tableColumns.countryColumn(),
+		tableColumns.jobCountLocationColumn(),
+		tableColumns.interviewCountLocationColumn(),
+		tableColumns.createdAtColumn(),
 	];
 
 	const locationMap = (locationData: LocationData[]) => {
@@ -28,7 +28,6 @@ const LocationsPage = () => {
 	return (
 		<DataTable
 			entityType="locations"
-			endpoint="locations"
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			title="Locations"
 			columns={columns}

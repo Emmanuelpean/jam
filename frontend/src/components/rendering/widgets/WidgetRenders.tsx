@@ -1,17 +1,16 @@
 import { Form } from "react-bootstrap";
-import { renderStarRating } from "./StarRating";
-import { renderSalaryInput } from "./SalaryInput";
-import { renderTextarea } from "./TextArea";
-import { renderDateLocal, renderDateTimeLocal } from "./Datetime";
-import { renderPasswordInput } from "./PasswordInput";
-import { renderCheckbox } from "./Checkbox";
-import { renderSelect } from "./SelectWidget";
+import { StarRating } from "./StarRating";
+import { SalaryInput } from "./SalaryInput";
+import { Textarea } from "./TextArea";
+import { LocalDatetimeInput } from "./Datetime";
+import { PasswordInput } from "./PasswordInput";
+import { Checkbox } from "./Checkbox";
+import { SelectInput, SelectWidgetPreviewConfig } from "./SelectWidget";
 import { ModalFormField } from "../form/FormRenders";
 import React, { JSX } from "react";
 import { HelpBubble } from "./HelpBubble";
-import { renderUrlInputWidget } from "./UrlInput";
+import { UrlInput } from "./UrlInput";
 import { CurrentUser } from "../../../contexts/AuthContext";
-import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 
 export interface SyntheticEvent {
 	target: {
@@ -33,7 +32,8 @@ export interface WidgetProps {
 	error?: string | null;
 	secondaryValue?: string | null;
 	currentUser?: CurrentUser | null;
-	// dataContext?: DataContextValue;
+	previewConfig?: SelectWidgetPreviewConfig | null;
+	data?: any;
 }
 
 export const displayError = (errorMessage: string | null): JSX.Element[] | null => {
@@ -41,7 +41,7 @@ export const displayError = (errorMessage: string | null): JSX.Element[] | null 
 	return errorMessage.split("\n").map((line: string, index: number): JSX.Element => <div key={index}>{line}</div>);
 };
 
-export const renderDefaultInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
+export const DefaultInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
 	return (
 		<>
 			<Form.Control
@@ -54,6 +54,7 @@ export const renderDefaultInput = ({ field, value, handleChange, error }: Widget
 				isInvalid={!!error}
 				step={field.step}
 				autoComplete={field.autoComplete}
+				disabled={field.isDisabled}
 			/>
 		</>
 	);
@@ -69,6 +70,7 @@ export const FormField = (
 	const value: any = formData[field.name];
 	const secondaryValue: any = field.secondaryName ? formData[field.secondaryName] : null;
 	const error: string | null | undefined = errors[field.name];
+	const previewConfig = field.previewConfig;
 
 	const widgetProps: WidgetProps = {
 		field,
@@ -77,12 +79,14 @@ export const FormField = (
 		error,
 		secondaryValue,
 		currentUser,
+		previewConfig,
+		data: formData,
 	};
 
 	if (field.type === "checkbox") {
 		return (
-			<Form.Group className="mb-4" id={`${field.name}-form-group`}>
-				{renderCheckbox(widgetProps)}
+			<Form.Group className="mb-3" id={`${field.name}-form-group`}>
+				<Checkbox {...widgetProps} />
 				{error && (
 					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
 						{displayError(error)}
@@ -93,7 +97,7 @@ export const FormField = (
 	}
 
 	return (
-		<Form.Group className="mb-4" id={`${field.name}-form-group`}>
+		<Form.Group className="mb-3" id={`${field.name}-form-group`}>
 			<Form.Label>
 				{field.icon && <i className={`${field.icon} me-2 text-muted`}></i>}
 				{field.label}
@@ -103,32 +107,32 @@ export const FormField = (
 			{(() => {
 				switch (field.type) {
 					case "textarea":
-						return renderTextarea(widgetProps);
+						return <Textarea {...widgetProps} />;
 
 					case "select":
 					case "multiselect":
-						return renderSelect(widgetProps);
+						return <SelectInput {...widgetProps} />;
 
 					case "datetime-local":
-						return renderDateTimeLocal(widgetProps);
+						return <LocalDatetimeInput {...widgetProps} inputType="datetime-local" />;
 
 					case "date":
-						return renderDateLocal(widgetProps);
+						return <LocalDatetimeInput {...widgetProps} inputType="date" />;
 
 					case "password":
-						return renderPasswordInput(widgetProps);
+						return <PasswordInput {...widgetProps} />;
 
 					case "salary":
-						return renderSalaryInput(widgetProps);
+						return <SalaryInput {...widgetProps} />;
 
 					case "rating":
-						return renderStarRating(widgetProps);
+						return <StarRating {...widgetProps} />;
 
 					case "url":
-						return renderUrlInputWidget(widgetProps);
+						return <UrlInput {...widgetProps} />;
 
 					default:
-						return renderDefaultInput(widgetProps);
+						return <DefaultInput {...widgetProps} />;
 				}
 			})()}
 			{error && (

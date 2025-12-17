@@ -8,11 +8,11 @@ from email.header import decode_header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
-from typing import List, Dict, Optional
 
 from fastapi.templating import Jinja2Templates
 
 from app.config import settings
+from app.emails.utils import clean_email_address, build_multi_from_query
 from app.utils import AppLogger
 
 templates = Jinja2Templates(directory="templates")
@@ -31,7 +31,7 @@ class EmailService(object):
     def __init__(self) -> None:
         """Initialize the EmailService class."""
 
-        self.logger = AppLogger.create_service_logger("EmailService", "INFO")
+        self.logger = AppLogger.create_service_logger("email_service", "INFO")
         self.test_emails = []
 
         # Setup Jinja2 templates using FastAPI's built-in class
@@ -82,7 +82,7 @@ class EmailService(object):
                 server.starttls()
                 server.login(settings.email_username, settings.email_password)
                 server.sendmail(settings.email_username, recipient, msg.as_string())
-            self.logger.info(f"{message_type} email sent to %s with subject: %s", recipient, subject)
+                self.logger.info(f"{message_type} email sent to %s with subject: %s", recipient, subject)
         except Exception as e:
             self.logger.error(f"Failed to send {message_type} email to %s: %s", recipient, str(e))
             raise e
@@ -179,12 +179,19 @@ class EmailService(object):
     def send_email_change_notification(
         self,
         recipient: str,
+        old_email: str,
     ) -> None:
         """Send an email to the specified recipient mentioning that the email was changed.
-        :param recipient: The recipient's email address."""
+        :param recipient: The recipient's email address.
+        :param old_email: The old email address before the change."""
 
         template = self.templates.env.get_template("email_changed.html")
-        html_content = template.render(change_date=self.current_datetime, support_email=settings.support_email)
+        html_content = template.render(
+            change_date=self.current_datetime,
+            support_email=settings.support_email,
+            old_email=old_email,
+            new_email=recipient,
+        )
 
         subject = "Your JAM Email Address Has Been Changed"
         self.send_email(
@@ -204,7 +211,7 @@ class EmailService(object):
         mail.login(settings.email_username, settings.email_password)
         return mail
 
-    def get_test_emails(self, recipient: str = None) -> List[Dict]:
+    def get_test_emails(self, recipient: str = None) -> list[dict]:
         """Get test emails for a specific recipient or all test emails."""
 
         if not settings.test_mode:
@@ -224,24 +231,27 @@ class EmailService(object):
         self,
         recipient_email: str = "",
         sender_email: str = "",
-        inbox_only: bool = True,
+        inbox: str = "INBOX",
         timedelta_days: int | float = 1,
         subject_contains: str = "",
-    ) -> List[str]:
+        from_email: list[str] | str = "",
+        to_email: str = "",
+    ) -> list[str]:
         """Search for messages matching a query.
         :param recipient_email: Filter by recipient email address (e.g. jam.jobscraper@emmanuelpean.me)
         :param sender_email: Filter by sender email address (e.g. emmanuelpean@gmail.com)
-        :param inbox_only: Search only in the inbox (True) or all folders (False)
+        :param inbox: Mailbox to search in (default is INBOX)
         :param timedelta_days: Number of days to search for emails
         :param subject_contains: Filter by subject content
+        :param from_email: Filter by 'From' email address
+        :param to_email: Filter by 'To' email address
         :return: List of message IDs matching the query"""
 
         mail = self._connect_imap()
 
         try:
             # Select mailbox
-            mailbox = "INBOX" if inbox_only else "ALL"
-            mail.select(mailbox)
+            mail.select(inbox)
 
             # Build IMAP search criteria
             search_criteria = []
@@ -262,6 +272,14 @@ class EmailService(object):
             if subject_contains:
                 search_criteria.append(f'SUBJECT "{subject_contains}"')
 
+            # From email filter
+            if from_email:
+                search_criteria.append(build_multi_from_query(from_email))
+
+            # To email filter
+            if to_email:
+                search_criteria.append(f'HEADER To "{to_email}"')
+
             # Default to all if no criteria
             search_query = " ".join(search_criteria) if search_criteria else "ALL"
 
@@ -279,10 +297,10 @@ class EmailService(object):
             mail.close()
             mail.logout()
 
-    def get_email_content(
+    def get_email_data(
         self,
         email_id: str,
-    ) -> Optional[Dict[str, str]]:
+    ) -> dict[str, str | datetime] | None:
         """Get the content of a specific email by ID.
         :param email_id: The email message ID
         :return: Dictionary with email details (subject, from, date, body)"""
@@ -305,73 +323,86 @@ class EmailService(object):
 
             # Extract headers
             subject = self._decode_header(msg["Subject"])
-            from_email = self._decode_header(msg["From"])
-            date = msg["Date"]
+            from_email = clean_email_address(self._decode_header(msg["From"]))
+            to_email = clean_email_address(self._decode_header(msg["To"]))
 
-            # Extract body
+            # Extract date
+            date = msg["Date"]
+            date_formats = [
+                "%a, %d %b %Y %H:%M:%S %z",  # Standard RFC 2822: "Thu, 14 Aug 2025 02:25:53 +0000"
+                "%a, %d %b %Y %H:%M:%S %z (UTC)",  # Original format with (UTC)
+                "%a, %d %b %Y %H:%M:%S",  # Without timezone
+                "%d %b %Y %H:%M:%S %z",  # Without day name
+                "%a, %d %b %Y %H:%M:%S GMT",  # GMT timezone
+                "%a, %d %b %Y %H:%M:%S UTC",  # UTC timezone
+            ]
+
+            date_received = None
+            for date_format in date_formats:
+                try:
+                    date_received = datetime.strptime(date, date_format)
+                    break
+                except ValueError:
+                    continue
+
             body_text = ""
+            html_text = ""
 
             if msg.is_multipart():
                 for part in msg.walk():
                     content_type = part.get_content_type()
                     content_disposition = str(part.get("Content-Disposition"))
 
-                    # Skip attachments
                     if "attachment" in content_disposition:
                         continue
 
-                    # Get email body
-                    if content_type == "text/plain":
-                        body_text = part.get_payload(decode=True).decode()
+                    payload = part.get_payload(decode=True)
+                    charset = part.get_content_charset() or "utf-8"
 
+                    if content_type == "text/plain":
+                        try:
+                            body_text = payload.decode(charset)
+                        except UnicodeDecodeError:
+                            body_text = payload.decode("windows-1252", errors="replace")
+
+                    elif content_type == "text/html":
+                        try:
+                            html_text = payload.decode(charset)
+                        except UnicodeDecodeError:
+                            html_text = payload.decode("windows-1252", errors="replace")
             else:
-                # Not multipart - simple email
+                # single-part message
+                content_type = msg.get_content_type()
                 body_text = msg.get_payload(decode=True).decode()
+                if content_type == "text/html":
+                    html_text = body_text
+
+            # Prefer text, but fallback to HTML if needed
+            final_body = html_text or body_text
 
             return {
                 "id": email_id,
                 "subject": subject,
                 "from": from_email,
-                "date": date,
-                "body_text": body_text,
+                "to": to_email,
+                "date": date_received,
+                "body": final_body,
             }
 
         finally:
             mail.close()
             mail.logout()
 
-    def get_emails(
-        self,
-        recipient_email: str = "",
-        sender_email: str = "",
-        inbox_only: bool = True,
-        timedelta_days: int | float = 1,
-        subject_contains: str = "",
-        limit: int = 10,
-    ) -> List[Dict[str, str]]:
+    def get_emails(self, *args, **kwargs) -> list[dict[str, str]]:
         """Get multiple emails matching criteria.
-        :param recipient_email: Filter by recipient email address
-        :param sender_email: Filter by sender email address
-        :param inbox_only: Search only in the inbox
-        :param timedelta_days: Number of days to search for emails
-        :param subject_contains: Filter by subject content
-        :param limit: Maximum number of emails to retrieve
+        :param args: arguments passed to get_email_ids
+        :param kwargs: Keyword arguments passed to get_email_ids
         :return: List of email content dictionaries"""
 
-        email_ids = self.get_email_ids(
-            recipient_email=recipient_email,
-            sender_email=sender_email,
-            inbox_only=inbox_only,
-            timedelta_days=timedelta_days,
-            subject_contains=subject_contains,
-        )
-
-        # Limit results
-        email_ids = email_ids[-limit:] if len(email_ids) > limit else email_ids
-
+        email_ids = self.get_email_ids(*args, **kwargs)
         emails = []
         for email_id in reversed(email_ids):  # Most recent first
-            content = self.get_email_content(email_id)
+            content = self.get_email_data(email_id)
             if content:
                 emails.append(content)
 
@@ -396,6 +427,37 @@ class EmailService(object):
                 decoded_string += part
 
         return decoded_string
+
+    def delete_email(
+        self,
+        email_id: str,
+    ) -> bool:
+        """Delete an email by ID from the inbox.
+        :param email_id: The email message ID to delete
+        :return: True if deletion successful, False otherwise"""
+
+        if settings.test_mode:
+            return True
+
+        mail = self._connect_imap()
+
+        try:
+            mail.select("INBOX")
+
+            # Mark the email as deleted
+            status, _ = mail.store(email_id, "+FLAGS", "\\Deleted")
+
+            if status != "OK":
+                return False
+
+            # Permanently remove emails marked as deleted
+            mail.expunge()
+
+            return True
+
+        finally:
+            mail.close()
+            mail.logout()
 
 
 email_service = EmailService()

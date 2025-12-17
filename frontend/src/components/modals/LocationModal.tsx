@@ -1,22 +1,22 @@
-import React from "react";
-import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
+import React, { forwardRef } from "react";
+import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { modalViewFields } from "../rendering/view/ModalFields";
+import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { LocationData, LocationDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, submode = "view", size = "lg" }) => {
-	const { countries } = useFormOptions(["countries"]);
+export const LocationModal = forwardRef<DataModalHandle, DataModalProps>(({ size = "lg" }: DataModalProps, ref) => {
+	const { countries } = useFormOptions();
 	const dataContext: DataContextValue = useDataContext();
 
-	const formFieldsArray = [
+	const formFieldsArray: Fields = [
 		formFields.city({ placeholder: "Oxford" }),
 		formFields.postcode({ placeholder: "OX1 1AA" }),
 		formFields.country(countries),
 	];
-	const viewFieldsArray = [
+	const viewFieldsArray: Fields = [
 		[modalViewFields.city(), modalViewFields.postcode(), modalViewFields.country()],
 		modalViewFields.locationMap(),
 	];
@@ -26,10 +26,15 @@ export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, su
 		view: viewFieldsArray,
 	};
 
-	const additionalFields = [
+	const additionalFields: ModalViewField[] = [
 		modalViewFields.accordionJobTableLocation({ helpText: "List of jobs at this location." }),
 		modalViewFields.accordionInterviewTable({
-			columns: [tableColumns.date!(), tableColumns.job!(), tableColumns.type!(), tableColumns.note!()],
+			columns: [
+				tableColumns.dateColumn(),
+				tableColumns.jobBadgeColumn(),
+				tableColumns.typeColumn(),
+				tableColumns.noteColumn(),
+			],
 			helpText: "List of interviews at this location.",
 		}),
 	];
@@ -38,10 +43,10 @@ export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, su
 		const errors: ValidationErrors = {};
 
 		// Check if any value has been set
-		const hasCity = formData.city && formData.city.trim();
-		const hasPostcode = formData.postcode && formData.postcode.trim();
-		const hasCountry = formData.country && formData.country.trim();
-		const hasAnyValue = hasCity || hasPostcode || hasCountry;
+		const hasCity: string | null | undefined = formData.city && formData.city.trim();
+		const hasPostcode: string | null | undefined = formData.postcode && formData.postcode.trim();
+		const hasCountry: string | null | undefined = formData.country && formData.country.trim();
+		const hasAnyValue: boolean = !!(hasCity || hasPostcode || hasCountry);
 		if (!hasAnyValue) {
 			errors.city =
 				errors.country =
@@ -81,12 +86,9 @@ export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, su
 
 	return (
 		<DataModal
-			show={show}
-			onHide={onHide}
-			mode={submode}
+			ref={ref}
 			itemName="Location"
 			size={size}
-			data={data}
 			additionalFields={additionalFields}
 			fields={fields}
 			endpoint="locations"
@@ -94,4 +96,4 @@ export const LocationModal: React.FC<DataModalProps> = ({ show, onHide, data, su
 			transformFormData={transformFormData}
 		/>
 	);
-};
+});

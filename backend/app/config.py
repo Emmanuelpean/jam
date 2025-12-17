@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # Application settings
     min_password_length: int
     max_file_size_mb: int
+    log_directory: str
 
     # Email configuration
     email_username: str
@@ -29,8 +30,6 @@ class Settings(BaseSettings):
     email_smtp_host: str
     email_imap_port: int
     email_imap_host: str
-
-    # Email addresses
     scraper_email: str
     info_email: str
     support_email: str
@@ -45,6 +44,17 @@ class Settings(BaseSettings):
 
     # Testing
     test_mode: bool
+
+    # BrightAPI
+    brightdata_api_key: str
+    brightdata_linkedin_dataset_id: str
+    brightdata_indeed_dataset_id: str
+
+    # AI Keys
+    openai_api_key: str
+
+    # Apify
+    apify_api_key: str
 
     model_config = SettingsConfigDict(
         extra="ignore",

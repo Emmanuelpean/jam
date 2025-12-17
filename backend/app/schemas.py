@@ -102,6 +102,7 @@ class UserCreate(BaseModel):
     update_limit: int = 30
     toast_active: bool = False
     default_currency: str = "GBP"
+    is_demo: bool = False
 
 
 class UserOut(Out):
@@ -111,6 +112,7 @@ class UserOut(Out):
     theme: str
     is_active: bool
     is_admin: bool
+    is_demo: bool
     last_login: datetime | None
     chase_threshold: int
     deadline_threshold: int
@@ -125,6 +127,32 @@ class UserUpdate(UserCreate):
 
     email: EmailField | None = None
     password: str | None = None
+
+
+class CurrentUserUpdateResponse(BaseModel):
+    success: bool
+    message: str
+    logged_out: bool | None = None
+
+
+# ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------
+
+
+class UserQualificationUpsert(BaseModel):
+    """User qualification create schema"""
+
+    id: int | None = None
+    experience: str | None = None
+    skills: str | None = None
+    education: str | None = None
+    qualities: str | None = None
+    interests: str | None = None
+
+
+class UserQualificationOut(UserQualificationUpsert, OwnedOut):
+    """User qualification output schema"""
+
+    pass
 
 
 # ---------------------------------------------------- CURRENT USER ----------------------------------------------------
@@ -319,7 +347,6 @@ class PersonOut(PersonCreate, OwnedOut):
     interviews: list[OwnedOut] = []
     jobs: list[OwnedOut] = []
     name: str | None = None
-    name_company: str | None = None
 
 
 class PersonUpdate(PersonCreate):
@@ -371,7 +398,6 @@ class JobOut(JobCreate, OwnedOut):
     contacts: list[int] = []
     interviews: list[OwnedOut] = []
     updates: list[OwnedOut] = []
-    name: str
 
     @field_validator("keywords", "contacts", mode="before")
     @classmethod

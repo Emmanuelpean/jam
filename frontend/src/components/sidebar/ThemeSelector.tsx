@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { authApi } from "../../services/Api";
 import { THEMES } from "../../utils/Theme";
+import { useAuth } from "../../contexts/AuthContext";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
 
 interface ThemeSelectorProps {
 	currentTheme: string;
-	token: string | null;
-	onThemeChange: (theme: string) => void;
+	onThemeChange: () => void;
 	isVisible: boolean;
 }
 
@@ -17,24 +17,21 @@ interface CSSColors {
 
 export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 	currentTheme,
-	token,
 	onThemeChange,
 	isVisible,
 }: ThemeSelectorProps) => {
 	const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+	const { showToastError } = useGlobalToast();
+	const { updateCurrentUser } = useAuth();
 
 	const handleThemeChange = async (themeKey: string): Promise<void> => {
-		onThemeChange(themeKey);
-		document.documentElement.setAttribute("data-theme", themeKey);
-		localStorage.setItem("theme", themeKey);
-
-		if (token) {
-			try {
-				await authApi.updateCurrentUser({ theme: themeKey }, token);
-			} catch (error) {
-				console.error("Error saving theme:", error);
-			}
+		try {
+			await updateCurrentUser({ theme: themeKey });
+		} catch (error) {
+			showToastError("Failed to save theme preference.");
+			console.error("Error saving theme:", error);
 		}
+		onThemeChange();
 	};
 
 	const getCurrentCSSColors = (): CSSColors => {

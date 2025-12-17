@@ -18,13 +18,12 @@ dependencies = [
     "pydantic[email]==2.11.9",
     "python-jose==3.5.0",
     "bcrypt==4.3.0",
-    "google-api-python-client==2.179.0",
-    "google-auth-httplib2==0.2.0",
-    "google-auth-oauthlib==1.2.2",
     "cloudscraper==1.2.71",
     "tqdm==4.67.1",
     "gunicorn==23.0.0",
     "beautifulsoup4==4.14.2",
+    "apify-client==2.3.0",
+    "openai==2.12.0",
 ]
 
 [project.optional-dependencies]
@@ -36,7 +35,8 @@ dev = [
     "black==25.9.0",
     "sqlalchemy-stubs==0.4",
     "psutil==7.1.0",
-    "selenium==4.36.0"
+    "selenium==4.36.0",
+    "alembic==1.17.2",
 ]
 
 [build-system]
