@@ -19,6 +19,7 @@ class TestCleanEmailAddress:
             ("Invalid Format", "invalid"),
             ("Jane Smith <jane.smith+tag@company.co.uk>", "jane.smith+tag@company.co.uk"),
             ("Multiple Words Name <multi.word@domain.org>", "multi.word@domain.org"),
+            ("emmanuel péan, phd <emmanuelpean@gmail.com>", "emmanuelpean@gmail.com"),
         ],
     )
     def test_clean_email_address(self, sender_field, expected) -> None:

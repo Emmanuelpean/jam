@@ -129,11 +129,13 @@ class JobEmailScraper(EmailService):
         email_id: str,
         user: models.User,
         service_log_id: int,
+        forwarded: bool = False,
     ) -> tuple[JobEmail, bool]:
         """Read and save an email to the database
         :param email_id: Email ID
         :param user: User entry associated with this email
         :param service_log_id: ID of the EisServiceLog instance associated with this email
+        :param forwarded: Whether the email was forwarded
         :return: JobEmails instance and whether the record was created or already existing"""
 
         # Check if the email already exists and return it if it does
@@ -158,7 +160,7 @@ class JobEmailScraper(EmailService):
             if not platform:
                 raise ValueError("Email body does not contain a valid platform identifier.")
             alert_name = ALERT_NAME_EXTRACTORS[platform](message["subject"], message["body"])
-
+            sender = message["from"] if forwarded else message["to"]
             # Create a new email record
             # noinspection PyArgumentList
             email_record = JobEmail(
@@ -166,7 +168,7 @@ class JobEmailScraper(EmailService):
                 service_log_id=service_log_id,
                 external_email_id=email_id,
                 subject=message["subject"],
-                sender=message["to"],
+                sender=sender,
                 date_received=message["date"],
                 body=remove_style_tags(message["body"]),
                 platform=platform,
@@ -390,6 +392,7 @@ class JobEmailScraper(EmailService):
             self.logger.info(f"Processing user: {user.email} (ID: {user.id})")
 
             # Get the list of all emails
+            forwarded = False
             try:
                 email_ids = self.get_email_ids(
                     recipient_email=settings.scraper_email,
@@ -404,6 +407,7 @@ class JobEmailScraper(EmailService):
                         to_email=settings.scraper_email,
                         timedelta_days=timedelta_days,
                     )
+                    forwarded = True
                 service_log.email_found_n += len(email_ids)
                 self.logger.info(f"Found {len(email_ids)} emails")
             except Exception as exception:
@@ -415,7 +419,7 @@ class JobEmailScraper(EmailService):
             for email_id in email_ids:
                 self.logger.info(f"Processing email with ID: {email_id}")
                 try:
-                    email_record, is_new = self.get_and_save_email_to_db(email_id, user, service_log.id)
+                    email_record, is_new = self.get_and_save_email_to_db(email_id, user, service_log.id, forwarded)
 
                     # Extract jobs if this is a new email
                     if is_new:
