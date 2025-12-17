@@ -9,12 +9,12 @@ import JobsPage from "./pages/JobsPage";
 import PersonPage from "./pages/PersonPage";
 import KeywordsPage from "./pages/KeywordsPage";
 import InterviewsPage from "./pages/InterviewsPage";
-import DashboardPage from "./pages/EISDashboardPage";
+import JobScraperDashboard from "./pages/Services/JobScraperDashboard/JobScraperDashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
 import { NotAuthorisedPage, NotFoundPage } from "./pages/NotFoundPage";
 import { Sidebar } from "./components/sidebar/Sidebar";
 import JobApplicationUpdatesPage from "./pages/JobApplicationUpdatesPage";
-import JobSearchDashboard from "./pages/Dashboard/DashboardPage";
+import Dashboard from "./pages/Dashboard/DashboardPage";
 import { LoadingProvider, useLoading } from "./contexts/LoadingContext";
 import { UserManagementPage } from "./pages/UserManagementPage";
 import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
@@ -25,6 +25,8 @@ import AboutPage from "./pages/AboutPage/AboutPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 import "./Themes.css";
+import { AlertProvider } from "./contexts/AlertContext";
+import JobRatingDashboard from "./pages/Services/JobRatingDashboard/JobRatingDashboardPage";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -52,7 +54,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const { currentUser } = useAuth();
 	useSwetrixPageViews();
 
-	const isAuthPage = location.pathname === "/login" || location.pathname === "/register";
+	const isAuthPage: boolean = location.pathname === "/login" || location.pathname === "/register";
 
 	return (
 		<div style={{ display: "flex", minHeight: "100vh" }}>
@@ -133,10 +135,11 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/interviews", element: <InterviewsPage />, protected: true },
 	{ path: "/aggregators", element: <AggregatorsPage />, protected: true },
 	{ path: "/jobapplicationupdates", element: <JobApplicationUpdatesPage />, protected: true },
-	{ path: "/dashboard", element: <JobSearchDashboard />, protected: true },
+	{ path: "/dashboard", element: <Dashboard />, protected: true },
 	{ path: "/settings", element: <UserSettingsPage />, protected: true },
 	{ path: "/users", element: <UserManagementPage />, protected: true, adminOnly: true },
-	{ path: "/eis_dashboard", element: <DashboardPage />, protected: true, adminOnly: true },
+	{ path: "/eis_dashboard", element: <JobScraperDashboard />, protected: true, adminOnly: true },
+	{ path: "/job_rating_dashboard", element: <JobRatingDashboard />, protected: true, adminOnly: true },
 	{ path: "/app_settings", element: <SettingsPage />, protected: true, adminOnly: true },
 	{ path: "*", element: <NotFoundPage /> },
 ];
@@ -172,12 +175,14 @@ function App(): JSX.Element {
 	return (
 		<BrowserRouter basename="/jam">
 			<AllProviders>
-				<ToastContext.Provider value={toastMethods}>
-					<AppLayout>
-						<AppRoutes />
-					</AppLayout>
-					<ToastStack toasts={toastMethods.toasts} onClose={toastMethods.hideToast} position="top-end" />
-				</ToastContext.Provider>
+				<AlertProvider>
+					<ToastContext.Provider value={toastMethods}>
+						<AppLayout>
+							<AppRoutes />
+						</AppLayout>
+						<ToastStack toasts={toastMethods.toasts} onClose={toastMethods.hideToast} position="top-end" />
+					</ToastContext.Provider>
+				</AlertProvider>
 			</AllProviders>
 		</BrowserRouter>
 	);

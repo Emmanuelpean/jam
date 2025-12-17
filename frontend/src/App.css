@@ -65,7 +65,7 @@ html {
 .form-label {
     font-weight: 600;
     color: #181b1e;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
     font-size: 1rem;
     letter-spacing: 0.025em;
 }
@@ -79,6 +79,10 @@ html {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: rgba(255, 255, 255, 100%);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.form-select {
+    padding: 0.2rem;
 }
 
 .form-control:focus,
@@ -357,7 +361,7 @@ textarea.form-control {
     outline: none;
 }
 
-.form-control::placeholder{
+.form-control::placeholder {
     color: rgb(173, 181, 189);
     font-style: italic;
     font-weight: 300;
@@ -371,9 +375,10 @@ textarea.form-control {
     width: 97%;
     margin: 0 auto;
 }
+
 /* ------------------------------------------------- PROGRESS BAR -------------------------------------------------- */
 
-.global-loading-overlay .progress {
+.progress {
     background: linear-gradient(145deg, #e9ecef 0%, #dee2e6 100%);
     border-radius: 12px;
     height: 20px;
@@ -381,7 +386,7 @@ textarea.form-control {
     border: 1px solid #dee2e6;
 }
 
-.global-loading-overlay .progress-bar {
+.progress-bar {
     background: var(--primary-mid);
     font-size: 0.875rem;
     font-weight: 600;

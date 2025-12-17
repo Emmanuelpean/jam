@@ -1,17 +1,40 @@
-import { SelectOption, toSelectOptions } from "../../../utils/Utils";
-import React, { JSX, useMemo, useState } from "react";
-import { useDataContext } from "../../../contexts/DataContext";
-import { CompanyModal } from "../../modals/CompanyModal";
-import { LocationModal } from "../../modals/LocationModal";
-import { KeywordModal } from "../../modals/KeywordModal";
-import { PersonModal } from "../../modals/PersonModal";
-import { AggregatorModal } from "../../modals/AggregatorModal";
-import { JobModal } from "../../modals/JobModal";
-import currencies from "../../../data/currencies.json";
-import countries from "../../../data/countries.json";
+import { findItemById } from "../../../utils/Utils";
+import { useMemo } from "react";
+import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
+import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
+import { modalViewFields } from "../view/ModalFields";
+import { PersonData } from "../../../services/Schemas";
+import stringSimilarity from "string-similarity";
+
+export type SelectOption = {
+	value: string;
+	label: string;
+	data?: any;
+};
+
+export function findClosestOption(options: SelectOption[], name: string): string | null {
+	if (!name || options.length === 0) return null;
+	const names: string[] = options.map((c: SelectOption): string => c.label);
+	const result = stringSimilarity.findBestMatch(name, names);
+
+	const MIN_SIMILARITY_THRESHOLD = 0.4;
+
+	if (result.bestMatch.rating < MIN_SIMILARITY_THRESHOLD) {
+		return null;
+	}
+
+	return options[result.bestMatchIndex]?.value || null;
+}
+
+export function findExactOption(options: SelectOption[], name: string): string | null | undefined {
+	if (!name || options.length === 0) return null;
+	const match: SelectOption | undefined = options.find(
+		(opt: SelectOption): boolean => opt.label.toLowerCase() === name.toLowerCase(),
+	);
+	return match ? match.value : null;
+}
 
 interface UseFormOptionsReturn {
-	error: Error | null;
 	companies: SelectOption[];
 	locations: SelectOption[];
 	keywords: SelectOption[];
@@ -21,150 +44,168 @@ interface UseFormOptionsReturn {
 	countries: SelectOption[];
 	currencies: SelectOption[];
 	currencyNames: SelectOption[];
-	openCompanyModal: () => void;
-	renderCompanyModal: () => JSX.Element;
-	openLocationModal: () => void;
-	renderLocationModal: () => JSX.Element;
-	openKeywordModal: () => void;
-	renderKeywordModal: () => JSX.Element;
-	openPersonModal: () => void;
-	renderPersonModal: () => JSX.Element;
-	openAggregatorModal: () => void;
-	renderAggregatorModal: () => JSX.Element;
-	openJobModal: () => void;
-	renderJobModal: () => JSX.Element;
+	getCompanyPreviewConfig: SelectWidgetPreviewConfig;
+	getPersonPreviewConfig: SelectWidgetPreviewConfig;
+	getLocationPreviewConfig: SelectWidgetPreviewConfig;
+	getAggregatorPreviewConfig: SelectWidgetPreviewConfig;
 }
 
-export const useFormOptions = (requiredOptions: string[] = []): UseFormOptionsReturn => {
-	const {
-		companies: companiesData,
-		locations: locationsData,
-		keywords: keywordsData,
-		persons: personsData,
-		aggregators: aggregatorsData,
-		jobs: jobsData,
-		error,
-	} = useDataContext();
+export const toSelectOptions = <T extends Record<string, any>>(
+	data: T[],
+	valueKey: keyof T | ((item: T) => any) = "id",
+	labelKey: keyof T | ((item: T) => any) = "name",
+): SelectOption[] => {
+	const sorted = [...data].sort((a, b) => {
+		const aLabel = typeof labelKey === "function" ? labelKey(a) : a[labelKey];
+		const bLabel = typeof labelKey === "function" ? labelKey(b) : b[labelKey];
+		return String(aLabel).localeCompare(String(bLabel));
+	});
 
-	// Modal states
-	const [showCompanyModal, setShowCompanyModal] = useState<boolean>(false);
-	const [showLocationModal, setShowLocationModal] = useState<boolean>(false);
-	const [showKeywordModal, setShowKeywordModal] = useState<boolean>(false);
-	const [showPersonModal, setShowPersonModal] = useState<boolean>(false);
-	const [showAggregatorModal, setShowAggregatorModal] = useState<boolean>(false);
-	const [showJobModal, setShowJobModal] = useState<boolean>(false);
+	return sorted.map(
+		(item): SelectOption => ({
+			value: typeof valueKey === "function" ? valueKey(item) : item[valueKey],
+			label: typeof labelKey === "function" ? labelKey(item) : item[labelKey],
+			data: item,
+		}),
+	);
+};
+
+export const useFormOptions = (): UseFormOptionsReturn => {
+	const contextData: DataContextValue = useDataContext();
+
+	const getCompanyPreviewConfig: SelectWidgetPreviewConfig = {
+		enabled: true,
+		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
+		getDataById: (id: number) => findItemById(contextData.companies, id),
+	};
+
+	const getPersonPreviewConfig: SelectWidgetPreviewConfig = {
+		enabled: true,
+		fields: [
+			modalViewFields.name({ isTitle: true }),
+			modalViewFields.email(),
+			[modalViewFields.companyBadge(), modalViewFields.role()],
+		],
+		getDataById: (id: number) => findItemById(contextData.persons, id),
+	};
+
+	const getLocationPreviewConfig: SelectWidgetPreviewConfig = {
+		enabled: true,
+		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.locationMap({ label: "" })],
+		getDataById: (id: number) => findItemById(contextData.locations, id),
+	};
+
+	const getAggregatorPreviewConfig: SelectWidgetPreviewConfig = {
+		enabled: true,
+		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.url()],
+		getDataById: (id: number) => findItemById(contextData.aggregators, id),
+	};
+
+	const getPersonLabel = (person: PersonData): string => {
+		if (person.company_id) {
+			const company = findItemById(contextData.companies, person.company_id);
+			if (company) {
+				return `${person.name} (${company.name})`;
+			}
+		}
+		return person.name;
+	};
 
 	// Convert data to SelectOptions and memoize
 	const companyOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(companiesData),
-		[companiesData],
+		(): SelectOption[] => toSelectOptions(contextData.companies),
+		[contextData.companies],
 	);
 	const locationOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(locationsData),
-		[locationsData],
+		(): SelectOption[] => toSelectOptions(contextData.locations),
+		[contextData.locations],
 	);
-	const keywordOptions: SelectOption[] = useMemo((): SelectOption[] => toSelectOptions(keywordsData), [keywordsData]);
+	const keywordOptions: SelectOption[] = useMemo(
+		(): SelectOption[] => toSelectOptions(contextData.keywords),
+		[contextData.keywords],
+	);
 	const personOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(personsData, "id", "name_company"),
-		[personsData],
+		(): SelectOption[] => toSelectOptions(contextData.persons, "id", getPersonLabel),
+		[contextData.persons],
 	);
 	const aggregatorOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(aggregatorsData),
-		[aggregatorsData],
+		(): SelectOption[] => toSelectOptions(contextData.aggregators),
+		[contextData.aggregators],
 	);
 	const jobOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(jobsData, "id", "name"),
-		[jobsData],
+		(): SelectOption[] => toSelectOptions(contextData.jobs, "id", "name"),
+		[contextData.jobs],
 	);
 	const countryOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(countries, "name", "name"),
-		[countries],
+		(): SelectOption[] => toSelectOptions(contextData.countries, "name", "name"),
+		[contextData.countries],
 	);
 	const currencyOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(currencies, "code", "symbol"),
-		[currencies],
+		(): SelectOption[] => toSelectOptions(contextData.currencies, "code", "symbol"),
+		[contextData.currencies],
 	);
 	const currencyNameOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(currencies, "code", "name"),
-		[currencies],
-	);
-
-	// Modal handlers
-	const openCompanyModal = (): void => setShowCompanyModal(true);
-	const closeCompanyModal = (): void => setShowCompanyModal(false);
-
-	const openLocationModal = (): void => setShowLocationModal(true);
-	const closeLocationModal = (): void => setShowLocationModal(false);
-
-	const openKeywordModal = (): void => setShowKeywordModal(true);
-	const closeKeywordModal = (): void => setShowKeywordModal(false);
-
-	const openPersonModal = (): void => setShowPersonModal(true);
-	const closePersonModal = (): void => setShowPersonModal(false);
-
-	const openAggregatorModal = (): void => setShowAggregatorModal(true);
-	const closeAggregatorModal = (): void => setShowAggregatorModal(false);
-
-	const openJobModal = (): void => setShowJobModal(true);
-	const closeJobModal = (): void => setShowJobModal(false);
-
-	// Render modal functions
-	const renderCompanyModal = (): JSX.Element => (
-		<CompanyModal show={showCompanyModal} onHide={closeCompanyModal} onSuccess={closeCompanyModal} submode="add" />
-	);
-
-	const renderLocationModal = (): JSX.Element => (
-		<LocationModal
-			show={showLocationModal}
-			onHide={closeLocationModal}
-			onSuccess={closeCompanyModal}
-			submode="add"
-		/>
-	);
-
-	const renderKeywordModal = (): JSX.Element => (
-		<KeywordModal show={showKeywordModal} onHide={closeKeywordModal} onSuccess={closeKeywordModal} submode="add" />
-	);
-
-	const renderPersonModal = (): JSX.Element => (
-		<PersonModal show={showPersonModal} onHide={closePersonModal} onSuccess={closePersonModal} submode="add" />
-	);
-
-	const renderAggregatorModal = (): JSX.Element => (
-		<AggregatorModal
-			show={showAggregatorModal}
-			onHide={closeAggregatorModal}
-			onSuccess={closeAggregatorModal}
-			submode="add"
-		/>
-	);
-
-	const renderJobModal = (): JSX.Element => (
-		<JobModal show={showJobModal} onHide={closeJobModal} onSuccess={closeJobModal} submode="add" />
+		(): SelectOption[] => toSelectOptions(contextData.currencies, "code", "name"),
+		[contextData.currencies],
 	);
 
 	return {
-		error: error as Error | null,
-		companies: requiredOptions.includes("companies") ? companyOptions : [],
-		locations: requiredOptions.includes("locations") ? locationOptions : [],
-		keywords: requiredOptions.includes("keywords") ? keywordOptions : [],
-		persons: requiredOptions.includes("persons") ? personOptions : [],
-		aggregators: requiredOptions.includes("aggregators") ? aggregatorOptions : [],
-		jobs: requiredOptions.includes("jobs") ? jobOptions : [],
-		countries: requiredOptions.includes("countries") ? countryOptions : [],
-		currencies: requiredOptions.includes("currencies") ? currencyOptions : [],
-		currencyNames: requiredOptions.includes("currencyNames") ? currencyNameOptions : [],
-		openCompanyModal,
-		renderCompanyModal,
-		openLocationModal,
-		renderLocationModal,
-		openKeywordModal,
-		renderKeywordModal,
-		openPersonModal,
-		renderPersonModal,
-		openAggregatorModal,
-		renderAggregatorModal,
-		openJobModal,
-		renderJobModal,
+		companies: companyOptions,
+		locations: locationOptions,
+		keywords: keywordOptions,
+		persons: personOptions,
+		aggregators: aggregatorOptions,
+		jobs: jobOptions,
+		countries: countryOptions,
+		currencies: currencyOptions,
+		currencyNames: currencyNameOptions,
+		getCompanyPreviewConfig,
+		getPersonPreviewConfig,
+		getLocationPreviewConfig,
+		getAggregatorPreviewConfig,
 	};
 };
+
+export const appliedViaOptions: SelectOption[] = [
+	{ value: "aggregator", label: "Aggregator" },
+	{ value: "company_website", label: "Company Website" },
+	{ value: "email", label: "Email" },
+	{ value: "phone", label: "Phone" },
+	{ value: "other", label: "Other" },
+];
+
+export const applicationStatusOptions: SelectOption[] = [
+	{ value: "applied", label: "Applied" },
+	{ value: "interview", label: "Interview" },
+	{ value: "rejected", label: "Rejected" },
+	{ value: "offer", label: "Offer" },
+	{ value: "withdrawn", label: "Withdrawn" },
+];
+
+export const attendanceTypeOptions: SelectOption[] = [
+	{ value: "on-site", label: "On-site" },
+	{ value: "hybrid", label: "Hybrid" },
+	{ value: "remote", label: "Remote" },
+];
+
+export const interviewAttendanceOptions: SelectOption[] = [
+	{ value: "on-site", label: "On-site" },
+	{ value: "remote", label: "Remote" },
+];
+
+export const updateTypeOptions: SelectOption[] = [
+	{ value: "received", label: "Received" },
+	{ value: "sent", label: "Sent" },
+];
+
+export const interviewTypeOptions: SelectOption[] = [
+	{ value: "HR", label: "HR Interview" },
+	{ value: "Technical", label: "Technical Interview" },
+	{ value: "Management", label: "Management Interview" },
+	{ value: "Panel", label: "Panel Interview" },
+	{ value: "Phone", label: "Phone Interview" },
+	{ value: "Video", label: "Video Interview" },
+	{ value: "Assessment", label: "Assessment/Test" },
+	{ value: "Final", label: "Final Interview" },
+	{ value: "Other", label: "Other" },
+];

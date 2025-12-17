@@ -6,7 +6,10 @@ export interface ModalViewField extends ViewField {
 	type?: string;
 	isTitle?: boolean;
 	displayCondition?: (item: any) => boolean;
+	icon?: string;
 }
+
+export type ModalViewFields = (ModalViewField | ModalViewField[])[];
 
 interface ModalViewFieldOverride extends Partial<ModalViewField> {}
 
@@ -26,7 +29,10 @@ export const renderModalViewField = (field: ModalViewField, item: any, id: strin
 	} else if (field.label) {
 		return (
 			<>
-				<h6 className="mb-2 fw-bold">{field.label}</h6>
+				<h6 className="mb-2 fw-bold">
+					{field.icon && <i className={`bi ${field.icon} me-2`} />}
+					{field.label}
+				</h6>
 				<div className="mb-3">{output}</div>
 			</>
 		);
@@ -78,9 +84,10 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	type: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	interviewType: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "type",
 		label: "Type",
+		render: renderFunctions.interviewType,
 		...overrides,
 	}),
 
@@ -205,7 +212,7 @@ export const modalViewFields = {
 	jobBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job",
 		label: "Job",
-		render: (params: RenderParams) => renderFunctions.jobBadge(params, null),
+		render: (params: RenderParams) => renderFunctions.jobBadge(params),
 		...overrides,
 	}),
 
@@ -237,6 +244,15 @@ export const modalViewFields = {
 		label: "Location on Map",
 		type: "custom",
 		render: renderFunctions.locationMap,
+		...overrides,
+	}),
+
+	scrapedLocationMap: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "location_map",
+		label: "Location on Map",
+		type: "custom",
+		render: renderFunctions.scrapedLocationMap,
+		displayCondition: (item) => "location" in item && !!item.location,
 		...overrides,
 	}),
 
@@ -272,6 +288,14 @@ export const modalViewFields = {
 		key: "is_active",
 		label: "Active",
 		render: (params: RenderParams) => renderFunctions.isActive({ ...params, view: true }),
+		...overrides,
+	}),
+
+	jobRating: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "job_rating",
+		label: "Job Rating",
+		icon: "bi-stars",
+		render: (params: RenderParams) => renderFunctions.jobRating({ ...params, view: true }),
 		...overrides,
 	}),
 

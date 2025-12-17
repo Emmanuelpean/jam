@@ -5,20 +5,19 @@ import { tableColumns } from "../components/rendering/view/TableColumns";
 
 export const UserManagementPage: React.FC = () => {
 	const columns = [
-		tableColumns.id(),
-		tableColumns.email(),
-		tableColumns.appTheme(),
-		tableColumns.last_login(),
-		tableColumns.isAdmin(),
-		tableColumns.isActive(),
-		tableColumns.toastActive(),
-		tableColumns.createdAt(),
+		tableColumns.idColumn(),
+		tableColumns.emailColumn(),
+		tableColumns.appThemeColumn(),
+		tableColumns.lastLoginColumn(),
+		tableColumns.isAdminColumn(),
+		tableColumns.isActiveColumn(),
+		tableColumns.toastActiveColumn(),
+		tableColumns.createdAtColumn(),
 	];
 
 	return (
 		<DataTable
 			entityType="users"
-			endpoint="users"
 			initialSortConfig={{ key: "id", direction: "asc" }}
 			title="Users"
 			columns={columns}

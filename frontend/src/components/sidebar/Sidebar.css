@@ -32,9 +32,10 @@
         box-shadow 0.4s ease;
         overflow: hidden;
     }
+
     .custom-sidebar.expanded {
         transform: translateX(0);
-        box-shadow: 0 0 0 9999px rgba(0,0,0,0.3); /* optional overlay effect */
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3); /* optional overlay effect */
     }
 }
 
@@ -260,4 +261,31 @@
 
 .nav-item.active:hover .submenu-arrow {
     color: white;
+}
+
+.sidebar-close-btn,
+.sidebar-open-btn {
+    position: fixed;
+    top: 16px;
+    z-index: 2100;
+    background: #fff;
+    border: none;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.sidebar-open-btn {
+    position: fixed;
+    left: 16px;
+}
+
+.sidebar-close-btn {
+    position: absolute;
+    right: 16px;
 }

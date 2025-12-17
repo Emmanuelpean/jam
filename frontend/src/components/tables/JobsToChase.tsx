@@ -1,34 +1,37 @@
-import React, { useEffect, useState } from "react";
-import { DataTableProps, DataTable } from "./DataTable";
-import { tableColumns } from "../rendering/view/TableColumns";
+import React, { JSX, useEffect, useState } from "react";
+import { DataTable, DataTableProps } from "./DataTable";
+import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
-import { JobData } from "../../services/Schemas";
 
-const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], columns = [], menuItems = [] }) => {
+const JobToChaseTable: React.FC<DataTableProps> = ({
+	data = [],
+	columns = [],
+	menuItems = [],
+}: DataTableProps): JSX.Element => {
 	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
+	let defaultColumns: TableColumn[] =
+		columns.length > 0
+			? columns
+			: [
+					tableColumns.titleColumn(),
+					tableColumns.companyBadgeColumn(),
+					tableColumns.locationBadgeColumn(),
+					tableColumns.daysSinceLastUpdateColumn(),
+					tableColumns.lastUpdateTypeColumn(),
+				];
+
 	useEffect(() => {
-		const handleResize = () => setWindowWidth(window.innerWidth);
+		const handleResize = (): void => setWindowWidth(window.innerWidth);
 		window.addEventListener("resize", handleResize);
 		return () => window.removeEventListener("resize", handleResize);
 	}, []);
 
-	let defaultColumns =
-		columns.length > 0
-			? columns
-			: [
-					tableColumns.title(),
-					tableColumns.companyBadge(),
-					tableColumns.location(),
-					tableColumns.daysSinceLastUpdate(),
-					tableColumns.lastUpdateType(),
-				];
-
 	if (windowWidth < 1300) {
-		defaultColumns = defaultColumns.filter((col) => col.key !== "location");
+		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "location");
 	}
 	if (windowWidth < 1000) {
-		defaultColumns = defaultColumns.filter((col) => col.key !== "company");
+		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "company");
 	}
 
 	return (
@@ -38,7 +41,6 @@ const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], columns = [], me
 			data={data}
 			initialSortConfig={{ key: "days_since_last_update", direction: "desc" }}
 			Modal={JobModal}
-			endpoint="jobs"
 			nameKey="title"
 			itemType="Job"
 			modalSize="xl"

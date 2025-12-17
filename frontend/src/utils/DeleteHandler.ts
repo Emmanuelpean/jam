@@ -1,31 +1,21 @@
-import { useDataContext, EntityType } from "../contexts/DataContext";
+import { EntityType, useDataContext } from "../contexts/DataContext";
+import { useGlobalToast } from "../hooks/useNotificationToast";
+import { useAlert } from "../contexts/AlertContext";
 
-export interface CreateDeleteHandlerProps {
-	entityType: EntityType;
-	showDelete: (config: any) => Promise<boolean>;
-	showError: (config: any) => Promise<boolean>;
-	nameKey?: string;
-	itemType?: string;
-}
-
-const getItemName = (item: any, nameKey?: string, itemType?: string): string => {
+const getItemName = (item: any, nameKey: string | null, itemType?: string): string => {
 	if (nameKey && nameKey !== "date") {
 		return `"${item[nameKey]}"`;
 	} else if (itemType) {
-		return `this ${itemType}`;
+		return `this ${itemType.toLowerCase()}`;
 	} else {
 		return `this item`;
 	}
 };
 
-export const useDeleteHandler = ({
-	entityType,
-	showDelete,
-	showError,
-	nameKey,
-	itemType = "item",
-}: CreateDeleteHandlerProps) => {
+export const useDeleteHandler = (entityType: EntityType, nameKey: string | null, itemType = "item") => {
 	const { deleteEntity } = useDataContext();
+	const { showToastSuccess, showToastError } = useGlobalToast();
+	const { showDelete } = useAlert();
 
 	return async (item: any): Promise<boolean> => {
 		const itemName = getItemName(item, nameKey, itemType);
@@ -43,24 +33,19 @@ export const useDeleteHandler = ({
 			}
 
 			await deleteEntity(entityType, item.id);
+			showToastSuccess(`${itemType} deleted successfully.`);
 			return true;
 		} catch (error) {
-			await showError({
-				message: `Failed to delete ${itemName}. Please check your connection and try again.`,
-			});
+			showToastError(`Failed to delete ${itemName}. Please check your connection and try again.`);
 			return false;
 		}
 	};
 };
 
-export const useActiveHandler = ({
-	entityType,
-	showDelete,
-	showError,
-	nameKey,
-	itemType = "item",
-}: CreateDeleteHandlerProps) => {
+export const useActiveHandler = (entityType: EntityType, nameKey: string | null, itemType = "item") => {
 	const { updateEntity } = useDataContext();
+	const { showToastSuccess, showToastError } = useGlobalToast();
+	const { showDelete } = useAlert();
 
 	return async (item: any): Promise<boolean> => {
 		const itemName = getItemName(item, nameKey, itemType);
@@ -78,11 +63,10 @@ export const useActiveHandler = ({
 			}
 
 			await updateEntity(entityType, item.id, { is_active: false });
+			showToastSuccess(`${itemType} deleted successfully.`);
 			return true;
 		} catch (error) {
-			await showError({
-				message: `Failed to delete ${itemName}. Please check your connection and try again.`,
-			});
+			showToastError(`Failed to delete ${itemName}. Please check your connection and try again.`);
 			return false;
 		}
 	};

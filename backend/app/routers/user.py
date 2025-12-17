@@ -37,6 +37,68 @@ user_router = generate_data_table_crud_router(
 )
 
 
+# ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------
+
+
+user_qualification_router = APIRouter(prefix="/user_qualifications", tags=["user_qualifications"])
+
+
+@user_qualification_router.get("/latest", response_model=schemas.UserQualificationOut)
+def get_latest_user_qualification(
+    db: Session = Depends(database.get_db),
+    user: models.User = Depends(oauth2.get_current_user),
+):
+    """Get the latest user qualification for the current user."""
+
+    entry = (
+        db.query(models.UserQualification)
+        .filter(models.UserQualification.owner_id == user.id)
+        .order_by(models.UserQualification.modified_at.desc())
+        .first()
+    )
+    if not entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User Qualification not found",
+        )
+    return entry
+
+
+@user_qualification_router.post("/", response_model=schemas.UserQualificationOut)
+def upsert_user_qualification(
+    qualification: schemas.UserQualificationUpsert,
+    db: Session = Depends(database.get_db),
+    user: models.User = Depends(oauth2.get_current_user),
+):
+    """Create or update a user qualification."""
+
+    entry = (
+        db.query(models.UserQualification)
+        .filter(models.UserQualification.owner_id == user.id, models.UserQualification.id == qualification.id)
+        .first()
+    )
+    if entry:
+        # Determine if the qualification was used to rate jobs
+        if len(entry.job_ratings):
+            # noinspection PyArgumentList
+            entry = models.UserQualification(
+                **qualification.model_dump(exclude_unset=True, exclude=["id"]), owner_id=user.id
+            )
+            db.add(entry)
+        else:
+            for field, value in qualification.model_dump(exclude_unset=True).items():
+                setattr(entry, field, value)
+    else:
+        # noinspection PyArgumentList
+        entry = models.UserQualification(
+            **qualification.model_dump(exclude_unset=True, exclude=["id"]), owner_id=user.id
+        )
+        db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return entry
+
+
 # ---------------------------------------------------- CURRENT USER ----------------------------------------------------
 
 
@@ -103,7 +165,7 @@ def send_email_change_with_rate_limit(
         }
 
 
-@current_user_router.put("/")
+@current_user_router.put("/", response_model=schemas.CurrentUserUpdateResponse)
 def update_current_user_profile(
     user_update: schemas.CurrentUserUpdate,
     current_user: models.User = Depends(oauth2.get_current_user),
@@ -116,7 +178,7 @@ def update_current_user_profile(
     :returns: A dictionary with the result of the update operation."""
 
     result = {"success": True, "message": "User has been successfully updated"}
-    user_update_dict = user_update.model_dump(exclude_defaults=True)
+    user_update_dict = user_update.model_dump(exclude_unset=True)
 
     # Track if password or email changed
     password_changed = False
@@ -127,12 +189,19 @@ def update_current_user_profile(
     # Determine if the user is updating the password or email
     requires_password_check = "password" in user_update_dict or "email" in user_update_dict
 
+    # Prevent test users from changing password or email
+    if current_user.is_demo and requires_password_check:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Test users cannot change their password or email address.",
+        )
+
     # Update password/email
     current_password = user_update_dict.get("current_password", "")
     if requires_password_check and not utils.verify_password(current_password, current_user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="The current password is required",
+            detail="The current password is incorrect.",
         )
 
     # Track password change
@@ -195,6 +264,13 @@ def verify_email_change(
             detail="Invalid or expired token. Please request a new one by logging in and changing your email address.",
         )
 
+    # Check if demo user
+    if user.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Test users cannot change their password or email address.",
+        )
+
     # Check if token is expired
     if check_token_expiration(user.email_change_token_created_at):
         raise HTTPException(
@@ -213,13 +289,14 @@ def verify_email_change(
         )
 
     # Update email and clear pending fields
+    old_email = user.email
     user.email = user.pending_email
     user.pending_email = None
     user.email_change_token = None
     user.email_change_token_created_at = None
     user.token_version += 1
     db.commit()
-    email_service.send_email_change_notification(user.email)
+    email_service.send_email_change_notification(user.email, old_email)
 
     return {"message": "Email address changed successfully. You can now log in with your new email."}
 

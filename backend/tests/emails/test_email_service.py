@@ -148,7 +148,6 @@ class TestEmailServiceIMAP:
             sender_email="sender@example.com",
             subject_contains="Test Subject",
             timedelta_days=1,
-            inbox_only=True,
         )
 
         # Verify search was called with combined criteria
@@ -181,8 +180,8 @@ class TestEmailServiceIMAP:
         assert email_ids == []
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_content_success(self, mock_imap) -> None:
-        """Test retrieving email content."""
+    def test_get_email_data_success(self, mock_imap) -> None:
+        """Test retrieving email data."""
 
         mock_mail = MagicMock()
         mock_imap.return_value = mock_mail
@@ -199,19 +198,19 @@ class TestEmailServiceIMAP:
         )
         mock_mail.fetch.return_value = ("OK", [(b"1", email_message)])
 
-        content = email_svc.get_email_content("1")
+        content = email_svc.get_email_data("1")
 
         assert content is not None
         assert content["id"] == "1"
         assert content["subject"] == "Test Email"
         assert content["from"] == "sender@example.com"
-        assert "This is the email body" in content["body_text"]
+        assert "This is the email body" in content["body"]
         mock_mail.close.assert_called_once()
         mock_mail.logout.assert_called_once()
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_content_multipart(self, mock_imap) -> None:
-        """Test retrieving multipart email content."""
+    def test_get_email_data_multipart(self, mock_imap) -> None:
+        """Test retrieving multipart email data."""
 
         mock_mail = MagicMock()
         mock_imap.return_value = mock_mail
@@ -237,13 +236,13 @@ class TestEmailServiceIMAP:
         )
         mock_mail.fetch.return_value = ("OK", [(b"2", multipart_email)])
 
-        content = email_svc.get_email_content("2")
+        content = email_svc.get_email_data("2")
 
         assert content is not None
-        assert "Plain text body" in content["body_text"]
+        assert "<html>HTML body</html>" in content["body"]
 
     @patch("imaplib.IMAP4_SSL")
-    def test_get_email_content_not_found(self, mock_imap) -> None:
+    def test_get_email_data_not_found(self, mock_imap) -> None:
         """Test retrieving non-existent email."""
 
         mock_mail = MagicMock()
@@ -251,7 +250,7 @@ class TestEmailServiceIMAP:
         mock_mail.fetch.return_value = ("NO", None)
         email_svc = EmailService()
 
-        content = email_svc.get_email_content("999")
+        content = email_svc.get_email_data("999")
 
         assert content is None
 
@@ -295,38 +294,13 @@ class TestEmailServiceIMAP:
             ("OK", [(b"1", email_1)]),
         ]
 
-        emails = email_svc.get_emails(limit=10)
+        emails = email_svc.get_emails()
 
         assert len(emails) == 3
         # Should be in reverse order (most recent first)
         assert emails[0]["subject"] == "Email 3"
         assert emails[1]["subject"] == "Email 2"
         assert emails[2]["subject"] == "Email 1"
-
-    @patch("imaplib.IMAP4_SSL")
-    def test_get_emails_with_limit(self, mock_imap) -> None:
-        """Test retrieving emails with limit."""
-
-        mock_mail = MagicMock()
-        mock_imap.return_value = mock_mail
-        email_svc = EmailService()
-
-        # Return 10 email IDs but limit to 3
-        mock_mail.search.return_value = ("OK", [b"1 2 3 4 5 6 7 8 9 10"])
-
-        # Only the last 3 should be fetched
-        email_template = b"From: sender@example.com\r\nSubject: Email {}\r\n\r\nBody"
-        mock_mail.fetch.side_effect = [
-            ("OK", [(b"10", email_template.replace(b"{}", b"10"))]),
-            ("OK", [(b"9", email_template.replace(b"{}", b"9"))]),
-            ("OK", [(b"8", email_template.replace(b"{}", b"8"))]),
-        ]
-
-        emails = email_svc.get_emails(limit=3)
-
-        assert len(emails) == 3
-        # Should only fetch the last 3 IDs
-        assert mock_mail.fetch.call_count == 3
 
     @patch("imaplib.IMAP4_SSL")
     def test_get_emails_empty_results(self, mock_imap) -> None:

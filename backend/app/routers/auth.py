@@ -308,6 +308,7 @@ def request_password_reset(
     :return: Success message
     :raises HTTPException with a 404 status code if user does not exist
     :raises HTTPException with a 401 status code if user account is not active
+    :raises HTTPException with a 403 status code if user is a test user
     :raises HTTPException with send_password_reset_with_rate_limit error details"""
 
     # Find user by email
@@ -318,6 +319,10 @@ def request_password_reset(
 
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User account is not active.")
+
+    # Prevent test users from resetting password
+    if user.is_demo:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test users cannot reset their password.")
 
     # Send password reset email with rate limiting
     result = send_password_reset_with_rate_limit(user, db)
@@ -337,6 +342,7 @@ def reset_password(
     :param db: The database session
     :return: Success message
     :raises HTTPException with code 403 if token is invalid or expired
+    :raises HTTPException with code 403 if user is a test user
     :raises HTTPException with code 500 if there is an error resetting the password"""
 
     # Hash the token to compare with stored hash
@@ -347,6 +353,10 @@ def reset_password(
 
     if not user or check_token_expiration(user.password_reset_token_created_at):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired password reset token")
+
+    # Prevent test users from resetting password
+    if user.is_demo:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Test users cannot reset their password.")
 
     # Hash the new password
     hashed_password = utils.hash_password(reset_data.new_password)

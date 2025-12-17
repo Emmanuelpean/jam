@@ -1,7 +1,9 @@
 """Module containing utility functions."""
 
 import hashlib
+import json
 import logging
+import os
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -9,6 +11,8 @@ from typing import Optional
 
 import bcrypt
 from pydantic import EmailStr
+
+from app.config import settings
 
 
 def hash_password(password: str) -> str:
@@ -44,6 +48,41 @@ def clean_email(email: EmailStr | str) -> str:
     return str(email).strip().lower()
 
 
+def open_json(filepath: str) -> list[dict]:
+    """Open a file and return its content
+    :param filepath: The json file to open
+    :return: The contents of the file"""
+
+    BASE_DIR = os.path.dirname(__file__)
+    path = os.path.join(BASE_DIR, "..", filepath)
+    with open(path, "r", encoding="utf8") as ofile:
+        return json.load(ofile)
+
+
+def super_getattr(obj: object, attr: str) -> object:
+    """Get nested attributes from an object using dot notation.
+    :param obj: The object to get attributes from
+    :param attr: The attribute path in dot notation"""
+
+    attrs = attr.split(".")
+    for a in attrs:
+        obj = getattr(obj, a)
+    return obj
+
+
+def super_hasattr(obj: object, attr: str) -> bool:
+    """Check if nested attributes exist in an object using dot notation.
+    :param obj: The object to check attributes from
+    :param attr: The attribute path in dot notation"""
+
+    attrs = attr.split(".")
+    for a in attrs:
+        if not hasattr(obj, a):
+            return False
+        obj = getattr(obj, a)
+    return True
+
+
 class AppLogger:
     """Centralised logging utility"""
 
@@ -53,7 +92,6 @@ class AppLogger:
     def get_logger(
         cls,
         name: str,
-        log_dir: str = "logs",
         log_file: Optional[str] = None,
         level: int = logging.INFO,
         max_file_size: int = 10 * 1024 * 1024,  # 10MB
@@ -62,7 +100,6 @@ class AppLogger:
     ) -> logging.Logger:
         """Get or create a logger with the specified configuration
         :param name: Logger name (usually module name)
-        :param log_dir: Directory for log files
         :param log_file: Specific log file name (defaults to {name}.log)
         :param level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         :param max_file_size: Maximum size of log file before rotation
@@ -71,6 +108,7 @@ class AppLogger:
         :return: Configured logger instance"""
 
         # Return cached logger if it exists
+        log_dir = settings.log_directory
         cache_key = f"{name}_{log_dir}_{log_file}"
         if cache_key in cls._loggers:
             return cls._loggers[cache_key]
@@ -141,7 +179,6 @@ class AppLogger:
 
         return cls.get_logger(
             name=service_name,
-            log_dir="logs",
             log_file=f"{service_name}.log",
             level=level,
             max_file_size=10 * 1024 * 1024,  # 10MB
@@ -185,39 +222,3 @@ class AppLogger:
                 logger.info(f"{key}: {value}")
 
         logger.info("=" * 50)
-
-
-def get_gmail_logger() -> logging.Logger:
-    """Get logger for Gmail scraping service"""
-
-    return AppLogger.create_service_logger("gmail_scraper", "INFO")
-
-
-def get_job_scraper_logger() -> logging.Logger:
-    """Get logger for job scraping service"""
-
-    return AppLogger.create_service_logger("job_scraper", "INFO")
-
-
-def get_scheduler_logger() -> logging.Logger:
-    """Get logger for scheduler service"""
-
-    return AppLogger.create_service_logger("scheduler", "INFO")
-
-
-def get_api_logger() -> logging.Logger:
-    """Get logger for API operations"""
-
-    return AppLogger.create_service_logger("api", "INFO")
-
-
-def get_database_logger() -> logging.Logger:
-    """Get logger for database operations"""
-
-    return AppLogger.create_service_logger("database", "WARNING")
-
-
-def get_auth_logger() -> logging.Logger:
-    """Get logger for authentication operations"""
-
-    return AppLogger.create_service_logger("auth", "INFO")

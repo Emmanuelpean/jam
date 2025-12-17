@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { ProgressBar, Spinner } from "react-bootstrap";
 import L from "leaflet";
 import { geocodeLocationsBatch } from "../../services/GeoCoding";
 import "leaflet/dist/leaflet.css";
-import { LocationData } from "../../services/Schemas";
+import { LocationData, LocationDataTransform } from "../../services/Schemas";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -25,8 +25,9 @@ interface GeocodedLocation extends LocationData {
 }
 
 interface LocationMapProps {
-	locations?: LocationData[];
+	locations?: LocationDataTransform[];
 	height?: string;
+	scrollWheelZoom?: boolean;
 }
 
 interface MapViewUpdaterProps {
@@ -63,7 +64,7 @@ const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpd
 	return null;
 };
 
-const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400px" }) => {
+const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400px", scrollWheelZoom = true }) => {
 	const [geocodedLocations, setGeocodedLocations] = useState<GeocodedLocation[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [progress, setProgress] = useState<Progress>({ current: 0, total: 0 });
@@ -160,21 +161,31 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 					boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
 				}}
 			>
-				<MapContainer center={[20, 0]} zoom={2} style={{ height: "100%", width: "100%" }}>
+				<MapContainer
+					center={[20, 0]}
+					zoom={2}
+					style={{ height: "100%", width: "100%" }}
+					scrollWheelZoom={scrollWheelZoom}
+				>
 					<TileLayer
 						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 						url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
 					/>
 					<MapViewUpdater locations={geocodedLocations} />
-					{geocodedLocations.map((location) => (
-						<Marker key={location.id} position={[location.geocoded.latitude, location.geocoded.longitude]}>
-							<Popup>
-								<div>
-									<strong>{formatLocationName(location)}</strong>
-								</div>
-							</Popup>
-						</Marker>
-					))}
+					{geocodedLocations.map(
+						(location: GeocodedLocation): JSX.Element => (
+							<Marker
+								key={`${location.id}-${location.geocoded.latitude}-${location.geocoded.longitude}`}
+								position={[location.geocoded.latitude, location.geocoded.longitude]}
+							>
+								<Popup>
+									<div>
+										<strong>{formatLocationName(location)}</strong>
+									</div>
+								</Popup>
+							</Marker>
+						),
+					)}
 				</MapContainer>
 			</div>
 		</div>

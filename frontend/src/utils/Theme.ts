@@ -13,7 +13,3 @@ export const THEMES: Theme[] = [
 ];
 
 export const DEFAULT_THEME: string = "mixed-berry";
-
-export const isValidTheme = (themeKey: string) => {
-	return THEMES.some((theme: Theme): boolean => theme.key === themeKey);
-};

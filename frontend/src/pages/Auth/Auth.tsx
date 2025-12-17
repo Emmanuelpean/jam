@@ -9,7 +9,8 @@ import { Errors, FormField, SyntheticEvent } from "../../components/rendering/wi
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { ApiError, authApi } from "../../services/Api";
+import { authApi } from "../../services/api/Users";
+import { ApiError } from "../../services/api/Base";
 import { useLoading } from "../../contexts/LoadingContext";
 
 interface VerificationResponse {
@@ -73,7 +74,6 @@ function AuthForm(): JSX.Element {
 	}, [location.pathname, isAuthenticated, searchParams, navigate]);
 
 	useEffect(() => {
-		console.log("Auth mode changed to:", mode);
 		// Verifies the email
 		if (!["verifyEmail", "verifyNewEmail"].includes(mode) || isVerifying) return;
 
@@ -109,6 +109,7 @@ function AuthForm(): JSX.Element {
 				setTimeout(() => {
 					isVerifying = false;
 				}, 1000);
+				switchToLogin();
 			});
 	}, [mode, location.pathname, searchParams, navigate]);
 

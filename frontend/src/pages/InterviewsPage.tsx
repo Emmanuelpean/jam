@@ -5,18 +5,17 @@ import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const InterviewsPage = () => {
 	const columns = [
-		tableColumns.job(),
-		tableColumns.interviewers(),
-		tableColumns.date(),
-		tableColumns.type(),
-		tableColumns.location(),
-		tableColumns.createdAt(),
+		tableColumns.jobBadgeColumn(),
+		tableColumns.interviewerBadgesColumn(),
+		tableColumns.dateColumn(),
+		tableColumns.typeColumn(),
+		tableColumns.locationBadgeColumn(),
+		tableColumns.createdAtColumn(),
 	];
 
 	return (
 		<DataTable
 			entityType="interviews"
-			endpoint="interviews"
 			initialSortConfig={{ key: "date", direction: "desc" }}
 			title="Interviews"
 			columns={columns}

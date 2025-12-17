@@ -200,7 +200,8 @@ class TestUserSettingsPage(BaseTest):
         self.set_text(self.new_password, new_password)
         self.set_text(self.confirm_password, new_password)
         self.confirm()
-        self.assert_toast("User settings updated successfully.")
+        self.wait_for_page("login")
+        self.assert_toast("Password updated successfully. Please log in again.")
         assert verify_password(new_password, self.db_user.password)
 
     def test_change_password_invalid(self) -> None:

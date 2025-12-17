@@ -1,8 +1,8 @@
 import React, { JSX, useState } from "react";
 import { Form } from "react-bootstrap";
-import { displayError, WidgetProps } from "./WidgetRenders";
+import { WidgetProps } from "./WidgetRenders";
 
-const PasswordInput = ({ field, value, handleChange, error }: WidgetProps) => {
+export const PasswordInput = ({ field, value, handleChange, error }: WidgetProps) => {
 	const [showPassword, setShowPassword] = useState<boolean>(false);
 
 	return (
@@ -19,6 +19,7 @@ const PasswordInput = ({ field, value, handleChange, error }: WidgetProps) => {
 					isInvalid={!!error}
 					autoComplete={field.autoComplete || "current-password"}
 					style={{ paddingRight: "50px" }}
+					disabled={field.isDisabled}
 				/>
 				<button
 					type="button"
@@ -32,8 +33,4 @@ const PasswordInput = ({ field, value, handleChange, error }: WidgetProps) => {
 			{/*{field.helpText && !error && <Form.Text className="text-muted">{field.helpText}</Form.Text>}*/}
 		</>
 	);
-};
-
-export const renderPasswordInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
-	return <PasswordInput field={field} value={value} handleChange={handleChange} error={error} />;
 };

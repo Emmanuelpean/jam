@@ -88,6 +88,22 @@ class Owned(CommonBase):
     owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
 
 
+class ServiceLog(object):
+    """Base class for service logs.
+
+    Attributes:
+    -----------
+    - `run_duration` (float, optional): Duration of the service run.
+    - `run_datetime` (datetime): Date and time of the service run.
+    - `is_success` (bool): Indicates whether the service run was successful.
+    - `error_message` (str, optional): Error message if the service run failed."""
+
+    run_duration = Column(Float, nullable=True)
+    run_datetime = Column(TIMESTAMP(timezone=True), nullable=False)
+    is_success = Column(Boolean, nullable=True)
+    error_message = Column(String, nullable=True)
+
+
 # --------------------------------------------------------- APP --------------------------------------------------------
 
 
@@ -133,6 +149,7 @@ class User(CommonBase, Base):
     - `email` (str, unique): User's email address.
     - `theme` (str): The theme of the application.
     - `is_admin` (bool): Indicates whether the user is an administrator.
+    - `is_demo` (bool): Indicates whether the user is a demo account.
     - `is_active` (bool): Indicates whether the user account is active.
     - `last_login` (datetime, optional): The timestamp of the last login.
     - `chase_threshold` (int): The threshold for chasing jobs in the dashboard.
@@ -148,17 +165,14 @@ class User(CommonBase, Base):
     - `pending_email` (str, optional): New email address pending verification.
     - `email_change_token` (str, optional): Token used for email change verification.
     - `email_change_token_created_at` (datetime, optional): Timestamp of when the email change token was created.
-    - `token_version` (int): Version of the token for invalidation purposes.
-
-    Constraints:
-    ------------
-    - Minimum password length is enforced based on environment variables."""
+    - `token_version` (int): Version of the token for invalidation purposes."""
 
     password = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
     theme = Column(String, nullable=False, server_default="mixed-berry")
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
     is_admin = Column(Boolean, nullable=False, server_default=expression.false())
+    is_demo = Column(Boolean, nullable=False, server_default=expression.false())
     last_login = Column(TIMESTAMP(timezone=True), nullable=True)
     chase_threshold = Column(Integer, nullable=False, server_default="14")
     deadline_threshold = Column(Integer, nullable=False, server_default="7")
@@ -174,6 +188,43 @@ class User(CommonBase, Base):
     email_change_token = Column(String, nullable=True)
     email_change_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
     token_version = Column(Integer, default=0, nullable=False)
+
+
+class UserQualification(Owned, Base):
+    """User qualifications for job matching
+
+    Attributes:
+    -----------
+    - `experience` (str): User's experience details.
+    - `skills` (str): User's skills details.
+    - `qualities` (str): User's personal qualities.
+    - `education` (str): User's education details.
+    - `interests` (str): User's job interests.
+    - `is_active` (bool): Indicates whether the qualification is active.
+
+    Relationships:
+    --------------
+    - `job_ratings` (list of JobRating): List of job ratings associated with the user qualification.
+
+    Constraints
+    ------------
+    - At least one of experience, skills, qualities, education, or interests must be provided"""
+
+    experience = Column(String, nullable=True)
+    skills = Column(String, nullable=True)
+    qualities = Column(String, nullable=True)
+    education = Column(String, nullable=True)
+    interests = Column(String, nullable=True)
+    is_active = Column(Boolean, nullable=False, server_default=expression.true())
+
+    job_ratings = relationship("JobRating", back_populates="user_qualification")
+
+    __table_args__ = (
+        CheckConstraint(
+            "experience IS NOT NULL OR skills IS NOT NULL OR qualities IS NOT NULL OR education IS NOT NULL OR interests IS NOT NULL",
+            name="user_qualification_data_required",
+        ),
+    )
 
 
 # -------------------------------------------------------- DATA --------------------------------------------------------
@@ -343,7 +394,6 @@ class Person(Owned, Base):
     - `role` (str, optional): Role or position held by the person within the company.
     - `linkedin_url` (str, optional): LinkedIn profile URL of the person.
     - `name` (str): Computed property combining first and last name.
-    - `name_company` (str): Computed property combining first name, last name, and company name.
 
     Foreign keys:
     -------------
@@ -376,15 +426,6 @@ class Person(Owned, Base):
 
         return f"{self.first_name} {self.last_name}"
 
-    @hybrid_property
-    def name_company(self) -> str:
-        """Computed property that combines the first name, last name, and the company name"""
-
-        if self.company:
-            return f"{self.first_name} {self.last_name} ({self.company.name})"
-        else:
-            return self.name
-
 
 class Job(Owned, Base):
     """Represents job postings within the application.
@@ -401,7 +442,6 @@ class Job(Owned, Base):
     - `deadline` (datetime, optional): Deadline for the job application.
     - `followup_snooze_datetime` (datetime, optional): Date and time to snooze follow-up reminders.
     - `attendance_type` (str, optional): Type of attendance offered for the job (on-site, remote, hybrid).
-    - `name` (str): Computed property combining the job title and company name.
     - `application_date` (datetime, optional): Date when the application was submitted.
     - `application_url` (str, optional): URL used to submit the application.
     - `application_status` (str, optional): Current status of the job application
@@ -483,17 +523,6 @@ class Job(Owned, Base):
     application_cv = relationship("File", foreign_keys=[cv_id], lazy="select")
     application_cover_letter = relationship("File", foreign_keys=[cover_letter_id], lazy="select")
 
-    @hybrid_property
-    def name(self) -> str | Column[str]:
-        """Computed property that combines the job title and company name"""
-
-        if hasattr(self, "company") and self.title and self.company and self.company.name:
-            return f"{self.title} - {self.company.name}"
-        elif self.title:
-            return self.title
-        else:
-            return "Unknown Job"
-
     __table_args__ = (
         CheckConstraint("personal_rating >= 1 AND personal_rating <= 5", name=f"valid_rating_range"),
         CheckConstraint("salary_min <= salary_max", name=f"valid_salary_range"),
@@ -502,7 +531,10 @@ class Job(Owned, Base):
             "application_status IN ('applied', 'interview', 'offer', 'rejected', 'withdrawn')",
             name="valid_application_status_values",
         ),
-        CheckConstraint("applied_via IN ('aggregator', 'email', 'phone', 'other')", name="valid_applied_via_values"),
+        CheckConstraint(
+            "applied_via IN ('aggregator', 'email', 'company_website', 'phone', 'other')",
+            name="valid_applied_via_values",
+        ),
     )
 
 

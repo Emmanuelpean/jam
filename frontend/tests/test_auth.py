@@ -408,6 +408,7 @@ class TestEmailVerification(TestAuthenticationPage):
         verification_url = self.get_verification_link_from_email(email)
         self.driver.get(verification_url)
         self.assert_toast_message("Account verified successfully")
+        self.wait_for_login()
 
     def test_full_email_verification_flow(self) -> None:
         """Test the full email verification flow starting from registration to successful login after email verification."""
@@ -437,6 +438,7 @@ class TestEmailVerification(TestAuthenticationPage):
         self.login_user(test_email, test_password)
         self.assert_toast_message("Please wait")
         self._verify_account_via_email_link(test_email)
+        self.wait_for_login()
         self.login_user(test_email, test_password)
         self.wait_for_dashboard()
 

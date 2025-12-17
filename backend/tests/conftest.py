@@ -10,8 +10,7 @@ and providing the necessary utilities for seamless interactions with the applica
 
 import datetime as dt
 import os
-from functools import wraps
-from typing import Any, Generator, Callable
+from typing import Any, Generator
 
 import pytest
 from fastapi import status
@@ -20,10 +19,12 @@ from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
 from app import models, database, schemas
+from app.job_email_scraping import models as eis_models
+from app.job_rating import models as rating_models
 from app.config import settings
-from app.eis import models as eis_models
 from app.main import app
 from app.oauth2 import create_access_token
+from app.utils import hash_token
 from tests.utils.create_data import (
     create_users,
     create_companies,
@@ -34,14 +35,28 @@ from tests.utils.create_data import (
     create_jobs,
     create_files,
     create_interviews,
-    create_job_alert_emails,
-    create_scraped_jobs,
-    create_service_logs,
     create_job_application_updates,
     create_settings,
+    create_scraped_jobs,
+    create_job_scraping_service_logs,
+    create_job_scraping_platform_stats,
+    create_job_scraping_service_errors,
+    create_job_alert_emails,
+    create_user_qualifications,
+    create_job_ratings,
+    create_job_rating_service_logs,
 )
 from tests.utils.seed_database import reset_database
-from app.utils import hash_token
+from tests.utils.test_data import (
+    DEMO_USER_INDEX,
+    ADMIN_USER_INDEX,
+    INACTIVE_USER_INDEX,
+    REGULAR_USER_INDEX,
+    UNVERIFIED_USER_INDEX,
+)
+
+# ---------------------------------------------------- TEST DATABASE ---------------------------------------------------
+
 
 DATABASE_NAME = "jam_test"
 SQLALCHEMY_DATABASE_URL = (
@@ -79,6 +94,16 @@ def session() -> Generator[orm.Session, Any, None]:
         db.close()
 
 
+# ------------------------------------------------------- CLIENTS ------------------------------------------------------
+
+
+@pytest.fixture
+def tokens(test_users) -> list[str]:
+    """Fixture that generates access tokens for the given test users."""
+
+    return [create_access_token({"user_id": user.id}) for user in test_users]
+
+
 @pytest.fixture
 def client(session) -> Generator[TestClient, Any, None]:
     """Fixture that provides a test client with an overridden database dependency.
@@ -95,89 +120,9 @@ def client(session) -> Generator[TestClient, Any, None]:
         finally:
             session.close()
 
-    app.dependency_overrides[database.get_db] = override_get_db
+    app.dependency_overrides[database.get_db] = override_get_db  # noqa
     yield TestClient(app)
-    app.dependency_overrides.pop(database.get_db, None)  # Clean up dependency override
-
-
-@pytest.fixture
-def test_users(session) -> list[models.User]:
-    """Create test user data"""
-
-    return create_users(session)
-
-
-@pytest.fixture
-def test_unverified_user(session) -> models.User:
-    """Fixture to create an unverified user."""
-
-    # noinspection PyArgumentList
-    return create_users(
-        session,
-        [
-            dict(
-                email="unverified@test.com",
-                password="password",
-                is_verified=False,
-                is_active=True,
-            )
-        ],
-    )[0]
-
-
-@pytest.fixture
-def test_unverified_token_user(session) -> models.User:
-    """Fixture to create an unverified user."""
-
-    plain_token = "testtoken"
-    hashed_token = hash_token(plain_token)
-
-    user = create_users(
-        session,
-        [
-            dict(
-                email="unverified@test.com",
-                password="password",
-                is_verified=False,
-                is_active=True,
-                verification_token=hashed_token,
-                verification_token_created_at=dt.datetime.now(),
-            )
-        ],
-    )[0]
-    user.plain_verification_token = plain_token
-    return user
-
-
-@pytest.fixture
-def test_user_change_email_token_user(session) -> models.User:
-    """Fixture to create a user with a change email token."""
-
-    plain_token = "changeemailtoken"
-    hashed_token = hash_token(plain_token)
-    user = create_users(
-        session,
-        [
-            dict(
-                email="test_user@test.com",
-                password="password",
-                is_verified=True,
-                is_active=True,
-                pending_email="newemail@test.com",
-                email_change_token=hashed_token,
-                email_change_token_created_at=dt.datetime.now(),
-            )
-        ],
-    )[0]
-    user.plain_verification_token = plain_token
-    return user
-
-
-@pytest.fixture
-def tokens(test_users) -> list[str]:
-    """Fixture that generates access tokens for the given test users."""
-
-    return [create_access_token({"user_id": user.id}) for user in test_users]
+    app.dependency_overrides.pop(database.get_db, None)  # Clean up dependency override  # noqa
 
 
 @pytest.fixture
@@ -195,29 +140,127 @@ def authorised_clients(client: TestClient, tokens: list[str]) -> list[TestClient
 @pytest.fixture
 def admin_client(authorised_clients) -> TestClient:
     """Fixture for an admin client."""
-    return authorised_clients[1]
+
+    return authorised_clients[ADMIN_USER_INDEX]
 
 
 @pytest.fixture
-def admin_user(test_users) -> models.User:
-    """Fixture for an admin user."""
-    user = test_users[1]
-    assert user.is_admin
-    return user
-
-
-@pytest.fixture
-def test_client(authorised_clients) -> TestClient:
+def regular_user_client(authorised_clients) -> TestClient:
     """Fixture for a non-admin client."""
-    return authorised_clients[0]
+
+    return authorised_clients[REGULAR_USER_INDEX]
 
 
 @pytest.fixture
-def test_user(test_users) -> models.User:
+def demo_user_client(authorised_clients) -> TestClient:
+    """Fixture for a demo user client"""
+
+    return authorised_clients[DEMO_USER_INDEX]
+
+
+# -------------------------------------------------------- USERS -------------------------------------------------------
+
+
+@pytest.fixture
+def test_users(session) -> list[models.User]:
+    """Create test user data"""
+
+    return create_users(session)
+
+
+@pytest.fixture
+def test_admin_user(test_users) -> models.User:
+    """Fixture for an admin user."""
+
+    return test_users[ADMIN_USER_INDEX]
+
+
+@pytest.fixture
+def test_demo_user(test_users) -> models.User:
     """Fixture for a non-admin user."""
-    user = test_users[0]
-    assert not user.is_admin
+
+    return test_users[DEMO_USER_INDEX]
+
+
+@pytest.fixture
+def test_regular_user(test_users) -> models.User:
+    """Fixture for a non-admin user."""
+
+    return test_users[REGULAR_USER_INDEX]
+
+
+@pytest.fixture
+def test_inactive_user(test_users) -> models.User:
+    """Fixture for an inactive user."""
+
+    return test_users[INACTIVE_USER_INDEX]
+
+
+@pytest.fixture
+def test_unverified_user(test_users) -> models.User:
+    """Fixture to create an unverified user (i.e. is_verified=False)."""
+
+    return test_users[UNVERIFIED_USER_INDEX]
+
+
+@pytest.fixture
+def test_unverified_token_user(session) -> models.User:
+    """Fixture to create an unverified user with a verification token."""
+
+    plain_token = "testtoken"
+    hashed_token = hash_token(plain_token)
+    user_data = dict(
+        email="unverified@test.com",
+        password="password",
+        is_verified=False,
+        is_active=True,
+        verification_token=hashed_token,
+        verification_token_created_at=dt.datetime.now(),
+    )
+
+    user = create_users(session, [user_data])[0]
+    user.plain_verification_token = plain_token
     return user
+
+
+@pytest.fixture
+def test_user_change_email_token_user(session) -> models.User:
+    """Fixture to create a user with a change email token."""
+
+    plain_token = "changeemailtoken"
+    hashed_token = hash_token(plain_token)
+    user_data = dict(
+        email="test_user@test.com",
+        password="password",
+        is_verified=True,
+        is_active=True,
+        pending_email="newemail@test.com",
+        email_change_token=hashed_token,
+        email_change_token_created_at=dt.datetime.now(),
+    )
+    user = create_users(session, [user_data])[0]
+    user.plain_verification_token = plain_token
+    return user
+
+
+@pytest.fixture
+def test_user_qualifications(session, test_users) -> list[models.UserQualification]:
+    """Create test user qualifications"""
+
+    return create_user_qualifications(session, test_users)
+
+
+# -------------------------------------------------------- OTHER -------------------------------------------------------
+
+
+@pytest.fixture
+def test_settings(session) -> list[models.Setting]:
+    """Create test settings data"""
+
+    return create_settings(session)
+
+
+# ------------------------------------------------------ TEST DATA -----------------------------------------------------
 
 
 @pytest.fixture
@@ -294,14 +337,7 @@ def test_jobs(
 
 @pytest.fixture
 def jobs_unauthorised_data(
-    session,
-    test_users,
-    test_companies,
-    test_locations,
-    test_keywords,
-    test_persons,
-    test_aggregators,
-    test_files,
+    session, test_users, test_companies, test_locations, test_keywords, test_persons, test_aggregators, test_files
 ) -> tuple[list[dict], int, list[dict], list[dict]]:
     """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
 
@@ -427,16 +463,6 @@ def test_job_application_updates_unauthorised(
     return updates, owner_id
 
 
-# ---------------------------------------------------- EIS Fixtures ----------------------------------------------------
-
-
-@pytest.fixture
-def test_job_alert_emails(session, test_users, test_service_logs) -> list[eis_models.JobAlertEmail]:
-    """Create test job alert emails"""
-
-    return create_job_alert_emails(session, test_users, test_service_logs)
-
-
 @pytest.fixture
 def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[eis_models.ScrapedJob]:
     """Create test job alert email jobs"""
@@ -445,17 +471,52 @@ def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[eis_mo
 
 
 @pytest.fixture
-def test_service_logs(session) -> list[eis_models.EisServiceLog]:
+def test_eis_service_logs(session) -> list[eis_models.JobEmailScrapingServiceLog]:
     """Create test service logs"""
 
-    return create_service_logs(session)
+    return create_job_scraping_service_logs(session)
 
 
 @pytest.fixture
-def test_settings(session) -> list[models.Setting]:
-    """Create test settings data"""
+def test_platform_stats(session, test_eis_service_logs) -> list[eis_models.JobEmailScrapingPlatformStat]:
+    """Create test platform stats"""
 
-    return create_settings(session)
+    return create_job_scraping_platform_stats(session, test_eis_service_logs)
+
+
+@pytest.fixture
+def test_eis_service_errors(session, test_eis_service_logs) -> list[eis_models.JobEmailScrapingServiceError]:
+    """Create test job_email_scraping service errors"""
+
+    return create_job_scraping_service_errors(session, test_eis_service_logs)
+
+
+@pytest.fixture
+def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[eis_models.JobEmail]:
+    """Create test job alert emails"""
+
+    return create_job_alert_emails(session, test_users, test_eis_service_logs)
+
+
+@pytest.fixture
+def test_job_rating_service_logs(session) -> list[rating_models.JobRatingServiceLog]:
+    """Create test job rating service logs"""
+
+    return create_job_rating_service_logs(session)
+
+
+@pytest.fixture
+def test_job_ratings(
+    session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
+) -> list[rating_models.JobRating]:
+    """Create test job ratings"""
+
+    return create_job_ratings(
+        session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
+    )
+
+
+# -------------------------------------------------------- UTILS -------------------------------------------------------
 
 
 def open_file(filepath: str) -> str:
@@ -464,7 +525,7 @@ def open_file(filepath: str) -> str:
 
     base_dir = os.path.dirname(__file__)  # directory of this test file
     filepath = os.path.join(base_dir, "resources", filepath)
-    with open(filepath, "r") as ofile:
+    with open(filepath, "r", encoding="utf8") as ofile:
         return ofile.read()
 
 
@@ -483,23 +544,28 @@ def assert_ownership(item: list | dict, owner_id: int) -> None:
             assert_ownership(subitem, owner_id)
 
 
-def skip_if_action_not_enabled(action: str) -> Any:
-    """Decorator to skip a test if the specified action is not enabled in the actions_to_test list."""
+def pytest_configure(config) -> None:
+    """Configure pytest to add custom markers."""
 
-    def decorator(func: Callable) -> Any:
-        """Decorator to skip a test if the specified action is not enabled in the actions_to_test list."""
+    config.addinivalue_line(
+        "markers",
+        "requires_actions(*actions): mark test as requiring certain CRUD actions",
+    )
 
-        @wraps(func)
-        def wrapper(self, *args, **kwargs) -> Any:
-            """Wrapper function to check if the action is enabled."""
 
-            if action not in self.actions_to_test:
-                pytest.skip(f"Skipping {action.upper()} tests as per actions_to_test setting")
-            return func(self, *args, **kwargs)
+def pytest_collection_modifyitems(config, items) -> None:
+    """Modify collected test items to skip tests based on actions_to_test setting in test classes."""
 
-        return wrapper
-
-    return decorator
+    _ = config
+    for item in items:
+        mark = item.get_closest_marker("requires_actions")
+        if not mark:
+            continue
+        required_actions = set(mark.args)
+        cls = getattr(item, "cls", None)
+        actions_to_test = getattr(cls, "actions_to_test", [])
+        if required_actions.isdisjoint(actions_to_test):
+            item.add_marker(pytest.mark.skip(reason="Skipping tests as per actions_to_test setting"))
 
 
 class CRUDTestBase:
@@ -590,6 +656,12 @@ class CRUDTestBase:
 
         return client.get(self.endpoint)
 
+    def get_bulk(self, client, item_ids) -> Response:
+        """Helper method to get bulk items from the endpoint."""
+
+        strings = ["ids=" + str(i) for i in item_ids]
+        return client.get(f"{self.endpoint}/?{'&'.join(strings)}")
+
     def get_one(self, client, item_id) -> Response:
         """Helper method to get one item from the endpoint."""
 
@@ -612,29 +684,29 @@ class CRUDTestBase:
 
     # ----------------------------------------------------- CLIENTS ----------------------------------------------------
 
-    def _get_admin_authorised_client(self, authorised_clients) -> TestClient:
+    def _get_authorised_client(self, authorised_clients) -> TestClient:
         """Get the appropriate authorised client based on admin_only setting."""
 
         if self.admin_only:
-            return authorised_clients[1]  # admin_client
+            return authorised_clients[ADMIN_USER_INDEX]
         else:
-            return authorised_clients[0]  # regular user client
+            return authorised_clients[REGULAR_USER_INDEX]
 
     def _get_admin_unauthorised_client(self, authorised_clients) -> TestClient:
         """Get a client that should be denied access."""
 
         if self.admin_only:
-            return authorised_clients[0]  # non-admin client
+            return authorised_clients[REGULAR_USER_INDEX]
         else:
-            return authorised_clients[1]  # different user client
+            return authorised_clients[ADMIN_USER_INDEX]
 
     def _get_admin_authorised_user(self, test_users) -> models.User:
         """Get the appropriate authorised user based on admin_only setting."""
 
         if self.admin_only:
-            return test_users[1]  # admin_user
+            return test_users[ADMIN_USER_INDEX]
         else:
-            return test_users[0]  # regular user
+            return test_users[REGULAR_USER_INDEX]
 
     def get_user_data(self, test_users, data: list) -> list:
         """Get create_data filtered by owner_id based on admin_only setting."""
@@ -642,7 +714,6 @@ class CRUDTestBase:
         user = self._get_admin_authorised_user(test_users)
         filtered_data = []
         for d in data:
-
             # Determine if the user owns the data
             if isinstance(d, dict):
                 owner_condition = "owner_id" in d and d["owner_id"] == user.id
@@ -674,7 +745,7 @@ class CRUDTestBase:
 
     # ----------------------------------------------------- GET ALL ----------------------------------------------------
 
-    @skip_if_action_not_enabled("get")
+    @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_authorised(
         self,
         authorised_clients,
@@ -684,12 +755,12 @@ class CRUDTestBase:
         For admin only endpoints, uses admin user; otherwise regular user.
         Verifies 200 OK response and validates the returned data matches expected test data."""
 
-        client = self._get_admin_authorised_client(authorised_clients)  # admin user for admin_only endpoints
+        client = self._get_authorised_client(authorised_clients)  # admin user for admin_only endpoints
         response = self.get_all(client)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data, response.json())
 
-    @skip_if_action_not_enabled("get")
+    @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_unauthenticated(
         self,
         client: TestClient,
@@ -701,7 +772,7 @@ class CRUDTestBase:
         response = self.get_all(client)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("get")
+    @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_non_admin(
         self,
         authorised_clients,
@@ -715,7 +786,7 @@ class CRUDTestBase:
             response = self.get_all(client)
             assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @skip_if_action_not_enabled("get")
+    @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_data_only_authorised(
         self,
         authorised_clients,
@@ -735,7 +806,7 @@ class CRUDTestBase:
 
     # ----------------------------------------------------- GET ONE ----------------------------------------------------
 
-    @skip_if_action_not_enabled("get")
+    @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_success(
         self,
         authorised_clients,
@@ -745,12 +816,12 @@ class CRUDTestBase:
         For admin only endpoints, uses admin user; otherwise regular user.
         Verifies 200 OK response and validates the returned data matches the requested item."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(test_data[0], response.json())
 
-    @skip_if_action_not_enabled("get")
+    @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_unauthenticated(
         self,
         client,
@@ -762,7 +833,7 @@ class CRUDTestBase:
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("get")
+    @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_incorrect_user(
         self,
         authorised_clients,
@@ -775,7 +846,7 @@ class CRUDTestBase:
         response = self.get_one(client, test_data[0].id)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @skip_if_action_not_enabled("get")
+    @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_non_exist(
         self,
         authorised_clients,
@@ -783,13 +854,13 @@ class CRUDTestBase:
         """Test that requests for non-existent items return a 404 error.
         Verifies proper handling when the requested item ID doesn't exist in the database."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.get_one(client, 0)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
-    @skip_if_action_not_enabled("post")
+    @pytest.mark.requires_actions("post")
     def test_post_success(
         self,
         authorised_clients,
@@ -799,14 +870,14 @@ class CRUDTestBase:
         For admin only endpoints, uses admin user; otherwise regular user.
         Iterates through create_data examples, verifies 201 Created responses and validates returned data."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         for create_data in self.get_user_data(test_users, self.create_data):
             create_data = {key: value for key, value in create_data.items() if key not in ("id", "owner_id")}
             response = self.post(client, create_data)
             assert response.status_code == status.HTTP_201_CREATED
             self.check_output(create_data, response.json())
 
-    @skip_if_action_not_enabled("post")
+    @pytest.mark.requires_actions("post")
     def test_post_unauthenticated(
         self,
         client,
@@ -817,7 +888,7 @@ class CRUDTestBase:
         response = self.post(client, {})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("post")
+    @pytest.mark.requires_actions("post")
     def test_post_non_admin(
         self,
         authorised_clients,
@@ -833,7 +904,7 @@ class CRUDTestBase:
                 response = self.post(client, create_data)
                 assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @skip_if_action_not_enabled("post")
+    @pytest.mark.requires_actions("post")
     def test_post_data_only_authorised(
         self,
         authorised_clients,
@@ -852,7 +923,7 @@ class CRUDTestBase:
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
-    @skip_if_action_not_enabled("put")
+    @pytest.mark.requires_actions("put")
     def test_put_success(
         self,
         authorised_clients,
@@ -862,12 +933,12 @@ class CRUDTestBase:
         For admin only endpoints, uses admin user; otherwise regular user.
         Verifies 200 OK response and validates the returned data matches the update_data."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.put(client, self.update_data.get("id"), self.update_data)
         assert response.status_code == status.HTTP_200_OK
         self.check_output(self.update_data, response.json())
 
-    @skip_if_action_not_enabled("put")
+    @pytest.mark.requires_actions("put")
     def test_put_empty_body(
         self,
         authorised_clients,
@@ -876,20 +947,20 @@ class CRUDTestBase:
         """Test that PUT requests with empty request bodies are rejected.
         Verifies 400 Bad Request response when no update data is provided."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.put(client, test_data[0].id, {})
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    @skip_if_action_not_enabled("put")
+    @pytest.mark.requires_actions("put")
     def test_put_non_exist(self, authorised_clients) -> None:
         """Test that PUT requests for non-existent items return a 404 error.
         Verifies proper handling when attempting to update an item that doesn't exist."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.put(client, 0, {})
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    @skip_if_action_not_enabled("put")
+    @pytest.mark.requires_actions("put")
     def test_put_unauthenticated(
         self,
         client,
@@ -901,7 +972,7 @@ class CRUDTestBase:
         response = self.put(client, test_data[0].id, {"name": "Test"})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("put")
+    @pytest.mark.requires_actions("put")
     def test_put_forbidden(self, authorised_clients, test_data) -> None:
         """Test that users are denied access to update items they don't have permission to modify.
         For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
@@ -912,7 +983,7 @@ class CRUDTestBase:
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 
-    @skip_if_action_not_enabled("delete")
+    @pytest.mark.requires_actions("delete")
     def test_delete_success(
         self,
         authorised_clients,
@@ -921,11 +992,11 @@ class CRUDTestBase:
         """Test that authorised users can successfully delete existing items.
         Verifies 204 No Content response indicating successful deletion."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    @skip_if_action_not_enabled("delete")
+    @pytest.mark.requires_actions("delete")
     def test_delete_non_exist(
         self,
         authorised_clients,
@@ -933,11 +1004,11 @@ class CRUDTestBase:
         """Test that DELETE requests for non-existent items return a 404 error.
         Verifies proper handling when attempting to delete an item that doesn't exist."""
 
-        client = self._get_admin_authorised_client(authorised_clients)
+        client = self._get_authorised_client(authorised_clients)
         response = self.delete(client, 0)
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    @skip_if_action_not_enabled("delete")
+    @pytest.mark.requires_actions("delete")
     def test_delete_unauthenticated(
         self,
         client,
@@ -949,7 +1020,7 @@ class CRUDTestBase:
         response = self.delete(client, test_data[0].id)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    @skip_if_action_not_enabled("delete")
+    @pytest.mark.requires_actions("delete")
     def test_delete_forbidden(
         self,
         authorised_clients,

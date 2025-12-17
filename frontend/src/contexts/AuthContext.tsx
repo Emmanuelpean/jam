@@ -1,7 +1,9 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ApiError, authApi } from "../services/Api";
+import { authApi } from "../services/api/Users";
+import { ApiError } from "../services/api/Base";
 import { UserData } from "../services/Schemas";
+import { DEFAULT_THEME } from "../utils/Theme";
 
 export interface CurrentUser extends UserData {
 	token: string | null;
@@ -14,7 +16,14 @@ export interface AuthResponse {
 }
 
 export interface LoginResponse {
-	access_token?: string;
+	access_token: string;
+}
+
+interface UpdateCurrentUserResponse {
+	user: UserData;
+	success: boolean;
+	message: string;
+	logged_out: boolean;
 }
 
 export interface AuthContextType {
@@ -22,7 +31,7 @@ export interface AuthContextType {
 	token: string | null;
 	login: (email: string, password: string) => Promise<AuthResponse>;
 	register: (email: string, password: string) => Promise<AuthResponse>;
-	updateCurrentUser: (userData: Partial<UserData>) => void;
+	updateCurrentUser: (userData: Partial<UserData>) => Promise<any>;
 	logout: () => void;
 	isAuthenticated: boolean;
 }
@@ -49,11 +58,12 @@ export function useAuth(): AuthContextType {
 
 export function AuthProvider({ children }: AuthProviderProps) {
 	const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-	const [token, setToken] = useState<string | null>(localStorage.getItem("token") || null);
+	const [token, setToken] = useState<string | null>(() => {
+		return localStorage.getItem("token");
+	});
 	const [userFetched, setUserFetched] = useState<boolean>(false);
 	const navigate = useNavigate();
 
-	// Memoize fetchUserInfo to prevent unnecessary re-creation
 	const fetchUserInfo = useCallback(
 		async (authToken: string): Promise<void> => {
 			// Don't fetch if we already have user data and the token hasn't changed
@@ -89,25 +99,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		[userFetched, currentUser, token],
 	);
 
-	const updateCurrentUser = useCallback((userData: Partial<UserData>): void => {
-		setCurrentUser((prev) => {
-			if (!prev) return prev;
-			return {
-				...prev,
-				...userData,
-			};
-		});
-	}, []);
+	const updateCurrentUser = async (userData: Partial<UserData>) => {
+		if (!token) return null;
+		const response: UpdateCurrentUserResponse = await authApi.updateCurrentUser(userData, token);
+		if (response.logged_out) {
+			logout();
+			return response;
+		}
+		const userResponse: UserData = await authApi.getCurrentUser(token);
+		setCurrentUser((prev: CurrentUser | null) => (prev ? { ...prev, ...userResponse } : prev));
+		return response;
+	};
+
+	useEffect(() => {
+		document.documentElement.setAttribute("data-theme", currentUser?.theme || DEFAULT_THEME);
+	}, [currentUser]);
 
 	// Check if token exists on load and fetch user info
 	useEffect(() => {
-		const storedToken = localStorage.getItem("token");
-		if (storedToken && !userFetched) {
-			// Only fetch if not already fetched
-			setToken(storedToken);
-			fetchUserInfo(storedToken).then(() => null);
+		// Only fetch user info if we have a token and haven't fetched yet
+		if (token && !userFetched) {
+			fetchUserInfo(token).then(() => null);
 		}
-	}, []);
+	}, [token, userFetched, fetchUserInfo]);
 
 	const login = async (email: string, password: string): Promise<AuthResponse> => {
 		try {
@@ -132,7 +146,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	};
 
-	// Register function
 	const register = async (email: string, password: string): Promise<AuthResponse> => {
 		try {
 			await authApi.register(email, password);
@@ -147,7 +160,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	};
 
-	// Logout function
 	const logout = (): void => {
 		localStorage.removeItem("token");
 		setToken(null);

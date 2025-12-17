@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import { Currency, DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
-import { Theme, THEMES } from "../../../utils/Theme";
+import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../maps/LocationMap";
 import {
 	AggregatorData,
@@ -11,6 +11,7 @@ import {
 	InterviewData,
 	JobApplicationUpdateData,
 	JobData,
+	JobRating,
 	KeywordData,
 	LocationData,
 	PersonData,
@@ -22,6 +23,8 @@ import { Accordion } from "./Accordion";
 import {
 	AggregatorModalManager,
 	CompanyModalManager,
+	InterviewModalManager,
+	JobApplicationUpdateModalManager,
 	JobModalManager,
 	KeywordModalManager,
 	LocationModalManager,
@@ -36,9 +39,16 @@ import {
 	getToastIcon,
 	getUpdateTypeIcon,
 } from "./Icons";
-import { ensureHttpPrefix } from "../../../utils/StringUtils";
-import { findByKey } from "../../../utils/Utils";
-import currencies from "../../../data/currencies.json";
+import { capitalise, ensureHttpPrefix } from "../../../utils/StringUtils";
+import { findItemByKey } from "../../../utils/Utils";
+import {
+	applicationStatusOptions,
+	appliedViaOptions,
+	attendanceTypeOptions,
+	interviewTypeOptions,
+	SelectOption,
+	updateTypeOptions,
+} from "../form/FormOptions";
 
 // Parameters passed to the view render functions
 export interface RenderParams {
@@ -68,7 +78,7 @@ function filterByKey<T>(items: T[], key: string, id: number | undefined): T[] {
 	});
 }
 
-function getJamData<T extends { id: number }>(jamData: T[], id: number | undefined): T | undefined {
+function getJamData<T extends { id: number }>(jamData: T[], id: number | undefined | null): T | undefined {
 	return jamData.find((data: T): boolean => data.id === id);
 }
 
@@ -118,27 +128,38 @@ export const renderFunctions = {
 	},
 
 	appTheme: (param: RenderParams): ReactNode => {
-		const themeKey: Theme | undefined = param.item?.theme;
+		const themeKey: string | undefined = param.item?.theme;
 		if (themeKey) {
-			return findByKey(THEMES, themeKey)?.name;
+			return findItemByKey(THEMES, themeKey)?.name;
 		}
 		return null;
 	},
 
 	updateType: (param: RenderParams): ReactNode => {
-		const updateType: string | undefined | null = param.item?.type;
+		const updateType: string | null =
+			updateTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]?.label ||
+			null;
 		if (updateType) {
-			const capitalizedType = updateType.charAt(0).toUpperCase() + updateType.slice(1);
 			const icon = getUpdateTypeIcon(updateType);
-
 			return (
 				<span>
 					{icon && <i className={`${icon} me-1`}></i>}
-					{capitalizedType}
+					{updateType}
 				</span>
 			);
 		}
 		return null;
+	},
+
+	interviewType: (param: RenderParams): ReactNode => {
+		return (
+			interviewTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]
+				?.label || null
+		);
+	},
+
+	overallScore: (param: RenderParams): number | null => {
+		return param.item?.job_rating?.overall_score;
 	},
 
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
@@ -243,9 +264,9 @@ export const renderFunctions = {
 	salaryRange: (param: RenderParams): string | null => {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
-		const salaryCurrency: string | undefined | null = currencies.find(
-			(currency: Currency) => currency.code === param.item?.salary_currency,
-		)?.symbol;
+		const salaryCurrency: string | undefined | null =
+			param.dataContext.currencies.find((currency: Currency) => currency.code === param.item?.salary_currency)
+				?.symbol || "";
 		if (!salary_min && !salary_max) {
 			return null;
 		}
@@ -286,7 +307,10 @@ export const renderFunctions = {
 	},
 
 	applicationStatus: (param: RenderParams): ReactNode => {
-		const status: string | undefined | null = param.item?.application_status;
+		const status: string | null =
+			applicationStatusOptions.filter(
+				(option: SelectOption): boolean => option.value === param.item?.application_status,
+			)[0]?.label || null;
 		if (status) {
 			return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
 		}
@@ -296,6 +320,16 @@ export const renderFunctions = {
 		const location: LocationData = param.item;
 		const locations: LocationData[] = location ? [location] : [];
 		return <LocationMap locations={locations} />;
+	},
+
+	scrapedLocationMap: (param: RenderParams): ReactNode => {
+		const location = {
+			postcode: param.item?.location_postcode,
+			city: param.item?.location_city,
+			country: param.item?.location_country,
+		};
+		const locations = location ? [location] : [];
+		return <LocationMap locations={locations} scrollWheelZoom={false} />;
 	},
 
 	lastUpdateDays: (params: RenderParams): ReactNode => {
@@ -308,6 +342,48 @@ export const renderFunctions = {
 		if (seconds) {
 			return <span className={"text-danger"}>{formatTimedelta(seconds)}</span>;
 		}
+	},
+
+	capitalise: (param: RenderParams, key: string): ReactNode => {
+		const text: string | undefined | null = param.item?.[key];
+		if (text) {
+			return capitalise(text);
+		}
+		return null;
+	},
+
+	jobRating: (param: RenderParams): ReactNode => {
+		const job_rating: JobRating | undefined | null = param.item?.job_rating;
+		if (!job_rating) return null;
+
+		return (
+			<div className="card shadow-sm">
+				<div className="card-body p-3">
+					<table className="table table-sm table-striped table-hover mb-2">
+						<thead className="table-light">
+							<tr>
+								<th className="text-center">Overall</th>
+								<th className="text-center">Educational</th>
+								<th className="text-center">Experience</th>
+								<th className="text-center">Interest</th>
+								<th className="text-center">Technical</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td className="text-center fw-semibold">{job_rating.overall_score}</td>
+								<td className="text-center">{job_rating.educational_score}</td>
+								<td className="text-center">{job_rating.experience_score}</td>
+								<td className="text-center">{job_rating.interest_score}</td>
+								<td className="text-center">{job_rating.technical_score}</td>
+							</tr>
+						</tbody>
+					</table>
+
+					{job_rating.feedback && <div className="small">{job_rating.feedback}</div>}
+				</div>
+			</div>
+		);
 	},
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------
@@ -334,7 +410,7 @@ export const renderFunctions = {
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
-	jobBadge: (param: RenderParams, text: string | null | undefined): ReactNode => {
+	jobBadge: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const job: EnrichedJobData | undefined = getJamData(ctx.jobs, param.item?.job_id);
 
@@ -348,13 +424,56 @@ export const renderFunctions = {
 							id={param.id}
 						>
 							<i className="bi bi-briefcase me-1"></i>
-							{String(text || job.title)}
+							{job.name}
 						</span>
 					)}
 				</JobModalManager>
 			);
 		}
 		return null;
+	},
+
+	interviewBadge: (param: RenderParams): ReactNode => {
+		if (param.item) {
+			const ctx: DataContextValue = param.dataContext;
+			const job: EnrichedJobData = getJamData(ctx.jobs, param.item.job_id)!;
+
+			return (
+				<InterviewModalManager>
+					{(handleClick) => (
+						<span
+							className={`badge bg-info clickable-badge`}
+							onClick={() => handleClick(param.item)}
+							id={param.id}
+						>
+							<i className="bi bi-briefcase me-1"></i>
+							{job.name}
+						</span>
+					)}
+				</InterviewModalManager>
+			);
+		}
+	},
+
+	jobApplicationUpdateBadge: (param: RenderParams): ReactNode => {
+		if (param.item) {
+			const ctx: DataContextValue = param.dataContext;
+			const job: EnrichedJobData = getJamData(ctx.jobs, param.item.job_id)!;
+			return (
+				<JobApplicationUpdateModalManager>
+					{(handleClick) => (
+						<span
+							className={`badge bg-info clickable-badge`}
+							onClick={() => handleClick(param.item)}
+							id={param.id}
+						>
+							<i className="bi bi-briefcase me-1"></i>
+							{job.name}
+						</span>
+					)}
+				</JobApplicationUpdateModalManager>
+			);
+		}
 	},
 
 	LocationBadge: (param: RenderParams): ReactNode => {
@@ -371,14 +490,9 @@ export const renderFunctions = {
 			icon = "bi-house";
 		}
 
-		let attendanceString: string | null = null;
-		if (attendanceType === "on-site") {
-			attendanceString = "On-site";
-		} else if (attendanceType === "hybrid") {
-			attendanceString = "Hybrid";
-		} else if (attendanceType === "remote") {
-			attendanceString = "Remote";
-		}
+		let attendanceString: string | null =
+			attendanceTypeOptions.filter((option: SelectOption): boolean => option.value === attendanceType)[0]
+				?.label || null;
 
 		let displayText: string | null = null;
 		if (location && attendanceString) {
@@ -459,13 +573,17 @@ export const renderFunctions = {
 
 	AppliedViaBadge: (param: RenderParams): ReactNode => {
 		const appliedVia: string | null = param.item?.applied_via;
-		if (appliedVia === "aggregator") {
+		const applicationAggregatorId: string | null = param.item?.application_aggregator_id;
+		if (appliedVia === "aggregator" && applicationAggregatorId) {
 			return renderFunctions._aggregatorBadge(param, "application_aggregator_id");
 		}
 		if (appliedVia) {
+			const text: string =
+				appliedViaOptions.filter((option: SelectOption): boolean => option.value === appliedVia)[0]?.label ||
+				appliedVia;
 			return (
 				<span className={"badge bg-info"} id={param.id}>
-					{appliedVia}
+					{text}
 				</span>
 			);
 		}
@@ -626,7 +744,7 @@ export const RenderViewFieldWithContext: React.FC<{
 		rendered = item?.[field.key];
 	}
 
-	if (rendered !== null && rendered !== undefined) {
+	if (rendered !== null && rendered !== undefined && rendered !== "") {
 		return <>{rendered}</>;
 	} else {
 		return <span className="text-muted">Not Provided</span>;

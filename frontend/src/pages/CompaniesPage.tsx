@@ -5,18 +5,17 @@ import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const CompaniesPage = () => {
 	const columns = [
-		tableColumns.name(),
-		tableColumns.description(),
-		tableColumns.url(),
-		tableColumns.jobCountCompany(),
-		tableColumns.personCountCompany(),
-		tableColumns.createdAt(),
+		tableColumns.nameColumn(),
+		tableColumns.descriptionColumn(),
+		tableColumns.urlColumn(),
+		tableColumns.jobCountCompanyColumn(),
+		tableColumns.personCountCompanyColumn(),
+		tableColumns.createdAtColumn(),
 	];
 
 	return (
 		<DataTable
 			entityType="companies"
-			endpoint="companies"
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			title="Companies"
 			columns={columns}

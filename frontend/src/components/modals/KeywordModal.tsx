@@ -1,11 +1,11 @@
-import React from "react";
-import DataModal, { DataModalProps, ValidationErrors } from "./DataModal/DataModal";
+import React, { forwardRef } from "react";
+import DataModal, { DataModalHandle, DataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { modalViewFields } from "../rendering/view/ModalFields";
+import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { KeywordData, KeywordDataTransform } from "../../services/Schemas";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const KeywordModal: React.FC<DataModalProps> = ({ show, onHide, data, submode, size = "lg" }) => {
+export const KeywordModal = forwardRef<DataModalHandle, DataModalProps>(({ size = "lg" }: DataModalProps, ref) => {
 	const dataContext: DataContextValue = useDataContext();
 
 	const fields = {
@@ -13,7 +13,7 @@ export const KeywordModal: React.FC<DataModalProps> = ({ show, onHide, data, sub
 		view: [modalViewFields.name({ isTitle: true })],
 	};
 
-	const additionalFields = [
+	const additionalFields: ModalViewField[] = [
 		modalViewFields.accordionJobTableKeyword({
 			helpText: "List of jobs associated with this tag.",
 		}),
@@ -31,7 +31,6 @@ export const KeywordModal: React.FC<DataModalProps> = ({ show, onHide, data, sub
 			(keyword: KeywordData): boolean =>
 				keyword.name.toLowerCase() === formData.name.trim().toLowerCase() && keyword.id !== formData?.id,
 		);
-
 		if (nameDuplicates.length > 0) {
 			errors.name = `A tag with this name already exists`;
 		}
@@ -40,12 +39,9 @@ export const KeywordModal: React.FC<DataModalProps> = ({ show, onHide, data, sub
 
 	return (
 		<DataModal
-			show={show}
-			onHide={onHide}
-			mode={submode}
-			itemName="Tag"
+			ref={ref}
 			size={size}
-			data={data}
+			itemName="Tag"
 			fields={fields}
 			additionalFields={additionalFields}
 			endpoint="keywords"
@@ -53,4 +49,4 @@ export const KeywordModal: React.FC<DataModalProps> = ({ show, onHide, data, sub
 			validation={customValidation}
 		/>
 	);
-};
+});

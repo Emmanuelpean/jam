@@ -39,6 +39,11 @@ export function getTableIcon(title: string): string {
 		"Job Aggregators": "bi-linkedin",
 		Users: "bi-person-lines-fill",
 		Settings: "bi-database-gear",
+		"User Settings": "bi-gear",
+		"TOAST Dashboard": "bi-envelope-arrow-down",
+		About: "bi-info-circle",
+		Admin: "bi-person-gear",
+		"Job Rating Dashboard": "bi-star-half",
 	};
 	return iconMap[title] || "bi-table";
 }

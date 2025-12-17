@@ -1,20 +1,20 @@
-import React, { MouseEvent, ReactNode, useCallback, useEffect, useState } from "react";
+import React, { JSX, MouseEvent, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { useDataContext } from "../../contexts/DataContext";
-import { api } from "../../services/Api";
+import { DataContextValue, EntityType, JamData, useDataContext } from "../../contexts/DataContext";
+import { api } from "../../services/api/Base";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
-import { accessAttribute, toList } from "../../utils/Utils";
-import AlertModal from "../modals/AlertModal";
-import useModalState from "../../hooks/useModalState";
-import useGenericAlert from "../../hooks/useGenericAlert";
+import { accessAttribute } from "../../utils/Utils";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
 import { useActiveHandler, useDeleteHandler } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
 import "./DataTable.css";
+import LoadingSpinner from "../spinner/Spinner";
+import { DataModalHandle } from "../modals/DataModal/DataModal";
+import { EnrichedJobData, JobData } from "../../services/Schemas";
 
 export type Direction = "asc" | "desc";
 
@@ -34,23 +34,13 @@ export interface DataTableProps {
 
 export interface GenericTableProps {
 	// Data source - entity type from DataContext
-	entityType:
-		| "jobs"
-		| "companies"
-		| "persons"
-		| "interviews"
-		| "jobApplicationUpdates"
-		| "aggregators"
-		| "keywords"
-		| "locations"
-		| "settings"
-		| "users";
-
-	// Override context data with provided data
+	entityType: EntityType;
 	data?: any[];
 
-	// For import mode (scraped jobs, etc.)
+	// Mode
 	mode?: "default" | "import";
+
+	// Optional endpoint when data are not provided or not fetched from context
 	endpoint?: string;
 
 	// Table configuration
@@ -76,7 +66,7 @@ export interface GenericTableProps {
 	showAdd?: boolean;
 
 	// Import mode configuration
-	onImportSuccess?: (importedItem: any) => void;
+	onImportSuccess?: (importedItem: any) => Promise<any>;
 
 	// Additional content
 	children?: (data: any[]) => ReactNode;
@@ -103,10 +93,20 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	onImportSuccess,
 	children,
 	menuItems,
-}: GenericTableProps) => {
+}: GenericTableProps): JSX.Element => {
 	const { token } = useAuth();
-	const dataContext = useDataContext();
-	const { alertState, showDelete, showError, hideAlert } = useGenericAlert();
+	const modalRef = useRef<DataModalHandle>(null);
+	const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
+	const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
+	const openAddModal = () => modalRef.current?.showAdd({});
+	const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
+
+	// Data management
+	const dataContext: DataContextValue = useDataContext();
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [loadError, setLoadError] = useState<string | null>(null);
+	const [fetchedData, setFetchedData] = useState<any[]>([]);
+	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
 
 	// Search and sort
 	const [sortConfig, setSortConfig] = useState<SortConfig>(
@@ -119,63 +119,66 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 	const [currentPage, setCurrentPage] = useState<number>(0);
 	const [pageSize, setPageSize] = useState<number>(20);
+	const [totalCount, setTotalCount] = useState<number>(0);
 
-	const {
-		showModal,
-		showViewModal,
-		showEditModal,
-		showImportModal,
-		selectedItem,
-		openAddModal,
-		closeAddModal,
-		openViewModal,
-		closeViewModal,
-		openEditModal,
-		closeEditModal,
-		openImportModal,
-		closeImportModal,
-	} = useModalState();
+	const isServerPagination: boolean = !!endpoint && !providedData;
 
-	// Get data from context based on entityType
-	const getData = (): any[] => {
-		// If data is explicitly provided, use it
+	useEffect(() => {
+		const timer = setTimeout((): void => {
+			setDebouncedSearchTerm(searchTerm);
+		}, 300); // Wait 300ms after user stops typing
+		return (): void => clearTimeout(timer);
+	}, [searchTerm]);
+
+	// Reset page when debounced search changes
+	useEffect(() => {
+		setCurrentPage(0);
+	}, [debouncedSearchTerm, sortConfig, pageSize]);
+
+	const fetchData = async (): Promise<void> => {
+		setIsLoading(true);
+		setLoadError(null);
+
+		try {
+			const params = new URLSearchParams({
+				page: currentPage.toString(),
+				page_size: pageSize.toString(),
+				sort_by: sortConfig.key,
+				sort_direction: sortConfig.direction,
+				search: debouncedSearchTerm,
+			});
+
+			const response: any = await api.get(`${endpoint}/paged?${params.toString()}`, token);
+			setFetchedData(response.items);
+			setTotalCount(response.total);
+		} catch (error: any) {
+			setLoadError(error.message || "Failed to load data");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect((): void => {
+		if (isServerPagination) {
+			fetchData().then((_): null => null);
+		}
+	}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination, debouncedSearchTerm]);
+
+	const getData = (): JamData[] => {
 		if (providedData !== undefined) {
 			return providedData;
 		}
-
-		// Otherwise, get from context
+		if (isServerPagination) {
+			return fetchedData;
+		}
 		return (dataContext as any)[entityType] || [];
 	};
 
-	const data = getData();
+	const data: JamData[] = getData();
 	const { error: contextError } = dataContext;
 
-	// CRUD operations using context methods
-	const addItem = useCallback(
-		(newItem: any) => {
-			dataContext.addEntity(entityType, newItem);
-		},
-		[dataContext, entityType],
-	);
-
-	const updateItem = useCallback(
-		(updatedItem: any) => {
-			if (updatedItem) {
-				dataContext.updateEntity(entityType, updatedItem.id, updatedItem);
-			}
-		},
-		[dataContext, entityType],
-	);
-
-	const removeItem = useCallback(
-		(itemId: number) => {
-			dataContext.deleteEntity(entityType, itemId);
-		},
-		[dataContext, entityType],
-	);
-
 	const handleSort = useCallback(
-		(key: string) => {
+		(key: string): void => {
 			let direction: Direction = "asc";
 			if (sortConfig.key === key && sortConfig.direction === "asc") {
 				direction = "desc";
@@ -186,28 +189,24 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	);
 
 	// Data processing
-	const getSortedData = (): any[] => {
-		let filteredData = [...data];
-		const searchTermLower = searchTerm.toLowerCase();
+	const getSortedData = (): JamData[] => {
+		let filteredData: JamData[] = [...data];
+		const searchTermLower: string = searchTerm.toLowerCase();
 
 		// Filter by search term
-		if (searchTermLower && columns.some((col: TableColumn) => col.searchable)) {
-			filteredData = filteredData.filter((item: any): boolean => {
-				return columns.some((column: TableColumn): boolean => {
+		if (searchTermLower && columns.some((col: TableColumn): boolean | undefined => col.searchable)) {
+			filteredData = filteredData.filter((item: JamData): boolean => {
+				return columns.some((column: TableColumn): boolean | undefined => {
 					if (!column.searchable) return false;
-					let value: string;
+					let value: string | null | Date | number;
 					if (column.searchFields) {
 						if (typeof column.searchFields === "function") {
 							value = column.searchFields(item, dataContext);
 						} else {
-							const fields: string[] = toList(column.searchFields);
-							value = fields
-								.map((field: string): any => accessAttribute(item, field))
-								.filter((val: any): boolean => val != null)
-								.join(" ");
+							value = accessAttribute(item, column.searchFields);
 						}
 					} else {
-						value = item[column.key];
+						value = item[column.key as keyof JamData];
 					}
 					return value?.toString().toLowerCase().includes(searchTermLower);
 				});
@@ -216,22 +215,19 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 		// Sort data
 		if (sortConfig.key) {
-			filteredData.sort((a: any, b: any) => {
-				const column = columns.find((col: TableColumn) => col.key === sortConfig.key);
+			filteredData.sort((a: any, b: any): 0 | 1 | -1 => {
+				const column: TableColumn | undefined = columns.find(
+					(col: TableColumn): boolean => col.key === sortConfig.key,
+				);
 				let aValue: any, bValue: any;
 				if (!column) return 0;
 
 				if (typeof column.sortField === "function") {
 					aValue = column.sortField(a, dataContext);
 					bValue = column.sortField(b, dataContext);
-				} else if (typeof column.sortField === "string" || Array.isArray(column.sortField)) {
-					const sortFields: string[] = toList(column.sortField);
-					aValue = sortFields
-						.map((field: string) => accessAttribute(a, field))
-						.reduce((acc, val) => acc + (val ?? ""), "");
-					bValue = sortFields
-						.map((field: string) => accessAttribute(b, field))
-						.reduce((acc, val) => acc + (val ?? ""), "");
+				} else if (typeof column.sortField === "string") {
+					aValue = a[column.sortField];
+					bValue = b[column.sortField];
 				} else {
 					aValue = a[column.key];
 					bValue = b[column.key];
@@ -278,11 +274,10 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			currentElement = currentElement.parentElement;
 		}
 
-		// Different behavior based on mode
 		if (mode === "import") {
 			openImportModal(item);
 		} else {
-			openViewModal(item);
+			modalRef.current?.showView(item);
 		}
 	};
 
@@ -292,39 +287,25 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		setContextMenu({ item, x: event.clientX, y: event.clientY, show: true });
 	};
 
-	const activeHandler = useActiveHandler({
-		entityType,
-		showDelete,
-		showError,
-		nameKey,
-		itemType,
-	});
-	const deleteHandler = useDeleteHandler({
-		entityType,
-		showDelete,
-		showError,
-		nameKey,
-		itemType,
-	});
+	const activeHandler = useActiveHandler(entityType, nameKey, itemType);
+	const deleteHandler = useDeleteHandler(entityType, nameKey, itemType);
 
-	// Select the handler based on mode
-	const handleDelete = mode === "import" ? activeHandler : deleteHandler;
-
-	// Success handlers
-	const handleEditSuccess = (updatedItem: any): void => {
-		updateItem(updatedItem);
-		closeEditModal();
+	const handleDelete = (item: JamData) => {
+		const result = mode === "import" ? activeHandler : deleteHandler;
+		result(item).then((r: boolean) => {
+			if (r && isServerPagination) {
+				fetchData().then((_): null => null);
+			}
+		});
 	};
 
-	const handleAddSuccess = (newItem: any): void => {
-		addItem(newItem);
-		closeAddModal();
-	};
-
-	const handleImportSuccess = (importedItem: any): void => {
-		onImportSuccess?.(importedItem);
-		removeItem?.(importedItem.id);
-		closeImportModal();
+	const handleSuccess = (importedItem: any): void => {
+		onImportSuccess?.(importedItem).then((): void => {
+			if (isServerPagination) {
+				fetchData().then((): null => null);
+			}
+			showToastSuccess("Job imported successfully.");
+		});
 	};
 
 	// Close context menu on outside click or escape
@@ -351,34 +332,41 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		};
 	}, [contextMenu]);
 
-	// Pagination
-	const sortedData = getSortedData();
-	const totalPages = Math.ceil(sortedData.length / pageSize);
-	const startIndex = showAllEntries ? 0 : currentPage * pageSize;
-	const endIndex = showAllEntries ? sortedData.length : startIndex + pageSize;
-	const currentPageData = sortedData.slice(startIndex, endIndex);
+	// Pagination calculations
+	const sortedData: JamData[] = isServerPagination ? data : getSortedData();
+	let currentPageData: any[];
+	let totalPages: number;
+	let displayTotal: number;
 
-	useEffect(() => setCurrentPage(0), [searchTerm, data]);
+	if (isServerPagination) {
+		// Server-side: data already paginated
+		currentPageData = sortedData;
+		displayTotal = totalCount;
+		totalPages = Math.ceil(totalCount / pageSize);
+	} else {
+		// Client-side: do pagination ourselves
+		displayTotal = sortedData.length;
+		totalPages = Math.ceil(displayTotal / pageSize);
 
-	const goToPage = (page: number): void => setCurrentPage(Math.max(0, Math.min(totalPages - 1, page)));
-	const handlePageSizeChange = (newPageSize: number): void => {
-		setPageSize(newPageSize);
-		setCurrentPage(0);
-	};
+		if (showAllEntries) {
+			currentPageData = sortedData;
+		} else {
+			const startIndex = currentPage * pageSize;
+			const endIndex = startIndex + pageSize;
+			currentPageData = sortedData.slice(startIndex, endIndex);
+		}
+	}
 
 	const handleSnoozeItem = (weeks: number) => {
-		return async (item: any) => {
+		return async (item: EnrichedJobData): Promise<void> => {
 			try {
 				const snoozeDate = new Date();
 				snoozeDate.setDate(snoozeDate.getDate() + weeks * 7);
-
-				const updatedItem = await api.put(
-					`${endpoint || entityType}/${item.id}`,
-					{ followup_snooze_datetime: snoozeDate.toISOString() },
-					token,
-				);
-				updateItem(updatedItem);
-				showToastSuccess(`${item.title} was snoozed for ${weeks} week(s).`);
+				dataContext
+					.updateEntity(entityType, item.id, { followup_snooze_datetime: snoozeDate.toISOString() })
+					.then((job: JobData): void => {
+						showToastSuccess(`${job.title} was snoozed for ${weeks} week(s).`);
+					});
 			} catch (error) {
 				showToastError(`Failed to snooze ${item.title}. Please try again.`);
 			} finally {
@@ -388,10 +376,22 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	};
 
 	// Get context menu items based on mode
-	const getContextMenuItems = () => {
+	const getContextMenuItems = (): MenuItem[] => {
 		let baseItems: MenuItem[] = [
-			{ action: "view", icon: "eye", text: "View", id: "context-menu-view", function: openViewModal },
-			{ action: "edit", icon: "pencil", text: "Edit", id: "context-menu-edit", function: openEditModal },
+			{
+				action: "view",
+				icon: "eye",
+				text: "View",
+				id: "context-menu-view",
+				function: openViewModal,
+			},
+			{
+				action: "edit",
+				icon: "pencil",
+				text: "Edit",
+				id: "context-menu-edit",
+				function: openEditModal,
+			},
 			{
 				action: "snooze",
 				icon: "alarm",
@@ -435,7 +435,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	};
 
 	// Get button text based on mode
-	const getAddButtonText = () => {
+	const getAddButtonText = (): string => {
 		if (mode === "import") {
 			return `Import ${itemType}`;
 		} else {
@@ -453,6 +453,15 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 	if (contextError) {
 		return <div className="alert alert-danger mt-3">{contextError.message}</div>;
+	}
+
+	if (loadError) {
+		return (
+			<div className="alert alert-danger mt-3">
+				<i className="bi bi-exclamation-triangle-fill me-2"></i>
+				{loadError}
+			</div>
+		);
 	}
 
 	return (
@@ -476,17 +485,17 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				style={{ gap: compact ? "0.5rem" : "1rem" }}
 			>
 				{showSearch && !compact && (
-					<div className="d-flex align-items-center gap-3" style={{ width: "40%" }}>
+					<div className="d-flex align-items-center gap-3" style={{ width: showAdd ? "40%" : "100%" }}>
 						<input
 							type="text"
 							className="form-control"
 							placeholder="Search..."
 							value={searchTerm}
-							onChange={(e) => setSearchTerm(e.target.value)}
+							onChange={(e): void => setSearchTerm(e.target.value)}
 							id="search-input"
 						/>
 						<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
-							Showing {sortedData.length} Entries
+							Showing {displayTotal} Entries
 						</span>
 					</div>
 				)}
@@ -502,7 +511,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 							padding: compact ? "0.25rem 0.5rem" : undefined,
 							height: compact ? "2rem" : undefined,
 						}}
-						id="add-entity-button"
+						id={`add-${entityType}-button`}
 					>
 						<i className={`${getAddButtonIcon()} me-2`} style={{ fontSize: "1.1rem" }}></i>
 						{getAddButtonText()}
@@ -511,176 +520,193 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			</div>
 
 			{/* Table */}
-			<div className="table-responsive">
-				<table
-					className={`table table-striped table-hover rounded-3 overflow-hidden ${compact ? "table-sm" : ""}`}
-					style={compact ? { fontSize: "0.875rem" } : {}}
-				>
-					<thead className="custom-header">
-						<tr>
-							{columns.map((column) => (
-								<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
-									<div className="d-flex align-items-center justify-content-between">
-										<div
-											className={column.sortable ? "cursor-pointer user-select-none" : ""}
-											onClick={() => column.sortable && handleSort(column.key)}
-											id={`table-header-${column.key}`}
-											style={compact ? { fontSize: "0.875rem" } : {}}
-										>
-											{column.label}
-											{column.sortable && (
-												<span className="ms-1">
-													<i
-														className={`bi bi-arrow-${
-															sortConfig.key === column.key
-																? sortConfig.direction === "asc"
-																	? "up"
-																	: "down"
-																: "down-up"
-														}`}
-														style={compact ? { fontSize: "0.75rem" } : {}}
-													></i>
-												</span>
-											)}
-										</div>
-									</div>
-								</th>
-							))}
-						</tr>
-					</thead>
-					<tbody>
-						{currentPageData.map((item, index) => (
-							<tr
-								key={item.id || index}
-								id={`table-row-${item.id}`}
-								className={`table-row-clickable`}
-								onClick={(e) => handleRowClick(e, item)}
-								onContextMenu={(e) => handleRowRightClick(item, e)}
-								style={{ cursor: "pointer" }}
-							>
-								{columns.map((column, columnIndex) => (
-									<td
-										key={column.key}
-										className="align-middle"
-										style={{
-											...(columnIndex === 0 ? { fontWeight: "bold" } : {}),
-											...(compact
-												? {
-														padding: "0.5rem",
-														fontSize: "0.875rem",
-													}
-												: {}),
-										}}
-									>
-										<RenderViewFieldWithContext
-											field={column}
-											item={item}
-											id={`table-row-${item.id}`}
-										/>
-									</td>
-								))}
-							</tr>
-						))}
-						{currentPageData.length === 0 && (
-							<tr>
-								<td
-									colSpan={columns.length}
-									className="text-center py-4 text-muted"
-									style={
-										compact
-											? {
-													padding: "1rem",
-													fontSize: "0.875rem",
-												}
-											: {}
-									}
-								>
-									{emptyMessage || `No ${pluralize(itemType)} found`}
-								</td>
-							</tr>
-						)}
-					</tbody>
-				</table>
-			</div>
-
-			{/* Pagination */}
-			{!showAllEntries && data.length > 19 && (
-				<div className={`d-flex justify-content-between align-items-center mt-0`}>
-					<div className="d-flex align-items-center gap-0">
-						{[
-							{
-								action: () => goToPage(0),
-								disabled: currentPage === 0,
-								icon: "chevron-double-left",
-								label: "First",
-							},
-							{
-								action: () => goToPage(currentPage - 1),
-								disabled: currentPage === 0,
-								icon: "chevron-left",
-								label: "Previous",
-							},
-							{
-								action: () => goToPage(currentPage + 1),
-								disabled: currentPage >= totalPages - 1,
-								icon: "chevron-right",
-								label: "Next",
-							},
-							{
-								action: () => goToPage(totalPages - 1),
-								disabled: currentPage >= totalPages - 1,
-								icon: "chevron-double-right",
-								label: "Last",
-							},
-						].map(({ action, disabled, icon, label }) => (
-							<Button
-								key={label}
-								variant="outline-secondary"
-								size="sm"
-								className={compact ? "py-0 px-1" : "py-0 px-2"}
-								onClick={action}
-								disabled={disabled}
-								aria-label={label}
-								style={compact ? { fontSize: "0.75rem" } : {}}
-							>
-								<i className={`bi bi-${icon}`} aria-hidden="true"></i>
-							</Button>
-						))}
-					</div>
-					<div className="d-flex align-items-center gap-2">
-						<span className={`small text-muted text-nowrap`} style={compact ? { fontSize: "0.75rem" } : {}}>
-							Page {currentPage + 1} of {totalPages || 1}
-						</span>
-						<Form.Select
-							size="sm"
-							id="page-items-select"
-							style={{
-								width: "auto",
-								padding: compact ? "0.125rem 0.25rem" : "0.25rem 0.5rem",
-								textAlign: "center",
-								fontSize: compact ? "0.75rem" : undefined,
-							}}
-							value={pageSize}
-							onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+			{isLoading ? (
+				<LoadingSpinner text="Loading..." />
+			) : (
+				<>
+					<div className="table-responsive">
+						<table
+							className={`table table-striped table-hover rounded-3 overflow-hidden ${compact ? "table-sm" : ""}`}
+							style={compact ? { fontSize: "0.875rem" } : {}}
 						>
-							{[20, 30, 40, 50, 100].map((size) => (
-								<option key={size} value={size}>
-									Show {size} Entries
-								</option>
-							))}
-						</Form.Select>
+							<thead className="custom-header">
+								<tr>
+									{columns.map((column) => (
+										<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
+											<div className="d-flex align-items-center justify-content-between">
+												<div
+													className={column.sortable ? "cursor-pointer user-select-none" : ""}
+													onClick={() => column.sortable && handleSort(column.key)}
+													id={`table-header-${column.key}`}
+													style={compact ? { fontSize: "0.875rem" } : {}}
+												>
+													{column.label}
+													{column.sortable && (
+														<span className="ms-1">
+															<i
+																className={`bi bi-arrow-${
+																	sortConfig.key === column.key
+																		? sortConfig.direction === "asc"
+																			? "up"
+																			: "down"
+																		: "down-up"
+																}`}
+																style={compact ? { fontSize: "0.75rem" } : {}}
+															></i>
+														</span>
+													)}
+												</div>
+											</div>
+										</th>
+									))}
+								</tr>
+							</thead>
+							<tbody>
+								{currentPageData.map((item, index) => (
+									<tr
+										key={item.id || index}
+										id={`table-row-${entityType}-${item.id}`}
+										className={`table-row-clickable`}
+										onClick={(e) => handleRowClick(e, item)}
+										onContextMenu={(e) => handleRowRightClick(item, e)}
+										style={{ cursor: "pointer" }}
+									>
+										{columns.map((column, columnIndex) => (
+											<td
+												key={column.key}
+												className="align-middle"
+												style={{
+													...(columnIndex === 0 ? { fontWeight: "bold" } : {}),
+													...(compact
+														? {
+																padding: "0.5rem",
+																fontSize: "0.875rem",
+															}
+														: {}),
+												}}
+											>
+												<RenderViewFieldWithContext
+													field={column}
+													item={item}
+													id={`table-row-${item.id}`}
+												/>
+											</td>
+										))}
+									</tr>
+								))}
+								{currentPageData.length === 0 && (
+									<tr>
+										<td
+											colSpan={columns.length}
+											className="text-center py-4 text-muted"
+											style={
+												compact
+													? {
+															padding: "1rem",
+															fontSize: "0.875rem",
+														}
+													: {}
+											}
+										>
+											{emptyMessage || `No ${pluralize(itemType)} found`}
+										</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
 					</div>
-				</div>
+
+					{/* Pagination */}
+					{!showAllEntries && displayTotal > 20 && (
+						<div className={`d-flex justify-content-between align-items-center mt-0`}>
+							<div className="d-flex align-items-center gap-0">
+								{[
+									{
+										action: () => setCurrentPage(0),
+										disabled: currentPage === 0,
+										icon: "chevron-double-left",
+										label: "First",
+									},
+									{
+										action: () => setCurrentPage(Math.max(0, currentPage - 1)),
+										disabled: currentPage === 0,
+										icon: "chevron-left",
+										label: "Previous",
+									},
+									{
+										action: () => setCurrentPage(Math.min(totalPages - 1, currentPage + 1)),
+										disabled: currentPage >= totalPages - 1,
+										icon: "chevron-right",
+										label: "Next",
+									},
+									{
+										action: () => setCurrentPage(totalPages - 1),
+										disabled: currentPage >= totalPages - 1,
+										icon: "chevron-double-right",
+										label: "Last",
+									},
+								].map(
+									({ action, disabled, icon, label }): JSX.Element => (
+										<Button
+											key={label}
+											variant="outline-secondary"
+											size="sm"
+											className={compact ? "py-0 px-1" : "py-0 px-2"}
+											onClick={action}
+											disabled={disabled}
+											aria-label={label}
+											style={compact ? { fontSize: "0.75rem" } : {}}
+										>
+											<i className={`bi bi-${icon}`} aria-hidden="true"></i>
+										</Button>
+									),
+								)}
+							</div>
+							<div className="d-flex align-items-center gap-2">
+								{isServerPagination && (
+									<span
+										className={`small text-muted text-nowrap`}
+										style={compact ? { fontSize: "0.75rem" } : {}}
+									>
+										{currentPage * pageSize + 1} to{" "}
+										{Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount}
+									</span>
+								)}
+								<span
+									className={`small text-muted text-nowrap`}
+									style={compact ? { fontSize: "0.75rem" } : {}}
+								>
+									Page {currentPage + 1} of {totalPages || 1}
+								</span>
+								<Form.Select
+									size="sm"
+									id="page-items-select"
+									value={pageSize}
+									onChange={(e): void => {
+										setPageSize(Number(e.target.value));
+									}}
+								>
+									{[20, 30, 40, 50, 100].map(
+										(size): JSX.Element => (
+											<option key={size} value={size}>
+												Show {size} Entries
+											</option>
+										),
+									)}
+								</Form.Select>
+							</div>
+						</div>
+					)}
+				</>
 			)}
 
-			{/* Context Menu */}
 			{contextMenu?.show && (
 				<ContextMenu
 					position={{ x: contextMenu.x, y: contextMenu.y }}
 					items={getContextMenuItems()}
 					selectedItem={contextMenu.item}
 					onClose={() => setContextMenu(null)}
-					onItemClick={(menuItem, item) => {
+					onItemClick={(menuItem: MenuItem, item: any): void => {
 						if (menuItem.function) {
 							menuItem.function(item);
 						}
@@ -690,61 +716,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			)}
 
 			{children ? children(data) : null}
-
-			{mode !== "import" && (
-				<>
-					<Modal
-						show={showModal}
-						onHide={closeAddModal}
-						onSuccess={handleAddSuccess}
-						size={modalSize}
-						data={{}}
-						submode="add"
-						{...modalProps}
-					/>
-
-					<Modal
-						show={showEditModal}
-						onHide={closeEditModal}
-						onSuccess={handleEditSuccess}
-						data={selectedItem || {}}
-						submode="edit"
-						onDelete={removeItem}
-						size={modalSize}
-						{...modalProps}
-					/>
-
-					<Modal
-						show={showViewModal}
-						onHide={closeViewModal}
-						onSuccess={updateItem}
-						data={selectedItem}
-						submode="view"
-						onDelete={removeItem}
-						onEdit={() => {
-							closeViewModal();
-							openEditModal(selectedItem);
-						}}
-						size={modalSize}
-						{...modalProps}
-					/>
-				</>
-			)}
-
-			{mode === "import" && (
-				<Modal
-					show={showImportModal}
-					onHide={closeImportModal}
-					onSuccess={handleImportSuccess}
-					onDelete={removeItem}
-					data={selectedItem}
-					submode="import"
-					size={modalSize}
-					{...modalProps}
-				/>
-			)}
-
-			<AlertModal alertState={alertState} hideAlert={hideAlert} />
+			<Modal ref={modalRef} onSuccess={handleSuccess} size={modalSize} {...modalProps} />
 		</div>
 	);
 };
