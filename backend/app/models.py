@@ -51,6 +51,13 @@ job_contact_mapping = Table(
     Column("person_id", Integer, ForeignKey("person.id", ondelete="CASCADE"), primary_key=True),
 )
 
+speculativeapp_contact_mapping = Table(
+    "speculativeapp_contact_mapping",
+    Base.metadata,
+    Column("speculative_application_id", Integer, ForeignKey("speculative_application.id", ondelete="CASCADE"), primary_key=True),
+    Column("person_id", Integer, ForeignKey("person.id", ondelete="CASCADE"), primary_key=True),
+)
+
 
 # -------------------------------------------------------- BASES -------------------------------------------------------
 
@@ -612,3 +619,33 @@ class JobApplicationUpdate(Owned, Base):
     job = relationship("Job", back_populates="updates")
 
     __table_args__ = (CheckConstraint("type IN ('received', 'sent')", name="valid_update_type_values"),)
+
+
+class SpeculativeApplication(Owned, Base):
+    """Represents a speculative application.
+
+    Attributes:
+    -----------
+    - `date` (datetime): The date and time of the application.
+    - `note` (str, optional): Additional notes or comments about the application.
+    - `contact_enail` (str, optional): Email address used for the application.
+
+    Foreign keys:
+    -------------
+    - `company_id` (int): Identifier for the company associated with the application.
+
+    Relationships:
+    --------------
+    - `company` (Company): Company object related to the application.
+    - `contact` (Person): Persons object related to the application."""
+
+    date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+    note = Column(String, nullable=True)
+    contact_email = Column(String, nullable=True)
+
+    # Foreign keys
+    company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False)
+
+    # Relationships
+    company = relationship("Company", back_populates="spontaneous_applications")
+    contacts = relationship("Person", secondary=job_contact_mapping, back_populates="jobs", lazy="selectin")
