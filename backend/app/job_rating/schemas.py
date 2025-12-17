@@ -39,7 +39,8 @@ class JobRatingServiceLogOut(Out):
     rated_job_found_ids: list[int] = []
     rated_job_succeeded_ids: list[int] = []
     rated_job_failed_ids: list[int] = []
-    rated_job_skipped_ids: list[int] = []
+    user_found_ids: list[int] = []
+    user_processed_ids: list[int] = []
 
 
 class JobRatingServiceLogStartRequest(BaseModel):

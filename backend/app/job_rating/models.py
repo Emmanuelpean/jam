@@ -63,21 +63,24 @@ class JobRatingServiceLog(ServiceLog, CommonBase, Base):
 
     Attributes:
     -----------
+    - `user_found_ids` (List[int]): List of user IDs that were found during the processing.
+    - `user_processed_ids` (List[int]): List of user IDs that were processed.
     - `rated_job_found_ids` (List[int]): List of job IDs that were found during the rating process.
     - `rated_job_succeeded_ids` (List[int]): List of job IDs that were successfully rated.
-    - `rated_job_failed_ids` (List[int]): List of job IDs that failed to be rated.
-    - `rated_job_skipped_ids` (List[int]): List of job IDs that were skipped during the rating process."""
+    - `rated_job_failed_ids` (List[int]): List of job IDs that failed to be rated."""
 
+    user_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    user_processed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     rated_job_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     rated_job_succeeded_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     rated_job_failed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
-    rated_job_skipped_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
 
     def __init__(self, **kwargs) -> None:
         """Initialise array fields with empty lists if not provided"""
 
+        kwargs.setdefault("user_found_ids", [])
+        kwargs.setdefault("user_processed_ids", [])
         kwargs.setdefault("rated_job_found_ids", [])
         kwargs.setdefault("rated_job_succeeded_ids", [])
         kwargs.setdefault("rated_job_failed_ids", [])
-        kwargs.setdefault("rated_job_skipped_ids", [])
         super().__init__(**kwargs)

@@ -6,11 +6,9 @@ import traceback
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.job_rating import models
-from app import models as app_models
+from app import model_registry as models
 from app import utils
 from app.database import get_db
-from app.job_email_scraping import models as eis_models
 from app.job_rating.ai_rating import ai_score_job, __version__
 from app.service_runner import ServiceRunner
 
@@ -32,85 +30,89 @@ def score_scraped_jobs(min_description_length: int = 100, db: Session | None = N
     db.refresh(service_log)
 
     try:
-        # noinspection PyComparisonWithNone
-        scraped_jobs = (
-            db.query(eis_models.ScrapedJob)
-            .filter(eis_models.ScrapedJob.is_scraped)  # scraped
-            .filter(eis_models.ScrapedJob.is_failed.is_(False))  # not failed
-            .filter(eis_models.ScrapedJob.job_rating == None)  # not yet rated
-            .filter(eis_models.ScrapedJob.is_active)  # active
-            .filter(eis_models.ScrapedJob.is_imported.is_(False))  # not imported
-            .filter(func.length(eis_models.ScrapedJob.description) > min_description_length)  # description length
-            .all()
-        )
-        service_log.rated_job_found_ids = [job.id for job in scraped_jobs]
-        logger.info(f"Found {len(scraped_jobs)} scraped jobs to rate")
-
-        for scraped_job in scraped_jobs:
-            owner_id = scraped_job.owner_id
-            owner_qualifications = (
-                db.query(app_models.UserQualification)
-                .filter(app_models.UserQualification.owner_id == owner_id)
-                .order_by(app_models.UserQualification.modified_at.desc())
+        users = db.query(models.User).join(models.UserQualification).filter(models.User.is_active).all()
+        logger.info(f"Found {len(users)} active users to process")
+        service_log.user_found_ids = [user.id for user in users]
+        for user in users:
+            # Get the most recent qualification for the user
+            user_qualification = (
+                db.query(models.UserQualification)
+                .filter(models.UserQualification.owner_id == user.id)
+                .order_by(models.UserQualification.modified_at.desc())
                 .first()
             )
-            if owner_qualifications and (
-                owner_qualifications.experience
-                or owner_qualifications.education
-                or owner_qualifications.skills
-                or owner_qualifications.qualities
-            ):
-                kwargs = dict(
-                    scraped_job_id=scraped_job.id,
-                    owner_id=owner_id,
-                    script_version=__version__,
-                    user_qualification_id=owner_qualifications.id,
+            if user_qualification:
+                logger.info(f"Processing user {user.id}")
+
+                # Find scraped jobs for this user that need rating
+                # noinspection PyComparisonWithNone
+                scraped_jobs = (
+                    db.query(models.ScrapedJob)
+                    .filter(models.ScrapedJob.owner_id == user.id)  # for this user
+                    .filter(models.ScrapedJob.is_scraped)  # scraped
+                    .filter(models.ScrapedJob.is_failed.is_(False))  # not failed
+                    .filter(models.ScrapedJob.job_rating == None)  # not yet rated
+                    .filter(models.ScrapedJob.is_active)  # active
+                    .filter(models.ScrapedJob.is_imported.is_(False))  # not imported
+                    .filter(func.length(models.ScrapedJob.description) > min_description_length)  # description length
+                    .all()
                 )
-                score = None
-                try:
-                    logger.info(f"Scoring job ID {scraped_job.id} for owner ID {owner_id}")
-                    score = ai_score_job(
-                        owner_qualifications.experience,
-                        owner_qualifications.education,
-                        owner_qualifications.skills,
-                        owner_qualifications.qualities,
-                        owner_qualifications.interests,
-                        scraped_job.title,
-                        scraped_job.company,
-                        scraped_job.description,
-                    )
-                    # noinspection PyArgumentList
-                    job_rating = models.JobRating(
-                        overall_score=score["overall_score"],
-                        technical_score=score["technical_fit"],
-                        experience_score=score["experience_alignment"],
-                        educational_score=score["educational_match"],
-                        interest_score=score["interest_match"],
-                        feedback=score["explanation"],
-                        is_success=True,
-                        **kwargs,
-                    )
-                    db.add(job_rating)
-                    db.commit()
-                    # noinspection PyAugmentAssignment
-                    service_log.rated_job_succeeded_ids = service_log.rated_job_succeeded_ids + [scraped_job.id]
-                except Exception as exception:
-                    tb = traceback.format_exc()
-                    logger.exception(f"Error in rating workflow: {exception}")
-                    # noinspection PyArgumentList
-                    job_rating = models.JobRating(
-                        is_success=False,
-                        error=f"Error scoring job: {exception}\n{tb}\nRaw response is {score}",
-                        **kwargs,
-                    )
-                    db.add(job_rating)
-                    db.commit()
-                    # noinspection PyAugmentAssignment
-                    service_log.rated_job_failed_ids = service_log.rated_job_failed_ids + [scraped_job.id]
-            else:
-                logger.info(f"Skipping job ID {scraped_job.id} for owner ID {owner_id} due to missing qualifications")
                 # noinspection PyAugmentAssignment
-                service_log.rated_job_skipped_ids = service_log.rated_job_skipped_ids + [scraped_job.id]
+                service_log.rated_job_found_ids = service_log.rated_job_found_ids + [job.id for job in scraped_jobs]
+                logger.info(f"Found {len(scraped_jobs)} scraped jobs to rate")
+
+                for scraped_job in scraped_jobs:
+
+                    kwargs = dict(
+                        scraped_job_id=scraped_job.id,
+                        owner_id=user.id,
+                        script_version=__version__,
+                        user_qualification_id=user_qualification.id,
+                    )
+                    score = None
+                    try:
+                        logger.info(f"Scoring job ID {scraped_job.id}")
+                        score = ai_score_job(
+                            user_qualification.experience,
+                            user_qualification.education,
+                            user_qualification.skills,
+                            user_qualification.qualities,
+                            user_qualification.interests,
+                            scraped_job.title,
+                            scraped_job.company,
+                            scraped_job.description,
+                        )
+                        # noinspection PyArgumentList
+                        job_rating = models.JobRating(
+                            overall_score=score["overall_score"],
+                            technical_score=score["technical_fit"],
+                            experience_score=score["experience_alignment"],
+                            educational_score=score["educational_match"],
+                            interest_score=score["interest_match"],
+                            feedback=score["explanation"],
+                            is_success=True,
+                            **kwargs,
+                        )
+                        db.add(job_rating)
+                        db.commit()
+                        # noinspection PyAugmentAssignment
+                        service_log.rated_job_succeeded_ids = service_log.rated_job_succeeded_ids + [scraped_job.id]
+                    except Exception as exception:
+                        tb = traceback.format_exc()
+                        logger.exception(f"Error in rating workflow: {exception}")
+                        # noinspection PyArgumentList
+                        job_rating = models.JobRating(
+                            is_success=False,
+                            error=f"Error scoring job: {exception}\n{tb}\nRaw response is {score}",
+                            **kwargs,
+                        )
+                        db.add(job_rating)
+                        db.commit()
+                        # noinspection PyAugmentAssignment
+                        service_log.rated_job_failed_ids = service_log.rated_job_failed_ids + [scraped_job.id]
+
+                # noinspection PyAugmentAssignment
+                service_log.user_processed_ids = service_log.user_processed_ids + [user.id]
 
         # Log final statistics
         service_log.run_duration = (dt.datetime.now() - start_time).total_seconds()

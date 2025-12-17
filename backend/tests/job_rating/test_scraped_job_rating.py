@@ -24,7 +24,8 @@ class TestScoreScrapedJobs(object):
         assert len(service_log.rated_job_found_ids) == 44
         assert len(service_log.rated_job_succeeded_ids) == 44
         assert len(service_log.rated_job_failed_ids) == 0
-        assert len(service_log.rated_job_skipped_ids) == 0
+        assert len(service_log.user_found_ids) == 3
+        assert len(service_log.user_processed_ids) == 3
 
     def test_skipped(self, session, test_scraped_jobs, test_user_qualifications, test_eis_service_logs) -> None:
         """Test scoring scraped jobs successfully"""
@@ -54,7 +55,8 @@ class TestScoreScrapedJobs(object):
         service_log = session.query(models.JobRatingServiceLog).first()
         assert service_log is not None
         assert service_log.run_datetime is not None
-        assert len(service_log.rated_job_found_ids) == 45
+        assert len(service_log.rated_job_found_ids) == 44
         assert len(service_log.rated_job_succeeded_ids) == 44
         assert len(service_log.rated_job_failed_ids) == 0
-        assert len(service_log.rated_job_skipped_ids) == 1
+        assert len(service_log.user_found_ids) == 3
+        assert len(service_log.user_processed_ids) == 3

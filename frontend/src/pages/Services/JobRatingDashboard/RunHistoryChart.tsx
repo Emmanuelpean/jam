@@ -40,12 +40,6 @@ export const RunHistoryChart = ({
 				failureColor,
 				(log: JobRatingServiceLog): number => log.rated_job_failed_ids.length,
 			),
-			createSeries(
-				serviceLogData,
-				"Skipped Jobs",
-				"#fbbf24",
-				(log: JobRatingServiceLog): number => log.rated_job_skipped_ids.length,
-			),
 		];
 		setLogData([jobSeries, durationSeries]);
 	}, [serviceLogData]);

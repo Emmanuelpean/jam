@@ -306,7 +306,8 @@ export interface JobRatingServiceLog extends ServiceLog {
 	rated_job_found_ids: number[];
 	rated_job_succeeded_ids: number[];
 	rated_job_failed_ids: number[];
-	rated_job_skipped_ids: number[];
+	user_found_ids: number[];
+	user_processed_ids: number[];
 }
 
 export interface PlatformStat {
@@ -337,4 +338,5 @@ export interface UserQualification extends OwnedOut {
 	skills: string | null;
 	qualities: string | null;
 	education: string | null;
+	interests: string | null;
 }

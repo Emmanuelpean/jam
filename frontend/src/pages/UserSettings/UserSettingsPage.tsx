@@ -29,6 +29,7 @@ interface UserFormData {
 	skills?: string;
 	qualities?: string;
 	education?: string;
+	interests?: string;
 }
 
 const UserSettingsPage: React.FC = () => {
@@ -72,6 +73,7 @@ const UserSettingsPage: React.FC = () => {
 							skills: data.skills || "",
 							qualities: data.qualities || "",
 							education: data.education || "",
+							interests: data.interests || "",
 						}),
 					);
 				}
@@ -367,7 +369,7 @@ const UserSettingsPage: React.FC = () => {
 		type: "textarea",
 		label: "Experience",
 		placeholder: "Describe your work experience...",
-		rows: 4,
+		rows: 3,
 	};
 
 	const skillsField: ModalFormField = {
@@ -375,7 +377,7 @@ const UserSettingsPage: React.FC = () => {
 		type: "textarea",
 		label: "Skills",
 		placeholder: "List your skills...",
-		rows: 4,
+		rows: 3,
 	};
 
 	const qualitiesField: ModalFormField = {
@@ -383,7 +385,7 @@ const UserSettingsPage: React.FC = () => {
 		type: "textarea",
 		label: "Qualities",
 		placeholder: "Describe your qualities...",
-		rows: 4,
+		rows: 3,
 	};
 
 	const educationField: ModalFormField = {
@@ -391,7 +393,15 @@ const UserSettingsPage: React.FC = () => {
 		type: "textarea",
 		label: "Education",
 		placeholder: "Describe your education...",
-		rows: 4,
+		rows: 3,
+	};
+
+	const interestsField: ModalFormField = {
+		name: "interests",
+		type: "textarea",
+		label: "Interests",
+		placeholder: "Describe your interests...",
+		rows: 3,
 	};
 
 	return (
@@ -588,13 +598,22 @@ const UserSettingsPage: React.FC = () => {
 								<Col md={12} className="mb-3">
 									{FormField(educationField, formData, handleInputChange, errors)}
 								</Col>
-
+								<Col md={12} className="mb-3">
+									{FormField(interestsField, formData, handleInputChange, errors)}
+								</Col>
 								<div className="settings-actions">
 									<div className="horizontal-bar mb-3"></div>
 									<ActionButton
 										id="confirm-button"
 										type="submit"
-										disabled={submitting}
+										disabled={
+											submitting ||
+											(!formData.experience &&
+												!formData.skills &&
+												!formData.qualities &&
+												!formData.education &&
+												!formData.interests)
+										}
 										loading={submitting}
 										className="save-button"
 										loadingText="Saving Qualifications..."
