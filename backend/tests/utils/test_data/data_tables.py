@@ -1575,3 +1575,37 @@ INTERVIEW_INTERVIEWER_MAPPINGS = [
     {"interview_id": 17, "person_ids": [21]},
     {"interview_id": 18, "person_ids": [17, 19]},
 ]
+
+
+SPECULATIVE_APPLICATION_DATA = [
+    {
+        "date": dt.datetime(2025, 1, 8, 9, 30, tzinfo=dt.timezone.utc),
+        "note": "Initial speculative application for a research scientist position.",
+        "contact_email": "careers@photonicsltd.com",
+        "company_id": 1,
+    },
+    {
+        "date": dt.datetime(2025, 1, 15, 14, 45, tzinfo=dt.timezone.utc),
+        "contact_email": "hr@photonicsltd.com",
+        "company_id": 1,
+    },
+    {
+        "date": dt.datetime(2025, 2, 2, 10, 0, tzinfo=dt.timezone.utc),
+        "note": "Speculative application submitted via company website.",
+        "company_id": 2,
+    },
+    {
+        "date": dt.datetime(2025, 2, 12, 16, 20, tzinfo=dt.timezone.utc),
+        "note": "Reached out regarding potential R&D collaboration opportunities.",
+        "contact_email": "contact@nanomaterials.io",
+    },
+    {
+        "date": dt.datetime(2025, 3, 1, 11, 10, tzinfo=dt.timezone.utc),
+    },
+]
+
+SPECULATIVE_APPLICATION_CONTACTS_MAPPING = [
+    {"speculative_application_id": 1, "person_ids": [1]},
+    {"speculative_application_id": 2, "person_ids": [4, 5, 3, 6]},
+    {"speculative_application_id": 3, "person_ids": [4, 6, 8]},
+]

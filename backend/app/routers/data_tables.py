@@ -174,3 +174,13 @@ job_application_update_router = generate_data_table_crud_router(
     endpoint="jobapplicationupdates",
     not_found_msg="Job Application Update not found",
 )
+
+# Speculative Application router
+speculative_application_update_router = generate_data_table_crud_router(
+    table_model=models.SpeculativeApplication,
+    create_schema=schemas.SpeculativeApplicationCreate,
+    update_schema=schemas.SpeculativeApplicationUpdate,
+    out_schema=schemas.SpeculativeApplicationOut,
+    endpoint="speculativeapplications",
+    not_found_msg="Speculative Application not found",
+)

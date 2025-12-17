@@ -307,6 +307,33 @@ def create_job_application_updates(
     return add_to_db(db, updates)
 
 
+def create_speculative_applications(
+    db,
+    users: list[models.User],
+    persons: list[models.Person],
+):
+    """Create sample speculative applications"""
+
+    print("Creating speculative applications...")
+    # noinspection PyArgumentList
+    applications = [
+        models.SpeculativeApplication(**data)
+        for data in override_entries_properties(
+            data_tables.SPECULATIVE_APPLICATION_DATA,
+            ("owner_id", users),
+        )
+    ]
+
+    test_data_utils.add_mappings(
+        primary_data=applications,
+        secondary_data=persons,
+        mapping_data=data_tables.SPECULATIVE_APPLICATION_CONTACTS_MAPPING,
+        primary_key="speculative_application_id",
+        secondary_key="contact_ids",
+        relationship_attr="contacts",
+    )
+
+
 # ------------------------------------------------ JOB SCRAPING SERVICE ------------------------------------------------
 
 
