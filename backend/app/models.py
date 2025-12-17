@@ -204,7 +204,11 @@ class UserQualification(Owned, Base):
 
     Relationships:
     --------------
-    - `job_ratings` (list of JobRating): List of job ratings associated with the user qualification."""
+    - `job_ratings` (list of JobRating): List of job ratings associated with the user qualification.
+
+    Constraints
+    ------------
+    - At least one of experience, skills, qualities, education, or interests must be provided"""
 
     experience = Column(String, nullable=True)
     skills = Column(String, nullable=True)
@@ -214,6 +218,13 @@ class UserQualification(Owned, Base):
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
 
     job_ratings = relationship("JobRating", back_populates="user_qualification")
+
+    __table_args__ = (
+        CheckConstraint(
+            "experience IS NOT NULL OR skills IS NOT NULL OR qualities IS NOT NULL OR education IS NOT NULL OR interests IS NOT NULL",
+            name="user_qualification_data_required",
+        ),
+    )
 
 
 # -------------------------------------------------------- DATA --------------------------------------------------------

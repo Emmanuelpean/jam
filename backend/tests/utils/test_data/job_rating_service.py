@@ -14,7 +14,8 @@ JOB_RATING_SERVICE_LOG_DATA = [
         "rated_job_found_ids": [101, 102, 103],
         "rated_job_succeeded_ids": [101, 102],
         "rated_job_failed_ids": [103],
-        "rated_job_skipped_ids": [],
+        "user_found_ids": [1, 2],
+        "user_processed_ids": [1, 2],
     },
     {
         "run_duration": 1.23,
@@ -24,7 +25,8 @@ JOB_RATING_SERVICE_LOG_DATA = [
         "rated_job_found_ids": [201, 202],
         "rated_job_succeeded_ids": [201],
         "rated_job_failed_ids": [202],
-        "rated_job_skipped_ids": [],
+        "user_found_ids": [1, 2],
+        "user_processed_ids": [1, 2],
     },
     {
         "run_duration": 3,
@@ -34,6 +36,7 @@ JOB_RATING_SERVICE_LOG_DATA = [
         "rated_job_found_ids": [],
         "rated_job_succeeded_ids": [],
         "rated_job_failed_ids": [],
-        "rated_job_skipped_ids": [301],
+        "user_found_ids": [1, 2],
+        "user_processed_ids": [1],
     },
 ]
