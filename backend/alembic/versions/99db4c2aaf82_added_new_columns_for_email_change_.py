@@ -1,7 +1,7 @@
 """Added new columns for email change verification
 
 Revision ID: 99db4c2aaf82
-Revises:
+Revises: 8a882611d98c
 Create Date: 2025-11-10 20:50:15.996276
 
 """
@@ -14,7 +14,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "99db4c2aaf82"
-down_revision: Union[str, None] = None
+down_revision: Union[str, None] = "8a882611d98c"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
