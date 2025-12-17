@@ -26,6 +26,7 @@ from tests.utils.create_data import (
     create_job_scraping_service_errors,
     create_user_qualifications,
     create_job_ratings,
+    create_speculative_applications,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -85,6 +86,7 @@ def seed_database() -> None:
         interviews = create_interviews(db, people, users, locations, jobs)
         job_application_updates = create_job_application_updates(db, users, jobs)
         user_qualifications = create_user_qualifications(db, users)
+        speculative_applications = create_speculative_applications(db, users, people)
 
         # EIS data
         service_logs = create_job_scraping_service_logs(db)
@@ -110,6 +112,7 @@ def seed_database() -> None:
         print(f"Jobs: {len(jobs)}")
         print(f"Files: {len(files)}")
         print(f"Interviews: {len(interviews)}")
+        print(f"Speculative Applications: {len(speculative_applications)}")
         print(f"Service Logs: {len(service_logs)}")
         print(f"Job Alert Emails: {len(alert_emails)}")
         print(f"Scraped Jobs: {len(scraped_jobs)}")

@@ -54,7 +54,12 @@ job_contact_mapping = Table(
 speculativeapp_contact_mapping = Table(
     "speculativeapp_contact_mapping",
     Base.metadata,
-    Column("speculative_application_id", Integer, ForeignKey("speculative_application.id", ondelete="CASCADE"), primary_key=True),
+    Column(
+        "speculative_application_id",
+        Integer,
+        ForeignKey("speculative_application.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
     Column("person_id", Integer, ForeignKey("person.id", ondelete="CASCADE"), primary_key=True),
 )
 
@@ -316,6 +321,7 @@ class Company(Owned, Base):
     # Relationships
     jobs = relationship("Job", back_populates="company")
     persons = relationship("Person", back_populates="company")
+    speculative_applications = relationship("SpeculativeApplication", back_populates="company")
 
     # Constraints
     __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_owner_company_name"),)
@@ -426,6 +432,7 @@ class Person(Owned, Base):
     company = relationship("Company", back_populates="persons")
     interviews = relationship("Interview", secondary=interview_interviewer_mapping, back_populates="interviewers")
     jobs = relationship("Job", secondary=job_contact_mapping, back_populates="contacts")
+    speculative_applications = relationship("SpeculativeApplication", back_populates="speculative_applications")
 
     @hybrid_property
     def name(self) -> str:
@@ -647,5 +654,5 @@ class SpeculativeApplication(Owned, Base):
     company_id = Column(Integer, ForeignKey("company.id", ondelete="CASCADE"), nullable=False)
 
     # Relationships
-    company = relationship("Company", back_populates="spontaneous_applications")
+    company = relationship("Company", back_populates="speculative_applications")
     contacts = relationship("Person", secondary=job_contact_mapping, back_populates="jobs", lazy="selectin")
