@@ -1605,7 +1605,7 @@ SPECULATIVE_APPLICATION_DATA = [
 ]
 
 SPECULATIVE_APPLICATION_CONTACTS_MAPPING = [
-    {"speculative_application_id": 1, "person_ids": [1]},
-    {"speculative_application_id": 2, "person_ids": [4, 5, 3, 6]},
-    {"speculative_application_id": 3, "person_ids": [4, 6, 8]},
+    {"speculative_application_id": 1, "contact_ids": [1]},
+    {"speculative_application_id": 2, "contact_ids": [4, 5, 3, 6]},
+    {"speculative_application_id": 3, "contact_ids": [4, 6, 8]},
 ]
