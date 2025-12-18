@@ -31,6 +31,7 @@
 * [X] Add the ability to display the results for the selected platform only
 * [X] Add new endpoint for admin only that allows to query specific job ids (as a list)
 * [X] Add job alert name extraction
+* [ ] Store the scraped jobs needing scraping in the service log
 
 ### Select Widgets Improvements
 * [X] Sort options alphabetically
