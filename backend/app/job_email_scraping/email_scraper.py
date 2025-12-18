@@ -7,12 +7,10 @@ content), and records run statistics in an EisServiceLog."""
 
 import traceback
 from datetime import datetime
-from functools import lru_cache
 
 from app import utils, model_registry as models
 from app.config import settings
 from app.database import get_db
-from app.emails.email_service import EmailService
 from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.job_scrapers import JobResult
@@ -28,6 +26,7 @@ from app.job_email_scraping.models import (
     JobEmailScrapingPlatformStat,
     JobEmailScrapingServiceError,
 )
+from app.emails.email_service import EmailService
 from app.service_runner import ServiceRunner
 from app.utils import AppLogger
 
@@ -557,8 +556,4 @@ class EmailScraperServiceRunner(ServiceRunner):
         ServiceRunner.__init__(self, SERVICE_NAME, dict(timedelta_days=3), JobEmailScraper().run_scraping)
 
 
-@lru_cache()
-def get_email_scraper_service() -> EmailScraperServiceRunner:
-    """Singleton per worker process"""
-
-    return EmailScraperServiceRunner()
+scraper_service = EmailScraperServiceRunner()

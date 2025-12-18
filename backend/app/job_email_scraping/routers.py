@@ -15,7 +15,7 @@ from app import model_registry as models
 from app import service_runner
 from app.database import get_db
 from app.job_email_scraping import schemas
-from app.job_email_scraping.email_scraper import get_email_scraper_service, SERVICE_NAME, EmailScraperServiceRunner
+from app.job_email_scraping.email_scraper import scraper_service, SERVICE_NAME
 from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
@@ -314,38 +314,30 @@ email_scraper_service_router = APIRouter(prefix="/email_scraper_service", tags=[
 def start_scraper(
     request: schemas.JobEmailScrapingStartRequest,
     current_user: models.User = Depends(get_current_user),
-    service: EmailScraperServiceRunner = Depends(get_email_scraper_service),
 ) -> dict:
     """Start the service runner with the specified period.
     :param request: StartRequest object containing period_hours
-    :param current_user: Current authenticated user
-    :param service: EmailScraperServiceRunner instance"""
+    :param current_user: Current authenticated user"""
 
-    return service_runner.start_scraper(service, current_user, request.period_hours)
+    return service_runner.start_scraper(scraper_service, current_user, request.period_hours)
 
 
 @email_scraper_service_router.post("/stop")
-def stop_scraper(
-    current_user: models.User = Depends(get_current_user),
-    service: EmailScraperServiceRunner = Depends(get_email_scraper_service),
-) -> dict:
+def stop_scraper(current_user: models.User = Depends(get_current_user)) -> dict:
     """Stop the service runner.
-    :param current_user: Current authenticated user
-    :param service: EmailScraperServiceRunner instance"""
+    :param current_user: Current authenticated user"""
 
-    return service_runner.stop_scraper(service, current_user)
+    return service_runner.stop_scraper(scraper_service, current_user)
 
 
 @email_scraper_service_router.get("/status")
 def scraper_status(
     current_user: models.User = Depends(get_current_user),
-    service: EmailScraperServiceRunner = Depends(get_email_scraper_service),
 ) -> dict:
     """Get the current status of the service.
-    :param current_user: Current authenticated user
-    :param service: EmailScraperServiceRunner instance"""
+    :param current_user: Current authenticated user"""
 
-    return service_runner.scraper_status(service, current_user)
+    return service_runner.scraper_status(scraper_service, current_user)
 
 
 @email_scraper_service_router.get("/logs")
