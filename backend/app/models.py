@@ -51,8 +51,8 @@ job_contact_mapping = Table(
     Column("person_id", Integer, ForeignKey("person.id", ondelete="CASCADE"), primary_key=True),
 )
 
-speculativeapp_contact_mapping = Table(
-    "speculativeapp_contact_mapping",
+speculative_application_contact_mapping = Table(
+    "speculative_application_contact_mapping",
     Base.metadata,
     Column(
         "speculative_application_id",
@@ -432,7 +432,9 @@ class Person(Owned, Base):
     company = relationship("Company", back_populates="persons")
     interviews = relationship("Interview", secondary=interview_interviewer_mapping, back_populates="interviewers")
     jobs = relationship("Job", secondary=job_contact_mapping, back_populates="contacts")
-    speculative_applications = relationship("SpeculativeApplication", back_populates="speculative_applications")
+    speculative_applications = relationship(
+        "SpeculativeApplication", secondary=speculative_application_contact_mapping, back_populates="contacts"
+    )
 
     @hybrid_property
     def name(self) -> str:
@@ -655,4 +657,9 @@ class SpeculativeApplication(Owned, Base):
 
     # Relationships
     company = relationship("Company", back_populates="speculative_applications")
-    contacts = relationship("Person", secondary=job_contact_mapping, back_populates="jobs", lazy="selectin")
+    contacts = relationship(
+        "Person",
+        secondary=speculative_application_contact_mapping,
+        back_populates="speculative_applications",
+        lazy="selectin",
+    )
