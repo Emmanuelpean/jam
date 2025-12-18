@@ -20,6 +20,7 @@ from tests.utils.test_data import (
     JOB_DATA,
     INTERVIEW_DATA,
     JOB_APPLICATION_UPDATE_DATA,
+    SPECULATIVE_APPLICATION_DATA,
 )
 
 
@@ -262,3 +263,16 @@ class TestInterviewCRUD(CRUDTestBase):
     }
     get_unauthorised_fixture = "test_interviews_unauthorised"
     unauthorised_data_fixture = "interviews_unauthorised_data"
+
+
+class TestSpeculativeApplicationCRUD(CRUDTestBase):
+    endpoint = "/speculativeapplications"
+    create_schema = schemas.SpeculativeApplicationCreate
+    out_schema = schemas.SpeculativeApplicationOut
+    test_data_ref = "test_speculative_applications"
+    required_fixture = ["test_companies", "test_persons"]
+    create_data = SPECULATIVE_APPLICATION_DATA
+    update_data = {
+        "note": "Interview went very well - positive feedback",
+        "id": 1,
+    }

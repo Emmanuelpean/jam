@@ -44,6 +44,7 @@ export const Sidebar = () => {
 	const navigationItems: NavigationItem[] = [
 		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard", position: "top" },
 		{ path: "/jobs", text: "Jobs", position: "top" },
+		{ path: "/speculative-applications", text: "Speculative Applications", position: "top" },
 		{ path: "/persons", text: "People", position: "top" },
 		{ path: "/locations", text: "Locations", position: "top" },
 		{ path: "/companies", text: "Companies", position: "top" },

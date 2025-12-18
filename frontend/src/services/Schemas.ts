@@ -340,3 +340,19 @@ export interface UserQualification extends OwnedOut {
 	education: string | null;
 	interests: string | null;
 }
+
+export interface SpeculativeApplicationDataTransform {
+	date: Date | string | null;
+	note: string | null;
+	contact_email: string | null;
+	contacts: number[];
+	company_id: number;
+}
+
+export interface SpeculativeApplicationData extends OwnedOut {
+	date: Date | string | null;
+	note: string | null;
+	contact_email: string | null;
+	contacts: number[];
+	company_id: number;
+}

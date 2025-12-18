@@ -1579,28 +1579,35 @@ INTERVIEW_INTERVIEWER_MAPPINGS = [
 
 SPECULATIVE_APPLICATION_DATA = [
     {
-        "date": dt.datetime(2025, 1, 8, 9, 30, tzinfo=dt.timezone.utc),
+        "date": dt.datetime(2025, 1, 8, 9, 30, tzinfo=dt.timezone.utc).strftime(DATETIME_FORMAT),
         "note": "Initial speculative application for a research scientist position.",
         "contact_email": "careers@photonicsltd.com",
         "company_id": 1,
+        "owner_id": 1,
     },
     {
-        "date": dt.datetime(2025, 1, 15, 14, 45, tzinfo=dt.timezone.utc),
+        "date": dt.datetime(2025, 1, 15, 14, 45, tzinfo=dt.timezone.utc).strftime(DATETIME_FORMAT),
         "contact_email": "hr@photonicsltd.com",
         "company_id": 1,
+        "owner_id": 1,
     },
     {
-        "date": dt.datetime(2025, 2, 2, 10, 0, tzinfo=dt.timezone.utc),
+        "date": dt.datetime(2025, 2, 2, 10, 0, tzinfo=dt.timezone.utc).strftime(DATETIME_FORMAT),
         "note": "Speculative application submitted via company website.",
         "company_id": 2,
+        "owner_id": 1,
     },
     {
-        "date": dt.datetime(2025, 2, 12, 16, 20, tzinfo=dt.timezone.utc),
+        "date": dt.datetime(2025, 2, 12, 16, 20, tzinfo=dt.timezone.utc).strftime(DATETIME_FORMAT),
         "note": "Reached out regarding potential R&D collaboration opportunities.",
         "contact_email": "contact@nanomaterials.io",
+        "company_id": 4,
+        "owner_id": 2,
     },
     {
-        "date": dt.datetime(2025, 3, 1, 11, 10, tzinfo=dt.timezone.utc),
+        "date": dt.datetime(2025, 3, 1, 11, 10, tzinfo=dt.timezone.utc).strftime(DATETIME_FORMAT),
+        "company_id": 7,
+        "owner_id": 1,
     },
 ]
 

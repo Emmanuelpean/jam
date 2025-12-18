@@ -11,6 +11,7 @@ import {
 	locationsApi,
 	personsApi,
 	settingsApi,
+	speculativeApplicationsApi,
 } from "../services/api/DataTables";
 import { ApiError } from "../services/api/Base";
 import { userApi } from "../services/api/Users";
@@ -30,6 +31,7 @@ import {
 	PersonData,
 	ScrapedJobData,
 	SettingData,
+	SpeculativeApplicationData,
 	UserData,
 } from "../services/Schemas";
 import { useLoading } from "./LoadingContext";
@@ -46,7 +48,8 @@ export type EntityType =
 	| "locations"
 	| "settings"
 	| "users"
-	| "scrapedJobs";
+	| "scrapedJobs"
+	| "speculativeApplications";
 
 export type JamData =
 	| KeywordData
@@ -59,7 +62,8 @@ export type JamData =
 	| JobApplicationUpdateData
 	| UserData
 	| SettingData
-	| ScrapedJobData;
+	| ScrapedJobData
+	| SpeculativeApplicationData;
 
 export const endpointToEntityType = (endpoint: string): EntityType | null => {
 	const mapping: Record<string, EntityType> = {
@@ -74,6 +78,7 @@ export const endpointToEntityType = (endpoint: string): EntityType | null => {
 		settings: "settings",
 		users: "users",
 		scraped_jobs: "scrapedJobs",
+		speculativeapplications: "speculativeApplications",
 	};
 	return mapping[endpoint.toLowerCase()] || null;
 };
@@ -103,6 +108,7 @@ export interface DataContextValue {
 	aggregators: AggregatorData[];
 	keywords: KeywordData[];
 	locations: LocationData[];
+	speculativeApplications: SpeculativeApplicationData[];
 	settings: SettingData[];
 	users: UserData[];
 	countries: Country[];
@@ -128,6 +134,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [aggregators, setAggregators] = useState<AggregatorData[]>([]);
 	const [keywords, setKeywords] = useState<KeywordData[]>([]);
 	const [locations, setLocations] = useState<LocationData[]>([]);
+	const [speculativeApplications, setSpeculativeApplications] = useState<SpeculativeApplicationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [_scrapedJobs, setScrapedJobs] = useState<any[]>([]);
@@ -266,6 +273,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		// Define all promises with their labels
 		const fetchOperations = [
 			{ promise: jobsApi.getAll(token), label: "Jobs" },
+			{ promise: speculativeApplicationsApi.getAll(token), label: "Speculative Applications" },
 			{ promise: companiesApi.getAll(token), label: "Companies" },
 			{ promise: personsApi.getAll(token), label: "Persons" },
 			{ promise: interviewsApi.getAll(token), label: "Interviews" },
@@ -307,6 +315,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			// Destructure based on what we fetched
 			const [
 				jobsData,
+				speculativeApplicationData,
 				companiesData,
 				personsData,
 				interviewsData,
@@ -320,6 +329,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			] = results;
 
 			setRawJobs(jobsData || []);
+			setSpeculativeApplications(speculativeApplicationData || []);
 			setCompanies(companiesData || []);
 			setPersons(personsData || []);
 			setRawInterviews(interviewsData || []);
@@ -354,6 +364,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			settings: settingsApi,
 			users: userApi,
 			scrapedJobs: scrapedJobApi,
+			speculativeApplications: speculativeApplicationsApi,
 		};
 		return apiMap[type];
 	};
@@ -372,6 +383,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			settings: setSettings,
 			users: setUsers,
 			scrapedJobs: setScrapedJobs,
+			speculativeApplications: setSpeculativeApplications,
 		};
 		return setterMap[type];
 	};
@@ -422,6 +434,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			try {
 				// Create on backend first
 				const api = getApi(type);
+				console.log(api, type);
 				const apiResult = await api.create(newData, token);
 
 				// Add to the entity's own array
@@ -455,6 +468,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				locations,
 				countries,
 				currencies,
+				speculativeApplications,
 				settings,
 				users,
 				error,

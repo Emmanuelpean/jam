@@ -1,0 +1,29 @@
+import React, { JSX } from "react";
+import { DataTable } from "../components/tables/DataTable";
+import { TableColumn, tableColumns } from "../components/rendering/view/TableColumns";
+import { SpeculativeApplicationModal } from "../components/modals/SpeculativeApplicationModal";
+
+const SpeculativeApplicationsPage = (): JSX.Element => {
+	const columns: TableColumn[] = [
+		tableColumns.companyBadgeColumn(),
+		tableColumns.emailColumn({ key: "contact_email" }),
+		tableColumns.dateColumn({ key: "date" }),
+		tableColumns.contactBadgesColumn(),
+		tableColumns.createdAtColumn(),
+	];
+
+	return (
+		<DataTable
+			entityType="speculativeApplications"
+			initialSortConfig={{ key: "created_at", direction: "desc" }}
+			title="Speculative Applications"
+			columns={columns}
+			Modal={SpeculativeApplicationModal}
+			nameKey="company_id"
+			itemType="Speculative Application"
+			modalSize="xl"
+		/>
+	);
+};
+
+export default SpeculativeApplicationsPage;
