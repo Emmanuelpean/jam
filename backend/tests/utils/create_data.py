@@ -332,7 +332,7 @@ def create_speculative_applications(
         secondary_key="contact_ids",
         relationship_attr="contacts",
     )
-    return applications
+    return add_to_db(db, applications)
 
 
 # ------------------------------------------------ JOB SCRAPING SERVICE ------------------------------------------------

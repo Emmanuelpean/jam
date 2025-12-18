@@ -33,6 +33,7 @@ app.include_router(data_tables.interview_router)
 app.include_router(data_tables.keyword_router)
 app.include_router(data_tables.file_router)
 app.include_router(data_tables.job_application_update_router)
+app.include_router(data_tables.speculative_application_update_router)
 
 # EIS routers
 app.include_router(eis_routers.scraped_job_router)

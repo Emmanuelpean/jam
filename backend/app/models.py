@@ -635,9 +635,9 @@ class SpeculativeApplication(Owned, Base):
 
     Attributes:
     -----------
-    - `date` (datetime): The date and time of the application.
+    - `date` (datetime, optional): The date and time of the application.
     - `note` (str, optional): Additional notes or comments about the application.
-    - `contact_enail` (str, optional): Email address used for the application.
+    - `contact_email` (str, optional): Email address used for the application.
 
     Foreign keys:
     -------------
@@ -648,7 +648,7 @@ class SpeculativeApplication(Owned, Base):
     - `company` (Company): Company object related to the application.
     - `contact` (Person): Persons object related to the application."""
 
-    date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=False)
+    date = Column(TIMESTAMP(timezone=True), server_default=text("now()"), nullable=True)
     note = Column(String, nullable=True)
     contact_email = Column(String, nullable=True)
 

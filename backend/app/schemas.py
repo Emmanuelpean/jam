@@ -472,18 +472,21 @@ class JobApplicationUpdateUpdate(JobApplicationUpdateCreate):
     type: str | None = None
     job_id: int | None = None
 
+
 # ----------------------------------------------- SPECULATIVE APPLICATION ----------------------------------------------
+
 
 class SpeculativeApplicationCreate(BaseModel):
     """Speculative application create schema"""
 
-    date: datetime
+    date: datetime | None = None
     note: str | None = None
     contact_email: str | None = None
 
     # Foreign keys
-    company_id: int | None = None
+    company_id: int
     contacts: list[int] = []
+
 
 class SpeculativeApplicationOut(SpeculativeApplicationCreate, OwnedOut):
     """Speculative application output schema"""
@@ -494,7 +497,8 @@ class SpeculativeApplicationOut(SpeculativeApplicationCreate, OwnedOut):
         """Serialize relationships to list of IDs"""
         return serialize_relationships(value)
 
-def SpeculativeApplicationUpdate(SpeculativeApplicationCreate):
+
+class SpeculativeApplicationUpdate(SpeculativeApplicationCreate):
     """Speculative application update schema"""
 
-    date: datetime | None = None
+    company_id: int | None = None

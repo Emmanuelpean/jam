@@ -27,6 +27,7 @@ import "./App.css";
 import "./Themes.css";
 import { AlertProvider } from "./contexts/AlertContext";
 import JobRatingDashboard from "./pages/Services/JobRatingDashboard/JobRatingDashboardPage";
+import SpeculativeApplicationsPage from "./pages/SpeculativeApplicationsPage";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -130,6 +131,7 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/locations", element: <LocationsPage />, protected: true },
 	{ path: "/companies", element: <CompaniesPage />, protected: true },
 	{ path: "/jobs", element: <JobsPage />, protected: true },
+	{ path: "/speculative-applications", element: <SpeculativeApplicationsPage />, protected: true },
 	{ path: "/persons", element: <PersonPage />, protected: true },
 	{ path: "/keywords", element: <KeywordsPage />, protected: true },
 	{ path: "/interviews", element: <InterviewsPage />, protected: true },

@@ -19,9 +19,9 @@ from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
 from app import models, database, schemas
+from app.config import settings
 from app.job_email_scraping import models as eis_models
 from app.job_rating import models as rating_models
-from app.config import settings
 from app.main import app
 from app.oauth2 import create_access_token
 from app.utils import hash_token
@@ -45,6 +45,7 @@ from tests.utils.create_data import (
     create_user_qualifications,
     create_job_ratings,
     create_job_rating_service_logs,
+    create_speculative_applications
 )
 from tests.utils.seed_database import reset_database
 from tests.utils.test_data import (
@@ -461,6 +462,13 @@ def test_job_application_updates_unauthorised(
     data, owner_id = job_application_updates_unauthorised_data
     updates = create_job_application_updates(session, test_users, test_jobs, data)
     return updates, owner_id
+
+
+@pytest.fixture
+def test_speculative_applications(session, test_users, test_persons, test_companies) -> list[models.SpeculativeApplication]:
+    """Create test speculative application data"""
+
+    return create_speculative_applications(session, test_users, test_persons)
 
 
 @pytest.fixture

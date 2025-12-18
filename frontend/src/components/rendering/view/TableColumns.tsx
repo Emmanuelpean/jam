@@ -53,6 +53,10 @@ const getInterviewersText = (item: JamData, context: DataContextValue): string |
 	return _getPersonsText(item, context, "interviewers");
 };
 
+const getContactsText = (item: JamData, context: DataContextValue): string | null => {
+	return _getPersonsText(item, context, "contacts");
+};
+
 interface TableColumnOverrides extends Partial<TableColumn> {}
 
 export const tableColumns = {
@@ -365,6 +369,17 @@ export const tableColumns = {
 		type: "text",
 		searchFields: getInterviewersText,
 		render: renderFunctions.InterviewerBadges,
+		...overrides,
+	}),
+
+	contactBadgesColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "contacts",
+		label: "Contacts",
+		sortable: false,
+		searchable: true,
+		type: "text",
+		searchFields: getContactsText,
+		render: renderFunctions.ContactBadges,
 		...overrides,
 	}),
 

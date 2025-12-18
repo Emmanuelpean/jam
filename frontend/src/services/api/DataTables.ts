@@ -11,3 +11,4 @@ export const jobApplicationUpdatesApi: CrudApi = createCrudApi("jobapplicationup
 export const settingsApi: CrudApi = createCrudApi("settings");
 export const countriesApi: CrudApi = createCrudApi("others/countries");
 export const currenciesApi: CrudApi = createCrudApi("others/currencies");
+export const speculativeApplicationsApi: CrudApi = createCrudApi("speculativeapplications");
