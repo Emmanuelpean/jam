@@ -797,6 +797,13 @@ class TablePage(BaseTest):
         self.cancel_button("view", "job").click()
         self.wait_for_view_modal_close("job")
 
+    def check_speculative_application_view_modal(self, entry: models.SpeculativeApplication) -> None:
+        """Check the speculative application view modal"""
+
+        modal = self.wait_for_view_modal("speculativeApplication")
+        expected = "Speculative Application Details\nSpeculative Application Details\n"
+        assert modal.text == expected
+
 
 class TestKeywordsPage(TablePage):
     """Test class for the keywords Page functionality including:
@@ -1206,3 +1213,26 @@ class TestJobPage(TablePage):
 
         # Verify the update view modal displays the updated information
         self.check_update_view_modal(update, False)
+
+
+class TestSpeculativeApplicationPage(TablePage):
+
+    endpoint = "speculativeapplications"
+    page_url = "speculative-applications"
+    entity_type = "speculativeApplications"
+    test_fixture = ["test_speculative_applications"]
+    entry_name = "Speculative Application"
+    duplicate_fields = ["company_id"]
+    required_fields = ["company_id"]
+    test_data = {
+        "company_id": "Oxford PV",
+        "note": "Interview went very well - positive feedback",
+    }
+    model = models.SpeculativeApplication
+
+    def _test_view_modal(self, entry=None) -> None:
+        """Helper method to test the view modal for an entry"""
+
+        if not entry:
+            entry = self.test_entry
+        self.check_speculative_application_view_modal(entry)
