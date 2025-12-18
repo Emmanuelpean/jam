@@ -37,11 +37,8 @@ const CustomDropdownIndicator = (props: any): JSX.Element => {
 							}
 						});
 					} else {
-						console.log("A");
 						customProps.addButtonModalRef.current?.showAdd({}, (newData: any) => {
-							console.log(newData);
 							if (customProps.onAddSuccess) {
-								console.log("here");
 								customProps.onAddSuccess(newData);
 							}
 						});
