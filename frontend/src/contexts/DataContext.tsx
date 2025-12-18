@@ -434,7 +434,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			try {
 				// Create on backend first
 				const api = getApi(type);
-				console.log(api, type);
 				const apiResult = await api.create(newData, token);
 
 				// Add to the entity's own array
