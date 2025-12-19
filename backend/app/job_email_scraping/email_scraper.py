@@ -480,6 +480,10 @@ class JobEmailScraper(EmailService):
 
         # List all unique job records that haven't been scraped yet
         job_records = self.db.query(ScrapedJob).filter(ScrapedJob.is_scraped.is_(False)).all()
+        platforms = set([job.platform for job in job_records])
+        for platform in platforms:
+            ids = [job.id for job in job_records if job.platform == platform]
+            self.upsert_platform_stat(service_log, platform, job_to_scrape_ids=ids)
 
         # For each job record, scrape the data
         for job_record in job_records:

@@ -131,6 +131,7 @@ class JobEmailScrapingServiceLogOut(Out):
 
     # Jobs
     job_found_n: int = 0
+    job_to_scrape_n: int = 0
     job_scrape_succeeded_n: int = 0
     job_scrape_failed_n: int = 0
     job_scrape_copied_n: int = 0
@@ -159,6 +160,7 @@ class JobEmailScrapingPlatformStatOut(Out):
 
     # Jobs
     job_found_ids: list[int] = []
+    job_to_scrape_ids: list[int] = []
     job_scrape_succeeded_ids: list[int] = []
     job_scrape_failed_ids: list[int] = []
     job_scrape_copied_ids: list[int] = []
