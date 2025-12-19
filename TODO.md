@@ -16,7 +16,7 @@
 * [X] Add currency parsing
 * [X] Add admin control and monitoring page
 * [X] Add graphs showing the results of previous service logs
-* [ ] Add frontend tests
+* [X] Add frontend tests
 * [X] Deleting/deactivating is not working
 * [ ] If no currency is found, use the default currency
 * [X] Load the currencies and countries from the backend instead of the frontend
@@ -25,13 +25,14 @@
 * [X] Add the total number of scraped jobs
 * [X] Display the most common failures
 * [X] Display critical failures
-* [ ] Add AI rating for the jobs
+* [X] Add AI rating for the jobs
 * [ ] Add the ability to filter out jobs (extract the job title when extracting the job ids). Mark the job as filtered
 * [X] Add NHS job alert support
 * [X] Add the ability to display the results for the selected platform only
 * [X] Add new endpoint for admin only that allows to query specific job ids (as a list)
 * [X] Add job alert name extraction
 * [ ] Store the scraped jobs needing scraping in the service log
+* [ ] Display the current step of the logs
 
 ### Select Widgets Improvements
 * [X] Sort options alphabetically
