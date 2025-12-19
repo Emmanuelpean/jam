@@ -291,6 +291,7 @@ export interface JobScraperServiceLog extends ServiceLog {
 	scraped_jobs: ScrapedJobData[];
 	platform_stats: PlatformStat[];
 	errors: ServiceError[];
+	job_to_scrape_n: number;
 	job_scrape_succeeded_n: number;
 	job_scrape_failed_n: number;
 	job_scrape_copied_n: number;
@@ -316,6 +317,7 @@ export interface PlatformStat {
 	email_saved_ids: number[];
 	email_skipped_ids: number[];
 	job_found_ids: number[];
+	job_to_scrape_ids: number[];
 	job_scrape_failed_ids: number[];
 	job_scrape_succeeded_ids: number[];
 	job_scrape_copied_ids: number[];
