@@ -202,6 +202,11 @@ class JobEmailScrapingServiceLog(ServiceLog, CommonBase, Base):
         super().__init__(**kwargs)
 
     @hybrid_property
+    def job_to_scrape_n(self) -> int:
+        """Total jobs to scrape across all platforms."""
+        return sum(len(stat.job_to_scrape_ids) for stat in self.platform_stats)
+
+    @hybrid_property
     def job_scrape_succeeded_n(self) -> int:
         """Total successfully scraped jobs across all platforms."""
         return sum(len(stat.job_scrape_succeeded_ids) for stat in self.platform_stats)
@@ -250,6 +255,7 @@ class JobEmailScrapingPlatformStat(CommonBase, Base):
 
     # Jobs
     - `job_found_ids` (list of int): List of found job IDs from the emails.
+    - `job_to_scrape_ids` (list of int): List of job IDs to be scraped.
     - `job_scrape_failed_ids` (list of int): List of failed job scrape IDs.
     - `job_scrape_succeeded_ids` (list of int): List of successful job scrape IDs.
     - `job_scrape_copied_ids` (list of int): List of copied job scrape IDs.
@@ -276,6 +282,7 @@ class JobEmailScrapingPlatformStat(CommonBase, Base):
 
     # Jobs
     job_found_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
+    job_to_scrape_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_scrape_failed_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_scrape_succeeded_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
     job_scrape_copied_ids = Column(PG_ARRAY(Integer), server_default="{}", nullable=False)
@@ -297,6 +304,7 @@ class JobEmailScrapingPlatformStat(CommonBase, Base):
         kwargs.setdefault("email_saved_ids", [])
         kwargs.setdefault("email_skipped_ids", [])
         kwargs.setdefault("job_found_ids", [])
+        kwargs.setdefault("job_to_scrape_ids", [])
         kwargs.setdefault("job_scrape_failed_ids", [])
         kwargs.setdefault("job_scrape_succeeded_ids", [])
         kwargs.setdefault("job_scrape_copied_ids", [])
