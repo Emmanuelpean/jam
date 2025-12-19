@@ -45,14 +45,14 @@ class NhsJobScraper:
         for job in job_data:
 
             # Deadline
-            if job.get("closingDate"):
+            try:
                 deadline = dt.datetime.strptime(job.get("closingDate"), "%d %B %Y")
-            else:
+            except:
                 deadline = None
 
             # Salary
             pattern = r"(?P<currency>£)\s*(?P<min>[\d,]+)\s*to\s*(?P=currency)\s*(?P<max>[\d,]+).*?(?P<frequency>a year|per annum)"
-            match = re.search(pattern, job.get("salary"), re.IGNORECASE)
+            match = re.search(pattern, job.get("salary") or "", re.IGNORECASE)
 
             min_salary = max_salary = None
             currency = None

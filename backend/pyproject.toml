@@ -16,7 +16,7 @@ dependencies = [
     "pydantic-settings==2.10.1",
     "psycopg2-binary",
     "pydantic[email]==2.11.9",
-    "python-jose==3.5.0",
+    "PyJWT==2.10.1",
     "bcrypt==4.3.0",
     "cloudscraper==1.2.71",
     "tqdm==4.67.1",
