@@ -1,10 +1,11 @@
 import React, { JSX, useState } from "react";
 import { JobScraperServiceLog } from "../../../services/Schemas";
+import { ErrorCount } from "../../../hooks/useJobScraperErrors";
 
 interface ErrorSummaryCardProps {
 	latestServiceLogs: JobScraperServiceLog[] | null;
-	lastScraperErrors: Record<string, number>;
-	latestScraperErrors: Record<string, number>;
+	lastScraperErrors: Record<string, ErrorCount>;
+	latestScraperErrors: Record<string, ErrorCount>;
 	lastServiceErrors: Record<string, number>;
 	latestServiceErrors: Record<string, number>;
 	isRunning: boolean;
@@ -123,16 +124,26 @@ export const ErrorSummaryCard = ({
 					) : (
 						<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
 							{Object.entries(scrapeErrors)
-								.sort((a, b) => b[1] - a[1])
-								.map(([errorMsg, count], idx) => (
+								.sort((a, b) => b[1].count - a[1].count)
+								.map(([errorMsg, error], idx) => (
 									<div key={idx} className="alert alert-warning">
-										<div className="d-flex justify-content-between align-items-start mb-1">
+										<div className="d-flex justify-content-between align-items-start mb-2">
 											<span className="badge bg-warning">
-												{count} {count > 1 ? "occurrences" : "occurrence"}
+												{error.count} {error.count > 1 ? "occurrences" : "occurrence"}
 											</span>
 										</div>
-										<div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+										<div
+											style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+											className="mb-2"
+										>
 											{errorMsg}
+										</div>
+										<div className="mt-2" style={{ fontSize: "0.85rem" }}>
+											{error.jobs.map((job, jobIdx) => (
+												<div key={jobIdx}>
+													{job.platform}: {job.jobId}
+												</div>
+											))}
 										</div>
 									</div>
 								))}

@@ -73,7 +73,7 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 						latestLog.job_scrape_failed_n +
 						latestLog.job_scrape_skipped_n
 					}
-					total={latestLog.job_found_n}
+					total={latestLog.job_to_scrape_n}
 				/>
 			</div>
 		</div>
