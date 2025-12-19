@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from unittest.mock import patch
 
 import pytest
-from jose import jwt
+import jwt
 
 from app import schemas, models
 from app.config import settings
