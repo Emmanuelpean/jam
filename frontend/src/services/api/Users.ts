@@ -67,7 +67,7 @@ export interface UserQualificationApi {
 
 export const userQualificationApi: UserQualificationApi = {
 	getLatest: (token: string): Promise<UserQualification> => api.get("user_qualifications/latest", token),
-	upsert: (data: any, token: string): Promise<UserQualification> => api.post("user_qualifications", data, token),
+	upsert: (data: any, token: string): Promise<UserQualification> => api.post("user_qualifications/", data, token),
 };
 
 export interface ExportCrudApi {
