@@ -278,6 +278,7 @@ const UserSettingsPage: React.FC = () => {
 				skills: formData.skills || "",
 				qualities: formData.qualities || "",
 				education: formData.education || "",
+				interests: formData.interests || "",
 			};
 			await userQualificationApi.upsert(qualificationData, token);
 			showToastSuccess("Qualifications saved successfully.");
