@@ -1037,15 +1037,15 @@ for i in range(50):
     EMAIL_SCRAPEDJOB_MAPPINGS[0]["scraped_job_ids"].append(i + 14)
 
 
-JOB_FILTER_DATA = [
+SCRAPED_JOB_FILTER_DATA = [
     # ========== Owner 1 Rules (San Francisco-based user) ==========
     # 1. Hide all "Senior" positions (case-insensitive contains)
     # Filters out: "Senior Python Developer" (external_job_id: 3789012345)
     {
         "owner_id": 1,
-        "filter_type": "title",
-        "filter_operator": "contains",
-        "filter_value": "Senior",
+        "type": "title",
+        "operator": "contains",
+        "value": "Senior",
         "is_active": True,
         "case_sensitive": False,
     },
@@ -1053,9 +1053,9 @@ JOB_FILTER_DATA = [
     # Filters out: "Full Stack Engineer" from StartupXYZ (external_job_id: 987654321)
     {
         "owner_id": 1,
-        "filter_type": "company",
-        "filter_operator": "equals",
-        "filter_value": "StartupXYZ",
+        "type": "company",
+        "operator": "equals",
+        "value": "StartupXYZ",
         "is_active": True,
         "case_sensitive": False,
     },
@@ -1063,9 +1063,9 @@ JOB_FILTER_DATA = [
     # Filters out: "DevOps Engineer" (external_job_id: 1122334455)
     {
         "owner_id": 1,
-        "filter_type": "location_city",
-        "filter_operator": "equals",
-        "filter_value": "New York",
+        "type": "location_city",
+        "operator": "equals",
+        "value": "New York",
         "is_active": True,
         "case_sensitive": False,
     },
@@ -1073,9 +1073,9 @@ JOB_FILTER_DATA = [
     # Filters out jobs with salary_min < 100000
     {
         "owner_id": 1,
-        "filter_type": "salary_min",
-        "filter_operator": "less_than",
-        "filter_value": "100000",
+        "type": "salary_min",
+        "operator": "less_than",
+        "value": "100000",
         "is_active": True,
         "case_sensitive": False,
     },
@@ -1083,18 +1083,18 @@ JOB_FILTER_DATA = [
     # Filters out: "Senior Python Developer", "Backend Developer"
     {
         "owner_id": 1,
-        "filter_type": "title",
-        "filter_operator": "ends_with",
-        "filter_value": "Developer",
+        "type": "title",
+        "operator": "ends_with",
+        "value": "Developer",
         "is_active": True,
         "case_sensitive": False,
     },
     # 7. INACTIVE rule (should not affect results)
     {
         "owner_id": 1,
-        "filter_type": "title",
-        "filter_operator": "contains",
-        "filter_value": "Engineer",
+        "type": "title",
+        "operator": "contains",
+        "value": "Engineer",
         "is_active": False,
         "case_sensitive": False,
     },
@@ -1103,9 +1103,9 @@ JOB_FILTER_DATA = [
     # Filters out: "FinTech Innovations Ltd", "StartupXYZ"
     {
         "owner_id": 2,
-        "filter_type": "company",
-        "filter_operator": "not_contains",
-        "filter_value": "Tech",
+        "type": "company",
+        "operator": "not_contains",
+        "value": "Tech",
         "is_active": True,
         "case_sensitive": False,
     },
@@ -1113,9 +1113,9 @@ JOB_FILTER_DATA = [
     # Filters out: "Full Stack JavaScript Developer" (external_job_id: jobsite_901234)
     {
         "owner_id": 2,
-        "filter_type": "location_city",
-        "filter_operator": "equals",
-        "filter_value": "Manchester",
+        "type": "location_city",
+        "operator": "equals",
+        "value": "Manchester",
         "is_active": True,
         "case_sensitive": False,
     },
@@ -1123,9 +1123,9 @@ JOB_FILTER_DATA = [
     # Filters out: "Flutter Developer" (external_job_id: totaljobs_567890)
     {
         "owner_id": 2,
-        "filter_type": "attendance_type",
-        "filter_operator": "equals",
-        "filter_value": "remote",
+        "type": "attendance_type",
+        "operator": "equals",
+        "value": "remote",
         "is_active": True,
         "case_sensitive": False,
     },
@@ -1133,9 +1133,9 @@ JOB_FILTER_DATA = [
     # Filters out: "Senior Java Developer" (95k), potentially others
     {
         "owner_id": 2,
-        "filter_type": "salary_max",
-        "filter_operator": "greater_than",
-        "filter_value": "90000",
+        "type": "salary_max",
+        "operator": "greater_than",
+        "value": "90000",
         "is_active": True,
         "case_sensitive": False,
     },
@@ -1143,9 +1143,9 @@ JOB_FILTER_DATA = [
     # Filters out: "Machine Learning Engineer" (external_job_id: reed_345678)
     {
         "owner_id": 2,
-        "filter_type": "title",
-        "filter_operator": "starts_with",
-        "filter_value": "Machine",
+        "type": "title",
+        "operator": "starts_with",
+        "value": "Machine",
         "is_active": True,
         "case_sensitive": False,
     },
@@ -1153,9 +1153,9 @@ JOB_FILTER_DATA = [
     # Would filter out non-UK jobs if any existed
     {
         "owner_id": 2,
-        "filter_type": "location_country",
-        "filter_operator": "not_equals",
-        "filter_value": "United Kingdom",
+        "type": "location_country",
+        "operator": "not_equals",
+        "value": "United Kingdom",
         "is_active": True,
         "case_sensitive": False,
     },
@@ -1163,9 +1163,9 @@ JOB_FILTER_DATA = [
     # Would only match if exact case exists in title
     {
         "owner_id": 1,
-        "filter_type": "title",
-        "filter_operator": "contains",
-        "filter_value": "Python",
+        "type": "title",
+        "operator": "contains",
+        "value": "Python",
         "is_active": True,
         "case_sensitive": True,
     },
@@ -1173,9 +1173,9 @@ JOB_FILTER_DATA = [
     # Filters out: "CloudTech Solutions" for owner_id=1
     {
         "owner_id": 1,
-        "filter_type": "company",
-        "filter_operator": "starts_with",
-        "filter_value": "Cloud",
+        "type": "company",
+        "operator": "starts_with",
+        "value": "Cloud",
         "is_active": True,
         "case_sensitive": False,
     },

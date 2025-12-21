@@ -362,3 +362,16 @@ def get_scraper_logs(
     :param current_user: Current authenticated user"""
 
     return service_runner.get_service_logs(SERVICE_NAME, lines, current_user)
+
+
+# ------------------------------------------------- SCRAPED JOB FILTERS ------------------------------------------------
+
+
+scraped_job_filter_router = generate_data_table_crud_router(
+    table_model=models.ScrapedJobFilter,
+    create_schema=schemas.ScrapedJobFilterCreate,
+    update_schema=schemas.ScrapedJobFilterUpdate,
+    out_schema=schemas.ScrapedJobFilterOut,
+    endpoint="scraped_job_filters",
+    not_found_msg="Scraped Job Filter not found",
+)

@@ -18,9 +18,8 @@ from requests import Response
 from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
-from app import models, database, schemas
-from app.job_email_scraping import models as eis_models
-from app.job_rating import models as rating_models
+from app import database, schemas
+from app import model_registry as models
 from app.config import settings
 from app.main import app
 from app.oauth2 import create_access_token
@@ -45,6 +44,7 @@ from tests.utils.create_data import (
     create_user_qualifications,
     create_job_ratings,
     create_job_rating_service_logs,
+    create_scraped_job_filters,
 )
 from tests.utils.seed_database import reset_database
 from tests.utils.test_data import (
@@ -464,42 +464,42 @@ def test_job_application_updates_unauthorised(
 
 
 @pytest.fixture
-def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[eis_models.ScrapedJob]:
+def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[models.ScrapedJob]:
     """Create test job alert email jobs"""
 
     return create_scraped_jobs(session, test_job_alert_emails, test_users)
 
 
 @pytest.fixture
-def test_eis_service_logs(session) -> list[eis_models.JobEmailScrapingServiceLog]:
+def test_eis_service_logs(session) -> list[models.JobEmailScrapingServiceLog]:
     """Create test service logs"""
 
     return create_job_scraping_service_logs(session)
 
 
 @pytest.fixture
-def test_platform_stats(session, test_eis_service_logs) -> list[eis_models.JobEmailScrapingPlatformStat]:
+def test_platform_stats(session, test_eis_service_logs) -> list[models.JobEmailScrapingPlatformStat]:
     """Create test platform stats"""
 
     return create_job_scraping_platform_stats(session, test_eis_service_logs)
 
 
 @pytest.fixture
-def test_eis_service_errors(session, test_eis_service_logs) -> list[eis_models.JobEmailScrapingServiceError]:
+def test_eis_service_errors(session, test_eis_service_logs) -> list[models.JobEmailScrapingServiceError]:
     """Create test job_email_scraping service errors"""
 
     return create_job_scraping_service_errors(session, test_eis_service_logs)
 
 
 @pytest.fixture
-def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[eis_models.JobEmail]:
+def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[models.JobEmail]:
     """Create test job alert emails"""
 
     return create_job_alert_emails(session, test_users, test_eis_service_logs)
 
 
 @pytest.fixture
-def test_job_rating_service_logs(session) -> list[rating_models.JobRatingServiceLog]:
+def test_job_rating_service_logs(session) -> list[models.JobRatingServiceLog]:
     """Create test job rating service logs"""
 
     return create_job_rating_service_logs(session)
@@ -508,12 +508,19 @@ def test_job_rating_service_logs(session) -> list[rating_models.JobRatingService
 @pytest.fixture
 def test_job_ratings(
     session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
-) -> list[rating_models.JobRating]:
+) -> list[models.JobRating]:
     """Create test job ratings"""
 
     return create_job_ratings(
         session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
     )
+
+
+@pytest.fixture
+def test_scraped_job_filters(session, test_users, test_scraped_jobs) -> list[models.ScrapedJobFilter]:
+    """Create test scraped job filter data"""
+
+    return create_scraped_job_filters(session, test_users)
 
 
 # -------------------------------------------------------- UTILS -------------------------------------------------------
