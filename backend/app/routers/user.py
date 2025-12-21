@@ -74,7 +74,8 @@ def upsert_user_qualification(
 
     entry = (
         db.query(models.UserQualification)
-        .filter(models.UserQualification.owner_id == user.id, models.UserQualification.id == qualification.id)
+        .filter(models.UserQualification.owner_id == user.id)
+        .filter(models.UserQualification.id == qualification.id)
         .first()
     )
     if entry:

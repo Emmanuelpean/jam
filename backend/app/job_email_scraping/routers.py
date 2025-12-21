@@ -16,6 +16,7 @@ from app import service_runner
 from app.database import get_db
 from app.job_email_scraping import schemas
 from app.job_email_scraping.email_scraper import scraper_service, SERVICE_NAME
+from app.job_email_scraping.filtering import rule_to_sql_predicate
 from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
@@ -55,7 +56,6 @@ scraped_job_router = generate_data_table_crud_router(
 )
 
 
-# GET endpoint for regular user to get paged scraped jobs
 @scraped_job_router.get("/paged", response_model=schemas.PaginatedScrapedJobResponse)
 def get_all(
     request: Request,
@@ -78,6 +78,18 @@ def get_all(
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.is_active)
     )
+
+    # Apply user filter rules (exclude jobs matching any active rule)
+    active_rules = (
+        db.query(models.JobFilter)
+        .filter(models.JobFilter.owner_id == current_user.id)
+        .filter(models.JobFilter.is_active.is_(True))
+        .all()
+    )
+
+    if active_rules:
+        exclude_predicate = or_(*(rule_to_sql_predicate(r) for r in active_rules))
+        query = query.filter(~exclude_predicate)
 
     # Apply search filter
     if search:

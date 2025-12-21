@@ -11,8 +11,10 @@ from datetime import datetime
 from app import utils, model_registry as models
 from app.config import settings
 from app.database import get_db
+from app.emails.email_service import EmailService
 from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
+from app.job_email_scraping.filtering import is_job_filtered_for_user
 from app.job_email_scraping.job_scrapers import JobResult
 from app.job_email_scraping.job_scrapers.indeed import IndeedApifyJobScraper
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
@@ -26,7 +28,6 @@ from app.job_email_scraping.models import (
     JobEmailScrapingPlatformStat,
     JobEmailScrapingServiceError,
 )
-from app.emails.email_service import EmailService
 from app.service_runner import ServiceRunner
 from app.utils import AppLogger
 
@@ -487,6 +488,18 @@ class JobEmailScraper(EmailService):
 
         # For each job record, scrape the data
         for job_record in job_records:
+
+            # Check if filtered out for user
+            if job_filter_rule := is_job_filtered_for_user(self.db, job_record):
+                self.logger.info(
+                    f"Job ID {job_record.external_job_id} filtered out for user ID {job_record.owner_id} "
+                    f"due to rule {job_filter_rule.name}"
+                )
+                job_record.is_scraped = True
+                job_record.filtering_reason = f"Filtered by rule: {job_filter_rule.name}"
+                self.db.commit()
+                self.upsert_platform_stat(service_log, job_record.platform, job_scrape_filtered_ids=job_record.id)
+                continue  # next job record
 
             # Find any existing scraped job data in the database
             existing_data = (

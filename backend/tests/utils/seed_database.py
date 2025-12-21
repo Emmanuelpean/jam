@@ -26,6 +26,7 @@ from tests.utils.create_data import (
     create_job_scraping_service_errors,
     create_user_qualifications,
     create_job_ratings,
+    create_job_filters,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -92,6 +93,7 @@ def seed_database() -> None:
         eis_service_errors = create_job_scraping_service_errors(db, service_logs)
         alert_emails = create_job_alert_emails(db, users, service_logs)
         scraped_jobs = create_scraped_jobs(db, alert_emails, users)
+        job_filters = create_job_filters(db, users)
 
         # Job Ratings data
         job_rating_service_logs = create_job_scraping_service_logs(db)
@@ -116,6 +118,7 @@ def seed_database() -> None:
         print(f"Job Application Updates: {len(job_application_updates)}")
         print(f"Platform Stats: {len(platform_stats)}")
         print(f"EIS Service Errors: {len(eis_service_errors)}")
+        print(f"Job Filters: {len(job_filters)}")
         print(f"User Qualifications: {len(user_qualifications)}")
         print(f"Job Rating Service Logs: {len(job_rating_service_logs)}")
         print(f"Job Ratings: {len(job_ratings)}")
