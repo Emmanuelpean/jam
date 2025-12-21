@@ -261,6 +261,11 @@ export const renderFunctions = {
 		return getActiveBadge(isActive);
 	},
 
+	caseSensitive: (param: RenderParams): ReactNode => {
+		const isActive: boolean = param.item?.case_sensitive;
+		return getActiveBadge(isActive);
+	},
+
 	salaryRange: (param: RenderParams): string | null => {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;

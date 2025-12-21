@@ -106,3 +106,6 @@ export const jobRatingServiceRunnerApi: JobRatingServiceRunnerApi = {
 		return api.post("job_rating_service_runner/start", data, token);
 	},
 };
+
+// Filters
+export const scrapedJobFilterApi: CrudApi = createCrudApi("scraped_job_filters");

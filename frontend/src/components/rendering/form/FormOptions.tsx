@@ -209,3 +209,25 @@ export const interviewTypeOptions: SelectOption[] = [
 	{ value: "Final", label: "Final Interview" },
 	{ value: "Other", label: "Other" },
 ];
+
+export const scrapedJobFilterTypeOptions: SelectOption[] = [
+	{ value: "title", label: "Job Title" },
+	{ value: "company", label: "Company Name" },
+	{ value: "location", label: "Location" },
+	{ value: "location_city", label: "City" },
+	{ value: "location_country", label: "Country" },
+	{ value: "salary_min", label: "Minimum Salary" },
+	{ value: "salary_max", label: "Maximum Salary" },
+	{ value: "attendance_type", label: "Attendance Type" },
+];
+
+export const scrapedJobFilterOperatorOptions: SelectOption[] = [
+	{ value: "contains", label: "Contains" },
+	{ value: "equals", label: "Equals To" },
+	{ value: "starts_with", label: "Starts With" },
+	{ value: "ends_with", label: "Ends With" },
+	{ value: "less_than", label: "Less or Equal Than" },
+	{ value: "greater_than", label: "Greater or Equal Than" },
+	{ value: "not_contains", label: "Does Not Contain" },
+	{ value: "not_equals", label: "Is Not Equal To" },
+];

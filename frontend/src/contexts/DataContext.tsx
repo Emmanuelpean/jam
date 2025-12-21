@@ -14,7 +14,7 @@ import {
 } from "../services/api/DataTables";
 import { ApiError } from "../services/api/Base";
 import { userApi } from "../services/api/Users";
-import { scrapedJobApi } from "../services/api/Services";
+import { scrapedJobApi, scrapedJobFilterApi } from "../services/api/Services";
 import { useAuth } from "./AuthContext";
 import {
 	AggregatorData,
@@ -29,6 +29,7 @@ import {
 	LocationData,
 	PersonData,
 	ScrapedJobData,
+	ScrapedJobFilter,
 	SettingData,
 	UserData,
 } from "../services/Schemas";
@@ -46,7 +47,8 @@ export type EntityType =
 	| "locations"
 	| "settings"
 	| "users"
-	| "scrapedJobs";
+	| "scrapedJobs"
+	| "scrapedJobFilters";
 
 export type JamData =
 	| KeywordData
@@ -59,7 +61,8 @@ export type JamData =
 	| JobApplicationUpdateData
 	| UserData
 	| SettingData
-	| ScrapedJobData;
+	| ScrapedJobData
+	| ScrapedJobFilter;
 
 export const endpointToEntityType = (endpoint: string): EntityType | null => {
 	const mapping: Record<string, EntityType> = {
@@ -74,6 +77,7 @@ export const endpointToEntityType = (endpoint: string): EntityType | null => {
 		settings: "settings",
 		users: "users",
 		scraped_jobs: "scrapedJobs",
+		scraped_job_filters: "scrapedJobFilters",
 	};
 	return mapping[endpoint.toLowerCase()] || null;
 };
@@ -104,6 +108,7 @@ export interface DataContextValue {
 	keywords: KeywordData[];
 	locations: LocationData[];
 	settings: SettingData[];
+	scrapedJobFilters: ScrapedJobFilter[];
 	users: UserData[];
 	countries: Country[];
 	currencies: Currency[];
@@ -129,6 +134,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [keywords, setKeywords] = useState<KeywordData[]>([]);
 	const [locations, setLocations] = useState<LocationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
+	const [scrapedJobFilters, setScrapedJobFilters] = useState<ScrapedJobFilter[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [_scrapedJobs, setScrapedJobs] = useState<any[]>([]);
 	const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -273,6 +279,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" },
 			{ promise: keywordsApi.getAll(token), label: "Keywords" },
 			{ promise: locationsApi.getAll(token), label: "Locations" },
+			{ promise: scrapedJobFilterApi.getAll(token), label: "Scraped Job Filters" },
 			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" },
 			{ promise: countriesApi.getAll(token), label: "Miscellaneous" },
 		];
@@ -314,6 +321,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				aggregatorsData,
 				keywordsData,
 				locationsData,
+				scrapedJobFiltersData,
 				currenciesData,
 				countriesData,
 				...adminData
@@ -327,6 +335,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setAggregators(aggregatorsData || []);
 			setKeywords(keywordsData || []);
 			setLocations(locationsData || []);
+			setScrapedJobFilters(scrapedJobFiltersData || []);
 			setCurrencies(currenciesData || []);
 			setCountries(countriesData || []);
 
@@ -354,6 +363,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			settings: settingsApi,
 			users: userApi,
 			scrapedJobs: scrapedJobApi,
+			scrapedJobFilters: scrapedJobFilterApi,
 		};
 		return apiMap[type];
 	};
@@ -372,6 +382,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			settings: setSettings,
 			users: setUsers,
 			scrapedJobs: setScrapedJobs,
+			scrapedJobFilters: setScrapedJobFilters,
 		};
 		return setterMap[type];
 	};
@@ -453,6 +464,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				aggregators,
 				keywords,
 				locations,
+				scrapedJobFilters,
 				countries,
 				currencies,
 				settings,

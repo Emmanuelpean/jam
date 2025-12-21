@@ -275,6 +275,22 @@ export interface JobRating extends BaseOut {
 	user_qualification_id: number | null;
 }
 
+export interface ScrapedJobFilterTransform {
+	type: string;
+	operator: string;
+	value: string;
+	is_active: boolean;
+	case_sensitive: boolean;
+}
+
+export interface ScrapedJobFilter extends OwnedOut {
+	type: string;
+	operator: string;
+	value: string;
+	is_active: boolean;
+	case_sensitive: boolean;
+}
+
 // ---------------------------------------------------- SERVICE LOGS ---------------------------------------------------
 
 export interface ServiceLog extends BaseOut {
