@@ -1,12 +1,12 @@
 """Logic for filtering scraped jobs based on user-defined rules."""
 
-from typing import Any
+import datetime as dt
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
-from app.job_email_scraping.models import ScrapedJob, JobFilter
+from app.job_email_scraping.models import ScrapedJob, ScrapedJobFilter
 
 STRING_OPERATORS = [
     "contains",
@@ -19,8 +19,8 @@ STRING_OPERATORS = [
 
 
 def apply_rule_to_values(
-    job_value: Any,
-    rule_value: str,
+    job_value: str | float | int,
+    rule_value: str | float | int,
     op: str,
     case_sensitive: bool,
 ) -> bool:
@@ -67,36 +67,36 @@ def apply_rule_to_values(
 
 def job_matches_rule_python(
     job: ScrapedJob,
-    rule: JobFilter,
+        job_filter: ScrapedJobFilter,
 ) -> bool:
     """Check if a job matches a given filter rule using Python logic.
     :param job: The ScrapedJob instance to check.
-    :param rule: The JobFilterRule instance to apply.
+    :param job_filter: The JobFilterRule instance to apply.
     :return: True if the job matches the rule (i.e. should be filtered out)."""
 
-    field_value = getattr(job, rule.filter_type, None)
+    field_value = getattr(job, job_filter.type, None)
     if field_value is None:
         return False
 
     return apply_rule_to_values(
         job_value=field_value,
-        rule_value=rule.filter_value,
-        op=rule.filter_operator,
-        case_sensitive=rule.case_sensitive,
+        rule_value=job_filter.value,
+        op=job_filter.operator,
+        case_sensitive=job_filter.case_sensitive,
     )
 
 
 def is_job_filtered_for_user(
     session: Session,
     job: ScrapedJob,
-) -> JobFilter | None:
+) -> ScrapedJobFilter | None:
     """Check if a job should be filtered out for a given user based on their rules.
     :param session: SQLAlchemy session for database access.
     :param job: The ScrapedJob instance to check.
     :return: True if the job should be filtered out for the user."""
 
     rules = (
-        session.query(JobFilter).filter(JobFilter.owner_id == job.owner_id).filter(JobFilter.is_active.is_(True)).all()
+        session.query(ScrapedJobFilter).filter(ScrapedJobFilter.owner_id == job.owner_id).filter(ScrapedJobFilter.is_active.is_(True)).all()
     )
 
     for rule in rules:
@@ -106,17 +106,17 @@ def is_job_filtered_for_user(
         return None
 
 
-def rule_to_sql_predicate(filter: JobFilter) -> ColumnElement[bool]:
+def rule_to_sql_predicate(job_filter: ScrapedJobFilter) -> ColumnElement[bool]:
     """Convert a rule into a SQLAlchemy expression that matches jobs to EXCLUDE.
-    :param filter: The JobFilterRule instance to convert.
+    :param job_filter: The JobFilterRule instance to convert.
     :return: A SQLAlchemy boolean expression representing the rule."""
 
-    field = getattr(ScrapedJob, filter.filter_type)
-    value = filter.filter_value
-    op = filter.filter_operator
+    field = getattr(ScrapedJob, job_filter.type)
+    value = job_filter.value
+    op = job_filter.operator
 
     # Case handling for strings (mirror Python logic)
-    if not filter.case_sensitive and op in STRING_OPERATORS:
+    if not job_filter.case_sensitive and op in STRING_OPERATORS:
         field = func.lower(field)
         value = value.lower()
 
