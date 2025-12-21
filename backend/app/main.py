@@ -40,6 +40,7 @@ app.include_router(eis_routers.job_alert_email_router)
 app.include_router(eis_routers.eis_service_log_router)
 app.include_router(eis_routers.scraper_router)
 app.include_router(eis_routers.email_scraper_service_router)
+app.include_router(eis_routers.scraped_job_filter_router)
 
 # Job Rating routers
 app.include_router(job_rating_routers.job_rating_router)

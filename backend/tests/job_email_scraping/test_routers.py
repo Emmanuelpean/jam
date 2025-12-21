@@ -7,7 +7,7 @@ from starlette import status
 
 from app.job_email_scraping import schemas
 from tests.conftest import CRUDTestBase
-from tests.utils.test_data.job_scraping_service import JOB_ALERT_EMAIL_DATA
+from tests.utils.test_data.job_scraping_service import JOB_ALERT_EMAIL_DATA, SCRAPED_JOB_FILTER_DATA
 
 
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
@@ -211,3 +211,18 @@ class TestEisServiceLog:
         response = client.get("/eis_service_logs/latest")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+# ------------------------------------------------- SCRAPED JOB FILTERS ------------------------------------------------
+
+
+class TestScrapedJobFilters(CRUDTestBase):
+    endpoint = "/scraped_job_filters"
+    out_schema = schemas.ScrapedJobFilterOut
+    test_data_ref = "test_scraped_job_filters"
+    create_data = SCRAPED_JOB_FILTER_DATA
+    update_data = {
+        "id": 1,
+        "type": "title",
+    }
+    required_fixture = ["test_scraped_jobs"]

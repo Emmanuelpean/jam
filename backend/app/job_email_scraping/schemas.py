@@ -192,3 +192,32 @@ class JobEmailScrapingStartRequest(BaseModel):
 
     period_hours: float | None = 3.0
     timedelta_days: int | None = 1
+
+
+# ------------------------------------------------- SCRAPED JOB FILTER -------------------------------------------------
+
+
+class ScrapedJobFilterCreate(BaseModel):
+    """Scraped Job Filter creation schema"""
+
+    type: str
+    value: str
+    operator: str
+    is_active: bool = True
+    case_sensitive: bool = False
+
+
+class ScrapedJobFilterUpdate(BaseModel):
+    """Scraped Job Filter update schema"""
+
+    type: str | None = None
+    value: str | None = None
+    operator: str | None = None
+    is_active: bool | None = None
+    case_sensitive: bool | None = None
+
+
+class ScrapedJobFilterOut(OwnedOut, ScrapedJobFilterCreate):
+    """Scraped Job Filter output schema"""
+
+    pass
