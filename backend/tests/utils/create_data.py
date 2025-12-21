@@ -398,13 +398,13 @@ def create_job_scraping_service_errors(db, service_logs) -> list[eis_models.JobE
     return add_to_db(db, errors)
 
 
-def create_job_filters(db, users: list[models.User]) -> list[eis_models.JobFilter]:
+def create_job_filters(db, users: list[models.User]) -> list[eis_models.ScrapedJobFilter]:
     """Create sample job filters"""
 
     print("Creating job filters...")
     # noinspection PyArgumentList
     filters = [
-        eis_models.JobFilter(**filter_data)
+        eis_models.ScrapedJobFilter(**filter_data)
         for filter_data in override_entries_properties(
             job_scraping_service.JOB_FILTER_DATA,
             ("owner_id", users),

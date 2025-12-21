@@ -81,9 +81,9 @@ def get_all(
 
     # Apply user filter rules (exclude jobs matching any active rule)
     active_rules = (
-        db.query(models.JobFilter)
-        .filter(models.JobFilter.owner_id == current_user.id)
-        .filter(models.JobFilter.is_active.is_(True))
+        db.query(models.ScrapedJobFilter)
+        .filter(models.ScrapedJobFilter.owner_id == current_user.id)
+        .filter(models.ScrapedJobFilter.is_active.is_(True))
         .all()
     )
 

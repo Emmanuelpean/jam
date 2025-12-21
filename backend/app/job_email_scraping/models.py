@@ -361,14 +361,14 @@ class JobEmailScrapingServiceError(CommonBase, Base):
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="service_errors")
 
 
-class JobFilter(Owned, Base):
+class ScrapedJobFilter(Owned, Base):
     """Represents user-defined rules to filter out scraped jobs.
 
     Attributes:
     -----------
-    - `filter_type` (str): Type of filter (title, company, location, salary, attendance_type).
-    - `filter_operator` (str): Operator for the filter (contains, equals, starts_with, ends_with, less_than, greater_than).
-    - `filter_value` (str): Value to match against.
+    - `type` (str): Type of filter (title, company, location, salary, attendance_type).
+    - `operator` (str): Operator for the filter (contains, equals, starts_with, ends_with, less_than, greater_than).
+    - `value` (str): Value to match against.
     - `is_active` (bool): Whether this filter rule is currently active.
     - `case_sensitive` (bool): Whether string matching should be case-sensitive.
 
@@ -377,15 +377,15 @@ class JobFilter(Owned, Base):
     - Check constraint to ensure valid filter_type values.
     - Check constraint to ensure valid filter_operator values."""
 
-    filter_type = Column(String, nullable=False)
-    filter_operator = Column(String, nullable=False)
-    filter_value = Column(String, nullable=False)
+    type = Column(String, nullable=False)
+    operator = Column(String, nullable=False)
+    value = Column(String, nullable=False)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
     case_sensitive = Column(Boolean, nullable=False, server_default=expression.false())
 
     __table_args__ = (
         CheckConstraint(
-            filter_type.in_(
+            type.in_(
                 [
                     "title",
                     "company",
@@ -400,7 +400,7 @@ class JobFilter(Owned, Base):
             name="valid_filter_type",
         ),
         CheckConstraint(
-            filter_operator.in_(
+            operator.in_(
                 [
                     "contains",
                     "equals",
@@ -420,4 +420,4 @@ class JobFilter(Owned, Base):
     def name(self) -> str:
         """Generate a human-readable name for the filter rule."""
 
-        return f"{self.filter_type} {self.filter_operator} '{self.filter_value}'"
+        return f"{self.type} {self.operator} '{self.value}'"
