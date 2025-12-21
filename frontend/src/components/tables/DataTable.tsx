@@ -30,6 +30,7 @@ export interface DataTableProps {
 	error?: string | null;
 	showAdd?: boolean;
 	menuItems?: string[];
+	toolbarAddon?: React.ReactNode;
 }
 
 export interface GenericTableProps {
@@ -70,6 +71,7 @@ export interface GenericTableProps {
 
 	// Additional content
 	children?: (data: any[]) => ReactNode;
+	toolbarAddon?: React.ReactNode;
 }
 
 export const DataTable: React.FC<GenericTableProps> = ({
@@ -93,6 +95,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	onImportSuccess,
 	children,
 	menuItems,
+	toolbarAddon,
 }: GenericTableProps): JSX.Element => {
 	const { token } = useAuth();
 	const modalRef = useRef<DataModalHandle>(null);
@@ -485,7 +488,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				style={{ gap: compact ? "0.5rem" : "1rem" }}
 			>
 				{showSearch && !compact && (
-					<div className="d-flex align-items-center gap-3" style={{ width: showAdd ? "40%" : "100%" }}>
+					<div className="d-flex align-items-center gap-3" style={{ width: showAdd ? "40%" : "90%" }}>
 						<input
 							type="text"
 							className="form-control"
@@ -499,6 +502,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 						</span>
 					</div>
 				)}
+				{toolbarAddon && <div className="datatable-toolbar-addon">{toolbarAddon}</div>}
 				{showAdd && mode !== "import" && (
 					<Button
 						variant="primary"

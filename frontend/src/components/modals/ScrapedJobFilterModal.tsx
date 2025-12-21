@@ -6,19 +6,22 @@ import { ScrapedJobFilter, ScrapedJobFilterTransform } from "../../services/Sche
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
 export const ScrapedJobFilterModal = forwardRef<DataModalHandle, DataModalProps>(
-	({ size = "lg" }: DataModalProps, ref): JSX.Element => {
+	({ size = "xl" }: DataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
+		console.log(dataContext.scrapedJobFilters);
 
 		const formFieldsArray: Fields = [
-			[
-				formFields.scrapedJobFilterType(),
-				formFields.scrapedJobFilterOperator(),
-				formFields.value({ type: "input" }),
-			],
+			formFields.scrapedJobFilterType(),
+			formFields.scrapedJobFilterOperator(),
+			formFields.value({ type: "input" }),
+
 			[formFields.isActive(), formFields.caseSensitive()],
 		];
 
-		const viewFieldsArray: Fields = [modalViewFields.name({ isTitle: true })];
+		const viewFieldsArray: Fields = [
+			modalViewFields.scrapedJobFilterName({ isTitle: true }),
+			[modalViewFields.isActive(), modalViewFields.caseSensitive()],
+		];
 
 		const fields = {
 			form: formFieldsArray,
@@ -56,10 +59,10 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, DataModalProps>
 			<>
 				<DataModal
 					ref={ref}
-					itemName="scrapedJobFilter"
+					itemName="Scraping Filter"
 					size={size}
 					fields={fields}
-					endpoint="persons"
+					endpoint="scraped_job_filters"
 					validation={customValidation}
 					transformFormData={transformFormData}
 				/>

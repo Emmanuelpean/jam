@@ -46,6 +46,8 @@ import {
 	appliedViaOptions,
 	attendanceTypeOptions,
 	interviewTypeOptions,
+	scrapedJobFilterOperatorOptions,
+	scrapedJobFilterTypeOptions,
 	SelectOption,
 	updateTypeOptions,
 } from "../form/FormOptions";
@@ -160,6 +162,27 @@ export const renderFunctions = {
 
 	overallScore: (param: RenderParams): number | null => {
 		return param.item?.job_rating?.overall_score;
+	},
+
+	filterType: (param: RenderParams): ReactNode => {
+		return (
+			scrapedJobFilterTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]
+				?.label || null
+		);
+	},
+
+	filterOperator: (param: RenderParams): ReactNode => {
+		return (
+			scrapedJobFilterOperatorOptions.filter(
+				(option: SelectOption): boolean => option.value === param.item?.operator,
+			)[0]?.label || null
+		);
+	},
+
+	scrapedJobFilterName: (param: RenderParams): ReactNode => {
+		const type = renderFunctions.filterType(param);
+		const operator = renderFunctions.filterOperator(param);
+		return type + " " + operator + ' "' + param.item?.value + '"';
 	},
 
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------

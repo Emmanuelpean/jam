@@ -143,6 +143,13 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	scrapedJobFilterName: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "name",
+		label: "Filter Name",
+		render: renderFunctions.scrapedJobFilterName,
+		...overrides,
+	}),
+
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
 	url: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
@@ -288,6 +295,13 @@ export const modalViewFields = {
 		key: "is_active",
 		label: "Active",
 		render: (params: RenderParams) => renderFunctions.isActive({ ...params, view: true }),
+		...overrides,
+	}),
+
+	caseSensitive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "case_sensitive",
+		label: "Case Sensitive",
+		render: (params: RenderParams) => renderFunctions.caseSensitive({ ...params, view: true }),
 		...overrides,
 	}),
 
