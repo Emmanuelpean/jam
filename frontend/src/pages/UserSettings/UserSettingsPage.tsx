@@ -274,11 +274,11 @@ const UserSettingsPage: React.FC = () => {
 		try {
 			const qualificationData = {
 				id: formData.qualification_id,
-				experience: formData.experience || "",
-				skills: formData.skills || "",
-				qualities: formData.qualities || "",
-				education: formData.education || "",
-				interests: formData.interests || "",
+				experience: formData.experience || null,
+				skills: formData.skills || null,
+				qualities: formData.qualities || null,
+				education: formData.education || null,
+				interests: formData.interests || null,
 			};
 			await userQualificationApi.upsert(qualificationData, token);
 			showToastSuccess("Qualifications saved successfully.");

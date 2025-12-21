@@ -1035,3 +1035,148 @@ for i in range(50):
 
     JOB_SCRAPED_DATA.append(job)
     EMAIL_SCRAPEDJOB_MAPPINGS[0]["scraped_job_ids"].append(i + 14)
+
+
+JOB_FILTER_DATA = [
+    # ========== Owner 1 Rules (San Francisco-based user) ==========
+    # 1. Hide all "Senior" positions (case-insensitive contains)
+    # Filters out: "Senior Python Developer" (external_job_id: 3789012345)
+    {
+        "owner_id": 1,
+        "filter_type": "title",
+        "filter_operator": "contains",
+        "filter_value": "Senior",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    # 2. Hide specific company exactly
+    # Filters out: "Full Stack Engineer" from StartupXYZ (external_job_id: 987654321)
+    {
+        "owner_id": 1,
+        "filter_type": "company",
+        "filter_operator": "equals",
+        "filter_value": "StartupXYZ",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    # 3. Hide jobs in New York
+    # Filters out: "DevOps Engineer" (external_job_id: 1122334455)
+    {
+        "owner_id": 1,
+        "filter_type": "location_city",
+        "filter_operator": "equals",
+        "filter_value": "New York",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    # 4. Hide jobs with salary_min below threshold
+    # Filters out jobs with salary_min < 100000
+    {
+        "owner_id": 1,
+        "filter_type": "salary_min",
+        "filter_operator": "less_than",
+        "filter_value": "100000",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    # 6. Hide titles ending with "Developer" (but not "Engineer")
+    # Filters out: "Senior Python Developer", "Backend Developer"
+    {
+        "owner_id": 1,
+        "filter_type": "title",
+        "filter_operator": "ends_with",
+        "filter_value": "Developer",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    # 7. INACTIVE rule (should not affect results)
+    {
+        "owner_id": 1,
+        "filter_type": "title",
+        "filter_operator": "contains",
+        "filter_value": "Engineer",
+        "is_active": False,
+        "case_sensitive": False,
+    },
+    # ========== Owner 2 Rules (UK-based user) ==========
+    # 8. Hide companies NOT containing "Tech" (inverted logic)
+    # Filters out: "FinTech Innovations Ltd", "StartupXYZ"
+    {
+        "owner_id": 2,
+        "filter_type": "company",
+        "filter_operator": "not_contains",
+        "filter_value": "Tech",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    # 9. Hide jobs in Manchester
+    # Filters out: "Full Stack JavaScript Developer" (external_job_id: jobsite_901234)
+    {
+        "owner_id": 2,
+        "filter_type": "location_city",
+        "filter_operator": "equals",
+        "filter_value": "Manchester",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    # 10. Hide remote positions (user prefers office work)
+    # Filters out: "Flutter Developer" (external_job_id: totaljobs_567890)
+    {
+        "owner_id": 2,
+        "filter_type": "attendance_type",
+        "filter_operator": "equals",
+        "filter_value": "remote",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    # 11. Hide jobs with salary_max greater than 90000 (user avoiding senior roles)
+    # Filters out: "Senior Java Developer" (95k), potentially others
+    {
+        "owner_id": 2,
+        "filter_type": "salary_max",
+        "filter_operator": "greater_than",
+        "filter_value": "90000",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    # 12. Hide jobs with title starting with "Machine"
+    # Filters out: "Machine Learning Engineer" (external_job_id: reed_345678)
+    {
+        "owner_id": 2,
+        "filter_type": "title",
+        "filter_operator": "starts_with",
+        "filter_value": "Machine",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    # 13. Hide jobs NOT equal to UK (inverted equality - hide non-UK)
+    # Would filter out non-UK jobs if any existed
+    {
+        "owner_id": 2,
+        "filter_type": "location_country",
+        "filter_operator": "not_equals",
+        "filter_value": "United Kingdom",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+    # 14. Case-sensitive test: only hide exact "Python" (not "python")
+    # Would only match if exact case exists in title
+    {
+        "owner_id": 1,
+        "filter_type": "title",
+        "filter_operator": "contains",
+        "filter_value": "Python",
+        "is_active": True,
+        "case_sensitive": True,
+    },
+    # 15. Hide companies starting with "Cloud"
+    # Filters out: "CloudTech Solutions" for owner_id=1
+    {
+        "owner_id": 1,
+        "filter_type": "company",
+        "filter_operator": "starts_with",
+        "filter_value": "Cloud",
+        "is_active": True,
+        "case_sensitive": False,
+    },
+]
