@@ -31,6 +31,7 @@ export interface DataTableProps {
 	showAdd?: boolean;
 	menuItems?: string[];
 	toolbarAddon?: React.ReactNode;
+	reloadTrigger?: number;
 }
 
 export interface GenericTableProps {
@@ -57,6 +58,7 @@ export interface GenericTableProps {
 	// Data management
 	nameKey: string;
 	itemType: string;
+	initialData?: any;
 
 	// Display options
 	title?: string;
@@ -72,6 +74,7 @@ export interface GenericTableProps {
 	// Additional content
 	children?: (data: any[]) => ReactNode;
 	toolbarAddon?: React.ReactNode;
+	reloadTrigger?: number;
 }
 
 export const DataTable: React.FC<GenericTableProps> = ({
@@ -92,16 +95,18 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	compact = false,
 	showSearch = true,
 	showAdd = true,
+	initialData = {},
 	onImportSuccess,
 	children,
 	menuItems,
 	toolbarAddon,
+	reloadTrigger,
 }: GenericTableProps): JSX.Element => {
 	const { token } = useAuth();
 	const modalRef = useRef<DataModalHandle>(null);
 	const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
 	const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
-	const openAddModal = () => modalRef.current?.showAdd({});
+	const openAddModal = () => modalRef.current?.showAdd(initialData);
 	const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
 
 	// Data management
@@ -160,6 +165,12 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			setIsLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		if (isServerPagination) {
+			fetchData().then(() => null);
+		}
+	}, [reloadTrigger]);
 
 	useEffect((): void => {
 		if (isServerPagination) {
@@ -454,6 +465,14 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		return "bi-plus-circle";
 	};
 
+	const handleModalHide = () => {
+		modalRef.current?.hide?.();
+		console.log("A", modalProps);
+		if (typeof modalProps.fetchTrigger === "function") {
+			modalProps.fetchTrigger();
+		}
+	};
+
 	if (contextError) {
 		return <div className="alert alert-danger mt-3">{contextError.message}</div>;
 	}
@@ -720,7 +739,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			)}
 
 			{children ? children(data) : null}
-			<Modal ref={modalRef} onSuccess={handleSuccess} size={modalSize} {...modalProps} />
+			<Modal ref={modalRef} onSuccess={handleSuccess} size={modalSize} {...modalProps} onHide={handleModalHide} />
 		</div>
 	);
 };

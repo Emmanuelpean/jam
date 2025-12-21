@@ -1,14 +1,16 @@
-import React, { JSX, useState } from "react";
+import React, { JSX, useState, useEffect } from "react";
 import { Button } from "react-bootstrap";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../modals/ScrapedJobModal";
-import { JobData, JobDataTransform } from "../../services/Schemas";
+import { JobData, JobDataTransform, ScrapedJobFilter } from "../../services/Schemas";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
-import { useDataContext } from "../../contexts/DataContext";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import ScrapedJobFilterTable from "./ScrapedJobFilterTable";
 
 const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableProps): JSX.Element => {
+	const dataContext: DataContextValue = useDataContext();
+	const [reloadFlag, setReloadFlag] = useState(0);
 	const [showFilters, setShowFilters] = useState(false);
 	const { addEntity } = useDataContext();
 	const defaultColumns: TableColumn[] =
@@ -45,6 +47,10 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 		return addEntity("jobs", jobData);
 	};
 
+	const refetchMain = (): void => {
+		setReloadFlag((prev: number): number => prev + 1);
+	};
+
 	return (
 		<>
 			<DataTable
@@ -59,14 +65,34 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 				modalSize="xl"
 				showAdd={false}
 				showSearch={true}
+				reloadTrigger={reloadFlag}
 				onImportSuccess={onImportSuccess}
 				toolbarAddon={
-					<Button size="sm" variant="outline-secondary" onClick={() => setShowFilters(true)}>
-						Filters
+					<Button
+						style={{ height: "100%" }}
+						variant="outline-primary"
+						onClick={(): void => setShowFilters(true)}
+					>
+						Filters (
+						{
+							dataContext.scrapedJobFilters.filter(
+								(filter: ScrapedJobFilter): boolean => filter.is_active,
+							).length
+						}
+						)
 					</Button>
 				}
+				modalProps={{
+					fetchTrigger: refetchMain,
+				}}
 			/>
-			<ScrapedJobFilterTable show={showFilters} onHide={() => setShowFilters(false)} />
+			<ScrapedJobFilterTable
+				show={showFilters}
+				onHide={(): void => {
+					setShowFilters(false);
+					refetchMain();
+				}}
+			/>
 		</>
 	);
 };
