@@ -48,6 +48,7 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 					showAllEntries={true}
 					compact={true}
 					showSearch={true}
+					initialData={{ is_active: true }}
 				/>
 			</Modal.Body>
 		</Modal>
