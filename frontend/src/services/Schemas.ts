@@ -289,6 +289,7 @@ export interface ScrapedJobFilter extends OwnedOut {
 	value: string;
 	is_active: boolean;
 	case_sensitive: boolean;
+	name: string;
 }
 
 // ---------------------------------------------------- SERVICE LOGS ---------------------------------------------------

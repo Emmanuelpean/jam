@@ -220,4 +220,4 @@ class ScrapedJobFilterUpdate(BaseModel):
 class ScrapedJobFilterOut(OwnedOut, ScrapedJobFilterCreate):
     """Scraped Job Filter output schema"""
 
-    pass
+    name: str

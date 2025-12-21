@@ -263,6 +263,26 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	filterTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "type",
+		label: "Filter Type",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.filterType,
+		...overrides,
+	}),
+
+	filterOperatorColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "operator",
+		label: "Operator",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.filterOperator,
+		...overrides,
+	}),
+
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
 	urlColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({

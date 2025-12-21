@@ -1,12 +1,15 @@
-import React, { JSX } from "react";
+import React, { JSX, useState } from "react";
+import { Button } from "react-bootstrap";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../modals/ScrapedJobModal";
 import { JobData, JobDataTransform } from "../../services/Schemas";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
 import { useDataContext } from "../../contexts/DataContext";
+import ScrapedJobFilterTable from "./ScrapedJobFilterTable";
 
 const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableProps): JSX.Element => {
+	const [showFilters, setShowFilters] = useState(false);
 	const { addEntity } = useDataContext();
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
@@ -43,20 +46,28 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 	};
 
 	return (
-		<DataTable
-			entityType="scrapedJobs"
-			mode="import"
-			columns={defaultColumns}
-			initialSortConfig={{ key: "created_at", direction: "desc" }}
-			Modal={ScrapedJobModal}
-			endpoint="scraped_jobs"
-			nameKey="title"
-			itemType="Scraped Job"
-			modalSize="xl"
-			showAdd={false}
-			showSearch={true}
-			onImportSuccess={onImportSuccess}
-		/>
+		<>
+			<DataTable
+				entityType="scrapedJobs"
+				mode="import"
+				columns={defaultColumns}
+				initialSortConfig={{ key: "created_at", direction: "desc" }}
+				Modal={ScrapedJobModal}
+				endpoint="scraped_jobs"
+				nameKey="title"
+				itemType="Scraped Job"
+				modalSize="xl"
+				showAdd={false}
+				showSearch={true}
+				onImportSuccess={onImportSuccess}
+				toolbarAddon={
+					<Button size="sm" variant="outline-secondary" onClick={() => setShowFilters(true)}>
+						Filters
+					</Button>
+				}
+			/>
+			<ScrapedJobFilterTable show={showFilters} onHide={() => setShowFilters(false)} />
+		</>
 	);
 };
 
