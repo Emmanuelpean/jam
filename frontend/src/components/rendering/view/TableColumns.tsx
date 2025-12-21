@@ -124,6 +124,15 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	operatorColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "operator",
+		label: "Operator",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		...overrides,
+	}),
+
 	updateTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "type",
 		label: "Type",
@@ -408,6 +417,16 @@ export const tableColumns = {
 		searchable: true,
 		type: "text",
 		render: renderFunctions.isActive,
+		...overrides,
+	}),
+
+	caseSensitiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "case_sensitive",
+		label: "Case Sensitive",
+		sortable: true,
+		searchable: false,
+		type: "text",
+		render: renderFunctions.caseSensitive,
 		...overrides,
 	}),
 
