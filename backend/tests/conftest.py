@@ -464,10 +464,10 @@ def test_job_application_updates_unauthorised(
 
 
 @pytest.fixture
-def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[models.ScrapedJob]:
+def test_scraped_jobs(session, test_users, test_job_alert_emails, test_scraped_job_filters) -> list[models.ScrapedJob]:
     """Create test job alert email jobs"""
 
-    return create_scraped_jobs(session, test_job_alert_emails, test_users)
+    return create_scraped_jobs(session, test_job_alert_emails, test_users, test_scraped_job_filters)
 
 
 @pytest.fixture

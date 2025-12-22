@@ -98,7 +98,7 @@ def is_job_filtered_for_user(
     rules = (
         session.query(ScrapedJobFilter)
         .filter(ScrapedJobFilter.owner_id == job.owner_id)
-        .filter(ScrapedJobFilter.is_active.is_(True))
+        .filter(ScrapedJobFilter.is_enabled.is_(True))
         .all()
     )
 

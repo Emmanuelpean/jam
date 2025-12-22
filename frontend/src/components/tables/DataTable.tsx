@@ -460,15 +460,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		}
 		return "bi-plus-circle";
 	};
-
-	const handleModalHide = () => {
-		modalRef.current?.hide?.();
-		console.log("A", modalProps);
-		if (typeof modalProps.fetchTrigger === "function") {
-			modalProps.fetchTrigger();
-		}
-	};
-
+	// Render
 	if (contextError) {
 		return <div className="alert alert-danger mt-3">{contextError.message}</div>;
 	}
@@ -735,7 +727,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			)}
 
 			{children ? children(data) : null}
-			<Modal ref={modalRef} onSuccess={handleSuccess} size={modalSize} {...modalProps} onHide={handleModalHide} />
+			<Modal ref={modalRef} onSuccess={handleSuccess} size={modalSize} {...modalProps} />
 		</div>
 	);
 };

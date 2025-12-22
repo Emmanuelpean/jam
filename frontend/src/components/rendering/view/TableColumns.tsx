@@ -430,13 +430,13 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	isActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "is_active",
-		label: "Active",
+	isEnabledColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_enabled",
+		label: "Enabled",
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: renderFunctions.isActive,
+		render: renderFunctions.isEnabled,
 		...overrides,
 	}),
 

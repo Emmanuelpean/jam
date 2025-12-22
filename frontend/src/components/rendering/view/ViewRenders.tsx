@@ -37,6 +37,7 @@ import {
 	getApplicationStatusBadgeClass,
 	getTableIcon,
 	getToastIcon,
+	getTrueFalseBadge,
 	getUpdateTypeIcon,
 } from "./Icons";
 import { capitalise, ensureHttpPrefix } from "../../../utils/StringUtils";
@@ -284,9 +285,12 @@ export const renderFunctions = {
 		return getActiveBadge(isActive);
 	},
 
+	isEnabled: (param: RenderParams): ReactNode => {
+		return getTrueFalseBadge(param.item?.is_enabled);
+	},
+
 	caseSensitive: (param: RenderParams): ReactNode => {
-		const isActive: boolean = param.item?.case_sensitive;
-		return getActiveBadge(isActive);
+		return getTrueFalseBadge(param.item?.case_sensitive);
 	},
 
 	salaryRange: (param: RenderParams): string | null => {

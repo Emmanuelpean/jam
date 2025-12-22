@@ -1,5 +1,5 @@
 import React, { forwardRef, JSX } from "react";
-import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { PersonData, PersonTransform } from "../../services/Schemas";
@@ -7,8 +7,8 @@ import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { CompanyModal } from "./CompanyModal";
 
-export const PersonModal = forwardRef<DataModalHandle, DataModalProps>(
-	({ size = "lg" }: DataModalProps, ref): JSX.Element => {
+export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
+	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const companyModalRef = React.useRef<DataModalHandle>(null);
 		const { companies } = useFormOptions();
 		const dataContext: DataContextValue = useDataContext();

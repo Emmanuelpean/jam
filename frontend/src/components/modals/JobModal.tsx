@@ -1,5 +1,11 @@
 import React, { forwardRef, ReactNode, useRef } from "react";
-import DataModal, { DataModalHandle, DataModalProps, Fields, TabConfig, ValidationErrors } from "./DataModal/DataModal";
+import DataModal, {
+	DataModalHandle,
+	JamDataModalProps,
+	Fields,
+	TabConfig,
+	ValidationErrors,
+} from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
@@ -14,7 +20,7 @@ import { AggregatorModal } from "./AggregatorModal";
 import { KeywordModal } from "./KeywordModal";
 import { LocationModal } from "./LocationModal";
 
-interface JobAndApplicationProps extends DataModalProps {
+interface JobAndApplicationProps extends JamDataModalProps {
 	defaultActiveTab?: "job" | "application";
 }
 

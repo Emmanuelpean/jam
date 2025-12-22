@@ -204,6 +204,7 @@ class ScrapedJobFilterCreate(BaseModel):
     value: str
     operator: str
     is_active: bool = True
+    is_enabled: bool = True
     case_sensitive: bool = False
 
 
@@ -214,6 +215,7 @@ class ScrapedJobFilterUpdate(BaseModel):
     value: str | None = None
     operator: str | None = None
     is_active: bool | None = None
+    is_enabled: bool | None = None
     case_sensitive: bool | None = None
 
 
@@ -221,3 +223,10 @@ class ScrapedJobFilterOut(OwnedOut, ScrapedJobFilterCreate):
     """Scraped Job Filter output schema"""
 
     name: str
+    filtered_jobs: list[int]
+
+    @field_validator("filtered_jobs", mode="before")
+    @classmethod
+    def serialize_relationships(cls, value) -> list[int]:
+        """Serialize relationships to list of IDs"""
+        return serialize_relationships(value)

@@ -7,7 +7,7 @@ from starlette import status
 
 from app.job_email_scraping import schemas
 from tests.conftest import CRUDTestBase
-from tests.utils.test_data.job_scraping_service import JOB_ALERT_EMAIL_DATA, SCRAPED_JOB_FILTER_DATA
+from tests.utils.test_data.job_scraping_service import JOB_EMAIL_DATA, SCRAPED_JOB_FILTER_DATA
 
 
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
@@ -17,7 +17,7 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
     endpoint = "/job_alert_emails"
     out_schema = schemas.JobEmailOut
     test_data_ref = "test_job_alert_emails"
-    create_data = JOB_ALERT_EMAIL_DATA
+    create_data = JOB_EMAIL_DATA
     update_data = {
         "id": 1,
         "subject": "Updated Python",
