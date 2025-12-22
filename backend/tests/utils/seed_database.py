@@ -72,7 +72,7 @@ def seed_database() -> None:
 
     try:
         # App data
-        users = create_users(db)
+        users = create_users(db, None, 12)
         settings = create_settings(db)
 
         # Table data

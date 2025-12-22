@@ -22,7 +22,7 @@ def create_settings(db) -> list[models.Setting]:
     return db.query(models.Setting).all()
 
 
-def create_users(db, user_data: list[dict] = None) -> list[models.User]:
+def create_users(db, user_data: list[dict] | None = None, rounds=4) -> list[models.User]:
     """Create sample users and return them attached to the session"""
 
     print("Creating users...")
@@ -35,7 +35,7 @@ def create_users(db, user_data: list[dict] = None) -> list[models.User]:
     for user in user_data:
         user_dict = user.copy()
         original_passwords.append(user_dict["password"])  # Store original password
-        user_dict["password"] = utils.hash_password(user_dict["password"])
+        user_dict["password"] = utils.hash_password(user_dict["password"], rounds)
         # noinspection PyArgumentList
         users.append(models.User(**user_dict))
 
