@@ -56,7 +56,6 @@ import {
 import { scrapedJobApi } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import ScrapedJobsTableReadOnly from "../../tables/ScrapedJobTableReadOnly";
-import Spinner from "../../spinner/Spinner";
 import LoadingSpinner from "../../spinner/Spinner";
 
 // Parameters passed to the view render functions
@@ -799,40 +798,39 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 	const [loading, setLoading] = useState<boolean>(true);
 
 	useEffect(() => {
-		if (!param.token) return;
-		let mounted = true;
-		setLoading(true);
-
-		scrapedJobApi
-			.getByFilterId(param.item.id, param.token)
-			.then((result: ScrapedJobData[]): void => {
-				if (mounted) setData(result);
-			})
-			.catch(console.error)
-			.finally(() => setLoading(false));
-
-		return () => {
-			mounted = false;
+		const fetchData = async (): Promise<void> => {
+			if (!param.token || !param.item.id) return;
+			setLoading(true);
+			try {
+				const response: ScrapedJobData[] = await scrapedJobApi.getByFilterId(param.item.id, param.token);
+				setData(response);
+			} catch (error) {
+				console.error("Error fetching filtered scraped jobs:", error);
+				setData([]);
+			} finally {
+				setLoading(false);
+			}
 		};
+
+		fetchData().then();
 	}, [param.item.id, param.token]);
 
-	if (!data) return null;
-	console.log(data);
+	if (loading) {
+		return <LoadingSpinner size={"sm"} />;
+	}
+
+	if (!data) {
+		return null;
+	}
 
 	return (
-		<>
-			{loading ? (
-				<LoadingSpinner text="Loading Filtered Jobs..." />
-			) : (
-				<Accordion
-					title="Filtered Jobs"
-					data={data}
-					icon={getTableIcon("Scraped Jobs")}
-					helpText={param.helpText}
-				>
-					{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
-				</Accordion>
-			)}
-		</>
+		<Accordion
+			title="Filtered Jobs"
+			data={data}
+			icon={getTableIcon("Scraped Jobs")}
+			helpText="Scraped Jobs that were filtered by this filter."
+		>
+			{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
+		</Accordion>
 	);
 };
