@@ -16,7 +16,6 @@ from app import service_runner
 from app.database import get_db
 from app.job_email_scraping import schemas
 from app.job_email_scraping.email_scraper import scraper_service, SERVICE_NAME
-from app.job_email_scraping.filtering import rule_to_sql_predicate
 from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
@@ -70,6 +69,7 @@ def get_all(
     """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped."""
 
     # Base query with eager loading of job_rating
+    # noinspection PyComparisonWithNone
     query = (
         db.query(models.ScrapedJob)
         .options(joinedload(models.ScrapedJob.job_rating))  # Always load rating
@@ -77,19 +77,8 @@ def get_all(
         .filter(models.ScrapedJob.is_scraped)
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.is_active)
+        .filter(models.ScrapedJob.filter_id == None)
     )
-
-    # Apply user filter rules (exclude jobs matching any active rule)
-    active_rules = (
-        db.query(models.ScrapedJobFilter)
-        .filter(models.ScrapedJobFilter.owner_id == current_user.id)
-        .filter(models.ScrapedJobFilter.is_active.is_(True))
-        .all()
-    )
-
-    if active_rules:
-        exclude_predicate = or_(*(rule_to_sql_predicate(r) for r in active_rules))
-        query = query.filter(~exclude_predicate)
 
     # Apply search filter
     if search:
@@ -170,12 +159,14 @@ def get_scraped_job_count(
     :param db: Database session
     :return: Count of scraped jobs"""
 
+    # noinspection PyComparisonWithNone
     count = (
         db.query(models.ScrapedJob)
         .filter(models.ScrapedJob.owner_id == current_user.id)
         .filter(models.ScrapedJob.is_scraped)
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.is_active)
+        .filter(models.ScrapedJob.filter_id == None)
         .count()
     )
     return {"count": count}
@@ -374,4 +365,75 @@ scraped_job_filter_router = generate_data_table_crud_router(
     out_schema=schemas.ScrapedJobFilterOut,
     endpoint="scraped_job_filters",
     not_found_msg="Scraped Job Filter not found",
+    allowed_actions=["get_all", "get_one", "post"],
 )
+
+
+@scraped_job_filter_router.delete("/{filter_id}")
+def delete_scraped_job_filter(
+    filter_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete a scraped job filter by ID.
+    :param filter_id: ID of the filter to delete
+    :param current_user: Current authenticated user
+    :param db: Database session"""
+
+    # Fetch the filter to ensure it exists and belongs to the current user
+    filter_obj = (
+        db.query(models.ScrapedJobFilter)
+        .filter(models.ScrapedJobFilter.id == filter_id)
+        .filter(models.ScrapedJobFilter.owner_id == current_user.id)
+        .first()
+    )
+
+    if not filter_obj:
+        raise NOT_ALLOWED_EXCEPTION
+
+    if filter_obj.filtered_jobs and len(filter_obj.filtered_jobs) > 0:
+        filter_obj.is_active = False
+    else:
+        db.delete(filter_obj)
+
+    db.commit()
+
+    return {"detail": "Scraped Job Filter deleted successfully."}
+
+
+@scraped_job_filter_router.put("/{filter_id}")
+def update_scraped_job_filter(
+    filter_id: int,
+    update_data: schemas.ScrapedJobFilterUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update a scraped job filter by ID.
+    :param filter_id: ID of the filter to update
+    :param update_data: Update data for the filter
+    :param current_user: Current authenticated user
+    :param db: Database session"""
+
+    # Fetch the filter to ensure it exists and belongs to the current user
+    filter_obj = (
+        db.query(models.ScrapedJobFilter)
+        .filter(models.ScrapedJobFilter.id == filter_id)
+        .filter(models.ScrapedJobFilter.owner_id == current_user.id)
+        .filter(models.ScrapedJobFilter.is_active)
+        .first()
+    )
+
+    if not filter_obj:
+        raise NOT_ALLOWED_EXCEPTION
+
+    if filter_obj.filtered_jobs and len(filter_obj.filtered_jobs) > 0:
+        for key, value in update_data.model_dump(exclude_unset=True).items():
+            setattr(filter_obj, key, value)
+    else:
+        # noinspection PyArgumentList
+        filter_obj = models.ScrapedJobFilter(**update_data.model_dump(), owner_id=current_user.id)
+        db.add(filter_obj)
+
+    db.commit()
+    db.refresh(filter_obj)
+    return filter_obj

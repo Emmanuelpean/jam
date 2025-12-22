@@ -1,5 +1,5 @@
 import React, { forwardRef, JSX } from "react";
-import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import "../../pages/Auth/Auth.css";
@@ -7,7 +7,7 @@ import { UserData, UserDataTransform } from "../../services/Schemas";
 import { THEMES } from "../../utils/Theme";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const UserModal = forwardRef<DataModalHandle, DataModalProps>(({ size = "lg" }, ref): JSX.Element => {
+export const UserModal = forwardRef<DataModalHandle, JamDataModalProps>(({ size = "lg" }, ref): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 
 	const createFields = (data: any, mode: string): { form: Fields; view: Fields } => {

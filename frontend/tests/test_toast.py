@@ -60,7 +60,7 @@ class TestToast(BaseTest):
         self.assert_toast_message("Scraped Job deleted successfully.")
         self.db.expire_all()
         scraped_job = self.db.query(eis_models.ScrapedJob).filter(eis_models.ScrapedJob.id == 2).first()
-        assert not scraped_job.is_active
+        assert not scraped_job.is_enabled
 
     def test_context_menu_delete_scraped_job(self) -> None:
         """Test deleting a scraped job via right-click and displaying a toast notification."""
@@ -71,7 +71,7 @@ class TestToast(BaseTest):
         self.assert_toast_message("Scraped Job deleted successfully.")
         self.db.expire_all()
         scraped_job = self.db.query(eis_models.ScrapedJob).filter(eis_models.ScrapedJob.id == 2).first()
-        assert not scraped_job.is_active
+        assert not scraped_job.is_enabled
 
     def wait_for_import_modal_modal_close(self) -> None:
         """Wait for the import modal to close."""

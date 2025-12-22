@@ -17,7 +17,6 @@ import {
 	JamData,
 	useDataContext,
 } from "../../../contexts/DataContext";
-import "./DataModal.css";
 import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
 import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArray } from "../../../utils/Utils";
@@ -25,6 +24,7 @@ import { ModalViewField, renderModalViewField } from "../../rendering/view/Modal
 import { ModalFormField } from "../../rendering/form/FormRenders";
 import { useActiveHandler, useDeleteHandler } from "../../../utils/DeleteHandler";
 import { useAlert } from "../../../contexts/AlertContext";
+import "./DataModal.css";
 
 export type Field = ModalViewField | ModalFormField;
 export type Fields = (Field | Field[])[];
@@ -42,7 +42,7 @@ export interface WarningConfig {
 	variant?: "warning" | "danger" | "info" | "primary" | "secondary" | "success";
 }
 
-export interface GenericModalProps {
+export interface DataModalProps {
 	mode?: "view" | "edit" | "add" | "import"; // modal mode
 	fields?: { view: Fields; form: Fields } | ((data: any, mode: string) => { view: Fields; form: Fields }); // fields to display
 	data?: any; // data to populate the fields (required for import mode)
@@ -58,6 +58,7 @@ export interface GenericModalProps {
 	onSuccess?: (data: any, onSuccess?: (newData: any) => void) => void; // called when an entry is successfully added/modified
 	onDelete?: () => void; // called when an entry is successfully deleted
 	warningMessage?: (data: any) => WarningConfig[] | null; // optional warning message to display
+	canEdit?: boolean; // Controls edit button and edit mode access
 }
 
 export interface ValidationErrors {
@@ -72,7 +73,7 @@ export interface DataModalHandle {
 	hide: () => void;
 }
 
-const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
+const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 	(
 		{
 			fields,
@@ -88,7 +89,8 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 			onSuccess,
 			onDelete,
 			warningMessage,
-		},
+			canEdit = true,
+		}: DataModalProps,
 		ref,
 	) => {
 		const hasTabs = tabs && tabs.length > 0;
@@ -732,13 +734,15 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 								defaultText="Close"
 								fullWidth={false}
 							/>
-							<ActionButton
-								id={getModalId() + "-edit-button"}
-								variant="primary"
-								onClick={handleEdit}
-								defaultText="Edit"
-								fullWidth={false}
-							/>
+							{canEdit && (
+								<ActionButton
+									id={getModalId() + "-edit-button"}
+									variant="primary"
+									onClick={handleEdit}
+									defaultText="Edit"
+									fullWidth={false}
+								/>
+							)}
 						</div>
 					</Modal.Footer>
 				);
@@ -773,7 +777,8 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 
 export default DataModal;
 
-export interface DataModalProps {
+export interface JamDataModalProps {
 	onSuccess?: (data: any) => void;
 	size?: "sm" | "lg" | "xl";
+	canEdit?: boolean;
 }

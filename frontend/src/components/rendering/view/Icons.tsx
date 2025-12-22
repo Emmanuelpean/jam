@@ -71,3 +71,11 @@ export const getActiveBadge = (isActive: boolean): ReactNode => {
 		return <span className="badge bg-secondary">Inactive</span>;
 	}
 };
+
+export const getTrueFalseBadge = (value: boolean): ReactNode => {
+	if (value) {
+		return <i className="bi bi-check-circle text-success"></i>;
+	} else {
+		return <i className="bi bi-x-circle text-danger"></i>;
+	}
+};

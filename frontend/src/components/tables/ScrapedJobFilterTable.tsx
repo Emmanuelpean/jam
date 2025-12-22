@@ -1,8 +1,10 @@
-import React, { JSX } from "react";
+import React, { JSX, useState, useLayoutEffect, useRef } from "react";
 import { Modal } from "react-bootstrap";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobFilterModal } from "../modals/ScrapedJobFilterModal";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
+import { ScrapedJobFilter } from "../../services/Schemas";
 
 interface ScrapedJobFilterTableProps extends DataTableProps {
 	show: boolean;
@@ -14,6 +16,12 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 	show,
 	onHide,
 }: ScrapedJobFilterTableProps): JSX.Element => {
+	const dataContext: DataContextValue = useDataContext();
+	const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
+	const [containerHeight, setContainerHeight] = useState("auto");
+	const contentRef = useRef<HTMLDivElement>(null);
+	console.log(dataContext.scrapedJobFilters);
+
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
@@ -21,9 +29,123 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 					tableColumns.filterTypeColumn(),
 					tableColumns.filterOperatorColumn(),
 					tableColumns.valueColumn({ type: "text" }),
-					tableColumns.isActiveColumn(),
+					tableColumns.isEnabledColumn(),
 					tableColumns.caseSensitiveColumn(),
 				];
+
+	const activeFilters: ScrapedJobFilter[] = dataContext.scrapedJobFilters.filter(
+		(filter: ScrapedJobFilter): boolean => filter.is_active,
+	);
+
+	const deletedFilters: ScrapedJobFilter[] = dataContext.scrapedJobFilters.filter(
+		(filter: ScrapedJobFilter): boolean => !filter.is_active,
+	);
+
+	const tabs = [
+		{ key: "active" as const, title: `Active (${activeFilters.length})` },
+		{ key: "deleted" as const, title: `Deleted (${deletedFilters.length})` },
+	];
+
+	const renderBodyContent = (): JSX.Element => {
+		switch (activeTab) {
+			case "active":
+				return (
+					<div className="modal-content-animated" style={{ height: containerHeight }}>
+						<div className="modal-content-animated-inner">
+							<div ref={contentRef} style={{ paddingTop: "5px" }}>
+								<DataTable
+									entityType="scrapedJobFilters"
+									data={activeFilters}
+									columns={defaultColumns}
+									initialSortConfig={{ key: "type", direction: "asc" }}
+									Modal={ScrapedJobFilterModal}
+									nameKey="name"
+									itemType="Scraping Filters"
+									modalSize="lg"
+									showAllEntries={true}
+									compact={true}
+									initialData={{ is_enabled: true }}
+								/>
+							</div>
+						</div>
+					</div>
+				);
+			case "deleted":
+				return (
+					<div className="modal-content-animated" style={{ height: containerHeight }}>
+						<div className="modal-content-animated-inner">
+							<div ref={contentRef} style={{ paddingTop: "5px" }}>
+								<DataTable
+									entityType="scrapedJobFilters"
+									data={deletedFilters}
+									columns={defaultColumns}
+									initialSortConfig={{ key: "type", direction: "asc" }}
+									Modal={ScrapedJobFilterModal}
+									nameKey="name"
+									itemType="Scraping Filters"
+									modalSize="lg"
+									showAllEntries={true}
+									compact={true}
+									showAdd={false}
+									menuItems={["view"]}
+									modalProps={{ canEdit: false }}
+								/>
+							</div>
+						</div>
+					</div>
+				);
+			default:
+				return <></>;
+		}
+	};
+
+	useLayoutEffect(() => {
+		if (!contentRef.current) return;
+
+		const updateHeight = (): void => {
+			if (contentRef.current?.scrollHeight) {
+				setContainerHeight(String(Number(contentRef.current.scrollHeight) + 1) + "px");
+			}
+		};
+
+		updateHeight();
+
+		const resizeObserver = new ResizeObserver(() => {
+			updateHeight();
+		});
+
+		resizeObserver.observe(contentRef.current);
+
+		const childElements = contentRef.current.querySelectorAll("*");
+		childElements.forEach((el: Element) => {
+			resizeObserver.observe(el);
+		});
+
+		return () => {
+			resizeObserver.disconnect();
+		};
+	}, [activeTab]);
+
+	const renderTabs = (): JSX.Element => (
+		<>
+			<div className="custom-tab-nav">
+				{tabs.map(
+					(tab): JSX.Element => (
+						<button
+							key={tab.key}
+							id={tab.key + "-tab"}
+							type="button"
+							className={`custom-tab-button ${activeTab === tab.key ? "active" : ""}`}
+							onClick={() => setActiveTab(tab.key)}
+						>
+							{tab.title}
+						</button>
+					),
+				)}
+			</div>
+			<div className="custom-tab-content">{renderBodyContent()}</div>
+		</>
+	);
 
 	return (
 		<Modal show={show} onHide={onHide} size="xl" centered={true} backdrop={true} keyboard={true}>
@@ -37,19 +159,7 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 					to view jobs from company "ABC Corp", you can create a filter with Type "Company", Operator
 					"Equals", and Value "ABC Corp".
 				</i>
-				<DataTable
-					entityType="scrapedJobFilters"
-					columns={defaultColumns}
-					initialSortConfig={{ key: "type", direction: "asc" }}
-					Modal={ScrapedJobFilterModal}
-					nameKey="name"
-					itemType="Scraping Filters"
-					modalSize="lg"
-					showAllEntries={true}
-					compact={true}
-					showSearch={true}
-					initialData={{ is_active: true }}
-				/>
+				{renderTabs()}
 			</Modal.Body>
 		</Modal>
 	);

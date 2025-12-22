@@ -1,12 +1,12 @@
 import React, { forwardRef, JSX } from "react";
-import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { ScrapedJobFilter, ScrapedJobFilterTransform } from "../../services/Schemas";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const ScrapedJobFilterModal = forwardRef<DataModalHandle, DataModalProps>(
-	({ size = "lg" }: DataModalProps, ref): JSX.Element => {
+export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalProps>(
+	({ size = "lg", canEdit = true }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 
 		const formFieldsArray: Fields = [
@@ -14,12 +14,12 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, DataModalProps>
 			formFields.scrapedJobFilterOperator(),
 			formFields.value({ type: "input", placeholder: "Enter a value" }),
 
-			[formFields.isActive(), formFields.caseSensitive()],
+			[formFields.isEnabled(), formFields.caseSensitive()],
 		];
 
 		const viewFieldsArray: Fields = [
 			modalViewFields.scrapedJobFilterName({ isTitle: true }),
-			[modalViewFields.isActive(), modalViewFields.caseSensitive()],
+			[modalViewFields.isEnabled(), modalViewFields.caseSensitive()],
 		];
 
 		const fields = {
@@ -49,7 +49,7 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, DataModalProps>
 				type: formData.type,
 				operator: formData.operator,
 				value: formData.value.trim(),
-				is_active: formData.is_active,
+				is_active: formData.is_enabled,
 				case_sensitive: formData.case_sensitive,
 			};
 		};
@@ -64,6 +64,7 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, DataModalProps>
 					endpoint="scraped_job_filters"
 					validation={customValidation}
 					transformFormData={transformFormData}
+					canEdit={canEdit}
 				/>
 			</>
 		);

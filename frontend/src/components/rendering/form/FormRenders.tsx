@@ -130,6 +130,13 @@ export const formFields = {
 		...overrides,
 	}),
 
+	isEnabled: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "is_enabled",
+		label: "Enabled",
+		type: "checkbox",
+		...overrides,
+	}),
+
 	caseSensitive: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "case_sensitive",
 		label: "Case Sensitive",

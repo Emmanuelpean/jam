@@ -10,7 +10,7 @@ export const UserManagementPage: React.FC = () => {
 		tableColumns.appThemeColumn(),
 		tableColumns.lastLoginColumn(),
 		tableColumns.isAdminColumn(),
-		tableColumns.isActiveColumn(),
+		tableColumns.isEnabledColumn(),
 		tableColumns.toastActiveColumn(),
 		tableColumns.createdAtColumn(),
 	];

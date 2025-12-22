@@ -157,11 +157,13 @@ class ScrapedJob(Owned, Base):
     service_log_id = Column(
         Integer, ForeignKey("job_email_scraping_service_log.id", ondelete="SET NULL"), nullable=False
     )
+    filter_id = Column(Integer, ForeignKey("scraped_job_filter.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     emails = relationship("JobEmail", secondary=jobemail_scrapedjob_mapping, back_populates="jobs")
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="scraped_jobs")
     job_rating = relationship("JobRating", back_populates="scraped_job", uselist=False)
+    filter = relationship("ScrapedJobFilter", back_populates="filtered_jobs")
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
@@ -369,7 +371,7 @@ class ScrapedJobFilter(Owned, Base):
     - `type` (str): Type of filter (title, company, location, salary, attendance_type).
     - `operator` (str): Operator for the filter (contains, equals, starts_with, ends_with, less_than, greater_than).
     - `value` (str): Value to match against.
-    - `is_active` (bool): Whether this filter rule is currently active.
+    - `is_enabled` (bool): Whether this filter rule is currently active.
     - `case_sensitive` (bool): Whether string matching should be case-sensitive.
 
     Constraints:
@@ -380,9 +382,14 @@ class ScrapedJobFilter(Owned, Base):
     type = Column(String, nullable=False)
     operator = Column(String, nullable=False)
     value = Column(String, nullable=False)
-    is_active = Column(Boolean, nullable=False, server_default=expression.true())
+    is_enabled = Column(Boolean, nullable=False, server_default=expression.true())
     case_sensitive = Column(Boolean, nullable=False, server_default=expression.false())
+    is_active = Column(Boolean, nullable=False, server_default=expression.true())
 
+    # Relationships
+    filtered_jobs = relationship("ScrapedJob", back_populates="filter")
+
+    # Constraints
     __table_args__ = (
         CheckConstraint(
             type.in_(

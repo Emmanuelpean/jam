@@ -298,6 +298,13 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	isEnabled: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "is_enabled",
+		label: "Enabled",
+		render: renderFunctions.isEnabled,
+		...overrides,
+	}),
+
 	caseSensitive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "case_sensitive",
 		label: "Case Sensitive",

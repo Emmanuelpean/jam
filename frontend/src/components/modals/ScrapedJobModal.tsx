@@ -1,7 +1,7 @@
 import React, { forwardRef, JSX, useRef } from "react";
 import DataModal, {
 	DataModalHandle,
-	DataModalProps,
+	JamDataModalProps,
 	Fields,
 	ValidationErrors,
 	WarningConfig,
@@ -18,8 +18,8 @@ import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const ScrapedJobModal = forwardRef<DataModalHandle, DataModalProps>(
-	({ size = "xl", onSuccess }: DataModalProps, ref): JSX.Element => {
+export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
+	({ size = "xl", onSuccess }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const locationModalRef = useRef<DataModalHandle>(null);

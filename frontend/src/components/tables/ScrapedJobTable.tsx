@@ -1,4 +1,4 @@
-import React, { JSX, useState, useEffect } from "react";
+import React, { JSX, useState } from "react";
 import { Button } from "react-bootstrap";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
@@ -10,7 +10,6 @@ import ScrapedJobFilterTable from "./ScrapedJobFilterTable";
 
 const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
-	const [reloadFlag, setReloadFlag] = useState(0);
 	const [showFilters, setShowFilters] = useState(false);
 	const { addEntity } = useDataContext();
 	const defaultColumns: TableColumn[] =
@@ -47,10 +46,6 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 		return addEntity("jobs", jobData);
 	};
 
-	const refetchMain = (): void => {
-		setReloadFlag((prev: number): number => prev + 1);
-	};
-
 	return (
 		<>
 			<DataTable
@@ -65,7 +60,6 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 				modalSize="xl"
 				showAdd={false}
 				showSearch={true}
-				reloadTrigger={reloadFlag}
 				onImportSuccess={onImportSuccess}
 				toolbarAddon={
 					<Button
@@ -76,21 +70,17 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 						Filters (
 						{
 							dataContext.scrapedJobFilters.filter(
-								(filter: ScrapedJobFilter): boolean => filter.is_active,
+								(filter: ScrapedJobFilter): boolean => filter.is_enabled,
 							).length
 						}
 						)
 					</Button>
 				}
-				modalProps={{
-					fetchTrigger: refetchMain,
-				}}
 			/>
 			<ScrapedJobFilterTable
 				show={showFilters}
 				onHide={(): void => {
 					setShowFilters(false);
-					refetchMain();
 				}}
 			/>
 		</>
