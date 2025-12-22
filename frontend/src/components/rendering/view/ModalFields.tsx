@@ -56,6 +56,25 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	company: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "company",
+		label: "Company",
+		...overrides,
+	}),
+
+	location: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "location",
+		label: "Location",
+		...overrides,
+	}),
+
+	platform: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "platform",
+		label: "Aggregator",
+		render: (params: RenderParams) => renderFunctions.capitalise(params, "platform"),
+		...overrides,
+	}),
+
 	value: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "value",
 		label: "Value",
@@ -386,6 +405,12 @@ export const modalViewFields = {
 	accordionPersonTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "persons",
 		render: renderFunctions.AccordionPersonTable,
+		...overrides,
+	}),
+
+	accordionScrapedJobTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "filtered_jobs",
+		render: renderFunctions.accordionScrapedJobTable,
 		...overrides,
 	}),
 

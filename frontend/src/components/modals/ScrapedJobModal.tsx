@@ -19,7 +19,7 @@ import { AggregatorModal } from "./AggregatorModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
 export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
-	({ size = "xl", onSuccess }: JamDataModalProps, ref): JSX.Element => {
+	({ size = "xl", onSuccess, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const locationModalRef = useRef<DataModalHandle>(null);
@@ -79,6 +79,14 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			modalViewFields.scrapedLocationMap(),
 		];
 
+		const viewFields: Fields = [
+			modalViewFields.title({ isTitle: true }),
+			modalViewFields.description(),
+			[modalViewFields.company(), modalViewFields.location()],
+			[modalViewFields.platform(), modalViewFields.url()],
+			modalViewFields.scrapedLocationMap(),
+		];
+
 		const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
 			const errors: ValidationErrors = {};
 			const duplicates: EnrichedJobData[] = dataContext.jobs.filter(
@@ -121,7 +129,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			<>
 				<DataModal
 					ref={ref}
-					fields={{ form: jobFormFields, view: [] }}
+					fields={{ form: jobFormFields, view: viewFields }}
 					transformFormData={transformData}
 					transformInputData={transformInputData}
 					itemName="Scraped Job"
@@ -130,6 +138,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					validation={customValidation}
 					onSuccess={onSuccess}
 					warningMessage={warningMessage}
+					canEdit={canEdit}
 				/>
 				<CompanyModal ref={companyModalRef} />
 				<LocationModal ref={locationModalRef} />

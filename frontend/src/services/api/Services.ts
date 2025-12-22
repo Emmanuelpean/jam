@@ -1,14 +1,17 @@
-import { JobRatingServiceLog, JobScraperServiceLog } from "../Schemas";
+import { JobRatingServiceLog, JobScraperServiceLog, ScrapedJobData } from "../Schemas";
 import { api, createCrudApi, CrudApi } from "./Base";
 
 // Scraped Job API
 export interface ScrapedJobCrudApi extends CrudApi {
-	getCount: (token: string) => Promise<any>;
+	getCount: (token: string) => Promise<{ count: number }>;
+	getByFilterId: (filterId: number, token: string) => Promise<ScrapedJobData[]>;
 }
 
 export const scrapedJobApi: ScrapedJobCrudApi = {
 	...createCrudApi("scraped_jobs"),
-	getCount: (token: string): Promise<any> => api.get("scraped_jobs/count", token),
+	getCount: (token: string): Promise<{ count: number }> => api.get("scraped_jobs/count", token),
+	getByFilterId: (filterId: number, token: string): Promise<ScrapedJobData[]> =>
+		api.get(`scraped_jobs/filtered_by_filter/${filterId}`, token),
 };
 
 // Job Rating APIs

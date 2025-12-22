@@ -172,6 +172,27 @@ def get_scraped_job_count(
     return {"count": count}
 
 
+@scraped_job_router.get("/filtered_by_filter/{filter_id}", response_model=list[schemas.ScrapedJobOut])
+def get_scraped_jobs_filtered_by_filter(
+    filter_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get scraped jobs associated with a specific filter for the current user.
+    :param filter_id: ID of the filter
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: List of scraped jobs associated with the filter"""
+
+    scraped_jobs = (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.filter_id == filter_id)
+        .all()
+    )
+    return scraped_jobs
+
+
 # PUT endpoint for regular users to update the entries
 generate_data_table_crud_router(
     table_model=models.ScrapedJob,

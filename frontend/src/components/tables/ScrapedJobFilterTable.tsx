@@ -20,7 +20,6 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 	const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef<HTMLDivElement>(null);
-	console.log(dataContext.scrapedJobFilters);
 
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
