@@ -67,7 +67,7 @@ def apply_rule_to_values(
 
 def job_matches_rule_python(
     job: ScrapedJob,
-        job_filter: ScrapedJobFilter,
+    job_filter: ScrapedJobFilter,
 ) -> bool:
     """Check if a job matches a given filter rule using Python logic.
     :param job: The ScrapedJob instance to check.
@@ -96,7 +96,10 @@ def is_job_filtered_for_user(
     :return: True if the job should be filtered out for the user."""
 
     rules = (
-        session.query(ScrapedJobFilter).filter(ScrapedJobFilter.owner_id == job.owner_id).filter(ScrapedJobFilter.is_active.is_(True)).all()
+        session.query(ScrapedJobFilter)
+        .filter(ScrapedJobFilter.owner_id == job.owner_id)
+        .filter(ScrapedJobFilter.is_active.is_(True))
+        .all()
     )
 
     for rule in rules:
@@ -108,8 +111,7 @@ def is_job_filtered_for_user(
 
 def rule_to_sql_predicate(job_filter: ScrapedJobFilter) -> ColumnElement[bool]:
     """Convert a rule into a SQLAlchemy expression that matches jobs to EXCLUDE.
-    :param job_filter: The JobFilterRule instance to convert.
-    :return: A SQLAlchemy boolean expression representing the rule."""
+    Only applies if the field is not NULL."""
 
     field = getattr(ScrapedJob, job_filter.type)
     value = job_filter.value
@@ -120,24 +122,28 @@ def rule_to_sql_predicate(job_filter: ScrapedJobFilter) -> ColumnElement[bool]:
         field = func.lower(field)
         value = value.lower()
 
+    # Build the base condition
     if op == "contains":
-        return field.contains(value)
-    if op == "not_contains":
-        return ~field.contains(value)
-    if op == "equals":
-        return field == value
-    if op == "not_equals":
-        return field != value
-    if op == "starts_with":
-        return field.startswith(value)
-    if op == "ends_with":
-        return field.endswith(value)
-
+        condition = field.contains(value)
+    elif op == "not_contains":
+        condition = ~field.contains(value)
+    elif op == "equals":
+        condition = field == value
+    elif op == "not_equals":
+        condition = field != value
+    elif op == "starts_with":
+        condition = field.startswith(value)
+    elif op == "ends_with":
+        condition = field.endswith(value)
     # Numeric operators
-    num_value = float(value)
-    if op == "less_than":
-        return field < num_value
-    if op == "greater_than":
-        return field > num_value
+    else:
+        num_value = float(value)
+        if op == "less_than":
+            condition = field < num_value
+        elif op == "greater_than":
+            condition = field > num_value
+        else:
+            raise ValueError(f"Unsupported operator: {op}")
 
-    raise ValueError(f"Unsupported operator: {op}")
+    # CRUCIAL: Only exclude if field is NOT NULL
+    return field.isnot(None) & condition
