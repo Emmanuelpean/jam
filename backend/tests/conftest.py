@@ -124,7 +124,7 @@ def client(session) -> Generator[TestClient, Any, None]:
 
     app.dependency_overrides[database.get_db] = override_get_db  # noqa
     yield TestClient(app)
-    app.dependency_overrides.pop(database.get_db, None)  # Clean up dependency override  # noqa
+    app.dependency_overrides.pop(database.get_db, None)  # Clean up dependency override
 
 
 @pytest.fixture

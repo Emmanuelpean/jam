@@ -15,12 +15,13 @@ from pydantic import EmailStr
 from app.config import settings
 
 
-def hash_password(password: str) -> str:
+def hash_password(password: str, rounds: int = 12) -> str:
     """Hash a password for storing.
     :param password: password to hash
+    :param rounds: number of bcrypt rounds (default: 12)
     :return: hashed password"""
 
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=rounds)).decode("utf-8")
 
 
 def verify_password(password: str, hashed: str) -> bool:
