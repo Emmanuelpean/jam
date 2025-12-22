@@ -310,6 +310,7 @@ export const modalViewFields = {
 		label: "Job Rating",
 		icon: "bi-stars",
 		render: (params: RenderParams) => renderFunctions.jobRating({ ...params, view: true }),
+		displayCondition: (item): boolean => !!item.job_rating,
 		...overrides,
 	}),
 
