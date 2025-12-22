@@ -22,6 +22,7 @@ from app import database, schemas
 from app import model_registry as models
 from app.config import settings
 from app.main import app
+from app.model_registry import Base
 from app.oauth2 import create_access_token
 from app.utils import hash_token
 from tests.utils.create_data import (
@@ -46,7 +47,6 @@ from tests.utils.create_data import (
     create_job_rating_service_logs,
     create_scraped_job_filters,
 )
-from tests.utils.seed_database import reset_database
 from tests.utils.test_data import (
     DEMO_USER_INDEX,
     ADMIN_USER_INDEX,
@@ -67,10 +67,11 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def find_non_owned(entries: list, owner_id: int) -> int:
+def find_non_owned_entry(entries: list, owner_id: int) -> int:
     """Find an entry not owned by the specified owner_id.
     :param entries: List of entries to search.
-    :param owner_id: The owner ID to exclude."""
+    :param owner_id: The owner ID to exclude.
+    :return: The ID of the first entry not owned by the specified owner_id."""
 
     for entry in entries:
         if entry.owner_id != owner_id:
@@ -86,7 +87,8 @@ def session() -> Generator[orm.Session, Any, None]:
     function completes, the session is closed.
     :yield: A new SQLAlchemy session bound to the test database."""
 
-    reset_database(engine, False)
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
     try:
         yield db
@@ -303,7 +305,7 @@ def persons_unauthorised_data(test_companies) -> tuple[list[dict], int]:
     """Create test person data with incorrect company_id for access control testing"""
 
     owner_id = 1
-    company_id = find_non_owned(test_companies, owner_id)
+    company_id = find_non_owned_entry(test_companies, owner_id)
     return [{"first_name": "A", "last_name": "B", "company_id": company_id, "owner_id": owner_id}], owner_id
 
 
@@ -342,10 +344,10 @@ def jobs_unauthorised_data(
     """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
 
     owner_id = 1
-    company_id = find_non_owned(test_companies, owner_id)
-    location_id = find_non_owned(test_locations, owner_id)
-    job_keyword_mapping = [{"job_id": 1, "keyword_ids": [find_non_owned(test_keywords, owner_id)]}]
-    job_contact_mapping = [{"job_id": 1, "person_ids": [find_non_owned(test_persons, owner_id)]}]
+    company_id = find_non_owned_entry(test_companies, owner_id)
+    location_id = find_non_owned_entry(test_locations, owner_id)
+    job_keyword_mapping = [{"job_id": 1, "keyword_ids": [find_non_owned_entry(test_keywords, owner_id)]}]
+    job_contact_mapping = [{"job_id": 1, "person_ids": [find_non_owned_entry(test_persons, owner_id)]}]
     data = [
         {
             "title": "A",
@@ -402,9 +404,9 @@ def interviews_unauthorised_data(
     """Create test interview data with incorrect job_id for access control testing"""
 
     owner_id = 1
-    job_id = find_non_owned(test_jobs, owner_id)
+    job_id = find_non_owned_entry(test_jobs, owner_id)
     data = [{"job_id": job_id, "date": str(dt.datetime.now()), "owner_id": owner_id, "type": "phone"}]
-    interview_interviewer_mappings = [{"interview_id": 1, "person_ids": [find_non_owned(test_persons, owner_id)]}]
+    interview_interviewer_mappings = [{"interview_id": 1, "person_ids": [find_non_owned_entry(test_persons, owner_id)]}]
     return data, owner_id, interview_interviewer_mappings
 
 
@@ -439,7 +441,7 @@ def job_application_updates_unauthorised_data(session, test_users, test_jobs) ->
     """Create test job application update data with incorrect job_id for access control testing"""
 
     owner_id = 1
-    job_id = find_non_owned(test_jobs, owner_id)
+    job_id = find_non_owned_entry(test_jobs, owner_id)
     data = [
         {
             "job_id": job_id,
@@ -517,7 +519,7 @@ def test_job_ratings(
 
 
 @pytest.fixture
-def test_scraped_job_filters(session, test_users, test_scraped_jobs) -> list[models.ScrapedJobFilter]:
+def test_scraped_job_filters(session, test_users) -> list[models.ScrapedJobFilter]:
     """Create test scraped job filter data"""
 
     return create_scraped_job_filters(session, test_users)
