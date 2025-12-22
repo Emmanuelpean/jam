@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { Currency, DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
@@ -15,6 +15,7 @@ import {
 	KeywordData,
 	LocationData,
 	PersonData,
+	ScrapedJobData,
 } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
@@ -52,6 +53,11 @@ import {
 	SelectOption,
 	updateTypeOptions,
 } from "../form/FormOptions";
+import { scrapedJobApi } from "../../../services/api/Services";
+import { useAuth } from "../../../contexts/AuthContext";
+import ScrapedJobsTableReadOnly from "../../tables/ScrapedJobTableReadOnly";
+import Spinner from "../../spinner/Spinner";
+import LoadingSpinner from "../../spinner/Spinner";
 
 // Parameters passed to the view render functions
 export interface RenderParams {
@@ -61,6 +67,7 @@ export interface RenderParams {
 	columns?: TableColumn[]; // columns for rendered tables
 	helpText?: string; // help text
 	dataContext: DataContextValue; // data context
+	token: string | null;
 }
 
 // Base class for Fields (Table or Modal fields)
@@ -580,7 +587,7 @@ export const renderFunctions = {
 		return null;
 	},
 
-	_aggregatorBadge: (param: RenderParams, idKey: keyof JobData): ReactNode => {
+	_aggregatorBadge: (param: RenderParams, idKey: keyof JobData | keyof ScrapedJobData): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const aggregator: AggregatorData | undefined = getJamData(ctx.aggregators, param.item?.[idKey]);
 
@@ -752,6 +759,8 @@ export const renderFunctions = {
 			</Accordion>
 		);
 	},
+
+	accordionScrapedJobTable: (param: RenderParams) => <AccordionScrapedJobTable param={param} />,
 };
 
 export const RenderViewFieldWithContext: React.FC<{
@@ -760,6 +769,7 @@ export const RenderViewFieldWithContext: React.FC<{
 	id: string;
 }> = ({ field, item, id }) => {
 	const context = useDataContext();
+	const { token } = useAuth();
 
 	let rendered: ReactNode;
 	if (field.render) {
@@ -770,6 +780,7 @@ export const RenderViewFieldWithContext: React.FC<{
 			columns: field.columns,
 			helpText: field.helpText,
 			dataContext: context,
+			token: token,
 		};
 		rendered = field.render(renderParams);
 	} else {
@@ -781,4 +792,47 @@ export const RenderViewFieldWithContext: React.FC<{
 	} else {
 		return <span className="text-muted">Not Provided</span>;
 	}
+};
+
+const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
+	const [data, setData] = useState<ScrapedJobData[] | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
+
+	useEffect(() => {
+		if (!param.token) return;
+		let mounted = true;
+		setLoading(true);
+
+		scrapedJobApi
+			.getByFilterId(param.item.id, param.token)
+			.then((result: ScrapedJobData[]): void => {
+				if (mounted) setData(result);
+			})
+			.catch(console.error)
+			.finally(() => setLoading(false));
+
+		return () => {
+			mounted = false;
+		};
+	}, [param.item.id, param.token]);
+
+	if (!data) return null;
+	console.log(data);
+
+	return (
+		<>
+			{loading ? (
+				<LoadingSpinner text="Loading Filtered Jobs..." />
+			) : (
+				<Accordion
+					title="Filtered Jobs"
+					data={data}
+					icon={getTableIcon("Scraped Jobs")}
+					helpText={param.helpText}
+				>
+					{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
+				</Accordion>
+			)}
+		</>
+	);
 };

@@ -64,6 +64,7 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 					endpoint="scraped_job_filters"
 					validation={customValidation}
 					transformFormData={transformFormData}
+					additionalFields={[modalViewFields.accordionScrapedJobTable()]}
 					canEdit={canEdit}
 				/>
 			</>
