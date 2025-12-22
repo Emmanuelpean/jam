@@ -26,12 +26,8 @@ export interface SortConfig {
 export interface DataTableProps {
 	data?: any | null;
 	columns?: TableColumn[];
-	onDataChange?: (data: any[]) => void;
-	error?: string | null;
 	showAdd?: boolean;
 	menuItems?: string[];
-	toolbarAddon?: React.ReactNode;
-	reloadTrigger?: number;
 }
 
 export interface GenericTableProps {
