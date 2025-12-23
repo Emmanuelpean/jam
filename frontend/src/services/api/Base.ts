@@ -26,7 +26,12 @@ const getAuthHeaders = (token: string): HeadersInit => ({
 	...(token && { Authorization: `Bearer ${token}` }),
 });
 
-const handleResponse = async (response: Response, isBlob: boolean = false): Promise<any> => {
+export interface ApiResponse<T = any> {
+	data: T;
+	status: number;
+}
+
+const handleResponse = async (response: Response, isBlob: boolean = false): Promise<ApiResponse> => {
 	// Enhanced error handling
 	if (!response.ok) {
 		const errorData = await response.json().catch(() => ({}));
@@ -36,28 +41,29 @@ const handleResponse = async (response: Response, isBlob: boolean = false): Prom
 		throw error;
 	}
 
+	let data: any;
+
 	if (isBlob) {
-		return response.blob();
+		data = await response.blob();
+	} else {
+		// Check if response has content before parsing JSON
+		const text: string = await response.text();
+		if (!text) {
+			data = null;
+		} else {
+			try {
+				data = JSON.parse(text);
+			} catch (error) {
+				console.warn("Failed to parse JSON response:", text);
+				data = null;
+			}
+		}
 	}
 
-	// Handle empty responses (like DELETE 204 No Content)
-	const contentType = response.headers.get("content-type");
-	if (response.status === 204 || !contentType || !contentType.includes("application/json")) {
-		return null;
-	}
-
-	// Check if response has content before parsing JSON
-	const text = await response.text();
-	if (!text) {
-		return null;
-	}
-
-	try {
-		return JSON.parse(text);
-	} catch (error) {
-		console.warn("Failed to parse JSON response:", text);
-		return null;
-	}
+	return {
+		data,
+		status: response.status,
+	};
 };
 
 class ApiService {

@@ -1,4 +1,4 @@
-import { createCrudApi, CrudApi } from "./Base";
+import { ApiResponse, createCrudApi, CrudApi } from "./Base";
 import { UserQualification } from "../Schemas";
 import { api } from "./Base";
 
@@ -13,7 +13,7 @@ export interface AuthApi {
 	verifyNewEmail: (token: string) => Promise<any>;
 	checkPendingEmail: (token: string) => Promise<any>;
 	requestPasswordReset: (email: string) => Promise<any>;
-	resetPassword: (token: string, newPassword: string) => Promise<{ message: string }>;
+	resetPassword: (token: string, newPassword: string) => Promise<any>;
 }
 
 export const authApi: AuthApi = {
@@ -61,13 +61,14 @@ export const authApi: AuthApi = {
 };
 
 export interface UserQualificationApi {
-	getLatest: (token: string) => Promise<UserQualification>;
-	upsert: (data: any, token: string) => Promise<UserQualification>;
+	getLatest: (token: string) => Promise<ApiResponse<UserQualification>>;
+	upsert: (data: any, token: string) => Promise<ApiResponse<UserQualification>>;
 }
 
 export const userQualificationApi: UserQualificationApi = {
-	getLatest: (token: string): Promise<UserQualification> => api.get("user_qualifications/latest", token),
-	upsert: (data: any, token: string): Promise<UserQualification> => api.post("user_qualifications/", data, token),
+	getLatest: (token: string): Promise<ApiResponse<UserQualification>> => api.get("user_qualifications/latest", token),
+	upsert: (data: any, token: string): Promise<ApiResponse<UserQualification>> =>
+		api.post("user_qualifications/", data, token),
 };
 
 export interface ExportCrudApi {

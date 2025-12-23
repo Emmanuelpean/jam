@@ -245,7 +245,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			}
 
 			// Create the job name from the title and the company name
-			let jobName = job.title;
+			let jobName: string = job.title;
 			if (job.company_id) {
 				const company: CompanyData | undefined = companies.find(
 					(c: CompanyData): boolean => c.id === job.company_id,
@@ -327,21 +327,21 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				...adminData
 			] = results;
 
-			setRawJobs(jobsData || []);
-			setCompanies(companiesData || []);
-			setPersons(personsData || []);
-			setRawInterviews(interviewsData || []);
-			setRawJobApplicationUpdates(jobApplicationUpdatesData || []);
-			setAggregators(aggregatorsData || []);
-			setKeywords(keywordsData || []);
-			setLocations(locationsData || []);
-			setScrapedJobFilters(scrapedJobFiltersData || []);
-			setCurrencies(currenciesData || []);
-			setCountries(countriesData || []);
+			setRawJobs(jobsData.data || []);
+			setCompanies(companiesData.data || []);
+			setPersons(personsData.data || []);
+			setRawInterviews(interviewsData.data || []);
+			setRawJobApplicationUpdates(jobApplicationUpdatesData.data || []);
+			setAggregators(aggregatorsData.data || []);
+			setKeywords(keywordsData.data || []);
+			setLocations(locationsData.data || []);
+			setScrapedJobFilters(scrapedJobFiltersData.data || []);
+			setCurrencies(currenciesData.data || []);
+			setCountries(countriesData.data || []);
 
 			if (currentUser?.is_admin) {
-				setSettings(adminData[0] || []);
-				setUsers(adminData[1] || []);
+				setSettings(adminData[0].data || []);
+				setUsers(adminData[1].data || []);
 			}
 		} catch (e: any) {
 			setError(e);
@@ -393,7 +393,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			try {
 				// Update backend first
 				const api = getApi(type);
-				const apiResult = await api.update(id, updatedData, token);
+				const apiResult: T = await api.update(id, updatedData, token);
 
 				// Update the entity itself in context
 				const setter = getSetter(type);
@@ -414,11 +414,16 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			try {
 				// Delete from backend first
 				const api = getApi(type);
-				await api.delete(id, token);
+				const result = await api.delete(id, token);
+				console.log(result);
 
 				// Remove from the entity's own array
 				const setter = getSetter(type);
-				setter((prev: any[]): any[] => prev.filter((item: any) => item.id !== id));
+				if (type !== "scrapedJobFilters") {
+					setter((prev: any[]): any[] => prev.filter((item: any) => item.id !== id));
+				} else {
+					setter((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? result : item)));
+				}
 			} catch (error) {
 				console.error(`Failed to delete ${type}:`, error);
 				throw error;

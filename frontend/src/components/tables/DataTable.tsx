@@ -2,7 +2,7 @@ import React, { JSX, MouseEvent, ReactNode, useCallback, useEffect, useRef, useS
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { DataContextValue, EntityType, JamData, useDataContext } from "../../contexts/DataContext";
-import { api } from "../../services/api/Base";
+import { api, ApiResponse } from "../../services/api/Base";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";
@@ -11,10 +11,10 @@ import { TableColumn } from "../rendering/view/TableColumns";
 import { useActiveHandler, useDeleteHandler } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
-import "./DataTable.css";
 import LoadingSpinner from "../spinner/Spinner";
 import { DataModalHandle } from "../modals/DataModal/DataModal";
 import { EnrichedJobData, JobData } from "../../services/Schemas";
+import "./DataTable.css";
 
 export type Direction = "asc" | "desc";
 
@@ -152,9 +152,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				search: debouncedSearchTerm,
 			});
 
-			const response: any = await api.get(`${endpoint}/paged?${params.toString()}`, token);
-			setFetchedData(response.items);
-			setTotalCount(response.total);
+			const response: ApiResponse<any> = await api.get(`${endpoint}/paged?${params.toString()}`, token);
+			setFetchedData(response.data.items);
+			setTotalCount(response.data.total);
 		} catch (error: any) {
 			setLoadError(error.message || "Failed to load data");
 		} finally {

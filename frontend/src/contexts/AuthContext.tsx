@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../services/api/Users";
-import { ApiError } from "../services/api/Base";
+import { ApiError, ApiResponse } from "../services/api/Base";
 import { UserData } from "../services/Schemas";
 import { DEFAULT_THEME } from "../utils/Theme";
 
@@ -72,10 +72,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			}
 
 			try {
-				const userData: UserData = await authApi.getCurrentUser(authToken);
+				const userData: ApiResponse<UserData> = await authApi.getCurrentUser(authToken);
 				setCurrentUser({
 					token: token,
-					...userData,
+					...userData.data,
 				});
 				setUserFetched(true);
 			} catch (error) {
@@ -101,13 +101,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 	const updateCurrentUser = async (userData: Partial<UserData>) => {
 		if (!token) return null;
-		const response: UpdateCurrentUserResponse = await authApi.updateCurrentUser(userData, token);
-		if (response.logged_out) {
+		const response: ApiResponse<UpdateCurrentUserResponse> = await authApi.updateCurrentUser(userData, token);
+		if (response.data.logged_out) {
 			logout();
 			return response;
 		}
-		const userResponse: UserData = await authApi.getCurrentUser(token);
-		setCurrentUser((prev: CurrentUser | null) => (prev ? { ...prev, ...userResponse } : prev));
+		const userResponse: ApiResponse<UserData> = await authApi.getCurrentUser(token);
+		setCurrentUser((prev: CurrentUser | null) => (prev ? { ...prev, ...userResponse.data } : prev));
 		return response;
 	};
 
@@ -125,14 +125,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 	const login = async (email: string, password: string): Promise<AuthResponse> => {
 		try {
-			const data: LoginResponse = await authApi.login(email, password);
-			if (data.access_token) {
-				localStorage.setItem("token", data.access_token);
-				setToken(data.access_token);
+			const data: ApiResponse<LoginResponse> = await authApi.login(email, password);
+			if (data.data.access_token) {
+				localStorage.setItem("token", data.data.access_token);
+				setToken(data.data.access_token);
 				setUserFetched(false);
 
 				// Fetch user info after successful login
-				await fetchUserInfo(data.access_token);
+				await fetchUserInfo(data.data.access_token);
 			}
 
 			return { success: true };
