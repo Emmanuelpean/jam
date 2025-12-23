@@ -19,7 +19,6 @@ backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
 
 import time
-import signal
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -544,7 +543,7 @@ class BaseTest:
                 if test_failed or os.getenv("CI"):
                     self._save_browser_logs(failed=test_failed)
                     self._save_page_screenshot(failed=test_failed)
-                os.kill(self.driver.service.process.pid, signal.SIGTERM)
+                self.driver.quit()
         except Exception as e:
             print(f"Error during teardown: {e}")
 
