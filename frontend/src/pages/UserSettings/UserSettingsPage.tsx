@@ -101,7 +101,7 @@ const UserSettingsPage: React.FC = () => {
 			}
 		};
 		checkPending().then((_) => null);
-	}, [token]);
+	}, [token, hasPendingEmail, showToastError]);
 
 	const downloadJobsExport = async (token: string | null): Promise<void> => {
 		if (!token) return;

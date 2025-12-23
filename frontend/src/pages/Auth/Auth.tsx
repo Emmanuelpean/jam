@@ -80,9 +80,9 @@ function AuthForm(): JSX.Element {
 		const verifyToken: string | null = searchParams.get("token");
 
 		let api = null;
-		if (mode == "verifyEmail") {
+		if (mode === "verifyEmail") {
 			api = authApi.verifyEmail;
-		} else if (mode == "verifyNewEmail") {
+		} else if (mode === "verifyNewEmail") {
 			api = authApi.verifyNewEmail;
 		}
 

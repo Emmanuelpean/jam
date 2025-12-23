@@ -123,7 +123,7 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 		return () => {
 			resizeObserver.disconnect();
 		};
-	}, [activeTab]);
+	}, [activeTab, show]);
 
 	const renderTabs = (): JSX.Element => (
 		<>
