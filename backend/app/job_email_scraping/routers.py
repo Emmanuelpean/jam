@@ -6,9 +6,10 @@ and service execution logs with CRUD operations and admin access controls."""
 from datetime import datetime
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session, joinedload
+from starlette import status
 from starlette.requests import Request
 
 from app import model_registry as models
@@ -390,16 +391,59 @@ scraped_job_filter_router = generate_data_table_crud_router(
 )
 
 
-@scraped_job_filter_router.delete("/{filter_id}")
+@scraped_job_filter_router.post("/")
+def create_scraped_job_filter(
+    filter_data: schemas.ScrapedJobFilterCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Create a new scraped job filter.
+    :param filter_data: Data for the new filter
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: Created scraped job filter"""
+
+    # If an existing filter with the same parameters exists for the user, return it instead of creating a new one
+    existing_filter = (
+        db.query(models.ScrapedJobFilter)
+        .filter_by(owner_id=current_user.id)
+        .filter_by(type=filter_data.type)
+        .filter_by(operator=filter_data.operator)
+        .filter_by(value=filter_data.value)
+        .filter_by(case_sensitive=filter_data.case_sensitive)
+        .first()
+    )
+    if existing_filter:
+        existing_filter.is_active = True
+        db.commit()
+        db.refresh(existing_filter)
+        return existing_filter
+
+    else:
+        # noinspection PyArgumentList
+        filter_obj = models.ScrapedJobFilter(
+            **filter_data.model_dump(),
+            owner_id=current_user.id,
+        )
+        db.add(filter_obj)
+        db.commit()
+        db.refresh(filter_obj)
+        return filter_obj
+
+
+@scraped_job_filter_router.delete("/{filter_id}", response_model=schemas.ScrapedJobFilterOut)
 def delete_scraped_job_filter(
     filter_id: int,
+    response: Response,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Delete a scraped job filter by ID.
     :param filter_id: ID of the filter to delete
+    :param response: FastAPI response object
     :param current_user: Current authenticated user
-    :param db: Database session"""
+    :param db: Database session
+    :return: The deleted or deactivated filter object"""
 
     # Fetch the filter to ensure it exists and belongs to the current user
     filter_obj = (
@@ -414,12 +458,15 @@ def delete_scraped_job_filter(
 
     if filter_obj.filtered_jobs and len(filter_obj.filtered_jobs) > 0:
         filter_obj.is_active = False
+        db.commit()
+        db.refresh(filter_obj)
+        response.status_code = status.HTTP_200_OK
     else:
         db.delete(filter_obj)
+        db.commit()
+        response.status_code = status.HTTP_204_NO_CONTENT
 
-    db.commit()
-
-    return {"detail": "Scraped Job Filter deleted successfully."}
+    return filter_obj
 
 
 @scraped_job_filter_router.put("/{filter_id}")

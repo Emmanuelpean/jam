@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Alert, Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { authApi, exportApi, userQualificationApi } from "../../services/api/Users";
-import { ApiError } from "../../services/api/Base";
+import { ApiError, ApiResponse } from "../../services/api/Base";
 import { THEMES } from "../../utils/Theme";
 import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
@@ -63,7 +63,8 @@ const UserSettingsPage: React.FC = () => {
 		const fetchQualifications = async (): Promise<void> => {
 			if (!token) return;
 			try {
-				const data: UserQualification = await userQualificationApi.getLatest(token);
+				const response: ApiResponse<UserQualification> = await userQualificationApi.getLatest(token);
+				const data = response.data;
 				if (data) {
 					setFormData(
 						(prev: UserFormData): UserFormData => ({
@@ -89,8 +90,8 @@ const UserSettingsPage: React.FC = () => {
 		const checkPending = async (): Promise<void> => {
 			if (!hasPendingEmail || !token) return;
 			try {
-				const valid: boolean = await authApi.checkPendingEmail(token);
-				if (!valid) {
+				const valid: ApiResponse<boolean> = await authApi.checkPendingEmail(token);
+				if (!valid.data) {
 					showToastError(
 						"Pending email verification token has expired. Please request the email change again.",
 						"Verification Expired",
