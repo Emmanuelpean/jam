@@ -448,12 +448,23 @@ def update_scraped_job_filter(
         raise NOT_ALLOWED_EXCEPTION
 
     if filter_obj.filtered_jobs and len(filter_obj.filtered_jobs) > 0:
+        filter_dict = {
+            "type": filter_obj.type,
+            "operator": filter_obj.operator,
+            "value": filter_obj.value,
+            "case_sensitive": filter_obj.case_sensitive,
+            "is_enabled": filter_obj.is_enabled,
+            "is_active": filter_obj.is_active,
+            "owner_id": filter_obj.owner_id,
+        }
+        filter_dict.update(update_data.model_dump(exclude_unset=True))
+        # noinspection PyArgumentList
+        filter_obj = models.ScrapedJobFilter(**filter_dict)
+        db.add(filter_obj)
+
+    else:
         for key, value in update_data.model_dump(exclude_unset=True).items():
             setattr(filter_obj, key, value)
-    else:
-        # noinspection PyArgumentList
-        filter_obj = models.ScrapedJobFilter(**update_data.model_dump(), owner_id=current_user.id)
-        db.add(filter_obj)
 
     db.commit()
     db.refresh(filter_obj)

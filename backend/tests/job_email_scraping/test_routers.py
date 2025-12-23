@@ -5,8 +5,10 @@ import datetime as dt
 import pytest
 from starlette import status
 
+from app import model_registry as models
 from app.job_email_scraping import schemas
 from tests.conftest import CRUDTestBase
+from tests.utils.create_data import add_to_db
 from tests.utils.test_data.job_scraping_service import JOB_EMAIL_DATA, SCRAPED_JOB_FILTER_DATA
 
 
@@ -47,14 +49,14 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         authorised_clients,
         test_scraped_jobs,
     ) -> None:
-        """Test retrieving all scraped jobs for the authorized user that are scraped, not imported, active"""
+        """Test retrieving all scraped jobs for the authorised user that are scraped, not imported, active"""
 
         self.get_user_data(test_users, test_scraped_jobs)
         client = self._get_authorised_client(authorised_clients)
         response = client.get(self.endpoint + "/paged/?page=1&page_size=5")
         assert response.status_code == status.HTTP_200_OK
         scraped_jobs = response.json()
-        assert scraped_jobs["total"] == 50
+        assert scraped_jobs["total"] == 51
         assert len(scraped_jobs["items"]) == 5
 
     def test_get_count(self, test_users, authorised_clients, test_scraped_jobs) -> None:
@@ -63,7 +65,7 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         client = self._get_authorised_client(authorised_clients)
         response = client.get(self.endpoint + "/count")
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["count"] == 50
+        assert response.json()["count"] == 51
 
 
 class TestScrapedJobCRUDAdminUser(CRUDTestBase):
@@ -226,3 +228,145 @@ class TestScrapedJobFilters(CRUDTestBase):
         "type": "title",
     }
     required_fixture = ["test_scraped_jobs"]
+    actions_to_test = ["get_all", "get_one", "post"]
+
+    @staticmethod
+    def _create_filter(session, owner_id: int = 1) -> models.ScrapedJobFilter:
+        """Helper to create a scraped job filter"""
+
+        # noinspection PyArgumentList
+        filters = models.ScrapedJobFilter(type="title", operator="contains", value="Some", owner_id=owner_id)
+        return add_to_db(session, [filters])[0]
+
+    def test_delete_filter_without_filtered_jobs(self, session, authorised_clients, test_users) -> None:
+        """Should delete filter completely when it has no filtered jobs"""
+
+        filter_obj = self._create_filter(session)
+        response = self.delete(authorised_clients[0], filter_obj.id)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {"detail": "Scraped Job Filter deleted successfully."}
+
+        # Verify filter was completely deleted from database
+        deleted_filter = session.query(models.ScrapedJobFilter).filter_by(id=filter_obj.id).first()
+        assert deleted_filter is None
+
+    def test_delete_filter_with_filtered_jobs(
+        self, session, authorised_clients, test_users, test_eis_service_logs
+    ) -> None:
+        """Should deactivate filter when it has filtered jobs instead of deleting"""
+
+        filter_obj = self._create_filter(session)
+        filter_id = filter_obj.id
+
+        # Add a filtered job
+        # noinspection PyArgumentList
+        scraped_job = models.ScrapedJob(
+            external_job_id="A",
+            platform="saf",
+            title="Engineer",
+            filter_id=filter_obj.id,
+            owner_id=filter_obj.owner_id,
+            service_log_id=test_eis_service_logs[0].id,
+        )
+        add_to_db(session, [scraped_job])
+
+        response = self.delete(authorised_clients[0], filter_id)
+        assert response.status_code == status.HTTP_200_OK
+
+        # Verify filter was deactivated, not deleted
+        updated_filter = session.query(models.ScrapedJobFilter).filter_by(id=filter_id).first()
+        assert updated_filter is not None
+        assert updated_filter.is_active is False
+
+    def test_delete_filter_not_found(self, authorised_clients) -> None:
+        """Should return 403 when filter doesn't exist"""
+
+        response = self.delete(authorised_clients[0], 99999)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_delete_filter_wrong_owner(self, session, authorised_clients, test_users) -> None:
+        """Should return 403 when trying to delete another user's filter"""
+
+        filter_id = self._create_filter(session, 2).id
+        response = self.delete(authorised_clients[0], filter_id)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_delete_filter_unauthenticated(self, session, client, test_users) -> None:
+        """Should return 401 when not authenticated"""
+
+        filter_obj = self._create_filter(session)
+        response = self.delete(client, filter_obj.id)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    # ----------------------------------------------------- UPDATE -----------------------------------------------------
+
+    def test_update_filter_with_filtered_jobs(
+        self, session, authorised_clients, test_users, test_eis_service_logs
+    ) -> None:
+        """Should update existing filter when it has filtered jobs"""
+
+        filter_obj = self._create_filter(session)
+        filter_id = filter_obj.id
+        filter_operator = filter_obj.operator
+        user_id = test_users[0].id
+
+        # Add a filtered job
+        # noinspection PyArgumentList
+        scraped_job = models.ScrapedJob(
+            external_job_id="A",
+            platform="saf",
+            title="Engineer",
+            filter_id=filter_id,
+            owner_id=filter_obj.owner_id,
+            service_log_id=test_eis_service_logs[0].id,
+        )
+        add_to_db(session, [scraped_job])
+
+        update_data = {"value": "Updated Title"}
+        response = self.put(authorised_clients[0], filter_id, update_data)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["id"] != filter_id
+        assert data["operator"] == filter_operator
+        assert data["value"] == update_data["value"]
+        assert data["owner_id"] == user_id
+
+    def test_update_filter_without_filtered_jobs_creates_new(self, session, authorised_clients, test_users) -> None:
+        """Should create new filter when original has no filtered jobs"""
+
+        filter_obj = self._create_filter(session)
+        filter_id = filter_obj.id
+        filter_operator = filter_obj.operator
+        user_id = test_users[0].id
+
+        update_data = {"value": "Updated Title"}
+        response = self.put(authorised_clients[0], filter_id, update_data)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["id"] == filter_id
+        assert data["value"] == update_data["value"]
+        assert data["operator"] == filter_operator
+        assert data["owner_id"] == user_id
+
+    def test_update_filter_not_found(self, authorised_clients) -> None:
+        """Should return 403 when filter doesn't exist"""
+
+        update_data = {"title": "Updated"}
+        response = self.put(authorised_clients[0], 99999, update_data)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_update_filter_wrong_owner(self, session, authorised_clients, test_users) -> None:
+        """Should return 403 when trying to update another user's filter"""
+
+        filter_id = self._create_filter(session, 2).id
+        response = self.put(authorised_clients[0], filter_id, {"value": "Updated"})
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_update_filter_unauthenticated(self, session, client, test_users) -> None:
+        """Should return 401 when not authenticated"""
+
+        filter_obj = self._create_filter(session)
+        response = self.put(client, filter_obj.id, {"value": "Updated"})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
