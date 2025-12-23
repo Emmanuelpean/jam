@@ -234,7 +234,7 @@ def test_backend_server() -> Generator[str, None, None]:
         print_backend_pid()
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="session")
 def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
     """Start a test frontend server for integration tests"""
 
@@ -499,9 +499,9 @@ class BaseTest:
             chrome_options.add_argument("--lang=en-GB")
 
             # Enable verbose logging
-            chrome_options.add_argument("--enable-logging")
-            chrome_options.add_argument("--v=1")
-            chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
+            # chrome_options.add_argument("--enable-logging")
+            # chrome_options.add_argument("--v=1")
+            # chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
 
             self.driver = webdriver.Chrome(options=chrome_options)
             # self.driver.maximize_window()
