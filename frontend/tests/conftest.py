@@ -498,13 +498,7 @@ class BaseTest:
             chrome_options.add_argument("--disable-dev-shm-usage")
             chrome_options.add_argument("--lang=en-GB")
 
-            # Enable verbose logging
-            # chrome_options.add_argument("--enable-logging")
-            # chrome_options.add_argument("--v=1")
-            # chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
-
             self.driver = webdriver.Chrome(options=chrome_options)
-            # self.driver.maximize_window()
             self.wait = WebDriverWait(self.driver, 10)
             # Set timezone using CDP
             self.driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
@@ -526,7 +520,7 @@ class BaseTest:
         except Exception:
             if hasattr(self, "driver"):
                 try:
-                    self._save_browser_logs(failed=True)
+                    # self._save_browser_logs(failed=True)
                     self.driver.quit()
                 except:
                     pass
@@ -537,12 +531,12 @@ class BaseTest:
         try:
             if hasattr(self, "driver"):
                 # Check if test failed
-                test_failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False
-
-                # Save logs on failure or in CI (always in CI for debugging)
-                if test_failed or os.getenv("CI"):
-                    self._save_browser_logs(failed=test_failed)
-                    self._save_page_screenshot(failed=test_failed)
+                # test_failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False
+                #
+                # # Save logs on failure or in CI (always in CI for debugging)
+                # if test_failed or os.getenv("CI"):
+                #     self._save_browser_logs(failed=test_failed)
+                #     self._save_page_screenshot(failed=test_failed)
                 self.driver.quit()
         except Exception as e:
             print(f"Error during teardown: {e}")
