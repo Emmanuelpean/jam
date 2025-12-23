@@ -507,6 +507,7 @@ class TestPasswordReset(TestAuthenticationPage):
         self.driver.get(reset_url)
 
         # Set new password
+        time.sleep(1)
         self.set_password(new_password)
         self.set_confirm_password(new_password)
         self.confirm()
