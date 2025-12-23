@@ -460,7 +460,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 					mode === "add"
 						? await dataContext.addEntity(entityType, dataToSubmit)
 						: await dataContext.updateEntity(entityType, effectiveData.id, dataToSubmit);
-				if (mode === "add" || mode === "edit" || mode == "import") {
+				if (mode === "add" || mode === "edit" || mode === "import") {
 					handleHideImmediate();
 				} else {
 					setEffectiveData(apiResult);
