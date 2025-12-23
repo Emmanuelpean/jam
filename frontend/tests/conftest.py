@@ -6,12 +6,12 @@ import platform
 import queue
 import shutil
 import subprocess
-import sys
 import threading
 from pathlib import Path
 
 import psutil
 import requests
+import sys
 from selenium.webdriver import Keys, ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
 
@@ -19,7 +19,7 @@ backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
 
 import time
-
+import signal
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -544,7 +544,7 @@ class BaseTest:
                 if test_failed or os.getenv("CI"):
                     self._save_browser_logs(failed=test_failed)
                     self._save_page_screenshot(failed=test_failed)
-                self.driver.quit()
+                os.kill(self.driver.service.process.pid, signal.SIGTERM)
         except Exception as e:
             print(f"Error during teardown: {e}")
 

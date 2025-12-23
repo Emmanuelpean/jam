@@ -4,7 +4,7 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
-from conftest import BaseTest, models, eis_models
+from conftest import BaseTest, models
 
 
 class TestToast(BaseTest):
@@ -32,7 +32,7 @@ class TestToast(BaseTest):
         self.go_to("jobs")
         self.get_element("table-row-jobs-{}".format(job_count + 1))
         self.db.expire_all()
-        scraped_job = self.db.query(eis_models.ScrapedJob).filter(eis_models.ScrapedJob.id == 2).first()
+        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
         assert scraped_job.is_imported
 
     def test_right_click_import_scraped_job(self) -> None:
@@ -47,7 +47,7 @@ class TestToast(BaseTest):
         self.go_to("jobs")
         self.get_element("table-row-jobs-{}".format(job_count + 1))
         self.db.expire_all()
-        scraped_job = self.db.query(eis_models.ScrapedJob).filter(eis_models.ScrapedJob.id == 2).first()
+        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
         assert scraped_job.is_imported
 
     def test_delete_scraped_job(self) -> None:
@@ -59,8 +59,8 @@ class TestToast(BaseTest):
         self.wait_for_import_modal_modal_close()
         self.assert_toast_message("Scraped Job deleted successfully.")
         self.db.expire_all()
-        scraped_job = self.db.query(eis_models.ScrapedJob).filter(eis_models.ScrapedJob.id == 2).first()
-        assert not scraped_job.is_enabled
+        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
+        assert not scraped_job.is_active
 
     def test_context_menu_delete_scraped_job(self) -> None:
         """Test deleting a scraped job via right-click and displaying a toast notification."""
@@ -70,8 +70,8 @@ class TestToast(BaseTest):
         self.wait_for_import_modal_modal_close()
         self.assert_toast_message("Scraped Job deleted successfully.")
         self.db.expire_all()
-        scraped_job = self.db.query(eis_models.ScrapedJob).filter(eis_models.ScrapedJob.id == 2).first()
-        assert not scraped_job.is_enabled
+        scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
+        assert not scraped_job.is_active
 
     def wait_for_import_modal_modal_close(self) -> None:
         """Wait for the import modal to close."""
