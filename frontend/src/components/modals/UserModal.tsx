@@ -2,7 +2,7 @@ import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import "../../pages/Auth/Auth.css";
+import "../../pages/Auth/AuthPage.css";
 import { UserData, UserDataTransform } from "../../services/Schemas";
 import { THEMES } from "../../utils/Theme";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";

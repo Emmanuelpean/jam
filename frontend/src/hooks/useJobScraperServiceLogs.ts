@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PlatformStat, JobScraperServiceLog } from "../services/Schemas";
+import { PlatformStat, JobScrapingServiceLogData } from "../services/Schemas";
 import { SelectOption } from "../components/rendering/form/FormOptions";
 import { jobScraperServiceLogApi } from "../services/api/Services";
 import { DateRange } from "../utils/TimeUtils";
@@ -8,15 +8,15 @@ import { useAuth } from "../contexts/AuthContext";
 
 export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: DateRange) => {
 	const { token } = useAuth();
-	const [previousServiceLogs, setPreviousServiceLogs] = useState<JobScraperServiceLog[] | null>(null);
-	const [latestServiceLog, setLatestServiceLog] = useState<JobScraperServiceLog | null>(null);
+	const [previousServiceLogs, setPreviousServiceLogs] = useState<JobScrapingServiceLogData[] | null>(null);
+	const [latestServiceLog, setLatestServiceLog] = useState<JobScrapingServiceLogData | null>(null);
 	const [platformOptions, setPlatformOptions] = useState<SelectOption[]>([]);
 	const [serviceLogError, setServiceLogError] = useState<string | null>(null);
 
 	const fetchLatestServiceLog = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const log: JobScraperServiceLog = await jobScraperServiceLogApi.getLatest(token);
+			const log: JobScrapingServiceLogData = await jobScraperServiceLogApi.getLatest(token);
 			if (log) {
 				setLatestServiceLog(log);
 			}
@@ -29,7 +29,7 @@ export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: D
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const logs: JobScraperServiceLog[] = await jobScraperServiceLogApi.getAll(token, {
+			const logs: JobScrapingServiceLogData[] = await jobScraperServiceLogApi.getAll(token, {
 				start_date: new Date(dateRange.start).toISOString(),
 				end_date: new Date(dateRange.end).toISOString(),
 			});
@@ -40,7 +40,7 @@ export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: D
 				{ value: "all", label: "All Platforms" },
 				...Array.from(
 					new Set(
-						logs.flatMap((log: JobScraperServiceLog): string[] =>
+						logs.flatMap((log: JobScrapingServiceLogData): string[] =>
 							log.platform_stats ? log.platform_stats.map((stat: PlatformStat): string => stat.name) : [],
 						),
 					),

@@ -2,7 +2,7 @@ import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { ScrapedJobFilter, ScrapedJobFilterTransform } from "../../services/Schemas";
+import { ScrapedJobFilterData, ScrapedJobFilterTransform } from "../../services/Schemas";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
 export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalProps>(
@@ -27,11 +27,11 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 			view: viewFieldsArray,
 		};
 
-		const customValidation = async (formData: ScrapedJobFilter): Promise<ValidationErrors> => {
+		const customValidation = async (formData: ScrapedJobFilterData): Promise<ValidationErrors> => {
 			const errors: ValidationErrors = {};
 
-			const duplicates: ScrapedJobFilter[] = dataContext.scrapedJobFilters.filter(
-				(filter: ScrapedJobFilter): boolean =>
+			const duplicates: ScrapedJobFilterData[] = dataContext.scrapedJobFilters.filter(
+				(filter: ScrapedJobFilterData): boolean =>
 					filter.type === formData.type &&
 					filter.operator === formData.operator &&
 					filter.value.trim().toLowerCase() === formData.value.trim().toLowerCase() &&
@@ -44,7 +44,7 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 			return errors;
 		};
 
-		const transformFormData = (formData: ScrapedJobFilter): ScrapedJobFilterTransform => {
+		const transformFormData = (formData: ScrapedJobFilterData): ScrapedJobFilterTransform => {
 			return {
 				type: formData.type,
 				operator: formData.operator,

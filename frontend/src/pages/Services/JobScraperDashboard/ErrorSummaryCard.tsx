@@ -1,9 +1,9 @@
 import React, { JSX, useState } from "react";
-import { JobScraperServiceLog } from "../../../services/Schemas";
+import { JobScrapingServiceLogData } from "../../../services/Schemas";
 import { ErrorCount } from "../../../hooks/useJobScraperErrors";
 
 interface ErrorSummaryCardProps {
-	latestServiceLogs: JobScraperServiceLog[] | null;
+	latestServiceLogs: JobScrapingServiceLogData[] | null;
 	lastScraperErrors: Record<string, ErrorCount>;
 	latestScraperErrors: Record<string, ErrorCount>;
 	lastServiceErrors: Record<string, number>;
@@ -24,12 +24,12 @@ export const ErrorSummaryCard = ({
 	const [errorView, setErrorView] = useState<ErrorView>("current");
 
 	// Select data based on view
-	const criticalErrorLogs: JobScraperServiceLog[] = latestServiceLogs || [];
+	const criticalErrorLogs: JobScrapingServiceLogData[] = latestServiceLogs || [];
 	const scrapeErrors = errorView === "current" ? latestScraperErrors : lastScraperErrors;
 	const serviceErrors = errorView === "current" ? latestServiceErrors : lastServiceErrors;
 
 	const criticalErrorCount: number = criticalErrorLogs.filter(
-		(l: JobScraperServiceLog): boolean => !!(l.error_message && l.error_message.trim()),
+		(l: JobScrapingServiceLogData): boolean => !!(l.error_message && l.error_message.trim()),
 	).length;
 
 	const handleViewToggle = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -68,15 +68,15 @@ export const ErrorSummaryCard = ({
 							{criticalErrorLogs
 								.slice()
 								.sort(
-									(a: JobScraperServiceLog, b: JobScraperServiceLog): number =>
+									(a: JobScrapingServiceLogData, b: JobScrapingServiceLogData): number =>
 										new Date(b.run_datetime).getTime() - new Date(a.run_datetime).getTime(),
 								)
 								.filter(
-									(log: JobScraperServiceLog): boolean =>
+									(log: JobScrapingServiceLogData): boolean =>
 										!!(log.error_message && log.error_message.trim()),
 								)
 								.map(
-									(log: JobScraperServiceLog, idx: number): JSX.Element => (
+									(log: JobScrapingServiceLogData, idx: number): JSX.Element => (
 										<div key={idx} className="alert alert-danger">
 											<div className="small mb-1">
 												{new Date(log.run_datetime).toLocaleString()}

@@ -374,8 +374,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				snoozeDate.setDate(snoozeDate.getDate() + weeks * 7);
 				dataContext
 					.updateEntity(entityType, item.id, { followup_snooze_datetime: snoozeDate.toISOString() })
-					.then((job: JobData): void => {
-						showToastSuccess(`${job.title} was snoozed for ${weeks} week(s).`);
+					.then((response: ApiResponse<JamData>) => {
+						showToastSuccess(`${response.data.title} was snoozed for ${weeks} week(s).`);
 					});
 			} catch (error) {
 				showToastError(`Failed to snooze ${item.title}. Please try again.`);

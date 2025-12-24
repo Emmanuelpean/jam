@@ -258,10 +258,10 @@ export interface ScrapedJobData extends OwnedOut {
 	attendance_type: string | null;
 	location: string | null;
 	emails: number[];
-	job_rating: JobRating | null;
+	job_rating: JobRatingData | null;
 }
 
-export interface JobRating extends BaseOut {
+export interface JobRatingData extends BaseOut {
 	overall_score: number | null;
 	technical_score: number | null;
 	experience_score: number | null;
@@ -283,7 +283,7 @@ export interface ScrapedJobFilterTransform {
 	case_sensitive: boolean;
 }
 
-export interface ScrapedJobFilter extends OwnedOut {
+export interface ScrapedJobFilterData extends OwnedOut {
 	type: string;
 	operator: string;
 	value: string;
@@ -302,7 +302,7 @@ export interface ServiceLog extends BaseOut {
 	error_message: string | null;
 }
 
-export interface JobScraperServiceLog extends ServiceLog {
+export interface JobScrapingServiceLogData extends ServiceLog {
 	user_found_ids: number[];
 	user_processed_ids: number[];
 	emails: number[];
@@ -321,7 +321,7 @@ export interface JobScraperServiceLog extends ServiceLog {
 	service_errors: ServiceError[];
 }
 
-export interface JobRatingServiceLog extends ServiceLog {
+export interface JobRatingServiceLogData extends ServiceLog {
 	rated_job_found_ids: number[];
 	rated_job_succeeded_ids: number[];
 	rated_job_failed_ids: number[];

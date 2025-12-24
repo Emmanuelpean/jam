@@ -4,7 +4,7 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobFilterModal } from "../modals/ScrapedJobFilterModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
-import { ScrapedJobFilter } from "../../services/Schemas";
+import { ScrapedJobFilterData } from "../../services/Schemas";
 
 interface ScrapedJobFilterTableProps extends DataTableProps {
 	show: boolean;
@@ -32,12 +32,12 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 					tableColumns.caseSensitiveColumn(),
 				];
 
-	const activeFilters: ScrapedJobFilter[] = dataContext.scrapedJobFilters.filter(
-		(filter: ScrapedJobFilter): boolean => filter.is_active,
+	const activeFilters: ScrapedJobFilterData[] = dataContext.scrapedJobFilters.filter(
+		(filter: ScrapedJobFilterData): boolean => filter.is_active,
 	);
 
-	const deletedFilters: ScrapedJobFilter[] = dataContext.scrapedJobFilters.filter(
-		(filter: ScrapedJobFilter): boolean => !filter.is_active,
+	const deletedFilters: ScrapedJobFilterData[] = dataContext.scrapedJobFilters.filter(
+		(filter: ScrapedJobFilterData): boolean => !filter.is_active,
 	);
 
 	const tabs = [

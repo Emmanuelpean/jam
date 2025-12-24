@@ -104,7 +104,7 @@ const Dashboard: React.FC = () => {
 	const recentActivity = allUpdates.slice(0, currentUser.update_limit);
 
 	scrapedJobApi.getCount(token || "").then((count) => {
-		setScrapedJobCount(count.count);
+		setScrapedJobCount(count.data.count);
 	});
 
 	return (

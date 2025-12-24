@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { AuthResponse, FormData, useAuth } from "../../contexts/AuthContext";
-import "./Auth.css";
+import { FormData, useAuth } from "../../contexts/AuthContext";
+import "./AuthPage.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Alert, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
@@ -9,7 +9,7 @@ import { Errors, FormField, SyntheticEvent } from "../../components/rendering/wi
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { authApi } from "../../services/api/Users";
+import { authApi, AuthResponse } from "../../services/api/Users";
 import { ApiError, ApiResponse } from "../../services/api/Base";
 import { useLoading } from "../../contexts/LoadingContext";
 

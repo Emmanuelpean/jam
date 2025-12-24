@@ -393,7 +393,7 @@ def generate_data_table_crud_router(
 
     if "put" in allowed_actions:
 
-        @router.put("/{entry_id}", response_model=out_schema)
+        @router.put("/{entry_id}", status_code=status.HTTP_200_OK, response_model=out_schema)
         def update(
             entry_id: int,
             item: update_schema,  # noqa
@@ -466,7 +466,7 @@ def generate_data_table_crud_router(
 
     if "delete" in allowed_actions:
 
-        @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
+        @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT, response_model=out_schema)
         def delete(
             entry_id: int,
             db: Session = Depends(database.get_db),
@@ -486,6 +486,7 @@ def generate_data_table_crud_router(
             # Get the entry to delete
             query = db.query(table_model).filter(table_model.id == entry_id)
             entry = query.first()
+            entry_data = entry.model_dump()
             if not entry:
                 raise NOT_FOUND_EXCEPTION
 
@@ -502,5 +503,6 @@ def generate_data_table_crud_router(
 
             query.delete(synchronize_session=False)
             db.commit()
+            return entry_data
 
     return router

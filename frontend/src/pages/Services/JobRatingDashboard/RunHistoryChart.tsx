@@ -1,12 +1,12 @@
 import React, { JSX, useEffect, useState } from "react";
-import { JobRatingServiceLog } from "../../../services/Schemas";
+import { JobRatingServiceLogData } from "../../../services/Schemas";
 import { LineChart, SeriesData } from "../../../components/charts/LineChart";
 import TimeSelection from "../../../components/TimeSelection/TimeSelection";
 import { DateRange } from "../../../utils/TimeUtils";
 import { createSeries, failureColor, infoColor, successColor } from "../ServiceUtils";
 
 interface RunHistoryChartProps {
-	serviceLogData: JobRatingServiceLog[] | null;
+	serviceLogData: JobRatingServiceLogData[] | null;
 	onDateRangeChange: (dateRange: DateRange) => void;
 	isRunning: boolean;
 }
@@ -22,7 +22,7 @@ export const RunHistoryChart = ({
 		if (!serviceLogData) return;
 
 		const durationSeries: SeriesData[] = [
-			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: JobRatingServiceLog): number =>
+			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: JobRatingServiceLogData): number =>
 				log.run_duration ? log.run_duration / 3600 : 0,
 			),
 		];
@@ -32,13 +32,13 @@ export const RunHistoryChart = ({
 				serviceLogData,
 				"Successful Jobs",
 				successColor,
-				(log: JobRatingServiceLog): number => log.rated_job_succeeded_ids.length,
+				(log: JobRatingServiceLogData): number => log.rated_job_succeeded_ids.length,
 			),
 			createSeries(
 				serviceLogData,
 				"Failed Jobs",
 				failureColor,
-				(log: JobRatingServiceLog): number => log.rated_job_failed_ids.length,
+				(log: JobRatingServiceLogData): number => log.rated_job_failed_ids.length,
 			),
 		];
 		setLogData([jobSeries, durationSeries]);

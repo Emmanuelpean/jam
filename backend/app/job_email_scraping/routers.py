@@ -387,21 +387,24 @@ scraped_job_filter_router = generate_data_table_crud_router(
     out_schema=schemas.ScrapedJobFilterOut,
     endpoint="scraped_job_filters",
     not_found_msg="Scraped Job Filter not found",
-    allowed_actions=["get_all", "get_one", "post"],
+    allowed_actions=["get_all", "get_one"],
 )
 
 
-@scraped_job_filter_router.post("/")
+@scraped_job_filter_router.post("/", response_model=schemas.ScrapedJobFilterOut)
 def create_scraped_job_filter(
     filter_data: schemas.ScrapedJobFilterCreate,
+    response: Response,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Create a new scraped job filter.
+    """Create a new scraped job filter. If the type, operator and value are the same as an existing filter, use that
+    new filter and update it with the data.
     :param filter_data: Data for the new filter
+    :param response: Response for the new filter
     :param current_user: Current authenticated user
     :param db: Database session
-    :return: Created scraped job filter"""
+    :return: New job filter or existing one"""
 
     # If an existing filter with the same parameters exists for the user, return it instead of creating a new one
     existing_filter = (
@@ -414,9 +417,11 @@ def create_scraped_job_filter(
         .first()
     )
     if existing_filter:
-        existing_filter.is_active = True
+        for key, value in filter_data.model_dump().items():
+            setattr(existing_filter, key, value)
         db.commit()
         db.refresh(existing_filter)
+        response.status_code = status.HTTP_200_OK
         return existing_filter
 
     else:
@@ -428,6 +433,7 @@ def create_scraped_job_filter(
         db.add(filter_obj)
         db.commit()
         db.refresh(filter_obj)
+        response.status_code = status.HTTP_201_CREATED
         return filter_obj
 
 
@@ -452,11 +458,12 @@ def delete_scraped_job_filter(
         .filter(models.ScrapedJobFilter.owner_id == current_user.id)
         .first()
     )
+    filter_data = filter_obj.model_dump()
 
     if not filter_obj:
         raise NOT_ALLOWED_EXCEPTION
 
-    if filter_obj.filtered_jobs and len(filter_obj.filtered_jobs) > 0:
+    if filter_obj.filtered_jobs:
         filter_obj.is_active = False
         db.commit()
         db.refresh(filter_obj)
@@ -466,23 +473,25 @@ def delete_scraped_job_filter(
         db.commit()
         response.status_code = status.HTTP_204_NO_CONTENT
 
-    return filter_obj
+    return filter_data
 
 
 @scraped_job_filter_router.put("/{filter_id}")
 def update_scraped_job_filter(
     filter_id: int,
     update_data: schemas.ScrapedJobFilterUpdate,
+    response: Response,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Update a scraped job filter by ID.
     :param filter_id: ID of the filter to update
     :param update_data: Update data for the filter
+    :param response: FastAPI response object
     :param current_user: Current authenticated user
     :param db: Database session"""
 
-    # Fetch the filter to ensure it exists and belongs to the current user
+    # Fetch the filter to ensure it exists and belongs to the current user. Inactive filters cannot be updated
     filter_obj = (
         db.query(models.ScrapedJobFilter)
         .filter(models.ScrapedJobFilter.id == filter_id)
@@ -494,7 +503,8 @@ def update_scraped_job_filter(
     if not filter_obj:
         raise NOT_ALLOWED_EXCEPTION
 
-    if filter_obj.filtered_jobs and len(filter_obj.filtered_jobs) > 0:
+    # If the filter previously filtered jobs, create a new filter
+    if filter_obj.filtered_jobs:
         filter_dict = {
             "type": filter_obj.type,
             "operator": filter_obj.operator,
@@ -508,10 +518,13 @@ def update_scraped_job_filter(
         # noinspection PyArgumentList
         filter_obj = models.ScrapedJobFilter(**filter_dict)
         db.add(filter_obj)
+        response.status_code = status.HTTP_201_CREATED
 
+    # If the filter was never used, update it
     else:
         for key, value in update_data.model_dump(exclude_unset=True).items():
             setattr(filter_obj, key, value)
+        response.status_code = status.HTTP_200_OK
 
     db.commit()
     db.refresh(filter_obj)

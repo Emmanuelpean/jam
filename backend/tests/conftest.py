@@ -22,7 +22,6 @@ from app import database, schemas
 from app import model_registry as models
 from app.config import settings
 from app.main import app
-from app.model_registry import Base
 from app.oauth2 import create_access_token
 from app.utils import hash_token
 from tests.utils.create_data import (
@@ -47,6 +46,7 @@ from tests.utils.create_data import (
     create_job_rating_service_logs,
     create_scraped_job_filters,
 )
+from tests.utils.seed_database import reset_database
 from tests.utils.test_data import (
     DEMO_USER_INDEX,
     ADMIN_USER_INDEX,
@@ -87,8 +87,7 @@ def session() -> Generator[orm.Session, Any, None]:
     function completes, the session is closed.
     :yield: A new SQLAlchemy session bound to the test database."""
 
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    reset_database(engine, False)
     db = TestingSessionLocal()
     try:
         yield db
@@ -311,7 +310,7 @@ def persons_unauthorised_data(test_companies) -> tuple[list[dict], int]:
 
 @pytest.fixture
 def test_persons_unauthorised(
-    session, test_users, test_companies, persons_unauthorised_data
+        session, test_users, test_companies, persons_unauthorised_data
 ) -> tuple[list[models.Person], int]:
     """Create test person data with incorrect company_id for access control testing"""
 
@@ -328,7 +327,7 @@ def test_files(session, test_users) -> list[models.File]:
 
 @pytest.fixture
 def test_jobs(
-    session, test_users, test_companies, test_locations, test_keywords, test_persons, test_aggregators, test_files
+        session, test_users, test_companies, test_locations, test_keywords, test_persons, test_aggregators, test_files
 ) -> list[models.Job]:
     """Create test job data"""
 
@@ -339,7 +338,7 @@ def test_jobs(
 
 @pytest.fixture
 def jobs_unauthorised_data(
-    session, test_users, test_companies, test_locations, test_keywords, test_persons, test_aggregators, test_files
+        session, test_users, test_companies, test_locations, test_keywords, test_persons, test_aggregators, test_files
 ) -> tuple[list[dict], int, list[dict], list[dict]]:
     """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
 
@@ -361,15 +360,15 @@ def jobs_unauthorised_data(
 
 @pytest.fixture
 def test_jobs_unauthorised(
-    session,
-    test_users,
-    test_companies,
-    test_locations,
-    test_keywords,
-    test_persons,
-    test_aggregators,
-    test_files,
-    jobs_unauthorised_data,
+        session,
+        test_users,
+        test_companies,
+        test_locations,
+        test_keywords,
+        test_persons,
+        test_aggregators,
+        test_files,
+        jobs_unauthorised_data,
 ) -> tuple[list[models.Job], int]:
     """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
 
@@ -399,7 +398,7 @@ def test_interviews(session, test_users, test_jobs, test_locations, test_persons
 
 @pytest.fixture
 def interviews_unauthorised_data(
-    session, test_users, test_jobs, test_locations, test_persons
+        session, test_users, test_jobs, test_locations, test_persons
 ) -> tuple[list[dict], int, list[dict]]:
     """Create test interview data with incorrect job_id for access control testing"""
 
@@ -412,7 +411,7 @@ def interviews_unauthorised_data(
 
 @pytest.fixture
 def test_interviews_unauthorised(
-    session, test_users, test_jobs, test_locations, test_persons, interviews_unauthorised_data
+        session, test_users, test_jobs, test_locations, test_persons, interviews_unauthorised_data
 ) -> tuple[list[models.Interview], int]:
     """Create test interview data with incorrect job_id for access control testing"""
 
@@ -456,7 +455,7 @@ def job_application_updates_unauthorised_data(session, test_users, test_jobs) ->
 
 @pytest.fixture
 def test_job_application_updates_unauthorised(
-    session, test_users, test_jobs, job_application_updates_unauthorised_data
+        session, test_users, test_jobs, job_application_updates_unauthorised_data
 ) -> tuple[list[models.JobApplicationUpdate], int]:
     """Create test job application update data with incorrect job_id for access control testing"""
 
@@ -509,7 +508,7 @@ def test_job_rating_service_logs(session) -> list[models.JobRatingServiceLog]:
 
 @pytest.fixture
 def test_job_ratings(
-    session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
+        session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
 ) -> list[models.JobRating]:
     """Create test job ratings"""
 
@@ -607,9 +606,9 @@ class CRUDTestBase:
     actions_to_test: list[str] = ["get", "post", "put", "delete"]
 
     def check_output(
-        self,
-        test_data: list[schemas.BaseModel] | list[dict] | dict | schemas.BaseModel,
-        response_data: list[dict] | dict,
+            self,
+            test_data: list[schemas.BaseModel] | list[dict] | dict | schemas.BaseModel,
+            response_data: list[dict] | dict,
     ):
         """Check that the output of a test matches the test data.
         :param test_data: The test data to compare against.
@@ -756,9 +755,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_authorised(
-        self,
-        authorised_clients,
-        test_data,
+            self,
+            authorised_clients,
+            test_data,
     ) -> None:
         """Test that an authorised users can successfully retrieve all items from the endpoint.
         For admin only endpoints, uses admin user; otherwise regular user.
@@ -771,9 +770,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_unauthenticated(
-        self,
-        client: TestClient,
-        test_data,
+            self,
+            client: TestClient,
+            test_data,
     ) -> None:
         """Test that unauthenticated requests to get all items are rejected.
         Verifies 401 response when no authentication is provided."""
@@ -783,9 +782,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_non_admin(
-        self,
-        authorised_clients,
-        test_data,
+            self,
+            authorised_clients,
+            test_data,
     ) -> None:
         """Test that non admin user requests to get all items are rejected for admin_only endpoints.
         Verifies 403 response when the user is not an admin."""
@@ -797,9 +796,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("get", "get_all")
     def test_get_all_data_only_authorised(
-        self,
-        authorised_clients,
-        request,
+            self,
+            authorised_clients,
+            request,
     ) -> None:
         """Test that users only see data they own when retrieving all items (non-admin endpoints only).
         Verifies proper data filtering based on ownership using the get_unauthorised_fixture."""
@@ -817,9 +816,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_success(
-        self,
-        authorised_clients,
-        test_data,
+            self,
+            authorised_clients,
+            test_data,
     ) -> None:
         """Test that an authorised users can successfully retrieve a specific item by ID.
         For admin only endpoints, uses admin user; otherwise regular user.
@@ -832,9 +831,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_unauthenticated(
-        self,
-        client,
-        test_data,
+            self,
+            client,
+            test_data,
     ) -> None:
         """Test that unauthenticated requests to get a specific item are rejected.
         Verifies 401 Unauthorised response when no authentication is provided."""
@@ -844,9 +843,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_incorrect_user(
-        self,
-        authorised_clients,
-        test_data,
+            self,
+            authorised_clients,
+            test_data,
     ) -> None:
         """Test that users are denied access to items they don't have permission to view.
         For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
@@ -857,8 +856,8 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("get", "get_one")
     def test_get_one_non_exist(
-        self,
-        authorised_clients,
+            self,
+            authorised_clients,
     ) -> None:
         """Test that requests for non-existent items return a 404 error.
         Verifies proper handling when the requested item ID doesn't exist in the database."""
@@ -871,9 +870,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("post")
     def test_post_success(
-        self,
-        authorised_clients,
-        test_users,
+            self,
+            authorised_clients,
+            test_users,
     ) -> None:
         """Test that authorised users can successfully create new items.
         For admin only endpoints, uses admin user; otherwise regular user.
@@ -888,8 +887,8 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("post")
     def test_post_unauthenticated(
-        self,
-        client,
+            self,
+            client,
     ) -> None:
         """Test that unauthenticated requests to create items are rejected.
         Verifies 401 Unauthorised response when no authentication is provided."""
@@ -899,9 +898,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("post")
     def test_post_non_admin(
-        self,
-        authorised_clients,
-        test_users,
+            self,
+            authorised_clients,
+            test_users,
     ) -> None:
         """Test that non-admin users are denied access to create items on admin-only endpoints.
         Only runs for admin_only=True endpoints, verifying 403 Forbidden responses."""
@@ -915,9 +914,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("post")
     def test_post_data_only_authorised(
-        self,
-        authorised_clients,
-        request,
+            self,
+            authorised_clients,
+            request,
     ) -> None:
         """Test that users can successfully create data they own on non-admin endpoints.
         Uses unauthorised_data_fixture to verify proper ownership validation during creation."""
@@ -934,9 +933,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("put")
     def test_put_success(
-        self,
-        authorised_clients,
-        test_data,
+            self,
+            authorised_clients,
+            test_data,
     ) -> None:
         """Test that authorised users can successfully update existing items.
         For admin only endpoints, uses admin user; otherwise regular user.
@@ -949,9 +948,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("put")
     def test_put_empty_body(
-        self,
-        authorised_clients,
-        test_data,
+            self,
+            authorised_clients,
+            test_data,
     ) -> None:
         """Test that PUT requests with empty request bodies are rejected.
         Verifies 400 Bad Request response when no update data is provided."""
@@ -971,9 +970,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("put")
     def test_put_unauthenticated(
-        self,
-        client,
-        test_data,
+            self,
+            client,
+            test_data,
     ) -> None:
         """Test that unauthenticated requests to update items are rejected.
         Verifies 401 Unauthorised response when no authentication is provided."""
@@ -994,9 +993,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("delete")
     def test_delete_success(
-        self,
-        authorised_clients,
-        test_data,
+            self,
+            authorised_clients,
+            test_data,
     ) -> None:
         """Test that authorised users can successfully delete existing items.
         Verifies 204 No Content response indicating successful deletion."""
@@ -1007,8 +1006,8 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("delete")
     def test_delete_non_exist(
-        self,
-        authorised_clients,
+            self,
+            authorised_clients,
     ) -> None:
         """Test that DELETE requests for non-existent items return a 404 error.
         Verifies proper handling when attempting to delete an item that doesn't exist."""
@@ -1019,9 +1018,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("delete")
     def test_delete_unauthenticated(
-        self,
-        client,
-        test_data,
+            self,
+            client,
+            test_data,
     ) -> None:
         """Test that unauthenticated requests to delete items are rejected.
         Verifies 401 Unauthorised response when no authentication is provided."""
@@ -1031,9 +1030,9 @@ class CRUDTestBase:
 
     @pytest.mark.requires_actions("delete")
     def test_delete_forbidden(
-        self,
-        authorised_clients,
-        test_data,
+            self,
+            authorised_clients,
+            test_data,
     ) -> None:
         """Test that users are denied access to delete items they don't have permission to remove.
         For admin_only=True: non-admin users get 403; for admin_only=False: different users get 403."""
