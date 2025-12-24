@@ -33,7 +33,6 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
 
 
 class TestScrapedJobCRUDRegularUser(CRUDTestBase):
-
     endpoint = "/scraped_jobs"
     out_schema = schemas.ScrapedJobOut
     test_data_ref = "test_scraped_jobs"
@@ -69,7 +68,6 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
 
 
 class TestScrapedJobCRUDAdminUser(CRUDTestBase):
-
     endpoint = "/scraped_jobs"
     out_schema = schemas.ScrapedJobOut
     test_data_ref = "test_scraped_jobs"
@@ -228,14 +226,14 @@ class TestScrapedJobFilters(CRUDTestBase):
         "type": "title",
     }
     required_fixture = ["test_scraped_jobs"]
-    actions_to_test = ["get_all", "get_one", "post"]
+    actions_to_test = ["get_all", "get_one"]
 
     @staticmethod
-    def _create_filter(session, owner_id: int = 1) -> models.ScrapedJobFilter:
+    def _create_filter(session, owner_id: int = 1, **kwargs) -> models.ScrapedJobFilter:
         """Helper to create a scraped job filter"""
 
         # noinspection PyArgumentList
-        filters = models.ScrapedJobFilter(type="title", operator="contains", value="Some", owner_id=owner_id)
+        filters = models.ScrapedJobFilter(type="title", operator="contains", value="Some", owner_id=owner_id, **kwargs)
         return add_to_db(session, [filters])[0]
 
     def test_delete_filter_without_filtered_jobs(self, session, authorised_clients, test_users) -> None:
@@ -243,8 +241,7 @@ class TestScrapedJobFilters(CRUDTestBase):
 
         filter_obj = self._create_filter(session)
         response = self.delete(authorised_clients[0], filter_obj.id)
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() == {"detail": "Scraped Job Filter deleted successfully."}
+        assert response.status_code == status.HTTP_202_ACCEPTED
 
         # Verify filter was completely deleted from database
         deleted_filter = session.query(models.ScrapedJobFilter).filter_by(id=filter_obj.id).first()
@@ -325,7 +322,7 @@ class TestScrapedJobFilters(CRUDTestBase):
         update_data = {"value": "Updated Title"}
         response = self.put(authorised_clients[0], filter_id, update_data)
 
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["id"] != filter_id
         assert data["operator"] == filter_operator
@@ -369,4 +366,44 @@ class TestScrapedJobFilters(CRUDTestBase):
 
         filter_obj = self._create_filter(session)
         response = self.put(client, filter_obj.id, {"value": "Updated"})
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    # ------------------------------------------------------ POST ------------------------------------------------------
+
+    def test_post_filter_non_existent(self, session, authorised_clients, test_users) -> None:
+        """Should delete filter completely when it has no filtered jobs"""
+
+        data = {"value": "Updated Title", "type": "title", "operator": "contains"}
+        response = self.post(authorised_clients[0], data)
+        assert response.status_code == status.HTTP_201_CREATED
+        for key, value in data.items():
+            assert response.json()[key] == value
+
+    def test_post_filter_duplicate(self, session, authorised_clients, test_users) -> None:
+        """Should deactivate filter when it has filtered jobs instead of deleting"""
+
+        filter_obj = self._create_filter(session)
+        data = {"value": filter_obj.value, "type": filter_obj.type, "operator": filter_obj.operator}
+        response = self.post(authorised_clients[0], data)
+        assert response.json()["id"] == filter_obj.id
+        assert response.status_code == status.HTTP_200_OK
+        for key, value in data.items():
+            assert response.json()[key] == value
+
+    def test_post_filter_duplicate_inactive(self, session, authorised_clients, test_users) -> None:
+        """Should deactivate filter when it has filtered jobs instead of deleting"""
+
+        filter_obj = self._create_filter(session, is_active=False)
+        data = {"value": filter_obj.value, "type": filter_obj.type, "operator": filter_obj.operator, "is_active": True}
+        response = self.post(authorised_clients[0], data)
+        assert response.json()["id"] == filter_obj.id
+        assert response.status_code == status.HTTP_200_OK
+        for key, value in data.items():
+            assert response.json()[key] == value
+
+    def test_post_filter_unauthenticated(self, session, client, test_users) -> None:
+        """Should return 401 when not authenticated"""
+
+        data = {"value": "Updated Title", "type": "title", "operator": "contains"}
+        response = self.post(client, data)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED

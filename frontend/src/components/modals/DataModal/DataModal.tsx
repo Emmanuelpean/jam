@@ -25,6 +25,7 @@ import { ModalFormField } from "../../rendering/form/FormRenders";
 import { useActiveHandler, useDeleteHandler } from "../../../utils/DeleteHandler";
 import { useAlert } from "../../../contexts/AlertContext";
 import "./DataModal.css";
+import { ApiResponse } from "../../../services/api/Base";
 
 export type Field = ModalViewField | ModalFormField;
 export type Fields = (Field | Field[])[];
@@ -456,14 +457,14 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				const dataToSubmit: any = transformFormData ? transformFormData(formData) : formData;
 
 				// Submit to API
-				const apiResult: JamData =
+				const apiResult: ApiResponse<JamData> =
 					mode === "add"
 						? await dataContext.addEntity(entityType, dataToSubmit)
 						: await dataContext.updateEntity(entityType, effectiveData.id, dataToSubmit);
 				if (mode === "add" || mode === "edit" || mode === "import") {
 					handleHideImmediate();
 				} else {
-					setEffectiveData(apiResult);
+					setEffectiveData(apiResult.data);
 					handleEditToView();
 				}
 
@@ -471,11 +472,11 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 					requestAnimationFrame(() => {
 						// Call callbacks after 2 animation frames - ensures all renders are complete
 						if (onSuccess) {
-							onSuccess(mode === "import" ? formData : apiResult);
+							onSuccess(mode === "import" ? formData : apiResult.data);
 						}
 
 						if (onSuccessCallback) {
-							onSuccessCallback(apiResult);
+							onSuccessCallback(apiResult.data);
 						}
 					});
 				});

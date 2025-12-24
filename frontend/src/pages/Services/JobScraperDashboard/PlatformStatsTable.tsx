@@ -1,15 +1,15 @@
 import React, { JSX } from "react";
 import { Table } from "react-bootstrap";
-import { PlatformStat, JobScraperServiceLog } from "../../../services/Schemas";
+import { PlatformStat, JobScrapingServiceLogData } from "../../../services/Schemas";
 
 import { capitalise } from "../../../utils/StringUtils";
 
 interface PlatformStatsTableProps {
 	platformStats: PlatformStat[];
-	latestLog: JobScraperServiceLog;
+	latestLog: JobScrapingServiceLogData;
 }
 
-const getPlatformStat = (log: JobScraperServiceLog, platform: string, key: string): number => {
+const getPlatformStat = (log: JobScrapingServiceLogData, platform: string, key: string): number => {
 	const stat: PlatformStat | undefined = log.platform_stats.find((p: PlatformStat): boolean => p.name === platform);
 	if (!stat) return 0;
 

@@ -3,7 +3,7 @@ import { Button } from "react-bootstrap";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../modals/ScrapedJobModal";
-import { JobData, JobDataTransform, ScrapedJobFilter } from "../../services/Schemas";
+import { JobData, JobDataTransform, ScrapedJobFilterData } from "../../services/Schemas";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import ScrapedJobFilterTable from "./ScrapedJobFilterTable";
@@ -70,7 +70,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 						Filters (
 						{
 							dataContext.scrapedJobFilters.filter(
-								(filter: ScrapedJobFilter): boolean => filter.is_enabled,
+								(filter: ScrapedJobFilterData): boolean => filter.is_enabled,
 							).length
 						}
 						)

@@ -10,6 +10,7 @@ from app import schemas, models
 from app.config import settings
 from app.routers import auth
 from app.utils import hash_token
+from routers import utils
 
 
 # -------------------------------------------------- UTILITY FUNCTIONS -------------------------------------------------
@@ -35,7 +36,7 @@ class TestGetRemainingSeconds:
         else:
             dt = datetime.now(timezone.utc) - timedelta(minutes=minutes_ago)
 
-        assert auth.get_retry_remaining_seconds(dt) == expected_remaining
+        assert utils.get_retry_remaining_seconds(dt) == expected_remaining
 
 
 class TestGenerateToken:
@@ -43,7 +44,7 @@ class TestGenerateToken:
     def test_generate_token(self) -> None:
         """Test generation of verification token."""
 
-        token, code = auth.generate_token()
+        token, code = utils.generate_token()
         assert len(token) == 43
         assert len(code) == 64
 
@@ -62,7 +63,7 @@ class TestCheckTokenExpiration:
     def test_check_token_expiration(self, created_at, expected) -> None:
         """Test verification token expiration check."""
 
-        assert auth.check_token_expiration(created_at) == expected
+        assert utils.check_token_expiration(created_at) == expected
 
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
@@ -172,7 +173,11 @@ class TestSendVerificationWithRateLimit:
         """Test sending of verification email."""
 
         result = auth.send_verification_with_rate_limit(test_regular_user, session)
-        assert result == {"success": True, "message": "Verification email sent successfully.", "error_code": None}
+        assert result.model_dump() == {
+            "success": True,
+            "message": "Verification email sent successfully.",
+            "error_code": None,
+        }
         assert mock_email.call_count == 1
         assert test_regular_user.verification_token is not None
         assert test_regular_user.verification_token_created_at is not None
@@ -182,8 +187,11 @@ class TestSendVerificationWithRateLimit:
         """Test rate limiting when sending verification email."""
 
         result = auth.send_verification_with_rate_limit(test_unverified_token_user, session)
-        assert result["success"] is False
-        assert result["error_code"] == 429
+        assert result.model_dump() == {
+            "error_code": 429,
+            "message": "Please wait 120 seconds before requesting another verification " "email.",
+            "success": False,
+        }
         assert mock_email.call_count == 0
 
 
@@ -361,7 +369,11 @@ class TestSendPasswordResetWithRateLimit:
         """Test sending of password reset email."""
 
         result = auth.send_password_reset_with_rate_limit(test_regular_user, session)
-        assert result == {"success": True, "message": "Password reset email sent successfully", "error_code": None}
+        assert result.model_dump() == {
+            "success": True,
+            "message": "Password reset email sent successfully",
+            "error_code": None,
+        }
         assert mock_email.call_count == 1
         assert test_regular_user.password_reset_token is not None
         assert test_regular_user.password_reset_token_created_at is not None
@@ -372,8 +384,11 @@ class TestSendPasswordResetWithRateLimit:
 
         auth.send_password_reset_with_rate_limit(test_regular_user, session)
         result = auth.send_password_reset_with_rate_limit(test_regular_user, session)
-        assert result["success"] is False
-        assert result["error_code"] == 429
+        assert result.model_dump() == {
+            "error_code": 429,
+            "message": "Please wait 120 seconds before requesting another password reset " "email",
+            "success": False,
+        }
         assert mock_email.call_count == 1
 
 

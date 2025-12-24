@@ -11,7 +11,7 @@ import {
 	InterviewData,
 	JobApplicationUpdateData,
 	JobData,
-	JobRating,
+	JobRatingData,
 	KeywordData,
 	LocationData,
 	PersonData,
@@ -391,7 +391,7 @@ export const renderFunctions = {
 	},
 
 	jobRating: (param: RenderParams): ReactNode => {
-		const job_rating: JobRating | undefined | null = param.item?.job_rating;
+		const job_rating: JobRatingData | undefined | null = param.item?.job_rating;
 		if (!job_rating) return null;
 
 		return (
@@ -802,8 +802,8 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 			if (!param.token || !param.item.id) return;
 			setLoading(true);
 			try {
-				const response: ScrapedJobData[] = await scrapedJobApi.getByFilterId(param.item.id, param.token);
-				setData(response);
+				const response = await scrapedJobApi.getByFilterId(param.item.id, param.token);
+				setData(response.data);
 			} catch (error) {
 				console.error("Error fetching filtered scraped jobs:", error);
 				setData([]);

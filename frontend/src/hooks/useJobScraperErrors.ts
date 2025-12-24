@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PlatformStat, ScrapedJobData, JobScraperServiceLog } from "../services/Schemas";
+import { PlatformStat, ScrapedJobData, JobScrapingServiceLogData } from "../services/Schemas";
 import { scrapedJobApi } from "../services/api/Services";
 import { normaliseArray } from "../utils/Utils";
 import { useAuth } from "../contexts/AuthContext";
@@ -10,7 +10,7 @@ export interface ErrorCount {
 }
 
 export const useJobScraperErrors = (
-	latestLog: JobScraperServiceLog | JobScraperServiceLog[] | null,
+	latestLog: JobScrapingServiceLogData | JobScrapingServiceLogData[] | null,
 	platform: string,
 ) => {
 	const { token } = useAuth();
@@ -23,13 +23,13 @@ export const useJobScraperErrors = (
 		const fetchErrors = async (): Promise<void> => {
 			try {
 				// Normalize input to array
-				const logs: JobScraperServiceLog[] = normaliseArray(latestLog);
+				const logs: JobScrapingServiceLogData[] = normaliseArray(latestLog);
 
 				let ids: number[] = [];
 
 				if (platform !== "all") {
 					// Collect IDs from all logs for the specific platform
-					logs.forEach((log: JobScraperServiceLog): void => {
+					logs.forEach((log: JobScrapingServiceLogData): void => {
 						const platformStat: PlatformStat | undefined = log.platform_stats.find(
 							(stat: PlatformStat): boolean => stat.name === platform,
 						);
@@ -39,7 +39,7 @@ export const useJobScraperErrors = (
 					});
 				} else {
 					// Collect all IDs from all platforms across all logs
-					logs.forEach((log: JobScraperServiceLog): void => {
+					logs.forEach((log: JobScrapingServiceLogData): void => {
 						log.platform_stats.forEach((stat: PlatformStat): void => {
 							if (stat.job_scrape_failed_ids) {
 								ids.push(...stat.job_scrape_failed_ids);

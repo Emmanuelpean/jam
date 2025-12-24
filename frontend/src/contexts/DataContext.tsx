@@ -10,11 +10,12 @@ import {
 	keywordsApi,
 	locationsApi,
 	personsApi,
+	scrapedJobFilterApi,
 	settingsApi,
 } from "../services/api/DataTables";
-import { ApiError } from "../services/api/Base";
+import { ApiError, ApiResponse, ApiResponsePromise } from "../services/api/Base";
 import { userApi } from "../services/api/Users";
-import { scrapedJobApi, scrapedJobFilterApi } from "../services/api/Services";
+import { scrapedJobApi } from "../services/api/Services";
 import { useAuth } from "./AuthContext";
 import {
 	AggregatorData,
@@ -29,7 +30,7 @@ import {
 	LocationData,
 	PersonData,
 	ScrapedJobData,
-	ScrapedJobFilter,
+	ScrapedJobFilterData,
 	SettingData,
 	UserData,
 } from "../services/Schemas";
@@ -62,7 +63,7 @@ export type JamData =
 	| UserData
 	| SettingData
 	| ScrapedJobData
-	| ScrapedJobFilter;
+	| ScrapedJobFilterData;
 
 export const endpointToEntityType = (endpoint: string): EntityType | null => {
 	const mapping: Record<string, EntityType> = {
@@ -97,6 +98,11 @@ export interface Country {
 	code: string;
 }
 
+interface TypedFetchOperation<T> {
+	promise: ApiResponsePromise<T>;
+	label: string;
+}
+
 export interface DataContextValue {
 	// Data arrays
 	jobs: EnrichedJobData[];
@@ -108,7 +114,7 @@ export interface DataContextValue {
 	keywords: KeywordData[];
 	locations: LocationData[];
 	settings: SettingData[];
-	scrapedJobFilters: ScrapedJobFilter[];
+	scrapedJobFilters: ScrapedJobFilterData[];
 	users: UserData[];
 	countries: Country[];
 	currencies: Currency[];
@@ -116,9 +122,9 @@ export interface DataContextValue {
 	error: ApiError | null;
 
 	// Generic update functions
-	updateEntity: <T extends EntityType>(type: T, id: number, data: any) => Promise<any>;
+	addEntity: <T extends EntityType>(type: T, data: any) => Promise<ApiResponse<JamData>>;
+	updateEntity: <T extends EntityType>(type: T, id: number, data: any) => Promise<ApiResponse<JamData>>;
 	deleteEntity: <T extends EntityType>(type: T, id: number) => Promise<void>;
-	addEntity: <T extends EntityType>(type: T, data: any) => Promise<any>;
 }
 
 const DataContext = createContext<DataContextValue | undefined>(undefined);
@@ -134,7 +140,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [keywords, setKeywords] = useState<KeywordData[]>([]);
 	const [locations, setLocations] = useState<LocationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
-	const [scrapedJobFilters, setScrapedJobFilters] = useState<ScrapedJobFilter[]>([]);
+	const [scrapedJobFilters, setScrapedJobFilters] = useState<ScrapedJobFilterData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [_scrapedJobs, setScrapedJobs] = useState<any[]>([]);
 	const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -144,7 +150,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 	const interviews: EnrichedInterviewData[] = useMemo<EnrichedInterviewData[]>((): EnrichedInterviewData[] => {
 		// Enrich interviews with their sequence number per job
-
 		return rawInterviews.map((interview: InterviewData): EnrichedInterviewData => {
 			const job: JobData | undefined = rawJobs.find((j: JobData): boolean => j.id === interview.job_id)!;
 
@@ -270,25 +275,29 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		setError(null);
 
 		// Define all promises with their labels
-		const fetchOperations = [
-			{ promise: jobsApi.getAll(token), label: "Jobs" },
-			{ promise: companiesApi.getAll(token), label: "Companies" },
-			{ promise: personsApi.getAll(token), label: "Persons" },
-			{ promise: interviewsApi.getAll(token), label: "Interviews" },
-			{ promise: jobApplicationUpdatesApi.getAll(token), label: "Updates" },
-			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" },
-			{ promise: keywordsApi.getAll(token), label: "Keywords" },
-			{ promise: locationsApi.getAll(token), label: "Locations" },
-			{ promise: scrapedJobFilterApi.getAll(token), label: "Scraped Job Filters" },
-			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" },
-			{ promise: countriesApi.getAll(token), label: "Miscellaneous" },
+		const fetchOperations: any[] = [
+			{ promise: jobsApi.getAll(token), label: "Jobs" } as TypedFetchOperation<JobData[]>,
+			{ promise: companiesApi.getAll(token), label: "Companies" } as TypedFetchOperation<CompanyData[]>,
+			{ promise: personsApi.getAll(token), label: "Persons" } as TypedFetchOperation<PersonData[]>,
+			{ promise: interviewsApi.getAll(token), label: "Interviews" } as TypedFetchOperation<InterviewData[]>,
+			{ promise: jobApplicationUpdatesApi.getAll(token), label: "Updates" } as TypedFetchOperation<
+				JobApplicationUpdateData[]
+			>,
+			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" } as TypedFetchOperation<AggregatorData[]>,
+			{ promise: keywordsApi.getAll(token), label: "Keywords" } as TypedFetchOperation<KeywordData[]>,
+			{ promise: locationsApi.getAll(token), label: "Locations" } as TypedFetchOperation<LocationData[]>,
+			{ promise: scrapedJobFilterApi.getAll(token), label: "Scraped Job Filters" } as TypedFetchOperation<
+				ScrapedJobFilterData[]
+			>,
+			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Currency[]>,
+			{ promise: countriesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Country[]>,
 		];
 
 		// Add admin-only calls if user is admin
 		if (currentUser?.is_admin) {
 			fetchOperations.push(
-				{ promise: settingsApi.getAll(token), label: "Settings" },
-				{ promise: userApi.getAll(token), label: "Users" },
+				{ promise: settingsApi.getAll(token), label: "Settings" } as TypedFetchOperation<SettingData[]>,
+				{ promise: userApi.getAll(token), label: "Users" } as TypedFetchOperation<UserData[]>,
 			);
 		}
 
@@ -301,12 +310,16 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		try {
 			// Track progress for each promise
 			const trackedPromises = fetchOperations.map(({ promise, label }) =>
-				promise.then((result) => {
-					completedOperations++;
-					const progressPercentage = Math.round((completedOperations / totalOperations) * 100);
-					updateProgress(progressPercentage, `Loading ${label}...`);
-					return result;
-				}),
+				promise.then(
+					(
+						result: ApiResponse<(JamData | Country | Currency)[]>,
+					): ApiResponse<(JamData | Country | Currency)[]> => {
+						completedOperations++;
+						const progressPercentage = Math.round((completedOperations / totalOperations) * 100);
+						updateProgress(progressPercentage, `Loading ${label}...`);
+						return result;
+					},
+				),
 			);
 
 			const results = await Promise.all(trackedPromises);
@@ -338,7 +351,6 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setScrapedJobFilters(scrapedJobFiltersData.data || []);
 			setCurrencies(currenciesData.data || []);
 			setCountries(countriesData.data || []);
-
 			if (currentUser?.is_admin) {
 				setSettings(adminData[0].data || []);
 				setUsers(adminData[1].data || []);
@@ -349,6 +361,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			hideLoading();
 		}
 	};
+
 	// Helper to get API instance for an entity type
 	const getApi = (type: EntityType) => {
 		const apiMap = {
@@ -387,17 +400,44 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		return setterMap[type];
 	};
 
+	const updateData = (apiResult: ApiResponse<JamData>, entityType: EntityType) => {
+		const setter = getSetter(entityType);
+		if (apiResult.status === 200) {
+			setter((prev: any[]): any[] =>
+				prev.map((item: any) => (item.id === apiResult.data.id ? apiResult.data : item)),
+			);
+		} else if (apiResult.status === 201) {
+			setter((prev: any[]): any[] => [...prev, apiResult.data]);
+		} else if (apiResult.status === 204 || apiResult.status === 202) {
+			setter((prev: any[]): any[] => prev.filter((item: any): boolean => item.id !== apiResult.data.id));
+		}
+	};
+
+	// Generic add function - refetch jobs if needed
+	const addEntity = useCallback(
+		async <T extends EntityType>(type: T, newData: any): Promise<ApiResponse<JamData>> => {
+			try {
+				// Create on backend first
+				const api = getApi(type);
+				const apiResult = await api.create(newData, token);
+				updateData(apiResult, type);
+				return apiResult;
+			} catch (error) {
+				console.error(`Failed to add ${type}:`, error);
+				throw error;
+			}
+		},
+		[token],
+	);
+
 	// Generic update function - refetch jobs if needed
 	const updateEntity = useCallback(
-		async <T extends EntityType>(type: T, id: number, updatedData: any): Promise<any> => {
+		async <T extends EntityType>(type: T, id: number, updatedData: any): Promise<ApiResponse<JamData>> => {
 			try {
 				// Update backend first
 				const api = getApi(type);
-				const apiResult: T = await api.update(id, updatedData, token);
-
-				// Update the entity itself in context
-				const setter = getSetter(type);
-				setter((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult : item)));
+				const apiResult: ApiResponse<JamData> = await api.update(id, updatedData, token);
+				updateData(apiResult, type);
 
 				return apiResult;
 			} catch (error) {
@@ -414,39 +454,10 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			try {
 				// Delete from backend first
 				const api = getApi(type);
-				const result = await api.delete(id, token);
-				console.log(result);
-
-				// Remove from the entity's own array
-				const setter = getSetter(type);
-				if (type !== "scrapedJobFilters") {
-					setter((prev: any[]): any[] => prev.filter((item: any) => item.id !== id));
-				} else {
-					setter((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? result : item)));
-				}
+				const apiResult: ApiResponse<JamData> = await api.delete(id, token);
+				updateData(apiResult, type);
 			} catch (error) {
 				console.error(`Failed to delete ${type}:`, error);
-				throw error;
-			}
-		},
-		[token],
-	);
-
-	// Generic add function - refetch jobs if needed
-	const addEntity = useCallback(
-		async <T extends EntityType>(type: T, newData: any): Promise<any> => {
-			try {
-				// Create on backend first
-				const api = getApi(type);
-				const apiResult = await api.create(newData, token);
-
-				// Add to the entity's own array
-				const setter = getSetter(type);
-				setter((prev: any[]): any[] => [...prev, apiResult]);
-
-				return apiResult;
-			} catch (error) {
-				console.error(`Failed to add ${type}:`, error);
 				throw error;
 			}
 		},

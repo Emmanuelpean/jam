@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import { JobRatingServiceLog } from "../services/Schemas";
+import { JobRatingServiceLogData } from "../services/Schemas";
 import { jobRatingServiceLogApi } from "../services/api/Services";
 import { DateRange } from "../utils/TimeUtils";
 import { useAuth } from "../contexts/AuthContext";
 
 export const useJobRatingServiceLogs = (isServiceRunning: boolean, dateRange: DateRange) => {
 	const { token } = useAuth();
-	const [previousServiceLogs, setPreviousServiceLogs] = useState<JobRatingServiceLog[] | null>(null);
-	const [latestServiceLog, setLatestServiceLog] = useState<JobRatingServiceLog | null>(null);
+	const [previousServiceLogs, setPreviousServiceLogs] = useState<JobRatingServiceLogData[] | null>(null);
+	const [latestServiceLog, setLatestServiceLog] = useState<JobRatingServiceLogData | null>(null);
 	const [serviceLogError, setServiceLogError] = useState<string | null>(null);
 
 	const fetchLatestServiceLog = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const log: JobRatingServiceLog = await jobRatingServiceLogApi.getLatest(token);
+			const log: JobRatingServiceLogData = await jobRatingServiceLogApi.getLatest(token);
 			if (log) {
 				setLatestServiceLog(log);
 			}
@@ -26,7 +26,7 @@ export const useJobRatingServiceLogs = (isServiceRunning: boolean, dateRange: Da
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const logs: JobRatingServiceLog[] = await jobRatingServiceLogApi.getAll(token, {
+			const logs: JobRatingServiceLogData[] = await jobRatingServiceLogApi.getAll(token, {
 				start_date: new Date(dateRange.start).toISOString(),
 				end_date: new Date(dateRange.end).toISOString(),
 			});

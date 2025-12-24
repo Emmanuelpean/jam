@@ -2,7 +2,7 @@ import React, { createContext, JSX, ReactNode, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
-import Login from "./pages/Auth/Auth";
+import Login from "./pages/Auth/AuthPage";
 import LocationsPage from "./pages/LocationsPage";
 import CompaniesPage from "./pages/CompaniesPage";
 import JobsPage from "./pages/JobsPage";

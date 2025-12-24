@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../services/api/Users";
+import { authApi, AuthResponse, LoginResponse, UpdateCurrentUserResponse } from "../services/api/Users";
 import { ApiError, ApiResponse } from "../services/api/Base";
 import { UserData } from "../services/Schemas";
 import { DEFAULT_THEME } from "../utils/Theme";
@@ -9,29 +9,12 @@ export interface CurrentUser extends UserData {
 	token: string | null;
 }
 
-export interface AuthResponse {
-	success: boolean;
-	status?: number;
-	error?: string;
-}
-
-export interface LoginResponse {
-	access_token: string;
-}
-
-interface UpdateCurrentUserResponse {
-	user: UserData;
-	success: boolean;
-	message: string;
-	logged_out: boolean;
-}
-
 export interface AuthContextType {
 	currentUser: CurrentUser | null;
 	token: string | null;
 	login: (email: string, password: string) => Promise<AuthResponse>;
 	register: (email: string, password: string) => Promise<AuthResponse>;
-	updateCurrentUser: (userData: Partial<UserData>) => Promise<any>;
+	updateCurrentUser: (userData: Partial<UserData>) => Promise<ApiResponse<UpdateCurrentUserResponse> | null>;
 	logout: () => void;
 	isAuthenticated: boolean;
 }
@@ -99,7 +82,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		[userFetched, currentUser, token],
 	);
 
-	const updateCurrentUser = async (userData: Partial<UserData>) => {
+	const updateCurrentUser = async (
+		userData: Partial<UserData>,
+	): Promise<ApiResponse<UpdateCurrentUserResponse> | null> => {
 		if (!token) return null;
 		const response: ApiResponse<UpdateCurrentUserResponse> = await authApi.updateCurrentUser(userData, token);
 		if (response.data.logged_out) {

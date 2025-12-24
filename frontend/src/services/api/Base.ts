@@ -13,14 +13,6 @@ export interface RequestOptions {
 	responseType?: "blob" | "json";
 }
 
-export interface CrudApi {
-	getAll: (token: string, queryParams?: QueryParams | null) => Promise<any>;
-	get: (id: number, token: string) => Promise<any>;
-	create: (data: any, token: string) => Promise<any>;
-	update: (id: number, data: any, token: string) => Promise<any>;
-	delete: (id: number, token: string) => Promise<any>;
-}
-
 const getAuthHeaders = (token: string): HeadersInit => ({
 	"Content-Type": "application/json",
 	...(token && { Authorization: `Bearer ${token}` }),
@@ -31,7 +23,9 @@ export interface ApiResponse<T = any> {
 	status: number;
 }
 
-const handleResponse = async (response: Response, isBlob: boolean = false): Promise<ApiResponse> => {
+export type ApiResponsePromise<T = any> = Promise<ApiResponse<T>>;
+
+const handleResponse = async (response: Response, isBlob: boolean = false): ApiResponsePromise => {
 	// Enhanced error handling
 	if (!response.ok) {
 		const errorData = await response.json().catch(() => ({}));
@@ -67,7 +61,7 @@ const handleResponse = async (response: Response, isBlob: boolean = false): Prom
 };
 
 class ApiService {
-	async get(endpoint: string, token: string | null = null, options: RequestOptions = {}): Promise<any> {
+	async get(endpoint: string, token: string | null = null, options: RequestOptions = {}): ApiResponsePromise {
 		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
 			method: "GET",
 			headers: getAuthHeaders(token || ""),
@@ -75,7 +69,7 @@ class ApiService {
 		return handleResponse(response, options.responseType === "blob");
 	}
 
-	async post(endpoint: string, data: any, token: string | null = null): Promise<any> {
+	async post(endpoint: string, data: any, token: string | null = null): ApiResponsePromise {
 		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
 			method: "POST",
 			headers: getAuthHeaders(token || ""),
@@ -84,7 +78,7 @@ class ApiService {
 		return handleResponse(response);
 	}
 
-	async put(endpoint: string, data: any, token: string | null = null): Promise<any> {
+	async put(endpoint: string, data: any, token: string | null = null): ApiResponsePromise {
 		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
 			method: "PUT",
 			headers: getAuthHeaders(token || ""),
@@ -93,7 +87,7 @@ class ApiService {
 		return handleResponse(response);
 	}
 
-	async delete(endpoint: string, token: string | null = null): Promise<any> {
+	async delete(endpoint: string, token: string | null = null): ApiResponsePromise {
 		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
 			method: "DELETE",
 			headers: getAuthHeaders(token || ""),
@@ -101,7 +95,7 @@ class ApiService {
 		return handleResponse(response);
 	}
 
-	async postFormData(endpoint: string, formData: FormData, token: string | null = null): Promise<any> {
+	async postFormData(endpoint: string, formData: FormData, token: string | null = null): ApiResponsePromise {
 		const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
 			method: "POST",
@@ -112,11 +106,8 @@ class ApiService {
 	}
 
 	async downloadFile(endpoint: string, filename: string, token: string | null = null): Promise<void> {
-		// Use the existing get method with blob response type
 		const blob = await this.get(endpoint, token, { responseType: "blob" });
-
-		// Create download link and trigger download
-		const url: string = window.URL.createObjectURL(blob);
+		const url: string = window.URL.createObjectURL(blob.data);
 		const link: HTMLAnchorElement = document.createElement("a");
 		link.href = url;
 		link.download = filename;
@@ -127,35 +118,4 @@ class ApiService {
 	}
 }
 
-const api = new ApiService();
-
-export const createCrudApi = (endpoint: string): CrudApi => ({
-	getAll: (token: string, queryParams: QueryParams | null = null): Promise<any> => {
-		let url: string = `${endpoint}/`;
-		if (queryParams) {
-			const searchParams = new URLSearchParams();
-			Object.keys(queryParams).forEach((key: string): void => {
-				const value: any = queryParams[key];
-				if (value !== undefined) {
-					if (Array.isArray(value)) {
-						value.forEach((item): void => {
-							searchParams.append(key, String(item));
-						});
-					} else {
-						searchParams.append(key, String(value));
-					}
-				}
-			});
-			if (searchParams.toString()) {
-				url += `?${searchParams.toString()}`;
-			}
-		}
-		return api.get(url, token);
-	},
-	get: (id: string | number, token: string): Promise<any> => api.get(`${endpoint}/${id}`, token),
-	create: (data: any, token: string): Promise<any> => api.post(`${endpoint}/`, data, token),
-	update: (id: string | number, data: any, token: string): Promise<any> => api.put(`${endpoint}/${id}`, data, token),
-	delete: (id: string | number, token: string): Promise<any> => api.delete(`${endpoint}/${id}`, token),
-});
-
-export { api };
+export const api = new ApiService();
