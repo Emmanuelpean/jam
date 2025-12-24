@@ -3,6 +3,7 @@ import { PlatformStat, ScrapedJobData, JobScrapingServiceLogData } from "../serv
 import { scrapedJobApi } from "../services/api/Services";
 import { normaliseArray } from "../utils/Utils";
 import { useAuth } from "../contexts/AuthContext";
+import { ApiResponse } from "../services/api/Base";
 
 export interface ErrorCount {
 	count: number;
@@ -56,10 +57,10 @@ export const useJobScraperErrors = (
 					return;
 				}
 
-				const scraped_jobs: ScrapedJobData[] = await scrapedJobApi.getAll(token, { id: ids });
+				const scraped_jobs: ApiResponse<ScrapedJobData[]> = await scrapedJobApi.getAll(token, { id: ids });
 
 				const errorCounts: Record<string, ErrorCount> = {};
-				scraped_jobs.forEach((job: ScrapedJobData): void => {
+				scraped_jobs.data.forEach((job: ScrapedJobData): void => {
 					if (job.is_failed && job.scrape_error) {
 						const errorMsg: string = job.scrape_error.trim();
 						if (!errorCounts[errorMsg]) {

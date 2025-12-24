@@ -486,7 +486,6 @@ def generate_data_table_crud_router(
             # Get the entry to delete
             query = db.query(table_model).filter(table_model.id == entry_id)
             entry = query.first()
-            entry_data = entry.model_dump()
             if not entry:
                 raise NOT_FOUND_EXCEPTION
 
@@ -503,6 +502,5 @@ def generate_data_table_crud_router(
 
             query.delete(synchronize_session=False)
             db.commit()
-            return entry_data
 
     return router
