@@ -5,6 +5,7 @@ import { jobScraperServiceLogApi } from "../services/api/Services";
 import { DateRange } from "../utils/TimeUtils";
 import { capitalise } from "../utils/StringUtils";
 import { useAuth } from "../contexts/AuthContext";
+import { ApiResponse } from "../services/api/Base";
 
 export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: DateRange) => {
 	const { token } = useAuth();
@@ -16,9 +17,9 @@ export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: D
 	const fetchLatestServiceLog = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const log: JobScrapingServiceLogData = await jobScraperServiceLogApi.getLatest(token);
-			if (log) {
-				setLatestServiceLog(log);
+			const log: ApiResponse<JobScrapingServiceLogData> = await jobScraperServiceLogApi.getLatest(token);
+			if (log.data) {
+				setLatestServiceLog(log.data);
 			}
 		} catch (err: any) {
 			setServiceLogError(err.message || "An error occurred while fetching the latest log.");
@@ -29,18 +30,18 @@ export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: D
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const logs: JobScrapingServiceLogData[] = await jobScraperServiceLogApi.getAll(token, {
+			const logs: ApiResponse<JobScrapingServiceLogData[]> = await jobScraperServiceLogApi.getAll(token, {
 				start_date: new Date(dateRange.start).toISOString(),
 				end_date: new Date(dateRange.end).toISOString(),
 			});
-			setPreviousServiceLogs(logs);
+			setPreviousServiceLogs(logs.data);
 
 			// Extract unique platforms from logs
 			const platformOptions: SelectOption[] = [
 				{ value: "all", label: "All Platforms" },
 				...Array.from(
 					new Set(
-						logs.flatMap((log: JobScrapingServiceLogData): string[] =>
+						logs.data.flatMap((log: JobScrapingServiceLogData): string[] =>
 							log.platform_stats ? log.platform_stats.map((stat: PlatformStat): string => stat.name) : [],
 						),
 					),

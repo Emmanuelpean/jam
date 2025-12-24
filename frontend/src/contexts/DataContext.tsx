@@ -454,8 +454,13 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			try {
 				// Delete from backend first
 				const api = getApi(type);
-				const apiResult: ApiResponse<JamData> = await api.delete(id, token);
-				updateData(apiResult, type);
+				const apiResult: ApiResponse<JamData | null> = await api.delete(id, token);
+				if (!apiResult.data) {
+					const setter = getSetter(type);
+					setter((prev: any[]): any[] => prev.filter((item: any): boolean => item.id !== id));
+				} else if (apiResult.data) {
+					updateData(apiResult, type);
+				}
 			} catch (error) {
 				console.error(`Failed to delete ${type}:`, error);
 				throw error;

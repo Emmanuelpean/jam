@@ -375,7 +375,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				dataContext
 					.updateEntity(entityType, item.id, { followup_snooze_datetime: snoozeDate.toISOString() })
 					.then((response: ApiResponse<JamData>) => {
-						showToastSuccess(`${response.data.title} was snoozed for ${weeks} week(s).`);
+						if ("title" in response.data) {
+							showToastSuccess(`${response.data.title} was snoozed for ${weeks} week(s).`);
+						}
 					});
 			} catch (error) {
 				showToastError(`Failed to snooze ${item.title}. Please try again.`);

@@ -3,6 +3,7 @@ import { JobRatingData, JobRatingServiceLogData } from "../services/Schemas";
 import { jobRatingApi } from "../services/api/Services";
 import { normaliseArray } from "../utils/Utils";
 import { useAuth } from "../contexts/AuthContext";
+import { ApiResponse } from "../services/api/Base";
 
 export const useJobRatingErrors = (latestLog: JobRatingServiceLogData | JobRatingServiceLogData[] | null) => {
 	const { token } = useAuth();
@@ -20,9 +21,9 @@ export const useJobRatingErrors = (latestLog: JobRatingServiceLogData | JobRatin
 				ids = [...new Set(ids)];
 
 				// Get the job rating data for the failed IDs
-				const jobRatings: JobRatingData[] = await jobRatingApi.getAll(token, { id: ids });
+				const jobRatings: ApiResponse<JobRatingData[]> = await jobRatingApi.getAll(token, { id: ids });
 				const errorCounts: Record<string, number> = {};
-				jobRatings.forEach((job: JobRatingData): void => {
+				jobRatings.data.forEach((job: JobRatingData): void => {
 					if (!job.is_success && job.error) {
 						const errorMsg: string = job.error.trim();
 						errorCounts[errorMsg] = (errorCounts[errorMsg] || 0) + 1;

@@ -471,7 +471,7 @@ def delete_scraped_job_filter(
     else:
         db.delete(filter_obj)
         db.commit()
-        response.status_code = status.HTTP_204_NO_CONTENT
+        response.status_code = status.HTTP_202_ACCEPTED
 
     return filter_data
 
