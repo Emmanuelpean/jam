@@ -446,6 +446,10 @@ export const renderFunctions = {
 		return filterByKey(ctx.persons, key, param.item?.id).length;
 	},
 
+	filteredJobCount: (param: RenderParams): number => {
+		return param.item?.filtered_jobs?.length || 0;
+	},
+
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
 	jobBadge: (param: RenderParams): ReactNode => {

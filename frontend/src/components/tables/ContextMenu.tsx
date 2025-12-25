@@ -1,15 +1,21 @@
 import React, { MouseEvent, useEffect, useRef, useState } from "react";
 import "./ContextMenu.css";
 
+export type MenuItemKey = "view" | "edit" | "delete" | "activate" | "deactivate" | "import" | "snooze";
+
 export interface MenuItem {
-	action: string;
+	action: MenuItemKey;
 	icon?: string;
 	text: string;
 	id?: string;
 	color?: string;
 	function?: (item: any) => void;
 	hasSubmenu?: boolean;
-	submenu?: MenuItem[];
+	submenu?: SubMenuItem[];
+}
+
+export interface SubMenuItem extends Omit<MenuItem, "action"> {
+	action: string;
 }
 
 export interface ContextMenuState {
@@ -29,7 +35,7 @@ export interface ContextMenuProps {
 	items: MenuItem[];
 	selectedItem: any;
 	onClose: () => void;
-	onItemClick: (menuItem: MenuItem, item: any) => void;
+	onItemClick: (menuItem: MenuItem | SubMenuItem, item: any) => void;
 	compact?: boolean;
 }
 
@@ -96,7 +102,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 		}
 	}, [position]);
 
-	const handleItemClick = (menuItem: MenuItem, e: MouseEvent) => {
+	const handleItemClick = (menuItem: MenuItem | SubMenuItem, e: MouseEvent) => {
 		e.stopPropagation();
 
 		if (menuItem.hasSubmenu) {
@@ -107,7 +113,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 		onClose();
 	};
 
-	const handleMouseEnter = (menuItem: MenuItem, e: MouseEvent) => {
+	const handleMouseEnter = (menuItem: MenuItem | SubMenuItem, e: MouseEvent) => {
 		// Clear any pending timeout
 		if (submenuTimeoutRef.current) {
 			clearTimeout(submenuTimeoutRef.current);

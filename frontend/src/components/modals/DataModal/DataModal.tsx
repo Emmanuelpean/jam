@@ -22,7 +22,12 @@ import { ActionButton } from "../../rendering/form/ActionButton";
 import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArray } from "../../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
-import { useActiveHandler, useDeleteHandler, useSmartDeleteHandler } from "../../../utils/DeleteHandler";
+import {
+	useActivateEntity,
+	useDeactivateEntity,
+	useDeactivateHandler,
+	useDeleteHandler,
+} from "../../../utils/DeleteHandler";
 import { useAlert } from "../../../contexts/AlertContext";
 import { ApiResponse } from "../../../services/api/Base";
 import "./DataModal.css";
@@ -63,7 +68,7 @@ export interface DataModalProps {
 	warningMessage?: (data: any) => WarningMessageConfig[] | null; // optional warning message to display
 	canEdit?: boolean | ((formData: any) => string); // Controls edit button and edit mode access
 	canDelete?: boolean | ((formData: any) => string); // Controls delete button and edit mode access
-	canDeactivate?: ((formData: any) => string | null) | null; // Controls deactivate button and edit mode access
+	showDeactivate?: boolean; // whether to show deactivate items in view mode
 }
 
 interface ButtonState {
@@ -80,7 +85,6 @@ export interface DataModalHandle {
 	showEdit: (data: any) => void;
 	showAdd: (data: any) => void;
 	showImport: (data: any) => void;
-	showDetail: (data: any) => void;
 	hide: () => void;
 }
 
@@ -102,7 +106,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			warningMessage,
 			canEdit = true,
 			canDelete = true,
-			canDeactivate = null,
+			showDeactivate = false,
 		}: DataModalProps,
 		ref,
 	) => {
@@ -131,11 +135,6 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			showImport: (data: JamData) => {
 				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
 				setMode("import");
-				setInternalShow(true);
-			},
-			showDetail: (data: JamData) => {
-				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
-				setMode("detail");
 				setInternalShow(true);
 			},
 			hide: (): void => setInternalShow(false),
@@ -372,19 +371,14 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 		// ----------------------------------------------------- DELETE ----------------------------------------------------
 
-		const handleDeActivate = useActiveHandler(entityType, null, itemName);
+		const handleDeActivate = useDeactivateHandler(entityType, null, itemName);
 		const handleDelete = useDeleteHandler(entityType, null, itemName);
-		const handleSmartDelete = useSmartDeleteHandler(entityType, null, itemName, canDeactivate);
+		const activateEntityHandler = useActivateEntity(entityType, null, itemName);
+		const deactivateEntityHandler = useDeactivateEntity(entityType, null, itemName);
 
 		const handleDeleteClick = async () => {
 			if (mode === "import") {
 				const confirm: boolean = await handleDeActivate(effectiveData);
-				if (confirm) {
-					onDelete?.();
-					handleHideImmediate();
-				}
-			} else if (canDeactivate && handleSmartDelete) {
-				const confirm: boolean = await handleSmartDelete(effectiveData);
 				if (confirm) {
 					onDelete?.();
 					handleHideImmediate();
@@ -395,6 +389,18 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 					onDelete?.();
 					handleHideImmediate();
 				}
+			}
+		};
+
+		const toggleActivate = async () => {
+			if (effectiveData.is_active) {
+				deactivateEntityHandler(effectiveData).then(() => {
+					handleHideImmediate();
+				});
+			} else {
+				activateEntityHandler(effectiveData).then(() => {
+					handleHideImmediate();
+				});
 			}
 		};
 
@@ -768,57 +774,16 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 					);
 				}
 			} else {
-				// Non-editing modes: "view" and "detail"
-				if (mode === "detail") {
-					return (
-						<Modal.Footer>
-							<div className="d-flex flex-column w-100 gap-2">
-								<div className="modal-buttons-container">
-									{canDelete && (
-										<ActionButton
-											id={getModalId() + "-delete-button"}
-											variant="danger"
-											onClick={handleDeleteClick}
-											className="me-auto"
-											defaultText="Delete"
-											defaultIcon="bi bi-trash"
-											fullWidth={false}
-											disabled={deleteState.disabled}
-											tooltip={deleteState.message}
-										/>
-									)}
-									{canEdit && (
-										<ActionButton
-											id={getModalId() + "-edit-button"}
-											variant="primary"
-											onClick={handleEdit}
-											defaultText="Edit"
-											fullWidth={false}
-											disabled={editState.disabled}
-											tooltip={editState.message}
-										/>
-									)}
-								</div>
-								<ActionButton
-									id={getModalId() + "-close-button"}
-									variant="secondary"
-									onClick={handleHideImmediate}
-									defaultText="Close"
-									fullWidth={false}
-								/>
-							</div>
-						</Modal.Footer>
-					);
-				} else {
-					// This handles "view" mode
-					return (
-						<Modal.Footer>
+				// This handles "view" mode
+				return showDeactivate ? (
+					<Modal.Footer>
+						<div className="d-flex flex-column w-100 gap-2">
 							<div className="modal-buttons-container">
 								<ActionButton
-									id={getModalId() + "-cancel-button"}
-									variant="secondary"
-									onClick={handleHideImmediate}
-									defaultText="Close"
+									id={getModalId() + "-deactivate-button"}
+									variant="danger"
+									onClick={toggleActivate}
+									defaultText={effectiveData?.is_active ? "Deactivate" : "Activate"}
 									fullWidth={false}
 								/>
 								{canEdit && (
@@ -834,9 +799,42 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 									/>
 								)}
 							</div>
-						</Modal.Footer>
-					);
-				}
+							<div className="modal-buttons-container">
+								<ActionButton
+									id={getModalId() + "-cancel-button"}
+									variant="secondary"
+									onClick={handleHideImmediate}
+									defaultText="Close"
+									fullWidth={false}
+								/>
+							</div>
+						</div>
+					</Modal.Footer>
+				) : (
+					<Modal.Footer>
+						<div className="modal-buttons-container">
+							<ActionButton
+								id={getModalId() + "-cancel-button"}
+								variant="secondary"
+								onClick={handleHideImmediate}
+								defaultText="Close"
+								fullWidth={false}
+							/>
+							{canEdit && (
+								<ActionButton
+									id={getModalId() + "-edit-button"}
+									variant="primary"
+									onClick={handleEdit}
+									defaultText="Edit"
+									fullWidth={false}
+									disabled={editState.disabled}
+									tooltip={editState.message}
+									tooltipPlacement="top"
+								/>
+							)}
+						</div>
+					</Modal.Footer>
+				);
 			}
 		};
 

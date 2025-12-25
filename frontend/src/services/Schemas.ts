@@ -279,7 +279,6 @@ export interface ScrapedJobFilterTransform {
 	type: string;
 	operator: string;
 	value: string;
-	is_active: boolean;
 	case_sensitive: boolean;
 }
 

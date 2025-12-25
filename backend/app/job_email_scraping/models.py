@@ -371,8 +371,8 @@ class ScrapedJobFilter(Owned, Base):
     - `type` (str): Type of filter (title, company, location, salary, attendance_type).
     - `operator` (str): Operator for the filter (contains, equals, starts_with, ends_with, less_than, greater_than).
     - `value` (str): Value to match against.
-    - `is_enabled` (bool): Whether this filter rule is currently active.
     - `case_sensitive` (bool): Whether string matching should be case-sensitive.
+    - `is_active` (bool): Whether the filter is active.
 
     Constraints:
     ------------
@@ -382,7 +382,6 @@ class ScrapedJobFilter(Owned, Base):
     type = Column(String, nullable=False)
     operator = Column(String, nullable=False)
     value = Column(String, nullable=False)
-    is_enabled = Column(Boolean, nullable=False, server_default=expression.true())
     case_sensitive = Column(Boolean, nullable=False, server_default=expression.false())
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
 

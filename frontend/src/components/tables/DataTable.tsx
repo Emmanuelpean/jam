@@ -8,9 +8,14 @@ import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
-import { useActiveHandler, useDeleteHandler, useSmartDeleteHandler } from "../../utils/DeleteHandler";
+import {
+	useActivateEntity,
+	useDeactivateEntity,
+	useDeactivateHandler,
+	useDeleteHandler,
+} from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
-import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
+import { ContextMenu, ContextMenuState, MenuItem, SubMenuItem } from "./ContextMenu";
 import LoadingSpinner from "../spinner/Spinner";
 import { DataModalHandle, modalModes } from "../modals/DataModal/DataModal";
 import { EnrichedJobData } from "../../services/Schemas";
@@ -72,7 +77,6 @@ export interface GenericTableProps {
 	children?: (data: any[]) => ReactNode;
 	toolbarAddon?: React.ReactNode;
 	reloadTrigger?: number;
-	canDeactivate?: ((formData: any) => string | null) | null;
 }
 
 export const DataTable: React.FC<GenericTableProps> = ({
@@ -100,7 +104,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	toolbarAddon,
 	reloadTrigger,
 	defaultModalMode = "view",
-	canDeactivate = null,
 }: GenericTableProps): JSX.Element => {
 	const { token } = useAuth();
 	const modalRef = useRef<DataModalHandle>(null);
@@ -108,7 +111,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
 	const openAddModal = () => modalRef.current?.showAdd(initialData);
 	const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
-	const openDetailModal = (item: any): void | undefined => modalRef.current?.showDetail(item);
 
 	// Data management
 	const dataContext: DataContextValue = useDataContext();
@@ -294,8 +296,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		} else {
 			if (defaultModalMode === "edit") {
 				openEditModal(item);
-			} else if (defaultModalMode === "detail") {
-				openDetailModal(item);
 			} else {
 				openViewModal(item);
 			}
@@ -308,16 +308,15 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		setContextMenu({ item, x: event.clientX, y: event.clientY, show: true });
 	};
 
-	const activeHandler = useActiveHandler(entityType, nameKey, itemType);
+	const activeHandler = useDeactivateHandler(entityType, nameKey, itemType);
 	const deleteHandler = useDeleteHandler(entityType, nameKey, itemType);
-	const handleSmartDelete = useSmartDeleteHandler(entityType, nameKey, itemType, canDeactivate);
+	const activateEntityHandler = useActivateEntity(entityType, nameKey, itemType);
+	const deactivateEntityHandler = useDeactivateEntity(entityType, nameKey, itemType);
 
 	const handleDelete = async (item: JamData) => {
 		let result: boolean;
 		if (mode === "import") {
 			result = await activeHandler(item);
-		} else if (canDeactivate) {
-			result = await handleSmartDelete(item);
 		} else {
 			result = await deleteHandler(item);
 		}
@@ -450,11 +449,18 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				function: handleDelete,
 			},
 			{
-				action: "detail",
-				icon: "eye",
-				text: "View",
-				id: "context-menu-details",
-				function: openDetailModal,
+				action: "activate",
+				icon: "check-circle",
+				text: "Activate",
+				id: "context-menu-activate",
+				function: activateEntityHandler,
+			},
+			{
+				action: "deactivate",
+				icon: "slash-circle",
+				text: "Deactivate",
+				id: "context-menu-deactivate",
+				function: deactivateEntityHandler,
 			},
 		];
 
@@ -751,7 +757,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 					items={getContextMenuItems(contextMenu.item)}
 					selectedItem={contextMenu.item}
 					onClose={() => setContextMenu(null)}
-					onItemClick={(menuItem: MenuItem, item: any): void => {
+					onItemClick={(menuItem: MenuItem | SubMenuItem, item: any): void => {
 						if (menuItem.function) {
 							menuItem.function(item);
 						}

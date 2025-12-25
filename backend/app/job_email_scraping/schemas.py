@@ -204,7 +204,6 @@ class ScrapedJobFilterCreate(BaseModel):
     value: str
     operator: str
     is_active: bool = True
-    is_enabled: bool = True
     case_sensitive: bool = False
 
 
@@ -215,7 +214,6 @@ class ScrapedJobFilterUpdate(BaseModel):
     value: str | None = None
     operator: str | None = None
     is_active: bool | None = None
-    is_enabled: bool | None = None
     case_sensitive: bool | None = None
 
 
