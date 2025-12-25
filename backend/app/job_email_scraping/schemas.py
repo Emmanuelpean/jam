@@ -197,7 +197,7 @@ class JobEmailScrapingStartRequest(BaseModel):
 # ------------------------------------------------- SCRAPED JOB FILTER -------------------------------------------------
 
 
-class ScrapedJobFilterCreate(BaseModel):
+class ScrapingFilterCreate(BaseModel):
     """Scraped Job Filter creation schema"""
 
     type: str
@@ -207,17 +207,15 @@ class ScrapedJobFilterCreate(BaseModel):
     case_sensitive: bool = False
 
 
-class ScrapedJobFilterUpdate(BaseModel):
+class ScrapingFilterUpdate(ScrapingFilterCreate):
     """Scraped Job Filter update schema"""
 
     type: str | None = None
     value: str | None = None
     operator: str | None = None
-    is_active: bool | None = None
-    case_sensitive: bool | None = None
 
 
-class ScrapedJobFilterOut(OwnedOut, ScrapedJobFilterCreate):
+class ScrapingFilterOut(OwnedOut, ScrapingFilterCreate):
     """Scraped Job Filter output schema"""
 
     name: str

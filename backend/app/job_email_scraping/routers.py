@@ -380,23 +380,21 @@ def get_scraper_logs(
 # ------------------------------------------------- SCRAPED JOB FILTERS ------------------------------------------------
 
 
-scraped_job_filter_router = generate_data_table_crud_router(
-    table_model=models.ScrapedJobFilter,
-    create_schema=schemas.ScrapedJobFilterCreate,
-    update_schema=schemas.ScrapedJobFilterUpdate,
-    out_schema=schemas.ScrapedJobFilterOut,
-    endpoint="scraped_job_filters",
+scraping_filter_router = generate_data_table_crud_router(
+    table_model=models.ScrapingFilter,
+    create_schema=schemas.ScrapingFilterCreate,
+    update_schema=schemas.ScrapingFilterUpdate,
+    out_schema=schemas.ScrapingFilterOut,
+    endpoint="scraping_filters",
     not_found_msg="Scraped Job Filter not found",
     allowed_actions=["get_all", "get_one", "post"],
 )
 
 
-@scraped_job_filter_router.put(
-    "/{filter_id}", status_code=status.HTTP_200_OK, response_model=schemas.ScrapedJobFilterOut
-)
-def update_scraped_job_filter(
+@scraping_filter_router.put("/{filter_id}", status_code=status.HTTP_200_OK, response_model=schemas.ScrapingFilterOut)
+def update_scraping_filter(
     filter_id: int,
-    update_data: schemas.ScrapedJobFilterUpdate,
+    update_data: schemas.ScrapingFilterUpdate,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -408,9 +406,9 @@ def update_scraped_job_filter(
 
     # Fetch the filter to ensure it exists and belongs to the current user.
     filter_obj = (
-        db.query(models.ScrapedJobFilter)
-        .filter(models.ScrapedJobFilter.id == filter_id)
-        .filter(models.ScrapedJobFilter.owner_id == current_user.id)
+        db.query(models.ScrapingFilter)
+        .filter(models.ScrapingFilter.id == filter_id)
+        .filter(models.ScrapingFilter.owner_id == current_user.id)
         .first()
     )
 
@@ -439,8 +437,8 @@ def update_scraped_job_filter(
     return filter_obj
 
 
-@scraped_job_filter_router.delete("/{filter_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_scraped_job_filter(
+@scraping_filter_router.delete("/{filter_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_scraping_filter(
     filter_id: int,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -453,9 +451,9 @@ def delete_scraped_job_filter(
 
     # Fetch the filter to ensure it exists and belongs to the current user
     filter_obj = (
-        db.query(models.ScrapedJobFilter)
-        .filter(models.ScrapedJobFilter.id == filter_id)
-        .filter(models.ScrapedJobFilter.owner_id == current_user.id)
+        db.query(models.ScrapingFilter)
+        .filter(models.ScrapingFilter.id == filter_id)
+        .filter(models.ScrapingFilter.owner_id == current_user.id)
         .first()
     )
 

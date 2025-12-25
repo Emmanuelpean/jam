@@ -2,22 +2,22 @@ import React, { JSX, useState, useLayoutEffect, useRef } from "react";
 import { Modal } from "react-bootstrap";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
-import { ScrapedJobFilterModal } from "../modals/ScrapedJobFilterModal";
+import { ScrapingFilterModal } from "../modals/ScrapingFilterModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
-import { ScrapedJobFilterData } from "../../services/Schemas";
+import { ScrapingFilterData } from "../../services/Schemas";
 
-interface ScrapedJobFilterTableProps extends DataTableProps {
+interface ScrapingFilterTableProps extends DataTableProps {
 	show: boolean;
 	onHide: () => void;
 }
 
 type tabKeys = "active" | "inactive";
 
-const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
+const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	columns = [],
 	show,
 	onHide,
-}: ScrapedJobFilterTableProps): JSX.Element => {
+}: ScrapingFilterTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const [activeTab, setActiveTab] = useState<tabKeys>("active");
 	const [containerHeight, setContainerHeight] = useState("auto");
@@ -34,12 +34,12 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 					tableColumns.filteredJobCountColumn(),
 				];
 
-	const activeFilters: ScrapedJobFilterData[] = dataContext.scrapedJobFilters.filter(
-		(filter: ScrapedJobFilterData): boolean => filter.is_active,
+	const activeFilters: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
+		(filter: ScrapingFilterData): boolean => filter.is_active,
 	);
 
-	const deletedFilters: ScrapedJobFilterData[] = dataContext.scrapedJobFilters.filter(
-		(filter: ScrapedJobFilterData): boolean => !filter.is_active,
+	const deletedFilters: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
+		(filter: ScrapingFilterData): boolean => !filter.is_active,
 	);
 
 	const tabs = [
@@ -47,7 +47,7 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 		{ key: "inactive" as const, title: `Inactive (${deletedFilters.length})` },
 	];
 
-	const menuItems = (item: ScrapedJobFilterData): string[] => {
+	const menuItems = (item: ScrapingFilterData): string[] => {
 		if (item.filtered_jobs.length > 0) {
 			if (item.is_active) {
 				return ["view", "deactivate"];
@@ -64,7 +64,7 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 	};
 
 	const renderBodyContent = (): JSX.Element => {
-		const data: ScrapedJobFilterData[] = activeTab === "active" ? activeFilters : deletedFilters;
+		const data: ScrapingFilterData[] = activeTab === "active" ? activeFilters : deletedFilters;
 		const showAdd: boolean = activeTab === "active";
 
 		return (
@@ -72,11 +72,11 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 				<div className="modal-content-animated-inner">
 					<div ref={contentRef} style={{ paddingTop: "5px" }}>
 						<DataTable
-							entityType="scrapedJobFilters"
+							entityType="scrapingFilters"
 							data={data}
 							columns={defaultColumns}
 							initialSortConfig={{ key: "type", direction: "asc" }}
-							Modal={ScrapedJobFilterModal}
+							Modal={ScrapingFilterModal}
 							nameKey="name"
 							itemType="Scraping Filters"
 							modalSize="lg"
@@ -159,4 +159,4 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 	);
 };
 
-export default ScrapedJobFilterTable;
+export default ScrapingFilterTable;
