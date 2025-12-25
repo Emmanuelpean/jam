@@ -401,28 +401,16 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		return setterMap[type];
 	};
 
-	const updateData = (apiResult: ApiResponse<JamData>, entityType: EntityType): void => {
-		const setter = getSetter(entityType);
-		if (apiResult.status === 200) {
-			setter((prev: any[]): any[] =>
-				prev.map((item: any) => (item.id === apiResult.data.id ? apiResult.data : item)),
-			);
-		} else if (apiResult.status === 201) {
-			setter((prev: any[]): any[] => [...prev, apiResult.data]);
-		} else if (apiResult.status === 204 || apiResult.status === 202) {
-			setter((prev: any[]): any[] => prev.filter((item: any): boolean => item.id !== apiResult.data.id));
-		}
-	};
-
 	const addEntity = useCallback(
-		async <T extends EntityType>(entityType: T, newData: any): ApiResponsePromise<JamData> => {
-			const api: CrudApi<JamData> = getApi(entityType);
+		async <T extends EntityType>(type: T, newData: any): Promise<any> => {
 			try {
+				const api: CrudApi<JamData> = getApi(type);
 				const apiResult: ApiResponse<JamData> = await api.create(newData, token);
-				updateData(apiResult, entityType);
+				const setter = getSetter(type);
+				setter((prev: any[]): any[] => [...prev, apiResult]);
 				return apiResult;
 			} catch (error) {
-				console.error(`Failed to add ${entityType}:`, error);
+				console.error(`Failed to add ${type}:`, error);
 				throw error;
 			}
 		},
@@ -430,11 +418,12 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	);
 
 	const updateEntity = useCallback(
-		async <T extends EntityType>(type: T, id: number, updatedData: any): ApiResponsePromise<JamData> => {
-			const api: CrudApi<JamData> = getApi(type);
+		async <T extends EntityType>(type: T, id: number, updatedData: any): Promise<any> => {
 			try {
+				const api: CrudApi<JamData> = getApi(type);
 				const apiResult: ApiResponse<JamData> = await api.update(id, updatedData, token);
-				updateData(apiResult, type);
+				const setter = getSetter(type);
+				setter((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult : item)));
 				return apiResult;
 			} catch (error) {
 				console.error(`Failed to update ${type}:`, error);
@@ -444,24 +433,16 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		[token],
 	);
 
-	// Generic delete function - refetch jobs if needed
 	const deleteEntity = useCallback(
 		async <T extends EntityType>(type: T, id: number): Promise<void> => {
-			const api: CrudApi<JamData> = getApi(type);
 			try {
+				const api: CrudApi<JamData> = getApi(type);
 				await api.delete(id, token);
 				const setter = getSetter(type);
-				setter((prev: any[]): any[] => prev.filter((item: any): boolean => item.id !== id));
+				setter((prev: any[]): any[] => prev.filter((item: any) => item.id !== id));
 			} catch (error) {
-				const apiError = error as ApiError;
-				if (apiError.status === 409) {
-					const apiResult: ApiResponse<JamData> = await api.update(id, { is_active: false }, token);
-					updateData(apiResult, type);
-					return;
-				} else {
-					console.error(`Failed to delete ${type}:`, error);
-					throw error;
-				}
+				console.error(`Failed to delete ${type}:`, error);
+				throw error;
 			}
 		},
 		[token],
@@ -469,7 +450,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 	useEffect(() => {
 		if (!token || !currentUser) return;
-		fetchAllData().then(() => {});
+		fetchAllData().then((): void => {});
 	}, [token, currentUser?.is_admin]);
 
 	return (
