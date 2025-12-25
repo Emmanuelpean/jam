@@ -9,13 +9,9 @@ import { Errors, FormField, SyntheticEvent } from "../../components/rendering/wi
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { authApi, AuthResponse } from "../../services/api/Users";
+import { authApi, AuthResponse, GenericResponse } from "../../services/api/Users";
 import { ApiError, ApiResponse } from "../../services/api/Base";
 import { useLoading } from "../../contexts/LoadingContext";
-
-interface VerificationResponse {
-	message: string;
-}
 
 type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
@@ -95,7 +91,7 @@ function AuthForm(): JSX.Element {
 		showLoading("Verifying email...", undefined);
 
 		api(verifyToken)
-			.then((response: ApiResponse<VerificationResponse>) => {
+			.then((response: ApiResponse<GenericResponse>) => {
 				showToastSuccess(response.data.message, "Email Verified");
 				setSearchParams({});
 			})

@@ -36,6 +36,7 @@ import {
 } from "../services/Schemas";
 import { useLoading } from "./LoadingContext";
 import { sortByKey } from "../utils/Utils";
+import { CrudApi } from "../services/api/Crud";
 
 export type EntityType =
 	| "jobs"
@@ -400,7 +401,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		return setterMap[type];
 	};
 
-	const updateData = (apiResult: ApiResponse<JamData>, entityType: EntityType) => {
+	const updateData = (apiResult: ApiResponse<JamData>, entityType: EntityType): void => {
 		const setter = getSetter(entityType);
 		if (apiResult.status === 200) {
 			setter((prev: any[]): any[] =>
@@ -413,32 +414,27 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		}
 	};
 
-	// Generic add function - refetch jobs if needed
 	const addEntity = useCallback(
-		async <T extends EntityType>(type: T, newData: any): Promise<ApiResponse<JamData>> => {
+		async <T extends EntityType>(entityType: T, newData: any): ApiResponsePromise<JamData> => {
+			const api: CrudApi<JamData> = getApi(entityType);
 			try {
-				// Create on backend first
-				const api = getApi(type);
-				const apiResult = await api.create(newData, token);
-				updateData(apiResult, type);
+				const apiResult: ApiResponse<JamData> = await api.create(newData, token);
+				updateData(apiResult, entityType);
 				return apiResult;
 			} catch (error) {
-				console.error(`Failed to add ${type}:`, error);
+				console.error(`Failed to add ${entityType}:`, error);
 				throw error;
 			}
 		},
 		[token],
 	);
 
-	// Generic update function - refetch jobs if needed
 	const updateEntity = useCallback(
-		async <T extends EntityType>(type: T, id: number, updatedData: any): Promise<ApiResponse<JamData>> => {
+		async <T extends EntityType>(type: T, id: number, updatedData: any): ApiResponsePromise<JamData> => {
+			const api: CrudApi<JamData> = getApi(type);
 			try {
-				// Update backend first
-				const api = getApi(type);
 				const apiResult: ApiResponse<JamData> = await api.update(id, updatedData, token);
 				updateData(apiResult, type);
-
 				return apiResult;
 			} catch (error) {
 				console.error(`Failed to update ${type}:`, error);
@@ -451,19 +447,21 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	// Generic delete function - refetch jobs if needed
 	const deleteEntity = useCallback(
 		async <T extends EntityType>(type: T, id: number): Promise<void> => {
+			const api: CrudApi<JamData> = getApi(type);
 			try {
-				// Delete from backend first
-				const api = getApi(type);
-				const apiResult: ApiResponse<JamData | null> = await api.delete(id, token);
-				if (!apiResult.data) {
-					const setter = getSetter(type);
-					setter((prev: any[]): any[] => prev.filter((item: any): boolean => item.id !== id));
-				} else if (apiResult.data) {
-					updateData(apiResult, type);
-				}
+				await api.delete(id, token);
+				const setter = getSetter(type);
+				setter((prev: any[]): any[] => prev.filter((item: any): boolean => item.id !== id));
 			} catch (error) {
-				console.error(`Failed to delete ${type}:`, error);
-				throw error;
+				const apiError = error as ApiError;
+				if (apiError.status === 409) {
+					const apiResult: ApiResponse<JamData> = await api.update(id, { is_active: false }, token);
+					updateData(apiResult, type);
+					return;
+				} else {
+					console.error(`Failed to delete ${type}:`, error);
+					throw error;
+				}
 			}
 		},
 		[token],

@@ -6,7 +6,7 @@ import { ScrapedJobFilterData, ScrapedJobFilterTransform } from "../../services/
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
 export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalProps>(
-	({ size = "lg", canEdit = true }: JamDataModalProps, ref): JSX.Element => {
+	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 
 		const formFieldsArray: Fields = [
@@ -35,6 +35,7 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 					filter.type === formData.type &&
 					filter.operator === formData.operator &&
 					filter.value.trim().toLowerCase() === formData.value.trim().toLowerCase() &&
+					filter.case_sensitive === formData.case_sensitive &&
 					filter.id !== formData?.id,
 			);
 
@@ -42,6 +43,23 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 				errors.type = errors.operator = errors.value = `A filter with these values already exist`;
 			}
 			return errors;
+		};
+
+		const canEdit = (formData: ScrapedJobFilterData) => {
+			console.log(formData);
+			if (formData?.filtered_jobs?.length > 0) {
+				return "Filters that have been applied to scraped jobs cannot be edited.";
+			} else {
+				return "";
+			}
+		};
+
+		const canDeactivate = (formData: ScrapedJobFilterData) => {
+			if (formData?.filtered_jobs?.length > 0) {
+				return "it having been used to filter scraped jobs";
+			} else {
+				return "";
+			}
 		};
 
 		const transformFormData = (formData: ScrapedJobFilterData): ScrapedJobFilterTransform => {
@@ -66,6 +84,7 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 					transformFormData={transformFormData}
 					additionalFields={[modalViewFields.accordionScrapedJobTable()]}
 					canEdit={canEdit}
+					canDeactivate={canDeactivate}
 				/>
 			</>
 		);

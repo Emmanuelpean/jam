@@ -5,7 +5,7 @@ export interface CrudApi<T = any> {
 	get: (id: number, token: string) => ApiResponsePromise<T>;
 	create: (data: any, token: string) => ApiResponsePromise<T>;
 	update: (id: number, data: any, token: string) => ApiResponsePromise<T>;
-	delete: (id: number, token: string) => ApiResponsePromise<T | null>;
+	delete: (id: number, token: string) => ApiResponsePromise<null>;
 }
 
 export const createCrudApi = <T = any>(endpoint: string): CrudApi<T> => ({
@@ -34,5 +34,5 @@ export const createCrudApi = <T = any>(endpoint: string): CrudApi<T> => ({
 	get: (id: number, token: string): ApiResponsePromise<T> => api.get(`${endpoint}/${id}`, token),
 	create: (data: any, token: string): ApiResponsePromise<T> => api.post(`${endpoint}/`, data, token),
 	update: (id: number, data: any, token: string): ApiResponsePromise<T> => api.put(`${endpoint}/${id}`, data, token),
-	delete: (id: number, token: string): ApiResponsePromise<T | null> => api.delete(`${endpoint}/${id}`, token),
+	delete: (id: number, token: string): ApiResponsePromise<null> => api.delete(`${endpoint}/${id}`, token),
 });

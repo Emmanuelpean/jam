@@ -223,3 +223,10 @@ class ScrapedJobFilterOut(OwnedOut, ScrapedJobFilterCreate):
     """Scraped Job Filter output schema"""
 
     name: str
+    filtered_jobs: list[int]
+
+    @field_validator("filtered_jobs", mode="before")
+    @classmethod
+    def serialize_relationships(cls, value) -> list[int]:
+        """Serialize relationships to list of IDs"""
+        return serialize_relationships(value)

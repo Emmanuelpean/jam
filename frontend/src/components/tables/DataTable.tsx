@@ -8,12 +8,12 @@ import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
-import { useActiveHandler, useDeleteHandler } from "../../utils/DeleteHandler";
+import { useActiveHandler, useDeleteHandler, useSmartDeleteHandler } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ContextMenu, ContextMenuState, MenuItem } from "./ContextMenu";
 import LoadingSpinner from "../spinner/Spinner";
-import { DataModalHandle } from "../modals/DataModal/DataModal";
-import { EnrichedJobData, JobData } from "../../services/Schemas";
+import { DataModalHandle, modalModes } from "../modals/DataModal/DataModal";
+import { EnrichedJobData } from "../../services/Schemas";
 import "./DataTable.css";
 
 export type Direction = "asc" | "desc";
@@ -27,7 +27,7 @@ export interface DataTableProps {
 	data?: any | null;
 	columns?: TableColumn[];
 	showAdd?: boolean;
-	menuItems?: string[];
+	menuItems?: string[] | ((item: any) => string[]);
 }
 
 export interface GenericTableProps {
@@ -44,12 +44,13 @@ export interface GenericTableProps {
 	// Table configuration
 	columns?: TableColumn[];
 	initialSortConfig?: Partial<SortConfig>;
-	menuItems?: string[];
+	menuItems?: string[] | ((item: any) => string[]);
 
 	// Modal configuration
 	Modal: React.ComponentType<any>;
 	modalSize?: string;
 	modalProps?: any;
+	defaultModalMode?: modalModes;
 
 	// Data management
 	nameKey: string;
@@ -71,6 +72,7 @@ export interface GenericTableProps {
 	children?: (data: any[]) => ReactNode;
 	toolbarAddon?: React.ReactNode;
 	reloadTrigger?: number;
+	canDeactivate?: ((formData: any) => string | null) | null;
 }
 
 export const DataTable: React.FC<GenericTableProps> = ({
@@ -97,6 +99,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	menuItems,
 	toolbarAddon,
 	reloadTrigger,
+	defaultModalMode = "view",
+	canDeactivate = null,
 }: GenericTableProps): JSX.Element => {
 	const { token } = useAuth();
 	const modalRef = useRef<DataModalHandle>(null);
@@ -104,6 +108,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
 	const openAddModal = () => modalRef.current?.showAdd(initialData);
 	const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
+	const openDetailModal = (item: any): void | undefined => modalRef.current?.showDetail(item);
 
 	// Data management
 	const dataContext: DataContextValue = useDataContext();
@@ -152,7 +157,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				search: debouncedSearchTerm,
 			});
 
-			const response: ApiResponse<any> = await api.get(`${endpoint}/paged?${params.toString()}`, token);
+			const response: ApiResponse = await api.get(`${endpoint}/paged?${params.toString()}`, token);
 			setFetchedData(response.data.items);
 			setTotalCount(response.data.total);
 		} catch (error: any) {
@@ -287,7 +292,13 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		if (mode === "import") {
 			openImportModal(item);
 		} else {
-			modalRef.current?.showView(item);
+			if (defaultModalMode === "edit") {
+				openEditModal(item);
+			} else if (defaultModalMode === "detail") {
+				openDetailModal(item);
+			} else {
+				openViewModal(item);
+			}
 		}
 	};
 
@@ -299,14 +310,20 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 	const activeHandler = useActiveHandler(entityType, nameKey, itemType);
 	const deleteHandler = useDeleteHandler(entityType, nameKey, itemType);
+	const handleSmartDelete = useSmartDeleteHandler(entityType, nameKey, itemType, canDeactivate);
 
-	const handleDelete = (item: JamData) => {
-		const result = mode === "import" ? activeHandler : deleteHandler;
-		result(item).then((r: boolean) => {
-			if (r && isServerPagination) {
-				fetchData().then((_): null => null);
-			}
-		});
+	const handleDelete = async (item: JamData) => {
+		let result: boolean;
+		if (mode === "import") {
+			result = await activeHandler(item);
+		} else if (canDeactivate) {
+			result = await handleSmartDelete(item);
+		} else {
+			result = await deleteHandler(item);
+		}
+		if (result && isServerPagination) {
+			fetchData().then((_): null => null);
+		}
 	};
 
 	const handleSuccess = (importedItem: any): void => {
@@ -388,7 +405,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	};
 
 	// Get context menu items based on mode
-	const getContextMenuItems = (): MenuItem[] => {
+	const getContextMenuItems = (item: JamData): MenuItem[] => {
 		let baseItems: MenuItem[] = [
 			{
 				action: "view",
@@ -432,18 +449,29 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				color: "#dc3545",
 				function: handleDelete,
 			},
+			{
+				action: "detail",
+				icon: "eye",
+				text: "View",
+				id: "context-menu-details",
+				function: openDetailModal,
+			},
 		];
 
-		if (!menuItems) {
+		let allowedActions: string[];
+
+		if (typeof menuItems === "function") {
+			allowedActions = menuItems(item);
+		} else if (menuItems) {
+			allowedActions = menuItems;
+		} else {
 			if (mode === "import") {
-				menuItems = ["import", "delete"];
+				allowedActions = ["import", "delete"];
 			} else {
-				menuItems = ["view", "edit", "delete"];
+				allowedActions = ["view", "edit", "delete"];
 			}
 		}
-		baseItems = baseItems.filter((item: MenuItem): boolean => menuItems!.includes(item.action));
-
-		return baseItems;
+		return baseItems.filter((menuItem: MenuItem): boolean => allowedActions.includes(menuItem.action));
 	};
 
 	// Get button text based on mode
@@ -716,7 +744,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			{contextMenu?.show && (
 				<ContextMenu
 					position={{ x: contextMenu.x, y: contextMenu.y }}
-					items={getContextMenuItems()}
+					items={getContextMenuItems(contextMenu.item)}
 					selectedItem={contextMenu.item}
 					onClose={() => setContextMenu(null)}
 					onItemClick={(menuItem: MenuItem, item: any): void => {

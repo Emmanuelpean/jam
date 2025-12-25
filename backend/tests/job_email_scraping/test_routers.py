@@ -241,7 +241,7 @@ class TestScrapedJobFilters(CRUDTestBase):
 
         filter_obj = self._create_filter(session)
         response = self.delete(authorised_clients[0], filter_obj.id)
-        assert response.status_code == status.HTTP_202_ACCEPTED
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Verify filter was completely deleted from database
         deleted_filter = session.query(models.ScrapedJobFilter).filter_by(id=filter_obj.id).first()
@@ -268,12 +268,7 @@ class TestScrapedJobFilters(CRUDTestBase):
         add_to_db(session, [scraped_job])
 
         response = self.delete(authorised_clients[0], filter_id)
-        assert response.status_code == status.HTTP_200_OK
-
-        # Verify filter was deactivated, not deleted
-        updated_filter = session.query(models.ScrapedJobFilter).filter_by(id=filter_id).first()
-        assert updated_filter is not None
-        assert updated_filter.is_active is False
+        assert response.status_code == status.HTTP_409_CONFLICT
 
     def test_delete_filter_not_found(self, authorised_clients) -> None:
         """Should return 403 when filter doesn't exist"""
