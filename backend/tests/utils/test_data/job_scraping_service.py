@@ -652,7 +652,7 @@ MemoryError: Unable to allocate 2.5 GiB for an array with shape (50000, 100) and
 ]
 
 
-SCRAPED_JOB_FILTER_DATA = [
+SCRAPING_FILTER_DATA = [
     {
         "owner_id": 1,
         "type": "title",

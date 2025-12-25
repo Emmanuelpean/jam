@@ -1,12 +1,10 @@
 """Logic for filtering scraped jobs based on user-defined rules."""
 
-import datetime as dt
-
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
-from app.job_email_scraping.models import ScrapedJob, ScrapedJobFilter
+from app.job_email_scraping.models import ScrapedJob, ScrapingFilter
 
 STRING_OPERATORS = [
     "contains",
@@ -67,7 +65,7 @@ def apply_rule_to_values(
 
 def job_matches_rule_python(
     job: ScrapedJob,
-    job_filter: ScrapedJobFilter,
+    job_filter: ScrapingFilter,
 ) -> bool:
     """Check if a job matches a given filter rule using Python logic.
     :param job: The ScrapedJob instance to check.
@@ -89,16 +87,16 @@ def job_matches_rule_python(
 def is_job_filtered_for_user(
     session: Session,
     job: ScrapedJob,
-) -> ScrapedJobFilter | None:
+) -> ScrapingFilter | None:
     """Check if a job should be filtered out for a given user based on their rules.
     :param session: SQLAlchemy session for database access.
     :param job: The ScrapedJob instance to check.
     :return: True if the job should be filtered out for the user."""
 
     rules = (
-        session.query(ScrapedJobFilter)
-        .filter(ScrapedJobFilter.owner_id == job.owner_id)
-        .filter(ScrapedJobFilter.is_active.is_(True))
+        session.query(ScrapingFilter)
+        .filter(ScrapingFilter.owner_id == job.owner_id)
+        .filter(ScrapingFilter.is_active.is_(True))
         .all()
     )
 
@@ -109,7 +107,7 @@ def is_job_filtered_for_user(
         return None
 
 
-def rule_to_sql_predicate(job_filter: ScrapedJobFilter) -> ColumnElement[bool]:
+def rule_to_sql_predicate(job_filter: ScrapingFilter) -> ColumnElement[bool]:
     """Convert a rule into a SQLAlchemy expression that matches jobs to EXCLUDE.
     Only applies if the field is not NULL."""
 

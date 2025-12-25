@@ -157,13 +157,13 @@ class ScrapedJob(Owned, Base):
     service_log_id = Column(
         Integer, ForeignKey("job_email_scraping_service_log.id", ondelete="SET NULL"), nullable=False
     )
-    filter_id = Column(Integer, ForeignKey("scraped_job_filter.id", ondelete="SET NULL"), nullable=True)
+    filter_id = Column(Integer, ForeignKey("scraping_filter.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     emails = relationship("JobEmail", secondary=jobemail_scrapedjob_mapping, back_populates="jobs")
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="scraped_jobs")
     job_rating = relationship("JobRating", back_populates="scraped_job", uselist=False)
-    filter = relationship("ScrapedJobFilter", back_populates="filtered_jobs")
+    filter = relationship("ScrapingFilter", back_populates="filtered_jobs")
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)
@@ -363,7 +363,7 @@ class JobEmailScrapingServiceError(CommonBase, Base):
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="service_errors")
 
 
-class ScrapedJobFilter(Owned, Base):
+class ScrapingFilter(Owned, Base):
     """Represents user-defined rules to filter out scraped jobs.
 
     Attributes:

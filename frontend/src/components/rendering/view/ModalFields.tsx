@@ -162,10 +162,10 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	scrapedJobFilterName: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	scrapingFilterName: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "name",
 		label: "Filter Name",
-		render: renderFunctions.scrapedJobFilterName,
+		render: renderFunctions.scrapingFilterName,
 		...overrides,
 	}),
 

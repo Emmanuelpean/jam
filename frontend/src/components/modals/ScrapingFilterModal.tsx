@@ -2,22 +2,22 @@ import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { ScrapedJobFilterData, ScrapedJobFilterTransform } from "../../services/Schemas";
+import { ScrapingFilterData, ScrapingFilterTransform } from "../../services/Schemas";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalProps>(
+export const ScrapingFilterModal = forwardRef<DataModalHandle, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 
 		const formFieldsArray: Fields = [
-			formFields.scrapedJobFilterType(),
-			formFields.scrapedJobFilterOperator(),
+			formFields.scrapingFilterType(),
+			formFields.scrapingFilterOperator(),
 			formFields.value({ type: "input", placeholder: "Enter a value" }),
 			formFields.caseSensitive(),
 		];
 
 		const viewFieldsArray: Fields = [
-			modalViewFields.scrapedJobFilterName({ isTitle: true }),
+			modalViewFields.scrapingFilterName({ isTitle: true }),
 			modalViewFields.caseSensitive(),
 		];
 
@@ -26,11 +26,11 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 			view: viewFieldsArray,
 		};
 
-		const customValidation = async (formData: ScrapedJobFilterData): Promise<ValidationErrors> => {
+		const customValidation = async (formData: ScrapingFilterData): Promise<ValidationErrors> => {
 			const errors: ValidationErrors = {};
 
-			const duplicates: ScrapedJobFilterData[] = dataContext.scrapedJobFilters.filter(
-				(filter: ScrapedJobFilterData): boolean =>
+			const duplicates: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
+				(filter: ScrapingFilterData): boolean =>
 					filter.type === formData.type &&
 					filter.operator === formData.operator &&
 					filter.value.trim().toLowerCase() === formData.value.trim().toLowerCase() &&
@@ -44,7 +44,7 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 			return errors;
 		};
 
-		const canEdit = (formData: ScrapedJobFilterData): string => {
+		const canEdit = (formData: ScrapingFilterData): string => {
 			if (formData?.filtered_jobs?.length > 0) {
 				return "Filters that have been applied to scraped jobs cannot be edited.";
 			} else {
@@ -52,7 +52,7 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 			}
 		};
 
-		const canDelete = (formData: ScrapedJobFilterData): string => {
+		const canDelete = (formData: ScrapingFilterData): string => {
 			if (formData?.filtered_jobs?.length > 0) {
 				return "Filters that have been applied to scraped jobs cannot be deleted.";
 			} else {
@@ -60,7 +60,7 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 			}
 		};
 
-		const transformFormData = (formData: ScrapedJobFilterData): ScrapedJobFilterTransform => {
+		const transformFormData = (formData: ScrapingFilterData): ScrapingFilterTransform => {
 			return {
 				type: formData.type,
 				operator: formData.operator,
@@ -76,7 +76,7 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 					itemName="Scraping Filter"
 					size={size}
 					fields={fields}
-					endpoint="scraped_job_filters"
+					endpoint="scraping_filters"
 					validation={customValidation}
 					transformFormData={transformFormData}
 					additionalFields={[modalViewFields.accordionScrapedJobTable()]}

@@ -275,14 +275,14 @@ export interface JobRatingData extends BaseOut {
 	user_qualification_id: number | null;
 }
 
-export interface ScrapedJobFilterTransform {
+export interface ScrapingFilterTransform {
 	type: string;
 	operator: string;
 	value: string;
 	case_sensitive: boolean;
 }
 
-export interface ScrapedJobFilterData extends OwnedOut {
+export interface ScrapingFilterData extends OwnedOut {
 	type: string;
 	operator: string;
 	value: string;

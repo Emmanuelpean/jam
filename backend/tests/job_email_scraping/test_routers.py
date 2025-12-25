@@ -9,7 +9,7 @@ from app import model_registry as models
 from app.job_email_scraping import schemas
 from tests.conftest import CRUDTestBase
 from tests.utils.create_data import add_to_db
-from tests.utils.test_data.job_scraping_service import JOB_EMAIL_DATA, SCRAPED_JOB_FILTER_DATA
+from tests.utils.test_data.job_scraping_service import JOB_EMAIL_DATA, SCRAPING_FILTER_DATA
 
 
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
@@ -216,11 +216,11 @@ class TestEisServiceLog:
 # ------------------------------------------------- SCRAPED JOB FILTERS ------------------------------------------------
 
 
-class TestScrapedJobFilters(CRUDTestBase):
-    endpoint = "/scraped_job_filters"
-    out_schema = schemas.ScrapedJobFilterOut
-    test_data_ref = "test_scraped_job_filters"
-    create_data = SCRAPED_JOB_FILTER_DATA
+class TestScrapingFilters(CRUDTestBase):
+    endpoint = "/scraping_filters"
+    out_schema = schemas.ScrapingFilterOut
+    test_data_ref = "test_scraping_filters"
+    create_data = SCRAPING_FILTER_DATA
     update_data = {
         "id": 1,
         "type": "title",
@@ -229,11 +229,11 @@ class TestScrapedJobFilters(CRUDTestBase):
     actions_to_test = ["get_all", "get_one", "post"]
 
     @staticmethod
-    def _create_filter(session, owner_id: int = 1, **kwargs) -> models.ScrapedJobFilter:
+    def _create_filter(session, owner_id: int = 1, **kwargs) -> models.ScrapingFilter:
         """Helper to create a scraped job filter"""
 
         # noinspection PyArgumentList
-        filters = models.ScrapedJobFilter(type="title", operator="contains", value="Some", owner_id=owner_id, **kwargs)
+        filters = models.ScrapingFilter(type="title", operator="contains", value="Some", owner_id=owner_id, **kwargs)
         return add_to_db(session, [filters])[0]
 
     def test_delete_filter_without_filtered_jobs(self, session, authorised_clients, test_users) -> None:
@@ -244,7 +244,7 @@ class TestScrapedJobFilters(CRUDTestBase):
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Verify filter was completely deleted from database
-        deleted_filter = session.query(models.ScrapedJobFilter).filter_by(id=filter_obj.id).first()
+        deleted_filter = session.query(models.ScrapingFilter).filter_by(id=filter_obj.id).first()
         assert deleted_filter is None
 
     def test_delete_filter_with_filtered_jobs(

@@ -48,8 +48,8 @@ import {
 	appliedViaOptions,
 	attendanceTypeOptions,
 	interviewTypeOptions,
-	scrapedJobFilterOperatorOptions,
-	scrapedJobFilterTypeOptions,
+	scrapingFilterOperatorOptions,
+	scrapingFilterTypeOptions,
 	SelectOption,
 	updateTypeOptions,
 } from "../form/FormOptions";
@@ -173,20 +173,20 @@ export const renderFunctions = {
 
 	filterType: (param: RenderParams): ReactNode => {
 		return (
-			scrapedJobFilterTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]
+			scrapingFilterTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]
 				?.label || null
 		);
 	},
 
 	filterOperator: (param: RenderParams): ReactNode => {
 		return (
-			scrapedJobFilterOperatorOptions.filter(
+			scrapingFilterOperatorOptions.filter(
 				(option: SelectOption): boolean => option.value === param.item?.operator,
 			)[0]?.label || null
 		);
 	},
 
-	scrapedJobFilterName: (param: RenderParams): ReactNode => {
+	scrapingFilterName: (param: RenderParams): ReactNode => {
 		const type = renderFunctions.filterType(param);
 		const operator = renderFunctions.filterOperator(param);
 		return type + " " + operator + ' "' + param.item?.value + '"';

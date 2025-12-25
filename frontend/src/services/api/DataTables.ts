@@ -8,7 +8,7 @@ import {
 	KeywordData,
 	LocationData,
 	PersonData,
-	ScrapedJobFilterData,
+	ScrapingFilterData,
 	SettingData,
 } from "../Schemas";
 import { Country, Currency } from "../../contexts/DataContext";
@@ -24,4 +24,4 @@ export const jobApplicationUpdatesApi: CrudApi<JobApplicationUpdateData> = creat
 export const settingsApi: CrudApi<SettingData> = createCrudApi("settings");
 export const countriesApi: CrudApi<Country> = createCrudApi("others/countries");
 export const currenciesApi: CrudApi<Currency> = createCrudApi("others/currencies");
-export const scrapedJobFilterApi: CrudApi<ScrapedJobFilterData> = createCrudApi("scraped_job_filters");
+export const scrapingFilterApi: CrudApi<ScrapingFilterData> = createCrudApi("scraping_filters");

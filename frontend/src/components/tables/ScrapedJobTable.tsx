@@ -3,10 +3,10 @@ import { Button } from "react-bootstrap";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../modals/ScrapedJobModal";
-import { JobData, JobDataTransform, ScrapedJobFilterData } from "../../services/Schemas";
+import { JobData, JobDataTransform, ScrapingFilterData } from "../../services/Schemas";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
-import ScrapedJobFilterTable from "./ScrapedJobFilterTable";
+import ScrapingFilterTable from "./ScrapingFilterTable";
 
 const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
@@ -69,15 +69,15 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 					>
 						Filters (
 						{
-							dataContext.scrapedJobFilters.filter(
-								(filter: ScrapedJobFilterData): boolean => filter.is_active,
+							dataContext.scrapingFilters.filter(
+								(filter: ScrapingFilterData): boolean => filter.is_active,
 							).length
 						}
 						)
 					</Button>
 				}
 			/>
-			<ScrapedJobFilterTable
+			<ScrapingFilterTable
 				show={showFilters}
 				onHide={(): void => {
 					setShowFilters(false);

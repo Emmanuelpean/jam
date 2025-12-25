@@ -10,7 +10,7 @@ import {
 	keywordsApi,
 	locationsApi,
 	personsApi,
-	scrapedJobFilterApi,
+	scrapingFilterApi,
 	settingsApi,
 } from "../services/api/DataTables";
 import { ApiError, ApiResponse, ApiResponsePromise } from "../services/api/Base";
@@ -30,7 +30,7 @@ import {
 	LocationData,
 	PersonData,
 	ScrapedJobData,
-	ScrapedJobFilterData,
+	ScrapingFilterData,
 	SettingData,
 	UserData,
 } from "../services/Schemas";
@@ -50,7 +50,7 @@ export type EntityType =
 	| "settings"
 	| "users"
 	| "scrapedJobs"
-	| "scrapedJobFilters";
+	| "scrapingFilters";
 
 export type JamData =
 	| KeywordData
@@ -64,7 +64,7 @@ export type JamData =
 	| UserData
 	| SettingData
 	| ScrapedJobData
-	| ScrapedJobFilterData;
+	| ScrapingFilterData;
 
 export const endpointToEntityType = (endpoint: string): EntityType | null => {
 	const mapping: Record<string, EntityType> = {
@@ -79,7 +79,7 @@ export const endpointToEntityType = (endpoint: string): EntityType | null => {
 		settings: "settings",
 		users: "users",
 		scraped_jobs: "scrapedJobs",
-		scraped_job_filters: "scrapedJobFilters",
+		scraping_filters: "scrapingFilters",
 	};
 	return mapping[endpoint.toLowerCase()] || null;
 };
@@ -115,7 +115,7 @@ export interface DataContextValue {
 	keywords: KeywordData[];
 	locations: LocationData[];
 	settings: SettingData[];
-	scrapedJobFilters: ScrapedJobFilterData[];
+	scrapingFilters: ScrapingFilterData[];
 	users: UserData[];
 	countries: Country[];
 	currencies: Currency[];
@@ -141,7 +141,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [keywords, setKeywords] = useState<KeywordData[]>([]);
 	const [locations, setLocations] = useState<LocationData[]>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
-	const [scrapedJobFilters, setScrapedJobFilters] = useState<ScrapedJobFilterData[]>([]);
+	const [scrapingFilters, setScrapingFilters] = useState<ScrapingFilterData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
 	const [_scrapedJobs, setScrapedJobs] = useState<any[]>([]);
 	const [currencies, setCurrencies] = useState<Currency[]>([]);
@@ -287,8 +287,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" } as TypedFetchOperation<AggregatorData[]>,
 			{ promise: keywordsApi.getAll(token), label: "Keywords" } as TypedFetchOperation<KeywordData[]>,
 			{ promise: locationsApi.getAll(token), label: "Locations" } as TypedFetchOperation<LocationData[]>,
-			{ promise: scrapedJobFilterApi.getAll(token), label: "Scraped Job Filters" } as TypedFetchOperation<
-				ScrapedJobFilterData[]
+			{ promise: scrapingFilterApi.getAll(token), label: "Scraped Job Filters" } as TypedFetchOperation<
+				ScrapingFilterData[]
 			>,
 			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Currency[]>,
 			{ promise: countriesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Country[]>,
@@ -335,7 +335,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				aggregatorsData,
 				keywordsData,
 				locationsData,
-				scrapedJobFiltersData,
+				scrapingFiltersData,
 				currenciesData,
 				countriesData,
 				...adminData
@@ -349,7 +349,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setAggregators(aggregatorsData.data || []);
 			setKeywords(keywordsData.data || []);
 			setLocations(locationsData.data || []);
-			setScrapedJobFilters(scrapedJobFiltersData.data || []);
+			setScrapingFilters(scrapingFiltersData.data || []);
 			setCurrencies(currenciesData.data || []);
 			setCountries(countriesData.data || []);
 			if (currentUser?.is_admin) {
@@ -377,7 +377,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			settings: settingsApi,
 			users: userApi,
 			scrapedJobs: scrapedJobApi,
-			scrapedJobFilters: scrapedJobFilterApi,
+			scrapingFilters: scrapingFilterApi,
 		};
 		return apiMap[type];
 	};
@@ -396,7 +396,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			settings: setSettings,
 			users: setUsers,
 			scrapedJobs: setScrapedJobs,
-			scrapedJobFilters: setScrapedJobFilters,
+			scrapingFilters: setScrapingFilters,
 		};
 		return setterMap[type];
 	};
@@ -464,7 +464,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				aggregators,
 				keywords,
 				locations,
-				scrapedJobFilters,
+				scrapingFilters: scrapingFilters,
 				countries,
 				currencies,
 				settings,

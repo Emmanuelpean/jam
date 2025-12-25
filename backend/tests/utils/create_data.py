@@ -330,7 +330,7 @@ def create_job_alert_emails(
 
 
 def create_scraped_jobs(
-    db, emails, users: list[models.User], filters: list[models.ScrapedJobFilter]
+    db, emails, users: list[models.User], filters: list[models.ScrapingFilter]
 ) -> list[models.ScrapedJob]:
     """Create sample scraped jobs - some with scraped data, some without"""
 
@@ -401,15 +401,15 @@ def create_job_scraping_service_errors(db, service_logs) -> list[models.JobEmail
     return add_to_db(db, errors)
 
 
-def create_scraped_job_filters(db, users: list[models.User]) -> list[models.ScrapedJobFilter]:
+def create_scraping_filters(db, users: list[models.User]) -> list[models.ScrapingFilter]:
     """Create sample job filters"""
 
     print("Creating job filters...")
     # noinspection PyArgumentList
     filters = [
-        models.ScrapedJobFilter(**filter_data)
+        models.ScrapingFilter(**filter_data)
         for filter_data in override_entries_properties(
-            job_scraping_service.SCRAPED_JOB_FILTER_DATA,
+            job_scraping_service.SCRAPING_FILTER_DATA,
             ("owner_id", users),
         )
     ]

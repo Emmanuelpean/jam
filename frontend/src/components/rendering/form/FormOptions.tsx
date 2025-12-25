@@ -210,7 +210,7 @@ export const interviewTypeOptions: SelectOption[] = [
 	{ value: "Other", label: "Other" },
 ];
 
-export const scrapedJobFilterTypeOptions: SelectOption[] = [
+export const scrapingFilterTypeOptions: SelectOption[] = [
 	{ value: "title", label: "Job Title" },
 	{ value: "company", label: "Company Name" },
 	{ value: "location", label: "Location" },
@@ -221,7 +221,7 @@ export const scrapedJobFilterTypeOptions: SelectOption[] = [
 	{ value: "attendance_type", label: "Attendance Type" },
 ];
 
-export const scrapedJobFilterOperatorOptions: SelectOption[] = [
+export const scrapingFilterOperatorOptions: SelectOption[] = [
 	{ value: "contains", label: "Contains" },
 	{ value: "equals", label: "Equals To" },
 	{ value: "starts_with", label: "Starts With" },

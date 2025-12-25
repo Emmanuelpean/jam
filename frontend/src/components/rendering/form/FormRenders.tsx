@@ -7,8 +7,8 @@ import {
 	attendanceTypeOptions,
 	interviewAttendanceOptions,
 	interviewTypeOptions,
-	scrapedJobFilterOperatorOptions,
-	scrapedJobFilterTypeOptions,
+	scrapingFilterOperatorOptions,
+	scrapingFilterTypeOptions,
 	SelectOption,
 	updateTypeOptions,
 } from "./FormOptions";
@@ -525,7 +525,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	scrapedJobFilterType: (overrides: FormFieldOverride = {}): ModalFormField => ({
+	scrapingFilterType: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "type",
 		label: "Filter Type",
 		type: "select",
@@ -533,11 +533,11 @@ export const formFields = {
 		placeholder: "Select filter type",
 		isSearchable: true,
 		isClearable: true,
-		options: scrapedJobFilterTypeOptions,
+		options: scrapingFilterTypeOptions,
 		...overrides,
 	}),
 
-	scrapedJobFilterOperator: (overrides: FormFieldOverride = {}): ModalFormField => ({
+	scrapingFilterOperator: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "operator",
 		label: "Operator",
 		type: "select",
@@ -545,7 +545,7 @@ export const formFields = {
 		placeholder: "Select filter type",
 		isSearchable: true,
 		isClearable: true,
-		options: scrapedJobFilterOperatorOptions,
+		options: scrapingFilterOperatorOptions,
 		...overrides,
 	}),
 };
