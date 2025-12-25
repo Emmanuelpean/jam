@@ -471,7 +471,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				allowedActions = ["view", "edit", "delete"];
 			}
 		}
-		return baseItems.filter((menuItem: MenuItem): boolean => allowedActions.includes(menuItem.action));
+		return allowedActions
+			.map((action: string): MenuItem | undefined =>
+				baseItems.find((menuItem: MenuItem): boolean => menuItem.action === action),
+			)
+			.filter((item: MenuItem | undefined): item is MenuItem => item !== undefined);
 	};
 
 	// Get button text based on mode

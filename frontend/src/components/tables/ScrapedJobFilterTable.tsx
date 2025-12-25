@@ -62,60 +62,36 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 	};
 
 	const renderBodyContent = (): JSX.Element => {
-		switch (activeTab) {
-			case "active":
-				return (
-					<div className="modal-content-animated" style={{ height: containerHeight }}>
-						<div className="modal-content-animated-inner">
-							<div ref={contentRef} style={{ paddingTop: "5px" }}>
-								<DataTable
-									entityType="scrapedJobFilters"
-									data={activeFilters}
-									columns={defaultColumns}
-									initialSortConfig={{ key: "type", direction: "asc" }}
-									Modal={ScrapedJobFilterModal}
-									nameKey="name"
-									itemType="Scraping Filters"
-									modalSize="lg"
-									showAllEntries={true}
-									compact={true}
-									initialData={{ is_enabled: true }}
-									menuItems={menuItems}
-									defaultModalMode={"detail"}
-									canDeactivate={canDeactivate}
-								/>
-							</div>
-						</div>
+		const data: ScrapedJobFilterData[] = activeTab === "active" ? activeFilters : deletedFilters;
+		const showAdd: boolean = activeTab !== "deleted";
+
+		if (activeTab !== "active" && activeTab !== "deleted") return <></>;
+
+		return (
+			<div className="modal-content-animated" style={{ height: containerHeight }}>
+				<div className="modal-content-animated-inner">
+					<div ref={contentRef} style={{ paddingTop: "5px" }}>
+						<DataTable
+							entityType="scrapedJobFilters"
+							data={data}
+							columns={defaultColumns}
+							initialSortConfig={{ key: "type", direction: "asc" }}
+							Modal={ScrapedJobFilterModal}
+							nameKey="name"
+							itemType="Scraping Filters"
+							modalSize="lg"
+							showAllEntries={true}
+							compact={true}
+							initialData={{ is_enabled: true }}
+							menuItems={menuItems}
+							defaultModalMode={"detail"}
+							canDeactivate={canDeactivate}
+							showAdd={showAdd}
+						/>
 					</div>
-				);
-			case "deleted":
-				return (
-					<div className="modal-content-animated" style={{ height: containerHeight }}>
-						<div className="modal-content-animated-inner">
-							<div ref={contentRef} style={{ paddingTop: "5px" }}>
-								<DataTable
-									entityType="scrapedJobFilters"
-									data={deletedFilters}
-									columns={defaultColumns}
-									initialSortConfig={{ key: "type", direction: "asc" }}
-									Modal={ScrapedJobFilterModal}
-									nameKey="name"
-									itemType="Scraping Filters"
-									modalSize="lg"
-									showAllEntries={true}
-									compact={true}
-									showAdd={false}
-									menuItems={menuItems}
-									defaultModalMode={"detail"}
-									canDeactivate={canDeactivate}
-								/>
-							</div>
-						</div>
-					</div>
-				);
-			default:
-				return <></>;
-		}
+				</div>
+			</div>
+		);
 	};
 
 	useLayoutEffect(() => {
