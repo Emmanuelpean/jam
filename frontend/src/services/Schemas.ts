@@ -286,7 +286,6 @@ export interface ScrapedJobFilterData extends OwnedOut {
 	type: string;
 	operator: string;
 	value: string;
-	is_enabled: boolean;
 	case_sensitive: boolean;
 	name: string;
 	is_active: boolean;

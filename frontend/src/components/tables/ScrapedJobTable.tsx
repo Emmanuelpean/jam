@@ -70,7 +70,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 						Filters (
 						{
 							dataContext.scrapedJobFilters.filter(
-								(filter: ScrapedJobFilterData): boolean => filter.is_enabled,
+								(filter: ScrapedJobFilterData): boolean => filter.is_active,
 							).length
 						}
 						)
