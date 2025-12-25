@@ -13,13 +13,12 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 			formFields.scrapedJobFilterType(),
 			formFields.scrapedJobFilterOperator(),
 			formFields.value({ type: "input", placeholder: "Enter a value" }),
-
-			[formFields.isEnabled(), formFields.caseSensitive()],
+			formFields.caseSensitive(),
 		];
 
 		const viewFieldsArray: Fields = [
 			modalViewFields.scrapedJobFilterName({ isTitle: true }),
-			[modalViewFields.isEnabled(), modalViewFields.caseSensitive()],
+			modalViewFields.caseSensitive(),
 		];
 
 		const fields = {
@@ -45,8 +44,7 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 			return errors;
 		};
 
-		const canEdit = (formData: ScrapedJobFilterData) => {
-			console.log(formData);
+		const canEdit = (formData: ScrapedJobFilterData): string => {
 			if (formData?.filtered_jobs?.length > 0) {
 				return "Filters that have been applied to scraped jobs cannot be edited.";
 			} else {
@@ -54,9 +52,9 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 			}
 		};
 
-		const canDeactivate = (formData: ScrapedJobFilterData) => {
+		const canDelete = (formData: ScrapedJobFilterData): string => {
 			if (formData?.filtered_jobs?.length > 0) {
-				return "it having been used to filter scraped jobs";
+				return "Filters that have been applied to scraped jobs cannot be deleted.";
 			} else {
 				return "";
 			}
@@ -67,7 +65,6 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 				type: formData.type,
 				operator: formData.operator,
 				value: formData.value.trim(),
-				is_active: formData.is_enabled,
 				case_sensitive: formData.case_sensitive,
 			};
 		};
@@ -84,7 +81,8 @@ export const ScrapedJobFilterModal = forwardRef<DataModalHandle, JamDataModalPro
 					transformFormData={transformFormData}
 					additionalFields={[modalViewFields.accordionScrapedJobTable()]}
 					canEdit={canEdit}
-					canDeactivate={canDeactivate}
+					canDelete={canDelete}
+					showDeactivate={true}
 				/>
 			</>
 		);

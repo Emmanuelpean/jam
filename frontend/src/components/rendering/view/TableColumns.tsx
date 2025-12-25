@@ -553,4 +553,13 @@ export const tableColumns = {
 		render: (param: RenderParams) => renderFunctions._personCount(param, "company_id"),
 		...overrides,
 	}),
+
+	filteredJobCountColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "filtered_jobs",
+		label: "Filtered Jobs",
+		sortable: true,
+		searchable: false,
+		render: renderFunctions.filteredJobCount,
+		...overrides,
+	}),
 };

@@ -11,13 +11,15 @@ interface ScrapedJobFilterTableProps extends DataTableProps {
 	onHide: () => void;
 }
 
+type tabKeys = "active" | "inactive";
+
 const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 	columns = [],
 	show,
 	onHide,
 }: ScrapedJobFilterTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
-	const [activeTab, setActiveTab] = useState<"active" | "deleted">("active");
+	const [activeTab, setActiveTab] = useState<tabKeys>("active");
 	const [containerHeight, setContainerHeight] = useState("auto");
 	const contentRef = useRef<HTMLDivElement>(null);
 
@@ -28,8 +30,8 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 					tableColumns.filterTypeColumn(),
 					tableColumns.filterOperatorColumn(),
 					tableColumns.valueColumn({ type: "text" }),
-					tableColumns.isEnabledColumn(),
 					tableColumns.caseSensitiveColumn(),
+					tableColumns.filteredJobCountColumn(),
 				];
 
 	const activeFilters: ScrapedJobFilterData[] = dataContext.scrapedJobFilters.filter(
@@ -42,30 +44,28 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 
 	const tabs = [
 		{ key: "active" as const, title: `Active (${activeFilters.length})` },
-		{ key: "deleted" as const, title: `Deleted (${deletedFilters.length})` },
+		{ key: "inactive" as const, title: `Inactive (${deletedFilters.length})` },
 	];
 
 	const menuItems = (item: ScrapedJobFilterData): string[] => {
 		if (item.filtered_jobs.length > 0) {
-			return ["detail", "delete"];
+			if (item.is_active) {
+				return ["view", "deactivate"];
+			} else {
+				return ["view", "activate"];
+			}
 		} else {
-			return ["detail", "edit", "delete"];
-		}
-	};
-
-	const canDeactivate = (item: ScrapedJobFilterData): string | null => {
-		if (item.filtered_jobs.length > 0) {
-			return "it having been used to filter scraped jobs";
-		} else {
-			return null;
+			if (item.is_active) {
+				return ["view", "edit", "deactivate", "delete"];
+			} else {
+				return ["view", "edit", "activate", "delete"];
+			}
 		}
 	};
 
 	const renderBodyContent = (): JSX.Element => {
 		const data: ScrapedJobFilterData[] = activeTab === "active" ? activeFilters : deletedFilters;
-		const showAdd: boolean = activeTab !== "deleted";
-
-		if (activeTab !== "active" && activeTab !== "deleted") return <></>;
+		const showAdd: boolean = activeTab === "active";
 
 		return (
 			<div className="modal-content-animated" style={{ height: containerHeight }}>
@@ -84,8 +84,7 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 							compact={true}
 							initialData={{ is_enabled: true }}
 							menuItems={menuItems}
-							defaultModalMode={"detail"}
-							canDeactivate={canDeactivate}
+							defaultModalMode={"view"}
 							showAdd={showAdd}
 						/>
 					</div>

@@ -6,7 +6,7 @@ and service execution logs with CRUD operations and admin access controls."""
 from datetime import datetime
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query, Response, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session, joinedload
 from starlette import status
@@ -391,73 +391,26 @@ scraped_job_filter_router = generate_data_table_crud_router(
 )
 
 
-# @scraped_job_filter_router.post("/", response_model=schemas.ScrapedJobFilterOut)
-# def create_scraped_job_filter(
-#     filter_data: schemas.ScrapedJobFilterCreate,
-#     response: Response,
-#     current_user: models.User = Depends(get_current_user),
-#     db: Session = Depends(get_db),
-# ):
-#     """Create a new scraped job filter. If the type, operator and value are the same as an existing filter, use that
-#     new filter and update it with the data.
-#     :param filter_data: Data for the new filter
-#     :param response: Response for the new filter
-#     :param current_user: Current authenticated user
-#     :param db: Database session
-#     :return: New job filter or existing one"""
-#
-#     # If an existing filter with the same parameters exists for the user, return it instead of creating a new one
-#     existing_filter = (
-#         db.query(models.ScrapedJobFilter)
-#         .filter_by(owner_id=current_user.id)
-#         .filter_by(type=filter_data.type)
-#         .filter_by(operator=filter_data.operator)
-#         .filter_by(value=filter_data.value)
-#         .filter_by(case_sensitive=filter_data.case_sensitive)
-#         .first()
-#     )
-#     if existing_filter:
-#         for key, value in filter_data.model_dump().items():
-#             setattr(existing_filter, key, value)
-#         db.commit()
-#         db.refresh(existing_filter)
-#         response.status_code = status.HTTP_200_OK
-#         return existing_filter
-#
-#     else:
-#         # noinspection PyArgumentList
-#         filter_obj = models.ScrapedJobFilter(
-#             **filter_data.model_dump(),
-#             owner_id=current_user.id,
-#         )
-#         db.add(filter_obj)
-#         db.commit()
-#         db.refresh(filter_obj)
-#         response.status_code = status.HTTP_201_CREATED
-#         return filter_obj
-
-
-@scraped_job_filter_router.put("/{filter_id}")
+@scraped_job_filter_router.put(
+    "/{filter_id}", status_code=status.HTTP_200_OK, response_model=schemas.ScrapedJobFilterOut
+)
 def update_scraped_job_filter(
     filter_id: int,
     update_data: schemas.ScrapedJobFilterUpdate,
-    response: Response,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Update a scraped job filter by ID.
     :param filter_id: ID of the filter to update
     :param update_data: Update data for the filter
-    :param response: FastAPI response object
     :param current_user: Current authenticated user
     :param db: Database session"""
 
-    # Fetch the filter to ensure it exists and belongs to the current user. Inactive filters cannot be updated
+    # Fetch the filter to ensure it exists and belongs to the current user.
     filter_obj = (
         db.query(models.ScrapedJobFilter)
         .filter(models.ScrapedJobFilter.id == filter_id)
         .filter(models.ScrapedJobFilter.owner_id == current_user.id)
-        .filter(models.ScrapedJobFilter.is_active)
         .first()
     )
 
@@ -480,7 +433,6 @@ def update_scraped_job_filter(
     # If the filter was never used, update it
     for key, value in update_data.model_dump(exclude_unset=True).items():
         setattr(filter_obj, key, value)
-    response.status_code = status.HTTP_200_OK
 
     db.commit()
     db.refresh(filter_obj)
