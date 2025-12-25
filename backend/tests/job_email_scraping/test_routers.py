@@ -226,7 +226,7 @@ class TestScrapedJobFilters(CRUDTestBase):
         "type": "title",
     }
     required_fixture = ["test_scraped_jobs"]
-    actions_to_test = ["get_all", "get_one"]
+    actions_to_test = ["get_all", "get_one", "post"]
 
     @staticmethod
     def _create_filter(session, owner_id: int = 1, **kwargs) -> models.ScrapedJobFilter:
@@ -299,8 +299,6 @@ class TestScrapedJobFilters(CRUDTestBase):
 
         filter_obj = self._create_filter(session)
         filter_id = filter_obj.id
-        filter_operator = filter_obj.operator
-        user_id = test_users[0].id
 
         # Add a filtered job
         # noinspection PyArgumentList
@@ -317,12 +315,7 @@ class TestScrapedJobFilters(CRUDTestBase):
         update_data = {"value": "Updated Title"}
         response = self.put(authorised_clients[0], filter_id, update_data)
 
-        assert response.status_code == status.HTTP_201_CREATED
-        data = response.json()
-        assert data["id"] != filter_id
-        assert data["operator"] == filter_operator
-        assert data["value"] == update_data["value"]
-        assert data["owner_id"] == user_id
+        assert response.status_code == status.HTTP_409_CONFLICT
 
     def test_update_filter_without_filtered_jobs_creates_new(self, session, authorised_clients, test_users) -> None:
         """Should create new filter when original has no filtered jobs"""
@@ -361,44 +354,4 @@ class TestScrapedJobFilters(CRUDTestBase):
 
         filter_obj = self._create_filter(session)
         response = self.put(client, filter_obj.id, {"value": "Updated"})
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    # ------------------------------------------------------ POST ------------------------------------------------------
-
-    def test_post_filter_non_existent(self, session, authorised_clients, test_users) -> None:
-        """Should delete filter completely when it has no filtered jobs"""
-
-        data = {"value": "Updated Title", "type": "title", "operator": "contains"}
-        response = self.post(authorised_clients[0], data)
-        assert response.status_code == status.HTTP_201_CREATED
-        for key, value in data.items():
-            assert response.json()[key] == value
-
-    def test_post_filter_duplicate(self, session, authorised_clients, test_users) -> None:
-        """Should deactivate filter when it has filtered jobs instead of deleting"""
-
-        filter_obj = self._create_filter(session)
-        data = {"value": filter_obj.value, "type": filter_obj.type, "operator": filter_obj.operator}
-        response = self.post(authorised_clients[0], data)
-        assert response.json()["id"] == filter_obj.id
-        assert response.status_code == status.HTTP_200_OK
-        for key, value in data.items():
-            assert response.json()[key] == value
-
-    def test_post_filter_duplicate_inactive(self, session, authorised_clients, test_users) -> None:
-        """Should deactivate filter when it has filtered jobs instead of deleting"""
-
-        filter_obj = self._create_filter(session, is_active=False)
-        data = {"value": filter_obj.value, "type": filter_obj.type, "operator": filter_obj.operator, "is_active": True}
-        response = self.post(authorised_clients[0], data)
-        assert response.json()["id"] == filter_obj.id
-        assert response.status_code == status.HTTP_200_OK
-        for key, value in data.items():
-            assert response.json()[key] == value
-
-    def test_post_filter_unauthenticated(self, session, client, test_users) -> None:
-        """Should return 401 when not authenticated"""
-
-        data = {"value": "Updated Title", "type": "title", "operator": "contains"}
-        response = self.post(client, data)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
