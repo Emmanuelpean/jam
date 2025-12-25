@@ -466,7 +466,7 @@ def generate_data_table_crud_router(
 
     if "delete" in allowed_actions:
 
-        @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT, response_model=out_schema)
+        @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
         def delete(
             entry_id: int,
             db: Session = Depends(database.get_db),

@@ -45,6 +45,22 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 		{ key: "deleted" as const, title: `Deleted (${deletedFilters.length})` },
 	];
 
+	const menuItems = (item: ScrapedJobFilterData): string[] => {
+		if (item.filtered_jobs.length > 0) {
+			return ["detail", "delete"];
+		} else {
+			return ["detail", "edit", "delete"];
+		}
+	};
+
+	const canDeactivate = (item: ScrapedJobFilterData): string | null => {
+		if (item.filtered_jobs.length > 0) {
+			return "it having been used to filter scraped jobs";
+		} else {
+			return null;
+		}
+	};
+
 	const renderBodyContent = (): JSX.Element => {
 		switch (activeTab) {
 			case "active":
@@ -64,6 +80,9 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 									showAllEntries={true}
 									compact={true}
 									initialData={{ is_enabled: true }}
+									menuItems={menuItems}
+									defaultModalMode={"detail"}
+									canDeactivate={canDeactivate}
 								/>
 							</div>
 						</div>
@@ -86,8 +105,9 @@ const ScrapedJobFilterTable: React.FC<ScrapedJobFilterTableProps> = ({
 									showAllEntries={true}
 									compact={true}
 									showAdd={false}
-									menuItems={["view"]}
-									modalProps={{ canEdit: false }}
+									menuItems={menuItems}
+									defaultModalMode={"detail"}
+									canDeactivate={canDeactivate}
 								/>
 							</div>
 						</div>

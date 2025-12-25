@@ -4,7 +4,7 @@ import DataModal, {
 	JamDataModalProps,
 	Fields,
 	ValidationErrors,
-	WarningConfig,
+	WarningMessageConfig,
 } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { EnrichedJobData, JobData, ScrapedJobData } from "../../services/Schemas";
@@ -100,7 +100,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		};
 
 		const warningMessage = (data: ScrapedJobData) => {
-			const result: WarningConfig[] = [];
+			const result: WarningMessageConfig[] = [];
 
 			if (data?.is_failed) {
 				result.push({

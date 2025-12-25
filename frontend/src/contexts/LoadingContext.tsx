@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, JSX } from "react";
 
 interface LoadingContextType {
 	isLoading: boolean;
@@ -16,20 +16,22 @@ interface LoadingProviderProps {
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
 export const useLoading = (): LoadingContextType => {
-	const context = useContext(LoadingContext);
+	const context: LoadingContextType | undefined = useContext(LoadingContext);
 	if (!context) {
 		throw new Error("useLoading must be used within a LoadingProvider");
 	}
 	return context;
 };
 
-export const LoadingProvider = ({ children }: LoadingProviderProps) => {
+export const LoadingProvider = ({ children }: LoadingProviderProps): JSX.Element => {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [loadingMessage, setLoadingMessage] = useState<string>("Loading...");
 	const [progress, setProgress] = useState<number | undefined>(undefined);
 
 	const showLoading = (message: string = "Loading...", initialProgress: number = 0): void => {
-		setLoadingMessage(message);
+		if (message) {
+			setLoadingMessage(message);
+		}
 		setProgress(initialProgress);
 		setIsLoading(true);
 	};
@@ -40,10 +42,10 @@ export const LoadingProvider = ({ children }: LoadingProviderProps) => {
 	};
 
 	const updateProgress = (newProgress: number, message?: string): void => {
-		setProgress(newProgress);
 		if (message) {
 			setLoadingMessage(message);
 		}
+		setProgress(newProgress);
 	};
 
 	const value: LoadingContextType = {

@@ -6,7 +6,7 @@ and service execution logs with CRUD operations and admin access controls."""
 from datetime import datetime
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Response, HTTPException
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session, joinedload
 from starlette import status
@@ -387,93 +387,54 @@ scraped_job_filter_router = generate_data_table_crud_router(
     out_schema=schemas.ScrapedJobFilterOut,
     endpoint="scraped_job_filters",
     not_found_msg="Scraped Job Filter not found",
-    allowed_actions=["get_all", "get_one"],
+    allowed_actions=["get_all", "get_one", "post"],
 )
 
 
-@scraped_job_filter_router.post("/", response_model=schemas.ScrapedJobFilterOut)
-def create_scraped_job_filter(
-    filter_data: schemas.ScrapedJobFilterCreate,
-    response: Response,
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """Create a new scraped job filter. If the type, operator and value are the same as an existing filter, use that
-    new filter and update it with the data.
-    :param filter_data: Data for the new filter
-    :param response: Response for the new filter
-    :param current_user: Current authenticated user
-    :param db: Database session
-    :return: New job filter or existing one"""
-
-    # If an existing filter with the same parameters exists for the user, return it instead of creating a new one
-    existing_filter = (
-        db.query(models.ScrapedJobFilter)
-        .filter_by(owner_id=current_user.id)
-        .filter_by(type=filter_data.type)
-        .filter_by(operator=filter_data.operator)
-        .filter_by(value=filter_data.value)
-        .filter_by(case_sensitive=filter_data.case_sensitive)
-        .first()
-    )
-    if existing_filter:
-        for key, value in filter_data.model_dump().items():
-            setattr(existing_filter, key, value)
-        db.commit()
-        db.refresh(existing_filter)
-        response.status_code = status.HTTP_200_OK
-        return existing_filter
-
-    else:
-        # noinspection PyArgumentList
-        filter_obj = models.ScrapedJobFilter(
-            **filter_data.model_dump(),
-            owner_id=current_user.id,
-        )
-        db.add(filter_obj)
-        db.commit()
-        db.refresh(filter_obj)
-        response.status_code = status.HTTP_201_CREATED
-        return filter_obj
-
-
-@scraped_job_filter_router.delete("/{filter_id}", response_model=schemas.ScrapedJobFilterOut)
-def delete_scraped_job_filter(
-    filter_id: int,
-    response: Response,
-    current_user: models.User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """Delete a scraped job filter by ID.
-    :param filter_id: ID of the filter to delete
-    :param response: FastAPI response object
-    :param current_user: Current authenticated user
-    :param db: Database session
-    :return: The deleted or deactivated filter object"""
-
-    # Fetch the filter to ensure it exists and belongs to the current user
-    filter_obj = (
-        db.query(models.ScrapedJobFilter)
-        .filter(models.ScrapedJobFilter.id == filter_id)
-        .filter(models.ScrapedJobFilter.owner_id == current_user.id)
-        .first()
-    )
-    filter_data = filter_obj.model_dump()
-
-    if not filter_obj:
-        raise NOT_ALLOWED_EXCEPTION
-
-    if filter_obj.filtered_jobs:
-        filter_obj.is_active = False
-        db.commit()
-        db.refresh(filter_obj)
-        response.status_code = status.HTTP_200_OK
-    else:
-        db.delete(filter_obj)
-        db.commit()
-        response.status_code = status.HTTP_202_ACCEPTED
-
-    return filter_data
+# @scraped_job_filter_router.post("/", response_model=schemas.ScrapedJobFilterOut)
+# def create_scraped_job_filter(
+#     filter_data: schemas.ScrapedJobFilterCreate,
+#     response: Response,
+#     current_user: models.User = Depends(get_current_user),
+#     db: Session = Depends(get_db),
+# ):
+#     """Create a new scraped job filter. If the type, operator and value are the same as an existing filter, use that
+#     new filter and update it with the data.
+#     :param filter_data: Data for the new filter
+#     :param response: Response for the new filter
+#     :param current_user: Current authenticated user
+#     :param db: Database session
+#     :return: New job filter or existing one"""
+#
+#     # If an existing filter with the same parameters exists for the user, return it instead of creating a new one
+#     existing_filter = (
+#         db.query(models.ScrapedJobFilter)
+#         .filter_by(owner_id=current_user.id)
+#         .filter_by(type=filter_data.type)
+#         .filter_by(operator=filter_data.operator)
+#         .filter_by(value=filter_data.value)
+#         .filter_by(case_sensitive=filter_data.case_sensitive)
+#         .first()
+#     )
+#     if existing_filter:
+#         for key, value in filter_data.model_dump().items():
+#             setattr(existing_filter, key, value)
+#         db.commit()
+#         db.refresh(existing_filter)
+#         response.status_code = status.HTTP_200_OK
+#         return existing_filter
+#
+#     else:
+#         # noinspection PyArgumentList
+#         filter_obj = models.ScrapedJobFilter(
+#             **filter_data.model_dump(),
+#             owner_id=current_user.id,
+#         )
+#         db.add(filter_obj)
+#         db.commit()
+#         db.refresh(filter_obj)
+#         response.status_code = status.HTTP_201_CREATED
+#         return filter_obj
 
 
 @scraped_job_filter_router.put("/{filter_id}")
@@ -503,29 +464,55 @@ def update_scraped_job_filter(
     if not filter_obj:
         raise NOT_ALLOWED_EXCEPTION
 
-    # If the filter previously filtered jobs, create a new filter
+    # Get the update fields
+    update_dict = update_data.model_dump(exclude_unset=True)
+
+    # If the filter previously filtered jobs, only allow is_active updates
     if filter_obj.filtered_jobs:
-        filter_dict = {
-            "type": filter_obj.type,
-            "operator": filter_obj.operator,
-            "value": filter_obj.value,
-            "case_sensitive": filter_obj.case_sensitive,
-            "is_enabled": filter_obj.is_enabled,
-            "is_active": filter_obj.is_active,
-            "owner_id": filter_obj.owner_id,
-        }
-        filter_dict.update(update_data.model_dump(exclude_unset=True))
-        # noinspection PyArgumentList
-        filter_obj = models.ScrapedJobFilter(**filter_dict)
-        db.add(filter_obj)
-        response.status_code = status.HTTP_201_CREATED
+        # Check if any fields other than is_active are being updated
+        non_active_fields = {k: v for k, v in update_dict.items() if k != "is_active"}
+        if non_active_fields:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot update filter fields other than is_active when filter has been used",
+            )
 
     # If the filter was never used, update it
-    else:
-        for key, value in update_data.model_dump(exclude_unset=True).items():
-            setattr(filter_obj, key, value)
-        response.status_code = status.HTTP_200_OK
+    for key, value in update_data.model_dump(exclude_unset=True).items():
+        setattr(filter_obj, key, value)
+    response.status_code = status.HTTP_200_OK
 
     db.commit()
     db.refresh(filter_obj)
     return filter_obj
+
+
+@scraped_job_filter_router.delete("/{filter_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_scraped_job_filter(
+    filter_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete a scraped job filter by ID.
+    :param filter_id: ID of the filter to delete
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: The deleted or deactivated filter object"""
+
+    # Fetch the filter to ensure it exists and belongs to the current user
+    filter_obj = (
+        db.query(models.ScrapedJobFilter)
+        .filter(models.ScrapedJobFilter.id == filter_id)
+        .filter(models.ScrapedJobFilter.owner_id == current_user.id)
+        .first()
+    )
+
+    if not filter_obj:
+        raise NOT_ALLOWED_EXCEPTION
+
+    # If the filter has filtered jobs, do not delete it, just deactivate it
+    if filter_obj.filtered_jobs:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+    else:
+        db.delete(filter_obj)
+        db.commit()
