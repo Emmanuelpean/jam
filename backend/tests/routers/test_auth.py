@@ -8,9 +8,8 @@ import jwt
 
 from app import schemas, models
 from app.config import settings
-from app.routers import auth
+from app.routers import auth, utils
 from app.utils import hash_token
-from routers import utils
 
 
 # -------------------------------------------------- UTILITY FUNCTIONS -------------------------------------------------
