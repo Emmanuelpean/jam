@@ -66,8 +66,9 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 						style={{ height: "100%" }}
 						variant="outline-primary"
 						onClick={(): void => setShowFilters(true)}
+						id={"scraping-filters-button"}
 					>
-						Filters (
+						Scraping Filters (
 						{
 							dataContext.scrapingFilters.filter(
 								(filter: ScrapingFilterData): boolean => filter.is_active,

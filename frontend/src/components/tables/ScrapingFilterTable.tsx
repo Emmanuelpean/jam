@@ -38,13 +38,13 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 		(filter: ScrapingFilterData): boolean => filter.is_active,
 	);
 
-	const deletedFilters: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
+	const deactivatedFilters: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
 		(filter: ScrapingFilterData): boolean => !filter.is_active,
 	);
 
-	const tabs = [
+	const tabs: { key: tabKeys; title: string }[] = [
 		{ key: "active" as const, title: `Active (${activeFilters.length})` },
-		{ key: "inactive" as const, title: `Inactive (${deletedFilters.length})` },
+		{ key: "inactive" as const, title: `Inactive (${deactivatedFilters.length})` },
 	];
 
 	const menuItems = (item: ScrapingFilterData): string[] => {
@@ -64,7 +64,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	};
 
 	const renderBodyContent = (): JSX.Element => {
-		const data: ScrapingFilterData[] = activeTab === "active" ? activeFilters : deletedFilters;
+		const data: ScrapingFilterData[] = activeTab === "active" ? activeFilters : deactivatedFilters;
 		const showAdd: boolean = activeTab === "active";
 
 		return (
@@ -104,7 +104,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 
 		updateHeight();
 
-		const resizeObserver = new ResizeObserver(() => {
+		const resizeObserver = new ResizeObserver((): void => {
 			updateHeight();
 		});
 
@@ -142,7 +142,15 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	);
 
 	return (
-		<Modal show={show} onHide={onHide} size="xl" centered={true} backdrop={true} keyboard={true}>
+		<Modal
+			show={show}
+			onHide={onHide}
+			size="xl"
+			centered={true}
+			backdrop={true}
+			keyboard={true}
+			id={"scraping-filters-modal"}
+		>
 			<Modal.Header closeButton>
 				<Modal.Title>Scraped Job Filters</Modal.Title>
 			</Modal.Header>

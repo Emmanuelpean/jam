@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
 from conftest import BaseTest, models
+from react_select import ReactSelect
 
 
 class TestToast(BaseTest):
@@ -18,7 +19,6 @@ class TestToast(BaseTest):
 
         request.getfixturevalue("test_scraped_jobs")
         self.login()
-        # request.getfixturevalue("test_jobs")
 
     def test_import_scraped_job(self) -> None:
         """Test importing a scraped job and displaying a toast notification."""
@@ -96,3 +96,63 @@ class TestToast(BaseTest):
         actions = ActionChains(self.driver)
         actions.context_click(self.table_row(entity_id)).perform()
         self.get_element(f"context-menu-{choice}").click()
+
+
+class TestScrapingFilters(BaseTest):
+
+    user_index = 0
+    page_url = "dashboard"
+    entity_type = "scrapingFilters"
+
+    def setup_function(self, request) -> None:
+        """Setup for each test function."""
+
+        request.getfixturevalue("test_scraped_jobs")
+        request.getfixturevalue("test_scraping_filters")
+        self.login()
+
+    def select_option(self, element: str, option: str) -> None:
+        """Select an option from a React Select element."""
+
+        select = ReactSelect(self.get_element(element))
+        select.open_menu()
+        select.select_by_visible_text(option)
+
+    def open_modal(self) -> None:
+        """Open the scraping filters modal."""
+
+        self.get_element("scraping-filters-button").click()
+        self.get_element("scraping-filters-modal")
+
+    def test_add_scraping_filter(self) -> None:
+        """Test adding a scraping filter and displaying a toast notification."""
+
+        filter_count = self.db.query(models.ScrapingFilter).count()
+        self.open_modal()
+        self.get_element("add-scrapingFilters-button").click()
+        self.select_option("type", "Attendance Type")
+        self.select_option("operator", "Contains")
+        self.set_text(self.get_element("value"), "In Person")
+        self.get_element("modal-edit-scraping filter-confirm-button").click()
+        assert self.db.query(models.ScrapingFilter).count() == filter_count + 1
+
+    def context_menu(self, entity_id: int, choice: str) -> None:
+        """Row context menu"""
+
+        actions = ActionChains(self.driver)
+        actions.context_click(self.table_row(entity_id)).perform()
+        self.get_element(f"context-menu-{choice}").click()
+
+    #
+    # def deactivate_scraping_filter(self) -> None:
+    #     """Test deactivating a scraping filter and displaying a toast notification."""
+    #
+    #     self.open_modal()
+    #     self.get_element("table-row-scrapingFilters-2").click()
+    #     self.get_element("modal-edit-scraping filter-deactivate-button").click()
+    #     self.get_element("delete-alert-modal-confirm-button").click()
+    #     self.wait_for_modal_close("modal-edit-scraping filter")
+    #     self.assert_toast_message("Scraping Filter deactivated successfully.")
+    #     self.db.expire_all()
+    #     scraping_filter = self.db.query(models.ScrapingFilter).filter_by(id=1).first()
+    #     assert not scraping_filter.is_active
