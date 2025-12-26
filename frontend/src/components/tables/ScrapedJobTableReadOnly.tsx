@@ -15,7 +15,6 @@ const ScrapedJobsTableReadOnly: React.FC<DataTableProps> = ({
 					tableColumns.scrapedCompanyColumn(),
 					tableColumns.scrapedLocationColumn(),
 					tableColumns.salaryRangeColumn(),
-					tableColumns.overallScore(),
 					tableColumns.urlGenericColumn(),
 					tableColumns.platformColumn(),
 					tableColumns.createdAtColumn({ label: "Date Received" }),

@@ -535,7 +535,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				style={{ gap: compact ? "0.5rem" : "1rem" }}
 			>
 				{showSearch && !compact && (
-					<div className="d-flex align-items-center gap-3" style={{ width: showAdd ? "40%" : "90%" }}>
+					<div className="d-flex align-items-center gap-3" style={{ flex: 1, width: "auto" }}>
 						<input
 							type="text"
 							className="form-control"

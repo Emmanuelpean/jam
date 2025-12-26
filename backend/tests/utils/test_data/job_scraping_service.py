@@ -857,6 +857,7 @@ SCRAPED_JOB_DATA = [
         "is_imported": True,
         "url": "test",
         "service_log_id": 1,
+        "filter_id": 1,
     },
     {
         "external_job_id": "9988776655",
@@ -870,6 +871,7 @@ SCRAPED_JOB_DATA = [
         "is_active": False,
         "url": "test",
         "service_log_id": 1,
+        "filter_id": 1,
     },
     {
         "external_job_id": "4123456789",
@@ -926,7 +928,6 @@ SCRAPED_JOB_DATA = [
         "url": "https://reed.co.uk/jobs/ml-engineer-edinburgh/345678",
         "scrape_datetime": "2025-09-05T09:33:12.345678+00:00",
         "service_log_id": 1,
-        "filter_id": 1,
     },
     {
         "external_job_id": "cvlib_678901",
@@ -958,7 +959,6 @@ SCRAPED_JOB_DATA = [
         "url": "https://jobsite.co.uk/job/fullstack-js-manchester-901234",
         "scrape_datetime": "2025-09-09T13:20:15.567890+00:00",
         "service_log_id": 1,
-        "filter_id": 1,
     },
     {
         "external_job_id": "soft123456789",

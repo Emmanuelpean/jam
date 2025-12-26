@@ -407,7 +407,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				const api: CrudApi<JamData> = getApi(type);
 				const apiResult: ApiResponse<JamData> = await api.create(newData, token);
 				const setter = getSetter(type);
-				setter((prev: any[]): any[] => [...prev, apiResult]);
+				setter((prev: any[]): any[] => [...prev, apiResult.data]);
 				return apiResult;
 			} catch (error) {
 				console.error(`Failed to add ${type}:`, error);
@@ -423,7 +423,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				const api: CrudApi<JamData> = getApi(type);
 				const apiResult: ApiResponse<JamData> = await api.update(id, updatedData, token);
 				const setter = getSetter(type);
-				setter((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult : item)));
+				setter((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult.data : item)));
 				return apiResult;
 			} catch (error) {
 				console.error(`Failed to update ${type}:`, error);
