@@ -451,189 +451,14 @@ LOGS_DIR = Path(os.path.join(os.path.dirname(settings.log_directory), "test_logs
 LOGS_DIR.mkdir(exist_ok=True)
 
 
-class BaseTest:
-    """Base class for selenium tests"""
+class BaseUtils(object):
+    """Base class for selenium utilities"""
 
-    driver = None  # chrome driver
-    wait = None  # chrome driver wait
-    frontend_base_url = ""  # frontend base url
-    backend_url = ""  # backend url
-    user = None  # user to use
-    client = None  # client for the current user
-    db = None  # database session
-
-    # Parameters needed
-    page_url = ""  # url of the page to test (not including the base url)
-    user_index = 1  # index of the user to use for the test
-
-    _test_name = ""
-
-    @pytest.fixture(autouse=True)
-    def setup_method(
-        self,
-        test_frontend_server,
-        test_backend_server,
-        request,
-        test_users,
-        authorised_clients,
-        session,
-    ) -> Generator[None, None, None]:
-        """Set up the test environment before each test with test data"""
-        self._test_name = request.node.name
-        try:
-            # Configure Chrome options to disable password prompts
-            chrome_options = Options()
-            prefs = {
-                "profile.password_manager_leak_detection": False,
-                "credentials_enable_service": False,
-                "password_manager_enabled": False,
-                "profile.password_manager_enabled": False,
-            }
-            chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--headless=new")
-            chrome_options.add_argument("--window-size=1960,1080")
-            chrome_options.add_argument("--disable-gpu")
-            chrome_options.add_argument("--no-sandbox")
-            chrome_options.add_argument("--ignore-certificate-errors")
-            chrome_options.add_argument("--disable-dev-shm-usage")
-            chrome_options.add_argument("--lang=en-GB")
-
-            # Enable verbose logging
-            chrome_options.add_argument("--enable-logging")
-            chrome_options.add_argument("--v=1")
-            chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
-
-            self.driver = webdriver.Chrome(options=chrome_options)
-            # self.driver.maximize_window()
-            self.wait = WebDriverWait(self.driver, 10)
-            # Set timezone using CDP
-            self.driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
-
-            # Set locale using CDP
-            self.driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-GB"})
-
-            # Frontend/Backend
-            self.frontend_base_url = test_frontend_server
-            self.backend_url = test_backend_server
-
-            # Client/User
-            self.client = authorised_clients[self.user_index]
-            self.user = test_users[self.user_index]
-            self.db = session
-
-            self.setup_function(request)
-
-        except Exception:
-            if hasattr(self, "driver"):
-                try:
-                    self._save_browser_logs(failed=True)
-                    self.driver.quit()
-                except:
-                    pass
-            raise
-        yield  # This allows the test to run
-
-        # Teardown
-        try:
-            if hasattr(self, "driver"):
-                # Check if test failed
-                test_failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False
-
-                # Save logs on failure or in CI (always in CI for debugging)
-                if test_failed or os.getenv("CI"):
-                    self._save_browser_logs(failed=test_failed)
-                    self._save_page_screenshot(failed=test_failed)
-                self.driver.quit()
-        except Exception as e:
-            print(f"Error during teardown: {e}")
-
-    def setup_function(self, request) -> None:
-        """Function to run before each test - can be overridden in subclasses"""
-        pass
-
-    def go_to(self, page) -> None:
+    def go_to_page(self, page) -> None:
         """Helper method to go to a specific page"""
 
         self.driver.get(f"{self.frontend_base_url}/{page}")
         self.wait_for_page(page)
-
-    def login(self) -> None:
-        """Helper method to log in to the application"""
-
-        login_url = f"{self.frontend_base_url}/login"
-        self.driver.get(login_url)
-        self.get_element("email").send_keys(self.user.email)
-        self.get_element("password").send_keys(self.user.plain_password)
-        self.get_element("confirm-button").click()
-        try:
-            self.get_element("loading-spinner", timeout=2)
-            self.wait_for_disappear("loading-spinner", timeout=2)
-        except:
-            pass
-        self.wait_for_page("dashboard")
-        self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
-        self.wait_for_table_load()
-
-    def _save_browser_logs(self, failed: bool = False) -> None:
-        """Save browser console logs to file"""
-        try:
-            # Get browser logs
-            browser_logs = self.driver.get_log("browser")
-            performance_logs = self.driver.get_log("performance")
-
-            # Create filename with test name and timestamp
-            timestamp = time.strftime("%Y%m%d_%H%M%S")
-            status_string = "FAILED" if failed else "PASSED"
-            safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
-
-            # Save browser console logs
-            browser_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_browser.log"
-            with open(browser_log_file, "w") as f:
-                f.write(f"Test: {self._test_name}\n")
-                f.write(f"Status: {status_string}\n")
-                f.write(f"Timestamp: {timestamp}\n")
-                f.write(f"URL: {self.driver.current_url}\n")
-                f.write("=" * 80 + "\n\n")
-
-                for entry in browser_logs:
-                    f.write(f"[{entry['level']}] {entry['timestamp']}: {entry['message']}\n")
-
-            # Save performance logs (network requests)
-            perf_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_network.log"
-            with open(perf_log_file, "w") as f:
-                f.write(f"Test: {self._test_name}\n")
-                f.write(f"Network Performance Logs\n")
-                f.write("=" * 80 + "\n\n")
-
-                for entry in performance_logs:
-                    try:
-                        log_entry = json.loads(entry["message"])
-                        # Filter for network events
-                        if "Network" in log_entry.get("message", {}).get("method", ""):
-                            f.write(json.dumps(log_entry, indent=2) + "\n")
-                    except:
-                        pass
-
-            print(f"✅ Saved browser logs to {browser_log_file}")
-
-        except Exception as e:
-            print(f"⚠️ Could not save browser logs: {e}")
-
-    def _save_page_screenshot(self, failed: bool = False) -> None:
-        """Save screenshot of current page"""
-        try:
-            timestamp = time.strftime("%Y%m%d_%H%M%S")
-            status_string = "FAILED" if failed else "PASSED"
-            safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
-
-            screenshot_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}.png"
-            self.driver.save_screenshot(str(screenshot_file))
-            print(f"✅ Saved screenshot to {screenshot_file}")
-
-        except Exception as e:
-            print(f"⚠️ Could not save screenshot: {e}")
-
-    # ------------------------------------------------ GET/WAIT ELEMENTS -----------------------------------------------
 
     def wait_for_page(self, page_url: str) -> None:
         """Wait for the dashboard to load"""
@@ -712,27 +537,16 @@ class BaseTest:
         element.send_keys(Keys.DELETE)
         element.send_keys(text)
 
-    # ---------------------------------------------------- UTILITIES ---------------------------------------------------
-
     def _wait_for_modal_close(self, name: str) -> None:
         """Wait for the modal to close"""
 
         self.wait.until(ec.invisibility_of_element_located((By.ID, name)))
 
-    @property
-    def db_user(self) -> models.User:
-        """Get the user from the database"""
-
-        self.db.expire_all()
-        return self.db.query(models.User).filter(models.User.id == self.user.id).first()
-
-    def verify_user_in_database(self, email: str) -> list[models.User]:
-        """Helper method to verify user exists in database"""
-
-        return self.db.query(models.User).filter(models.User.email == email).all()
+    # ----------------------------------------------------- EMAILS -----------------------------------------------------
 
     def get_verification_token_from_db(self, email: str) -> str:
-        """Helper method to get verification token from database"""
+        """Helper method to get verification token from database
+        :param email: Email of the user to get the token for"""
 
         user = self.db.query(models.User).filter(models.User.email == email).first()
         token = user.verification_token
@@ -762,7 +576,225 @@ class BaseTest:
         response = requests.delete(f"{settings.backend_url}/test/emails")
         assert response.status_code == 200, "Failed to clear test emails"
 
+    # ---------------------------------------------------- ELEMENTS ----------------------------------------------------
+
     def assert_toast_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
         assert error_message in self.get_element("toast").text, f"Message not found: {error_message}"
+
+    @property
+    def delete_confirm_button(self) -> WebElement:
+        """Get the delete confirm button on the modal"""
+
+        return self.get_element("delete-alert-modal-confirm-button")
+
+    def wait_for_delete_modal_close(self) -> None:
+        """Wait for the delete modal to close"""
+
+        self._wait_for_modal_close("delete-alert-modal")
+
+
+class BaseUtils1(BaseUtils):
+
+    def __init__(self, driver: WebDriver, test_frontend_server, session):
+        """Object constructor
+        :param driver: Selenium WebDriver instance
+        :param test_frontend_server: Base URL of the frontend server"""
+
+        self.driver = driver
+        self.wait = WebDriverWait(self.driver, 10)
+        self.frontend_base_url = test_frontend_server
+        self.db = session
+
+
+class BaseTest:
+    """Base class for selenium tests"""
+
+    driver = None  # chrome driver
+    wait = None  # chrome driver wait
+    frontend_base_url = ""  # frontend base url
+    backend_url = ""  # backend url
+    user = None  # user to use
+    client = None  # client for the current user
+    db = None  # database session
+    base_utils = None  # base utils
+
+    # Parameters needed
+    page_url = ""  # url of the page to test (not including the base url)
+    user_index = 1  # index of the user to use for the test
+
+    _test_name = ""
+
+    @pytest.fixture(autouse=True)
+    def setup_method(
+        self,
+        test_frontend_server,
+        test_backend_server,
+        request,
+        test_users,
+        authorised_clients,
+        session,
+    ) -> Generator[None, None, None]:
+        """Set up the test environment before each test with test data"""
+        self._test_name = request.node.name
+        try:
+            # Configure Chrome options to disable password prompts
+            chrome_options = Options()
+            prefs = {
+                "profile.password_manager_leak_detection": False,
+                "credentials_enable_service": False,
+                "password_manager_enabled": False,
+                "profile.password_manager_enabled": False,
+            }
+            chrome_options.add_experimental_option("prefs", prefs)
+            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--window-size=1960,1080")
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--ignore-certificate-errors")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--lang=en-GB")
+
+            # Enable verbose logging
+            chrome_options.add_argument("--enable-logging")
+            chrome_options.add_argument("--v=1")
+            chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
+
+            self.driver = webdriver.Chrome(options=chrome_options)
+            # self.driver.maximize_window()
+            self.wait = WebDriverWait(self.driver, 10)
+            # Set timezone using CDP
+            self.driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
+
+            # Set locale using CDP
+            self.driver.execute_cdp_cmd("Emulation.setLocaleOverride", {"locale": "en-GB"})
+
+            # Frontend/Backend
+            self.frontend_base_url = test_frontend_server
+            self.backend_url = test_backend_server
+
+            # Client/User
+            self.client = authorised_clients[self.user_index]
+            self.user = test_users[self.user_index]
+            self.db = session
+            self.base_utils = BaseUtils(self.driver, test_frontend_server, session)
+
+            self.setup_function(request)
+
+        except Exception:
+            if hasattr(self, "driver"):
+                try:
+                    self._save_browser_logs(failed=True)
+                    self.driver.quit()
+                except:
+                    pass
+            raise
+        yield  # This allows the test to run
+
+        # Teardown
+        try:
+            if hasattr(self, "driver"):
+                # Check if test failed
+                test_failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False
+
+                # Save logs on failure or in CI (always in CI for debugging)
+                if test_failed or os.getenv("CI"):
+                    self._save_browser_logs(failed=test_failed)
+                    self._save_page_screenshot(failed=test_failed)
+                self.driver.quit()
+        except Exception as e:
+            print(f"Error during teardown: {e}")
+
+    def setup_function(self, request) -> None:
+        """Function to run before each test - can be overridden in subclasses"""
+        pass
+
+    def _save_browser_logs(self, failed: bool = False) -> None:
+        """Save browser console logs to file"""
+        try:
+            # Get browser logs
+            browser_logs = self.driver.get_log("browser")
+            performance_logs = self.driver.get_log("performance")
+
+            # Create filename with test name and timestamp
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            status_string = "FAILED" if failed else "PASSED"
+            safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
+
+            # Save browser console logs
+            browser_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_browser.log"
+            with open(browser_log_file, "w") as f:
+                f.write(f"Test: {self._test_name}\n")
+                f.write(f"Status: {status_string}\n")
+                f.write(f"Timestamp: {timestamp}\n")
+                f.write(f"URL: {self.driver.current_url}\n")
+                f.write("=" * 80 + "\n\n")
+
+                for entry in browser_logs:
+                    f.write(f"[{entry['level']}] {entry['timestamp']}: {entry['message']}\n")
+
+            # Save performance logs (network requests)
+            perf_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_network.log"
+            with open(perf_log_file, "w") as f:
+                f.write(f"Test: {self._test_name}\n")
+                f.write(f"Network Performance Logs\n")
+                f.write("=" * 80 + "\n\n")
+
+                for entry in performance_logs:
+                    try:
+                        log_entry = json.loads(entry["message"])
+                        # Filter for network events
+                        if "Network" in log_entry.get("message", {}).get("method", ""):
+                            f.write(json.dumps(log_entry, indent=2) + "\n")
+                    except:
+                        pass
+
+            print(f"✅ Saved browser logs to {browser_log_file}")
+
+        except Exception as e:
+            print(f"⚠️ Could not save browser logs: {e}")
+
+    def _save_page_screenshot(self, failed: bool = False) -> None:
+        """Save screenshot of current page"""
+        try:
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            status_string = "FAILED" if failed else "PASSED"
+            safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
+
+            screenshot_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}.png"
+            self.driver.save_screenshot(str(screenshot_file))
+            print(f"✅ Saved screenshot to {screenshot_file}")
+
+        except Exception as e:
+            print(f"⚠️ Could not save screenshot: {e}")
+
+    def login(self) -> None:
+        """Helper method to log in to the application"""
+
+        self.driver.get(f"{self.frontend_base_url}/login")
+        self.base_utils.get_element("email").send_keys(self.user.email)
+        self.base_utils.get_element("password").send_keys(self.user.plain_password)
+        self.base_utils.get_element("confirm-button").click()
+        try:
+            self.base_utils.get_element("loading-spinner", timeout=2)
+            self.base_utils.wait_for_disappear("loading-spinner", timeout=2)
+        except:
+            pass
+        self.base_utils.wait_for_page("dashboard")
+        self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
+        self.base_utils.wait_for_table_load()
+
+    # ---------------------------------------------------- DATABASE ----------------------------------------------------
+
+    @property
+    def db_user(self) -> models.User:
+        """Get the user from the database"""
+
+        self.db.expire_all()
+        return self.db.query(models.User).filter(models.User.id == self.user.id).first()
+
+    def verify_user_in_database(self, email: str) -> list[models.User]:
+        """Helper method to verify user exists in database"""
+
+        return self.db.query(models.User).filter(models.User.email == email).all()

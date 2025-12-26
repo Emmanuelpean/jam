@@ -11,45 +11,24 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.wait import WebDriverWait
 
-from conftest import contiguous_subdicts, models, BaseTest
+from conftest import contiguous_subdicts, models, BaseUtils, BaseTest
 from react_select import ReactSelect
 
 
-class TablePage(BaseTest):
-    """Base class for testing pages"""
+class DataModalUtils(BaseUtils):
+    """Base class for testing data modals"""
 
-    test_entries = None
-    test_entry = None
-    entity_type = None
-    user_index = 0
+    def __init__(self, driver, entry_name: str, test_frontend_server, session):
+        """Object constructor
+        :param driver: Selenium WebDriver
+        :param entry_name: Name of the entry type (e.g. tag, company)
+        :param test_frontend_server: Frontend server URL
+        :param session: requests.Session object for backend API calls"""
 
-    # Parameters needed
-    endpoint = ""  # endpoint of the table, used to query the data
-    entry_name = ""  # name of the table entries (e.g. aggregator)
-    test_fixture = ""  # test fixture to load the test date
-    test_data = {}  # test data used to fill the modal (adding entries, adding incorrect entries, editing entries)
-    required_fields = (
-        []
-    )  # required fields for adding entries. if empty, assume that any field is required (at least one)
-    duplicate_fields = []  # fields which are required to be unique
-    columns = []  # table column keys user for search and sorting
-    sorting_columns = []
-    test_entry_index = 0
-    model = None
+        BaseUtils.__init__(self, driver, test_frontend_server, session)
+        self.entry_name = entry_name
 
-    def setup_function(self, request) -> None:
-        """Function called during the setup"""
-
-        if isinstance(self.test_fixture, str):
-            self.test_fixture = [self.test_fixture]
-        self.test_entries, *self.add_test_entries = [request.getfixturevalue(fixture) for fixture in self.test_fixture]
-        self.test_entries = [entry for entry in self.test_entries if entry.owner_id == self.user.id]
-        self.test_entry = self.test_entries[self.test_entry_index]
-        if not self.sorting_columns:
-            self.sorting_columns = self.columns
-        self.login()
-
-    # ----------------------------------------------------- MODALS -----------------------------------------------------
+    # ------------------------------------------------ HELPER FUNCTIONS ------------------------------------------------
 
     def wait_for_view_modal_close(self, entry_name: str = "") -> None:
         """Wait for the view modal to close"""
@@ -68,11 +47,6 @@ class TablePage(BaseTest):
         except:
             raise AssertionError(f"Element in present in: {self.get_all_element_ids()}")
 
-    def wait_for_delete_modal_close(self) -> None:
-        """Wait for the delete modal to close"""
-
-        self._wait_for_modal_close("delete-alert-modal")
-
     def wait_for_view_modal(self, entry_name: str = "") -> WebElement:
         """Wait for the view modal to appear"""
 
@@ -87,219 +61,41 @@ class TablePage(BaseTest):
             entry_name = self.entry_name
         return self.get_element(f"modal-edit-{entry_name}")
 
+    def wait_for_import_modal_modal_close(self, entry_name: str = "") -> None:
+        """Wait for the import modal to close"""
+
+        if not entry_name:
+            entry_name = self.entry_name
+        try:
+            self._wait_for_modal_close(f"modal-import-{entry_name}")
+        except:
+            raise AssertionError(f"Element in present in: {self.get_all_element_ids()}")
+
     def wait_for_delete_modal(self) -> WebElement:
         """Wait for the delete modal to appear"""
 
         return self.get_element("delete-alert-modal")
 
-    # ----------------------------------------------------- TABLES -----------------------------------------------------
-
-    @property
-    def table_rows(self) -> list[WebElement]:
-        """Get all table rows on the page"""
-
-        self.get_element("table-row-clickable", By.CLASS_NAME)
-        return self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entity_type}-']")
-
-    def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
-        """Get a specific table row by its ID"""
-
-        return self.get_element(f"table-row-{self.entity_type}-{item_id}", *args, **kwargs)
-
-    def context_menu(self, entity_id: int, choice: str) -> None:
-        """Row context menu"""
-
-        actions = ActionChains(self.driver)
-        actions.context_click(self.table_row(entity_id)).perform()
-        self.get_element(f"context-menu-{choice}").click()
-
-    def check_row_exist(self, column: str, name: str, expected_count: int = 1) -> None:
-        """Check that a specific row with a specific name exists in the table
-        :param column: Name of the column to check
-        :param name: Name of the column
-        :param expected_count: Expected number of rows with that name"""
-
-        assert (
-            self.get_column_values(column).count(name) == expected_count
-        ), f"Expected {expected_count} rows with name '{name}'"
-
-    def get_column_values(self, column_key: str | None = None) -> list[str] | list[dict[str, str]]:
-        """Get values from a specific table column via the column key
-        (matched using id attributes starting with 'table-header-').
-        :param column_key: The key of the column. If None, returns all rows as list of dicts.
-        :return: List of values from that column, or list of row dicts if no key provided.
-        """
-        # Find all elements where id starts with 'table-header-'
-        header_elements = self.driver.find_elements(By.XPATH, "//*[@id[starts-with(., 'table-header-')]]")
-        header_keys = []
-        for header in header_elements:
-            th_id = header.get_attribute("id")
-            # Ensure only ids with "table-header-" are considered
-            if th_id and th_id.startswith("table-header-"):
-                header_keys.append(th_id[len("table-header-") :])
-
-        # If no column_key provided, return all rows as list of dicts
-        if column_key is None:
-            rows_data = []
-            for row in self.table_rows:
-                row_dict = {}
-                cells = row.find_elements(By.TAG_NAME, "td")
-                for i, key in enumerate(header_keys):
-                    if i < len(cells):
-                        row_dict[key] = cells[i].text
-                rows_data.append(row_dict)
-            return rows_data
-
-        if column_key not in header_keys:
-            raise ValueError(f"Column key '{column_key}' not found. Available keys: {header_keys}")
-
-        column_index = header_keys.index(column_key)
-        return [row.find_elements(By.TAG_NAME, "td")[column_index].text for row in self.table_rows]
-
-    # ----------------------------------------------------- BUTTONS ----------------------------------------------------
-
-    @property
-    def add_entity_button(self) -> WebElement:
-        """Get the Add Entity button"""
-
-        return self.get_element(f"add-{self.entity_type}-button")
-
-    @property
-    def delete_confirm_button(self) -> WebElement:
-        """Get the delete confirm button on the modal"""
-
-        return self.get_element("delete-alert-modal-confirm-button")
-
-    def confirm_button(self, mode: str, entry_name: str | None = None) -> WebElement:
+    def confirm_button(self, mode: str, entry_name: str = "") -> WebElement:
         """Get the confirm button on the modal"""
 
         if not entry_name:
             entry_name = self.entry_name
         return self.get_element(f"modal-{mode}-{entry_name}-confirm-button")
 
-    def cancel_button(self, mode: str, entry_name: str | None = None) -> WebElement:
+    def cancel_button(self, mode: str, entry_name: str = "") -> WebElement:
         """Get the cancel button on the modal"""
 
         if not entry_name:
             entry_name = self.entry_name
         return self.get_element(f"modal-{mode}-{entry_name}-cancel-button")
 
-    def edit_button(self, mode: str, entry_name: str | None = None) -> WebElement:
+    def edit_button(self, mode: str, entry_name: str = "") -> WebElement:
         """Get the edit button on the modal"""
 
         if not entry_name:
             entry_name = self.entry_name
         return self.get_element(f"modal-{mode}-{entry_name}-edit-button")
-
-    def set_page_item_select(self, value) -> None:
-        """Set the number of items to display per page
-        :param value: Value to select (e.g. "20", "40")"""
-
-        if len(self.table_rows) >= 20:
-            Select(self.get_element("page-items-select")).select_by_value(value)
-
-    def table_row_click(self, row_index: int) -> None:
-        """Click on a table row by its index (0-based)"""
-
-        element = self.table_row(row_index)
-        self.driver.execute_script("arguments[0].click();", element)
-
-    # ---------------------------------------------------- UTILITIES ---------------------------------------------------
-
-    @property
-    def test_name(self) -> str:
-        """Get the name of the test entity"""
-
-        return f"Test_{int(time.time())}"
-
-    @staticmethod
-    def salary_range(item: models.Job) -> str | None:
-        """
-        Returns a formatted salary range string based on minimum and maximum salary values.
-
-        Parameters
-        ----------
-        item : dict | None
-            A dictionary that may contain 'salary_min' and 'salary_max' keys.
-
-        Returns
-        -------
-        str | None
-            A formatted salary string such as:
-            - "£30,000"
-            - "£30,000 - £40,000"
-            - "From £30,000"
-            - "Up to £40,000"
-            or None if no salary values are provided.
-        """
-        if not item:
-            return None
-
-        salary_min = item.salary_min
-        salary_max = item.salary_max
-
-        if not salary_min and not salary_max:
-            return None
-
-        if salary_min == salary_max and salary_min:
-            return f"£{salary_min:,.0f}"
-
-        if salary_min and salary_max:
-            return f"£{salary_min:,.0f} - £{salary_max:,.0f}"
-
-        if salary_min:
-            return f"From £{salary_min:,.0f}"
-
-        if salary_max:
-            return f"Up to £{salary_max:,.0f}"
-
-        return None
-
-    # ----------------------------------------------- DISPLAY/VIEW TESTS -----------------------------------------------
-
-    def test_display_entries(self) -> None:
-        """Test that entries are displayed correctly"""
-
-        # Default 20 entries display
-        assert len(self.table_rows) == min([20, len(self.test_entries)]), "The table rows should match the entries"
-
-        # Increase to 40
-        self.set_page_item_select("40")
-        self.wait_for_table_load()
-        assert len(self.table_rows) == min([40, len(self.test_entries)]), "The table rows should match the entries"
-
-    def _test_view_modal(self, entry=None) -> None:
-        """Helper method to test the view modal for an entry"""
-
-        raise AssertionError("Not implemented")
-
-    def test_view_entry(self) -> None:
-        """Test viewing an entry details by clicking on a table row"""
-
-        self.table_row_click(self.test_entry.id)
-        self._test_view_modal()
-
-    def test_view_entry_right_click(self) -> None:
-        """Test viewing an entry details through the right-click context menu"""
-
-        self.context_menu(self.test_entry.id, "view")
-        self._test_view_modal()
-
-    # --------------------------------------------------- DELETE TEST --------------------------------------------------
-
-    def test_delete_entry(self) -> None:
-        """Test deleting an entry entry"""
-
-        self.context_menu(self.test_entry.id, "delete")
-        self.wait_for_delete_modal()
-        self.delete_confirm_button.click()
-        self.wait_for_delete_modal_close()
-        time.sleep(0.1)
-        self.wait_for_disappear(f"table-row-{self.test_entry.id}")
-        db_data = self.client.get(f"{self.backend_url}/{self.endpoint}/?id={self.test_entry.id}").json()
-        assert len(db_data) == 0, "Expected entry to be deleted from database"
-
-    # ----------------------------------------------------- ADD TEST ---------------------------------------------------
 
     def _fill_modal(self, entry_name: str = "", **values) -> None:
         """Fill the modal with the given values  (key: key of the input elements, value: value to set)."""
@@ -329,204 +125,10 @@ class TablePage(BaseTest):
                     select.select_by_visible_text(value)
                 elif key in ["date", "application_date"]:
                     self.get_element(key + "_set_current").click()
-                    # element = self.get_element(key)
-                    # element.send_keys(value.strftime("%d%m%Y"))
-                    # element.send_keys(Keys.TAB)
-                    # element.send_keys(value.strftime("%H%M%S"))
                 else:
                     self.set_text(self.get_element(key), value)
 
-    def test_add_valid_entry(self) -> None:
-        """Test adding a new entry"""
-
-        self.set_page_item_select("100")
-        # Determine the number of entries in the db and in the table
-        n_entries = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
-        initial_table_count = len(self.table_rows)
-
-        # Add the new entry
-        self.add_entity_button.click()
-        self.wait_for_edit_modal()
-        self._fill_modal(**self.test_data)
-        self.confirm_button("edit").click()
-        self.wait_for_edit_modal_close()
-
-        # Check that the new entry was properly added to the db and table
-        n_entries_new = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
-        assert n_entries_new == n_entries + 1, "Expected entry to be added to database"
-        new_table_count = len(self.table_rows)
-        assert new_table_count == initial_table_count + 1, "Expected entry to be added to table"
-
-        entries = self.db.query(self.model).all()
-        entry_id = max([entry.id for entry in entries])
-        entry = [entry for entry in entries if entry.id == entry_id][0]
-
-        # Reopen the modal
-        self.table_row(entry_id).click()
-        self.wait_for_view_modal()
-        self._test_view_modal(entry)
-
-        # Reopen in edit mode
-        self.context_menu(entry_id, "edit")
-        self.check_edit_modal(entry_id, **self.test_data)
-
-    def check_edit_modal(self, entry_id: int, **values) -> None:
-        """Check that the modal in edit mode contains the expected data
-        :param entry_id: entry ID
-        :param values: values to check"""
-
-        if any(isinstance(v, dict) for v in values.values()):
-            for tab_key in values:
-                self.get_element(f"{tab_key}-tab").click()
-                self.check_edit_modal(entry_id, **values[tab_key])
-        else:
-            for key in values:
-                if "date" in key:
-                    continue
-                element = self.get_element(key)
-                if element.tag_name == "input":
-                    value = element.get_attribute("value")
-                else:
-                    value = element.text
-                assert str(value) == str(values[key])
-
-    def test_add_duplicate_entry(self) -> None:
-        """Test that adding a new entry with an existing name shows validation error"""
-
-        if self.duplicate_fields:
-            # Add the new entry
-            self.add_entity_button.click()
-            self.wait_for_edit_modal()
-            self._fill_modal(**self.test_data)
-            self.confirm_button("edit").click()
-            self.wait_for_edit_modal_close()
-
-            self.add_entity_button.click()
-            self.wait_for_edit_modal()
-            self._fill_modal(**{key: self.test_data[key] for key in self.duplicate_fields})
-            self.confirm_button("edit").click()
-            self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-            self.cancel_button("edit").click()
-            self.wait_for_edit_modal_close()
-        else:
-            pytest.skip("Duplicate entries are allowed")
-
-    def test_add_incomplete_entry(self) -> None:
-        """Test that adding a new entry without all required information shows an error"""
-
-        if len(self.required_fields) > 1:
-            dictionaries = contiguous_subdicts({key: self.test_data[key] for key in self.required_fields})
-        else:
-            dictionaries = [dict()]
-
-        for d in dictionaries:
-            self.add_entity_button.click()
-            self._fill_modal(**d)
-            self.confirm_button("edit").click()
-            self.get_element(".invalid-feedback", By.CSS_SELECTOR)
-            self.cancel_button("edit").click()
-            self.wait_for_edit_modal_close()
-
-    def test_add_entry_cancel(self) -> None:
-        """Test cancelling a new entry creation."""
-
-        self.add_entity_button.click()
-        self.wait_for_edit_modal()
-        self.cancel_button("edit").click()
-        self.wait_for_edit_modal_close()
-
-    # ---------------------------------------------------- EDIT TEST ---------------------------------------------------
-
-    def test_edit_entry_through_view_modal(self) -> None:
-        """Test editing an entry through the view modal's edit button"""
-
-        self.set_page_item_select("100")
-        initial_count = len(self.table_rows)
-        self.table_row_click(self.test_entry.id)
-        self.wait_for_view_modal()
-        self.edit_button("view").click()
-        self._fill_modal(**self.test_data)
-        self.confirm_button("edit").click()
-        self.wait_for_edit_modal_close()
-        self.cancel_button("view").click()
-        assert len(self.table_rows) == initial_count, "Expected table to remain unchanged"
-
-    def test_edit_entry_through_right_click_context_menu(self) -> None:
-        """Test editing an entry through right-click context menu"""
-
-        self.set_page_item_select("100")
-        initial_count = len(self.table_rows)
-        self.context_menu(self.test_entry.id, "edit")
-        self._fill_modal(**self.test_data)
-        self.confirm_button("edit").click()
-        self.wait_for_edit_modal_close()
-        assert len(self.table_rows) == initial_count, "Expected table to remain unchanged"
-
-    def test_cancel_edit_view(self) -> None:
-        """Test cancelling an entry edit opened via the view modal"""
-
-        self.table_row_click(self.test_entry.id)
-        self.wait_for_view_modal()
-        self.edit_button("view").click()
-        self.cancel_button("edit").click()
-        self.wait_for_edit_modal_close()
-        self.wait_for_view_modal()
-
-    def test_cancel_edit(self) -> None:
-        """Test cancelling an entry edit opened via the edit modal"""
-
-        self.context_menu(self.test_entry.id, "edit")
-        self.cancel_button("edit").click()
-        self.wait_for_edit_modal_close()
-
-    def test_search_functionality(self) -> None:
-        """Test the search functionality"""
-
-        for key in self.columns:
-            print("Testing column:", key)
-            search_text = self.get_search_value(self.test_entry, key).lower()[3:]
-            print("Search text:", search_text)
-
-            # Get the expected list of entries
-            expected_entries = []
-            for entry in self.test_entries:
-                value = self.get_search_value(entry, key).lower()
-                if search_text in value:
-                    expected_entries.append(value)
-
-            # entries = set(entries)
-            print("expected", expected_entries)
-            self.set_text(self.get_element("search-input"), search_text)
-            time.sleep(0.2)  # Allow time for search to filter
-            print("got", self.table_rows)
-            assert len(self.table_rows) == len(expected_entries), "Expected search to filter results"
-
-    # def test_sort_functionality(self) -> None:
-    #     """Test sorting functionality"""
-    #
-    #     for key in self.sorting_columns:
-    #         # Click to sort and give time for UI update
-    #         self.get_element(f"table-header-{key}").click()
-    #         time.sleep(0.2)
-    #
-    #         # Compare with the sorted values
-    #         values = self.get_column_values(key)
-    #         a = [v.lower() for v in values if v != "Not Provided"]
-    #         assert values == sorted([v.lower() for v in values if v != "Not Provided"] + (len(values) - len(a)) * ["Not Provided"])
-
-    @staticmethod
-    def get_search_value(value, key: str) -> str:
-        """Get the search value for a given column key"""
-
-        result = getattr(value, key)
-        if isinstance(result, str):
-            return result
-        elif isinstance(result, models.Company):
-            return result.name
-        else:
-            return ""
-
-    # --------------------------------------------------- VIEW MODAL ---------------------------------------------------
+    # ------------------------------------------------ CHECK VIEW MODAL ------------------------------------------------
 
     def check_keyword_view_modal(self, entry: models.Keyword) -> None:
         """Helper method to test the view modal for a keyword entry"""
@@ -797,8 +399,440 @@ class TablePage(BaseTest):
         self.cancel_button("view", "job").click()
         self.wait_for_view_modal_close("job")
 
+    @property
+    def test_name(self) -> str:
+        """Get the name of the test entity"""
 
-class TestKeywordsPage(TablePage):
+        return f"Test_{int(time.time())}"
+
+    @staticmethod
+    def salary_range(item: models.Job) -> str | None:
+        """
+        Returns a formatted salary range string based on minimum and maximum salary values.
+
+        Parameters
+        ----------
+        item : dict | None
+            A dictionary that may contain 'salary_min' and 'salary_max' keys.
+
+        Returns
+        -------
+        str | None
+            A formatted salary string such as:
+            - "£30,000"
+            - "£30,000 - £40,000"
+            - "From £30,000"
+            - "Up to £40,000"
+            or None if no salary values are provided.
+        """
+        if not item:
+            return None
+
+        salary_min = item.salary_min
+        salary_max = item.salary_max
+
+        if not salary_min and not salary_max:
+            return None
+
+        if salary_min == salary_max and salary_min:
+            return f"£{salary_min:,.0f}"
+
+        if salary_min and salary_max:
+            return f"£{salary_min:,.0f} - £{salary_max:,.0f}"
+
+        if salary_min:
+            return f"From £{salary_min:,.0f}"
+
+        if salary_max:
+            return f"Up to £{salary_max:,.0f}"
+
+        return None
+
+
+class DataTableUtils(BaseUtils):
+    """Base class for testing data tables"""
+
+    # Parameters needed
+    entry_type: str = ""  # entity type of the table (e.g. keywords)
+
+    def __init__(self, driver, entry_type: str, test_frontend_server, session):
+        """Object constructor
+        :param driver: Selenium WebDriver
+        :param entry_type: Name of the entry type (e.g. keywords, companies)
+        :param test_frontend_server: Frontend server URL
+        :param session: requests.Session object for backend API calls"""
+
+        BaseUtils.__init__(self, driver, test_frontend_server, session)
+        self.entry_type = entry_type
+
+    # ----------------------------------------------------- TABLES -----------------------------------------------------
+
+    @property
+    def table_rows(self) -> list[WebElement]:
+        """Get all table rows on the page"""
+
+        self.get_element("table-row-clickable", By.CLASS_NAME)
+        return self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")
+
+    def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
+        """Get a specific table row by its ID"""
+
+        return self.get_element(f"table-row-{self.entry_type}-{item_id}", *args, **kwargs)
+
+    def context_menu(self, entity_id: int, choice: str) -> None:
+        """Row context menu"""
+
+        actions = ActionChains(self.driver)
+        actions.context_click(self.table_row(entity_id)).perform()
+        self.get_element(f"context-menu-{choice}").click()
+
+    def check_row_exist(self, column: str, name: str, expected_count: int = 1) -> None:
+        """Check that a specific row with a specific name exists in the table
+        :param column: Name of the column to check
+        :param name: Name of the column
+        :param expected_count: Expected number of rows with that name"""
+
+        assert (
+            self.get_column_values(column).count(name) == expected_count
+        ), f"Expected {expected_count} rows with name '{name}'"
+
+    def get_column_values(self, column_key: str | None = None) -> list[str] | list[dict[str, str]]:
+        """Get values from a specific table column via the column key
+        (matched using id attributes starting with 'table-header-').
+        :param column_key: The key of the column. If None, returns all rows as list of dicts.
+        :return: List of values from that column, or list of row dicts if no key provided.
+        """
+        # Find all elements where id starts with 'table-header-'
+        header_elements = self.driver.find_elements(By.XPATH, "//*[@id[starts-with(., 'table-header-')]]")
+        header_keys = []
+        for header in header_elements:
+            th_id = header.get_attribute("id")
+            # Ensure only ids with "table-header-" are considered
+            if th_id and th_id.startswith("table-header-"):
+                header_keys.append(th_id[len("table-header-") :])
+
+        # If no column_key provided, return all rows as list of dicts
+        if column_key is None:
+            rows_data = []
+            for row in self.table_rows:
+                row_dict = {}
+                cells = row.find_elements(By.TAG_NAME, "td")
+                for i, key in enumerate(header_keys):
+                    if i < len(cells):
+                        row_dict[key] = cells[i].text
+                rows_data.append(row_dict)
+            return rows_data
+
+        if column_key not in header_keys:
+            raise ValueError(f"Column key '{column_key}' not found. Available keys: {header_keys}")
+
+        column_index = header_keys.index(column_key)
+        return [row.find_elements(By.TAG_NAME, "td")[column_index].text for row in self.table_rows]
+
+    # ----------------------------------------------------- BUTTONS ----------------------------------------------------
+
+    @property
+    def add_entity_button(self) -> WebElement:
+        """Get the Add Entity button"""
+
+        return self.get_element(f"add-{self.entry_type}-button")
+
+    def set_page_item_select(self, value) -> None:
+        """Set the number of items to display per page
+        :param value: Value to select (e.g. "20", "40")"""
+
+        if len(self.table_rows) >= 20:
+            Select(self.get_element("page-items-select")).select_by_value(value)
+
+    def table_row_click(self, row_index: int) -> None:
+        """Click on a table row by its index (0-based)"""
+
+        element = self.table_row(row_index)
+        self.driver.execute_script("arguments[0].click();", element)
+
+
+class BaseTablePage(BaseTest):
+    """Base class for testing pages"""
+
+    test_entries = None
+    test_entry = None
+    user_index = 0
+    table_utils = None
+    modal_utils = None
+
+    # Parameters needed
+    entry_type = ""
+    entry_name = ""
+    endpoint = ""  # endpoint of the table, used to query the data
+    test_fixture = ""  # test fixture to load the test date
+    test_data = {}  # test data used to fill the modal (adding entries, adding incorrect entries, editing entries)
+    required_fields = (
+        []
+    )  # required fields for adding entries. if empty, assume that any field is required (at least one)
+    duplicate_fields = []  # fields which are required to be unique
+    columns = []  # table column keys user for search and sorting
+    sorting_columns = []
+    test_entry_index = 0
+    model = None
+
+    def setup_function(self, request) -> None:
+        """Function called during the setup"""
+
+        self.table_utils = DataTableUtils(self.driver, self.entry_type, self.frontend_base_url, self.db)
+        self.modal_utils = DataModalUtils(self.driver, self.entry_name, self.frontend_base_url, self.db)
+        if isinstance(self.test_fixture, str):
+            self.test_fixture = [self.test_fixture]
+        self.test_entries, *self.add_test_entries = [request.getfixturevalue(fixture) for fixture in self.test_fixture]
+        self.test_entries = [entry for entry in self.test_entries if entry.owner_id == self.user.id]
+        self.test_entry = self.test_entries[self.test_entry_index]
+        if not self.sorting_columns:
+            self.sorting_columns = self.columns
+        self.login()
+
+    # ----------------------------------------------- DISPLAY/VIEW TESTS -----------------------------------------------
+
+    def test_display_entries(self) -> None:
+        """Test that entries are displayed correctly"""
+
+        # Default 20 entries display
+        assert len(self.table_utils.table_rows) == min(
+            [20, len(self.test_entries)]
+        ), "The table rows should match the entries"
+
+        # Increase to 40
+        self.table_utils.set_page_item_select("40")
+        self.table_utils.wait_for_table_load()
+        assert len(self.table_utils.table_rows) == min(
+            [40, len(self.test_entries)]
+        ), "The table rows should match the entries"
+
+    def _test_view_modal(self, entry=None) -> None:
+        """Helper method to test the view modal for an entry"""
+
+        raise AssertionError("Not implemented")
+
+    def test_view_entry(self) -> None:
+        """Test viewing an entry details by clicking on a table row"""
+
+        self.table_utils.table_row_click(self.test_entry.id)
+        self._test_view_modal()
+
+    def test_view_entry_right_click(self) -> None:
+        """Test viewing an entry details through the right-click context menu"""
+
+        self.table_utils.context_menu(self.test_entry.id, "view")
+        self._test_view_modal()
+
+    # --------------------------------------------------- DELETE TEST --------------------------------------------------
+
+    def test_delete_entry(self) -> None:
+        """Test deleting an entry entry"""
+
+        self.table_utils.context_menu(self.test_entry.id, "delete")
+        self.modal_utils.wait_for_delete_modal()
+        self.table_utils.delete_confirm_button.click()
+        self.table_utils.wait_for_delete_modal_close()
+        time.sleep(0.1)
+        self.table_utils.wait_for_disappear(f"table-row-{self.test_entry.id}")
+        db_data = self.client.get(f"{self.backend_url}/{self.endpoint}/?id={self.test_entry.id}").json()
+        assert len(db_data) == 0, "Expected entry to be deleted from database"
+
+    # ----------------------------------------------------- ADD TEST ---------------------------------------------------
+
+    def test_add_valid_entry(self) -> None:
+        """Test adding a new entry"""
+
+        self.table_utils.set_page_item_select("100")
+        # Determine the number of entries in the db and in the table
+        n_entries = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
+        initial_table_count = len(self.table_utils.table_rows)
+
+        # Add the new entry
+        self.table_utils.add_entity_button.click()
+        self.modal_utils.wait_for_edit_modal()
+        self.modal_utils._fill_modal(**self.test_data)
+        self.modal_utils.confirm_button("edit").click()
+        self.modal_utils.wait_for_edit_modal_close()
+
+        # Check that the new entry was properly added to the db and table
+        n_entries_new = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
+        assert n_entries_new == n_entries + 1, "Expected entry to be added to database"
+        new_table_count = len(self.table_utils.table_rows)
+        assert new_table_count == initial_table_count + 1, "Expected entry to be added to table"
+
+        entries = self.db.query(self.model).all()
+        entry_id = max([entry.id for entry in entries])
+        entry = [entry for entry in entries if entry.id == entry_id][0]
+
+        # Reopen the modal
+        self.table_utils.table_row(entry_id).click()
+        self.modal_utils.wait_for_view_modal()
+        self._test_view_modal(entry)
+
+        # Reopen in edit mode
+        self.table_utils.context_menu(entry_id, "edit")
+        self.check_edit_modal(entry_id, **self.test_data)
+
+    def check_edit_modal(self, entry_id: int, **values) -> None:
+        """Check that the modal in edit mode contains the expected data
+        :param entry_id: entry ID
+        :param values: values to check"""
+
+        if any(isinstance(v, dict) for v in values.values()):
+            for tab_key in values:
+                self.table_utils.get_element(f"{tab_key}-tab").click()
+                self.check_edit_modal(entry_id, **values[tab_key])
+        else:
+            for key in values:
+                if "date" in key:
+                    continue
+                element = self.table_utils.get_element(key)
+                if element.tag_name == "input":
+                    value = element.get_attribute("value")
+                else:
+                    value = element.text
+                assert str(value) == str(values[key])
+
+    def test_add_duplicate_entry(self) -> None:
+        """Test that adding a new entry with an existing name shows validation error"""
+
+        if self.duplicate_fields:
+            # Add the new entry
+            self.table_utils.add_entity_button.click()
+            self.modal_utils.wait_for_edit_modal()
+            self.modal_utils._fill_modal(**self.test_data)
+            self.modal_utils.confirm_button("edit").click()
+            self.modal_utils.wait_for_edit_modal_close()
+
+            self.table_utils.add_entity_button.click()
+            self.modal_utils.wait_for_edit_modal()
+            self.modal_utils._fill_modal(**{key: self.test_data[key] for key in self.duplicate_fields})
+            self.modal_utils.confirm_button("edit").click()
+            self.modal_utils.get_element(".invalid-feedback", By.CSS_SELECTOR)
+            self.modal_utils.cancel_button("edit").click()
+            self.modal_utils.wait_for_edit_modal_close()
+        else:
+            pytest.skip("Duplicate entries are allowed")
+
+    def test_add_incomplete_entry(self) -> None:
+        """Test that adding a new entry without all required information shows an error"""
+
+        if len(self.required_fields) > 1:
+            dictionaries = contiguous_subdicts({key: self.test_data[key] for key in self.required_fields})
+        else:
+            dictionaries = [dict()]
+
+        for d in dictionaries:
+            self.table_utils.add_entity_button.click()
+            self.modal_utils._fill_modal(**d)
+            self.modal_utils.confirm_button("edit").click()
+            self.modal_utils.get_element(".invalid-feedback", By.CSS_SELECTOR)
+            self.modal_utils.cancel_button("edit").click()
+            self.modal_utils.wait_for_edit_modal_close()
+
+    def test_add_entry_cancel(self) -> None:
+        """Test cancelling a new entry creation."""
+
+        self.table_utils.add_entity_button.click()
+        self.modal_utils.wait_for_edit_modal()
+        self.modal_utils.cancel_button("edit").click()
+        self.modal_utils.wait_for_edit_modal_close()
+
+    # ---------------------------------------------------- EDIT TEST ---------------------------------------------------
+
+    def test_edit_entry_through_view_modal(self) -> None:
+        """Test editing an entry through the view modal's edit button"""
+
+        self.table_utils.set_page_item_select("100")
+        initial_count = len(self.table_utils.table_rows)
+        self.table_utils.table_row_click(self.test_entry.id)
+        self.modal_utils.wait_for_view_modal()
+        self.modal_utils.edit_button("view").click()
+        self.modal_utils._fill_modal(**self.test_data)
+        self.modal_utils.confirm_button("edit").click()
+        self.modal_utils.wait_for_edit_modal_close()
+        self.modal_utils.cancel_button("view").click()
+        assert len(self.table_utils.table_rows) == initial_count, "Expected table to remain unchanged"
+
+    def test_edit_entry_through_right_click_context_menu(self) -> None:
+        """Test editing an entry through right-click context menu"""
+
+        self.table_utils.set_page_item_select("100")
+        initial_count = len(self.table_utils.table_rows)
+        self.table_utils.context_menu(self.test_entry.id, "edit")
+        self.modal_utils._fill_modal(**self.test_data)
+        self.modal_utils.confirm_button("edit").click()
+        self.modal_utils.wait_for_edit_modal_close()
+        assert len(self.table_utils.table_rows) == initial_count, "Expected table to remain unchanged"
+
+    def test_cancel_edit_view(self) -> None:
+        """Test cancelling an entry edit opened via the view modal"""
+
+        self.table_utils.table_row_click(self.test_entry.id)
+        self.modal_utils.wait_for_view_modal()
+        self.modal_utils.edit_button("view").click()
+        self.modal_utils.cancel_button("edit").click()
+        self.modal_utils.wait_for_edit_modal_close()
+        self.modal_utils.wait_for_view_modal()
+
+    def test_cancel_edit(self) -> None:
+        """Test cancelling an entry edit opened via the edit modal"""
+
+        self.table_utils.context_menu(self.test_entry.id, "edit")
+        self.modal_utils.cancel_button("edit").click()
+        self.modal_utils.wait_for_edit_modal_close()
+
+    def test_search_functionality(self) -> None:
+        """Test the search functionality"""
+
+        for key in self.columns:
+            print("Testing column:", key)
+            search_text = self.get_search_value(self.test_entry, key).lower()[3:]
+            print("Search text:", search_text)
+
+            # Get the expected list of entries
+            expected_entries = []
+            for entry in self.test_entries:
+                value = self.get_search_value(entry, key).lower()
+                if search_text in value:
+                    expected_entries.append(value)
+
+            # entries = set(entries)
+            print("expected", expected_entries)
+            self.table_utils.set_text(self.table_utils.get_element("search-input"), search_text)
+            time.sleep(0.2)  # Allow time for search to filter
+            print("got", self.table_utils.table_rows)
+            assert len(self.table_utils.table_rows) == len(expected_entries), "Expected search to filter results"
+
+    # def test_sort_functionality(self) -> None:
+    #     """Test sorting functionality"""
+    #
+    #     for key in self.sorting_columns:
+    #         # Click to sort and give time for UI update
+    #         self.get_element(f"table-header-{key}").click()
+    #         time.sleep(0.2)
+    #
+    #         # Compare with the sorted values
+    #         values = self.get_column_values(key)
+    #         a = [v.lower() for v in values if v != "Not Provided"]
+    #         assert values == sorted([v.lower() for v in values if v != "Not Provided"] + (len(values) - len(a)) * ["Not Provided"])
+
+    @staticmethod
+    def get_search_value(value, key: str) -> str:
+        """Get the search value for a given column key"""
+
+        result = getattr(value, key)
+        if isinstance(result, str):
+            return result
+        elif isinstance(result, models.Company):
+            return result.name
+        else:
+            return ""
+
+    # --------------------------------------------------- VIEW MODAL ---------------------------------------------------
+
+
+class TestKeywordsPage(BaseTablePage):
     """Test class for the keywords Page functionality including:
     - Displaying entries
     - Adding entries
@@ -808,7 +842,7 @@ class TestKeywordsPage(TablePage):
 
     endpoint = "keywords"
     page_url = "keywords"
-    entity_type = "keywords"
+    entry_type = "keywords"
     entry_name = "tag"
     test_fixture = "test_keywords"
     test_data = {"name": "Test_Name"}
@@ -822,10 +856,10 @@ class TestKeywordsPage(TablePage):
 
         if not entry:
             entry = self.test_entry
-        self.check_keyword_view_modal(entry)
+        self.modal_utils.check_keyword_view_modal(entry)
 
 
-class TestAggregatorsPage(TablePage):
+class TestAggregatorsPage(BaseTablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries
@@ -835,7 +869,7 @@ class TestAggregatorsPage(TablePage):
 
     endpoint = "aggregators"
     page_url = "aggregators"
-    entity_type = "aggregators"
+    entry_type = "aggregators"
     test_fixture = "test_aggregators"
     entry_name = "aggregator"
     test_data = {"name": "Test_Name", "url": "https://www.google.com"}
@@ -851,7 +885,7 @@ class TestAggregatorsPage(TablePage):
         self.check_aggregator_view_modal(entry)
 
 
-class TestCompaniesPage(TablePage):
+class TestCompaniesPage(BaseTablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries
@@ -861,7 +895,7 @@ class TestCompaniesPage(TablePage):
 
     endpoint = "companies"
     page_url = "companies"
-    entity_type = "companies"
+    entry_type = "companies"
     test_fixture = "test_companies"
     entry_name = "company"
     test_data = {"name": "Test_Name", "url": "https://www.google.com", "description": "This is a test description"}
@@ -877,7 +911,7 @@ class TestCompaniesPage(TablePage):
         self.check_company_view_modal(entry)
 
 
-class TestLocationsPage(TablePage):
+class TestLocationsPage(BaseTablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries
@@ -887,7 +921,7 @@ class TestLocationsPage(TablePage):
 
     endpoint = "locations"
     page_url = "locations"
-    entity_type = "locations"
+    entry_type = "locations"
     test_fixture = "test_locations"
     entry_name = "location"
     test_data = {"city": "Oxford", "postcode": "OX1", "country": "United Kingdom"}
@@ -903,7 +937,7 @@ class TestLocationsPage(TablePage):
         self.check_location_view_modal(entry)
 
 
-class TestPersonsPage(TablePage):
+class TestPersonsPage(BaseTablePage):
     """Test class for Aggregators Page functionality including:
     - Displaying entries
     - Adding new entries
@@ -913,7 +947,7 @@ class TestPersonsPage(TablePage):
 
     endpoint = "persons"
     page_url = "persons"
-    entity_type = "persons"
+    entry_type = "persons"
     test_fixture = ["test_persons", "test_companies"]
     entry_name = "person"
     test_data = {
@@ -971,12 +1005,12 @@ class TestPersonsPage(TablePage):
         assert self.get_element("modal-view-person-CompanyBadge").text == "New Company Name".upper()
 
 
-class TestJobApplicationUpdatesPage(TablePage):
+class TestJobApplicationUpdatesPage(BaseTablePage):
     """Test class for Job Application Update Page functionalities"""
 
     endpoint = "jobapplicationupdates"
     page_url = "jobapplicationupdates"
-    entity_type = "jobApplicationUpdates"
+    entry_type = "jobApplicationUpdates"
     test_fixture = ["test_job_application_updates", "test_jobs"]
     entry_name = "update"
     required_fields = ["job_id", "type", "date"]
@@ -995,12 +1029,12 @@ class TestJobApplicationUpdatesPage(TablePage):
         self.check_update_view_modal(entry)
 
 
-class TestInterviewPage(TablePage):
+class TestInterviewPage(BaseTablePage):
     """Test class for Job Application Update Page functionalities"""
 
     endpoint = "interviews"
     page_url = "interviews"
-    entity_type = "interviews"
+    entry_type = "interviews"
     test_fixture = ["test_interviews", "test_jobs"]
     entry_name = "interview"
     required_fields = ["job_id", "type", "date"]
@@ -1050,12 +1084,12 @@ class TestInterviewPage(TablePage):
     # TODO add job view
 
 
-class TestJobPage(TablePage):
+class TestJobPage(BaseTablePage):
     """Test class for Job Application Update Page functionalities"""
 
     endpoint = "jobs"
     page_url = "jobs"
-    entity_type = "jobs"
+    entry_type = "jobs"
     test_fixture = ["test_jobs"]
     entry_name = "job"
     required_fields = ["title"]

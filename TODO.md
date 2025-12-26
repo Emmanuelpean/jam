@@ -31,7 +31,7 @@
 * [X] Add the ability to display the results for the selected platform only
 * [X] Add new endpoint for admin only that allows to query specific job ids (as a list)
 * [X] Add job alert name extraction
-* [ ] Store the scraped jobs needing scraping in the service log
+* [X] Store the scraped jobs needing scraping in the service log
 * [ ] Display the current step of the logs
 
 ### Select Widgets Improvements
@@ -68,14 +68,17 @@
 
 ### New Modals
 * [X] Interview modals should show the edited value after being edited from the job modal
-* [X] Multiple modals of the same type should be able to be opened at the same time 
-
+* [X] Multiple modals of the same type should be able to be opened at the same time
 
 ### AI Rating
-* [ ] User Qualification table
-  * [ ] If no entry, then create a new entry. If a user modifies an entry either
-    * [ ] Create a new entry if the current entry has been used to rate a job
-    * [ ] Update the current entry if it has not been used to rate a job
-  * [ ] Show the list of qualifications in the user settings page
-* [ ] Create the service that will rate the jobs based on the user qualifications
-* 
+* [X] User Qualification table
+  * [X] If no entry, then create a new entry. If a user modifies an entry either
+    * [X] Create a new entry if the current entry has been used to rate a job
+    * [X] Update the current entry if it has not been used to rate a job
+  * [X] Show the list of qualifications in the user settings page
+* [X] Create the service that will rate the jobs based on the user qualifications
+
+
+### Scraping Filters
+* [X] Add the ability to filter out jobs based on keywords in the job title or description
+* [ ] Add the ability to manage the filters
