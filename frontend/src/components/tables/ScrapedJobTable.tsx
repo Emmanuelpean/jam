@@ -54,7 +54,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 				columns={defaultColumns}
 				initialSortConfig={{ key: "created_at", direction: "desc" }}
 				Modal={ScrapedJobModal}
-				endpoint="scraped_jobs"
+				endpoint="scraped-jobs"
 				nameKey="title"
 				itemType="Scraped Job"
 				modalSize="xl"

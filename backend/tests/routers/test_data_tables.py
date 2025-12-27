@@ -266,7 +266,7 @@ class TestInterviewCRUD(CRUDTestBase):
 
 
 class TestSpeculativeApplicationCRUD(CRUDTestBase):
-    endpoint = "/speculativeapplications"
+    endpoint = "/speculative-applications"
     create_schema = schemas.SpeculativeApplicationCreate
     out_schema = schemas.SpeculativeApplicationOut
     test_data_ref = "test_speculative_applications"

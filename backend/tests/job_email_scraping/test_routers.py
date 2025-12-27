@@ -16,7 +16,7 @@ from tests.utils.test_data.job_scraping_service import JOB_EMAIL_DATA, SCRAPING_
 
 
 class TestJobAlertEmailCRUD(CRUDTestBase):
-    endpoint = "/job_alert_emails"
+    endpoint = "/job-alert-emails"
     out_schema = schemas.JobEmailOut
     test_data_ref = "test_job_alert_emails"
     create_data = JOB_EMAIL_DATA
@@ -33,7 +33,7 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
 
 
 class TestScrapedJobCRUDRegularUser(CRUDTestBase):
-    endpoint = "/scraped_jobs"
+    endpoint = "/scraped-jobs"
     out_schema = schemas.ScrapedJobOut
     test_data_ref = "test_scraped_jobs"
     update_data = {
@@ -68,7 +68,7 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
 
 
 class TestScrapedJobCRUDAdminUser(CRUDTestBase):
-    endpoint = "/scraped_jobs"
+    endpoint = "/scraped-jobs"
     out_schema = schemas.ScrapedJobOut
     test_data_ref = "test_scraped_jobs"
     actions_to_test = ["get_all"]
