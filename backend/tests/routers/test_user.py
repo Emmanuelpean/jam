@@ -51,11 +51,11 @@ class TestCurrentUser:
         """Test successfully getting current user profile."""
 
         # Admin
-        response = admin_client.get("/current_user")
+        response = admin_client.get("/current-user")
         assert test_admin_user.email == response.json()["email"]
 
         # Non-admin
-        response = regular_user_client.get("/current_user")
+        response = regular_user_client.get("/current-user")
         assert test_regular_user.email == response.json()["email"]
 
     @patch("app.routers.auth.email_service.send_email_change_verification")
@@ -66,7 +66,7 @@ class TestCurrentUser:
         initial_token_version = test_regular_user.token_version
 
         update_data = {"email": "newemail@example.com", "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put("/current_user", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert mock_email_verif.call_count == 1
         assert mock_email_verif.call_args[0][0] == "newemail@example.com"
         assert response.status_code == 200
@@ -84,7 +84,7 @@ class TestCurrentUser:
         """Test updating own profile as non-admin (with email change)."""
 
         update_data = {"email": "newemail@example.com", "current_password": test_demo_user.plain_password}
-        response = demo_user_client.put("/current_user", json=update_data)
+        response = demo_user_client.put("/current-user", json=update_data)
         assert mock_email_verif.call_count == 0
         assert response.status_code == 403
 
@@ -95,7 +95,7 @@ class TestCurrentUser:
         initial_token_version = test_regular_user.token_version
 
         update_data = {"current_password": test_regular_user.plain_password, "password": "newpassword1"}
-        response = regular_user_client.put("/current_user", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
 
         assert response.status_code == 200
 
@@ -114,7 +114,7 @@ class TestCurrentUser:
         """Test updating own password as non-admin."""
 
         update_data = {"current_password": test_demo_user.plain_password, "password": "newpassword1"}
-        response = demo_user_client.put("/current_user", json=update_data)
+        response = demo_user_client.put("/current-user", json=update_data)
         assert response.status_code == 403
 
     def test_update_password_revokes_token(self, regular_user_client, test_regular_user, session) -> None:
@@ -122,11 +122,11 @@ class TestCurrentUser:
 
         # Change password
         update_data = {"current_password": test_regular_user.plain_password, "password": "newpassword1"}
-        response = regular_user_client.put("/current_user", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 200
 
         # Try to use the old token (test_client still has it)
-        response = regular_user_client.get("/current_user")
+        response = regular_user_client.get("/current-user")
         assert response.status_code == 401
         assert "revoked" in response.json()["detail"].lower()
 
@@ -134,21 +134,21 @@ class TestCurrentUser:
         """Test updating password with incorrect current password."""
 
         update_data = {"current_password": "", "password": "newpassword1"}
-        response = regular_user_client.put("/current_user", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 401
 
     def test_update_incorrect_email_format(self, session, regular_user_client, test_regular_user) -> None:
         """Test updating with invalid email."""
 
         update_data = {"email": "ff", "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put(f"/current_user", json=update_data)
+        response = regular_user_client.put(f"/current-user", json=update_data)
         assert response.status_code == 422
 
     def test_update_existing_email(self, session, regular_user_client, test_regular_user, test_admin_user) -> None:
         """Test updating with an email that already exists."""
 
         update_data = {"email": test_admin_user.email, "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put(f"/current_user", json=update_data)
+        response = regular_user_client.put(f"/current-user", json=update_data)
         assert response.status_code == 400
 
     def test_update_settings(self, session, regular_user_client, test_regular_user) -> None:
@@ -158,7 +158,7 @@ class TestCurrentUser:
         initial_token_version = test_regular_user.token_version
 
         update_data = {"chase_threshold": 100}
-        response = regular_user_client.put(f"/current_user", json=update_data)
+        response = regular_user_client.put(f"/current-user", json=update_data)
         assert response.status_code == 200
 
         updated_user = self.get_user(test_regular_user.id, session)
@@ -174,7 +174,7 @@ class TestCurrentUser:
         """Test updating without authentication."""
 
         update_data = {"chase_threshold": 100}
-        response = client.put(f"/current_user", json=update_data)
+        response = client.put(f"/current-user", json=update_data)
         assert response.status_code == 401
 
 
@@ -212,7 +212,7 @@ class TestEmailVerification:
         pending_email = test_user_change_email_token_user.pending_email
 
         response = client.get(
-            f"/current_user/verify-email/{test_user_change_email_token_user.plain_verification_token}"
+            f"/current-user/verify-email/{test_user_change_email_token_user.plain_verification_token}"
         )
 
         assert response.status_code == 200
@@ -244,7 +244,7 @@ class TestEmailVerification:
         session.commit()
         user.plain_verification_token = "plain_token"
 
-        response = client.get(f"/current_user/verify-email/{user.plain_verification_token}")
+        response = client.get(f"/current-user/verify-email/{user.plain_verification_token}")
 
         assert response.status_code == 403
         assert mock_email.call_count == 0
@@ -252,7 +252,7 @@ class TestEmailVerification:
     def test_verify_email_invalid_token(self, client) -> None:
         """Test email verification with invalid token."""
 
-        response = client.get("/current_user/verify-email/invalid_token_xyz")
+        response = client.get("/current-user/verify-email/invalid_token_xyz")
 
         assert response.status_code == 403
         assert "invalid" in response.json()["detail"].lower()
@@ -278,7 +278,7 @@ class TestEmailVerification:
         session.add(user)
         session.commit()
 
-        response = client.get(f"/current_user/verify-email/{token}")
+        response = client.get(f"/current-user/verify-email/{token}")
 
         assert response.status_code == 403
         assert "expired" in response.json()["detail"].lower()
@@ -302,7 +302,7 @@ class TestEmailVerification:
         session.add(user)
         session.commit()
 
-        response = client.get(f"/current_user/verify-email/{token}")
+        response = client.get(f"/current-user/verify-email/{token}")
 
         assert response.status_code == 400
         assert response.json()["detail"].lower() == "email already registered"
@@ -322,23 +322,23 @@ class TestTokenVersioning:
         """Test that tokens with old version are rejected after password change."""
 
         # First verify current token works
-        response = regular_user_client.get("/current_user")
+        response = regular_user_client.get("/current-user")
         assert response.status_code == 200
 
         # Change password (this increments token_version)
         update_data = {"current_password": test_regular_user.plain_password, "password": "newpassword1"}
-        response = regular_user_client.put("/current_user", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 200
 
         # Try to use old token - should fail
-        response = regular_user_client.get("/current_user")
+        response = regular_user_client.get("/current-user")
         assert response.status_code == 401
         assert "revoked" in response.json()["detail"].lower()
 
         # Verify new login works
         user = session.query(models.User).filter(models.User.id == test_regular_user.id).first()
         new_token = oauth2.create_access_token(data={"user_id": test_regular_user.id}, token_version=user.token_version)
-        response = client.get("/current_user", headers={"Authorization": f"Bearer {new_token}"})
+        response = client.get("/current-user", headers={"Authorization": f"Bearer {new_token}"})
         assert response.status_code == 200
 
     @patch("app.routers.auth.email_service.send_email_change_verification")
@@ -350,7 +350,7 @@ class TestTokenVersioning:
         initial_version = test_regular_user.token_version
 
         update_data = {"email": "newemail@example.com", "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put("/current_user", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 200
 
         user = session.query(models.User).filter(models.User.id == test_regular_user.id).first()
@@ -365,7 +365,7 @@ class TestTokenVersioning:
         initial_version = test_user_change_email_token_user.token_version
 
         response = client.get(
-            f"/current_user/verify-email/{test_user_change_email_token_user.plain_verification_token}"
+            f"/current-user/verify-email/{test_user_change_email_token_user.plain_verification_token}"
         )
         assert response.status_code == 200
 
@@ -381,14 +381,14 @@ class TestTokenVersioning:
         initial_version = test_regular_user.token_version
 
         update_data = {"chase_threshold": 200}
-        response = regular_user_client.put("/current_user", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 200
 
         user = session.query(models.User).filter(models.User.id == test_regular_user.id).first()
         assert user.token_version == initial_version
 
         # Verify token still works
-        response = regular_user_client.get("/current_user")
+        response = regular_user_client.get("/current-user")
         assert response.status_code == 200
 
 

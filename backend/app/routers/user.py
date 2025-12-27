@@ -103,7 +103,7 @@ def upsert_user_qualification(
 # ---------------------------------------------------- CURRENT USER ----------------------------------------------------
 
 
-current_user_router = APIRouter(prefix="/current_user", tags=["current_user"])
+current_user_router = APIRouter(prefix="/current-user", tags=["current-user"])
 
 
 @current_user_router.get("/", response_model=schemas.UserOut)
