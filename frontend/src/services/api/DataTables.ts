@@ -10,6 +10,7 @@ import {
 	PersonData,
 	ScrapingFilterData,
 	SettingData,
+	SpeculativeApplicationData,
 } from "../Schemas";
 import { Country, Currency } from "../../contexts/DataContext";
 
@@ -25,4 +26,4 @@ export const settingsApi: CrudApi<SettingData> = createCrudApi("settings");
 export const countriesApi: CrudApi<Country> = createCrudApi("others/countries");
 export const currenciesApi: CrudApi<Currency> = createCrudApi("others/currencies");
 export const scrapingFilterApi: CrudApi<ScrapingFilterData> = createCrudApi("scraping_filters");
-export const speculativeApplicationsApi: CrudApi = createCrudApi("speculativeapplications");
+export const speculativeApplicationsApi: CrudApi<SpeculativeApplicationData> = createCrudApi("speculativeapplications");

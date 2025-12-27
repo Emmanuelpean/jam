@@ -1,7 +1,8 @@
 """Utility functions for email parsers"""
 
-from bs4 import BeautifulSoup
 from enum import Enum
+
+from bs4 import BeautifulSoup
 
 
 def process_salary(salary_str: str) -> int | None:

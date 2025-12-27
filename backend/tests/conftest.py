@@ -45,7 +45,7 @@ from tests.utils.create_data import (
     create_job_ratings,
     create_job_rating_service_logs,
     create_scraping_filters,
-create_speculative_applications
+    create_speculative_applications,
 )
 from tests.utils.seed_database import reset_database
 from tests.utils.test_data import (
@@ -466,7 +466,9 @@ def test_job_application_updates_unauthorised(
 
 
 @pytest.fixture
-def test_speculative_applications(session, test_users, test_persons, test_companies) -> list[models.SpeculativeApplication]:
+def test_speculative_applications(
+    session, test_users, test_persons, test_companies
+) -> list[models.SpeculativeApplication]:
     """Create test speculative application data"""
 
     return create_speculative_applications(session, test_users, test_persons)

@@ -3,14 +3,13 @@ verification, and usage of JWT access tokens."""
 
 from datetime import datetime, timedelta, timezone
 
+import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-import jwt
 from sqlalchemy.orm import Session
 
 from app import models, database, schemas
 from app.config import settings
-
 
 SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm

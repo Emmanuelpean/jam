@@ -3,13 +3,13 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import data_tables, user, auth, export, settings, others
-from app.job_email_scraping import routers as eis_routers
-from app.job_rating import routers as job_rating_routers
-from app.emails import routers as email_routers
 from app.config import settings as app_settings
 from app.database import engine
+from app.emails import routers as email_routers
+from app.job_email_scraping import routers as eis_routers
+from app.job_rating import routers as job_rating_routers
 from app.model_registry import Base
+from app.routers import data_tables, user, auth, export, settings, others
 
 app = FastAPI()
 

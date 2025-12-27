@@ -159,7 +159,7 @@ class DataModalUtils(BaseUtils1):
                 else:
                     self.set_text(self.get_element(key), value)
 
-    # ------------------------------------------------ CHECK VIEW MODAL ------------------------------------------------
+    # -------------------------------------------------- VIEW MODALS --------------------------------------------------
 
     def check_keyword_view_modal(self, entry: models.Keyword) -> None:
         """Helper method to test the view modal for a keyword entry"""
@@ -430,11 +430,34 @@ class DataModalUtils(BaseUtils1):
         self.cancel_button("view", "job").click()
         self.wait_for_view_modal_close("job")
 
-    @property
-    def test_name(self) -> str:
-        """Get the name of the test entity"""
+    def check_speculative_application_view_modal(self, entry: models.SpeculativeApplication) -> None:
+        """Helper method to test the view modal for a speculative application entry"""
 
-        return f"Test_{int(time.time())}"
+        modal = self.wait_for_view_modal("speculative application")
+        expected = "Speculative Application Details\n" "Company\n" f"{entry.company.name.upper()}\n"
+        if entry.date:
+            display_time = entry.date.astimezone()
+            expected += f"Date & Time\n{display_time.strftime("%d/%m/%Y %H:%M")}\n"
+        else:
+            expected += "Date & Time\nNot Provided\n"
+        if entry.contact_email:
+            expected += f"Contact Email\n{entry.contact_email}\n"
+        else:
+            expected += "Contact Email\nNot Provided\n"
+        if entry.contacts:
+            expected += f"Contacts\n{'\n'.join([person.name.upper() for person in entry.contacts])}\n"
+        else:
+            expected += "Contacts\nNot Provided\n"
+        if entry.note:
+            expected += f"Notes\n{entry.note}\n"
+        else:
+            expected += "Notes\nNot Provided\n"
+        expected += "Close\nEdit"
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view", "speculative application").click()
+        self.wait_for_view_modal_close("speculative application")
 
     @staticmethod
     def salary_range(item: models.Job) -> str | None:
@@ -1289,3 +1312,24 @@ class TestJobPage(BaseTablePage):
 
         # Verify the update view modal displays the updated information
         self.modal_utils.check_update_view_modal(update, False)
+
+
+class TestSpeculativeApplicationPage(BaseTablePage):
+    """Test class for Job Application Update Page functionalities"""
+
+    endpoint = "speculativeapplications"
+    page_url = "speculative-applications"
+    entry_type = "speculativeApplications"
+    test_fixture = ["test_speculative_applications", "test_persons", "test_companies"]
+    entry_name = "speculative application"
+    required_fields = ["title"]
+    test_data = {"company_id": "Tech Corp"}
+    duplicate_fields = ["company_id"]
+    model = models.SpeculativeApplication
+
+    def _test_view_modal(self, entry=None) -> None:
+        """Helper method to test the view modal for an entry"""
+
+        if not entry:
+            entry = self.test_entry
+        self.modal_utils.check_speculative_application_view_modal(entry)

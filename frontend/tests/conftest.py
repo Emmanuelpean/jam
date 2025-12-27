@@ -6,12 +6,12 @@ import platform
 import queue
 import shutil
 import subprocess
+import sys
 import threading
 from pathlib import Path
 
 import psutil
 import requests
-import sys
 from selenium.webdriver import Keys, ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
 
@@ -43,6 +43,10 @@ from tests.conftest import (
     test_jobs,
 )
 from tests.conftest import *
+
+
+LOGS_DIR = Path(os.path.join(os.path.dirname(settings.log_directory), "test_logs"))
+LOGS_DIR.mkdir(exist_ok=True)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -409,48 +413,6 @@ def contiguous_subdicts(dictionary: dict) -> list[dict]:
     return [dict()] + results
 
 
-def get_all_element_ids(driver) -> list[str]:
-    """Get all element IDs present on the current page
-    :param driver: Selenium WebDriver instance"""
-
-    # Find all elements that have an ID attribute
-    elements_with_id = driver.find_elements(By.XPATH, "//*[@id]")
-
-    # Extract the ID values
-    element_ids = []
-    for element in elements_with_id:
-        element_id = element.get_attribute("id")
-        if element_id:
-            element_ids.append(element_id)
-
-    return sorted(element_ids)
-
-
-def get_element(
-    driver: WebDriver,
-    element_id: str,
-    selector: str = By.ID,
-    timeout: float = 10.0,
-) -> WebElement:
-    """Get an element by its ID.
-    :param driver: Selenium WebDriver instance
-    :param element_id: ID of the element to get
-    :param selector: Selector to use for finding the element
-    :param timeout: How long to wait before raising an error"""
-
-    try:
-        wait = WebDriverWait(driver, timeout)
-        element = wait.until(ec.element_to_be_clickable((selector, element_id)))
-        ActionChains(driver).move_to_element(element).perform()
-        return element
-    except Exception:
-        raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {get_all_element_ids(driver)}")
-
-
-LOGS_DIR = Path(os.path.join(os.path.dirname(settings.log_directory), "test_logs"))
-LOGS_DIR.mkdir(exist_ok=True)
-
-
 class BaseUtils(object):
     """Base class for selenium utilities"""
 
@@ -605,136 +567,6 @@ class BaseUtils1(BaseUtils):
         self.wait = WebDriverWait(self.driver, 10)
         self.frontend_base_url = test_frontend_server
         self.db = session
-
-
-class AuthentificationUtils(BaseUtils1):
-    """Test class for Authentication functionality including:
-    - Login with valid credentials
-    - Login with invalid credentials
-    - Signup with valid data
-    - Signup with invalid data
-    - Form validation"""
-
-    # ----------------------------------------------------- INPUTS -----------------------------------------------------
-
-    def go_to_login(self) -> None:
-        """Go to the login page"""
-
-        self.driver.get(f"{self.frontend_base_url}/login")
-
-    def go_to_register(self) -> None:
-        """Go to the register page"""
-
-        self.driver.get(f"{self.frontend_base_url}/register")
-
-    def go_to_forgot_password(self) -> None:
-        """Go to the forgot password page"""
-
-        self.driver.get(f"{self.frontend_base_url}/forgot-password")
-
-    def set_email(self, email: str) -> None:
-        """Set the email field to the given value"""
-
-        self.get_element("email").send_keys(email)
-
-    def set_password(self, password: str) -> None:
-        """Set the password field to the given value"""
-
-        self.get_element("password").send_keys(password)
-
-    def set_confirm_password(self, password: str) -> None:
-        """Set the confirm password field to the given value"""
-
-        self.get_element("confirmPassword").send_keys(password)
-
-    def confirm(self) -> None:
-        """Confirm the form submission"""
-
-        self.get_element("confirm-button").click()
-
-    def set_terms(self) -> None:
-        """Set the accept terms checkbox to True"""
-
-        self.get_element("terms").click()
-
-    def register_user(self, email: str, password: str) -> None:
-        """Register a new user"""
-
-        self.go_to_register()
-        self.set_email(email)
-        self.set_password(password)
-        self.set_confirm_password(password)
-        self.set_terms()
-        self.confirm()
-
-    def login_user(self, email: str, password: str) -> None:
-        """Login with given credentials"""
-
-        self.go_to_login()
-        self.set_email(email)
-        self.set_password(password)
-        self.confirm()
-
-    # ----------------------------------------------------- ERRORS -----------------------------------------------------
-
-    def _assert_message(self, key: str, message: str) -> None:
-        """Assert that the given message is displayed on the page
-        :param key: Key to use for finding the error message element
-        :param message: Message to check for"""
-
-        assert message in self.get_element(key + "error-message").text, f"Message not found: {message}"
-
-    def assert_email_error_message(self, error_message: str) -> None:
-        """Assert that the given error message is displayed on the page"""
-
-        self._assert_message("email-", error_message)
-
-    def assert_password_error_message(self, error_message: str) -> None:
-        """Assert that the given error message is displayed on the page"""
-
-        self._assert_message("password-", error_message)
-
-    def assert_confirm_password_error_message(self, error_message: str) -> None:
-        """Assert that the given error message is displayed on the page"""
-
-        self._assert_message("confirmPassword-", error_message)
-
-    def assert_accept_terms_error_message(self, error_message: str) -> None:
-        """Assert that the given error message is displayed on the page"""
-
-        self._assert_message("terms-", error_message)
-
-    # ------------------------------------------------------ PAGES -----------------------------------------------------
-
-    def wait_for_dashboard(self) -> None:
-        """Wait for the dashboard to load"""
-
-        self.wait_for_page("dashboard")
-
-    def wait_for_login(self) -> None:
-        """Wait for the login page to load"""
-
-        self.wait_for_page("login")
-
-    def wait_for_register(self) -> None:
-        """Wait for the register page to load"""
-
-        self.wait_for_page("register")
-
-    def switch_mode(self) -> None:
-        """Switch between login and register modes"""
-
-        self.get_element("switch-mode-button").click()
-
-    def go_to_verification_url(self, token: str) -> None:
-        """Navigate to login page with verification token"""
-
-        self.driver.get(f"{self.frontend_base_url}/verify-email/?token={token}")
-
-    def switch_to_forgot_password(self) -> None:
-        """Navigate to forgot password page"""
-
-        self.get_element("forgot-password-link").click()
 
 
 class BaseTest(BaseUtils):

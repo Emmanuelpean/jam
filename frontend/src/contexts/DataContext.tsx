@@ -285,7 +285,10 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		// Define all promises with their labels
 		const fetchOperations: any[] = [
 			{ promise: jobsApi.getAll(token), label: "Jobs" } as TypedFetchOperation<JobData[]>,
-			{ promise: speculativeApplicationsApi.getAll(token), label: "Speculative Applications" },
+			{
+				promise: speculativeApplicationsApi.getAll(token),
+				label: "Speculative Applications",
+			} as TypedFetchOperation<SpeculativeApplicationData[]>,
 			{ promise: companiesApi.getAll(token), label: "Companies" } as TypedFetchOperation<CompanyData[]>,
 			{ promise: personsApi.getAll(token), label: "Persons" } as TypedFetchOperation<PersonData[]>,
 			{ promise: interviewsApi.getAll(token), label: "Interviews" } as TypedFetchOperation<InterviewData[]>,

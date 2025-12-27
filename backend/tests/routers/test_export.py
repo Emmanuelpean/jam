@@ -1,8 +1,8 @@
 """Tests for export endpoint"""
 
-import zipfile
 import csv
 import io
+import zipfile
 
 
 class TestExport:

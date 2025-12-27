@@ -6,10 +6,10 @@ are registered on Base.metadata before first use.
 """
 
 # noinspection PyUnusedImports
-from app.models import *
+from app.job_email_scraping.models import *
 
 # noinspection PyUnusedImports
 from app.job_rating.models import *
 
 # noinspection PyUnusedImports
-from app.job_email_scraping.models import *
+from app.models import *
