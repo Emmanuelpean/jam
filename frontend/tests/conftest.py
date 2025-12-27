@@ -454,6 +454,11 @@ LOGS_DIR.mkdir(exist_ok=True)
 class BaseUtils(object):
     """Base class for selenium utilities"""
 
+    driver: WebDriver = None
+    wait: WebDriverWait = None
+    frontend_base_url: str = ""
+    db = None
+
     def go_to_page(self, page) -> None:
         """Helper method to go to a specific page"""
 
@@ -464,16 +469,6 @@ class BaseUtils(object):
         """Wait for the dashboard to load"""
 
         self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
-
-    def wait_for_table_load(self, timeout: int | float = 0.1) -> None:
-        """Wait for loading spinner to disappear"""
-
-        try:
-            WebDriverWait(self.driver, timeout).until(
-                ec.invisibility_of_element_located((By.CSS_SELECTOR, "spinner-border"))
-            )
-        except TimeoutException:
-            pass
 
     def get_all_element_ids(self) -> list[str]:
         """Get all element IDs present on the current page"""
@@ -495,17 +490,21 @@ class BaseUtils(object):
         element_id: str,
         selector: str = By.ID,
         timeout: float = 10.0,
+        enabled=True,
     ) -> WebElement:
         """Get an element by its ID.
         :param element_id: ID of the element to get
         :param selector: Selector to use for finding the element
         :param timeout: How long to wait before raising an error
-        """
+        :param enabled: Whether to wait for the element to be enabled"""
 
         time.sleep(0.1)
         try:
             wait = WebDriverWait(self.driver, timeout)
-            element = wait.until(ec.element_to_be_clickable((selector, element_id)))
+            if enabled:
+                element = wait.until(ec.element_to_be_clickable((selector, element_id)))
+            else:
+                element = wait.until(ec.presence_of_element_located((selector, element_id)))
             ActionChains(self.driver).move_to_element(element).perform()
             return element
         except Exception:
@@ -608,16 +607,142 @@ class BaseUtils1(BaseUtils):
         self.db = session
 
 
-class BaseTest:
+class AuthentificationUtils(BaseUtils1):
+    """Test class for Authentication functionality including:
+    - Login with valid credentials
+    - Login with invalid credentials
+    - Signup with valid data
+    - Signup with invalid data
+    - Form validation"""
+
+    # ----------------------------------------------------- INPUTS -----------------------------------------------------
+
+    def go_to_login(self) -> None:
+        """Go to the login page"""
+
+        self.driver.get(f"{self.frontend_base_url}/login")
+
+    def go_to_register(self) -> None:
+        """Go to the register page"""
+
+        self.driver.get(f"{self.frontend_base_url}/register")
+
+    def go_to_forgot_password(self) -> None:
+        """Go to the forgot password page"""
+
+        self.driver.get(f"{self.frontend_base_url}/forgot-password")
+
+    def set_email(self, email: str) -> None:
+        """Set the email field to the given value"""
+
+        self.get_element("email").send_keys(email)
+
+    def set_password(self, password: str) -> None:
+        """Set the password field to the given value"""
+
+        self.get_element("password").send_keys(password)
+
+    def set_confirm_password(self, password: str) -> None:
+        """Set the confirm password field to the given value"""
+
+        self.get_element("confirmPassword").send_keys(password)
+
+    def confirm(self) -> None:
+        """Confirm the form submission"""
+
+        self.get_element("confirm-button").click()
+
+    def set_terms(self) -> None:
+        """Set the accept terms checkbox to True"""
+
+        self.get_element("terms").click()
+
+    def register_user(self, email: str, password: str) -> None:
+        """Register a new user"""
+
+        self.go_to_register()
+        self.set_email(email)
+        self.set_password(password)
+        self.set_confirm_password(password)
+        self.set_terms()
+        self.confirm()
+
+    def login_user(self, email: str, password: str) -> None:
+        """Login with given credentials"""
+
+        self.go_to_login()
+        self.set_email(email)
+        self.set_password(password)
+        self.confirm()
+
+    # ----------------------------------------------------- ERRORS -----------------------------------------------------
+
+    def _assert_message(self, key: str, message: str) -> None:
+        """Assert that the given message is displayed on the page
+        :param key: Key to use for finding the error message element
+        :param message: Message to check for"""
+
+        assert message in self.get_element(key + "error-message").text, f"Message not found: {message}"
+
+    def assert_email_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("email-", error_message)
+
+    def assert_password_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("password-", error_message)
+
+    def assert_confirm_password_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("confirmPassword-", error_message)
+
+    def assert_accept_terms_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("terms-", error_message)
+
+    # ------------------------------------------------------ PAGES -----------------------------------------------------
+
+    def wait_for_dashboard(self) -> None:
+        """Wait for the dashboard to load"""
+
+        self.wait_for_page("dashboard")
+
+    def wait_for_login(self) -> None:
+        """Wait for the login page to load"""
+
+        self.wait_for_page("login")
+
+    def wait_for_register(self) -> None:
+        """Wait for the register page to load"""
+
+        self.wait_for_page("register")
+
+    def switch_mode(self) -> None:
+        """Switch between login and register modes"""
+
+        self.get_element("switch-mode-button").click()
+
+    def go_to_verification_url(self, token: str) -> None:
+        """Navigate to login page with verification token"""
+
+        self.driver.get(f"{self.frontend_base_url}/verify-email/?token={token}")
+
+    def switch_to_forgot_password(self) -> None:
+        """Navigate to forgot password page"""
+
+        self.get_element("forgot-password-link").click()
+
+
+class BaseTest(BaseUtils):
     """Base class for selenium tests"""
 
-    driver = None  # chrome driver
-    wait = None  # chrome driver wait
-    frontend_base_url = ""  # frontend base url
     backend_url = ""  # backend url
     user = None  # user to use
     client = None  # client for the current user
-    db = None  # database session
     base_utils = None  # base utils
 
     # Parameters needed
@@ -648,7 +773,7 @@ class BaseTest:
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -678,7 +803,6 @@ class BaseTest:
             self.client = authorised_clients[self.user_index]
             self.user = test_users[self.user_index]
             self.db = session
-            self.base_utils = BaseUtils(self.driver, test_frontend_server, session)
 
             self.setup_function(request)
 
@@ -773,17 +897,16 @@ class BaseTest:
         """Helper method to log in to the application"""
 
         self.driver.get(f"{self.frontend_base_url}/login")
-        self.base_utils.get_element("email").send_keys(self.user.email)
-        self.base_utils.get_element("password").send_keys(self.user.plain_password)
-        self.base_utils.get_element("confirm-button").click()
+        self.get_element("email").send_keys(self.user.email)
+        self.get_element("password").send_keys(self.user.plain_password)
+        self.get_element("confirm-button").click()
         try:
-            self.base_utils.get_element("loading-spinner", timeout=2)
-            self.base_utils.wait_for_disappear("loading-spinner", timeout=2)
+            self.get_element("loading-spinner", timeout=2)
+            self.wait_for_disappear("loading-spinner", timeout=2)
         except:
             pass
-        self.base_utils.wait_for_page("dashboard")
+        self.wait_for_page("dashboard")
         self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
-        self.base_utils.wait_for_table_load()
 
     # ---------------------------------------------------- DATABASE ----------------------------------------------------
 

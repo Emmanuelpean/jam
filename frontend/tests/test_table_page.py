@@ -5,17 +5,19 @@ import re
 import time
 
 import pytest
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.select import Select
 from selenium.webdriver.support.wait import WebDriverWait
 
-from conftest import contiguous_subdicts, models, BaseUtils, BaseTest
+from conftest import contiguous_subdicts, models, BaseUtils1, BaseTest
 from react_select import ReactSelect
 
 
-class DataModalUtils(BaseUtils):
+class DataModalUtils(BaseUtils1):
     """Base class for testing data modals"""
 
     def __init__(self, driver, entry_name: str, test_frontend_server, session):
@@ -25,7 +27,7 @@ class DataModalUtils(BaseUtils):
         :param test_frontend_server: Frontend server URL
         :param session: requests.Session object for backend API calls"""
 
-        BaseUtils.__init__(self, driver, test_frontend_server, session)
+        BaseUtils1.__init__(self, driver, test_frontend_server, session)
         self.entry_name = entry_name
 
     # ------------------------------------------------ HELPER FUNCTIONS ------------------------------------------------
@@ -90,12 +92,40 @@ class DataModalUtils(BaseUtils):
             entry_name = self.entry_name
         return self.get_element(f"modal-{mode}-{entry_name}-cancel-button")
 
-    def edit_button(self, mode: str, entry_name: str = "") -> WebElement:
+    def edit_button(self, mode: str, entry_name: str = "", **kwargs) -> WebElement:
         """Get the edit button on the modal"""
 
         if not entry_name:
             entry_name = self.entry_name
-        return self.get_element(f"modal-{mode}-{entry_name}-edit-button")
+        return self.get_element(f"modal-{mode}-{entry_name}-edit-button", **kwargs)
+
+    def import_button(self, entry_name: str = "") -> WebElement:
+        """Get the import button on the modal"""
+
+        if not entry_name:
+            entry_name = self.entry_name
+        return self.get_element(f"modal-import-{entry_name}-import-button")
+
+    def delete_button(self, mode: str, entry_name: str = "") -> WebElement:
+        """Get the delete button on the modal"""
+
+        if not entry_name:
+            entry_name = self.entry_name
+        return self.get_element(f"modal-{mode}-{entry_name}-delete-button")
+
+    def deactivate_button(self, entry_name: str = "") -> WebElement:
+        """Get the deactivate button on the modal"""
+
+        if not entry_name:
+            entry_name = self.entry_name
+        return self.get_element(f"modal-view-{entry_name}-deactivate-button")
+
+    def activate_button(self, entry_name: str = "") -> WebElement:
+        """Get the activate button on the modal"""
+
+        if not entry_name:
+            entry_name = self.entry_name
+        return self.get_element(f"modal-view-{entry_name}-activate-button")
 
     def _fill_modal(self, entry_name: str = "", **values) -> None:
         """Fill the modal with the given values  (key: key of the input elements, value: value to set)."""
@@ -108,6 +138,7 @@ class DataModalUtils(BaseUtils):
             self.wait_for_edit_modal(entry_name)
             for key, value in values.items():
                 if key in (
+                    "operator",
                     "country",
                     "company_id",
                     "location_id",
@@ -448,8 +479,16 @@ class DataModalUtils(BaseUtils):
 
         return None
 
+    def add_entry(self, **data) -> None:
+        """Add a new entry"""
 
-class DataTableUtils(BaseUtils):
+        self.wait_for_edit_modal()
+        self._fill_modal(**data)
+        self.confirm_button("edit").click()
+        self.wait_for_edit_modal_close()
+
+
+class DataTableUtils(BaseUtils1):
     """Base class for testing data tables"""
 
     # Parameters needed
@@ -462,7 +501,7 @@ class DataTableUtils(BaseUtils):
         :param test_frontend_server: Frontend server URL
         :param session: requests.Session object for backend API calls"""
 
-        BaseUtils.__init__(self, driver, test_frontend_server, session)
+        BaseUtils1.__init__(self, driver, test_frontend_server, session)
         self.entry_type = entry_type
 
     # ----------------------------------------------------- TABLES -----------------------------------------------------
@@ -528,6 +567,16 @@ class DataTableUtils(BaseUtils):
 
         column_index = header_keys.index(column_key)
         return [row.find_elements(By.TAG_NAME, "td")[column_index].text for row in self.table_rows]
+
+    def wait_for_table_load(self, timeout: int | float = 0.1) -> None:
+        """Wait for loading spinner to disappear"""
+
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                ec.invisibility_of_element_located((By.CSS_SELECTOR, "spinner-border"))
+            )
+        except TimeoutException:
+            pass
 
     # ----------------------------------------------------- BUTTONS ----------------------------------------------------
 
@@ -882,7 +931,7 @@ class TestAggregatorsPage(BaseTablePage):
         """Helper method to test the view modal for an entry"""
         if not entry:
             entry = self.test_entry
-        self.check_aggregator_view_modal(entry)
+        self.modal_utils.check_aggregator_view_modal(entry)
 
 
 class TestCompaniesPage(BaseTablePage):
@@ -908,7 +957,7 @@ class TestCompaniesPage(BaseTablePage):
         """Helper method to test the view modal for an entry"""
         if not entry:
             entry = self.test_entry
-        self.check_company_view_modal(entry)
+        self.modal_utils.check_company_view_modal(entry)
 
 
 class TestLocationsPage(BaseTablePage):
@@ -934,7 +983,7 @@ class TestLocationsPage(BaseTablePage):
         """Helper method to test the view modal for an entry"""
         if not entry:
             entry = self.test_entry
-        self.check_location_view_modal(entry)
+        self.modal_utils.check_location_view_modal(entry)
 
 
 class TestPersonsPage(BaseTablePage):
@@ -969,23 +1018,23 @@ class TestPersonsPage(BaseTablePage):
         """Helper method to test the view modal for an entry"""
         if not entry:
             entry = self.test_entry
-        self.check_person_view_modal(entry)
+        self.modal_utils.check_person_view_modal(entry)
 
     def test_table_company_badge(self) -> None:
         """Test that the company badge is displayed correctly"""
 
         self.get_element("table-row-1-CompanyBadge").click()
-        self.check_company_view_modal(self.test_entry.company)
+        self.modal_utils.check_company_view_modal(self.test_entry.company)
 
     def test_add_company(self) -> None:
         """Test adding a new person with a new company"""
 
-        self.add_entity_button.click()
-        self._fill_modal(first_name="John", last_name="Doe")
+        self.table_utils.add_entity_button.click()
+        self.modal_utils._fill_modal(first_name="John", last_name="Doe")
         self.get_element("add-button").click()
-        self._fill_modal(name="Company")
+        self.modal_utils._fill_modal(name="Company")
         self.get_element("modal-edit-company-confirm-button").click()
-        self.wait_for_edit_modal()
+        self.modal_utils.wait_for_edit_modal()
         assert self.get_element("first_name").get_attribute("value") == "John"
         assert self.get_element("last_name").get_attribute("value") == "Doe"
         assert self.get_element("company_id").text == "Company"
@@ -993,14 +1042,14 @@ class TestPersonsPage(BaseTablePage):
     def test_modify_company(self) -> None:
         """Test modifying the company of an existing person"""
 
-        self.table_row_click(self.test_entry.id)
+        self.table_utils.table_row_click(self.test_entry.id)
         self.get_element("modal-view-person-CompanyBadge").click()
         self.get_element("modal-view-company-edit-button").click()
-        self.wait_for_edit_modal("company")
+        self.modal_utils.wait_for_edit_modal("company")
         assert self.get_element("name").get_attribute("value") == self.test_entry.company.name
-        self._fill_modal("company", name="New Company Name")
+        self.modal_utils._fill_modal("company", name="New Company Name")
         self.get_element("modal-edit-company-confirm-button").click()
-        assert "New Company Name" in self.wait_for_view_modal("company").text
+        assert "New Company Name" in self.modal_utils.wait_for_view_modal("company").text
         self.get_element("modal-view-company-cancel-button").click()
         assert self.get_element("modal-view-person-CompanyBadge").text == "New Company Name".upper()
 
@@ -1026,7 +1075,7 @@ class TestJobApplicationUpdatesPage(BaseTablePage):
         """Helper method to test the view modal for an entry"""
         if not entry:
             entry = self.test_entry
-        self.check_update_view_modal(entry)
+        self.modal_utils.check_update_view_modal(entry)
 
 
 class TestInterviewPage(BaseTablePage):
@@ -1051,35 +1100,35 @@ class TestInterviewPage(BaseTablePage):
         """Helper method to test the view modal for an entry"""
         if not entry:
             entry = self.test_entry
-        self.check_interview_view_modal(entry)
+        self.modal_utils.check_interview_view_modal(entry)
 
     def test_table_interviewers_badge(self) -> None:
         """Test that the person badge is displayed correctly in the table"""
 
         self.get_element("table-row-1-interviewers-0").click()
-        self.check_person_view_modal(self.test_entry.interviewers[0])
+        self.modal_utils.check_person_view_modal(self.test_entry.interviewers[0])
 
     def test_modal_interviewers_badge(self) -> None:
         """Test that the person badge is displayed correctly in the modal"""
 
-        self.table_row(self.test_entry.id).click()
-        self.wait_for_view_modal()
+        self.table_utils.table_row(self.test_entry.id).click()
+        self.modal_utils.wait_for_view_modal()
         self.get_element("modal-view-interview-person-0").click()
-        self.check_person_view_modal(self.test_entry.interviewers[0])
+        self.modal_utils.check_person_view_modal(self.test_entry.interviewers[0])
 
     def test_table_location_badge_table(self) -> None:
         """Test that the location badge is displayed correctly in the table"""
 
         self.get_element("table-row-1-location").click()
-        self.check_location_view_modal(self.test_entry.location)
+        self.modal_utils.check_location_view_modal(self.test_entry.location)
 
     def test_modal_location_badge(self) -> None:
         """Test that the location badge is displayed correctly in the modal"""
 
-        self.table_row(self.test_entry.id).click()
-        self.wait_for_view_modal()
+        self.table_utils.table_row(self.test_entry.id).click()
+        self.modal_utils.wait_for_view_modal()
         self.get_element("modal-view-interview-location").click()
-        self.check_location_view_modal(self.test_entry.location)
+        self.modal_utils.check_location_view_modal(self.test_entry.location)
 
     # TODO add job view
 
@@ -1120,7 +1169,7 @@ class TestJobPage(BaseTablePage):
 
         if not entry:
             entry = self.test_entry
-        self.check_job_view_modal(entry)
+        self.modal_utils.check_job_view_modal(entry)
 
     def test_add_interview(self) -> None:
         """Test adding an interview through the job view modal"""
@@ -1133,19 +1182,19 @@ class TestJobPage(BaseTablePage):
         )
 
         interview_count = len(self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-interviews-']"))
-        self.table_row_click(self.test_entry.id)
-        self.wait_for_view_modal()
+        self.table_utils.table_row_click(self.test_entry.id)
+        self.modal_utils.wait_for_view_modal()
         self.get_element("application-tab").click()
         self.get_element("add-interviews-button").click()
-        self._fill_modal("interview", **interview_data)
-        self.confirm_button("edit", "interview").click()
-        self.wait_for_edit_modal_close("interview")
+        self.modal_utils._fill_modal("interview", **interview_data)
+        self.modal_utils.confirm_button("edit", "interview").click()
+        self.modal_utils.wait_for_edit_modal_close("interview")
         rows = self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-interviews-']")
         assert len(rows) == interview_count + 1
         rows[0].click()
         interview_id = int(re.search(r"table-row-interviews-(\d+)", rows[0].get_attribute("id")).group(1))
         interview = self.db.query(models.Interview).filter(models.Interview.id == interview_id).first()
-        self.check_interview_view_modal(interview, False)
+        self.modal_utils.check_interview_view_modal(interview, False)
 
     def test_modify_interview(self, test_interviews) -> None:
         """Test modifying an interview through the job view modal"""
@@ -1158,8 +1207,8 @@ class TestJobPage(BaseTablePage):
 
         # Open job view modal and navigate to the job application tab
         self.driver.refresh()
-        self.table_row_click(self.test_entry.id)
-        self.wait_for_view_modal()
+        self.table_utils.table_row_click(self.test_entry.id)
+        self.modal_utils.wait_for_view_modal()
         self.get_element("application-tab").click()
 
         # Count the number of rows and determine the interview ID
@@ -1169,9 +1218,9 @@ class TestJobPage(BaseTablePage):
 
         # Switch to edit mode and modify the interview
         self.get_element("modal-view-interview-edit-button").click()
-        self._fill_modal("interview", **interview_data)
-        self.confirm_button("edit", "interview").click()
-        self.wait_for_edit_modal_close("interview")
+        self.modal_utils._fill_modal("interview", **interview_data)
+        self.modal_utils.confirm_button("edit", "interview").click()
+        self.modal_utils.wait_for_edit_modal_close("interview")
 
         # Check the db entry to ensure the modifications were saved
         self.db.expire_all()
@@ -1181,7 +1230,7 @@ class TestJobPage(BaseTablePage):
         assert interview.note == interview_data["note"]
 
         # Verify the interview view modal displays the updated information
-        self.check_interview_view_modal(interview, False)
+        self.modal_utils.check_interview_view_modal(interview, False)
 
     def test_add_job_application_update(self) -> None:
         """Test adding a job application update through the job view modal"""
@@ -1192,20 +1241,20 @@ class TestJobPage(BaseTablePage):
             note="Scheduled first round interview",
         )
 
-        self.table_row_click(self.test_entry.id)
-        self.wait_for_view_modal()
+        self.table_utils.table_row_click(self.test_entry.id)
+        self.modal_utils.wait_for_view_modal()
         self.get_element("application-tab").click()
         update_count = len(self.driver.find_elements(By.CSS_SELECTOR, "[id^='table-row-jobApplicationUpdates-']"))
         self.get_element("add-jobApplicationUpdates-button").click()
-        self._fill_modal("update", **update_data)
-        self.confirm_button("edit", "update").click()
-        self.wait_for_edit_modal_close("update")
+        self.modal_utils._fill_modal("update", **update_data)
+        self.modal_utils.confirm_button("edit", "update").click()
+        self.modal_utils.wait_for_edit_modal_close("update")
         rows = self.driver.find_elements(By.CSS_SELECTOR, "[id^='table-row-jobApplicationUpdates-']")
         assert len(rows) == update_count + 1
         rows[0].click()
         update_id = int(re.search(r"table-row-jobApplicationUpdates-(\d+)", rows[0].get_attribute("id")).group(1))
         update = self.db.query(models.JobApplicationUpdate).filter(models.JobApplicationUpdate.id == update_id).first()
-        self.check_update_view_modal(update, False)
+        self.modal_utils.check_update_view_modal(update, False)
 
     def test_modify_job_application_update(self, test_job_application_updates) -> None:
         """Test modifying a job application update through the job view modal"""
@@ -1217,8 +1266,8 @@ class TestJobPage(BaseTablePage):
 
         # Open job view modal and navigate to the job application tab
         self.driver.refresh()
-        self.table_row_click(self.test_entry.id)
-        self.wait_for_view_modal()
+        self.table_utils.table_row_click(self.test_entry.id)
+        self.modal_utils.wait_for_view_modal()
         self.get_element("application-tab").click()
 
         # Find the first update row and get its ID
@@ -1228,9 +1277,9 @@ class TestJobPage(BaseTablePage):
 
         # Switch to edit mode and modify the update
         self.get_element("modal-view-update-edit-button").click()
-        self._fill_modal("update", **update_data)
-        self.confirm_button("edit", "update").click()
-        self.wait_for_edit_modal_close("update")
+        self.modal_utils._fill_modal("update", **update_data)
+        self.modal_utils.confirm_button("edit", "update").click()
+        self.modal_utils.wait_for_edit_modal_close("update")
 
         # Check the db entry to ensure the modifications were saved
         self.db.expire_all()
@@ -1239,4 +1288,4 @@ class TestJobPage(BaseTablePage):
         assert update.note == update_data["note"]
 
         # Verify the update view modal displays the updated information
-        self.check_update_view_modal(update, False)
+        self.modal_utils.check_update_view_modal(update, False)
