@@ -136,13 +136,13 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/keywords", element: <KeywordsPage />, protected: true },
 	{ path: "/interviews", element: <InterviewsPage />, protected: true },
 	{ path: "/aggregators", element: <AggregatorsPage />, protected: true },
-	{ path: "/jobapplicationupdates", element: <JobApplicationUpdatesPage />, protected: true },
+	{ path: "/job-application-updates", element: <JobApplicationUpdatesPage />, protected: true },
 	{ path: "/dashboard", element: <Dashboard />, protected: true },
 	{ path: "/settings", element: <UserSettingsPage />, protected: true },
 	{ path: "/users", element: <UserManagementPage />, protected: true, adminOnly: true },
-	{ path: "/eis_dashboard", element: <JobScraperDashboard />, protected: true, adminOnly: true },
-	{ path: "/job_rating_dashboard", element: <JobRatingDashboard />, protected: true, adminOnly: true },
-	{ path: "/app_settings", element: <SettingsPage />, protected: true, adminOnly: true },
+	{ path: "/job-scraping-dashboard", element: <JobScraperDashboard />, protected: true, adminOnly: true },
+	{ path: "/job-rating-dashboard", element: <JobRatingDashboard />, protected: true, adminOnly: true },
+	{ path: "/app-settings", element: <SettingsPage />, protected: true, adminOnly: true },
 	{ path: "*", element: <NotFoundPage /> },
 ];
 
