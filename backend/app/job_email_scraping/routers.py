@@ -173,7 +173,7 @@ def get_scraped_job_count(
     return {"count": count}
 
 
-@scraped_job_router.get("/filtered_by_filter/{filter_id}", response_model=list[schemas.ScrapedJobOut])
+@scraped_job_router.get("/filtered-by-filter/{filter_id}", response_model=list[schemas.ScrapedJobOut])
 def get_scraped_jobs_filtered_by_filter(
     filter_id: int,
     current_user: models.User = Depends(get_current_user),
@@ -210,7 +210,7 @@ generate_data_table_crud_router(
 
 
 # Email Ingestion Service Log router
-eis_service_log_router = APIRouter(prefix="/eis_service_logs", tags=["eis_service_logs"])
+eis_service_log_router = APIRouter(prefix="/job-scraping-service-logs", tags=["job-scraping-service-logs"])
 
 
 # GET endpoint for admins to get the service logs

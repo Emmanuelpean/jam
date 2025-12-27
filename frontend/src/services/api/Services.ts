@@ -10,9 +10,9 @@ export interface ScrapedJobCrudApi extends CrudApi<ScrapedJobData> {
 
 export const scrapedJobApi: ScrapedJobCrudApi = {
 	...createCrudApi("scraped-jobs"),
-	getCount: (token: string): ApiResponsePromise<{ count: number }> => api.get("scraped_jobs/count", token),
+	getCount: (token: string): ApiResponsePromise<{ count: number }> => api.get("scraped-jobs/count", token),
 	getByFilterId: (filterId: number, token: string): ApiResponsePromise<ScrapedJobData[]> =>
-		api.get(`scraped-jobs/filtered_by_filter/${filterId}`, token),
+		api.get(`scraped-jobs/filtered-by-filter/${filterId}`, token),
 };
 
 // Job Rating APIs
@@ -24,9 +24,9 @@ export interface ServiceLogCrudApi<T = any> extends CrudApi {
 }
 
 export const jobScraperServiceLogApi: ServiceLogCrudApi<JobScrapingServiceLogData> = {
-	...createCrudApi("eis_service_logs"),
+	...createCrudApi("job-scraping-service-logs"),
 	getLatest: (token: string): ApiResponsePromise<JobScrapingServiceLogData> =>
-		api.get("eis_service_logs/latest", token),
+		api.get("job-scraping-service-logs/latest", token),
 };
 
 export const jobRatingServiceLogApi: ServiceLogCrudApi<JobRatingServiceLogData> = {
