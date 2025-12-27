@@ -62,7 +62,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModal
 					ref={ref}
 					transformFormData={transformData}
 					itemName="Speculative Application"
-					endpoint="speculativeapplications"
+					endpoint="speculative-applications"
 					size={size}
 					fields={{
 						form: jobFormFields,

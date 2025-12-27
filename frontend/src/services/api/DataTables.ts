@@ -26,4 +26,5 @@ export const settingsApi: CrudApi<SettingData> = createCrudApi("settings");
 export const countriesApi: CrudApi<Country> = createCrudApi("others/countries");
 export const currenciesApi: CrudApi<Currency> = createCrudApi("others/currencies");
 export const scrapingFilterApi: CrudApi<ScrapingFilterData> = createCrudApi("scraping_filters");
-export const speculativeApplicationsApi: CrudApi<SpeculativeApplicationData> = createCrudApi("speculativeapplications");
+export const speculativeApplicationsApi: CrudApi<SpeculativeApplicationData> =
+	createCrudApi("speculative-applications");

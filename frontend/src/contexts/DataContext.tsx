@@ -82,9 +82,9 @@ export const endpointToEntityType = (endpoint: string): EntityType | null => {
 		locations: "locations",
 		settings: "settings",
 		users: "users",
-		scraped_jobs: "scrapedJobs",
+		"scraped-jobs": "scrapedJobs",
 		scraping_filters: "scrapingFilters",
-		speculativeapplications: "speculativeApplications",
+		"speculative-applications": "speculativeApplications",
 	};
 	return mapping[endpoint.toLowerCase()] || null;
 };

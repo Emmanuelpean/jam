@@ -35,7 +35,7 @@ from app.routers import (
 job_alert_email_router = generate_data_table_crud_router(
     table_model=models.JobEmail,
     out_schema=schemas.JobEmailOut,
-    endpoint="job_alert_emails",
+    endpoint="job-alert-emails",
     not_found_msg="Job alert email not found",
     allowed_actions=["get_all"],
     admin_only=True,
@@ -49,7 +49,7 @@ job_alert_email_router = generate_data_table_crud_router(
 scraped_job_router = generate_data_table_crud_router(
     table_model=models.ScrapedJob,
     out_schema=schemas.ScrapedJobOut,
-    endpoint="scraped_jobs",
+    endpoint="scraped-jobs",
     not_found_msg="Scraped Job not found",
     allowed_actions=["get_all"],
     admin_only=True,
@@ -199,7 +199,7 @@ generate_data_table_crud_router(
     table_model=models.ScrapedJob,
     update_schema=schemas.ScrapedJobUpdate,
     out_schema=schemas.ScrapedJobOut,
-    endpoint="scraped_jobs",
+    endpoint="scraped-jobs",
     not_found_msg="Scraped Job not found",
     allowed_actions=["put"],
     router=scraped_job_router,

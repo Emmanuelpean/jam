@@ -181,6 +181,6 @@ speculative_application_update_router = generate_data_table_crud_router(
     create_schema=schemas.SpeculativeApplicationCreate,
     update_schema=schemas.SpeculativeApplicationUpdate,
     out_schema=schemas.SpeculativeApplicationOut,
-    endpoint="speculativeapplications",
+    endpoint="speculative-applications",
     not_found_msg="Speculative Application not found",
 )
