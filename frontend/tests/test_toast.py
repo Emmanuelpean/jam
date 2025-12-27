@@ -1,12 +1,7 @@
 """Tests for the scraped jobs."""
 
-from selenium.webdriver import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-
 from conftest import BaseTest, models
 from frontend.tests.test_table_page import DataTableUtils, DataModalUtils
-from react_select import ReactSelect
 
 
 class TestToast(BaseTest):
@@ -21,21 +16,28 @@ class TestToast(BaseTest):
 
         request.getfixturevalue("test_scraped_jobs")
         self.table_utils = DataTableUtils(self.driver, self.entity_type, self.frontend_base_url, self.db)
+        self.job_table_utils = DataTableUtils(self.driver, "jobs", self.frontend_base_url, self.db)
         self.modal_utils = DataModalUtils(self.driver, self.entry_name, self.frontend_base_url, self.db)
         self.login()
 
     def test_import_scraped_job(self) -> None:
         """Test importing a scraped job and displaying a toast notification."""
 
+        # Import the scraped job with ID 2
         job_count = self.db.query(models.Job).count()
-        self.table_utils.get_element("table-row-scrapedJobs-2").click()
-        self.table_utils.get_element("modal-import-scraped job-import-button").click()
+        self.table_utils.table_row(2).click()
+        self.modal_utils.import_button().click()
         self.modal_utils.wait_for_import_modal_modal_close()
         self.table_utils.assert_toast_message("Job imported successfully.")
+
+        # Verify that the job count has increased by 1
         assert self.db.query(models.Job).count() == job_count + 1
         self.table_utils.go_to_page("jobs")
-        self.table_utils.get_element("table-row-jobs-{}".format(job_count + 1))
+        self.job_table_utils.wait_for_table_load()
+        assert len(self.job_table_utils.table_rows) == job_count + 1
         self.db.expire_all()
+
+        # Verify that the scraped job is marked as imported
         scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
         assert scraped_job.is_imported
 
@@ -44,23 +46,28 @@ class TestToast(BaseTest):
 
         job_count = self.db.query(models.Job).count()
         self.table_utils.context_menu(2, "import")
-        self.table_utils.get_element("modal-import-scraped job-import-button").click()
+        self.modal_utils.import_button().click()
         self.modal_utils.wait_for_import_modal_modal_close()
         self.table_utils.assert_toast_message("Job imported successfully.")
+
+        # Verify that the job count has increased by 1
         assert self.db.query(models.Job).count() == job_count + 1
         self.table_utils.go_to_page("jobs")
-        self.table_utils.get_element("table-row-jobs-{}".format(job_count + 1))
+        self.job_table_utils.wait_for_table_load()
+        assert len(self.job_table_utils.table_rows) == job_count + 1
         self.db.expire_all()
+
+        # Verify that the scraped job is marked as imported
         scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
         assert scraped_job.is_imported
 
     def test_delete_scraped_job(self) -> None:
         """Test deleting a scraped job and displaying a toast notification."""
 
-        self.get_element("table-row-scrapedJobs-2").click()
-        self.get_element("modal-import-scraped job-delete-button").click()
-        self.get_element("delete-alert-modal-confirm-button").click()
-        self.wait_for_import_modal_modal_close()
+        self.table_utils.table_row(2).click()
+        self.modal_utils.delete_button("import").click()
+        self.delete_confirm_button.click()
+        self.modal_utils.wait_for_import_modal_modal_close()
         self.assert_toast_message("Scraped Job deleted successfully.")
         self.db.expire_all()
         scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
@@ -69,9 +76,9 @@ class TestToast(BaseTest):
     def test_context_menu_delete_scraped_job(self) -> None:
         """Test deleting a scraped job via right-click and displaying a toast notification."""
 
-        self.context_menu(2, "delete")
-        self.get_element("delete-alert-modal-confirm-button").click()
-        self.wait_for_import_modal_modal_close()
+        self.table_utils.context_menu(2, "delete")
+        self.delete_confirm_button.click()
+        self.modal_utils.wait_for_import_modal_modal_close()
         self.assert_toast_message("Scraped Job deleted successfully.")
         self.db.expire_all()
         scraped_job = self.db.query(models.ScrapedJob).filter_by(id=2).first()
@@ -83,14 +90,20 @@ class TestScrapingFilters(BaseTest):
     user_index = 0
     page_url = "dashboard"
     entry_type = "scrapingFilters"
-    entry_name = "Scraping Filters"
-    test_fixture = ["test_scraping_filters", "test_scraped_jobs"]
+    entry_name = "scraping filter"
     test_data = dict(type="Attendance Type", operator="Contains", value="In Person")
+    filtered_index = 1
+    no_filtered_index = 3
 
     def setup_function(self, request) -> None:
         """Setup for each test function."""
 
+        request.getfixturevalue("test_scraped_jobs")
+        request.getfixturevalue("test_scraping_filters")
+        self.table_utils = DataTableUtils(self.driver, self.entry_type, self.frontend_base_url, self.db)
+        self.modal_utils = DataModalUtils(self.driver, self.entry_name, self.frontend_base_url, self.db)
         self.login()
+        self.open_modal()
 
     def open_modal(self) -> None:
         """Open the scraping filters modal."""
@@ -102,31 +115,38 @@ class TestScrapingFilters(BaseTest):
         """Test adding a scraping filter and displaying a toast notification."""
 
         filter_count = self.db.query(models.ScrapingFilter).count()
-        self.open_modal()
-        self.get_element(f"add-{self.entry_type}-button").click()
-        self._fill_modal()
-        self.select_option("type", "Attendance Type")
-        self.select_option("operator", "Contains")
-        self.set_text(self.get_element("value"), "In Person")
-        self.get_element("modal-edit-scraping filter-confirm-button").click()
+        self.table_utils.add_entity_button.click()
+        self.modal_utils.add_entry(**self.test_data)
         assert self.db.query(models.ScrapingFilter).count() == filter_count + 1
 
-    def context_menu(self, entity_id: int, choice: str) -> None:
-        """Row context menu"""
-
-        actions = ActionChains(self.driver)
-        actions.context_click(self.table_row(entity_id)).perform()
-        self.get_element(f"context-menu-{choice}").click()
-
-    def deactivate_scraping_filter(self) -> None:
+    def test_deactivate_scraping_filter(self) -> None:
         """Test deactivating a scraping filter and displaying a toast notification."""
 
-        self.open_modal()
-        self.get_element("table-row-scrapingFilters-2").click()
-        self.get_element("modal-edit-scraping filter-deactivate-button").click()
-        self.get_element("delete-alert-modal-confirm-button").click()
-        self.wait_for_modal_close("modal-edit-scraping filter")
+        self.table_utils.table_row(self.no_filtered_index).click()
+        self.modal_utils.deactivate_button().click()
+        self.modal_utils.wait_for_view_modal_close()
         self.assert_toast_message("Scraping Filter deactivated successfully.")
         self.db.expire_all()
-        scraping_filter = self.db.query(models.ScrapingFilter).filter_by(id=1).first()
+        scraping_filter = self.db.query(models.ScrapingFilter).filter_by(id=self.no_filtered_index).first()
         assert not scraping_filter.is_active
+        self.get_element("inactive-tab").click()
+        assert self.table_utils.table_row(self.no_filtered_index).is_displayed()
+
+    def test_edit_scraping_filter(self) -> None:
+        """Test deactivating a scraping filter when it has filtered jobs."""
+
+        assert not self.db.query(models.ScrapingFilter).filter_by(id=self.no_filtered_index).first().filtered_jobs
+        self.table_utils.table_row(self.no_filtered_index).click()
+        assert self.modal_utils.deactivate_button().is_enabled()
+        assert not self.modal_utils.edit_button("view", enabled=False).click()
+        self.modal_utils._fill_modal(self.entry_name, value="Virtual")
+        self.modal_utils.confirm_button("edit").click()
+        self.modal_utils.wait_for_view_modal_close()
+
+    def test_edit_scraping_filter_failure(self) -> None:
+        """Test deactivating a scraping filter when it has filtered jobs."""
+
+        assert self.db.query(models.ScrapingFilter).filter_by(id=self.filtered_index).first().filtered_jobs
+        self.table_utils.table_row(self.filtered_index).click()
+        assert self.modal_utils.deactivate_button().is_enabled()
+        assert not self.modal_utils.edit_button("view", enabled=False).is_enabled()
