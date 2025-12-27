@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi import HTTPException, status
-from jose import jwt
+import jwt
 
 from app import oauth2, schemas
 from app.config import settings

@@ -3,6 +3,7 @@ import { BaseServiceApi, LogResponse } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../components/spinner/Spinner";
 import "./LogViewer.css";
+import { ApiResponse } from "../../../services/api/Base";
 
 interface LogViewerProps {
 	api: BaseServiceApi;
@@ -27,8 +28,8 @@ const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
 		if (!token) return;
 		setError(null);
 		try {
-			const data: LogResponse = await api.getLogs(logLinesRef.current, token);
-			setLogs(data);
+			const data: ApiResponse<LogResponse> = await api.getLogs(logLinesRef.current, token);
+			setLogs(data.data);
 		} catch (err: any) {
 			setError(err?.message || "Failed to fetch logs");
 			console.error(err);

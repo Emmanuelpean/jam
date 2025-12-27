@@ -18,10 +18,9 @@ from requests import Response
 from sqlalchemy import create_engine, orm
 from starlette.testclient import TestClient
 
-from app import models, database, schemas
+from app import database, schemas
+from app import model_registry as models
 from app.config import settings
-from app.job_email_scraping import models as eis_models
-from app.job_rating import models as rating_models
 from app.main import app
 from app.oauth2 import create_access_token
 from app.utils import hash_token
@@ -45,7 +44,8 @@ from tests.utils.create_data import (
     create_user_qualifications,
     create_job_ratings,
     create_job_rating_service_logs,
-    create_speculative_applications
+    create_scraping_filters,
+create_speculative_applications
 )
 from tests.utils.seed_database import reset_database
 from tests.utils.test_data import (
@@ -68,10 +68,11 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def find_non_owned(entries: list, owner_id: int) -> int:
+def find_non_owned_entry(entries: list, owner_id: int) -> int:
     """Find an entry not owned by the specified owner_id.
     :param entries: List of entries to search.
-    :param owner_id: The owner ID to exclude."""
+    :param owner_id: The owner ID to exclude.
+    :return: The ID of the first entry not owned by the specified owner_id."""
 
     for entry in entries:
         if entry.owner_id != owner_id:
@@ -123,7 +124,7 @@ def client(session) -> Generator[TestClient, Any, None]:
 
     app.dependency_overrides[database.get_db] = override_get_db  # noqa
     yield TestClient(app)
-    app.dependency_overrides.pop(database.get_db, None)  # Clean up dependency override  # noqa
+    app.dependency_overrides.pop(database.get_db, None)  # Clean up dependency override
 
 
 @pytest.fixture
@@ -304,7 +305,7 @@ def persons_unauthorised_data(test_companies) -> tuple[list[dict], int]:
     """Create test person data with incorrect company_id for access control testing"""
 
     owner_id = 1
-    company_id = find_non_owned(test_companies, owner_id)
+    company_id = find_non_owned_entry(test_companies, owner_id)
     return [{"first_name": "A", "last_name": "B", "company_id": company_id, "owner_id": owner_id}], owner_id
 
 
@@ -343,10 +344,10 @@ def jobs_unauthorised_data(
     """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
 
     owner_id = 1
-    company_id = find_non_owned(test_companies, owner_id)
-    location_id = find_non_owned(test_locations, owner_id)
-    job_keyword_mapping = [{"job_id": 1, "keyword_ids": [find_non_owned(test_keywords, owner_id)]}]
-    job_contact_mapping = [{"job_id": 1, "person_ids": [find_non_owned(test_persons, owner_id)]}]
+    company_id = find_non_owned_entry(test_companies, owner_id)
+    location_id = find_non_owned_entry(test_locations, owner_id)
+    job_keyword_mapping = [{"job_id": 1, "keyword_ids": [find_non_owned_entry(test_keywords, owner_id)]}]
+    job_contact_mapping = [{"job_id": 1, "person_ids": [find_non_owned_entry(test_persons, owner_id)]}]
     data = [
         {
             "title": "A",
@@ -403,9 +404,9 @@ def interviews_unauthorised_data(
     """Create test interview data with incorrect job_id for access control testing"""
 
     owner_id = 1
-    job_id = find_non_owned(test_jobs, owner_id)
+    job_id = find_non_owned_entry(test_jobs, owner_id)
     data = [{"job_id": job_id, "date": str(dt.datetime.now()), "owner_id": owner_id, "type": "phone"}]
-    interview_interviewer_mappings = [{"interview_id": 1, "person_ids": [find_non_owned(test_persons, owner_id)]}]
+    interview_interviewer_mappings = [{"interview_id": 1, "person_ids": [find_non_owned_entry(test_persons, owner_id)]}]
     return data, owner_id, interview_interviewer_mappings
 
 
@@ -440,7 +441,7 @@ def job_application_updates_unauthorised_data(session, test_users, test_jobs) ->
     """Create test job application update data with incorrect job_id for access control testing"""
 
     owner_id = 1
-    job_id = find_non_owned(test_jobs, owner_id)
+    job_id = find_non_owned_entry(test_jobs, owner_id)
     data = [
         {
             "job_id": job_id,
@@ -472,42 +473,42 @@ def test_speculative_applications(session, test_users, test_persons, test_compan
 
 
 @pytest.fixture
-def test_scraped_jobs(session, test_users, test_job_alert_emails) -> list[eis_models.ScrapedJob]:
+def test_scraped_jobs(session, test_users, test_job_alert_emails, test_scraping_filters) -> list[models.ScrapedJob]:
     """Create test job alert email jobs"""
 
-    return create_scraped_jobs(session, test_job_alert_emails, test_users)
+    return create_scraped_jobs(session, test_job_alert_emails, test_users, test_scraping_filters)
 
 
 @pytest.fixture
-def test_eis_service_logs(session) -> list[eis_models.JobEmailScrapingServiceLog]:
+def test_eis_service_logs(session) -> list[models.JobEmailScrapingServiceLog]:
     """Create test service logs"""
 
     return create_job_scraping_service_logs(session)
 
 
 @pytest.fixture
-def test_platform_stats(session, test_eis_service_logs) -> list[eis_models.JobEmailScrapingPlatformStat]:
+def test_platform_stats(session, test_eis_service_logs) -> list[models.JobEmailScrapingPlatformStat]:
     """Create test platform stats"""
 
     return create_job_scraping_platform_stats(session, test_eis_service_logs)
 
 
 @pytest.fixture
-def test_eis_service_errors(session, test_eis_service_logs) -> list[eis_models.JobEmailScrapingServiceError]:
+def test_eis_service_errors(session, test_eis_service_logs) -> list[models.JobEmailScrapingServiceError]:
     """Create test job_email_scraping service errors"""
 
     return create_job_scraping_service_errors(session, test_eis_service_logs)
 
 
 @pytest.fixture
-def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[eis_models.JobEmail]:
+def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[models.JobEmail]:
     """Create test job alert emails"""
 
     return create_job_alert_emails(session, test_users, test_eis_service_logs)
 
 
 @pytest.fixture
-def test_job_rating_service_logs(session) -> list[rating_models.JobRatingServiceLog]:
+def test_job_rating_service_logs(session) -> list[models.JobRatingServiceLog]:
     """Create test job rating service logs"""
 
     return create_job_rating_service_logs(session)
@@ -516,12 +517,19 @@ def test_job_rating_service_logs(session) -> list[rating_models.JobRatingService
 @pytest.fixture
 def test_job_ratings(
     session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
-) -> list[rating_models.JobRating]:
+) -> list[models.JobRating]:
     """Create test job ratings"""
 
     return create_job_ratings(
         session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
     )
+
+
+@pytest.fixture
+def test_scraping_filters(session, test_users) -> list[models.ScrapingFilter]:
+    """Create test scraped job filter data"""
+
+    return create_scraping_filters(session, test_users)
 
 
 # -------------------------------------------------------- UTILS -------------------------------------------------------

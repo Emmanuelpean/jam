@@ -1,7 +1,6 @@
 """Authentication route"""
 
-import secrets
-from datetime import datetime, timezone, timedelta
+import datetime as dt
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -10,38 +9,7 @@ from sqlalchemy.orm import Session
 from app import utils, models, database, schemas, oauth2
 from app.config import settings
 from app.emails.email_service import email_service
-
-
-def get_retry_remaining_seconds(token_created_at: datetime | None) -> int:
-    """Calculate how many seconds remain until the next email can be sent.
-    :param token_created_at: datetime when the last token was created
-    :return: seconds remaining until next email can be sent"""
-
-    if token_created_at:
-        time_since_last_email = int((datetime.now(timezone.utc) - token_created_at).total_seconds())
-        return settings.verification_email_min_interval_seconds - time_since_last_email
-    return 0
-
-
-def generate_token() -> tuple[str, str]:
-    """Generate a secure random token.
-    :return: tuple containing the token and its hashed verification code"""
-
-    token = secrets.token_urlsafe(32)
-    verification_code = utils.hash_token(token)
-    return token, verification_code
-
-
-def check_token_expiration(token_created_at: datetime | None) -> bool:
-    """Check if the token has expired.
-    :param token_created_at: datetime when the token was created
-    :return: True if expired, False otherwise"""
-
-    if token_created_at:
-        expiration_time = token_created_at + timedelta(minutes=settings.verification_token_expiration_minutes)
-        return datetime.now(timezone.utc) > expiration_time
-    return True
-
+from app.routers.utils import get_retry_remaining_seconds, generate_token, check_token_expiration
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
 
@@ -80,19 +48,19 @@ def login(
         result = send_verification_with_rate_limit(user, db)
 
         # Raise appropriate exception based on email sending result
-        if result["success"]:
+        if result.success:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=f"User account is not verified. A new verification email has been sent to {user.email}.",
             )
         else:
             raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=result["message"],
+                status_code=result.error_code,
+                detail=result.message,
             )
 
     # Update the user last login
-    user.last_login = datetime.now(timezone.utc)
+    user.last_login = dt.datetime.now(dt.timezone.utc)
     db.commit()
 
     # Create an access token and return it
@@ -109,7 +77,7 @@ def login(
 def send_verification_with_rate_limit(
     user: models.User,
     db: Session,
-) -> dict[str, bool | str | int | None]:
+) -> schemas.GenericResponse:
     """Send verification email with rate limiting.
     :param user: user entry
     :param db: database session
@@ -118,11 +86,11 @@ def send_verification_with_rate_limit(
     # Check if enough time has passed since last email
     seconds_remaining = get_retry_remaining_seconds(user.verification_token_created_at)
     if seconds_remaining > 0:
-        return {
-            "success": False,
-            "message": f"Please wait {seconds_remaining} seconds before requesting another verification email",
-            "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
-        }
+        return schemas.GenericResponse(
+            success=False,
+            message=f"Please wait {seconds_remaining} seconds before requesting another verification email.",
+            error_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
 
     # Generate new verification token
     token, verification_code = generate_token()
@@ -134,32 +102,32 @@ def send_verification_with_rate_limit(
 
         # Update user with new verification code and timestamp
         user.verification_token = verification_code
-        user.verification_token_created_at = datetime.now(timezone.utc)
+        user.verification_token_created_at = dt.datetime.now(dt.timezone.utc)
         db.commit()
 
-        return {
-            "success": True,
-            "message": "Verification email sent successfully.",
-            "error_code": None,
-        }
+        return schemas.GenericResponse(
+            success=True,
+            message="Verification email sent successfully.",
+            error_code=None,
+        )
 
     except Exception as e:
         db.rollback()
-        return {
-            "success": False,
-            "message": f"Error sending verification email: {str(e)}",
-            "error_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
-        }
+        return schemas.GenericResponse(
+            success=False,
+            message=f"Error sending verification email: {e}",
+            error_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 register_router = APIRouter(prefix="/register", tags=["Register"])
 
 
-@register_router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.VerificationResponse)
+@register_router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.GenericResponse)
 def create_user(
     user: schemas.UserRegister,
     db: Session = Depends(database.get_db),
-) -> dict[str, str | bool]:
+) -> schemas.GenericResponse:
     """Create a new user
     :param user: The user data
     :param db: The database session
@@ -184,14 +152,14 @@ def create_user(
         # If user exists but is not verified, resend verification email
         if not existing_user.is_verified:
             result = send_verification_with_rate_limit(existing_user, db)
-            if result["success"]:
+            if result.success:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail=f"Email already registered but not verified. "
                     f"A new verification email has been sent to {existing_user.email}.",
                 )
             else:
-                raise HTTPException(status_code=result["error_code"], detail=result["message"])
+                raise HTTPException(status_code=result.error_code, detail=result.message)
         else:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
@@ -202,8 +170,8 @@ def create_user(
     user_data = user.model_dump()
     new_user = models.User(**user_data)  # noqa
     result = send_verification_with_rate_limit(new_user, db)
-    if not result["success"]:
-        raise HTTPException(status_code=result["error_code"], detail=result["message"])
+    if not result.success:
+        raise HTTPException(status_code=result.error_code, detail=result.message)
     else:
         db.add(new_user)
         db.commit()
@@ -212,11 +180,11 @@ def create_user(
     return result
 
 
-@register_router.get("/verify-email/{token}")
+@register_router.get("/verify-email/{token}", response_model=schemas.GenericResponse)
 def verify_email(
     token: str,
     db: Session = Depends(database.get_db),
-) -> dict[str, str]:
+) -> dict[str, str | bool]:
     """Verify a user's email address using the provided token
     :param token: The verification token from the email
     :param db: The database session
@@ -243,7 +211,7 @@ def verify_email(
     user.is_verified = True
     db.commit()
 
-    return {"message": "Account verified successfully"}
+    return {"message": "Account verified successfully", "success": True}
 
 
 # ------------------------------------------------------ PASSWORD ------------------------------------------------------
@@ -255,7 +223,7 @@ password_router = APIRouter(prefix="/password", tags=["Password"])
 def send_password_reset_with_rate_limit(
     user: models.User,
     db: Session,
-) -> dict[str, bool | str]:
+) -> schemas.GenericResponse:
     """Send password reset email with rate limiting.
     :param user: user entry
     :param db: database session
@@ -264,11 +232,11 @@ def send_password_reset_with_rate_limit(
     # Check if enough time has passed since last email
     seconds_remaining = get_retry_remaining_seconds(user.password_reset_token_created_at)
     if seconds_remaining > 0:
-        return {
-            "success": False,
-            "message": f"Please wait {seconds_remaining} seconds before requesting another password reset email",
-            "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
-        }
+        return schemas.GenericResponse(
+            success=False,
+            message=f"Please wait {seconds_remaining} seconds before requesting another password reset email",
+            error_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
 
     # Generate new verification token
     token, code = generate_token()
@@ -280,28 +248,29 @@ def send_password_reset_with_rate_limit(
 
         # Update user with new verification code and timestamp
         user.password_reset_token = code
-        user.password_reset_token_created_at = datetime.now(timezone.utc)
+        user.password_reset_token_created_at = dt.datetime.now(dt.timezone.utc)
         db.commit()
 
-        return {
-            "success": True,
-            "message": "Password reset email sent successfully",
-            "error_code": None,
-        }
+        return schemas.GenericResponse(
+            success=True,
+            message="Password reset email sent successfully",
+            error_code=None,
+        )
+
     except Exception as e:
         db.rollback()
-        return {
-            "success": False,
-            "message": f"Error sending password reset email: {str(e)}",
-            "error_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
-        }
+        return schemas.GenericResponse(
+            success=False,
+            message=f"Error sending password reset email: {str(e)}",
+            error_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
-@password_router.post("/forgot", status_code=status.HTTP_200_OK)
+@password_router.post("/forgot", status_code=status.HTTP_200_OK, response_model=schemas.GenericResponse)
 def request_password_reset(
     email_data: schemas.EmailRequest,
     db: Session = Depends(database.get_db),
-) -> dict[str, str | bool]:
+) -> schemas.GenericResponse:
     """Request a password reset email.
     :param email_data: Schema containing the user's email address
     :param db: The database session
@@ -326,13 +295,13 @@ def request_password_reset(
 
     # Send password reset email with rate limiting
     result = send_password_reset_with_rate_limit(user, db)
-    if result["error_code"]:
-        raise HTTPException(status_code=result["error_code"], detail=result["message"])
+    if not result.success:
+        raise HTTPException(status_code=result.error_code, detail=result.message)
     else:
-        return {"success": True, "message": result["message"]}
+        return result
 
 
-@password_router.post("/reset", status_code=status.HTTP_200_OK)
+@password_router.post("/reset", status_code=status.HTTP_200_OK, response_model=schemas.GenericResponse)
 def reset_password(
     reset_data: schemas.PasswordReset,
     db: Session = Depends(database.get_db),

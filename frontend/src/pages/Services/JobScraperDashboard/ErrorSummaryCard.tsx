@@ -1,10 +1,11 @@
 import React, { JSX, useState } from "react";
-import { JobScraperServiceLog } from "../../../services/Schemas";
+import { JobScrapingServiceLogData } from "../../../services/Schemas";
+import { ErrorCount } from "../../../hooks/useJobScraperErrors";
 
 interface ErrorSummaryCardProps {
-	latestServiceLogs: JobScraperServiceLog[] | null;
-	lastScraperErrors: Record<string, number>;
-	latestScraperErrors: Record<string, number>;
+	latestServiceLogs: JobScrapingServiceLogData[] | null;
+	lastScraperErrors: Record<string, ErrorCount>;
+	latestScraperErrors: Record<string, ErrorCount>;
 	lastServiceErrors: Record<string, number>;
 	latestServiceErrors: Record<string, number>;
 	isRunning: boolean;
@@ -23,12 +24,12 @@ export const ErrorSummaryCard = ({
 	const [errorView, setErrorView] = useState<ErrorView>("current");
 
 	// Select data based on view
-	const criticalErrorLogs: JobScraperServiceLog[] = latestServiceLogs || [];
+	const criticalErrorLogs: JobScrapingServiceLogData[] = latestServiceLogs || [];
 	const scrapeErrors = errorView === "current" ? latestScraperErrors : lastScraperErrors;
 	const serviceErrors = errorView === "current" ? latestServiceErrors : lastServiceErrors;
 
 	const criticalErrorCount: number = criticalErrorLogs.filter(
-		(l: JobScraperServiceLog): boolean => !!(l.error_message && l.error_message.trim()),
+		(l: JobScrapingServiceLogData): boolean => !!(l.error_message && l.error_message.trim()),
 	).length;
 
 	const handleViewToggle = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -67,15 +68,15 @@ export const ErrorSummaryCard = ({
 							{criticalErrorLogs
 								.slice()
 								.sort(
-									(a: JobScraperServiceLog, b: JobScraperServiceLog): number =>
+									(a: JobScrapingServiceLogData, b: JobScrapingServiceLogData): number =>
 										new Date(b.run_datetime).getTime() - new Date(a.run_datetime).getTime(),
 								)
 								.filter(
-									(log: JobScraperServiceLog): boolean =>
+									(log: JobScrapingServiceLogData): boolean =>
 										!!(log.error_message && log.error_message.trim()),
 								)
 								.map(
-									(log: JobScraperServiceLog, idx: number): JSX.Element => (
+									(log: JobScrapingServiceLogData, idx: number): JSX.Element => (
 										<div key={idx} className="alert alert-danger">
 											<div className="small mb-1">
 												{new Date(log.run_datetime).toLocaleString()}
@@ -123,16 +124,26 @@ export const ErrorSummaryCard = ({
 					) : (
 						<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
 							{Object.entries(scrapeErrors)
-								.sort((a, b) => b[1] - a[1])
-								.map(([errorMsg, count], idx) => (
+								.sort((a, b) => b[1].count - a[1].count)
+								.map(([errorMsg, error], idx) => (
 									<div key={idx} className="alert alert-warning">
-										<div className="d-flex justify-content-between align-items-start mb-1">
+										<div className="d-flex justify-content-between align-items-start mb-2">
 											<span className="badge bg-warning">
-												{count} {count > 1 ? "occurrences" : "occurrence"}
+												{error.count} {error.count > 1 ? "occurrences" : "occurrence"}
 											</span>
 										</div>
-										<div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+										<div
+											style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+											className="mb-2"
+										>
 											{errorMsg}
+										</div>
+										<div className="mt-2" style={{ fontSize: "0.85rem" }}>
+											{error.jobs.map((job, jobIdx) => (
+												<div key={jobIdx}>
+													{job.platform}: {job.jobId}
+												</div>
+											))}
 										</div>
 									</div>
 								))}

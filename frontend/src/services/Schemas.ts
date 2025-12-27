@@ -258,10 +258,10 @@ export interface ScrapedJobData extends OwnedOut {
 	attendance_type: string | null;
 	location: string | null;
 	emails: number[];
-	job_rating: JobRating | null;
+	job_rating: JobRatingData | null;
 }
 
-export interface JobRating extends BaseOut {
+export interface JobRatingData extends BaseOut {
 	overall_score: number | null;
 	technical_score: number | null;
 	experience_score: number | null;
@@ -275,6 +275,23 @@ export interface JobRating extends BaseOut {
 	user_qualification_id: number | null;
 }
 
+export interface ScrapingFilterTransform {
+	type: string;
+	operator: string;
+	value: string;
+	case_sensitive: boolean;
+}
+
+export interface ScrapingFilterData extends OwnedOut {
+	type: string;
+	operator: string;
+	value: string;
+	case_sensitive: boolean;
+	name: string;
+	is_active: boolean;
+	filtered_jobs: number[];
+}
+
 // ---------------------------------------------------- SERVICE LOGS ---------------------------------------------------
 
 export interface ServiceLog extends BaseOut {
@@ -284,13 +301,14 @@ export interface ServiceLog extends BaseOut {
 	error_message: string | null;
 }
 
-export interface JobScraperServiceLog extends ServiceLog {
+export interface JobScrapingServiceLogData extends ServiceLog {
 	user_found_ids: number[];
 	user_processed_ids: number[];
 	emails: number[];
 	scraped_jobs: ScrapedJobData[];
 	platform_stats: PlatformStat[];
 	errors: ServiceError[];
+	job_to_scrape_n: number;
 	job_scrape_succeeded_n: number;
 	job_scrape_failed_n: number;
 	job_scrape_copied_n: number;
@@ -302,7 +320,7 @@ export interface JobScraperServiceLog extends ServiceLog {
 	service_errors: ServiceError[];
 }
 
-export interface JobRatingServiceLog extends ServiceLog {
+export interface JobRatingServiceLogData extends ServiceLog {
 	rated_job_found_ids: number[];
 	rated_job_succeeded_ids: number[];
 	rated_job_failed_ids: number[];
@@ -316,6 +334,7 @@ export interface PlatformStat {
 	email_saved_ids: number[];
 	email_skipped_ids: number[];
 	job_found_ids: number[];
+	job_to_scrape_ids: number[];
 	job_scrape_failed_ids: number[];
 	job_scrape_succeeded_ids: number[];
 	job_scrape_copied_ids: number[];

@@ -11,8 +11,10 @@ from datetime import datetime
 from app import utils, model_registry as models
 from app.config import settings
 from app.database import get_db
+from app.emails.email_service import EmailService
 from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
+from app.job_email_scraping.filtering import is_job_filtered_for_user
 from app.job_email_scraping.job_scrapers import JobResult
 from app.job_email_scraping.job_scrapers.indeed import IndeedApifyJobScraper
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
@@ -26,7 +28,6 @@ from app.job_email_scraping.models import (
     JobEmailScrapingPlatformStat,
     JobEmailScrapingServiceError,
 )
-from app.emails.email_service import EmailService
 from app.service_runner import ServiceRunner
 from app.utils import AppLogger
 
@@ -129,11 +130,13 @@ class JobEmailScraper(EmailService):
         email_id: str,
         user: models.User,
         service_log_id: int,
+        forwarded: bool = False,
     ) -> tuple[JobEmail, bool]:
         """Read and save an email to the database
         :param email_id: Email ID
         :param user: User entry associated with this email
         :param service_log_id: ID of the EisServiceLog instance associated with this email
+        :param forwarded: Whether the email was forwarded
         :return: JobEmails instance and whether the record was created or already existing"""
 
         # Check if the email already exists and return it if it does
@@ -158,7 +161,7 @@ class JobEmailScraper(EmailService):
             if not platform:
                 raise ValueError("Email body does not contain a valid platform identifier.")
             alert_name = ALERT_NAME_EXTRACTORS[platform](message["subject"], message["body"])
-
+            sender = message["from"] if forwarded else message["to"]
             # Create a new email record
             # noinspection PyArgumentList
             email_record = JobEmail(
@@ -166,7 +169,7 @@ class JobEmailScraper(EmailService):
                 service_log_id=service_log_id,
                 external_email_id=email_id,
                 subject=message["subject"],
-                sender=message["to"],
+                sender=sender,
                 date_received=message["date"],
                 body=remove_style_tags(message["body"]),
                 platform=platform,
@@ -390,6 +393,7 @@ class JobEmailScraper(EmailService):
             self.logger.info(f"Processing user: {user.email} (ID: {user.id})")
 
             # Get the list of all emails
+            forwarded = False
             try:
                 email_ids = self.get_email_ids(
                     recipient_email=settings.scraper_email,
@@ -404,6 +408,7 @@ class JobEmailScraper(EmailService):
                         to_email=settings.scraper_email,
                         timedelta_days=timedelta_days,
                     )
+                    forwarded = True
                 service_log.email_found_n += len(email_ids)
                 self.logger.info(f"Found {len(email_ids)} emails")
             except Exception as exception:
@@ -415,7 +420,7 @@ class JobEmailScraper(EmailService):
             for email_id in email_ids:
                 self.logger.info(f"Processing email with ID: {email_id}")
                 try:
-                    email_record, is_new = self.get_and_save_email_to_db(email_id, user, service_log.id)
+                    email_record, is_new = self.get_and_save_email_to_db(email_id, user, service_log.id, forwarded)
 
                     # Extract jobs if this is a new email
                     if is_new:
@@ -476,9 +481,25 @@ class JobEmailScraper(EmailService):
 
         # List all unique job records that haven't been scraped yet
         job_records = self.db.query(ScrapedJob).filter(ScrapedJob.is_scraped.is_(False)).all()
+        platforms = set([job.platform for job in job_records])
+        for platform in platforms:
+            ids = [job.id for job in job_records if job.platform == platform]
+            self.upsert_platform_stat(service_log, platform, job_to_scrape_ids=ids)
 
         # For each job record, scrape the data
         for job_record in job_records:
+
+            # Check if filtered out for user
+            if job_filter_rule := is_job_filtered_for_user(self.db, job_record):
+                self.logger.info(
+                    f"Job ID {job_record.external_job_id} filtered out for user ID {job_record.owner_id} "
+                    f"due to rule {job_filter_rule.name}"
+                )
+                job_record.is_scraped = True
+                job_record.filter_id = job_filter_rule.id
+                self.db.commit()
+                self.upsert_platform_stat(service_log, job_record.platform, job_scrape_filtered_ids=job_record.id)
+                continue  # next job record
 
             # Find any existing scraped job data in the database
             existing_data = (
@@ -543,7 +564,7 @@ class JobEmailScraper(EmailService):
                     self.upsert_platform_stat(service_log, job_record.platform, job_scrape_failed_ids=job_record.id)
 
 
-class EmailScraperService(ServiceRunner):
+class EmailScraperServiceRunner(ServiceRunner):
     """Service runner for the EmailScraperService"""
 
     def __init__(self) -> None:
@@ -552,4 +573,4 @@ class EmailScraperService(ServiceRunner):
         ServiceRunner.__init__(self, SERVICE_NAME, dict(timedelta_days=3), JobEmailScraper().run_scraping)
 
 
-scraper_service = EmailScraperService()
+scraper_service = EmailScraperServiceRunner()

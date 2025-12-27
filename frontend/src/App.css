@@ -116,6 +116,18 @@ textarea.form-control {
     box-shadow: 0 6px 20px var(--jam-glow), 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.btn-outline-primary {
+    border: 2px solid var(--primary-mid) !important;
+    color: var(--primary-mid);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    border: 2px solid !important;
+    background: var(--primary-gradient);
+    color: white;
+}
+
 .btn-primary:hover {
     background: var(--primary-hover-gradient);
     transform: translateY(-2px);

@@ -1,10 +1,10 @@
 import React, { forwardRef, JSX, useRef } from "react";
 import DataModal, {
 	DataModalHandle,
-	DataModalProps,
+	JamDataModalProps,
 	Fields,
 	ValidationErrors,
-	WarningConfig,
+	WarningMessageConfig,
 } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { EnrichedJobData, JobData, ScrapedJobData } from "../../services/Schemas";
@@ -18,8 +18,8 @@ import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const ScrapedJobModal = forwardRef<DataModalHandle, DataModalProps>(
-	({ size = "xl", onSuccess }: DataModalProps, ref): JSX.Element => {
+export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
+	({ size = "xl", onSuccess, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const locationModalRef = useRef<DataModalHandle>(null);
@@ -79,6 +79,14 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, DataModalProps>(
 			modalViewFields.scrapedLocationMap(),
 		];
 
+		const viewFields: Fields = [
+			modalViewFields.title({ isTitle: true }),
+			modalViewFields.description(),
+			[modalViewFields.company(), modalViewFields.location()],
+			[modalViewFields.platform(), modalViewFields.url()],
+			modalViewFields.scrapedLocationMap(),
+		];
+
 		const customValidation = async (formData: JobData): Promise<ValidationErrors> => {
 			const errors: ValidationErrors = {};
 			const duplicates: EnrichedJobData[] = dataContext.jobs.filter(
@@ -92,7 +100,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, DataModalProps>(
 		};
 
 		const warningMessage = (data: ScrapedJobData) => {
-			const result: WarningConfig[] = [];
+			const result: WarningMessageConfig[] = [];
 
 			if (data?.is_failed) {
 				result.push({
@@ -121,7 +129,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, DataModalProps>(
 			<>
 				<DataModal
 					ref={ref}
-					fields={{ form: jobFormFields, view: [] }}
+					fields={{ form: jobFormFields, view: viewFields }}
 					transformFormData={transformData}
 					transformInputData={transformInputData}
 					itemName="Scraped Job"
@@ -130,6 +138,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, DataModalProps>(
 					validation={customValidation}
 					onSuccess={onSuccess}
 					warningMessage={warningMessage}
+					canEdit={canEdit}
 				/>
 				<CompanyModal ref={companyModalRef} />
 				<LocationModal ref={locationModalRef} />

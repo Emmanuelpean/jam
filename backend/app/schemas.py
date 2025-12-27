@@ -37,7 +37,7 @@ class OwnedOut(Out):
     owner_id: int
 
 
-class VerificationResponse(BaseModel):
+class GenericResponse(BaseModel):
     success: bool
     message: str
     error_code: int | None = None

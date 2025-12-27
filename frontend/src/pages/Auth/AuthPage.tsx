@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { AuthResponse, FormData, useAuth } from "../../contexts/AuthContext";
-import "./Auth.css";
+import { FormData, useAuth } from "../../contexts/AuthContext";
+import "./AuthPage.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Alert, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
@@ -9,13 +9,9 @@ import { Errors, FormField, SyntheticEvent } from "../../components/rendering/wi
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { authApi } from "../../services/api/Users";
-import { ApiError } from "../../services/api/Base";
+import { authApi, AuthResponse, GenericResponse } from "../../services/api/Users";
+import { ApiError, ApiResponse } from "../../services/api/Base";
 import { useLoading } from "../../contexts/LoadingContext";
-
-interface VerificationResponse {
-	message: string;
-}
 
 type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
@@ -80,9 +76,9 @@ function AuthForm(): JSX.Element {
 		const verifyToken: string | null = searchParams.get("token");
 
 		let api = null;
-		if (mode == "verifyEmail") {
+		if (mode === "verifyEmail") {
 			api = authApi.verifyEmail;
-		} else if (mode == "verifyNewEmail") {
+		} else if (mode === "verifyNewEmail") {
 			api = authApi.verifyNewEmail;
 		}
 
@@ -95,8 +91,8 @@ function AuthForm(): JSX.Element {
 		showLoading("Verifying email...", undefined);
 
 		api(verifyToken)
-			.then((response: VerificationResponse) => {
-				showToastSuccess(response.message, "Email Verified");
+			.then((response: ApiResponse<GenericResponse>) => {
+				showToastSuccess(response.data.message, "Email Verified");
 				setSearchParams({});
 			})
 			.catch((err: any) => {
@@ -275,8 +271,8 @@ function AuthForm(): JSX.Element {
 		setLoading(true);
 
 		try {
-			const response = await authApi.requestPasswordReset(formData.email);
-			showToastSuccess(response.message, "Reset Link Sent");
+			const response: ApiResponse = await authApi.requestPasswordReset(formData.email);
+			showToastSuccess(response.data.message, "Reset Link Sent");
 		} catch (error) {
 			const apiError = error as ApiError;
 			showToastError(apiError.message, "Error Sending Reset Link");
@@ -296,8 +292,8 @@ function AuthForm(): JSX.Element {
 		setLoading(true);
 
 		try {
-			const response = await authApi.resetPassword(resetToken, formData.password);
-			showToastSuccess(response.message, "Password Reset Successful");
+			const response: ApiResponse = await authApi.resetPassword(resetToken, formData.password);
+			showToastSuccess(response.data.message, "Password Reset Successful");
 			switchToLogin();
 		} catch (error) {
 			const apiError = error as ApiError;

@@ -1,12 +1,12 @@
 import React, { forwardRef, JSX } from "react";
-import DataModal, { DataModalHandle, DataModalProps, ValidationErrors } from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, JamDataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { SettingData, SettingDataTransform } from "../../services/Schemas";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 
-export const SettingModal = forwardRef<DataModalHandle, DataModalProps>(
-	({ size = "xl" }: DataModalProps, ref): JSX.Element => {
+export const SettingModal = forwardRef<DataModalHandle, JamDataModalProps>(
+	({ size = "xl" }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
 
 		const fields = {

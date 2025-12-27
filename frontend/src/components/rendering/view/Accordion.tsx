@@ -4,7 +4,6 @@ import { HelpBubble } from "../widgets/HelpBubble";
 interface GenericAccordionProps<T = any> {
 	title: string;
 	data: T[];
-	itemId?: number;
 	children: (data: T[], onChange?: () => void) => React.ReactNode;
 	icon?: string;
 	defaultOpen?: boolean;

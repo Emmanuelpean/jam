@@ -22,9 +22,11 @@ const LoadingSpinner = ({
 			<div className={`spinner-border text-primary ${sizeClasses[size]}`} role="status">
 				<span className="visually-hidden">{text}</span>
 			</div>
-			<span className="mt-3" style={{ color: textColor }}>
-				{text}
-			</span>
+			{text ? (
+				<span className="mt-3" style={{ color: textColor }}>
+					{text}
+				</span>
+			) : null}
 		</div>
 	);
 };

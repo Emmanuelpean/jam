@@ -56,6 +56,25 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	company: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "company",
+		label: "Company",
+		...overrides,
+	}),
+
+	location: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "location",
+		label: "Location",
+		...overrides,
+	}),
+
+	platform: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "platform",
+		label: "Aggregator",
+		render: (params: RenderParams) => renderFunctions.capitalise(params, "platform"),
+		...overrides,
+	}),
+
 	value: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "value",
 		label: "Value",
@@ -140,6 +159,13 @@ export const modalViewFields = {
 		key: "type",
 		label: "Type",
 		render: renderFunctions.updateType,
+		...overrides,
+	}),
+
+	scrapingFilterName: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "name",
+		label: "Filter Name",
+		render: renderFunctions.scrapingFilterName,
 		...overrides,
 	}),
 
@@ -291,11 +317,26 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	isEnabled: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "is_enabled",
+		label: "Enabled",
+		render: renderFunctions.isEnabled,
+		...overrides,
+	}),
+
+	caseSensitive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "case_sensitive",
+		label: "Case Sensitive",
+		render: (params: RenderParams) => renderFunctions.caseSensitive({ ...params, view: true }),
+		...overrides,
+	}),
+
 	jobRating: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job_rating",
 		label: "Job Rating",
 		icon: "bi-stars",
 		render: (params: RenderParams) => renderFunctions.jobRating({ ...params, view: true }),
+		displayCondition: (item): boolean => !!item.job_rating,
 		...overrides,
 	}),
 
@@ -364,6 +405,12 @@ export const modalViewFields = {
 	accordionPersonTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "persons",
 		render: renderFunctions.AccordionPersonTable,
+		...overrides,
+	}),
+
+	accordionScrapedJobTable: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "filtered_jobs",
+		render: renderFunctions.accordionScrapedJobTable,
 		...overrides,
 	}),
 

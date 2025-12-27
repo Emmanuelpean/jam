@@ -1,5 +1,5 @@
 import React, { forwardRef, useRef } from "react";
-import DataModal, { DataModalHandle, DataModalProps, Fields } from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, JamDataModalProps, Fields } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { InterviewDataTransform, JobData } from "../../services/Schemas";
@@ -7,7 +7,7 @@ import { useFormOptions } from "../rendering/form/FormOptions";
 import { LocationModal } from "./LocationModal";
 import { PersonModal } from "./PersonModal";
 
-export interface InterviewModalProps extends DataModalProps {
+export interface InterviewModalProps extends JamDataModalProps {
 	jobId?: number;
 }
 export const InterviewModal = forwardRef<DataModalHandle, InterviewModalProps>(
