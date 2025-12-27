@@ -16,7 +16,7 @@ export const scrapedJobApi: ScrapedJobCrudApi = {
 };
 
 // Job Rating APIs
-export const jobRatingApi: CrudApi<JobRatingData> = createCrudApi("job_ratings");
+export const jobRatingApi: CrudApi<JobRatingData> = createCrudApi("job-ratings");
 
 // Service Log APIs
 export interface ServiceLogCrudApi<T = any> extends CrudApi {
@@ -30,9 +30,9 @@ export const jobScraperServiceLogApi: ServiceLogCrudApi<JobScrapingServiceLogDat
 };
 
 export const jobRatingServiceLogApi: ServiceLogCrudApi<JobRatingServiceLogData> = {
-	...createCrudApi("job_rating_service_logs"),
+	...createCrudApi("job-rating-service-logs"),
 	getLatest: (token: string): ApiResponsePromise<JobRatingServiceLogData> =>
-		api.get("job_rating_service_logs/latest", token),
+		api.get("job-rating-service-logs/latest", token),
 };
 
 // Service Runner APIs

@@ -18,7 +18,7 @@ from app.routers import generate_data_table_crud_router
 job_rating_router = generate_data_table_crud_router(
     table_model=models.JobRating,
     out_schema=schemas.JobRatingOut,
-    endpoint="job_ratings",
+    endpoint="job-ratings",
     not_found_msg="Job Rating not found",
     allowed_actions=["get_all"],
     admin_only=True,
@@ -29,7 +29,7 @@ job_rating_router = generate_data_table_crud_router(
 
 
 # Service Log router
-job_rating_service_log_router = APIRouter(prefix="/job_rating_service_logs", tags=["job_rating_service_logs"])
+job_rating_service_log_router = APIRouter(prefix="/job-rating-service-logs", tags=["job-rating-service-logs"])
 
 
 # GET endpoint for admins to get the service logs
