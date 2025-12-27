@@ -219,7 +219,7 @@ class TestEisServiceLog:
 
 
 class TestScrapingFilters(CRUDTestBase):
-    endpoint = "/scraping_filters"
+    endpoint = "/scraping-filters"
     out_schema = schemas.ScrapingFilterOut
     test_data_ref = "test_scraping_filters"
     create_data = SCRAPING_FILTER_DATA
