@@ -62,10 +62,10 @@
         <p class="text">
             <a id="prevFileLink" class="nav" href="z_f777a31e4f5212e6___init___py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a id="nextFileLink" class="nav" href="z_26486fb6aa30b971___init___py.html">&#xbb; next</a>
+            <a id="nextFileLink" class="nav" href="z_f777a31e4f5212e6_seed_database_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.0">coverage.py v7.13.0</a>,
-            created at 2025-12-23 12:41 +0000
+            created at 2025-12-27 01:59 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -412,7 +412,7 @@
     <p class="pln"><span class="n"><a id="t330" href="#t330">330</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t331" href="#t331">331</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t332" href="#t332">332</a></span><span class="t"><span class="key">def</span> <span class="nam">create_scraped_jobs</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t333" href="#t333">333</a></span><span class="t">    <span class="nam">db</span><span class="op">,</span> <span class="nam">emails</span><span class="op">,</span> <span class="nam">users</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">models</span><span class="op">.</span><span class="nam">User</span><span class="op">]</span><span class="op">,</span> <span class="nam">filters</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">models</span><span class="op">.</span><span class="nam">ScrapedJobFilter</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t333" href="#t333">333</a></span><span class="t">    <span class="nam">db</span><span class="op">,</span> <span class="nam">emails</span><span class="op">,</span> <span class="nam">users</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">models</span><span class="op">.</span><span class="nam">User</span><span class="op">]</span><span class="op">,</span> <span class="nam">filters</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">models</span><span class="op">.</span><span class="nam">ScrapingFilter</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t334" href="#t334">334</a></span><span class="t"><span class="op">)</span> <span class="op">-></span> <span class="nam">list</span><span class="op">[</span><span class="nam">models</span><span class="op">.</span><span class="nam">ScrapedJob</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t335" href="#t335">335</a></span><span class="t">    <span class="str">"""Create sample scraped jobs - some with scraped data, some without"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t336" href="#t336">336</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -483,15 +483,15 @@
     <p class="mis show_mis"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">    <span class="key">return</span> <span class="nam">add_to_db</span><span class="op">(</span><span class="nam">db</span><span class="op">,</span> <span class="nam">errors</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t402" href="#t402">402</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t403" href="#t403">403</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t"><span class="key">def</span> <span class="nam">create_scraped_job_filters</span><span class="op">(</span><span class="nam">db</span><span class="op">,</span> <span class="nam">users</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">models</span><span class="op">.</span><span class="nam">User</span><span class="op">]</span><span class="op">)</span> <span class="op">-></span> <span class="nam">list</span><span class="op">[</span><span class="nam">models</span><span class="op">.</span><span class="nam">ScrapedJobFilter</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t"><span class="key">def</span> <span class="nam">create_scraping_filters</span><span class="op">(</span><span class="nam">db</span><span class="op">,</span> <span class="nam">users</span><span class="op">:</span> <span class="nam">list</span><span class="op">[</span><span class="nam">models</span><span class="op">.</span><span class="nam">User</span><span class="op">]</span><span class="op">)</span> <span class="op">-></span> <span class="nam">list</span><span class="op">[</span><span class="nam">models</span><span class="op">.</span><span class="nam">ScrapingFilter</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t405" href="#t405">405</a></span><span class="t">    <span class="str">"""Create sample job filters"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t406" href="#t406">406</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t407" href="#t407">407</a></span><span class="t">    <span class="nam">print</span><span class="op">(</span><span class="str">"Creating job filters..."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t408" href="#t408">408</a></span><span class="t">    <span class="com"># noinspection PyArgumentList</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t409" href="#t409">409</a></span><span class="t">    <span class="nam">filters</span> <span class="op">=</span> <span class="op">[</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t410" href="#t410">410</a></span><span class="t">        <span class="nam">models</span><span class="op">.</span><span class="nam">ScrapedJobFilter</span><span class="op">(</span><span class="op">**</span><span class="nam">filter_data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t410" href="#t410">410</a></span><span class="t">        <span class="nam">models</span><span class="op">.</span><span class="nam">ScrapingFilter</span><span class="op">(</span><span class="op">**</span><span class="nam">filter_data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t411" href="#t411">411</a></span><span class="t">        <span class="key">for</span> <span class="nam">filter_data</span> <span class="key">in</span> <span class="nam">override_entries_properties</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t412" href="#t412">412</a></span><span class="t">            <span class="nam">job_scraping_service</span><span class="op">.</span><span class="nam">SCRAPED_JOB_FILTER_DATA</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t412" href="#t412">412</a></span><span class="t">            <span class="nam">job_scraping_service</span><span class="op">.</span><span class="nam">SCRAPING_FILTER_DATA</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t413" href="#t413">413</a></span><span class="t">            <span class="op">(</span><span class="str">"owner_id"</span><span class="op">,</span> <span class="nam">users</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t414" href="#t414">414</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t415" href="#t415">415</a></span><span class="t">    <span class="op">]</span>&nbsp;</span><span class="r"></span></p>
@@ -533,10 +533,10 @@
         <p>
             <a class="nav" href="z_f777a31e4f5212e6___init___py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a class="nav" href="z_26486fb6aa30b971___init___py.html">&#xbb; next</a>
+            <a class="nav" href="z_f777a31e4f5212e6_seed_database_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.0">coverage.py v7.13.0</a>,
-            created at 2025-12-23 12:41 +0000
+            created at 2025-12-27 01:59 +0000
         </p>
     </div>
 </footer>

@@ -62,10 +62,10 @@
         <p class="text">
             <a id="prevFileLink" class="nav" href="z_c7b50ea58964f22c_settings_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a id="nextFileLink" class="nav" href="z_db5c5b9d094212ab_schemas_py.html">&#xbb; next</a>
+            <a id="nextFileLink" class="nav" href="z_c7b50ea58964f22c_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.0">coverage.py v7.13.0</a>,
-            created at 2025-12-23 12:41 +0000
+            created at 2025-12-27 01:59 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -91,7 +91,7 @@
     <p class="run"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t"><span class="key">from</span> <span class="nam">app</span><span class="op">.</span><span class="nam">config</span> <span class="key">import</span> <span class="nam">settings</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="key">from</span> <span class="nam">app</span><span class="op">.</span><span class="nam">emails</span><span class="op">.</span><span class="nam">email_service</span> <span class="key">import</span> <span class="nam">email_service</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="nam">app</span><span class="op">.</span><span class="nam">routers</span> <span class="key">import</span> <span class="nam">generate_data_table_crud_router</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="nam">app</span><span class="op">.</span><span class="nam">routers</span><span class="op">.</span><span class="nam">auth</span> <span class="key">import</span> <span class="nam">check_token_expiration</span><span class="op">,</span> <span class="nam">get_retry_remaining_seconds</span><span class="op">,</span> <span class="nam">generate_token</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="nam">app</span><span class="op">.</span><span class="nam">routers</span><span class="op">.</span><span class="nam">utils</span> <span class="key">import</span> <span class="nam">get_retry_remaining_seconds</span><span class="op">,</span> <span class="nam">generate_token</span><span class="op">,</span> <span class="nam">check_token_expiration</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="com"># -------------------------------------------------------- USERS -------------------------------------------------------</span>&nbsp;</span><span class="r"></span></p>
@@ -328,7 +328,7 @@
     <p class="run"><span class="n"><a id="t246" href="#t246">246</a></span><span class="t">    <span class="key">return</span> <span class="nam">result</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t"><span class="op">@</span><span class="nam">current_user_router</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"/verify-email/{token}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t"><span class="op">@</span><span class="nam">current_user_router</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"/verify-email/{token}"</span><span class="op">,</span> <span class="nam">response_model</span><span class="op">=</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">GenericResponse</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t"><span class="key">def</span> <span class="nam">verify_email_change</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t251" href="#t251">251</a></span><span class="t">    <span class="nam">token</span><span class="op">:</span> <span class="nam">str</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t252" href="#t252">252</a></span><span class="t">    <span class="nam">db</span><span class="op">:</span> <span class="nam">Session</span> <span class="op">=</span> <span class="nam">Depends</span><span class="op">(</span><span class="nam">database</span><span class="op">.</span><span class="nam">get_db</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -381,7 +381,7 @@
     <p class="run"><span class="n"><a id="t299" href="#t299">299</a></span><span class="t">    <span class="nam">db</span><span class="op">.</span><span class="nam">commit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t300" href="#t300">300</a></span><span class="t">    <span class="nam">email_service</span><span class="op">.</span><span class="nam">send_email_change_notification</span><span class="op">(</span><span class="nam">user</span><span class="op">.</span><span class="nam">email</span><span class="op">,</span> <span class="nam">old_email</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t301" href="#t301">301</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t302" href="#t302">302</a></span><span class="t">    <span class="key">return</span> <span class="op">{</span><span class="str">"message"</span><span class="op">:</span> <span class="str">"Email address changed successfully. You can now log in with your new email."</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t302" href="#t302">302</a></span><span class="t">    <span class="key">return</span> <span class="op">{</span><span class="str">"message"</span><span class="op">:</span> <span class="str">"Email address changed successfully. You can now log in with your new email."</span><span class="op">,</span> <span class="str">"success"</span><span class="op">:</span> <span class="key">True</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t303" href="#t303">303</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t304" href="#t304">304</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t305" href="#t305">305</a></span><span class="t"><span class="op">@</span><span class="nam">current_user_router</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"/check-pending-email"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -409,10 +409,10 @@
         <p>
             <a class="nav" href="z_c7b50ea58964f22c_settings_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
-            <a class="nav" href="z_db5c5b9d094212ab_schemas_py.html">&#xbb; next</a>
+            <a class="nav" href="z_c7b50ea58964f22c_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.0">coverage.py v7.13.0</a>,
-            created at 2025-12-23 12:41 +0000
+            created at 2025-12-27 01:59 +0000
         </p>
     </div>
 </footer>
