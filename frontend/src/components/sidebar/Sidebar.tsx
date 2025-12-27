@@ -56,7 +56,7 @@ export const Sidebar = () => {
 			position: "top",
 			submenu: [
 				{ path: "/interviews", text: "Interviews" },
-				{ path: "/jobapplicationupdates", text: "Job Application Updates" },
+				{ path: "/job-application-updates", text: "Job Application Updates" },
 			],
 		},
 		{ path: "/settings", text: "User Settings", position: "bottom" },
@@ -66,10 +66,10 @@ export const Sidebar = () => {
 			adminOnly: true,
 			position: "bottom",
 			submenu: [
-				{ path: "/eis_dashboard", text: "TOAST Dashboard" },
-				{ path: "/job_rating_dashboard", text: "Job Rating Dashboard" },
+				{ path: "/job-scraping-dashboard", text: "TOAST Dashboard" },
+				{ path: "/job-rating-dashboard", text: "Job Rating Dashboard" },
 				{ path: "/users", text: "Users" },
-				{ path: "/app_settings", text: "Settings" },
+				{ path: "/app-settings", text: "Settings" },
 			],
 		},
 		{ icon: "bi-box-arrow-right", text: "Logout", position: "bottom", onClick: logout, className: "logout-item" },
