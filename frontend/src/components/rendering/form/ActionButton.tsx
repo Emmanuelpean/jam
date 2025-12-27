@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
 
 interface ActionButtonProps {
 	id?: string;
@@ -33,6 +33,9 @@ interface ActionButtonProps {
 	onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 	customContent?: React.ReactNode;
 	customLoadingContent?: React.ReactNode;
+	tooltip?: string;
+	tooltipPlacement?: "top" | "bottom" | "left" | "right";
+	style?: React.CSSProperties;
 }
 
 export const ActionButton = ({
@@ -51,6 +54,9 @@ export const ActionButton = ({
 	onClick,
 	customContent,
 	customLoadingContent,
+	tooltip,
+	tooltipPlacement = "top",
+	style,
 	...otherProps
 }: ActionButtonProps): JSX.Element => {
 	const buttonClasses = `${className} ${fullWidth ? "w-100" : ""}`.trim();
@@ -100,18 +106,39 @@ export const ActionButton = ({
 		);
 	};
 
-	return (
-		<Button
-			id={id}
-			variant={variant}
-			type={type}
-			size={size}
-			disabled={disabled || loading}
-			className={buttonClasses}
-			onClick={onClick}
-			{...otherProps}
+	const button = (
+		<div
+			tabIndex={0}
+			style={{
+				cursor: "not-allowed",
+				flex: "1 1",
+				width: fullWidth ? "100%" : "auto",
+			}}
 		>
-			{renderContent()}
-		</Button>
+			<Button
+				id={id}
+				variant={variant}
+				type={type}
+				size={size}
+				disabled={disabled || loading}
+				className={buttonClasses}
+				onClick={onClick}
+				style={{ ...style, height: "100%", width: "100%" }}
+				{...otherProps}
+			>
+				{renderContent()}
+			</Button>
+		</div>
 	);
+
+	// Wrap with tooltip if provided
+	if (tooltip) {
+		return (
+			<OverlayTrigger placement={tooltipPlacement} overlay={<Tooltip id={`${id}-tooltip`}>{tooltip}</Tooltip>}>
+				{button}
+			</OverlayTrigger>
+		);
+	}
+
+	return button;
 };

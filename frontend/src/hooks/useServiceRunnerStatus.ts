@@ -11,8 +11,8 @@ export const useServiceRunnerStatus = (api: BaseServiceApi) => {
 	const fetchStatus = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const data: ServiceStatus = await api.getStatus(token);
-			setStatus(data);
+			const data = await api.getStatus(token);
+			setStatus(data.data);
 		} catch (err: any) {
 			setStatusError(err.message || "Failed to fetch service status");
 			console.error("An error occurred while fetching the service status", err);

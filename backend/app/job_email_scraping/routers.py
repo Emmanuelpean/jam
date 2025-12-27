@@ -6,9 +6,10 @@ and service execution logs with CRUD operations and admin access controls."""
 from datetime import datetime
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session, joinedload
+from starlette import status
 from starlette.requests import Request
 
 from app import model_registry as models
@@ -55,7 +56,6 @@ scraped_job_router = generate_data_table_crud_router(
 )
 
 
-# GET endpoint for regular user to get paged scraped jobs
 @scraped_job_router.get("/paged", response_model=schemas.PaginatedScrapedJobResponse)
 def get_all(
     request: Request,
@@ -70,6 +70,7 @@ def get_all(
     """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped."""
 
     # Base query with eager loading of job_rating
+    # noinspection PyComparisonWithNone
     query = (
         db.query(models.ScrapedJob)
         .options(joinedload(models.ScrapedJob.job_rating))  # Always load rating
@@ -77,6 +78,7 @@ def get_all(
         .filter(models.ScrapedJob.is_scraped)
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.is_active)
+        .filter(models.ScrapedJob.filter_id == None)
     )
 
     # Apply search filter
@@ -158,15 +160,38 @@ def get_scraped_job_count(
     :param db: Database session
     :return: Count of scraped jobs"""
 
+    # noinspection PyComparisonWithNone
     count = (
         db.query(models.ScrapedJob)
         .filter(models.ScrapedJob.owner_id == current_user.id)
         .filter(models.ScrapedJob.is_scraped)
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.is_active)
+        .filter(models.ScrapedJob.filter_id == None)
         .count()
     )
     return {"count": count}
+
+
+@scraped_job_router.get("/filtered_by_filter/{filter_id}", response_model=list[schemas.ScrapedJobOut])
+def get_scraped_jobs_filtered_by_filter(
+    filter_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get scraped jobs associated with a specific filter for the current user.
+    :param filter_id: ID of the filter
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: List of scraped jobs associated with the filter"""
+
+    scraped_jobs = (
+        db.query(models.ScrapedJob)
+        .filter(models.ScrapedJob.owner_id == current_user.id)
+        .filter(models.ScrapedJob.filter_id == filter_id)
+        .all()
+    )
+    return scraped_jobs
 
 
 # PUT endpoint for regular users to update the entries
@@ -350,3 +375,96 @@ def get_scraper_logs(
     :param current_user: Current authenticated user"""
 
     return service_runner.get_service_logs(SERVICE_NAME, lines, current_user)
+
+
+# ------------------------------------------------- SCRAPED JOB FILTERS ------------------------------------------------
+
+
+scraping_filter_router = generate_data_table_crud_router(
+    table_model=models.ScrapingFilter,
+    create_schema=schemas.ScrapingFilterCreate,
+    update_schema=schemas.ScrapingFilterUpdate,
+    out_schema=schemas.ScrapingFilterOut,
+    endpoint="scraping_filters",
+    not_found_msg="Scraped Job Filter not found",
+    allowed_actions=["get_all", "get_one", "post"],
+)
+
+
+@scraping_filter_router.put("/{filter_id}", status_code=status.HTTP_200_OK, response_model=schemas.ScrapingFilterOut)
+def update_scraping_filter(
+    filter_id: int,
+    update_data: schemas.ScrapingFilterUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update a scraped job filter by ID.
+    :param filter_id: ID of the filter to update
+    :param update_data: Update data for the filter
+    :param current_user: Current authenticated user
+    :param db: Database session"""
+
+    # Fetch the filter to ensure it exists and belongs to the current user.
+    filter_obj = (
+        db.query(models.ScrapingFilter)
+        .filter(models.ScrapingFilter.id == filter_id)
+        .filter(models.ScrapingFilter.owner_id == current_user.id)
+        .first()
+    )
+
+    if not filter_obj:
+        raise NOT_ALLOWED_EXCEPTION
+
+    # Get the update fields
+    update_dict = update_data.model_dump(exclude_unset=True)
+    print(filter_obj.filtered_jobs)
+    print(filter_obj.id)
+
+    # If the filter previously filtered jobs, only allow is_active updates
+    if filter_obj.filtered_jobs:
+        # Check if any fields other than is_active are being updated
+        non_active_fields = {k: v for k, v in update_dict.items() if k != "is_active"}
+        if non_active_fields:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot update filter fields other than is_active when filter has been used",
+            )
+
+    # If the filter was never used, update it
+    for key, value in update_data.model_dump(exclude_unset=True).items():
+        setattr(filter_obj, key, value)
+
+    db.commit()
+    db.refresh(filter_obj)
+    return filter_obj
+
+
+@scraping_filter_router.delete("/{filter_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_scraping_filter(
+    filter_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete a scraped job filter by ID.
+    :param filter_id: ID of the filter to delete
+    :param current_user: Current authenticated user
+    :param db: Database session
+    :return: The deleted or deactivated filter object"""
+
+    # Fetch the filter to ensure it exists and belongs to the current user
+    filter_obj = (
+        db.query(models.ScrapingFilter)
+        .filter(models.ScrapingFilter.id == filter_id)
+        .filter(models.ScrapingFilter.owner_id == current_user.id)
+        .first()
+    )
+
+    if not filter_obj:
+        raise NOT_ALLOWED_EXCEPTION
+
+    # If the filter has filtered jobs, do not delete it, just deactivate it
+    if filter_obj.filtered_jobs:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+    else:
+        db.delete(filter_obj)
+        db.commit()

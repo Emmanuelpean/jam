@@ -83,10 +83,6 @@
     margin: 0 auto;
 }
 
-.modal-buttons-container .btn {
-    flex: 1;
-}
-
 .modal:not(:last-of-type) .modal-content::after {
     content: "";
     position: absolute;

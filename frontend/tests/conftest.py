@@ -6,12 +6,12 @@ import platform
 import queue
 import shutil
 import subprocess
-import sys
 import threading
 from pathlib import Path
 
 import psutil
 import requests
+import sys
 from selenium.webdriver import Keys, ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
 
@@ -19,7 +19,6 @@ backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
 
 import time
-
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -452,16 +451,299 @@ LOGS_DIR = Path(os.path.join(os.path.dirname(settings.log_directory), "test_logs
 LOGS_DIR.mkdir(exist_ok=True)
 
 
-class BaseTest:
+class BaseUtils(object):
+    """Base class for selenium utilities"""
+
+    driver: WebDriver = None
+    wait: WebDriverWait = None
+    frontend_base_url: str = ""
+    db = None
+
+    def go_to_page(self, page) -> None:
+        """Helper method to go to a specific page"""
+
+        self.driver.get(f"{self.frontend_base_url}/{page}")
+        self.wait_for_page(page)
+
+    def wait_for_page(self, page_url: str) -> None:
+        """Wait for the dashboard to load"""
+
+        self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
+
+    def get_all_element_ids(self) -> list[str]:
+        """Get all element IDs present on the current page"""
+
+        # Find all elements that have an ID attribute
+        elements_with_id = self.driver.find_elements(By.XPATH, "//*[@id]")
+
+        # Extract the ID values
+        element_ids = []
+        for element in elements_with_id:
+            element_id = element.get_attribute("id")
+            if element_id:
+                element_ids.append(element_id)
+
+        return sorted(element_ids)
+
+    def get_element(
+        self,
+        element_id: str,
+        selector: str = By.ID,
+        timeout: float = 10.0,
+        enabled=True,
+    ) -> WebElement:
+        """Get an element by its ID.
+        :param element_id: ID of the element to get
+        :param selector: Selector to use for finding the element
+        :param timeout: How long to wait before raising an error
+        :param enabled: Whether to wait for the element to be enabled"""
+
+        time.sleep(0.1)
+        try:
+            wait = WebDriverWait(self.driver, timeout)
+            if enabled:
+                element = wait.until(ec.element_to_be_clickable((selector, element_id)))
+            else:
+                element = wait.until(ec.presence_of_element_located((selector, element_id)))
+            ActionChains(self.driver).move_to_element(element).perform()
+            return element
+        except Exception:
+            raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
+
+    def wait_for_disappear(
+        self,
+        element_id: str,
+        selector: str = By.ID,
+        timeout=10.0,
+    ) -> None:
+        """Wait for an element to disappear from the DOM
+        :param element_id: ID of the element to get
+        :param selector: Selector to use for finding the element
+        :param timeout: How long to wait before raising an error"""
+
+        try:
+            wait = WebDriverWait(self.driver, timeout)
+            wait.until(ec.invisibility_of_element_located((selector, element_id)))
+        except TimeoutException:
+            raise AssertionError(f"Element {element_id} did not disappear")
+
+    @staticmethod
+    def set_text(element: WebElement, text: str = "") -> None:
+        """Clears the input element"""
+
+        modifier_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
+        element.send_keys(modifier_key, "a")
+        element.send_keys(Keys.DELETE)
+        element.send_keys(text)
+
+    def _wait_for_modal_close(self, name: str) -> None:
+        """Wait for the modal to close"""
+
+        self.wait.until(ec.invisibility_of_element_located((By.ID, name)))
+
+    # ----------------------------------------------------- EMAILS -----------------------------------------------------
+
+    def get_verification_token_from_db(self, email: str) -> str:
+        """Helper method to get verification token from database
+        :param email: Email of the user to get the token for"""
+
+        user = self.db.query(models.User).filter(models.User.email == email).first()
+        token = user.verification_token
+        assert token is not None, "Verification token not found in database"
+        return token
+
+    @staticmethod
+    def get_verification_link_from_email(email: str) -> str:
+        """Helper method to get verification link from test email endpoint"""
+
+        response = requests.get(f"{settings.backend_url}/test/verification-link/{email}")
+        assert response.status_code == 200, f"Failed to get verification link: {response.text}"
+        return response.json()["verification_url"]
+
+    @staticmethod
+    def get_reset_link_from_email(email: str) -> str:
+        """Helper method to get password reset link from test email endpoint"""
+
+        response = requests.get(f"{settings.backend_url}/test/reset-link/{email}")
+        assert response.status_code == 200, f"Failed to get reset link: {response.text}"
+        return response.json()["reset_url"]
+
+    @staticmethod
+    def clear_test_emails() -> None:
+        """Helper method to clear all test emails"""
+
+        response = requests.delete(f"{settings.backend_url}/test/emails")
+        assert response.status_code == 200, "Failed to clear test emails"
+
+    # ---------------------------------------------------- ELEMENTS ----------------------------------------------------
+
+    def assert_toast_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        assert error_message in self.get_element("toast").text, f"Message not found: {error_message}"
+
+    @property
+    def delete_confirm_button(self) -> WebElement:
+        """Get the delete confirm button on the modal"""
+
+        return self.get_element("delete-alert-modal-confirm-button")
+
+    def wait_for_delete_modal_close(self) -> None:
+        """Wait for the delete modal to close"""
+
+        self._wait_for_modal_close("delete-alert-modal")
+
+
+class BaseUtils1(BaseUtils):
+
+    def __init__(self, driver: WebDriver, test_frontend_server, session):
+        """Object constructor
+        :param driver: Selenium WebDriver instance
+        :param test_frontend_server: Base URL of the frontend server"""
+
+        self.driver = driver
+        self.wait = WebDriverWait(self.driver, 10)
+        self.frontend_base_url = test_frontend_server
+        self.db = session
+
+
+class AuthentificationUtils(BaseUtils1):
+    """Test class for Authentication functionality including:
+    - Login with valid credentials
+    - Login with invalid credentials
+    - Signup with valid data
+    - Signup with invalid data
+    - Form validation"""
+
+    # ----------------------------------------------------- INPUTS -----------------------------------------------------
+
+    def go_to_login(self) -> None:
+        """Go to the login page"""
+
+        self.driver.get(f"{self.frontend_base_url}/login")
+
+    def go_to_register(self) -> None:
+        """Go to the register page"""
+
+        self.driver.get(f"{self.frontend_base_url}/register")
+
+    def go_to_forgot_password(self) -> None:
+        """Go to the forgot password page"""
+
+        self.driver.get(f"{self.frontend_base_url}/forgot-password")
+
+    def set_email(self, email: str) -> None:
+        """Set the email field to the given value"""
+
+        self.get_element("email").send_keys(email)
+
+    def set_password(self, password: str) -> None:
+        """Set the password field to the given value"""
+
+        self.get_element("password").send_keys(password)
+
+    def set_confirm_password(self, password: str) -> None:
+        """Set the confirm password field to the given value"""
+
+        self.get_element("confirmPassword").send_keys(password)
+
+    def confirm(self) -> None:
+        """Confirm the form submission"""
+
+        self.get_element("confirm-button").click()
+
+    def set_terms(self) -> None:
+        """Set the accept terms checkbox to True"""
+
+        self.get_element("terms").click()
+
+    def register_user(self, email: str, password: str) -> None:
+        """Register a new user"""
+
+        self.go_to_register()
+        self.set_email(email)
+        self.set_password(password)
+        self.set_confirm_password(password)
+        self.set_terms()
+        self.confirm()
+
+    def login_user(self, email: str, password: str) -> None:
+        """Login with given credentials"""
+
+        self.go_to_login()
+        self.set_email(email)
+        self.set_password(password)
+        self.confirm()
+
+    # ----------------------------------------------------- ERRORS -----------------------------------------------------
+
+    def _assert_message(self, key: str, message: str) -> None:
+        """Assert that the given message is displayed on the page
+        :param key: Key to use for finding the error message element
+        :param message: Message to check for"""
+
+        assert message in self.get_element(key + "error-message").text, f"Message not found: {message}"
+
+    def assert_email_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("email-", error_message)
+
+    def assert_password_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("password-", error_message)
+
+    def assert_confirm_password_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("confirmPassword-", error_message)
+
+    def assert_accept_terms_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("terms-", error_message)
+
+    # ------------------------------------------------------ PAGES -----------------------------------------------------
+
+    def wait_for_dashboard(self) -> None:
+        """Wait for the dashboard to load"""
+
+        self.wait_for_page("dashboard")
+
+    def wait_for_login(self) -> None:
+        """Wait for the login page to load"""
+
+        self.wait_for_page("login")
+
+    def wait_for_register(self) -> None:
+        """Wait for the register page to load"""
+
+        self.wait_for_page("register")
+
+    def switch_mode(self) -> None:
+        """Switch between login and register modes"""
+
+        self.get_element("switch-mode-button").click()
+
+    def go_to_verification_url(self, token: str) -> None:
+        """Navigate to login page with verification token"""
+
+        self.driver.get(f"{self.frontend_base_url}/verify-email/?token={token}")
+
+    def switch_to_forgot_password(self) -> None:
+        """Navigate to forgot password page"""
+
+        self.get_element("forgot-password-link").click()
+
+
+class BaseTest(BaseUtils):
     """Base class for selenium tests"""
 
-    driver = None  # chrome driver
-    wait = None  # chrome driver wait
-    frontend_base_url = ""  # frontend base url
     backend_url = ""  # backend url
     user = None  # user to use
     client = None  # client for the current user
-    db = None  # database session
+    base_utils = None  # base utils
 
     # Parameters needed
     page_url = ""  # url of the page to test (not including the base url)
@@ -491,7 +773,7 @@ class BaseTest:
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -552,29 +834,6 @@ class BaseTest:
         """Function to run before each test - can be overridden in subclasses"""
         pass
 
-    def go_to(self, page) -> None:
-        """Helper method to go to a specific page"""
-
-        self.driver.get(f"{self.frontend_base_url}/{page}")
-        self.wait_for_page(page)
-
-    def login(self) -> None:
-        """Helper method to log in to the application"""
-
-        login_url = f"{self.frontend_base_url}/login"
-        self.driver.get(login_url)
-        self.get_element("email").send_keys(self.user.email)
-        self.get_element("password").send_keys(self.user.plain_password)
-        self.get_element("confirm-button").click()
-        try:
-            self.get_element("loading-spinner", timeout=2)
-            self.wait_for_disappear("loading-spinner", timeout=2)
-        except:
-            pass
-        self.wait_for_page("dashboard")
-        self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
-        self.wait_for_table_load()
-
     def _save_browser_logs(self, failed: bool = False) -> None:
         """Save browser console logs to file"""
         try:
@@ -634,91 +893,22 @@ class BaseTest:
         except Exception as e:
             print(f"⚠️ Could not save screenshot: {e}")
 
-    # ------------------------------------------------ GET/WAIT ELEMENTS -----------------------------------------------
+    def login(self) -> None:
+        """Helper method to log in to the application"""
 
-    def wait_for_page(self, page_url: str) -> None:
-        """Wait for the dashboard to load"""
-
-        self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
-
-    def wait_for_table_load(self, timeout: int | float = 0.1) -> None:
-        """Wait for loading spinner to disappear"""
-
+        self.driver.get(f"{self.frontend_base_url}/login")
+        self.get_element("email").send_keys(self.user.email)
+        self.get_element("password").send_keys(self.user.plain_password)
+        self.get_element("confirm-button").click()
         try:
-            WebDriverWait(self.driver, timeout).until(
-                ec.invisibility_of_element_located((By.CSS_SELECTOR, "spinner-border"))
-            )
-        except TimeoutException:
+            self.get_element("loading-spinner", timeout=2)
+            self.wait_for_disappear("loading-spinner", timeout=2)
+        except:
             pass
+        self.wait_for_page("dashboard")
+        self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
 
-    def get_all_element_ids(self) -> list[str]:
-        """Get all element IDs present on the current page"""
-
-        # Find all elements that have an ID attribute
-        elements_with_id = self.driver.find_elements(By.XPATH, "//*[@id]")
-
-        # Extract the ID values
-        element_ids = []
-        for element in elements_with_id:
-            element_id = element.get_attribute("id")
-            if element_id:
-                element_ids.append(element_id)
-
-        return sorted(element_ids)
-
-    def get_element(
-        self,
-        element_id: str,
-        selector: str = By.ID,
-        timeout: float = 10.0,
-    ) -> WebElement:
-        """Get an element by its ID.
-        :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element
-        :param timeout: How long to wait before raising an error
-        """
-
-        time.sleep(0.1)
-        try:
-            wait = WebDriverWait(self.driver, timeout)
-            element = wait.until(ec.element_to_be_clickable((selector, element_id)))
-            ActionChains(self.driver).move_to_element(element).perform()
-            return element
-        except Exception:
-            raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
-
-    def wait_for_disappear(
-        self,
-        element_id: str,
-        selector: str = By.ID,
-        timeout=10.0,
-    ) -> None:
-        """Wait for an element to disappear from the DOM
-        :param element_id: ID of the element to get
-        :param selector: Selector to use for finding the element
-        :param timeout: How long to wait before raising an error"""
-
-        try:
-            wait = WebDriverWait(self.driver, timeout)
-            wait.until(ec.invisibility_of_element_located((selector, element_id)))
-        except TimeoutException:
-            raise AssertionError(f"Element {element_id} did not disappear")
-
-    @staticmethod
-    def set_text(element: WebElement, text: str = "") -> None:
-        """Clears the input element"""
-
-        modifier_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
-        element.send_keys(modifier_key, "a")
-        element.send_keys(Keys.DELETE)
-        element.send_keys(text)
-
-    # ---------------------------------------------------- UTILITIES ---------------------------------------------------
-
-    def _wait_for_modal_close(self, name: str) -> None:
-        """Wait for the modal to close"""
-
-        self.wait.until(ec.invisibility_of_element_located((By.ID, name)))
+    # ---------------------------------------------------- DATABASE ----------------------------------------------------
 
     @property
     def db_user(self) -> models.User:
@@ -731,39 +921,3 @@ class BaseTest:
         """Helper method to verify user exists in database"""
 
         return self.db.query(models.User).filter(models.User.email == email).all()
-
-    def get_verification_token_from_db(self, email: str) -> str:
-        """Helper method to get verification token from database"""
-
-        user = self.db.query(models.User).filter(models.User.email == email).first()
-        token = user.verification_token
-        assert token is not None, "Verification token not found in database"
-        return token
-
-    @staticmethod
-    def get_verification_link_from_email(email: str) -> str:
-        """Helper method to get verification link from test email endpoint"""
-
-        response = requests.get(f"{settings.backend_url}/test/verification-link/{email}")
-        assert response.status_code == 200, f"Failed to get verification link: {response.text}"
-        return response.json()["verification_url"]
-
-    @staticmethod
-    def get_reset_link_from_email(email: str) -> str:
-        """Helper method to get password reset link from test email endpoint"""
-
-        response = requests.get(f"{settings.backend_url}/test/reset-link/{email}")
-        assert response.status_code == 200, f"Failed to get reset link: {response.text}"
-        return response.json()["reset_url"]
-
-    @staticmethod
-    def clear_test_emails() -> None:
-        """Helper method to clear all test emails"""
-
-        response = requests.delete(f"{settings.backend_url}/test/emails")
-        assert response.status_code == 200, "Failed to clear test emails"
-
-    def assert_toast_message(self, error_message: str) -> None:
-        """Assert that the given error message is displayed on the page"""
-
-        assert error_message in self.get_element("toast").text, f"Message not found: {error_message}"

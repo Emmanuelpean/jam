@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { Currency, DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
@@ -11,10 +11,11 @@ import {
 	InterviewData,
 	JobApplicationUpdateData,
 	JobData,
-	JobRating,
+	JobRatingData,
 	KeywordData,
 	LocationData,
 	PersonData,
+	ScrapedJobData,
 } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
@@ -37,6 +38,7 @@ import {
 	getApplicationStatusBadgeClass,
 	getTableIcon,
 	getToastIcon,
+	getTrueFalseBadge,
 	getUpdateTypeIcon,
 } from "./Icons";
 import { capitalise, ensureHttpPrefix } from "../../../utils/StringUtils";
@@ -46,9 +48,15 @@ import {
 	appliedViaOptions,
 	attendanceTypeOptions,
 	interviewTypeOptions,
+	scrapingFilterOperatorOptions,
+	scrapingFilterTypeOptions,
 	SelectOption,
 	updateTypeOptions,
 } from "../form/FormOptions";
+import { scrapedJobApi } from "../../../services/api/Services";
+import { useAuth } from "../../../contexts/AuthContext";
+import ScrapedJobsTableReadOnly from "../../tables/ScrapedJobTableReadOnly";
+import LoadingSpinner from "../../spinner/Spinner";
 
 // Parameters passed to the view render functions
 export interface RenderParams {
@@ -58,6 +66,7 @@ export interface RenderParams {
 	columns?: TableColumn[]; // columns for rendered tables
 	helpText?: string; // help text
 	dataContext: DataContextValue; // data context
+	token: string | null;
 }
 
 // Base class for Fields (Table or Modal fields)
@@ -162,6 +171,27 @@ export const renderFunctions = {
 		return param.item?.job_rating?.overall_score;
 	},
 
+	filterType: (param: RenderParams): ReactNode => {
+		return (
+			scrapingFilterTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]
+				?.label || null
+		);
+	},
+
+	filterOperator: (param: RenderParams): ReactNode => {
+		return (
+			scrapingFilterOperatorOptions.filter(
+				(option: SelectOption): boolean => option.value === param.item?.operator,
+			)[0]?.label || null
+		);
+	},
+
+	scrapingFilterName: (param: RenderParams): ReactNode => {
+		const type = renderFunctions.filterType(param);
+		const operator = renderFunctions.filterOperator(param);
+		return type + " " + operator + ' "' + param.item?.value + '"';
+	},
+
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
 	_url: (param: RenderParams, attribute: string, displayText: string | null = null): ReactNode => {
@@ -261,6 +291,14 @@ export const renderFunctions = {
 		return getActiveBadge(isActive);
 	},
 
+	isEnabled: (param: RenderParams): ReactNode => {
+		return getTrueFalseBadge(param.item?.is_enabled);
+	},
+
+	caseSensitive: (param: RenderParams): ReactNode => {
+		return getTrueFalseBadge(param.item?.case_sensitive);
+	},
+
 	salaryRange: (param: RenderParams): string | null => {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
@@ -353,7 +391,7 @@ export const renderFunctions = {
 	},
 
 	jobRating: (param: RenderParams): ReactNode => {
-		const job_rating: JobRating | undefined | null = param.item?.job_rating;
+		const job_rating: JobRatingData | undefined | null = param.item?.job_rating;
 		if (!job_rating) return null;
 
 		return (
@@ -406,6 +444,10 @@ export const renderFunctions = {
 	_personCount: (param: RenderParams, key: keyof PersonData): number => {
 		const ctx: DataContextValue = param.dataContext;
 		return filterByKey(ctx.persons, key, param.item?.id).length;
+	},
+
+	filteredJobCount: (param: RenderParams): number => {
+		return param.item?.filtered_jobs?.length || 0;
 	},
 
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
@@ -548,7 +590,7 @@ export const renderFunctions = {
 		return null;
 	},
 
-	_aggregatorBadge: (param: RenderParams, idKey: keyof JobData): ReactNode => {
+	_aggregatorBadge: (param: RenderParams, idKey: keyof JobData | keyof ScrapedJobData): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const aggregator: AggregatorData | undefined = getJamData(ctx.aggregators, param.item?.[idKey]);
 
@@ -720,6 +762,8 @@ export const renderFunctions = {
 			</Accordion>
 		);
 	},
+
+	accordionScrapedJobTable: (param: RenderParams) => <AccordionScrapedJobTable param={param} />,
 };
 
 export const RenderViewFieldWithContext: React.FC<{
@@ -728,6 +772,7 @@ export const RenderViewFieldWithContext: React.FC<{
 	id: string;
 }> = ({ field, item, id }) => {
 	const context = useDataContext();
+	const { token } = useAuth();
 
 	let rendered: ReactNode;
 	if (field.render) {
@@ -738,6 +783,7 @@ export const RenderViewFieldWithContext: React.FC<{
 			columns: field.columns,
 			helpText: field.helpText,
 			dataContext: context,
+			token: token,
 		};
 		rendered = field.render(renderParams);
 	} else {
@@ -749,4 +795,46 @@ export const RenderViewFieldWithContext: React.FC<{
 	} else {
 		return <span className="text-muted">Not Provided</span>;
 	}
+};
+
+const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) => {
+	const [data, setData] = useState<ScrapedJobData[] | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
+
+	useEffect(() => {
+		const fetchData = async (): Promise<void> => {
+			if (!param.token || !param.item.id) return;
+			setLoading(true);
+			try {
+				const response = await scrapedJobApi.getByFilterId(param.item.id, param.token);
+				setData(response.data);
+			} catch (error) {
+				console.error("Error fetching filtered scraped jobs:", error);
+				setData([]);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchData().then();
+	}, [param.item.id, param.token]);
+
+	if (loading) {
+		return <LoadingSpinner size={"sm"} />;
+	}
+
+	if (!data) {
+		return null;
+	}
+
+	return (
+		<Accordion
+			title="Filtered Jobs"
+			data={data}
+			icon={getTableIcon("Scraped Jobs")}
+			helpText="Scraped Jobs that were filtered by this filter."
+		>
+			{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
+		</Accordion>
+	);
 };

@@ -51,15 +51,7 @@ const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpd
 			const bounds = L.latLngBounds(locations.map((loc) => [loc.geocoded.latitude, loc.geocoded.longitude]));
 			map.fitBounds(bounds, { padding: [20, 20] });
 		}
-	}, [
-		map,
-		JSON.stringify(
-			locations.map((location) => ({
-				id: location.id,
-				city: location.modified_at,
-			})),
-		),
-	]);
+	}, [locations]);
 
 	return null;
 };

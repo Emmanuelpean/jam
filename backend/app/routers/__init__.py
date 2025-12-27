@@ -393,7 +393,7 @@ def generate_data_table_crud_router(
 
     if "put" in allowed_actions:
 
-        @router.put("/{entry_id}", response_model=out_schema)
+        @router.put("/{entry_id}", status_code=status.HTTP_200_OK, response_model=out_schema)
         def update(
             entry_id: int,
             item: update_schema,  # noqa

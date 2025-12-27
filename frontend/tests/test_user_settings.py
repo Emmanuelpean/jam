@@ -19,11 +19,6 @@ class TestUserSettingsPage(BaseTest):
 
         self.login()
 
-    def verify_user_in_database(self, email: str) -> bool:
-        """Helper method to verify user exists in database"""
-
-        return self.db.query(models.User).filter(models.User.email == email).all()
-
     @property
     def current_password(self) -> WebElement:
         """Get the current password field"""

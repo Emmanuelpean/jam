@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+import jwt
 from sqlalchemy.orm import Session
 
 from app import models, database, schemas
@@ -52,7 +52,7 @@ def verify_access_token(
 
         token_data = schemas.TokenData(id=str(user_id), token_version=token_version)
 
-    except JWTError:
+    except jwt.PyJWTError:
         raise credentials_exception
 
     return token_data

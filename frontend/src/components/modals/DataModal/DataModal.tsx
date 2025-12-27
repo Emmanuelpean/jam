@@ -17,14 +17,20 @@ import {
 	JamData,
 	useDataContext,
 } from "../../../contexts/DataContext";
-import "./DataModal.css";
 import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
 import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArray } from "../../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
-import { useActiveHandler, useDeleteHandler } from "../../../utils/DeleteHandler";
+import {
+	useActivateEntity,
+	useDeactivateEntity,
+	useDeactivateHandler,
+	useDeleteHandler,
+} from "../../../utils/DeleteHandler";
 import { useAlert } from "../../../contexts/AlertContext";
+import { ApiResponse } from "../../../services/api/Base";
+import "./DataModal.css";
 
 export type Field = ModalViewField | ModalFormField;
 export type Fields = (Field | Field[])[];
@@ -36,14 +42,16 @@ export interface TabConfig {
 	additionalFields?: ModalViewField[];
 }
 
-export interface WarningConfig {
+export interface WarningMessageConfig {
 	key?: string;
 	message: ReactNode;
 	variant?: "warning" | "danger" | "info" | "primary" | "secondary" | "success";
 }
 
-export interface GenericModalProps {
-	mode?: "view" | "edit" | "add" | "import"; // modal mode
+export type modalModes = "view" | "edit" | "add" | "import" | "detail";
+
+export interface DataModalProps {
+	mode?: modalModes; // modal mode
 	fields?: { view: Fields; form: Fields } | ((data: any, mode: string) => { view: Fields; form: Fields }); // fields to display
 	data?: any; // data to populate the fields (required for import mode)
 	validation?: ((data: any) => any) | null; // custom validation method before submit
@@ -57,7 +65,15 @@ export interface GenericModalProps {
 	endpoint: string; // API endpoint for CRUD operations
 	onSuccess?: (data: any, onSuccess?: (newData: any) => void) => void; // called when an entry is successfully added/modified
 	onDelete?: () => void; // called when an entry is successfully deleted
-	warningMessage?: (data: any) => WarningConfig[] | null; // optional warning message to display
+	warningMessage?: (data: any) => WarningMessageConfig[] | null; // optional warning message to display
+	canEdit?: boolean | ((formData: any) => string); // Controls edit button and edit mode access
+	canDelete?: boolean | ((formData: any) => string); // Controls delete button and edit mode access
+	showDeactivate?: boolean; // whether to show deactivate items in view mode
+}
+
+interface ButtonState {
+	disabled: boolean;
+	message: string;
 }
 
 export interface ValidationErrors {
@@ -72,7 +88,7 @@ export interface DataModalHandle {
 	hide: () => void;
 }
 
-const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
+const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 	(
 		{
 			fields,
@@ -88,12 +104,17 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 			onSuccess,
 			onDelete,
 			warningMessage,
-		},
+			canEdit = true,
+			canDelete = true,
+			showDeactivate = false,
+		}: DataModalProps,
 		ref,
 	) => {
 		const hasTabs = tabs && tabs.length > 0;
 
 		const [internalShow, setInternalShow] = useState(false);
+		const [mode, setMode] = useState<modalModes>("view");
+		const [effectiveData, setEffectiveData] = useState<any>(null);
 		useImperativeHandle(ref, () => ({
 			showView: (data: JamData) => {
 				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
@@ -116,20 +137,17 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 				setMode("import");
 				setInternalShow(true);
 			},
-			hide: () => setInternalShow(false),
+			hide: (): void => setInternalShow(false),
 		}));
 
 		const [onSuccessCallback, setOnSuccessCallback] = useState<((data: any) => void) | null>(null);
-		const [mode, setMode] = useState<"view" | "edit" | "add" | "import">("view");
-		const dataContext: DataContextValue = useDataContext();
-		const entityType: EntityType = endpointToEntityType(endpoint)!;
-		const [effectiveData, setEffectiveData] = useState<any>(null);
 		const [formData, setFormData] = useState<Record<string, any>>({});
 		const [originalFormData, setOriginalFormData] = useState<Record<string, any>>({});
 		const [submitting, setSubmitting] = useState(false);
 		const [errors, setErrors] = useState<Errors>({});
 		const [isEditing, setIsEditing] = useState(false);
 		const { currentUser } = useAuth();
+		const dataContext: DataContextValue = useDataContext();
 		const [activeTab, setActiveTab] = useState<string | null>(() => {
 			if (hasTabs) {
 				return defaultActiveTab || tabs[0]!.key;
@@ -138,6 +156,7 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 		});
 		const [containerHeight, setContainerHeight] = useState("auto");
 		const contentRef = useRef<HTMLDivElement>(null);
+		const entityType: EntityType = endpointToEntityType(endpoint)!;
 		const { showDelete } = useAlert();
 
 		// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
@@ -192,20 +211,18 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 		};
 
 		useEffect(() => {
-			// Initialize modal state when it becomes visible or data changes
 			if (!internalShow) return;
 			if (mode === "add" || mode === "edit" || mode === "import") {
 				setFormData({ ...effectiveData });
 				setOriginalFormData({ ...effectiveData });
 				setIsEditing(true);
-			} else if (mode === "view") {
+			} else if (mode === "view" || mode === "detail") {
 				setFormData({ ...effectiveData });
 				setOriginalFormData({ ...effectiveData });
 				setIsEditing(false);
 			}
 			setErrors({});
 
-			// Reset active tab only when modal first opens
 			if (hasTabs) {
 				setActiveTab(defaultActiveTab || tabs[0]!.key);
 			}
@@ -223,7 +240,7 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 			});
 		};
 
-		const handleCloseWithConfirmation = async () => {
+		const handleCloseWithConfirmation = async (): Promise<false | undefined> => {
 			if (hasUnsavedChanges()) {
 				const confirmed = await showDelete({
 					title: "Unsaved Changes",
@@ -247,6 +264,22 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 
 		// ---------------------------------------------------- EDITING ----------------------------------------------------
 
+		const getEditDisabledState = (): ButtonState => {
+			if (typeof canEdit === "function") {
+				const message = canEdit(formData);
+				return { disabled: message !== "", message };
+			}
+			return { disabled: !canEdit, message: "" };
+		};
+
+		const getDeleteDisabledState = (): ButtonState => {
+			if (typeof canDelete === "function") {
+				const message = canDelete(formData);
+				return { disabled: message !== "", message };
+			}
+			return { disabled: !canDelete, message: "" };
+		};
+
 		const handleEditToView = (): void => {
 			setIsEditing(false);
 			setFormData({ ...effectiveData });
@@ -259,6 +292,9 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 			setFormData({ ...effectiveData });
 			setOriginalFormData({ ...effectiveData });
 		};
+
+		const editState: ButtonState = getEditDisabledState();
+		const deleteState: ButtonState = getDeleteDisabledState();
 
 		// ----------------------------------------------------- LAYOUT ----------------------------------------------------
 
@@ -335,8 +371,10 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 
 		// ----------------------------------------------------- DELETE ----------------------------------------------------
 
+		const handleDeActivate = useDeactivateHandler(entityType, null, itemName);
 		const handleDelete = useDeleteHandler(entityType, null, itemName);
-		const handleDeActivate = useActiveHandler(entityType, null, itemName);
+		const activateEntityHandler = useActivateEntity(entityType, null, itemName);
+		const deactivateEntityHandler = useDeactivateEntity(entityType, null, itemName);
 
 		const handleDeleteClick = async () => {
 			if (mode === "import") {
@@ -351,6 +389,18 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 					onDelete?.();
 					handleHideImmediate();
 				}
+			}
+		};
+
+		const toggleActivate = async () => {
+			if (effectiveData.is_active) {
+				deactivateEntityHandler(effectiveData).then(() => {
+					handleHideImmediate();
+				});
+			} else {
+				activateEntityHandler(effectiveData).then(() => {
+					handleHideImmediate();
+				});
 			}
 		};
 
@@ -454,14 +504,14 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 				const dataToSubmit: any = transformFormData ? transformFormData(formData) : formData;
 
 				// Submit to API
-				const apiResult: JamData =
+				const apiResult: ApiResponse<JamData> =
 					mode === "add"
 						? await dataContext.addEntity(entityType, dataToSubmit)
 						: await dataContext.updateEntity(entityType, effectiveData.id, dataToSubmit);
-				if (mode === "add" || mode === "edit" || mode == "import") {
+				if (mode === "add" || mode === "edit" || mode === "import") {
 					handleHideImmediate();
 				} else {
-					setEffectiveData(apiResult);
+					setEffectiveData(apiResult.data);
 					handleEditToView();
 				}
 
@@ -469,11 +519,11 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 					requestAnimationFrame(() => {
 						// Call callbacks after 2 animation frames - ensures all renders are complete
 						if (onSuccess) {
-							onSuccess(mode === "import" ? formData : apiResult);
+							onSuccess(mode === "import" ? formData : apiResult.data);
 						}
 
 						if (onSuccessCallback) {
-							onSuccessCallback(apiResult);
+							onSuccessCallback(apiResult.data);
 						}
 					});
 				});
@@ -657,6 +707,8 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 										className="me-auto"
 										defaultText="Delete"
 										defaultIcon="bi bi-trash"
+										disabled={deleteState.disabled}
+										tooltip={deleteState.message}
 									/>
 									<ActionButton
 										id={getModalId() + "-import-button"}
@@ -682,47 +734,83 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 						</Modal.Footer>
 					);
 				} else {
+					// This handles "edit" mode (when user clicks edit in view/detail mode)
 					return (
 						<Modal.Footer>
 							<div className="d-flex flex-column w-100 gap-2">
-								<>
-									<div className="modal-buttons-container">
-										<ActionButton
-											id={getModalId() + "-delete-button"}
-											variant="danger"
-											onClick={handleDeleteClick}
-											className="me-auto"
-											defaultText="Delete"
-											defaultIcon="bi bi-trash"
-											fullWidth={false}
-										/>
-
-										<ActionButton
-											id={getModalId() + "-confirm-button"}
-											type="submit"
-											disabled={submitting}
-											loading={submitting}
-											loadingText="Updating..."
-											defaultText="Update"
-											fullWidth={false}
-										/>
-									</div>
-									<div className="modal-buttons-container">
-										<ActionButton
-											id={getModalId() + "-cancel-button"}
-											variant="secondary"
-											onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
-											defaultText={mode === "edit" ? "Close" : "Cancel"}
-											fullWidth={false}
-										/>
-									</div>
-								</>
+								<div className="modal-buttons-container">
+									<ActionButton
+										id={getModalId() + "-delete-button"}
+										variant="danger"
+										onClick={handleDeleteClick}
+										className="me-auto"
+										defaultText="Delete"
+										defaultIcon="bi bi-trash"
+										fullWidth={false}
+										disabled={deleteState.disabled}
+										tooltip={deleteState.message}
+									/>
+									<ActionButton
+										id={getModalId() + "-confirm-button"}
+										type="submit"
+										disabled={submitting}
+										loading={submitting}
+										loadingText="Updating..."
+										defaultText="Update"
+										fullWidth={false}
+									/>
+								</div>
+								<div className="modal-buttons-container">
+									<ActionButton
+										id={getModalId() + "-cancel-button"}
+										variant="secondary"
+										onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
+										defaultText={mode === "edit" ? "Close" : "Cancel"}
+										fullWidth={false}
+									/>
+								</div>
 							</div>
 						</Modal.Footer>
 					);
 				}
 			} else {
-				return (
+				// This handles "view" mode
+				return showDeactivate ? (
+					<Modal.Footer>
+						<div className="d-flex flex-column w-100 gap-2">
+							<div className="modal-buttons-container">
+								<ActionButton
+									id={getModalId() + "-deactivate-button"}
+									variant="danger"
+									onClick={toggleActivate}
+									defaultText={effectiveData?.is_active ? "Deactivate" : "Activate"}
+									fullWidth={false}
+								/>
+								{canEdit && (
+									<ActionButton
+										id={getModalId() + "-edit-button"}
+										variant="primary"
+										onClick={handleEdit}
+										defaultText="Edit"
+										fullWidth={false}
+										disabled={editState.disabled}
+										tooltip={editState.message}
+										tooltipPlacement="top"
+									/>
+								)}
+							</div>
+							<div className="modal-buttons-container">
+								<ActionButton
+									id={getModalId() + "-cancel-button"}
+									variant="secondary"
+									onClick={handleHideImmediate}
+									defaultText="Close"
+									fullWidth={false}
+								/>
+							</div>
+						</div>
+					</Modal.Footer>
+				) : (
 					<Modal.Footer>
 						<div className="modal-buttons-container">
 							<ActionButton
@@ -732,13 +820,18 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 								defaultText="Close"
 								fullWidth={false}
 							/>
-							<ActionButton
-								id={getModalId() + "-edit-button"}
-								variant="primary"
-								onClick={handleEdit}
-								defaultText="Edit"
-								fullWidth={false}
-							/>
+							{canEdit && (
+								<ActionButton
+									id={getModalId() + "-edit-button"}
+									variant="primary"
+									onClick={handleEdit}
+									defaultText="Edit"
+									fullWidth={false}
+									disabled={editState.disabled}
+									tooltip={editState.message}
+									tooltipPlacement="top"
+								/>
+							)}
 						</div>
 					</Modal.Footer>
 				);
@@ -773,7 +866,8 @@ const DataModal = forwardRef<DataModalHandle, GenericModalProps>(
 
 export default DataModal;
 
-export interface DataModalProps {
+export interface JamDataModalProps {
 	onSuccess?: (data: any) => void;
 	size?: "sm" | "lg" | "xl";
+	canEdit?: boolean;
 }

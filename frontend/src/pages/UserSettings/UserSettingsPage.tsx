@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Button, Card, Col, Form, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { authApi, exportApi, userQualificationApi } from "../../services/api/Users";
-import { ApiError } from "../../services/api/Base";
+import { authApi, exportApi, UpdateCurrentUserResponse, userQualificationApi } from "../../services/api/Users";
+import { ApiError, ApiResponse } from "../../services/api/Base";
 import { THEMES } from "../../utils/Theme";
 import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import "./UserSettingsPage.css";
@@ -63,7 +63,8 @@ const UserSettingsPage: React.FC = () => {
 		const fetchQualifications = async (): Promise<void> => {
 			if (!token) return;
 			try {
-				const data: UserQualification = await userQualificationApi.getLatest(token);
+				const response: ApiResponse<UserQualification> = await userQualificationApi.getLatest(token);
+				const data = response.data;
 				if (data) {
 					setFormData(
 						(prev: UserFormData): UserFormData => ({
@@ -89,8 +90,8 @@ const UserSettingsPage: React.FC = () => {
 		const checkPending = async (): Promise<void> => {
 			if (!hasPendingEmail || !token) return;
 			try {
-				const valid: boolean = await authApi.checkPendingEmail(token);
-				if (!valid) {
+				const valid: ApiResponse<boolean> = await authApi.checkPendingEmail(token);
+				if (!valid.data) {
 					showToastError(
 						"Pending email verification token has expired. Please request the email change again.",
 						"Verification Expired",
@@ -101,7 +102,7 @@ const UserSettingsPage: React.FC = () => {
 			}
 		};
 		checkPending().then((_) => null);
-	}, [token]);
+	}, [token, hasPendingEmail, showToastError]);
 
 	const downloadJobsExport = async (token: string | null): Promise<void> => {
 		if (!token) return;
@@ -180,7 +181,7 @@ const UserSettingsPage: React.FC = () => {
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const handleSubmitSettings = async (e: React.FormEvent): Promise<void> => {
+	const handleSubmitSettings = async (e: React.FormEvent): Promise<void | null> => {
 		e.preventDefault();
 		if (!validateForm() || !token) {
 			return;
@@ -224,20 +225,24 @@ const UserSettingsPage: React.FC = () => {
 
 			updateData.default_currency = formData.default_currency;
 
-			const response = await updateCurrentUser(updateData);
+			const response: ApiResponse<UpdateCurrentUserResponse> | null = await updateCurrentUser(updateData);
+			if (!response) {
+				return null;
+			}
+			const responseData: UpdateCurrentUserResponse = response.data;
 
 			if (emailChanged) {
-				if (response.success) {
-					showToastSuccess(response.message, "Email Change Pending");
+				if (responseData.success) {
+					showToastSuccess(responseData.message, "Email Change Pending");
 				} else {
-					showToastError(response.message, "Error Updating Settings");
+					showToastError(responseData.message, "Error Updating Settings");
 				}
 				setFormData((prev) => ({
 					...prev,
 					email: currentUser?.email || "",
 					current_password: "",
 				}));
-			} else if (response.logged_out) {
+			} else if (responseData.logged_out) {
 				showToastSuccess("Password updated successfully. Please log in again.", "Password Changed");
 			} else {
 				showToastSuccess("User settings updated successfully.");
@@ -274,10 +279,11 @@ const UserSettingsPage: React.FC = () => {
 		try {
 			const qualificationData = {
 				id: formData.qualification_id,
-				experience: formData.experience || "",
-				skills: formData.skills || "",
-				qualities: formData.qualities || "",
-				education: formData.education || "",
+				experience: formData.experience || null,
+				skills: formData.skills || null,
+				qualities: formData.qualities || null,
+				education: formData.education || null,
+				interests: formData.interests || null,
 			};
 			await userQualificationApi.upsert(qualificationData, token);
 			showToastSuccess("Qualifications saved successfully.");

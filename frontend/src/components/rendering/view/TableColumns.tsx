@@ -128,6 +128,15 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	operatorColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "operator",
+		label: "Operator",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		...overrides,
+	}),
+
 	updateTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "type",
 		label: "Type",
@@ -255,6 +264,26 @@ export const tableColumns = {
 		searchable: false,
 		type: "number",
 		render: renderFunctions.overallScore,
+		...overrides,
+	}),
+
+	filterTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "type",
+		label: "Filter Type",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.filterType,
+		...overrides,
+	}),
+
+	filterOperatorColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "operator",
+		label: "Operator",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.filterOperator,
 		...overrides,
 	}),
 
@@ -416,13 +445,23 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	isActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "is_active",
-		label: "Active",
+	isEnabledColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "is_enabled",
+		label: "Enabled",
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: renderFunctions.isActive,
+		render: renderFunctions.isEnabled,
+		...overrides,
+	}),
+
+	caseSensitiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "case_sensitive",
+		label: "Case Sensitive",
+		sortable: true,
+		searchable: false,
+		type: "text",
+		render: renderFunctions.caseSensitive,
 		...overrides,
 	}),
 
@@ -527,6 +566,15 @@ export const tableColumns = {
 		sortable: true,
 		searchable: false,
 		render: (param: RenderParams) => renderFunctions._personCount(param, "company_id"),
+		...overrides,
+	}),
+
+	filteredJobCountColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "filtered_jobs",
+		label: "Filtered Jobs",
+		sortable: true,
+		searchable: false,
+		render: renderFunctions.filteredJobCount,
 		...overrides,
 	}),
 };

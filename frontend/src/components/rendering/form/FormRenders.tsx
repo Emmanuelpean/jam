@@ -7,6 +7,8 @@ import {
 	attendanceTypeOptions,
 	interviewAttendanceOptions,
 	interviewTypeOptions,
+	scrapingFilterOperatorOptions,
+	scrapingFilterTypeOptions,
 	SelectOption,
 	updateTypeOptions,
 } from "./FormOptions";
@@ -124,6 +126,20 @@ export const formFields = {
 	isActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "is_active",
 		label: "Active",
+		type: "checkbox",
+		...overrides,
+	}),
+
+	isEnabled: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "is_enabled",
+		label: "Enabled",
+		type: "checkbox",
+		...overrides,
+	}),
+
+	caseSensitive: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "case_sensitive",
+		label: "Case Sensitive",
 		type: "checkbox",
 		...overrides,
 	}),
@@ -506,6 +522,30 @@ export const formFields = {
 		previewConfig: previewConfig,
 		options: options,
 		addButton: { modalRef, transformParentData },
+		...overrides,
+	}),
+
+	scrapingFilterType: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "type",
+		label: "Filter Type",
+		type: "select",
+		required: true,
+		placeholder: "Select filter type",
+		isSearchable: true,
+		isClearable: true,
+		options: scrapingFilterTypeOptions,
+		...overrides,
+	}),
+
+	scrapingFilterOperator: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "operator",
+		label: "Operator",
+		type: "select",
+		required: true,
+		placeholder: "Select filter type",
+		isSearchable: true,
+		isClearable: true,
+		options: scrapingFilterOperatorOptions,
 		...overrides,
 	}),
 };

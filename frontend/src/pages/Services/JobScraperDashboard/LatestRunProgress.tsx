@@ -1,11 +1,11 @@
 import React, { JSX } from "react";
-import { JobScraperServiceLog } from "../../../services/Schemas";
+import { JobScrapingServiceLogData } from "../../../services/Schemas";
 import { formatDuration } from "../../../utils/TimeUtils";
 import ProgressBar from "../ProgressBar/ProgressBar";
 import { PlatformStatsTable } from "./PlatformStatsTable";
 
 interface LatestRunProgressProps {
-	latestLog: JobScraperServiceLog | null;
+	latestLog: JobScrapingServiceLogData | null;
 	isRunning: boolean;
 }
 
@@ -73,7 +73,7 @@ export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressPro
 						latestLog.job_scrape_failed_n +
 						latestLog.job_scrape_skipped_n
 					}
-					total={latestLog.job_found_n}
+					total={latestLog.job_to_scrape_n}
 				/>
 			</div>
 		</div>

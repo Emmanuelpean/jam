@@ -42,7 +42,7 @@ export const useDeleteHandler = (entityType: EntityType, nameKey: string | null,
 	};
 };
 
-export const useActiveHandler = (entityType: EntityType, nameKey: string | null, itemType = "item") => {
+export const useDeactivateHandler = (entityType: EntityType, nameKey: string | null, itemType = "item") => {
 	const { updateEntity } = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const { showDelete } = useAlert();
@@ -67,6 +67,42 @@ export const useActiveHandler = (entityType: EntityType, nameKey: string | null,
 			return true;
 		} catch (error) {
 			showToastError(`Failed to delete ${itemName}. Please check your connection and try again.`);
+			return false;
+		}
+	};
+};
+
+export const useActivateEntity = (entityType: EntityType, nameKey: string | null, itemType = "item") => {
+	const { updateEntity } = useDataContext();
+	const { showToastSuccess, showToastError } = useGlobalToast();
+
+	return async (item: any): Promise<boolean> => {
+		const itemName: string = getItemName(item, nameKey, itemType);
+
+		try {
+			await updateEntity(entityType, item.id, { is_active: true });
+			showToastSuccess(`${itemType} activated successfully.`);
+			return true;
+		} catch (error) {
+			showToastError(`Failed to activate ${itemName}. Please check your connection and try again.`);
+			return false;
+		}
+	};
+};
+
+export const useDeactivateEntity = (entityType: EntityType, nameKey: string | null, itemType = "item") => {
+	const { updateEntity } = useDataContext();
+	const { showToastSuccess, showToastError } = useGlobalToast();
+
+	return async (item: any): Promise<boolean> => {
+		const itemName: string = getItemName(item, nameKey, itemType);
+
+		try {
+			await updateEntity(entityType, item.id, { is_active: false });
+			showToastSuccess(`${itemType} deactivated successfully.`);
+			return true;
+		} catch (error) {
+			showToastError(`Failed to deactivate ${itemName}. Please check your connection and try again.`);
 			return false;
 		}
 	};

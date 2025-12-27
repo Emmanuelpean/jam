@@ -9,7 +9,7 @@ from app import utils, models, oauth2, database, schemas
 from app.config import settings
 from app.emails.email_service import email_service
 from app.routers import generate_data_table_crud_router
-from app.routers.auth import check_token_expiration, get_retry_remaining_seconds, generate_token
+from app.routers.utils import get_retry_remaining_seconds, generate_token, check_token_expiration
 
 
 # -------------------------------------------------------- USERS -------------------------------------------------------
@@ -74,7 +74,8 @@ def upsert_user_qualification(
 
     entry = (
         db.query(models.UserQualification)
-        .filter(models.UserQualification.owner_id == user.id, models.UserQualification.id == qualification.id)
+        .filter(models.UserQualification.owner_id == user.id)
+        .filter(models.UserQualification.id == qualification.id)
         .first()
     )
     if entry:
@@ -245,7 +246,7 @@ def update_current_user_profile(
     return result
 
 
-@current_user_router.get("/verify-email/{token}")
+@current_user_router.get("/verify-email/{token}", response_model=schemas.GenericResponse)
 def verify_email_change(
     token: str,
     db: Session = Depends(database.get_db),
@@ -298,7 +299,7 @@ def verify_email_change(
     db.commit()
     email_service.send_email_change_notification(user.email, old_email)
 
-    return {"message": "Email address changed successfully. You can now log in with your new email."}
+    return {"message": "Email address changed successfully. You can now log in with your new email.", "success": True}
 
 
 @current_user_router.get("/check-pending-email")
