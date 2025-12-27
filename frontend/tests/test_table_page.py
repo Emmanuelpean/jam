@@ -1080,7 +1080,7 @@ class TestPersonsPage(BaseTablePage):
 class TestJobApplicationUpdatesPage(BaseTablePage):
     """Test class for Job Application Update Page functionalities"""
 
-    endpoint = "jobapplicationupdates"
+    endpoint = "job-application-updates"
     page_url = "jobapplicationupdates"
     entry_type = "jobApplicationUpdates"
     test_fixture = ["test_job_application_updates", "test_jobs"]

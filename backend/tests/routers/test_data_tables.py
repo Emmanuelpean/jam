@@ -234,7 +234,7 @@ class TestJobCRUD(CRUDTestBase):
 
 
 class TestJobApplicationUpdateCRUD(CRUDTestBase):
-    endpoint = "/jobapplicationupdates"
+    endpoint = "/job-application-updates"
     create_schema = schemas.JobApplicationUpdateCreate
     out_schema = schemas.JobApplicationUpdateOut
     test_data_ref = "test_job_application_updates"

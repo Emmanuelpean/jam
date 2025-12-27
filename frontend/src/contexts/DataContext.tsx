@@ -76,7 +76,7 @@ export const endpointToEntityType = (endpoint: string): EntityType | null => {
 		companies: "companies",
 		persons: "persons",
 		interviews: "interviews",
-		jobapplicationupdates: "jobApplicationUpdates",
+		"job-application-updates": "jobApplicationUpdates",
 		aggregators: "aggregators",
 		keywords: "keywords",
 		locations: "locations",
