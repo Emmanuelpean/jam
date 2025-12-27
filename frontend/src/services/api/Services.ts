@@ -110,9 +110,9 @@ export const jobScraperServiceApi: JobScraperServiceRunnerApi = {
 };
 
 export const jobRatingServiceRunnerApi: JobRatingServiceRunnerApi = {
-	...createServiceApi("job_rating_service_runner"),
+	...createServiceApi("job-rating-service-runner"),
 	start: async (periodHours: number, token: string): ApiResponsePromise<ServiceRunnerResponse> => {
 		const data: StartServiceRunnerRequest = { period_hours: periodHours };
-		return api.post("job_rating_service_runner/start", data, token);
+		return api.post("job-rating-service-runner/start", data, token);
 	},
 };
