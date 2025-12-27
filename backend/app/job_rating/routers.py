@@ -79,7 +79,7 @@ def get_latest(
 # --------------------------------------------------- SERVICE RUNNER ---------------------------------------------------
 
 
-job_rating_service_router = APIRouter(prefix="/job_rating_service_runner", tags=["job_rating_service_runner"])
+job_rating_service_router = APIRouter(prefix="/job-rating-service-runner", tags=["job-rating-service-runner"])
 
 
 @job_rating_service_router.post("/start")
