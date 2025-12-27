@@ -40,7 +40,7 @@ user_router = generate_data_table_crud_router(
 # ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------
 
 
-user_qualification_router = APIRouter(prefix="/user_qualifications", tags=["user_qualifications"])
+user_qualification_router = APIRouter(prefix="/user-qualifications", tags=["user-qualifications"])
 
 
 @user_qualification_router.get("/latest", response_model=schemas.UserQualificationOut)
