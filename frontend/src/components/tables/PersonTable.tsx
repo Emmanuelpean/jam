@@ -17,7 +17,7 @@ const PersonTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: Data
 
 	return (
 		<DataTable
-			entityType="persons"
+			entityType="person"
 			data={data}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "name", direction: "asc" }}

@@ -19,7 +19,7 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 
 	return (
 		<DataTable
-			entityType="jobApplicationUpdates"
+			entityType="jobApplicationUpdate"
 			data={data}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}

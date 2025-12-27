@@ -1105,8 +1105,8 @@ class TestInterviewPage(BaseTablePage):
     """Test class for Job Application Update Page functionalities"""
 
     endpoint = "interviews"
-    page_url = "interviews"
-    entry_type = "interviews"
+    page_url = "interview"
+    entry_type = "interview"
     test_fixture = ["test_interviews", "test_jobs"]
     entry_name = "interview"
     required_fields = ["job_id", "type", "date"]
@@ -1161,7 +1161,7 @@ class TestJobPage(BaseTablePage):
 
     endpoint = "jobs"
     page_url = "jobs"
-    entry_type = "jobs"
+    entry_type = "job"
     test_fixture = ["test_jobs"]
     entry_name = "job"
     required_fields = ["title"]

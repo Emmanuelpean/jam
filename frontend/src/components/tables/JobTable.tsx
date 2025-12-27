@@ -16,7 +16,7 @@ const JobsTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTa
 
 	return (
 		<DataTable
-			entityType="jobs"
+			entityType="job"
 			data={data}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "created_at", direction: "desc" }}

@@ -1,7 +1,8 @@
 import React, { JSX } from "react";
 import { Form, InputGroup } from "react-bootstrap";
 import { WidgetProps } from "./WidgetRenders";
-import { Currency, DataContextValue, useDataContext } from "../../../contexts/DataContext";
+import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
+import { Currency } from "../../../services/Schemas";
 
 export const SalaryInput = ({
 	field,

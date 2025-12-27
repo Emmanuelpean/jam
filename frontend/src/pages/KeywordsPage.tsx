@@ -10,7 +10,7 @@ const KeywordsPage = () => {
 
 	return (
 		<DataTable
-			entityType="keywords"
+			entityType="keyword"
 			data={dataContext.keywords}
 			endpoint="/keywords"
 			columns={columns}

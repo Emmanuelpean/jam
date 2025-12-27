@@ -1,5 +1,5 @@
 import React, { ReactNode, useEffect, useState } from "react";
-import { Currency, DataContextValue, useDataContext } from "../../../contexts/DataContext";
+import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
@@ -7,6 +7,7 @@ import LocationMap from "../../maps/LocationMap";
 import {
 	AggregatorData,
 	CompanyData,
+	Currency,
 	EnrichedJobData,
 	InterviewData,
 	JobApplicationUpdateData,

@@ -72,7 +72,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 				<div className="modal-content-animated-inner">
 					<div ref={contentRef} style={{ paddingTop: "5px" }}>
 						<DataTable
-							entityType="scrapingFilters"
+							entityType="scrapingFilter"
 							data={data}
 							columns={defaultColumns}
 							initialSortConfig={{ key: "type", direction: "asc" }}

@@ -31,7 +31,7 @@ const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], columns =
 
 	return (
 		<DataTable
-			entityType="jobs"
+			entityType="job"
 			columns={defaultColumns}
 			data={data}
 			initialSortConfig={{ key: "days_until_deadline", direction: "asc" }}

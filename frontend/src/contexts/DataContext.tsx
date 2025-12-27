@@ -21,6 +21,8 @@ import { useAuth } from "./AuthContext";
 import {
 	AggregatorData,
 	CompanyData,
+	Country,
+	Currency,
 	EnrichedInterviewData,
 	EnrichedJobApplicationUpdateData,
 	EnrichedJobData,
@@ -41,19 +43,19 @@ import { sortByKey } from "../utils/Utils";
 import { CrudApi } from "../services/api/Crud";
 
 export type EntityType =
-	| "jobs"
-	| "companies"
-	| "persons"
-	| "interviews"
-	| "jobApplicationUpdates"
-	| "aggregators"
-	| "keywords"
-	| "locations"
-	| "settings"
-	| "users"
-	| "scrapedJobs"
-	| "scrapingFilters"
-	| "speculativeApplications";
+	| "job"
+	| "company"
+	| "person"
+	| "interview"
+	| "jobApplicationUpdate"
+	| "aggregator"
+	| "keyword"
+	| "location"
+	| "setting"
+	| "user"
+	| "scrapedJob"
+	| "scrapingFilter"
+	| "speculativeApplication";
 
 export type JamData =
 	| KeywordData
@@ -72,37 +74,41 @@ export type JamData =
 
 export const endpointToEntityType = (endpoint: string): EntityType | null => {
 	const mapping: Record<string, EntityType> = {
-		jobs: "jobs",
-		companies: "companies",
-		persons: "persons",
-		interviews: "interviews",
-		"job-application-updates": "jobApplicationUpdates",
-		aggregators: "aggregators",
-		keywords: "keywords",
-		locations: "locations",
-		settings: "settings",
-		users: "users",
-		"scraped-jobs": "scrapedJobs",
-		"scraping-filters": "scrapingFilters",
-		"speculative-applications": "speculativeApplications",
+		jobs: "job",
+		companies: "company",
+		persons: "person",
+		interviews: "interview",
+		"job-application-updates": "jobApplicationUpdate",
+		aggregators: "aggregator",
+		keywords: "keyword",
+		locations: "location",
+		settings: "setting",
+		users: "user",
+		"scraped-jobs": "scrapedJob",
+		"scraping-filters": "scrapingFilter",
+		"speculative-applications": "speculativeApplication",
 	};
-	return mapping[endpoint.toLowerCase()] || null;
+	return mapping[endpoint] || null;
 };
 
-export interface Currency {
-	symbol: string;
-	name: string;
-	symbol_native: string;
-	decimal_digits: number;
-	rounding: number;
-	code: string;
-	name_plural: string;
-}
-
-export interface Country {
-	name: string;
-	code: string;
-}
+const entityTypeToApi = (entityType: EntityType) => {
+	const apiMap = {
+		job: jobsApi,
+		company: companiesApi,
+		person: personsApi,
+		interview: interviewsApi,
+		jobApplicationUpdate: jobApplicationUpdatesApi,
+		aggregator: aggregatorsApi,
+		keyword: keywordsApi,
+		location: locationsApi,
+		setting: settingsApi,
+		user: userApi,
+		scrapedJob: scrapedJobApi,
+		scrapingFilter: scrapingFilterApi,
+		speculativeApplication: speculativeApplicationsApi,
+	};
+	return apiMap[entityType];
+};
 
 interface TypedFetchOperation<T> {
 	promise: ApiResponsePromise<T>;
@@ -129,8 +135,8 @@ export interface DataContextValue {
 	error: ApiError | null;
 
 	// Generic update functions
-	addEntity: <T extends EntityType>(type: T, data: any) => Promise<ApiResponse<JamData>>;
-	updateEntity: <T extends EntityType>(type: T, id: number, data: any) => Promise<ApiResponse<JamData>>;
+	addEntity: <T extends EntityType>(type: T, data: any) => ApiResponsePromise<JamData>;
+	updateEntity: <T extends EntityType>(type: T, id: number, data: any) => ApiResponsePromise<JamData>;
 	deleteEntity: <T extends EntityType>(type: T, id: number) => Promise<void>;
 }
 
@@ -292,13 +298,14 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			{ promise: companiesApi.getAll(token), label: "Companies" } as TypedFetchOperation<CompanyData[]>,
 			{ promise: personsApi.getAll(token), label: "Persons" } as TypedFetchOperation<PersonData[]>,
 			{ promise: interviewsApi.getAll(token), label: "Interviews" } as TypedFetchOperation<InterviewData[]>,
-			{ promise: jobApplicationUpdatesApi.getAll(token), label: "Updates" } as TypedFetchOperation<
-				JobApplicationUpdateData[]
-			>,
+			{
+				promise: jobApplicationUpdatesApi.getAll(token),
+				label: "Job Application Updates",
+			} as TypedFetchOperation<JobApplicationUpdateData[]>,
 			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" } as TypedFetchOperation<AggregatorData[]>,
 			{ promise: keywordsApi.getAll(token), label: "Keywords" } as TypedFetchOperation<KeywordData[]>,
 			{ promise: locationsApi.getAll(token), label: "Locations" } as TypedFetchOperation<LocationData[]>,
-			{ promise: scrapingFilterApi.getAll(token), label: "Scraped Job Filters" } as TypedFetchOperation<
+			{ promise: scrapingFilterApi.getAll(token), label: "Scraping Filters" } as TypedFetchOperation<
 				ScrapingFilterData[]
 			>,
 			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Currency[]>,
@@ -313,11 +320,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			);
 		}
 
-		const totalOperations = fetchOperations.length;
-		let completedOperations = 0;
+		const totalOperations: number = fetchOperations.length;
+		let completedOperations: number = 0;
 
 		// Show initial loading state
-		showLoading("Initialising data load...", 0);
+		showLoading("Initialising Data Load...", 0);
 
 		try {
 			// Track progress for each promise
@@ -327,7 +334,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 						result: ApiResponse<(JamData | Country | Currency)[]>,
 					): ApiResponse<(JamData | Country | Currency)[]> => {
 						completedOperations++;
-						const progressPercentage = Math.round((completedOperations / totalOperations) * 100);
+						const progressPercentage: number = Math.round((completedOperations / totalOperations) * 100);
 						updateProgress(progressPercentage, `Loading ${label}...`);
 						return result;
 					},
@@ -376,56 +383,36 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		}
 	};
 
-	// Helper to get API instance for an entity type
-	const getApi = (type: EntityType) => {
-		const apiMap = {
-			jobs: jobsApi,
-			companies: companiesApi,
-			persons: personsApi,
-			interviews: interviewsApi,
-			jobApplicationUpdates: jobApplicationUpdatesApi,
-			aggregators: aggregatorsApi,
-			keywords: keywordsApi,
-			locations: locationsApi,
-			settings: settingsApi,
-			users: userApi,
-			scrapedJobs: scrapedJobApi,
-			scrapingFilters: scrapingFilterApi,
-			speculativeApplications: speculativeApplicationsApi,
-		};
-		return apiMap[type];
-	};
-
 	// Helper to get setter function for an entity type
-	const getSetter = (type: EntityType) => {
+	const entityTypeToSetter = (type: EntityType) => {
 		const setterMap = {
-			jobs: setRawJobs,
-			companies: setCompanies,
-			persons: setPersons,
-			interviews: setRawInterviews,
-			jobApplicationUpdates: setRawJobApplicationUpdates,
-			aggregators: setAggregators,
-			keywords: setKeywords,
-			locations: setLocations,
-			settings: setSettings,
-			users: setUsers,
-			scrapedJobs: setScrapedJobs,
-			scrapingFilters: setScrapingFilters,
-			speculativeApplications: setSpeculativeApplications,
+			job: setRawJobs,
+			company: setCompanies,
+			person: setPersons,
+			interview: setRawInterviews,
+			jobApplicationUpdate: setRawJobApplicationUpdates,
+			aggregator: setAggregators,
+			keyword: setKeywords,
+			location: setLocations,
+			setting: setSettings,
+			user: setUsers,
+			scrapedJob: setScrapedJobs,
+			scrapingFilter: setScrapingFilters,
+			speculativeApplication: setSpeculativeApplications,
 		};
 		return setterMap[type];
 	};
 
 	const addEntity = useCallback(
-		async <T extends EntityType>(type: T, newData: any): Promise<any> => {
+		async <T extends EntityType>(entityType: T, newData: any): Promise<any> => {
 			try {
-				const api: CrudApi<JamData> = getApi(type);
+				const api: CrudApi<JamData> = entityTypeToApi(entityType);
 				const apiResult: ApiResponse<JamData> = await api.create(newData, token);
-				const setter = getSetter(type);
+				const setter = entityTypeToSetter(entityType);
 				setter((prev: any[]): any[] => [...prev, apiResult.data]);
 				return apiResult;
 			} catch (error) {
-				console.error(`Failed to add ${type}:`, error);
+				console.error(`Failed to add ${entityType}:`, error);
 				throw error;
 			}
 		},
@@ -433,15 +420,15 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	);
 
 	const updateEntity = useCallback(
-		async <T extends EntityType>(type: T, id: number, updatedData: any): Promise<any> => {
+		async <T extends EntityType>(entityType: T, id: number, updatedData: any): Promise<any> => {
 			try {
-				const api: CrudApi<JamData> = getApi(type);
+				const api: CrudApi<JamData> = entityTypeToApi(entityType);
 				const apiResult: ApiResponse<JamData> = await api.update(id, updatedData, token);
-				const setter = getSetter(type);
+				const setter = entityTypeToSetter(entityType);
 				setter((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult.data : item)));
 				return apiResult;
 			} catch (error) {
-				console.error(`Failed to update ${type}:`, error);
+				console.error(`Failed to update ${entityType}:`, error);
 				throw error;
 			}
 		},
@@ -449,14 +436,14 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	);
 
 	const deleteEntity = useCallback(
-		async <T extends EntityType>(type: T, id: number): Promise<void> => {
+		async <T extends EntityType>(entityType: T, id: number): Promise<void> => {
 			try {
-				const api: CrudApi<JamData> = getApi(type);
+				const api: CrudApi<JamData> = entityTypeToApi(entityType);
 				await api.delete(id, token);
-				const setter = getSetter(type);
+				const setter = entityTypeToSetter(entityType);
 				setter((prev: any[]): any[] => prev.filter((item: any) => item.id !== id));
 			} catch (error) {
-				console.error(`Failed to delete ${type}:`, error);
+				console.error(`Failed to delete ${entityType}:`, error);
 				throw error;
 			}
 		},
@@ -496,8 +483,8 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	);
 };
 
-export const useDataContext = () => {
-	const context = useContext(DataContext);
+export const useDataContext = (): DataContextValue => {
+	const context: DataContextValue | undefined = useContext(DataContext);
 	if (!context) throw new Error("useDataContext must be used within a DataProvider");
 	return context;
 };

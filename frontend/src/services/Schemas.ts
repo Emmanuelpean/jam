@@ -8,6 +8,21 @@ export interface OwnedOut extends BaseOut {
 	owner_id: number;
 }
 
+export interface Currency {
+	symbol: string;
+	name: string;
+	symbol_native: string;
+	decimal_digits: number;
+	rounding: number;
+	code: string;
+	name_plural: string;
+}
+
+export interface Country {
+	name: string;
+	code: string;
+}
+
 // ------------------------------------------------------ SETTING ------------------------------------------------------
 
 export interface SettingDataTransform {
@@ -359,6 +374,8 @@ export interface UserQualification extends OwnedOut {
 	education: string | null;
 	interests: string | null;
 }
+
+// ---------------------------------------------- SPECULATIVE APPLICATION ----------------------------------------------
 
 export interface SpeculativeApplicationDataTransform {
 	date: Date | string | null;

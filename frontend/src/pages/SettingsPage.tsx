@@ -14,7 +14,7 @@ const SettingsPage = () => {
 
 	return (
 		<DataTable
-			entityType="settings"
+			entityType="setting"
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			title="Settings"
 			columns={columns}
