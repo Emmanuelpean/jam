@@ -14,7 +14,7 @@ const SpeculativeApplicationsPage = (): JSX.Element => {
 
 	return (
 		<DataTable
-			entityType="speculativeApplications"
+			entityType="speculativeApplication"
 			initialSortConfig={{ key: "created_at", direction: "desc" }}
 			title="Speculative Applications"
 			columns={columns}

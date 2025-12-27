@@ -14,7 +14,7 @@ const JobApplicationUpdatesPage = () => {
 
 	return (
 		<DataTable
-			entityType="jobApplicationUpdates"
+			entityType="jobApplicationUpdate"
 			initialSortConfig={{ key: "date", direction: "desc" }}
 			title="Job Application Updates"
 			columns={columns}

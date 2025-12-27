@@ -24,7 +24,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 
 	return (
 		<DataTable
-			entityType="interviews"
+			entityType="interview"
 			data={data}
 			columns={defaultColumns}
 			initialSortConfig={{ key: "date", direction: "desc" }}

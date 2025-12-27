@@ -43,13 +43,13 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 			contacts: formData.contacts || [],
 			attendance_type: formData.attendance_type?.trim() || null,
 		};
-		return addEntity("jobs", jobData);
+		return addEntity("job", jobData);
 	};
 
 	return (
 		<>
 			<DataTable
-				entityType="scrapedJobs"
+				entityType="scrapedJob"
 				mode="import"
 				columns={defaultColumns}
 				initialSortConfig={{ key: "created_at", direction: "desc" }}

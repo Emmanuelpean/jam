@@ -2,6 +2,8 @@ import { createCrudApi, CrudApi } from "./Crud";
 import {
 	AggregatorData,
 	CompanyData,
+	Country,
+	Currency,
 	InterviewData,
 	JobApplicationUpdateData,
 	JobData,
@@ -12,7 +14,6 @@ import {
 	SettingData,
 	SpeculativeApplicationData,
 } from "../Schemas";
-import { Country, Currency } from "../../contexts/DataContext";
 
 export const jobsApi: CrudApi<JobData> = createCrudApi("jobs");
 export const companiesApi: CrudApi<CompanyData> = createCrudApi("companies");

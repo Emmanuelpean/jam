@@ -36,7 +36,7 @@ const JobToChaseTable: React.FC<DataTableProps> = ({
 
 	return (
 		<DataTable
-			entityType="jobs"
+			entityType="job"
 			columns={defaultColumns}
 			data={data}
 			initialSortConfig={{ key: "days_since_last_update", direction: "desc" }}

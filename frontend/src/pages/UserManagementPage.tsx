@@ -17,7 +17,7 @@ export const UserManagementPage: React.FC = () => {
 
 	return (
 		<DataTable
-			entityType="users"
+			entityType="user"
 			initialSortConfig={{ key: "id", direction: "asc" }}
 			title="Users"
 			columns={columns}
