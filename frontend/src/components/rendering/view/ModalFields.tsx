@@ -192,6 +192,13 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	contactEmail: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "contact_email",
+		label: "Contact Email",
+		render: (params: RenderParams) => renderFunctions.contactEmail({ ...params, view: true }),
+		...overrides,
+	}),
+
 	linkedinUrl: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "linkedin_url",
 		label: "LinkedIn Profile",

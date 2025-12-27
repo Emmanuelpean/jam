@@ -1,10 +1,11 @@
 """Router for testing email functionalities in test mode."""
 
-from fastapi import APIRouter, HTTPException
-from app.emails.email_service import email_service
 import re
 
+from fastapi import APIRouter, HTTPException
+
 from app.config import settings
+from app.emails.email_service import email_service
 
 router = APIRouter(prefix="/test", tags=["testing"])
 

@@ -220,8 +220,8 @@ export const renderFunctions = {
 		return renderFunctions._url(param, "application_url");
 	},
 
-	email: (param: RenderParams): ReactNode => {
-		const email: string | undefined = param.item?.email;
+	_email: (param: RenderParams, key: string): ReactNode => {
+		const email: string | undefined = param.item?.[key];
 		if (email)
 			return (
 				<a href={`mailto:${email}`} className="text-decoration-none">
@@ -230,6 +230,14 @@ export const renderFunctions = {
 				</a>
 			);
 		return null;
+	},
+
+	email: (param: RenderParams): ReactNode => {
+		return renderFunctions._email(param, "email");
+	},
+
+	contactEmail: (param: RenderParams): ReactNode => {
+		return renderFunctions._email(param, "contact_email");
 	},
 
 	linkedinUrl: (param: RenderParams): ReactNode => {

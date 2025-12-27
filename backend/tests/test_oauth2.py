@@ -5,9 +5,9 @@ Tests token creation, verification, and user authentication with token versionin
 
 from datetime import datetime, timedelta, timezone
 
+import jwt
 import pytest
 from fastapi import HTTPException, status
-import jwt
 
 from app import oauth2, schemas
 from app.config import settings

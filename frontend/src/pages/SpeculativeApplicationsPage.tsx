@@ -6,8 +6,8 @@ import { SpeculativeApplicationModal } from "../components/modals/SpeculativeApp
 const SpeculativeApplicationsPage = (): JSX.Element => {
 	const columns: TableColumn[] = [
 		tableColumns.companyBadgeColumn(),
-		tableColumns.emailColumn({ key: "contact_email" }),
-		tableColumns.dateColumn({ key: "date" }),
+		tableColumns.contactEmailColumn(),
+		tableColumns.dateColumn(),
 		tableColumns.contactBadgesColumn(),
 		tableColumns.createdAtColumn(),
 	];

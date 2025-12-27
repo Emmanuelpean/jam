@@ -319,6 +319,16 @@ export const tableColumns = {
 		...overrides,
 	}),
 
+	contactEmailColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+		key: "contact_email",
+		label: "Contact Email",
+		sortable: true,
+		searchable: true,
+		type: "text",
+		render: renderFunctions.contactEmail,
+		...overrides,
+	}),
+
 	linkedinUrlColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "linkedin_url",
 		label: "LinkedIn",

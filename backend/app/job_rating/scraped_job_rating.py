@@ -12,7 +12,6 @@ from app.database import get_db
 from app.job_rating.ai_rating import ai_score_job, __version__
 from app.service_runner import ServiceRunner
 
-
 SERVICE_NAME = "job_rating_service"
 
 

@@ -7,10 +7,10 @@ operations behave as expected under various scenarios, including successful requ
 from datetime import datetime, timezone, timedelta
 from unittest.mock import patch
 
-from app import schemas, models, utils, oauth2
 import app.job_rating.models as job_rating_models
-from tests.conftest import CRUDTestBase
+from app import schemas, models, utils, oauth2
 from app.routers.user import send_email_change_with_rate_limit
+from tests.conftest import CRUDTestBase
 
 
 class TestUsersCRUS(CRUDTestBase):

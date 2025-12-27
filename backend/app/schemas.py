@@ -7,8 +7,10 @@ Update schemas should be used to update existing entries in the database."""
 
 from datetime import datetime
 from typing import Annotated
-from app.utils import clean_email
+
 from pydantic import BaseModel, EmailStr, field_validator, BeforeValidator
+
+from app.utils import clean_email
 
 
 def serialize_relationships(value) -> list[int]:
