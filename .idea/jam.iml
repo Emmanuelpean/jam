@@ -15,6 +15,7 @@
       <excludeFolder url="file://$MODULE_DIR$/logs" />
       <excludeFolder url="file://$MODULE_DIR$/reports" />
       <excludeFolder url="file://$MODULE_DIR$/backend/tests/resources" />
+      <excludeFolder url="file://$MODULE_DIR$/test_logs" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.12 (jam)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

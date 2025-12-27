@@ -52,15 +52,15 @@ export const authApi: AuthApi = {
 	},
 
 	getCurrentUser: async (token: string): ApiResponsePromise<UserData> => {
-		return api.get("current_user/", token);
+		return api.get("current-user/", token);
 	},
 
 	updateCurrentUser: async (data: any, token: string): ApiResponsePromise<UpdateCurrentUserResponse> => {
-		return api.put("current_user/", data, token);
+		return api.put("current-user/", data, token);
 	},
 
 	checkPendingEmail: async (token: string): ApiResponsePromise<boolean> => {
-		return api.get("current_user/check-pending-email/", token);
+		return api.get("current-user/check-pending-email/", token);
 	},
 
 	verifyEmail: async (token: string): ApiResponsePromise<GenericResponse> => {
@@ -72,7 +72,7 @@ export const authApi: AuthApi = {
 	},
 
 	verifyNewEmail: async (token: string): ApiResponsePromise<GenericResponse> => {
-		return api.get(`current_user/verify-email/${token}`);
+		return api.get(`current-user/verify-email/${token}`);
 	},
 
 	resetPassword: async (token: string, newPassword: string): ApiResponsePromise<GenericResponse> => {
