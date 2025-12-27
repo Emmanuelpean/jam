@@ -394,7 +394,7 @@ class TestTokenVersioning:
 
 class TestUserQualificationsCRUD(CRUDTestBase):
 
-    endpoint = "user_qualifications"
+    endpoint = "user-qualifications"
     actions_to_test = []
 
     def test_get_latest_user_qualification(self, authorised_clients, test_users, test_user_qualifications) -> None:
