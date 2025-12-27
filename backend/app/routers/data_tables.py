@@ -171,7 +171,7 @@ job_application_update_router = generate_data_table_crud_router(
     create_schema=schemas.JobApplicationUpdateCreate,
     update_schema=schemas.JobApplicationUpdateUpdate,
     out_schema=schemas.JobApplicationUpdateOut,
-    endpoint="jobapplicationupdates",
+    endpoint="job-application-updates",
     not_found_msg="Job Application Update not found",
 )
 

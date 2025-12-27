@@ -54,7 +54,7 @@ export const JobApplicationUpdateModal = forwardRef<DataModalHandle, JobApplicat
 					itemName="Update"
 					size={size}
 					fields={fields}
-					endpoint="jobapplicationupdates"
+					endpoint="job-application-updates"
 					transformFormData={transformFormData}
 				/>
 			</>
