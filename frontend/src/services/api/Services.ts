@@ -98,14 +98,14 @@ function createServiceApi(servicePath: string): BaseServiceApi {
 
 // Create the specific API instances
 export const jobScraperServiceApi: JobScraperServiceRunnerApi = {
-	...createServiceApi("email_scraper_service"),
+	...createServiceApi("job-scraper-service"),
 	start: async (
 		periodHours: number,
 		timedeltaDays: number,
 		token: string,
 	): ApiResponsePromise<ServiceRunnerResponse> => {
 		const data: StartJobScraperServiceRunnerRequest = { period_hours: periodHours, timedelta_days: timedeltaDays };
-		return api.post("email_scraper_service/start", data, token);
+		return api.post("job-scraper-service/start", data, token);
 	},
 };
 

@@ -332,7 +332,7 @@ def scrape_job(
 # ------------------------------------------------ EMAIL SCRAPER SERVICE -----------------------------------------------
 
 
-email_scraper_service_router = APIRouter(prefix="/email_scraper_service", tags=["email_scraper_service"])
+email_scraper_service_router = APIRouter(prefix="/job-scraper-service", tags=["job-scraper-service"])
 
 
 @email_scraper_service_router.post("/start")
@@ -385,7 +385,7 @@ scraping_filter_router = generate_data_table_crud_router(
     create_schema=schemas.ScrapingFilterCreate,
     update_schema=schemas.ScrapingFilterUpdate,
     out_schema=schemas.ScrapingFilterOut,
-    endpoint="scraping_filters",
+    endpoint="scraping-filters",
     not_found_msg="Scraped Job Filter not found",
     allowed_actions=["get_all", "get_one", "post"],
 )
