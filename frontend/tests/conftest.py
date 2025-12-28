@@ -4,6 +4,7 @@ import json
 import os
 import platform
 import queue
+import re
 import shutil
 import subprocess
 import sys
@@ -14,6 +15,7 @@ import psutil
 import requests
 from selenium.webdriver import Keys, ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.support.select import Select
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
@@ -26,6 +28,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
+from react_select import ReactSelect
 
 # noinspection PyUnresolvedReferences
 from tests.conftest import (
@@ -501,7 +504,10 @@ class BaseUtils(object):
     def _wait_for_modal_close(self, name: str) -> None:
         """Wait for the modal to close"""
 
-        self.wait.until(ec.invisibility_of_element_located((By.ID, name)))
+        try:
+            self.wait.until(ec.invisibility_of_element_located((By.ID, name)))
+        except:
+            raise AssertionError(f"{name} is present in: {self.get_all_element_ids()}")
 
     # ----------------------------------------------------- EMAILS -----------------------------------------------------
 
@@ -539,6 +545,11 @@ class BaseUtils(object):
 
     # ---------------------------------------------------- ELEMENTS ----------------------------------------------------
 
+    def wait_for_delete_modal(self) -> WebElement:
+        """Wait for the delete modal to appear"""
+
+        return self.get_element("delete-alert-modal")
+
     def assert_toast_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
@@ -556,7 +567,7 @@ class BaseUtils(object):
         self._wait_for_modal_close("delete-alert-modal")
 
 
-class BaseUtils1(BaseUtils):
+class BaseUtilsClass(BaseUtils):
 
     def __init__(self, driver: WebDriver, test_frontend_server, session):
         """Object constructor
@@ -567,6 +578,798 @@ class BaseUtils1(BaseUtils):
         self.wait = WebDriverWait(self.driver, 10)
         self.frontend_base_url = test_frontend_server
         self.db = session
+
+
+class DataModalUtils(BaseUtilsClass):
+    """Base class for testing data modals"""
+
+    def __init__(self, driver, entry_type: str, test_frontend_server, session):
+        """Object constructor
+        :param driver: Selenium WebDriver
+        :param entry_type: Name of the entry type (e.g. tag, company)
+        :param test_frontend_server: Frontend server URL
+        :param session: requests.Session object for backend API calls"""
+
+        BaseUtilsClass.__init__(self, driver, test_frontend_server, session)
+        self.entry_type = entry_type
+
+    # ------------------------------------------------ HELPER FUNCTIONS ------------------------------------------------
+
+    def wait_for_view_modal_close(self) -> None:
+        """Wait for the view modal to close"""
+
+        self._wait_for_modal_close(f"modal-view-{self.entry_type}")
+
+    def wait_for_edit_modal_close(self) -> None:
+        """Wait for the view modal to close"""
+
+        self._wait_for_modal_close(f"modal-edit-{self.entry_type}")
+
+    def wait_for_view_modal(self) -> WebElement:
+        """Wait for the view modal to appear"""
+
+        return self.get_element(f"modal-view-{self.entry_type}")
+
+    def wait_for_edit_modal(self) -> WebElement:
+        """Wait for the edit modal to appear"""
+
+        return self.get_element(f"modal-edit-{self.entry_type}")
+
+    def wait_for_import_modal_modal_close(self) -> None:
+        """Wait for the import modal to close"""
+
+        self._wait_for_modal_close(f"modal-import-{self.entry_type}")
+
+    def confirm_button(self, mode: str) -> WebElement:
+        """Get the confirm button on the modal"""
+
+        return self.get_element(f"modal-{mode}-{self.entry_type}-confirm-button")
+
+    def cancel_button(self, mode: str) -> WebElement:
+        """Get the cancel button on the modal"""
+
+        return self.get_element(f"modal-{mode}-{self.entry_type}-cancel-button")
+
+    def edit_button(self, mode: str, **kwargs) -> WebElement:
+        """Get the edit button on the modal"""
+
+        return self.get_element(f"modal-{mode}-{self.entry_type}-edit-button", **kwargs)
+
+    def import_button(self) -> WebElement:
+        """Get the import button on the modal"""
+
+        return self.get_element(f"modal-import-{self.entry_type}-import-button")
+
+    def delete_button(self, mode: str) -> WebElement:
+        """Get the delete button on the modal"""
+
+        return self.get_element(f"modal-{mode}-{self.entry_type}-delete-button")
+
+    def deactivate_button(self) -> WebElement:
+        """Get the deactivate button on the modal"""
+
+        return self.get_element(f"modal-view-{self.entry_type}-deactivate-button")
+
+    def activate_button(self) -> WebElement:
+        """Get the activate button on the modal"""
+
+        return self.get_element(f"modal-view-{self.entry_type}-activate-button")
+
+    def _fill_modal(self, **values) -> None:
+        """Fill the modal with the given values  (key: key of the input elements, value: value to set)."""
+
+        if any(isinstance(v, dict) for v in values.values()):
+            for tab_key in values:
+                self.get_element(f"{tab_key}-tab").click()
+                self._fill_modal(**values[tab_key])
+        else:
+            self.wait_for_edit_modal()
+            for key, value in values.items():
+                if key in (
+                    "operator",
+                    "country",
+                    "company_id",
+                    "location_id",
+                    "job_id",
+                    "aggregator_id",
+                    "job_application_id",
+                    "type",
+                    "source",
+                    "attendance_type",
+                    "applied_via",
+                    "application_status",
+                ):
+                    select = ReactSelect(self.get_element(key))
+                    select.open_menu()
+                    select.select_by_visible_text(value)
+                elif key in ["date", "application_date"]:
+                    self.get_element(key + "_set_current").click()
+                else:
+                    self.set_text(self.get_element(key), value)
+
+    # -------------------------------------------------- VIEW MODALS --------------------------------------------------
+
+    def check_keyword_view_modal(self, entry: models.Keyword) -> None:
+        """Helper method to test the view modal for a keyword entry"""
+
+        modal = self.wait_for_view_modal()
+
+        # Verify modal contains the entry information
+        expected = f"Tag Details\n{entry.name}\nJobs\n({len(entry.jobs)})\nClose\nEdit"
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view").click()
+        self.wait_for_view_modal_close()
+
+    def check_aggregator_view_modal(self, entry: models.Aggregator) -> None:
+        """Helper method to test the view modal for an aggregator entry"""
+
+        modal = self.wait_for_view_modal()
+
+        # Verify modal contains the entry information
+        expected = (
+            f"Aggregator Details\n{entry.name}\nWebsite\n{entry.url.replace('https://', '')}\nJobs\n({len(entry.jobs)})"
+            f"\nJob Applications\n({len(entry.job_applications)})\nClose\nEdit"
+        )
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view").click()
+        self.wait_for_view_modal_close()
+
+    def check_location_view_modal(self, entry: models.Location) -> None:
+        """Helper method to test the view modal for a location entry"""
+
+        modal = self.wait_for_view_modal()
+        WebDriverWait(self.driver, 30).until(lambda d: "Finding location on map..." not in modal.text)
+
+        # Verify modal contains the entry information
+        expected = (
+            f"Location Details\nCity\n{entry.city}\nPostcode\n{entry.postcode}"
+            f"\nCountry\n{entry.country}\n"
+            f"Location on Map\n+\n−\nLeaflet | © OpenStreetMap\n"
+            f"Jobs\n({len(entry.jobs)})\nInterviews\n({len(entry.interviews)})\n"
+            f"Close\nEdit"
+        )
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view").click()
+        self.wait_for_view_modal_close()
+
+    def check_company_view_modal(self, entry: models.Company) -> None:
+        """Helper method to test the view modal for a company entry"""
+
+        modal = self.wait_for_view_modal()
+
+        # Verify modal contains the entry information
+        expected = (
+            f"Company Details\n{entry.name}\nWebsite\n{entry.url.replace("https://", "")}"
+            f"\nDescription\n{entry.description}\nJobs\n({len(entry.jobs)})\nPersons\n({len(entry.persons)})\nClose\nEdit"
+        )
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view").click()
+        self.wait_for_view_modal_close()
+
+    def check_person_view_modal(self, entry: models.Person) -> None:
+        """Helper method to test the view modal for a person entry"""
+
+        modal = self.wait_for_view_modal()
+        expected = (
+            f"Person Details\n{entry.name}\n"
+            f"Company\n{entry.company.name.upper()}\nRole\n{entry.role}\n"
+            f"Email\n{entry.email}\nPhone\n{entry.phone}\nLinkedIn Profile\nProfile\n"
+            f"Interviews\n({len(entry.interviews)})\nJobs\n({len(entry.jobs)})\nClose\nEdit"
+        )
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view").click()
+        self.wait_for_view_modal_close()
+
+    def check_interview_view_modal(self, entry: models.Interview, standalone: bool = True) -> None:
+        """Helper method to test the view modal for an interview entry
+        :param entry: Interview entry
+        :param standalone: Whether the interview is viewed standalone or as part of a job application"""
+
+        modal = self.wait_for_view_modal()
+        display_time = entry.date.astimezone()
+        entry_type = {"HR": "HR Interview", "Technical": "Technical Interview"}[entry.type]
+        if standalone:
+            expected = "Interview Details\n" "Job\n" f"{entry.job.title.upper()} ({entry.job.company.name.upper()})\n"
+        else:
+            expected = "Interview Details\n"
+        expected += "Date & Time\n" f"{display_time.strftime("%d/%m/%Y %H:%M")}\n" "Type\n" f"{entry_type}\n"
+
+        if entry.attendance_type and not entry.location:
+            expected += f"Location\n{entry.attendance_type.upper()}\n"
+        elif entry.location:
+            expected += "Location\n" f"{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
+        else:
+            expected += "Location\nNot Provided\n"
+
+        if entry.interviewers:
+            expected += (
+                "Interviewers\n" f"{', '.join([interviewer.name.upper() for interviewer in entry.interviewers])}\n"
+            )
+        else:
+            expected += "Interviewers\nNot Provided\n"
+
+        if entry.note:
+            expected += f"Notes\n{entry.note}\n"
+        else:
+            expected += "Notes\nNot Provided\n"
+
+        expected += "Close\nEdit"
+
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view").click()
+        self.wait_for_view_modal_close()
+
+    def check_update_view_modal(self, entry: models.JobApplicationUpdate, standalone: bool = True) -> None:
+        """Helper method to test the view modal for a job application update entry"""
+
+        modal = self.wait_for_view_modal()
+        display_time = entry.date.astimezone()
+        if standalone:
+            expected = (
+                "Job Application Update Details\n"
+                "Job\n"
+                f"{entry.job.title.upper()} ({entry.job.company.name.upper()})\n"
+                "Date & Time\n"
+                f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
+                "Type\n"
+                f"{entry.type[0].upper() + entry.type[1:]}\n"
+                "Notes\n"
+                f"{entry.note}\n"
+                "Close\n"
+                "Edit"
+            )
+        else:
+            expected = (
+                "Job Application Update Details\n"
+                "Date & Time\n"
+                f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
+                "Type\n"
+                f"{entry.type[0].upper() + entry.type[1:]}\n"
+                "Notes\n"
+                f"{entry.note}\n"
+                "Close\n"
+                "Edit"
+            )
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view").click()
+        self.wait_for_view_modal_close()
+
+    def check_job_view_modal(self, entry: models.Job) -> None:
+        """Helper method to test the view modal for a job application update entry"""
+
+        modal = self.wait_for_view_modal()
+        expected = "Job Details\nJob Details\nJob Application"
+        if entry.application_status:
+            expected += f" {entry.application_status.upper()}"
+        expected += f"\n{entry.title}\n"
+        if entry.company:
+            expected += f"Company\n{entry.company.name.upper()}\n"
+        else:
+            expected += "Company\nNot Provided\n"
+        if entry.attendance_type and not entry.location:
+            expected += f"Location\n{entry.attendance_type.upper()}\n"
+        elif entry.attendance_type and entry.location:
+            expected += f"Location\n{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
+        elif not entry.attendance_type and entry.location:
+            expected += f"Location\n{entry.location.name.upper()}\n"
+        else:
+            expected += "Location\nNot Provided\n"
+        if entry.description:
+            expected += f"Description\n{entry.description}\n"
+        else:
+            expected += "Description\nNot Provided\n"
+        if entry.note:
+            expected += f"Notes\n{entry.note}\n"
+        else:
+            expected += "Notes\nNot Provided\n"
+        salary_range = self.salary_range(entry)
+        if salary_range:
+            expected += f"Salary Range\n{salary_range}\n"
+        else:
+            expected += "Salary Range\nNot Provided\n"
+        expected += "Personal Rating\n"
+        if not entry.personal_rating:
+            expected += "Not Provided\n"
+        if entry.source:
+            expected += f"Source Aggregator\n{entry.source.name.upper()}\n"
+        else:
+            expected += "Source Aggregator\nNot Provided\n"
+        if entry.url:
+            expected += f"Job URL\n{entry.url.replace('https://', '')}\n"
+        else:
+            expected += "Job URL\nNot Provided\n"
+        if entry.keywords:
+            expected += f"Tags\n{'\n'.join([tag.name.upper() for tag in entry.keywords])}\n"
+        else:
+            expected += "Tags\nNot Provided\n"
+        if entry.contacts:
+            expected += f"Contacts\n{'\n'.join([person.name.upper() for person in entry.contacts])}\n"
+        else:
+            expected += "Contacts\nNot Provided\n"
+        if entry.deadline:
+            expected += f"Application Deadline\n{entry.deadline.strftime('%d/%m/%Y')}\n"
+        else:
+            expected += "Application Deadline\nNot Provided\n"
+        expected += "Close\nEdit"
+        assert modal.text == expected
+
+        # Job Application
+        self.get_element("application-tab").click()
+        expected = "Job Details\nJob Details\n"
+        if entry.application_status:
+            expected += f"Job Application {entry.application_status.upper()}\n"
+        else:
+            expected += "Job Application\n"
+        if entry.application_date:
+            display_time = entry.application_date.astimezone()
+            expected += f"Application Date\n{display_time.strftime("%d/%m/%Y")}\n"
+        else:
+            expected += "Date\nNot Provided\n"
+        if entry.application_status:
+            expected += f"Status\n{entry.application_status.upper()}\n"
+        else:
+            expected += "Status\nNot Provided\n"
+        if entry.applied_via == "aggregator" and entry.application_aggregator:
+            expected += f"Applied Via\n{entry.application_aggregator.name.upper()}\n"
+        elif entry.applied_via:
+            expected += f"Applied Via\n{entry.applied_via.upper()}\n"
+        else:
+            expected += "Applied Via\nNot Provided\n"
+        if entry.application_url:
+            expected += f"Application URL\n{entry.application_url.replace("https://", "")}\n"
+        else:
+            expected += "Application URL\nNot Provided\n"
+        if entry.note:
+            expected += f"Notes\n{entry.application_note}\n"
+        else:
+            expected += "Notes\nNot Provided\n"
+        expected += (
+            "Add Interview\n"
+            "Date\n"
+            "Type\n"
+            "Location\n"
+            "Notes\n"
+            "No Interviews found\n"
+            "Add Update\n"
+            "Date\n"
+            "Type\n"
+            "Notes\n"
+            "No Updates found\n"
+            "Close\n"
+            "Edit"
+        )
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view").click()
+        self.wait_for_view_modal_close()
+
+    def check_speculative_application_view_modal(self, entry: models.SpeculativeApplication) -> None:
+        """Helper method to test the view modal for a speculative application entry"""
+
+        modal = self.wait_for_view_modal()
+        expected = "Speculative Application Details\n" "Company\n" f"{entry.company.name.upper()}\n"
+        if entry.date:
+            display_time = entry.date.astimezone()
+            expected += f"Date & Time\n{display_time.strftime("%d/%m/%Y %H:%M")}\n"
+        else:
+            expected += "Date & Time\nNot Provided\n"
+        if entry.contact_email:
+            expected += f"Contact Email\n{entry.contact_email}\n"
+        else:
+            expected += "Contact Email\nNot Provided\n"
+        if entry.contacts:
+            expected += f"Contacts\n{'\n'.join([person.name.upper() for person in entry.contacts])}\n"
+        else:
+            expected += "Contacts\nNot Provided\n"
+        if entry.note:
+            expected += f"Notes\n{entry.note}\n"
+        else:
+            expected += "Notes\nNot Provided\n"
+        expected += "Close\nEdit"
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view").click()
+        self.wait_for_view_modal_close()
+
+    @staticmethod
+    def salary_range(item: models.Job) -> str | None:
+        """
+        Returns a formatted salary range string based on minimum and maximum salary values.
+
+        Parameters
+        ----------
+        item : dict | None
+            A dictionary that may contain 'salary_min' and 'salary_max' keys.
+
+        Returns
+        -------
+        str | None
+            A formatted salary string such as:
+            - "£30,000"
+            - "£30,000 - £40,000"
+            - "From £30,000"
+            - "Up to £40,000"
+            or None if no salary values are provided.
+        """
+        if not item:
+            return None
+
+        salary_min = item.salary_min
+        salary_max = item.salary_max
+
+        if not salary_min and not salary_max:
+            return None
+
+        if salary_min == salary_max and salary_min:
+            return f"£{salary_min:,.0f}"
+
+        if salary_min and salary_max:
+            return f"£{salary_min:,.0f} - £{salary_max:,.0f}"
+
+        if salary_min:
+            return f"From £{salary_min:,.0f}"
+
+        if salary_max:
+            return f"Up to £{salary_max:,.0f}"
+
+        return None
+
+    def add_entry(self, **data) -> None:
+        """Add a new entry"""
+
+        self.wait_for_edit_modal()
+        self._fill_modal(**data)
+        self.confirm_button("edit").click()
+        self.wait_for_edit_modal_close()
+
+
+class DataTableUtils(BaseUtilsClass):
+    """Base class for testing data tables"""
+
+    # Parameters needed
+    entry_type: str = ""  # entity type of the table (e.g. keywords)
+
+    def __init__(self, driver, entry_type: str, test_frontend_server, session):
+        """Object constructor
+        :param driver: Selenium WebDriver
+        :param entry_type: Name of the entry type (e.g. keywords, companies)
+        :param test_frontend_server: Frontend server URL
+        :param session: requests.Session object for backend API calls"""
+
+        BaseUtilsClass.__init__(self, driver, test_frontend_server, session)
+        self.entry_type = entry_type
+
+    # ----------------------------------------------------- TABLES -----------------------------------------------------
+
+    @property
+    def table_rows(self) -> list[WebElement]:
+        """Get all table rows on the page"""
+
+        self.get_element("table-row-clickable", By.CLASS_NAME)
+        return self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")
+
+    def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
+        """Get a specific table row by its ID"""
+
+        return self.get_element(f"table-row-{self.entry_type}-{item_id}", *args, **kwargs)
+
+    def context_menu(self, entity_id: int, choice: str) -> None:
+        """Row context menu"""
+
+        actions = ActionChains(self.driver)
+        actions.context_click(self.table_row(entity_id)).perform()
+        self.get_element(f"context-menu-{choice}").click()
+
+    def check_row_exist(self, column: str, name: str, expected_count: int = 1) -> None:
+        """Check that a specific row with a specific name exists in the table
+        :param column: Name of the column to check
+        :param name: Name of the column
+        :param expected_count: Expected number of rows with that name"""
+
+        assert (
+            self.get_column_values(column).count(name) == expected_count
+        ), f"Expected {expected_count} rows with name '{name}'"
+
+    def get_column_values(self, column_key: str | None = None) -> list[str] | list[dict[str, str]]:
+        """Get values from a specific table column via the column key
+        (matched using id attributes starting with 'table-header-').
+        :param column_key: The key of the column. If None, returns all rows as list of dicts.
+        :return: List of values from that column, or list of row dicts if no key provided.
+        """
+        # Find all elements where id starts with 'table-header-'
+        header_elements = self.driver.find_elements(By.XPATH, "//*[@id[starts-with(., 'table-header-')]]")
+        header_keys = []
+        for header in header_elements:
+            th_id = header.get_attribute("id")
+            # Ensure only ids with "table-header-" are considered
+            if th_id and th_id.startswith("table-header-"):
+                header_keys.append(th_id[len("table-header-") :])
+
+        # If no column_key provided, return all rows as list of dicts
+        if column_key is None:
+            rows_data = []
+            for row in self.table_rows:
+                row_dict = {}
+                cells = row.find_elements(By.TAG_NAME, "td")
+                for i, key in enumerate(header_keys):
+                    if i < len(cells):
+                        row_dict[key] = cells[i].text
+                rows_data.append(row_dict)
+            return rows_data
+
+        if column_key not in header_keys:
+            raise ValueError(f"Column key '{column_key}' not found. Available keys: {header_keys}")
+
+        column_index = header_keys.index(column_key)
+        return [row.find_elements(By.TAG_NAME, "td")[column_index].text for row in self.table_rows]
+
+    def wait_for_table_load(self, timeout: int | float = 0.1) -> None:
+        """Wait for loading spinner to disappear"""
+
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                ec.invisibility_of_element_located((By.CSS_SELECTOR, "spinner-border"))
+            )
+        except TimeoutException:
+            pass
+
+    def get_row_id(self, index: int) -> int:
+        """Get the entry ID of a table row by its index (0-based)
+        :param index: Index of the table row"""
+
+        return int(
+            re.search(rf"table-row-{self.entry_type}-(\d+)", self.table_rows[index].get_attribute("id")).group(1)
+        )
+
+    # ----------------------------------------------------- BUTTONS ----------------------------------------------------
+
+    @property
+    def add_entity_button(self) -> WebElement:
+        """Get the Add Entity button"""
+
+        return self.get_element(f"add-{self.entry_type}-button")
+
+    def set_page_item_select(self, value) -> None:
+        """Set the number of items to display per page
+        :param value: Value to select (e.g. "20", "40")"""
+
+        if len(self.table_rows) >= 20:
+            Select(self.get_element("page-items-select")).select_by_value(value)
+
+    def table_row_click(self, row_index: int) -> None:
+        """Click on a table row by its index (0-based)"""
+
+        element = self.table_row(row_index)
+        self.driver.execute_script("arguments[0].click();", element)
+
+
+class AuthentificationUtils(BaseUtilsClass):
+    """Test class for Authentication functionality including:
+    - Login with valid credentials
+    - Login with invalid credentials
+    - Signup with valid data
+    - Signup with invalid data
+    - Form validation"""
+
+    # ----------------------------------------------------- INPUTS -----------------------------------------------------
+
+    def go_to_login(self) -> None:
+        """Go to the login page"""
+
+        self.driver.get(f"{self.frontend_base_url}/login")
+
+    def go_to_register(self) -> None:
+        """Go to the register page"""
+
+        self.driver.get(f"{self.frontend_base_url}/register")
+
+    def go_to_forgot_password(self) -> None:
+        """Go to the forgot password page"""
+
+        self.driver.get(f"{self.frontend_base_url}/forgot-password")
+
+    def set_email(self, email: str) -> None:
+        """Set the email field to the given value"""
+
+        self.get_element("email").send_keys(email)
+
+    def set_password(self, password: str) -> None:
+        """Set the password field to the given value"""
+
+        self.get_element("password").send_keys(password)
+
+    def set_confirm_password(self, password: str) -> None:
+        """Set the confirm password field to the given value"""
+
+        self.get_element("confirmPassword").send_keys(password)
+
+    def confirm(self) -> None:
+        """Confirm the form submission"""
+
+        self.get_element("confirm-button").click()
+
+    def set_terms(self) -> None:
+        """Set the accept terms checkbox to True"""
+
+        self.get_element("terms").click()
+
+    def register_user(self, email: str, password: str) -> None:
+        """Register a new user"""
+
+        self.go_to_register()
+        self.set_email(email)
+        self.set_password(password)
+        self.set_confirm_password(password)
+        self.set_terms()
+        self.confirm()
+
+    def login_user(self, email: str, password: str) -> None:
+        """Login with given credentials"""
+
+        self.go_to_login()
+        self.set_email(email)
+        self.set_password(password)
+        self.confirm()
+
+    # ----------------------------------------------------- ERRORS -----------------------------------------------------
+
+    def _assert_message(self, key: str, message: str) -> None:
+        """Assert that the given message is displayed on the page
+        :param key: Key to use for finding the error message element
+        :param message: Message to check for"""
+
+        assert message in self.get_element(key + "error-message").text, f"Message not found: {message}"
+
+    def assert_email_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("email-", error_message)
+
+    def assert_password_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("password-", error_message)
+
+    def assert_confirm_password_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("confirmPassword-", error_message)
+
+    def assert_accept_terms_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("terms-", error_message)
+
+    # ------------------------------------------------------ PAGES -----------------------------------------------------
+
+    def wait_for_dashboard(self) -> None:
+        """Wait for the dashboard to load"""
+
+        self.wait_for_page("dashboard")
+
+    def wait_for_login(self) -> None:
+        """Wait for the login page to load"""
+
+        self.wait_for_page("login")
+
+    def wait_for_register(self) -> None:
+        """Wait for the register page to load"""
+
+        self.wait_for_page("register")
+
+    def switch_mode(self) -> None:
+        """Switch between login and register modes"""
+
+        self.get_element("switch-mode-button").click()
+
+    def go_to_verification_url(self, token: str) -> None:
+        """Navigate to login page with verification token"""
+
+        self.driver.get(f"{self.frontend_base_url}/verify-email/?token={token}")
+
+    def switch_to_forgot_password(self) -> None:
+        """Navigate to forgot password page"""
+
+        self.get_element("forgot-password-link").click()
+
+
+class UserSettingsUtils(BaseUtilsClass):
+    """Test class for the User Settings Page"""
+
+    @property
+    def current_password(self) -> WebElement:
+        """Get the current password field"""
+        return self.get_element("current_password")
+
+    @property
+    def email(self) -> WebElement:
+        """Get the email field"""
+
+        return self.get_element("email")
+
+    @property
+    def new_password(self) -> WebElement:
+        """Get the new password field"""
+
+        return self.get_element("new_password")
+
+    @property
+    def confirm_password(self) -> WebElement:
+        """Get the confirmation password field"""
+
+        return self.get_element("confirm_password")
+
+    @property
+    def theme_hint(self) -> WebElement:
+        """Get the theme hint text"""
+
+        return self.get_element("theme-hint")
+
+    @property
+    def chase_threshold(self) -> WebElement:
+        """Get the chase threshold input"""
+
+        return self.get_element("chase_threshold")
+
+    @property
+    def deadline_threshold(self) -> WebElement:
+        """Get the deadline threshold input"""
+
+        return self.get_element("deadline_threshold")
+
+    @property
+    def update_limit(self) -> WebElement:
+        """Get the update limit input"""
+
+        return self.get_element("update_limit")
+
+    def confirm(self) -> None:
+        """Confirm the form submission"""
+
+        self.get_element("confirm-button").click()
+
+    def _assert_message(self, key: str, message: str) -> None:
+        """Assert that the given message is displayed on the page
+        :param key: Key to use for finding the error message element
+        :param message: Message to check for"""
+
+        assert message in self.get_element(key + "error-message").text, f"Message not found: {message}"
+
+    def assert_email_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("email-", error_message)
+
+    def assert_password_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("current_password-", error_message)
+
+    def assert_new_password_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("new_password-", error_message)
+
+    def assert_confirm_password_error_message(self, error_message: str) -> None:
+        """Assert that the given error message is displayed on the page"""
+
+        self._assert_message("confirm_password-", error_message)
 
 
 class BaseTest(BaseUtils):
@@ -582,6 +1385,30 @@ class BaseTest(BaseUtils):
     user_index = 1  # index of the user to use for the test
 
     _test_name = ""
+
+    company_modal_utils: DataModalUtils = None
+    aggregator_modal_utils: DataModalUtils = None
+    keyword_modal_utils: DataModalUtils = None
+    location_modal_utils: DataModalUtils = None
+    person_modal_utils: DataModalUtils = None
+    job_modal_utils: DataModalUtils = None
+    interview_modal_utils: DataModalUtils = None
+    update_modal_utils: DataModalUtils = None
+    speculative_application_modal_utils: DataModalUtils = None
+    scraped_job_modal_utils: DataModalUtils = None
+    scraping_filter_modal_utils: DataModalUtils = None
+    company_table_utils: DataTableUtils = None
+    aggregator_table_utils: DataTableUtils = None
+    keyword_table_utils: DataTableUtils = None
+    location_table_utils: DataTableUtils = None
+    person_table_utils: DataTableUtils = None
+    job_table_utils: DataTableUtils = None
+    update_table_utils: DataTableUtils = None
+    interview_table_utils: DataTableUtils = None
+    scraped_job_table_utils: DataTableUtils = None
+    scraping_filter_table_utils: DataTableUtils = None
+    auth_utils: AuthentificationUtils = None
+    user_settings_utils: UserSettingsUtils = None
 
     @pytest.fixture(autouse=True)
     def setup_method(
@@ -635,6 +1462,43 @@ class BaseTest(BaseUtils):
             self.client = authorised_clients[self.user_index]
             self.user = test_users[self.user_index]
             self.db = session
+
+            self.company_modal_utils = DataModalUtils(self.driver, "company", self.frontend_base_url, self.db)
+            self.aggregator_modal_utils = DataModalUtils(self.driver, "aggregator", self.frontend_base_url, self.db)
+            self.keyword_modal_utils = DataModalUtils(self.driver, "keyword", self.frontend_base_url, self.db)
+            self.location_modal_utils = DataModalUtils(self.driver, "location", self.frontend_base_url, self.db)
+            self.person_modal_utils = DataModalUtils(self.driver, "person", self.frontend_base_url, self.db)
+            self.job_modal_utils = DataModalUtils(self.driver, "job", self.frontend_base_url, self.db)
+            self.interview_modal_utils = DataModalUtils(self.driver, "interview", self.frontend_base_url, self.db)
+            self.update_modal_utils = DataModalUtils(
+                self.driver, "jobApplicationUpdate", self.frontend_base_url, self.db
+            )
+            self.speculative_application_modal_utils = DataModalUtils(
+                self.driver, "speculative-application", self.frontend_base_url, self.db
+            )
+            self.scraped_job_modal_utils = DataModalUtils(self.driver, "scrapedJob", self.frontend_base_url, self.db)
+            self.scraping_filter_modal_utils = DataModalUtils(
+                self.driver, "scrapingFilter", self.frontend_base_url, self.db
+            )
+
+            self.company_table_utils = DataTableUtils(self.driver, "company", self.frontend_base_url, self.db)
+            self.aggregator_table_utils = DataTableUtils(self.driver, "aggregator", self.frontend_base_url, self.db)
+            self.keyword_table_utils = DataTableUtils(self.driver, "keyword", self.frontend_base_url, self.db)
+            self.location_table_utils = DataTableUtils(self.driver, "location", self.frontend_base_url, self.db)
+            self.person_table_utils = DataTableUtils(self.driver, "person", self.frontend_base_url, self.db)
+            self.job_table_utils = DataTableUtils(self.driver, "job", self.frontend_base_url, self.db)
+            self.update_table_utils = DataTableUtils(
+                self.driver, "jobApplicationUpdate", self.frontend_base_url, self.db
+            )
+            self.interview_table_utils = DataTableUtils(self.driver, "interview", self.frontend_base_url, self.db)
+            self.scraped_job_table_utils = DataTableUtils(self.driver, "scrapedJob", self.frontend_base_url, self.db)
+            self.scraping_filter_table_utils = DataTableUtils(
+                self.driver, "scrapingFilter", self.frontend_base_url, self.db
+            )
+
+            self.auth_utils = AuthentificationUtils(self.driver, self.frontend_base_url, self.db)
+
+            self.user_settings_utils = UserSettingsUtils(self.driver, self.frontend_base_url, self.db)
 
             self.setup_function(request)
 
