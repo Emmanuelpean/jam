@@ -188,7 +188,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		if (isServerPagination) {
 			return fetchedData;
 		}
-		return (dataContext as any)[entityType] || [];
+		return dataContext.getEntityData(entityType);
 	};
 
 	const data: JamData[] = getData();

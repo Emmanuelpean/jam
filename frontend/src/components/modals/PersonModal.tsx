@@ -73,10 +73,9 @@ export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			<>
 				<DataModal
 					ref={ref}
-					itemName="Person"
 					size={size}
 					fields={fields}
-					endpoint="persons"
+					entityType="person"
 					validation={customValidation}
 					transformFormData={transformFormData}
 					additionalFields={additionalFields}

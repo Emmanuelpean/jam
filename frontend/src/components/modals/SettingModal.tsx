@@ -49,10 +49,9 @@ export const SettingModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		return (
 			<DataModal
 				ref={ref}
-				itemName="Setting"
 				size={size}
 				fields={fields}
-				endpoint="settings"
+				entityType="setting"
 				transformFormData={transformFormData}
 				validation={customValidation}
 			/>

@@ -68,8 +68,7 @@ export const InterviewModal = forwardRef<DataModalHandle, InterviewModalProps>(
 					ref={ref}
 					size={size}
 					fields={fields}
-					endpoint="interviews"
-					itemName="Interview"
+					entityType="interview"
 					transformFormData={transformFormData}
 				/>
 

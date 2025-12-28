@@ -73,10 +73,9 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle, JamDataModalProps
 			<>
 				<DataModal
 					ref={ref}
-					itemName="Scraping Filter"
 					size={size}
 					fields={fields}
-					endpoint="scraping-filters"
+					entityType="scrapingFilter"
 					validation={customValidation}
 					transformFormData={transformFormData}
 					additionalFields={[modalViewFields.accordionScrapedJobTable()]}

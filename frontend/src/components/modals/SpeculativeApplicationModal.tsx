@@ -50,7 +50,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModal
 					},
 				);
 				if (urlDuplicates.length > 0) {
-					errors.url = `A Speculative Application for this company already exists`;
+					errors.company_id = `A Speculative Application for this company already exists`;
 				}
 			}
 			return errors;
@@ -61,8 +61,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModal
 				<DataModal
 					ref={ref}
 					transformFormData={transformData}
-					itemName="Speculative Application"
-					endpoint="speculative-applications"
+					entityType="speculativeApplication"
 					size={size}
 					fields={{
 						form: jobFormFields,

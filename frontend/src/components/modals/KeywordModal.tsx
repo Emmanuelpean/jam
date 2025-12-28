@@ -42,10 +42,9 @@ export const KeywordModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			<DataModal
 				ref={ref}
 				size={size}
-				itemName="Tag"
 				fields={fields}
 				additionalFields={additionalFields}
-				endpoint="keywords"
+				entityType="keyword"
 				transformFormData={transformFormData}
 				validation={customValidation}
 			/>
