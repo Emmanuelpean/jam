@@ -45,11 +45,11 @@
 * [X] Add option for application on company website
 
 ### Spontaneous Applications
-* [ ] Add spontaneous application table with the following columns:
-  * [ ] Company
-  * [ ] Date Sent
-  * [ ] Notes
-  * [ ] Email sent to
+* [X] Add spontaneous application table with the following columns:
+  * [X] Company
+  * [X] Date Sent
+  * [X] Notes
+  * [X] Email sent to
 
 ### Email Generation
 * [ ] Add the ability to generate a follow-up email and select the contact to send it to
@@ -81,4 +81,4 @@
 
 ### Scraping Filters
 * [X] Add the ability to filter out jobs based on keywords in the job title or description
-* [ ] Add the ability to manage the filters
+* [X] Add the ability to manage the filters
