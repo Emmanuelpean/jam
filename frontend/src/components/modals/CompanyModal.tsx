@@ -62,11 +62,10 @@ export const CompanyModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		return (
 			<DataModal
 				ref={ref}
-				itemName="Company"
 				size={size}
 				fields={fields}
 				additionalFields={additionalFields}
-				endpoint="companies"
+				entityType="company"
 				transformFormData={transformFormData}
 				validation={customValidation}
 			/>

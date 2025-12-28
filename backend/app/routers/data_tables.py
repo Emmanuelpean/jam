@@ -183,4 +183,12 @@ speculative_application_update_router = generate_data_table_crud_router(
     out_schema=schemas.SpeculativeApplicationOut,
     endpoint="speculative-applications",
     not_found_msg="Speculative Application not found",
+    many_to_many_fields={
+        "contacts": {
+            "table": models.speculative_application_contact_mapping,
+            "local_key": "speculative_application_id",
+            "remote_key": "person_id",
+            "related_model": models.Person,
+        },
+    },
 )

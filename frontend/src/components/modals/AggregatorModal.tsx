@@ -57,10 +57,9 @@ export const AggregatorModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			<DataModal
 				ref={ref}
 				additionalFields={additionalFields}
-				itemName="Aggregator"
 				size={size}
 				fields={fields}
-				endpoint="aggregators"
+				entityType="aggregator"
 				transformFormData={transformFormData}
 				validation={customValidation}
 			/>

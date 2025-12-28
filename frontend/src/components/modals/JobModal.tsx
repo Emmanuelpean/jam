@@ -188,8 +188,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				<DataModal
 					ref={ref}
 					transformFormData={transformData}
-					itemName="Job"
-					endpoint="jobs"
+					entityType="job"
 					size={size}
 					tabs={tabs}
 					defaultActiveTab={defaultActiveTab}

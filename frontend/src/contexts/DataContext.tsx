@@ -72,23 +72,23 @@ export type JamData =
 	| ScrapingFilterData
 	| SpeculativeApplicationData;
 
-export const endpointToEntityType = (endpoint: string): EntityType | null => {
-	const mapping: Record<string, EntityType> = {
-		jobs: "job",
-		companies: "company",
-		persons: "person",
-		interviews: "interview",
-		"job-application-updates": "jobApplicationUpdate",
-		aggregators: "aggregator",
-		keywords: "keyword",
-		locations: "location",
-		settings: "setting",
-		users: "user",
-		"scraped-jobs": "scrapedJob",
-		"scraping-filters": "scrapingFilter",
-		"speculative-applications": "speculativeApplication",
+export const entityTypeToName = (entityType: EntityType): string => {
+	const nameMap: Record<EntityType, string> = {
+		job: "Job",
+		company: "Company",
+		person: "Person",
+		interview: "Interview",
+		jobApplicationUpdate: "Job Application Update",
+		aggregator: "Aggregator",
+		keyword: "Tag",
+		location: "Location",
+		setting: "Setting",
+		user: "User",
+		scrapedJob: "Scraped Job",
+		scrapingFilter: "Scraping Filter",
+		speculativeApplication: "Speculative Application",
 	};
-	return mapping[endpoint] || null;
+	return nameMap[entityType];
 };
 
 const entityTypeToApi = (entityType: EntityType) => {
@@ -138,6 +138,7 @@ export interface DataContextValue {
 	addEntity: <T extends EntityType>(type: T, data: any) => ApiResponsePromise<JamData>;
 	updateEntity: <T extends EntityType>(type: T, id: number, data: any) => ApiResponsePromise<JamData>;
 	deleteEntity: <T extends EntityType>(type: T, id: number) => Promise<void>;
+	getEntityData: <T extends EntityType>(type: T) => JamData[];
 }
 
 const DataContext = createContext<DataContextValue | undefined>(undefined);
@@ -450,6 +451,42 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 		[token],
 	);
 
+	const getEntityData = useCallback(
+		<T extends EntityType>(entityType: T): JamData[] => {
+			const dataMap: Record<EntityType, JamData[]> = {
+				job: jobs,
+				company: companies,
+				person: persons,
+				interview: interviews,
+				jobApplicationUpdate: jobApplicationUpdates,
+				aggregator: aggregators,
+				keyword: keywords,
+				location: locations,
+				setting: settings,
+				user: users,
+				scrapedJob: _scrapedJobs,
+				scrapingFilter: scrapingFilters,
+				speculativeApplication: speculativeApplications,
+			};
+			return dataMap[entityType];
+		},
+		[
+			jobs,
+			companies,
+			persons,
+			interviews,
+			jobApplicationUpdates,
+			aggregators,
+			keywords,
+			locations,
+			settings,
+			users,
+			_scrapedJobs,
+			scrapingFilters,
+			speculativeApplications,
+		],
+	);
+
 	useEffect(() => {
 		if (!token || !currentUser) return;
 		fetchAllData().then((): void => {});
@@ -476,6 +513,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				updateEntity,
 				deleteEntity,
 				addEntity,
+				getEntityData,
 			}}
 		>
 			{children}

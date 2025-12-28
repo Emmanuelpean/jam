@@ -10,13 +10,7 @@ import React, {
 } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
-import {
-	DataContextValue,
-	endpointToEntityType,
-	EntityType,
-	JamData,
-	useDataContext,
-} from "../../../contexts/DataContext";
+import { DataContextValue, EntityType, entityTypeToName, JamData, useDataContext } from "../../../contexts/DataContext";
 import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
 import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArray } from "../../../utils/Utils";
@@ -58,11 +52,11 @@ export interface DataModalProps {
 	transformFormData?: ((data: any) => any) | null; // custom data transformation before submit
 	transformInputData?: ((data: any) => any) | null; // custom data transformation when loading data into the form
 	additionalFields?: ModalViewField[]; // additional fields displayed outside the card in view mode
-	itemName?: string; // name of the item being managed, used in titles and messages
+	entityName?: string; // name of the item being managed, used in titles and messages
 	size?: "sm" | "lg" | "xl"; // modal size
 	tabs?: TabConfig[] | null; // optional tabs configuration
 	defaultActiveTab?: string | null; // default active tab key
-	endpoint: string; // API endpoint for CRUD operations
+	entityType: EntityType; // entity type for API operations
 	onSuccess?: (data: any, onSuccess?: (newData: any) => void) => void; // called when an entry is successfully added/modified
 	onDelete?: () => void; // called when an entry is successfully deleted
 	warningMessage?: (data: any) => WarningMessageConfig[] | null; // optional warning message to display
@@ -92,12 +86,11 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 	(
 		{
 			fields,
-			itemName = "Entry",
 			size = "lg",
 			tabs = null,
 			defaultActiveTab = null,
 			additionalFields = [],
-			endpoint,
+			entityType,
 			validation = null,
 			transformFormData = null,
 			transformInputData = null,
@@ -156,8 +149,8 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		});
 		const [containerHeight, setContainerHeight] = useState("auto");
 		const contentRef = useRef<HTMLDivElement>(null);
-		const entityType: EntityType = endpointToEntityType(endpoint)!;
 		const { showDelete } = useAlert();
+		const entityName: string = entityTypeToName(entityType);
 
 		// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
 
@@ -371,10 +364,10 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 		// ----------------------------------------------------- DELETE ----------------------------------------------------
 
-		const handleDeActivate = useDeactivateHandler(entityType, null, itemName);
-		const handleDelete = useDeleteHandler(entityType, null, itemName);
-		const activateEntityHandler = useActivateEntity(entityType, null, itemName);
-		const deactivateEntityHandler = useDeactivateEntity(entityType, null, itemName);
+		const handleDeActivate = useDeactivateHandler(entityType, null, entityName);
+		const handleDelete = useDeleteHandler(entityType, null, entityName);
+		const activateEntityHandler = useActivateEntity(entityType, null, entityName);
+		const deactivateEntityHandler = useDeactivateEntity(entityType, null, entityName);
 
 		const handleDeleteClick = async () => {
 			if (mode === "import") {
@@ -529,7 +522,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				});
 			} catch (err: any) {
 				const errorMessage = `Failed to ${mode === "add" || mode === "import" ? "create" : "update"} 
-        ${itemName.toLowerCase()} due to the following error: ${err.message}`;
+        ${entityName.toLowerCase()} due to the following error: ${err.message}`;
 				setErrors({
 					submit: errorMessage,
 				});
@@ -541,11 +534,11 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const getModalId = (): string => {
 			if (isEditing) {
 				if (mode === "import") {
-					return `modal-import-${itemName.toLowerCase()}`;
+					return `modal-import-${entityType}`;
 				}
-				return `modal-edit-${itemName.toLowerCase()}`;
+				return `modal-edit-${entityType}`;
 			} else {
-				return `modal-view-${itemName.toLowerCase()}`;
+				return `modal-view-${entityType}`;
 			}
 		};
 
@@ -553,16 +546,16 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			let icon: string, text: string;
 			if (mode === "add") {
 				icon = "bi bi-plus-circle";
-				text = `Add New ${itemName}`;
+				text = `Add New ${entityName}`;
 			} else if (mode === "import") {
 				icon = "bi bi-download";
-				text = `Import ${itemName}`;
+				text = `Import ${entityName}`;
 			} else if (mode === "edit" || isEditing) {
 				icon = "bi bi-pencil";
-				text = `Edit ${itemName}`;
+				text = `Edit ${entityName}`;
 			} else {
 				icon = "bi bi-eye";
-				text = `${itemName} Details`;
+				text = `${entityName} Details`;
 			}
 			return (
 				<Modal.Header closeButton>

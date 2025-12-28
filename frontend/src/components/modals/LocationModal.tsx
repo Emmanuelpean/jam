@@ -89,11 +89,10 @@ export const LocationModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		return (
 			<DataModal
 				ref={ref}
-				itemName="Location"
 				size={size}
 				additionalFields={additionalFields}
 				fields={fields}
-				endpoint="locations"
+				entityType="location"
 				validation={customValidation}
 				transformFormData={transformFormData}
 			/>
