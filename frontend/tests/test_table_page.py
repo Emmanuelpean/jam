@@ -1,634 +1,12 @@
 """Test the main pages of JAM"""
 
 import datetime
-import re
 import time
 
 import pytest
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.support.select import Select
-from selenium.webdriver.support.wait import WebDriverWait
 
-from conftest import contiguous_subdicts, models, BaseUtils1, BaseTest
-from react_select import ReactSelect
-
-
-class DataModalUtils(BaseUtils1):
-    """Base class for testing data modals"""
-
-    def __init__(self, driver, entry_type: str, test_frontend_server, session):
-        """Object constructor
-        :param driver: Selenium WebDriver
-        :param entry_type: Name of the entry type (e.g. tag, company)
-        :param test_frontend_server: Frontend server URL
-        :param session: requests.Session object for backend API calls"""
-
-        BaseUtils1.__init__(self, driver, test_frontend_server, session)
-        self.entry_type = entry_type
-
-    # ------------------------------------------------ HELPER FUNCTIONS ------------------------------------------------
-
-    def wait_for_view_modal_close(self, entry_type: str = "") -> None:
-        """Wait for the view modal to close"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        self._wait_for_modal_close(f"modal-view-{entry_type}")
-
-    def wait_for_edit_modal_close(self, entry_type: str = "") -> None:
-        """Wait for the view modal to close"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        try:
-            self._wait_for_modal_close(f"modal-edit-{entry_type}")
-        except:
-            raise AssertionError(f"modal-edit-{entry_type} is present in: {self.get_all_element_ids()}")
-
-    def wait_for_view_modal(self, entry_type: str = "") -> WebElement:
-        """Wait for the view modal to appear"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        return self.get_element(f"modal-view-{entry_type}")
-
-    def wait_for_edit_modal(self, entry_type: str = "") -> WebElement:
-        """Wait for the edit modal to appear"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        return self.get_element(f"modal-edit-{entry_type}")
-
-    def wait_for_import_modal_modal_close(self, entry_type: str = "") -> None:
-        """Wait for the import modal to close"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        try:
-            self._wait_for_modal_close(f"modal-import-{entry_type}")
-        except:
-            raise AssertionError(f"Element in present in: {self.get_all_element_ids()}")
-
-    def wait_for_delete_modal(self) -> WebElement:
-        """Wait for the delete modal to appear"""
-
-        return self.get_element("delete-alert-modal")
-
-    def confirm_button(self, mode: str, entry_type: str = "") -> WebElement:
-        """Get the confirm button on the modal"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        return self.get_element(f"modal-{mode}-{entry_type}-confirm-button")
-
-    def cancel_button(self, mode: str, entry_type: str = "") -> WebElement:
-        """Get the cancel button on the modal"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        return self.get_element(f"modal-{mode}-{entry_type}-cancel-button")
-
-    def edit_button(self, mode: str, entry_type: str = "", **kwargs) -> WebElement:
-        """Get the edit button on the modal"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        return self.get_element(f"modal-{mode}-{entry_type}-edit-button", **kwargs)
-
-    def import_button(self, entry_type: str = "") -> WebElement:
-        """Get the import button on the modal"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        return self.get_element(f"modal-import-{entry_type}-import-button")
-
-    def delete_button(self, mode: str, entry_type: str = "") -> WebElement:
-        """Get the delete button on the modal"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        return self.get_element(f"modal-{mode}-{entry_type}-delete-button")
-
-    def deactivate_button(self, entry_type: str = "") -> WebElement:
-        """Get the deactivate button on the modal"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        return self.get_element(f"modal-view-{entry_type}-deactivate-button")
-
-    def activate_button(self, entry_type: str = "") -> WebElement:
-        """Get the activate button on the modal"""
-
-        if not entry_type:
-            entry_type = self.entry_type
-        return self.get_element(f"modal-view-{entry_type}-activate-button")
-
-    def _fill_modal(self, entry_type: str = "", **values) -> None:
-        """Fill the modal with the given values  (key: key of the input elements, value: value to set)."""
-
-        if any(isinstance(v, dict) for v in values.values()):
-            for tab_key in values:
-                self.get_element(f"{tab_key}-tab").click()
-                self._fill_modal(entry_type, **values[tab_key])
-        else:
-            self.wait_for_edit_modal(entry_type)
-            for key, value in values.items():
-                if key in (
-                    "operator",
-                    "country",
-                    "company_id",
-                    "location_id",
-                    "job_id",
-                    "aggregator_id",
-                    "job_application_id",
-                    "type",
-                    "source",
-                    "attendance_type",
-                    "applied_via",
-                    "application_status",
-                ):
-                    select = ReactSelect(self.get_element(key))
-                    select.open_menu()
-                    select.select_by_visible_text(value)
-                elif key in ["date", "application_date"]:
-                    self.get_element(key + "_set_current").click()
-                else:
-                    self.set_text(self.get_element(key), value)
-
-    # -------------------------------------------------- VIEW MODALS --------------------------------------------------
-
-    def check_keyword_view_modal(self, entry: models.Keyword) -> None:
-        """Helper method to test the view modal for a keyword entry"""
-
-        modal = self.wait_for_view_modal("keyword")
-
-        # Verify modal contains the entry information
-        expected = f"Tag Details\n{entry.name}\nJobs\n({len(entry.jobs)})\nClose\nEdit"
-        assert modal.text == expected
-
-        # Close modal
-        self.cancel_button("view", "keyword").click()
-        self.wait_for_view_modal_close("keyword")
-
-    def check_aggregator_view_modal(self, entry: models.Aggregator) -> None:
-        """Helper method to test the view modal for an aggregator entry"""
-
-        modal = self.wait_for_view_modal("aggregator")
-
-        # Verify modal contains the entry information
-        expected = (
-            f"Aggregator Details\n{entry.name}\nWebsite\n{entry.url.replace('https://', '')}\nJobs\n({len(entry.jobs)})"
-            f"\nJob Applications\n({len(entry.job_applications)})\nClose\nEdit"
-        )
-        assert modal.text == expected
-
-        # Close modal
-        self.cancel_button("view", "aggregator").click()
-        self.wait_for_view_modal_close("aggregator")
-
-    def check_location_view_modal(self, entry: models.Location) -> None:
-        """Helper method to test the view modal for a location entry"""
-
-        modal = self.wait_for_view_modal("location")
-        WebDriverWait(self.driver, 30).until(lambda d: "Finding location on map..." not in modal.text)
-
-        # Verify modal contains the entry information
-        expected = (
-            f"Location Details\nCity\n{entry.city}\nPostcode\n{entry.postcode}"
-            f"\nCountry\n{entry.country}\n"
-            f"Location on Map\n+\n−\nLeaflet | © OpenStreetMap\n"
-            f"Jobs\n({len(entry.jobs)})\nInterviews\n({len(entry.interviews)})\n"
-            f"Close\nEdit"
-        )
-        assert modal.text == expected
-
-        # Close modal
-        self.cancel_button("view", "location").click()
-        self.wait_for_view_modal_close("location")
-
-    def check_company_view_modal(self, entry: models.Company) -> None:
-        """Helper method to test the view modal for a company entry"""
-
-        modal = self.wait_for_view_modal("company")
-
-        # Verify modal contains the entry information
-        expected = (
-            f"Company Details\n{entry.name}\nWebsite\n{entry.url.replace("https://", "")}"
-            f"\nDescription\n{entry.description}\nJobs\n({len(entry.jobs)})\nPersons\n({len(entry.persons)})\nClose\nEdit"
-        )
-        assert modal.text == expected
-
-        # Close modal
-        self.cancel_button("view", "company").click()
-        self.wait_for_view_modal_close("company")
-
-    def check_person_view_modal(self, entry: models.Person) -> None:
-        """Helper method to test the view modal for a person entry"""
-
-        modal = self.wait_for_view_modal("person")
-        expected = (
-            f"Person Details\n{entry.name}\n"
-            f"Company\n{entry.company.name.upper()}\nRole\n{entry.role}\n"
-            f"Email\n{entry.email}\nPhone\n{entry.phone}\nLinkedIn Profile\nProfile\n"
-            f"Interviews\n({len(entry.interviews)})\nJobs\n({len(entry.jobs)})\nClose\nEdit"
-        )
-        assert modal.text == expected
-
-        # Close modal
-        self.cancel_button("view", "person").click()
-        self.wait_for_view_modal_close("person")
-
-    def check_interview_view_modal(self, entry: models.Interview, standalone: bool = True) -> None:
-        """Helper method to test the view modal for an interview entry
-        :param entry: Interview entry
-        :param standalone: Whether the interview is viewed standalone or as part of a job application"""
-
-        modal = self.wait_for_view_modal("interview")
-        display_time = entry.date.astimezone()
-        entry_type = {"HR": "HR Interview", "Technical": "Technical Interview"}[entry.type]
-        if standalone:
-            expected = "Interview Details\n" "Job\n" f"{entry.job.title.upper()} ({entry.job.company.name.upper()})\n"
-        else:
-            expected = "Interview Details\n"
-        expected += "Date & Time\n" f"{display_time.strftime("%d/%m/%Y %H:%M")}\n" "Type\n" f"{entry_type}\n"
-
-        if entry.attendance_type and not entry.location:
-            expected += f"Location\n{entry.attendance_type.upper()}\n"
-        elif entry.location:
-            expected += "Location\n" f"{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
-        else:
-            expected += "Location\nNot Provided\n"
-
-        if entry.interviewers:
-            expected += (
-                "Interviewers\n" f"{', '.join([interviewer.name.upper() for interviewer in entry.interviewers])}\n"
-            )
-        else:
-            expected += "Interviewers\nNot Provided\n"
-
-        if entry.note:
-            expected += f"Notes\n{entry.note}\n"
-        else:
-            expected += "Notes\nNot Provided\n"
-
-        expected += "Close\nEdit"
-
-        assert modal.text == expected
-
-        # Close modal
-        self.cancel_button("view", "interview").click()
-        self.wait_for_view_modal_close("interview")
-
-    def check_update_view_modal(self, entry: models.JobApplicationUpdate, standalone: bool = True) -> None:
-        """Helper method to test the view modal for a job application update entry"""
-
-        modal = self.wait_for_view_modal("jobApplicationUpdate")
-        display_time = entry.date.astimezone()
-        if standalone:
-            expected = (
-                "Job Application Update Details\n"
-                "Job\n"
-                f"{entry.job.title.upper()} ({entry.job.company.name.upper()})\n"
-                "Date & Time\n"
-                f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
-                "Type\n"
-                f"{entry.type[0].upper() + entry.type[1:]}\n"
-                "Notes\n"
-                f"{entry.note}\n"
-                "Close\n"
-                "Edit"
-            )
-        else:
-            expected = (
-                "Job Application Update Details\n"
-                "Date & Time\n"
-                f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
-                "Type\n"
-                f"{entry.type[0].upper() + entry.type[1:]}\n"
-                "Notes\n"
-                f"{entry.note}\n"
-                "Close\n"
-                "Edit"
-            )
-        assert modal.text == expected
-
-        # Close modal
-        self.cancel_button("view", "jobApplicationUpdate").click()
-        self.wait_for_view_modal_close("jobApplicationUpdate")
-
-    def check_job_view_modal(self, entry: models.Job) -> None:
-        """Helper method to test the view modal for a job application update entry"""
-
-        modal = self.wait_for_view_modal("job")
-        expected = "Job Details\nJob Details\nJob Application"
-        if entry.application_status:
-            expected += f" {entry.application_status.upper()}"
-        expected += f"\n{entry.title}\n"
-        if entry.company:
-            expected += f"Company\n{entry.company.name.upper()}\n"
-        else:
-            expected += "Company\nNot Provided\n"
-        if entry.attendance_type and not entry.location:
-            expected += f"Location\n{entry.attendance_type.upper()}\n"
-        elif entry.attendance_type and entry.location:
-            expected += f"Location\n{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
-        elif not entry.attendance_type and entry.location:
-            expected += f"Location\n{entry.location.name.upper()}\n"
-        else:
-            expected += "Location\nNot Provided\n"
-        if entry.description:
-            expected += f"Description\n{entry.description}\n"
-        else:
-            expected += "Description\nNot Provided\n"
-        if entry.note:
-            expected += f"Notes\n{entry.note}\n"
-        else:
-            expected += "Notes\nNot Provided\n"
-        salary_range = self.salary_range(entry)
-        if salary_range:
-            expected += f"Salary Range\n{salary_range}\n"
-        else:
-            expected += "Salary Range\nNot Provided\n"
-        expected += "Personal Rating\n"
-        if not entry.personal_rating:
-            expected += "Not Provided\n"
-        if entry.source:
-            expected += f"Source Aggregator\n{entry.source.name.upper()}\n"
-        else:
-            expected += "Source Aggregator\nNot Provided\n"
-        if entry.url:
-            expected += f"Job URL\n{entry.url.replace('https://', '')}\n"
-        else:
-            expected += "Job URL\nNot Provided\n"
-        if entry.keywords:
-            expected += f"Tags\n{'\n'.join([tag.name.upper() for tag in entry.keywords])}\n"
-        else:
-            expected += "Tags\nNot Provided\n"
-        if entry.contacts:
-            expected += f"Contacts\n{'\n'.join([person.name.upper() for person in entry.contacts])}\n"
-        else:
-            expected += "Contacts\nNot Provided\n"
-        if entry.deadline:
-            expected += f"Application Deadline\n{entry.deadline.strftime('%d/%m/%Y')}\n"
-        else:
-            expected += "Application Deadline\nNot Provided\n"
-        expected += "Close\nEdit"
-        assert modal.text == expected
-
-        # Job Application
-        self.get_element("application-tab").click()
-        expected = "Job Details\nJob Details\n"
-        if entry.application_status:
-            expected += f"Job Application {entry.application_status.upper()}\n"
-        else:
-            expected += "Job Application\n"
-        if entry.application_date:
-            display_time = entry.application_date.astimezone()
-            expected += f"Application Date\n{display_time.strftime("%d/%m/%Y")}\n"
-        else:
-            expected += "Date\nNot Provided\n"
-        if entry.application_status:
-            expected += f"Status\n{entry.application_status.upper()}\n"
-        else:
-            expected += "Status\nNot Provided\n"
-        if entry.applied_via == "aggregator" and entry.application_aggregator:
-            expected += f"Applied Via\n{entry.application_aggregator.name.upper()}\n"
-        elif entry.applied_via:
-            expected += f"Applied Via\n{entry.applied_via.upper()}\n"
-        else:
-            expected += "Applied Via\nNot Provided\n"
-        if entry.application_url:
-            expected += f"Application URL\n{entry.application_url.replace("https://", "")}\n"
-        else:
-            expected += "Application URL\nNot Provided\n"
-        if entry.note:
-            expected += f"Notes\n{entry.application_note}\n"
-        else:
-            expected += "Notes\nNot Provided\n"
-        expected += (
-            "Add Interview\n"
-            "Date\n"
-            "Type\n"
-            "Location\n"
-            "Notes\n"
-            "No Interviews found\n"
-            "Add Update\n"
-            "Date\n"
-            "Type\n"
-            "Notes\n"
-            "No Updates found\n"
-            "Close\n"
-            "Edit"
-        )
-        assert modal.text == expected
-
-        # Close modal
-        self.cancel_button("view", "job").click()
-        self.wait_for_view_modal_close("job")
-
-    def check_speculative_application_view_modal(self, entry: models.SpeculativeApplication) -> None:
-        """Helper method to test the view modal for a speculative application entry"""
-
-        modal = self.wait_for_view_modal("speculativeApplication")
-        expected = "Speculative Application Details\n" "Company\n" f"{entry.company.name.upper()}\n"
-        if entry.date:
-            display_time = entry.date.astimezone()
-            expected += f"Date & Time\n{display_time.strftime("%d/%m/%Y %H:%M")}\n"
-        else:
-            expected += "Date & Time\nNot Provided\n"
-        if entry.contact_email:
-            expected += f"Contact Email\n{entry.contact_email}\n"
-        else:
-            expected += "Contact Email\nNot Provided\n"
-        if entry.contacts:
-            expected += f"Contacts\n{'\n'.join([person.name.upper() for person in entry.contacts])}\n"
-        else:
-            expected += "Contacts\nNot Provided\n"
-        if entry.note:
-            expected += f"Notes\n{entry.note}\n"
-        else:
-            expected += "Notes\nNot Provided\n"
-        expected += "Close\nEdit"
-        assert modal.text == expected
-
-        # Close modal
-        self.cancel_button("view", "speculativeApplication").click()
-        self.wait_for_view_modal_close("speculativeApplication")
-
-    @staticmethod
-    def salary_range(item: models.Job) -> str | None:
-        """
-        Returns a formatted salary range string based on minimum and maximum salary values.
-
-        Parameters
-        ----------
-        item : dict | None
-            A dictionary that may contain 'salary_min' and 'salary_max' keys.
-
-        Returns
-        -------
-        str | None
-            A formatted salary string such as:
-            - "£30,000"
-            - "£30,000 - £40,000"
-            - "From £30,000"
-            - "Up to £40,000"
-            or None if no salary values are provided.
-        """
-        if not item:
-            return None
-
-        salary_min = item.salary_min
-        salary_max = item.salary_max
-
-        if not salary_min and not salary_max:
-            return None
-
-        if salary_min == salary_max and salary_min:
-            return f"£{salary_min:,.0f}"
-
-        if salary_min and salary_max:
-            return f"£{salary_min:,.0f} - £{salary_max:,.0f}"
-
-        if salary_min:
-            return f"From £{salary_min:,.0f}"
-
-        if salary_max:
-            return f"Up to £{salary_max:,.0f}"
-
-        return None
-
-    def add_entry(self, **data) -> None:
-        """Add a new entry"""
-
-        self.wait_for_edit_modal()
-        self._fill_modal(**data)
-        self.confirm_button("edit").click()
-        self.wait_for_edit_modal_close()
-
-
-class DataTableUtils(BaseUtils1):
-    """Base class for testing data tables"""
-
-    # Parameters needed
-    entry_type: str = ""  # entity type of the table (e.g. keywords)
-
-    def __init__(self, driver, entry_type: str, test_frontend_server, session):
-        """Object constructor
-        :param driver: Selenium WebDriver
-        :param entry_type: Name of the entry type (e.g. keywords, companies)
-        :param test_frontend_server: Frontend server URL
-        :param session: requests.Session object for backend API calls"""
-
-        BaseUtils1.__init__(self, driver, test_frontend_server, session)
-        self.entry_type = entry_type
-
-    # ----------------------------------------------------- TABLES -----------------------------------------------------
-
-    @property
-    def table_rows(self) -> list[WebElement]:
-        """Get all table rows on the page"""
-
-        self.get_element("table-row-clickable", By.CLASS_NAME)
-        return self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")
-
-    def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
-        """Get a specific table row by its ID"""
-
-        return self.get_element(f"table-row-{self.entry_type}-{item_id}", *args, **kwargs)
-
-    def context_menu(self, entity_id: int, choice: str) -> None:
-        """Row context menu"""
-
-        actions = ActionChains(self.driver)
-        actions.context_click(self.table_row(entity_id)).perform()
-        self.get_element(f"context-menu-{choice}").click()
-
-    def check_row_exist(self, column: str, name: str, expected_count: int = 1) -> None:
-        """Check that a specific row with a specific name exists in the table
-        :param column: Name of the column to check
-        :param name: Name of the column
-        :param expected_count: Expected number of rows with that name"""
-
-        assert (
-            self.get_column_values(column).count(name) == expected_count
-        ), f"Expected {expected_count} rows with name '{name}'"
-
-    def get_column_values(self, column_key: str | None = None) -> list[str] | list[dict[str, str]]:
-        """Get values from a specific table column via the column key
-        (matched using id attributes starting with 'table-header-').
-        :param column_key: The key of the column. If None, returns all rows as list of dicts.
-        :return: List of values from that column, or list of row dicts if no key provided.
-        """
-        # Find all elements where id starts with 'table-header-'
-        header_elements = self.driver.find_elements(By.XPATH, "//*[@id[starts-with(., 'table-header-')]]")
-        header_keys = []
-        for header in header_elements:
-            th_id = header.get_attribute("id")
-            # Ensure only ids with "table-header-" are considered
-            if th_id and th_id.startswith("table-header-"):
-                header_keys.append(th_id[len("table-header-") :])
-
-        # If no column_key provided, return all rows as list of dicts
-        if column_key is None:
-            rows_data = []
-            for row in self.table_rows:
-                row_dict = {}
-                cells = row.find_elements(By.TAG_NAME, "td")
-                for i, key in enumerate(header_keys):
-                    if i < len(cells):
-                        row_dict[key] = cells[i].text
-                rows_data.append(row_dict)
-            return rows_data
-
-        if column_key not in header_keys:
-            raise ValueError(f"Column key '{column_key}' not found. Available keys: {header_keys}")
-
-        column_index = header_keys.index(column_key)
-        return [row.find_elements(By.TAG_NAME, "td")[column_index].text for row in self.table_rows]
-
-    def wait_for_table_load(self, timeout: int | float = 0.1) -> None:
-        """Wait for loading spinner to disappear"""
-
-        try:
-            WebDriverWait(self.driver, timeout).until(
-                ec.invisibility_of_element_located((By.CSS_SELECTOR, "spinner-border"))
-            )
-        except TimeoutException:
-            pass
-
-    def get_row_id(self, index: int) -> int:
-        """Get the entry ID of a table row by its index (0-based)
-        :param index: Index of the table row"""
-
-        return int(
-            re.search(rf"table-row-{self.entry_type}-(\d+)", self.table_rows[index].get_attribute("id")).group(1)
-        )
-
-    # ----------------------------------------------------- BUTTONS ----------------------------------------------------
-
-    @property
-    def add_entity_button(self) -> WebElement:
-        """Get the Add Entity button"""
-
-        return self.get_element(f"add-{self.entry_type}-button")
-
-    def set_page_item_select(self, value) -> None:
-        """Set the number of items to display per page
-        :param value: Value to select (e.g. "20", "40")"""
-
-        if len(self.table_rows) >= 20:
-            Select(self.get_element("page-items-select")).select_by_value(value)
-
-    def table_row_click(self, row_index: int) -> None:
-        """Click on a table row by its index (0-based)"""
-
-        element = self.table_row(row_index)
-        self.driver.execute_script("arguments[0].click();", element)
+from conftest import contiguous_subdicts, models, BaseTest, DataModalUtils, DataTableUtils
 
 
 class BaseTablePage(BaseTest):
@@ -1048,8 +426,9 @@ class TestPersonsPage(BaseTablePage):
     def test_table_company_badge(self) -> None:
         """Test that the company badge is displayed correctly"""
 
+        company_modal_utils = DataModalUtils(self.driver, "company", self.frontend_base_url, self.db)
         self.get_element("table-row-1-CompanyBadge").click()
-        self.modal_utils.check_company_view_modal(self.test_entry.company)
+        company_modal_utils.check_company_view_modal(self.test_entry.company)
 
     def test_add_company(self) -> None:
         """Test adding a new person with a new company"""
@@ -1057,9 +436,7 @@ class TestPersonsPage(BaseTablePage):
         self.table_utils.add_entity_button.click()
         self.modal_utils._fill_modal(first_name="John", last_name="Doe")
         self.get_element("add-button").click()
-        self.modal_utils._fill_modal(name="Company")
-        self.get_element("modal-edit-company-confirm-button").click()
-        self.modal_utils.wait_for_edit_modal()
+        self.company_modal_utils.add_entry(name="Company")
         assert self.get_element("first_name").get_attribute("value") == "John"
         assert self.get_element("last_name").get_attribute("value") == "Doe"
         assert self.get_element("company_id").text == "Company"
@@ -1069,13 +446,13 @@ class TestPersonsPage(BaseTablePage):
 
         self.table_utils.table_row_click(self.test_entry.id)
         self.get_element("modal-view-person-CompanyBadge").click()
-        self.get_element("modal-view-company-edit-button").click()
-        self.modal_utils.wait_for_edit_modal("company")
+        self.company_modal_utils.edit_button("view").click()
+        self.company_modal_utils.wait_for_edit_modal()
         assert self.get_element("name").get_attribute("value") == self.test_entry.company.name
-        self.modal_utils._fill_modal("company", name="New Company Name")
-        self.get_element("modal-edit-company-confirm-button").click()
-        assert "New Company Name" in self.modal_utils.wait_for_view_modal("company").text
-        self.get_element("modal-view-company-cancel-button").click()
+        self.company_modal_utils._fill_modal(name="New Company Name")
+        self.company_modal_utils.confirm_button("edit").click()
+        assert "New Company Name" in self.company_modal_utils.wait_for_view_modal().text
+        self.company_modal_utils.cancel_button("view").click()
         assert self.get_element("modal-view-person-CompanyBadge").text == "New Company Name".upper()
 
 
@@ -1129,7 +506,7 @@ class TestInterviewPage(BaseTablePage):
         """Test that the person badge is displayed correctly in the table"""
 
         self.get_element("table-row-1-interviewers-0").click()
-        self.modal_utils.check_person_view_modal(self.test_entry.interviewers[0])
+        self.person_modal_utils.check_person_view_modal(self.test_entry.interviewers[0])
 
     def test_modal_interviewers_badge(self) -> None:
         """Test that the person badge is displayed correctly in the modal"""
@@ -1137,13 +514,13 @@ class TestInterviewPage(BaseTablePage):
         self.table_utils.table_row(self.test_entry.id).click()
         self.modal_utils.wait_for_view_modal()
         self.get_element("modal-view-interview-person-0").click()
-        self.modal_utils.check_person_view_modal(self.test_entry.interviewers[0])
+        self.person_modal_utils.check_person_view_modal(self.test_entry.interviewers[0])
 
     def test_table_location_badge_table(self) -> None:
         """Test that the location badge is displayed correctly in the table"""
 
         self.get_element("table-row-1-location").click()
-        self.modal_utils.check_location_view_modal(self.test_entry.location)
+        self.location_modal_utils.check_location_view_modal(self.test_entry.location)
 
     def test_modal_location_badge(self) -> None:
         """Test that the location badge is displayed correctly in the modal"""
@@ -1151,7 +528,7 @@ class TestInterviewPage(BaseTablePage):
         self.table_utils.table_row(self.test_entry.id).click()
         self.modal_utils.wait_for_view_modal()
         self.get_element("modal-view-interview-location").click()
-        self.modal_utils.check_location_view_modal(self.test_entry.location)
+        self.location_modal_utils.check_location_view_modal(self.test_entry.location)
 
     # TODO add job view
 
@@ -1196,8 +573,6 @@ class TestJobPage(BaseTablePage):
     def test_add_interview(self) -> None:
         """Test adding an interview through the job view modal"""
 
-        interview_table_utils = DataTableUtils(self.driver, "interview", self.frontend_base_url, self.db)
-        interview_modal_utils = DataModalUtils(self.driver, "interview", self.frontend_base_url, self.db)
         interview_data = dict(
             date=datetime.datetime(year=2025, month=4, day=10, hour=10, minute=0, tzinfo=datetime.timezone.utc),
             type="HR Interview",
@@ -1205,25 +580,23 @@ class TestJobPage(BaseTablePage):
             note="Initial HR screening interview",
         )
 
-        interview_count = len(interview_table_utils.table_rows)
+        interview_count = len(self.interview_table_utils.table_rows)
         self.table_utils.table_row_click(self.test_entry.id)
         self.modal_utils.wait_for_view_modal()
         self.get_element("application-tab").click()
-        interview_table_utils.add_entity_button.click()
-        interview_modal_utils._fill_modal(**interview_data)
-        interview_modal_utils.confirm_button("edit").click()
-        interview_modal_utils.wait_for_edit_modal_close()
-        assert len(interview_table_utils.table_rows) == interview_count + 1
-        interview_table_utils.table_rows[0].click()
-        interview_id = interview_table_utils.get_row_id(0)
+        self.interview_table_utils.add_entity_button.click()
+        self.interview_modal_utils._fill_modal(**interview_data)
+        self.interview_modal_utils.confirm_button("edit").click()
+        self.interview_modal_utils.wait_for_edit_modal_close()
+        assert len(self.interview_table_utils.table_rows) == interview_count + 1
+        self.interview_table_utils.table_rows[0].click()
+        interview_id = self.interview_table_utils.get_row_id(0)
         interview = self.db.query(models.Interview).filter(models.Interview.id == interview_id).first()
-        self.modal_utils.check_interview_view_modal(interview, False)
+        self.interview_modal_utils.check_interview_view_modal(interview, False)
 
     def test_modify_interview(self, test_interviews) -> None:
         """Test modifying an interview through the job view modal"""
 
-        interview_table_utils = DataTableUtils(self.driver, "interview", self.frontend_base_url, self.db)
-        interview_modal_utils = DataModalUtils(self.driver, "interview", self.frontend_base_url, self.db)
         interview_data = dict(
             type="Technical Interview",
             attendance_type="Remote",
@@ -1237,14 +610,14 @@ class TestJobPage(BaseTablePage):
         self.get_element("application-tab").click()
 
         # Count the number of rows and determine the interview ID
-        interview_id = interview_table_utils.get_row_id(0)
-        interview_table_utils.table_rows[0].click()
+        interview_id = self.interview_table_utils.get_row_id(0)
+        self.interview_table_utils.table_rows[0].click()
 
         # Switch to edit mode and modify the interview
-        interview_modal_utils.edit_button("view").click()
-        interview_modal_utils._fill_modal(**interview_data)
-        interview_modal_utils.confirm_button("edit").click()
-        interview_modal_utils.wait_for_edit_modal_close()
+        self.interview_modal_utils.edit_button("view").click()
+        self.interview_modal_utils._fill_modal(**interview_data)
+        self.interview_modal_utils.confirm_button("edit").click()
+        self.interview_modal_utils.wait_for_edit_modal_close()
 
         # Check the db entry to ensure the modifications were saved
         self.db.expire_all()
@@ -1254,13 +627,11 @@ class TestJobPage(BaseTablePage):
         assert interview.note == interview_data["note"]
 
         # Verify the interview view modal displays the updated information
-        self.modal_utils.check_interview_view_modal(interview, False)
+        self.interview_modal_utils.check_interview_view_modal(interview, False)
 
     def test_add_job_application_update(self) -> None:
         """Test adding a job application update through the job view modal"""
 
-        update_table_utils = DataTableUtils(self.driver, "jobApplicationUpdate", self.frontend_base_url, self.db)
-        update_modal_utils = DataModalUtils(self.driver, "jobApplicationUpdate", self.frontend_base_url, self.db)
         update_data = dict(
             date=datetime.datetime(year=2025, month=4, day=15, hour=14, minute=0, tzinfo=datetime.timezone.utc),
             type="Received",
@@ -1270,22 +641,20 @@ class TestJobPage(BaseTablePage):
         self.table_utils.table_row_click(self.test_entry.id)
         self.modal_utils.wait_for_view_modal()
         self.get_element("application-tab").click()
-        update_count = len(update_table_utils.table_rows)
-        update_table_utils.add_entity_button.click()
-        update_modal_utils._fill_modal(**update_data)
-        update_modal_utils.confirm_button("edit").click()
-        update_modal_utils.wait_for_edit_modal_close()
-        assert len(update_table_utils.table_rows) == update_count + 1
-        update_table_utils.table_rows[0].click()
-        update_id = update_table_utils.get_row_id(0)
+        update_count = len(self.update_table_utils.table_rows)
+        self.update_table_utils.add_entity_button.click()
+        self.update_modal_utils._fill_modal(**update_data)
+        self.update_modal_utils.confirm_button("edit").click()
+        self.update_modal_utils.wait_for_edit_modal_close()
+        assert len(self.update_table_utils.table_rows) == update_count + 1
+        self.update_table_utils.table_rows[0].click()
+        update_id = self.update_table_utils.get_row_id(0)
         update = self.db.query(models.JobApplicationUpdate).filter(models.JobApplicationUpdate.id == update_id).first()
-        self.modal_utils.check_update_view_modal(update, False)
+        self.update_modal_utils.check_update_view_modal(update, False)
 
     def test_modify_job_application_update(self, test_job_application_updates) -> None:
         """Test modifying a job application update through the job view modal"""
 
-        update_table_utils = DataTableUtils(self.driver, "jobApplicationUpdate", self.frontend_base_url, self.db)
-        update_modal_utils = DataModalUtils(self.driver, "jobApplicationUpdate", self.frontend_base_url, self.db)
         update_data = dict(
             type="Sent",
             note="Rescheduled interview to next week",
@@ -1298,14 +667,14 @@ class TestJobPage(BaseTablePage):
         self.get_element("application-tab").click()
 
         # Find the first update row and get its ID
-        update_id = update_table_utils.get_row_id(0)
-        update_table_utils.table_rows[0].click()
+        update_id = self.update_table_utils.get_row_id(0)
+        self.update_table_utils.table_rows[0].click()
 
         # Switch to edit mode and modify the update
-        update_modal_utils.edit_button("view").click()
-        update_modal_utils._fill_modal(**update_data)
-        update_modal_utils.confirm_button("edit").click()
-        update_modal_utils.wait_for_edit_modal_close()
+        self.update_modal_utils.edit_button("view").click()
+        self.update_modal_utils._fill_modal(**update_data)
+        self.update_modal_utils.confirm_button("edit").click()
+        self.update_modal_utils.wait_for_edit_modal_close()
 
         # Check the db entry to ensure the modifications were saved
         self.db.expire_all()
@@ -1314,7 +683,7 @@ class TestJobPage(BaseTablePage):
         assert update.note == update_data["note"]
 
         # Verify the update view modal displays the updated information
-        self.modal_utils.check_update_view_modal(update, False)
+        self.update_modal_utils.check_update_view_modal(update, False)
 
 
 class TestSpeculativeApplicationPage(BaseTablePage):
