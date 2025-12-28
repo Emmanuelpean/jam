@@ -495,7 +495,7 @@ class JobEmailScraper(EmailService):
                     f"Job ID {job_record.external_job_id} filtered out for user ID {job_record.owner_id} "
                     f"due to rule {job_filter_rule.name}"
                 )
-                job_record.is_scraped = True
+                job_record.is_scraped = False
                 job_record.filter_id = job_filter_rule.id
                 self.db.commit()
                 self.upsert_platform_stat(service_log, job_record.platform, job_scrape_filtered_ids=job_record.id)
