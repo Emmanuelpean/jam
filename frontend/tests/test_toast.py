@@ -8,16 +8,14 @@ class TestToast(BaseTest):
 
     user_index = 0
     page_url = "dashboard"
-    entity_type = "scrapedJobs"
-    entry_name = "scraped job"
 
     def setup_function(self, request) -> None:
         """Setup for each test function."""
 
         request.getfixturevalue("test_scraped_jobs")
-        self.table_utils = DataTableUtils(self.driver, self.entity_type, self.frontend_base_url, self.db)
-        self.job_table_utils = DataTableUtils(self.driver, "jobs", self.frontend_base_url, self.db)
-        self.modal_utils = DataModalUtils(self.driver, self.entry_name, self.frontend_base_url, self.db)
+        self.table_utils = DataTableUtils(self.driver, "scrapedJob", self.frontend_base_url, self.db)
+        self.job_table_utils = DataTableUtils(self.driver, "job", self.frontend_base_url, self.db)
+        self.modal_utils = DataModalUtils(self.driver, "scrapedJob", self.frontend_base_url, self.db)
         self.login()
 
     def test_import_scraped_job(self) -> None:
@@ -89,8 +87,6 @@ class TestScrapingFilters(BaseTest):
 
     user_index = 0
     page_url = "dashboard"
-    entry_type = "scrapingFilters"
-    entry_name = "scraping filter"
     test_data = dict(type="Attendance Type", operator="Contains", value="In Person")
     filtered_index = 1
     no_filtered_index = 3
@@ -100,8 +96,8 @@ class TestScrapingFilters(BaseTest):
 
         request.getfixturevalue("test_scraped_jobs")
         request.getfixturevalue("test_scraping_filters")
-        self.table_utils = DataTableUtils(self.driver, self.entry_type, self.frontend_base_url, self.db)
-        self.modal_utils = DataModalUtils(self.driver, self.entry_name, self.frontend_base_url, self.db)
+        self.table_utils = DataTableUtils(self.driver, "scrapingFilter", self.frontend_base_url, self.db)
+        self.modal_utils = DataModalUtils(self.driver, "scrapingFilter", self.frontend_base_url, self.db)
         self.login()
         self.open_modal()
 
@@ -139,7 +135,7 @@ class TestScrapingFilters(BaseTest):
         self.table_utils.table_row(self.no_filtered_index).click()
         assert self.modal_utils.deactivate_button().is_enabled()
         assert not self.modal_utils.edit_button("view", enabled=False).click()
-        self.modal_utils._fill_modal(self.entry_name, value="Virtual")
+        self.modal_utils._fill_modal(value="Virtual")
         self.modal_utils.confirm_button("edit").click()
         self.modal_utils.wait_for_view_modal_close()
 
