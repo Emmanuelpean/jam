@@ -26,7 +26,7 @@
 * [X] Display the most common failures
 * [X] Display critical failures
 * [X] Add AI rating for the jobs
-* [ ] Add the ability to filter out jobs (extract the job title when extracting the job ids). Mark the job as filtered
+* [X] Add the ability to filter out jobs (extract the job title when extracting the job ids). Mark the job as filtered
 * [X] Add NHS job alert support
 * [X] Add the ability to display the results for the selected platform only
 * [X] Add new endpoint for admin only that allows to query specific job ids (as a list)

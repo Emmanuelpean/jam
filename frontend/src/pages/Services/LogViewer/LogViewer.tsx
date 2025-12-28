@@ -63,7 +63,14 @@ const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
 				}}
 			>
 				{logsExpanded ? "▼" : "▶"} View Log File
-				{logs && <span className="log-count"> ({logs.total_lines} total lines)</span>}
+				{logs && (
+					<>
+						<span className="log-count"> ({logs.total_lines} total lines)</span>
+						{logs.lines.length > 0 && !logsExpanded && (
+							<span className="log-preview"> - {logs.lines[logs.lines.length - 1]}</span>
+						)}
+					</>
+				)}
 			</button>
 
 			{logsExpanded && (
