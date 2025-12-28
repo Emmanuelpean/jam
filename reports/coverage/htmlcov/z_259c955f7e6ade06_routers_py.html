@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_259c955f7e6ade06_schemas_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.0">coverage.py v7.13.0</a>,
-            created at 2025-12-15 19:58 +0000
+            created at 2025-12-28 11:30 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -100,7 +100,7 @@
     <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="nam">job_rating_router</span> <span class="op">=</span> <span class="nam">generate_data_table_crud_router</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">    <span class="nam">table_model</span><span class="op">=</span><span class="nam">models</span><span class="op">.</span><span class="nam">JobRating</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">    <span class="nam">out_schema</span><span class="op">=</span><span class="nam">schemas</span><span class="op">.</span><span class="nam">JobRatingOut</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">    <span class="nam">endpoint</span><span class="op">=</span><span class="str">"job_ratings"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">    <span class="nam">endpoint</span><span class="op">=</span><span class="str">"job-ratings"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">    <span class="nam">not_found_msg</span><span class="op">=</span><span class="str">"Job Rating not found"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">    <span class="nam">allowed_actions</span><span class="op">=</span><span class="op">[</span><span class="str">"get_all"</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">    <span class="nam">admin_only</span><span class="op">=</span><span class="key">True</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -111,7 +111,7 @@
     <p class="pln"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t"><span class="com"># Service Log router</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t"><span class="nam">job_rating_service_log_router</span> <span class="op">=</span> <span class="nam">APIRouter</span><span class="op">(</span><span class="nam">prefix</span><span class="op">=</span><span class="str">"/job_rating_service_logs"</span><span class="op">,</span> <span class="nam">tags</span><span class="op">=</span><span class="op">[</span><span class="str">"job_rating_service_logs"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t"><span class="nam">job_rating_service_log_router</span> <span class="op">=</span> <span class="nam">APIRouter</span><span class="op">(</span><span class="nam">prefix</span><span class="op">=</span><span class="str">"/job-rating-service-logs"</span><span class="op">,</span> <span class="nam">tags</span><span class="op">=</span><span class="op">[</span><span class="str">"job-rating-service-logs"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="com"># GET endpoint for admins to get the service logs</span>&nbsp;</span><span class="r"></span></p>
@@ -161,7 +161,7 @@
     <p class="pln"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t"><span class="com"># --------------------------------------------------- SERVICE RUNNER ---------------------------------------------------</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t"><span class="nam">job_rating_service_router</span> <span class="op">=</span> <span class="nam">APIRouter</span><span class="op">(</span><span class="nam">prefix</span><span class="op">=</span><span class="str">"/job_rating_service_runner"</span><span class="op">,</span> <span class="nam">tags</span><span class="op">=</span><span class="op">[</span><span class="str">"job_rating_service_runner"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t"><span class="nam">job_rating_service_router</span> <span class="op">=</span> <span class="nam">APIRouter</span><span class="op">(</span><span class="nam">prefix</span><span class="op">=</span><span class="str">"/job-rating-service-runner"</span><span class="op">,</span> <span class="nam">tags</span><span class="op">=</span><span class="op">[</span><span class="str">"job-rating-service-runner"</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t"><span class="op">@</span><span class="nam">job_rating_service_router</span><span class="op">.</span><span class="nam">post</span><span class="op">(</span><span class="str">"/start"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -215,7 +215,7 @@
             <a class="nav" href="z_259c955f7e6ade06_schemas_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.13.0">coverage.py v7.13.0</a>,
-            created at 2025-12-15 19:58 +0000
+            created at 2025-12-28 11:30 +0000
         </p>
     </div>
 </footer>
