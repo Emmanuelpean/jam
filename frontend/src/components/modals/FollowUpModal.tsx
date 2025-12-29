@@ -114,7 +114,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 				[e.target.name]: e.target.value,
 			}),
 		);
-		if (e.target.name === "contact" && currentJob) {
+		if (e.target.name === "contactId" && currentJob) {
 			const contact: PersonData | undefined = dataContext.persons.find(
 				(person: PersonData): boolean => person.id === parseInt(e.target.value),
 			);
@@ -228,36 +228,38 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 				{FormField(bodyField, formData, handleChange, errors, currentUser)}
 			</Modal.Body>
 			<Modal.Footer>
-				<Button variant="secondary" onClick={handleCloseWithConfirmation}>
-					Close
-				</Button>
-				<Dropdown as={ButtonGroup} className="email-service-dropdown">
-					<Button variant="primary" onClick={() => handleSend("default")}>
-						<i className="bi bi-send-fill me-2"></i>
-						Send Email
+				<div className="modal-buttons-container">
+					<Button variant="secondary" onClick={handleCloseWithConfirmation} style={{ width: "auto" }}>
+						Close
 					</Button>
-					<Dropdown.Toggle
-						split
-						variant="primary"
-						id="dropdown-split-email"
-						className="dropdown-toggle-split"
-					/>
-					<Dropdown.Menu align="end" className="email-dropdown-menu">
-						<Dropdown.Item onClick={() => handleSend("default")} className="email-dropdown-item">
-							<i className="bi bi-envelope-fill me-2"></i>
-							Default Email Client
-						</Dropdown.Item>
-						<Dropdown.Divider />
-						<Dropdown.Item onClick={() => handleSend("gmail")} className="email-dropdown-item">
-							<i className="bi bi-google me-2"></i>
-							Send with Gmail
-						</Dropdown.Item>
-						<Dropdown.Item onClick={() => handleSend("outlook")} className="email-dropdown-item">
-							<i className="bi bi-microsoft me-2"></i>
-							Send with Outlook
-						</Dropdown.Item>
-					</Dropdown.Menu>
-				</Dropdown>
+					<Dropdown as={ButtonGroup}>
+						<Button variant="outline-primary" onClick={() => handleSend("default")}>
+							<i className="bi bi-send-fill me-2"></i>
+							Send Email
+						</Button>
+						<Dropdown.Toggle
+							split
+							variant="outline-primary"
+							id="dropdown-split-email"
+							className="dropdown-toggle-split"
+						/>
+						<Dropdown.Menu align="end" className="email-dropdown-menu">
+							<Dropdown.Item onClick={() => handleSend("default")} className="email-dropdown-item">
+								<i className="bi bi-envelope-fill me-2"></i>
+								Default Email Client
+							</Dropdown.Item>
+							<Dropdown.Divider />
+							<Dropdown.Item onClick={() => handleSend("gmail")} className="email-dropdown-item">
+								<i className="bi bi-google me-2"></i>
+								Send with Gmail
+							</Dropdown.Item>
+							<Dropdown.Item onClick={() => handleSend("outlook")} className="email-dropdown-item">
+								<i className="bi bi-microsoft me-2"></i>
+								Send with Outlook
+							</Dropdown.Item>
+						</Dropdown.Menu>
+					</Dropdown>
+				</div>
 			</Modal.Footer>
 		</Modal>
 	);
