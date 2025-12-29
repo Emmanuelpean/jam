@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi, GenericResponse, LoginResponse, UpdateCurrentUserResponse } from "../services/api/Users";
-import { ApiError, ApiResponse } from "../services/api/Base";
+import { ApiError, ApiResponse, ApiResponsePromise } from "../services/api/Base";
 import { UserData } from "../services/Schemas";
 import { DEFAULT_THEME } from "../utils/Theme";
 

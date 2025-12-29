@@ -176,6 +176,8 @@ class CurrentUserUpdate(BaseModel):
     deadline_threshold: int = 7
     update_limit: int = 30
     default_currency: str = "GBP"
+    first_name: str | None = None
+    last_name: str | None = None
 
 
 # -------------------------------------------------------- TOKEN -------------------------------------------------------

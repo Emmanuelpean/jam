@@ -1209,7 +1209,23 @@ class AuthentificationUtils(BaseUtilsClass):
 
         self.get_element("terms").click()
 
-    def register_user(self, email: str, password: str) -> None:
+    def set_first_name(self, value: str) -> WebElement:
+        """Get the first name field"""
+
+        return self.get_element("firstName").send_keys(value)
+
+    def set_last_name(self, value: str) -> WebElement:
+        """Get the last name field"""
+
+        return self.get_element("lastName").send_keys(value)
+
+    def register_user(
+        self,
+        email: str,
+        password: str,
+        first_name: str = "First Name",
+        last_name: str = "Last Name",
+    ) -> None:
         """Register a new user"""
 
         self.go_to_register()
@@ -1217,6 +1233,9 @@ class AuthentificationUtils(BaseUtilsClass):
         self.set_password(password)
         self.set_confirm_password(password)
         self.set_terms()
+        self.confirm()
+        self.set_first_name(first_name)
+        self.set_last_name(last_name)
         self.confirm()
 
     def login_user(self, email: str, password: str) -> None:

@@ -7,6 +7,8 @@ USER_DATA = [
         "password": "password1",
         "toast_active": True,
         "is_verified": True,
+        "first_name": "Regular",
+        "last_name": "User",
     },
     # Admin user
     {
@@ -14,6 +16,8 @@ USER_DATA = [
         "password": "password2",
         "is_admin": True,
         "is_verified": True,
+        "first_name": "Admin",
+        "last_name": "User",
     },
     # Inactive user
     {
