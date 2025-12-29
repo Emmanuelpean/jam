@@ -1,0 +1,56 @@
+.email-service-dropdown .btn-primary {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.dropdown-toggle-split {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.dropdown-toggle-split::after {
+    margin-left: 0;
+}
+
+.email-dropdown-menu {
+    border-radius: 12px;
+    border: 2px solid #e8eaed;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    min-width: 220px;
+}
+
+.email-dropdown-item {
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+}
+
+.email-dropdown-item:hover {
+    background: var(--primary-gradient);
+    color: white;
+    transform: translateX(4px);
+}
+
+.email-dropdown-item i {
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+    border-top: 1px solid #e8eaed;
+}
+
+/* Ensure button group maintains consistent styling */
+.btn-group > .btn-primary:not(:last-child) {
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+}

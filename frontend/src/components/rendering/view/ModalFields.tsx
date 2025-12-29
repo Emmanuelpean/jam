@@ -331,6 +331,13 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	isRecruiter: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "is_recruiter",
+		label: "Recruiter",
+		render: renderFunctions.isRecruiter,
+		...overrides,
+	}),
+
 	caseSensitive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "case_sensitive",
 		label: "Case Sensitive",

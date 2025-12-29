@@ -304,6 +304,10 @@ export const renderFunctions = {
 		return getTrueFalseBadge(param.item?.is_enabled);
 	},
 
+	isRecruiter: (param: RenderParams): ReactNode => {
+		return getTrueFalseBadge(param.item?.is_recruiter);
+	},
+
 	caseSensitive: (param: RenderParams): ReactNode => {
 		return getTrueFalseBadge(param.item?.case_sensitive);
 	},

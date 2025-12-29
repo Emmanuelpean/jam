@@ -105,6 +105,8 @@ class UserCreate(BaseModel):
     toast_active: bool = False
     default_currency: str = "GBP"
     is_demo: bool = False
+    first_name: str | None = None
+    last_name: str | None = None
 
 
 class UserOut(Out):
@@ -122,6 +124,9 @@ class UserOut(Out):
     toast_active: bool
     default_currency: str
     pending_email: EmailField | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    name: str | None = None
 
 
 class UserUpdate(UserCreate):
@@ -338,6 +343,7 @@ class PersonCreate(BaseModel):
     phone: str | None = None
     linkedin_url: str | None = None
     role: str | None = None
+    is_recruiter: bool = False
 
     # Foreign keys
     company_id: int | None = None
