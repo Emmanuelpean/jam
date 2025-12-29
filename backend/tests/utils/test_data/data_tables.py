@@ -428,6 +428,7 @@ PERSON_DATA = [
         "role": "Senior Engineering Manager",
         "company_id": 1,
         "owner_id": 1,
+        "is_recruiter": True,
     },
     {
         "first_name": "Jane",
@@ -492,6 +493,7 @@ PERSON_DATA = [
         "role": "CTO",
         "company_id": 6,
         "owner_id": 1,
+        "is_recruiter": True,
     },
     {
         "first_name": "Maria",
@@ -575,6 +577,7 @@ PERSON_DATA = [
         "role": "Technical Recruiter",
         "company_id": 14,
         "owner_id": 2,
+        "is_recruiter": True,
     },
     {
         "first_name": "Catherine",
@@ -584,6 +587,7 @@ PERSON_DATA = [
         "role": "Senior Java Developer",
         "company_id": 15,
         "owner_id": 2,
+        "is_recruiter": True,
     },
     {
         "first_name": "Daniel",

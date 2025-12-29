@@ -15,11 +15,10 @@ import { useLoading } from "../../contexts/LoadingContext";
 
 type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
-let isVerifying = false;
+let isVerifying: boolean = false;
 
 const determineAuthMode = (pathname: string, token: string | null): AuthMode => {
-	// Remove trailing slash for consistent comparison
-	const normalizedPath = pathname.endsWith("/") && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
+	const normalizedPath: string = pathname.endsWith("/") && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
 
 	if (normalizedPath === "/reset-password" && token) return "resetPassword";
 	if (normalizedPath === "/verify-email") return "verifyEmail";
@@ -42,7 +41,7 @@ function AuthForm(): JSX.Element {
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [mode, setMode] = useState<AuthMode>(() => determineAuthMode(location.pathname, searchParams.get("token")));
-	const [registrationStep, setRegistrationStep] = useState<number>(1); // Step 1: credentials, Step 2: personal info
+	const [registrationStep, setRegistrationStep] = useState<number>(1);
 	const [formData, setFormData] = useState<FormData>(defaultFormData);
 	const [resetToken, setResetToken] = useState<string>("");
 	const [showBanner, setShowBanner] = useState<boolean>(true);
@@ -59,7 +58,6 @@ function AuthForm(): JSX.Element {
 	document.documentElement.setAttribute("data-theme", "mixed-berry");
 
 	useEffect(() => {
-		// Update mode based on URL path and query params and redirect if authenticated
 		const token = searchParams.get("token");
 		const newMode = determineAuthMode(location.pathname, token);
 
@@ -75,7 +73,6 @@ function AuthForm(): JSX.Element {
 	}, [location.pathname, isAuthenticated, searchParams, navigate]);
 
 	useEffect(() => {
-		// Verifies the email
 		if (!["verifyEmail", "verifyNewEmail"].includes(mode) || isVerifying) return;
 
 		const verifyToken: string | null = searchParams.get("token");
@@ -114,7 +111,6 @@ function AuthForm(): JSX.Element {
 			});
 	}, [mode, location.pathname, searchParams, navigate]);
 
-	// Detect small screens
 	useEffect(() => {
 		const checkScreenSize = () => {
 			setShowMobileWarning(window.innerWidth < 768);
@@ -174,12 +170,10 @@ function AuthForm(): JSX.Element {
 	const validateForm = (currentStep?: number): Errors => {
 		const errors: Errors = {};
 
-		// For registration mode, validate based on current step
 		if (mode === "register") {
 			const step = currentStep ?? registrationStep;
 
 			if (step === 1) {
-				// Step 1: Email, password, confirm password, and terms
 				if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
 					errors.email = "Please provide a valid email address.";
 				}
@@ -200,7 +194,6 @@ function AuthForm(): JSX.Element {
 					errors.terms = "You must accept the Terms and Conditions to register.";
 				}
 			} else if (step === 2) {
-				// Step 2: First name and last name
 				if (!formData.firstName || formData.firstName.trim().length === 0) {
 					errors.firstName = "First name is required.";
 				}
@@ -213,14 +206,12 @@ function AuthForm(): JSX.Element {
 			return errors;
 		}
 
-		// Email validation
 		if (["login", "forgotPassword"].includes(mode)) {
 			if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
 				errors.email = "Please provide a valid email address.";
 			}
 		}
 
-		// Password validation
 		if (["login", "resetPassword"].includes(mode)) {
 			if (!formData.password) {
 				errors.password = "Password is required.";
@@ -228,7 +219,6 @@ function AuthForm(): JSX.Element {
 				errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
 			}
 
-			// Confirm password validation (for resetPassword)
 			if (["resetPassword"].includes(mode)) {
 				if (!formData.confirmPassword) {
 					errors.confirmPassword = "Please confirm your password.";
@@ -260,7 +250,8 @@ function AuthForm(): JSX.Element {
 				showToastError(result.message, "Login Failed");
 			}
 		} catch (error) {
-			showToastError("Failed to login. An unknown error occurred", "Login Failed");
+			const apiError = error as ApiError;
+			showToastError(apiError.message || "Failed to login. An unknown error occurred", "Login Failed");
 		} finally {
 			setLoading(false);
 		}
@@ -310,7 +301,11 @@ function AuthForm(): JSX.Element {
 				showToastError(result.data.message, "Registration Failed");
 			}
 		} catch (error) {
-			showToastError("Failed to create an account. An unknown error occurred", "Registration Failed");
+			const apiError = error as ApiError;
+			showToastError(
+				apiError.message || "Failed to create an account. An unknown error occurred",
+				"Registration Failed",
+			);
 		} finally {
 			setLoading(false);
 		}
@@ -386,7 +381,6 @@ function AuthForm(): JSX.Element {
 		setShowTerms(true);
 	};
 
-	// Define field configurations
 	const emailField: ModalFormField = {
 		name: "email",
 		type: "text",
@@ -414,7 +408,6 @@ function AuthForm(): JSX.Element {
 		icon: "bi bi-lock-fill",
 		placeholder: mode === "resetPassword" ? "Confirm your new password" : "Confirm your password",
 		autoComplete: "new-password",
-		tabIndex: mode === "login" ? -1 : 0,
 	};
 
 	const firstNameField: ModalFormField = {
@@ -513,7 +506,7 @@ function AuthForm(): JSX.Element {
 				>
 					<Alert.Heading className="h6 d-flex align-items-center mb-2">
 						<i className="bi bi-rocket-takeoff-fill me-2"></i>
-						Welcome to JAM Early Alpha!
+						Welcome to JAM!
 					</Alert.Heading>
 					<p className="mb-2 small">Thanks for testing! Try out the app with these demo credentials:</p>
 					<div className="d-flex flex-column gap-1 mb-2" style={{ fontSize: "0.875rem" }}>
@@ -572,89 +565,66 @@ function AuthForm(): JSX.Element {
 					)}
 
 					<Form onSubmit={handleSubmit} autoComplete="on">
-						{/* Registration Step 1: Email + Password + Terms */}
+						{/* Registration Step 1 */}
 						{mode === "register" && registrationStep === 1 && (
 							<>
-								<div className="auth-field-container auth-field-visible">
-									{FormField(emailField, formData, handleInputChange, fieldErrors)}
-								</div>
-
-								<div className="auth-field-container auth-field-visible">
-									{FormField(passwordField, formData, handleInputChange, fieldErrors)}
-								</div>
-
-								<div className="auth-field-container auth-field-visible">
-									{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
-								</div>
-
-								<div className="auth-field-container auth-field-visible">
-									{FormField(
-										termsField,
-										{ terms: acceptedTerms },
-										//@ts-ignore
-										handleTermsCheckboxChange,
-										fieldErrors,
-									)}
-								</div>
+								{FormField(emailField, formData, handleInputChange, fieldErrors)}
+								{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+								{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
+								{FormField(
+									termsField,
+									{ terms: acceptedTerms },
+									//@ts-ignore
+									handleTermsCheckboxChange,
+									fieldErrors,
+								)}
 							</>
 						)}
 
-						{/* Registration Step 2: First Name + Last Name */}
+						{/* Registration Step 2 */}
 						{mode === "register" && registrationStep === 2 && (
 							<>
-								<div className="auth-field-container auth-field-visible">
-									{FormField(firstNameField, formData, handleInputChange, fieldErrors)}
-								</div>
+								{FormField(firstNameField, formData, handleInputChange, fieldErrors)}
+								{FormField(lastNameField, formData, handleInputChange, fieldErrors)}
+							</>
+						)}
 
-								<div className="auth-field-container auth-field-visible">
-									{FormField(lastNameField, formData, handleInputChange, fieldErrors)}
+						{/* Login Mode */}
+						{mode === "login" && (
+							<>
+								{FormField(emailField, formData, handleInputChange, fieldErrors)}
+								{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+								<div className="text-end mb-3">
+									<button
+										type="button"
+										onClick={switchToForgotPassword}
+										className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent small"
+										style={{ cursor: "pointer" }}
+										id="forgot-password-link"
+									>
+										Forgot your password?
+									</button>
 								</div>
 							</>
 						)}
 
-						{/* Email field - visible for login and forgotPassword */}
-						<div
-							className={`auth-field-container ${!["register", "resetPassword"].includes(mode) ? "auth-field-visible" : "auth-field-hidden"}`}
-						>
-							{FormField(emailField, formData, handleInputChange, fieldErrors)}
-						</div>
+						{/* Forgot Password Mode */}
+						{mode === "forgotPassword" && (
+							<>{FormField(emailField, formData, handleInputChange, fieldErrors)}</>
+						)}
 
-						{/* Password field - visible for login and resetPassword */}
-						<div
-							className={`auth-field-container ${["login", "resetPassword"].includes(mode) ? "auth-field-visible" : "auth-field-hidden"}`}
-						>
-							{FormField(passwordField, formData, handleInputChange, fieldErrors)}
-						</div>
+						{/* Reset Password Mode */}
+						{mode === "resetPassword" && (
+							<>
+								{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+								{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
+							</>
+						)}
 
-						{/* Forgot password link - visible only for login */}
-						<div
-							className={`auth-field-container ${mode === "login" ? "auth-field-visible" : "auth-field-hidden"}`}
-						>
-							<div className="text-end mb-3">
-								<button
-									type="button"
-									onClick={switchToForgotPassword}
-									className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent small"
-									style={{ cursor: "pointer" }}
-									id="forgot-password-link"
-								>
-									Forgot your password?
-								</button>
-							</div>
-						</div>
-
-						{/* Confirm password - visible for resetPassword */}
-						<div
-							className={`auth-field-container ${mode === "resetPassword" ? "auth-field-visible" : "auth-field-hidden"}`}
-						>
-							{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
-						</div>
-
-						{/* Action buttons container */}
+						{/* Action buttons */}
 						<div className="d-grid gap-2">
 							{mode === "register" && registrationStep === 2 && (
 								<ActionButton
-									id="back-button"
 									type="button"
 									onClick={handlePreviousStep}
 									variant="secondary"
@@ -665,8 +635,8 @@ function AuthForm(): JSX.Element {
 							)}
 
 							<ActionButton
-								id="confirm-button"
 								type="submit"
+								id="confirm-button"
 								disabled={loading}
 								loading={loading}
 								className="fw-semibold"
@@ -709,19 +679,7 @@ function AuthForm(): JSX.Element {
 
 					<Card.Footer className="bg-transparent border-0 text-center">
 						<small className="text-muted">
-							{mode === "resetPassword" ? (
-								<>
-									Remember your password?{" "}
-									<button
-										type="button"
-										onClick={switchToLogin}
-										className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-										style={{ cursor: "pointer" }}
-									>
-										Back to Login
-									</button>
-								</>
-							) : mode === "forgotPassword" ? (
+							{mode === "resetPassword" || mode === "forgotPassword" ? (
 								<>
 									Remember your password?{" "}
 									<button

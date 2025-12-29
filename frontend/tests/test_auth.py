@@ -121,6 +121,9 @@ class TestSignUp(BaseTest):
         self.auth_utils.set_confirm_password(test_password)
         self.auth_utils.set_terms()
         self.auth_utils.confirm()
+        self.auth_utils.set_first_name("Test")
+        self.auth_utils.set_last_name("Test")
+        self.auth_utils.confirm()
 
         # Verify redirect to login page
         self.auth_utils.wait_for_login()
@@ -140,6 +143,9 @@ class TestSignUp(BaseTest):
         self.auth_utils.set_password(test_password)
         self.auth_utils.set_confirm_password(test_password)
         self.auth_utils.set_terms()
+        self.auth_utils.confirm()
+        self.auth_utils.set_first_name("Test")
+        self.auth_utils.set_last_name("Test")
         self.auth_utils.confirm()
 
         # Verify error message and database
@@ -257,6 +263,9 @@ class TestSignUp(BaseTest):
         self.auth_utils.set_password(test_password)
         self.auth_utils.set_confirm_password(test_password)
         self.auth_utils.set_terms()
+        self.auth_utils.confirm()
+        self.auth_utils.set_first_name("Test")
+        self.auth_utils.set_last_name("Test")
         self.auth_utils.confirm()
 
         self.auth_utils.assert_toast_message("You are not allowed to sign up for now.")

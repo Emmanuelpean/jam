@@ -24,6 +24,8 @@ interface UserFormData {
 	chase_threshold?: number;
 	deadline_threshold?: number;
 	update_limit?: number;
+	first_name?: string;
+	last_name?: string;
 	qualification_id?: number;
 	experience?: string;
 	skills?: string;
@@ -44,6 +46,8 @@ const UserSettingsPage: React.FC = () => {
 		new_password: "",
 		confirm_password: "",
 		default_currency: currentUser?.default_currency || "",
+		first_name: currentUser?.first_name || "",
+		last_name: currentUser?.last_name || "",
 		qualification_id: undefined,
 		experience: "",
 		skills: "",
@@ -197,6 +201,8 @@ const UserSettingsPage: React.FC = () => {
 				deadline_threshold?: number;
 				update_limit?: number;
 				default_currency: string;
+				first_name?: string;
+				last_name?: string;
 			} = {
 				default_currency: "",
 			};
@@ -224,6 +230,14 @@ const UserSettingsPage: React.FC = () => {
 			}
 
 			updateData.default_currency = formData.default_currency;
+
+			if (formData.first_name !== undefined) {
+				updateData.first_name = formData.first_name;
+			}
+			if (formData.last_name !== undefined) {
+				updateData.last_name = formData.last_name;
+			}
+			console.log(updateData);
 
 			const response: ApiResponse<UpdateCurrentUserResponse> | null = await updateCurrentUser(updateData);
 			if (!response) {
@@ -370,6 +384,20 @@ const UserSettingsPage: React.FC = () => {
 		isClearable: false,
 	};
 
+	const firstNameField: ModalFormField = {
+		name: "first_name",
+		type: "text",
+		label: "First Name",
+		placeholder: "Enter your first name",
+	};
+
+	const lastNameField: ModalFormField = {
+		name: "last_name",
+		type: "text",
+		label: "Last Name",
+		placeholder: "Enter your last name",
+	};
+
 	const experienceField: ModalFormField = {
 		name: "experience",
 		type: "textarea",
@@ -481,6 +509,14 @@ const UserSettingsPage: React.FC = () => {
 										</h5>
 									</div>
 									{FormField(emailField, formData, handleInputChange, errors)}
+									<Row>
+										<Col md={6} className="mb-3">
+											{FormField(firstNameField, formData, handleInputChange, errors)}
+										</Col>
+										<Col md={6} className="mb-3">
+											{FormField(lastNameField, formData, handleInputChange, errors)}
+										</Col>
+									</Row>
 								</div>
 
 								{/* Security Section */}
