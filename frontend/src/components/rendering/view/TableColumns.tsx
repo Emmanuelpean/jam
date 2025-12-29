@@ -128,15 +128,6 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	operatorColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "operator",
-		label: "Operator",
-		sortable: true,
-		searchable: true,
-		type: "text",
-		...overrides,
-	}),
-
 	updateTypeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "type",
 		label: "Type",

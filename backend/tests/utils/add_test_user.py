@@ -22,6 +22,7 @@ from tests.utils.create_data import (
     create_scraped_jobs,
     create_job_scraping_service_logs,
     create_job_application_updates,
+    create_scraping_filters,
 )
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -57,7 +58,8 @@ def seed_database() -> None:
         job_application_updates = create_job_application_updates(db, users, jobs)
         service_logs = create_job_scraping_service_logs(db)
         alert_emails = create_job_alert_emails(db, users, service_logs)
-        scraped_jobs = create_scraped_jobs(db, alert_emails, users)
+        filters = create_scraping_filters(db, users)
+        scraped_jobs = create_scraped_jobs(db, alert_emails, users, filters)
 
         print("\n" + "=" * 50)
         print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
