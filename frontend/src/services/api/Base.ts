@@ -1,7 +1,7 @@
 const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 
 export interface ApiError extends Error {
-	status?: number;
+	status?: number | null;
 	data?: any;
 }
 
