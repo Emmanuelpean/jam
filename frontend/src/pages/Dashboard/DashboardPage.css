@@ -51,7 +51,7 @@
     font-weight: 600;
     padding: 0.5rem 0.875rem;
     border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
     min-width: 32px;
     text-align: center;
 }
@@ -82,14 +82,14 @@
 }
 
 /* Responsive adjustments */
-@media (min-width: 992px) {
+@media (width >= 992px) {
     .table-column, .activity-column {
         height: 500px;
         min-height: 0;
     }
 }
 
-@media (max-width: 991px) {
+@media (width <= 991px) {
     .table-column, .activity-column {
         height: auto;
         min-height: 400px;

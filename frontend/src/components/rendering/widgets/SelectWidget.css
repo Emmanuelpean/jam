@@ -2,7 +2,7 @@
 .react-select-container .react-select__control {
     border: 2px solid #e8eaed;
     border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 2px 4px rgb(0 0 0 / 2%);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -16,7 +16,7 @@
 .react-select__control--is-focused,
 .react-select-container .react-select__control--is-focused {
     border-color: var(--primary-mid);
-    box-shadow: 0 0 0 0.25rem var(--jam-glow), 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 0 0.25rem var(--jam-glow), 0 4px 12px rgb(0 0 0 / 10%);
     outline: none;
 }
 
@@ -30,7 +30,7 @@
 .form-control::placeholder,
 .react-select__placeholder,
 .react-select-container .react-select__placeholder {
-    color: rgb(173, 181, 189);
+    color: rgb(173 181 189);
     font-style: italic;
     font-weight: 300;
     line-height: 1.5;
@@ -90,7 +90,7 @@
 
 .react-select-container.error .react-select__control--is-focused {
     border-color: #dc3545 !important;
-    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 0 0 0.25rem rgb(220 53 69 / 25%), 0 4px 12px rgb(0 0 0 / 10%) !important;
 }
 
 .custom-dropdown-indicator {
@@ -99,13 +99,13 @@
     margin-left: 11px;
     box-sizing: border-box;
     cursor: pointer;
-    color: hsl(0, 0%, 80%);
+    color: hsl(0deg 0% 80%);
     transition: color 150ms;
 }
 
 .custom-dropdown-indicator:hover,
 .custom-dropdown-indicator.active {
-    color: hsl(0, 0%, 60%);
+    color: hsl(0deg 0% 60%);
 }
 
 .custom-dropdown-indicator .bi-plus-circle {

@@ -33,11 +33,11 @@
 
 .url-open-button:hover:not(.disabled) {
     color: #495057;
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgb(0 0 0 / 5%);
 }
 
 .url-open-button:active:not(.disabled) {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgb(0 0 0 / 10%);
 }
 
 .url-scrape-button.disabled {

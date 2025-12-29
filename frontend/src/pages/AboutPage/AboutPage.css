@@ -7,7 +7,7 @@
 }
 
 .hero-overlay {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+    background: linear-gradient(135deg, rgb(59 130 246 / 10%) 0%, rgb(147 51 234 / 10%) 100%);
 }
 
 
@@ -16,34 +16,34 @@
 }
 
 .glass-card {
-    background: rgba(255, 255, 255, 0.8);
+    background: rgb(255 255 255 / 80%);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgb(255 255 255 / 20%);
     border-radius: 1.5rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%);
     transition: all 0.3s ease;
 }
 
 .glass-badge {
-    background: rgba(255, 255, 255, 0.7);
+    background: rgb(255 255 255 / 70%);
     backdrop-filter: blur(10px);
     border-radius: 9999px;
     padding: 0.75rem 1.5rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 10%);
 }
 
 .feature-card {
-    background: rgba(255, 255, 255, 0.8);
+    background: rgb(255 255 255 / 80%);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgb(255 255 255 / 20%);
     border-radius: 1rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px -5px rgb(0 0 0 / 10%);
     transition: all 0.3s ease;
 }
 
 .feature-card:hover {
     transform: scale(1.02);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%);
 }
 
 .feature-icon {

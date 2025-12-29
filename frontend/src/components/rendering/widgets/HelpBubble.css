@@ -12,7 +12,7 @@
     font-size: 14px;
     white-space: normal;
     z-index: 9999;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
     pointer-events: none;
     max-width: 360px;
     word-break: break-word;

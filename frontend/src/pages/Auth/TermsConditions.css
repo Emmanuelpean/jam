@@ -48,16 +48,17 @@
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     box-shadow: 0 2px 8px var(--jam-glow);
+    transition: all 0.3s ease;
 }
 
 .terms-section.terms-highlight {
     border-left-color: var(--primary-end);
-    background: linear-gradient(135deg, #ffffff, rgba(253, 121, 168, 0.05));
+    background: linear-gradient(135deg, #fff, rgb(253 121 168 / 5%));
 }
 
 .terms-section.terms-warning {
     border-left-color: #dc3545;
-    background: linear-gradient(135deg, #ffffff, #fff8f8);
+    background: linear-gradient(135deg, #fff, #fff8f8);
 }
 
 .terms-section-title {
@@ -68,6 +69,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    transition: color 0.3s ease;
 }
 
 .terms-highlight .terms-section-title {
@@ -90,6 +92,8 @@
     font-size: 0.9rem;
     font-weight: 600;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
 }
 
 .terms-highlight .section-number {
@@ -143,13 +147,15 @@
     border-top: 1px solid var(--bs-border-color, #dee2e6);
     padding: 1.5rem 2rem;
     justify-content: center;
+    display: flex !important;
 }
 
 .terms-footer .btn {
     min-width: 180px;
     font-weight: 600;
     text-transform: uppercase;
-    /*noinspection CssNonIntegerLengthInPixels*/
+
+    /* noinspection CssNonIntegerLengthInPixels */
     letter-spacing: 0.5px;
     background: var(--primary-gradient);
     border: none;
@@ -157,37 +163,12 @@
     transition: all 0.3s ease;
 }
 
-
-/* Theme-aware animations */
-.terms-section {
-    transition: all 0.3s ease;
-}
-
-.terms-section-title {
-    transition: color 0.3s ease;
-}
-
 /* JAM theme enhancement for the updated date */
 .terms-updated-date i {
     color: var(--primary-mid);
 }
 
-/* Enhanced section numbering with JAM colors */
-.section-number {
-    position: relative;
-    overflow: hidden;
-}
-
-
 .section-number span {
     position: relative;
     z-index: 1;
-}
-
-.terms-footer {
-    background: var(--bs-light, #f8f9fa);
-    border-top: 1px solid var(--bs-border-color, #dee2e6);
-    padding: 1.5rem 2rem;
-    display: flex !important;
-    justify-content: center !important;
 }
