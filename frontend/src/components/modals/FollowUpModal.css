@@ -1,3 +1,61 @@
+/* Apply gradient to the button group container */
+.email-service-dropdown {
+    background: var(--primary-gradient);
+    border-radius: 12px !important;
+    padding: 0;
+    box-shadow: 0 6px 20px var(--jam-glow), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Make both buttons transparent so the gradient shows through */
+.email-service-dropdown .btn-primary {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Remove Bootstrap's default borders between buttons */
+.email-service-dropdown .btn-primary:not(:last-child) {
+    border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Hover effect - darken slightly */
+.email-service-dropdown:hover {
+    background: var(--primary-hover-gradient);
+    box-shadow: 0 8px 25px var(--jam-glow), 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Active state */
+.email-service-dropdown .btn-primary:active,
+.email-service-dropdown .btn-primary.active {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Focus state */
+.email-service-dropdown .btn-primary:focus {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.dropdown-toggle-split {
+    flex: 0 0 30px !important;
+    width: 30px !important;
+}
+
+/* Dropdown toggle styling */
+.dropdown-toggle-split {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+.dropdown-toggle-split::after {
+    margin-left: 0;
+}
+
+/* Dropdown menu */
 .email-dropdown-menu {
     border-radius: 12px;
     border: 2px solid #e8eaed;
@@ -5,10 +63,6 @@
     padding: 0.5rem;
     margin-top: 0.5rem;
     min-width: 220px;
-}
-
-.dropdown-toggle-split {
-    --bs-btn-active-bg: var(--primary-mid) !important;
 }
 
 .email-dropdown-item {
@@ -34,9 +88,4 @@
 .dropdown-divider {
     margin: 0.5rem 0;
     border-top: 1px solid #e8eaed;
-}
-
-/* Ensure button group maintains consistent styling */
-.btn-group > .btn-primary:not(:last-child) {
-    border-right: 1px solid rgba(255, 255, 255, 0.3);
 }

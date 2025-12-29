@@ -8,12 +8,6 @@ export interface GenericResponse {
 	error_code: number | null;
 }
 
-export interface AuthResponse {
-	success: boolean;
-	status?: number;
-	error?: string;
-}
-
 export interface LoginResponse {
 	access_token: string;
 }
@@ -25,11 +19,18 @@ export interface UpdateCurrentUserResponse {
 	logged_out: boolean;
 }
 
+export interface RegisterData {
+	email: string;
+	password: string;
+	first_name: string;
+	last_name: string;
+}
+
 export const userApi: CrudApi<UserData> = createCrudApi("users");
 
 export interface AuthApi {
 	login: (email: string, password: string) => ApiResponsePromise<LoginResponse>;
-	register: (email: string, password: string) => ApiResponsePromise<GenericResponse>;
+	register: (registerData: RegisterData) => ApiResponsePromise<GenericResponse>;
 	getCurrentUser: (token: string) => ApiResponsePromise<UserData>;
 	updateCurrentUser: (data: any, token: string) => ApiResponsePromise<UpdateCurrentUserResponse>;
 	verifyEmail: (token: string) => ApiResponsePromise<GenericResponse>;
@@ -47,8 +48,8 @@ export const authApi: AuthApi = {
 		return api.postFormData("login/", formData);
 	},
 
-	register: async (email: string, password: string): ApiResponsePromise<GenericResponse> => {
-		return api.post("register/", { email, password });
+	register: async (registerData: RegisterData): ApiResponsePromise<GenericResponse> => {
+		return api.post("register/", registerData);
 	},
 
 	getCurrentUser: async (token: string): ApiResponsePromise<UserData> => {

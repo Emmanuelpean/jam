@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi, AuthResponse, LoginResponse, UpdateCurrentUserResponse } from "../services/api/Users";
+import { authApi, GenericResponse, LoginResponse, UpdateCurrentUserResponse } from "../services/api/Users";
 import { ApiError, ApiResponse } from "../services/api/Base";
 import { UserData } from "../services/Schemas";
 import { DEFAULT_THEME } from "../utils/Theme";
@@ -12,8 +12,7 @@ export interface CurrentUser extends UserData {
 export interface AuthContextType {
 	currentUser: CurrentUser | null;
 	token: string | null;
-	login: (email: string, password: string) => Promise<AuthResponse>;
-	register: (email: string, password: string) => Promise<AuthResponse>;
+	login: (email: string, password: string) => Promise<GenericResponse>;
 	updateCurrentUser: (userData: Partial<UserData>) => Promise<ApiResponse<UpdateCurrentUserResponse> | null>;
 	logout: () => void;
 	isAuthenticated: boolean;
@@ -27,6 +26,8 @@ export interface FormData {
 	email: string;
 	password: string;
 	confirmPassword: string;
+	firstName: string;
+	lastName: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -108,41 +109,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		}
 	}, [token, userFetched, fetchUserInfo]);
 
-	const login = async (email: string, password: string): Promise<AuthResponse> => {
-		try {
-			const data: ApiResponse<LoginResponse> = await authApi.login(email, password);
-			if (data.data.access_token) {
-				localStorage.setItem("token", data.data.access_token);
-				setToken(data.data.access_token);
-				setUserFetched(false);
+	const login = async (email: string, password: string): Promise<GenericResponse> => {
+		const data: ApiResponse<LoginResponse> = await authApi.login(email, password);
+		if (data.data.access_token) {
+			localStorage.setItem("token", data.data.access_token);
+			setToken(data.data.access_token);
+			setUserFetched(false);
 
-				// Fetch user info after successful login
-				await fetchUserInfo(data.data.access_token);
-			}
-
-			return { success: true };
-		} catch (error) {
-			const apiError = error as ApiError;
-			return {
-				success: false,
-				error: apiError.message,
-				status: apiError.status,
-			};
+			// Fetch user info after successful login
+			await fetchUserInfo(data.data.access_token);
 		}
-	};
-
-	const register = async (email: string, password: string): Promise<AuthResponse> => {
-		try {
-			await authApi.register(email, password);
-			return { success: true };
-		} catch (error) {
-			const apiError = error as ApiError;
-			return {
-				success: false,
-				error: apiError.message,
-				status: apiError.status,
-			};
-		}
+		return { success: true, message: "Login successful", error_code: null };
 	};
 
 	const logout = (): void => {
@@ -157,7 +134,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		currentUser,
 		token,
 		login,
-		register,
 		logout,
 		updateCurrentUser,
 		isAuthenticated: !!token,
