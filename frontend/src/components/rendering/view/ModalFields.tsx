@@ -324,13 +324,6 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	isEnabled: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "is_enabled",
-		label: "Enabled",
-		render: renderFunctions.isEnabled,
-		...overrides,
-	}),
-
 	isRecruiter: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "is_recruiter",
 		label: "Recruiter",
