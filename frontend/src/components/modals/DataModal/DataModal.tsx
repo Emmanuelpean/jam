@@ -79,7 +79,6 @@ export interface DataModalHandle {
 	showEdit: (data: any) => void;
 	showAdd: (data: any) => void;
 	showImport: (data: any) => void;
-	hide: () => void;
 }
 
 const DataModal = forwardRef<DataModalHandle, DataModalProps>(
@@ -130,7 +129,6 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				setMode("import");
 				setInternalShow(true);
 			},
-			hide: (): void => setInternalShow(false),
 		}));
 
 		const [onSuccessCallback, setOnSuccessCallback] = useState<((data: any) => void) | null>(null);
@@ -226,10 +224,8 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const hasUnsavedChanges = (): boolean => {
 			if (!isEditing) return false;
 			const keys: string[] = Object.keys(formData);
-			return keys.some((key: string) => {
-				const currentValue: any = formData[key];
-				const originalValue: any = originalFormData[key];
-				return areDifferent(currentValue, originalValue);
+			return keys.some((key: string): boolean => {
+				return areDifferent(formData[key], originalFormData[key]);
 			});
 		};
 
@@ -313,7 +309,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				resizeObserver.observe(el);
 			});
 
-			return () => {
+			return (): void => {
 				resizeObserver.disconnect();
 			};
 		}, [isEditing, activeTab, effectiveData, internalShow]);

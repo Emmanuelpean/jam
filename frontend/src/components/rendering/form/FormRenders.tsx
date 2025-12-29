@@ -1,10 +1,12 @@
 import { JSX } from "react";
+import { GroupBase } from "react-select";
 import { Theme, THEMES } from "../../../utils/Theme";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import {
 	applicationStatusOptions,
 	appliedViaOptions,
 	attendanceTypeOptions,
+	GroupedSelectOption,
 	interviewAttendanceOptions,
 	interviewTypeOptions,
 	scrapingFilterOperatorOptions,
@@ -22,7 +24,7 @@ export interface ModalFormField {
 	type: string;
 	required?: boolean;
 	placeholder?: string;
-	options?: SelectOption[];
+	options?: SelectOption[] | GroupedSelectOption[];
 	validation?: (value: string) => { isValid: boolean; message: string } | undefined;
 	rows?: number;
 	isSearchable?: boolean;
@@ -126,13 +128,6 @@ export const formFields = {
 	isActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "is_active",
 		label: "Active",
-		type: "checkbox",
-		...overrides,
-	}),
-
-	isEnabled: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "is_enabled",
-		label: "Enabled",
 		type: "checkbox",
 		...overrides,
 	}),

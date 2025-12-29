@@ -25,6 +25,7 @@ const JobsPage = () => {
 			nameKey="title"
 			itemType="Job"
 			modalSize="xl"
+			menuItems={["view", "edit", "delete", "followup"]}
 		/>
 	);
 };
