@@ -18,8 +18,9 @@ import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ContextMenu, ContextMenuState, MenuItem, SubMenuItem } from "./ContextMenu";
 import LoadingSpinner from "../spinner/Spinner";
 import { DataModalHandle, modalModes } from "../modals/DataModal/DataModal";
-import { EnrichedJobData } from "../../services/Schemas";
+import { EnrichedJobData, JobData } from "../../services/Schemas";
 import "./DataTable.css";
+import FollowUpModal, { FollowUpModalHandle } from "../modals/FollowUpModal";
 
 export type Direction = "asc" | "desc";
 
@@ -131,6 +132,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const [currentPage, setCurrentPage] = useState<number>(0);
 	const [pageSize, setPageSize] = useState<number>(20);
 	const [totalCount, setTotalCount] = useState<number>(0);
+	const followUpModalRef = useRef<FollowUpModalHandle>(null);
 
 	const isServerPagination: boolean = !!endpoint && !providedData;
 
@@ -462,6 +464,16 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				id: "context-menu-deactivate",
 				function: deactivateEntityHandler,
 			},
+			{
+				action: "followup",
+				icon: "bell",
+				text: "Follow-up Email",
+				id: "context-menu-followup",
+				function: (item: JobData): void => {
+					followUpModalRef.current?.show(item);
+					setContextMenu(null);
+				},
+			},
 		];
 
 		let allowedActions: string[];
@@ -515,260 +527,265 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	}
 
 	return (
-		<div className={"table-container"}>
-			{title && (
-				<div className="table-header-section mb-4">
-					<div className="d-flex align-items-center justify-content-between p-4 border-0 bg-white shadow-sm rounded-3">
-						<div className="d-flex align-items-center">
-							<div className="header-icon-wrapper me-3">
-								<i className={getTableIcon(title)}></i>
+		<>
+			<div className={"table-container"}>
+				{title && (
+					<div className="table-header-section mb-4">
+						<div className="d-flex align-items-center justify-content-between p-4 border-0 bg-white shadow-sm rounded-3">
+							<div className="d-flex align-items-center">
+								<div className="header-icon-wrapper me-3">
+									<i className={getTableIcon(title)}></i>
+								</div>
+								<h4 className="mb-0 fw-bold text-dark">{title}</h4>
 							</div>
-							<h4 className="mb-0 fw-bold text-dark">{title}</h4>
+							{data.length > 0 && <div className="table-count-badge">{data.length}</div>}
 						</div>
-						{data.length > 0 && <div className="table-count-badge">{data.length}</div>}
-					</div>
-				</div>
-			)}
-
-			<div
-				className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
-				style={{ gap: compact ? "0.5rem" : "1rem" }}
-			>
-				{showSearch && !compact && (
-					<div className="d-flex align-items-center gap-3" style={{ flex: 1, width: "auto" }}>
-						<input
-							type="text"
-							className="form-control"
-							placeholder="Search..."
-							value={searchTerm}
-							onChange={(e): void => setSearchTerm(e.target.value)}
-							id="search-input"
-						/>
-						<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
-							Showing {displayTotal} Entries
-						</span>
 					</div>
 				)}
-				{toolbarAddon && <div className="datatable-toolbar-addon">{toolbarAddon}</div>}
-				{showAdd && mode !== "import" && (
-					<Button
-						variant="primary"
-						{...(compact ? { size: "sm" as const } : {})}
-						onClick={() => openAddModal()}
-						className="d-flex align-items-center justify-content-center"
-						style={{
-							width: compact ? "100%" : "60%",
-							fontSize: compact ? "0.875rem" : undefined,
-							padding: compact ? "0.25rem 0.5rem" : undefined,
-							height: compact ? "2rem" : undefined,
-						}}
-						id={`add-${entityType}-button`}
-					>
-						<i className={`${getAddButtonIcon()} me-2`} style={{ fontSize: "1.1rem" }}></i>
-						{getAddButtonText()}
-					</Button>
-				)}
-			</div>
 
-			{/* Table */}
-			{isLoading ? (
-				<LoadingSpinner text="Loading..." />
-			) : (
-				<>
-					<div className="table-responsive">
-						<table
-							className={`table table-striped table-hover rounded-3 overflow-hidden ${compact ? "table-sm" : ""}`}
-							style={compact ? { fontSize: "0.875rem" } : {}}
+				<div
+					className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
+					style={{ gap: compact ? "0.5rem" : "1rem" }}
+				>
+					{showSearch && !compact && (
+						<div className="d-flex align-items-center gap-3" style={{ flex: 1, width: "auto" }}>
+							<input
+								type="text"
+								className="form-control"
+								placeholder="Search..."
+								value={searchTerm}
+								onChange={(e): void => setSearchTerm(e.target.value)}
+								id="search-input"
+							/>
+							<span className="text-muted small" style={{ whiteSpace: "nowrap" }}>
+								Showing {displayTotal} Entries
+							</span>
+						</div>
+					)}
+					{toolbarAddon && <div className="datatable-toolbar-addon">{toolbarAddon}</div>}
+					{showAdd && mode !== "import" && (
+						<Button
+							variant="primary"
+							{...(compact ? { size: "sm" as const } : {})}
+							onClick={() => openAddModal()}
+							className="d-flex align-items-center justify-content-center"
+							style={{
+								width: compact ? "100%" : "60%",
+								fontSize: compact ? "0.875rem" : undefined,
+								padding: compact ? "0.25rem 0.5rem" : undefined,
+								height: compact ? "2rem" : undefined,
+							}}
+							id={`add-${entityType}-button`}
 						>
-							<thead className="custom-header">
-								<tr>
-									{columns.map((column) => (
-										<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
-											<div className="d-flex align-items-center justify-content-between">
-												<div
-													className={column.sortable ? "cursor-pointer user-select-none" : ""}
-													onClick={() => column.sortable && handleSort(column.key)}
-													id={`table-header-${column.key}`}
-													style={compact ? { fontSize: "0.875rem" } : {}}
-												>
-													{column.label}
-													{column.sortable && (
-														<span className="ms-1">
-															<i
-																className={`bi bi-arrow-${
-																	sortConfig.key === column.key
-																		? sortConfig.direction === "asc"
-																			? "up"
-																			: "down"
-																		: "down-up"
-																}`}
-																style={compact ? { fontSize: "0.75rem" } : {}}
-															></i>
-														</span>
-													)}
+							<i className={`${getAddButtonIcon()} me-2`} style={{ fontSize: "1.1rem" }}></i>
+							{getAddButtonText()}
+						</Button>
+					)}
+				</div>
+
+				{/* Table */}
+				{isLoading ? (
+					<LoadingSpinner text="Loading..." />
+				) : (
+					<>
+						<div className="table-responsive">
+							<table
+								className={`table table-striped table-hover rounded-3 overflow-hidden ${compact ? "table-sm" : ""}`}
+								style={compact ? { fontSize: "0.875rem" } : {}}
+							>
+								<thead className="custom-header">
+									<tr>
+										{columns.map((column) => (
+											<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
+												<div className="d-flex align-items-center justify-content-between">
+													<div
+														className={
+															column.sortable ? "cursor-pointer user-select-none" : ""
+														}
+														onClick={() => column.sortable && handleSort(column.key)}
+														id={`table-header-${column.key}`}
+														style={compact ? { fontSize: "0.875rem" } : {}}
+													>
+														{column.label}
+														{column.sortable && (
+															<span className="ms-1">
+																<i
+																	className={`bi bi-arrow-${
+																		sortConfig.key === column.key
+																			? sortConfig.direction === "asc"
+																				? "up"
+																				: "down"
+																			: "down-up"
+																	}`}
+																	style={compact ? { fontSize: "0.75rem" } : {}}
+																></i>
+															</span>
+														)}
+													</div>
 												</div>
-											</div>
-										</th>
-									))}
-								</tr>
-							</thead>
-							<tbody>
-								{currentPageData.map((item, index) => (
-									<tr
-										key={item.id || index}
-										id={`table-row-${entityType}-${item.id}`}
-										className={`table-row-clickable`}
-										onClick={(e) => handleRowClick(e, item)}
-										onContextMenu={(e) => handleRowRightClick(item, e)}
-										style={{ cursor: "pointer" }}
-									>
-										{columns.map((column, columnIndex) => (
-											<td
-												key={column.key}
-												className="align-middle"
-												style={{
-													...(columnIndex === 0 ? { fontWeight: "bold" } : {}),
-													...(compact
-														? {
-																padding: "0.5rem",
-																fontSize: "0.875rem",
-															}
-														: {}),
-												}}
-											>
-												<RenderViewFieldWithContext
-													field={column}
-													item={item}
-													id={`table-row-${item.id}`}
-												/>
-											</td>
+											</th>
 										))}
 									</tr>
-								))}
-								{currentPageData.length === 0 && (
-									<tr>
-										<td
-											colSpan={columns.length}
-											className="text-center py-4 text-muted"
-											style={
-												compact
-													? {
-															padding: "1rem",
-															fontSize: "0.875rem",
-														}
-													: {}
-											}
+								</thead>
+								<tbody>
+									{currentPageData.map((item, index) => (
+										<tr
+											key={item.id || index}
+											id={`table-row-${entityType}-${item.id}`}
+											className={`table-row-clickable`}
+											onClick={(e) => handleRowClick(e, item)}
+											onContextMenu={(e) => handleRowRightClick(item, e)}
+											style={{ cursor: "pointer" }}
 										>
-											{emptyMessage || `No ${pluralize(itemType)} found`}
-										</td>
-									</tr>
-								)}
-							</tbody>
-						</table>
-					</div>
+											{columns.map((column, columnIndex) => (
+												<td
+													key={column.key}
+													className="align-middle"
+													style={{
+														...(columnIndex === 0 ? { fontWeight: "bold" } : {}),
+														...(compact
+															? {
+																	padding: "0.5rem",
+																	fontSize: "0.875rem",
+																}
+															: {}),
+													}}
+												>
+													<RenderViewFieldWithContext
+														field={column}
+														item={item}
+														id={`table-row-${item.id}`}
+													/>
+												</td>
+											))}
+										</tr>
+									))}
+									{currentPageData.length === 0 && (
+										<tr>
+											<td
+												colSpan={columns.length}
+												className="text-center py-4 text-muted"
+												style={
+													compact
+														? {
+																padding: "1rem",
+																fontSize: "0.875rem",
+															}
+														: {}
+												}
+											>
+												{emptyMessage || `No ${pluralize(itemType)} found`}
+											</td>
+										</tr>
+									)}
+								</tbody>
+							</table>
+						</div>
 
-					{/* Pagination */}
-					{!showAllEntries && displayTotal > 20 && (
-						<div className={`d-flex justify-content-between align-items-center mt-0`}>
-							<div className="d-flex align-items-center gap-0">
-								{[
-									{
-										action: () => setCurrentPage(0),
-										disabled: currentPage === 0,
-										icon: "chevron-double-left",
-										label: "First",
-									},
-									{
-										action: () => setCurrentPage(Math.max(0, currentPage - 1)),
-										disabled: currentPage === 0,
-										icon: "chevron-left",
-										label: "Previous",
-									},
-									{
-										action: () => setCurrentPage(Math.min(totalPages - 1, currentPage + 1)),
-										disabled: currentPage >= totalPages - 1,
-										icon: "chevron-right",
-										label: "Next",
-									},
-									{
-										action: () => setCurrentPage(totalPages - 1),
-										disabled: currentPage >= totalPages - 1,
-										icon: "chevron-double-right",
-										label: "Last",
-									},
-								].map(
-									({ action, disabled, icon, label }): JSX.Element => (
-										<Button
-											key={label}
-											variant="outline-secondary"
-											size="sm"
-											className={compact ? "py-0 px-1" : "py-0 px-2"}
-											onClick={action}
-											disabled={disabled}
-											aria-label={label}
+						{/* Pagination */}
+						{!showAllEntries && displayTotal > 20 && (
+							<div className={`d-flex justify-content-between align-items-center mt-0`}>
+								<div className="d-flex align-items-center gap-0">
+									{[
+										{
+											action: () => setCurrentPage(0),
+											disabled: currentPage === 0,
+											icon: "chevron-double-left",
+											label: "First",
+										},
+										{
+											action: () => setCurrentPage(Math.max(0, currentPage - 1)),
+											disabled: currentPage === 0,
+											icon: "chevron-left",
+											label: "Previous",
+										},
+										{
+											action: () => setCurrentPage(Math.min(totalPages - 1, currentPage + 1)),
+											disabled: currentPage >= totalPages - 1,
+											icon: "chevron-right",
+											label: "Next",
+										},
+										{
+											action: () => setCurrentPage(totalPages - 1),
+											disabled: currentPage >= totalPages - 1,
+											icon: "chevron-double-right",
+											label: "Last",
+										},
+									].map(
+										({ action, disabled, icon, label }): JSX.Element => (
+											<Button
+												key={label}
+												variant="outline-secondary"
+												size="sm"
+												className={compact ? "py-0 px-1" : "py-0 px-2"}
+												onClick={action}
+												disabled={disabled}
+												aria-label={label}
+												style={compact ? { fontSize: "0.75rem" } : {}}
+											>
+												<i className={`bi bi-${icon}`} aria-hidden="true"></i>
+											</Button>
+										),
+									)}
+								</div>
+								<div className="d-flex align-items-center gap-2">
+									{isServerPagination && (
+										<span
+											className={`small text-muted text-nowrap`}
 											style={compact ? { fontSize: "0.75rem" } : {}}
 										>
-											<i className={`bi bi-${icon}`} aria-hidden="true"></i>
-										</Button>
-									),
-								)}
-							</div>
-							<div className="d-flex align-items-center gap-2">
-								{isServerPagination && (
+											{currentPage * pageSize + 1} to{" "}
+											{Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount}
+										</span>
+									)}
 									<span
 										className={`small text-muted text-nowrap`}
 										style={compact ? { fontSize: "0.75rem" } : {}}
 									>
-										{currentPage * pageSize + 1} to{" "}
-										{Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount}
+										Page {currentPage + 1} of {totalPages || 1}
 									</span>
-								)}
-								<span
-									className={`small text-muted text-nowrap`}
-									style={compact ? { fontSize: "0.75rem" } : {}}
-								>
-									Page {currentPage + 1} of {totalPages || 1}
-								</span>
-								<Form.Select
-									size="sm"
-									id="page-items-select"
-									value={pageSize}
-									onChange={(e): void => {
-										setPageSize(Number(e.target.value));
-									}}
-								>
-									{[20, 30, 40, 50, 100].map(
-										(size): JSX.Element => (
-											<option key={size} value={size}>
-												Show {size} Entries
-											</option>
-										),
-									)}
-								</Form.Select>
+									<Form.Select
+										size="sm"
+										id="page-items-select"
+										value={pageSize}
+										onChange={(e): void => {
+											setPageSize(Number(e.target.value));
+										}}
+									>
+										{[20, 30, 40, 50, 100].map(
+											(size): JSX.Element => (
+												<option key={size} value={size}>
+													Show {size} Entries
+												</option>
+											),
+										)}
+									</Form.Select>
+								</div>
 							</div>
-						</div>
-					)}
-				</>
-			)}
+						)}
+					</>
+				)}
 
-			{contextMenu?.show && (
-				<ContextMenu
-					position={{ x: contextMenu.x, y: contextMenu.y }}
-					items={getContextMenuItems(contextMenu.item)}
-					selectedItem={contextMenu.item}
-					onClose={() => setContextMenu(null)}
-					onItemClick={(menuItem: MenuItem | SubMenuItem, item: any): void => {
-						if (menuItem.function) {
-							menuItem.function(item);
-						}
-					}}
-					compact={compact}
-				/>
-			)}
+				{contextMenu?.show && (
+					<ContextMenu
+						position={{ x: contextMenu.x, y: contextMenu.y }}
+						items={getContextMenuItems(contextMenu.item)}
+						selectedItem={contextMenu.item}
+						onClose={() => setContextMenu(null)}
+						onItemClick={(menuItem: MenuItem | SubMenuItem, item: any): void => {
+							if (menuItem.function) {
+								menuItem.function(item);
+							}
+						}}
+						compact={compact}
+					/>
+				)}
 
-			{children ? children(data) : null}
-			<Modal ref={modalRef} onSuccess={handleSuccess} size={modalSize} {...modalProps} />
-		</div>
+				{children ? children(data) : null}
+				<Modal ref={modalRef} onSuccess={handleSuccess} size={modalSize} {...modalProps} />
+			</div>
+			<FollowUpModal ref={followUpModalRef} />
+		</>
 	);
 };
 

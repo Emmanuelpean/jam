@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import { modalViewFields } from "../view/ModalFields";
-import { PersonData } from "../../../services/Schemas";
+import { InterviewData, JobData, PersonData } from "../../../services/Schemas";
 import stringSimilarity from "string-similarity";
 
 export type SelectOption = {
@@ -11,6 +11,11 @@ export type SelectOption = {
 	label: string;
 	data?: any;
 };
+
+export interface GroupedSelectOption {
+	label: string;
+	options: SelectOption[];
+}
 
 export function findClosestOption(options: SelectOption[], name: string): string | null {
 	if (!name || options.length === 0) return null;
@@ -68,6 +73,24 @@ export const toSelectOptions = <T extends Record<string, any>>(
 			data: item,
 		}),
 	);
+};
+
+export const getContactOptions = (dataContext: DataContextValue, job: JobData): GroupedSelectOption[] => {
+	const persons: PersonData[] = dataContext.persons.filter((person: PersonData): boolean => person.email !== null);
+	const jobContacts: PersonData[] = persons.filter((person: PersonData): boolean =>
+		job.contacts?.includes(person.id),
+	);
+	const interviews: InterviewData[] = dataContext.interviews.filter(
+		(interview: InterviewData): boolean => interview.job_id === job.id,
+	);
+	const interviewContacts: PersonData[] = persons.filter((person: PersonData): boolean =>
+		interviews.some((interview: InterviewData) => interview.interviewers?.includes(person.id)),
+	);
+	return [
+		{ label: "Job Contacts", options: toSelectOptions(jobContacts) },
+		{ label: "Interviewers", options: toSelectOptions(interviewContacts) },
+		{ label: "All Contacts", options: toSelectOptions(persons) },
+	];
 };
 
 export const useFormOptions = (): UseFormOptionsReturn => {

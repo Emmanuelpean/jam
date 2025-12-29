@@ -1,12 +1,12 @@
-import React, { JSX, useCallback, useState, useRef } from "react";
-import Select, { ActionMeta, GroupBase, MultiValue, SingleValue } from "react-select";
+import React, { JSX, useCallback, useRef, useState } from "react";
+import Select, { ActionMeta, MultiValue, SingleValue } from "react-select";
 import makeAnimated from "react-select/animated";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 import "./SelectWidget.css";
 import { FloatingPreview } from "../../FloatingPreview/FloatingPreview";
 import { CustomSelectOption } from "../form/CustomSelectOption";
 import { ModalViewFields } from "../view/ModalFields";
-import { SelectOption } from "../form/FormOptions";
+import { GroupedSelectOption, SelectOption } from "../form/FormOptions";
 
 export interface SelectWidgetPreviewConfig {
 	enabled: boolean;
@@ -15,6 +15,33 @@ export interface SelectWidgetPreviewConfig {
 }
 
 const animatedComponents = makeAnimated();
+
+// Type guard to check if options are grouped
+const isGroupedOptions = (
+	options: readonly (SelectOption | GroupedSelectOption)[],
+): options is readonly GroupedSelectOption[] => {
+	return options.length > 0 && "options" in options[0]!;
+};
+
+// Helper function to find option in both flat and grouped arrays
+const findOption = (
+	options: readonly (SelectOption | GroupedSelectOption)[] | undefined,
+	targetValue: string,
+): SelectOption | undefined => {
+	if (!options || options.length === 0) return undefined;
+
+	if (isGroupedOptions(options)) {
+		// Search within grouped options
+		for (const group of options) {
+			const found = group.options.find((opt) => opt.value === targetValue);
+			if (found) return found;
+		}
+		return undefined;
+	} else {
+		// Search flat options - type is now narrowed to SelectOption[]
+		return (options as readonly SelectOption[]).find((opt) => opt.value === targetValue);
+	}
+};
 
 const CustomDropdownIndicator = (props: any): JSX.Element => {
 	const [hover, setHover] = useState(false);
@@ -140,7 +167,7 @@ export const SelectInput = ({
 			selectedValue = value
 				.map((item: any) => {
 					const id = typeof item === "object" && item !== null ? item.id : item;
-					return field.options!.find((opt) => opt.value === id);
+					return findOption(field.options, id);
 				})
 				.filter(Boolean) as SelectOption[];
 		} else {
@@ -148,7 +175,7 @@ export const SelectInput = ({
 		}
 	} else {
 		if (value !== null && value !== undefined && value !== "" && field.options) {
-			selectedValue = field.options.find((option) => option.value === value) || null;
+			selectedValue = findOption(field.options, value) || null;
 		}
 	}
 
@@ -169,7 +196,7 @@ export const SelectInput = ({
 
 	const selectElement = (
 		<>
-			<Select<SelectOption, boolean, GroupBase<SelectOption>>
+			<Select<SelectOption, boolean>
 				name={field.name}
 				value={selectedValue}
 				onChange={(

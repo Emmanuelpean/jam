@@ -1,7 +1,7 @@
 import React, { MouseEvent, useEffect, useRef, useState } from "react";
 import "./ContextMenu.css";
 
-export type MenuItemKey = "view" | "edit" | "delete" | "activate" | "deactivate" | "import" | "snooze";
+export type MenuItemKey = "view" | "edit" | "delete" | "activate" | "deactivate" | "import" | "snooze" | "followup";
 
 export interface MenuItem {
 	action: MenuItemKey;
