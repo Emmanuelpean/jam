@@ -59,6 +59,8 @@
 	},
 	"devDependencies": {
 		"@types/leaflet": "^1.9.20",
-		"prettier": "^3.5.3"
+		"prettier": "^3.5.3",
+		"stylelint": "^16.26.1",
+		"stylelint-config-standard": "^39.0.1"
 	}
 }
