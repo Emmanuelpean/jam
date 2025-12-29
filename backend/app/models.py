@@ -200,6 +200,17 @@ class User(CommonBase, Base):
     email_change_token = Column(String, nullable=True)
     email_change_token_created_at = Column(TIMESTAMP(timezone=True), nullable=True)
     token_version = Column(Integer, default=0, nullable=False)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
+
+    @hybrid_property
+    def name(self) -> str | None:
+        """Computed property that combines the first and last name"""
+
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        else:
+            return None
 
 
 class UserQualification(Owned, Base):
@@ -406,6 +417,7 @@ class Person(Owned, Base):
     - `phone` (str, optional): Phone number of the person.
     - `role` (str, optional): Role or position held by the person within the company.
     - `linkedin_url` (str, optional): LinkedIn profile URL of the person.
+    - `is_recruiter` (bool): Indicates whether the person is a recruiter.
     - `name` (str): Computed property combining first and last name.
 
     Foreign keys:
@@ -424,6 +436,7 @@ class Person(Owned, Base):
     phone = Column(String, nullable=True)
     role = Column(String, nullable=True)
     linkedin_url = Column(String, nullable=True)
+    is_recruiter = Column(Boolean, nullable=False, server_default=expression.false())
 
     # Foreign keys
     company_id = Column(Integer, ForeignKey("company.id", ondelete="SET NULL"), nullable=True, index=True)

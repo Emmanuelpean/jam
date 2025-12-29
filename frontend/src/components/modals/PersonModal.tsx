@@ -17,14 +17,15 @@ export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			[formFields.firstName({ placeholder: "Jane" }), formFields.lastName({ placeholder: "Doe" })],
 			[formFields.company(companies, companyModalRef), formFields.role({ placeholder: "Team Leader" })],
 			[formFields.email({ placeholder: "jane.doe@company.com" }), formFields.phone()],
-			[formFields.linkedinUrl({ placeholder: "https://linkedin.com/in/janedoe" })],
+			formFields.linkedinUrl({ placeholder: "https://linkedin.com/in/janedoe" }),
+			formFields.isRecruiter(),
 		];
 
 		const viewFieldsArray: Fields = [
 			[modalViewFields.personName({ isTitle: true })],
 			[modalViewFields.companyBadge(), modalViewFields.role()],
 			[modalViewFields.email(), modalViewFields.phone()],
-			modalViewFields.linkedinUrl(),
+			[modalViewFields.linkedinUrl(), modalViewFields.isRecruiter()],
 		];
 
 		const fields = {
@@ -66,6 +67,7 @@ export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				role: data.role?.trim() || null,
 				linkedin_url: data.linkedin_url?.trim() || null,
 				company_id: data.company_id || null,
+				is_recruiter: data.is_recruiter,
 			};
 		};
 

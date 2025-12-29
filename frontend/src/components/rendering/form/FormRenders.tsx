@@ -1,5 +1,4 @@
 import { JSX } from "react";
-import { GroupBase } from "react-select";
 import { Theme, THEMES } from "../../../utils/Theme";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import {
@@ -135,6 +134,13 @@ export const formFields = {
 	caseSensitive: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "case_sensitive",
 		label: "Case Sensitive",
+		type: "checkbox",
+		...overrides,
+	}),
+
+	isRecruiter: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: "is_recruiter",
+		label: "Is Recruiter",
 		type: "checkbox",
 		...overrides,
 	}),

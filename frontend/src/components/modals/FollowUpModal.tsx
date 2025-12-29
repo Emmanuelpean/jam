@@ -1,15 +1,14 @@
 import React, { forwardRef, useImperativeHandle, useState } from "react";
-import { Modal } from "react-bootstrap";
+import { Button, ButtonGroup, Dropdown, Modal } from "react-bootstrap";
 import { useAlert } from "../../contexts/AlertContext";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
-import { getContactOptions, GroupedSelectOption } from "../rendering/form/FormOptions";
-import { JobData, PersonData } from "../../services/Schemas";
+import { GroupedSelectOption, useFormOptions } from "../rendering/form/FormOptions";
+import { CompanyData, JobData, PersonData } from "../../services/Schemas";
 import { useAuth } from "../../contexts/AuthContext";
 import { Errors, FormField, SyntheticEvent } from "../rendering/widgets/WidgetRenders";
 import { ModalFormField } from "../rendering/form/FormRenders";
 import { areDifferent } from "../../utils/Utils";
-import "./DataModal/DataModal.css";
-import { ActionButton } from "../rendering/form/ActionButton";
+import "./FollowUpModal.css";
 
 export interface FollowUpModalHandle {
 	show: (job: JobData) => void;
@@ -17,14 +16,22 @@ export interface FollowUpModalHandle {
 
 export interface FormData {
 	body: string;
-	contact: number;
+	contactId: number;
 	subject: string;
 }
 
-export function jobFollowUpEmail(hiringManager: string, jobTitle: string, yourName: string) {
+type mailClient = "default" | "gmail" | "outlook";
+
+export function jobFollowUpEmail(
+	hiringManager: string,
+	jobTitle: string,
+	yourName: string,
+	company: string | null = null,
+): string {
+	company = company ? ` at ${company}` : "";
 	return `Hi ${hiringManager},
 
-I hope you are well. I am writing to follow up on my application for the ${jobTitle} position and to kindly ask if there have been any updates regarding the recruitment process.
+I hope you are well. I am writing to follow up on my application for the ${jobTitle} position${company} and to kindly ask if there have been any updates regarding the recruitment process.
 
 Thank you for your time and consideration.
 
@@ -37,7 +44,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 	const defaultFormData: FormData = {
 		body: "",
 		subject: "",
-		contact: 0,
+		contactId: 0,
 	};
 	const [internalShow, setInternalShow] = useState(false);
 	const [currentJob, setCurrentJob] = useState<JobData | null>(null);
@@ -48,11 +55,12 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 	const [errors, setErrors] = useState<Errors>({});
 	const dataContext: DataContextValue = useDataContext();
 	const { currentUser } = useAuth();
+	const { getContactOptions } = useFormOptions();
 
 	useImperativeHandle(ref, () => ({
 		show: (job: JobData): void => {
 			setCurrentJob(job);
-			setContactOptions(getContactOptions(dataContext, job));
+			setContactOptions(getContactOptions(job));
 			const formData: FormData = transformInputData(job);
 			setFormData(formData);
 			setOriginalFormData(formData);
@@ -61,21 +69,32 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 	}));
 
 	const generateEmailBody = (contact: PersonData | undefined, job: JobData): string => {
-		return jobFollowUpEmail(contact?.first_name || "[Contact Name]", job?.title || "[Job Title]", "[Your Name]");
+		let companyString: string | null = null;
+		if (contact?.is_recruiter && contact.company_id !== job.company_id) {
+			companyString =
+				dataContext.companies.find((c: CompanyData): boolean => c.id === contact?.company_id)?.name ||
+				"[Company Name]";
+		}
+		return jobFollowUpEmail(
+			contact?.first_name || "[Contact Name]",
+			job?.title || "[Job Title]",
+			currentUser?.name || "[Your Name]",
+			companyString,
+		);
 	};
 
 	const generateEmailSubject = (job: JobData): string => {
-		return `Follow Up on My Application for ${job?.title || "[Job Title]"}`;
+		return `Follow Up on My Application for the ${job?.title || "[Job Title]"} position`;
 	};
 
 	const transformInputData = (data: JobData): FormData => {
-		const contactOptions: GroupedSelectOption[] = getContactOptions(dataContext, data);
-		const optionValue: string = contactOptions[0]?.options[0]?.value || "";
+		const contactOptions: GroupedSelectOption[] = getContactOptions(data);
+		const optionValue: string = contactOptions[0]?.options[0]?.value || contactOptions[1]?.options[0]?.value || "";
 		const contact: PersonData | undefined = dataContext.persons.find(
 			(person: PersonData): boolean => person.id === parseInt(optionValue),
 		);
 		return {
-			contact: parseInt(optionValue || "0"),
+			contactId: parseInt(optionValue || "0"),
 			body: generateEmailBody(contact, data),
 			subject: generateEmailSubject(data),
 		};
@@ -132,7 +151,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 
 	const selectField: ModalFormField = {
 		type: "select",
-		name: "contact",
+		name: "contactId",
 		label: "Contact",
 		options: contactOptions,
 	};
@@ -152,16 +171,50 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 		placeholder: "Enter the email subject here...",
 	};
 
-	const handleSend = (): void => {
+	const buildEmailUrl = (service: "default" | "gmail" | "outlook"): string => {
 		const contact: PersonData | undefined = dataContext.persons.find(
-			(person: PersonData): boolean => person.id === formData.contact,
+			(person: PersonData): boolean => person.id === formData.contactId,
 		);
 
-		const emailAddress = contact?.email || "";
-		const subject = encodeURIComponent(formData.subject);
-		const body = encodeURIComponent(formData.body);
+		const emailAddress: string = contact?.email || "";
+		const subject: string = encodeURIComponent(formData.subject);
+		const body: string = encodeURIComponent(formData.body);
 
-		window.location.href = `mailto:${emailAddress}?subject=${subject}&body=${body}`;
+		switch (service) {
+			case "gmail":
+				return `https://mail.google.com/mail/?view=cm&fs=1&to=${emailAddress}&su=${subject}&body=${body}`;
+			case "outlook":
+				return `https://outlook.office.com/mail/deeplink/compose?to=${emailAddress}&subject=${subject}&body=${body}`;
+			case "default":
+			default:
+				return `mailto:${emailAddress}?subject=${subject}&body=${body}`;
+		}
+	};
+
+	const createUpdate = async (): Promise<void> => {
+		const result: boolean = await showConfirm({
+			title: "Create Update?",
+			message: "Have you sent the follow up email? An update will be created for this job.",
+			confirmText: "Yes",
+			cancelText: "No",
+		});
+		if (result) {
+			dataContext
+				.addEntity("jobApplicationUpdate", {
+					type: "sent",
+					job_id: currentJob?.id,
+					note: `Follow up email sent to ${formData.contactId}`,
+					date: new Date().toISOString(),
+				})
+				.then((): void => {
+					hide();
+				});
+		}
+	};
+
+	const handleSend = (service: mailClient): void => {
+		window.open(buildEmailUrl(service), "_blank", "noopener,noreferrer");
+		createUpdate().then((): void => {});
 	};
 
 	return (
@@ -175,10 +228,36 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 				{FormField(bodyField, formData, handleChange, errors, currentUser)}
 			</Modal.Body>
 			<Modal.Footer>
-				<div className="modal-buttons-container">
-					<ActionButton variant="secondary" onClick={hide} defaultText={"Close"} fullWidth={true} />
-					<ActionButton variant="primary" onClick={handleSend} defaultText={"Send"} fullWidth={true} />
-				</div>
+				<Button variant="secondary" onClick={handleCloseWithConfirmation}>
+					Close
+				</Button>
+				<Dropdown as={ButtonGroup} className="email-service-dropdown">
+					<Button variant="primary" onClick={() => handleSend("default")}>
+						<i className="bi bi-send-fill me-2"></i>
+						Send Email
+					</Button>
+					<Dropdown.Toggle
+						split
+						variant="primary"
+						id="dropdown-split-email"
+						className="dropdown-toggle-split"
+					/>
+					<Dropdown.Menu align="end" className="email-dropdown-menu">
+						<Dropdown.Item onClick={() => handleSend("default")} className="email-dropdown-item">
+							<i className="bi bi-envelope-fill me-2"></i>
+							Default Email Client
+						</Dropdown.Item>
+						<Dropdown.Divider />
+						<Dropdown.Item onClick={() => handleSend("gmail")} className="email-dropdown-item">
+							<i className="bi bi-google me-2"></i>
+							Send with Gmail
+						</Dropdown.Item>
+						<Dropdown.Item onClick={() => handleSend("outlook")} className="email-dropdown-item">
+							<i className="bi bi-microsoft me-2"></i>
+							Send with Outlook
+						</Dropdown.Item>
+					</Dropdown.Menu>
+				</Dropdown>
 			</Modal.Footer>
 		</Modal>
 	);

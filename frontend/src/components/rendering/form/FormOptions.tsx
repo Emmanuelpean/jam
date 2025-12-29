@@ -53,6 +53,7 @@ interface UseFormOptionsReturn {
 	getPersonPreviewConfig: SelectWidgetPreviewConfig;
 	getLocationPreviewConfig: SelectWidgetPreviewConfig;
 	getAggregatorPreviewConfig: SelectWidgetPreviewConfig;
+	getContactOptions: (job: JobData) => GroupedSelectOption[];
 }
 
 export const toSelectOptions = <T extends Record<string, any>>(
@@ -75,31 +76,13 @@ export const toSelectOptions = <T extends Record<string, any>>(
 	);
 };
 
-export const getContactOptions = (dataContext: DataContextValue, job: JobData): GroupedSelectOption[] => {
-	const persons: PersonData[] = dataContext.persons.filter((person: PersonData): boolean => person.email !== null);
-	const jobContacts: PersonData[] = persons.filter((person: PersonData): boolean =>
-		job.contacts?.includes(person.id),
-	);
-	const interviews: InterviewData[] = dataContext.interviews.filter(
-		(interview: InterviewData): boolean => interview.job_id === job.id,
-	);
-	const interviewContacts: PersonData[] = persons.filter((person: PersonData): boolean =>
-		interviews.some((interview: InterviewData) => interview.interviewers?.includes(person.id)),
-	);
-	return [
-		{ label: "Job Contacts", options: toSelectOptions(jobContacts) },
-		{ label: "Interviewers", options: toSelectOptions(interviewContacts) },
-		{ label: "All Contacts", options: toSelectOptions(persons) },
-	];
-};
-
 export const useFormOptions = (): UseFormOptionsReturn => {
-	const contextData: DataContextValue = useDataContext();
+	const dataContext: DataContextValue = useDataContext();
 
 	const getCompanyPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
 		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
-		getDataById: (id: number) => findItemById(contextData.companies, id),
+		getDataById: (id: number) => findItemById(dataContext.companies, id),
 	};
 
 	const getPersonPreviewConfig: SelectWidgetPreviewConfig = {
@@ -109,24 +92,24 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 			modalViewFields.email(),
 			[modalViewFields.companyBadge(), modalViewFields.role()],
 		],
-		getDataById: (id: number) => findItemById(contextData.persons, id),
+		getDataById: (id: number) => findItemById(dataContext.persons, id),
 	};
 
 	const getLocationPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
 		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.locationMap({ label: "" })],
-		getDataById: (id: number) => findItemById(contextData.locations, id),
+		getDataById: (id: number) => findItemById(dataContext.locations, id),
 	};
 
 	const getAggregatorPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
 		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.url()],
-		getDataById: (id: number) => findItemById(contextData.aggregators, id),
+		getDataById: (id: number) => findItemById(dataContext.aggregators, id),
 	};
 
 	const getPersonLabel = (person: PersonData): string => {
 		if (person.company_id) {
-			const company = findItemById(contextData.companies, person.company_id);
+			const company = findItemById(dataContext.companies, person.company_id);
 			if (company) {
 				return `${person.name} (${company.name})`;
 			}
@@ -134,42 +117,62 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 		return person.name;
 	};
 
+	const getContactOptions = (job: JobData): GroupedSelectOption[] => {
+		const persons: PersonData[] = dataContext.persons.filter(
+			(person: PersonData): boolean => person.email !== null,
+		);
+		const jobContacts: PersonData[] = persons.filter((person: PersonData): boolean =>
+			job.contacts?.includes(person.id),
+		);
+		const interviews: InterviewData[] = dataContext.interviews.filter(
+			(interview: InterviewData): boolean => interview.job_id === job.id,
+		);
+		const interviewContacts: PersonData[] = persons.filter((person: PersonData): boolean =>
+			interviews.some((interview: InterviewData) => interview.interviewers?.includes(person.id)),
+		);
+		return [
+			{ label: "Job Contacts", options: toSelectOptions(jobContacts) },
+			{ label: "Interviewers", options: toSelectOptions(interviewContacts) },
+			{ label: "All Contacts", options: toSelectOptions(persons) },
+		];
+	};
+
 	// Convert data to SelectOptions and memoize
 	const companyOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(contextData.companies),
-		[contextData.companies],
+		(): SelectOption[] => toSelectOptions(dataContext.companies),
+		[dataContext.companies],
 	);
 	const locationOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(contextData.locations),
-		[contextData.locations],
+		(): SelectOption[] => toSelectOptions(dataContext.locations),
+		[dataContext.locations],
 	);
 	const keywordOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(contextData.keywords),
-		[contextData.keywords],
+		(): SelectOption[] => toSelectOptions(dataContext.keywords),
+		[dataContext.keywords],
 	);
 	const personOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(contextData.persons, "id", getPersonLabel),
-		[contextData.persons],
+		(): SelectOption[] => toSelectOptions(dataContext.persons, "id", getPersonLabel),
+		[dataContext.persons],
 	);
 	const aggregatorOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(contextData.aggregators),
-		[contextData.aggregators],
+		(): SelectOption[] => toSelectOptions(dataContext.aggregators),
+		[dataContext.aggregators],
 	);
 	const jobOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(contextData.jobs, "id", "name"),
-		[contextData.jobs],
+		(): SelectOption[] => toSelectOptions(dataContext.jobs, "id", "name"),
+		[dataContext.jobs],
 	);
 	const countryOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(contextData.countries, "name", "name"),
-		[contextData.countries],
+		(): SelectOption[] => toSelectOptions(dataContext.countries, "name", "name"),
+		[dataContext.countries],
 	);
 	const currencyOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(contextData.currencies, "code", "symbol"),
-		[contextData.currencies],
+		(): SelectOption[] => toSelectOptions(dataContext.currencies, "code", "symbol"),
+		[dataContext.currencies],
 	);
 	const currencyNameOptions: SelectOption[] = useMemo(
-		(): SelectOption[] => toSelectOptions(contextData.currencies, "code", "name"),
-		[contextData.currencies],
+		(): SelectOption[] => toSelectOptions(dataContext.currencies, "code", "name"),
+		[dataContext.currencies],
 	);
 
 	return {
@@ -186,6 +189,7 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 		getPersonPreviewConfig,
 		getLocationPreviewConfig,
 		getAggregatorPreviewConfig,
+		getContactOptions,
 	};
 };
 

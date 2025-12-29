@@ -102,6 +102,7 @@ export interface PersonTransform {
 	linkedin_url: string | null;
 	role: string | null;
 	company_id: number | null;
+	is_recruiter: boolean;
 }
 
 export interface PersonData extends OwnedOut {
@@ -113,6 +114,7 @@ export interface PersonData extends OwnedOut {
 	role: string | null;
 	linkedin_url: string | null;
 	company_id: number | null;
+	is_recruiter: boolean;
 }
 
 // ----------------------------------------------- JOB APPLICATION UPDATE ----------------------------------------------
@@ -246,6 +248,9 @@ export interface UserData extends OwnedOut {
 	default_currency: string;
 	pending_email: string | null;
 	email_change_token: string | null;
+	first_name: string | null;
+	last_name: string | null;
+	name: string | null;
 }
 
 // ---------------------------------------------------- SCRAPED JOB ----------------------------------------------------
