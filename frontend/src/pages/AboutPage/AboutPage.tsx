@@ -12,9 +12,11 @@ import v100 from "../../releaseNotes/V1_0_0";
 import v101 from "../../releaseNotes/V1_0_1";
 import v102 from "../../releaseNotes/V1_0_2";
 import v110 from "../../releaseNotes/V1_1_0";
+import v120 from "../../releaseNotes/V1_2_0";
 
 const AboutPage = () => {
 	const releaseNotes: Record<string, any> = {
+		"1.2.0": v120,
 		"1.1.0": v110,
 		"1.0.2": v102,
 		"1.0.1": v101,
