@@ -9,10 +9,10 @@ import { accessAttribute } from "../../utils/Utils";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
 import {
+	useDeleteEntity,
 	useActivateEntity,
 	useDeactivateEntity,
 	useDeactivateHandler,
-	useDeleteHandler,
 } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { MenuItem } from "./ContextMenu";
@@ -60,7 +60,6 @@ export interface GenericTableProps {
 	defaultModalMode?: modalModes;
 
 	// Data management
-	nameKey: string;
 	itemType: string;
 	initialData?: any;
 
@@ -91,7 +90,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	Modal,
 	modalSize = "lg",
 	modalProps = {},
-	nameKey,
 	itemType,
 	title,
 	showAllEntries = false,
@@ -305,10 +303,10 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		}
 	};
 
-	const activeHandler = useDeactivateHandler(entityType, nameKey, itemType);
-	const deleteHandler = useDeleteHandler(entityType, nameKey, itemType);
-	const activateEntityHandler = useActivateEntity(entityType, nameKey, itemType);
-	const deactivateEntityHandler = useDeactivateEntity(entityType, nameKey, itemType);
+	const activeHandler = useDeactivateHandler(entityType);
+	const deleteHandler = useDeleteEntity(entityType);
+	const activateEntityHandler = useActivateEntity(entityType);
+	const deactivateEntityHandler = useDeactivateEntity(entityType);
 
 	const handleDelete = async (item: JamData) => {
 		let result: boolean;

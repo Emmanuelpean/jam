@@ -22,7 +22,6 @@ const JobsPage = (): JSX.Element => {
 			title="Jobs"
 			columns={columns}
 			Modal={JobModal}
-			nameKey="title"
 			itemType="Job"
 			modalSize="xl"
 			menuItems={["view", "edit", "delete", "followup"]}

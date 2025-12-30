@@ -22,7 +22,6 @@ export const UserManagementPage: React.FC = () => {
 			title="Users"
 			columns={columns}
 			Modal={UserModal}
-			nameKey="email"
 			itemType="User"
 		/>
 	);

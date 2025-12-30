@@ -10,13 +10,13 @@ import { PersonModal } from "../../modals/PersonModal";
 import { KeywordModal } from "../../modals/KeywordModal";
 import { JobModal } from "../../modals/JobModal";
 import { AggregatorModal } from "../../modals/AggregatorModal";
-import { useDeleteHandler } from "../../../utils/DeleteHandler";
 import { JobApplicationUpdateModal } from "../../modals/JobApplicationUpdateModal";
 import { InterviewModal } from "../../modals/InterviewModal";
+import { useDeleteEntity } from "../../../utils/DeleteHandler";
+import { EntityType } from "../../../contexts/DataContext";
 
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 
-// Badge-specific interface
 export interface DataBadgeProps<T> {
 	item: T;
 	badgeId?: string;
@@ -30,10 +30,11 @@ export interface DataBadgeProps<T> {
 // Create badge manager with modal integration
 const createBadgeModalManager = <T,>(
 	ModalComponent: FlexibleModalComponent,
+	entityType: EntityType,
 	defaultIcon: string,
 	defaultBadgeClass: string = "bg-info",
 	defaultDisplayText: (item: T) => string,
-	defaultMenuItemKeys: MenuItemKey[] = ["view", "edit"],
+	defaultMenuItemKeys: MenuItemKey[] = ["view", "edit", "delete"],
 ) => {
 	return ({
 		item,
@@ -47,12 +48,12 @@ const createBadgeModalManager = <T,>(
 		const modalRef = useRef<DataModalHandle>(null);
 		const { openContextMenu } = useContextMenu();
 		const followUpModalRef = useRef<FollowUpModalHandle>(null);
-		// const deleteHandler = useDeleteHandler()
+		const deleteHandler = useDeleteEntity(entityType);
 
 		const availableMenuItems: MenuItem[] = [
 			{ action: "view", icon: "eye", text: "View", function: modalRef.current?.showView },
 			{ action: "edit", icon: "pencil", text: "Edit", function: modalRef.current?.showEdit },
-			{ action: "delete", icon: "trash", text: "Delete", color: "#dc3545" },
+			{ action: "delete", icon: "trash", text: "Delete", color: "#dc3545", function: deleteHandler },
 			{
 				action: "followup",
 				icon: "bell",
@@ -96,6 +97,7 @@ const createBadgeModalManager = <T,>(
 
 export const PersonBadge = createBadgeModalManager(
 	PersonModal,
+	"person",
 	"file-person",
 	"bg-info",
 	(item: PersonData): string => item.name,
@@ -103,42 +105,49 @@ export const PersonBadge = createBadgeModalManager(
 );
 export const CompanyBadge = createBadgeModalManager(
 	CompanyModal,
+	"company",
 	"building",
 	"bg-success",
 	(item: CompanyData): string => item.name,
 );
 export const LocationBadge = createBadgeModalManager(
 	LocationModal,
+	"location",
 	"geo-alt",
 	"bg-warning",
 	(item: LocationData): string => item.name,
 );
 export const KeywordBadge = createBadgeModalManager(
 	KeywordModal,
+	"keyword",
 	"tag",
 	"bg-secondary",
 	(item: KeywordData): string => item.name,
 );
 export const JobBadge = createBadgeModalManager(
 	JobModal,
+	"job",
 	"briefcase",
 	"bg-primary",
 	(item: JobData): string => item.title,
 );
 export const AggregatorBadge = createBadgeModalManager(
 	AggregatorModal,
+	"aggregator",
 	"collection",
 	"bg-dark",
 	(item: AggregatorData): string => item.name,
 );
 export const JobApplicationUpdateBadge = createBadgeModalManager(
 	JobApplicationUpdateModal,
+	"jobApplicationUpdate",
 	"arrow-repeat",
 	"bg-info",
 	(item: JobData): string => item.title,
 );
 export const InterviewBadge = createBadgeModalManager(
 	InterviewModal,
+	"interview",
 	"calendar-check",
 	"bg-primary",
 	(item: JobData): string => item.title,
