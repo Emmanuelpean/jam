@@ -67,8 +67,8 @@
     /* Badge colors */
     --badge-primary-bg: var(--primary-gradient);
     --badge-primary-color: white;
-    --badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
-    --badge-info-color: black;
+    --badge-info-bg: linear-gradient(135deg, #b5cbe6 0%, #606b7c 100%);
+    --badge-info-color: white;
     --badge-success-bg: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 100%);
     --badge-success-color: white;
     --badge-warning-bg: linear-gradient(135deg, #b5cbe6 0%, #428195 100%);
