@@ -15,12 +15,13 @@ import {
 	useDeleteHandler,
 } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
-import { ContextMenu, ContextMenuState, MenuItem, SubMenuItem } from "./ContextMenu";
+import { MenuItem } from "./ContextMenu";
 import LoadingSpinner from "../spinner/Spinner";
 import { DataModalHandle, modalModes } from "../modals/DataModal/DataModal";
 import { EnrichedJobData, JobData } from "../../services/Schemas";
 import "./DataTable.css";
 import FollowUpModal, { FollowUpModalHandle } from "../modals/FollowUpModal";
+import { useContextMenu } from "../../contexts/ContextMenuContext";
 
 export type Direction = "asc" | "desc";
 
@@ -113,6 +114,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const openAddModal = () => modalRef.current?.showAdd(initialData);
 	const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
 
+	// Add context menu hook
+	const { openContextMenu } = useContextMenu();
+
 	// Data management
 	const dataContext: DataContextValue = useDataContext();
 	const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -128,7 +132,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 	// UI state
 	const { showToastSuccess, showToastError } = useGlobalToast();
-	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 	const [currentPage, setCurrentPage] = useState<number>(0);
 	const [pageSize, setPageSize] = useState<number>(20);
 	const [totalCount, setTotalCount] = useState<number>(0);
@@ -272,8 +275,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 	// Event handlers
 	const handleRowClick = (event: MouseEvent<HTMLTableRowElement>, item: any): void => {
-		if (contextMenu) return;
-
 		const isInteractiveElement = (element: Element | null): boolean => {
 			if (!element) return false;
 			const tagName = element.tagName?.toLowerCase();
@@ -304,12 +305,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		}
 	};
 
-	const handleRowRightClick = (item: any, event: MouseEvent<HTMLTableRowElement>): void => {
-		event.preventDefault();
-		event.stopPropagation();
-		setContextMenu({ item, x: event.clientX, y: event.clientY, show: true });
-	};
-
 	const activeHandler = useDeactivateHandler(entityType, nameKey, itemType);
 	const deleteHandler = useDeleteHandler(entityType, nameKey, itemType);
 	const activateEntityHandler = useActivateEntity(entityType, nameKey, itemType);
@@ -335,30 +330,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			showToastSuccess("Job imported successfully.");
 		});
 	};
-
-	// Close context menu on outside click or escape
-	useEffect(() => {
-		const handleGlobalClick = (): void => {
-			if (contextMenu) {
-				setContextMenu(null);
-			}
-		};
-		const handleKeyPress = (e: KeyboardEvent): void => {
-			if (e.key === "Escape" && contextMenu) {
-				setContextMenu(null);
-			}
-		};
-
-		if (contextMenu) {
-			document.addEventListener("click", handleGlobalClick);
-			document.addEventListener("keydown", handleKeyPress);
-		}
-
-		return () => {
-			document.removeEventListener("click", handleGlobalClick);
-			document.removeEventListener("keydown", handleKeyPress);
-		};
-	}, [contextMenu]);
 
 	// Pagination calculations
 	const sortedData: JamData[] = isServerPagination ? data : getSortedData();
@@ -399,8 +370,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 					});
 			} catch (error) {
 				showToastError(`Failed to snooze ${item.title}. Please try again.`);
-			} finally {
-				setContextMenu(null);
 			}
 		};
 	};
@@ -471,7 +440,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				id: "context-menu-followup",
 				function: (item: JobData): void => {
 					followUpModalRef.current?.show(item);
-					setContextMenu(null);
 				},
 			},
 		];
@@ -496,6 +464,18 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			.filter((item: MenuItem | undefined): item is MenuItem => item !== undefined);
 	};
 
+	const handleRowRightClick = (item: any, event: MouseEvent<HTMLTableRowElement>): void => {
+		event.preventDefault();
+		event.stopPropagation();
+
+		const items = getContextMenuItems(item);
+		openContextMenu(
+			event as any, // Cast to satisfy MouseEvent<HTMLElement>
+			items,
+			item,
+			compact,
+		);
+	};
 	// Get button text based on mode
 	const getAddButtonText = (): string => {
 		if (mode === "import") {
@@ -764,21 +744,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 							</div>
 						)}
 					</>
-				)}
-
-				{contextMenu?.show && (
-					<ContextMenu
-						position={{ x: contextMenu.x, y: contextMenu.y }}
-						items={getContextMenuItems(contextMenu.item)}
-						selectedItem={contextMenu.item}
-						onClose={() => setContextMenu(null)}
-						onItemClick={(menuItem: MenuItem | SubMenuItem, item: any): void => {
-							if (menuItem.function) {
-								menuItem.function(item);
-							}
-						}}
-						compact={compact}
-					/>
 				)}
 
 				{children ? children(data) : null}

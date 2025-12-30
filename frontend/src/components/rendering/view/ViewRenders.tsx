@@ -58,6 +58,17 @@ import { scrapedJobApi } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import ScrapedJobsTableReadOnly from "../../tables/ScrapedJobTableReadOnly";
 import LoadingSpinner from "../../spinner/Spinner";
+import {
+	AggregatorBadge,
+	CompanyBadge,
+	InterviewBadge,
+	JobApplicationUpdateBadge,
+	JobBadge,
+	KeywordBadge,
+	LocationBadge,
+	PersonBadge,
+} from "./DataBadge";
+import { JobApplicationUpdateModal } from "../../modals/JobApplicationUpdateModal";
 
 // Parameters passed to the view render functions
 export interface RenderParams {
@@ -68,6 +79,7 @@ export interface RenderParams {
 	helpText?: string; // help text
 	dataContext: DataContextValue; // data context
 	token: string | null;
+	handleContextMenu?: (e: React.MouseEvent<HTMLElement>, item: any) => void;
 }
 
 // Base class for Fields (Table or Modal fields)
@@ -76,6 +88,7 @@ export interface ViewField {
 	render?: (params: RenderParams) => ReactNode; // render function to use
 	columns?: TableColumn[]; // columns for rendered tables
 	helpText?: string; // help text
+	handleContextMenu?: (e: React.MouseEvent<HTMLElement>, item: any) => void;
 }
 
 function filterByKey<T>(items: T[], key: string, id: number | undefined): T[] {
@@ -470,64 +483,27 @@ export const renderFunctions = {
 		const job: EnrichedJobData | undefined = getJamData(ctx.jobs, param.item?.job_id);
 
 		if (job) {
-			return (
-				<JobModalManager>
-					{(handleClick) => (
-						<span
-							className={`badge bg-info clickable-badge`}
-							onClick={() => handleClick(job)}
-							id={param.id}
-						>
-							<i className="bi bi-briefcase me-1"></i>
-							{job.name}
-						</span>
-					)}
-				</JobModalManager>
-			);
+			return <JobBadge item={job} badgeId={param.id} />;
 		}
-		return null;
 	},
 
 	interviewBadge: (param: RenderParams): ReactNode => {
 		if (param.item) {
 			const ctx: DataContextValue = param.dataContext;
-			const job: EnrichedJobData = getJamData(ctx.jobs, param.item.job_id)!;
-
-			return (
-				<InterviewModalManager>
-					{(handleClick) => (
-						<span
-							className={`badge bg-info clickable-badge`}
-							onClick={() => handleClick(param.item)}
-							id={param.id}
-						>
-							<i className="bi bi-briefcase me-1"></i>
-							{job.name}
-						</span>
-					)}
-				</InterviewModalManager>
-			);
+			const job: EnrichedJobData | undefined = getJamData(ctx.jobs, param.item.job_id);
+			if (job) {
+				return <InterviewBadge item={param.item} badgeId={param.id} displayText={job.name} />;
+			}
 		}
 	},
 
 	jobApplicationUpdateBadge: (param: RenderParams): ReactNode => {
 		if (param.item) {
 			const ctx: DataContextValue = param.dataContext;
-			const job: EnrichedJobData = getJamData(ctx.jobs, param.item.job_id)!;
-			return (
-				<JobApplicationUpdateModalManager>
-					{(handleClick) => (
-						<span
-							className={`badge bg-info clickable-badge`}
-							onClick={() => handleClick(param.item)}
-							id={param.id}
-						>
-							<i className="bi bi-briefcase me-1"></i>
-							{job.name}
-						</span>
-					)}
-				</JobApplicationUpdateModalManager>
-			);
+			const job: EnrichedJobData | undefined = getJamData(ctx.jobs, param.item.job_id);
+			if (job) {
+				return <JobApplicationUpdateBadge item={param.item} badgeId={param.id} displayText={job.name} />;
+			}
 		}
 	},
 
@@ -560,21 +536,8 @@ export const renderFunctions = {
 			return null;
 		}
 
-		if (displayText) {
-			return (
-				<LocationModalManager>
-					{(handleClick) => (
-						<span
-							className="badge bg-warning clickable-badge"
-							onClick={() => location && handleClick(location)}
-							id={param.id}
-						>
-							<i className={`bi ${icon} me-1`}></i>
-							{displayText}
-						</span>
-					)}
-				</LocationModalManager>
-			);
+		if (displayText && location) {
+			return <LocationBadge item={location} badgeId={param.id} icon={icon} displayText={displayText} />;
 		} else {
 			return null;
 		}
@@ -585,20 +548,7 @@ export const renderFunctions = {
 		const company: CompanyData | undefined = getJamData(ctx.companies, param.item?.company_id);
 
 		if (company) {
-			return (
-				<CompanyModalManager>
-					{(handleClick) => (
-						<span
-							className={"badge bg-info clickable-badge"}
-							onClick={() => handleClick(company)}
-							id={param.id}
-						>
-							<i className="bi bi-building me-1"></i>
-							{company.name}
-						</span>
-					)}
-				</CompanyModalManager>
-			);
+			return <CompanyBadge item={company} badgeId={param.id} />;
 		}
 		return null;
 	},
@@ -608,20 +558,7 @@ export const renderFunctions = {
 		const aggregator: AggregatorData | undefined = getJamData(ctx.aggregators, param.item?.[idKey]);
 
 		if (aggregator) {
-			return (
-				<AggregatorModalManager>
-					{(handleClick) => (
-						<span
-							className={"badge bg-info clickable-badge"}
-							onClick={() => handleClick(aggregator)}
-							id={param.id}
-						>
-							<i className="bi bi-building me-1"></i>
-							{aggregator.name}
-						</span>
-					)}
-				</AggregatorModalManager>
-			);
+			return <AggregatorBadge item={aggregator} badgeId={param.id} />;
 		}
 		return null;
 	},
@@ -658,18 +595,7 @@ export const renderFunctions = {
 				<div className="badge-group">
 					{keywords.map((keyword, index) => (
 						<span key={keyword.id || index} className="me-1">
-							<KeywordModalManager>
-								{(handleClick) => (
-									<span
-										className="badge bg-info clickable-badge"
-										onClick={() => handleClick(keyword)}
-										id={param.id ? `${param.id}-${index}` : undefined}
-									>
-										<i className="bi bi-tag me-1"></i>
-										{keyword.name}
-									</span>
-								)}
-							</KeywordModalManager>
+							<KeywordBadge item={keyword} badgeId={`${param.id}-${index}`} />
 						</span>
 					))}
 				</div>
@@ -687,18 +613,7 @@ export const renderFunctions = {
 				<div className="badge-group">
 					{persons.map((person: PersonData, index: number) => (
 						<span key={person.id || index} className="me-1">
-							<PersonModalManager>
-								{(handleClick) => (
-									<span
-										className="badge bg-info clickable-badge"
-										onClick={() => handleClick(person)}
-										id={param.id ? `${param.id}-${index}` : undefined}
-									>
-										<i className="bi bi-file-person me-1"></i>
-										{person.name}
-									</span>
-								)}
-							</PersonModalManager>
+							<PersonBadge item={person} badgeId={`${param.id}-${index}`} />
 						</span>
 					))}
 				</div>
@@ -797,6 +712,7 @@ export const RenderViewFieldWithContext: React.FC<{
 			helpText: field.helpText,
 			dataContext: context,
 			token: token,
+			handleContextMenu: field.handleContextMenu,
 		};
 		rendered = field.render(renderParams);
 	} else {

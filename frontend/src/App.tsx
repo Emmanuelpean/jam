@@ -28,6 +28,7 @@ import "./Themes.css";
 import { AlertProvider } from "./contexts/AlertContext";
 import JobRatingDashboard from "./pages/Services/JobRatingDashboard/JobRatingDashboardPage";
 import SpeculativeApplicationsPage from "./pages/SpeculativeApplicationsPage";
+import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -179,9 +180,11 @@ function App(): JSX.Element {
 			<AllProviders>
 				<AlertProvider>
 					<ToastContext.Provider value={toastMethods}>
-						<AppLayout>
-							<AppRoutes />
-						</AppLayout>
+						<ContextMenuProvider>
+							<AppLayout>
+								<AppRoutes />
+							</AppLayout>
+						</ContextMenuProvider>
 						<ToastStack toasts={toastMethods.toasts} onClose={toastMethods.hideToast} position="top-end" />
 					</ToastContext.Provider>
 				</AlertProvider>
