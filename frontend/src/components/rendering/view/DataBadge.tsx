@@ -14,7 +14,7 @@ import { JobApplicationUpdateModal } from "../../modals/JobApplicationUpdateModa
 import { InterviewModal } from "../../modals/InterviewModal";
 import { useDeleteEntity } from "../../../utils/DeleteHandler";
 import { EntityType, JamData } from "../../../contexts/DataContext";
-import { getEntityIcon, getTableIcon } from "./Icons";
+import { getEntityIcon } from "./Icons";
 
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 
@@ -89,7 +89,7 @@ const createBadgeModalManager = <T,>(
 					onContextMenu={handleContextMenu}
 					id={badgeId}
 				>
-					<i className={`bi bi-${getEntityIcon(entityType)} me-1`}></i>
+					<i className={`bi bi-${icon || getEntityIcon(entityType)} me-1`}></i>
 					{getText()}
 				</span>
 				<ModalComponent ref={modalRef} />
@@ -124,7 +124,7 @@ export const KeywordBadge = createBadgeModalManager(
 	"bg-secondary",
 	(item: KeywordData): string => item.name,
 );
-export const JobBadge = createBadgeModalManager(JobModal, "job", "bg-primary", (item: JobData): string => item.title);
+export const JobBadge = createBadgeModalManager(JobModal, "job", "bg-primary", (item: JobData): string => item.name);
 export const AggregatorBadge = createBadgeModalManager(
 	AggregatorModal,
 	"aggregator",

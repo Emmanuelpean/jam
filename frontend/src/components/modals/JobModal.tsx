@@ -25,7 +25,7 @@ interface JobAndApplicationProps extends JamDataModalProps {
 }
 
 export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
-	({ size = "lg", defaultActiveTab = "job" }: JobAndApplicationProps, ref) => {
+	({ size = "xl", defaultActiveTab = "job" }: JobAndApplicationProps, ref) => {
 		const locationModalRef = useRef<DataModalHandle>(null);
 		const personModalRef = useRef<DataModalHandle>(null);
 		const companyModalRef = useRef<DataModalHandle>(null);

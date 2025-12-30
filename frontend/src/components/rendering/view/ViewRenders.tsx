@@ -503,11 +503,11 @@ export const renderFunctions = {
 
 		let icon: string;
 		if (attendanceType === "on-site") {
-			icon = "bi-building";
+			icon = "building";
 		} else if (attendanceType === "hybrid") {
-			icon = "bi-house-door";
+			icon = "house-door";
 		} else {
-			icon = "bi-house";
+			icon = "house";
 		}
 
 		let attendanceString: string | null =
