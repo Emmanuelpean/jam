@@ -1,10 +1,10 @@
-import React from "react";
+import React, { JSX } from "react";
 import { DataTable } from "../components/tables/DataTable";
 import { JobModal } from "../components/modals/JobModal";
-import { tableColumns } from "../components/rendering/view/TableColumns";
+import { TableColumn, tableColumns } from "../components/rendering/view/TableColumns";
 
-const JobsPage = () => {
-	const columns = [
+const JobsPage = (): JSX.Element => {
+	const columns: TableColumn[] = [
 		tableColumns.titleColumn(),
 		tableColumns.companyBadgeColumn(),
 		tableColumns.locationBadgeColumn(),
