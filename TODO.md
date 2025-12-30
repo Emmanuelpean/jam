@@ -32,7 +32,7 @@
 * [X] Add new endpoint for admin only that allows to query specific job ids (as a list)
 * [X] Add job alert name extraction
 * [X] Store the scraped jobs needing scraping in the service log
-* [ ] Display the current step of the logs
+* [X] Display the current step of the logs
 
 ### Select Widgets Improvements
 * [X] Sort options alphabetically
