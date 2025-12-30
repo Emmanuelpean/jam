@@ -8,11 +8,10 @@
 }
 
 .auth-card {
-    border-radius: 32px !important;
+    border-radius: 14px !important;
     box-shadow: 0 20px 60px rgb(0 0 0 / 15%);
     width: 100%;
     max-width: 520px;
-    padding: 2.5rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -43,8 +42,7 @@
 
 .card-footer {
     text-align: center;
-    margin-top: 2rem;
-    padding-top: 1.5rem;
+    margin-top: 1rem;
     border-top: 1px solid #dee2e6;
     background-color: transparent;
 }
