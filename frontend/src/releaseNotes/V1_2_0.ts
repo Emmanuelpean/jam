@@ -4,6 +4,7 @@ export default `<h4>Version 1.2.0</h4>
 <ul>
     <li>You can now update your first and last name directly in the user settings page.</li>
     <li>A new option has been added to the person details page, allowing you to mark individual contacts as recruiters.</li>
+    <li>Badge data (e.g. company) can now be edited or deleted directly via right-click</li>
 </ul>
 
 <h5>Job Scraping Filters</h5>

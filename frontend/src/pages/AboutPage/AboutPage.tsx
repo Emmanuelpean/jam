@@ -45,6 +45,21 @@ const AboutPage = () => {
 			title: "Progress Monitoring",
 			description: "Monitor application status, progress, and deadlines",
 		},
+		{
+			icon: "bi-inbox",
+			title: "Job Alert Scraping",
+			description: "Automatically scrape job alerts from popular job board email alerts",
+		},
+		{
+			icon: "bi-star-half",
+			title: "Job Rating",
+			description: "Automatically rate scraped jobs based on your preferences to prioritise applications",
+		},
+		{
+			icon: "bi-envelope-arrow-up",
+			title: "Follow-Up Email Generator",
+			description: "Automatically generate personalized follow-up email drafts for your applications",
+		},
 	];
 
 	return (

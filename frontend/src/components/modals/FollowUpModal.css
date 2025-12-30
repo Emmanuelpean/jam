@@ -3,7 +3,7 @@
     background: var(--primary-gradient);
     border-radius: 12px !important;
     padding: 0;
-    box-shadow: 0 6px 20px var(--jam-glow), 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 20px var(--jam-glow), 0 2px 4px rgb(0 0 0 / 10%);
 }
 
 /* Make both buttons transparent so the gradient shows through */
@@ -12,18 +12,18 @@
     border: none !important;
     box-shadow: none !important;
     color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
 
 /* Remove Bootstrap's default borders between buttons */
 .email-service-dropdown .btn-primary:not(:last-child) {
-    border-right: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-right: 1px solid rgb(255 255 255 / 30%) !important;
 }
 
 /* Hover effect - darken slightly */
 .email-service-dropdown:hover {
     background: var(--primary-hover-gradient);
-    box-shadow: 0 8px 25px var(--jam-glow), 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 25px var(--jam-glow), 0 4px 8px rgb(0 0 0 / 15%);
     transform: translateY(-2px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -31,7 +31,7 @@
 /* Active state */
 .email-service-dropdown .btn-primary:active,
 .email-service-dropdown .btn-primary.active {
-    background: rgba(0, 0, 0, 0.1) !important;
+    background: rgb(0 0 0 / 10%) !important;
 }
 
 /* Focus state */
@@ -40,26 +40,21 @@
     box-shadow: none !important;
 }
 
-.dropdown-toggle-split {
-    flex: 0 0 30px !important;
-    width: 30px !important;
+.email-service-dropdown .dropdown-toggle-split {
+    width: 60px !important;  /* Override the existing !important */
+    min-width: 60px !important;
+    max-width: 60px !important;
+    flex: 0 0 60px !important;  /* Override the flex property */
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
 }
 
-/* Dropdown toggle styling */
-.dropdown-toggle-split {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-}
-
-.dropdown-toggle-split::after {
-    margin-left: 0;
-}
 
 /* Dropdown menu */
 .email-dropdown-menu {
     border-radius: 12px;
     border: 2px solid #e8eaed;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 20px rgb(0 0 0 / 15%), 0 2px 4px rgb(0 0 0 / 10%);
     padding: 0.5rem;
     margin-top: 0.5rem;
     min-width: 220px;
