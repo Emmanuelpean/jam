@@ -98,6 +98,12 @@
     background: #fff;
 }
 
+.modal-content-animated {
+    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow: hidden !important;
+}
+
+
 /* Specific fixes for tabbed modals */
 .modal-body .tab-content .modal-content-animated {
     height: auto !important;
@@ -149,19 +155,8 @@
     min-height: 0;
 }
 
-.modal-content-animated {
-    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    overflow: hidden !important;
-}
-
 .modal-content-animated-inner {
     padding-left: 2px;
     padding-right: 2px;
     overflow: visible;
-}
-
-
-.custom-tab-button:hover {
-    color: var(--primary-mid);
-    border-bottom-color: rgb(var(--primary-mid), 0.3);
 }

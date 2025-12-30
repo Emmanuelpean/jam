@@ -12,6 +12,7 @@ import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { authApi, GenericResponse } from "../../services/api/Users";
 import { ApiError, ApiResponse } from "../../services/api/Base";
 import { useLoading } from "../../contexts/LoadingContext";
+import { DEFAULT_THEME } from "../../utils/Theme";
 
 type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
@@ -62,7 +63,7 @@ function AuthForm(): JSX.Element {
 			setContentHeight(contentRef.current.scrollHeight);
 		}
 	}, [mode, registrationStep, fieldErrors]);
-	document.documentElement.setAttribute("data-theme", "mixed-berry");
+	document.documentElement.setAttribute("data-theme", DEFAULT_THEME);
 
 	useEffect(() => {
 		const token = searchParams.get("token");
