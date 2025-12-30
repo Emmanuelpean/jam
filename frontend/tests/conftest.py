@@ -761,7 +761,7 @@ class DataModalUtils(BaseUtilsClass):
         expected = (
             f"Person Details\n{entry.name}\n"
             f"Company\n{entry.company.name.upper()}\nRole\n{entry.role}\n"
-            f"Email\n{entry.email}\nPhone\n{entry.phone}\nLinkedIn Profile\nProfile\n"
+            f"Email\n{entry.email}\nPhone\n{entry.phone}\nLinkedIn Profile\nProfile\nRecruiter\n"
             f"Interviews\n({len(entry.interviews)})\nJobs\n({len(entry.jobs)})\nClose\nEdit"
         )
         assert modal.text == expected
@@ -1451,7 +1451,7 @@ class BaseTest(BaseUtils):
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
