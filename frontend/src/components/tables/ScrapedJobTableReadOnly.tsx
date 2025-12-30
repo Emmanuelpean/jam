@@ -28,7 +28,6 @@ const ScrapedJobsTableReadOnly: React.FC<DataTableProps> = ({
 				initialSortConfig={{ key: "created_at", direction: "desc" }}
 				Modal={ScrapedJobModal}
 				data={data}
-				itemType="Scraped Job"
 				modalSize="xl"
 				compact={true}
 				showAdd={false}

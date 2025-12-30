@@ -19,7 +19,6 @@ const SpeculativeApplicationsPage = (): JSX.Element => {
 			title="Speculative Applications"
 			columns={columns}
 			Modal={SpeculativeApplicationModal}
-			itemType="Speculative Application"
 			modalSize="xl"
 		/>
 	);

@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react";
+import { EntityType } from "../../../contexts/DataContext";
 
 export function getApplicationStatusBadgeClass(status: string | undefined): string {
 	switch (status?.toLowerCase()) {
@@ -27,26 +28,44 @@ export function getUpdateTypeIcon(type: string): string {
 
 export function getTableIcon(title: string): string {
 	const iconMap: Record<string, string> = {
-		Jobs: "bi-briefcase",
-		Companies: "bi-building",
-		Persons: "bi-people",
-		People: "bi-people",
-		Locations: "bi-geo-alt",
-		Tags: "bi-tags",
-		Interviews: "bi-calendar-event",
-		"Job Applications": "bi-person-workspace",
-		"Job Application Updates": "bi-bell",
-		"Job Aggregators": "bi-linkedin",
-		Users: "bi-person-lines-fill",
-		Settings: "bi-database-gear",
-		"User Settings": "bi-gear",
-		"TOAST Dashboard": "bi-envelope-arrow-down",
-		About: "bi-info-circle",
-		Admin: "bi-person-gear",
-		"Job Rating Dashboard": "bi-star-half",
-		"Speculative Applications": "bi-person-lines-fill",
+		Jobs: getEntityIcon("job"),
+		Companies: getEntityIcon("company"),
+		People: getEntityIcon("person"),
+		Locations: getEntityIcon("location"),
+		Tags: getEntityIcon("keyword"),
+		"Job Application Updates": getEntityIcon("jobApplicationUpdate"),
+		Interviews: getEntityIcon("interview"),
+		"Job Aggregators": getEntityIcon("aggregator"),
+		"Speculative Applications": getEntityIcon("speculativeApplication"),
+		Dashboard: "house-door",
+		"Job Applications": "person-workspace",
+		Users: getEntityIcon("user"),
+		Settings: getEntityIcon("setting"),
+		"User Settings": "gear",
+		"TOAST Dashboard": "envelope-arrow-down",
+		About: "info-circle",
+		Admin: "person-gear",
+		"Job Rating Dashboard": "star-half",
+		Other: "three-dots",
 	};
 	return iconMap[title] || "bi-table";
+}
+
+export function getEntityIcon(entityType: EntityType): string {
+	const iconMap: Record<string, string> = {
+		job: "briefcase",
+		company: "building",
+		person: "people",
+		location: "geo-alt",
+		keyword: "tags",
+		interview: "calendar-event",
+		jobApplicationUpdate: "bell",
+		aggregator: "linkedin",
+		user: "person-lines-fill",
+		setting: "database-gear",
+		speculativeApplication: "envelope-paper",
+	};
+	return iconMap[entityType] || "";
 }
 
 export const getAdminIcon = (isAdmin: boolean): string => {

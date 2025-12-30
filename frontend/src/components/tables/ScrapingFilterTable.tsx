@@ -77,7 +77,6 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 							columns={defaultColumns}
 							initialSortConfig={{ key: "type", direction: "asc" }}
 							Modal={ScrapingFilterModal}
-							itemType="Scraping Filters"
 							modalSize="lg"
 							showAllEntries={true}
 							compact={true}

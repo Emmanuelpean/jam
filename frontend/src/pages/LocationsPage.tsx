@@ -32,7 +32,6 @@ const LocationsPage = () => {
 			title="Locations"
 			columns={columns}
 			Modal={LocationModal}
-			itemType="Location"
 			children={locationMap}
 		></DataTable>
 	);

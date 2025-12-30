@@ -28,7 +28,7 @@ export const Accordion = <T,>({
 				style={{ cursor: "pointer" }}
 			>
 				<div className="d-flex align-items-center">
-					{icon && <i className={`${icon} me-2`}></i>}
+					{icon && <i className={`bi-${icon} me-2`}></i>}
 					<span className="fw-medium">{title}</span>
 					<span className="text-muted ms-2">({data?.length || 0})</span>
 					{helpText && <HelpBubble helpText={helpText} size="17px" />}

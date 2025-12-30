@@ -11,6 +11,7 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 	jobId,
 	data = [],
 	columns = [],
+	showAdd = true,
 }: InterviewsTableProps): JSX.Element => {
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
@@ -30,11 +31,10 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 			initialSortConfig={{ key: "date", direction: "desc" }}
 			Modal={InterviewModal}
 			modalProps={{ jobId }}
-			itemType="Interview"
 			modalSize="lg"
 			showAllEntries={true}
 			compact={true}
-			showAdd={true}
+			showAdd={showAdd}
 		/>
 	);
 };

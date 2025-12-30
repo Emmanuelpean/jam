@@ -19,7 +19,6 @@ const JobApplicationUpdatesPage = () => {
 			title="Job Application Updates"
 			columns={columns}
 			Modal={JobApplicationUpdateModal}
-			itemType="Job Application Update"
 			modalSize="lg"
 		/>
 	);
