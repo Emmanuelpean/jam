@@ -19,7 +19,7 @@ import { getEntityIcon } from "./Icons";
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 
 export interface DataBadgeProps<T> {
-	item: T;
+	item: T | undefined;
 	badgeId: string;
 	parentItem?: JamData;
 	icon?: string;
@@ -78,7 +78,13 @@ const createBadgeModalManager = <T,>(
 		};
 
 		const getText = (): string => {
-			return typeof displayText === "function" ? displayText(item) : displayText;
+			if (typeof displayText === "function") {
+				return item ? displayText(item) : "";
+			} else if (displayText) {
+				return displayText;
+			} else {
+				return "";
+			}
 		};
 
 		return (

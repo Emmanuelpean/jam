@@ -525,7 +525,7 @@ export const renderFunctions = {
 			return null;
 		}
 
-		if (displayText && location) {
+		if (displayText) {
 			return <LocationBadge item={location} badgeId={param.id} icon={icon} displayText={displayText} />;
 		} else {
 			return null;
