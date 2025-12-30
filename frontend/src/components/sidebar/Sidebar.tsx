@@ -42,7 +42,7 @@ export const Sidebar = () => {
 	const handleSidebarToggle = (): void => setIsExpanded((prev: boolean): boolean => !prev);
 
 	const navigationItems: NavigationItem[] = [
-		{ path: "/dashboard", icon: "bi-house-door", text: "Dashboard", position: "top" },
+		{ path: "/dashboard", text: "Dashboard", position: "top" },
 		{ path: "/jobs", text: "Jobs", position: "top" },
 		{ path: "/speculative-applications", text: "Speculative Applications", position: "top" },
 		{ path: "/persons", text: "People", position: "top" },
@@ -52,7 +52,6 @@ export const Sidebar = () => {
 		{ path: "/keywords", text: "Tags", position: "top" },
 		{
 			text: "Other",
-			icon: "bi-three-dots",
 			position: "top",
 			submenu: [
 				{ path: "/interviews", text: "Interviews" },
@@ -72,7 +71,7 @@ export const Sidebar = () => {
 				{ path: "/app-settings", text: "Settings" },
 			],
 		},
-		{ icon: "bi-box-arrow-right", text: "Logout", position: "bottom", onClick: logout, className: "logout-item" },
+		{ icon: "box-arrow-right", text: "Logout", position: "bottom", onClick: logout, className: "logout-item" },
 	];
 
 	const getFilteredNavigationItems = (position: string): NavigationItem[] => {
@@ -153,7 +152,7 @@ export const Sidebar = () => {
 							style={{ cursor: isExpanded ? "pointer" : "default" }}
 						>
 							<span className="nav-icon">
-								<i className={`bi ${item?.icon || getTableIcon(item.text)}`}></i>
+								<i className={`bi bi-${item?.icon || getTableIcon(item.text)}`}></i>
 							</span>
 							<span className="nav-text-container">
 								<span className="nav-text">{item.text}</span>
@@ -179,7 +178,7 @@ export const Sidebar = () => {
 									}}
 								>
 									<span className="nav-icon">
-										<i className={`bi ${subItem?.icon || getTableIcon(subItem.text)}`}></i>
+										<i className={`bi bi-${subItem?.icon || getTableIcon(subItem.text)}`}></i>
 									</span>
 									<span className="nav-text-container">
 										<span className="nav-text">{subItem.text}</span>
@@ -199,7 +198,7 @@ export const Sidebar = () => {
 					onClick={item.onClick}
 				>
 					<span className="nav-icon">
-						<i className={`bi ${item?.icon || getTableIcon(item.text)}`}></i>
+						<i className={`bi bi-${item?.icon || getTableIcon(item.text)}`}></i>
 					</span>
 					<span className="nav-text-container">
 						<span className="nav-text">{item.text}</span>

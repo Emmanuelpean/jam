@@ -19,7 +19,6 @@ const SettingsPage = () => {
 			title="Settings"
 			columns={columns}
 			Modal={SettingModal}
-			itemType="Setting"
 		/>
 	);
 };

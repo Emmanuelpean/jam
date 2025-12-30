@@ -41,7 +41,6 @@ const JobToChaseTable: React.FC<DataTableProps> = ({
 			data={data}
 			initialSortConfig={{ key: "days_since_last_update", direction: "desc" }}
 			Modal={JobModal}
-			itemType="Job"
 			modalSize="xl"
 			showSearch={false}
 			showAdd={false}

@@ -112,7 +112,7 @@ const JobRatingDashboard = (): JSX.Element => {
 				<div className="d-flex align-items-center justify-content-between p-4 border-0 bg-white shadow-sm rounded-3">
 					<div className="d-flex align-items-center">
 						<div className="header-icon-wrapper me-3">
-							<i className={getTableIcon("Job Rating Dashboard")}></i>
+							<i className={`bi-${getTableIcon("Job Rating Dashboard")}`}></i>
 						</div>
 						<h4 className="mb-0 fw-bold text-dark">Job Rating Dashboard</h4>
 					</div>

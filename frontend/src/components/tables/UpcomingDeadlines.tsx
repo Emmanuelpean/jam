@@ -36,7 +36,6 @@ const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], columns =
 			data={data}
 			initialSortConfig={{ key: "days_until_deadline", direction: "asc" }}
 			Modal={JobModal}
-			itemType="Job"
 			modalSize="xl"
 			showSearch={false}
 			showAdd={false}

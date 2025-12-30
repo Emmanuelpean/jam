@@ -40,7 +40,7 @@ export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ childre
 
 		e.preventDefault();
 		setMenuState({
-			position: { x: e.pageX, y: e.pageY },
+			position: { x: e.clientX, y: e.clientY },
 			items,
 			selectedItem,
 			show: true,

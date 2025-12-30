@@ -14,6 +14,7 @@ import { JobApplicationUpdateModal } from "../../modals/JobApplicationUpdateModa
 import { InterviewModal } from "../../modals/InterviewModal";
 import { useDeleteEntity } from "../../../utils/DeleteHandler";
 import { EntityType, JamData } from "../../../contexts/DataContext";
+import { getEntityIcon, getTableIcon } from "./Icons";
 
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 
@@ -32,7 +33,6 @@ export interface DataBadgeProps<T> {
 const createBadgeModalManager = <T,>(
 	ModalComponent: FlexibleModalComponent,
 	entityType: EntityType,
-	defaultIcon: string,
 	defaultBadgeClass: string = "bg-info",
 	defaultDisplayText: (item: T) => string,
 	defaultMenuItemKeys: MenuItemKey[] = ["view", "edit", "delete"],
@@ -41,7 +41,7 @@ const createBadgeModalManager = <T,>(
 		item,
 		badgeId,
 		parentItem,
-		icon = defaultIcon,
+		icon,
 		displayText = defaultDisplayText,
 		badgeClass = defaultBadgeClass,
 		menuItemKeys = defaultMenuItemKeys,
@@ -89,7 +89,7 @@ const createBadgeModalManager = <T,>(
 					onContextMenu={handleContextMenu}
 					id={badgeId}
 				>
-					<i className={`bi bi-${icon} me-1`}></i>
+					<i className={`bi bi-${getEntityIcon(entityType)} me-1`}></i>
 					{getText()}
 				</span>
 				<ModalComponent ref={modalRef} />
@@ -102,7 +102,6 @@ const createBadgeModalManager = <T,>(
 export const PersonBadge = createBadgeModalManager(
 	PersonModal,
 	"person",
-	"file-person",
 	"bg-info",
 	(item: PersonData): string => item.name,
 	["view", "edit", "delete", "followup"],
@@ -110,49 +109,37 @@ export const PersonBadge = createBadgeModalManager(
 export const CompanyBadge = createBadgeModalManager(
 	CompanyModal,
 	"company",
-	"building",
 	"bg-success",
 	(item: CompanyData): string => item.name,
 );
 export const LocationBadge = createBadgeModalManager(
 	LocationModal,
 	"location",
-	"geo-alt",
 	"bg-warning",
 	(item: LocationData): string => item.name,
 );
 export const KeywordBadge = createBadgeModalManager(
 	KeywordModal,
 	"keyword",
-	"tag",
 	"bg-secondary",
 	(item: KeywordData): string => item.name,
 );
-export const JobBadge = createBadgeModalManager(
-	JobModal,
-	"job",
-	"briefcase",
-	"bg-primary",
-	(item: JobData): string => item.title,
-);
+export const JobBadge = createBadgeModalManager(JobModal, "job", "bg-primary", (item: JobData): string => item.title);
 export const AggregatorBadge = createBadgeModalManager(
 	AggregatorModal,
 	"aggregator",
-	"collection",
 	"bg-dark",
 	(item: AggregatorData): string => item.name,
 );
 export const JobApplicationUpdateBadge = createBadgeModalManager(
 	JobApplicationUpdateModal,
 	"jobApplicationUpdate",
-	"arrow-repeat",
 	"bg-info",
 	(item: JobData): string => item.title,
 );
 export const InterviewBadge = createBadgeModalManager(
 	InterviewModal,
 	"interview",
-	"calendar-check",
 	"bg-primary",
 	(item: JobData): string => item.title,
 );

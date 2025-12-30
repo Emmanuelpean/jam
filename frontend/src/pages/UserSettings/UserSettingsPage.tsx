@@ -444,7 +444,7 @@ const UserSettingsPage: React.FC = () => {
 				<Card.Header className="settings-header border-0 p-0 bg-white">
 					<div className="d-flex align-items-center p-4">
 						<div className="header-icon-wrapper me-3">
-							<i className={`bi ${getTableIcon("User Settings")}`}></i>
+							<i className={`bi-${getTableIcon("User Settings")}`}></i>
 						</div>
 						<div>
 							<h4 className="mb-0 fw-bold text-dark">User Settings</h4>

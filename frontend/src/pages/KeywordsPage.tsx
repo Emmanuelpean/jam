@@ -14,7 +14,6 @@ const KeywordsPage = () => {
 			data={dataContext.keywords}
 			endpoint="/keywords"
 			columns={columns}
-			itemType="Tag"
 			Modal={KeywordModal}
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			title="Tags"

@@ -127,7 +127,7 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 							backgroundColor: activityColor,
 						}}
 					>
-						<i className={`bi ${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
+						<i className={`bi-${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
 					</div>
 				</div>
 

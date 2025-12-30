@@ -1,7 +1,13 @@
 import React, { JSX, MouseEvent, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import { DataContextValue, EntityType, JamData, useDataContext } from "../../contexts/DataContext";
+import {
+	DataContextValue,
+	EntityType,
+	entityTypeToGenericName,
+	JamData,
+	useDataContext,
+} from "../../contexts/DataContext";
 import { api, ApiResponse } from "../../services/api/Base";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
@@ -9,10 +15,10 @@ import { accessAttribute } from "../../utils/Utils";
 import { pluralize } from "../../utils/StringUtils";
 import { TableColumn } from "../rendering/view/TableColumns";
 import {
-	useDeleteEntity,
 	useActivateEntity,
 	useDeactivateEntity,
 	useDeactivateHandler,
+	useDeleteEntity,
 } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { MenuItem } from "./ContextMenu";
@@ -60,7 +66,6 @@ export interface GenericTableProps {
 	defaultModalMode?: modalModes;
 
 	// Data management
-	itemType: string;
 	initialData?: any;
 
 	// Display options
@@ -90,7 +95,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	Modal,
 	modalSize = "lg",
 	modalProps = {},
-	itemType,
 	title,
 	showAllEntries = false,
 	emptyMessage,
@@ -136,6 +140,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	const followUpModalRef = useRef<FollowUpModalHandle>(null);
 
 	const isServerPagination: boolean = !!endpoint && !providedData;
+
+	const entityName: string = entityTypeToGenericName(entityType);
 
 	useEffect(() => {
 		const timer = setTimeout((): void => {
@@ -477,9 +483,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	// Get button text based on mode
 	const getAddButtonText = (): string => {
 		if (mode === "import") {
-			return `Import ${itemType}`;
+			return `Import ${entityName}`;
 		} else {
-			return `Add ${itemType}`;
+			return `Add ${entityName}`;
 		}
 	};
 
@@ -512,7 +518,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 						<div className="d-flex align-items-center justify-content-between p-4 border-0 bg-white shadow-sm rounded-3">
 							<div className="d-flex align-items-center">
 								<div className="header-icon-wrapper me-3">
-									<i className={getTableIcon(title)}></i>
+									<i className={`bi-${getTableIcon(title)}`}></i>
 								</div>
 								<h4 className="mb-0 fw-bold text-dark">{title}</h4>
 							</div>
@@ -652,7 +658,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 														: {}
 												}
 											>
-												{emptyMessage || `No ${pluralize(itemType)} found`}
+												{emptyMessage || `No ${pluralize(entityName)} found`}
 											</td>
 										</tr>
 									)}
