@@ -13,13 +13,14 @@ import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobApplicationUpdateModal } from "../../modals/JobApplicationUpdateModal";
 import { InterviewModal } from "../../modals/InterviewModal";
 import { useDeleteEntity } from "../../../utils/DeleteHandler";
-import { EntityType } from "../../../contexts/DataContext";
+import { EntityType, JamData } from "../../../contexts/DataContext";
 
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 
 export interface DataBadgeProps<T> {
 	item: T;
-	badgeId?: string;
+	badgeId: string;
+	parentItem?: JamData;
 	icon?: string;
 	displayText?: string | ((item: T) => string);
 	badgeClass?: string;
@@ -39,6 +40,7 @@ const createBadgeModalManager = <T,>(
 	return ({
 		item,
 		badgeId,
+		parentItem,
 		icon = defaultIcon,
 		displayText = defaultDisplayText,
 		badgeClass = defaultBadgeClass,
@@ -58,8 +60,10 @@ const createBadgeModalManager = <T,>(
 				action: "followup",
 				icon: "bell",
 				text: "Follow-up Email",
-				color: "#0d6efd",
-				function: followUpModalRef.current?.show,
+				function: (item: PersonData): void => {
+					followUpModalRef.current?.show(parentItem as JobData, item);
+				},
+				displayCondition: (item: PersonData): boolean => !!(item.email && parentItem),
 			},
 		];
 

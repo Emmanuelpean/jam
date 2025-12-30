@@ -63,7 +63,7 @@ import {
 export interface RenderParams {
 	item: any; // item containing the field to render
 	view?: boolean; // true if rendered in a modal, false if in a table
-	id?: string; // id of the rendered element
+	id: string; // id of the rendered element
 	columns?: TableColumn[]; // columns for rendered tables
 	helpText?: string; // help text
 	dataContext: DataContextValue; // data context
@@ -602,7 +602,7 @@ export const renderFunctions = {
 				<div className="badge-group">
 					{persons.map((person: PersonData, index: number) => (
 						<span key={person.id || index} className="me-1">
-							<PersonBadge item={person} badgeId={`${param.id}-${index}`} />
+							<PersonBadge item={person} badgeId={`${param.id}-${index}`} parentItem={param.item} />
 						</span>
 					))}
 				</div>

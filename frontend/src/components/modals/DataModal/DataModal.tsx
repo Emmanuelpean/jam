@@ -318,7 +318,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			return (): void => {
 				resizeObserver.disconnect();
 			};
-		}, [isEditing, activeTab, effectiveData, internalShow]);
+		}, [isEditing, activeTab, effectiveData]);
 
 		// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 
