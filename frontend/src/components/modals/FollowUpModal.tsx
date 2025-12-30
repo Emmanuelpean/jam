@@ -11,7 +11,7 @@ import { areDifferent } from "../../utils/Utils";
 import "./FollowUpModal.css";
 
 export interface FollowUpModalHandle {
-	show: (job: JobData) => void;
+	show: (job: JobData, person?: PersonData) => void;
 }
 
 export interface FormData {
@@ -58,10 +58,10 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 	const { getContactOptions } = useFormOptions();
 
 	useImperativeHandle(ref, () => ({
-		show: (job: JobData): void => {
+		show: (job: JobData, person?: PersonData): void => {
 			setCurrentJob(job);
 			setContactOptions(getContactOptions(job));
-			const formData: FormData = transformInputData(job);
+			const formData: FormData = transformInputData(job, person);
 			setFormData(formData);
 			setOriginalFormData(formData);
 			setInternalShow(true);
@@ -87,14 +87,25 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 		return `Follow Up on My Application for the ${job?.title || "[Job Title]"} position`;
 	};
 
-	const transformInputData = (data: JobData): FormData => {
+	const transformInputData = (data: JobData, person?: PersonData): FormData => {
 		const contactOptions: GroupedSelectOption[] = getContactOptions(data);
-		const optionValue: string = contactOptions[0]?.options[0]?.value || contactOptions[1]?.options[0]?.value || "";
-		const contact: PersonData | undefined = dataContext.persons.find(
-			(person: PersonData): boolean => person.id === parseInt(optionValue),
-		);
+
+		// Use provided person if available, otherwise fall back to first option
+		let contactId: number;
+		let contact: PersonData | undefined;
+
+		if (person) {
+			contactId = person.id;
+			contact = person;
+		} else {
+			const optionValue: string =
+				contactOptions[0]?.options[0]?.value || contactOptions[1]?.options[0]?.value || "";
+			contactId = parseInt(optionValue || "0");
+			contact = dataContext.persons.find((p: PersonData): boolean => p.id === contactId);
+		}
+
 		return {
-			contactId: parseInt(optionValue || "0"),
+			contactId: contactId,
 			body: generateEmailBody(contact, data),
 			subject: generateEmailSubject(data),
 		};

@@ -1,4 +1,4 @@
-import React, { MouseEvent, useEffect, useRef, useState } from "react";
+import React, { MouseEvent, useEffect, useRef, useState, JSX } from "react";
 import "./ContextMenu.css";
 
 export type MenuItemKey = "view" | "edit" | "delete" | "activate" | "deactivate" | "import" | "snooze" | "followup";
@@ -12,17 +12,11 @@ export interface MenuItem {
 	function?: (item: any) => void;
 	hasSubmenu?: boolean;
 	submenu?: SubMenuItem[];
+	displayCondition?: (item: any) => boolean;
 }
 
 export interface SubMenuItem extends Omit<MenuItem, "action"> {
 	action: string;
-}
-
-export interface ContextMenuState {
-	item: any;
-	x: number;
-	y: number;
-	show: boolean;
 }
 
 export interface ContextMenuPosition {
@@ -53,7 +47,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 	const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
 	useEffect(() => {
-		const handleGlobalClick = (e: Event) => {
+		const handleGlobalClick = (e: Event): void => {
 			if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
 				onClose();
 			}
@@ -78,7 +72,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 	}, [onClose]);
 
 	// Adjust menu position if it goes off screen
-	useEffect(() => {
+	useEffect((): void => {
 		if (menuRef.current) {
 			const menuRect = menuRef.current.getBoundingClientRect();
 			const viewportWidth = window.innerWidth;
@@ -102,7 +96,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 		}
 	}, [position]);
 
-	const handleItemClick = (menuItem: MenuItem | SubMenuItem, e: MouseEvent) => {
+	const handleItemClick = (menuItem: MenuItem | SubMenuItem, e: MouseEvent): void => {
 		e.stopPropagation();
 
 		if (menuItem.hasSubmenu) {
@@ -113,7 +107,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 		onClose();
 	};
 
-	const handleMouseEnter = (menuItem: MenuItem | SubMenuItem, e: MouseEvent) => {
+	const handleMouseEnter = (menuItem: MenuItem | SubMenuItem, e: MouseEvent): void => {
 		// Clear any pending timeout
 		if (submenuTimeoutRef.current) {
 			clearTimeout(submenuTimeoutRef.current);
@@ -135,14 +129,14 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 		}
 	};
 
-	const handleMouseLeave = () => {
+	const handleMouseLeave = (): void => {
 		// Delay closing the submenu to allow moving to it
 		submenuTimeoutRef.current = setTimeout(() => {
 			setSubmenuVisible(null);
 		}, 200);
 	};
 
-	const handleSubmenuMouseEnter = () => {
+	const handleSubmenuMouseEnter = (): void => {
 		// Clear timeout when entering submenu
 		if (submenuTimeoutRef.current) {
 			clearTimeout(submenuTimeoutRef.current);
@@ -150,7 +144,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 		}
 	};
 
-	const handleSubmenuMouseLeave = () => {
+	const handleSubmenuMouseLeave = (): void => {
 		// Delay closing when leaving submenu
 		submenuTimeoutRef.current = setTimeout(() => {
 			setSubmenuVisible(null);
@@ -175,41 +169,48 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 					minWidth: compact ? "120px" : "150px",
 					overflow: "hidden",
 				}}
-				onClick={(e) => e.stopPropagation()}
+				onClick={(e: MouseEvent): void => e.stopPropagation()}
 			>
-				{items.map((menuItem, index) => (
-					<div
-						key={menuItem.action}
-						className="context-menu-item"
-						style={{
-							padding: compact ? "6px 12px" : "8px 16px",
-							cursor: "pointer",
-							fontSize: compact ? "13px" : "14px",
-							borderBottom: index !== items.length - 1 ? "1px solid #eee" : "none",
-							color: menuItem.color || "inherit",
-							display: "flex",
-							justifyContent: "space-between",
-							alignItems: "center",
-							transition: "background-color 0.15s ease",
-						}}
-						onClick={(e) => handleItemClick(menuItem, e)}
-						onMouseEnter={(e) => {
-							(e.currentTarget as HTMLElement).style.backgroundColor = "#f8f9fa";
-							handleMouseEnter(menuItem, e);
-						}}
-						onMouseLeave={(e) => {
-							(e.currentTarget as HTMLElement).style.backgroundColor = "white";
-							handleMouseLeave();
-						}}
-						id={menuItem.id}
-					>
-						<span>
-							{menuItem.icon && <i className={`bi bi-${menuItem.icon} me-2`}></i>}
-							{menuItem.text}
-						</span>
-						{menuItem.hasSubmenu && <i className="bi bi-chevron-right"></i>}
-					</div>
-				))}
+				{items
+					.filter(
+						(menuItem: MenuItem): boolean =>
+							!menuItem.displayCondition || menuItem.displayCondition(selectedItem),
+					)
+					.map(
+						(menuItem: MenuItem, index: number, filteredItems: MenuItem[]): JSX.Element => (
+							<div
+								key={menuItem.action}
+								className="context-menu-item"
+								style={{
+									padding: compact ? "6px 12px" : "8px 16px",
+									cursor: "pointer",
+									fontSize: compact ? "13px" : "14px",
+									borderBottom: index !== filteredItems.length - 1 ? "1px solid #eee" : "none",
+									color: menuItem.color || "inherit",
+									display: "flex",
+									justifyContent: "space-between",
+									alignItems: "center",
+									transition: "background-color 0.15s ease",
+								}}
+								onClick={(e: MouseEvent): void => handleItemClick(menuItem, e)}
+								onMouseEnter={(e: MouseEvent): void => {
+									(e.currentTarget as HTMLElement).style.backgroundColor = "#f8f9fa";
+									handleMouseEnter(menuItem, e);
+								}}
+								onMouseLeave={(e: MouseEvent): void => {
+									(e.currentTarget as HTMLElement).style.backgroundColor = "white";
+									handleMouseLeave();
+								}}
+								id={menuItem.id}
+							>
+								<span>
+									{menuItem.icon && <i className={`bi bi-${menuItem.icon} me-2`}></i>}
+									{menuItem.text}
+								</span>
+								{menuItem.hasSubmenu && <i className="bi bi-chevron-right"></i>}
+							</div>
+						),
+					)}
 			</div>
 
 			{/* Submenu */}
