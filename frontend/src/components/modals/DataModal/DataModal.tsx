@@ -10,17 +10,23 @@ import React, {
 } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
 import { useAuth } from "../../../contexts/AuthContext";
-import { DataContextValue, EntityType, entityTypeToName, JamData, useDataContext } from "../../../contexts/DataContext";
+import {
+	DataContextValue,
+	EntityType,
+	entityTypeToGenericName,
+	JamData,
+	useDataContext,
+} from "../../../contexts/DataContext";
 import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
 import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArray } from "../../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
 import {
+	useDeleteEntity,
 	useActivateEntity,
 	useDeactivateEntity,
 	useDeactivateHandler,
-	useDeleteHandler,
 } from "../../../utils/DeleteHandler";
 import { useAlert } from "../../../contexts/AlertContext";
 import { ApiResponse } from "../../../services/api/Base";
@@ -148,7 +154,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const [containerHeight, setContainerHeight] = useState("auto");
 		const contentRef = useRef<HTMLDivElement>(null);
 		const { showDelete } = useAlert();
-		const entityName: string = entityTypeToName(entityType);
+		const entityName: string = entityTypeToGenericName(entityType);
 
 		// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
 
@@ -360,20 +366,20 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 		// ----------------------------------------------------- DELETE ----------------------------------------------------
 
-		const handleDeActivate = useDeactivateHandler(entityType, null, entityName);
-		const handleDelete = useDeleteHandler(entityType, null, entityName);
-		const activateEntityHandler = useActivateEntity(entityType, null, entityName);
-		const deactivateEntityHandler = useDeactivateEntity(entityType, null, entityName);
+		const deactivateHandler = useDeactivateHandler(entityType);
+		const deleteHandler = useDeleteEntity(entityType);
+		const activateEntityHandler = useActivateEntity(entityType);
+		const deactivateEntityHandler = useDeactivateEntity(entityType);
 
 		const handleDeleteClick = async () => {
 			if (mode === "import") {
-				const confirm: boolean = await handleDeActivate(effectiveData);
+				const confirm: boolean = await deactivateHandler(effectiveData);
 				if (confirm) {
 					onDelete?.();
 					handleHideImmediate();
 				}
 			} else {
-				const confirm: boolean = await handleDelete(effectiveData);
+				const confirm: boolean = await deleteHandler(effectiveData);
 				if (confirm) {
 					onDelete?.();
 					handleHideImmediate();

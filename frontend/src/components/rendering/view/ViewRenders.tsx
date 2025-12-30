@@ -22,16 +22,6 @@ import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
 import { TableColumn } from "./TableColumns";
 import { Accordion } from "./Accordion";
-import {
-	AggregatorModalManager,
-	CompanyModalManager,
-	InterviewModalManager,
-	JobApplicationUpdateModalManager,
-	JobModalManager,
-	KeywordModalManager,
-	LocationModalManager,
-	PersonModalManager,
-} from "../../modals/ModalManagers";
 import { formatTimedelta, toDdMmYyyy, toDdMmYyyyHhMm } from "../../../utils/TimeUtils";
 import {
 	getActiveBadge,
@@ -68,7 +58,6 @@ import {
 	LocationBadge,
 	PersonBadge,
 } from "./DataBadge";
-import { JobApplicationUpdateModal } from "../../modals/JobApplicationUpdateModal";
 
 // Parameters passed to the view render functions
 export interface RenderParams {

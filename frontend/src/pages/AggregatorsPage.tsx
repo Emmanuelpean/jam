@@ -19,7 +19,6 @@ const AggregatorsPage = () => {
 			title="Job Aggregators"
 			columns={columns}
 			Modal={AggregatorModal}
-			nameKey="name"
 			itemType="Aggregator"
 		/>
 	);

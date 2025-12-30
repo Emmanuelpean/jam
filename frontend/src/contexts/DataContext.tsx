@@ -39,7 +39,7 @@ import {
 	UserData,
 } from "../services/Schemas";
 import { useLoading } from "./LoadingContext";
-import { sortByKey } from "../utils/Utils";
+import { findItemById, sortByKey } from "../utils/Utils";
 import { CrudApi } from "../services/api/Crud";
 
 export type EntityType =
@@ -72,7 +72,7 @@ export type JamData =
 	| ScrapingFilterData
 	| SpeculativeApplicationData;
 
-export const entityTypeToName = (entityType: EntityType): string => {
+export const entityTypeToGenericName = (entityType: EntityType): string => {
 	const nameMap: Record<EntityType, string> = {
 		job: "Job",
 		company: "Company",
@@ -87,6 +87,40 @@ export const entityTypeToName = (entityType: EntityType): string => {
 		scrapedJob: "Scraped Job",
 		scrapingFilter: "Scraping Filter",
 		speculativeApplication: "Speculative Application",
+	};
+	return nameMap[entityType];
+};
+
+export const entityTypeToName = (
+	entityType: EntityType,
+	dataContext: DataContextValue,
+): ((data: JamData) => string) => {
+	const nameMap: Record<EntityType, (data: JamData) => string> = {
+		keyword: (data: JamData): string => (data as KeywordData).name,
+		aggregator: (data: JamData): string => (data as AggregatorData).name,
+		company: (data: JamData): string => (data as CompanyData).name,
+		location: (data: JamData): string => (data as LocationData).name,
+		person: (data: JamData): string => (data as PersonData).name,
+		speculativeApplication: (data: JamData): string => {
+			const company: CompanyData = findItemById(
+				dataContext.companies,
+				(data as SpeculativeApplicationData).company_id,
+			)!;
+			return "Speculative Application for " + company.name;
+		},
+		job: (data: JamData): string => (data as JobData).title,
+		interview: (data: JamData): string => {
+			const job: JobData = findItemById(dataContext.jobs, (data as InterviewData).job_id)!;
+			return `${job.title} - Interview #${(data as EnrichedInterviewData).number}`;
+		},
+		jobApplicationUpdate: (data: JamData): string => {
+			const job: JobData = findItemById(dataContext.jobs, (data as InterviewData).job_id)!;
+			return `${job.title} - Update #${(data as EnrichedJobApplicationUpdateData).number}`;
+		},
+		setting: (data: JamData): string => (data as SettingData).name,
+		user: (data: JamData): string => (data as UserData).email,
+		scrapedJob: (data: JamData): string => (data as ScrapedJobData)?.title || "Scraped Job",
+		scrapingFilter: (data: JamData): string => (data as ScrapingFilterData).name,
 	};
 	return nameMap[entityType];
 };

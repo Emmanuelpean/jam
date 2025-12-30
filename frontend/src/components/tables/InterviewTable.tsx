@@ -30,7 +30,6 @@ const InterviewsTable: React.FC<InterviewsTableProps> = ({
 			initialSortConfig={{ key: "date", direction: "desc" }}
 			Modal={InterviewModal}
 			modalProps={{ jobId }}
-			nameKey="date"
 			itemType="Interview"
 			modalSize="lg"
 			showAllEntries={true}

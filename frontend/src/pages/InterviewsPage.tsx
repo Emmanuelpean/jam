@@ -20,7 +20,6 @@ const InterviewsPage = () => {
 			title="Interviews"
 			columns={columns}
 			Modal={InterviewModal}
-			nameKey="date"
 			itemType="Interview"
 		/>
 	);

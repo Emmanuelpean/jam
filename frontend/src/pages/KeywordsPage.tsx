@@ -15,7 +15,6 @@ const KeywordsPage = () => {
 			endpoint="/keywords"
 			columns={columns}
 			itemType="Tag"
-			nameKey="name"
 			Modal={KeywordModal}
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			title="Tags"

@@ -22,7 +22,6 @@ const PersonTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: Data
 			columns={defaultColumns}
 			initialSortConfig={{ key: "name", direction: "asc" }}
 			Modal={PersonModal}
-			nameKey="name"
 			itemType="Person"
 			modalSize="lg"
 			showAllEntries={true}

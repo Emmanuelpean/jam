@@ -1,109 +1,101 @@
-import { EntityType, useDataContext } from "../contexts/DataContext";
+import {
+	DataContextValue,
+	EntityType,
+	entityTypeToGenericName,
+	entityTypeToName,
+	JamData,
+	useDataContext,
+} from "../contexts/DataContext";
 import { useGlobalToast } from "../hooks/useNotificationToast";
 import { useAlert } from "../contexts/AlertContext";
+import { ApiResponsePromise } from "../services/api/Base";
 
-const getItemName = (item: any, nameKey: string | null, itemType?: string): string => {
-	if (nameKey && nameKey !== "date") {
-		return `"${item[nameKey]}"`;
-	} else if (itemType) {
-		return `this ${itemType.toLowerCase()}`;
-	} else {
-		return `this item`;
-	}
+const useEntityOperation = (
+	entityType: EntityType,
+	operation: (entityType: EntityType, id: number, data?: any) => Promise<void> | ApiResponsePromise<JamData>,
+	successMessage: (entityTypeName: string) => string,
+	errorMessage: (entityName: string) => string,
+	confirmationConfig?: {
+		title: (entityTypeName: string) => string;
+		message: (entityName: string) => string;
+	},
+) => {
+	const { showToastSuccess, showToastError } = useGlobalToast();
+	const { showDelete } = useAlert();
+	const dataContext: DataContextValue = useDataContext();
+
+	return async (item: JamData, data?: any): Promise<boolean> => {
+		const entityTypeName: string = entityTypeToGenericName(entityType);
+		const entityName: string = entityTypeToName(entityType, dataContext)(item);
+
+		try {
+			if (confirmationConfig) {
+				const confirmed = await showDelete({
+					title: confirmationConfig.title(entityTypeName),
+					message: confirmationConfig.message(entityName),
+					confirmText: "Delete",
+					cancelText: "Cancel",
+				});
+
+				if (!confirmed) {
+					return false;
+				}
+			}
+
+			await operation(entityType, item.id, data);
+			showToastSuccess(successMessage(entityTypeName));
+			return true;
+		} catch (error) {
+			showToastError(errorMessage(entityName));
+			return false;
+		}
+	};
 };
 
-export const useDeleteHandler = (entityType: EntityType, nameKey: string | null, itemType = "item") => {
+export const useDeleteEntity = (entityType: EntityType) => {
 	const { deleteEntity } = useDataContext();
-	const { showToastSuccess, showToastError } = useGlobalToast();
-	const { showDelete } = useAlert();
-
-	return async (item: any): Promise<boolean> => {
-		const itemName = getItemName(item, nameKey, itemType);
-
-		try {
-			const confirmed = await showDelete({
-				title: `Delete ${itemType}`,
-				message: `Are you sure you want to delete ${itemName}? This action cannot be undone.`,
-				confirmText: "Delete",
-				cancelText: "Cancel",
-			});
-
-			if (!confirmed) {
-				return false;
-			}
-
-			await deleteEntity(entityType, item.id);
-			showToastSuccess(`${itemType} deleted successfully.`);
-			return true;
-		} catch (error) {
-			showToastError(`Failed to delete ${itemName}. Please check your connection and try again.`);
-			return false;
-		}
-	};
+	return useEntityOperation(
+		entityType,
+		(type: EntityType, id: number): Promise<void> => deleteEntity(type, id),
+		(typeName: string): string => `${typeName} deleted successfully.`,
+		(name: string): string => `Failed to delete ${name}. Please check your connection and try again.`,
+		{
+			title: (typeName: string): string => `Delete ${typeName}`,
+			message: (name: string): string => `Are you sure you want to delete ${name}? This action cannot be undone.`,
+		},
+	);
 };
 
-export const useDeactivateHandler = (entityType: EntityType, nameKey: string | null, itemType = "item") => {
+export const useDeactivateHandler = (entityType: EntityType) => {
 	const { updateEntity } = useDataContext();
-	const { showToastSuccess, showToastError } = useGlobalToast();
-	const { showDelete } = useAlert();
-
-	return async (item: any): Promise<boolean> => {
-		const itemName = getItemName(item, nameKey, itemType);
-
-		try {
-			const confirmed = await showDelete({
-				title: `Delete ${itemType}`,
-				message: `Are you sure you want to delete ${itemName}? This action cannot be undone.`,
-				confirmText: "Delete",
-				cancelText: "Cancel",
-			});
-
-			if (!confirmed) {
-				return false;
-			}
-
-			await updateEntity(entityType, item.id, { is_active: false });
-			showToastSuccess(`${itemType} deleted successfully.`);
-			return true;
-		} catch (error) {
-			showToastError(`Failed to delete ${itemName}. Please check your connection and try again.`);
-			return false;
-		}
-	};
+	return useEntityOperation(
+		entityType,
+		(type: EntityType, id: number): ApiResponsePromise<JamData> => updateEntity(type, id, { is_active: false }),
+		(typeName: string): string => `${typeName} deleted successfully.`,
+		(name: string): string => `Failed to delete ${name}. Please check your connection and try again.`,
+		{
+			title: (typeName: string): string => `Delete ${typeName}`,
+			message: (name: string): string => `Are you sure you want to delete ${name}? This action cannot be undone.`,
+		},
+	);
 };
 
-export const useActivateEntity = (entityType: EntityType, nameKey: string | null, itemType = "item") => {
+export const useActivateEntity = (entityType: EntityType) => {
 	const { updateEntity } = useDataContext();
-	const { showToastSuccess, showToastError } = useGlobalToast();
-
-	return async (item: any): Promise<boolean> => {
-		const itemName: string = getItemName(item, nameKey, itemType);
-
-		try {
-			await updateEntity(entityType, item.id, { is_active: true });
-			showToastSuccess(`${itemType} activated successfully.`);
-			return true;
-		} catch (error) {
-			showToastError(`Failed to activate ${itemName}. Please check your connection and try again.`);
-			return false;
-		}
-	};
+	return useEntityOperation(
+		entityType,
+		(type: EntityType, id: number): ApiResponsePromise<JamData> => updateEntity(type, id, { is_active: true }),
+		(typeName: string): string => `${typeName} activated successfully.`,
+		(name: string): string => `Failed to activate ${name}. Please check your connection and try again.`,
+	);
 };
 
-export const useDeactivateEntity = (entityType: EntityType, nameKey: string | null, itemType = "item") => {
+export const useDeactivateEntity = (entityType: EntityType) => {
 	const { updateEntity } = useDataContext();
-	const { showToastSuccess, showToastError } = useGlobalToast();
-
-	return async (item: any): Promise<boolean> => {
-		const itemName: string = getItemName(item, nameKey, itemType);
-
-		try {
-			await updateEntity(entityType, item.id, { is_active: false });
-			showToastSuccess(`${itemType} deactivated successfully.`);
-			return true;
-		} catch (error) {
-			showToastError(`Failed to deactivate ${itemName}. Please check your connection and try again.`);
-			return false;
-		}
-	};
+	return useEntityOperation(
+		entityType,
+		(type: EntityType, id: number): ApiResponsePromise<JamData> => updateEntity(type, id, { is_active: false }),
+		(typeName: string): string => `${typeName} deactivated successfully.`,
+		(name: string): string => `Failed to deactivate ${name}. Please check your connection and try again.`,
+	);
 };

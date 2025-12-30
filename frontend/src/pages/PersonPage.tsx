@@ -21,7 +21,6 @@ const PersonsPage = () => {
 			title="Persons"
 			columns={columns}
 			Modal={PersonModal}
-			nameKey="name"
 			itemType="Person"
 		/>
 	);
