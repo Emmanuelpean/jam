@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX, useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { FormData, useAuth } from "../../contexts/AuthContext";
 import "./AuthPage.css";
@@ -54,7 +54,14 @@ function AuthForm(): JSX.Element {
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
 	const { showLoading, hideLoading } = useLoading();
+	const contentRef = useRef<HTMLDivElement>(null);
+	const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
 
+	useEffect(() => {
+		if (contentRef.current) {
+			setContentHeight(contentRef.current.scrollHeight);
+		}
+	}, [mode, registrationStep, fieldErrors]);
 	document.documentElement.setAttribute("data-theme", "mixed-berry");
 
 	useEffect(() => {
@@ -530,197 +537,199 @@ function AuthForm(): JSX.Element {
 				</Alert>
 			)}
 
-			<Card className="auth-card border-0 auth-card-animated">
-				<Card.Body>
-					<Card.Title className="text-primary">{cardTitle}</Card.Title>
+			<Card className="auth-card border-0" style={{ height: contentHeight }}>
+				<div ref={contentRef} style={{ padding: "2.5rem" }}>
+					<Card.Body>
+						<Card.Title className="text-primary">{cardTitle}</Card.Title>
 
-					{mode === "register" && (
-						<div className="mb-3">
-							<div className="d-flex justify-content-between align-items-center mb-2">
-								<small className="text-muted">Step {registrationStep} of 2</small>
-							</div>
-							<div className="progress" style={{ height: "4px" }}>
-								<div
-									className="progress-bar"
-									role="progressbar"
-									style={{ width: `${(registrationStep / 2) * 100}%` }}
-									aria-valuenow={(registrationStep / 2) * 100}
-									aria-valuemin={0}
-									aria-valuemax={100}
-								></div>
-							</div>
-						</div>
-					)}
-
-					{mode === "forgotPassword" && (
-						<p className="text-muted mb-4">
-							Enter your email address and we'll send you a link to reset your password.
-						</p>
-					)}
-
-					{mode === "resetPassword" && (
-						<p className="text-muted mb-4">
-							Please enter your new password below. Make sure it's strong and secure.
-						</p>
-					)}
-
-					<Form onSubmit={handleSubmit} autoComplete="on">
-						{/* Registration Step 1 */}
-						{mode === "register" && registrationStep === 1 && (
-							<>
-								{FormField(emailField, formData, handleInputChange, fieldErrors)}
-								{FormField(passwordField, formData, handleInputChange, fieldErrors)}
-								{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
-								{FormField(
-									termsField,
-									{ terms: acceptedTerms },
-									//@ts-ignore
-									handleTermsCheckboxChange,
-									fieldErrors,
-								)}
-							</>
-						)}
-
-						{/* Registration Step 2 */}
-						{mode === "register" && registrationStep === 2 && (
-							<>
-								{FormField(firstNameField, formData, handleInputChange, fieldErrors)}
-								{FormField(lastNameField, formData, handleInputChange, fieldErrors)}
-							</>
-						)}
-
-						{/* Login Mode */}
-						{mode === "login" && (
-							<>
-								{FormField(emailField, formData, handleInputChange, fieldErrors)}
-								{FormField(passwordField, formData, handleInputChange, fieldErrors)}
-								<div className="text-end mb-3">
-									<button
-										type="button"
-										onClick={switchToForgotPassword}
-										className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent small"
-										style={{ cursor: "pointer" }}
-										id="forgot-password-link"
-									>
-										Forgot your password?
-									</button>
+						{mode === "register" && (
+							<div className="mb-3">
+								<div className="d-flex justify-content-between align-items-center mb-2">
+									<small className="text-muted">Step {registrationStep} of 2</small>
 								</div>
-							</>
+								<div className="progress" style={{ height: "4px" }}>
+									<div
+										className="progress-bar"
+										role="progressbar"
+										style={{ width: `${(registrationStep / 2) * 100}%` }}
+										aria-valuenow={(registrationStep / 2) * 100}
+										aria-valuemin={0}
+										aria-valuemax={100}
+									></div>
+								</div>
+							</div>
 						)}
 
-						{/* Forgot Password Mode */}
 						{mode === "forgotPassword" && (
-							<>{FormField(emailField, formData, handleInputChange, fieldErrors)}</>
+							<p className="text-muted mb-4">
+								Enter your email address and we'll send you a link to reset your password.
+							</p>
 						)}
 
-						{/* Reset Password Mode */}
 						{mode === "resetPassword" && (
-							<>
-								{FormField(passwordField, formData, handleInputChange, fieldErrors)}
-								{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
-							</>
+							<p className="text-muted mb-4">
+								Please enter your new password below. Make sure it's strong and secure.
+							</p>
 						)}
 
-						{/* Action buttons */}
-						<div className="d-grid gap-2">
+						<Form onSubmit={handleSubmit} autoComplete="on">
+							{/* Registration Step 1 */}
+							{mode === "register" && registrationStep === 1 && (
+								<>
+									{FormField(emailField, formData, handleInputChange, fieldErrors)}
+									{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+									{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
+									{FormField(
+										termsField,
+										{ terms: acceptedTerms },
+										//@ts-ignore
+										handleTermsCheckboxChange,
+										fieldErrors,
+									)}
+								</>
+							)}
+
+							{/* Registration Step 2 */}
 							{mode === "register" && registrationStep === 2 && (
+								<>
+									{FormField(firstNameField, formData, handleInputChange, fieldErrors)}
+									{FormField(lastNameField, formData, handleInputChange, fieldErrors)}
+								</>
+							)}
+
+							{/* Login Mode */}
+							{mode === "login" && (
+								<>
+									{FormField(emailField, formData, handleInputChange, fieldErrors)}
+									{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+									<div className="text-end mb-3">
+										<button
+											type="button"
+											onClick={switchToForgotPassword}
+											className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent small"
+											style={{ cursor: "pointer" }}
+											id="forgot-password-link"
+										>
+											Forgot your password?
+										</button>
+									</div>
+								</>
+							)}
+
+							{/* Forgot Password Mode */}
+							{mode === "forgotPassword" && (
+								<>{FormField(emailField, formData, handleInputChange, fieldErrors)}</>
+							)}
+
+							{/* Reset Password Mode */}
+							{mode === "resetPassword" && (
+								<>
+									{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+									{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
+								</>
+							)}
+
+							{/* Action buttons */}
+							<div className="d-grid gap-2">
+								{mode === "register" && registrationStep === 2 && (
+									<ActionButton
+										type="button"
+										onClick={handlePreviousStep}
+										variant="secondary"
+										className="fw-semibold"
+										defaultText="Back"
+										defaultIcon="bi bi-arrow-left"
+									/>
+								)}
+
 								<ActionButton
-									type="button"
-									onClick={handlePreviousStep}
-									variant="secondary"
+									type="submit"
+									id="confirm-button"
+									disabled={loading}
+									loading={loading}
 									className="fw-semibold"
-									defaultText="Back"
-									defaultIcon="bi bi-arrow-left"
+									loadingText={
+										mode === "resetPassword"
+											? "Resetting Password..."
+											: mode === "forgotPassword"
+												? "Sending..."
+												: mode === "login"
+													? "Logging in..."
+													: registrationStep === 1
+														? "Next..."
+														: "Creating Account..."
+									}
+									defaultText={
+										mode === "resetPassword"
+											? "Reset Password"
+											: mode === "forgotPassword"
+												? "Send Reset Link"
+												: mode === "login"
+													? "Login"
+													: registrationStep === 1
+														? "Next"
+														: "Create Account"
+									}
+									defaultIcon={
+										mode === "resetPassword"
+											? "bi bi-shield-lock"
+											: mode === "forgotPassword"
+												? "bi bi-envelope-paper"
+												: mode === "login"
+													? "bi bi-box-arrow-in-right"
+													: registrationStep === 1
+														? "bi bi-arrow-right"
+														: "bi bi-person-plus"
+									}
 								/>
-							)}
+							</div>
+						</Form>
 
-							<ActionButton
-								type="submit"
-								id="confirm-button"
-								disabled={loading}
-								loading={loading}
-								className="fw-semibold"
-								loadingText={
-									mode === "resetPassword"
-										? "Resetting Password..."
-										: mode === "forgotPassword"
-											? "Sending..."
-											: mode === "login"
-												? "Logging in..."
-												: registrationStep === 1
-													? "Next..."
-													: "Creating Account..."
-								}
-								defaultText={
-									mode === "resetPassword"
-										? "Reset Password"
-										: mode === "forgotPassword"
-											? "Send Reset Link"
-											: mode === "login"
-												? "Login"
-												: registrationStep === 1
-													? "Next"
-													: "Create Account"
-								}
-								defaultIcon={
-									mode === "resetPassword"
-										? "bi bi-shield-lock"
-										: mode === "forgotPassword"
-											? "bi bi-envelope-paper"
-											: mode === "login"
-												? "bi bi-box-arrow-in-right"
-												: registrationStep === 1
-													? "bi bi-arrow-right"
-													: "bi bi-person-plus"
-								}
-							/>
-						</div>
-					</Form>
-
-					<Card.Footer className="bg-transparent border-0 text-center">
-						<small className="text-muted">
-							{mode === "resetPassword" || mode === "forgotPassword" ? (
-								<>
-									Remember your password?{" "}
-									<button
-										type="button"
-										onClick={switchToLogin}
-										className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-										style={{ cursor: "pointer" }}
-									>
-										Back to Login
-									</button>
-								</>
-							) : mode === "login" ? (
-								<>
-									Don't have an account?{" "}
-									<button
-										type="button"
-										id="switch-mode-button"
-										onClick={switchToRegister}
-										className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-										style={{ cursor: "pointer" }}
-									>
-										Create one here
-									</button>
-								</>
-							) : (
-								<>
-									Already have an account?{" "}
-									<button
-										type="button"
-										id="switch-mode-button"
-										onClick={switchToLogin}
-										className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-										style={{ cursor: "pointer" }}
-									>
-										Login here
-									</button>
-								</>
-							)}
-						</small>
-					</Card.Footer>
-				</Card.Body>
+						<Card.Footer className="bg-transparent border-0 text-center">
+							<small className="text-muted">
+								{mode === "resetPassword" || mode === "forgotPassword" ? (
+									<>
+										Remember your password?{" "}
+										<button
+											type="button"
+											onClick={switchToLogin}
+											className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+											style={{ cursor: "pointer" }}
+										>
+											Back to Login
+										</button>
+									</>
+								) : mode === "login" ? (
+									<>
+										Don't have an account?{" "}
+										<button
+											type="button"
+											id="switch-mode-button"
+											onClick={switchToRegister}
+											className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+											style={{ cursor: "pointer" }}
+										>
+											Create one here
+										</button>
+									</>
+								) : (
+									<>
+										Already have an account?{" "}
+										<button
+											type="button"
+											id="switch-mode-button"
+											onClick={switchToLogin}
+											className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+											style={{ cursor: "pointer" }}
+										>
+											Login here
+										</button>
+									</>
+								)}
+							</small>
+						</Card.Footer>
+					</Card.Body>
+				</div>
 			</Card>
 
 			<TermsAndConditions show={showTerms} onHide={() => setShowTerms(false)} />
