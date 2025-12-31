@@ -7,7 +7,6 @@ export interface ModalViewField extends ViewField {
 	isTitle?: boolean;
 	displayCondition?: (item: any) => boolean;
 	icon?: string;
-	handleContextMenu?: (e: React.MouseEvent<HTMLElement>, item: any) => void;
 }
 
 export type ModalViewFields = (ModalViewField | ModalViewField[])[];
@@ -236,11 +235,10 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	personBadges: (handleContextMenu?: any, overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	personBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "person",
 		label: "Contacts",
 		render: renderFunctions.ContactBadges,
-		handleContextMenu: handleContextMenu,
 		...overrides,
 	}),
 
