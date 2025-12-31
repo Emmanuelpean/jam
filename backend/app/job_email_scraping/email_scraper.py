@@ -490,16 +490,24 @@ class JobEmailScraper(EmailService):
         for job_record in job_records:
 
             # Check if filtered out for user
-            if job_filter_rule := is_job_filtered_for_user(self.db, job_record):
-                self.logger.info(
-                    f"Job ID {job_record.external_job_id} filtered out for user ID {job_record.owner_id} "
-                    f"due to rule {job_filter_rule.name}"
+            try:
+                if job_filter_rule := is_job_filtered_for_user(self.db, job_record):
+                    self.logger.info(
+                        f"Job ID {job_record.external_job_id} filtered out for user ID {job_record.owner_id} "
+                        f"due to rule {job_filter_rule.name}"
+                    )
+                    job_record.is_scraped = False
+                    job_record.filter_id = job_filter_rule.id
+                    self.db.commit()
+                    self.upsert_platform_stat(service_log, job_record.platform, job_scrape_filtered_ids=job_record.id)
+                    continue  # next job record
+            except Exception as exception:
+                error = (
+                    f"Failed to check filtering for job ID {job_record.external_job_id} due to error: {exception}. "
+                    f"Proceeding with scraping."
                 )
-                job_record.is_scraped = False
-                job_record.filter_id = job_filter_rule.id
-                self.db.commit()
-                self.upsert_platform_stat(service_log, job_record.platform, job_scrape_filtered_ids=job_record.id)
-                continue  # next job record
+                self.log_eis_service_error(service_log, error)
+                self.logger.exception(error)
 
             # Find any existing scraped job data in the database
             existing_data = (

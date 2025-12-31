@@ -7,12 +7,13 @@ import pytest
 
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.job_scrapers import JobResult
-from app.job_email_scraping.models import (
+from app.model_registry import (
     JobEmail,
     ScrapedJob,
     JobEmailScrapingPlatformStat,
     JobEmailScrapingServiceLog,
     JobEmailScrapingServiceError,
+    ScrapingFilter,
 )
 from tests.job_email_scraping import resources
 from tests.utils.test_data import TOAST_USER_1_INDEX
@@ -559,11 +560,11 @@ class TestScrapeJobs:
         """Fixture to create Indeed scraped jobs for multiple users"""
 
         scraped_jobs = []
-        job_ids = [job.job_id for job in jobs]
-        for job_id in job_ids:
+        for job in jobs:
             # noinspection PyArgumentList
             scraped_job = ScrapedJob(
-                external_job_id=job_id,
+                external_job_id=job.job_id,
+                title=job.job.title,
                 owner_id=email_record.owner_id,
                 platform=email_record.platform,
                 service_log_id=test_service_log.id,
@@ -767,3 +768,40 @@ class TestScrapeJobs:
             assert len(platform_stat.job_scrape_skipped_ids) == 0
             assert len(platform_stat.job_scrape_failed_ids) == 0
             assert len(platform_stat.job_scrape_copied_ids) == len(indeed_scraped_jobs)
+
+    def test_scraping_filter(self, nhs_scraped_jobs, test_eis_service_log, test_job_scraper, session) -> None:
+        """Test successful processing of NHS email jobs with scraping filter applied"""
+
+        # noinspection PyArgumentList
+        filter_entry = ScrapingFilter(
+            type="title",
+            operator="contains",
+            value=nhs_scraped_jobs[0].title[:10],
+            owner_id=nhs_scraped_jobs[0].owner_id,
+        )
+        session.add(filter_entry)
+        session.commit()
+        session.refresh(filter_entry)
+        test_job_scraper.scrape_jobs(test_eis_service_log)
+
+        # Verify all jobs are now scraped
+        scraped_jobs = session.query(ScrapedJob).filter().all()
+        for job in scraped_jobs:
+            if job.external_job_id == nhs_scraped_jobs[0].external_job_id:
+                assert not job.is_scraped
+                assert job.filter_id == filter_entry.id
+            else:
+                assert job.is_scraped
+                assert job.scrape_error is None
+
+        # Verify the platform stats
+        platform_stat = (
+            session.query(JobEmailScrapingPlatformStat)
+            .filter(JobEmailScrapingPlatformStat.name == Platform.NHS.value)
+            .first()
+        )
+        assert platform_stat is not None
+        assert len(platform_stat.job_scrape_succeeded_ids) == len(nhs_scraped_jobs) - 1
+        assert len(platform_stat.job_scrape_filtered_ids) == 1
+        assert len(platform_stat.job_scrape_failed_ids) == 0
+        assert len(platform_stat.job_scrape_copied_ids) == 0
