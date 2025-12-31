@@ -61,7 +61,8 @@ export const useDeleteEntity = (entityType: EntityType) => {
 		(name: string): string => `Failed to delete ${name}. Please check your connection and try again.`,
 		{
 			title: (typeName: string): string => `Delete ${typeName}`,
-			message: (name: string): string => `Are you sure you want to delete ${name}? This action cannot be undone.`,
+			message: (name: string): string =>
+				`Are you sure you want to delete ${name}? This will delete it for all the entries it is associated with. This action cannot be undone.`,
 		},
 	);
 };

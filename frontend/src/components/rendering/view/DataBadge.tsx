@@ -95,7 +95,7 @@ const createBadgeModalManager = <T,>(
 					onContextMenu={handleContextMenu}
 					id={badgeId}
 				>
-					<i className={`bi bi-${icon || getEntityIcon(entityType)} me-1`}></i>
+					<i className={`bi bi-${icon || getEntityIcon(entityType)} me-2`}></i>
 					{getText()}
 				</span>
 				<ModalComponent ref={modalRef} />
