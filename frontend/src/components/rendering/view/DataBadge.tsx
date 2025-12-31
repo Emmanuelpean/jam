@@ -18,7 +18,7 @@ import { getEntityIcon } from "./Icons";
 
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 
-export interface DataBadgeProps<T> {
+export interface DataBadgeProps<T extends JamData> {
 	item: T | undefined;
 	badgeId: string;
 	parentItem?: JamData;
@@ -30,7 +30,7 @@ export interface DataBadgeProps<T> {
 }
 
 // Create badge manager with modal integration
-const createBadgeModalManager = <T,>(
+const createBadgeModalManager = <T extends JamData>(
 	ModalComponent: FlexibleModalComponent,
 	entityType: EntityType,
 	defaultBadgeClass: string = "bg-info",
@@ -91,7 +91,7 @@ const createBadgeModalManager = <T,>(
 			<>
 				<span
 					className={`badge ${badgeClass} clickable-badge`}
-					onClick={() => modalRef.current?.showView(item)}
+					onClick={() => item && modalRef.current?.showView(item.id)}
 					onContextMenu={handleContextMenu}
 					id={badgeId}
 				>

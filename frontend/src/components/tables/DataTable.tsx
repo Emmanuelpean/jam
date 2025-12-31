@@ -111,8 +111,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 }: GenericTableProps): JSX.Element => {
 	const { token } = useAuth();
 	const modalRef = useRef<DataModalHandle>(null);
-	const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
-	const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
+	const openViewModal = (id: number): void | undefined => modalRef.current?.showView(id);
+	const openEditModal = (id: number): void | undefined => modalRef.current?.showEdit(id);
 	const openAddModal = () => modalRef.current?.showAdd(initialData);
 	const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
 
@@ -302,9 +302,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			openImportModal(item);
 		} else {
 			if (defaultModalMode === "edit") {
-				openEditModal(item);
+				openEditModal(item.id);
 			} else {
-				openViewModal(item);
+				openViewModal(item.id);
 			}
 		}
 	};
