@@ -1,5 +1,5 @@
 import React, { ReactNode, useEffect, useState } from "react";
-import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
+import { DataContextValue, JamData, useDataContext } from "../../../contexts/DataContext";
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
@@ -591,7 +591,7 @@ export const renderFunctions = {
 		return null;
 	},
 
-	_personBadges: (param: RenderParams, key: string): ReactNode => {
+	_personBadges: (param: RenderParams, key: string, parent: JamData): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const persons: PersonData[] = getJamDataList(ctx.persons, param.item?.[key]);
 
@@ -600,7 +600,7 @@ export const renderFunctions = {
 				<div className="badge-group">
 					{persons.map((person: PersonData, index: number) => (
 						<span key={person.id || index} className="me-1">
-							<PersonBadge item={person} badgeId={`${param.id}-${index}`} parentItem={param.item} />
+							<PersonBadge item={person} badgeId={`${param.id}-${index}`} parentItem={parent} />
 						</span>
 					))}
 				</div>
@@ -610,11 +610,13 @@ export const renderFunctions = {
 	},
 
 	ContactBadges: (param: RenderParams): ReactNode => {
-		return renderFunctions._personBadges(param, "contacts");
+		return renderFunctions._personBadges(param, "contacts", param.item);
 	},
 
 	InterviewerBadges: (param: RenderParams): ReactNode => {
-		return renderFunctions._personBadges(param, "interviewers");
+		const ctx: DataContextValue = param.dataContext;
+		const job: EnrichedJobData = getJamData(ctx.jobs, param.item?.job_id)!;
+		return renderFunctions._personBadges(param, "interviewers", job);
 	},
 
 	// ----------------------------------------------------- TABLES ----------------------------------------------------
