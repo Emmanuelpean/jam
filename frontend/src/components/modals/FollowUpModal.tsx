@@ -9,6 +9,7 @@ import { Errors, FormField, SyntheticEvent } from "../rendering/widgets/WidgetRe
 import { ModalFormField } from "../rendering/form/FormRenders";
 import { areDifferent } from "../../utils/Utils";
 import "./FollowUpModal.css";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
 
 export interface FollowUpModalHandle {
 	show: (job: JobData, person?: PersonData) => void;
@@ -56,6 +57,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 	const dataContext: DataContextValue = useDataContext();
 	const { currentUser } = useAuth();
 	const { getContactOptions } = useFormOptions();
+	const { showToastSuccess } = useGlobalToast();
 
 	useImperativeHandle(ref, () => ({
 		show: (job: JobData, person?: PersonData): void => {
@@ -210,16 +212,22 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 			cancelText: "No",
 		});
 		if (result) {
+			const contact: PersonData | undefined = dataContext.persons.find(
+				(person: PersonData): boolean => person.id === formData.contactId,
+			);
 			dataContext
 				.addEntity("jobApplicationUpdate", {
 					type: "sent",
 					job_id: currentJob?.id,
-					note: `Follow up email sent to ${formData.contactId}`,
+					note: `Follow up email sent to ${contact?.name}\n\nSubject: ${formData.subject}\n\n${formData.body}`,
 					date: new Date().toISOString(),
 				})
 				.then((): void => {
+					showToastSuccess("Follow up email update created successfully.");
 					hide();
 				});
+		} else {
+			hide();
 		}
 	};
 
@@ -229,7 +237,13 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 	};
 
 	return (
-		<Modal show={internalShow} onHide={handleCloseWithConfirmation} centered={true} size={"lg"}>
+		<Modal
+			show={internalShow}
+			onHide={handleCloseWithConfirmation}
+			centered={true}
+			size={"lg"}
+			id={"follow-up-modal"}
+		>
 			<Modal.Header closeButton>
 				<Modal.Title>Follow Up Email Generator</Modal.Title>
 			</Modal.Header>
@@ -246,6 +260,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 							variant="secondary"
 							onClick={handleCloseWithConfirmation}
 							className="flex-fill"
+							id={"cancel-btn"}
 						>
 							Close
 						</Button>
@@ -256,22 +271,34 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 							className="email-service-dropdown flex-fill"
 							style={{ width: "100%" }}
 						>
-							<Button variant="primary" onClick={() => handleSend("default")}>
+							<Button variant="primary" onClick={(): void => handleSend("default")} id={"send-btn"}>
 								<i className="bi bi-send-fill me-2"></i>
 								Send Email
 							</Button>
 							<Dropdown.Toggle split variant="primary" id="dropdown-split-email" />
 							<Dropdown.Menu align="end" className="email-dropdown-menu">
-								<Dropdown.Item onClick={() => handleSend("default")} className="email-dropdown-item">
+								<Dropdown.Item
+									onClick={(): void => handleSend("default")}
+									className="email-dropdown-item"
+									id={"default-email-btn"}
+								>
 									<i className="bi bi-envelope-fill me-2"></i>
 									Default Email Client
 								</Dropdown.Item>
 								<Dropdown.Divider />
-								<Dropdown.Item onClick={() => handleSend("gmail")} className="email-dropdown-item">
+								<Dropdown.Item
+									onClick={(): void => handleSend("gmail")}
+									className="email-dropdown-item"
+									id={"gmail-btn"}
+								>
 									<i className="bi bi-google me-2"></i>
 									Send with Gmail
 								</Dropdown.Item>
-								<Dropdown.Item onClick={() => handleSend("outlook")} className="email-dropdown-item">
+								<Dropdown.Item
+									onClick={(): void => handleSend("outlook")}
+									className="email-dropdown-item"
+									id={"outlook-btn"}
+								>
 									<i className="bi bi-microsoft me-2"></i>
 									Send with Outlook
 								</Dropdown.Item>

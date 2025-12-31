@@ -4,7 +4,7 @@ import AlertModal, { AlertState } from "../components/modals/AlertModal";
 interface AlertConfig {
 	title?: string;
 	message: string;
-	type?: "info" | "success" | "danger" | "warning";
+	type?: "info" | "success" | "danger" | "warning" | "primary";
 	confirmText?: string;
 	cancelText?: string | null;
 	icon?: string | null;
@@ -178,7 +178,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		return showAlert({
 			title,
 			message: message!,
-			type: "danger",
+			type: "primary",
 			confirmText,
 			cancelText,
 			icon: "bi bi-question-circle-fill",
