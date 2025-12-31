@@ -39,7 +39,7 @@ class TestToast(BaseTest):
         """Test importing a scraped job via right-click and displaying a toast notification."""
 
         job_count = self.db.query(models.Job).count()
-        self.scraped_job_table_utils.context_menu(2, "import")
+        self.scraped_job_table_utils.table_context_menu(2, "import")
         self.scraped_job_modal_utils.import_button().click()
         self.scraped_job_modal_utils.wait_for_import_modal_modal_close()
         self.scraped_job_table_utils.assert_toast_message("Job imported successfully.")
@@ -70,7 +70,7 @@ class TestToast(BaseTest):
     def test_context_menu_delete_scraped_job(self) -> None:
         """Test deleting a scraped job via right-click and displaying a toast notification."""
 
-        self.scraped_job_table_utils.context_menu(2, "delete")
+        self.scraped_job_table_utils.table_context_menu(2, "delete")
         self.delete_confirm_button.click()
         self.scraped_job_modal_utils.wait_for_import_modal_modal_close()
         self.assert_toast_message("Scraped Job deleted successfully.")

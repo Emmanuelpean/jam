@@ -7,7 +7,6 @@ export interface MenuItem {
 	action: MenuItemKey;
 	icon?: string;
 	text: string;
-	id?: string;
 	color?: string;
 	function?: (item: any) => void;
 	hasSubmenu?: boolean;
@@ -201,7 +200,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 									(e.currentTarget as HTMLElement).style.backgroundColor = "white";
 									handleMouseLeave();
 								}}
-								id={menuItem.id}
+								id={`context-menu-${menuItem.action}`}
 							>
 								<span>
 									{menuItem.icon && <i className={`bi bi-${menuItem.icon} me-2`}></i>}

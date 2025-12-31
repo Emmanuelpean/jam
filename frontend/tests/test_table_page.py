@@ -77,7 +77,7 @@ class BaseTablePage(BaseTest):
     def test_view_entry_right_click(self) -> None:
         """Test viewing an entry details through the right-click context menu"""
 
-        self.table_utils.context_menu(self.test_entry.id, "view")
+        self.table_utils.table_context_menu(self.test_entry.id, "view")
         self._test_view_modal()
 
     # --------------------------------------------------- DELETE TEST --------------------------------------------------
@@ -85,7 +85,7 @@ class BaseTablePage(BaseTest):
     def test_delete_entry(self) -> None:
         """Test deleting an entry entry"""
 
-        self.table_utils.context_menu(self.test_entry.id, "delete")
+        self.table_utils.table_context_menu(self.test_entry.id, "delete")
         self.modal_utils.wait_for_delete_modal()
         self.table_utils.delete_confirm_button.click()
         self.table_utils.wait_for_delete_modal_close()
@@ -127,7 +127,7 @@ class BaseTablePage(BaseTest):
         self._test_view_modal(entry)
 
         # Reopen in edit mode
-        self.table_utils.context_menu(entry_id, "edit")
+        self.table_utils.table_context_menu(entry_id, "edit")
         self.check_edit_modal(entry_id, **self.test_data)
 
     def check_edit_modal(self, entry_id: int, **values) -> None:
@@ -216,7 +216,7 @@ class BaseTablePage(BaseTest):
 
         self.table_utils.set_page_item_select("100")
         initial_count = len(self.table_utils.table_rows)
-        self.table_utils.context_menu(self.test_entry.id, "edit")
+        self.table_utils.table_context_menu(self.test_entry.id, "edit")
         self.modal_utils._fill_modal(**self.test_data)
         self.modal_utils.confirm_button("edit").click()
         self.modal_utils.wait_for_edit_modal_close()
@@ -235,7 +235,7 @@ class BaseTablePage(BaseTest):
     def test_cancel_edit(self) -> None:
         """Test cancelling an entry edit opened via the edit modal"""
 
-        self.table_utils.context_menu(self.test_entry.id, "edit")
+        self.table_utils.table_context_menu(self.test_entry.id, "edit")
         self.modal_utils.cancel_button("edit").click()
         self.modal_utils.wait_for_edit_modal_close()
 

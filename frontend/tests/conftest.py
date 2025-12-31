@@ -492,6 +492,13 @@ class BaseUtils(object):
         except TimeoutException:
             raise AssertionError(f"Element {element_id} did not disappear")
 
+    def context_menu(self, element: WebElement, choice: str) -> None:
+        """Row context menu"""
+
+        actions = ActionChains(self.driver)
+        actions.context_click(element).perform()
+        self.get_element(f"context-menu-{choice}").click()
+
     @staticmethod
     def set_text(element: WebElement, text: str = "") -> None:
         """Clears the input element"""
@@ -1079,12 +1086,10 @@ class DataTableUtils(BaseUtilsClass):
 
         return self.get_element(f"table-row-{self.entry_type}-{item_id}", *args, **kwargs)
 
-    def context_menu(self, entity_id: int, choice: str) -> None:
+    def table_context_menu(self, entity_id: int, choice: str) -> None:
         """Row context menu"""
 
-        actions = ActionChains(self.driver)
-        actions.context_click(self.table_row(entity_id)).perform()
-        self.get_element(f"context-menu-{choice}").click()
+        self.context_menu(self.table_row(entity_id), choice)
 
     def check_row_exist(self, column: str, name: str, expected_count: int = 1) -> None:
         """Check that a specific row with a specific name exists in the table
@@ -1461,7 +1466,7 @@ class BaseTest(BaseUtils):
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
