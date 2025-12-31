@@ -81,8 +81,8 @@ export interface ValidationErrors {
 }
 
 export interface DataModalHandle {
-	showView: (data: any) => void;
-	showEdit: (data: any) => void;
+	showView: (id: number) => void;
+	showEdit: (id: number) => void;
 	showAdd: (data: any) => void;
 	showImport: (data: any) => void;
 }
@@ -114,12 +114,18 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const [mode, setMode] = useState<modalModes>("view");
 		const [effectiveData, setEffectiveData] = useState<any>(null);
 		useImperativeHandle(ref, () => ({
-			showView: (data: JamData) => {
+			showView: (id: number): void => {
+				const data = dataContext
+					.getEntityData(entityType)
+					.filter((item: JamData): boolean => item.id === id)[0];
 				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
 				setMode("view");
 				setInternalShow(true);
 			},
-			showEdit: (data: JamData) => {
+			showEdit: (id: number): void => {
+				const data = dataContext
+					.getEntityData(entityType)
+					.filter((item: JamData): boolean => item.id === id)[0];
 				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
 				setMode("edit");
 				setInternalShow(true);
