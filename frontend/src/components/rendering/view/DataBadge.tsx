@@ -13,8 +13,9 @@ import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobApplicationUpdateModal } from "../../modals/JobApplicationUpdateModal";
 import { InterviewModal } from "../../modals/InterviewModal";
 import { useDeleteEntity } from "../../../utils/DeleteHandler";
-import { EntityType, JamData } from "../../../contexts/DataContext";
+import { DataContextValue, EntityType, JamData, useDataContext } from "../../../contexts/DataContext";
 import { getEntityIcon } from "./Icons";
+import { useGlobalToast } from "../../../hooks/useNotificationToast";
 
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 
@@ -22,6 +23,8 @@ export interface DataBadgeProps<T extends JamData> {
 	item: T | undefined;
 	badgeId: string;
 	parentItem?: JamData;
+	parentKey?: string;
+	parentEntityType?: EntityType;
 	icon?: string;
 	displayText?: string | ((item: T) => string);
 	badgeClass?: string;
@@ -41,6 +44,8 @@ const createBadgeModalManager = <T extends JamData>(
 		item,
 		badgeId,
 		parentItem,
+		parentKey,
+		parentEntityType,
 		icon,
 		displayText = defaultDisplayText,
 		badgeClass = defaultBadgeClass,
@@ -51,11 +56,41 @@ const createBadgeModalManager = <T extends JamData>(
 		const { openContextMenu } = useContextMenu();
 		const followUpModalRef = useRef<FollowUpModalHandle>(null);
 		const deleteHandler = useDeleteEntity(entityType);
+		const dataContext: DataContextValue = useDataContext();
+		const { showToastSuccess } = useGlobalToast();
 
+		const handleRemove = (id: number): void => {
+			if (parentItem && parentKey) {
+				let updatedParent;
+				if (Array.isArray((parentItem as any)[parentKey])) {
+					updatedParent = {
+						...parentItem,
+						[parentKey]: (parentItem as any)[parentKey].filter((itemId: number): boolean => itemId !== id),
+					};
+				} else {
+					updatedParent = {
+						...parentItem,
+						[parentKey]: null,
+					};
+				}
+				if (parentEntityType) {
+					dataContext.updateEntity(parentEntityType, parentItem.id, updatedParent).then((_) => {
+						showToastSuccess("Association removed successfully.");
+					});
+				}
+			}
+		};
 		const availableMenuItems: MenuItem[] = [
 			{ action: "view", icon: "eye", text: "View", function: modalRef.current?.showView },
 			{ action: "edit", icon: "pencil", text: "Edit", function: modalRef.current?.showEdit },
 			{ action: "delete", icon: "trash", text: "Delete", color: "#dc3545", function: deleteHandler },
+			{
+				action: "remove",
+				icon: "x-circle",
+				text: "Remove",
+				color: "#dc3545",
+				function: handleRemove,
+			},
 			{
 				action: "followup",
 				icon: "bell",
@@ -91,7 +126,7 @@ const createBadgeModalManager = <T extends JamData>(
 			<>
 				<span
 					className={`badge ${badgeClass} clickable-badge`}
-					onClick={() => item && modalRef.current?.showView(item.id)}
+					onClick={() => item && modalRef.current?.showView(item)}
 					onContextMenu={handleContextMenu}
 					id={badgeId}
 				>

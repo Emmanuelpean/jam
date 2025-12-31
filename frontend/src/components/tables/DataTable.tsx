@@ -21,7 +21,7 @@ import {
 	useDeleteEntity,
 } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
-import { MenuItem } from "./ContextMenu";
+import { MenuItem, MenuItemKey } from "./ContextMenu";
 import LoadingSpinner from "../spinner/Spinner";
 import { DataModalHandle, modalModes } from "../modals/DataModal/DataModal";
 import { EnrichedJobData, JobData } from "../../services/Schemas";
@@ -40,7 +40,7 @@ export interface DataTableProps {
 	data?: any | null;
 	columns?: TableColumn[];
 	showAdd?: boolean;
-	menuItems?: string[] | ((item: any) => string[]);
+	menuItems?: string[] | ((item: any) => MenuItemKey[]);
 }
 
 export interface GenericTableProps {
@@ -57,7 +57,7 @@ export interface GenericTableProps {
 	// Table configuration
 	columns?: TableColumn[];
 	initialSortConfig?: Partial<SortConfig>;
-	menuItems?: string[] | ((item: any) => string[]);
+	menuItems?: MenuItemKey[] | ((item: any) => MenuItemKey[]);
 
 	// Modal configuration
 	Modal: React.ComponentType<any>;
@@ -111,8 +111,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 }: GenericTableProps): JSX.Element => {
 	const { token } = useAuth();
 	const modalRef = useRef<DataModalHandle>(null);
-	const openViewModal = (id: number): void | undefined => modalRef.current?.showView(id);
-	const openEditModal = (id: number): void | undefined => modalRef.current?.showEdit(id);
+	const openViewModal = (item: any): void | undefined => modalRef.current?.showView(item);
+	const openEditModal = (item: any): void | undefined => modalRef.current?.showEdit(item);
 	const openAddModal = () => modalRef.current?.showAdd(initialData);
 	const openImportModal = (item: any): void | undefined => modalRef.current?.showImport(item);
 
@@ -302,9 +302,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			openImportModal(item);
 		} else {
 			if (defaultModalMode === "edit") {
-				openEditModal(item.id);
+				openEditModal(item);
 			} else {
-				openViewModal(item.id);
+				openViewModal(item);
 			}
 		}
 	};

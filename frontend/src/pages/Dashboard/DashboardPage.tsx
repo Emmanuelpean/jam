@@ -173,7 +173,7 @@ const Dashboard: React.FC = () => {
 						/>
 						<Card.Body className="p-0 flex-grow-1 overflow-auto">
 							<div className="px-3">
-								<JobsToChase data={needsChase} menuItems={["view", "edit", "snooze", "delete"]} />
+								<JobsToChase data={needsChase} />
 							</div>
 						</Card.Body>
 					</Card>
