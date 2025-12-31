@@ -68,7 +68,6 @@ export interface RenderParams {
 	helpText?: string; // help text
 	dataContext: DataContextValue; // data context
 	token: string | null;
-	handleContextMenu?: (e: React.MouseEvent<HTMLElement>, item: any) => void;
 }
 
 // Base class for Fields (Table or Modal fields)
@@ -77,7 +76,6 @@ export interface ViewField {
 	render?: (params: RenderParams) => ReactNode; // render function to use
 	columns?: TableColumn[]; // columns for rendered tables
 	helpText?: string; // help text
-	handleContextMenu?: (e: React.MouseEvent<HTMLElement>, item: any) => void;
 }
 
 function filterByKey<T>(items: T[], key: string, id: number | undefined): T[] {
@@ -688,7 +686,7 @@ export const RenderViewFieldWithContext: React.FC<{
 	item: any;
 	id: string;
 }> = ({ field, item, id }) => {
-	const context = useDataContext();
+	const context: DataContextValue = useDataContext();
 	const { token } = useAuth();
 
 	let rendered: ReactNode;
@@ -701,7 +699,6 @@ export const RenderViewFieldWithContext: React.FC<{
 			helpText: field.helpText,
 			dataContext: context,
 			token: token,
-			handleContextMenu: field.handleContextMenu,
 		};
 		rendered = field.render(renderParams);
 	} else {
