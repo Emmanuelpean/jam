@@ -1,4 +1,4 @@
-/*Sidebar*/
+/* Sidebar */
 .custom-sidebar {
     display: flex;
     position: sticky;
@@ -19,7 +19,7 @@
     width: 300px !important;
 }
 
-@media (max-width: 990px) {
+@media (width <= 990px) {
     .custom-sidebar {
         position: fixed;
         left: 0;
@@ -35,11 +35,11 @@
 
     .custom-sidebar.expanded {
         transform: translateX(0);
-        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3); /* optional overlay effect */
+        box-shadow: 0 0 0 9999px rgb(0 0 0 / 30%); /* optional overlay effect */
     }
 }
 
-/*Header*/
+/* Header */
 .sidebar-header {
     padding-left: 13.5px;
     border-bottom: 1px solid #dee2e6;
@@ -66,14 +66,13 @@
     background: white;
     border: 1px solid #dee2e6;
     border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
     padding: 0.5rem;
 }
 
 /* Navigation sections */
 .sidebar-nav {
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden auto;
 }
 
 .sidebar-nav-top {
@@ -209,7 +208,7 @@
     left: 100%;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(0, 0, 0, 0.9);
+    background: rgb(0 0 0 / 90%);
     color: white;
     padding: 0.5rem 0.75rem;
     border-radius: 6px;
@@ -221,7 +220,7 @@
     z-index: 1200;
     margin-left: 10px;
     font-size: 0.875rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
     pointer-events: none;
 }
 
@@ -238,7 +237,7 @@
     top: 50%;
     transform: translateY(-50%);
     border: 5px solid transparent;
-    border-right-color: rgba(0, 0, 0, 0.9);
+    border-right-color: rgb(0 0 0 / 90%);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.2s ease,
@@ -271,7 +270,7 @@
     background: #fff;
     border: none;
     border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
     width: 40px;
     height: 40px;
     display: flex;
@@ -288,4 +287,9 @@
 .sidebar-close-btn {
     position: absolute;
     right: 16px;
+}
+
+/* Vertical scrollbar width */
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
 }
