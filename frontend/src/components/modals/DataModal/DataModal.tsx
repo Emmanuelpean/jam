@@ -81,8 +81,8 @@ export interface ValidationErrors {
 }
 
 export interface DataModalHandle {
-	showView: (id: number) => void;
-	showEdit: (id: number) => void;
+	showView: (data: JamData) => void;
+	showEdit: (data: JamData) => void;
 	showAdd: (data: any) => void;
 	showImport: (data: any) => void;
 }
@@ -113,19 +113,16 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const [internalShow, setInternalShow] = useState(false);
 		const [mode, setMode] = useState<modalModes>("view");
 		const [effectiveData, setEffectiveData] = useState<any>(null);
+		const [_id, setId] = useState<number | null>(null);
 		useImperativeHandle(ref, () => ({
-			showView: (id: number): void => {
-				const data = dataContext
-					.getEntityData(entityType)
-					.filter((item: JamData): boolean => item.id === id)[0];
+			showView: (data: JamData): void => {
+				setId(data.id);
 				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
 				setMode("view");
 				setInternalShow(true);
 			},
-			showEdit: (id: number): void => {
-				const data = dataContext
-					.getEntityData(entityType)
-					.filter((item: JamData): boolean => item.id === id)[0];
+			showEdit: (data: JamData): void => {
+				setId(data.id);
 				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
 				setMode("edit");
 				setInternalShow(true);
@@ -161,6 +158,11 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const contentRef = useRef<HTMLDivElement>(null);
 		const { showDelete } = useAlert();
 		const entityName: string = entityTypeToGenericName(entityType);
+
+		// useEffect(() => {
+		// 	const data = dataContext.getEntityData(entityType).filter((item: JamData): boolean => item.id === id)[0];
+		// 	setEffectiveData(data);
+		// }, [dataContext.getEntityData(entityType).filter((item: JamData): boolean => item.id === id)[0]]);
 
 		// ------------------------------------------------ MODAL STATE INIT ------------------------------------------------
 
