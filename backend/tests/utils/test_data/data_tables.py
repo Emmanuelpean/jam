@@ -443,6 +443,7 @@ PERSON_DATA = [
         "first_name": "Mike",
         "last_name": "Taylor",
         "phone": "9876543210",
+        "email": "mike.taylor@company.com",
         "role": "Lead Developer",
         "company_id": 1,
         "owner_id": 1,

@@ -385,21 +385,18 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				action: "view",
 				icon: "eye",
 				text: "View",
-				id: "context-menu-view",
 				function: openViewModal,
 			},
 			{
 				action: "edit",
 				icon: "pencil",
 				text: "Edit",
-				id: "context-menu-edit",
 				function: openEditModal,
 			},
 			{
 				action: "snooze",
 				icon: "alarm",
 				text: "Snooze for...",
-				id: "context-menu-snooze",
 				hasSubmenu: true,
 				submenu: [
 					{ action: "snooze-1", text: "1 week", function: handleSnoozeItem(1) },
@@ -412,14 +409,12 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				action: "import",
 				icon: "upload",
 				text: "Import",
-				id: "context-menu-import",
 				function: openImportModal,
 			},
 			{
 				action: "delete",
 				icon: "trash",
 				text: "Delete",
-				id: "context-menu-delete",
 				color: "#dc3545",
 				function: handleDelete,
 			},
@@ -427,21 +422,18 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				action: "activate",
 				icon: "check-circle",
 				text: "Activate",
-				id: "context-menu-activate",
 				function: activateEntityHandler,
 			},
 			{
 				action: "deactivate",
 				icon: "slash-circle",
 				text: "Deactivate",
-				id: "context-menu-deactivate",
 				function: deactivateEntityHandler,
 			},
 			{
 				action: "followup",
 				icon: "bell",
 				text: "Follow-up Email",
-				id: "context-menu-followup",
 				function: (item: JobData): void => {
 					followUpModalRef.current?.show(item);
 				},
