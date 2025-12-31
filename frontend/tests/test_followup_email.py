@@ -27,7 +27,7 @@ class TestFollowUpEmail(BaseTest):
         expected = (
             "Follow Up Email Generator\n"
             "Contact\n"
-            "John Doe\n"
+            "John Doe (Tech Corp)\n"
             "Email Subject\n"
             "Email Body\n"
             "Hi John,\n"
@@ -46,7 +46,7 @@ class TestFollowUpEmail(BaseTest):
         )
         assert modal.text == expected
         self.followup_modal.contact.open_menu()
-        self.followup_modal.contact.select_by_visible_text("Alex Johnson")
+        self.followup_modal.contact.select_by_visible_text("Alex Johnson (CloudFirst Inc)")
         assert "Alex" in self.followup_modal.body.text
 
     def test_cancel(self) -> None:
@@ -112,14 +112,14 @@ class TestFollowUpEmail(BaseTest):
         person_badge = self.get_element("modal-view-job-person-0")
         self.context_menu(person_badge, "followup")
         self.followup_modal.wait_for_modal()
-        assert self.followup_modal.contact_text == "John Doe"
+        assert self.followup_modal.contact_text == "John Doe (Tech Corp)"
         assert "John" in self.followup_modal.body.text
         self.followup_modal.cancel_button.click()
         self.followup_modal.wait_for_modal_close()
         person_badge = self.get_element("modal-view-job-person-1")
         self.context_menu(person_badge, "followup")
         self.followup_modal.wait_for_modal()
-        assert self.followup_modal.contact_text == "Mike Taylor"
+        assert self.followup_modal.contact_text == "Mike Taylor (Tech Corp)"
         assert "Mike" in self.followup_modal.body.text
 
 
