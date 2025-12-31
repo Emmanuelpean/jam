@@ -566,6 +566,16 @@ class BaseUtils(object):
 
         self._wait_for_modal_close("delete-alert-modal")
 
+    def wait_for_windows(self, n: int) -> None:
+        """Wait for the given number of browser windows to be present"""
+
+        self.wait.until(ec.number_of_windows_to_be(n))
+
+    def switch_to_window(self, index: int) -> None:
+        """Switch to the browser window with the given index"""
+
+        self.driver.switch_to.window(self.driver.window_handles[index])
+
 
 class BaseUtilsClass(BaseUtils):
 
@@ -944,11 +954,11 @@ class DataModalUtils(BaseUtilsClass):
             "Location\n"
             "Notes\n"
             "No Interviews found\n"
-            "Add Update\n"
+            "Add Job Application Update\n"
             "Date\n"
             "Type\n"
             "Notes\n"
-            "No Updates found\n"
+            "No Job Application Updates found\n"
             "Close\n"
             "Edit"
         )
