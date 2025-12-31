@@ -131,9 +131,9 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 			interviews.some((interview: InterviewData) => interview.interviewers?.includes(person.id)),
 		);
 		return [
-			{ label: "Job Contacts", options: toSelectOptions(jobContacts) },
-			{ label: "Interviewers", options: toSelectOptions(interviewContacts) },
-			{ label: "All Contacts", options: toSelectOptions(persons) },
+			{ label: "Job Contacts", options: toSelectOptions(jobContacts, "id", getPersonLabel) },
+			{ label: "Interviewers", options: toSelectOptions(interviewContacts, "id", getPersonLabel) },
+			{ label: "All Contacts", options: toSelectOptions(persons, "id", getPersonLabel) },
 		];
 	};
 

@@ -13,7 +13,7 @@ from app.routers import data_tables, user, auth, export, settings, others
 
 app = FastAPI()
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
