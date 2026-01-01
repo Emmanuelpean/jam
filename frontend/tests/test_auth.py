@@ -280,9 +280,7 @@ class TestEmailVerification(BaseTest):
         self.auth_utils.clear_test_emails()
         self.auth_utils.register_user(email, password)
         self.auth_utils.wait_for_login()
-        self.auth_utils.assert_toast_message(
-            "Account created! Please check your email to verify your account before logging in."
-        )
+        self.assert_toast_message("Account created! Please check your email to verify your account before logging in.")
 
     def _verify_account_via_email_link(self, email: str) -> None:
         """Helper to retrieve the verification link from email and visit it, asserting success."""

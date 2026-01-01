@@ -36,44 +36,43 @@ from app.config import settings
 from tests.conftest import (
     session,
     models,
-    # authorised_clients,
-    # client,
-    # tokens,
-    # test_settings,
-    # test_interviews,
-    # test_job_application_updates,
-    # test_jobs,
+    client,
+    tokens,
+    test_settings,
+    test_interviews,
+    test_job_application_updates,
+    test_jobs,
     database_url,
     test_users,
     worker_database_name,
     engine,
-    # test_keywords,
-    # test_regular_user,
-    # test_job_ratings,
-    # test_files,
-    # test_scraped_jobs,
-    # test_persons,
-    # test_aggregators,
-    # test_companies,
-    # test_locations,
-    # test_platform_stats,
-    # test_scraping_filters,
-    # test_admin_user,
-    # test_inactive_user,
-    # test_user_qualifications,
-    # test_jobs_unauthorised,
-    # test_persons_unauthorised,
-    # test_interviews_unauthorised,
-    # test_unverified_token_user,
-    # test_demo_user,
-    # test_job_alert_emails,
-    # test_speculative_applications,
-    # test_eis_service_logs,
-    # test_eis_service_errors,
-    # test_job_rating_service_logs,
-    # test_unverified_user,
-    # test_user_change_email_token_user,
-    # test_job_application_updates_unauthorised,
+    test_keywords,
+    test_regular_user,
+    test_job_ratings,
+    test_files,
+    test_scraped_jobs,
+    test_persons,
+    test_aggregators,
+    test_companies,
+    test_locations,
+    test_platform_stats,
+    test_scraping_filters,
+    test_admin_user,
+    test_inactive_user,
+    test_user_qualifications,
+    test_jobs_unauthorised,
+    test_persons_unauthorised,
+    test_interviews_unauthorised,
+    test_unverified_token_user,
+    test_demo_user,
+    test_job_alert_emails,
+    test_speculative_applications,
+    test_eis_service_logs,
+    test_eis_service_errors,
+    test_job_rating_service_logs,
+    test_unverified_user,
+    test_user_change_email_token_user,
+    test_job_application_updates_unauthorised,
 )
 
 
@@ -585,28 +584,29 @@ class BaseUtils(object):
 
 class BaseUtilsClass(BaseUtils):
 
-    def __init__(self, driver: WebDriver, test_frontend_server, session):
+    def __init__(self, driver: WebDriver, frontend_base_url, backend_base_url, db):
         """Object constructor
         :param driver: Selenium WebDriver instance
-        :param test_frontend_server: Base URL of the frontend server"""
+        :param frontend_base_url: Base URL of the frontend server
+        :param backend_base_url: Base URL of the backend server
+        :param db: Database session for backend API calls"""
 
         self.driver = driver
         self.wait = WebDriverWait(self.driver, 10)
-        self.frontend_base_url = test_frontend_server
-        self.db = session
+        self.frontend_base_url = frontend_base_url
+        self.backend_base_url = backend_base_url
+        self.db = db
 
 
 class DataModalUtils(BaseUtilsClass):
     """Base class for testing data modals"""
 
-    def __init__(self, driver, entry_type: str, test_frontend_server, session):
+    def __init__(self, entry_type: str, **kwargs):
         """Object constructor
-        :param driver: Selenium WebDriver
-        :param entry_type: Name of the entry type (e.g. tag, company)
-        :param test_frontend_server: Frontend server URL
-        :param session: requests.Session object for backend API calls"""
+        :param entry_type: Type of entry (e.g., "job", "company", etc.)
+        :param kwargs: Additional arguments for the base class"""
 
-        BaseUtilsClass.__init__(self, driver, test_frontend_server, session)
+        BaseUtilsClass.__init__(self, **kwargs)
         self.entry_type = entry_type
 
     # ------------------------------------------------ HELPER FUNCTIONS ------------------------------------------------
@@ -1058,17 +1058,12 @@ class DataModalUtils(BaseUtilsClass):
 class DataTableUtils(BaseUtilsClass):
     """Base class for testing data tables"""
 
-    # Parameters needed
-    entry_type: str = ""  # entity type of the table (e.g. keywords)
-
-    def __init__(self, driver, entry_type: str, test_frontend_server, session):
+    def __init__(self, entry_type: str, **kwargs):
         """Object constructor
-        :param driver: Selenium WebDriver
-        :param entry_type: Name of the entry type (e.g. keywords, companies)
-        :param test_frontend_server: Frontend server URL
-        :param session: requests.Session object for backend API calls"""
+        :param entry_type: Type of entry (e.g., "job", "company", etc.)
+        :param kwargs: Additional arguments for the base class"""
 
-        BaseUtilsClass.__init__(self, driver, test_frontend_server, session)
+        BaseUtilsClass.__init__(self, **kwargs)
         self.entry_type = entry_type
 
     # ----------------------------------------------------- TABLES -----------------------------------------------------
@@ -1462,7 +1457,7 @@ class BaseTest(BaseUtils):
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -1492,42 +1487,33 @@ class BaseTest(BaseUtils):
             self.user = test_users[self.user_index]
             self.db = session
 
-            self.company_modal_utils = DataModalUtils(self.driver, "company", self.frontend_base_url, self.db)
-            self.aggregator_modal_utils = DataModalUtils(self.driver, "aggregator", self.frontend_base_url, self.db)
-            self.keyword_modal_utils = DataModalUtils(self.driver, "keyword", self.frontend_base_url, self.db)
-            self.location_modal_utils = DataModalUtils(self.driver, "location", self.frontend_base_url, self.db)
-            self.person_modal_utils = DataModalUtils(self.driver, "person", self.frontend_base_url, self.db)
-            self.job_modal_utils = DataModalUtils(self.driver, "job", self.frontend_base_url, self.db)
-            self.interview_modal_utils = DataModalUtils(self.driver, "interview", self.frontend_base_url, self.db)
-            self.update_modal_utils = DataModalUtils(
-                self.driver, "jobApplicationUpdate", self.frontend_base_url, self.db
-            )
-            self.speculative_application_modal_utils = DataModalUtils(
-                self.driver, "speculative-application", self.frontend_base_url, self.db
-            )
-            self.scraped_job_modal_utils = DataModalUtils(self.driver, "scrapedJob", self.frontend_base_url, self.db)
-            self.scraping_filter_modal_utils = DataModalUtils(
-                self.driver, "scrapingFilter", self.frontend_base_url, self.db
-            )
+            modal_entities = [
+                "company",
+                "aggregator",
+                "keyword",
+                "location",
+                "person",
+                "job",
+                "interview",
+                "jobApplicationUpdate",
+                "speculative-application",
+                "scrapedJob",
+                "scrapingFilter",
+            ]
 
-            self.company_table_utils = DataTableUtils(self.driver, "company", self.frontend_base_url, self.db)
-            self.aggregator_table_utils = DataTableUtils(self.driver, "aggregator", self.frontend_base_url, self.db)
-            self.keyword_table_utils = DataTableUtils(self.driver, "keyword", self.frontend_base_url, self.db)
-            self.location_table_utils = DataTableUtils(self.driver, "location", self.frontend_base_url, self.db)
-            self.person_table_utils = DataTableUtils(self.driver, "person", self.frontend_base_url, self.db)
-            self.job_table_utils = DataTableUtils(self.driver, "job", self.frontend_base_url, self.db)
-            self.update_table_utils = DataTableUtils(
-                self.driver, "jobApplicationUpdate", self.frontend_base_url, self.db
-            )
-            self.interview_table_utils = DataTableUtils(self.driver, "interview", self.frontend_base_url, self.db)
-            self.scraped_job_table_utils = DataTableUtils(self.driver, "scrapedJob", self.frontend_base_url, self.db)
-            self.scraping_filter_table_utils = DataTableUtils(
-                self.driver, "scrapingFilter", self.frontend_base_url, self.db
-            )
+            shared_kwargs = {
+                "driver": self.driver,
+                "frontend_base_url": self.frontend_base_url,
+                "backend_base_url": self.backend_base_url,
+                "db": self.db,
+            }
+            for name in modal_entities:
+                setattr(self, f"{name}_modal_utils", DataModalUtils(entry_type=name, **shared_kwargs))
+            for name in modal_entities:
+                setattr(self, f"{name}_table_utils", DataTableUtils(entry_type=name, **shared_kwargs))
 
-            self.auth_utils = AuthentificationUtils(self.driver, self.frontend_base_url, self.db)
-
-            self.user_settings_utils = UserSettingsUtils(self.driver, self.frontend_base_url, self.db)
+            self.auth_utils = AuthentificationUtils(**shared_kwargs)
+            self.user_settings_utils = UserSettingsUtils(**shared_kwargs)
 
             self.driver.get("http://localhost:3000/jam")
             self.setup_function(request)
@@ -1559,8 +1545,11 @@ class BaseTest(BaseUtils):
         self.auth_utils.set_email(self.user.email)
         self.auth_utils.set_password(self.user.plain_password)
         self.auth_utils.confirm()
-        self.get_element("loading-spinner")
-        self.wait_for_disappear("loading-spinner")
+        try:
+            self.get_element("loading-spinner", timeout=2)
+            self.wait_for_disappear("loading-spinner", timeout=2)
+        except:
+            pass
         self.wait_for_page("dashboard")
         self.go_to_page(f"{self.page_url}")
 

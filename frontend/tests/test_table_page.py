@@ -35,8 +35,12 @@ class BaseTablePage(BaseTest):
     def setup_function(self, request) -> None:
         """Function called during the setup"""
 
-        self.table_utils = DataTableUtils(self.driver, self.entry_type, self.frontend_base_url, self.db)
-        self.modal_utils = DataModalUtils(self.driver, self.entry_type, self.frontend_base_url, self.db)
+        self.table_utils = DataTableUtils(
+            self.driver, self.entry_type, self.frontend_base_url, self.backend_base_url, self.db
+        )
+        self.modal_utils = DataModalUtils(
+            self.driver, self.entry_type, self.frontend_base_url, self.backend_base_url, self.db
+        )
         if isinstance(self.test_fixture, str):
             self.test_fixture = [self.test_fixture]
         self.test_entries, *self.add_test_entries = [request.getfixturevalue(fixture) for fixture in self.test_fixture]
@@ -427,9 +431,8 @@ class TestPersonsPage(BaseTablePage):
     def test_table_company_badge(self) -> None:
         """Test that the company badge is displayed correctly"""
 
-        company_modal_utils = DataModalUtils(self.driver, "company", self.frontend_base_url, self.db)
         self.get_element("table-row-1-CompanyBadge").click()
-        company_modal_utils.check_company_view_modal(self.test_entry.company)
+        self.company_modal_utils.check_company_view_modal(self.test_entry.company)
 
     def test_add_company(self) -> None:
         """Test adding a new person with a new company"""
