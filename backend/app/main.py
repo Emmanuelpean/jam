@@ -1,5 +1,7 @@
 """Main script"""
 
+import os
+
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -76,7 +78,7 @@ app.include_router(settings.settings_router)
 app.include_router(others.router)
 
 # Testing
-if app_settings.test_mode:
+if os.getenv("TEST_MODE") == "true":
     app.include_router(email_routers.router)
 
 

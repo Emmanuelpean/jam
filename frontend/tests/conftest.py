@@ -187,6 +187,7 @@ def test_backend_server(database_url, worker_id) -> Generator[str, None, None]:
 
     env = os.environ.copy()
     env["SQLALCHEMY_DATABASE_URL"] = database_url
+    env["TEST_MODE"] = "true"
     print(f"Using database URL: {database_url}")
     print(f"Backend path: {backend_path}")
 
@@ -1457,7 +1458,7 @@ class BaseTest(BaseUtils):
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")

@@ -35,15 +35,6 @@ from tests.utils.seed_database import reset_database
 DATABASE_NAME = "jam_test"
 
 
-@pytest.fixture(scope="session", autouse=True)
-def set_test_mode() -> Generator[None, None, None]:
-    """Set TEST_MODE to true for all tests"""
-
-    os.environ["TEST_MODE"] = "true"
-    yield
-    os.environ.pop("TEST_MODE", None)
-
-
 @pytest.fixture(scope="session")
 def worker_database_name(worker_id) -> str:
     """Generate unique database name for each worker."""
