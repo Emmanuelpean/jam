@@ -1,6 +1,5 @@
 """Fixtures and helper functions for integration tests"""
 
-import json
 import os
 import platform
 import queue
@@ -10,8 +9,10 @@ import subprocess
 import sys
 import threading
 from pathlib import Path
+from typing import Generator
 
 import psutil
+import pytest
 import requests
 from selenium.webdriver import Keys, ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -29,52 +30,71 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 from react_select import ReactSelect
+from app.config import settings
 
 # noinspection PyUnresolvedReferences
 from tests.conftest import (
     session,
     models,
+    # authorised_clients,
+    # client,
+    # tokens,
+    # test_settings,
+    # test_interviews,
+    # test_job_application_updates,
+    # test_jobs,
+    database_url,
     test_users,
-    SQLALCHEMY_DATABASE_URL,
-    authorised_clients,
-    client,
-    tokens,
-    test_settings,
-    DATABASE_NAME,
-    test_interviews,
-    test_job_application_updates,
-    test_jobs,
+    worker_database_name,
+    engine,
+    # test_keywords,
+    # test_regular_user,
+    # test_job_ratings,
+    # test_files,
+    # test_scraped_jobs,
+    # test_persons,
+    # test_aggregators,
+    # test_companies,
+    # test_locations,
+    # test_platform_stats,
+    # test_scraping_filters,
+    # test_admin_user,
+    # test_inactive_user,
+    # test_user_qualifications,
+    # test_jobs_unauthorised,
+    # test_persons_unauthorised,
+    # test_interviews_unauthorised,
+    # test_unverified_token_user,
+    # test_demo_user,
+    # test_job_alert_emails,
+    # test_speculative_applications,
+    # test_eis_service_logs,
+    # test_eis_service_errors,
+    # test_job_rating_service_logs,
+    # test_unverified_user,
+    # test_user_change_email_token_user,
+    # test_job_application_updates_unauthorised,
 )
-from tests.conftest import *
 
 
 LOGS_DIR = Path(os.path.join(os.path.dirname(settings.log_directory), "test_logs"))
 LOGS_DIR.mkdir(exist_ok=True)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def set_test_mode() -> Generator[None, None, None]:
-    """Set TEST_MODE to true for all tests"""
-
-    os.environ["TEST_MODE"] = "true"
-    yield
-    # Cleanup after all tests
-    os.environ.pop("TEST_MODE", None)
-
-
 def kill_process_on_port(port) -> bool:
     """Kill any process using the specified port"""
-
     try:
         print(f"Checking for processes on port {port}...")
-        for proc in psutil.process_iter(["pid", "name", "connections"]):
+        for proc in psutil.process_iter(["pid", "name"]):
             try:
-                connections = proc.info["connections"]
+                # Get connections separately, not from info dict
+                connections = proc.net_connections()
                 if connections:
                     for conn in connections:
-                        if conn.laddr.port == port:
+                        if hasattr(conn, "laddr") and conn.laddr.port == port:
                             print(f"Found process {proc.info['name']} (PID: {proc.info['pid']}) on port {port}")
                             proc.kill()
+                            proc.wait(timeout=5)  # Wait for process to die
                             print(f"Killed process {proc.info['pid']}")
                             return True
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
@@ -148,21 +168,27 @@ def print_backend_pid() -> None:
 
 
 @pytest.fixture(scope="session")
-def test_backend_server() -> Generator[str, None, None]:
+def test_backend_server(database_url, worker_id) -> Generator[str, None, None]:
     """Start a test backend server for integration tests"""
-
     print("=" * 60)
-    print("STARTING BACKEND SERVER")
+    print(f"STARTING BACKEND SERVER (Worker: {worker_id})")
     print("=" * 60)
-
     print_backend_pid()
-    kill_process_on_port(8000)
+
+    # Determine port based on worker_id
+    if worker_id == "master":
+        port = 8000
+    else:
+        # Extract worker number from worker_id (e.g., "gw0" -> 0)
+        worker_num = int(worker_id.replace("gw", ""))
+        port = 8000 + worker_num + 1  # gw0 -> 8001, gw1 -> 8002, etc.
+
+    print(f"Using port: {port}")
+    kill_process_on_port(port)
 
     env = os.environ.copy()
-    env["DATABASE_NAME"] = DATABASE_NAME
-    env["SQLALCHEMY_DATABASE_URL"] = SQLALCHEMY_DATABASE_URL
-
-    print(f"Using database URL: {SQLALCHEMY_DATABASE_URL}")
+    env["SQLALCHEMY_DATABASE_URL"] = database_url
+    print(f"Using database URL: {database_url}")
     print(f"Backend path: {backend_path}")
 
     if "PYTHONPATH" in env:
@@ -171,15 +197,15 @@ def test_backend_server() -> Generator[str, None, None]:
         env["PYTHONPATH"] = backend_path
 
     # CREATE LOG FILES FOR BACKEND OUTPUT
-    backend_log_file = LOGS_DIR / "backend_server.log"
-    backend_error_file = LOGS_DIR / "backend_errors.log"
+    backend_log_file = LOGS_DIR / f"backend_server_{worker_id}.log"
+    backend_error_file = LOGS_DIR / f"backend_errors_{worker_id}.log"
 
     with open(backend_log_file, "w") as log_out, open(backend_error_file, "w") as log_err:
         print(f"Backend logs will be saved to: {backend_log_file}")
 
-        # Start backend with output redirected to files
+        # Start backend with worker-specific port
         process = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"],
+            [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", str(port)],
             cwd=backend_path,
             env=env,
             stdout=log_out,
@@ -187,28 +213,26 @@ def test_backend_server() -> Generator[str, None, None]:
             text=True,
         )
 
-        print(f"Backend process started with PID: {process.pid}")
+        print(f"Backend process started with PID: {process.pid} on port {port}")
 
         # Wait for server to start
-        api_url = "http://localhost:8000"
+        api_url = f"http://localhost:{port}"
         print(f"Waiting for backend server to be ready at {api_url}...")
 
         for attempt in range(30):
             print(f"Attempt {attempt + 1}/30 - Checking backend server health...")
-
             if process.poll() is not None:
-                # Print last lines from error log
                 with open(backend_error_file, "r") as f:
                     error_content = f.read()
                 print(f"❌ Backend process died! Return code: {process.poll()}")
-                print(f"Last error output:\n{error_content[-1000:]}")  # Last 1000 chars
+                print(f"Last error output:\n{error_content[-1000:]}")
                 raise Exception(f"Backend server process terminated unexpectedly")
 
             try:
-                response = requests.get(f"{api_url}/docs", timeout=3)
+                response = requests.get(f"{api_url}/health", timeout=3)
                 print(f"✅ Backend response status code: {response.status_code}")
                 if response.status_code == 200:
-                    print("✅ Backend server is ready!")
+                    print(f"✅ Backend server is ready on port {port}!")
                     break
             except requests.exceptions.ConnectionError:
                 print("Backend connection refused, still starting...")
@@ -223,18 +247,17 @@ def test_backend_server() -> Generator[str, None, None]:
                 stdout_content = f.read()
             with open(backend_error_file, "r") as f:
                 stderr_content = f.read()
-
             print("❌ Backend server failed to start after 30 seconds")
             print(f"Backend STDOUT:\n{stdout_content[-1000:]}")
             print(f"Backend STDERR:\n{stderr_content[-1000:]}")
             kill_process_tree(process.pid)
             raise Exception(f"Backend server failed to start")
 
-        print("✅ Backend server startup completed successfully!")
+        print(f"✅ Backend server startup completed successfully on port {port}!")
         yield api_url
 
         # Cleanup
-        print("Cleaning up backend server...")
+        print(f"Cleaning up backend server on port {port}...")
         kill_process_tree(process.pid)
         print("✅ Backend server cleanup completed.")
         print(f"Backend logs saved in: {LOGS_DIR}")
@@ -242,28 +265,33 @@ def test_backend_server() -> Generator[str, None, None]:
 
 
 @pytest.fixture(scope="class")
-def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
+def test_frontend_server(test_backend_server, worker_id) -> Generator[str, None, None]:
     """Start a test frontend server for integration tests"""
-
     print("=" * 60)
-    print("STARTING FRONTEND SERVER")
+    print(f"STARTING FRONTEND SERVER (Worker: {worker_id})")
     print("=" * 60)
 
-    # Kill any existing process on port 3000
-    kill_process_on_port(3000)
+    # Determine port based on worker_id
+    if worker_id == "master":
+        port = 3000
+    else:
+        worker_num = int(worker_id.replace("gw", ""))
+        port = 3000 + worker_num + 1  # gw0 -> 3001, gw1 -> 3002, etc.
+
+    print(f"Using port: {port}")
+    kill_process_on_port(port)
+
     frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     print(f"Frontend path: {frontend_path}")
 
     # Set environment variables for frontend
     env = os.environ.copy()
-    env["REACT_APP_API_URL"] = test_backend_server  # Use the actual backend URL
-    env["PORT"] = "3000"  # Use different port to avoid conflicts
-    env["BROWSER"] = "none"  # Don't open browser automatically
-
+    env["REACT_APP_API_BASE_URL"] = test_backend_server  # Use worker-specific backend
+    env["PORT"] = str(port)
+    env["BROWSER"] = "none"
     print(f"Environment variables:")
-    print(f"  REACT_APP_API_URL: {env['REACT_APP_API_URL']}")
+    print(f"  REACT_APP_API_BASE_URL: {env['REACT_APP_API_BASE_URL']}")
     print(f"  PORT: {env['PORT']}")
-    print(f"  BROWSER: {env['BROWSER']}")
 
     # Find npm executable
     npm_cmd = "npm"
@@ -271,29 +299,18 @@ def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
         npm_path = shutil.which("npm.cmd") or shutil.which("npm")
         if npm_path:
             npm_cmd = npm_path
-            print(f"Found npm at: {npm_cmd}")
-        else:
-            raise Exception("npm not found in PATH")
-
-    # Check prerequisites
-    package_json_path = os.path.join(frontend_path, "package.json")
-    if not os.path.exists(package_json_path):
-        raise Exception(f"package.json not found at: {package_json_path}")
-
-    node_modules_path = os.path.join(frontend_path, "node_modules")
-    if not os.path.exists(node_modules_path):
-        print("⚠️  node_modules not found, you may need to run 'npm install' first")
+        print(f"Found npm at: {npm_cmd}")
+    else:
+        raise Exception("npm not found in PATH")
 
     # Start the frontend server
     print("Starting frontend server subprocess...")
-
-    # Use shell=True on Windows for better npm handling
     process = subprocess.Popen(
         f'"{npm_cmd}" start',
         cwd=frontend_path,
         env=env,
         stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,  # Combine stderr into stdout
+        stderr=subprocess.STDOUT,
         shell=True,
         text=True,
         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
@@ -302,7 +319,7 @@ def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
     print(f"Frontend process started with PID: {process.pid}")
 
     # Wait for frontend server to start
-    frontend_url = "http://localhost:3000"
+    frontend_url = f"http://localhost:{port}"
     print(f"Waiting for frontend server at {frontend_url}...")
     print("This will take 30-60 seconds for React to compile...")
 
@@ -317,25 +334,22 @@ def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
     output_thread.start()
 
     compiled = False
-    for attempt in range(90):  # 90 seconds max
-        # Check if process died
+    for attempt in range(90):
         if process.poll() is not None:
             print(f"❌ Frontend process died! Return code: {process.poll()}")
             remaining_output = []
             while not output_queue.empty():
                 remaining_output.append(output_queue.get())
             print("Recent output:")
-            for line in remaining_output[-10:]:  # Last 10 lines
+            for line in remaining_output[-10:]:
                 print(f"  {line}")
             raise Exception(f"Frontend server process terminated unexpectedly")
 
-        # Print recent output
         recent_lines = []
         while not output_queue.empty():
             line = output_queue.get()
             recent_lines.append(line)
 
-            # Look for compilation success indicators
             if "compiled successfully" in line.lower() or "webpack compiled" in line.lower():
                 compiled = True
                 print(f"✅ Frontend compiled: {line}")
@@ -343,21 +357,17 @@ def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
                 print(f"❌ Frontend compilation failed: {line}")
                 raise Exception(f"Frontend compilation failed: {line}")
 
-        # Show recent output every 10 seconds
         if attempt % 10 == 0 and recent_lines:
             print(f"Recent frontend output (attempt {attempt + 1}/90):")
-            for line in recent_lines[-3:]:  # Last 3 lines
+            for line in recent_lines[-3:]:
                 print(f"  {line}")
 
-        # Try connecting once compilation is done
         if compiled:
             try:
                 response = requests.get(frontend_url, timeout=3)
                 if response.status_code == 200:
-                    print("✅ Frontend server is ready!")
+                    print(f"✅ Frontend server is ready on port {port}!")
                     break
-                else:
-                    print(f"Frontend responded with status: {response.status_code}")
             except requests.exceptions.ConnectionError:
                 print("Frontend compiled but connection refused...")
             except requests.exceptions.Timeout:
@@ -367,36 +377,25 @@ def test_frontend_server(test_backend_server) -> Generator[str, None, None]:
 
         time.sleep(1)
     else:
-        # Frontend failed to start
         print("❌ Frontend server failed to start after 90 seconds")
-
-        # Get remaining output
         remaining_output = []
         while not output_queue.empty():
             remaining_output.append(output_queue.get())
-
         print("Final frontend output:")
-        for line in remaining_output[-20:]:  # Last 20 lines
+        for line in remaining_output[-20:]:
             print(f"  {line}")
-
         kill_process_tree(process.pid)
         raise Exception("Frontend server failed to start - see output above")
 
-    print("✅ Frontend server startup completed successfully!")
+    print(f"✅ Frontend server startup completed successfully on port {port}!")
     yield frontend_url + "/jam"
 
-    # Cleanup - more aggressive process killing
-    print("Cleaning up frontend server...")
-    print(f"Frontend process PID: {process.pid}")
-
-    # Kill the entire process tree
+    # Cleanup
+    print(f"Cleaning up frontend server on port {port}...")
     kill_process_tree(process.pid)
-
-    # Double-check that port 3000 is free
-    time.sleep(2)  # Give processes time to die
-    if kill_process_on_port(3000):
-        print("Found and killed additional process on port 3000")
-
+    time.sleep(2)
+    if kill_process_on_port(port):
+        print(f"Found and killed additional process on port {port}")
     print("✅ Frontend server cleanup completed.")
 
 
@@ -422,12 +421,15 @@ class BaseUtils(object):
     driver: WebDriver = None
     wait: WebDriverWait = None
     frontend_base_url: str = ""
+    backend_base_url: str = ""
     db = None
 
     def go_to_page(self, page) -> None:
         """Helper method to go to a specific page"""
 
-        self.driver.get(f"{self.frontend_base_url}/{page}")
+        self.driver.execute_script(f"window.history.pushState({{}}, '', '{self.frontend_base_url}/{page}');")
+        self.driver.execute_script("window.dispatchEvent(new Event('popstate'));")
+        # self.driver.get(f"{self.frontend_base_url}/{page}")
         self.wait_for_page(page)
 
     def wait_for_page(self, page_url: str) -> None:
@@ -527,27 +529,24 @@ class BaseUtils(object):
         assert token is not None, "Verification token not found in database"
         return token
 
-    @staticmethod
-    def get_verification_link_from_email(email: str) -> str:
+    def get_verification_link_from_email(self, email: str) -> str:
         """Helper method to get verification link from test email endpoint"""
 
-        response = requests.get(f"{settings.backend_url}/test/verification-link/{email}")
+        response = requests.get(f"{self.backend_base_url}/test/verification-link/{email}")
         assert response.status_code == 200, f"Failed to get verification link: {response.text}"
         return response.json()["verification_url"]
 
-    @staticmethod
-    def get_reset_link_from_email(email: str) -> str:
+    def get_reset_link_from_email(self, email: str) -> str:
         """Helper method to get password reset link from test email endpoint"""
 
-        response = requests.get(f"{settings.backend_url}/test/reset-link/{email}")
+        response = requests.get(f"{self.backend_base_url}/test/reset-link/{email}")
         assert response.status_code == 200, f"Failed to get reset link: {response.text}"
         return response.json()["reset_url"]
 
-    @staticmethod
-    def clear_test_emails() -> None:
+    def clear_test_emails(self) -> None:
         """Helper method to clear all test emails"""
 
-        response = requests.delete(f"{settings.backend_url}/test/emails")
+        response = requests.delete(f"{self.backend_base_url}/test/emails")
         assert response.status_code == 200, "Failed to clear test emails"
 
     # ---------------------------------------------------- ELEMENTS ----------------------------------------------------
@@ -1160,7 +1159,7 @@ class DataTableUtils(BaseUtilsClass):
 
         return self.get_element(f"add-{self.entry_type}-button")
 
-    def set_page_item_select(self, value) -> None:
+    def set_page_item_select(self, value: str) -> None:
         """Set the number of items to display per page
         :param value: Value to select (e.g. "20", "40")"""
 
@@ -1187,17 +1186,17 @@ class AuthentificationUtils(BaseUtilsClass):
     def go_to_login(self) -> None:
         """Go to the login page"""
 
-        self.driver.get(f"{self.frontend_base_url}/login")
+        self.go_to_page(f"login")
 
     def go_to_register(self) -> None:
         """Go to the register page"""
 
-        self.driver.get(f"{self.frontend_base_url}/register")
+        self.go_to_page(f"register")
 
     def go_to_forgot_password(self) -> None:
         """Go to the forgot password page"""
 
-        self.driver.get(f"{self.frontend_base_url}/forgot-password")
+        self.go_to_page(f"forgot-password")
 
     def set_email(self, email: str) -> None:
         """Set the email field to the given value"""
@@ -1315,7 +1314,7 @@ class AuthentificationUtils(BaseUtilsClass):
     def go_to_verification_url(self, token: str) -> None:
         """Navigate to login page with verification token"""
 
-        self.driver.get(f"{self.frontend_base_url}/verify-email/?token={token}")
+        self.go_to_page(f"verify-email/?token={token}")
 
     def switch_to_forgot_password(self) -> None:
         """Navigate to forgot password page"""
@@ -1409,9 +1408,7 @@ class UserSettingsUtils(BaseUtilsClass):
 class BaseTest(BaseUtils):
     """Base class for selenium tests"""
 
-    backend_url = ""  # backend url
     user = None  # user to use
-    client = None  # client for the current user
     base_utils = None  # base utils
 
     # Parameters needed
@@ -1451,7 +1448,6 @@ class BaseTest(BaseUtils):
         test_backend_server,
         request,
         test_users,
-        authorised_clients,
         session,
     ) -> Generator[None, None, None]:
         """Set up the test environment before each test with test data"""
@@ -1466,7 +1462,7 @@ class BaseTest(BaseUtils):
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
@@ -1480,7 +1476,7 @@ class BaseTest(BaseUtils):
             chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
 
             self.driver = webdriver.Chrome(options=chrome_options)
-            # self.driver.maximize_window()
+            self.driver.maximize_window()
             self.wait = WebDriverWait(self.driver, 10)
             # Set timezone using CDP
             self.driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
@@ -1490,10 +1486,9 @@ class BaseTest(BaseUtils):
 
             # Frontend/Backend
             self.frontend_base_url = test_frontend_server
-            self.backend_url = test_backend_server
+            self.backend_base_url = test_backend_server
 
             # Client/User
-            self.client = authorised_clients[self.user_index]
             self.user = test_users[self.user_index]
             self.db = session
 
@@ -1534,12 +1529,12 @@ class BaseTest(BaseUtils):
 
             self.user_settings_utils = UserSettingsUtils(self.driver, self.frontend_base_url, self.db)
 
+            self.driver.get("http://localhost:3000/jam")
             self.setup_function(request)
 
         except Exception:
             if hasattr(self, "driver"):
                 try:
-                    self._save_browser_logs(failed=True)
                     self.driver.quit()
                 except:
                     pass
@@ -1549,13 +1544,6 @@ class BaseTest(BaseUtils):
         # Teardown
         try:
             if hasattr(self, "driver"):
-                # Check if test failed
-                test_failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False
-
-                # Save logs on failure or in CI (always in CI for debugging)
-                if test_failed or os.getenv("CI"):
-                    self._save_browser_logs(failed=test_failed)
-                    self._save_page_screenshot(failed=test_failed)
                 self.driver.quit()
         except Exception as e:
             print(f"Error during teardown: {e}")
@@ -1564,79 +1552,17 @@ class BaseTest(BaseUtils):
         """Function to run before each test - can be overridden in subclasses"""
         pass
 
-    def _save_browser_logs(self, failed: bool = False) -> None:
-        """Save browser console logs to file"""
-        try:
-            # Get browser logs
-            browser_logs = self.driver.get_log("browser")
-            performance_logs = self.driver.get_log("performance")
-
-            # Create filename with test name and timestamp
-            timestamp = time.strftime("%Y%m%d_%H%M%S")
-            status_string = "FAILED" if failed else "PASSED"
-            safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
-
-            # Save browser console logs
-            browser_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_browser.log"
-            with open(browser_log_file, "w") as f:
-                f.write(f"Test: {self._test_name}\n")
-                f.write(f"Status: {status_string}\n")
-                f.write(f"Timestamp: {timestamp}\n")
-                f.write(f"URL: {self.driver.current_url}\n")
-                f.write("=" * 80 + "\n\n")
-
-                for entry in browser_logs:
-                    f.write(f"[{entry['level']}] {entry['timestamp']}: {entry['message']}\n")
-
-            # Save performance logs (network requests)
-            perf_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_network.log"
-            with open(perf_log_file, "w") as f:
-                f.write(f"Test: {self._test_name}\n")
-                f.write(f"Network Performance Logs\n")
-                f.write("=" * 80 + "\n\n")
-
-                for entry in performance_logs:
-                    try:
-                        log_entry = json.loads(entry["message"])
-                        # Filter for network events
-                        if "Network" in log_entry.get("message", {}).get("method", ""):
-                            f.write(json.dumps(log_entry, indent=2) + "\n")
-                    except:
-                        pass
-
-            print(f"✅ Saved browser logs to {browser_log_file}")
-
-        except Exception as e:
-            print(f"⚠️ Could not save browser logs: {e}")
-
-    def _save_page_screenshot(self, failed: bool = False) -> None:
-        """Save screenshot of current page"""
-        try:
-            timestamp = time.strftime("%Y%m%d_%H%M%S")
-            status_string = "FAILED" if failed else "PASSED"
-            safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
-
-            screenshot_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}.png"
-            self.driver.save_screenshot(str(screenshot_file))
-            print(f"✅ Saved screenshot to {screenshot_file}")
-
-        except Exception as e:
-            print(f"⚠️ Could not save screenshot: {e}")
-
     def login(self) -> None:
         """Helper method to log in to the application"""
 
-        self.driver.get(f"{self.frontend_base_url}/login")
-        self.get_element("email").send_keys(self.user.email)
-        self.get_element("password").send_keys(self.user.plain_password)
-        self.get_element("confirm-button").click()
-        try:
-            self.get_element("loading-spinner", timeout=2)
-            self.wait_for_disappear("loading-spinner", timeout=2)
-        except:
-            pass
+        self.auth_utils.go_to_login()
+        self.auth_utils.set_email(self.user.email)
+        self.auth_utils.set_password(self.user.plain_password)
+        self.auth_utils.confirm()
+        self.get_element("loading-spinner")
+        self.wait_for_disappear("loading-spinner")
         self.wait_for_page("dashboard")
-        self.driver.get(f"{self.frontend_base_url}/{self.page_url}")
+        self.go_to_page(f"{self.page_url}")
 
     # ---------------------------------------------------- DATABASE ----------------------------------------------------
 

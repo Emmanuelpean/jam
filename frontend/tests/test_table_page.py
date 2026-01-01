@@ -71,6 +71,7 @@ class BaseTablePage(BaseTest):
     def test_view_entry(self) -> None:
         """Test viewing an entry details by clicking on a table row"""
 
+        self.table_utils.set_page_item_select("100")
         self.table_utils.table_row_click(self.test_entry.id)
         self._test_view_modal()
 
@@ -91,8 +92,8 @@ class BaseTablePage(BaseTest):
         self.table_utils.wait_for_delete_modal_close()
         time.sleep(0.1)
         self.table_utils.wait_for_disappear(f"table-row-{self.test_entry.id}")
-        db_data = self.client.get(f"{self.backend_url}/{self.endpoint}/?id={self.test_entry.id}").json()
-        assert len(db_data) == 0, "Expected entry to be deleted from database"
+        db_data = self.db.query(self.model).filter_by(id=self.test_entry.id).first()
+        assert db_data is None, "Expected entry to be deleted from database"
 
     # ----------------------------------------------------- ADD TEST ---------------------------------------------------
 
@@ -101,7 +102,7 @@ class BaseTablePage(BaseTest):
 
         self.table_utils.set_page_item_select("100")
         # Determine the number of entries in the db and in the table
-        n_entries = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
+        n_entries = len(self.db.query(self.model).filter_by(owner_id=self.user.id).all())
         initial_table_count = len(self.table_utils.table_rows)
 
         # Add the new entry
@@ -112,7 +113,7 @@ class BaseTablePage(BaseTest):
         self.modal_utils.wait_for_edit_modal_close()
 
         # Check that the new entry was properly added to the db and table
-        n_entries_new = len(self.client.get(f"{self.backend_url}/{self.endpoint}/").json())
+        n_entries_new = len(self.db.query(self.model).filter_by(owner_id=self.user.id).all())
         assert n_entries_new == n_entries + 1, "Expected entry to be added to database"
         new_table_count = len(self.table_utils.table_rows)
         assert new_table_count == initial_table_count + 1, "Expected entry to be added to table"
