@@ -1083,7 +1083,8 @@ class DataTableUtils(BaseUtilsClass):
     def table_rows(self) -> list[WebElement]:
         """Get all table rows on the page"""
 
-        # self.get_element("table-row-clickable", By.CLASS_NAME)
+        time.sleep(0.5)
+        self.get_element("table-row-clickable", By.CLASS_NAME)
         return self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")
 
     def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
@@ -1643,3 +1644,46 @@ class BaseTest(BaseUtils):
         """Helper method to verify user exists in database"""
 
         return self.db.query(models.User).filter(models.User.email == email).all()
+
+
+import datetime as dt
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Hook to capture test execution results"""
+    outcome = yield
+    rep = outcome.get_result()
+
+    # Store the report for each phase (setup, call, teardown)
+    setattr(item, f"rep_{rep.when}", rep)
+
+
+@pytest.fixture(autouse=True)
+def screenshot_on_failure(request):
+    """Automatically take screenshot when test fails"""
+    yield
+
+    # Check if test failed during the call phase
+    if hasattr(request.node, "rep_call") and request.node.rep_call.failed:
+        # Get the driver fixture - adjust the fixture name if different
+        if "driver" in request.fixturenames:
+            driver = request.node.funcargs["driver"]
+
+            # Create screenshots directory if it doesn't exist
+            screenshot_dir = "test_screenshots"
+            os.makedirs(screenshot_dir, exist_ok=True)
+
+            # Get worker ID for parallel execution
+            worker_id = os.environ.get("PYTEST_XDIST_WORKER", "master")
+
+            # Create filename with timestamp, test name, and worker ID
+            timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+            test_name = request.node.nodeid.replace("::", "_").replace("/", "_")
+            filename = f"{screenshot_dir}/{test_name}_{worker_id}_{timestamp}.png"
+
+            try:
+                driver.save_screenshot(filename)
+                print(f"\n📸 Screenshot saved: {filename}")
+            except Exception as e:
+                print(f"\n❌ Failed to capture screenshot: {e}")
