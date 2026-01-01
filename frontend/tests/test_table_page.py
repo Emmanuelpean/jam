@@ -6,7 +6,7 @@ import time
 import pytest
 from selenium.webdriver.common.by import By
 
-from conftest import contiguous_subdicts, models, BaseTest, DataModalUtils, DataTableUtils
+from conftest import contiguous_subdicts, models, BaseTest
 
 
 class BaseTablePage(BaseTest):
@@ -35,12 +35,8 @@ class BaseTablePage(BaseTest):
     def setup_function(self, request) -> None:
         """Function called during the setup"""
 
-        self.table_utils = DataTableUtils(
-            self.driver, self.entry_type, self.frontend_base_url, self.backend_base_url, self.db
-        )
-        self.modal_utils = DataModalUtils(
-            self.driver, self.entry_type, self.frontend_base_url, self.backend_base_url, self.db
-        )
+        self.table_utils = getattr(self, f"{self.entry_type}_table_utils")
+        self.modal_utils = getattr(self, f"{self.entry_type}_modal_utils")
         if isinstance(self.test_fixture, str):
             self.test_fixture = [self.test_fixture]
         self.test_entries, *self.add_test_entries = [request.getfixturevalue(fixture) for fixture in self.test_fixture]
