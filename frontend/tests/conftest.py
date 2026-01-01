@@ -559,7 +559,9 @@ class BaseUtils(object):
     def assert_toast_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        assert error_message in self.get_element("toast").text, f"Message not found: {error_message}"
+        element = self.get_element("toast")
+        assert error_message in element.text, f"Message not found: {error_message}"
+        element.click()  # Dismiss toast
 
     @property
     def delete_confirm_button(self) -> WebElement:
@@ -1458,7 +1460,7 @@ class BaseTest(BaseUtils):
                 "profile.password_manager_enabled": False,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")
