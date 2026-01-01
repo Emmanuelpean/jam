@@ -167,7 +167,18 @@ def print_backend_pid() -> None:
 
 
 @pytest.fixture(scope="session")
-def test_backend_server(database_url, worker_id) -> Generator[str, None, None]:
+def frontend_url(worker_id) -> str:
+    """Calculate frontend URL for this worker without starting the server"""
+    if worker_id == "master":
+        port = 3000
+    else:
+        worker_num = int(worker_id.replace("gw", ""))
+        port = 3000 + worker_num + 1  # gw0 -> 3001, gw1 -> 3002, etc.
+    return f"http://localhost:{port}"
+
+
+@pytest.fixture(scope="session")
+def test_backend_server(database_url, worker_id, engine, frontend_url) -> Generator[str, None, None]:
     """Start a test backend server for integration tests"""
     print("=" * 60)
     print(f"STARTING BACKEND SERVER (Worker: {worker_id})")
@@ -188,6 +199,7 @@ def test_backend_server(database_url, worker_id) -> Generator[str, None, None]:
     env = os.environ.copy()
     env["SQLALCHEMY_DATABASE_URL"] = database_url
     env["TEST_MODE"] = "true"
+    env["FRONTEND_URL"] = frontend_url + "/jam"
     print(f"Using database URL: {database_url}")
     print(f"Backend path: {backend_path}")
 
@@ -265,19 +277,14 @@ def test_backend_server(database_url, worker_id) -> Generator[str, None, None]:
 
 
 @pytest.fixture(scope="class")
-def test_frontend_server(test_backend_server, worker_id) -> Generator[str, None, None]:
+def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Generator[str, None, None]:
     """Start a test frontend server for integration tests"""
     print("=" * 60)
     print(f"STARTING FRONTEND SERVER (Worker: {worker_id})")
     print("=" * 60)
 
-    # Determine port based on worker_id
-    if worker_id == "master":
-        port = 3000
-    else:
-        worker_num = int(worker_id.replace("gw", ""))
-        port = 3000 + worker_num + 1  # gw0 -> 3001, gw1 -> 3002, etc.
-
+    # Extract port from frontend_url
+    port = int(frontend_url.split(":")[-1])
     print(f"Using port: {port}")
     kill_process_on_port(port)
 
@@ -1518,7 +1525,7 @@ class BaseTest(BaseUtils):
             self.auth_utils = AuthentificationUtils(**shared_kwargs)
             self.user_settings_utils = UserSettingsUtils(**shared_kwargs)
 
-            self.driver.get("http://localhost:3000/jam")
+            self.driver.get(self.frontend_base_url)
             self.setup_function(request)
 
         except Exception:
