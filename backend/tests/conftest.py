@@ -16,6 +16,7 @@ import pytest
 from fastapi import status
 from requests import Response
 from sqlalchemy import create_engine, orm
+from sqlalchemy_utils import database_exists, create_database, drop_database
 from starlette.testclient import TestClient
 
 from app import database, schemas
@@ -60,12 +61,60 @@ from tests.utils.test_data import (
 
 
 DATABASE_NAME = "jam_test"
-SQLALCHEMY_DATABASE_URL = (
-    f"postgresql://{settings.database_username}:{settings.database_password}@"
-    f"{settings.database_hostname}:{settings.database_port}/{DATABASE_NAME}"
-)
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# SQLALCHEMY_DATABASE_URL = (
+#     f"postgresql://{settings.database_username}:{settings.database_password}@"
+#     f"{settings.database_hostname}:{settings.database_port}/{DATABASE_NAME}"
+# )
+# engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+@pytest.fixture(scope="session")
+def worker_database_name(worker_id) -> str:
+    """Generate unique database name for each worker."""
+    if worker_id == "master":
+        # Not running in parallel
+        return DATABASE_NAME
+    else:
+        # Running with xdist - worker-specific database
+        return f"{DATABASE_NAME}_{worker_id}"
+
+
+@pytest.fixture(scope="session")
+def database_url(worker_database_name) -> str:
+    """Generate database URL for the worker."""
+    return (
+        f"postgresql://{settings.database_username}:{settings.database_password}@"
+        f"{settings.database_hostname}:{settings.database_port}/{worker_database_name}"
+    )
+
+
+@pytest.fixture(scope="session")
+def engine(database_url, worker_id):
+    """Create engine once per worker session, creating database first."""
+    is_parallel = worker_id != "master"
+
+    # Only drop/create for parallel runs (each worker gets fresh DB)
+    if is_parallel:
+        if database_exists(database_url):
+            drop_database(database_url)
+        create_database(database_url)
+    else:
+        # For non-parallel runs, ensure database exists but don't drop
+        if not database_exists(database_url):
+            create_database(database_url)
+
+    # Create engine
+    engine = create_engine(database_url)
+
+    yield engine
+
+    # Cleanup: dispose engine
+    engine.dispose()
+
+    # Only drop database for parallel runs
+    if is_parallel:
+        drop_database(database_url)
 
 
 def find_non_owned_entry(entries: list, owner_id: int) -> int:
@@ -81,7 +130,7 @@ def find_non_owned_entry(entries: list, owner_id: int) -> int:
 
 
 @pytest.fixture(scope="function")
-def session() -> Generator[orm.Session, Any, None]:
+def session(engine) -> Generator[orm.Session, Any, None]:
     """Fixture that sets up and tears down a new database session for each test function.
     This fixture creates a fresh database session by creating and dropping all tables in the
     test database. It yields a session that can be used by test functions. After the test
@@ -89,6 +138,7 @@ def session() -> Generator[orm.Session, Any, None]:
     :yield: A new SQLAlchemy session bound to the test database."""
 
     reset_database(engine, False)
+    TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = TestingSessionLocal()
     try:
         yield db
