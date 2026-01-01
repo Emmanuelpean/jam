@@ -15,7 +15,7 @@ from typing import Any, Generator
 import pytest
 from fastapi import status
 from requests import Response
-from sqlalchemy import create_engine, orm
+from sqlalchemy import create_engine, orm, Engine
 from sqlalchemy_utils import database_exists, create_database, drop_database
 from starlette.testclient import TestClient
 
@@ -25,48 +25,23 @@ from app.config import settings
 from app.main import app
 from app.oauth2 import create_access_token
 from app.utils import hash_token
-from tests.utils.create_data import (
-    create_users,
-    create_companies,
-    create_locations,
-    create_aggregators,
-    create_keywords,
-    create_people,
-    create_jobs,
-    create_files,
-    create_interviews,
-    create_job_application_updates,
-    create_settings,
-    create_scraped_jobs,
-    create_job_scraping_service_logs,
-    create_job_scraping_platform_stats,
-    create_job_scraping_service_errors,
-    create_job_alert_emails,
-    create_user_qualifications,
-    create_job_ratings,
-    create_job_rating_service_logs,
-    create_scraping_filters,
-    create_speculative_applications,
-)
+from tests.utils import create_data as crd
+from tests.utils import test_data as td
 from tests.utils.seed_database import reset_database
-from tests.utils.test_data import (
-    DEMO_USER_INDEX,
-    ADMIN_USER_INDEX,
-    INACTIVE_USER_INDEX,
-    REGULAR_USER_INDEX,
-    UNVERIFIED_USER_INDEX,
-)
 
 # ---------------------------------------------------- TEST DATABASE ---------------------------------------------------
 
 
 DATABASE_NAME = "jam_test"
-# SQLALCHEMY_DATABASE_URL = (
-#     f"postgresql://{settings.database_username}:{settings.database_password}@"
-#     f"{settings.database_hostname}:{settings.database_port}/{DATABASE_NAME}"
-# )
-# engine = create_engine(SQLALCHEMY_DATABASE_URL)
-# TestingSessionLocal = orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def set_test_mode() -> Generator[None, None, None]:
+    """Set TEST_MODE to true for all tests"""
+
+    os.environ["TEST_MODE"] = "true"
+    yield
+    os.environ.pop("TEST_MODE", None)
 
 
 @pytest.fixture(scope="session")
@@ -90,7 +65,7 @@ def database_url(worker_database_name) -> str:
 
 
 @pytest.fixture(scope="session")
-def engine(database_url, worker_id):
+def engine(database_url, worker_id) -> Generator[Engine, Any, None]:
     """Create engine once per worker session, creating database first."""
     is_parallel = worker_id != "master"
 
@@ -193,21 +168,21 @@ def authorised_clients(client: TestClient, tokens: list[str]) -> list[TestClient
 def admin_client(authorised_clients) -> TestClient:
     """Fixture for an admin client."""
 
-    return authorised_clients[ADMIN_USER_INDEX]
+    return authorised_clients[td.ADMIN_USER_INDEX]
 
 
 @pytest.fixture
 def regular_user_client(authorised_clients) -> TestClient:
     """Fixture for a non-admin client."""
 
-    return authorised_clients[REGULAR_USER_INDEX]
+    return authorised_clients[td.REGULAR_USER_INDEX]
 
 
 @pytest.fixture
 def demo_user_client(authorised_clients) -> TestClient:
     """Fixture for a demo user client"""
 
-    return authorised_clients[DEMO_USER_INDEX]
+    return authorised_clients[td.DEMO_USER_INDEX]
 
 
 # -------------------------------------------------------- USERS -------------------------------------------------------
@@ -217,42 +192,42 @@ def demo_user_client(authorised_clients) -> TestClient:
 def test_users(session) -> list[models.User]:
     """Create test user data"""
 
-    return create_users(session)
+    return crd.create_users(session)
 
 
 @pytest.fixture
 def test_admin_user(test_users) -> models.User:
     """Fixture for an admin user."""
 
-    return test_users[ADMIN_USER_INDEX]
+    return test_users[td.ADMIN_USER_INDEX]
 
 
 @pytest.fixture
 def test_demo_user(test_users) -> models.User:
     """Fixture for a non-admin user."""
 
-    return test_users[DEMO_USER_INDEX]
+    return test_users[td.DEMO_USER_INDEX]
 
 
 @pytest.fixture
 def test_regular_user(test_users) -> models.User:
     """Fixture for a non-admin user."""
 
-    return test_users[REGULAR_USER_INDEX]
+    return test_users[td.REGULAR_USER_INDEX]
 
 
 @pytest.fixture
 def test_inactive_user(test_users) -> models.User:
     """Fixture for an inactive user."""
 
-    return test_users[INACTIVE_USER_INDEX]
+    return test_users[td.INACTIVE_USER_INDEX]
 
 
 @pytest.fixture
 def test_unverified_user(test_users) -> models.User:
     """Fixture to create an unverified user (i.e. is_verified=False)."""
 
-    return test_users[UNVERIFIED_USER_INDEX]
+    return test_users[td.UNVERIFIED_USER_INDEX]
 
 
 @pytest.fixture
@@ -270,7 +245,7 @@ def test_unverified_token_user(session) -> models.User:
         verification_token_created_at=dt.datetime.now(),
     )
 
-    user = create_users(session, [user_data])[0]
+    user = crd.create_users(session, [user_data])[0]
     user.plain_verification_token = plain_token
     return user
 
@@ -290,7 +265,7 @@ def test_user_change_email_token_user(session) -> models.User:
         email_change_token=hashed_token,
         email_change_token_created_at=dt.datetime.now(),
     )
-    user = create_users(session, [user_data])[0]
+    user = crd.create_users(session, [user_data])[0]
     user.plain_verification_token = plain_token
     return user
 
@@ -299,7 +274,7 @@ def test_user_change_email_token_user(session) -> models.User:
 def test_user_qualifications(session, test_users) -> list[models.UserQualification]:
     """Create test user qualifications"""
 
-    return create_user_qualifications(session, test_users)
+    return crd.create_user_qualifications(session, test_users)
 
 
 # -------------------------------------------------------- OTHER -------------------------------------------------------
@@ -309,7 +284,7 @@ def test_user_qualifications(session, test_users) -> list[models.UserQualificati
 def test_settings(session) -> list[models.Setting]:
     """Create test settings data"""
 
-    return create_settings(session)
+    return crd.create_settings(session)
 
 
 # ------------------------------------------------------ TEST DATA -----------------------------------------------------
@@ -319,35 +294,35 @@ def test_settings(session) -> list[models.Setting]:
 def test_keywords(session, test_users) -> list[models.Keyword]:
     """Create test keyword data"""
 
-    return create_keywords(session, test_users)
+    return crd.create_keywords(session, test_users)
 
 
 @pytest.fixture
 def test_aggregators(session, test_users) -> list[models.Aggregator]:
     """Create test aggregator data"""
 
-    return create_aggregators(session, test_users)
+    return crd.create_aggregators(session, test_users)
 
 
 @pytest.fixture
 def test_locations(session, test_users) -> list[models.Location]:
     """Create test location data"""
 
-    return create_locations(session, test_users)
+    return crd.create_locations(session, test_users)
 
 
 @pytest.fixture
 def test_companies(session, test_users) -> list[models.Company]:
     """Create test company data"""
 
-    return create_companies(session, test_users)
+    return crd.create_companies(session, test_users)
 
 
 @pytest.fixture
 def test_persons(session, test_users, test_companies) -> list[models.Person]:
     """Create test person data"""
 
-    return create_people(session, test_users, test_companies)
+    return crd.create_people(session, test_users, test_companies)
 
 
 @pytest.fixture
@@ -366,14 +341,14 @@ def test_persons_unauthorised(
     """Create test person data with incorrect company_id for access control testing"""
 
     data, owner_id = persons_unauthorised_data
-    return create_people(session, test_users, test_companies, data), owner_id
+    return crd.create_people(session, test_users, test_companies, data), owner_id
 
 
 @pytest.fixture
 def test_files(session, test_users) -> list[models.File]:
     """Create test files for job applications"""
 
-    return create_files(session, test_users)
+    return crd.create_files(session, test_users)
 
 
 @pytest.fixture
@@ -382,7 +357,7 @@ def test_jobs(
 ) -> list[models.Job]:
     """Create test job data"""
 
-    return create_jobs(
+    return crd.create_jobs(
         session, test_keywords, test_persons, test_users, test_companies, test_locations, test_aggregators, test_files
     )
 
@@ -424,7 +399,7 @@ def test_jobs_unauthorised(
     """Create test person data with incorrect company_id, location_id, keyword ids and person ids for access control testing"""
 
     data, owner_id, job_keyword_mapping, job_contact_mapping = jobs_unauthorised_data
-    jobs = create_jobs(
+    jobs = crd.create_jobs(
         session,
         test_keywords,
         test_persons,
@@ -444,7 +419,7 @@ def test_jobs_unauthorised(
 def test_interviews(session, test_users, test_jobs, test_locations, test_persons) -> list[models.Interview]:
     """Create test interview data"""
 
-    return create_interviews(session, test_persons, test_users, test_locations, test_jobs)
+    return crd.create_interviews(session, test_persons, test_users, test_locations, test_jobs)
 
 
 @pytest.fixture
@@ -467,7 +442,7 @@ def test_interviews_unauthorised(
     """Create test interview data with incorrect job_id for access control testing"""
 
     data, owner_id, interview_interviewer_mappings = interviews_unauthorised_data
-    interviews = create_interviews(
+    interviews = crd.create_interviews(
         session,
         test_persons,
         test_users,
@@ -483,7 +458,7 @@ def test_interviews_unauthorised(
 def test_job_application_updates(session, test_users, test_jobs) -> list[models.JobApplicationUpdate]:
     """Create test job application update data"""
 
-    return create_job_application_updates(session, test_users, test_jobs)
+    return crd.create_job_application_updates(session, test_users, test_jobs)
 
 
 @pytest.fixture
@@ -511,7 +486,7 @@ def test_job_application_updates_unauthorised(
     """Create test job application update data with incorrect job_id for access control testing"""
 
     data, owner_id = job_application_updates_unauthorised_data
-    updates = create_job_application_updates(session, test_users, test_jobs, data)
+    updates = crd.create_job_application_updates(session, test_users, test_jobs, data)
     return updates, owner_id
 
 
@@ -521,49 +496,49 @@ def test_speculative_applications(
 ) -> list[models.SpeculativeApplication]:
     """Create test speculative application data"""
 
-    return create_speculative_applications(session, test_users, test_persons)
+    return crd.create_speculative_applications(session, test_users, test_persons)
 
 
 @pytest.fixture
 def test_scraped_jobs(session, test_users, test_job_alert_emails, test_scraping_filters) -> list[models.ScrapedJob]:
     """Create test job alert email jobs"""
 
-    return create_scraped_jobs(session, test_job_alert_emails, test_users, test_scraping_filters)
+    return crd.create_scraped_jobs(session, test_job_alert_emails, test_users, test_scraping_filters)
 
 
 @pytest.fixture
 def test_eis_service_logs(session) -> list[models.JobEmailScrapingServiceLog]:
     """Create test service logs"""
 
-    return create_job_scraping_service_logs(session)
+    return crd.create_job_scraping_service_logs(session)
 
 
 @pytest.fixture
 def test_platform_stats(session, test_eis_service_logs) -> list[models.JobEmailScrapingPlatformStat]:
     """Create test platform stats"""
 
-    return create_job_scraping_platform_stats(session, test_eis_service_logs)
+    return crd.create_job_scraping_platform_stats(session, test_eis_service_logs)
 
 
 @pytest.fixture
 def test_eis_service_errors(session, test_eis_service_logs) -> list[models.JobEmailScrapingServiceError]:
     """Create test job_email_scraping service errors"""
 
-    return create_job_scraping_service_errors(session, test_eis_service_logs)
+    return crd.create_job_scraping_service_errors(session, test_eis_service_logs)
 
 
 @pytest.fixture
 def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[models.JobEmail]:
     """Create test job alert emails"""
 
-    return create_job_alert_emails(session, test_users, test_eis_service_logs)
+    return crd.create_job_alert_emails(session, test_users, test_eis_service_logs)
 
 
 @pytest.fixture
 def test_job_rating_service_logs(session) -> list[models.JobRatingServiceLog]:
     """Create test job rating service logs"""
 
-    return create_job_rating_service_logs(session)
+    return crd.create_job_rating_service_logs(session)
 
 
 @pytest.fixture
@@ -572,7 +547,7 @@ def test_job_ratings(
 ) -> list[models.JobRating]:
     """Create test job ratings"""
 
-    return create_job_ratings(
+    return crd.create_job_ratings(
         session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
     )
 
@@ -581,7 +556,7 @@ def test_job_ratings(
 def test_scraping_filters(session, test_users) -> list[models.ScrapingFilter]:
     """Create test scraped job filter data"""
 
-    return create_scraping_filters(session, test_users)
+    return crd.create_scraping_filters(session, test_users)
 
 
 # -------------------------------------------------------- UTILS -------------------------------------------------------
@@ -756,25 +731,25 @@ class CRUDTestBase:
         """Get the appropriate authorised client based on admin_only setting."""
 
         if self.admin_only:
-            return authorised_clients[ADMIN_USER_INDEX]
+            return authorised_clients[td.ADMIN_USER_INDEX]
         else:
-            return authorised_clients[REGULAR_USER_INDEX]
+            return authorised_clients[td.REGULAR_USER_INDEX]
 
     def _get_admin_unauthorised_client(self, authorised_clients) -> TestClient:
         """Get a client that should be denied access."""
 
         if self.admin_only:
-            return authorised_clients[REGULAR_USER_INDEX]
+            return authorised_clients[td.REGULAR_USER_INDEX]
         else:
-            return authorised_clients[ADMIN_USER_INDEX]
+            return authorised_clients[td.ADMIN_USER_INDEX]
 
     def _get_admin_authorised_user(self, test_users) -> models.User:
         """Get the appropriate authorised user based on admin_only setting."""
 
         if self.admin_only:
-            return test_users[ADMIN_USER_INDEX]
+            return test_users[td.ADMIN_USER_INDEX]
         else:
-            return test_users[REGULAR_USER_INDEX]
+            return test_users[td.REGULAR_USER_INDEX]
 
     def get_user_data(self, test_users, data: list) -> list:
         """Get create_data filtered by owner_id based on admin_only setting."""

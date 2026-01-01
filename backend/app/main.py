@@ -13,11 +13,21 @@ from app.routers import data_tables, user, auth, export, settings, others
 
 app = FastAPI()
 
-# Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
+
+
+def get_allowed_origins() -> list[str]:
+    """Get allowed CORS origins based on environment"""
+
+    if app_settings.test_mode:
+        return ["*"]
+    else:
+        return ["http://localhost:3000"]
+
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
