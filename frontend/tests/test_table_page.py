@@ -107,7 +107,6 @@ class BaseTablePage(BaseTest):
 
         # Add the new entry
         self.table_utils.add_entity_button.click()
-        self.modal_utils.wait_for_edit_modal()
         self.modal_utils._fill_modal(**self.test_data)
         self.modal_utils.confirm_button("edit").click()
         self.modal_utils.wait_for_edit_modal_close()
@@ -641,16 +640,16 @@ class TestJobPage(BaseTablePage):
         self.table_utils.table_row_click(self.test_entry.id)
         self.modal_utils.wait_for_view_modal()
         self.get_element("application-tab").click()
-        update_count = len(self.update_table_utils.table_rows)
-        self.update_table_utils.add_entity_button.click()
-        self.update_modal_utils._fill_modal(**update_data)
-        self.update_modal_utils.confirm_button("edit").click()
-        self.update_modal_utils.wait_for_edit_modal_close()
-        assert len(self.update_table_utils.table_rows) == update_count + 1
-        self.update_table_utils.table_rows[0].click()
-        update_id = self.update_table_utils.get_row_id(0)
+        update_count = len(self.jobApplicationUpdate_table_utils.table_rows)
+        self.jobApplicationUpdate_table_utils.add_entity_button.click()
+        self.jobApplicationUpdate_modal_utils._fill_modal(**update_data)
+        self.jobApplicationUpdate_modal_utils.confirm_button("edit").click()
+        self.jobApplicationUpdate_modal_utils.wait_for_edit_modal_close()
+        assert len(self.jobApplicationUpdate_table_utils.table_rows) == update_count + 1
+        self.jobApplicationUpdate_table_utils.table_rows[0].click()
+        update_id = self.jobApplicationUpdate_table_utils.get_row_id(0)
         update = self.db.query(models.JobApplicationUpdate).filter(models.JobApplicationUpdate.id == update_id).first()
-        self.update_modal_utils.check_update_view_modal(update, False)
+        self.jobApplicationUpdate_modal_utils.check_update_view_modal(update, False)
 
     def test_modify_job_application_update(self, test_job_application_updates) -> None:
         """Test modifying a job application update through the job view modal"""
@@ -667,14 +666,14 @@ class TestJobPage(BaseTablePage):
         self.get_element("application-tab").click()
 
         # Find the first update row and get its ID
-        update_id = self.update_table_utils.get_row_id(0)
-        self.update_table_utils.table_rows[0].click()
+        update_id = self.jobApplicationUpdate_table_utils.get_row_id(0)
+        self.jobApplicationUpdate_table_utils.table_rows[0].click()
 
         # Switch to edit mode and modify the update
-        self.update_modal_utils.edit_button("view").click()
-        self.update_modal_utils._fill_modal(**update_data)
-        self.update_modal_utils.confirm_button("edit").click()
-        self.update_modal_utils.wait_for_edit_modal_close()
+        self.jobApplicationUpdate_modal_utils.edit_button("view").click()
+        self.jobApplicationUpdate_modal_utils._fill_modal(**update_data)
+        self.jobApplicationUpdate_modal_utils.confirm_button("edit").click()
+        self.jobApplicationUpdate_modal_utils.wait_for_edit_modal_close()
 
         # Check the db entry to ensure the modifications were saved
         self.db.expire_all()
@@ -683,7 +682,7 @@ class TestJobPage(BaseTablePage):
         assert update.note == update_data["note"]
 
         # Verify the update view modal displays the updated information
-        self.update_modal_utils.check_update_view_modal(update, False)
+        self.jobApplicationUpdate_modal_utils.check_update_view_modal(update, False)
 
 
 class TestSpeculativeApplicationPage(BaseTablePage):

@@ -1,5 +1,6 @@
 """Fixtures and helper functions for integration tests"""
 
+import json
 import os
 import platform
 import queue
@@ -1082,7 +1083,7 @@ class DataTableUtils(BaseUtilsClass):
     def table_rows(self) -> list[WebElement]:
         """Get all table rows on the page"""
 
-        self.get_element("table-row-clickable", By.CLASS_NAME)
+        # self.get_element("table-row-clickable", By.CLASS_NAME)
         return self.driver.find_elements(By.CSS_SELECTOR, f"[id^='table-row-{self.entry_type}-']")
 
     def table_row(self, item_id: int, *args, **kwargs) -> WebElement:
@@ -1429,7 +1430,7 @@ class BaseTest(BaseUtils):
     person_modal_utils: DataModalUtils = None
     job_modal_utils: DataModalUtils = None
     interview_modal_utils: DataModalUtils = None
-    update_modal_utils: DataModalUtils = None
+    jobApplicationUpdate_modal_utils: DataModalUtils = None
     speculative_application_modal_utils: DataModalUtils = None
     scraped_job_modal_utils: DataModalUtils = None
     scraping_filter_modal_utils: DataModalUtils = None
@@ -1439,7 +1440,7 @@ class BaseTest(BaseUtils):
     location_table_utils: DataTableUtils = None
     person_table_utils: DataTableUtils = None
     job_table_utils: DataTableUtils = None
-    update_table_utils: DataTableUtils = None
+    jobApplicationUpdate_table_utils: DataTableUtils = None
     interview_table_utils: DataTableUtils = None
     scraped_job_table_utils: DataTableUtils = None
     scraping_filter_table_utils: DataTableUtils = None
@@ -1481,7 +1482,6 @@ class BaseTest(BaseUtils):
             chrome_options.set_capability("goog:loggingPrefs", {"browser": "ALL", "performance": "ALL"})
 
             self.driver = webdriver.Chrome(options=chrome_options)
-            self.driver.maximize_window()
             self.wait = WebDriverWait(self.driver, 10)
             # Set timezone using CDP
             self.driver.execute_cdp_cmd("Emulation.setTimezoneOverride", {"timezoneId": "Europe/London"})
@@ -1506,7 +1506,7 @@ class BaseTest(BaseUtils):
                 "job",
                 "interview",
                 "jobApplicationUpdate",
-                "speculative-application",
+                "speculativeApplication",
                 "scrapedJob",
                 "scrapingFilter",
             ]
@@ -1531,6 +1531,7 @@ class BaseTest(BaseUtils):
         except Exception:
             if hasattr(self, "driver"):
                 try:
+                    self._save_browser_logs(failed=True)
                     self.driver.quit()
                 except:
                     pass
@@ -1540,6 +1541,13 @@ class BaseTest(BaseUtils):
         # Teardown
         try:
             if hasattr(self, "driver"):
+                # Check if test failed
+                test_failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False
+
+                # Save logs on failure or in CI (always in CI for debugging)
+                if test_failed or os.getenv("CI"):
+                    self._save_browser_logs(failed=test_failed)
+                    self._save_page_screenshot(failed=test_failed)
                 self.driver.quit()
         except Exception as e:
             print(f"Error during teardown: {e}")
@@ -1547,6 +1555,65 @@ class BaseTest(BaseUtils):
     def setup_function(self, request) -> None:
         """Function to run before each test - can be overridden in subclasses"""
         pass
+
+    def _save_browser_logs(self, failed: bool = False) -> None:
+        """Save browser console logs to file"""
+        try:
+            # Get browser logs
+            browser_logs = self.driver.get_log("browser")
+            performance_logs = self.driver.get_log("performance")
+
+            # Create filename with test name and timestamp
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            status_string = "FAILED" if failed else "PASSED"
+            safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
+
+            # Save browser console logs
+            browser_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_browser.log"
+            with open(browser_log_file, "w") as f:
+                f.write(f"Test: {self._test_name}\n")
+                f.write(f"Status: {status_string}\n")
+                f.write(f"Timestamp: {timestamp}\n")
+                f.write(f"URL: {self.driver.current_url}\n")
+                f.write("=" * 80 + "\n\n")
+
+                for entry in browser_logs:
+                    f.write(f"[{entry['level']}] {entry['timestamp']}: {entry['message']}\n")
+
+            # Save performance logs (network requests)
+            perf_log_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}_network.log"
+            with open(perf_log_file, "w") as f:
+                f.write(f"Test: {self._test_name}\n")
+                f.write(f"Network Performance Logs\n")
+                f.write("=" * 80 + "\n\n")
+
+                for entry in performance_logs:
+                    try:
+                        log_entry = json.loads(entry["message"])
+                        # Filter for network events
+                        if "Network" in log_entry.get("message", {}).get("method", ""):
+                            f.write(json.dumps(log_entry, indent=2) + "\n")
+                    except:
+                        pass
+
+            print(f"✅ Saved browser logs to {browser_log_file}")
+
+        except Exception as e:
+            print(f"⚠️ Could not save browser logs: {e}")
+
+    def _save_page_screenshot(self, failed: bool = False) -> None:
+        """Save screenshot of current page"""
+        try:
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            status_string = "FAILED" if failed else "PASSED"
+            safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
+
+            screenshot_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}.png"
+            self.driver.save_screenshot(str(screenshot_file))
+            print(f"✅ Saved screenshot to {screenshot_file}")
+
+        except Exception as e:
+            print(f"⚠️ Could not save screenshot: {e}")
 
     def login(self) -> None:
         """Helper method to log in to the application"""
