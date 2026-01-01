@@ -37,6 +37,8 @@ dev = [
     "psutil==7.1.0",
     "selenium==4.36.0",
     "alembic==1.17.2",
+    "sqlalchemy_utils==0.42.1",
+    "pytest-xdist==3.8.0",
 ]
 
 [build-system]
