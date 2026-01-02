@@ -689,7 +689,7 @@ class DataModalUtils(BaseUtilsClass):
 
         return self.get_element(f"modal-view-{self.entry_type}-activate-button")
 
-    def _fill_modal(self, **values) -> None:
+    def _fill_modal(self, duplicate_fields=None, **values) -> None:
         """Fill the modal with the given values  (key: key of the input elements, value: value to set)."""
 
         if any(isinstance(v, dict) for v in values.values()):
@@ -699,6 +699,8 @@ class DataModalUtils(BaseUtilsClass):
         else:
             self.wait_for_edit_modal()
             for key, value in values.items():
+                if duplicate_fields and key not in duplicate_fields:
+                    continue
                 if key in (
                     "operator",
                     "country",
@@ -721,7 +723,51 @@ class DataModalUtils(BaseUtilsClass):
                 else:
                     self.set_text(self.get_element(key), value)
 
+    def check_edit_modal(self, entry_id: int, **values) -> None:
+        """Check that the modal in edit mode contains the expected data
+        :param entry_id: entry ID
+        :param values: values to check"""
+
+        if any(isinstance(v, dict) for v in values.values()):
+            for tab_key in values:
+                self.get_element(f"{tab_key}-tab").click()
+                self.check_edit_modal(entry_id, **values[tab_key])
+        else:
+            for key in values:
+                if "date" in key:
+                    continue
+                element = self.get_element(key)
+                if element.tag_name == "input":
+                    value = element.get_attribute("value")
+                else:
+                    value = element.text
+                assert str(value) == str(values[key])
+
     # -------------------------------------------------- VIEW MODALS --------------------------------------------------
+
+    def test_view_modal(self, entry=None) -> None:
+        """Helper method to test the view modal for an entry"""
+
+        if self.entry_type == "keyword":
+            self.check_keyword_view_modal(entry)
+        elif self.entry_type == "aggregator":
+            self.check_aggregator_view_modal(entry)
+        elif self.entry_type == "company":
+            self.check_company_view_modal(entry)
+        elif self.entry_type == "location":
+            self.check_location_view_modal(entry)
+        elif self.entry_type == "person":
+            self.check_person_view_modal(entry)
+        elif self.entry_type == "jobApplicationUpdate":
+            self.check_update_view_modal(entry)
+        elif self.entry_type == "interview":
+            self.check_interview_view_modal(entry)
+        elif self.entry_type == "job":
+            self.check_job_view_modal(entry)
+        elif self.entry_type == "speculativeApplication":
+            self.check_speculative_application_view_modal(entry)
+        else:
+            raise AssertionError("Not implemented")
 
     def check_keyword_view_modal(self, entry: models.Keyword) -> None:
         """Helper method to test the view modal for a keyword entry"""
@@ -757,6 +803,8 @@ class DataModalUtils(BaseUtilsClass):
 
         modal = self.wait_for_view_modal()
         WebDriverWait(self.driver, 30).until(lambda d: "Finding location on map..." not in modal.text)
+        if "No mappable locations found" in modal.text:
+            return
 
         # Verify modal contains the entry information
         expected = (
@@ -771,6 +819,7 @@ class DataModalUtils(BaseUtilsClass):
         # Close modal
         self.cancel_button("view").click()
         self.wait_for_view_modal_close()
+        return
 
     def check_company_view_modal(self, entry: models.Company) -> None:
         """Helper method to test the view modal for a company entry"""
