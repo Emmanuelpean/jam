@@ -82,3 +82,5 @@
 ### Scraping Filters
 * [X] Add the ability to filter out jobs based on keywords in the job title or description
 * [X] Add the ability to manage the filters
+
+* [ ] Store the coordinates of the locations and use them to improve the location

@@ -19,67 +19,103 @@ class BaseTablePage(BaseTest):
     modal_utils = None
 
     # Parameters needed
-    entry_type = ""
+    entry_type = ""  # entry type, used to get the correct utils
     endpoint = ""  # endpoint of the table, used to query the data
     test_fixture = ""  # test fixture to load the test date
     test_data = {}  # test data used to fill the modal (adding entries, adding incorrect entries, editing entries)
-    required_fields = (
-        []
-    )  # required fields for adding entries. if empty, assume that any field is required (at least one)
+    required_fields = []  # required fields for adding entries. if empty, assume that any field is required
     duplicate_fields = []  # fields which are required to be unique
     columns = []  # table column keys user for search and sorting
-    sorting_columns = []
-    test_entry_index = 0
-    model = None
+    sorting_columns = []  # columns which can be sorted, if empty assume all columns can be sorted
+    test_entry_index = 0  # index of the test entry to use for view/edit/delete tests
+    model = None  # database model class for the entry typew
 
     def setup_function(self, request) -> None:
         """Function called during the setup"""
 
         self.table_utils = getattr(self, f"{self.entry_type}_table_utils")
         self.modal_utils = getattr(self, f"{self.entry_type}_modal_utils")
-        if isinstance(self.test_fixture, str):
-            self.test_fixture = [self.test_fixture]
+        self.test_fixture = [self.test_fixture] if isinstance(self.test_fixture, str) else self.test_fixture
         self.test_entries, *self.add_test_entries = [request.getfixturevalue(fixture) for fixture in self.test_fixture]
         self.test_entries = [entry for entry in self.test_entries if entry.owner_id == self.user.id]
         self.test_entry = self.test_entries[self.test_entry_index]
-        if not self.sorting_columns:
-            self.sorting_columns = self.columns
+        self.sorting_columns = self.columns if not self.sorting_columns else None
         self.login()
 
-    # ----------------------------------------------- DISPLAY/VIEW TESTS -----------------------------------------------
+    # ------------------------------------------------------ TABLE -----------------------------------------------------
 
     def test_display_entries(self) -> None:
         """Test that entries are displayed correctly"""
 
         # Default 20 entries display
-        assert len(self.table_utils.table_rows) == min(
-            [20, len(self.test_entries)]
-        ), "The table rows should match the entries"
+        assert len(self.table_utils.table_rows) == min([20, len(self.test_entries)])
 
         # Increase to 40
         self.table_utils.set_page_item_select("40")
         self.table_utils.wait_for_table_load()
-        assert len(self.table_utils.table_rows) == min(
-            [40, len(self.test_entries)]
-        ), "The table rows should match the entries"
+        assert len(self.table_utils.table_rows) == min([40, len(self.test_entries)])
 
-    def _test_view_modal(self, entry=None) -> None:
-        """Helper method to test the view modal for an entry"""
+    # def test_search_functionality(self) -> None:
+    #     """Test the search functionality"""
+    #
+    #     for key in self.columns:
+    #         print("Testing column:", key)
+    #         search_text = self.get_search_value(self.test_entry, key).lower()[:-1]
+    #         print("Search text:", search_text)
+    #
+    #         # Get the expected list of entries
+    #         expected_entries = []
+    #         for entry in self.test_entries:
+    #             value = self.get_search_value(entry, key).lower()
+    #             if search_text in value:
+    #                 expected_entries.append(value)
+    #
+    #         # entries = set(entries)
+    #         print("expected", expected_entries)
+    #         self.table_utils.set_text(self.table_utils.get_element("search-input"), search_text)
+    #         time.sleep(0.2)  # Allow time for search to filter
+    #         print("got", self.table_utils.table_rows)
+    #         assert len(self.table_utils.table_rows) == len(expected_entries), "Expected search to filter results"
 
-        raise AssertionError("Not implemented")
+    # def test_sort_functionality(self) -> None:
+    #     """Test sorting functionality"""
+    #
+    #     for key in self.sorting_columns:
+    #         # Click to sort and give time for UI update
+    #         self.get_element(f"table-header-{key}").click()
+    #         time.sleep(0.2)
+    #
+    #         # Compare with the sorted values
+    #         values = self.get_column_values(key)
+    #         a = [v.lower() for v in values if v != "Not Provided"]
+    #         assert values == sorted([v.lower() for v in values if v != "Not Provided"] + (len(values) - len(a)) * ["Not Provided"])
+
+    @staticmethod
+    def get_search_value(value, key: str) -> str:
+        """Get the search value for a given column key"""
+
+        result = getattr(value, key)
+        if isinstance(result, str):
+            return result
+        elif isinstance(result, models.Company):
+            return result.name
+        else:
+            return ""
+
+    # --------------------------------------------------- VIEW TESTS ---------------------------------------------------
 
     def test_view_entry(self) -> None:
         """Test viewing an entry details by clicking on a table row"""
 
         self.table_utils.set_page_item_select("100")
         self.table_utils.table_row_click(self.test_entry.id)
-        self._test_view_modal()
+        self.modal_utils.test_view_modal(self.test_entry)
 
     def test_view_entry_right_click(self) -> None:
         """Test viewing an entry details through the right-click context menu"""
 
         self.table_utils.table_context_menu(self.test_entry.id, "view")
-        self._test_view_modal()
+        self.modal_utils.test_view_modal(self.test_entry)
 
     # --------------------------------------------------- DELETE TEST --------------------------------------------------
 
@@ -92,6 +128,26 @@ class BaseTablePage(BaseTest):
         self.table_utils.wait_for_delete_modal_close()
         time.sleep(0.1)
         self.table_utils.wait_for_disappear(f"table-row-{self.test_entry.id}")
+
+        # Check that the entry was deleted from the database
+        db_data = self.db.query(self.model).filter_by(id=self.test_entry.id).first()
+        assert db_data is None, "Expected entry to be deleted from database"
+
+    def test_view_delete_entry(self) -> None:
+        """Test deleting an entry entry"""
+
+        self.table_utils.table_row_click(self.test_entry.id)
+        self.modal_utils.wait_for_view_modal()
+        self.modal_utils.edit_button("view").click()
+        self.modal_utils.wait_for_edit_modal()
+        self.modal_utils.delete_button("edit").click()
+        self.modal_utils.wait_for_delete_modal()
+        self.table_utils.delete_confirm_button.click()
+        self.table_utils.wait_for_delete_modal_close()
+        time.sleep(0.1)
+        self.table_utils.wait_for_disappear(f"table-row-{self.test_entry.id}")
+
+        # Check that the entry was deleted from the database
         db_data = self.db.query(self.model).filter_by(id=self.test_entry.id).first()
         assert db_data is None, "Expected entry to be deleted from database"
 
@@ -101,6 +157,7 @@ class BaseTablePage(BaseTest):
         """Test adding a new entry"""
 
         self.table_utils.set_page_item_select("100")
+
         # Determine the number of entries in the db and in the table
         n_entries = len(self.db.query(self.model).filter_by(owner_id=self.user.id).all())
         initial_table_count = len(self.table_utils.table_rows)
@@ -121,34 +178,14 @@ class BaseTablePage(BaseTest):
         entry_id = max([entry.id for entry in entries])
         entry = [entry for entry in entries if entry.id == entry_id][0]
 
-        # Reopen the modal
+        # Reopen the modal in view mode and check contents
         self.table_utils.table_row(entry_id).click()
         self.modal_utils.wait_for_view_modal()
-        self._test_view_modal(entry)
+        self.modal_utils.test_view_modal(entry)
 
-        # Reopen in edit mode
+        # Reopen in edit mode and check contents
         self.table_utils.table_context_menu(entry_id, "edit")
-        self.check_edit_modal(entry_id, **self.test_data)
-
-    def check_edit_modal(self, entry_id: int, **values) -> None:
-        """Check that the modal in edit mode contains the expected data
-        :param entry_id: entry ID
-        :param values: values to check"""
-
-        if any(isinstance(v, dict) for v in values.values()):
-            for tab_key in values:
-                self.table_utils.get_element(f"{tab_key}-tab").click()
-                self.check_edit_modal(entry_id, **values[tab_key])
-        else:
-            for key in values:
-                if "date" in key:
-                    continue
-                element = self.table_utils.get_element(key)
-                if element.tag_name == "input":
-                    value = element.get_attribute("value")
-                else:
-                    value = element.text
-                assert str(value) == str(values[key])
+        self.modal_utils.check_edit_modal(entry_id, **self.test_data)
 
     def test_add_duplicate_entry(self) -> None:
         """Test that adding a new entry with an existing name shows validation error"""
@@ -161,9 +198,10 @@ class BaseTablePage(BaseTest):
             self.modal_utils.confirm_button("edit").click()
             self.modal_utils.wait_for_edit_modal_close()
 
+            # Try to add the same entry again
             self.table_utils.add_entity_button.click()
             self.modal_utils.wait_for_edit_modal()
-            self.modal_utils._fill_modal(**{key: self.test_data[key] for key in self.duplicate_fields})
+            self.modal_utils._fill_modal(duplicate_fields=self.duplicate_fields, **self.test_data)
             self.modal_utils.confirm_button("edit").click()
             self.modal_utils.get_element(".invalid-feedback", By.CSS_SELECTOR)
             self.modal_utils.cancel_button("edit").click()
@@ -239,55 +277,6 @@ class BaseTablePage(BaseTest):
         self.modal_utils.cancel_button("edit").click()
         self.modal_utils.wait_for_edit_modal_close()
 
-    def test_search_functionality(self) -> None:
-        """Test the search functionality"""
-
-        for key in self.columns:
-            print("Testing column:", key)
-            search_text = self.get_search_value(self.test_entry, key).lower()[:-2]
-            print("Search text:", search_text)
-
-            # Get the expected list of entries
-            expected_entries = []
-            for entry in self.test_entries:
-                value = self.get_search_value(entry, key).lower()
-                if search_text in value:
-                    expected_entries.append(value)
-
-            # entries = set(entries)
-            print("expected", expected_entries)
-            self.table_utils.set_text(self.table_utils.get_element("search-input"), search_text)
-            time.sleep(0.2)  # Allow time for search to filter
-            print("got", self.table_utils.table_rows)
-            assert len(self.table_utils.table_rows) == len(expected_entries), "Expected search to filter results"
-
-    # def test_sort_functionality(self) -> None:
-    #     """Test sorting functionality"""
-    #
-    #     for key in self.sorting_columns:
-    #         # Click to sort and give time for UI update
-    #         self.get_element(f"table-header-{key}").click()
-    #         time.sleep(0.2)
-    #
-    #         # Compare with the sorted values
-    #         values = self.get_column_values(key)
-    #         a = [v.lower() for v in values if v != "Not Provided"]
-    #         assert values == sorted([v.lower() for v in values if v != "Not Provided"] + (len(values) - len(a)) * ["Not Provided"])
-
-    @staticmethod
-    def get_search_value(value, key: str) -> str:
-        """Get the search value for a given column key"""
-
-        result = getattr(value, key)
-        if isinstance(result, str):
-            return result
-        elif isinstance(result, models.Company):
-            return result.name
-        else:
-            return ""
-
-    # --------------------------------------------------- VIEW MODAL ---------------------------------------------------
-
 
 class TestKeywordsPage(BaseTablePage):
     """Test class for the keywords Page functionality including:
@@ -304,15 +293,9 @@ class TestKeywordsPage(BaseTablePage):
     test_data = {"name": "Test_Name"}
     required_fields = ["name"]
     duplicate_fields = ["name"]
+    columns = ["name", "created_at"]
     test_entry_index = 14
     model = models.Keyword
-
-    def _test_view_modal(self, entry=None) -> None:
-        """Helper method to test the view modal for an entry"""
-
-        if not entry:
-            entry = self.test_entry
-        self.modal_utils.check_keyword_view_modal(entry)
 
 
 class TestAggregatorsPage(BaseTablePage):
@@ -330,14 +313,8 @@ class TestAggregatorsPage(BaseTablePage):
     test_data = {"name": "Test_Name", "url": "https://www.google.com"}
     required_fields = ["name", "url"]
     duplicate_fields = ["name"]
-    columns = ["name", "url"]
+    columns = ["name", "url", "created_at"]
     model = models.Aggregator
-
-    def _test_view_modal(self, entry=None) -> None:
-        """Helper method to test the view modal for an entry"""
-        if not entry:
-            entry = self.test_entry
-        self.modal_utils.check_aggregator_view_modal(entry)
 
 
 class TestCompaniesPage(BaseTablePage):
@@ -355,14 +332,8 @@ class TestCompaniesPage(BaseTablePage):
     test_data = {"name": "Test_Name", "url": "https://www.google.com", "description": "This is a test description"}
     required_fields = ["name"]
     duplicate_fields = ["name"]
-    columns = ["name", "url", "description"]
+    columns = ["name", "url", "description", "created_at"]
     model = models.Company
-
-    def _test_view_modal(self, entry=None) -> None:
-        """Helper method to test the view modal for an entry"""
-        if not entry:
-            entry = self.test_entry
-        self.modal_utils.check_company_view_modal(entry)
 
 
 class TestLocationsPage(BaseTablePage):
@@ -382,12 +353,6 @@ class TestLocationsPage(BaseTablePage):
     columns = ["city", "postcode", "country"]
     duplicate_fields = ["city", "postcode", "country"]
     model = models.Location
-
-    def _test_view_modal(self, entry=None) -> None:
-        """Helper method to test the view modal for an entry"""
-        if not entry:
-            entry = self.test_entry
-        self.modal_utils.check_location_view_modal(entry)
 
 
 class TestPersonsPage(BaseTablePage):
@@ -413,15 +378,9 @@ class TestPersonsPage(BaseTablePage):
     }
     required_fields = ["last_name", "first_name"]
     duplicate_fields = ["last_name", "first_name", "company_id"]
-    columns = ["last_name", "email", "company", "phone", "linkedin_url", "role"]
+    columns = ["last_name", "email", "company", "phone", "linkedin_url", "role", "created_at"]
     sorting_columns = ["name", "company", "role", "email", "created_at"]
     model = models.Person
-
-    def _test_view_modal(self, entry=None) -> None:
-        """Helper method to test the view modal for an entry"""
-        if not entry:
-            entry = self.test_entry
-        self.modal_utils.check_person_view_modal(entry)
 
     def test_table_company_badge(self) -> None:
         """Test that the company badge is displayed correctly"""
@@ -463,6 +422,7 @@ class TestJobApplicationUpdatesPage(BaseTablePage):
     entry_type = "jobApplicationUpdate"
     test_fixture = ["test_job_application_updates", "test_jobs"]
     required_fields = ["job_id", "type", "date"]
+    columns = ["job_id", "type", "date", "created_at"]
     test_data = {
         "date": datetime.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=datetime.timezone.utc),
         "job_id": "Senior Python Developer (Tech Corp)",
@@ -486,6 +446,7 @@ class TestInterviewPage(BaseTablePage):
     entry_type = "interview"
     test_fixture = ["test_interviews", "test_jobs"]
     required_fields = ["job_id", "type", "date"]
+    columns = ["job_id", "type", "date", "created_at"]
     test_data = {
         "date": datetime.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=datetime.timezone.utc),
         "job_id": "Senior Python Developer (Tech Corp)",
@@ -494,12 +455,6 @@ class TestInterviewPage(BaseTablePage):
         "type": "HR Interview",
     }
     model = models.Interview
-
-    def _test_view_modal(self, entry=None) -> None:
-        """Helper method to test the view modal for an entry"""
-        if not entry:
-            entry = self.test_entry
-        self.modal_utils.check_interview_view_modal(entry)
 
     def test_table_interviewers_badge(self) -> None:
         """Test that the person badge is displayed correctly in the table"""
@@ -529,8 +484,6 @@ class TestInterviewPage(BaseTablePage):
         self.get_element("modal-view-interview-location").click()
         self.location_modal_utils.check_location_view_modal(self.test_entry.location)
 
-    # TODO add job view
-
 
 class TestJobPage(BaseTablePage):
     """Test class for Job Application Update Page functionalities"""
@@ -540,6 +493,7 @@ class TestJobPage(BaseTablePage):
     entry_type = "job"
     test_fixture = ["test_jobs"]
     required_fields = ["title"]
+    columns = ["title", "company", "location", "created_at"]
     test_data = {
         "job": {
             "title": "Senior Python Developer",
@@ -559,15 +513,8 @@ class TestJobPage(BaseTablePage):
             "application_note": "Submitted application with cover letter",
         },
     }
-    # duplicate_fields = ["url"]  # TODO not working with tabs
+    duplicate_fields = ["url"]
     model = models.Job
-
-    def _test_view_modal(self, entry=None) -> None:
-        """Helper method to test the view modal for an entry"""
-
-        if not entry:
-            entry = self.test_entry
-        self.modal_utils.check_job_view_modal(entry)
 
     def test_add_interview(self) -> None:
         """Test adding an interview through the job view modal"""
@@ -696,10 +643,3 @@ class TestSpeculativeApplicationPage(BaseTablePage):
     test_data = {"company_id": "LocalBiz"}
     duplicate_fields = ["company_id"]
     model = models.SpeculativeApplication
-
-    def _test_view_modal(self, entry=None) -> None:
-        """Helper method to test the view modal for an entry"""
-
-        if not entry:
-            entry = self.test_entry
-        self.modal_utils.check_speculative_application_view_modal(entry)
