@@ -490,7 +490,115 @@ class BaseUtils(object):
             ActionChains(self.driver).move_to_element(element).perform()
             return element
         except Exception:
-            raise AssertionError(f"Could not find element {element_id}\nPossible IDs: {self.get_all_element_ids()}")
+            all_ids = self.get_all_element_ids()
+
+            # If element exists in DOM, provide diagnostic info
+            if element_id in all_ids:
+                element = self.driver.find_element(selector, element_id)
+                diagnostics = self._get_element_diagnostics(element)
+                raise AssertionError(
+                    f"Element '{element_id}' exists in DOM but failed to become clickable.\n"
+                    f"Diagnostics:\n{diagnostics}"
+                )
+            else:
+                raise AssertionError(f"Could not find element {element_id}\n" f"Possible IDs: {all_ids}")
+
+    def _get_element_diagnostics(self, element: WebElement) -> str:
+        """Get diagnostic information about why an element isn't clickable"""
+
+        diagnostics = []
+
+        # Check visibility
+        try:
+            is_displayed = element.is_displayed()
+            diagnostics.append(f"  - is_displayed(): {is_displayed}")
+        except Exception as e:
+            diagnostics.append(f"  - is_displayed(): Error - {e}")
+
+        # Check enabled state
+        try:
+            is_enabled = element.is_enabled()
+            diagnostics.append(f"  - is_enabled(): {is_enabled}")
+        except Exception as e:
+            diagnostics.append(f"  - is_enabled(): Error - {e}")
+
+        # Check CSS properties
+        try:
+            display = element.value_of_css_property("display")
+            visibility = element.value_of_css_property("visibility")
+            opacity = element.value_of_css_property("opacity")
+            diagnostics.append(f"  - CSS display: {display}")
+            diagnostics.append(f"  - CSS visibility: {visibility}")
+            diagnostics.append(f"  - CSS opacity: {opacity}")
+        except Exception as e:
+            diagnostics.append(f"  - CSS properties: Error - {e}")
+
+        # Check position/size
+        try:
+            size = element.size
+            location = element.location
+            diagnostics.append(f"  - Size: {size}")
+            diagnostics.append(f"  - Location: {location}")
+        except Exception as e:
+            diagnostics.append(f"  - Size/Location: Error - {e}")
+
+        # Check for overlapping elements
+        try:
+            overlapping = self._check_overlapping_elements(element)
+            if overlapping:
+                diagnostics.append(f"  - Overlapping elements detected: {overlapping}")
+            else:
+                diagnostics.append(f"  - No overlapping elements detected")
+        except Exception as e:
+            diagnostics.append(f"  - Overlap check: Error - {e}")
+
+        # Check page load state
+        try:
+            ready_state = self.driver.execute_script("return document.readyState;")
+            diagnostics.append(f"  - Page readyState: {ready_state}")
+        except Exception as e:
+            diagnostics.append(f"  - Page state: Error - {e}")
+
+        return "\n".join(diagnostics)
+
+    def _check_overlapping_elements(self, element: WebElement) -> str:
+        """Check if another element is overlaying the target element"""
+
+        try:
+            # Get element center point
+            location = element.location
+            size = element.size
+            center_x = location["x"] + size["width"] / 2
+            center_y = location["y"] + size["height"] / 2
+
+            # Find element at that point using JavaScript
+            script = """
+            var element = arguments[0];
+            var x = arguments[1];
+            var y = arguments[2];
+            var topElement = document.elementFromPoint(x, y);
+            
+            if (topElement === element) {
+                return null;
+            }
+            
+            // Return info about the overlapping element
+            return {
+                tag: topElement.tagName,
+                id: topElement.id || 'no-id',
+                class: topElement.className || 'no-class',
+                zIndex: window.getComputedStyle(topElement).zIndex
+            };
+            """
+
+            result = self.driver.execute_script(script, element, center_x, center_y)
+
+            if result:
+                return f"<{result['tag']} id='{result['id']}' class='{result['class']}' z-index='{result['zIndex']}'>"
+            return ""
+
+        except Exception as e:
+            return f"Error checking overlap: {e}"
 
     def wait_for_disappear(
         self,
@@ -1213,6 +1321,12 @@ class DataTableUtils(BaseUtilsClass):
         return int(
             re.search(rf"table-row-{self.entry_type}-(\d+)", self.table_rows[index].get_attribute("id")).group(1)
         )
+
+    def set_search(self, search_text: str) -> None:
+        """Set the search input to the given text"""
+
+        self.set_text(self.get_element("search-input"), search_text)
+        time.sleep(0.2)
 
     # ----------------------------------------------------- BUTTONS ----------------------------------------------------
 
