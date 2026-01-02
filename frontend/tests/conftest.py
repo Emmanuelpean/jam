@@ -302,14 +302,11 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     print(f"  PORT: {env['PORT']}")
 
     # Find npm executable
-    npm_cmd = "npm"
-    if os.name == "nt":  # Windows
-        npm_path = shutil.which("npm.cmd") or shutil.which("npm")
-        if npm_path:
-            npm_cmd = npm_path
-        print(f"Found npm at: {npm_cmd}")
-    else:
+    npm_cmd = shutil.which("npm") or shutil.which("npm.cmd")
+    if not npm_cmd:
         raise Exception("npm not found in PATH")
+
+    print(f"Found npm at: {npm_cmd}")
 
     # Check prerequisites
     package_json_path = os.path.join(frontend_path, "package.json")
