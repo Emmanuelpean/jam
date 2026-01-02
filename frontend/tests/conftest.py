@@ -302,6 +302,7 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     print(f"  PORT: {env['PORT']}")
 
     # Find npm executable
+    # noinspection PyDeprecation
     npm_cmd = shutil.which("npm") or shutil.which("npm.cmd")
     if not npm_cmd:
         raise Exception("npm not found in PATH")
@@ -1418,6 +1419,106 @@ class UserSettingsUtils(BaseUtilsClass):
         self._assert_message("confirm_password-", error_message)
 
 
+class FollowUpEmailModalUtils(BaseUtilsClass):
+    """Utilities for the Follow-Up Email Modal."""
+
+    def wait_for_modal(self) -> WebElement:
+        """Get the follow-up email modal element."""
+
+        return self.get_element("follow-up-modal")
+
+    def wait_for_modal_close(self) -> None:
+        """Wait for the follow-up email modal to close."""
+
+        self._wait_for_modal_close("follow-up-modal")
+
+    @property
+    def contact(self) -> ReactSelect:
+        """Get the contact element in the modal."""
+
+        return ReactSelect(self.get_element("contactId"))
+
+    @property
+    def contact_text(self) -> str:
+        """Get the contact text element in the modal."""
+
+        return self.get_element("contactId").text
+
+    @property
+    def subject(self) -> WebElement:
+        """Get the subject element in the modal."""
+
+        return self.get_element("subject")
+
+    @property
+    def body(self) -> WebElement:
+        """Get the body element in the modal."""
+
+        return self.get_element("body")
+
+    @property
+    def cancel_button(self) -> WebElement:
+        """Get the cancel button in the modal."""
+
+        return self.get_element("cancel-btn")
+
+    @property
+    def send_button(self) -> WebElement:
+        """Get the send button in the modal."""
+
+        return self.get_element("send-btn")
+
+    @property
+    def send_menu_button(self) -> WebElement:
+        """Get the send button in the modal."""
+
+        return self.get_element("dropdown-split-email")
+
+    @property
+    def gmail_option(self) -> WebElement:
+        """Get the Gmail option in the send menu."""
+
+        return self.get_element("gmail-btn")
+
+    @property
+    def outlook_option(self) -> WebElement:
+        """Get the Outlook option in the send menu."""
+
+        return self.get_element("outlook-btn")
+
+    @property
+    def default_option(self) -> WebElement:
+        """Get the Yahoo option in the send menu."""
+
+        return self.get_element("default-email-btn")
+
+
+class ConfirmModalUtils(BaseUtilsClass):
+    """Utilities for the Confirm Modal."""
+
+    def wait_for_modal(self) -> WebElement:
+        """Get the confirm modal element."""
+
+        return self.get_element("confirm-alert-modal")
+
+    def wait_for_modal_close(self) -> None:
+        """Wait for the confirm modal to close."""
+
+        self._wait_for_modal_close("confirm-alert-modal")
+
+    @property
+    def confirm_button(self) -> WebElement:
+        """Get the confirm button in the modal."""
+
+        return self.get_element("confirm-alert-modal-confirm-button")
+
+    @property
+    def cancel_button(self) -> WebElement:
+        """Get the cancel button in the modal."""
+
+        return self.get_element("confirm-alert-modal-cancel-button")
+
+
 class BaseTest(BaseUtils):
     """Base class for selenium tests"""
 
@@ -1430,29 +1531,55 @@ class BaseTest(BaseUtils):
 
     _test_name = ""
 
+    # Company
     company_modal_utils: DataModalUtils = None
-    aggregator_modal_utils: DataModalUtils = None
-    keyword_modal_utils: DataModalUtils = None
-    location_modal_utils: DataModalUtils = None
-    person_modal_utils: DataModalUtils = None
-    job_modal_utils: DataModalUtils = None
-    interview_modal_utils: DataModalUtils = None
-    jobApplicationUpdate_modal_utils: DataModalUtils = None
-    speculative_application_modal_utils: DataModalUtils = None
-    scraped_job_modal_utils: DataModalUtils = None
-    scraping_filter_modal_utils: DataModalUtils = None
     company_table_utils: DataTableUtils = None
+
+    # Aggregator
+    aggregator_modal_utils: DataModalUtils = None
     aggregator_table_utils: DataTableUtils = None
+
+    # Keyword
+    keyword_modal_utils: DataModalUtils = None
     keyword_table_utils: DataTableUtils = None
+
+    # Location
+    location_modal_utils: DataModalUtils = None
     location_table_utils: DataTableUtils = None
+
+    # Person
+    person_modal_utils: DataModalUtils = None
     person_table_utils: DataTableUtils = None
+
+    # Job
+    job_modal_utils: DataModalUtils = None
     job_table_utils: DataTableUtils = None
-    jobApplicationUpdate_table_utils: DataTableUtils = None
+
+    # Interview
+    interview_modal_utils: DataModalUtils = None
     interview_table_utils: DataTableUtils = None
-    scraped_job_table_utils: DataTableUtils = None
-    scraping_filter_table_utils: DataTableUtils = None
+
+    # Job Application Update
+    jobApplicationUpdate_modal_utils: DataModalUtils = None
+    jobApplicationUpdate_table_utils: DataTableUtils = None
+
+    # Speculative Application
+    speculativeApplication_modal_utils: DataModalUtils = None
+    speculativeApplication_table_utils: DataTableUtils = None
+
+    # Scraped Job
+    scrapedJob_modal_utils: DataModalUtils = None
+    scrapedJob_table_utils: DataTableUtils = None
+
+    # Scraping Filter
+    scrapingFilter_modal_utils: DataModalUtils = None
+    scrapingFilter_table_utils: DataTableUtils = None
+
+    # Others
     auth_utils: AuthentificationUtils = None
     user_settings_utils: UserSettingsUtils = None
+    followup_modal: FollowUpEmailModalUtils = None
+    confirm_modal: ConfirmModalUtils = None
 
     @pytest.fixture(autouse=True)
     def setup_method(
@@ -1531,6 +1658,8 @@ class BaseTest(BaseUtils):
 
             self.auth_utils = AuthentificationUtils(**shared_kwargs)
             self.user_settings_utils = UserSettingsUtils(**shared_kwargs)
+            self.followup_modal = FollowUpEmailModalUtils(**shared_kwargs)
+            self.confirm_modal = ConfirmModalUtils(**shared_kwargs)
 
             self.driver.get(self.frontend_base_url)
             self.setup_function(request)
@@ -1650,46 +1779,3 @@ class BaseTest(BaseUtils):
         """Helper method to verify user exists in database"""
 
         return self.db.query(models.User).filter(models.User.email == email).all()
-
-
-import datetime as dt
-
-
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item, call):
-    """Hook to capture test execution results"""
-    outcome = yield
-    rep = outcome.get_result()
-
-    # Store the report for each phase (setup, call, teardown)
-    setattr(item, f"rep_{rep.when}", rep)
-
-
-@pytest.fixture(autouse=True)
-def screenshot_on_failure(request):
-    """Automatically take screenshot when test fails"""
-    yield
-
-    # Check if test failed during the call phase
-    if hasattr(request.node, "rep_call") and request.node.rep_call.failed:
-        # Get the driver fixture - adjust the fixture name if different
-        if "driver" in request.fixturenames:
-            driver = request.node.funcargs["driver"]
-
-            # Create screenshots directory if it doesn't exist
-            screenshot_dir = "test_screenshots"
-            os.makedirs(screenshot_dir, exist_ok=True)
-
-            # Get worker ID for parallel execution
-            worker_id = os.environ.get("PYTEST_XDIST_WORKER", "master")
-
-            # Create filename with timestamp, test name, and worker ID
-            timestamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
-            test_name = request.node.nodeid.replace("::", "_").replace("/", "_")
-            filename = f"{screenshot_dir}/{test_name}_{worker_id}_{timestamp}.png"
-
-            try:
-                driver.save_screenshot(filename)
-                print(f"\n📸 Screenshot saved: {filename}")
-            except Exception as e:
-                print(f"\n❌ Failed to capture screenshot: {e}")

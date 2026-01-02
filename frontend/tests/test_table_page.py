@@ -244,7 +244,7 @@ class BaseTablePage(BaseTest):
 
         for key in self.columns:
             print("Testing column:", key)
-            search_text = self.get_search_value(self.test_entry, key).lower()[3:]
+            search_text = self.get_search_value(self.test_entry, key).lower()[:-2]
             print("Search text:", search_text)
 
             # Get the expected list of entries
