@@ -311,6 +311,15 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     else:
         raise Exception("npm not found in PATH")
 
+    # Check prerequisites
+    package_json_path = os.path.join(frontend_path, "package.json")
+    if not os.path.exists(package_json_path):
+        raise Exception(f"package.json not found at: {package_json_path}")
+
+    node_modules_path = os.path.join(frontend_path, "node_modules")
+    if not os.path.exists(node_modules_path):
+        print("⚠️  node_modules not found, you may need to run 'npm install' first")
+
     # Start the frontend server
     print("Starting frontend server subprocess...")
     process = subprocess.Popen(
