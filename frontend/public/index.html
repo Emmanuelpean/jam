@@ -26,15 +26,17 @@
     -->
     <title>JAM</title>
     <script>
-        const s = document.createElement("script");
-        s.src = "swetrix.js";
-        s.onload = () => {
-            swetrix.init("uQe6o51TmAzM", {
-                apiURL: "/api/v1/data"
-            });
-            swetrix.trackViews();
-        };
-        document.head.appendChild(s);
+        if (process.env.REACT_APP_ENABLE_ANALYTICS === "true") {
+            const s = document.createElement("script");
+            s.src = "swetrix.js";
+            s.onload = () => {
+                swetrix.init("uQe6o51TmAzM", {
+                    apiURL: "/api/v1/data"
+                });
+                swetrix.trackViews();
+            };
+            document.head.appendChild(s);
+        }
     </script>
 
 </head>
