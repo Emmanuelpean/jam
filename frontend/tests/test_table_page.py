@@ -1,6 +1,6 @@
 """Test the main pages of JAM"""
 
-import datetime
+import datetime as dt
 import time
 
 import pytest
@@ -59,23 +59,13 @@ class BaseTablePage(BaseTest):
     #     """Test the search functionality"""
     #
     #     for key in self.columns:
-    #         print("Testing column:", key)
     #         search_text = self.get_search_value(self.test_entry, key).lower()[:-1]
-    #         print("Search text:", search_text)
-    #
-    #         # Get the expected list of entries
-    #         expected_entries = []
-    #         for entry in self.test_entries:
-    #             value = self.get_search_value(entry, key).lower()
-    #             if search_text in value:
-    #                 expected_entries.append(value)
-    #
-    #         # entries = set(entries)
-    #         print("expected", expected_entries)
-    #         self.table_utils.set_text(self.table_utils.get_element("search-input"), search_text)
-    #         time.sleep(0.2)  # Allow time for search to filter
-    #         print("got", self.table_utils.table_rows)
-    #         assert len(self.table_utils.table_rows) == len(expected_entries), "Expected search to filter results"
+    #         self.table_utils.set_search(search_text)
+    #         values = self.table_utils.get_column_values()
+    #         print(values)
+    #         for row in values:
+    #             row_values = ",".join([row[key_] for key_ in self.columns]).lower()
+    #             assert search_text in row_values
 
     # def test_sort_functionality(self) -> None:
     #     """Test sorting functionality"""
@@ -88,17 +78,23 @@ class BaseTablePage(BaseTest):
     #         # Compare with the sorted values
     #         values = self.get_column_values(key)
     #         a = [v.lower() for v in values if v != "Not Provided"]
-    #         assert values == sorted([v.lower() for v in values if v != "Not Provided"] + (len(values) - len(a)) * ["Not Provided"])
+    #         assert values == sorted(
+    #             [v.lower() for v in values if v != "Not Provided"] + (len(values) - len(a)) * ["Not Provided"]
+    #         )
 
     @staticmethod
     def get_search_value(value, key: str) -> str:
         """Get the search value for a given column key"""
 
+        if key == "companyBadge":
+            return value.company.name
+        elif key == "jobBadge":
+            return value.job.title + " (" + value.job.company.name + ")"
         result = getattr(value, key)
         if isinstance(result, str):
             return result
-        elif isinstance(result, models.Company):
-            return result.name
+        elif isinstance(result, dt.datetime):
+            return result.strftime("%d/%m/%Y")
         else:
             return ""
 
@@ -378,14 +374,14 @@ class TestPersonsPage(BaseTablePage):
     }
     required_fields = ["last_name", "first_name"]
     duplicate_fields = ["last_name", "first_name", "company_id"]
-    columns = ["last_name", "email", "company", "phone", "linkedin_url", "role", "created_at"]
-    sorting_columns = ["name", "company", "role", "email", "created_at"]
+    columns = ["name", "email", "companyBadge", "phone", "role", "created_at"]
+    sorting_columns = ["name", "companyBadge", "role", "email", "created_at"]
     model = models.Person
 
     def test_table_company_badge(self) -> None:
         """Test that the company badge is displayed correctly"""
 
-        self.get_element("table-row-1-CompanyBadge").click()
+        self.get_element("table-row-1-companyBadge").click()
         self.company_modal_utils.check_company_view_modal(self.test_entry.company)
 
     def test_add_company(self) -> None:
@@ -422,9 +418,9 @@ class TestJobApplicationUpdatesPage(BaseTablePage):
     entry_type = "jobApplicationUpdate"
     test_fixture = ["test_job_application_updates", "test_jobs"]
     required_fields = ["job_id", "type", "date"]
-    columns = ["job_id", "type", "date", "created_at"]
+    columns = ["jobBadge", "date", "note", "created_at"]
     test_data = {
-        "date": datetime.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=datetime.timezone.utc),
+        "date": dt.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc),
         "job_id": "Senior Python Developer (Tech Corp)",
         "note": "Received automated confirmation email",
         "type": "Received",
@@ -446,9 +442,9 @@ class TestInterviewPage(BaseTablePage):
     entry_type = "interview"
     test_fixture = ["test_interviews", "test_jobs"]
     required_fields = ["job_id", "type", "date"]
-    columns = ["job_id", "type", "date", "created_at"]
+    columns = ["jobBadge", "type", "date", "created_at"]
     test_data = {
-        "date": datetime.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=datetime.timezone.utc),
+        "date": dt.datetime(year=2025, month=3, day=5, hour=3, minute=30, tzinfo=dt.timezone.utc),
         "job_id": "Senior Python Developer (Tech Corp)",
         "note": "Received automated confirmation email",
         "attendance_type": "On-site",
@@ -459,7 +455,7 @@ class TestInterviewPage(BaseTablePage):
     def test_table_interviewers_badge(self) -> None:
         """Test that the person badge is displayed correctly in the table"""
 
-        self.get_element("table-row-1-interviewers-0").click()
+        self.get_element("table-row-1-interviewerBadges-0").click()
         self.person_modal_utils.check_person_view_modal(self.test_entry.interviewers[0])
 
     def test_modal_interviewers_badge(self) -> None:
@@ -473,7 +469,7 @@ class TestInterviewPage(BaseTablePage):
     def test_table_location_badge_table(self) -> None:
         """Test that the location badge is displayed correctly in the table"""
 
-        self.get_element("table-row-1-location").click()
+        self.get_element("table-row-1-locationBadge").click()
         self.location_modal_utils.check_location_view_modal(self.test_entry.location)
 
     def test_modal_location_badge(self) -> None:
@@ -506,7 +502,7 @@ class TestJobPage(BaseTablePage):
             "attendance_type": "Hybrid",
         },
         "application": {
-            "application_date": datetime.datetime.now(),
+            "application_date": dt.datetime.now(),
             "application_url": "https://techcorp.com/apply/senior-python",
             "application_status": "Applied",
             "applied_via": "Aggregator",
@@ -520,7 +516,7 @@ class TestJobPage(BaseTablePage):
         """Test adding an interview through the job view modal"""
 
         interview_data = dict(
-            date=datetime.datetime(year=2025, month=4, day=10, hour=10, minute=0, tzinfo=datetime.timezone.utc),
+            date=dt.datetime(year=2025, month=4, day=10, hour=10, minute=0, tzinfo=dt.timezone.utc),
             type="HR Interview",
             attendance_type="On-site",
             note="Initial HR screening interview",
@@ -579,7 +575,7 @@ class TestJobPage(BaseTablePage):
         """Test adding a job application update through the job view modal"""
 
         update_data = dict(
-            date=datetime.datetime(year=2025, month=4, day=15, hour=14, minute=0, tzinfo=datetime.timezone.utc),
+            date=dt.datetime(year=2025, month=4, day=15, hour=14, minute=0, tzinfo=dt.timezone.utc),
             type="Received",
             note="Scheduled first round interview",
         )

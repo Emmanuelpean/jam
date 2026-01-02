@@ -368,7 +368,7 @@ export const tableColumns = {
 	// ----------------------------------------------------- BADGES ----------------------------------------------------
 
 	locationBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "location",
+		key: "locationBadge",
 		label: "Location",
 		sortable: true,
 		searchable: true,
@@ -380,7 +380,7 @@ export const tableColumns = {
 	}),
 
 	companyBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "CompanyBadge",
+		key: "companyBadge",
 		label: "Company",
 		sortable: true,
 		searchable: true,
@@ -392,7 +392,7 @@ export const tableColumns = {
 	}),
 
 	interviewerBadgesColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "interviewers",
+		key: "interviewerBadges",
 		label: "Interviewers",
 		sortable: false,
 		searchable: true,
@@ -403,7 +403,7 @@ export const tableColumns = {
 	}),
 
 	contactBadgesColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "contacts",
+		key: "contactBadges",
 		label: "Contacts",
 		sortable: false,
 		searchable: true,
@@ -414,7 +414,7 @@ export const tableColumns = {
 	}),
 
 	jobBadgeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "job",
+		key: "jobBadge",
 		label: "Job",
 		sortable: true,
 		searchable: true,
