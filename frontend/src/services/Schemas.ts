@@ -79,6 +79,11 @@ export interface CompanyData extends OwnedOut {
 
 // ------------------------------------------------------ LOCATION -----------------------------------------------------
 
+export interface GeoLocation {
+	latitude: number;
+	longitude: number;
+}
+
 export interface LocationDataTransform {
 	city?: string | null;
 	postcode?: string | null;
@@ -90,6 +95,7 @@ export interface LocationData extends OwnedOut {
 	postcode?: string | null;
 	country?: string | null;
 	name: string;
+	geolocation: GeoLocation | null;
 }
 
 // ------------------------------------------------------- PERSON ------------------------------------------------------
@@ -279,6 +285,7 @@ export interface ScrapedJobData extends OwnedOut {
 	location: string | null;
 	emails: number[];
 	job_rating: JobRatingData | null;
+	geolocation: GeoLocation | null;
 }
 
 export interface JobRatingData extends BaseOut {

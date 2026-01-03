@@ -149,6 +149,15 @@ def create_locations(db, users: list[models.User]) -> list[models.Location]:
     return add_to_db(db, locations)
 
 
+def create_geolocations(db) -> list[models.Geolocation]:
+    """Create sample geolocations"""
+
+    print("Creating geolocations...")
+    # noinspection PyArgumentList
+    geolocations = [models.Geolocation(**geo) for geo in data_tables.GEOLOCATION_DATA]
+    return add_to_db(db, geolocations)
+
+
 def create_people(
     db,
     users: list[models.User],

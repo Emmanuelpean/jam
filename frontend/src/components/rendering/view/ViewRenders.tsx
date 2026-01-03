@@ -374,13 +374,7 @@ export const renderFunctions = {
 	},
 
 	scrapedLocationMap: (param: RenderParams): ReactNode => {
-		const location = {
-			postcode: param.item?.location_postcode,
-			city: param.item?.location_city,
-			country: param.item?.location_country,
-		};
-		const locations = location ? [location] : [];
-		return <LocationMap locations={locations} scrollWheelZoom={false} />;
+		return <LocationMap locations={param.item} scrollWheelZoom={false} />;
 	},
 
 	lastUpdateDays: (params: RenderParams): ReactNode => {

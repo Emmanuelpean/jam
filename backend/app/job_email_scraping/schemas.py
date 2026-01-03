@@ -7,7 +7,7 @@ from datetime import datetime
 from pydantic import field_validator
 
 from app.job_rating.schemas import JobRatingOut
-from app.schemas import BaseModel, OwnedOut, Out, serialize_relationships
+from app.schemas import BaseModel, OwnedOut, Out, serialize_relationships, GeolocationOut
 
 
 # --------------------------------------------------- JOB ALERT EMAIL --------------------------------------------------
@@ -90,6 +90,7 @@ class ScrapedJobOut(ScrapedJob, OwnedOut):
 
     emails: list[int]
     job_rating: JobRatingOut | None
+    geolocation: GeolocationOut | None
 
     @field_validator("emails", mode="before")
     @classmethod

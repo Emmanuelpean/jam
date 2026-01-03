@@ -158,12 +158,14 @@ class ScrapedJob(Owned, Base):
         Integer, ForeignKey("job_email_scraping_service_log.id", ondelete="SET NULL"), nullable=False
     )
     filter_id = Column(Integer, ForeignKey("scraping_filter.id", ondelete="SET NULL"), nullable=True)
+    geolocation_id = Column(Integer, ForeignKey("geolocation.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     emails = relationship("JobEmail", secondary=jobemail_scrapedjob_mapping, back_populates="jobs")
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="scraped_jobs")
     job_rating = relationship("JobRating", back_populates="scraped_job", uselist=False)
     filter = relationship("ScrapingFilter", back_populates="filtered_jobs")
+    geolocation = relationship("Geolocation")
 
     # Constraints
     __table_args__ = (UniqueConstraint("external_job_id", "owner_id", name="unique_job_per_owner"),)

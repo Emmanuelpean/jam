@@ -1,14 +1,11 @@
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX, useEffect } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
-import { ProgressBar, Spinner } from "react-bootstrap";
 import L from "leaflet";
-import { geocodeLocationsBatch } from "../../services/GeoCoding";
 import "leaflet/dist/leaflet.css";
-import { LocationData, LocationDataTransform } from "../../services/Schemas";
+import { GeoLocation, LocationData, ScrapedJobData } from "../../services/Schemas";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { Progress } from "../../utils/Utils";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -17,112 +14,67 @@ L.Icon.Default.mergeOptions({
 	shadowUrl: markerShadow,
 });
 
-interface GeocodedLocation extends LocationData {
-	geocoded: {
-		latitude: number;
-		longitude: number;
-	};
-}
+type MapLocation = LocationData | ScrapedJobData;
 
 interface LocationMapProps {
-	locations?: LocationDataTransform[];
+	locations?: MapLocation[];
 	height?: string;
 	scrollWheelZoom?: boolean;
 }
 
 interface MapViewUpdaterProps {
-	locations: GeocodedLocation[];
+	locations: MapLocation[];
 }
+
+const isScrapedJobData = (location: MapLocation): location is ScrapedJobData => {
+	return "location_city" in location;
+};
+
+const formatLocationName = (location: MapLocation): string => {
+	if (isScrapedJobData(location)) {
+		const parts = [location.location_postcode, location.location_city, location.location_country].filter(Boolean);
+		return parts.join(", ") || "Unknown Location";
+	}
+	return location.name;
+};
+
+type GeolocatedMapLocation = MapLocation & { geolocation: GeoLocation };
 
 const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpdaterProps) => {
 	const map = useMap();
 
-	useEffect(() => {
-		if (locations.length === 0) {
-			// Default world view when no locations
+	useEffect((): void => {
+		const geolocatedLocations: GeolocatedMapLocation[] = locations.filter(
+			(location: MapLocation): location is GeolocatedMapLocation => location.geolocation !== null,
+		);
+
+		if (geolocatedLocations.length === 0) {
 			map.setView([20, 0], 2);
-		} else if (locations.length === 1) {
-			// Center on single location
-			// @ts-ignore
-			const location: GeocodedLocation = locations[0];
-			map.setView([location.geocoded.latitude, location.geocoded.longitude], 10);
+		} else if (geolocatedLocations.length === 1) {
+			const location = geolocatedLocations[0]!;
+			map.setView([location.geolocation.latitude, location.geolocation.longitude], 10);
 		} else {
-			// Fit bounds to show all markers
-			const bounds = L.latLngBounds(locations.map((loc) => [loc.geocoded.latitude, loc.geocoded.longitude]));
+			const bounds = L.latLngBounds(
+				geolocatedLocations.map((loc) => [loc.geolocation.latitude, loc.geolocation.longitude]),
+			);
 			map.fitBounds(bounds, { padding: [20, 20] });
 		}
-	}, [locations]);
+	}, [locations, map]);
 
 	return null;
 };
 
-const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400px", scrollWheelZoom = true }) => {
-	const [geocodedLocations, setGeocodedLocations] = useState<GeocodedLocation[]>([]);
-	const [loading, setLoading] = useState<boolean>(false);
-	const [progress, setProgress] = useState<Progress>({ current: 0, total: 0 });
+const LocationMap: React.FC<LocationMapProps> = ({
+	locations = [],
+	height = "400px",
+	scrollWheelZoom = true,
+}: LocationMapProps): JSX.Element => {
+	const geolocatedLocations = locations.filter(
+		(location: MapLocation): location is MapLocation & { geolocation: GeoLocation } =>
+			location.geolocation !== null,
+	);
 
-	useEffect(() => {
-		const geocodeLocations = async (): Promise<void> => {
-			if (locations.length === 0) {
-				setGeocodedLocations([]);
-				return;
-			}
-
-			setLoading(true);
-			setProgress({ current: 0, total: locations.length });
-
-			try {
-				const results = await geocodeLocationsBatch(locations, (current: number, total: number) => {
-					setProgress({ current, total });
-				});
-
-				// Filter out locations that couldn't be geocoded
-				const validLocations = results.filter((loc): loc is GeocodedLocation => loc.geocoded !== null);
-				setGeocodedLocations(validLocations);
-			} catch (err) {
-				console.error("Error geocoding locations:", err);
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		geocodeLocations().then(() => null);
-	}, [locations]);
-
-	const formatLocationName = (location: LocationData): string => {
-		const parts = [location.city, location.country].filter(Boolean);
-		return parts.length > 0 ? parts.join(", ") : "Unknown Location";
-	};
-
-	if (loading) {
-		return (
-			<div
-				style={{ height }}
-				className="d-flex flex-column justify-content-center align-items-center border rounded bg-light"
-			>
-				<Spinner animation="border" className="mb-3" />
-				<div className="text-center">
-					{progress.total > 1 ? (
-						<>
-							<p className="mb-2">Finding locations on map...</p>
-							<ProgressBar
-								now={(progress.current / progress.total) * 100}
-								style={{ width: "200px" }}
-								className="mb-2"
-							/>
-							<small className="text-muted">
-								{progress.current} of {progress.total} locations processed
-							</small>
-						</>
-					) : (
-						<p className="mb-2">Finding location on map...</p>
-					)}
-				</div>
-			</div>
-		);
-	}
-
-	if (geocodedLocations.length === 0) {
+	if (geolocatedLocations.length === 0) {
 		return (
 			<div
 				style={{ height }}
@@ -163,12 +115,12 @@ const LocationMap: React.FC<LocationMapProps> = ({ locations = [], height = "400
 						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 						url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
 					/>
-					<MapViewUpdater locations={geocodedLocations} />
-					{geocodedLocations.map(
-						(location: GeocodedLocation): JSX.Element => (
+					<MapViewUpdater locations={geolocatedLocations} />
+					{geolocatedLocations.map(
+						(location: GeolocatedMapLocation): JSX.Element => (
 							<Marker
-								key={`${location.id}-${location.geocoded.latitude}-${location.geocoded.longitude}`}
-								position={[location.geocoded.latitude, location.geocoded.longitude]}
+								key={`${location.id}-${location.geolocation.latitude}-${location.geolocation.longitude}`}
+								position={[location.geolocation.latitude, location.geolocation.longitude]}
 							>
 								<Popup>
 									<div>
