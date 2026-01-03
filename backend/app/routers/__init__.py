@@ -352,7 +352,7 @@ def generate_data_table_crud_router(
             # Extract the item data and exclude many-to-many fields from main creation
             item_dict = item.model_dump()
             if transform:
-                item_dict = transform(item_dict)
+                item_dict = transform(item_dict, db)
 
             # Remove many-to-many fields from main creation data
             main_data = item_dict.copy()
@@ -430,6 +430,9 @@ def generate_data_table_crud_router(
 
             if not item_dict:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided for update")
+
+            if transform:
+                item_dict = transform(item_dict, db)
 
             # Separate main fields from many-to-many fields
             main_data = item_dict.copy()

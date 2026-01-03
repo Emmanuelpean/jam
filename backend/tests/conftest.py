@@ -11,6 +11,7 @@ and providing the necessary utilities for seamless interactions with the applica
 import datetime as dt
 import os
 from typing import Any, Generator
+from unittest.mock import patch
 
 import pytest
 from fastapi import status
@@ -25,9 +26,18 @@ from app.config import settings
 from app.main import app
 from app.oauth2 import create_access_token
 from app.utils import hash_token
+from tests.geolocation import mock_geocoding_side_effect
 from tests.utils import create_data as crd
 from tests.utils import test_data as td
 from tests.utils.seed_database import reset_database
+
+
+@pytest.fixture(autouse=True)
+def mock_geocoding_for_all_tests() -> Generator[None, Any, None]:
+    """Mock geocoding API calls for all tests automatically"""
+    with patch("app.geolocation.call_geocoding_api", side_effect=mock_geocoding_side_effect):
+        yield
+
 
 # ---------------------------------------------------- TEST DATABASE ---------------------------------------------------
 
@@ -296,7 +306,14 @@ def test_aggregators(session, test_users) -> list[models.Aggregator]:
 
 
 @pytest.fixture
-def test_locations(session, test_users) -> list[models.Location]:
+def test_geolocations(session) -> list[models.Geolocation]:
+    """Create test geolocation data"""
+
+    return crd.create_geolocations(session)
+
+
+@pytest.fixture
+def test_locations(session, test_users, test_geolocations) -> list[models.Location]:
     """Create test location data"""
 
     return crd.create_locations(session, test_users)

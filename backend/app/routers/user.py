@@ -15,11 +15,13 @@ from app.routers.utils import get_retry_remaining_seconds, generate_token, check
 # -------------------------------------------------------- USERS -------------------------------------------------------
 
 
-def transform_user_data(data: dict):
+def transform_user_data(data: dict, db: Session):
     """Transform user data before creating or updating a user.
     :param data: The user data to transform.
+    :param db: The database session
     :returns: The transformed user data."""
 
+    _ = db
     if "password" in data:
         data["password"] = utils.hash_password(data["password"])
     return data
@@ -185,7 +187,7 @@ def update_current_user_profile(
     password_changed = False
 
     # Hash password if it's being updated
-    user_update_dict = transform_user_data(user_update_dict)
+    user_update_dict = transform_user_data(user_update_dict, db)
 
     # Determine if the user is updating the password or email
     requires_password_check = "password" in user_update_dict or "email" in user_update_dict

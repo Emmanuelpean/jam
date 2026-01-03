@@ -30,6 +30,7 @@ from app.job_email_scraping.models import (
 )
 from app.service_runner import ServiceRunner
 from app.utils import AppLogger
+from app.geolocation import geocode_location
 
 SERVICE_NAME = "email_scraper_service"
 
@@ -45,7 +46,6 @@ class JobEmailScraper(EmailService):
         self.location_parser = LocationParser()
         self.logger = AppLogger.create_service_logger(SERVICE_NAME, "INFO")
         self.db = next(get_db()) if db is None else db
-        self.countries = utils.open_json("app/data/countries.json")
         self.currencies = utils.open_json("app/data/currencies.json")
 
     @property
@@ -179,9 +179,6 @@ class JobEmailScraper(EmailService):
             self.db.commit()
             self.db.refresh(email_record)
 
-            # Delete the email from the inbox after saving to DB
-            # self.delete_email(message_id)  # TODO to uncomment
-
             return email_record, True
 
     # ------------------------------------------------- JOB PROCESSING -------------------------------------------------
@@ -197,15 +194,15 @@ class JobEmailScraper(EmailService):
         raw_location = job_result.location
         parsed_location, attendance_type = self.location_parser.parse_location(raw_location)
         result["location"] = raw_location
-        result["location_postcode"] = parsed_location.postcode
-        result["location_city"] = parsed_location.city
         result["attendance_type"] = attendance_type
-        result["location_country"] = None
-        if parsed_location.country:
-            for country in self.countries:
-                if parsed_location.country.lower() == country["name"].lower():
-                    result["location_country"] = country["name"]
-                    break
+
+        if parsed_location:
+            geolocation = geocode_location(parsed_location, self.db)
+            if geolocation:
+                result["geolocation_id"] = geolocation.id
+                result["location_postcode"] = geolocation.postcode
+                result["location_city"] = geolocation.city
+                result["location_country"] = geolocation.country
 
         # Salary
         result["salary_min"] = job_result.job.salary.min_amount

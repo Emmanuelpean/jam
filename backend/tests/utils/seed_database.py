@@ -7,28 +7,7 @@ import sys
 from sqlalchemy import text, inspect
 
 from app.database import engine, session_local, Base
-from tests.utils.create_data import (
-    create_users,
-    create_settings,
-    create_companies,
-    create_locations,
-    create_aggregators,
-    create_keywords,
-    create_people,
-    create_jobs,
-    create_files,
-    create_interviews,
-    create_job_alert_emails,
-    create_scraped_jobs,
-    create_job_scraping_service_logs,
-    create_job_application_updates,
-    create_job_scraping_platform_stats,
-    create_job_scraping_service_errors,
-    create_user_qualifications,
-    create_job_ratings,
-    create_speculative_applications,
-    create_scraping_filters,
-)
+import tests.utils.create_data as crd
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -73,33 +52,34 @@ def seed_database() -> None:
 
     try:
         # App data
-        users = create_users(db, None, 12)
-        settings = create_settings(db)
+        users = crd.create_users(db, None, 12)
+        settings = crd.create_settings(db)
 
         # Table data
-        keywords = create_keywords(db, users)
-        aggregators = create_aggregators(db, users)
-        locations = create_locations(db, users)
-        companies = create_companies(db, users)
-        people = create_people(db, users, companies)
-        files = create_files(db, users)
-        jobs = create_jobs(db, keywords, people, users, companies, locations, aggregators, files)
-        interviews = create_interviews(db, people, users, locations, jobs)
-        job_application_updates = create_job_application_updates(db, users, jobs)
-        user_qualifications = create_user_qualifications(db, users)
-        speculative_applications = create_speculative_applications(db, users, people)
+        keywords = crd.create_keywords(db, users)
+        aggregators = crd.create_aggregators(db, users)
+        geolocations = crd.create_geolocations(db)
+        locations = crd.create_locations(db, users)
+        companies = crd.create_companies(db, users)
+        people = crd.create_people(db, users, companies)
+        files = crd.create_files(db, users)
+        jobs = crd.create_jobs(db, keywords, people, users, companies, locations, aggregators, files)
+        interviews = crd.create_interviews(db, people, users, locations, jobs)
+        job_application_updates = crd.create_job_application_updates(db, users, jobs)
+        user_qualifications = crd.create_user_qualifications(db, users)
+        speculative_applications = crd.create_speculative_applications(db, users, people)
 
         # EIS data
-        service_logs = create_job_scraping_service_logs(db)
-        platform_stats = create_job_scraping_platform_stats(db, service_logs)
-        eis_service_errors = create_job_scraping_service_errors(db, service_logs)
-        alert_emails = create_job_alert_emails(db, users, service_logs)
-        scraping_filters = create_scraping_filters(db, users)
-        scraped_jobs = create_scraped_jobs(db, alert_emails, users, scraping_filters)
+        service_logs = crd.create_job_scraping_service_logs(db)
+        platform_stats = crd.create_job_scraping_platform_stats(db, service_logs)
+        eis_service_errors = crd.create_job_scraping_service_errors(db, service_logs)
+        alert_emails = crd.create_job_alert_emails(db, users, service_logs)
+        scraping_filters = crd.create_scraping_filters(db, users)
+        scraped_jobs = crd.create_scraped_jobs(db, alert_emails, users, scraping_filters)
 
         # Job Ratings data
-        job_rating_service_logs = create_job_scraping_service_logs(db)
-        job_ratings = create_job_ratings(db, users, scraped_jobs, user_qualifications, job_rating_service_logs)
+        job_rating_service_logs = crd.create_job_scraping_service_logs(db)
+        job_ratings = crd.create_job_ratings(db, users, scraped_jobs, user_qualifications, job_rating_service_logs)
 
         print("\n" + "=" * 50)
         print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
@@ -107,6 +87,7 @@ def seed_database() -> None:
         print(f"Users: {len(users)}")
         print(f"Settings: {len(settings)}")
         print(f"Companies: {len(companies)}")
+        print(f"Geolocations: {len(geolocations)}")
         print(f"Locations: {len(locations)}")
         print(f"Aggregators: {len(aggregators)}")
         print(f"Keywords: {len(keywords)}")

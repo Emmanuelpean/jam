@@ -281,6 +281,18 @@ class CompanyUpdate(CompanyCreate):
     name: str | None = None
 
 
+# ------------------------------------------------------ GEOLOCATION ------------------------------------------------------
+
+
+class GeolocationOut(BaseModel):
+    """Geolocation output schema"""
+
+    query: str
+    latitude: float
+    longitude: float
+    formatted_address: str | None = None
+
+
 # ------------------------------------------------------ LOCATION ------------------------------------------------------
 
 
@@ -296,6 +308,7 @@ class LocationOut(LocationCreate, OwnedOut):
     """Location output schema with job and interview data"""
 
     name: str | None = None
+    geolocation: GeolocationOut | None = None
     jobs: list[OwnedOut] = []
     interviews: list[OwnedOut] = []
 

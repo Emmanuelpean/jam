@@ -363,9 +363,13 @@ class Location(Owned, Base):
     city = Column(String, nullable=True)
     country = Column(String, nullable=True)
 
+    # Foreign keys
+    geolocation_id = Column(Integer, ForeignKey("geolocation.id"), nullable=True)
+
     # Relationships
     jobs = relationship("Job", back_populates="location")
     interviews = relationship("Interview", back_populates="location")
+    geolocation = relationship("Geolocation")
 
     @hybrid_property
     def name(self) -> str:
@@ -388,6 +392,32 @@ class Location(Owned, Base):
         ),
         UniqueConstraint("owner_id", "city", "postcode", "country", name="uq_owner_location_unique"),
     )
+
+
+class Geolocation(Base, CommonBase):
+    """Cache for geocoded location data to avoid redundant API calls.
+
+    Attributes:
+    -----------
+    - `query` (str, unique): The location query string used for geocoding
+    - `latitude` (float): Latitude coordinate
+    - `longitude` (float): Longitude coordinate
+    - `postcode` (str, optional): Postcode of the location
+    - `suburb` (str, optional): Suburb of the location
+    - `city` (str, optional): City of the location
+    - `county` (str, optional): County of the location
+    - `state` (str, optional): State of the location
+    - `country` (str, optional): Country of the location"""
+
+    query = Column(String, nullable=False, unique=True, index=True)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    postcode = Column(String, nullable=True)
+    suburb = Column(String, nullable=True)
+    city = Column(String, nullable=True)
+    county = Column(String, nullable=True)
+    state = Column(String, nullable=True)
+    country = Column(String, nullable=True)
 
 
 class File(Owned, Base):
