@@ -213,7 +213,7 @@ const Dashboard: React.FC = () => {
 			</Row>
 			{currentUser?.toast_active && (
 				<Row className="g-4 mb-4">
-					<Col lg={12} className="table-column order-lg-1">
+					<Col lg={12} className="table-column order-lg-1" style={{ height: "700px !important" }}>
 						<Card
 							className="shadow-sm border-0 flex-grow-1 d-flex flex-column"
 							style={{ height: "100%", minHeight: 0 }}
