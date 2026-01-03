@@ -56,6 +56,11 @@ class Settings(BaseSettings):
     # Apify
     apify_api_key: str
 
+    # Stripe
+    stripe_secret_key: str
+    stripe_webhook_secret: str
+    stripe_toast_price_id: str
+
     model_config = SettingsConfigDict(
         extra="ignore",
         env_file=Path(__file__).parent.parent / ".env",

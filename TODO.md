@@ -22,7 +22,8 @@
 * [ ] Move the scrollbar inside the tables so that the header is always visible
 * [ ] Add the ability to filter by columns and hide rejected jobs
 
-* [ ] Write script to add geolocation to existing locations
+* [X] Write script to add geolocation to existing locations
 * [ ] Rewrite the test data for the test user
 * [ ] Add payment system for toast
 * [ ] Change the service runner to work with multiple workers
+* [ ] Limit the number of scraped jobs per user per month, and set limits for AI rating
