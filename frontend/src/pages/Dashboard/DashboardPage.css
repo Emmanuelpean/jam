@@ -81,12 +81,10 @@
     z-index: 0;
 }
 
-/* Responsive adjustments */
-@media (width >= 992px) {
-    .table-column, .activity-column {
-        height: 500px;
-        min-height: 0;
-    }
+.table-column,
+.activity-column {
+    height: 500px;
+    min-height: 0;
 }
 
 @media (width <= 991px) {

@@ -364,7 +364,7 @@ class Location(Owned, Base):
     country = Column(String, nullable=True)
 
     # Foreign keys
-    geolocation_id = Column(Integer, ForeignKey("geolocation.id"), nullable=True)
+    geolocation_id = Column(Integer, ForeignKey("geolocation.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     jobs = relationship("Job", back_populates="location")
