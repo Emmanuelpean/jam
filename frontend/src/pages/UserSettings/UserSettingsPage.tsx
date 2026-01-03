@@ -14,6 +14,7 @@ import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ValidationErrors } from "../../components/modals/DataModal/DataModal";
 import { useFormOptions } from "../../components/rendering/form/FormOptions";
 import { UserQualification } from "../../services/Schemas";
+import { CheckoutModal } from "./CheckoutModal";
 
 interface UserFormData {
 	default_currency: string;
@@ -55,6 +56,7 @@ const UserSettingsPage: React.FC = () => {
 		education: "",
 	}));
 	const [activeTab, setActiveTab] = useState<string>("settings");
+	const [showCheckout, setShowCheckout] = useState(false);
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState(false);
@@ -593,6 +595,22 @@ const UserSettingsPage: React.FC = () => {
 										</p>
 									</div>
 								</div>
+								{currentUser?.email && (
+									<div className="container mt-5">
+										<h2>Upgrade to Premium</h2>
+										<p>Get access to all premium features for £5/month</p>
+
+										<Button variant="primary" size="lg" onClick={() => setShowCheckout(true)}>
+											Subscribe Now
+										</Button>
+
+										<CheckoutModal
+											show={showCheckout}
+											onHide={() => setShowCheckout(false)}
+											userEmail={currentUser.email}
+										/>
+									</div>
+								)}
 
 								{/* Download Section */}
 								<div className="settings-section">

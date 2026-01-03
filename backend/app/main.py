@@ -12,10 +12,11 @@ from app.job_email_scraping import routers as eis_routers
 from app.job_rating import routers as job_rating_routers
 from app.model_registry import Base
 from app.routers import data_tables, user, auth, export, settings, others
+from app.payments import routers as payment_routers
 
 app = FastAPI()
 
-# Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 
 def get_allowed_origins() -> list[str]:
@@ -76,6 +77,9 @@ app.include_router(settings.settings_router)
 
 # Others
 app.include_router(others.router)
+
+# Stripe
+app.include_router(payment_routers.payment_router)
 
 # Testing
 if os.getenv("TEST_MODE") == "true":
