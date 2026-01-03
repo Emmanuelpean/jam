@@ -10,10 +10,8 @@ import subprocess
 import sys
 import threading
 from pathlib import Path
-from typing import Generator
 
 import psutil
-import pytest
 import requests
 from selenium.webdriver import Keys, ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
@@ -31,50 +29,14 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 from react_select import ReactSelect
-from app.config import settings
 
-# noinspection PyUnresolvedReferences
 from tests.conftest import (
     session,
-    models,
-    client,
-    tokens,
-    test_settings,
-    test_interviews,
-    test_job_application_updates,
-    test_jobs,
     database_url,
     test_users,
-    worker_database_name,
     engine,
-    test_keywords,
-    test_regular_user,
-    test_job_ratings,
-    test_files,
-    test_scraped_jobs,
-    test_persons,
-    test_aggregators,
-    test_companies,
-    test_locations,
-    test_platform_stats,
-    test_scraping_filters,
-    test_admin_user,
-    test_inactive_user,
-    test_user_qualifications,
-    test_jobs_unauthorised,
-    test_persons_unauthorised,
-    test_interviews_unauthorised,
-    test_unverified_token_user,
-    test_demo_user,
-    test_job_alert_emails,
-    test_speculative_applications,
-    test_eis_service_logs,
-    test_eis_service_errors,
-    test_job_rating_service_logs,
-    test_unverified_user,
-    test_user_change_email_token_user,
-    test_job_application_updates_unauthorised,
 )
+from tests.conftest import *
 
 
 LOGS_DIR = Path(os.path.join(os.path.dirname(settings.log_directory), "test_logs"))
