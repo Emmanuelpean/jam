@@ -786,6 +786,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/3789012345",
         "scrape_datetime": "2025-08-15T14:32:18.123456+00:00",
         "service_log_id": 1,
+        "geolocation_id": 4,  # San Francisco, United States
     },
     {
         "external_job_id": "987654321",
@@ -821,6 +822,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/1122334455",
         "scrape_datetime": "2025-08-28T16:20:45.456789+00:00",
         "service_log_id": 1,
+        "geolocation_id": 1,  # New York, United States
     },
     {
         "external_job_id": "5566778899",
@@ -890,6 +892,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://linkedin.com/jobs/view/4123456789",
         "scrape_datetime": "2025-09-01T10:15:30.123456+00:00",
         "service_log_id": 1,
+        "geolocation_id": 3,  # London, United Kingdom
     },
     {
         "external_job_id": "totaljobs_567890",
@@ -909,6 +912,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://totaljobs.com/job/flutter-healthcare-567890",
         "scrape_datetime": "2025-09-03T14:22:45.789012+00:00",
         "service_log_id": 1,
+        "geolocation_id": 16,  # United Kingdom
     },
     {
         "external_job_id": "reed_345678",
@@ -928,6 +932,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://reed.co.uk/jobs/ml-engineer-edinburgh/345678",
         "scrape_datetime": "2025-09-05T09:33:12.345678+00:00",
         "service_log_id": 1,
+        "geolocation_id": 15,  # Edinburgh, United Kingdom
     },
     {
         "external_job_id": "cvlib_678901",
@@ -959,6 +964,7 @@ SCRAPED_JOB_DATA = [
         "url": "https://jobsite.co.uk/job/fullstack-js-manchester-901234",
         "scrape_datetime": "2025-09-09T13:20:15.567890+00:00",
         "service_log_id": 1,
+        "geolocation_id": 14,  # Manchester, United Kingdom
     },
     {
         "external_job_id": "soft123456789",
@@ -984,6 +990,7 @@ SCRAPED_JOB_DATA = [
         "location": "London",
         "location_city": "London",
         "filter_id": 2,
+        "geolocation_id": 3,  # London, United Kingdom
     },
     {
         "external_job_id": "soft1sdf23456789r3",
@@ -1159,6 +1166,7 @@ for i in range(50):
             job["location_city"] = random.choice(cities)
             job["location_country"] = "United Kingdom"
             job["location"] = f"{job['location_city']}, UK"
+            job["geolocation_id"] = 3
 
         # 60% have attendance type specified
         job["attendance_type"] = random.choice(attendance_types)

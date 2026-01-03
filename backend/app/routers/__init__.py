@@ -352,7 +352,7 @@ def generate_data_table_crud_router(
             # Extract the item data and exclude many-to-many fields from main creation
             item_dict = item.model_dump()
             if transform:
-                item_dict = transform(item_dict, db)
+                item_dict.update(transform(item_dict, db))
 
             # Remove many-to-many fields from main creation data
             main_data = item_dict.copy()
@@ -431,9 +431,6 @@ def generate_data_table_crud_router(
             if not item_dict:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided for update")
 
-            if transform:
-                item_dict = transform(item_dict, db)
-
             # Separate main fields from many-to-many fields
             main_data = item_dict.copy()
             m2m_data = {}
@@ -442,6 +439,13 @@ def generate_data_table_crud_router(
                 for field_name in many_to_many_fields.keys():
                     if field_name in main_data:
                         m2m_data[field_name] = main_data.pop(field_name)
+
+            # Apply transform to the merged data (existing entry + updates)
+            if transform:
+                merged_data = {c.name: getattr(entry, c.name) for c in entry.__table__.columns}
+                merged_data.update(main_data)
+                transformed_data = transform(merged_data, db)
+                main_data.update(transformed_data)
 
             # Update the record
             for field, value in main_data.items():

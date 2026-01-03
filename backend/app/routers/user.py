@@ -15,7 +15,7 @@ from app.routers.utils import get_retry_remaining_seconds, generate_token, check
 # -------------------------------------------------------- USERS -------------------------------------------------------
 
 
-def transform_user_data(data: dict, db: Session):
+def transform_user_data(data: dict, db: Session) -> dict:
     """Transform user data before creating or updating a user.
     :param data: The user data to transform.
     :param db: The database session
@@ -23,8 +23,9 @@ def transform_user_data(data: dict, db: Session):
 
     _ = db
     if "password" in data:
-        data["password"] = utils.hash_password(data["password"])
-    return data
+        return {"password": utils.hash_password(data["password"])}
+    else:
+        return {}
 
 
 user_router = generate_data_table_crud_router(
@@ -187,7 +188,8 @@ def update_current_user_profile(
     password_changed = False
 
     # Hash password if it's being updated
-    user_update_dict = transform_user_data(user_update_dict, db)
+    transformed_data = transform_user_data(user_update_dict, db)
+    user_update_dict.update(transformed_data)
 
     # Determine if the user is updating the password or email
     requires_password_check = "password" in user_update_dict or "email" in user_update_dict
