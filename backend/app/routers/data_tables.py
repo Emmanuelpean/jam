@@ -3,6 +3,7 @@
 import base64
 
 from fastapi import Depends, status, HTTPException, Response
+from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 from app import models, database, oauth2, schemas
