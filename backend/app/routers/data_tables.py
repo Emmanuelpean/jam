@@ -3,12 +3,11 @@
 import base64
 
 from fastapi import Depends, status, HTTPException, Response
-from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 from app import models, database, oauth2, schemas
-from app.routers import generate_data_table_crud_router
 from app.geolocation import geocode_location
+from app.routers import generate_data_table_crud_router
 
 # ---------------------------------------------------- SIMPLE TABLES ---------------------------------------------------
 
@@ -44,9 +43,7 @@ company_router = generate_data_table_crud_router(
 
 
 # Location router
-def transform_location(
-    location_data: dict, db: Session
-) -> dict:  # TODO issue where does not work if only partial data are sent in update
+def transform_location(location_data: dict, db: Session) -> dict:
     """Geolocate the location data before creating/updating the record.
     :param location_data: The location data dictionary.
     :param db: The database session.
@@ -55,8 +52,7 @@ def transform_location(
     parts = [location_data.get("postcode"), location_data.get("city"), location_data.get("country")]
     query_string = ", ".join([part for part in parts if part])
     geolocation = geocode_location(query_string, db)
-    location_data["geolocation_id"] = geolocation.id if geolocation else None
-    return location_data
+    return {"geolocation_id": geolocation.id if geolocation else None}
 
 
 location_router = generate_data_table_crud_router(

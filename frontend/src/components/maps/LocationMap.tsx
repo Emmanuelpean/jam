@@ -43,22 +43,43 @@ type GeolocatedMapLocation = MapLocation & { geolocation: GeoLocation };
 const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpdaterProps) => {
 	const map = useMap();
 
-	useEffect((): void => {
-		const geolocatedLocations: GeolocatedMapLocation[] = locations.filter(
-			(location: MapLocation): location is GeolocatedMapLocation => location.geolocation !== null,
-		);
+	useEffect((): (() => void) | void => {
+		const updateView = (): void => {
+			// Check if map container and pane are properly initialized
+			if (!map || !map.getContainer() || !map.getPane("mapPane")) return;
 
-		if (geolocatedLocations.length === 0) {
-			map.setView([20, 0], 2);
-		} else if (geolocatedLocations.length === 1) {
-			const location = geolocatedLocations[0]!;
-			map.setView([location.geolocation.latitude, location.geolocation.longitude], 10);
-		} else {
-			const bounds = L.latLngBounds(
-				geolocatedLocations.map((loc) => [loc.geolocation.latitude, loc.geolocation.longitude]),
+			const geolocatedLocations: GeolocatedMapLocation[] = locations.filter(
+				(location: MapLocation): location is GeolocatedMapLocation => location.geolocation !== null,
 			);
-			map.fitBounds(bounds, { padding: [20, 20] });
-		}
+
+			try {
+				// Stop any ongoing animations first
+				map.stop();
+
+				if (geolocatedLocations.length === 0) {
+					map.setView([20, 0], 2, { animate: false });
+				} else if (geolocatedLocations.length === 1) {
+					const location = geolocatedLocations[0]!;
+					map.setView([location.geolocation.latitude, location.geolocation.longitude], 10, {
+						animate: false,
+					});
+				} else {
+					const bounds = L.latLngBounds(
+						geolocatedLocations.map((loc) => [loc.geolocation.latitude, loc.geolocation.longitude]),
+					);
+					map.fitBounds(bounds, { padding: [20, 20], animate: false });
+				}
+			} catch (e) {
+				console.warn("Map view update failed:", e);
+			}
+		};
+
+		// Wait for next frame to ensure DOM is ready
+		const frameId = requestAnimationFrame(() => {
+			map.whenReady(updateView);
+		});
+
+		return () => cancelAnimationFrame(frameId);
 	}, [locations, map]);
 
 	return null;
@@ -69,10 +90,8 @@ const LocationMap: React.FC<LocationMapProps> = ({
 	height = "400px",
 	scrollWheelZoom = true,
 }: LocationMapProps): JSX.Element => {
-	const geolocatedLocations = locations.filter(
-		(location: MapLocation): location is MapLocation & { geolocation: GeoLocation } =>
-			location.geolocation !== null,
-	);
+	console.log("Rendering LocationMap with locations:", locations);
+	const geolocatedLocations = locations.filter((location: MapLocation) => !!location.geolocation);
 
 	if (geolocatedLocations.length === 0) {
 		return (
@@ -117,10 +136,10 @@ const LocationMap: React.FC<LocationMapProps> = ({
 					/>
 					<MapViewUpdater locations={geolocatedLocations} />
 					{geolocatedLocations.map(
-						(location: GeolocatedMapLocation): JSX.Element => (
+						(location): JSX.Element => (
 							<Marker
-								key={`${location.id}-${location.geolocation.latitude}-${location.geolocation.longitude}`}
-								position={[location.geolocation.latitude, location.geolocation.longitude]}
+								key={`${location.id}-${location.geolocation!.latitude}-${location.geolocation!.longitude}`}
+								position={[location.geolocation!.latitude, location.geolocation!.longitude]}
 							>
 								<Popup>
 									<div>
