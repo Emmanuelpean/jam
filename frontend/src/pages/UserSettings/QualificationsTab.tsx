@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Form } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ValidationErrors } from "../../components/modals/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
@@ -53,7 +53,7 @@ export const QualificationsTab: React.FC = () => {
 				console.error("Error fetching qualification:", error);
 			}
 		};
-		fetchQualifications();
+		fetchQualifications().then();
 	}, [token]);
 
 	const handleInputChange = (e: SyntheticEvent) => {
@@ -79,7 +79,11 @@ export const QualificationsTab: React.FC = () => {
 				interests: formData.interests || null,
 			};
 
-			await userQualificationApi.upsert(qualificationData, token);
+			const apiResult: ApiResponse<UserQualification> = await userQualificationApi.upsert(
+				qualificationData,
+				token,
+			);
+			formData.qualification_id = apiResult.data.id;
 			showToastSuccess("Qualifications saved successfully.");
 		} catch (error) {
 			console.error("Error saving qualifications:", error);
@@ -146,6 +150,7 @@ export const QualificationsTab: React.FC = () => {
 					variant="primary"
 					disabled={submitting}
 					defaultIcon="save"
+					id={"confirm-button"}
 					defaultText={submitting ? "Saving..." : "Save Qualifications"}
 				/>
 			</div>

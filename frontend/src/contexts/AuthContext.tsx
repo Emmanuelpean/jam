@@ -14,6 +14,7 @@ export interface AuthContextType {
 	token: string | null;
 	login: (email: string, password: string) => Promise<GenericResponse>;
 	updateCurrentUser: (userData: Partial<UserData>) => Promise<ApiResponse<UpdateCurrentUserResponse> | null>;
+	fetchUserInfo: (authToken: string) => Promise<void>;
 	logout: () => void;
 	isAuthenticated: boolean;
 }
@@ -50,11 +51,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 	const fetchUserInfo = useCallback(
 		async (authToken: string): Promise<void> => {
-			// Don't fetch if we already have user data and the token hasn't changed
-			if (userFetched && currentUser && token === authToken) {
-				return;
-			}
-
 			try {
 				const userData: ApiResponse<UserData> = await authApi.getCurrentUser(authToken);
 				setCurrentUser({
@@ -132,6 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 	const value: AuthContextType = {
 		currentUser,
+		fetchUserInfo,
 		token,
 		login,
 		logout,

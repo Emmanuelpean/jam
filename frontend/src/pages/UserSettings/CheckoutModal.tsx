@@ -1,8 +1,10 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, JSX, useRef } from "react";
 import { Modal } from "react-bootstrap";
 import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js";
 import { API_BASE_URL } from "../../services/api/Base";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { useAuth } from "../../contexts/AuthContext";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || "");
 
@@ -12,7 +14,15 @@ interface CheckoutModalProps {
 	userEmail: string;
 }
 
-export const CheckoutModal: React.FC<CheckoutModalProps> = ({ show, onHide, userEmail }) => {
+export const CheckoutModal: React.FC<CheckoutModalProps> = ({
+	show,
+	onHide,
+	userEmail,
+}: CheckoutModalProps): JSX.Element => {
+	const { showToastSuccess } = useGlobalToast();
+	const { fetchUserInfo, token } = useAuth();
+	const sessionIdRef = useRef<string | null>(null);
+
 	const fetchClientSecret = useCallback(async () => {
 		try {
 			const response: Response = await fetch(API_BASE_URL + "/payments/create-subscription-checkout", {
@@ -26,6 +36,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ show, onHide, user
 			}
 
 			const data = await response.json();
+			// Extract and store session ID from client_secret
+			sessionIdRef.current = data.clientSecret.split("_secret_")[0];
 			if (!data.clientSecret) {
 				new Error("No clientSecret in response");
 			}
@@ -47,7 +59,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ show, onHide, user
 		return () => clearInterval(interval);
 	}, [show]);
 
-	const options = { fetchClientSecret };
+	// noinspection JSUnusedGlobalSymbols
+	const options = {
+		fetchClientSecret,
+		onComplete: async () => {
+			if (sessionIdRef.current) {
+				await fetch(`${API_BASE_URL}/payments/check-subscription/${sessionIdRef.current}`);
+			}
+			fetchUserInfo(token!).then(() => {
+				showToastSuccess("Subscription successful! Enjoy your premium features!");
+				onHide();
+			});
+		},
+	};
 
 	return (
 		<Modal show={show} onHide={onHide} size="lg" centered={true} backdrop="static">

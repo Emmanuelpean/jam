@@ -465,6 +465,24 @@ class BaseUtils(object):
             else:
                 raise AssertionError(f"Could not find element {element_id}\n" f"Possible IDs: {all_ids}")
 
+    def check_element_exists(
+        self,
+        element_id: str,
+        selector: str = By.ID,
+        timeout: float = 0.1,
+    ) -> bool:
+        """Check if an element exists by its ID.
+        :param element_id: ID of the element to check
+        :param selector: Selector to use for finding the element
+        :param timeout: How long to wait before raising an error"""
+
+        try:
+            wait = WebDriverWait(self.driver, timeout)
+            wait.until(ec.presence_of_element_located((selector, element_id)))
+            return True
+        except TimeoutException:
+            return False
+
     def _get_element_diagnostics(self, element: WebElement) -> str:
         """Get diagnostic information about why an element isn't clickable"""
 
@@ -1464,6 +1482,26 @@ class AuthentificationUtils(BaseUtilsClass):
 class UserSettingsUtils(BaseUtilsClass):
     """Test class for the User Settings Page"""
 
+    def go_to_account_tab(self) -> None:
+        """Get the account tab button"""
+
+        self.get_element("account-tab").click()
+
+    def go_to_preferences_tab(self) -> None:
+        """Get the preferences tab button"""
+
+        self.get_element("preferences-tab").click()
+
+    def go_to_qualifications_tab(self) -> None:
+        """Get the qualifications tab button"""
+
+        self.get_element("qualifications-tab").click()
+
+    def go_to_premium_tab(self) -> None:
+        """Get the premium tab button"""
+
+        self.get_element("premium-tab").click()
+
     @property
     def current_password(self) -> WebElement:
         """Get the current password field"""
@@ -1542,6 +1580,36 @@ class UserSettingsUtils(BaseUtilsClass):
         """Assert that the given error message is displayed on the page"""
 
         self._assert_message("confirm_password-", error_message)
+
+    @property
+    def experience_input(self) -> WebElement:
+        """Get the experience input field"""
+
+        return self.get_element("experience")
+
+    @property
+    def skills_input(self) -> WebElement:
+        """Get the skills input field"""
+
+        return self.get_element("skills")
+
+    @property
+    def qualities_input(self) -> WebElement:
+        """Get the qualities input field"""
+
+        return self.get_element("qualities")
+
+    @property
+    def education_input(self) -> WebElement:
+        """Get the education input field"""
+
+        return self.get_element("education")
+
+    @property
+    def interests_input(self) -> WebElement:
+        """Get the interests input field"""
+
+        return self.get_element("interests")
 
 
 class FollowUpEmailModalUtils(BaseUtilsClass):

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, Form } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ValidationErrors } from "../../components/modals/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
@@ -136,14 +136,17 @@ export const PreferencesTab: React.FC = () => {
 			<h5 className="mb-3">
 				<i className="bi bi-palette"></i> Appearance
 			</h5>
-			<strong>{findItemByKey(THEMES, currentUser?.theme)?.name}</strong> is not your favourite flavour of JAM?!
-			You can easily pick another theme by clicking on the JAM logo in the sidebar.
+			<p id="theme-hint">
+				<strong>{findItemByKey(THEMES, currentUser?.theme)?.name}</strong> is not your favourite flavour of
+				JAM?! You can easily pick another theme by clicking on the JAM logo in the sidebar.
+			</p>
 			<div className="mt-4">
 				<ActionButton
 					type="submit"
 					variant="primary"
 					disabled={submitting}
 					defaultIcon="save"
+					id={"confirm-button"}
 					defaultText={submitting ? "Saving..." : "Save Preferences"}
 				/>
 			</div>

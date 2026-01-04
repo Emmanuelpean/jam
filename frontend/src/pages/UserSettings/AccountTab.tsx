@@ -264,6 +264,7 @@ export const AccountTab: React.FC = () => {
 					variant="primary"
 					disabled={submitting}
 					defaultIcon="save"
+					id={"confirm-button"}
 					defaultText={submitting ? "Saving..." : "Save Account Settings"}
 				/>
 			</div>

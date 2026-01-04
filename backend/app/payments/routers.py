@@ -1,5 +1,7 @@
 """Payment-related API routes using Stripe for subscription management."""
 
+import os
+
 import stripe
 from fastapi import HTTPException, Request, APIRouter, Depends
 from pydantic import BaseModel
@@ -49,11 +51,49 @@ async def create_subscription_checkout(
             locale="auto",
             ui_mode="embedded",
             allow_promotion_codes=False,
-            return_url=f"{settings.backend_url}/return?session_id={{CHECKOUT_SESSION_ID}}",
+            redirect_on_completion="never",
         )
 
         return {"clientSecret": checkout_session.client_secret}
     except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@payment_router.get("/check-subscription/{session_id}")
+async def check_subscription(
+    session_id: str,
+    db: Session = Depends(get_db),
+) -> dict:
+    """Check if subscription is active by session ID and update user.
+    :param session_id: Stripe checkout session ID
+    :param db: Database session
+    :return: dict with subscription status"""
+
+    if not os.getenv("TEST_MODE"):
+        return {"subscription_active": True, "user_updated": False}
+    try:
+        # Retrieve the session from Stripe
+        session = await stripe.checkout.Session.retrieve_async(session_id, expand=["subscription", "customer"])
+
+        # Check if payment was successful
+        if session.status == "complete" and session.subscription:
+            customer_email = session.customer.email
+
+            # Update user in database
+            user = db.query(User).filter(User.email == customer_email).first()
+            if user:
+                user.toast_active = True
+                db.commit()
+                print(f"User {customer_email} subscription activated via session check")
+                return {"subscription_active": True, "user_updated": True}
+            else:
+                print(f"User not found for email: {customer_email}")
+                return {"subscription_active": True, "user_updated": False}
+
+        return {"subscription_active": False, "user_updated": False}
+
+    except Exception as e:
+        print(f"Error checking subscription: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -106,3 +146,42 @@ async def stripe_webhook(
             db.commit()
 
     return {"status": "success"}
+
+
+@payment_router.post("/cancel-subscription")
+async def cancel_subscription(request: SubscriptionRequest, db: Session = Depends(get_db)) -> dict:
+    """Cancel a customer's subscription.
+    :param request: SubscriptionRequest with customer email
+    :param db: Database session
+    :return: dict with cancellation status"""
+
+    try:
+        # Get customer
+        customers = await stripe.Customer.list_async(email=request.customer_email, limit=1)
+
+        if not customers.data:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        customer = customers.data[0]
+
+        # Get active subscriptions
+        subscriptions = await stripe.Subscription.list_async(customer=customer.id, status="active", limit=1)
+
+        if not subscriptions.data:
+            raise HTTPException(status_code=404, detail="No active subscription found")
+
+        subscription = subscriptions.data[0]
+
+        # Cancel at period end (recommended) or immediately
+        canceled_sub = await stripe.Subscription.modify_async(subscription.id, cancel_at_period_end=False)
+
+        # Update database
+        user = db.query(User).filter(User.email == request.customer_email).first()
+        if user:
+            user.toast_active = False
+            db.commit()
+
+        return {"status": "canceled", "cancel_at": canceled_sub.cancel_at}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
