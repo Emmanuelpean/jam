@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import {
 	aggregatorsApi,
 	companiesApi,
+	configApi,
 	countriesApi,
 	currenciesApi,
 	interviewsApi,
@@ -95,6 +96,7 @@ export const entityTypeToName = (
 	entityType: EntityType,
 	dataContext: DataContextValue,
 ): ((data: JamData) => string) => {
+	// noinspection JSUnusedGlobalSymbols
 	const nameMap: Record<EntityType, (data: JamData) => string> = {
 		keyword: (data: JamData): string => (data as KeywordData).name,
 		aggregator: (data: JamData): string => (data as AggregatorData).name,
@@ -165,6 +167,7 @@ export interface DataContextValue {
 	users: UserData[];
 	countries: Country[];
 	currencies: Currency[];
+	config: any;
 
 	error: ApiError | null;
 
@@ -194,6 +197,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const [_scrapedJobs, setScrapedJobs] = useState<any[]>([]);
 	const [currencies, setCurrencies] = useState<Currency[]>([]);
 	const [countries, setCountries] = useState<Country[]>([]);
+	const [config, setConfig] = useState<any>(null);
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
@@ -345,6 +349,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			>,
 			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Currency[]>,
 			{ promise: countriesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Country[]>,
+			{ promise: configApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<any>,
 		];
 
 		// Add admin-only calls if user is admin
@@ -392,6 +397,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				scrapingFiltersData,
 				currenciesData,
 				countriesData,
+				configData,
 				...adminData
 			] = results;
 
@@ -407,6 +413,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			setScrapingFilters(scrapingFiltersData.data || []);
 			setCurrencies(currenciesData.data || []);
 			setCountries(countriesData.data || []);
+			setConfig(configData.data || []);
 			if (currentUser?.is_admin) {
 				setSettings(adminData[0].data || []);
 				setUsers(adminData[1].data || []);
@@ -543,6 +550,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				speculativeApplications,
 				settings,
 				users,
+				config,
 				error,
 				updateEntity,
 				deleteEntity,

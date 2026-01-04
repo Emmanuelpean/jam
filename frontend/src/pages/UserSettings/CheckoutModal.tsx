@@ -15,7 +15,7 @@ interface CheckoutModalProps {
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({ show, onHide, userEmail }) => {
 	const fetchClientSecret = useCallback(async () => {
 		try {
-			const response = await fetch(API_BASE_URL + "/payments/create-subscription-checkout", {
+			const response: Response = await fetch(API_BASE_URL + "/payments/create-subscription-checkout", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ customer_email: userEmail }),
@@ -26,8 +26,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ show, onHide, user
 			}
 
 			const data = await response.json();
-			console.log("Backend response:", data); // Debug log
-
 			if (!data.clientSecret) {
 				new Error("No clientSecret in response");
 			}
@@ -52,9 +50,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ show, onHide, user
 	const options = { fetchClientSecret };
 
 	return (
-		<Modal show={show} onHide={onHide} size="lg" centered backdrop="static">
+		<Modal show={show} onHide={onHide} size="lg" centered={true} backdrop="static">
 			<Modal.Header closeButton>
-				<Modal.Title>Subscribe to TOAST Premium</Modal.Title>
+				<Modal.Title>Subscribe to TOAST</Modal.Title>
 			</Modal.Header>
 
 			<Modal.Body style={{ minHeight: "500px", position: "relative", zIndex: 1 }}>
