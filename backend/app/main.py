@@ -76,7 +76,8 @@ app.include_router(export.router)
 app.include_router(settings.settings_router)
 
 # Others
-app.include_router(others.router)
+app.include_router(others.other_router)
+app.include_router(others.config_router)
 
 # Stripe
 app.include_router(payment_routers.payment_router)

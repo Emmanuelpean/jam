@@ -56,6 +56,10 @@ html {
     justify-content: center;
 }
 
+.tooltip-inner {
+    max-width: 500px !important;
+}
+
 /* .bi-question-circle { */
 
 /*    vertical-align: -0.2em; */

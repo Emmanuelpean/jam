@@ -19,7 +19,6 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int
 
     # Application settings
-    min_password_length: int
     max_file_size_mb: int
     log_directory: str
 

@@ -5,7 +5,7 @@ interface HelpBubbleProps {
 	helpText: string;
 	placement?: "top" | "bottom" | "left" | "right";
 	size?: string;
-	container?: HTMLElement; // Add this prop
+	container?: HTMLElement;
 }
 
 export const HelpBubble: React.FC<HelpBubbleProps> = ({ helpText, placement = "right", size = "14px", container }) => {
