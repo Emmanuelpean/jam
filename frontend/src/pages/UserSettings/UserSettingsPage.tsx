@@ -54,6 +54,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 							!(item.conditional === false) ? (
 								<button
 									key={item.id}
+									id={`${item.id}-tab`}
 									type="button"
 									className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${
 										activeTab === item.id ? "active" : ""

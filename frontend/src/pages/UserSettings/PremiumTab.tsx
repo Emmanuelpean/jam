@@ -1,10 +1,12 @@
-import React, { JSX } from "react";
+import React, { JSX, useState } from "react";
 import { Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { CheckoutModal } from "./CheckoutModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { API_BASE_URL } from "../../services/api/Base";
+import { useAlert } from "../../contexts/AlertContext";
 
 interface PremiumTabProps {
 	showCheckout: boolean;
@@ -15,15 +17,48 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 	showCheckout,
 	setShowCheckout,
 }: PremiumTabProps): JSX.Element => {
-	const { currentUser } = useAuth();
+	const { currentUser, fetchUserInfo, token } = useAuth();
 	const dataContext: DataContextValue = useDataContext();
-	const { showToastSuccess } = useGlobalToast();
+	const { showToastSuccess, showToastError } = useGlobalToast();
+	const [loading, setLoading] = useState<boolean>(false);
+	const { showConfirm } = useAlert();
 
 	const handleRightClick = (e: any, email: string) => {
 		e.preventDefault();
 		navigator.clipboard.writeText(email).then((_: void): void => {
-			showToastSuccess(`${email} to clipboard`);
+			showToastSuccess(`${email} copied to clipboard`);
 		});
+	};
+
+	const handleUnsubscribe = async (): Promise<void> => {
+		try {
+			const result: boolean = await showConfirm({
+				title: "Confirm Unsubscription",
+				message: `Are you sure you want to cancel your Premium subscription? You will lose access to all premium features on the ${currentUser?.premium_started_at}`,
+				confirmText: "Yes, Cancel Subscription",
+				cancelText: "No, Keep Subscription",
+			});
+			if (result) {
+				setLoading(true);
+				const response: Response = await fetch(API_BASE_URL + "/payments/cancel-subscription", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ customer_email: currentUser?.email }),
+				});
+
+				if (!response.ok) {
+					showToastError(
+						`Failed to cancel subscription. Please try again later or please contact support at ${dataContext.config.support_email}`,
+					);
+					new Error(`HTTP error! status: ${response.status}`);
+				}
+				showToastSuccess("Subscription cancelled successfully.");
+				fetchUserInfo(token!).then(() => setLoading(false));
+			}
+		} catch (error) {
+			console.error("fetchClientSecret error:", error);
+			throw error;
+		}
 	};
 
 	const jobBoards = [
@@ -60,11 +95,9 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 					<h2>{currentUser?.toast_active ? "Premium Active" : "Upgrade to Premium"}</h2>
 					<p className="text-muted">
 						{currentUser?.toast_active
-							? "You have Premium"
+							? "You have Premium (lucky you!)"
 							: "Unlock powerful features to supercharge your job search"}
 					</p>
-
-					{/* NEW SUMMARY SECTION */}
 					<div className="text-start mt-4 mb-4" style={{ maxWidth: "900px", margin: "0 auto" }}>
 						<h4 className="mb-3">Why Premium?</h4>
 						<p>
@@ -88,7 +121,22 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 							<ActionButton
 								onClick={() => setShowCheckout(true)}
 								defaultIcon="bi-gem"
+								id={"subscribe-button"}
 								defaultText="Subscribe Now"
+							/>
+						</>
+					)}
+					{currentUser?.toast_active && (
+						<>
+							<h3 className="mt-4">£5/month</h3>
+							<p className="text-muted">Cancel anytime</p>
+							<ActionButton
+								onClick={() => handleUnsubscribe()}
+								variant={"secondary"}
+								defaultIcon="bi-gem"
+								loading={loading}
+								id={"subscribe-button"}
+								defaultText="Unsubscribe from Premium"
 							/>
 						</>
 					)}

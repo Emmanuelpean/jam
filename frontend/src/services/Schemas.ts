@@ -246,6 +246,7 @@ export interface UserData extends OwnedOut {
 	is_active: boolean;
 	is_demo: boolean;
 	toast_active: boolean;
+	premium_started_at: Date | null;
 	theme: string;
 	last_login: Date | string | null;
 	chase_threshold: number;
