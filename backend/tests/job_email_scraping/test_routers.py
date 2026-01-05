@@ -231,11 +231,13 @@ class TestScrapingFilters(CRUDTestBase):
     actions_to_test = ["get_all", "get_one", "post"]
 
     @staticmethod
-    def _create_filter(session, owner_id: int = 1, **kwargs) -> models.ScrapingFilter:
+    def _create_filter(session, owner_id: int = 1, **kwargs) -> models.ScrapingExclusionFilter:
         """Helper to create a scraped job filter"""
 
         # noinspection PyArgumentList
-        filters = models.ScrapingFilter(type="title", operator="contains", value="Some", owner_id=owner_id, **kwargs)
+        filters = models.ScrapingExclusionFilter(
+            type="title", operator="contains", value="Some", owner_id=owner_id, **kwargs
+        )
         return add_to_db(session, [filters])[0]
 
     def test_delete_filter_without_filtered_jobs(self, session, authorised_clients, test_users) -> None:
@@ -246,7 +248,7 @@ class TestScrapingFilters(CRUDTestBase):
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Verify filter was completely deleted from database
-        deleted_filter = session.query(models.ScrapingFilter).filter_by(id=filter_obj.id).first()
+        deleted_filter = session.query(models.ScrapingExclusionFilter).filter_by(id=filter_obj.id).first()
         assert deleted_filter is None
 
     def test_delete_filter_with_filtered_jobs(
@@ -263,7 +265,7 @@ class TestScrapingFilters(CRUDTestBase):
             external_job_id="A",
             platform="saf",
             title="Engineer",
-            filter_id=filter_obj.id,
+            exclusion_filter_id=filter_obj.id,
             owner_id=filter_obj.owner_id,
             service_log_id=test_eis_service_logs[0].id,
         )
@@ -308,7 +310,7 @@ class TestScrapingFilters(CRUDTestBase):
             external_job_id="A",
             platform="saf",
             title="Engineer",
-            filter_id=filter_id,
+            exclusion_filter_id=filter_id,
             owner_id=filter_obj.owner_id,
             service_log_id=test_eis_service_logs[0].id,
         )

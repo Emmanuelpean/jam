@@ -13,7 +13,7 @@ from app.model_registry import (
     JobEmailScrapingPlatformStat,
     JobEmailScrapingServiceLog,
     JobEmailScrapingServiceError,
-    ScrapingFilter,
+    ScrapingExclusionFilter,
 )
 from tests.job_email_scraping import resources
 from tests.utils.test_data import TOAST_USER_1_INDEX
@@ -773,7 +773,7 @@ class TestScrapeJobs:
         """Test successful processing of NHS email jobs with scraping filter applied"""
 
         # noinspection PyArgumentList
-        filter_entry = ScrapingFilter(
+        filter_entry = ScrapingExclusionFilter(
             type="title",
             operator="contains",
             value=nhs_scraped_jobs[0].title[:10],
@@ -789,7 +789,7 @@ class TestScrapeJobs:
         for job in scraped_jobs:
             if job.external_job_id == nhs_scraped_jobs[0].external_job_id:
                 assert not job.is_scraped
-                assert job.filter_id == filter_entry.id
+                assert job.exclusion_filter_id == filter_entry.id
             else:
                 assert job.is_scraped
                 assert job.scrape_error is None

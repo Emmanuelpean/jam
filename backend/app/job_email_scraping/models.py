@@ -157,14 +157,20 @@ class ScrapedJob(Owned, Base):
     service_log_id = Column(
         Integer, ForeignKey("job_email_scraping_service_log.id", ondelete="SET NULL"), nullable=False
     )
-    filter_id = Column(Integer, ForeignKey("scraping_filter.id", ondelete="SET NULL"), nullable=True)
+    exclusion_filter_id = Column(
+        Integer, ForeignKey("scraping_exclusion_filter.id", ondelete="SET NULL"), nullable=True
+    )
+    favourite_filter_id = Column(
+        Integer, ForeignKey("scraping_favourite_filter.id", ondelete="SET NULL"), nullable=True
+    )
     geolocation_id = Column(Integer, ForeignKey("geolocation.id", ondelete="SET NULL"), nullable=True)
 
     # Relationships
     emails = relationship("JobEmail", secondary=jobemail_scrapedjob_mapping, back_populates="jobs")
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="scraped_jobs")
     job_rating = relationship("JobRating", back_populates="scraped_job", uselist=False)
-    filter = relationship("ScrapingFilter", back_populates="filtered_jobs")
+    exclusion_filter = relationship("ScrapingExclusionFilter", back_populates="filtered_jobs")
+    favourite_filter = relationship("ScrapingFavouriteFilter", back_populates="filtered_jobs")
     geolocation = relationship("Geolocation")
 
     # Constraints
@@ -365,8 +371,8 @@ class JobEmailScrapingServiceError(CommonBase, Base):
     service_log = relationship("JobEmailScrapingServiceLog", back_populates="service_errors")
 
 
-class ScrapingFilter(Owned, Base):
-    """Represents user-defined rules to filter out scraped jobs.
+class Filter(object):
+    """Represents user-defined rules to filter scraped jobs
 
     Attributes:
     -----------
@@ -387,39 +393,14 @@ class ScrapingFilter(Owned, Base):
     case_sensitive = Column(Boolean, nullable=False, server_default=expression.false())
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
 
-    # Relationships
-    filtered_jobs = relationship("ScrapedJob", back_populates="filter")
-
     # Constraints
     __table_args__ = (
         CheckConstraint(
-            type.in_(
-                [
-                    "title",
-                    "company",
-                    "location",
-                    "location_city",
-                    "location_country",
-                    "salary_min",
-                    "salary_max",
-                    "attendance_type",
-                ]
-            ),
+            "type IN ('title', 'company', 'location', 'location_city', 'location_country', 'salary_min', 'salary_max', 'attendance_type')",
             name="valid_filter_type",
         ),
         CheckConstraint(
-            operator.in_(
-                [
-                    "contains",
-                    "equals",
-                    "starts_with",
-                    "ends_with",
-                    "less_than",
-                    "greater_than",
-                    "not_contains",
-                    "not_equals",
-                ]
-            ),
+            "operator IN ('contains', 'equals', 'starts_with', 'ends_with', 'less_than', 'greater_than', 'not_contains', 'not_equals')",
             name="valid_filter_operator",
         ),
     )
@@ -428,4 +409,17 @@ class ScrapingFilter(Owned, Base):
     def name(self) -> str:
         """Generate a human-readable name for the filter rule."""
 
-        return f"{self.type} {self.operator} '{self.value}'"
+        case_str = " (case-sensitive)" if self.case_sensitive else ""
+        return f"{self.type} {self.operator} '{self.value}'{case_str}"
+
+
+class ScrapingExclusionFilter(Filter, Owned, Base):
+    """Represents user-defined rules to filter out scraped jobs."""
+
+    filtered_jobs = relationship("ScrapedJob", back_populates="exclusion_filter")
+
+
+class ScrapingFavouriteFilter(Filter, Owned, Base):
+    """Represents user-defined rules to filter favourite scraped jobs."""
+
+    filtered_jobs = relationship("ScrapedJob", back_populates="favourite_filter")

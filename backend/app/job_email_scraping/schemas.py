@@ -219,7 +219,6 @@ class ScrapingFilterUpdate(ScrapingFilterCreate):
 class ScrapingFilterOut(OwnedOut, ScrapingFilterCreate):
     """Scraped Job Filter output schema"""
 
-    name: str
     filtered_jobs: list[int]
 
     @field_validator("filtered_jobs", mode="before")

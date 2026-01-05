@@ -104,10 +104,10 @@ class TestScrapingFilters(BaseTest):
     def test_add_scraping_filter(self) -> None:
         """Test adding a scraping filter and displaying a toast notification."""
 
-        filter_count = self.db.query(models.ScrapingFilter).count()
+        filter_count = self.db.query(models.ScrapingExclusionFilter).count()
         self.scrapingFilter_table_utils.add_entity_button.click()
         self.scrapingFilter_modal_utils.add_entry(**self.test_data)
-        assert self.db.query(models.ScrapingFilter).count() == filter_count + 1
+        assert self.db.query(models.ScrapingExclusionFilter).count() == filter_count + 1
 
     def test_deactivate_scraping_filter(self) -> None:
         """Test deactivating a scraping filter and displaying a toast notification."""
@@ -117,7 +117,7 @@ class TestScrapingFilters(BaseTest):
         self.scrapingFilter_modal_utils.wait_for_view_modal_close()
         self.assert_toast_message("Scraping Filter deactivated successfully.")
         self.db.expire_all()
-        scraping_filter = self.db.query(models.ScrapingFilter).filter_by(id=self.no_filtered_index).first()
+        scraping_filter = self.db.query(models.ScrapingExclusionFilter).filter_by(id=self.no_filtered_index).first()
         assert not scraping_filter.is_active
         self.get_element("inactive-tab").click()
         assert self.scrapingFilter_table_utils.table_row(self.no_filtered_index).is_displayed()
@@ -125,7 +125,9 @@ class TestScrapingFilters(BaseTest):
     def test_edit_scraping_filter(self) -> None:
         """Test deactivating a scraping filter when it has filtered jobs."""
 
-        assert not self.db.query(models.ScrapingFilter).filter_by(id=self.no_filtered_index).first().filtered_jobs
+        assert (
+            not self.db.query(models.ScrapingExclusionFilter).filter_by(id=self.no_filtered_index).first().filtered_jobs
+        )
         self.scrapingFilter_table_utils.table_row(self.no_filtered_index).click()
         assert self.scrapingFilter_modal_utils.deactivate_button().is_enabled()
         assert not self.scrapingFilter_modal_utils.edit_button("view", enabled=False).click()
@@ -136,7 +138,7 @@ class TestScrapingFilters(BaseTest):
     def test_edit_scraping_filter_failure(self) -> None:
         """Test deactivating a scraping filter when it has filtered jobs."""
 
-        assert self.db.query(models.ScrapingFilter).filter_by(id=self.filtered_index).first().filtered_jobs
+        assert self.db.query(models.ScrapingExclusionFilter).filter_by(id=self.filtered_index).first().filtered_jobs
         self.scrapingFilter_table_utils.table_row(self.filtered_index).click()
         assert self.scrapingFilter_modal_utils.deactivate_button().is_enabled()
         assert not self.scrapingFilter_modal_utils.edit_button("view", enabled=False).is_enabled()

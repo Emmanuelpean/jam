@@ -14,7 +14,7 @@ from app.database import get_db
 from app.emails.email_service import EmailService
 from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
-from app.job_email_scraping.filtering import is_job_filtered_for_user
+from app.job_email_scraping.filtering import is_job_filtered_for_user, is_job_favoured_for_user
 from app.job_email_scraping.job_scrapers import JobResult
 from app.job_email_scraping.job_scrapers.indeed import IndeedApifyJobScraper
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
@@ -494,13 +494,29 @@ class JobEmailScraper(EmailService):
                         f"due to rule {job_filter_rule.name}"
                     )
                     job_record.is_scraped = False
-                    job_record.filter_id = job_filter_rule.id
+                    job_record.exclusion_filter_id = job_filter_rule.id
                     self.db.commit()
                     self.upsert_platform_stat(service_log, job_record.platform, job_scrape_filtered_ids=job_record.id)
                     continue  # next job record
             except Exception as exception:
                 error = (
                     f"Failed to check filtering for job ID {job_record.external_job_id} due to error: {exception}. "
+                    f"Proceeding with scraping."
+                )
+                self.log_eis_service_error(service_log, error)
+                self.logger.exception(error)
+
+            try:
+                if favoured_rule := is_job_favoured_for_user(self.db, job_record):
+                    self.logger.info(
+                        f"Job ID {job_record.external_job_id} favoured for user ID {job_record.owner_id} "
+                        f"due to rule {favoured_rule.name}"
+                    )
+                    job_record.favourite_filter_id = favoured_rule.id
+                    self.db.commit()
+            except Exception as exception:
+                error = (
+                    f"Failed to check favouring for job ID {job_record.external_job_id} due to error: {exception}. "
                     f"Proceeding with scraping."
                 )
                 self.log_eis_service_error(service_log, error)

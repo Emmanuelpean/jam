@@ -42,6 +42,7 @@ import {
 import { useLoading } from "./LoadingContext";
 import { findItemById, sortByKey } from "../utils/Utils";
 import { CrudApi } from "../services/api/Crud";
+import { getScrapingFilterName } from "../components/rendering/view/ViewRenders";
 
 export type EntityType =
 	| "job"
@@ -122,7 +123,7 @@ export const entityTypeToName = (
 		setting: (data: JamData): string => (data as SettingData).name,
 		user: (data: JamData): string => (data as UserData).email,
 		scrapedJob: (data: JamData): string => (data as ScrapedJobData)?.title || "Scraped Job",
-		scrapingFilter: (data: JamData): string => (data as ScrapingFilterData).name,
+		scrapingFilter: (data: JamData): string => getScrapingFilterName(data as ScrapingFilterData),
 	};
 	return nameMap[entityType];
 };
