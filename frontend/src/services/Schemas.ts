@@ -315,7 +315,6 @@ export interface ScrapingFilterData extends OwnedOut {
 	operator: string;
 	value: string;
 	case_sensitive: boolean;
-	name: string;
 	is_active: boolean;
 	filtered_jobs: number[];
 }

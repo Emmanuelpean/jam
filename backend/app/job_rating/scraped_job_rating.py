@@ -54,7 +54,7 @@ def score_scraped_jobs(min_description_length: int = 100, db: Session | None = N
                     .filter(models.ScrapedJob.is_active)  # active
                     .filter(models.ScrapedJob.is_imported.is_(False))  # not imported
                     .filter(func.length(models.ScrapedJob.description) > min_description_length)  # description length
-                    .filter(models.ScrapedJob.filter == None)  # not filtered out
+                    .filter(models.ScrapedJob.exclusion_filter == None)  # not filtered out
                     .all()
                 )
                 # noinspection PyAugmentAssignment

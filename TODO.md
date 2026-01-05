@@ -22,8 +22,15 @@
 * [ ] Move the scrollbar inside the tables so that the header is always visible
 * [ ] Add the ability to filter by columns and hide rejected jobs
 
-* [X] Write script to add geolocation to existing locations
 * [ ] Rewrite the test data for the test user
 * [ ] Add payment system for toast
 * [ ] Change the service runner to work with multiple workers
 * [ ] Limit the number of scraped jobs per user per month, and set limits for AI rating
+* [ ] finish adding configs endpoint
+* [ ] Add loading to delete for scraped jobs
+* [ ] Rename TOAST dashboard
+* [ ] Add loading to graphs on TOAST dashboard
+* [ ] Add acknowledgements for open source libraries used
+* [ ] Add acknowledgements for service errors
+* [ ] Add favourite filters for scraping
+* [ ] Fix frontend packages incompatibility issues

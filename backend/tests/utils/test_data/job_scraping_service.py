@@ -859,7 +859,7 @@ SCRAPED_JOB_DATA = [
         "is_imported": True,
         "url": "test",
         "service_log_id": 1,
-        "filter_id": 1,
+        "exclusion_filter_id": 1,
     },
     {
         "external_job_id": "9988776655",
@@ -873,7 +873,7 @@ SCRAPED_JOB_DATA = [
         "is_active": False,
         "url": "test",
         "service_log_id": 1,
-        "filter_id": 1,
+        "exclusion_filter_id": 1,
     },
     {
         "external_job_id": "4123456789",
@@ -989,7 +989,7 @@ SCRAPED_JOB_DATA = [
         "company": "StartupXYZ",
         "location": "London",
         "location_city": "London",
-        "filter_id": 2,
+        "exclusion_filter_id": 2,
         "geolocation_id": 3,  # London, United Kingdom
     },
     {
@@ -1001,7 +1001,7 @@ SCRAPED_JOB_DATA = [
         "title": "Senior Python Developer",
         "company": "StartupXYZ",
         "service_log_id": 1,
-        "filter_id": 2,
+        "exclusion_filter_id": 2,
     },
 ]
 

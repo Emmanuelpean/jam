@@ -17,6 +17,7 @@ import {
 	LocationData,
 	PersonData,
 	ScrapedJobData,
+	ScrapingFilterData,
 } from "../../../services/Schemas";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
@@ -97,6 +98,27 @@ function getJamDataList<T extends { id: number }>(jamData: T[], ids: number[] | 
 	return jamData.filter((data: T): boolean => ids.includes(data.id));
 }
 
+const getScrapingFilterTypeLabel = (scrapingFilter: ScrapingFilterData): string | null => {
+	return (
+		scrapingFilterTypeOptions.filter((option: SelectOption): boolean => option.value === scrapingFilter.type)[0]
+			?.label || null
+	);
+};
+
+const getScrapingFilterOperatorLabel = (scrapingFilter: ScrapingFilterData): string | null => {
+	return (
+		scrapingFilterOperatorOptions.filter(
+			(option: SelectOption): boolean => option.value === scrapingFilter.operator,
+		)[0]?.label || null
+	);
+};
+
+export const getScrapingFilterName = (scrapingFilter: ScrapingFilterData): string => {
+	const type = getScrapingFilterTypeLabel(scrapingFilter);
+	const operator = getScrapingFilterOperatorLabel(scrapingFilter);
+	return type + " " + operator + ' "' + scrapingFilter.value + '"';
+};
+
 export const renderFunctions = {
 	// ------------------------------------------------------ TEXT -----------------------------------------------------
 
@@ -173,24 +195,15 @@ export const renderFunctions = {
 	},
 
 	filterType: (param: RenderParams): ReactNode => {
-		return (
-			scrapingFilterTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]
-				?.label || null
-		);
+		return getScrapingFilterTypeLabel(param.item);
 	},
 
 	filterOperator: (param: RenderParams): ReactNode => {
-		return (
-			scrapingFilterOperatorOptions.filter(
-				(option: SelectOption): boolean => option.value === param.item?.operator,
-			)[0]?.label || null
-		);
+		return getScrapingFilterOperatorLabel(param.item);
 	},
 
 	scrapingFilterName: (param: RenderParams): ReactNode => {
-		const type = renderFunctions.filterType(param);
-		const operator = renderFunctions.filterOperator(param);
-		return type + " " + operator + ' "' + param.item?.value + '"';
+		return getScrapingFilterName(param.item);
 	},
 
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------

@@ -563,7 +563,7 @@ def test_job_ratings(
 
 
 @pytest.fixture
-def test_scraping_filters(session, test_users) -> list[models.ScrapingFilter]:
+def test_scraping_filters(session, test_users) -> list[models.ScrapingExclusionFilter]:
     """Create test scraped job filter data"""
 
     return crd.create_scraping_filters(session, test_users)

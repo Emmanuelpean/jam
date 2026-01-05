@@ -3,7 +3,7 @@
 import pytest
 
 from app.job_email_scraping.filtering import apply_rule_to_values, rule_to_sql_predicate
-from app.model_registry import ScrapingFilter
+from app.model_registry import ScrapingExclusionFilter
 
 
 class TestApplyRuleToValues:
@@ -46,11 +46,11 @@ class TestApplyRuleToValues:
 class TestRuleToSqlPredicate:
 
     @staticmethod
-    def create_filter(session, **kwargs) -> ScrapingFilter:
+    def create_filter(session, **kwargs) -> ScrapingExclusionFilter:
         """Helper to create and persist a ScrapingFilter."""
 
         # noinspection PyArgumentList
-        rule = ScrapingFilter(owner_id=1, **kwargs)
+        rule = ScrapingExclusionFilter(owner_id=1, **kwargs)
         session.add(rule)
         session.commit()
         return rule

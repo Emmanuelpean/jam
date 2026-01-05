@@ -78,7 +78,7 @@ def get_all(
         .filter(models.ScrapedJob.is_scraped)
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.is_active)
-        .filter(models.ScrapedJob.filter_id == None)
+        .filter(models.ScrapedJob.exclusion_filter_id == None)
     )
 
     # Apply search filter
@@ -167,7 +167,7 @@ def get_scraped_job_count(
         .filter(models.ScrapedJob.is_scraped)
         .filter(models.ScrapedJob.is_imported.is_(False))
         .filter(models.ScrapedJob.is_active)
-        .filter(models.ScrapedJob.filter_id == None)
+        .filter(models.ScrapedJob.exclusion_filter_id == None)
         .count()
     )
     return {"count": count}
@@ -188,7 +188,7 @@ def get_scraped_jobs_filtered_by_filter(
     scraped_jobs = (
         db.query(models.ScrapedJob)
         .filter(models.ScrapedJob.owner_id == current_user.id)
-        .filter(models.ScrapedJob.filter_id == filter_id)
+        .filter(models.ScrapedJob.exclusion_filter_id == filter_id)
         .all()
     )
     return scraped_jobs
@@ -381,7 +381,7 @@ def get_scraper_logs(
 
 
 scraping_filter_router = generate_data_table_crud_router(
-    table_model=models.ScrapingFilter,
+    table_model=models.ScrapingExclusionFilter,
     create_schema=schemas.ScrapingFilterCreate,
     update_schema=schemas.ScrapingFilterUpdate,
     out_schema=schemas.ScrapingFilterOut,
@@ -406,9 +406,9 @@ def update_scraping_filter(
 
     # Fetch the filter to ensure it exists and belongs to the current user.
     filter_obj = (
-        db.query(models.ScrapingFilter)
-        .filter(models.ScrapingFilter.id == filter_id)
-        .filter(models.ScrapingFilter.owner_id == current_user.id)
+        db.query(models.ScrapingExclusionFilter)
+        .filter(models.ScrapingExclusionFilter.id == filter_id)
+        .filter(models.ScrapingExclusionFilter.owner_id == current_user.id)
         .first()
     )
 
@@ -453,9 +453,9 @@ def delete_scraping_filter(
 
     # Fetch the filter to ensure it exists and belongs to the current user
     filter_obj = (
-        db.query(models.ScrapingFilter)
-        .filter(models.ScrapingFilter.id == filter_id)
-        .filter(models.ScrapingFilter.owner_id == current_user.id)
+        db.query(models.ScrapingExclusionFilter)
+        .filter(models.ScrapingExclusionFilter.id == filter_id)
+        .filter(models.ScrapingExclusionFilter.owner_id == current_user.id)
         .first()
     )
 
