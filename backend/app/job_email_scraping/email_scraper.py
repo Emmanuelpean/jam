@@ -12,6 +12,7 @@ from app import utils, model_registry as models
 from app.config import settings
 from app.database import get_db
 from app.emails.email_service import EmailService
+from app.geolocation import geocode_location
 from app.job_email_scraping.email_parsers import JOB_PARSERS, ALERT_NAME_EXTRACTORS, PLATFORM_SENDER_EMAILS
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.filtering import is_job_filtered_for_user, is_job_favoured_for_user
@@ -28,9 +29,8 @@ from app.job_email_scraping.models import (
     JobEmailScrapingPlatformStat,
     JobEmailScrapingServiceError,
 )
-from app.service_runner import ServiceRunner
+from app.service_runner.service_runner import ServiceRunner
 from app.utils import AppLogger
-from app.geolocation import geocode_location
 
 SERVICE_NAME = "email_scraper_service"
 
@@ -585,13 +585,8 @@ class JobEmailScraper(EmailService):
                     self.upsert_platform_stat(service_log, job_record.platform, job_scrape_failed_ids=job_record.id)
 
 
-class EmailScraperServiceRunner(ServiceRunner):
-    """Service runner for the EmailScraperService"""
-
-    def __init__(self) -> None:
-        """Object constructor"""
-
-        ServiceRunner.__init__(self, SERVICE_NAME, dict(timedelta_days=3), JobEmailScraper().run_scraping)
-
-
-scraper_service = EmailScraperServiceRunner()
+job_scraping_service_runner = ServiceRunner(
+    service_name=SERVICE_NAME,
+    service_function=JobEmailScraper().run_scraping,
+    service_kwargs=dict(timedelta_days=3),
+)

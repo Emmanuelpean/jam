@@ -31,7 +31,7 @@ const JobScraperDashboard = (): JSX.Element => {
 	const { serviceStatus, remainingTime, fetchStatus, statusError } = useServiceRunnerStatus(jobScraperServiceApi);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: serviceStatus?.period_hours || 0,
-		timedelta_days: serviceStatus?.service_kwargs.timedelta_days || 0,
+		timedelta_days: serviceStatus?.service_kwargs?.timedelta_days || 0,
 	});
 	const [loading, setLoading] = useState<boolean>(false);
 	const { showToastSuccess } = useGlobalToast();
@@ -52,7 +52,7 @@ const JobScraperDashboard = (): JSX.Element => {
 		if (serviceStatus?.service_runner_status === "stopped") {
 			setFormData({
 				period_hours: serviceStatus.period_hours || 3,
-				timedelta_days: serviceStatus.service_kwargs.timedelta_days || 1,
+				timedelta_days: serviceStatus.service_kwargs?.timedelta_days || 1,
 			});
 		}
 	}, [serviceStatus]);
