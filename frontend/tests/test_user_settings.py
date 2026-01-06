@@ -230,7 +230,7 @@ class TestPremiumSettingsPage(BaseTest):
         time.sleep(5)
         iframe = self.driver.find_elements(By.TAG_NAME, "iframe")[-1]
         self.driver.switch_to.frame(iframe)
-        self.set_text(self.get_element("cardNumber", By.NAME), "4242 4242 4242 4242")
+        self.set_text(self.get_element("cardNumber", By.NAME, timeout=30), "4242 4242 4242 4242")
         self.set_text(self.get_element("cardCvc", By.NAME), "123")
         self.set_text(self.get_element("cardExpiry", By.NAME), "1228")
         self.set_text(self.get_element("billingName", By.NAME), "John Doe")
