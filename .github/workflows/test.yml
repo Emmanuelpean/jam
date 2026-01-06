@@ -15,6 +15,54 @@ jobs:
     name: Run Tests and Generate Reports
     environment: test
     runs-on: ubuntu-latest
+    env:
+      # Database Configuration
+      DATABASE_HOSTNAME: ${{ vars.DATABASE_HOSTNAME }}
+      DATABASE_PORT: ${{ vars.DATABASE_PORT }}
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      DATABASE_NAME: ${{ vars.DATABASE_NAME }}
+      DATABASE_USERNAME: ${{ vars.DATABASE_USERNAME }}
+
+      # Authentication
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ALGORITHM: ${{ secrets.ALGORITHM }}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${{ vars.ACCESS_TOKEN_EXPIRE_MINUTES }}
+
+      # Application Settings
+      MAX_FILE_SIZE_MB: ${{ vars.MAX_FILE_SIZE_MB }}
+      LOG_DIRECTORY: ${{ vars.LOG_DIRECTORY }}
+      TEST_MODE: ${{ vars.TEST_MODE }}
+
+      # Email Configuration
+      EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
+      EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+      EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
+      EMAIL_SMTP_HOST: ${{ secrets.EMAIL_SMTP_HOST }}
+      EMAIL_IMAP_PORT: ${{ secrets.EMAIL_IMAP_PORT }}
+      EMAIL_IMAP_HOST: ${{ secrets.EMAIL_IMAP_HOST }}
+      SCRAPER_EMAIL: ${{ secrets.SCRAPER_EMAIL }}
+      INFO_EMAIL: ${{ secrets.INFO_EMAIL }}
+      SUPPORT_EMAIL: ${{ secrets.SUPPORT_EMAIL }}
+
+      # URLs
+      FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+      BACKEND_URL: ${{ vars.BACKEND_URL }}
+
+      # Verification Settings
+      VERIFICATION_TOKEN_EXPIRATION_MINUTES: ${{ vars.VERIFICATION_TOKEN_EXPIRATION_MINUTES }}
+      VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS: ${{ vars.VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS }}
+
+      # External API Keys
+      BRIGHTDATA_API_KEY: ${{ secrets.BRIGHTDATA_API_KEY }}
+      BRIGHTDATA_LINKEDIN_DATASET_ID: ${{ secrets.BRIGHTDATA_LINKEDIN_DATASET_ID }}
+      BRIGHTDATA_INDEED_DATASET_ID: ${{ secrets.BRIGHTDATA_INDEED_DATASET_ID }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      APIFY_API_KEY: ${{ secrets.APIFY_API_KEY }}
+
+      # Payment Configuration
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+      STRIPE_TOAST_PRICE_ID: ${{ secrets.STRIPE_TOAST_PRICE_ID }}
 
     services:
       postgres:
@@ -35,13 +83,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
-
-      - name: Definitive env check
-        run: |
-          echo "TZ=$TZ"
-          echo ${{secrets.DATABASE_PASSWORD}}
-          echo "TEST_MODE=${TEST_MODE:-<missing>}"
-          env | wc -l
 
       - name: Install Python
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
