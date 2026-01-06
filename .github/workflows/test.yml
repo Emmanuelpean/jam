@@ -36,6 +36,13 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
+      - name: Definitive env check
+        run: |
+          echo "TZ=$TZ"
+          echo "DATABASE_NAME=${DATABASE_NAME:-<missing>}"
+          echo "TEST_MODE=${TEST_MODE:-<missing>}"
+          env | wc -l
+
       - name: Install Python
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         uses: actions/setup-python@v5
