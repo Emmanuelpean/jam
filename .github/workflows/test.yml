@@ -12,7 +12,9 @@ env:
 
 jobs:
   build:
+    name: Run Tests and Generate Reports
     environment: test
+    runs-on: ubuntu-latest
 
     services:
       postgres:
@@ -28,7 +30,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -38,7 +39,7 @@ jobs:
       - name: Definitive env check
         run: |
           echo "TZ=$TZ"
-          echo "DATABASE_NAME=${DATABASE_NAME:-<missing>}"
+          echo ${{secrets.DATABASE_PASSWORD}}
           echo "TEST_MODE=${TEST_MODE:-<missing>}"
           env | wc -l
 
