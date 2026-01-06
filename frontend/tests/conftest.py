@@ -1802,6 +1802,15 @@ class BaseTest(BaseUtils):
             chrome_options.add_argument("--ignore-certificate-errors")
             chrome_options.add_argument("--disable-dev-shm-usage")
             chrome_options.add_argument("--lang=en-GB")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-setuid-sandbox")
+            chrome_options.add_argument("--disable-web-security")
+            chrome_options.add_argument("--disable-features=IsolateOrigins,site-per-process")
+            chrome_options.add_argument("--disable-site-isolation-trials")
+            chrome_options.add_argument("--allow-running-insecure-content")
+            chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            chrome_options.add_experimental_option("useAutomationExtension", False)
 
             # Enable verbose logging
             chrome_options.add_argument("--enable-logging")
