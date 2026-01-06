@@ -13,39 +13,7 @@ env:
 jobs:
   build:
     environment:
-      name: production
-    env:
-      DATABASE_HOSTNAME:  ${{secrets.DATABASE_HOSTNAME}}
-      DATABASE_PORT: ${{secrets.DATABASE_PORT}}
-      DATABASE_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
-      DATABASE_NAME: jam_test
-      DATABASE_USERNAME: ${{secrets.DATABASE_USERNAME}}
-      SECRET_KEY: ${{secrets.SECRET_KEY}}
-      ALGORITHM: ${{secrets.ALGORITHM}}
-      ACCESS_TOKEN_EXPIRE_MINUTES: ${{secrets.ACCESS_TOKEN_EXPIRE_MINUTES}}
-      MIN_PASSWORD_LENGTH: ${{secrets.MIN_PASSWORD_LENGTH}}
-      MAX_FILE_SIZE_MB: ${{secrets.MAX_FILE_SIZE_MB}}
-      EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-      EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-      EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
-      EMAIL_SMTP_HOST: ${{ secrets.EMAIL_SMTP_HOST }}
-      EMAIL_IMAP_PORT: ${{ secrets.EMAIL_IMAP_PORT }}
-      EMAIL_IMAP_HOST: ${{ secrets.EMAIL_IMAP_HOST }}
-      SCRAPER_EMAIL: ${{ secrets.SCRAPER_EMAIL }}
-      INFO_EMAIL: ${{ secrets.INFO_EMAIL }}
-      SUPPORT_EMAIL: ${{ secrets.SUPPORT_EMAIL }}
-      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
-      BACKEND_URL: ${{ secrets.BACKEND_URL }}
-      VERIFICATION_TOKEN_EXPIRATION_MINUTES: ${{ secrets.VERIFICATION_TOKEN_EXPIRATION_MINUTES }}
-      VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS: ${{ secrets.VERIFICATION_EMAIL_MIN_INTERVAL_SECONDS }}
-      TEST_MODE: true
-      log_directory: ${{ secrets.LOG_DIRECTORY }}
-      brightdata_api_key: ${{ secrets.BRIGHTDATA_API_KEY }}
-      brightdata_linkedin_dataset_id: ${{ secrets.BRIGHTDATA_LINKEDIN_DATASET_ID }}
-      brightdata_indeed_dataset_id: ${{ secrets.BRIGHTDATA_INDEED_DATASET_ID }}
-      openai_api_key: ${{ secrets.OPENAI_API_KEY }}
-      apify_api_key: ${{ secrets.APIFY_API_KEY }}
-      REACT_APP_ENABLE_ANALYTICS: ${{ secrets.REACT_APP_ENABLE_ANALYTICS }}
+      name: test
 
     services:
       postgres:
