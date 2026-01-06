@@ -10,7 +10,7 @@ from app import model_registry as models
 from app import utils
 from app.database import get_db
 from app.job_rating.ai_rating import ai_score_job, __version__
-from app.service_runner import ServiceRunner
+from app.service_runner.service_runner import ServiceRunner
 
 SERVICE_NAME = "job_rating_service"
 
@@ -131,17 +131,10 @@ def score_scraped_jobs(min_description_length: int = 100, db: Session | None = N
     return service_log
 
 
-class JobRatingServiceRunner(ServiceRunner):
-    """Service runner for the LLM job rating service."""
-
-    def __init__(self) -> None:
-        """Object constructor"""
-
-        ServiceRunner.__init__(self, SERVICE_NAME, dict(), score_scraped_jobs, 3.0)
-
-
-job_rating_service_runner = JobRatingServiceRunner()
-
+job_rating_service_runner = ServiceRunner(
+    service_name=SERVICE_NAME,
+    service_function=score_scraped_jobs,
+)
 
 if __name__ == "__main__":
     # service_runner = LlmJobRatingServiceRunner()

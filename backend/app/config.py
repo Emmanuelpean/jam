@@ -13,14 +13,17 @@ class Settings(BaseSettings):
     database_name: str
     database_username: str
 
-    # Authentication settings
+    # JWT settings
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
 
     # Application settings
     max_file_size_mb: int
+
+    # Other settings
     log_directory: str
+    test_mode: bool
 
     # Email configuration
     email_username: str
@@ -41,15 +44,12 @@ class Settings(BaseSettings):
     verification_token_expiration_minutes: int
     verification_email_min_interval_seconds: int
 
-    # Testing
-    test_mode: bool
-
-    # BrightAPI
+    # BrightData
     brightdata_api_key: str
     brightdata_linkedin_dataset_id: str
     brightdata_indeed_dataset_id: str
 
-    # AI Keys
+    # OpenAI
     openai_api_key: str
 
     # Apify
@@ -61,7 +61,6 @@ class Settings(BaseSettings):
     stripe_toast_price_id: str
 
     model_config = SettingsConfigDict(
-        extra="ignore",
         env_file=Path(__file__).parent.parent / ".env",
     )
 

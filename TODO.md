@@ -34,3 +34,6 @@
 * [ ] Add acknowledgements for service errors
 * [ ] Add favourite filters for scraping
 * [ ] Fix frontend packages incompatibility issues
+* [ ] Create free coupons for TOAST for first few users for a couple months
+* [ ] Add trial period for TOAST
+* [ ] Run the service API on a different worker

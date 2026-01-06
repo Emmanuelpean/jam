@@ -13,10 +13,9 @@ from starlette import status
 from starlette.requests import Request
 
 from app import model_registry as models
-from app import service_runner
 from app.database import get_db
 from app.job_email_scraping import schemas
-from app.job_email_scraping.email_scraper import scraper_service, SERVICE_NAME
+from app.job_email_scraping.email_scraper import job_scraping_service_runner, SERVICE_NAME
 from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
@@ -27,6 +26,7 @@ from app.routers import (
     filter_query,
     NOT_ALLOWED_EXCEPTION,
 )
+from app.service_runner import routers
 
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
 
@@ -232,7 +232,7 @@ def get_service_logs_by_date_range(
     :param db: Database session
     :return: list of service logs within the date range ordered by run_datetime descending"""
 
-    return service_runner.get_service_logs_by_date_range(
+    return routers.get_service_logs_by_date_range(
         start_date,
         end_date,
         delta_days,
@@ -254,7 +254,7 @@ def get_latest(
     :param db: Database session
     :return: Latest service log entry"""
 
-    return service_runner.get_latest(current_user, db, models.JobEmailScrapingServiceLog)
+    return routers.get_latest(current_user, db, models.JobEmailScrapingServiceLog)
 
 
 # ------------------------------------------------------ SCRAPING ------------------------------------------------------
@@ -344,25 +344,26 @@ def start_scraper(
     :param request: StartRequest object containing period_hours
     :param current_user: Current authenticated user"""
 
-    return service_runner.start_scraper(scraper_service, current_user, request.period_hours)
+    return routers.start_scraper(job_scraping_service_runner, current_user, request.period_hours)
 
 
 @email_scraper_service_router.post("/stop")
-def stop_scraper(current_user: models.User = Depends(get_current_user)) -> dict:
+def stop_scraper(
+    current_user: models.User = Depends(get_current_user),
+) -> dict:
     """Stop the service runner.
     :param current_user: Current authenticated user"""
 
-    return service_runner.stop_scraper(scraper_service, current_user)
+    return routers.stop_scraper(job_scraping_service_runner, current_user)
 
 
 @email_scraper_service_router.get("/status")
 def scraper_status(
     current_user: models.User = Depends(get_current_user),
 ) -> dict:
-    """Get the current status of the service.
-    :param current_user: Current authenticated user"""
+    """Get the current status of the service"""
 
-    return service_runner.scraper_status(scraper_service, current_user)
+    return routers.scraper_status(job_scraping_service_runner, current_user)
 
 
 @email_scraper_service_router.get("/logs")
@@ -374,7 +375,7 @@ def get_scraper_logs(
     :param lines: Number of lines to retrieve (default 100, max 10000)
     :param current_user: Current authenticated user"""
 
-    return service_runner.get_service_logs(SERVICE_NAME, lines, current_user)
+    return routers.get_service_logs(SERVICE_NAME, lines, current_user)
 
 
 # ------------------------------------------------- SCRAPED JOB FILTERS ------------------------------------------------

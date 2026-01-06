@@ -1,31 +1,33 @@
 """Main script"""
 
-import os
-
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import settings as app_settings
-from app.database import engine
+from app.config import settings
 from app.emails import routers as email_routers
-from app.job_email_scraping import routers as eis_routers
+from app.job_email_scraping import routers as job_scraping_routers
 from app.job_rating import routers as job_rating_routers
-from app.model_registry import Base
-from app.routers import data_tables, user, auth, export, settings, others
 from app.payments import routers as payment_routers
+from app.routers import auth as auth_routers
+from app.routers import data_tables as data_table_routers
+from app.routers import export as export_routers
+from app.routers import others as other_routers
+from app.routers import settings as settings_routers
+from app.routers import user as user_routers
 
 app = FastAPI()
-
-Base.metadata.create_all(bind=engine)
 
 
 def get_allowed_origins() -> list[str]:
     """Get allowed CORS origins based on environment"""
 
-    if app_settings.test_mode:
+    # In test mode, allow all origins
+    if settings.test_mode:
         return ["*"]
+
+    # In production, allow only the frontend URL
     else:
-        return ["http://localhost:3000"]
+        return ["http://localhost:3000"]  # TODO replace with app_settings.frontend_url when deploying
 
 
 app.add_middleware(
@@ -37,53 +39,55 @@ app.add_middleware(
 )
 
 # Data table routers
-app.include_router(data_tables.company_router)
-app.include_router(data_tables.person_router)
-app.include_router(data_tables.location_router)
-app.include_router(data_tables.job_router)
-app.include_router(data_tables.aggregator_router)
-app.include_router(data_tables.interview_router)
-app.include_router(data_tables.keyword_router)
-app.include_router(data_tables.file_router)
-app.include_router(data_tables.job_application_update_router)
-app.include_router(data_tables.speculative_application_update_router)
+app.include_router(data_table_routers.company_router)
+app.include_router(data_table_routers.person_router)
+app.include_router(data_table_routers.location_router)
+app.include_router(data_table_routers.job_router)
+app.include_router(data_table_routers.aggregator_router)
+app.include_router(data_table_routers.interview_router)
+app.include_router(data_table_routers.keyword_router)
+app.include_router(data_table_routers.file_router)
+app.include_router(data_table_routers.job_application_update_router)
+app.include_router(data_table_routers.speculative_application_update_router)
 
-# EIS routers
-app.include_router(eis_routers.scraped_job_router)
-app.include_router(eis_routers.job_alert_email_router)
-app.include_router(eis_routers.eis_service_log_router)
-app.include_router(eis_routers.scraper_router)
-app.include_router(eis_routers.email_scraper_service_router)
-app.include_router(eis_routers.scraping_filter_router)
+# Job Scraping routers
+app.include_router(job_scraping_routers.scraped_job_router)
+app.include_router(job_scraping_routers.job_alert_email_router)
+app.include_router(job_scraping_routers.eis_service_log_router)
+app.include_router(job_scraping_routers.scraper_router)
+app.include_router(job_scraping_routers.email_scraper_service_router)
+app.include_router(job_scraping_routers.scraping_filter_router)
 
 # Job Rating routers
 app.include_router(job_rating_routers.job_rating_router)
 app.include_router(job_rating_routers.job_rating_service_log_router)
 app.include_router(job_rating_routers.job_rating_service_router)
 
-# Authentification router
-app.include_router(user.user_router)
-app.include_router(user.current_user_router)
-app.include_router(auth.login_router)
-app.include_router(auth.register_router)
-app.include_router(auth.password_router)
-app.include_router(user.user_qualification_router)
+# User routers
+app.include_router(user_routers.user_router)
+app.include_router(user_routers.current_user_router)
+app.include_router(user_routers.user_qualification_router)
+
+# Auth routers
+app.include_router(auth_routers.login_router)
+app.include_router(auth_routers.register_router)
+app.include_router(auth_routers.password_router)
 
 # Export router
-app.include_router(export.router)
+app.include_router(export_routers.router)
 
 # Settings router
-app.include_router(settings.settings_router)
+app.include_router(settings_routers.settings_router)
 
 # Others
-app.include_router(others.other_router)
-app.include_router(others.config_router)
+app.include_router(other_routers.other_router)
+app.include_router(other_routers.config_router)
 
 # Stripe
 app.include_router(payment_routers.payment_router)
 
 # Testing
-if os.getenv("TEST_MODE") == "true":
+if settings.test_mode:
     app.include_router(email_routers.router)
 
 
