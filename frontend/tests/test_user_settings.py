@@ -228,11 +228,8 @@ class TestPremiumSettingsPage(BaseTest):
 
         self.get_element("subscribe-button").click()
         time.sleep(5)
-        modal = self.get_element("stripe-checkout-modal")
         iframe = self.driver.find_elements(By.TAG_NAME, "iframe")[-1]
         self.driver.switch_to.frame(iframe)
-        # overlay = self.get_element("webpack-dev-server-client-overlay-div")
-        # raise AssertionError(overlay.text)
         self.set_text(self.get_element("cardNumber", By.NAME), "4242 4242 4242 4242")
         self.set_text(self.get_element("cardCvc", By.NAME), "123")
         self.set_text(self.get_element("cardExpiry", By.NAME), "1228")
@@ -242,9 +239,6 @@ class TestPremiumSettingsPage(BaseTest):
         time.sleep(0.5)
         try:
             self.set_text(self.get_element("billingPostalCode", By.NAME), "10001")
-            self.get_element("link-registration-subheader-message").click()
-            # time.sleep(0.5)
-            # self.get_element("enableStripePass").click()
         except:
             pass
         time.sleep(5)
