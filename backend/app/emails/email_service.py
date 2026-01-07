@@ -202,6 +202,31 @@ class EmailService(object):
             "Email change notification",
         )
 
+    def send_trial_end_notification(
+        self,
+        recipient: str,
+        end_date: datetime,
+    ) -> None:
+        """Send an email to the specified recipient mentioning that the email was changed.
+        :param recipient: The recipient's email address.
+        :param end_date: The trial end date."""
+
+        template = self.templates.env.get_template("trial_end_reminder.html")
+        html_content = template.render(
+            upgrade_url=settings.frontend_url + "/settings/premium",
+            end_date=end_date.strftime("%B %d, %Y"),
+            support_email=settings.support_email,
+        )
+
+        subject = "Your TOAST Free Trial is Ending Soon"
+        self.send_email(
+            recipient,
+            subject,
+            html_content,
+            settings.support_email,
+            "Trial end notification",
+        )
+
     @staticmethod
     def _connect_imap() -> imaplib.IMAP4_SSL:
         """Connect to IMAP server and login.

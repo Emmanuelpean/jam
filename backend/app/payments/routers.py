@@ -1,6 +1,6 @@
 """Payment-related API routes using Stripe for subscription management."""
 
-import os
+import datetime as dt
 
 import stripe
 from fastapi import HTTPException, Request, APIRouter, Depends
@@ -9,7 +9,9 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
+from app.emails.email_service import email_service
 from app.model_registry import User
+from app.utils import AppLogger
 
 
 class SubscriptionRequest(BaseModel):
@@ -18,6 +20,7 @@ class SubscriptionRequest(BaseModel):
 
 payment_router = APIRouter(prefix="/payments", tags=["payments"])
 stripe.api_key = settings.stripe_secret_key
+logger = AppLogger.get_logger("Stripe")
 
 
 @payment_router.post("/create-subscription-checkout")
@@ -31,16 +34,16 @@ async def create_subscription_checkout(
     try:
         # Create or get customer
         customers = await stripe.Customer.list_async(email=request.customer_email, limit=1)
-
         if customers.data:
             customer = customers.data[0]
+            logger.info(f"Retrieved customer: {customer.email}")
         else:
             customer = await stripe.Customer.create_async(email=request.customer_email)
+            logger.info(f"Created customer {customer.email}")
 
         # Create checkout session for monthly subscription
         checkout_session = await stripe.checkout.Session.create_async(
             customer=customer.id,
-            payment_method_types=["card"],
             line_items=[
                 {
                     "price": settings.stripe_toast_price_id,
@@ -50,50 +53,21 @@ async def create_subscription_checkout(
             mode="subscription",
             locale="auto",
             ui_mode="embedded",
-            allow_promotion_codes=False,
+            allow_promotion_codes=True,
             redirect_on_completion="never",
+            payment_method_collection="if_required",
+            subscription_data={
+                "trial_period_days": 14,
+                "trial_settings": {
+                    "end_behavior": {
+                        "missing_payment_method": "cancel",
+                    },
+                },
+            },
         )
 
         return {"clientSecret": checkout_session.client_secret}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@payment_router.get("/check-subscription/{session_id}")
-async def check_subscription(
-    session_id: str,
-    db: Session = Depends(get_db),
-) -> dict:
-    """Check if subscription is active by session ID and update user.
-    :param session_id: Stripe checkout session ID
-    :param db: Database session
-    :return: dict with subscription status"""
-
-    if not os.getenv("TEST_MODE"):
-        return {"subscription_active": True, "user_updated": False}
-    try:
-        # Retrieve the session from Stripe
-        session = await stripe.checkout.Session.retrieve_async(session_id, expand=["subscription", "customer"])
-
-        # Check if payment was successful
-        if session.status == "complete" and session.subscription:
-            customer_email = session.customer.email
-
-            # Update user in database
-            user = db.query(User).filter(User.email == customer_email).first()
-            if user:
-                user.toast_active = True
-                db.commit()
-                print(f"User {customer_email} subscription activated via session check")
-                return {"subscription_active": True, "user_updated": True}
-            else:
-                print(f"User not found for email: {customer_email}")
-                return {"subscription_active": True, "user_updated": False}
-
-        return {"subscription_active": False, "user_updated": False}
-
-    except Exception as e:
-        print(f"Error checking subscription: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -117,71 +91,89 @@ async def stripe_webhook(
     except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    # Handle subscription events
-    if event["type"] == "customer.subscription.created":
-        subscription = event["data"]["object"]
-        customer_id = subscription["customer"]
+    subscription = event.data.object
+    subscription_id = subscription.id
+    customer_id = subscription.customer
 
-        # Get customer email from Stripe
-        customer = await stripe.Customer.retrieve_async(customer_id)
+    user = db.query(User).filter(User.stripe_customer_id == customer_id).first()
 
-        # Find user in database
-        user = db.query(User).filter(User.email == customer.email).first()
-        if user:
-            user.toast_active = True
-            db.commit()
-        print(f"Subscription created: {subscription['id']}")
+    # Create user link if not exists
+    if not user:
+        try:
+            customer = await stripe.Customer.retrieve_async(customer_id)
+            user = db.query(User).filter(User.email == customer.email).first()
 
-    elif event["type"] == "customer.subscription.deleted":
-        subscription = event["data"]["object"]
-        customer_id = subscription["customer"]
+            if not user:
+                logger.error(f"No user found for email {customer.email}")
+                return {"status": "user_not_found"}
 
-        # Get customer email from Stripe
-        customer = await stripe.Customer.retrieve_async(customer_id)
+            # Link customer and subscription to user
+            user.stripe_customer_id = customer_id
+            user.stripe_subscription_id = subscription_id
+            db.commit()  # Commit the link here
+            logger.info(f"Linked customer {customer_id} to user {user.id}")
+        except stripe.error.StripeError as e:
+            logger.error(f"Failed to retrieve customer {customer_id}: {e}")
+            return {"status": "error"}
 
-        # Find user in database
-        user = db.query(User).filter(User.email == customer.email).first()
-        if user:
-            user.toast_active = False
-            db.commit()
+    logger.info(f"Received webhook event: {event.type} for customer {customer_id}")
+
+    # Handle subscription creation
+    if event.type == "customer.subscription.created":
+        # Update subscription ID for existing customer
+        user.stripe_subscription_id = subscription_id
+        # Grant premium access
+        user.toast_active = True
+        db.commit()
+        logger.info(f"Subscription created: {subscription_id} for user {user.id}")
+
+    # Handle subscription deletion
+    elif event.type == "customer.subscription.deleted":
+        user.stripe_subscription_id = None
+        user.toast_active = False
+        db.commit()
+        logger.info(f"Subscription deleted for user {user.id}")
+
+    # Handle trial ending soon (3 days before)
+    elif event.type == "customer.subscription.trial_will_end":
+        try:
+            trial_end_date = dt.datetime.fromtimestamp(subscription.trial_end)
+            email_service.send_trial_end_notification(user.email, trial_end_date)
+            logger.info(f"Trial ending notification sent to user {user.id}")
+        except Exception as e:
+            logger.error(f"Failed to send trial ending email to user {user.id}: {e}")
+        logger.info(f"Trial ending soon for user {user.id}, trial_end: {subscription.trial_end}")
+
+    # Handle subscription pause (e.g., trial ended without payment)
+    elif event.type == "customer.subscription.paused":
+        user.toast_active = False
+        db.commit()
+        logger.info(f"Subscription paused for user {user.id}")
+
+    # Handle the rest
+    else:
+        logger.info(f"Unhandled event type: {event.type}")
 
     return {"status": "success"}
 
 
-@payment_router.post("/cancel-subscription")
-async def cancel_subscription(request: SubscriptionRequest, db: Session = Depends(get_db)) -> dict:
-    """Cancel a customer's subscription.
-    :param request: SubscriptionRequest with customer email
-    :param db: Database session
-    :return: dict with cancellation status"""
-
-    try:
-        # Get customer
-        customers = await stripe.Customer.list_async(email=request.customer_email, limit=1)
-
-        if not customers.data:
-            raise HTTPException(status_code=404, detail="Customer not found")
-
-        customer = customers.data[0]
-
-        # Get active subscriptions
-        subscriptions = await stripe.Subscription.list_async(customer=customer.id, status="active", limit=1)
-
-        if not subscriptions.data:
-            raise HTTPException(status_code=404, detail="No active subscription found")
-
-        subscription = subscriptions.data[0]
-
-        # Cancel at period end (recommended) or immediately
-        canceled_sub = await stripe.Subscription.modify_async(subscription.id, cancel_at_period_end=False)
-
-        # Update database
-        user = db.query(User).filter(User.email == request.customer_email).first()
-        if user:
-            user.toast_active = False
-            db.commit()
-
-        return {"status": "canceled", "cancel_at": canceled_sub.cancel_at}
-
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+# @payment_router.get("/is-trial-over/{subscription_id}")
+# async def is_trial_over(
+#     current_user=Depends(oauth2.get_current_user),
+# ) -> bool:
+#     """Check if subscription trial has ended."""
+#
+#     if not current_user.stripe_subscription_id:
+#         return True
+#
+#     subscription = await stripe.Subscription.retrieve_async(current_user.stripe_subscription_id)
+#
+#     if subscription.status == "trialing":
+#         return False
+#
+#     if subscription.trial_end:
+#         import time
+#
+#         return subscription.trial_end < time.time()
+#
+#     return True

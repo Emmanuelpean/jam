@@ -203,6 +203,8 @@ class User(CommonBase, Base):
     token_version = Column(Integer, default=0, nullable=False)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
+    stripe_customer_id = Column(String, nullable=True)
+    stripe_subscription_id = Column(String, nullable=True)
 
     @hybrid_property
     def name(self) -> str | None:
