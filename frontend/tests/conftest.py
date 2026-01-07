@@ -10,6 +10,7 @@ import subprocess
 import sys
 import threading
 from pathlib import Path
+from typing import Any, Generator
 
 import psutil
 import requests
@@ -1972,3 +1973,34 @@ class BaseTest(BaseUtils):
         """Helper method to verify user exists in database"""
 
         return self.db.query(models.User).filter(models.User.email == email).all()
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call) -> Generator[None, Any, None]:
+    """Attach test failure information to the request node."""
+    _ = call
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, f"rep_{rep.when}", rep)
+
+
+def _save_page_screenshot(self, failed: bool = False) -> None:
+    """Save screenshot and page source of current page"""
+    try:
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        status_string = "FAILED" if failed else "PASSED"
+        safe_test_name = self._test_name.replace("/", "_").replace(":", "_")
+
+        # Save screenshot
+        screenshot_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}.png"
+        self.driver.save_screenshot(str(screenshot_file))
+        print(f"✅ Saved screenshot to {screenshot_file}")
+
+        # Save page HTML source
+        html_file = LOGS_DIR / f"{safe_test_name}_{status_string}_{timestamp}.html"
+        with open(html_file, "w", encoding="utf-8") as f:
+            f.write(self.driver.page_source)
+        print(f"✅ Saved page source to {html_file}")
+
+    except Exception as e:
+        print(f"⚠️ Could not save screenshot/page source: {e}")
