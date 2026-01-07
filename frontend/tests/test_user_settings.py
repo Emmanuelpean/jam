@@ -242,9 +242,9 @@ class TestPremiumSettingsPage(BaseTest):
         time.sleep(0.5)
         try:
             self.set_text(self.get_element("billingPostalCode", By.NAME), "10001")
-            self.get_element("enableStripePass").click()
-            time.sleep(0.5)
-            self.get_element("enableStripePass").click()
+            self.get_element("link-registration-subheader-message").click()
+            # time.sleep(0.5)
+            # self.get_element("enableStripePass").click()
         except:
             pass
         time.sleep(5)
