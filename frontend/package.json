@@ -32,6 +32,7 @@
 		"react-select": "5.10.1",
 		"recharts": "^3.5.1",
 		"string-similarity": "^4.0.4",
+		"stripe": "^20.1.1",
 		"typescript": "^5.9.2",
 		"web-vitals": "2.1.4"
 	},
