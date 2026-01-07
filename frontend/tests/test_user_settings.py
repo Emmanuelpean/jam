@@ -237,10 +237,14 @@ class TestPremiumSettingsPage(BaseTest):
         self.set_text(self.get_element("cardCvc", By.NAME), "123")
         self.set_text(self.get_element("cardExpiry", By.NAME), "1228")
         self.set_text(self.get_element("billingName", By.NAME), "John Doe")
-        time.sleep(5)
+        time.sleep(0.5)
         self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(0.5)
-        # self.get_element("SubmitButton-Shimmer", By.CLASS_NAME)
+        try:
+            self.set_text(self.get_element("billingPostalCode", By.NAME), "10001")
+        except:
+            pass
+        time.sleep(5)
         self.get_element("SubmitButton-Shimmer", By.CLASS_NAME, enabled=False).click()
         self.driver.switch_to.default_content()
         self.assert_toast_message("Subscription successful! Enjoy your premium features!")
