@@ -74,7 +74,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 	};
 
 	return (
-		<Modal show={show} onHide={onHide} size="lg" centered={true} backdrop="static">
+		<Modal show={show} onHide={onHide} size="lg" centered={true} backdrop="static" id={"stripe-checkout-modal"}>
 			<Modal.Header closeButton>
 				<Modal.Title>Subscribe to TOAST</Modal.Title>
 			</Modal.Header>
