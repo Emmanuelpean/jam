@@ -230,6 +230,7 @@ class TestPremiumSettingsPage(BaseTest):
         time.sleep(5)
         iframe = self.driver.find_elements(By.TAG_NAME, "iframe")[-1]
         self.driver.switch_to.frame(iframe)
+        # modal = self.get_element("stripe-checkout-modal")
         # overlay = self.get_element("webpack-dev-server-client-overlay-div")
         # raise AssertionError(overlay.text)
         self.set_text(self.get_element("cardNumber", By.NAME), "4242 4242 4242 4242")
