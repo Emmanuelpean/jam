@@ -238,6 +238,7 @@ class TestPremiumSettingsPage(BaseTest):
         self.set_text(self.get_element("billingName", By.NAME), "John Doe")
         time.sleep(5)
         self.get_element("SubmitButton-Shimmer", By.CLASS_NAME).click()
+        self.get_element("SubmitButton-Shimmer", By.CLASS_NAME, enabled=False)
         self.driver.switch_to.default_content()
         self.assert_toast_message("Subscription successful! Enjoy your premium features!")
         assert self.db_user.toast_active
