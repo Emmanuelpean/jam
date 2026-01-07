@@ -230,7 +230,7 @@ class TestPremiumSettingsPage(BaseTest):
         time.sleep(5)
         iframe = self.driver.find_elements(By.TAG_NAME, "iframe")[-1]
         self.driver.switch_to.frame(iframe)
-        # modal = self.get_element("stripe-checkout-modal")
+        modal = self.get_element("stripe-checkout-modal")
         # overlay = self.get_element("webpack-dev-server-client-overlay-div")
         # raise AssertionError(overlay.text)
         self.set_text(self.get_element("cardNumber", By.NAME), "4242 4242 4242 4242")
@@ -238,7 +238,8 @@ class TestPremiumSettingsPage(BaseTest):
         self.set_text(self.get_element("cardExpiry", By.NAME), "1228")
         self.set_text(self.get_element("billingName", By.NAME), "John Doe")
         time.sleep(5)
-        self.get_element("SubmitButton-Shimmer", By.CLASS_NAME)
+        self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", modal)
+        # self.get_element("SubmitButton-Shimmer", By.CLASS_NAME)
         self.get_element("SubmitButton-Shimmer", By.CLASS_NAME, enabled=False).click()
         self.driver.switch_to.default_content()
         self.assert_toast_message("Subscription successful! Enjoy your premium features!")
