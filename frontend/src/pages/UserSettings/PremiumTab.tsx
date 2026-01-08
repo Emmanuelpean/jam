@@ -1,65 +1,162 @@
-import React, { JSX, useState } from "react";
-import { Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
+import React, { JSX, useEffect, useState } from "react";
+import { Alert, Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { CheckoutModal } from "./CheckoutModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { API_BASE_URL } from "../../services/api/Base";
-import { useAlert } from "../../contexts/AlertContext";
 
 interface PremiumTabProps {
 	showCheckout: boolean;
 	setShowCheckout: (show: boolean) => void;
 }
 
+type subscriptionStatus = "active" | "trialing" | "past_due" | "canceled" | "unpaid" | "paused" | null;
+
+interface SubscriptionStatus {
+	status: subscriptionStatus;
+	trial_end: number | null;
+	trial_days_remaining: number | null;
+}
+
 export const PremiumTab: React.FC<PremiumTabProps> = ({
 	showCheckout,
 	setShowCheckout,
 }: PremiumTabProps): JSX.Element => {
-	const { currentUser, fetchUserInfo, token } = useAuth();
+	const { currentUser, token } = useAuth();
 	const dataContext: DataContextValue = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [loading, setLoading] = useState<boolean>(false);
-	const { showConfirm } = useAlert();
+	const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
+		status: null,
+		trial_end: null,
+		trial_days_remaining: null,
+	});
 
-	const handleRightClick = (e: any, email: string) => {
+	useEffect(() => {
+		if (currentUser?.stripe_subscription_id) {
+			fetchSubscriptionStatus().then((_) => {});
+		}
+	}, [currentUser?.stripe_subscription_id]);
+
+	const fetchSubscriptionStatus = async () => {
+		try {
+			const response = await fetch(
+				`${API_BASE_URL}/payments/subscription-status/${currentUser?.stripe_subscription_id}`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				},
+			);
+
+			if (response.ok) {
+				const data = await response.json();
+				setSubscriptionStatus(data);
+			}
+		} catch (error) {
+			console.error("Failed to fetch subscription status:", error);
+		}
+	};
+
+	const getSubscriptionStatusDisplay = () => {
+		const { status, trial_days_remaining } = subscriptionStatus;
+
+		if (!status) {
+			return {
+				title: "Upgrade to Premium",
+				message: "Unlock powerful features to supercharge your job search",
+				variant: "info",
+				showSubscribeButton: true,
+			};
+		}
+
+		switch (status) {
+			case "trialing":
+				return {
+					title: "Premium Active (Trial)",
+					message:
+						trial_days_remaining !== null && trial_days_remaining > 0
+							? `${trial_days_remaining} day${trial_days_remaining !== 1 ? "s" : ""} of trial remaining`
+							: "Trial ending soon",
+					variant: "success",
+					showSubscribeButton: false,
+				};
+			case "active":
+				return {
+					title: "Premium Active",
+					message: "You have Premium (lucky you!)",
+					variant: "success",
+					showSubscribeButton: false,
+				};
+			case "past_due":
+				return {
+					title: "Payment Required",
+					message: "Your subscription has unpaid invoices. Please update your payment method.",
+					variant: "warning",
+					showSubscribeButton: false,
+				};
+			case "paused":
+				return {
+					title: "Subscription Paused",
+					message: "Your subscription is currently paused",
+					variant: "secondary",
+					showSubscribeButton: false,
+				};
+			case "canceled":
+			case "unpaid":
+				return {
+					title: "Subscription Inactive",
+					message: "Your subscription has been canceled",
+					variant: "danger",
+					showSubscribeButton: true,
+				};
+			default:
+				return {
+					title: "Upgrade to Premium",
+					message: "Unlock powerful features to supercharge your job search",
+					variant: "info",
+					showSubscribeButton: true,
+				};
+		}
+	};
+
+	const handleRightClick = (e: React.MouseEvent, email: string) => {
 		e.preventDefault();
 		navigator.clipboard.writeText(email).then((_: void): void => {
 			showToastSuccess(`${email} copied to clipboard`);
 		});
 	};
 
-	const handleUnsubscribe = async (): Promise<void> => {
+	const handleManageSubscription = async (): Promise<void> => {
 		try {
-			const result: boolean = await showConfirm({
-				title: "Confirm Unsubscription",
-				message: `Are you sure you want to cancel your Premium subscription? You will lose access to all premium features on the ${currentUser?.premium_started_at}`,
-				confirmText: "Yes, Cancel Subscription",
-				cancelText: "No, Keep Subscription",
+			setLoading(true);
+			const response: Response = await fetch(API_BASE_URL + "/payments/create-portal-session", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ customer_email: currentUser?.email }),
 			});
-			if (result) {
-				setLoading(true);
-				const response: Response = await fetch(API_BASE_URL + "/payments/cancel-subscription", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ customer_email: currentUser?.email }),
-				});
 
-				if (!response.ok) {
-					showToastError(
-						`Failed to cancel subscription. Please try again later or please contact support at ${dataContext.config.support_email}`,
-					);
-					new Error(`HTTP error! status: ${response.status}`);
-				}
-				showToastSuccess("Subscription cancelled successfully.");
-				fetchUserInfo(token!).then(() => setLoading(false));
+			if (!response.ok) {
+				showToastError(
+					`Failed to access subscription portal. Please try again later or contact support at ${dataContext.config.support_email}`,
+				);
+				new Error(`HTTP error! status: ${response.status}`);
 			}
+
+			const data = await response.json();
+			window.location.href = data.url;
 		} catch (error) {
-			console.error("fetchClientSecret error:", error);
-			throw error;
+			console.error("Portal session error:", error);
+			setLoading(false);
 		}
 	};
+
+	const statusDisplay = getSubscriptionStatusDisplay();
+	const hasActiveSubscription = ["active", "trialing", "past_due", "paused"].includes(
+		subscriptionStatus.status || "",
+	);
 
 	const jobBoards = [
 		{
@@ -92,12 +189,10 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 		<>
 			<Card className="mb-4 text-center">
 				<Card.Body>
-					<h2>{currentUser?.toast_active ? "Premium Active" : "Upgrade to Premium"}</h2>
-					<p className="text-muted">
-						{currentUser?.toast_active
-							? "You have Premium (lucky you!)"
-							: "Unlock powerful features to supercharge your job search"}
-					</p>
+					<h2>{statusDisplay.title}</h2>
+					<Alert variant={statusDisplay.variant} className="d-inline-block mt-2">
+						{statusDisplay.message}
+					</Alert>
 					<div className="text-start mt-4 mb-4" style={{ maxWidth: "900px", margin: "0 auto" }}>
 						<h4 className="mb-3">Why Premium?</h4>
 						<p>
@@ -114,29 +209,29 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 							the opportunities that matter most.
 						</p>
 					</div>
-					{!currentUser?.toast_active && (
+					{statusDisplay.showSubscribeButton && (
 						<>
 							<h3 className="mt-4">£5/month</h3>
-							<p className="text-muted">Cancel anytime</p>
+							<p className="text-muted">14-day free trial • Cancel anytime</p>
 							<ActionButton
 								onClick={() => setShowCheckout(true)}
 								defaultIcon="bi-gem"
 								id={"subscribe-button"}
-								defaultText="Subscribe Now"
+								defaultText="Start Free Trial"
 							/>
 						</>
 					)}
-					{currentUser?.toast_active && (
+					{hasActiveSubscription && (
 						<>
 							<h3 className="mt-4">£5/month</h3>
 							<p className="text-muted">Cancel anytime</p>
 							<ActionButton
-								onClick={() => handleUnsubscribe()}
+								onClick={handleManageSubscription}
 								variant={"secondary"}
-								defaultIcon="bi-gem"
+								defaultIcon="bi-gear"
 								loading={loading}
-								id={"subscribe-button"}
-								defaultText="Unsubscribe from Premium"
+								id={"manage-subscription-button"}
+								defaultText="Manage Subscription"
 							/>
 						</>
 					)}

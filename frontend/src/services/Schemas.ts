@@ -258,6 +258,8 @@ export interface UserData extends OwnedOut {
 	first_name: string | null;
 	last_name: string | null;
 	name: string | null;
+	stripe_subscription_id: string | null;
+	stripe_customer_id: string | null;
 }
 
 // ---------------------------------------------------- SCRAPED JOB ----------------------------------------------------

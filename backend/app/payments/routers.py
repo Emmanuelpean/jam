@@ -167,6 +167,58 @@ async def stripe_webhook(
     )
 
 
+@payment_router.post("/create-portal-session")
+async def create_portal_session(
+    request: SubscriptionRequest,
+) -> dict:
+    """Create a Stripe Customer Portal session for subscription management."""
+    try:
+        customers = await stripe.Customer.list_async(email=request.customer_email, limit=1)
+
+        if not customers.data:
+            raise HTTPException(status_code=404, detail="Customer not found")
+
+        customer = customers.data[0]
+
+        # Create portal session
+        portal_session = await stripe.billing_portal.Session.create_async(
+            customer=customer.id,
+            return_url=f"{settings.frontend_url}/settings",  # Adjust to your frontend URL
+        )
+
+        return {"url": portal_session.url}
+    except Exception as e:
+        logger.error(f"Failed to create portal session: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@payment_router.get("/subscription-status/{subscription_id}")
+async def get_subscription_status(
+    subscription_id: str,
+) -> dict:
+    """Get subscription status and trial information.
+    :param subscription_id: Stripe subscription ID
+    :return: dict with subscription status and trial info"""
+
+    try:
+        subscription = await stripe.Subscription.retrieve_async(subscription_id)
+
+        trial_days_remaining = None
+        if subscription.status == "trialing" and subscription.trial_end:
+            import time
+
+            trial_days_remaining = max(0, int((subscription.trial_end - time.time()) / 86400))
+
+        return {
+            "status": subscription.status,
+            "trial_end": subscription.trial_end,
+            "trial_days_remaining": trial_days_remaining,
+        }
+    except stripe.error.StripeError as e:
+        logger.error(f"Failed to retrieve subscription {subscription_id}: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 # @payment_router.get("/is-trial-over/{subscription_id}")
 # async def is_trial_over(
 #     current_user=Depends(oauth2.get_current_user),

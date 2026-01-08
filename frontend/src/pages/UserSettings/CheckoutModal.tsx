@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, JSX, useRef } from "react";
+import React, { useCallback, useEffect, JSX } from "react";
 import { Modal } from "react-bootstrap";
 import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js";
@@ -21,7 +21,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 }: CheckoutModalProps): JSX.Element => {
 	const { showToastSuccess } = useGlobalToast();
 	const { fetchUserInfo, token } = useAuth();
-	const sessionIdRef = useRef<string | null>(null);
 
 	const fetchClientSecret = useCallback(async () => {
 		try {
@@ -36,8 +35,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 			}
 
 			const data = await response.json();
-			// Extract and store session ID from client_secret
-			sessionIdRef.current = data.clientSecret.split("_secret_")[0];
+
 			if (!data.clientSecret) {
 				new Error("No clientSecret in response");
 			}
@@ -62,14 +60,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 	// noinspection JSUnusedGlobalSymbols
 	const options = {
 		fetchClientSecret,
-		onComplete: async () => {
-			if (sessionIdRef.current) {
-				await fetch(`${API_BASE_URL}/payments/check-subscription/${sessionIdRef.current}`);
-			}
-			fetchUserInfo(token!).then(() => {
-				showToastSuccess("Subscription successful! Enjoy your premium features!");
-				onHide();
-			});
+		onComplete: async (): Promise<void> => {
+			await fetchUserInfo(token!);
+			showToastSuccess("Subscription successful! Enjoy your premium features!");
+			onHide();
 		},
 	};
 
