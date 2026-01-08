@@ -128,6 +128,8 @@ class UserOut(Out):
     first_name: str | None = None
     last_name: str | None = None
     name: str | None = None
+    stripe_customer_id: str | None = None
+    stripe_subscription_id: str | None = None
 
 
 class UserUpdate(UserCreate):

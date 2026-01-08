@@ -1,4 +1,5 @@
-import React, { JSX, useState } from "react";
+import React, { JSX, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Card, Col, Row } from "react-bootstrap";
 import { AccountTab } from "./AccountTab";
 import { PreferencesTab } from "./PreferencesTab";
@@ -19,8 +20,19 @@ interface MenuItem {
 
 const UserSettingsPage: React.FC = (): JSX.Element => {
 	const { currentUser } = useAuth();
-	const [activeTab, setActiveTab] = useState<tabs>("account");
-	const [showCheckout, setShowCheckout] = useState(false);
+	const navigate = useNavigate();
+	const { tab } = useParams<{ tab: tabs }>();
+	const [showCheckout, setShowCheckout] = React.useState(false);
+
+	// Set active tab based on URL parameter
+	const activeTab = tab || "account";
+
+	// Redirect to default tab if no tab specified
+	useEffect(() => {
+		if (!tab) {
+			navigate("/settings/account", { replace: true });
+		}
+	}, [tab, navigate]);
 
 	const menuItems: MenuItem[] = [
 		{ id: "account", label: "Account", icon: "person" },
@@ -33,6 +45,10 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 		},
 		{ id: "premium", label: "Premium", icon: "gem" },
 	];
+
+	const handleTabChange = (tabId: tabs): void => {
+		navigate(`/settings/${tabId}`);
+	};
 
 	return (
 		<div className="container-fluid vh-100 d-flex flex-column">
@@ -59,7 +75,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 									className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${
 										activeTab === item.id ? "active" : ""
 									}`}
-									onClick={(): void => setActiveTab(item.id)}
+									onClick={(): void => handleTabChange(item.id)}
 								>
 									<span>
 										<i className={`bi bi-${item.icon} me-2`}></i>
