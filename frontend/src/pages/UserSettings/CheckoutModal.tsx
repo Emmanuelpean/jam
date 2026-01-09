@@ -24,10 +24,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
 	const fetchClientSecret = useCallback(async () => {
 		try {
-			const response: Response = await fetch(API_BASE_URL + "/payments/create-subscription-checkout", {
+			// Check if running in test mode
+			const isTestMode = process.env.REACT_APP_TEST_MODE === "true";
+			const endpoint = isTestMode
+				? "/test/create-subscription-checkout/" + process.env.REACT_APP_STRIPE_TEST_USER
+				: "/payments/create-subscription-checkout";
+
+			const response: Response = await fetch(API_BASE_URL + endpoint, {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ customer_email: userEmail }),
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 			});
 
 			if (!response.ok) {
@@ -35,7 +40,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 			}
 
 			const data = await response.json();
-
 			if (!data.clientSecret) {
 				new Error("No clientSecret in response");
 			}

@@ -115,8 +115,8 @@ export const Sidebar = () => {
 	};
 
 	const isMenuActive = (path: string): boolean => {
-		// Check if the current path matches the menu item's path
-		return location.pathname === path;
+		// Check if the current path starts with the menu item's path
+		return location.pathname.startsWith(path);
 	};
 
 	const isGroupMenuActive = (submenu: NavigationSubItem[]): boolean => {

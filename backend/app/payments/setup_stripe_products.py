@@ -1,8 +1,6 @@
-import stripe
+"""Script to set up Stripe products and prices."""
 
-from app.config import settings
-
-stripe.api_key = settings.stripe_secret_key
+from app.payments import stripe
 
 
 def setup_stripe_products() -> None:

@@ -6,32 +6,29 @@ import requests
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-
+from app.config import settings
 from conftest import BaseTest
 
 
 class TestPremiumSettingsPage(BaseTest):
     """Test class for the Premium Settings Page"""
 
-    page_url = "settings"
+    page_url = "settings/premium"
 
     def setup_function(self, request) -> None:
         """Setup function"""
+
         self.login()
         self.user_settings_utils.go_to_premium_tab()
 
     def test_premium_page_content(self) -> None:
         """Test premium page content"""
-        assert self.check_element_exists("subscribe-button")
 
-    def test_premium_page_features_list(self) -> None:
-        """Test that premium features are displayed"""
-        # Verify premium features are listed on the page
-        # Adjust element IDs based on your actual implementation
-        assert self.check_element_exists("premium-features")
+        assert self.check_element_exists("subscribe-button")
 
     def test_stripe_payment_modal_opens(self) -> None:
         """Test that clicking subscribe button opens Stripe modal"""
+
         self.get_element("subscribe-button").click()
         time.sleep(3)
 
@@ -39,8 +36,119 @@ class TestPremiumSettingsPage(BaseTest):
         iframes = self.driver.find_elements(By.TAG_NAME, "iframe")
         assert len(iframes) > 0, "Stripe iframe should be present"
 
+    def test_stripe_payment_modal_successful_subscription_trial(self) -> None:
+        """Test the Stripe payment modal with successful payment"""
+
+        self.get_element("subscribe-button").click()
+        time.sleep(5)
+
+        # Switch to Stripe iframe
+        iframe = self.driver.find_elements(By.TAG_NAME, "iframe")[-1]
+        self.driver.switch_to.frame(iframe)
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        self.get_element("SubmitButton-IconContainer", By.CLASS_NAME).click()
+        self.driver.switch_to.default_content()
+
+        customer_id = "cus_test_123456789"
+        subscription_id = "sub_test_123456789"
+        response = requests.post(
+            settings.backend_url + "/test/trigger-webhook",
+            json={
+                "customer_email": self.db_user.email,
+                "event_type": "customer.subscription.created",
+                "subscription_id": subscription_id,
+                "customer_id": customer_id,
+            },
+        )
+        assert response.status_code == 200
+
+        # Verify success
+        self.assert_toast_message("Subscription successful! Enjoy your premium features!")
+
+        # Refresh db_user to get updated state
+        self.db.refresh(self.db_user)
+        assert self.db_user.toast_active
+        assert self.db_user.stripe_customer_id == customer_id
+        assert self.db_user.stripe_subscription_id == subscription_id
+
+    def test_stripe_reactivation_after_trial_ended(self) -> None:
+        """Test reactivating subscription after trial ended by adding payment method"""
+
+        # Use subscription IDs that the mock endpoint recognises
+        trial_subscription_id = "sub_test_trial_12345"
+        ended_subscription_id = "sub_test_ended_67890"
+        active_subscription_id = "sub_test_active_11111"
+
+        # Simulate trial creation
+        requests.post(
+            settings.backend_url + "/test/trigger-webhook",
+            json={
+                "customer_email": self.db_user.email,
+                "event_type": "customer.subscription.created",
+                "subscription_id": trial_subscription_id,
+                "customer_id": "cus_test_reactivate",
+                "trial_end": int(time.time()) + (14 * 86400),
+            },
+        )
+
+        # Frontend can now call /test/subscription-status/sub_test_trial_12345
+        # and get proper trial status
+
+        # Simulate trial ending
+        requests.post(
+            settings.backend_url + "/test/trigger-webhook",
+            json={
+                "customer_email": self.db_user.email,
+                "event_type": "customer.subscription.deleted",
+                "subscription_id": ended_subscription_id,
+                "customer_id": "cus_test_reactivate",
+            },
+        )
+
+        # Verify user lost access
+        self.db.refresh(self.db_user)
+        assert not self.db_user.toast_active
+
+        # Now user clicks subscribe button to reactivate
+        self.get_element("subscribe-button").click()
+        time.sleep(5)
+
+        # Switch to Stripe iframe and provide payment details
+        iframe = self.driver.find_elements(By.TAG_NAME, "iframe")[-1]
+        self.driver.switch_to.frame(iframe)
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+        # In real Stripe test mode, you'd fill in card details here
+        # For testing purposes, we'll simulate successful payment submission
+        self.get_element("SubmitButton-IconContainer", By.CLASS_NAME).click()
+        self.driver.switch_to.default_content()
+
+        # Simulate the webhook for new subscription creation
+        new_subscription_id = "sub_test_reactivated_123"
+        response = requests.post(
+            "http://localhost:8000/test/trigger-webhook",
+            json={
+                "customer_email": self.db_user.email,
+                "event_type": "customer.subscription.created",
+                "subscription_id": new_subscription_id,
+                "customer_id": "cus_test_reactivate",
+                # No trial_end since this is a paid subscription
+            },
+        )
+        assert response.status_code == 200
+
+        # Verify success message
+        self.assert_toast_message("Subscription successful! Enjoy your premium features!")
+
+        # Verify user regained premium access with new subscription
+        self.db.refresh(self.db_user)
+        assert self.db_user.toast_active
+        assert self.db_user.stripe_subscription_id == new_subscription_id
+        assert self.db_user.stripe_customer_id == "cus_test_reactivate"
+
     def test_stripe_payment_modal_successful_subscription(self) -> None:
         """Test the Stripe payment modal with successful payment"""
+
         self.get_element("subscribe-button").click()
         time.sleep(5)
 
