@@ -122,7 +122,6 @@ class UserOut(Out):
     deadline_threshold: int
     update_limit: int
     toast_active: bool
-    premium_started_at: datetime | None = None
     default_currency: str
     pending_email: EmailField | None = None
     first_name: str | None = None

@@ -190,7 +190,6 @@ class User(CommonBase, Base):
     deadline_threshold = Column(Integer, nullable=False, server_default="7")
     update_limit = Column(Integer, nullable=False, server_default="10")
     toast_active = Column(Boolean, nullable=False, server_default=expression.false())
-    premium_started_at = Column(TIMESTAMP(timezone=True), nullable=True)
     default_currency = Column(String, nullable=False, server_default="GBP")
     is_verified = Column(Boolean, nullable=False, server_default=expression.false())
     verification_token = Column(String, nullable=True)

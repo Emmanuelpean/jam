@@ -7,7 +7,8 @@ from app.config import settings
 from app.emails import routers as email_routers
 from app.job_email_scraping import routers as job_scraping_routers
 from app.job_rating import routers as job_rating_routers
-from app.payments import routers as payment_routers
+from app.payments import webhooks as payment_routers
+from app.payments import test_routers as payment_test_routers
 from app.routers import auth as auth_routers
 from app.routers import data_tables as data_table_routers
 from app.routers import export as export_routers
@@ -15,7 +16,7 @@ from app.routers import others as other_routers
 from app.routers import settings as settings_routers
 from app.routers import user as user_routers
 
-app = FastAPI()
+app = FastAPI()  # TODO add version and app name
 
 
 def get_allowed_origins() -> list[str]:
@@ -89,6 +90,7 @@ app.include_router(payment_routers.payment_router)
 # Testing
 if settings.test_mode:
     app.include_router(email_routers.router)
+    app.include_router(payment_test_routers.test_router)
 
 
 @app.get("/")
