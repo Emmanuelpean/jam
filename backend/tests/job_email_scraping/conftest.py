@@ -6,10 +6,9 @@ from unittest import mock
 
 import pytest
 
-from app.job_email_scraping import models
+from app import models
 from app.job_email_scraping.email_parsers import indeed
 from app.job_email_scraping.email_scraper import JobEmailScraper
-from app.models import Setting
 from tests.job_email_scraping import resources
 from tests.job_email_scraping.mock_job_scrapers import (
     MockVeganJobsBrightdataJobScraper,
@@ -114,7 +113,7 @@ def test_job_scraper(session) -> JobEmailScraper:
     """Create a JobScraper instance for testing with mocked file dependencies."""
 
     # noinspection PyArgumentList
-    entry = Setting(name="indeed_scraper", value="brightapi")
+    entry = models.Setting(name="indeed_scraper", value="brightapi")
     session.add(entry)
     session.commit()
     return JobEmailScraper(session)
@@ -125,7 +124,7 @@ def job_scraper_with_brightapi_skip(session) -> JobEmailScraper:
     """Create a JobScraper instance with BrightAPI skip enabled for indeed jobs."""
 
     # noinspection PyArgumentList
-    entry = Setting(name="indeed_scraper", value="email")
+    entry = models.Setting(name="indeed_scraper", value="email")
     session.add(entry)
     session.commit()
     return JobEmailScraper(session)

@@ -19,11 +19,13 @@ import { ApiError, ApiResponse, ApiResponsePromise } from "../services/api/Base"
 import { userApi } from "../services/api/Users";
 import { scrapedJobApi } from "../services/api/Services";
 import { useAuth } from "./AuthContext";
+import { useLoading } from "./LoadingContext";
+import { findItemById, sortByKey } from "../utils/Utils";
+import { CrudApi } from "../services/api/Crud";
+import { getScrapingFilterName } from "../components/rendering/view/ViewRenders";
 import {
 	AggregatorData,
 	CompanyData,
-	Country,
-	Currency,
 	EnrichedInterviewData,
 	EnrichedJobApplicationUpdateData,
 	EnrichedJobData,
@@ -33,16 +35,11 @@ import {
 	KeywordData,
 	LocationData,
 	PersonData,
-	ScrapedJobData,
-	ScrapingFilterData,
-	SettingData,
 	SpeculativeApplicationData,
-	UserData,
-} from "../services/Schemas";
-import { useLoading } from "./LoadingContext";
-import { findItemById, sortByKey } from "../utils/Utils";
-import { CrudApi } from "../services/api/Crud";
-import { getScrapingFilterName } from "../components/rendering/view/ViewRenders";
+} from "../services/schemas/DataTables";
+import { SettingData, UserData } from "../services/schemas/Core";
+import { ScrapedJobData, ScrapingFilterData } from "../services/schemas/Services";
+import { Country, Currency } from "../services/schemas/Others";
 
 export type EntityType =
 	| "job"

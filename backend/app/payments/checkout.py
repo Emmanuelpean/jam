@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.model_registry import User
-from app.oauth2 import get_current_user
+from app.models import User
+from core.oauth2 import get_current_user
 from app.payments import stripe, logger, payment_router
 
 
@@ -77,13 +77,13 @@ async def get_or_create_stripe_customer(
             logger.info(f"Retrieved existing customer: {customer.email}")
 
             # Link customer ID to user if not already linked
-            if not user.stripe_customer_id:
-                user.stripe_customer_id = customer.id
+            if not user.stripe_details.customer_id:
+                user.stripe_details.customer_id = customer.id
                 db.commit()
                 logger.info(f"Linked Stripe customer {customer.id} to user {user.id}")
 
             # Verify customer ID matches
-            if user.stripe_customer_id != customer.id:
+            if user.stripe_details.customer_id != customer.id:
                 logger.warning(
                     f"Stripe customer ID mismatch for user {user.id}: "
                     f"expected {user.stripe_customer_id}, got {customer.id}"
@@ -111,7 +111,7 @@ async def get_or_create_stripe_customer(
                 email=user.email,
                 metadata={"user_id": str(user.id)},
             )
-            user.stripe_customer_id = customer.id
+            user.stripe_details.customer_id = customer.id
             db.commit()
             logger.info(f"Created new Stripe customer {customer.id} for user {user.id}")
 

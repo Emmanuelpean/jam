@@ -2,8 +2,8 @@ import React, { forwardRef } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
-import { AggregatorData, AggregatorDataTransform } from "../../services/Schemas";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
+import { AggregatorData, AggregatorDataTransform } from "../../services/schemas/DataTables";
 
 export const AggregatorModal = forwardRef<DataModalHandle, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref) => {

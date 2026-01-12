@@ -9,8 +9,8 @@ import jwt
 import pytest
 from fastapi import HTTPException, status
 
-from app import oauth2, schemas
 from app.config import settings
+from app.core import oauth2, schemas
 
 
 class TestCreateAccessToken:

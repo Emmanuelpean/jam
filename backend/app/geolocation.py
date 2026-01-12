@@ -6,7 +6,7 @@ import requests
 from sqlalchemy.orm import Session
 
 from app import utils
-from app.model_registry import Geolocation
+from app.models import Geolocation
 
 
 def call_geocoding_api(query: str) -> tuple[float, float, dict]:

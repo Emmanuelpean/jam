@@ -7,7 +7,7 @@ import pytest
 
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.job_scrapers import JobResult
-from app.model_registry import (
+from app.models import (
     JobEmail,
     ScrapedJob,
     JobEmailScrapingPlatformStat,

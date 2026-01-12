@@ -2,9 +2,9 @@ import React, { forwardRef } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
-import { CompanyData, CompanyDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
+import { CompanyData, CompanyDataTransform } from "../../services/schemas/DataTables";
 
 export const CompanyModal = forwardRef<DataModalHandle, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref) => {

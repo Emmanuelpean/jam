@@ -21,9 +21,9 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
 
-from app.models import Base, CommonBase, Owned, ServiceLog
-
-# ------------------------------------------------------ MAPPINGS ------------------------------------------------------
+from app.database import Base
+from app.base_models import CommonBase, Owned
+from app.service_runner.models import ServiceLog
 
 
 jobemail_scrapedjob_mapping = Table(
@@ -32,9 +32,6 @@ jobemail_scrapedjob_mapping = Table(
     Column("email_id", Integer, ForeignKey("job_email.id", ondelete="CASCADE"), primary_key=True),
     Column("job_id", Integer, ForeignKey("scraped_job.id", ondelete="CASCADE"), primary_key=True),
 )
-
-
-# -------------------------------------------------------- DATA --------------------------------------------------------
 
 
 class JobEmail(Owned, Base):

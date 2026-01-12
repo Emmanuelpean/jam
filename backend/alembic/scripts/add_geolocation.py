@@ -2,7 +2,7 @@
 
 from app.database import get_db
 from app.geolocation import geocode_location
-from app.model_registry import Location
+from app.models import Location
 
 
 def add_geolocation_to_locations() -> None:

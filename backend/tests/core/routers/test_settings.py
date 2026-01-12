@@ -1,6 +1,6 @@
 """Tests for the settings router."""
 
-from app import schemas
+from app.core import schemas
 from tests.conftest import CRUDTestBase
 from tests.utils.test_data import SETTINGS_DATA
 

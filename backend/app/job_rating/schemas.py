@@ -4,7 +4,7 @@ import datetime as dt
 
 from pydantic import BaseModel
 
-from app.schemas import Out
+from app.base_schemas import Out
 
 
 # ----------------------------------------------------- JOB RATING -----------------------------------------------------

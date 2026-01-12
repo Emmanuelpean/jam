@@ -1,11 +1,10 @@
 import React, { forwardRef, JSX } from "react";
-import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, Fields, JamDataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import "../../pages/Auth/AuthPage.css";
-import { UserData, UserDataTransform } from "../../services/Schemas";
-import { THEMES } from "../../utils/Theme";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
+import { UserData, UserDataTransform } from "../../services/schemas/Core";
 
 export const UserModal = forwardRef<DataModalHandle, JamDataModalProps>(({ size = "lg" }, ref): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
@@ -15,13 +14,12 @@ export const UserModal = forwardRef<DataModalHandle, JamDataModalProps>(({ size 
 
 		const formFieldsArray: Fields = [
 			[formFields.email({ required: true }), ...(isAddMode ? [formFields.password({ required: true })] : [])],
-			formFields.appTheme(),
-			[formFields.isAdmin(), formFields.toastActive(), formFields.isActive()],
+			[formFields.isAdmin(), formFields.isActive()],
 		];
 
 		const viewFieldsArray: Fields = [
-			[modalViewFields.email(), modalViewFields.appTheme()],
-			[modalViewFields.isAdmin(), modalViewFields.toastActive(), modalViewFields.isActive()],
+			[modalViewFields.email()],
+			[modalViewFields.isAdmin(), modalViewFields.isActive()],
 		];
 
 		return {
@@ -46,9 +44,7 @@ export const UserModal = forwardRef<DataModalHandle, JamDataModalProps>(({ size 
 		return {
 			email: formData.email?.trim(),
 			password: formData.password?.trim(),
-			theme: formData.theme || THEMES[0]?.key,
 			is_admin: formData.is_admin || false,
-			toast_active: formData.toast_active || false,
 			is_active: formData.is_active || false,
 		};
 	};

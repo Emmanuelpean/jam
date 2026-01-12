@@ -2,10 +2,10 @@ import React, { forwardRef } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
-import { LocationData, LocationDataTransform } from "../../services/Schemas";
 import { tableColumns } from "../rendering/view/TableColumns";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
+import { LocationData, LocationDataTransform } from "../../services/schemas/DataTables";
 
 export const LocationModal = forwardRef<DataModalHandle, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref) => {

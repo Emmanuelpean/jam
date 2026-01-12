@@ -1,6 +1,12 @@
 import { api, ApiResponsePromise } from "./Base";
-import { UserData, UserQualification } from "../Schemas";
 import { createCrudApi, CrudApi } from "./Crud";
+import {
+	UserData,
+	UserDataAccountUpdate,
+	UserDataPreferencesUpdate,
+	UserDataPremiumUpdate,
+	UserQualification,
+} from "../schemas/Core";
 
 export interface GenericResponse {
 	success: boolean;
@@ -32,7 +38,15 @@ export interface AuthApi {
 	login: (email: string, password: string) => ApiResponsePromise<LoginResponse>;
 	register: (registerData: RegisterData) => ApiResponsePromise<GenericResponse>;
 	getCurrentUser: (token: string) => ApiResponsePromise<UserData>;
-	updateCurrentUser: (data: any, token: string) => ApiResponsePromise<UpdateCurrentUserResponse>;
+	updateCurrentUserAccount: (
+		data: UserDataAccountUpdate,
+		token: string,
+	) => ApiResponsePromise<UpdateCurrentUserResponse>;
+	updateCurrentUserPreferences: (
+		data: UserDataPreferencesUpdate,
+		token: string,
+	) => ApiResponsePromise<GenericResponse>;
+	updateCurrentUserPremium: (data: UserDataPremiumUpdate, token: string) => ApiResponsePromise<GenericResponse>;
 	verifyEmail: (token: string) => ApiResponsePromise<GenericResponse>;
 	verifyNewEmail: (token: string) => ApiResponsePromise<GenericResponse>;
 	checkPendingEmail: (token: string) => ApiResponsePromise<boolean>;
@@ -56,8 +70,25 @@ export const authApi: AuthApi = {
 		return api.get("current-user/", token);
 	},
 
-	updateCurrentUser: async (data: any, token: string): ApiResponsePromise<UpdateCurrentUserResponse> => {
-		return api.put("current-user/", data, token);
+	updateCurrentUserAccount: async (
+		data: UserDataAccountUpdate,
+		token: string,
+	): ApiResponsePromise<UpdateCurrentUserResponse> => {
+		return api.put("current-user/account", data, token);
+	},
+
+	updateCurrentUserPreferences: async (
+		data: UserDataPreferencesUpdate,
+		token: string,
+	): ApiResponsePromise<GenericResponse> => {
+		return api.put("current-user/preferences", data, token);
+	},
+
+	updateCurrentUserPremium: async (
+		data: UserDataPremiumUpdate,
+		token: string,
+	): ApiResponsePromise<GenericResponse> => {
+		return api.put("current-user/premium", data, token);
 	},
 
 	checkPendingEmail: async (token: string): ApiResponsePromise<boolean> => {

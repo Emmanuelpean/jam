@@ -9,7 +9,6 @@ import DataModal, {
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { getApplicationStatusBadgeClass } from "../rendering/view/Icons";
-import { EnrichedJobData, JobData, JobDataTransform } from "../../services/Schemas";
 import { useAuth } from "../../contexts/AuthContext";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
@@ -19,6 +18,7 @@ import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { KeywordModal } from "./KeywordModal";
 import { LocationModal } from "./LocationModal";
+import { EnrichedJobData, JobData, JobDataTransform } from "../../services/schemas/DataTables";
 
 interface JobAndApplicationProps extends JamDataModalProps {
 	defaultActiveTab?: "job" | "application";
@@ -110,7 +110,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				url: jobData.url?.trim() || null,
 				salary_min: Number(jobData.salary_min) || null,
 				salary_max: Number(jobData.salary_max) || null,
-				salary_currency: currentUser?.default_currency?.trim() || null,
+				salary_currency: currentUser?.preferences.default_currency?.trim() || null,
 				personal_rating: jobData.personal_rating || null,
 				company_id: jobData.company_id || null,
 				location_id: jobData.location_id || null,

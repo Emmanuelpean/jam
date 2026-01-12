@@ -3,7 +3,7 @@
 import pytest
 
 from app.job_email_scraping.filtering import apply_rule_to_values, rule_to_sql_predicate
-from app.model_registry import ScrapingExclusionFilter
+from app.models import ScrapingExclusionFilter
 
 
 class TestApplyRuleToValues:

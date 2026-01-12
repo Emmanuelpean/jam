@@ -3,7 +3,7 @@
 import copy
 import random
 
-from app import model_registry as models, utils
+from app import models as models, utils
 from tests.utils.test_data import basics
 from tests.utils.test_data import data_tables
 from tests.utils.test_data import job_rating_service
@@ -23,7 +23,7 @@ def create_settings(db) -> list[models.Setting]:
 
 
 def create_users(db, user_data: list[dict] | None = None, rounds=4) -> list[models.User]:
-    """Create sample users and return them attached to the session"""
+    """Create sample users with their related preferences and stripe details, and return them attached to the session"""
 
     print("Creating users...")
     users = []
@@ -33,11 +33,18 @@ def create_users(db, user_data: list[dict] | None = None, rounds=4) -> list[mode
 
     # Store the original password and hash it for database storage
     for user in user_data:
-        user_dict = user.copy()
+        user_dict = {k: v for k, v in user.items() if k != "premium_active"}
         original_passwords.append(user_dict["password"])  # Store original password
         user_dict["password"] = utils.hash_password(user_dict["password"], rounds)
+
+        # Create user
         # noinspection PyArgumentList
-        users.append(models.User(**user_dict))
+        new_user = models.User(**user_dict)
+        new_user.preferences = models.UserPreferences()
+        # noinspection PyArgumentList
+        new_user.premium = models.PremiumSettings(is_active=user.get("premium_active", False))
+
+        users.append(new_user)
 
     users = add_to_db(db, users)
 

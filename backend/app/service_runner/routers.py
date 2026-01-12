@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from app.config import settings
-from app.model_registry import User
+from app.models import User
 from app.routers import assert_admin
 from app.service_runner.service_runner import ServiceRunner
 
