@@ -1,15 +1,14 @@
 """User route"""
 
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app import utils, models, oauth2, database, schemas
-from app.config import settings
+from app import base_schemas
+from app import utils, models, database
+from app.core import oauth2, schemas
+from app.core.utils import send_email_change_email
 from app.emails.email_service import email_service
 from app.routers import generate_data_table_crud_router
-from app.routers.utils import get_retry_remaining_seconds, generate_token, check_token_expiration
 
 
 # -------------------------------------------------------- USERS -------------------------------------------------------
@@ -50,7 +49,7 @@ user_qualification_router = APIRouter(prefix="/user-qualifications", tags=["user
 def get_latest_user_qualification(
     db: Session = Depends(database.get_db),
     user: models.User = Depends(oauth2.get_current_user),
-):
+) -> models.UserQualification:
     """Get the latest user qualification for the current user."""
 
     entry = (
@@ -72,8 +71,12 @@ def upsert_user_qualification(
     qualification: schemas.UserQualificationUpsert,
     db: Session = Depends(database.get_db),
     user: models.User = Depends(oauth2.get_current_user),
-):
-    """Create or update a user qualification."""
+) -> models.UserQualification:
+    """Create or update a user qualification.
+    :param qualification: The user qualification data.
+    :param db: The database session
+    :param user: The current authenticated user.
+    :returns: The created or updated user qualification."""
 
     entry = (
         db.query(models.UserQualification)
@@ -120,58 +123,9 @@ def get_current_user_profile(
     return current_user
 
 
-def send_email_change_with_rate_limit(
-    user: models.User,
-    db: Session,
-    email: str,
-) -> dict[str, bool | str | int | None]:
-    """Send email change email with rate limiting.
-    :param user: user entry
-    :param db: database session
-    :param email: new email address
-    :return: dictionary with success status, message and error code"""
-
-    # Check if enough time has passed since last email
-    seconds_remaining = get_retry_remaining_seconds(user.email_change_token_created_at)
-    if seconds_remaining > 0:
-        return {
-            "success": False,
-            "message": f"Please wait {seconds_remaining} seconds before requesting another verification email",
-            "error_code": status.HTTP_429_TOO_MANY_REQUESTS,
-        }
-
-    # Generate new verification token
-    token, verification_code = generate_token()
-
-    try:
-        # Send the email to the user
-        verification_url = f"{settings.frontend_url}/verify-new-email/?token={token}"
-        email_service.send_email_change_verification(email, verification_url)
-
-        # Update user with new verification code and timestamp
-        user.pending_email = email
-        user.email_change_token = verification_code
-        user.email_change_token_created_at = datetime.now(timezone.utc)
-        db.commit()
-
-        return {
-            "success": True,
-            "message": "Verification email sent successfully.",
-            "error_code": None,
-        }
-
-    except Exception as e:
-        db.rollback()
-        return {
-            "success": False,
-            "message": f"Error sending verification email: {str(e)}",
-            "error_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
-        }
-
-
-@current_user_router.put("/", response_model=schemas.CurrentUserUpdateResponse)
-def update_current_user_profile(
-    user_update: schemas.CurrentUserUpdate,
+@current_user_router.put("/account", response_model=schemas.CurrentUserUpdateResponse)
+def update_account(
+    user_update: schemas.UserUpdate,
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
 ) -> dict:
@@ -231,9 +185,13 @@ def update_current_user_profile(
             )
 
         # Send verification email with rate limiting
-        result = send_email_change_with_rate_limit(current_user, db, new_email)
-        if not result["success"]:
-            return result
+        email_result = send_email_change_email(current_user, new_email, db)
+        if not email_result.success:
+            raise HTTPException(
+                status_code=email_result.error_code,
+                detail=email_result.message,
+            )
+        result["message"] = email_result.message
 
     # Update other fields normally
     for field, value in user_update_dict.items():
@@ -242,7 +200,7 @@ def update_current_user_profile(
     # Increment token version if password was changed
     if password_changed:
         current_user.token_version += 1
-        result["message"] = "User updated successfully. Please log in again."
+        result["message"] = "Account updated successfully. Please log in again."
         result["logged_out"] = True
 
     db.commit()
@@ -250,7 +208,55 @@ def update_current_user_profile(
     return result
 
 
-@current_user_router.get("/verify-email/{token}", response_model=schemas.GenericResponse)
+@current_user_router.put("/preferences", response_model=base_schemas.GenericResponse)
+def update_preferences(
+    preferences_update: schemas.UserPreferencesUpdate,
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
+) -> dict:
+    """Update the current user's preferences.
+    :param preferences_update: The preferences update data.
+    :param current_user: The current authenticated user.
+    :param db: The database session.
+    :returns: A dictionary with the result of the update operation."""
+
+    preferences_dict = preferences_update.model_dump(exclude_unset=True)
+
+    # Update preferences fields
+    for field, value in preferences_dict.items():
+        setattr(current_user.preferences, field, value)
+
+    db.commit()
+    db.refresh(current_user)
+
+    return {"success": True, "message": "Preferences updated successfully"}
+
+
+@current_user_router.put("/premium", response_model=base_schemas.GenericResponse)
+def update_preferences(
+    update_data: schemas.PremiumDetailsUpdate,
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
+) -> dict:
+    """Update the current user's premium.
+    :param update_data: The premium update data.
+    :param current_user: The current authenticated user.
+    :param db: The database session.
+    :returns: A dictionary with the result of the update operation."""
+
+    update_data_dict = update_data.model_dump(exclude_unset=True)
+
+    # Update premium fields
+    for field, value in update_data_dict.items():
+        setattr(current_user.premium, field, value)
+
+    db.commit()
+    db.refresh(current_user)
+
+    return {"success": True, "message": "Premium settings updated successfully"}
+
+
+@current_user_router.get("/verify-email/{token}", response_model=base_schemas.GenericResponse)
 def verify_email_change(
     token: str,
     db: Session = Depends(database.get_db),
@@ -260,32 +266,51 @@ def verify_email_change(
     :param db: The database session.
     :returns: A message indicating the result of the email change verification."""
 
-    verification_code = utils.hash_token(token)
-    user = db.query(models.User).filter(models.User.email_change_token == verification_code).first()
+    hashed_token = utils.hash_token(token)
 
-    if not user:
+    # Find the token entry
+    token_entry = (
+        db.query(models.UserToken)
+        .filter(
+            models.UserToken.token == hashed_token,
+            models.UserToken.token_type == "email_change",
+        )
+        .first()
+    )
+
+    if not token_entry:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid or expired token. Please request a new one by logging in and changing your email address.",
         )
 
-    # Check if demo user
-    if user.is_demo:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Test users cannot change their password or email address.",
-        )
-
     # Check if token is expired
-    if check_token_expiration(user.email_change_token_created_at):
+    if not token_entry.is_valid:
+        db.delete(token_entry)
+        db.commit()
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Email change token has expired. Please request a new one by logging in and changing your email address.",
         )
 
-    # Check if user email does not already exist
+    # Get the user
+    user = db.query(models.User).filter(models.User.id == token_entry.owner_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not found.")
+
+    # Check if demo user
+    if user.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Test users cannot change their email address.",
+        )
+
+    # Check if email is already taken
     other_users = (
-        db.query(models.User).filter(models.User.id != user.id).filter(models.User.email == user.pending_email).first()
+        db.query(models.User)
+        .filter(models.User.id != user.id)
+        .filter(models.User.email == token_entry.pending_email)
+        .first()
     )
     if other_users:
         raise HTTPException(
@@ -293,35 +318,46 @@ def verify_email_change(
             detail="Email already registered",
         )
 
-    # Update email and clear pending fields
+    # Update email and invalidate all sessions
     old_email = user.email
-    user.email = user.pending_email
-    user.pending_email = None
-    user.email_change_token = None
-    user.email_change_token_created_at = None
+    user.email = token_entry.pending_email
     user.token_version += 1
+
+    # Delete the token after successful use
+    db.delete(token_entry)
     db.commit()
     email_service.send_email_change_notification(user.email, old_email)
 
     return {"message": "Email address changed successfully. You can now log in with your new email.", "success": True}
 
 
-@current_user_router.get("/check-pending-email")
+@current_user_router.get("/check-pending-email", response_model=schemas.CheckPendingEmailResponse)
 def check_email_pending(
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
-) -> bool:
-    """Check if the user has a pending email change and clear it if expired.
+) -> dict[str, bool | str | None]:
+    """Check if the user has a pending email change.
     :param current_user: The current authenticated user.
     :param db: The database session.
-    :returns: False if no pending email or if the token is expired, True otherwise."""
+    :returns: Dictionary with pending status and email if exists."""
+
+    # Get the email change token for this user
+    token_entry = (
+        db.query(models.UserToken)
+        .filter(
+            models.UserToken.owner_id == current_user.id,
+            models.UserToken.token_type == "email_change",
+        )
+        .first()
+    )
+
+    if not token_entry:
+        return {"has_pending_email": False, "pending_email": None}
 
     # Check if token is expired
-    if check_token_expiration(current_user.email_change_token_created_at):
-        current_user.pending_email = None
-        current_user.email_change_token = None
-        current_user.email_change_token_created_at = None
+    if not token_entry.is_valid:
+        db.delete(token_entry)
         db.commit()
-        return False
+        return {"has_pending_email": False, "pending_email": None}
 
-    return True
+    return {"has_pending_email": True, "pending_email": token_entry.pending_email}

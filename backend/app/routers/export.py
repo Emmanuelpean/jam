@@ -7,7 +7,8 @@ import zipfile
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
-from app import database, oauth2, models
+from app import database, models
+from core import oauth2
 
 router = APIRouter(prefix="/export", tags=["export"])
 

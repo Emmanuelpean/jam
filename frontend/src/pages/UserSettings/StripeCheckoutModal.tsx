@@ -14,7 +14,7 @@ interface CheckoutModalProps {
 	userEmail: string;
 }
 
-export const CheckoutModal: React.FC<CheckoutModalProps> = ({
+export const StripeCheckoutModal: React.FC<CheckoutModalProps> = ({
 	show,
 	onHide,
 	userEmail,
@@ -22,15 +22,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 	const { showToastSuccess } = useGlobalToast();
 	const { fetchUserInfo, token } = useAuth();
 
-	const fetchClientSecret = useCallback(async () => {
+	const fetchClientSecret = useCallback(async (): Promise<any> => {
 		try {
-			// Check if running in test mode
-			const isTestMode = process.env.REACT_APP_TEST_MODE === "true";
-			const endpoint = isTestMode
-				? "/test/create-subscription-checkout/" + process.env.REACT_APP_STRIPE_TEST_USER
-				: "/payments/create-subscription-checkout";
-
-			const response: Response = await fetch(API_BASE_URL + endpoint, {
+			const response: Response = await fetch(API_BASE_URL + "/payments/create-subscription-checkout", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 			});

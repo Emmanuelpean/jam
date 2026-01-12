@@ -8,8 +8,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
-from app import models, database, schemas
+from app import models, database
 from app.config import settings
+from app.core import schemas
 
 SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm

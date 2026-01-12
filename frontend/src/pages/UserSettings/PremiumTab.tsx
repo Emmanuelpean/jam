@@ -2,7 +2,7 @@ import React, { JSX, useEffect, useState } from "react";
 import { Alert, Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
-import { CheckoutModal } from "./CheckoutModal";
+import { StripeCheckoutModal } from "./StripeCheckoutModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { API_BASE_URL } from "../../services/api/Base";
@@ -379,7 +379,7 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 			</Row>
 
 			{currentUser?.email && (
-				<CheckoutModal
+				<StripeCheckoutModal
 					show={showCheckout}
 					onHide={() => setShowCheckout(false)}
 					userEmail={currentUser.email}

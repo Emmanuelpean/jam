@@ -4,17 +4,17 @@ from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.core.routers import auth as auth_routers
+from app.core.routers import settings as settings_routers
+from app.core.routers import user as user_routers
+from app.data_tables import routers as data_table_routers
 from app.emails import routers as email_routers
 from app.job_email_scraping import routers as job_scraping_routers
 from app.job_rating import routers as job_rating_routers
-from app.payments import webhooks as payment_routers
+from app.payments import payment_router
 from app.payments import test_routers as payment_test_routers
-from app.routers import auth as auth_routers
-from app.routers import data_tables as data_table_routers
 from app.routers import export as export_routers
 from app.routers import others as other_routers
-from app.routers import settings as settings_routers
-from app.routers import user as user_routers
 
 app = FastAPI()  # TODO add version and app name
 
@@ -85,7 +85,7 @@ app.include_router(other_routers.other_router)
 app.include_router(other_routers.config_router)
 
 # Stripe
-app.include_router(payment_routers.payment_router)
+app.include_router(payment_router)
 
 # Testing
 if settings.test_mode:

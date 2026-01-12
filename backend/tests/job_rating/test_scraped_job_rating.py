@@ -1,9 +1,7 @@
 """Tests for scoring scraped jobs"""
 
-from app import models as app_models
+from app import models
 from app.job_email_scraping.email_parsers import Platform
-from app.job_email_scraping.models import ScrapedJob
-from app.job_rating import models
 from app.job_rating.scraped_job_rating import score_scraped_jobs
 
 
@@ -14,15 +12,15 @@ class TestScoreScrapedJobs(object):
 
         score_scraped_jobs(1, session)
         job_ratings = session.query(models.JobRating).all()
-        assert len(job_ratings) == 45
+        assert len(job_ratings) == 41
         for job_rating in job_ratings:
             assert job_rating.is_success is True
             assert job_rating.overall_score is not None
         service_log = session.query(models.JobRatingServiceLog).first()
         assert service_log is not None
         assert service_log.run_datetime is not None
-        assert len(service_log.rated_job_found_ids) == 45
-        assert len(service_log.rated_job_succeeded_ids) == 45
+        assert len(service_log.rated_job_found_ids) == 41
+        assert len(service_log.rated_job_succeeded_ids) == 41
         assert len(service_log.rated_job_failed_ids) == 0
         assert len(service_log.user_found_ids) == 3
         assert len(service_log.user_processed_ids) == 3
@@ -30,11 +28,10 @@ class TestScoreScrapedJobs(object):
     def test_skipped(self, session, test_scraped_jobs, test_user_qualifications, test_eis_service_logs) -> None:
         """Test scoring scraped jobs successfully"""
 
-        assert (
-            session.query(app_models.UserQualification).filter(app_models.UserQualification.owner_id == 3).count() == 0
-        )
+        # Add a scraped job for a user without qualifications to test skipping
+        assert session.query(models.UserQualification).filter(models.UserQualification.owner_id == 3).count() == 0
         # noinspection PyArgumentList
-        scraped_job = ScrapedJob(
+        scraped_job = models.ScrapedJob(
             external_job_id="skip_this_job",
             platform=Platform.LINKEDIN,
             is_scraped=True,
@@ -48,15 +45,15 @@ class TestScoreScrapedJobs(object):
 
         score_scraped_jobs(1, session)
         job_ratings = session.query(models.JobRating).all()
-        assert len(job_ratings) == 45
+        assert len(job_ratings) == 41
         for job_rating in job_ratings:
             assert job_rating.is_success is True
             assert job_rating.overall_score is not None
         service_log = session.query(models.JobRatingServiceLog).first()
         assert service_log is not None
         assert service_log.run_datetime is not None
-        assert len(service_log.rated_job_found_ids) == 45
-        assert len(service_log.rated_job_succeeded_ids) == 45
+        assert len(service_log.rated_job_found_ids) == 41
+        assert len(service_log.rated_job_succeeded_ids) == 41
         assert len(service_log.rated_job_failed_ids) == 0
         assert len(service_log.user_found_ids) == 3
         assert len(service_log.user_processed_ids) == 3

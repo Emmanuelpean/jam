@@ -2,8 +2,8 @@ import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, Fields } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { JobApplicationUpdateData, JobApplicationUpdateDataTransform } from "../../services/Schemas";
 import { useFormOptions } from "../rendering/form/FormOptions";
+import { JobApplicationUpdateData, JobApplicationUpdateDataTransform } from "../../services/schemas/DataTables";
 
 export interface JobApplicationUpdateModalProps extends JamDataModalProps {
 	jobId?: number;

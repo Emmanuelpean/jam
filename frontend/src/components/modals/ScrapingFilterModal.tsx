@@ -2,8 +2,8 @@ import React, { forwardRef, JSX } from "react";
 import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { ScrapingFilterData, ScrapingFilterTransform } from "../../services/Schemas";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
+import { ScrapingFilterData, ScrapingFilterTransform } from "../../services/schemas/Services";
 
 export const ScrapingFilterModal = forwardRef<DataModalHandle, JamDataModalProps>(
 	({ size = "lg" }: JamDataModalProps, ref): JSX.Element => {

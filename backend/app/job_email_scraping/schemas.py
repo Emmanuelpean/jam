@@ -6,8 +6,9 @@ from datetime import datetime
 
 from pydantic import field_validator
 
+from app.base_schemas import BaseModel, OwnedOut, Out, serialize_relationships
+from app.data_tables.schemas import GeolocationOut
 from app.job_rating.schemas import JobRatingOut
-from app.schemas import BaseModel, OwnedOut, Out, serialize_relationships, GeolocationOut
 
 
 # --------------------------------------------------- JOB ALERT EMAIL --------------------------------------------------

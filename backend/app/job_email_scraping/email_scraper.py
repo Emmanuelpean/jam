@@ -8,7 +8,7 @@ content), and records run statistics in an EisServiceLog."""
 import traceback
 from datetime import datetime
 
-from app import utils, model_registry as models
+from app import utils, models as models
 from app.config import settings
 from app.database import get_db
 from app.emails.email_service import EmailService
@@ -52,7 +52,7 @@ class JobEmailScraper(EmailService):
     def indeed_brightapi_setting(self) -> str:
         """Get the Indeed BrightAPI setting from the database"""
 
-        return models.get_setting(self.db, "indeed_scraper", "scraper")
+        return models.get_setting_value(self.db, "indeed_scraper", "scraper")
 
     def create_service_log(self, **kwargs) -> JobEmailScrapingServiceLog:
         """Create a new service log entry
@@ -379,7 +379,9 @@ class JobEmailScraper(EmailService):
         # Get the list of active users with TOAST active
         users = (
             self.db.query(models.User)
-            .filter(models.User.toast_active, models.User.is_active, models.User.is_verified)
+            .filter(models.User.premium.has(is_active=True, job_scraping_active=True))
+            .filter(models.User.is_active)
+            .filter(models.User.is_verified)
             .all()
         )
         self.logger.info(f"Found {len(users)} users to process.")

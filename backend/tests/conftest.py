@@ -20,11 +20,11 @@ from sqlalchemy import create_engine, orm, Engine
 from sqlalchemy_utils import database_exists, create_database, drop_database
 from starlette.testclient import TestClient
 
-from app import database, schemas
-from app import model_registry as models
+from app import database
+from app import models as models
 from app.config import settings
 from app.main import app
-from app.oauth2 import create_access_token
+from core.oauth2 import create_access_token
 from app.utils import hash_token
 from tests.geolocation import mock_geocoding_side_effect
 from tests.utils import create_data as crd
@@ -237,16 +237,28 @@ def test_unverified_token_user(session) -> models.User:
 
     plain_token = "testtoken"
     hashed_token = hash_token(plain_token)
+
     user_data = dict(
         email="unverified@test.com",
         password="password",
         is_verified=False,
         is_active=True,
-        verification_token=hashed_token,
-        verification_token_created_at=dt.datetime.now(),
     )
 
     user = crd.create_users(session, [user_data])[0]
+
+    # Create verification token
+    # noinspection PyArgumentList
+    verification_token = models.UserToken(
+        owner_id=user.id,
+        token=hashed_token,
+        token_type="verification",
+        created_at=dt.datetime.now(dt.timezone.utc),
+    )
+    session.add(verification_token)
+    session.commit()
+
+    # Attach plain token for test convenience
     user.plain_verification_token = plain_token
     return user
 
@@ -257,16 +269,29 @@ def test_user_change_email_token_user(session) -> models.User:
 
     plain_token = "changeemailtoken"
     hashed_token = hash_token(plain_token)
+
     user_data = dict(
         email="test_user@test.com",
         password="password",
         is_verified=True,
         is_active=True,
-        pending_email="newemail@test.com",
-        email_change_token=hashed_token,
-        email_change_token_created_at=dt.datetime.now(),
     )
+
     user = crd.create_users(session, [user_data])[0]
+
+    # Create email change token
+    # noinspection PyArgumentList
+    email_change_token = models.UserToken(
+        owner_id=user.id,
+        token=hashed_token,
+        token_type="email_change",
+        created_at=dt.datetime.now(dt.timezone.utc),
+        pending_email="newemail@test.com",
+    )
+    session.add(email_change_token)
+    session.commit()
+
+    # Attach plain token for test convenience
     user.plain_verification_token = plain_token
     return user
 
@@ -652,7 +677,7 @@ class CRUDTestBase:
 
     def check_output(
         self,
-        test_data: list[schemas.BaseModel] | list[dict] | dict | schemas.BaseModel,
+        test_data,
         response_data: list[dict] | dict,
     ):
         """Check that the output of a test matches the test data.

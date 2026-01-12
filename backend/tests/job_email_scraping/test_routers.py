@@ -5,7 +5,7 @@ import datetime as dt
 import pytest
 from starlette import status
 
-from app import model_registry as models
+from app import models
 from app.job_email_scraping import schemas
 from tests.conftest import CRUDTestBase
 from tests.utils.create_data import add_to_db

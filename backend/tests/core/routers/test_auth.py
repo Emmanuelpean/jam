@@ -6,63 +6,11 @@ from unittest.mock import patch
 import jwt
 import pytest
 
-from app import schemas, models
+from app import models
 from app.config import settings
-from app.routers import auth, utils
+from app.core import schemas
 from app.utils import hash_token
-
-
-# -------------------------------------------------- UTILITY FUNCTIONS -------------------------------------------------
-
-
-class TestGetRemainingSeconds:
-
-    @pytest.mark.parametrize(
-        "minutes_ago, expected_remaining",
-        [
-            (1, 60),  # 1 minute ago = 60 seconds remaining
-            (2, 0),  # 2 minutes ago = 0 seconds remaining
-            (3, -60),  # 3 minutes ago = -60 seconds (expired)
-            (0, 120),  # right now = 120 seconds remaining
-            (None, 0),  # None = 0 seconds remaining
-        ],
-    )
-    def test_get_remaining_seconds(self, minutes_ago, expected_remaining) -> None:
-        """Test calculation of remaining seconds for rate limiting"""
-
-        if minutes_ago is None:
-            dt = None
-        else:
-            dt = datetime.now(timezone.utc) - timedelta(minutes=minutes_ago)
-
-        assert utils.get_retry_remaining_seconds(dt) == expected_remaining
-
-
-class TestGenerateToken:
-
-    def test_generate_token(self) -> None:
-        """Test generation of verification token."""
-
-        token, code = utils.generate_token()
-        assert len(token) == 43
-        assert len(code) == 64
-
-
-class TestCheckTokenExpiration:
-
-    @pytest.mark.parametrize(
-        "created_at, expected",
-        [
-            (datetime.now(timezone.utc) - timedelta(minutes=10), False),
-            (datetime.now(timezone.utc) - timedelta(minutes=20), True),
-            (datetime.now(timezone.utc), False),
-            (None, True),
-        ],
-    )
-    def test_check_token_expiration(self, created_at, expected) -> None:
-        """Test verification token expiration check."""
-
-        assert utils.check_token_expiration(created_at) == expected
+from app.core.utils import send_password_reset_email
 
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
@@ -118,7 +66,7 @@ class TestLogin:
         response = client.post("/login", data=user_data)
         assert response.status_code == 401
 
-    @patch("app.routers.auth.email_service.send_verification_email")
+    @patch("app.core.routers.auth.email_service.send_verification_email")
     def test_login_unverified_user(self, mock_email, test_unverified_user, client) -> None:
         """Test that login for unverified user sends verification email."""
 
@@ -132,7 +80,7 @@ class TestLogin:
         assert "not verified" in response.json()["detail"].lower()
         assert mock_email.call_count == 1
 
-    @patch("app.routers.auth.email_service.send_verification_email")
+    @patch("app.core.routers.auth.email_service.send_verification_email")
     def test_login_unverified_user_rate_limit(self, _mock, test_unverified_token_user, client, session) -> None:
         """Test rate limiting for unverified user login attempts."""
 
@@ -165,44 +113,17 @@ class TestLogin:
 # ------------------------------------------------------ REGISTER ------------------------------------------------------
 
 
-class TestSendVerificationWithRateLimit:
-
-    @patch("app.routers.auth.email_service.send_verification_email")
-    def test_send_verification_email(self, mock_email, test_regular_user, session) -> None:
-        """Test sending of verification email."""
-
-        result = auth.send_verification_with_rate_limit(test_regular_user, session)
-        assert result.model_dump() == {
-            "success": True,
-            "message": "Verification email sent successfully.",
-            "error_code": None,
-        }
-        assert mock_email.call_count == 1
-        assert test_regular_user.verification_token is not None
-        assert test_regular_user.verification_token_created_at is not None
-
-    @patch("app.routers.auth.email_service.send_verification_email")
-    def test_send_verification_email_rate_limited(self, mock_email, test_unverified_token_user, session) -> None:
-        """Test rate limiting when sending verification email."""
-
-        result = auth.send_verification_with_rate_limit(test_unverified_token_user, session)
-        assert result.model_dump() == {
-            "error_code": 429,
-            "message": "Please wait 120 seconds before requesting another verification " "email.",
-            "success": False,
-        }
-        assert mock_email.call_count == 0
-
-
 class TestRegister:
 
-    @patch("app.routers.auth.email_service.send_verification_email")
+    @patch("app.core.routers.auth.email_service.send_verification_email")
     def test_register_user(self, mock_email, client, session) -> None:
         """Test successful registration of a new user."""
 
         user_data = {
             "email": "Test_user@test.com",
             "password": "testpassword",
+            "first_name": "Test",
+            "last_name": "User",
         }
         response = client.post("/register", json=user_data)
 
@@ -220,6 +141,8 @@ class TestRegister:
         user_data = {
             "email": test_regular_user.email,
             "password": test_regular_user.plain_password + "123",
+            "first_name": "Test",
+            "last_name": "User",
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
@@ -228,6 +151,8 @@ class TestRegister:
         user_data = {
             "email": test_regular_user.email,
             "password": test_regular_user.plain_password,
+            "first_name": "Test",
+            "last_name": "User",
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
@@ -239,6 +164,8 @@ class TestRegister:
         user_data = {
             "email": test_regular_user.email,
             "password": test_regular_user.plain_password + "123",
+            "first_name": "Test",
+            "last_name": "User",
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
@@ -247,11 +174,13 @@ class TestRegister:
         user_data = {
             "email": test_regular_user.email,
             "password": test_regular_user.plain_password,
+            "first_name": "Test",
+            "last_name": "User",
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 400
 
-    @patch("app.routers.auth.email_service.send_verification_email")
+    @patch("app.core.routers.auth.email_service.send_verification_email")
     def test_register_user_unverified_exists_resends_email(
         self, mock_email, test_unverified_user, client, session, test_regular_user
     ) -> None:
@@ -260,6 +189,8 @@ class TestRegister:
         user_data = {
             "email": test_unverified_user.email,
             "password": test_unverified_user.plain_password,
+            "first_name": "Test",
+            "last_name": "User",
         }
         response = client.post("/register", json=user_data)
 
@@ -267,7 +198,7 @@ class TestRegister:
         assert "not verified" in response.json()["detail"].lower()
         assert mock_email.call_count == 1
 
-    @patch("app.routers.auth.email_service.send_verification_email")
+    @patch("app.core.routers.auth.email_service.send_verification_email")
     def test_register_user_unverified_exists_rate_limit(
         self, mock_email, test_unverified_token_user, client, session, test_regular_user
     ) -> None:
@@ -276,6 +207,8 @@ class TestRegister:
         user_data = {
             "email": test_unverified_token_user.email,
             "password": test_unverified_token_user.plain_password,
+            "first_name": "Test",
+            "last_name": "User",
         }
         response = client.post("/register", json=user_data)
 
@@ -289,17 +222,21 @@ class TestRegister:
         user_data = {
             "email": "test_user1@test.com",
             "password": "testpassword",
+            "first_name": "Test",
+            "last_name": "User",
         }
         response = client.post("/register", json=user_data)
         assert response.status_code == 401
 
-    @patch("app.routers.auth.email_service.send_verification_email", side_effect=Exception("SMTP error"))
+    @patch("app.core.routers.auth.email_service.send_verification_email", side_effect=Exception("SMTP error"))
     def test_register_email_sending_failure(self, mock_email, client) -> None:
         """Test handling of email sending failure during registration."""
 
         user_data = {
             "email": "test_fail@test.com",
             "password": "testpassword",
+            "first_name": "Test",
+            "last_name": "User",
         }
         response = client.post("/register", json=user_data)
 
@@ -321,8 +258,17 @@ class TestEmailVerification:
 
         verified_user = session.query(models.User).filter(models.User.id == user_id).first()
         assert verified_user.is_verified is True
-        assert verified_user.verification_token is None
-        assert verified_user.verification_token_created_at is None
+
+        # Check that the token was marked as used
+        verification_token = (
+            session.query(models.UserToken)
+            .filter(
+                models.UserToken.owner_id == user_id,
+                models.UserToken.token_type == "verification",
+            )
+            .first()
+        )
+        assert verification_token is None
 
     def test_verify_email_invalid_token(self, client) -> None:
         """Test email verification with invalid token."""
@@ -339,22 +285,38 @@ class TestEmailVerification:
         verification_code = hash_token(token)
         expired_time = datetime.now(timezone.utc) - timedelta(hours=25)
 
+        # Create user with preferences and stripe details
         # noinspection PyArgumentList
         user = models.User(
             email="unverified@test.com",
             password="password",
             is_verified=False,
             is_active=True,
-            verification_token=verification_code,
-            verification_token_created_at=expired_time,
         )
         session.add(user)
+        session.commit()
+
+        # Store user_id for later queries
+        user_id = user.id
+
+        # Create expired verification token
+        # noinspection PyArgumentList
+        expired_token = models.UserToken(
+            owner_id=user_id,
+            token=verification_code,
+            token_type="verification",
+            created_at=expired_time,
+        )
+        session.add(expired_token)
         session.commit()
 
         response = client.get(f"/register/verify-email/{token}")
 
         assert response.status_code == 403
         assert response.json()["detail"] == "Verification token has expired. Please request a new one by logging in."
+
+        # Re-query user to check verification status
+        user = session.query(models.User).filter(models.User.id == user_id).first()
         assert user.is_verified is False
 
 
@@ -363,29 +325,41 @@ class TestEmailVerification:
 
 class TestSendPasswordResetWithRateLimit:
 
-    @patch("app.routers.auth.email_service.send_password_reset_email")
-    def test_send_verification_email(self, mock_email, test_regular_user, session) -> None:
+    @patch("app.core.routers.auth.email_service.send_password_reset_email")
+    def test_send_password_reset_email(self, mock_email, test_regular_user, session) -> None:
         """Test sending of password reset email."""
 
-        result = auth.send_password_reset_with_rate_limit(test_regular_user, session)
+        result = send_password_reset_email(test_regular_user, session)
         assert result.model_dump() == {
             "success": True,
-            "message": "Password reset email sent successfully",
+            "message": "Password reset email sent successfully.",
             "error_code": None,
         }
         assert mock_email.call_count == 1
-        assert test_regular_user.password_reset_token is not None
-        assert test_regular_user.password_reset_token_created_at is not None
 
-    @patch("app.routers.auth.email_service.send_password_reset_email")
+        # Check that a password reset token was created
+        password_reset_token = (
+            session.query(models.UserToken)
+            .filter(
+                models.UserToken.owner_id == test_regular_user.id,
+                models.UserToken.token_type == "password_reset",
+            )
+            .order_by(models.UserToken.created_at.desc())
+            .first()
+        )
+        assert password_reset_token is not None
+        assert password_reset_token.token is not None
+        assert password_reset_token.created_at is not None
+
+    @patch("app.core.routers.auth.email_service.send_password_reset_email")
     def test_send_verification_email_rate_limited(self, mock_email, test_regular_user, session) -> None:
         """Test rate limiting when sending password reset email."""
 
-        auth.send_password_reset_with_rate_limit(test_regular_user, session)
-        result = auth.send_password_reset_with_rate_limit(test_regular_user, session)
+        send_password_reset_email(test_regular_user, session)
+        result = send_password_reset_email(test_regular_user, session)
         assert result.model_dump() == {
             "error_code": 429,
-            "message": "Please wait 120 seconds before requesting another password reset " "email",
+            "message": "Please wait 120 seconds before requesting another password_reset email.",
             "success": False,
         }
         assert mock_email.call_count == 1
@@ -393,7 +367,7 @@ class TestSendPasswordResetWithRateLimit:
 
 class TestRequestPasswordReset:
 
-    @patch("app.routers.auth.email_service.send_password_reset_email")
+    @patch("app.core.routers.auth.email_service.send_password_reset_email")
     def test_request_password_reset(self, mock_email, client, test_regular_user) -> None:
         """Test successful password reset request."""
 
@@ -403,10 +377,10 @@ class TestRequestPasswordReset:
         response = client.post("/password/forgot", json=user_data)
 
         assert response.status_code == 200
-        assert response.json()["message"].lower() == "password reset email sent successfully"
+        assert response.json()["message"] == "Password reset email sent successfully."
         assert mock_email.call_count == 1
 
-    @patch("app.routers.auth.email_service.send_password_reset_email")
+    @patch("app.core.routers.auth.email_service.send_password_reset_email")
     def test_request_password_reset_fail_demo(self, mock_email, client, test_demo_user) -> None:
         """Test successful password reset request."""
 
@@ -418,7 +392,7 @@ class TestRequestPasswordReset:
         assert response.status_code == 403
         assert mock_email.call_count == 0
 
-    @patch("app.routers.auth.email_service.send_password_reset_email")
+    @patch("app.core.routers.auth.email_service.send_password_reset_email")
     def test_request_password_reset_different_case(self, mock_email, client, test_regular_user) -> None:
         """Test successful password reset request."""
 
@@ -428,10 +402,10 @@ class TestRequestPasswordReset:
         response = client.post("/password/forgot", json=user_data)
 
         assert response.status_code == 200
-        assert response.json()["message"].lower() == "password reset email sent successfully"
+        assert response.json()["message"] == "Password reset email sent successfully."
         assert mock_email.call_count == 1
 
-    @patch("app.routers.auth.email_service.send_password_reset_email")
+    @patch("app.core.routers.auth.email_service.send_password_reset_email")
     def test_request_password_reset_rate_limit(self, mock_email, client, test_regular_user, session) -> None:
         """Test rate limiting on password reset requests."""
 
@@ -478,7 +452,7 @@ class TestRequestPasswordReset:
 
 class TestResetPassword:
 
-    @patch("app.routers.auth.email_service.send_password_changed_notification")
+    @patch("app.core.routers.auth.email_service.send_password_changed_notification")
     def test_reset_password_success(self, mock_email, client, test_regular_user, session) -> None:
         """Test successful password reset with valid token."""
 
@@ -489,12 +463,22 @@ class TestResetPassword:
         user_id = test_regular_user.id
         user = session.query(models.User).filter(models.User.id == user_id).first()
 
-        # remember current password for later comparison
-        old_password_hash = test_regular_user.plain_password
+        # Remember current password for later comparison
+        old_password_hash = user.password
 
-        user.password_reset_token = reset_code
-        user.password_reset_token_created_at = datetime.now(timezone.utc)
+        # Create password reset token
+        # noinspection PyArgumentList
+        reset_token = models.UserToken(
+            owner_id=user.id,
+            token=reset_code,
+            token_type="password_reset",
+            created_at=datetime.now(timezone.utc),
+        )
+        session.add(reset_token)
         session.commit()
+
+        # Store token_id for later query
+        token_id = reset_token.id
 
         new_password_data = {
             "token": token,
@@ -506,8 +490,10 @@ class TestResetPassword:
 
         updated_user = session.query(models.User).filter(models.User.id == user_id).first()
         assert updated_user.password != old_password_hash
-        assert updated_user.password_reset_token is None
-        assert updated_user.password_reset_token_created_at is None
+
+        # Re-query the token to check if it was marked as used
+        updated_token = session.query(models.UserToken).filter(models.UserToken.id == token_id).first()
+        assert updated_token is None
         assert mock_email.call_count == 1
 
     def test_reset_password_demo_fail(self, client, test_demo_user, session) -> None:

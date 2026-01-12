@@ -2,8 +2,8 @@ import React, { createContext, ReactNode, useCallback, useContext, useEffect, us
 import { useNavigate } from "react-router-dom";
 import { authApi, GenericResponse, LoginResponse, UpdateCurrentUserResponse } from "../services/api/Users";
 import { ApiError, ApiResponse } from "../services/api/Base";
-import { UserData } from "../services/Schemas";
 import { DEFAULT_THEME } from "../utils/Theme";
+import { UserData, UserDataAccountUpdate } from "../services/schemas/Core";
 
 export interface CurrentUser extends UserData {
 	token: string | null;
@@ -80,10 +80,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	);
 
 	const updateCurrentUser = async (
-		userData: Partial<UserData>,
+		userData: UserDataAccountUpdate,
 	): Promise<ApiResponse<UpdateCurrentUserResponse> | null> => {
 		if (!token) return null;
-		const response: ApiResponse<UpdateCurrentUserResponse> = await authApi.updateCurrentUser(userData, token);
+		const response: ApiResponse<UpdateCurrentUserResponse> = await authApi.updateCurrentUserAccount(
+			userData,
+			token,
+		);
 		if (response.data.logged_out) {
 			logout();
 			return response;
@@ -94,7 +97,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	};
 
 	useEffect(() => {
-		document.documentElement.setAttribute("data-theme", currentUser?.theme || DEFAULT_THEME);
+		document.documentElement.setAttribute("data-theme", currentUser?.preferences.theme || DEFAULT_THEME);
 	}, [currentUser]);
 
 	// Check if token exists on load and fetch user info

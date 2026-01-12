@@ -12,7 +12,8 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.requests import Request
 
-from app import database, models, oauth2
+from app import database, models
+from app.core import oauth2
 
 NOT_ALLOWED_EXCEPTION = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,

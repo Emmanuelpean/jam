@@ -10,8 +10,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.emails.email_service import email_service
-from app.model_registry import User
-from app.oauth2 import get_current_user
+from app.models import User
 from app.payments import payment_router, logger
 
 
@@ -28,7 +27,7 @@ async def get_user_from_customer_id(
     :param use_stripe_api: Whether to use Stripe API for lookup (False for testing)
     :return: User object or None"""
 
-    user = db.query(User).filter(User.stripe_customer_id == customer_id).first()
+    user = db.query(User).filter(User.stripe_details.customer_id == customer_id).first()
 
     if not user and use_stripe_api:
         try:
@@ -39,8 +38,8 @@ async def get_user_from_customer_id(
                 logger.error(f"No user found for email {customer.email}")
                 return None
 
-            user.stripe_customer_id = customer_id
-            user.stripe_subscription_id = subscription_id
+            user.stripe_details.customer_id = customer_id
+            user.stripe_details.subscription_id = subscription_id
             db.commit()
             logger.info(f"Linked customer {customer_id} to user {user.id}")
         except stripe.error.StripeError as e:
@@ -64,17 +63,17 @@ async def process_subscription_event(
     :param subscription_data: Subscription object data
     :param db: Database session"""
 
-    logger.info(f"Received event: {event_type} for customer {user.stripe_customer_id}")
+    logger.info(f"Received event: {event_type} for customer {user.stripe_details.customer_id}")
 
     if event_type == "customer.subscription.created":
-        user.stripe_subscription_id = subscription_id
+        user.stripe_details.subscription_id = subscription_id
         user.toast_active = True
         db.commit()
         logger.info(f"Subscription created: {subscription_id} for user {user.id}")
 
     # Handle subscription deletion
     elif event_type == "customer.subscription.deleted":
-        user.stripe_subscription_id = None
+        user.stripe_details.subscription_id = None
         user.toast_active = False
         db.commit()
         logger.info(f"Subscription deleted for user {user.id}")

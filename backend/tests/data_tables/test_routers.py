@@ -8,7 +8,7 @@ from CRUDTestBase to ensure consistent testing of standard CRUD operations, incl
 validation, and error handling. Additional custom endpoint tests are included where applicable.
 """
 
-from app import schemas
+from app.data_tables import schemas
 from tests.conftest import CRUDTestBase
 from tests.utils.test_data import (
     COMPANY_DATA,

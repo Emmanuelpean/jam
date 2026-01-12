@@ -5,7 +5,7 @@ USER_DATA = [
     {
         "email": "regular@example.com",
         "password": "password1",
-        "toast_active": True,
+        "premium_active": True,
         "is_verified": True,
         "first_name": "Regular",
         "last_name": "User",
@@ -44,14 +44,14 @@ USER_DATA = [
         "email": "emmanuelpean@gmail.com",
         "password": "test_password",
         "is_verified": True,
-        "toast_active": True,
+        "premium_active": True,
     },
     # Named users for specific tests
     {
         "email": "jessicaaggood@live.co.uk",
         "password": "test_password",
         "is_verified": True,
-        "toast_active": True,
+        "premium_active": True,
     },
 ]
 
@@ -77,16 +77,15 @@ assert not USER_DATA[UNVERIFIED_USER_INDEX]["is_verified"], "UNVERIFIED_USER_IND
 
 # Test user (for demo)
 DEMO_USER_INDEX = 4
-assert USER_DATA[DEMO_USER_INDEX]["is_demo"], "TEST_USER_INDEX does not point to a test user"
-
+assert USER_DATA[DEMO_USER_INDEX]["is_demo"], "DEMO_USER_INDEX does not point to a demo user"
 
 # TOAST user 1
 TOAST_USER_1_INDEX = 5
-assert USER_DATA[TOAST_USER_1_INDEX]["toast_active"]
+assert USER_DATA[TOAST_USER_1_INDEX]["premium_active"]
 
-# TOAST user 1
+# TOAST user 2
 TOAST_USER_INDEX_2 = 6
-assert USER_DATA[TOAST_USER_INDEX_2]["toast_active"]
+assert USER_DATA[TOAST_USER_INDEX_2]["premium_active"]
 
 
 SETTINGS_DATA = [
@@ -113,5 +112,10 @@ USER_QUALIFICATION_DATA = [
         "experience": "12 years Python",
         "skills": "3D printing",
         "interests": "software engineering",
+    },
+    {
+        "owner_id": 7,
+        "education": "Nutritionist",
+        "interests": "Animal rights",
     },
 ]

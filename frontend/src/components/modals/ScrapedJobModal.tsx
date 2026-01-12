@@ -7,7 +7,6 @@ import DataModal, {
 	WarningMessageConfig,
 } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
-import { EnrichedJobData, JobData, ScrapedJobData } from "../../services/Schemas";
 import { findClosestOption, findExactOption, useFormOptions } from "../rendering/form/FormOptions";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { capitalise } from "../../utils/StringUtils";
@@ -17,6 +16,8 @@ import { KeywordModal } from "./KeywordModal";
 import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
+import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
+import { ScrapedJobData } from "../../services/schemas/Services";
 
 export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 	({ size = "xl", onSuccess, canEdit = true }: JamDataModalProps, ref): JSX.Element => {

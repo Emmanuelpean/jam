@@ -210,7 +210,12 @@ class TestQualificationSettingsPage(BaseTest):
 class TestPremiumSettingsPage(BaseTest):
     """Test class for the Premium Settings Page"""
 
-    page_url = "settings"
+    page_url = "settings/premium"
+
+    def clear_stripe_customer_data(self) -> None:
+        """Clear Stripe customer data for the user"""
+
+        self.client.post("/test/delete_stripe_customer")
 
     def setup_function(self, request) -> None:
         """Setup function"""
@@ -242,6 +247,19 @@ class TestPremiumSettingsPage(BaseTest):
         except:
             pass
         time.sleep(5)
+        self.get_element("SubmitButton-IconContainer", By.CLASS_NAME).click()
+        self.driver.switch_to.default_content()
+        self.assert_toast_message("Subscription successful! Enjoy your premium features!")
+        assert self.db_user.toast_active
+
+    def test_stripe_payment(self) -> None:
+        """Test the Stripe payment modal interaction"""
+
+        self.get_element("subscribe-button").click()
+        time.sleep(5)
+        iframe = self.driver.find_elements(By.TAG_NAME, "iframe")[-1]
+        self.driver.switch_to.frame(iframe)
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         self.get_element("SubmitButton-IconContainer", By.CLASS_NAME).click()
         self.driver.switch_to.default_content()
         self.assert_toast_message("Subscription successful! Enjoy your premium features!")

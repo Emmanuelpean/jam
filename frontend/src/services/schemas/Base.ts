@@ -1,0 +1,14 @@
+export interface BaseOut {
+	id: number;
+	created_at: Date | string;
+	modified_at: Date | string;
+}
+
+export interface OwnedOut extends BaseOut {
+	owner_id: number;
+}
+
+export interface GeoLocation {
+	latitude: number;
+	longitude: number;
+}

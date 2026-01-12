@@ -1,247 +1,148 @@
 """Mock webhook endpoints for testing Stripe subscription flows."""
 
-from typing import Literal
+import asyncio
+from datetime import datetime
 
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.model_registry import User
-from app.oauth2 import get_current_user
-from app.payments import logger
-from app.payments.checkout import build_checkout_params
-from app.payments.webhooks import handle_subscription_event
+from app.models import User
+from core.oauth2 import get_current_user
+from app.payments import logger, stripe
 
 test_router = APIRouter(prefix="/test", tags=["testing"])
 
 
-class MockWebhookRequest(BaseModel):
-    customer_email: str
-    event_type: Literal[
-        "customer.subscription.created",
-        "customer.subscription.deleted",
-        "customer.subscription.trial_will_end",
-        "customer.subscription.paused",
-    ]
-    subscription_id: str = "sub_test_123456789"
-    customer_id: str = "cus_test_123456789"
-    trial_end: int | None = None
-
-
-@test_router.post("/trigger-webhook")
-async def trigger_mock_webhook(
-    request: MockWebhookRequest,
+@test_router.delete("/delete-customer")
+async def delete_stripe_customer(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict:
-    """Trigger webhook events for testing - bypasses signature verification."""
+    """Delete the current user's Stripe customer and cancel all subscriptions.
+    This permanently deletes the customer from Stripe and immediately cancels
+    any active subscriptions. This action cannot be undone.
+    :param current_user: Authenticated user from JWT token
+    :param db: Database session
+    :return: dict with deletion confirmation
+    :raises HTTPException: If customer doesn't exist or Stripe error occurs"""
 
-    # Pre-link user by email for testing (bypass Stripe API)
-    user = db.query(User).filter(User.email == request.customer_email).first()
-    if not user:
-        return {"status": "user_not_found"}
+    try:
+        # Check if user has a Stripe customer ID
+        if not current_user.stripe_details.customer_id:
+            raise HTTPException(status_code=404, detail="No Stripe customer found for this user")
 
-    if not user.stripe_customer_id:
-        user.stripe_customer_id = request.customer_id
+        # Delete customer from Stripe (also cancels active subscriptions)
+        deleted_customer = await stripe.Customer.delete_async(current_user.stripe_details.customer_id)
+
+        if not deleted_customer.get("deleted"):
+            raise HTTPException(status_code=500, detail="Failed to delete Stripe customer")
+
+        logger.info(f"Deleted Stripe customer {current_user.stripe_details.customer_id} " f"for user {current_user.id}")
+
+        # Clear Stripe customer ID from database
+        current_user.stripe_details.customer_id = None
         db.commit()
 
-    subscription_data = {
-        "id": request.subscription_id,
-        "customer": request.customer_id,
-        "trial_end": request.trial_end,
-    }
+        return {
+            "success": True,
+            "message": "Stripe customer deleted successfully",
+            "customer_id": deleted_customer["id"],
+        }
 
-    # Use shared logic but disable Stripe API calls
-    return await handle_subscription_event(
-        event_type=request.event_type,
-        subscription_data=subscription_data,
-        db=db,
-        use_stripe_api=False,  # Skip Stripe API for testing
+    except stripe.error.InvalidRequestError as e:
+        logger.error(f"Invalid Stripe customer {current_user.stripe_details.customer_id}: {str(e)}")
+        raise HTTPException(status_code=404, detail="Stripe customer not found or already deleted")
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error deleting customer for user {current_user.id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=503, detail="Payment service temporarily unavailable. Please try again.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error deleting customer for user {current_user.id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
+
+
+class AdvanceClockRequest(BaseModel):
+    days: int = Field(gt=0, le=730, description="Number of days to advance (1-730)")
+    test_clock_id: str | None = Field(
+        None, description="Optional test clock ID. If not provided, uses user's test clock"
     )
 
 
-@test_router.post("/create-subscription-checkout/new-user")
-async def mock_checkout_new_user(
+@test_router.post("/advance-test-clock")
+async def advance_test_clock(
+    request: AdvanceClockRequest,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
 ) -> dict:
-    """Mock checkout for NEW USER - never had a subscription.
-    - No previous subscription history
-    - Gets 14-day trial
-    - Payment method optional (if_required)"""
+    """Advance a Stripe test clock by X days for testing subscriptions.
+    This allows you to simulate time passing to test trial expirations,
+    billing cycles, and subscription renewals without waiting.
+    :param request: Request with days to advance and optional test_clock_id
+    :param current_user: Authenticated user from JWT token
+    :return: dict with updated test clock information
+    :raises HTTPException: If test clock doesn't exist or Stripe error occurs"""
 
-    customer_id = current_user.stripe_customer_id or f"cus_test_new_{current_user.id}"
+    try:
+        # Get test clock ID (from request or retrieve user's test clock)
+        test_clock_id = request.test_clock_id
 
-    if not current_user.stripe_customer_id:
-        current_user.stripe_customer_id = customer_id
-        db.commit()
+        if not test_clock_id:
+            # If no clock ID provided, find the user's customer test clock
+            if not current_user.stripe_details.customer_id:
+                raise HTTPException(status_code=404, detail="No Stripe customer found. Create a subscription first.")
 
-    # New user - no previous subscription
-    had_previous_subscription = False
-    checkout_params = build_checkout_params(customer_id, had_previous_subscription)
+            # Retrieve customer to get their test clock
+            customer = await stripe.Customer.retrieve_async(current_user.stripe_details.customer_id)
+            test_clock_id = customer.get("test_clock")
 
-    trial_offered = "subscription_data" in checkout_params
-    mock_client_secret = f"cs_test_new_user_{current_user.id}_trial"
+            if not test_clock_id:
+                raise HTTPException(status_code=404, detail="Customer is not associated with a test clock")
 
-    logger.info(f"Mock checkout: NEW USER {current_user.id} - trial offered")
+        # Retrieve current test clock to get frozen_time
+        test_clock = await stripe.test_helpers.TestClock.retrieve_async(test_clock_id)
 
-    return {
-        "clientSecret": mock_client_secret,
-        "_test_info": {
-            "user_type": "new_user",
-            "customer_id": customer_id,
-            "trial_offered": trial_offered,
-            "payment_required": False,
-        },
-    }
+        if test_clock.status != "ready":
+            raise HTTPException(
+                status_code=409, detail=f"Test clock is currently {test_clock.status}. Wait until ready."
+            )
 
+        # Calculate new frozen time (current + days)
+        current_frozen_time = test_clock.frozen_time
+        seconds_to_advance = request.days * 24 * 60 * 60
+        new_frozen_time = current_frozen_time + seconds_to_advance
 
-@test_router.post("/create-subscription-checkout/trial-ended")
-async def mock_checkout_trial_ended(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """Mock checkout for USER WHOSE TRIAL ENDED - subscription was canceled.
+        # Advance the test clock
+        await stripe.test_helpers.TestClock.advance_async(test_clock_id, frozen_time=new_frozen_time)
 
-    - Had previous subscription (canceled)
-    - No trial offered
-    - Payment method REQUIRED (always)
-    """
-    customer_id = current_user.stripe_customer_id or f"cus_test_ended_{current_user.id}"
+        logger.info(f"Advanced test clock {test_clock_id} by {request.days} days for user {current_user.id}")
 
-    if not current_user.stripe_customer_id:
-        current_user.stripe_customer_id = customer_id
-        db.commit()
+        # Wait briefly for clock to finish advancing
 
-    # Returning user - had previous subscription
-    had_previous_subscription = True
-    checkout_params = build_checkout_params(customer_id, had_previous_subscription)
+        await asyncio.sleep(1)
 
-    trial_offered = "subscription_data" in checkout_params
-    mock_client_secret = f"cs_test_trial_ended_{current_user.id}_notrial"
+        # Retrieve updated status
+        updated_clock = await stripe.test_helpers.TestClock.retrieve_async(test_clock_id)
 
-    logger.info(f"Mock checkout: TRIAL ENDED {current_user.id} - payment required")
+        return {
+            "success": True,
+            "test_clock_id": test_clock_id,
+            "days_advanced": request.days,
+            "previous_time": datetime.fromtimestamp(current_frozen_time).isoformat(),
+            "new_time": datetime.fromtimestamp(new_frozen_time).isoformat(),
+            "status": updated_clock.status,
+            "message": f"Advanced test clock by {request.days} days",
+        }
 
-    return {
-        "clientSecret": mock_client_secret,
-        "_test_info": {
-            "user_type": "trial_ended",
-            "customer_id": customer_id,
-            "trial_offered": trial_offered,
-            "payment_required": True,
-        },
-    }
-
-
-@test_router.post("/create-subscription-checkout/active-subscriber")
-async def mock_checkout_active_subscriber(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """Mock checkout for ACTIVE SUBSCRIBER trying to subscribe again.
-
-    - Has active subscription
-    - No trial offered
-    - Payment method REQUIRED (always)
-
-    Note: In production, you might want to prevent this entirely.
-    """
-    customer_id = current_user.stripe_customer_id or f"cus_test_active_{current_user.id}"
-
-    if not current_user.stripe_customer_id:
-        current_user.stripe_customer_id = customer_id
-        db.commit()
-
-    # Active subscriber - definitely has previous subscription
-    had_previous_subscription = True
-    checkout_params = build_checkout_params(customer_id, had_previous_subscription)
-
-    trial_offered = "subscription_data" in checkout_params
-    mock_client_secret = f"cs_test_active_{current_user.id}_notrial"
-
-    logger.info(f"Mock checkout: ACTIVE SUBSCRIBER {current_user.id} - payment required")
-
-    return {
-        "clientSecret": mock_client_secret,
-        "_test_info": {
-            "user_type": "active_subscriber",
-            "customer_id": customer_id,
-            "trial_offered": trial_offered,
-            "payment_required": True,
-        },
-    }
-
-
-@test_router.post("/create-subscription-checkout/paused-subscription")
-async def mock_checkout_paused_subscription(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """Mock checkout for USER WITH PAUSED SUBSCRIPTION.
-
-    - Had subscription that was paused
-    - No trial offered
-    - Payment method REQUIRED (always)
-    """
-    customer_id = current_user.stripe_customer_id or f"cus_test_paused_{current_user.id}"
-
-    if not current_user.stripe_customer_id:
-        current_user.stripe_customer_id = customer_id
-        db.commit()
-
-    # Paused subscription - has previous subscription history
-    had_previous_subscription = True
-    checkout_params = build_checkout_params(customer_id, had_previous_subscription)
-
-    trial_offered = "subscription_data" in checkout_params
-    mock_client_secret = f"cs_test_paused_{current_user.id}_notrial"
-
-    logger.info(f"Mock checkout: PAUSED SUBSCRIPTION {current_user.id} - payment required")
-
-    return {
-        "clientSecret": mock_client_secret,
-        "_test_info": {
-            "user_type": "paused_subscription",
-            "customer_id": customer_id,
-            "trial_offered": trial_offered,
-            "payment_required": True,
-        },
-    }
-
-
-@test_router.post("/create-subscription-checkout/customer-no-subscription")
-async def mock_checkout_customer_no_subscription(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """Mock checkout for EXISTING CUSTOMER who NEVER subscribed.
-
-    - Customer exists in Stripe
-    - But never created a subscription
-    - Gets 14-day trial
-    - Payment method optional (if_required)
-    """
-    customer_id = current_user.stripe_customer_id or f"cus_test_nosub_{current_user.id}"
-
-    if not current_user.stripe_customer_id:
-        current_user.stripe_customer_id = customer_id
-        db.commit()
-
-    # Customer exists but never subscribed
-    had_previous_subscription = False
-    checkout_params = build_checkout_params(customer_id, had_previous_subscription)
-
-    trial_offered = "subscription_data" in checkout_params
-    mock_client_secret = f"cs_test_customer_nosub_{current_user.id}_trial"
-
-    logger.info(f"Mock checkout: CUSTOMER NO SUB {current_user.id} - trial offered")
-
-    return {
-        "clientSecret": mock_client_secret,
-        "_test_info": {
-            "user_type": "customer_no_subscription",
-            "customer_id": customer_id,
-            "trial_offered": trial_offered,
-            "payment_required": False,
-        },
-    }
+    except stripe.error.InvalidRequestError as e:
+        logger.error(f"Invalid test clock request: {str(e)}")
+        raise HTTPException(status_code=404, detail="Test clock not found or invalid advancement")
+    except stripe.error.StripeError as e:
+        logger.error(f"Stripe error advancing test clock: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=503, detail="Payment service temporarily unavailable. Please try again.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error advancing test clock: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An error occurred. Please try again.")

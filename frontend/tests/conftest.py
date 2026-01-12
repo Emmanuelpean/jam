@@ -1716,6 +1716,7 @@ class BaseTest(BaseUtils):
     """Base class for selenium tests"""
 
     user = None  # user to use
+    client = None  # authorised client
     base_utils = None  # base utils
 
     # Parameters needed
@@ -1781,6 +1782,7 @@ class BaseTest(BaseUtils):
         test_backend_server,
         request,
         test_users,
+        authorised_clients,
         session,
     ) -> Generator[None, None, None]:
         """Set up the test environment before each test with test data"""
@@ -1822,6 +1824,7 @@ class BaseTest(BaseUtils):
 
             # Client/User
             self.user = test_users[self.user_index]
+            self.client = authorised_clients[self.user_index]
             self.db = session
 
             modal_entities = [

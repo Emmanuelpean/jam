@@ -2,11 +2,11 @@ import React, { forwardRef, useRef } from "react";
 import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
-import { SpeculativeApplicationData, SpeculativeApplicationDataTransform } from "../../services/Schemas";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { CompanyModal } from "./CompanyModal";
 import { PersonModal } from "./PersonModal";
+import { SpeculativeApplicationData, SpeculativeApplicationDataTransform } from "../../services/schemas/DataTables";
 
 export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModalProps>(
 	({ size = "lg" }: DataModalProps, ref) => {

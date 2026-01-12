@@ -6,7 +6,7 @@ import traceback
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app import model_registry as models
+from app import models as models
 from app import utils
 from app.database import get_db
 from app.job_rating.ai_rating import ai_score_job, __version__
@@ -29,7 +29,13 @@ def score_scraped_jobs(min_description_length: int = 100, db: Session | None = N
     db.refresh(service_log)
 
     try:
-        users = db.query(models.User).join(models.UserQualification).filter(models.User.is_active).all()
+        users = (
+            db.query(models.User)
+            .filter(models.User.premium.has(is_active=True, job_rating_active=True))
+            .filter(models.User.is_active)
+            .filter(models.User.is_verified)
+            .all()
+        )
         logger.info(f"Found {len(users)} active users to process")
         service_log.user_found_ids = [user.id for user in users]
         for user in users:
