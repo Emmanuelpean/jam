@@ -37,8 +37,8 @@ export interface PremiumDetails {
 }
 
 export interface PremiumDetailsUpdate {
-	job_scraping_active: boolean | null;
-	job_rating_active: boolean | null;
+	job_scraping_active?: boolean | null;
+	job_rating_active?: boolean | null;
 }
 
 // --------------------------------------------------- STRIPE DETAILS --------------------------------------------------
