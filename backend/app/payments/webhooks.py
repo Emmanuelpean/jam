@@ -1,17 +1,13 @@
 """Payment-related API routes using Stripe for subscription management."""
 
 import datetime as dt
-import time
 
 import stripe
-from fastapi import Request, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.config import settings
-from app.database import get_db
 from app.emails.email_service import email_service
 from app.models import User
-from app.payments import payment_router, logger
+from app.payments import logger
 
 
 async def get_user_from_customer_id(
@@ -116,52 +112,3 @@ async def handle_subscription_event(
     await process_subscription_event(event_type, user, subscription_id, subscription_data, db)
 
     return {"status": "success"}
-
-
-@payment_router.post("/webhook")
-async def stripe_webhook(
-    request: Request,
-    db: Session = Depends(get_db),
-) -> dict:
-    """Handle Stripe webhook events - signature verification only."""
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
-
-    try:
-        event = stripe.Webhook.construct_event(payload, sig_header, settings.stripe_webhook_secret)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.error.SignatureVerificationError:
-        raise HTTPException(status_code=400, detail="Invalid signature")
-
-    # Delegate to shared business logic
-    return await handle_subscription_event(
-        event_type=event.type,
-        subscription_data=event.data.object,
-        db=db,
-    )
-
-
-@payment_router.get("/subscription-status/{subscription_id}")
-async def get_subscription_status(
-    subscription_id: str,
-) -> dict:
-    """Get subscription status and trial information.
-    :param subscription_id: Stripe subscription ID
-    :return: dict with subscription status and trial info"""
-
-    try:
-        subscription = await stripe.Subscription.retrieve_async(subscription_id)
-
-        trial_days_remaining = None
-        if subscription.status == "trialing" and subscription.trial_end:
-            trial_days_remaining = max(0, int((subscription.trial_end - time.time()) / 86400))
-
-        return {
-            "status": subscription.status,
-            "trial_end": subscription.trial_end,
-            "trial_days_remaining": trial_days_remaining,
-        }
-    except stripe.error.StripeError as e:
-        logger.error(f"Failed to retrieve subscription {subscription_id}: {e}")
-        raise HTTPException(status_code=400, detail=str(e))

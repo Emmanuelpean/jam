@@ -5,21 +5,13 @@ import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { StripeCheckoutModal } from "./StripeCheckoutModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
-import { API_BASE_URL } from "../../services/api/Base";
+import { ApiResponse } from "../../services/api/Base";
 import { ActionToggle } from "../../components/rendering/form/ActionToggle";
-import { authApi } from "../../services/api/Users";
+import { paymentsApi, SubscriptionStatus } from "../../services/api/Payments";
 
 interface PremiumTabProps {
 	showCheckout: boolean;
 	setShowCheckout: (show: boolean) => void;
-}
-
-type subscriptionStatus = "active" | "trialing" | "past_due" | "canceled" | "unpaid" | "paused" | null;
-
-interface SubscriptionStatus {
-	status: subscriptionStatus;
-	trial_end: number | null;
-	trial_days_remaining: number | null;
 }
 
 export const PremiumTab: React.FC<PremiumTabProps> = ({
@@ -30,40 +22,36 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 	const dataContext: DataContextValue = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [loading, setLoading] = useState<boolean>(false);
+	const [subscriptionChanged, setSubscriptionChanged] = useState<boolean>(false);
+	const [jobRatingLoading, setJobRatingLoading] = useState<boolean>(false);
+	const [jobScrapingLoading, setJobScrapingLoading] = useState<boolean>(false);
 	const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
 		status: null,
 		trial_end: null,
-		trial_days_remaining: null,
 	});
 
-	useEffect(() => {
+	useEffect((): void => {
 		if (currentUser?.stripe_details.subscription_id) {
 			fetchSubscriptionStatus().then((_) => {});
 		}
 	}, [currentUser?.stripe_details.subscription_id]);
 
-	const fetchSubscriptionStatus = async () => {
-		try {
-			const response = await fetch(
-				`${API_BASE_URL}/payments/subscription-status/${currentUser?.stripe_details.subscription_id}`,
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				},
-			);
+	const fetchSubscriptionStatus = async (): Promise<void> => {
+		if (!currentUser?.stripe_details.subscription_id || !token) return;
 
-			if (response.ok) {
-				const data = await response.json();
-				setSubscriptionStatus(data);
-			}
+		try {
+			const response: ApiResponse<SubscriptionStatus> = await paymentsApi.getSubscriptionStatus(
+				currentUser.stripe_details.subscription_id,
+				token,
+			);
+			setSubscriptionStatus(response.data);
 		} catch (error) {
 			console.error("Failed to fetch subscription status:", error);
 		}
 	};
 
 	const getSubscriptionStatusDisplay = () => {
-		const { status, trial_days_remaining } = subscriptionStatus;
+		const { status, trial_end } = subscriptionStatus;
 
 		if (!status) {
 			return {
@@ -72,55 +60,33 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 				variant: "info",
 				showSubscribeButton: true,
 			};
-		}
-
-		switch (status) {
-			case "trialing":
-				return {
-					title: "Premium Active (Trial)",
-					message:
-						trial_days_remaining !== null && trial_days_remaining > 0
-							? `${trial_days_remaining} day${trial_days_remaining !== 1 ? "s" : ""} of trial remaining`
-							: "Trial ending soon",
-					variant: "success",
-					showSubscribeButton: false,
-				};
-			case "active":
-				return {
-					title: "Premium Active",
-					message: "You have Premium (lucky you!)",
-					variant: "success",
-					showSubscribeButton: false,
-				};
-			case "past_due":
-				return {
-					title: "Payment Required",
-					message: "Your subscription has unpaid invoices. Please update your payment method.",
-					variant: "warning",
-					showSubscribeButton: false,
-				};
-			case "paused":
-				return {
-					title: "Subscription Paused",
-					message: "Your subscription is currently paused",
-					variant: "secondary",
-					showSubscribeButton: false,
-				};
-			case "canceled":
-			case "unpaid":
-				return {
-					title: "Subscription Inactive",
-					message: "Your subscription has been canceled",
-					variant: "danger",
-					showSubscribeButton: true,
-				};
-			default:
-				return {
-					title: "Upgrade to Premium",
-					message: "Unlock powerful features to supercharge your job search",
-					variant: "info",
-					showSubscribeButton: true,
-				};
+		} else if (trial_end) {
+			const trial_days_remaining: number = Math.ceil(
+				(new Date(trial_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
+			);
+			return {
+				title: "Premium Active (Trial)",
+				message:
+					trial_days_remaining > 0
+						? `${trial_days_remaining} day${trial_days_remaining !== 1 ? "s" : ""} of trial remaining`
+						: "Trial ending soon",
+				variant: "success",
+				showSubscribeButton: false,
+			};
+		} else if (status === "active") {
+			return {
+				title: "Premium Active",
+				message: "You have Premium (lucky you!)",
+				variant: "success",
+				showSubscribeButton: false,
+			};
+		} else {
+			return {
+				title: "Unknown Subscription Status",
+				message: "Please contact support for assistance",
+				variant: "warning",
+				showSubscribeButton: false,
+			};
 		}
 	};
 
@@ -132,25 +98,17 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 	};
 
 	const handleManageSubscription = async (): Promise<void> => {
+		if (!currentUser?.email) return;
+
 		try {
 			setLoading(true);
-			const response: Response = await fetch(API_BASE_URL + "/payments/create-portal-session", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ customer_email: currentUser?.email }),
-			});
-
-			if (!response.ok) {
-				showToastError(
-					`Failed to access subscription portal. Please try again later or contact support at ${dataContext.config.support_email}`,
-				);
-				new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			const data = await response.json();
-			window.location.href = data.url;
+			const response = await paymentsApi.createPortalSession(currentUser.email);
+			window.location.href = response.data.url;
 		} catch (error) {
 			console.error("Portal session error:", error);
+			showToastError(
+				`Failed to access subscription portal. Please try again later or contact support at ${dataContext.config.support_email}`,
+			);
 			setLoading(false);
 		}
 	};
@@ -187,13 +145,31 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 		},
 	];
 
-	const handleToggleChange = () => {
+	const handleToggleJobRating = () => {
+		setJobRatingLoading(true);
 		updateCurrentUser({ premium: { job_rating_active: !currentUser?.premium.job_rating_active } })
 			.then(() => {
 				showToastSuccess("Settings updated");
 			})
 			.catch(() => {
 				showToastError("Failed to update settings");
+			})
+			.finally(() => {
+				setJobRatingLoading(false);
+			});
+	};
+
+	const handleToggleJobScraping = () => {
+		setJobScrapingLoading(true);
+		updateCurrentUser({ premium: { job_scraping_active: !currentUser?.premium.job_scraping_active } })
+			.then(() => {
+				showToastSuccess("Settings updated");
+			})
+			.catch(() => {
+				showToastError("Failed to update settings");
+			})
+			.finally(() => {
+				setJobScrapingLoading(false);
 			});
 	};
 
@@ -266,8 +242,8 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 										id="email-scraping-toggle"
 										label=""
 										checked={currentUser?.premium.job_scraping_active || false}
-										onChange={() => handleToggleChange("email_scraping_enabled")}
-										loading={toggleLoading.email_scraping}
+										onChange={() => handleToggleJobScraping()}
+										loading={jobScrapingLoading}
 									/>
 								)}
 							</div>
@@ -366,8 +342,8 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 										id="ai-matching-toggle"
 										label=""
 										checked={currentUser?.premium.job_rating_active}
-										onChange={() => handleToggleChange("ai_matching_enabled")}
-										loading={toggleLoading.ai_matching}
+										onChange={() => handleToggleJobRating()}
+										loading={jobRatingLoading}
 									/>
 								)}
 							</div>
