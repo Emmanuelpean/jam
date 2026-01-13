@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, JSX } from "react";
+import React, { JSX, useCallback, useEffect } from "react";
 import { Modal } from "react-bootstrap";
 import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckout, EmbeddedCheckoutProvider } from "@stripe/react-stripe-js";
-import { API_BASE_URL } from "../../services/api/Base";
+import { ApiResponse } from "../../services/api/Base";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
+import { CheckoutSessionResponse, paymentsApi } from "../../services/api/Payments";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || "");
 
@@ -17,33 +18,26 @@ interface CheckoutModalProps {
 export const StripeCheckoutModal: React.FC<CheckoutModalProps> = ({
 	show,
 	onHide,
-	userEmail,
 }: CheckoutModalProps): JSX.Element => {
 	const { showToastSuccess } = useGlobalToast();
 	const { fetchUserInfo, token } = useAuth();
 
-	const fetchClientSecret = useCallback(async (): Promise<any> => {
+	const fetchClientSecret = useCallback(async (): Promise<string> => {
+		if (!token) throw new Error("No authentication token");
+
 		try {
-			const response: Response = await fetch(API_BASE_URL + "/payments/create-subscription-checkout", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-			});
+			const response: ApiResponse<CheckoutSessionResponse> = await paymentsApi.createSubscriptionCheckout(token);
 
-			if (!response.ok) {
-				new Error(`HTTP error! status: ${response.status}`);
-			}
-
-			const data = await response.json();
-			if (!data.clientSecret) {
+			if (!response.data.clientSecret) {
 				new Error("No clientSecret in response");
 			}
 
-			return data.clientSecret;
+			return response.data.clientSecret;
 		} catch (error) {
 			console.error("fetchClientSecret error:", error);
 			throw error;
 		}
-	}, [userEmail]);
+	}, [token]);
 
 	useEffect(() => {
 		if (!show) return;

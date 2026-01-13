@@ -44,8 +44,8 @@ export interface PremiumDetailsUpdate {
 // --------------------------------------------------- STRIPE DETAILS --------------------------------------------------
 
 export interface StripeDetails {
-	customer_id: number | null;
-	subscription_id: number | null;
+	customer_id: string | null;
+	subscription_id: string | null;
 }
 
 // ----------------------------------------------------- USER DATA -----------------------------------------------------

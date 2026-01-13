@@ -11,7 +11,7 @@ from app.data_tables import routers as data_table_routers
 from app.emails import routers as email_routers
 from app.job_email_scraping import routers as job_scraping_routers
 from app.job_rating import routers as job_rating_routers
-from app.payments import payment_router
+from app.payments import routers as payment_router
 from app.payments import test_routers as payment_test_routers
 from app.routers import export as export_routers
 from app.routers import others as other_routers
@@ -28,7 +28,7 @@ def get_allowed_origins() -> list[str]:
 
     # In production, allow only the frontend URL
     else:
-        return ["http://localhost:3000"]  # TODO replace with app_settings.frontend_url when deploying
+        return [settings.frontend_url]
 
 
 app.add_middleware(
@@ -85,7 +85,7 @@ app.include_router(other_routers.other_router)
 app.include_router(other_routers.config_router)
 
 # Stripe
-app.include_router(payment_router)
+app.include_router(payment_router.payment_router)
 
 # Testing
 if settings.test_mode:

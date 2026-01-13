@@ -263,4 +263,4 @@ class TestPremiumSettingsPage(BaseTest):
         self.get_element("SubmitButton-IconContainer", By.CLASS_NAME).click()
         self.driver.switch_to.default_content()
         self.assert_toast_message("Subscription successful! Enjoy your premium features!")
-        assert self.db_user.toast_active
+        assert self.db_user.premium.is_active
