@@ -13,6 +13,7 @@ from starlette import status
 from starlette.requests import Request
 
 from app import models as models
+from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.job_email_scraping import schemas
 from app.job_email_scraping.email_scraper import job_scraping_service_runner, SERVICE_NAME
@@ -20,7 +21,6 @@ from app.job_email_scraping.job_scrapers.indeed import IndeedBrightdataJobScrape
 from app.job_email_scraping.job_scrapers.linkedin import LinkedinBrightdataJobScraper
 from app.job_email_scraping.job_scrapers.nhs import NhsJobScraper
 from app.job_email_scraping.job_scrapers.veganjobs import VeganJobsJobScraper
-from core.oauth2 import get_current_user
 from app.routers import generate_data_table_crud_router, filter_query, NOT_ALLOWED_EXCEPTION
 from app.service_runner import routers
 

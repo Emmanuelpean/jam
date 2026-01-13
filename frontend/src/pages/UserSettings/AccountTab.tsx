@@ -32,7 +32,7 @@ export const AccountTab: React.FC = () => {
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState(false);
 	const MIN_PASSWORD_LENGTH = parseInt(process.env.MIN_PASSWORD_LENGTH || "8");
-	const hasPendingEmail = !!currentUser?.pending_email && currentUser.pending_email !== currentUser.email;
+	const hasPendingEmail = !!currentUser?.pending_email_change;
 
 	useEffect(() => {
 		const checkPending = async () => {
@@ -165,7 +165,7 @@ export const AccountTab: React.FC = () => {
 		helpText: currentUser?.is_demo
 			? "This is a test account. Email changes are disabled."
 			: hasPendingEmail
-				? `Email change pending verification. Check ${currentUser?.pending_email} for verification link.`
+				? `Email change pending verification. Check ${currentUser?.pending_email_change} for verification link.`
 				: undefined,
 		isDisabled: currentUser?.is_demo,
 	};
@@ -220,8 +220,8 @@ export const AccountTab: React.FC = () => {
 			{hasPendingEmail && (
 				<Alert variant="info">
 					<Alert.Heading>Email Change Pending</Alert.Heading>A verification email has been sent to{" "}
-					<strong>{currentUser?.pending_email}</strong>. Please check your inbox and click the verification
-					link to complete your email change.
+					<strong>{currentUser?.pending_email_change}</strong>. Please check your inbox and click the
+					verification link to complete your email change.
 				</Alert>
 			)}
 

@@ -66,7 +66,7 @@ class TestCurrentUser:
         initial_token_version = test_regular_user.token_version
 
         update_data = {"email": "newemail@example.com", "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put("/current-user/account", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert mock_email_verif.call_count == 1
         assert mock_email_verif.call_args[0][0] == "newemail@example.com"
         assert response.status_code == 200
@@ -92,7 +92,7 @@ class TestCurrentUser:
         """Test updating own profile as demo user (should fail)."""
 
         update_data = {"email": "newemail@example.com", "current_password": test_demo_user.plain_password}
-        response = demo_user_client.put("/current-user/account", json=update_data)
+        response = demo_user_client.put("/current-user", json=update_data)
         assert mock_email_verif.call_count == 0
         assert response.status_code == 403
 
@@ -103,7 +103,7 @@ class TestCurrentUser:
         initial_token_version = test_regular_user.token_version
 
         update_data = {"current_password": test_regular_user.plain_password, "password": "newpassword1"}
-        response = regular_user_client.put("/current-user/account", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
 
         assert response.status_code == 200
 
@@ -122,7 +122,7 @@ class TestCurrentUser:
         """Test updating own password as demo user (should fail)."""
 
         update_data = {"current_password": test_demo_user.plain_password, "password": "newpassword1"}
-        response = demo_user_client.put("/current-user/account", json=update_data)
+        response = demo_user_client.put("/current-user", json=update_data)
         assert response.status_code == 403
 
     def test_update_password_revokes_token(self, regular_user_client, test_regular_user, session) -> None:
@@ -130,7 +130,7 @@ class TestCurrentUser:
 
         # Change password
         update_data = {"current_password": test_regular_user.plain_password, "password": "newpassword1"}
-        response = regular_user_client.put("/current-user/account", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 200
 
         # Try to use the old token (test_client still has it)
@@ -142,21 +142,21 @@ class TestCurrentUser:
         """Test updating password with incorrect current password."""
 
         update_data = {"current_password": "", "password": "newpassword1"}
-        response = regular_user_client.put("/current-user/account", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 401
 
     def test_update_incorrect_email_format(self, session, regular_user_client, test_regular_user) -> None:
         """Test updating with invalid email."""
 
         update_data = {"email": "ff", "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put("/current-user/account", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 422
 
     def test_update_existing_email(self, session, regular_user_client, test_regular_user, test_admin_user) -> None:
         """Test updating with an email that already exists."""
 
         update_data = {"email": test_admin_user.email, "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put("/current-user/account", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 400
 
     def test_update_preferences(self, session, regular_user_client, test_regular_user) -> None:
@@ -165,8 +165,8 @@ class TestCurrentUser:
         # Get initial token version
         initial_token_version = test_regular_user.token_version
 
-        update_data = {"chase_threshold": 100}
-        response = regular_user_client.put("/current-user/preferences", json=update_data)
+        update_data = {"preferences": {"chase_threshold": 100}}
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 200
 
         updated_user = self.get_user(test_regular_user.id, session)
@@ -182,7 +182,7 @@ class TestCurrentUser:
         """Test updating without authentication."""
 
         update_data = {"chase_threshold": 100}
-        response = client.put("/current-user/preferences", json=update_data)
+        response = client.put("/current-user", json=update_data)
         assert response.status_code == 401
 
 
@@ -368,7 +368,7 @@ class TestTokenVersioning:
 
         # Change password (this increments token_version)
         update_data = {"current_password": test_regular_user.plain_password, "password": "newpassword1"}
-        response = regular_user_client.put("/current-user/account", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 200
 
         # Try to use old token - should fail
@@ -391,7 +391,7 @@ class TestTokenVersioning:
         initial_version = test_regular_user.token_version
 
         update_data = {"email": "newemail@example.com", "current_password": test_regular_user.plain_password}
-        response = regular_user_client.put("/current-user/account", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 200
 
         user = session.query(models.User).filter(models.User.id == test_regular_user.id).first()
@@ -422,7 +422,7 @@ class TestTokenVersioning:
         initial_version = test_regular_user.token_version
 
         update_data = {"chase_threshold": 200}
-        response = regular_user_client.put("/current-user/preferences", json=update_data)
+        response = regular_user_client.put("/current-user", json=update_data)
         assert response.status_code == 200
 
         user = session.query(models.User).filter(models.User.id == test_regular_user.id).first()

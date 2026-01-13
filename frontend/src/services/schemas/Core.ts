@@ -16,17 +16,9 @@ export interface SettingData extends BaseOut {
 	is_active: boolean;
 }
 
-// ------------------------------------------------------ SETTING ------------------------------------------------------
+// -------------------------------------------------- USER PREFERENCES -------------------------------------------------
 
-export interface UserDataAccountUpdate {
-	email: string | null;
-	password: string | null;
-	current_password: string | null;
-	first_name: string | null;
-	last_name: string | null;
-}
-
-export interface UserDataPreferences {
+export interface UserPreferences {
 	theme: string;
 	chase_threshold: number;
 	deadline_threshold: number;
@@ -34,18 +26,29 @@ export interface UserDataPreferences {
 	default_currency: string;
 }
 
-export type UserDataPreferencesUpdate = Partial<UserDataPreferences>;
+export type UserPreferencesUpdate = Partial<UserPreferences>;
 
-export interface UserDataPremium {
+// -------------------------------------------------- PREMIUM DETAILS --------------------------------------------------
+
+export interface PremiumDetails {
 	is_active: boolean;
 	job_scraping_active: boolean;
 	job_rating_active: boolean;
 }
 
-export interface UserDataPremiumUpdate {
+export interface PremiumDetailsUpdate {
 	job_scraping_active: boolean | null;
 	job_rating_active: boolean | null;
 }
+
+// --------------------------------------------------- STRIPE DETAILS --------------------------------------------------
+
+export interface StripeDetails {
+	customer_id: number | null;
+	subscription_id: number | null;
+}
+
+// ----------------------------------------------------- USER DATA -----------------------------------------------------
 
 export interface UserDataTransform {
 	email: string;
@@ -54,9 +57,14 @@ export interface UserDataTransform {
 	is_active: boolean;
 }
 
-export interface StripeDetails {
-	customer_id: number | null;
-	subscription_id: number | null;
+export interface UserDataUpdate {
+	email?: string | null;
+	password?: string | null;
+	current_password?: string | null;
+	first_name?: string | null;
+	last_name?: string | null;
+	premium?: PremiumDetailsUpdate | null;
+	preferences?: UserPreferencesUpdate | null;
 }
 
 export interface UserData extends OwnedOut {
@@ -68,8 +76,9 @@ export interface UserData extends OwnedOut {
 	first_name: string | null;
 	last_name: string | null;
 	name: string | null;
-	premium: UserDataPremium;
-	preferences: UserDataPreferences;
+	pending_email_change: string | null;
+	premium: PremiumDetails;
+	preferences: UserPreferences;
 	stripe_details: StripeDetails;
 }
 

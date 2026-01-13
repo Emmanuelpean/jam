@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.models import User
-from core.oauth2 import get_current_user
+from app.core.oauth2 import get_current_user
 from app.payments import stripe, logger, payment_router
 
 

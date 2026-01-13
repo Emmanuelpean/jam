@@ -51,7 +51,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 	};
 
 	return (
-		<div className="container-fluid vh-100 d-flex flex-column">
+		<div className="container-fluid d-flex flex-column">
 			<Card.Header className="settings-header border-0 p-0 bg-white">
 				<div className="d-flex align-items-center p-4">
 					<div className="header-icon-wrapper me-3">

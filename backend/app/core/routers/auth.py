@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app import utils, models, database, base_schemas
 from app.core import schemas, oauth2
 from app.emails.email_service import email_service
-from core.utils import send_email_verification_email, send_password_reset_email, get_token
+from app.core.utils import send_email_verification_email, send_password_reset_email, get_token
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
 
