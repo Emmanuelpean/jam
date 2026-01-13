@@ -1,5 +1,5 @@
 import React, { JSX, useState } from "react";
-import { ServiceLog } from "../../../services/Schemas";
+import { ServiceLog } from "../../../services/schemas/Services";
 
 interface ErrorSummaryCardProps {
 	latestServiceLogs: ServiceLog[] | null;

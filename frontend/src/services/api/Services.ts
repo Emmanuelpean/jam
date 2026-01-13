@@ -1,4 +1,4 @@
-import { JobRatingData, JobRatingServiceLogData, JobScrapingServiceLogData, ScrapedJobData } from "../Schemas";
+import { JobRatingData, JobRatingServiceLogData, JobScrapingServiceLogData, ScrapedJobData } from "../schemas/Services";
 import { api, ApiResponsePromise } from "./Base";
 import { createCrudApi, CrudApi } from "./Crud";
 

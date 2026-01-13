@@ -1,5 +1,5 @@
 import React, { JSX, useState } from "react";
-import { JobScrapingServiceLogData } from "../../../services/Schemas";
+import { JobScrapingServiceLogData } from "../../../services/schemas/Services";
 import { ErrorCount } from "../../../hooks/useJobScraperErrors";
 
 interface ErrorSummaryCardProps {

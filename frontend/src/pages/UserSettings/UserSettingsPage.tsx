@@ -41,7 +41,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 			id: "qualifications",
 			label: "Qualifications",
 			icon: "mortarboard-fill",
-			conditional: currentUser?.toast_active,
+			conditional: currentUser?.premium.is_active,
 		},
 		{ id: "premium", label: "Premium", icon: "gem" },
 	];

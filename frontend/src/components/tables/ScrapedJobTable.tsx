@@ -3,10 +3,11 @@ import { Button } from "react-bootstrap";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapedJobModal } from "../modals/ScrapedJobModal";
-import { JobData, JobDataTransform, ScrapingFilterData } from "../../services/Schemas";
+import { ScrapingFilterData } from "../../services/schemas/Services";
 import { convertToEndOfDay } from "../../utils/TimeUtils";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import ScrapingFilterTable from "./ScrapingFilterTable";
+import { JobData, JobDataTransform } from "../../services/schemas/DataTables";
 
 const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();

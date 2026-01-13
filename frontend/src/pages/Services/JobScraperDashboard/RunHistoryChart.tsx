@@ -1,5 +1,5 @@
 import React, { JSX, useEffect, useState } from "react";
-import { PlatformStat, JobScrapingServiceLogData } from "../../../services/Schemas";
+import { PlatformStat, JobScrapingServiceLogData } from "../../../services/schemas/Services";
 import { SelectOption } from "../../../components/rendering/form/FormOptions";
 import { LineChart, SeriesData } from "../../../components/charts/LineChart";
 import TimeSelection from "../../../components/TimeSelection/TimeSelection";

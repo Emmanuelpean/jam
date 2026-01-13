@@ -7,7 +7,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { ApiResponse } from "../../services/api/Base";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
-import { UserQualification } from "../../services/Schemas";
+import { UserQualification } from "../../services/schemas/Core";
 import { userQualificationApi } from "../../services/api/Users";
 
 interface QualificationFormData {

@@ -2,18 +2,17 @@ import { createCrudApi, CrudApi } from "./Crud";
 import {
 	AggregatorData,
 	CompanyData,
-	Country,
-	Currency,
 	InterviewData,
 	JobApplicationUpdateData,
 	JobData,
 	KeywordData,
 	LocationData,
 	PersonData,
-	ScrapingFilterData,
-	SettingData,
 	SpeculativeApplicationData,
-} from "../Schemas";
+} from "../schemas/DataTables";
+import { SettingData } from "../schemas/Core";
+import { Country, Currency } from "../schemas/Others";
+import { ScrapingFilterData } from "../schemas/Services";
 
 export const jobsApi: CrudApi<JobData> = createCrudApi("jobs");
 export const companiesApi: CrudApi<CompanyData> = createCrudApi("companies");
@@ -29,4 +28,4 @@ export const currenciesApi: CrudApi<Currency> = createCrudApi("others/currencies
 export const scrapingFilterApi: CrudApi<ScrapingFilterData> = createCrudApi("scraping-filters");
 export const speculativeApplicationsApi: CrudApi<SpeculativeApplicationData> =
 	createCrudApi("speculative-applications");
-export const configApi: CrudApi<any> = createCrudApi("config");
+export const configApi: CrudApi = createCrudApi("config");

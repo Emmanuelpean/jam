@@ -24,7 +24,7 @@ import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { MenuItem, MenuItemKey } from "./ContextMenu";
 import LoadingSpinner from "../spinner/Spinner";
 import { DataModalHandle, modalModes } from "../modals/DataModal/DataModal";
-import { EnrichedJobData, JobData } from "../../services/Schemas";
+import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 import "./DataTable.css";
 import FollowUpModal, { FollowUpModalHandle } from "../modals/FollowUpModal";
 import { useContextMenu } from "../../contexts/ContextMenuContext";

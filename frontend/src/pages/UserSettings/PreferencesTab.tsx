@@ -24,10 +24,10 @@ export const PreferencesTab: React.FC = () => {
 	const { currencyNames } = useFormOptions();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [formData, setFormData] = useState<PreferencesFormData>(() => ({
-		default_currency: currentUser?.default_currency || "",
-		chase_threshold: currentUser?.chase_threshold || 0,
-		deadline_threshold: currentUser?.deadline_threshold || 0,
-		update_limit: currentUser?.update_limit || 0,
+		default_currency: currentUser?.preferences.default_currency || "",
+		chase_threshold: currentUser?.preferences.chase_threshold || 0,
+		deadline_threshold: currentUser?.preferences.deadline_threshold || 0,
+		update_limit: currentUser?.preferences.update_limit || 0,
 	}));
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState(false);
@@ -137,8 +137,8 @@ export const PreferencesTab: React.FC = () => {
 				<i className="bi bi-palette"></i> Appearance
 			</h5>
 			<p id="theme-hint">
-				<strong>{findItemByKey(THEMES, currentUser?.theme)?.name}</strong> is not your favourite flavour of
-				JAM?! You can easily pick another theme by clicking on the JAM logo in the sidebar.
+				<strong>{findItemByKey(THEMES, currentUser?.preferences.theme)?.name}</strong> is not your favourite
+				flavour of JAM?! You can easily pick another theme by clicking on the JAM logo in the sidebar.
 			</p>
 			<div className="mt-4">
 				<ActionButton

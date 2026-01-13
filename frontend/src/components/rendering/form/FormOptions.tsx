@@ -3,8 +3,8 @@ import { useMemo } from "react";
 import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import { modalViewFields } from "../view/ModalFields";
-import { InterviewData, JobData, PersonData } from "../../../services/Schemas";
 import stringSimilarity from "string-similarity";
+import { InterviewData, JobData, PersonData } from "../../../services/schemas/DataTables";
 
 export type SelectOption = {
 	value: string;

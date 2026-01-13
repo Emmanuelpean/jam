@@ -4,7 +4,7 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapingFilterModal } from "../modals/ScrapingFilterModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
-import { ScrapingFilterData } from "../../services/Schemas";
+import { ScrapingFilterData } from "../../services/schemas/Services";
 import { MenuItemKey } from "./ContextMenu";
 
 interface ScrapingFilterTableProps extends DataTableProps {

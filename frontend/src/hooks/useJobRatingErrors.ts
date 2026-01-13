@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { JobRatingData, JobRatingServiceLogData } from "../services/Schemas";
+import { JobRatingData, JobRatingServiceLogData } from "../services/schemas/Services";
 import { jobRatingApi } from "../services/api/Services";
 import { normaliseArray } from "../utils/Utils";
 import { useAuth } from "../contexts/AuthContext";

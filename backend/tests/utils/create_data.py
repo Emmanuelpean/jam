@@ -40,10 +40,6 @@ def create_users(db, user_data: list[dict] | None = None, rounds=4) -> list[mode
         # Create user
         # noinspection PyArgumentList
         new_user = models.User(**user_dict)
-        new_user.preferences = models.UserPreferences()
-        # noinspection PyArgumentList
-        new_user.premium = models.PremiumSettings(is_active=user.get("premium_active", False))
-
         users.append(new_user)
 
     users = add_to_db(db, users)

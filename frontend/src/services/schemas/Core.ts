@@ -54,6 +54,11 @@ export interface UserDataTransform {
 	is_active: boolean;
 }
 
+export interface StripeDetails {
+	customer_id: number | null;
+	subscription_id: number | null;
+}
+
 export interface UserData extends OwnedOut {
 	email: string;
 	is_admin: boolean;
@@ -65,6 +70,7 @@ export interface UserData extends OwnedOut {
 	name: string | null;
 	premium: UserDataPremium;
 	preferences: UserDataPreferences;
+	stripe_details: StripeDetails;
 }
 
 // ------------------------------------------------ USER QUALIFICATIONS ------------------------------------------------

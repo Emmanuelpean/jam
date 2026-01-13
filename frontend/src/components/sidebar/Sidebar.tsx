@@ -234,7 +234,7 @@ export const Sidebar = () => {
 					</div>
 
 					<ThemeSelector
-						currentTheme={currentUser?.theme || DEFAULT_THEME}
+						currentTheme={currentUser?.preferences.theme || DEFAULT_THEME}
 						onThemeChange={handleThemeChange}
 						isVisible={showDropdown && isExpanded}
 					/>

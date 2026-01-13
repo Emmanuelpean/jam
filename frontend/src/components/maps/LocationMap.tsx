@@ -2,10 +2,12 @@ import React, { JSX, useEffect } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { GeoLocation, LocationData, ScrapedJobData } from "../../services/Schemas";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import { LocationData } from "../../services/schemas/DataTables";
+import { ScrapedJobData } from "../../services/schemas/Services";
+import { GeoLocation } from "../../services/schemas/Base";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({

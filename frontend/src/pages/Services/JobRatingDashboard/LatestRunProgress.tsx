@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { JobRatingServiceLogData } from "../../../services/Schemas";
+import { JobRatingServiceLogData } from "../../../services/schemas/Services";
 import { formatDuration } from "../../../utils/TimeUtils";
 import ProgressBar from "../ProgressBar/ProgressBar";
 

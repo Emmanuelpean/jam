@@ -160,6 +160,9 @@ class UserUpdate(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
 
+    preferences: UserPreferencesUpdate | None = None
+    premium: PremiumDetailsUpdate | None = None
+
 
 class CurrentUserUpdateResponse(BaseModel):
     success: bool
