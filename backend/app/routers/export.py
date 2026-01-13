@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from app import database, models
-from core import oauth2
+from app.core import oauth2
 
 router = APIRouter(prefix="/export", tags=["export"])
 

@@ -26,7 +26,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
 	const handleThemeChange = async (themeKey: string): Promise<void> => {
 		try {
-			await updateCurrentUser({ theme: themeKey });
+			await updateCurrentUser({ preferences: { theme: themeKey } });
 		} catch (error) {
 			showToastError("Failed to save theme preference.");
 			console.error("Error saving theme:", error);

@@ -123,7 +123,7 @@ def get_current_user_profile(
     return current_user
 
 
-@current_user_router.put("/account", response_model=schemas.CurrentUserUpdateResponse)
+@current_user_router.put("/", response_model=schemas.CurrentUserUpdateResponse)
 def update_account(
     user_update: schemas.UserUpdate,
     current_user: models.User = Depends(oauth2.get_current_user),
@@ -195,7 +195,11 @@ def update_account(
 
     # Update other fields normally
     for field, value in user_update_dict.items():
-        setattr(current_user, field, value)
+        if isinstance(value, dict):
+            for k, v in value.items():
+                setattr(getattr(current_user, field), k, v)
+        else:
+            setattr(current_user, field, value)
 
     # Increment token version if password was changed
     if password_changed:
@@ -206,54 +210,6 @@ def update_account(
     db.commit()
     db.refresh(current_user)
     return result
-
-
-@current_user_router.put("/preferences", response_model=base_schemas.GenericResponse)
-def update_preferences(
-    preferences_update: schemas.UserPreferencesUpdate,
-    current_user: models.User = Depends(oauth2.get_current_user),
-    db: Session = Depends(database.get_db),
-) -> dict:
-    """Update the current user's preferences.
-    :param preferences_update: The preferences update data.
-    :param current_user: The current authenticated user.
-    :param db: The database session.
-    :returns: A dictionary with the result of the update operation."""
-
-    preferences_dict = preferences_update.model_dump(exclude_unset=True)
-
-    # Update preferences fields
-    for field, value in preferences_dict.items():
-        setattr(current_user.preferences, field, value)
-
-    db.commit()
-    db.refresh(current_user)
-
-    return {"success": True, "message": "Preferences updated successfully"}
-
-
-@current_user_router.put("/premium", response_model=base_schemas.GenericResponse)
-def update_preferences(
-    update_data: schemas.PremiumDetailsUpdate,
-    current_user: models.User = Depends(oauth2.get_current_user),
-    db: Session = Depends(database.get_db),
-) -> dict:
-    """Update the current user's premium.
-    :param update_data: The premium update data.
-    :param current_user: The current authenticated user.
-    :param db: The database session.
-    :returns: A dictionary with the result of the update operation."""
-
-    update_data_dict = update_data.model_dump(exclude_unset=True)
-
-    # Update premium fields
-    for field, value in update_data_dict.items():
-        setattr(current_user.premium, field, value)
-
-    db.commit()
-    db.refresh(current_user)
-
-    return {"success": True, "message": "Premium settings updated successfully"}
 
 
 @current_user_router.get("/verify-email/{token}", response_model=base_schemas.GenericResponse)

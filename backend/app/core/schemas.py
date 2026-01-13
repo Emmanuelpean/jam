@@ -144,6 +144,7 @@ class UserOut(Out):
     last_name: str | None = None
     name: str | None = None
     token_version: int
+    pending_email_change: str | None
 
     # Nested relationships
     preferences: UserPreferencesOut | None

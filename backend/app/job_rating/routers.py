@@ -9,7 +9,7 @@ from app import models
 from app.database import get_db
 from app.job_rating import schemas
 from app.job_rating.scraped_job_rating import job_rating_service_runner, SERVICE_NAME
-from core.oauth2 import get_current_user
+from app.core.oauth2 import get_current_user
 from app.routers import generate_data_table_crud_router
 from app.service_runner import routers
 

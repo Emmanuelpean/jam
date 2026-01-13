@@ -253,7 +253,7 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 								forwarding job alert emails to:
 							</p>
 							<p className="text-center">
-								<strong>{dataContext.config.scraper_email}</strong>
+								<strong>{dataContext.config?.scraper_email}</strong>
 							</p>
 							<p>
 								Simply set up email forwarding rules in your inbox, and new job opportunities will be
@@ -262,7 +262,7 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 							<p className="mb-2">The following job boards are currently supported:</p>
 							<div className="d-flex flex-wrap gap-2 mb-3">
 								{jobBoards.map((board) => {
-									const email = dataContext.config.platform_sender_emails?.[board.emailKey];
+									const email = dataContext.config?.platform_sender_emails?.[board.emailKey];
 
 									return (
 										<OverlayTrigger

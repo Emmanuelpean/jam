@@ -126,6 +126,15 @@ class User(CommonBase, Base):
             return f"{self.first_name} {self.last_name}"
         return None
 
+    @hybrid_property
+    def pending_email_change(self) -> str | None:
+        """Check if there is a pending email change token"""
+
+        for token in self.tokens:
+            if token.token_type == "email_change":
+                return token.pending_email
+        return None
+
 
 class UserPreferences(Owned, Base):
     """User-specific preferences and settings.
