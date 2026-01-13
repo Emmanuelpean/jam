@@ -6,6 +6,8 @@ import { StripeCheckoutModal } from "./StripeCheckoutModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { API_BASE_URL } from "../../services/api/Base";
+import { ActionToggle } from "../../components/rendering/form/ActionToggle";
+import { authApi } from "../../services/api/Users";
 
 interface PremiumTabProps {
 	showCheckout: boolean;
@@ -24,7 +26,7 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 	showCheckout,
 	setShowCheckout,
 }: PremiumTabProps): JSX.Element => {
-	const { currentUser, token } = useAuth();
+	const { currentUser, token, updateCurrentUser } = useAuth();
 	const dataContext: DataContextValue = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [loading, setLoading] = useState<boolean>(false);
@@ -185,6 +187,16 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 		},
 	];
 
+	const handleToggleChange = () => {
+		updateCurrentUser({ premium: { job_rating_active: !currentUser?.premium.job_rating_active } })
+			.then(() => {
+				showToastSuccess("Settings updated");
+			})
+			.catch(() => {
+				showToastError("Failed to update settings");
+			});
+	};
+
 	return (
 		<>
 			<Card className="mb-4 text-center">
@@ -244,9 +256,20 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 				<Col md={6} className="mb-3">
 					<Card className="h-100">
 						<Card.Body>
-							<div className="d-flex align-items-center mb-3">
-								<i className="bi bi-envelope fs-1 me-3"></i>
-								<h5 className="mb-0">Automatic Job Alert Email Scraping</h5>
+							<div className="d-flex align-items-center justify-content-between mb-3">
+								<div className="d-flex align-items-center">
+									<i className="bi bi-envelope fs-1 me-3"></i>
+									<h5 className="mb-0">Automatic Job Alert Email Scraping</h5>
+								</div>
+								{currentUser?.premium.is_active && (
+									<ActionToggle
+										id="email-scraping-toggle"
+										label=""
+										checked={currentUser?.premium.job_scraping_active || false}
+										onChange={() => handleToggleChange("email_scraping_enabled")}
+										loading={toggleLoading.email_scraping}
+									/>
+								)}
 							</div>
 							<p>
 								Automatically scrape and import jobs from job boards such as LinkedIn and Indeed by
@@ -333,9 +356,20 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 				<Col md={6} className="mb-3">
 					<Card className="h-100">
 						<Card.Body>
-							<div className="d-flex align-items-center mb-3">
-								<i className="bi bi-robot fs-1 me-3"></i>
-								<h5 className="mb-0">AI Job Matching</h5>
+							<div className="d-flex align-items-center justify-content-between mb-3">
+								<div className="d-flex align-items-center">
+									<i className="bi bi-robot fs-1 me-3"></i>
+									<h5 className="mb-0">AI Job Matching</h5>
+								</div>
+								{currentUser?.premium.is_active && (
+									<ActionToggle
+										id="ai-matching-toggle"
+										label=""
+										checked={currentUser?.premium.job_rating_active}
+										onChange={() => handleToggleChange("ai_matching_enabled")}
+										loading={toggleLoading.ai_matching}
+									/>
+								)}
 							</div>
 							<p>
 								Transform your job search with intelligent automation. Our advanced AI system
