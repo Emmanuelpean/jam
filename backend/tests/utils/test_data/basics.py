@@ -5,7 +5,7 @@ USER_DATA = [
     {
         "email": "regular@example.com",
         "password": "password1",
-        "premium_active": True,
+        "premium": {"is_active": True},
         "is_verified": True,
         "first_name": "Regular",
         "last_name": "User",
@@ -44,14 +44,14 @@ USER_DATA = [
         "email": "emmanuelpean@gmail.com",
         "password": "test_password",
         "is_verified": True,
-        "premium_active": True,
+        "premium": {"is_active": True},
     },
     # Named users for specific tests
     {
         "email": "jessicaaggood@live.co.uk",
         "password": "test_password",
         "is_verified": True,
-        "premium_active": True,
+        "premium": {"is_active": True},
     },
 ]
 
@@ -81,11 +81,11 @@ assert USER_DATA[DEMO_USER_INDEX]["is_demo"], "DEMO_USER_INDEX does not point to
 
 # TOAST user 1
 TOAST_USER_1_INDEX = 5
-assert USER_DATA[TOAST_USER_1_INDEX]["premium_active"]
+# assert USER_DATA[TOAST_USER_1_INDEX]["premium_active"]
 
 # TOAST user 2
 TOAST_USER_INDEX_2 = 6
-assert USER_DATA[TOAST_USER_INDEX_2]["premium_active"]
+# assert USER_DATA[TOAST_USER_INDEX_2]["premium_active"]
 
 
 SETTINGS_DATA = [

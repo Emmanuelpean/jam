@@ -8,7 +8,7 @@ import {
 	ViewField,
 } from "../../components/rendering/view/ViewRenders";
 import { getTableIcon } from "../../components/rendering/view/Icons";
-import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, JobData } from "../../services/Schemas";
+import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, JobData } from "../../services/schemas/DataTables";
 import { formatActivityDate } from "../../utils/TimeUtils";
 import { CardHeader } from "./CardHeader";
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PlatformStat, ScrapedJobData, JobScrapingServiceLogData } from "../services/Schemas";
+import { PlatformStat, ScrapedJobData, JobScrapingServiceLogData } from "../services/schemas/Services";
 import { scrapedJobApi } from "../services/api/Services";
 import { normaliseArray } from "../utils/Utils";
 import { useAuth } from "../contexts/AuthContext";

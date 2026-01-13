@@ -3,7 +3,6 @@ import { MenuItem, MenuItemKey } from "../../tables/ContextMenu";
 import { DataModalHandle } from "../../modals/DataModal/DataModal";
 import { useContextMenu } from "../../../contexts/ContextMenuContext";
 import FollowUpModal, { FollowUpModalHandle } from "../../modals/FollowUpModal";
-import { AggregatorData, CompanyData, JobData, KeywordData, LocationData, PersonData } from "../../../services/Schemas";
 import { LocationModal } from "../../modals/LocationModal";
 import { CompanyModal } from "../../modals/CompanyModal";
 import { PersonModal } from "../../modals/PersonModal";
@@ -16,6 +15,14 @@ import { useDeleteEntity } from "../../../utils/DeleteHandler";
 import { DataContextValue, EntityType, JamData, useDataContext } from "../../../contexts/DataContext";
 import { getEntityIcon } from "./Icons";
 import { useGlobalToast } from "../../../hooks/useNotificationToast";
+import {
+	AggregatorData,
+	CompanyData,
+	JobData,
+	KeywordData,
+	LocationData,
+	PersonData,
+} from "../../../services/schemas/DataTables";
 
 type FlexibleModalComponent = React.ForwardRefExoticComponent<any>;
 

@@ -20,8 +20,8 @@ class TestUsersCRUS(CRUDTestBase):
     create_schema = schemas.UserCreate
     out_schema = schemas.UserOut
     test_data_ref = "test_users"
-    create_data = [{"email": "test1@test.com", "password": "testpassword1"}]
-    update_data = {"id": 1, "email": "newemail@test.com"}
+    create_data = [{"email": "test1@test.com", "password": "testpassword1", "premium": {"job_scraping_active": False}}]
+    update_data = {"id": 1, "email": "newemail@test.com", "premium": {"job_scraping_active": False}}
 
     def test_update_admin_incorrect_email_format(self, admin_client, test_regular_user) -> None:
         """Test updating with invalid email."""

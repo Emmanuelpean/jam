@@ -1,12 +1,16 @@
-import React from "react";
+import React, { JSX } from "react";
 import DataTable from "../components/tables/DataTable";
 import { KeywordModal } from "../components/modals/KeywordModal";
-import { tableColumns } from "../components/rendering/view/TableColumns";
-import { useDataContext } from "../contexts/DataContext";
+import { TableColumn, tableColumns } from "../components/rendering/view/TableColumns";
+import { DataContextValue, useDataContext } from "../contexts/DataContext";
 
-const KeywordsPage = () => {
-	const dataContext = useDataContext();
-	const columns = [tableColumns.nameColumn(), tableColumns.jobCountKeywordColumn(), tableColumns.createdAtColumn()];
+const KeywordsPage = (): JSX.Element => {
+	const dataContext: DataContextValue = useDataContext();
+	const columns: TableColumn[] = [
+		tableColumns.nameColumn(),
+		tableColumns.jobCountKeywordColumn(),
+		tableColumns.createdAtColumn(),
+	];
 
 	return (
 		<DataTable

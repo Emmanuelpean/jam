@@ -3,11 +3,7 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../modals/JobModal";
 
-const JobToChaseTable: React.FC<DataTableProps> = ({
-	data = [],
-	columns = [],
-	menuItems = [],
-}: DataTableProps): JSX.Element => {
+const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
 	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
 	let defaultColumns: TableColumn[] =

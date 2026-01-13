@@ -450,7 +450,11 @@ def generate_data_table_crud_router(
 
             # Update the record
             for field, value in main_data.items():
-                setattr(entry, field, value)
+                if isinstance(value, dict):
+                    for k, v in value.items():
+                        setattr(getattr(entry, field), k, v)
+                else:
+                    setattr(entry, field, value)
 
             # Handle many-to-many relationships
             if m2m_data:

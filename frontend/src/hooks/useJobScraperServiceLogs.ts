@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PlatformStat, JobScrapingServiceLogData } from "../services/Schemas";
+import { PlatformStat, JobScrapingServiceLogData } from "../services/schemas/Services";
 import { SelectOption } from "../components/rendering/form/FormOptions";
 import { jobScraperServiceLogApi } from "../services/api/Services";
 import { DateRange } from "../utils/TimeUtils";

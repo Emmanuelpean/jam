@@ -87,14 +87,35 @@ class User(CommonBase, Base):
     def __init__(self, **kwargs) -> None:
         """Initialise User with automatic creation of related records."""
 
+        # Extract relationship data before calling super().__init__
+        preferences_data = kwargs.pop("preferences", None)
+        premium_data = kwargs.pop("premium", None)
+
+        # Call parent constructor with remaining kwargs
         super().__init__(**kwargs)
 
-        # Only create if not already provided
-        if not self.preferences:
+        # Handle preferences - create instance if dict provided or if not already set
+        if preferences_data:
+            if isinstance(preferences_data, dict):
+                # noinspection PyArgumentList
+                self.preferences = UserPreferences(**preferences_data)
+            else:
+                self.preferences = preferences_data
+        elif not self.preferences:
             self.preferences = UserPreferences()
+
+        # Handle stripe_details
         if not self.stripe_details:
             self.stripe_details = StripeDetails()
-        if not self.premium:
+
+        # Handle premium - create instance if dict provided or if not already set
+        if premium_data:
+            if isinstance(premium_data, dict):
+                # noinspection PyArgumentList
+                self.premium = PremiumSettings(**premium_data)
+            else:
+                self.premium = premium_data
+        elif not self.premium:
             self.premium = PremiumSettings()
 
     @hybrid_property

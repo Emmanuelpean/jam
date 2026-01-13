@@ -35,15 +35,15 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 	});
 
 	useEffect(() => {
-		if (currentUser?.stripe_subscription_id) {
+		if (currentUser?.stripe_details.subscription_id) {
 			fetchSubscriptionStatus().then((_) => {});
 		}
-	}, [currentUser?.stripe_subscription_id]);
+	}, [currentUser?.stripe_details.subscription_id]);
 
 	const fetchSubscriptionStatus = async () => {
 		try {
 			const response = await fetch(
-				`${API_BASE_URL}/payments/subscription-status/${currentUser?.stripe_subscription_id}`,
+				`${API_BASE_URL}/payments/subscription-status/${currentUser?.stripe_details.subscription_id}`,
 				{
 					headers: {
 						Authorization: `Bearer ${token}`,

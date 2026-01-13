@@ -1,8 +1,8 @@
 import { renderFunctions, RenderParams, ViewField } from "./ViewRenders";
 import { toDdMmYyyy } from "../../../utils/TimeUtils";
-import { PersonData } from "../../../services/Schemas";
 import { DataContextValue, JamData } from "../../../contexts/DataContext";
 import { findItemById } from "../../../utils/Utils";
+import { PersonData } from "../../../services/schemas/DataTables";
 
 export interface TableColumn extends ViewField {
 	label: string;

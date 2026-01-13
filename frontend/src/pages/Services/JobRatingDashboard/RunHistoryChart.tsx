@@ -1,5 +1,5 @@
 import React, { JSX, useEffect, useState } from "react";
-import { JobRatingServiceLogData } from "../../../services/Schemas";
+import { JobRatingServiceLogData } from "../../../services/schemas/Services";
 import { LineChart, SeriesData } from "../../../components/charts/LineChart";
 import TimeSelection from "../../../components/TimeSelection/TimeSelection";
 import { DateRange } from "../../../utils/TimeUtils";

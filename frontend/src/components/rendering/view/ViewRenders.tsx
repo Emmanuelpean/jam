@@ -7,18 +7,14 @@ import LocationMap from "../../maps/LocationMap";
 import {
 	AggregatorData,
 	CompanyData,
-	Currency,
 	EnrichedJobData,
 	InterviewData,
 	JobApplicationUpdateData,
 	JobData,
-	JobRatingData,
 	KeywordData,
 	LocationData,
 	PersonData,
-	ScrapedJobData,
-	ScrapingFilterData,
-} from "../../../services/Schemas";
+} from "../../../services/schemas/DataTables";
 import JobsTable from "../../tables/JobTable";
 import PersonTable from "../../tables/PersonTable";
 import { TableColumn } from "./TableColumns";
@@ -59,6 +55,8 @@ import {
 	LocationBadge,
 	PersonBadge,
 } from "./DataBadge";
+import { JobRatingData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
+import { Currency } from "../../../services/schemas/Others";
 
 // Parameters passed to the view render functions
 export interface RenderParams {

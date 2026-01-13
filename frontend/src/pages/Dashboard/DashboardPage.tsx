@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import { Card, Col, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import "./DashboardPage.css";
-import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, EnrichedJobData } from "../../services/Schemas";
+import {
+	EnrichedInterviewData,
+	EnrichedJobApplicationUpdateData,
+	EnrichedJobData,
+} from "../../services/schemas/DataTables";
 import JobsToChase from "../../components/tables/JobsToChase";
 import UpcomingDeadlinesTable from "../../components/tables/UpcomingDeadlines";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
@@ -40,11 +44,11 @@ const Dashboard: React.FC = () => {
 	const needsChase: EnrichedJobData[] = jobApplicationPending.filter(
 		(job: EnrichedJobData): boolean | 0 | null | undefined =>
 			job.days_since_last_update &&
-			job.days_since_last_update > currentUser.chase_threshold &&
+			job.days_since_last_update > currentUser.preferences.chase_threshold &&
 			(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now),
 	);
 
-	const thresholdDate = new Date(now.getTime() + currentUser.deadline_threshold * 24 * 60 * 60 * 1000);
+	const thresholdDate = new Date(now.getTime() + currentUser.preferences.deadline_threshold * 24 * 60 * 60 * 1000);
 
 	const upcomingDeadlines: EnrichedJobData[] = dataContext.jobs.filter(
 		(job: EnrichedJobData) =>
@@ -101,7 +105,7 @@ const Dashboard: React.FC = () => {
 	});
 
 	allUpdates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-	const recentActivity = allUpdates.slice(0, currentUser.update_limit);
+	const recentActivity = allUpdates.slice(0, currentUser.preferences.update_limit);
 
 	scrapedJobApi.getCount(token || "").then((count) => {
 		setScrapedJobCount(count.data.count);
@@ -211,7 +215,7 @@ const Dashboard: React.FC = () => {
 					/>
 				</Col>
 			</Row>
-			{currentUser?.toast_active && (
+			{currentUser?.premium.is_active && (
 				<Row className="g-4 mb-4">
 					<Col lg={12} className="toast-table order-lg-1">
 						<Card

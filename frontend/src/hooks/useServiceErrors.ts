@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { JobScrapingServiceLogData, ServiceError } from "../services/Schemas";
+import { JobScrapingServiceLogData, ServiceError } from "../services/schemas/Services";
 import { normaliseArray } from "../utils/Utils";
 
 export const useServiceErrors = (latestLog: JobScrapingServiceLogData | JobScrapingServiceLogData[] | null) => {
