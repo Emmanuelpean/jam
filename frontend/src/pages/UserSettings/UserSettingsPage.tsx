@@ -22,7 +22,6 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 	const { currentUser } = useAuth();
 	const navigate = useNavigate();
 	const { tab } = useParams<{ tab: tabs }>();
-	const [showCheckout, setShowCheckout] = React.useState(false);
 
 	// Set active tab based on URL parameter
 	const activeTab = tab || "account";
@@ -91,9 +90,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 					{activeTab === "account" && <AccountTab />}
 					{activeTab === "preferences" && <PreferencesTab />}
 					{activeTab === "qualifications" && <QualificationsTab />}
-					{activeTab === "premium" && (
-						<PremiumTab showCheckout={showCheckout} setShowCheckout={setShowCheckout} />
-					)}
+					{activeTab === "premium" && <PremiumTab />}
 				</Col>
 			</Row>
 		</div>
