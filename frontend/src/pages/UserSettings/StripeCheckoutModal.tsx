@@ -27,11 +27,9 @@ export const StripeCheckoutModal: React.FC<CheckoutModalProps> = ({
 
 		try {
 			const response: ApiResponse<CheckoutSessionResponse> = await paymentsApi.createSubscriptionCheckout(token);
-
 			if (!response.data.clientSecret) {
 				new Error("No clientSecret in response");
 			}
-
 			return response.data.clientSecret;
 		} catch (error) {
 			console.error("fetchClientSecret error:", error);
