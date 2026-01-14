@@ -23,7 +23,7 @@ async def create_subscription_checkout(
     Returning customers must provide payment method upfront.
     :param current_user: Authenticated user from JWT token
     :param db: Database session
-    :return: dict with checkout client secret
+    :return: dict with checkout URL
     :raises HTTPException: On Stripe or database errors"""
 
     try:
@@ -31,7 +31,7 @@ async def create_subscription_checkout(
         checkout_params = await checkout.build_checkout_params(customer_id)
         checkout_session = await stripe.checkout.Session.create_async(**checkout_params)
         logger.info(f"Created checkout session {checkout_session.id} for user {current_user.id}")
-        return {"clientSecret": checkout_session.client_secret}
+        return {"url": checkout_session.url}
     except HTTPException:
         raise
     except stripe.error.StripeError as e:
@@ -88,7 +88,7 @@ async def create_portal_session(
         # Create portal session
         portal_session = await stripe.billing_portal.Session.create_async(
             customer=customer.id,
-            return_url=f"{settings.frontend_url}/settings/premium",
+            return_url=f"{settings.frontend_url}/settings/premium/?success=true",
         )
 
         logger.info(f"Created portal session for user {current_user.id}")
@@ -113,6 +113,8 @@ async def get_subscription_status(
     :param current_user: Authenticated user from JWT token
     :return: dict with subscription status and trial info"""
 
+    if not current_user.stripe_details.subscription_id:
+        return {"status": None, "trial_end": None}
     try:
         data = await stripe.Subscription.retrieve_async(current_user.stripe_details.subscription_id)
         return {

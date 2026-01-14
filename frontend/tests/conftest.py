@@ -400,6 +400,7 @@ class BaseUtils(object):
     frontend_base_url: str = ""
     backend_base_url: str = ""
     db = None
+    client = None
 
     def go_to_page(self, page) -> None:
         """Helper method to go to a specific page"""
@@ -690,7 +691,7 @@ class BaseUtils(object):
 
 class BaseUtilsClass(BaseUtils):
 
-    def __init__(self, driver: WebDriver, frontend_base_url, backend_base_url, db):
+    def __init__(self, driver: WebDriver, frontend_base_url, backend_base_url, db, client):
         """Object constructor
         :param driver: Selenium WebDriver instance
         :param frontend_base_url: Base URL of the frontend server
@@ -702,6 +703,7 @@ class BaseUtilsClass(BaseUtils):
         self.frontend_base_url = frontend_base_url
         self.backend_base_url = backend_base_url
         self.db = db
+        self.client = client
 
 
 class DataModalUtils(BaseUtilsClass):
@@ -1846,6 +1848,7 @@ class BaseTest(BaseUtils):
                 "frontend_base_url": self.frontend_base_url,
                 "backend_base_url": self.backend_base_url,
                 "db": self.db,
+                "client": self.client,
             }
             for name in modal_entities:
                 setattr(self, f"{name}_modal_utils", DataModalUtils(entry_type=name, **shared_kwargs))

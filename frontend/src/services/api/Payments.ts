@@ -9,14 +9,10 @@ export interface PortalSessionResponse {
 	url: string;
 }
 
-export interface CheckoutSessionResponse {
-	clientSecret: string;
-}
-
 export interface PaymentsApi {
 	getSubscriptionStatus: (token: string) => ApiResponsePromise<SubscriptionStatus>;
 	createPortalSession: (token: string) => ApiResponsePromise<PortalSessionResponse>;
-	createSubscriptionCheckout: (token: string) => ApiResponsePromise<CheckoutSessionResponse>;
+	createSubscriptionCheckout: (token: string) => ApiResponsePromise<PortalSessionResponse>;
 }
 
 export const paymentsApi: PaymentsApi = {
@@ -28,7 +24,7 @@ export const paymentsApi: PaymentsApi = {
 		return api.post("payments/create-portal-session", {}, token);
 	},
 
-	createSubscriptionCheckout: async (token: string): ApiResponsePromise<CheckoutSessionResponse> => {
+	createSubscriptionCheckout: async (token: string): ApiResponsePromise<PortalSessionResponse> => {
 		return api.post("payments/create-subscription-checkout", {}, token);
 	},
 };

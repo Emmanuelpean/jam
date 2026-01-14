@@ -4,9 +4,10 @@ import datetime as dt
 import time
 
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 
 from app.utils import verify_password
-from conftest import models, BaseTest
+from conftest import models, BaseTest, BaseUtilsClass
 from tests.utils.test_data import TOAST_USER_1_INDEX
 
 
@@ -207,6 +208,78 @@ class TestQualificationSettingsPage(BaseTest):
         assert qualification.experience == "Different Experience"
 
 
+class PremiumSettingsUtils(BaseUtilsClass):
+
+    def delete_stripe_data(self) -> None:
+        """Delete Stripe customer data for the user"""
+
+        response = self.client.delete("/test/delete-all-customers")
+        assert response.status_code == 200
+
+    def call_stripe_create_webhook(self, user) -> None:
+        """Call Stripe webhook to simulate an event"""
+
+        response = self.client.post(
+            "/test/webhook",
+            json={"type": "customer.subscription.created", "customer_id": user.stripe_details.customer_id},
+        )
+        assert response.status_code == 200
+
+    @property
+    def subscribe_button(self) -> WebElement:
+        """Subscribe button element"""
+
+        return self.get_element("subscribe-button")
+
+    @property
+    def manage_subscription_button(self) -> WebElement:
+        """Manage subscription button element"""
+
+        return self.get_element("manage-subscription-button")
+
+    def set_payment_details(self) -> None:
+        """Set payment details in the Stripe iframe"""
+
+        self.driver.switch_to.frame(0)
+        self.set_text(self.get_element("Field-numberInput"), "4242 4242 4242 4242")
+        self.set_text(self.get_element("Field-cvcInput"), "123")
+        self.get_element("Field-countryInput").send_keys("United States")
+        self.set_text(self.get_element("Field-expiryInput"), "1228")
+        self.set_text(self.get_element("Field-postalCodeInput"), "10001")
+        self.driver.switch_to.default_content()
+        self.get_element("[data-test='confirm']", By.CSS_SELECTOR).click()
+
+    @property
+    def status_title(self) -> WebElement:
+        """Status title element"""
+
+        return self.get_element("status-title")
+
+    @property
+    def add_payment_method_button(self) -> WebElement:
+        """Add payment method button element"""
+
+        return self.get_element("[data-test='add-payment-method']", By.CSS_SELECTOR)
+
+    @property
+    def cancel_subscription_button(self) -> WebElement:
+        """Cancel subscription button element"""
+
+        return self.get_element("[data-test='cancel-subscription']", By.CSS_SELECTOR)
+
+    @property
+    def return_to_business_link(self) -> WebElement:
+        """Return to business link element"""
+
+        return self.get_element("[data-testid='return-to-business-link']", By.CSS_SELECTOR)
+
+    @property
+    def start_trial_button(self) -> WebElement:
+        """Start trial button element"""
+
+        return self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR)
+
+
 class TestPremiumSettingsPage(BaseTest):
     """Test class for the Premium Settings Page"""
 
@@ -222,52 +295,34 @@ class TestPremiumSettingsPage(BaseTest):
 
         self.login()
         self.user_settings_utils.go_to_premium_tab()
+        self.premium_settings_utils = PremiumSettingsUtils(
+            self.driver,
+            self.frontend_base_url,
+            self.backend_base_url,
+            self.db,
+            self.client,
+        )
 
     def test_premium_page_content(self) -> None:
         """Test premium page content"""
 
         assert self.check_element_exists("subscribe-button")
 
-    def test_stripe_payment_modal(self) -> None:
-        """Test the Stripe payment modal interaction"""
-
-        self.get_element("subscribe-button").click()
-        time.sleep(5)
-        iframe = self.driver.find_elements(By.TAG_NAME, "iframe")[-1]
-        self.driver.switch_to.frame(iframe)
-        self.set_text(self.get_element("cardNumber", By.NAME), "4242 4242 4242 4242")
-        self.set_text(self.get_element("cardCvc", By.NAME), "123")
-        self.set_text(self.get_element("cardExpiry", By.NAME), "1228")
-        self.set_text(self.get_element("billingName", By.NAME), "John Doe")
-        time.sleep(0.5)
-        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(0.5)
-        try:
-            self.set_text(self.get_element("billingPostalCode", By.NAME), "10001")
-        except:
-            pass
-        time.sleep(5)
-        self.get_element("SubmitButton-IconContainer", By.CLASS_NAME).click()
-        self.driver.switch_to.default_content()
-        self.assert_toast_message("Subscription successful! Enjoy your premium features!")
-        assert self.db_user.toast_active
-
     def test_stripe_payment(self) -> None:
         """Test the Stripe payment modal interaction"""
 
-        response = self.client.delete("/test/delete-all-customers")
-        assert response.status_code == 200
-        self.get_element("subscribe-button").click()
-        time.sleep(5)
-        iframe = self.driver.find_elements(By.TAG_NAME, "iframe")[-1]
-        self.driver.switch_to.frame(iframe)
-        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        self.get_element("SubmitButton-IconContainer", By.CLASS_NAME).click()
-        self.driver.switch_to.default_content()
-        self.assert_toast_message("Subscription successful! It might take a few moments to update your account.")
-        response = self.client.post(
-            "/test/webhook",
-            json={"type": "customer.subscription.created", "customer_id": self.db_user.stripe_details.customer_id},
-        )
-        assert response.status_code == 200
+        # Activate trial subscription
+        self.premium_settings_utils.delete_stripe_data()
+        self.premium_settings_utils.subscribe_button.click()
+        self.premium_settings_utils.start_trial_button.click()
+        time.sleep(1)
+        self.premium_settings_utils.call_stripe_create_webhook(self.db_user)
+        time.sleep(3)
+        assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
         assert self.db_user.premium.is_active
+
+        # Manage subscription and add payment method
+        self.premium_settings_utils.manage_subscription_button.click()
+        self.premium_settings_utils.add_payment_method_button.click()
+        self.premium_settings_utils.set_payment_details()
+        self.premium_settings_utils.return_to_business_link.click()
