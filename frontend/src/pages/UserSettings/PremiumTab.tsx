@@ -1,194 +1,166 @@
-import React, { JSX, useEffect, useRef, useState } from "react";
-import { Alert, Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
+import React, { JSX, useEffect, useState } from "react";
+import { Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
-import { StripeCheckoutModal } from "./StripeCheckoutModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ApiResponse } from "../../services/api/Base";
 import { ActionToggle } from "../../components/rendering/form/ActionToggle";
-import { paymentsApi, SubscriptionStatus } from "../../services/api/Payments";
-import { useSearchParams } from "react-router-dom";
+import { paymentsApi, PortalSessionResponse, SubscriptionStatus } from "../../services/api/Payments";
 import LoadingSpinner from "../../components/spinner/Spinner";
 
 const defaultSubscriptionStatus = {
-	status: null,
+	status: "unknowm",
 	trial_end: null,
+};
+
+interface SubscriptionStatusDisplay {
+	title: string;
+	message: string;
+	variant: "success" | "danger" | "warning" | "info";
+	showSubscribeButton: boolean;
+	badgeVariant: "success" | "danger" | "warning" | "info" | "primary";
+	icon: string;
+}
+
+const getSubscriptionStatusDisplay = (status: string | null, trialEnd: number | null): SubscriptionStatusDisplay => {
+	if (!status) {
+		return {
+			title: "Free Plan",
+			message: "Upgrade to unlock powerful automation features",
+			variant: "info",
+			badgeVariant: "info",
+			showSubscribeButton: true,
+			icon: "bi-star",
+		};
+	} else if (trialEnd) {
+		const remainingDays = Math.ceil((trialEnd - Date.now() / 1000) / 86400);
+		return {
+			title: "Premium (Trial)",
+			message: `${remainingDays} day${remainingDays !== 1 ? "s" : ""} remaining in your free trial`,
+			variant: "success",
+			badgeVariant: "success",
+			showSubscribeButton: false,
+			icon: "bi-gem",
+		};
+	} else if (status === "active") {
+		return {
+			title: "Premium",
+			message: "All features unlocked",
+			variant: "success",
+			badgeVariant: "success",
+			showSubscribeButton: false,
+			icon: "bi-gem",
+		};
+	} else {
+		return {
+			title: "Unknown Status",
+			message: "Please contact support for assistance",
+			variant: "warning",
+			badgeVariant: "warning",
+			showSubscribeButton: false,
+			icon: "bi-question-circle",
+		};
+	}
 };
 
 export const PremiumTab = (): JSX.Element => {
 	const { currentUser, token, updateCurrentUser, fetchUserInfo } = useAuth();
 	const dataContext: DataContextValue = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
-	const [loading, setLoading] = useState<boolean>(false);
+	const [stripeLoading, setStripeLoading] = useState<boolean>(false);
 	const [subscriptionLoading, setSubscriptionLoading] = useState<boolean>(false);
 	const [jobRatingLoading, setJobRatingLoading] = useState<boolean>(false);
 	const [jobScrapingLoading, setJobScrapingLoading] = useState<boolean>(false);
-	const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
 	const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>(defaultSubscriptionStatus);
-	const [searchParams, setSearchParams] = useSearchParams();
-	const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-	const previousStatusRef = useRef<string | null>(null);
-
-	useEffect((): void => {
-		if (currentUser?.stripe_details.subscription_id) {
-			setSubscriptionLoading(true);
-			fetchSubscriptionStatus().finally(() => {
-				setSubscriptionLoading(false);
-			});
-		}
-	}, [currentUser?.stripe_details.subscription_id]);
-
-	// Handle return from Stripe Customer Portal
-	useEffect(() => {
-		if (searchParams.get("refresh") === "true") {
-			// Remove the query parameter
-			setSearchParams({});
-
-			// Start polling for subscription updates
-			if (token) {
-				fetchUserInfo(token).then(() => {
-					startPollingSubscriptionStatus();
-				});
-			}
-		}
-	}, [searchParams, setSearchParams, token]);
-
-	useEffect(() => {
-		return () => {
-			if (pollingIntervalRef.current) {
-				clearInterval(pollingIntervalRef.current);
-			}
-		};
-	}, []);
 
 	const fetchSubscriptionStatus = async (): Promise<void> => {
-		if (!currentUser?.stripe_details.subscription_id || !token) return;
-
+		if (!token) return;
 		try {
+			setSubscriptionLoading(true);
 			const response: ApiResponse<SubscriptionStatus> = await paymentsApi.getSubscriptionStatus(token);
 			setSubscriptionStatus(response.data);
-
-			// Check if status changed
-			if (previousStatusRef.current && previousStatusRef.current !== response.data.status) {
-				await handleSubscriptionChange(response.data.status);
-			}
-
-			previousStatusRef.current = response.data.status;
 		} catch (error) {
-			console.error("Failed to fetch subscription status:", error);
+			setSubscriptionStatus({ status: "error", trial_end: null });
+		} finally {
+			setSubscriptionLoading(false);
 		}
 	};
 
-	const startPollingSubscriptionStatus = (): void => {
-		// Clear any existing interval
-		if (pollingIntervalRef.current) {
-			clearInterval(pollingIntervalRef.current);
-		}
+	useEffect((): void => {
+		fetchSubscriptionStatus().finally(() => {});
+	}, [currentUser?.stripe_details.subscription_id]);
 
-		// Store the initial status
-		previousStatusRef.current = subscriptionStatus.status;
+	useEffect(() => {
+		const params = new URLSearchParams(window.location.search);
+		const url = new URL(window.location.href);
+		console.log(window.location.href);
 
-		// Poll every 3 seconds
-		pollingIntervalRef.current = setInterval(() => {
-			fetchSubscriptionStatus().then((_) => {});
-		}, 3000);
+		if (params.get("success") === "true") {
+			console.log("here");
+			// Set up polling to check subscription status
+			let pollCount = 0;
+			const maxPolls = 100; // Poll up to 10 times
+			const pollingInterval = 3000; // Poll every 3 seconds
 
-		// Stop polling after 5 minutes (fallback)
-		setTimeout(
-			() => {
-				if (pollingIntervalRef.current) {
-					clearInterval(pollingIntervalRef.current);
-					pollingIntervalRef.current = null;
+			const intervalId = setInterval(() => {
+				console.log("Polling for subscription status...");
+				pollCount++;
+
+				if (pollCount >= maxPolls) {
+					clearInterval(intervalId);
+					return;
 				}
-			},
-			5 * 60 * 1000,
-		);
-	};
 
-	const stopPollingSubscriptionStatus = (): void => {
-		if (pollingIntervalRef.current) {
-			clearInterval(pollingIntervalRef.current);
-			pollingIntervalRef.current = null;
+				// Poll user data and subscription status
+				if (token) {
+					fetchUserInfo(token).then(() => {
+						paymentsApi.getSubscriptionStatus(token).then(() => {});
+					});
+				}
+			}, pollingInterval);
+
+			window.history.replaceState({}, document.title, url.pathname);
+
+			return () => {
+				clearInterval(intervalId);
+			};
 		}
-	};
+	}, [token]);
 
-	const handleSubscriptionChange = async (newStatus: string | null): Promise<void> => {
-		console.log(`Subscription status changed to: ${newStatus}`);
+	const handleSubscribe = async () => {
+		if (!token) return;
+		setStripeLoading(true);
 
-		// Stop polling since we detected the change
-		stopPollingSubscriptionStatus();
-
-		// Refresh the current user to get updated premium details
-		if (fetchUserInfo && token) {
-			await fetchUserInfo(token);
-		}
-
-		// Show success message if subscription is now active
-		if (newStatus === "active" || newStatus === "trialing") {
-			showToastSuccess("Welcome to JAM Premium! 🎉");
-		}
-	};
-
-	const handleCheckoutClose = (refetchUser: boolean): void => {
-		setShowCheckoutModal(false);
-
-		// Start polling for subscription status changes
-		console.log(refetchUser, token);
-		if (refetchUser && token) {
-			fetchUserInfo(token).then((_) => {
-				console.log("new user", currentUser);
-				startPollingSubscriptionStatus();
-			});
+		try {
+			const response: ApiResponse<PortalSessionResponse> = await paymentsApi.createSubscriptionCheckout(token);
+			if (response.data?.url) {
+				window.location.href = response.data.url;
+			} else {
+				showToastError("Failed to create checkout session. Please try again.");
+			}
+		} catch (error) {
+			showToastError("Failed to create checkout session. Please try again.");
+		} finally {
+			setStripeLoading(false);
 		}
 	};
 
 	const handleManageSubscription = async () => {
 		if (!token) return;
-		setLoading(true);
+		setStripeLoading(true);
+
 		try {
 			const response = await paymentsApi.createPortalSession(token);
-			window.location.href = response.data.url;
+			if (response.data?.url) {
+				window.location.href = response.data.url;
+			} else {
+				showToastError("Failed to open subscription management. Please try again.");
+			}
 		} catch (error) {
-			console.error("Error opening customer portal:", error);
 			showToastError("Failed to open subscription management. Please try again.");
-			setLoading(false);
-		}
-	};
-
-	const getSubscriptionStatusDisplay = () => {
-		const { status, trial_end } = subscriptionStatus;
-
-		if (!status) {
-			return {
-				title: "Upgrade to Premium",
-				message: "Unlock powerful features to supercharge your job search",
-				variant: "info",
-				showSubscribeButton: true,
-			};
-		} else if (trial_end) {
-			const remainingDays = Math.ceil((trial_end - Date.now() / 1000) / 86400);
-			console.log("trial_end", remainingDays);
-			return {
-				title: "Premium Active (Trial)",
-				message: `${remainingDays} Day${remainingDays !== 1 ? "s" : ""} Of Trial Remaining`,
-				variant: "success",
-				showSubscribeButton: false,
-			};
-		} else if (status === "active") {
-			return {
-				title: "Premium Active",
-				message: "You have Premium (lucky you!)",
-				variant: "success",
-				showSubscribeButton: false,
-			};
-		} else {
-			return {
-				title: "Unknown Subscription Status",
-				message: "Please contact support for assistance",
-				variant: "warning",
-				showSubscribeButton: false,
-			};
+		} finally {
+			setStripeLoading(false);
 		}
 	};
 
@@ -199,65 +171,38 @@ export const PremiumTab = (): JSX.Element => {
 		});
 	};
 
-	const statusDisplay = getSubscriptionStatusDisplay();
-	const hasActiveSubscription = ["active", "trialing", "past_due", "paused"].includes(
-		subscriptionStatus.status || "",
+	const statusDisplay: SubscriptionStatusDisplay = getSubscriptionStatusDisplay(
+		subscriptionStatus.status,
+		subscriptionStatus.trial_end,
 	);
+	const hasActiveSubscription = ["active", "trialing", "paused"].includes(subscriptionStatus.status || "");
 
 	const jobBoards = [
-		{
-			name: "LinkedIn",
-			url: "https://linkedin.com",
-			icon: "linkedin",
-			emailKey: "linkedin",
-		},
-		{
-			name: "Indeed",
-			url: "https://indeed.com",
-			icon: "briefcase",
-			emailKey: "indeed",
-		},
-		{
-			name: "VeganJobs",
-			url: "https://veganjobs.com",
-			icon: "flower1",
-			emailKey: "veganjobs",
-		},
-		{
-			name: "NHS",
-			url: "https://www.jobs.nhs.uk",
-			icon: "hospital",
-			emailKey: "nhs",
-		},
+		{ name: "LinkedIn", url: "https://linkedin.com", icon: "linkedin", emailKey: "linkedin" },
+		{ name: "Indeed", url: "https://indeed.com", icon: "briefcase", emailKey: "indeed" },
+		{ name: "VeganJobs", url: "https://veganjobs.com", icon: "flower1", emailKey: "veganjobs" },
+		{ name: "NHS", url: "https://www.jobs.nhs.uk", icon: "hospital", emailKey: "nhs" },
 	];
 
 	const handleToggleJobRating = () => {
 		setJobRatingLoading(true);
 		updateCurrentUser({ premium: { job_rating_active: !currentUser?.premium.job_rating_active } })
 			.then(() => {})
-			.catch(() => {
-				showToastError("Failed to update settings");
-			})
-			.finally(() => {
-				setJobRatingLoading(false);
-			});
+			.catch(() => showToastError("Failed to update settings"))
+			.finally(() => setJobRatingLoading(false));
 	};
 
 	const handleToggleJobScraping = () => {
 		setJobScrapingLoading(true);
 		updateCurrentUser({ premium: { job_scraping_active: !currentUser?.premium.job_scraping_active } })
 			.then(() => {})
-			.catch(() => {
-				showToastError("Failed to update settings");
-			})
-			.finally(() => {
-				setJobScrapingLoading(false);
-			});
+			.catch(() => showToastError("Failed to update settings"))
+			.finally(() => setJobScrapingLoading(false));
 	};
 
 	return (
 		<>
-			<Card className="mb-4 text-center">
+			<Card className="mb-4">
 				<Card.Body>
 					{subscriptionLoading ? (
 						<div className="py-5">
@@ -265,11 +210,66 @@ export const PremiumTab = (): JSX.Element => {
 						</div>
 					) : (
 						<>
-							<h2>{statusDisplay.title}</h2>
-							<Alert variant={statusDisplay.variant} className="d-inline-block mt-2">
-								{statusDisplay.message}
-							</Alert>
-							<div className="text-start mt-4 mb-4" style={{ maxWidth: "900px", margin: "0 auto" }}>
+							{/* Subscription Status Section */}
+							<div className="text-center mb-4">
+								<div className="d-flex align-items-center justify-content-center gap-3 mb-3">
+									<i className={`${statusDisplay.icon} fs-1`}></i>
+									<div className="text-start">
+										<h3 className="mb-1" id={"status-title"}>
+											{statusDisplay.title}
+										</h3>
+										<p className="text-muted mb-0" style={{ fontSize: "0.95rem" }}>
+											{statusDisplay.message}
+										</p>
+									</div>
+								</div>
+
+								{/* Action Buttons */}
+								<div className="d-flex flex-column align-items-center gap-2">
+									{statusDisplay.showSubscribeButton ? (
+										<>
+											<div className="mb-2">
+												<h4 className="mb-1">£5/month</h4>
+												<p className="text-muted mb-0">14-day free trial • Cancel anytime</p>
+											</div>
+											<ActionButton
+												onClick={handleSubscribe}
+												defaultIcon="bi-gem"
+												id={"subscribe-button"}
+												defaultText="Start Free Trial"
+												loading={stripeLoading}
+												loadingText="Loading..."
+											/>
+										</>
+									) : hasActiveSubscription ? (
+										<>
+											<div className="mb-2">
+												<h5 className="mb-1">£5/month</h5>
+												<p className="text-muted mb-0 small">Cancel anytime</p>
+											</div>
+											<ActionButton
+												onClick={handleManageSubscription}
+												variant={"secondary"}
+												defaultIcon="bi-gear"
+												loading={stripeLoading}
+												id={"manage-subscription-button"}
+												defaultText="Manage Subscription"
+												loadingText={"Loading..."}
+											/>
+										</>
+									) : null}
+								</div>
+							</div>
+
+							{/* Premium Description - Now Below Status */}
+							<div
+								className="text-start mt-4 pt-4"
+								style={{
+									maxWidth: "900px",
+									margin: "0 auto",
+									borderTop: "1px solid rgba(0,0,0,0.1)",
+								}}
+							>
 								<h4 className="mb-3">Why Premium?</h4>
 								<p>
 									If you're actively job hunting, you likely receive dozens of job alert emails every
@@ -285,37 +285,6 @@ export const PremiumTab = (): JSX.Element => {
 									AI-powered match scores highlighting the opportunities that matter most.
 								</p>
 							</div>
-							{statusDisplay.showSubscribeButton && (
-								<>
-									<h3 className="mt-4">£5/month</h3>
-									<p className="text-muted">14-day free trial • Cancel anytime</p>
-									<ActionButton
-										onClick={() => {
-											setLoading(true);
-											setShowCheckoutModal(true);
-											setLoading(false);
-										}}
-										defaultIcon="bi-gem"
-										id={"subscribe-button"}
-										defaultText="Start Free Trial"
-									/>
-								</>
-							)}
-							{hasActiveSubscription && (
-								<>
-									<h3 className="mt-4">£5/month</h3>
-									<p className="text-muted">Cancel anytime</p>
-									<ActionButton
-										onClick={() => handleManageSubscription()}
-										variant={"secondary"}
-										defaultIcon="bi-gear"
-										loading={loading}
-										id={"manage-subscription-button"}
-										defaultText="Manage Subscription"
-										loadingText={"Opening..."}
-									/>
-								</>
-							)}
 						</>
 					)}
 				</Card.Body>
@@ -482,16 +451,6 @@ export const PremiumTab = (): JSX.Element => {
 					</Card>
 				</Col>
 			</Row>
-
-			{currentUser?.email && (
-				<>
-					<StripeCheckoutModal
-						show={showCheckoutModal}
-						onHide={handleCheckoutClose}
-						userEmail={currentUser.email}
-					/>
-				</>
-			)}
 		</>
 	);
 };
