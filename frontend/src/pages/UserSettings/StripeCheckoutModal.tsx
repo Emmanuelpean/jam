@@ -11,7 +11,7 @@ const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY ||
 
 interface CheckoutModalProps {
 	show: boolean;
-	onHide: () => void;
+	onHide: (refetchUser: boolean) => void;
 	userEmail: string;
 }
 
@@ -20,7 +20,7 @@ export const StripeCheckoutModal: React.FC<CheckoutModalProps> = ({
 	onHide,
 }: CheckoutModalProps): JSX.Element => {
 	const { showToastSuccess } = useGlobalToast();
-	const { fetchUserInfo, token } = useAuth();
+	const { token } = useAuth();
 
 	const fetchClientSecret = useCallback(async (): Promise<string> => {
 		if (!token) throw new Error("No authentication token");
@@ -51,14 +51,20 @@ export const StripeCheckoutModal: React.FC<CheckoutModalProps> = ({
 	const options = {
 		fetchClientSecret,
 		onComplete: async (): Promise<void> => {
-			await fetchUserInfo(token!);
-			showToastSuccess("Subscription successful! Enjoy your premium features!");
-			onHide();
+			showToastSuccess("Subscription successful! It might take a few moments to update your account.");
+			onHide(true);
 		},
 	};
 
 	return (
-		<Modal show={show} onHide={onHide} size="lg" centered={true} backdrop="static" id={"stripe-checkout-modal"}>
+		<Modal
+			show={show}
+			onHide={() => onHide(false)}
+			size="lg"
+			centered={true}
+			backdrop="static"
+			id={"stripe-checkout-modal"}
+		>
 			<Modal.Header closeButton>
 				<Modal.Title>Subscribe to TOAST</Modal.Title>
 			</Modal.Header>

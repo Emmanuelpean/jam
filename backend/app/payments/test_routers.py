@@ -16,53 +16,64 @@ from app.payments.webhooks import process_subscription_event
 test_router = APIRouter(prefix="/test", tags=["testing"])
 
 
-@test_router.delete("/delete-customer")
-async def delete_stripe_customer(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-) -> dict:
-    """Delete the current user's Stripe customer and cancel all subscriptions.
-    This permanently deletes the customer from Stripe and immediately cancels
-    any active subscriptions. This action cannot be undone.
-    :param current_user: Authenticated user from JWT token
-    :param db: Database session
-    :return: dict with deletion confirmation
-    :raises HTTPException: If customer doesn't exist or Stripe error occurs"""
+@test_router.delete("/delete-all-customers")
+async def delete_all_stripe_customers() -> dict:
+    """Delete ALL Stripe customers and cancel all their subscriptions.
+    WARNING: This permanently deletes ALL customers from Stripe and immediately
+    cancels all active subscriptions across your entire account.
+    This action cannot be undone.
+    :return: dict with deletion summary"""
+
+    deleted_count = 0
+    failed_deletions = []
 
     try:
-        # Check if user has a Stripe customer ID
-        if not current_user.stripe_details.customer_id:
-            raise HTTPException(status_code=404, detail="No Stripe customer found for this user")
+        # List all customers with pagination
+        has_more = True
+        starting_after = None
 
-        # Delete customer from Stripe (also cancels active subscriptions)
-        deleted_customer = await stripe.Customer.delete_async(current_user.stripe_details.customer_id)
+        while has_more:
+            # Fetch customers in batches of 100 (Stripe's max)
+            params = {"limit": 100}
+            if starting_after:
+                params["starting_after"] = starting_after
 
-        if not deleted_customer.get("deleted"):
-            raise HTTPException(status_code=500, detail="Failed to delete Stripe customer")
+            customers = await stripe.Customer.list_async(**params)
 
-        logger.info(f"Deleted Stripe customer {current_user.stripe_details.customer_id} " f"for user {current_user.id}")
+            # Delete each customer (automatically cancels their subscriptions)
+            for customer in customers.data:
+                try:
+                    deleted_customer = await stripe.Customer.delete_async(customer.id)
 
-        # Clear Stripe customer ID from database
-        current_user.stripe_details.customer_id = None
-        current_user.stripe_details.subscription_id = None
-        db.commit()
+                    if deleted_customer.get("deleted"):
+                        deleted_count += 1
+                        logger.info(f"Deleted Stripe customer {customer.id}")
+                    else:
+                        failed_deletions.append(customer.id)
+
+                except stripe.error.StripeError as e:
+                    logger.error(f"Failed to delete customer {customer.id}: {str(e)}")
+                    failed_deletions.append(customer.id)
+
+            # Check if there are more customers to process
+            has_more = customers.has_more
+            if has_more and customers.data:
+                starting_after = customers.data[-1].id
 
         return {
             "success": True,
-            "message": "Stripe customer deleted successfully",
-            "customer_id": deleted_customer["id"],
+            "message": f"Deleted {deleted_count} Stripe customers",
+            "deleted_count": deleted_count,
+            "failed_count": len(failed_deletions),
+            "failed_ids": failed_deletions if failed_deletions else None,
         }
-    except stripe.error.InvalidRequestError as e:
-        logger.error(f"Invalid Stripe customer {current_user.stripe_details.customer_id}: {str(e)}")
-        raise HTTPException(status_code=404, detail="Stripe customer not found or already deleted")
+
     except stripe.error.StripeError as e:
-        logger.error(f"Stripe error deleting customer for user {current_user.id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=503, detail="Payment service temporarily unavailable. Please try again.")
-    except HTTPException:
-        raise
+        logger.error(f"Stripe error during bulk deletion: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=503, detail="Payment service error. Please try again.")
     except Exception as e:
-        logger.error(f"Unexpected error deleting customer for user {current_user.id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
+        logger.error(f"Unexpected error during bulk deletion: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An error occurred during deletion.")
 
 
 class AdvanceClockRequest(BaseModel):

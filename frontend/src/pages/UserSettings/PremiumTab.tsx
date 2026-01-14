@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useState, useRef } from "react";
+import React, { JSX, useEffect, useRef, useState } from "react";
 import { Alert, Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
@@ -49,10 +49,7 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 		if (!currentUser?.stripe_details.subscription_id || !token) return;
 
 		try {
-			const response: ApiResponse<SubscriptionStatus> = await paymentsApi.getSubscriptionStatus(
-				currentUser.stripe_details.subscription_id,
-				token,
-			);
+			const response: ApiResponse<SubscriptionStatus> = await paymentsApi.getSubscriptionStatus(token);
 			setSubscriptionStatus(response.data);
 
 			// Check if status changed
@@ -116,12 +113,20 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 		}
 	};
 
-	const handleCheckoutClose = (): void => {
+	// fetchUserInfo(token!).then((_) => {
+	// 	console.log(currentUser);
+	// });
+
+	const handleCheckoutClose = (refetchUser: boolean): void => {
 		setShowCheckout(false);
 
 		// Start polling for subscription status changes
-		if (currentUser?.stripe_details.subscription_id) {
-			startPollingSubscriptionStatus();
+		console.log(refetchUser, token);
+		if (refetchUser && token) {
+			fetchUserInfo(token).then((_) => {
+				console.log("new user", currentUser);
+				startPollingSubscriptionStatus();
+			});
 		}
 	};
 
@@ -136,15 +141,11 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 				showSubscribeButton: true,
 			};
 		} else if (trial_end) {
-			const trial_days_remaining: number = Math.ceil(
-				(new Date(trial_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
-			);
+			const remainingDays = Math.ceil((trial_end - Date.now() / 1000) / 86400);
+			console.log("trial_end", remainingDays);
 			return {
 				title: "Premium Active (Trial)",
-				message:
-					trial_days_remaining > 0
-						? `${trial_days_remaining} day${trial_days_remaining !== 1 ? "s" : ""} of trial remaining`
-						: "Trial ending soon",
+				message: `${remainingDays} Day${remainingDays !== 1 ? "s" : ""} Of Trial Remaining`,
 				variant: "success",
 				showSubscribeButton: false,
 			};
@@ -173,11 +174,11 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 	};
 
 	const handleManageSubscription = async (): Promise<void> => {
-		if (!currentUser?.email) return;
+		if (!token) return;
 
 		try {
 			setLoading(true);
-			const response = await paymentsApi.createPortalSession(currentUser.email);
+			const response = await paymentsApi.createPortalSession(token);
 			window.location.href = response.data.url;
 		} catch (error) {
 			console.error("Portal session error:", error);
@@ -223,9 +224,7 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 	const handleToggleJobRating = () => {
 		setJobRatingLoading(true);
 		updateCurrentUser({ premium: { job_rating_active: !currentUser?.premium.job_rating_active } })
-			.then(() => {
-				showToastSuccess("Settings updated");
-			})
+			.then(() => {})
 			.catch(() => {
 				showToastError("Failed to update settings");
 			})
@@ -237,9 +236,7 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 	const handleToggleJobScraping = () => {
 		setJobScrapingLoading(true);
 		updateCurrentUser({ premium: { job_scraping_active: !currentUser?.premium.job_scraping_active } })
-			.then(() => {
-				showToastSuccess("Settings updated");
-			})
+			.then(() => {})
 			.catch(() => {
 				showToastError("Failed to update settings");
 			})

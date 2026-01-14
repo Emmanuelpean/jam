@@ -94,8 +94,8 @@ class UserPreferencesOut(Out, UserPreferencesUpdate):
 class StripeDetailsOut(Out):
     """Stripe details output schema"""
 
-    stripe_customer_id: str | None = None
-    stripe_subscription_id: str | None = None
+    customer_id: str | None = None
+    subscription_id: str | None = None
 
 
 # --------------------------------------------------- PREMIUM DETAILS --------------------------------------------------
