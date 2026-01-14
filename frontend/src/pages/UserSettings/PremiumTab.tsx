@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX, useEffect, useState, useRef } from "react";
 import { Alert, Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
@@ -18,23 +18,32 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 	showCheckout,
 	setShowCheckout,
 }: PremiumTabProps): JSX.Element => {
-	const { currentUser, token, updateCurrentUser } = useAuth();
+	const { currentUser, token, updateCurrentUser, fetchUserInfo } = useAuth();
 	const dataContext: DataContextValue = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [loading, setLoading] = useState<boolean>(false);
-	const [subscriptionChanged, setSubscriptionChanged] = useState<boolean>(false);
 	const [jobRatingLoading, setJobRatingLoading] = useState<boolean>(false);
 	const [jobScrapingLoading, setJobScrapingLoading] = useState<boolean>(false);
 	const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
 		status: null,
 		trial_end: null,
 	});
+	const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+	const previousStatusRef = useRef<string | null>(null);
 
 	useEffect((): void => {
 		if (currentUser?.stripe_details.subscription_id) {
 			fetchSubscriptionStatus().then((_) => {});
 		}
 	}, [currentUser?.stripe_details.subscription_id]);
+
+	useEffect(() => {
+		return () => {
+			if (pollingIntervalRef.current) {
+				clearInterval(pollingIntervalRef.current);
+			}
+		};
+	}, []);
 
 	const fetchSubscriptionStatus = async (): Promise<void> => {
 		if (!currentUser?.stripe_details.subscription_id || !token) return;
@@ -45,8 +54,74 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 				token,
 			);
 			setSubscriptionStatus(response.data);
+
+			// Check if status changed
+			if (previousStatusRef.current && previousStatusRef.current !== response.data.status) {
+				await handleSubscriptionChange(response.data.status);
+			}
+
+			previousStatusRef.current = response.data.status;
 		} catch (error) {
 			console.error("Failed to fetch subscription status:", error);
+		}
+	};
+
+	const startPollingSubscriptionStatus = (): void => {
+		// Clear any existing interval
+		if (pollingIntervalRef.current) {
+			clearInterval(pollingIntervalRef.current);
+		}
+
+		// Store the initial status
+		previousStatusRef.current = subscriptionStatus.status;
+
+		// Poll every 3 seconds
+		pollingIntervalRef.current = setInterval(() => {
+			fetchSubscriptionStatus().then((_) => {});
+		}, 3000);
+
+		// Stop polling after 5 minutes (fallback)
+		setTimeout(
+			() => {
+				if (pollingIntervalRef.current) {
+					clearInterval(pollingIntervalRef.current);
+					pollingIntervalRef.current = null;
+				}
+			},
+			5 * 60 * 1000,
+		);
+	};
+
+	const stopPollingSubscriptionStatus = (): void => {
+		if (pollingIntervalRef.current) {
+			clearInterval(pollingIntervalRef.current);
+			pollingIntervalRef.current = null;
+		}
+	};
+
+	const handleSubscriptionChange = async (newStatus: string | null): Promise<void> => {
+		console.log(`Subscription status changed to: ${newStatus}`);
+
+		// Stop polling since we detected the change
+		stopPollingSubscriptionStatus();
+
+		// Refresh the current user to get updated premium details
+		if (fetchUserInfo && token) {
+			await fetchUserInfo(token);
+		}
+
+		// Show success message if subscription is now active
+		if (newStatus === "active" || newStatus === "trialing") {
+			showToastSuccess("Welcome to JAM Premium! 🎉");
+		}
+	};
+
+	const handleCheckoutClose = (): void => {
+		setShowCheckout(false);
+
+		// Start polling for subscription status changes
+		if (currentUser?.stripe_details.subscription_id) {
+			startPollingSubscriptionStatus();
 		}
 	};
 
@@ -389,11 +464,7 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 			</Row>
 
 			{currentUser?.email && (
-				<StripeCheckoutModal
-					show={showCheckout}
-					onHide={() => setShowCheckout(false)}
-					userEmail={currentUser.email}
-				/>
+				<StripeCheckoutModal show={showCheckout} onHide={handleCheckoutClose} userEmail={currentUser.email} />
 			)}
 		</>
 	);

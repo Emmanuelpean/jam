@@ -1,7 +1,5 @@
 """Payment-related API endpoints using FastAPI and Stripe."""
 
-import time
-
 import stripe
 from fastapi import Request, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -11,8 +9,8 @@ from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.models import User
 from app.payments import payment_router, logger
-from app.payments.checkout import build_checkout_params, get_or_create_stripe_customer
-from app.payments.webhooks import handle_subscription_event
+from app.payments import checkout
+from app.payments.webhooks import process_subscription_event
 
 
 @payment_router.post("/create-subscription-checkout")
@@ -29,19 +27,11 @@ async def create_subscription_checkout(
     :raises HTTPException: On Stripe or database errors"""
 
     try:
-        # Get or create customer and check history
-        customer_id, had_previous_subscription = await get_or_create_stripe_customer(current_user, db)
-
-        # Build checkout parameters
-        checkout_params = build_checkout_params(customer_id, had_previous_subscription)
-
-        # Create checkout session
+        customer_id = await checkout.get_or_create_stripe_customer(current_user, db)
+        checkout_params = await checkout.build_checkout_params(customer_id)
         checkout_session = await stripe.checkout.Session.create_async(**checkout_params)
-
         logger.info(f"Created checkout session {checkout_session.id} for user {current_user.id}")
-
         return {"clientSecret": checkout_session.client_secret}
-
     except HTTPException:
         raise
     except stripe.error.StripeError as e:
@@ -50,6 +40,30 @@ async def create_subscription_checkout(
     except Exception as e:
         logger.error(f"Unexpected error creating checkout for user {current_user.id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
+
+
+@payment_router.post("/webhook")
+async def stripe_webhook(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> dict:
+    """Handle Stripe webhook events
+    :param request: Incoming HTTP request
+    :param db: Database session"""
+
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, settings.stripe_webhook_secret)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    # Delegate to shared business logic
+    process_subscription_event(event.type, event.data.object, db)
+    return {"status": "success"}
 
 
 @payment_router.post("/create-portal-session")
@@ -91,40 +105,16 @@ async def create_portal_session(
         raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
 
 
-@payment_router.post("/webhook")
-async def stripe_webhook(
-    request: Request,
-    db: Session = Depends(get_db),
-) -> dict:
-    """Handle Stripe webhook events - signature verification only."""
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
-
-    try:
-        event = stripe.Webhook.construct_event(payload, sig_header, settings.stripe_webhook_secret)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.error.SignatureVerificationError:
-        raise HTTPException(status_code=400, detail="Invalid signature")
-
-    # Delegate to shared business logic
-    return await handle_subscription_event(
-        event_type=event.type,
-        subscription_data=event.data.object,
-        db=db,
-    )
-
-
 @payment_router.get("/subscription-status/{subscription_id}")
 async def get_subscription_status(
-    subscription_id: str,
+    current_user: User = Depends(get_current_user),
 ) -> dict:
     """Get subscription status and trial information.
-    :param subscription_id: Stripe subscription ID
+    :param current_user: Authenticated user from JWT token
     :return: dict with subscription status and trial info"""
 
     try:
-        return await stripe.Subscription.retrieve_async(subscription_id)
+        return await stripe.Subscription.retrieve_async(current_user.stripe_details.customer_id)
     except stripe.error.StripeError as e:
-        logger.error(f"Failed to retrieve subscription {subscription_id}: {e}")
+        logger.error(f"Failed to retrieve subscription {current_user.stripe_details.customer_id}: {e}")
         raise HTTPException(status_code=400, detail=str(e))

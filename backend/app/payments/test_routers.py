@@ -1,16 +1,17 @@
 """Mock webhook endpoints for testing Stripe subscription flows."""
 
 import asyncio
-from datetime import datetime
+import datetime as dt
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.models import User
-from app.core.oauth2 import get_current_user
 from app.payments import logger, stripe
+from app.payments.webhooks import process_subscription_event
 
 test_router = APIRouter(prefix="/test", tags=["testing"])
 
@@ -43,6 +44,7 @@ async def delete_stripe_customer(
 
         # Clear Stripe customer ID from database
         current_user.stripe_details.customer_id = None
+        current_user.stripe_details.subscription_id = None
         db.commit()
 
         return {
@@ -50,7 +52,6 @@ async def delete_stripe_customer(
             "message": "Stripe customer deleted successfully",
             "customer_id": deleted_customer["id"],
         }
-
     except stripe.error.InvalidRequestError as e:
         logger.error(f"Invalid Stripe customer {current_user.stripe_details.customer_id}: {str(e)}")
         raise HTTPException(status_code=404, detail="Stripe customer not found or already deleted")
@@ -129,8 +130,8 @@ async def advance_test_clock(
             "success": True,
             "test_clock_id": test_clock_id,
             "days_advanced": request.days,
-            "previous_time": datetime.fromtimestamp(current_frozen_time).isoformat(),
-            "new_time": datetime.fromtimestamp(new_frozen_time).isoformat(),
+            "previous_time": dt.datetime.fromtimestamp(current_frozen_time).isoformat(),
+            "new_time": dt.datetime.fromtimestamp(new_frozen_time).isoformat(),
             "status": updated_clock.status,
             "message": f"Advanced test clock by {request.days} days",
         }
@@ -146,3 +147,29 @@ async def advance_test_clock(
     except Exception as e:
         logger.error(f"Unexpected error advancing test clock: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
+
+
+class WebhookRequest(BaseModel):
+    type: str
+    customer_id: str
+
+
+@test_router.post("/webhook")
+async def stripe_webhook(
+    event: WebhookRequest,
+    db: Session = Depends(get_db),
+) -> dict:
+    """Handle Stripe webhook events - signature verification only."""
+
+    subscriptions = await stripe.Subscription.list_async(customer=event.customer_id, limit=1)
+
+    if not subscriptions.data:
+        raise HTTPException(status_code=404, detail="No subscription found for customer")
+
+    subscription = subscriptions.data[0]
+    process_subscription_event(
+        event.type,
+        {"customer": event.customer_id, "id": subscription.id, "trial_end": subscription.trial_end},
+        db,
+    )
+    return {"status": "success"}
