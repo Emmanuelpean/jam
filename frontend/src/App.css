@@ -403,3 +403,57 @@ textarea.form-control {
 .progress-text {
     font-size: 0;
 }
+/* ----------------------------------------------------- TOGGLE ----------------------------------------------------- */
+
+/* Hide the default checkbox for toggles */
+.form-switch .form-check-input {
+    width: 2.5rem;
+    height: 1.25rem;
+    background-color: #cbd5e0;
+    border: none;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background-image: none !important;
+}
+
+/* Create the sliding circle using ::before */
+.form-switch .form-check-input::before {
+    content: '';
+    position: absolute;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background-color: white;
+    top: 50%;
+    left: 0.125rem;
+    transform: translateY(-50%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Checked state - change background and move circle */
+.form-switch .form-check-input:checked {
+    background-color: var(--primary-mid);
+    border: none;
+}
+
+.form-switch .form-check-input:checked::before {
+    left: calc(100% - 1.125rem);
+}
+
+/*!* Focus state *!*/
+/*.form-switch .form-check-input:focus {*/
+/*    background-color: #cbd5e0;*/
+/*    border-color: var(--primary-mid);*/
+/*    box-shadow: 0 0 0 0.25rem var(--jam-glow);*/
+/*}*/
+
+/*.form-switch .form-check-input:checked:focus {*/
+/*    background-color: var(--primary-mid);*/
+/*}*/
+
+/*!* Hover effects *!*/
+/*.form-switch .form-check-input:hover::before {*/
+/*    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);*/
+/*}*/

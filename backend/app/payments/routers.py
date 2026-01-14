@@ -105,7 +105,7 @@ async def create_portal_session(
         raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
 
 
-@payment_router.get("/subscription-status/{subscription_id}")
+@payment_router.get("/subscription-status/")
 async def get_subscription_status(
     current_user: User = Depends(get_current_user),
 ) -> dict:
@@ -114,7 +114,11 @@ async def get_subscription_status(
     :return: dict with subscription status and trial info"""
 
     try:
-        return await stripe.Subscription.retrieve_async(current_user.stripe_details.customer_id)
+        data = await stripe.Subscription.retrieve_async(current_user.stripe_details.subscription_id)
+        return {
+            "status": data.status,
+            "trial_end": data.trial_end,
+        }
     except stripe.error.StripeError as e:
-        logger.error(f"Failed to retrieve subscription {current_user.stripe_details.customer_id}: {e}")
+        logger.error(f"Failed to retrieve subscription {current_user.stripe_details.subscription_id}: {e}")
         raise HTTPException(status_code=400, detail=str(e))

@@ -255,6 +255,8 @@ class TestPremiumSettingsPage(BaseTest):
     def test_stripe_payment(self) -> None:
         """Test the Stripe payment modal interaction"""
 
+        response = self.client.delete("/test/delete-all-customers")
+        assert response.status_code == 200
         self.get_element("subscribe-button").click()
         time.sleep(5)
         iframe = self.driver.find_elements(By.TAG_NAME, "iframe")[-1]
@@ -262,9 +264,10 @@ class TestPremiumSettingsPage(BaseTest):
         self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         self.get_element("SubmitButton-IconContainer", By.CLASS_NAME).click()
         self.driver.switch_to.default_content()
-        self.assert_toast_message("Subscription successful! Enjoy your premium features!")
-        self.client.post(
+        self.assert_toast_message("Subscription successful! It might take a few moments to update your account.")
+        response = self.client.post(
             "/test/webhook",
             json={"type": "customer.subscription.created", "customer_id": self.db_user.stripe_details.customer_id},
         )
+        assert response.status_code == 200
         assert self.db_user.premium.is_active

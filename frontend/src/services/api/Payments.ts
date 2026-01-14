@@ -2,7 +2,7 @@ import { api, ApiResponsePromise } from "./Base";
 
 export interface SubscriptionStatus {
 	status: string | null;
-	trial_end: Date | null;
+	trial_end: number | null;
 }
 
 export interface PortalSessionResponse {
@@ -14,18 +14,18 @@ export interface CheckoutSessionResponse {
 }
 
 export interface PaymentsApi {
-	getSubscriptionStatus: (subscriptionId: string, token: string) => ApiResponsePromise<SubscriptionStatus>;
-	createPortalSession: (customerEmail: string) => ApiResponsePromise<PortalSessionResponse>;
+	getSubscriptionStatus: (token: string) => ApiResponsePromise<SubscriptionStatus>;
+	createPortalSession: (token: string) => ApiResponsePromise<PortalSessionResponse>;
 	createSubscriptionCheckout: (token: string) => ApiResponsePromise<CheckoutSessionResponse>;
 }
 
 export const paymentsApi: PaymentsApi = {
-	getSubscriptionStatus: async (subscriptionId: string, token: string): ApiResponsePromise<SubscriptionStatus> => {
-		return api.get(`payments/subscription-status/${subscriptionId}`, token);
+	getSubscriptionStatus: async (token: string): ApiResponsePromise<SubscriptionStatus> => {
+		return api.get(`payments/subscription-status/`, token);
 	},
 
-	createPortalSession: async (customerEmail: string): ApiResponsePromise<PortalSessionResponse> => {
-		return api.post("payments/create-portal-session", { customer_email: customerEmail });
+	createPortalSession: async (token: string): ApiResponsePromise<PortalSessionResponse> => {
+		return api.post("payments/create-portal-session", {}, token);
 	},
 
 	createSubscriptionCheckout: async (token: string): ApiResponsePromise<CheckoutSessionResponse> => {
