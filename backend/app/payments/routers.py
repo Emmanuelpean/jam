@@ -8,8 +8,8 @@ from app.config import settings
 from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.models import User
-from app.payments import payment_router, logger
 from app.payments import checkout
+from app.payments import payment_router, logger
 from app.payments.webhooks import process_subscription_event
 
 

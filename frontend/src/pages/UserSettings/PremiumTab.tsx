@@ -8,34 +8,51 @@ import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ApiResponse } from "../../services/api/Base";
 import { ActionToggle } from "../../components/rendering/form/ActionToggle";
 import { paymentsApi, SubscriptionStatus } from "../../services/api/Payments";
+import { useSearchParams } from "react-router-dom";
+import LoadingSpinner from "../../components/spinner/Spinner";
 
-interface PremiumTabProps {
-	showCheckout: boolean;
-	setShowCheckout: (show: boolean) => void;
-}
+const defaultSubscriptionStatus = {
+	status: null,
+	trial_end: null,
+};
 
-export const PremiumTab: React.FC<PremiumTabProps> = ({
-	showCheckout,
-	setShowCheckout,
-}: PremiumTabProps): JSX.Element => {
+export const PremiumTab = (): JSX.Element => {
 	const { currentUser, token, updateCurrentUser, fetchUserInfo } = useAuth();
 	const dataContext: DataContextValue = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [loading, setLoading] = useState<boolean>(false);
+	const [subscriptionLoading, setSubscriptionLoading] = useState<boolean>(false);
 	const [jobRatingLoading, setJobRatingLoading] = useState<boolean>(false);
 	const [jobScrapingLoading, setJobScrapingLoading] = useState<boolean>(false);
-	const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
-		status: null,
-		trial_end: null,
-	});
+	const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
+	const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>(defaultSubscriptionStatus);
+	const [searchParams, setSearchParams] = useSearchParams();
 	const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 	const previousStatusRef = useRef<string | null>(null);
 
 	useEffect((): void => {
 		if (currentUser?.stripe_details.subscription_id) {
-			fetchSubscriptionStatus().then((_) => {});
+			setSubscriptionLoading(true);
+			fetchSubscriptionStatus().finally(() => {
+				setSubscriptionLoading(false);
+			});
 		}
 	}, [currentUser?.stripe_details.subscription_id]);
+
+	// Handle return from Stripe Customer Portal
+	useEffect(() => {
+		if (searchParams.get("refresh") === "true") {
+			// Remove the query parameter
+			setSearchParams({});
+
+			// Start polling for subscription updates
+			if (token) {
+				fetchUserInfo(token).then(() => {
+					startPollingSubscriptionStatus();
+				});
+			}
+		}
+	}, [searchParams, setSearchParams, token]);
 
 	useEffect(() => {
 		return () => {
@@ -113,12 +130,8 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 		}
 	};
 
-	// fetchUserInfo(token!).then((_) => {
-	// 	console.log(currentUser);
-	// });
-
 	const handleCheckoutClose = (refetchUser: boolean): void => {
-		setShowCheckout(false);
+		setShowCheckoutModal(false);
 
 		// Start polling for subscription status changes
 		console.log(refetchUser, token);
@@ -127,6 +140,19 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 				console.log("new user", currentUser);
 				startPollingSubscriptionStatus();
 			});
+		}
+	};
+
+	const handleManageSubscription = async () => {
+		if (!token) return;
+		setLoading(true);
+		try {
+			const response = await paymentsApi.createPortalSession(token);
+			window.location.href = response.data.url;
+		} catch (error) {
+			console.error("Error opening customer portal:", error);
+			showToastError("Failed to open subscription management. Please try again.");
+			setLoading(false);
 		}
 	};
 
@@ -171,22 +197,6 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 		navigator.clipboard.writeText(email).then((_: void): void => {
 			showToastSuccess(`${email} copied to clipboard`);
 		});
-	};
-
-	const handleManageSubscription = async (): Promise<void> => {
-		if (!token) return;
-
-		try {
-			setLoading(true);
-			const response = await paymentsApi.createPortalSession(token);
-			window.location.href = response.data.url;
-		} catch (error) {
-			console.error("Portal session error:", error);
-			showToastError(
-				`Failed to access subscription portal. Please try again later or contact support at ${dataContext.config.support_email}`,
-			);
-			setLoading(false);
-		}
 	};
 
 	const statusDisplay = getSubscriptionStatusDisplay();
@@ -249,50 +259,63 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 		<>
 			<Card className="mb-4 text-center">
 				<Card.Body>
-					<h2>{statusDisplay.title}</h2>
-					<Alert variant={statusDisplay.variant} className="d-inline-block mt-2">
-						{statusDisplay.message}
-					</Alert>
-					<div className="text-start mt-4 mb-4" style={{ maxWidth: "900px", margin: "0 auto" }}>
-						<h4 className="mb-3">Why Premium?</h4>
-						<p>
-							If you're actively job hunting, you likely receive dozens of job alert emails every day from
-							platforms like LinkedIn, Indeed, and others. Manually reviewing each job is time-consuming
-							and exhausting, you have to open every email, click through to job listings, and evaluate
-							whether each role matches your qualifications.
-						</p>
-						<p>
-							<strong>JAM Premium (TOAST)</strong> eliminates this wasted time by automatically scraping
-							jobs from your email alerts, intelligently rating them based on your qualifications, and
-							presenting everything in a unified dashboard. Instead of sifting through dozens of emails
-							and job boards, you get a single, organised view with AI-powered match scores highlighting
-							the opportunities that matter most.
-						</p>
-					</div>
-					{statusDisplay.showSubscribeButton && (
+					{subscriptionLoading ? (
+						<div className="py-5">
+							<LoadingSpinner text={"Loading subscription status..."} />
+						</div>
+					) : (
 						<>
-							<h3 className="mt-4">£5/month</h3>
-							<p className="text-muted">14-day free trial • Cancel anytime</p>
-							<ActionButton
-								onClick={() => setShowCheckout(true)}
-								defaultIcon="bi-gem"
-								id={"subscribe-button"}
-								defaultText="Start Free Trial"
-							/>
-						</>
-					)}
-					{hasActiveSubscription && (
-						<>
-							<h3 className="mt-4">£5/month</h3>
-							<p className="text-muted">Cancel anytime</p>
-							<ActionButton
-								onClick={handleManageSubscription}
-								variant={"secondary"}
-								defaultIcon="bi-gear"
-								loading={loading}
-								id={"manage-subscription-button"}
-								defaultText="Manage Subscription"
-							/>
+							<h2>{statusDisplay.title}</h2>
+							<Alert variant={statusDisplay.variant} className="d-inline-block mt-2">
+								{statusDisplay.message}
+							</Alert>
+							<div className="text-start mt-4 mb-4" style={{ maxWidth: "900px", margin: "0 auto" }}>
+								<h4 className="mb-3">Why Premium?</h4>
+								<p>
+									If you're actively job hunting, you likely receive dozens of job alert emails every
+									day from platforms like LinkedIn, Indeed, and others. Manually reviewing each job is
+									time-consuming and exhausting, you have to open every email, click through to job
+									listings, and evaluate whether each role matches your qualifications.
+								</p>
+								<p>
+									<strong>JAM Premium (TOAST)</strong> eliminates this wasted time by automatically
+									scraping jobs from your email alerts, intelligently rating them based on your
+									qualifications, and presenting everything in a unified dashboard. Instead of sifting
+									through dozens of emails and job boards, you get a single, organised view with
+									AI-powered match scores highlighting the opportunities that matter most.
+								</p>
+							</div>
+							{statusDisplay.showSubscribeButton && (
+								<>
+									<h3 className="mt-4">£5/month</h3>
+									<p className="text-muted">14-day free trial • Cancel anytime</p>
+									<ActionButton
+										onClick={() => {
+											setLoading(true);
+											setShowCheckoutModal(true);
+											setLoading(false);
+										}}
+										defaultIcon="bi-gem"
+										id={"subscribe-button"}
+										defaultText="Start Free Trial"
+									/>
+								</>
+							)}
+							{hasActiveSubscription && (
+								<>
+									<h3 className="mt-4">£5/month</h3>
+									<p className="text-muted">Cancel anytime</p>
+									<ActionButton
+										onClick={() => handleManageSubscription()}
+										variant={"secondary"}
+										defaultIcon="bi-gear"
+										loading={loading}
+										id={"manage-subscription-button"}
+										defaultText="Manage Subscription"
+										loadingText={"Opening..."}
+									/>
+								</>
+							)}
 						</>
 					)}
 				</Card.Body>
@@ -461,7 +484,13 @@ export const PremiumTab: React.FC<PremiumTabProps> = ({
 			</Row>
 
 			{currentUser?.email && (
-				<StripeCheckoutModal show={showCheckout} onHide={handleCheckoutClose} userEmail={currentUser.email} />
+				<>
+					<StripeCheckoutModal
+						show={showCheckoutModal}
+						onHide={handleCheckoutClose}
+						userEmail={currentUser.email}
+					/>
+				</>
 			)}
 		</>
 	);
