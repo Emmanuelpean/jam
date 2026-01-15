@@ -232,6 +232,7 @@ export const Sidebar = () => {
 								style={{
 									height: "57px",
 									width: "auto",
+									userSelect: "none",
 								}}
 							/>
 							<span className="logo-text">JAM</span>
