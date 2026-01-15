@@ -1,7 +1,7 @@
 import React from "react";
 import DataTable from "../components/tables/DataTable";
 import { LocationModal } from "../components/modals/LocationModal";
-import LocationMap from "../components/maps/LocationMap";
+import LocationMap from "../components/Maps/LocationMap";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 import { LocationData } from "../services/schemas/DataTables";
 

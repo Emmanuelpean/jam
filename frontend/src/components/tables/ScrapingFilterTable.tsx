@@ -5,7 +5,6 @@ import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { ScrapingFilterModal } from "../modals/ScrapingFilterModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { ScrapingFilterData } from "../../services/schemas/Services";
-import { MenuItemKey } from "./ContextMenu";
 
 interface ScrapingFilterTableProps extends DataTableProps {
 	show: boolean;
@@ -48,7 +47,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 		{ key: "inactive" as const, title: `Inactive (${deactivatedFilters.length})` },
 	];
 
-	const menuItems = (item: ScrapingFilterData): MenuItemKey[] => {
+	const menuItems = (item: ScrapingFilterData): string[] => {
 		if (item.filtered_jobs.length > 0) {
 			if (item.is_active) {
 				return ["view", "deactivate"];

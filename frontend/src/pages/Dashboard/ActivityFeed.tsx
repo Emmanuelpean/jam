@@ -134,7 +134,7 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 				{/* Activity content */}
 				<div className="flex-grow-1 min-width-0">
 					<div className="d-flex align-items-start justify-content-between mb-1">
-						<div className="fw-semibold text-dark" style={{ fontSize: "1rem" }}>
+						<div className="fw-semibold" style={{ fontSize: "1rem" }}>
 							{activity.type} {getActivityNumber(activity)}
 						</div>
 						<small className="text-muted flex-shrink-0 ms-2">{formatActivityDate(activity.date)}</small>

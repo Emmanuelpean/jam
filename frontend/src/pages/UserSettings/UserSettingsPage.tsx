@@ -8,6 +8,7 @@ import { PremiumTab } from "./PremiumTab";
 import "./UserSettingsPage.css";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import { useAuth } from "../../contexts/AuthContext";
+import PageHeader from "../PageHeader/PageHeader";
 
 type tabs = "account" | "preferences" | "qualifications" | "premium";
 
@@ -51,17 +52,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 
 	return (
 		<div className="container-fluid d-flex flex-column">
-			<Card.Header className="settings-header border-0 p-0 bg-white">
-				<div className="d-flex align-items-center p-4">
-					<div className="header-icon-wrapper me-3">
-						<i className={`bi bi-${getTableIcon("User Settings")}`}></i>
-					</div>
-					<div>
-						<h4 className="mb-0 fw-bold text-dark">User Settings</h4>
-						<small className="text-muted">Manage your account</small>
-					</div>
-				</div>
-			</Card.Header>
+			<PageHeader title={"User Settings"} icon={getTableIcon("User Settings")} />
 			<Row className="flex-grow-1 g-0">
 				<Col md={2} className="settings-sidebar border-end">
 					<div className="list-group list-group-flush">
@@ -86,7 +77,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 					</div>
 				</Col>
 
-				<Col className="p-4 overflow-auto" style={{ background: "white" }}>
+				<Col className="p-4 overflow-auto">
 					{activeTab === "account" && <AccountTab />}
 					{activeTab === "preferences" && <PreferencesTab />}
 					{activeTab === "qualifications" && <QualificationsTab />}

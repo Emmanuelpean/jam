@@ -4,7 +4,7 @@ import { ServiceStatus, ThreadStatus } from "../../services/api/Services";
 import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { formatDuration } from "../../utils/TimeUtils";
 import { HelpBubble } from "../../components/rendering/widgets/HelpBubble";
-import { SeriesData } from "../../components/charts/LineChart";
+import { SeriesData } from "../../components/Charts/LineChart";
 
 export const successColor = "#22c55e";
 export const failureColor = "#ef4444";

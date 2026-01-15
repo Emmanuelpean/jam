@@ -31,8 +31,8 @@ export const AccountTab: React.FC = () => {
 	}));
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState(false);
-	const MIN_PASSWORD_LENGTH = parseInt(process.env.MIN_PASSWORD_LENGTH || "8");
-	const hasPendingEmail = !!currentUser?.pending_email_change;
+	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.MIN_PASSWORD_LENGTH || "8");
+	const hasPendingEmail: boolean = !!currentUser?.pending_email_change;
 
 	useEffect(() => {
 		const checkPending = async () => {
@@ -72,11 +72,8 @@ export const AccountTab: React.FC = () => {
 
 	const validateForm = (): boolean => {
 		const newErrors: ValidationErrors = {};
-		const hasAccountChanges = !!(
-			formData.email !== currentUser?.email ||
-			formData.new_password ||
-			formData.confirm_password
-		);
+		const hasAccountChanges =
+			formData.email !== currentUser?.email || formData.new_password || formData.confirm_password;
 
 		if (hasAccountChanges && !formData.current_password) {
 			newErrors.current_password = "Current password is required to update email or password";
@@ -106,7 +103,7 @@ export const AccountTab: React.FC = () => {
 
 		try {
 			const updateData: any = {};
-			const emailChanged = !!(formData.email && formData.email !== currentUser?.email);
+			const emailChanged = formData.email && formData.email !== currentUser?.email;
 
 			if (formData.current_password) {
 				updateData.current_password = formData.current_password;

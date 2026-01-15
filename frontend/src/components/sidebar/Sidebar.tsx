@@ -228,7 +228,12 @@ export const Sidebar = () => {
 				<div className="sidebar-header">
 					<div onClick={() => setShowDropdown(!showDropdown)} style={{ cursor: "pointer" }}>
 						<div className="logo-container">
-							<JamLogo style={{ height: "57px", width: "auto" }} />
+							<JamLogo
+								style={{
+									height: "57px",
+									width: "auto",
+								}}
+							/>
 							<span className="logo-text">JAM</span>
 						</div>
 					</div>

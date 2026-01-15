@@ -1,4 +1,4 @@
-import React, { JSX, useEffect } from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -8,6 +8,7 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { LocationData } from "../../services/schemas/DataTables";
 import { ScrapedJobData } from "../../services/schemas/Services";
 import { GeoLocation } from "../../services/schemas/Base";
+import "./LocationMap.css";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -87,19 +88,48 @@ const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpd
 	return null;
 };
 
+const MAP_TILES = {
+	light: { url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" },
+	dark: { url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" },
+};
+
 const LocationMap: React.FC<LocationMapProps> = ({
 	locations = [],
 	height = "400px",
 	scrollWheelZoom = true,
 }: LocationMapProps): JSX.Element => {
-	console.log("Rendering LocationMap with locations:", locations);
+	// Track dark mode state
+	const [isDarkMode, setIsDarkMode] = useState<boolean>((): boolean => {
+		return document.documentElement.getAttribute("data-mode") === "dark";
+	});
+
+	// Listen for dark mode changes
+	useEffect(() => {
+		const observer = new MutationObserver((mutations: MutationRecord[]) => {
+			mutations.forEach((mutation: MutationRecord): void => {
+				if (mutation.type === "attributes" && mutation.attributeName === "data-mode") {
+					const newMode: boolean = document.documentElement.getAttribute("data-mode") === "dark";
+					setIsDarkMode(newMode);
+				}
+			});
+		});
+
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ["data-mode"],
+		});
+
+		return () => observer.disconnect();
+	}, []);
+
 	const geolocatedLocations = locations.filter((location: MapLocation) => !!location.geolocation);
+	const currentTileConfig = isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
 
 	if (geolocatedLocations.length === 0) {
 		return (
 			<div
 				style={{ height }}
-				className="d-flex flex-column justify-content-center align-items-center border rounded bg-light"
+				className="d-flex flex-column justify-content-center align-items-center border rounded location-map-empty"
 			>
 				<div className="text-center p-4">
 					<div className="mb-3" style={{ fontSize: "2rem" }}>
@@ -119,6 +149,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
 	return (
 		<div>
 			<div
+				className="location-map-container"
 				style={{
 					height,
 					borderRadius: "8px",
@@ -133,8 +164,10 @@ const LocationMap: React.FC<LocationMapProps> = ({
 					scrollWheelZoom={scrollWheelZoom}
 				>
 					<TileLayer
-						attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-						url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+						attribution={
+							'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+						}
+						url={currentTileConfig.url}
 					/>
 					<MapViewUpdater locations={geolocatedLocations} />
 					{geolocatedLocations.map(

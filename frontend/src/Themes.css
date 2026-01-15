@@ -1,5 +1,5 @@
-/* Default theme - Mixed Berry */
-:root {
+/* Mixed Berry Jam Theme */
+:root[data-theme="mixed-berry"] {
     --theme-name: 'Mixed Berry Jam';
     --primary-start: #a29bfe;
     --primary-mid: #6c5ce7;
@@ -133,6 +133,34 @@
     --badge-dark-color: white;
 }
 
+/* Wild Blackberry Theme */
+:root[data-theme="blackberry"] {
+    --theme-name: 'Wild Blackberry';
+    --primary-start: #d8c8e8;
+    --primary-mid: #8a7a9a;
+    --primary-end: #0a0015;
+    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
+    --primary-hover-gradient: linear-gradient(135deg, #ccb8dc 0%, #7e6e8e 50%, #080012 100%);
+    --primary-light: #e8d8f8;
+    --primary-dark: #050008;
+    --jam-glow: rgb(216 200 232 / 30%);
+
+    /* Badge colors */
+    --badge-primary-bg: var(--primary-gradient);
+    --badge-primary-color: white;
+    --badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
+    --badge-info-color: black;
+    --badge-success-bg: linear-gradient(135deg, #b8a8d8 0%, #8a7a9a 100%);
+    --badge-success-color: white;
+    --badge-warning-bg: linear-gradient(135deg, #c8b8e8 0%, #6b2356 100%);
+    --badge-warning-color: white;
+    --badge-secondary-bg: linear-gradient(135deg, #d8c8e8 0%, #a898b8 100%);
+    --badge-secondary-color: black;
+    --badge-dark-bg: linear-gradient(135deg, #2a1e36 0%, var(--primary-dark) 100%);
+    --badge-dark-color: white;
+}
+
+/* Override the badge styles to use theme variables */
 .badge.bg-primary {
     background: var(--badge-primary-bg) !important;
     color: var(--badge-primary-color) !important;

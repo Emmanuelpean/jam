@@ -1,0 +1,40 @@
+import { JSX } from "react";
+import "./PageHeader.css";
+import { Card } from "react-bootstrap";
+
+interface TableHeaderProps {
+	title: string;
+	subtitle?: string;
+	data?: unknown[];
+	icon: string;
+	className?: string;
+}
+
+const PageHeader: React.FC<TableHeaderProps> = ({
+	title,
+	data,
+	icon,
+	subtitle,
+	className = "",
+}: TableHeaderProps): JSX.Element => {
+	return (
+		<div className={`mb-4 ${className}`}>
+			<Card className="h-100 shadow-sm border-0 rounded-3">
+				<div className="d-flex align-items-center justify-content-between p-4">
+					<div className="d-flex align-items-center">
+						<div className="header-icon-wrapper me-3">
+							<i className={`bi bi-${icon}`}></i>
+						</div>
+						<div>
+							<h4 className="mb-0 fw-bold">{title}</h4>
+							{subtitle && <small className="text-muted">{subtitle}</small>}
+						</div>
+					</div>
+					{data && data.length > 0 && <div className="table-count-badge">{data.length}</div>}
+				</div>
+			</Card>
+		</div>
+	);
+};
+
+export default PageHeader;

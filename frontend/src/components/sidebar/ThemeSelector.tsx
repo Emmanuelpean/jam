@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { THEMES } from "../../utils/Theme";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { DarkModeToggle } from "./DarkModeToggle";
 
 interface ThemeSelectorProps {
 	currentTheme: string;
@@ -92,7 +93,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 		if (hoveredItem === itemKey) {
 			return {
 				...baseStyle,
-				backgroundColor: "#dcdcdc",
+				backgroundColor: "var(--bs-border-color)",
 			};
 		}
 
@@ -122,6 +123,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 					</div>
 				);
 			})}
+			<DarkModeToggle />
 		</div>
 	);
 };

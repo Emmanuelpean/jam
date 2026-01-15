@@ -1,4 +1,4 @@
-export default `<h4>Version 1.1.0</h3>
+export default `<h4>Version 1.1.0</h4>
 
 <h5>Quality of Life Improvements</h5>
 <ul>
@@ -16,9 +16,9 @@ export default `<h4>Version 1.1.0</h3>
     <li>The theme name displayed on the user settings page is now updated immediately when changed in the sidebar.</li>
 </ul>
 
-<h5>TOAST (Alpha)</h5>
+<h5>Job Scraping & Rating (Alpha)</h5>
 <ul>
-    <li>TOAST (Turn Opportunity Alerts into Structured Tracking) is a brand-new feature that automates the extraction and organization of job alert data from various platforms.</li>
+    <li>TOAST (Turn Opportunity Alerts into Structured Tracking) is a brand-new feature that automates the extraction and organisation of job alert data from various platforms.</li>
     <li>By automatically forwarding or redirecting job alert emails to a designated address, TOAST parses the content to extract key details such as job title, company, location, and salary.</li>
     <li>The extracted data is then structured and presented in an easy-to-navigate table on the main dashboard.</li>
     <li>Furthermore, each job is rated by an LLM based on the user qualifications set on their user page.</li>

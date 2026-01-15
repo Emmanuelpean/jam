@@ -11,7 +11,6 @@
     max-height: 90vh;
     height: 100%;
     overflow: hidden;
-    background: linear-gradient(145deg, #fff 0%, #fafafa 100%);
 }
 
 .modal-body {
@@ -67,7 +66,6 @@
 }
 
 .modal-footer {
-    background: linear-gradient(145deg, #f8f9fa 0%, #f0f1f2 100%);
     border-top: 1px solid rgb(0 0 0 / 8%);
     border-radius: 0 0 16px 16px;
     padding: 1.25rem 2rem;
@@ -95,14 +93,12 @@
 
 .modal-body .card {
     border-radius: 12px;
-    background: #fff;
 }
 
 .modal-content-animated {
     transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     overflow: hidden !important;
 }
-
 
 /* Specific fixes for tabbed modals */
 .modal-body .tab-content .modal-content-animated {
