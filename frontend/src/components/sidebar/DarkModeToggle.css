@@ -13,9 +13,9 @@
 
 .dark-mode-toggle {
     position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 30px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     cursor: pointer;
     margin: 0;
 }
@@ -27,13 +27,15 @@
 }
 
 .slider {
-    position: absolute;
-    inset: 0;
+    position: relative;
+    width: 60px;
+    height: 30px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 30px;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .slider::before {
@@ -103,24 +105,25 @@ input:checked + .slider .moon-icon {
     transform: translateY(0);
 }
 
-/* Label Styling */
 .toggle-label {
     font-weight: 600;
     font-size: 0.9rem;
     color: #2c3e50;
     transition: color 0.3s ease;
     user-select: none;
+    cursor: pointer;
 }
 
 [data-mode="dark"] .toggle-label {
     color: #e2e8f0;
 }
 
-.dark-mode-toggle:hover ~ .toggle-label {
+/* UPDATED: Changed selector since label is now inside */
+.dark-mode-toggle:hover .toggle-label {
     color: #667eea;
 }
 
-[data-mode="dark"] .dark-mode-toggle:hover ~ .toggle-label {
+[data-mode="dark"] .dark-mode-toggle:hover .toggle-label {
     color: #a5b4fc;
 }
 

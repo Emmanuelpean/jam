@@ -16,11 +16,11 @@ export const DarkModeToggle: React.FC = () => {
 					aria-label="Toggle dark mode"
 				/>
 				<span className="slider">
-					<i className={`bi bi-sun-fill sun-icon`}></i>
-					<i className={`bi bi-moon-stars-fill moon-icon`}></i>
+					<i className="bi bi-sun-fill sun-icon"></i>
+					<i className="bi bi-moon-stars-fill moon-icon"></i>
 				</span>
+				<span className="toggle-label">{isDarkMode ? "Dark" : "Light"} Mode</span>
 			</label>
-			<span className="toggle-label">{isDarkMode ? "Dark" : "Light"} Mode</span>
 		</div>
 	);
 };
