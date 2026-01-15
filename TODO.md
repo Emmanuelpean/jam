@@ -31,9 +31,11 @@
 * [ ] Rename TOAST dashboard
 * [ ] Add loading to graphs on TOAST dashboard
 * [ ] Add acknowledgements for open source libraries used
-* [ ] Add acknowledgements for service errors
+* [ ] Add acknowledgements for services
 * [ ] Add favourite filters for scraping
 * [ ] Fix frontend packages incompatibility issues
 * [ ] Create free coupons for TOAST for first few users for a couple months
-* [ ] Add trial period for TOAST
+* [X] Add trial period for TOAST
 * [ ] Run the service API on a different worker
+* [ ] Add loading spinner when using the context menu
+* [X] Delete interviews and updates when associated job is deleted

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import "./TimeSelection.css";
-import "../rendering/widgets/SelectWidget.css";
 import { DateRange, getDateRange, TimeUnit } from "../../utils/TimeUtils";
 
 type SelectionMode = "period" | "dateRange";

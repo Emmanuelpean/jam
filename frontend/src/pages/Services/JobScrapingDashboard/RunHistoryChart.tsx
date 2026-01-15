@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useState } from "react";
 import { PlatformStat, JobScrapingServiceLogData } from "../../../services/schemas/Services";
 import { SelectOption } from "../../../components/rendering/form/FormOptions";
-import { LineChart, SeriesData } from "../../../components/charts/LineChart";
+import { LineChart, SeriesData } from "../../../components/Charts/LineChart";
 import TimeSelection from "../../../components/TimeSelection/TimeSelection";
 import { DateRange } from "../../../utils/TimeUtils";
 import Select from "react-select";

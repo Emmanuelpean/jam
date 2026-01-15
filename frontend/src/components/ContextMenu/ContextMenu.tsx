@@ -1,19 +1,8 @@
 import React, { MouseEvent, useEffect, useRef, useState, JSX } from "react";
 import "./ContextMenu.css";
 
-export type MenuItemKey =
-	| "view"
-	| "edit"
-	| "delete"
-	| "activate"
-	| "deactivate"
-	| "import"
-	| "snooze"
-	| "followup"
-	| "remove";
-
 export interface MenuItem {
-	action: MenuItemKey;
+	action: string;
 	icon?: string;
 	text: string;
 	color?: string;
@@ -23,9 +12,7 @@ export interface MenuItem {
 	displayCondition?: (item: any) => boolean;
 }
 
-export interface SubMenuItem extends Omit<MenuItem, "action"> {
-	action: string;
-}
+export interface SubMenuItem extends Omit<MenuItem, "submenu | hasSubmenu"> {}
 
 export interface ContextMenuPosition {
 	x: number;
@@ -106,11 +93,9 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 
 	const handleItemClick = (menuItem: MenuItem | SubMenuItem, e: MouseEvent): void => {
 		e.stopPropagation();
-
 		if (menuItem.hasSubmenu) {
 			return;
 		}
-
 		onItemClick(menuItem, selectedItem);
 		onClose();
 	};
@@ -165,17 +150,9 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 				ref={menuRef}
 				className="context-menu"
 				style={{
-					position: "fixed",
 					top: position.y,
 					left: position.x,
-					zIndex: 10000,
-					backgroundColor: "white",
-					border: "1px solid #ccc",
-					borderRadius: "8px",
-					boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-					padding: "4px 0",
 					minWidth: compact ? "120px" : "150px",
-					overflow: "hidden",
 				}}
 				onClick={(e: MouseEvent): void => e.stopPropagation()}
 			>
@@ -191,22 +168,18 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 								className="context-menu-item"
 								style={{
 									padding: compact ? "6px 12px" : "8px 16px",
-									cursor: "pointer",
 									fontSize: compact ? "13px" : "14px",
-									borderBottom: index !== filteredItems.length - 1 ? "1px solid #eee" : "none",
+									borderBottom:
+										index !== filteredItems.length - 1
+											? "1px solid var(--bs-form-control-border-color)"
+											: "none",
 									color: menuItem.color || "inherit",
-									display: "flex",
-									justifyContent: "space-between",
-									alignItems: "center",
-									transition: "background-color 0.15s ease",
 								}}
 								onClick={(e: MouseEvent): void => handleItemClick(menuItem, e)}
 								onMouseEnter={(e: MouseEvent): void => {
-									(e.currentTarget as HTMLElement).style.backgroundColor = "#f8f9fa";
 									handleMouseEnter(menuItem, e);
 								}}
-								onMouseLeave={(e: MouseEvent): void => {
-									(e.currentTarget as HTMLElement).style.backgroundColor = "white";
+								onMouseLeave={(_: MouseEvent): void => {
 									handleMouseLeave();
 								}}
 								id={`context-menu-${menuItem.action}`}
@@ -230,46 +203,35 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 							key={`submenu-${menuItem.action}`}
 							className="context-submenu"
 							style={{
-								position: "fixed",
 								left: submenuPosition.x,
 								top: submenuPosition.y,
-								zIndex: 10001,
-								backgroundColor: "white",
-								border: "1px solid #ccc",
-								borderRadius: "8px",
-								boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-								padding: "4px 0",
 								minWidth: compact ? "100px" : "120px",
 							}}
 							onMouseEnter={handleSubmenuMouseEnter}
 							onMouseLeave={handleSubmenuMouseLeave}
 							onClick={(e) => e.stopPropagation()}
 						>
-							{menuItem.submenu?.map((subItem, subIndex) => (
-								<div
-									key={subItem.action}
-									className="context-menu-item"
-									style={{
-										padding: compact ? "6px 12px" : "8px 16px",
-										cursor: "pointer",
-										fontSize: compact ? "13px" : "14px",
-										borderBottom:
-											subIndex !== (menuItem.submenu?.length || 0) - 1
-												? "1px solid #eee"
-												: "none",
-										transition: "background-color 0.15s ease",
-									}}
-									onClick={(e) => handleItemClick(subItem, e)}
-									onMouseEnter={(e) =>
-										((e.currentTarget as HTMLElement).style.backgroundColor = "#f8f9fa")
-									}
-									onMouseLeave={(e) =>
-										((e.currentTarget as HTMLElement).style.backgroundColor = "white")
-									}
-								>
-									{subItem.text}
-								</div>
-							))}
+							{menuItem.submenu?.map(
+								(subItem: SubMenuItem, subIndex: number): JSX.Element => (
+									<div
+										key={subItem.action}
+										className="context-menu-item"
+										style={{
+											padding: compact ? "6px 12px" : "8px 16px",
+											cursor: "pointer",
+											fontSize: compact ? "13px" : "14px",
+											borderBottom:
+												subIndex !== (menuItem.submenu?.length || 0) - 1
+													? "1px solid var(--bs-form-control-border-color)"
+													: "none",
+											transition: "background-color 0.15s ease",
+										}}
+										onClick={(e: MouseEvent<HTMLDivElement>): void => handleItemClick(subItem, e)}
+									>
+										{subItem.text}
+									</div>
+								),
+							)}
 						</div>
 					))}
 		</>

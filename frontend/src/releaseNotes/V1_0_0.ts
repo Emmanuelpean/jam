@@ -28,4 +28,16 @@ export default `<h4>V1.0.0 - Initial Release</h4>
 
 <p>
     This release lays the groundwork for future enhancements and automation features aimed at streamlining the entire job application process.
+</p>
+<h4 style="margin-top: 3rem;">Version 1.0.1</h4>
+
+<ul>
+    <li>Added email verification for new user registrations.</li>
+    <li>Added password reset feature.</li>
+</ul>
+<h4 style="margin-top: 3rem;">Version 1.0.2</h4>
+
+<ul>
+    <li>Added email verification when changing the user email.</li>
+</ul>
 </p>`;

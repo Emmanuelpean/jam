@@ -91,8 +91,16 @@ export const LineChart = ({
 	const CustomTooltip = ({ active, payload, label }: any) => {
 		if (!active || !payload || !payload.length) return null;
 		return (
-			<div style={{ backgroundColor: "white", padding: "10px", border: "1px solid #ccc" }}>
-				<p style={{ margin: 0, fontWeight: "bold" }}>
+			<div
+				style={{
+					backgroundColor: "var(--bs-card-bg)",
+					padding: "10px",
+					border: "1px solid var(--bs-border-color)",
+					borderRadius: "4px",
+					boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+				}}
+			>
+				<p style={{ margin: 0, fontWeight: "bold", color: "var(--bs-body-color)" }}>
 					{xAxisLabel}: {xAxisFormatter(label)}
 				</p>
 				{payload.map((entry: any) => (
@@ -107,35 +115,59 @@ export const LineChart = ({
 	return (
 		<ResponsiveContainer width="100%" height={height}>
 			<RechartsLineChart data={transformedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-				<CartesianGrid strokeDasharray="3 3" />
-				<XAxis dataKey="x" tickFormatter={(value) => xAxisFormatter(value)} tick={{ fontSize: fontsize }}>
-					<Label value={xAxisLabel} offset={-5} position="insideBottom" />
+				<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
+				<XAxis
+					dataKey="x"
+					tickFormatter={xAxisFormatter}
+					tick={{ fontSize: fontsize, fill: "var(--bs-body-color)" }}
+					stroke="var(--bs-border-color)"
+				>
+					<Label value={xAxisLabel} offset={-5} position="insideBottom" fill="var(--bs-body-color)" />
 				</XAxis>
 				<YAxis
 					tickFormatter={(value) => String(yAxisFormatter(value) ?? "")}
-					tick={{ fontSize: fontsize }}
+					tick={{ fontSize: fontsize, fill: "var(--bs-body-color)" }}
+					stroke="var(--bs-border-color)"
 					domain={[0, "auto"]}
 				>
-					<Label value={yAxisLabel} angle={-90} position="insideLeft" style={{ textAnchor: "middle" }} />
+					<Label
+						value={yAxisLabel}
+						angle={-90}
+						position="insideLeft"
+						style={{ textAnchor: "middle", fill: "var(--bs-body-color)" }}
+					/>
 				</YAxis>
 				<Tooltip content={<CustomTooltip />} />
 				<Legend
 					onClick={handleLegendClick}
-					wrapperStyle={{ cursor: "pointer" }}
+					wrapperStyle={{
+						cursor: "pointer",
+						color: "var(--bs-body-color)",
+						position: "relative",
+						marginTop: "20px",
+					}}
 					formatter={(value) => (
-						<span style={{ color: hiddenSeries.has(value) ? "#ccc" : "inherit" }}>{value}</span>
+						<span
+							style={{
+								color: hiddenSeries.has(value) ? "var(--bs-muted-color)" : "var(--bs-body-color)",
+							}}
+						>
+							{value}
+						</span>
 					)}
 				/>
-				{data.map((series) => (
-					<Line
-						key={series.id}
-						type="monotone"
-						dataKey={series.id}
-						stroke={series.color}
-						hide={hiddenSeries.has(series.id)}
-						strokeWidth={2}
-					/>
-				))}
+				{data.map(
+					(series: SeriesData): JSX.Element => (
+						<Line
+							key={series.id}
+							type="monotone"
+							dataKey={series.id}
+							stroke={series.color}
+							hide={hiddenSeries.has(series.id)}
+							strokeWidth={2}
+						/>
+					),
+				)}
 			</RechartsLineChart>
 		</ResponsiveContainer>
 	);

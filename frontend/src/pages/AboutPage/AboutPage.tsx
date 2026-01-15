@@ -1,4 +1,4 @@
-import React from "react";
+import React, { JSX, useState } from "react";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import packageJson from "../../../package.json";
 import Container from "react-bootstrap/Container";
@@ -7,24 +7,63 @@ import Col from "react-bootstrap/Col";
 import Card from "react-bootstrap/Card";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AboutPage.css";
-import { Accordion } from "react-bootstrap";
 import v100 from "../../releaseNotes/V1_0_0";
-import v101 from "../../releaseNotes/V1_0_1";
-import v102 from "../../releaseNotes/V1_0_2";
 import v110 from "../../releaseNotes/V1_1_0";
 import v120 from "../../releaseNotes/V1_2_0";
 
-const AboutPage = () => {
+interface Feature {
+	icon: string;
+	title: string;
+	description: string;
+}
+
+interface ReleaseNoteAccordionProps {
+	version: string;
+	content: any;
+	isOpen: boolean;
+	onToggle: () => void;
+}
+
+const ReleaseNoteAccordion = ({ version, content, isOpen, onToggle }: ReleaseNoteAccordionProps): JSX.Element => {
+	const contentRef = React.useRef<HTMLDivElement>(null);
+
+	return (
+		<div className="simple-accordion mb-2" style={{ paddingLeft: "10px", paddingRight: "10px" }}>
+			<div
+				className="simple-accordion-header d-flex align-items-center justify-content-between py-2 border-bottom"
+				onClick={onToggle}
+				style={{ cursor: "pointer" }}
+			>
+				<div className="d-flex align-items-center">
+					<span className="fw-medium">V{version}</span>
+				</div>
+				<i className={`bi ${isOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}></i>
+			</div>
+			<div
+				ref={contentRef}
+				style={{
+					maxHeight: isOpen ? `${contentRef.current?.scrollHeight}px` : "0",
+					overflow: "hidden",
+					transition: "max-height 0.3s ease-in-out",
+				}}
+			>
+				<div className="simple-accordion-content" style={{ margin: "10px" }}>
+					<div className="release-notes-content" dangerouslySetInnerHTML={{ __html: content }} />
+				</div>
+			</div>
+		</div>
+	);
+};
+const AboutPage = (): JSX.Element => {
+	const [openVersion, setOpenVersion] = useState<string | null>(null);
 	const releaseNotes: Record<string, any> = {
-		"1.2.0": v120,
-		"1.1.0": v110,
-		"1.0.2": v102,
-		"1.0.1": v101,
-		"1.0.0": v100,
+		"1.2": v120,
+		"1.1": v110,
+		"1.0": v100,
 	};
 	const versions: string[] = Object.keys(releaseNotes);
 
-	const features = [
+	const features: Feature[] = [
 		{
 			icon: "bi-briefcase",
 			title: "Job Application Records",
@@ -34,11 +73,6 @@ const AboutPage = () => {
 			icon: "bi-calendar-check",
 			title: "Interview Scheduling",
 			description: "Track interview schedules and outcomes efficiently",
-		},
-		{
-			icon: "bi-building",
-			title: "Company Management",
-			description: "Store detailed company and contact information",
 		},
 		{
 			icon: "bi-bar-chart",
@@ -122,18 +156,14 @@ const AboutPage = () => {
 						<Col lg={10}>
 							<Card className="glass-card border-0 p-4">
 								<Card.Body className="text-center">
-									<h2 className="display-5 fw-bold text-dark mb-4">
-										Streamline Your Job Search Journey
-									</h2>
+									<h2 className="display-5 fw-bold mb-4">Streamline Your Job Search Journey</h2>
 									<p className="fs-5 about-text-muted mb-4" style={{ lineHeight: "1.625" }}>
-										<strong style={{ color: "var(--primary-mid)" }}>Jam</strong> is a user-friendly
-										web app designed to help you manage your jobs, applications, interviews, and
-										everything in-between. Job search can be a time-consuming and tedious process,
-										requiring you to keep track of many jobs and applications at the same time.
-									</p>
-									<p className="fs-5 about-text-muted" style={{ lineHeight: "1.625" }}>
-										<strong style={{ color: "var(--primary-mid)" }}>Jam</strong> aims to make this
-										process easier so that you can get the job of your dreams.
+										Job searching is overwhelming. Between tracking applications, following up with
+										contacts, and preparing for interviews, it's easy to lose sight of opportunities
+										that could change your career.{" "}
+										<strong style={{ color: "var(--primary-mid)" }}>Jam</strong> brings everything
+										together in one place—applications - interviews, contacts, and notes - so you
+										can stay organised and focused on landing your dream job.
 									</p>
 								</Card.Body>
 							</Card>
@@ -143,49 +173,47 @@ const AboutPage = () => {
 					{/* Features Section */}
 					<Row className="justify-content-center mb-5">
 						<Col lg={8} className="text-center mb-2">
-							<h2 className="display-5 fw-bold text-dark">What Jam Can Do For You</h2>
+							<h2 className="display-5 fw-bold">What Jam Can Do For You</h2>
 						</Col>
 					</Row>
-					<Row className="g-4 mb-5">
-						{features.map((feature, index) => (
-							<Col md={6} key={index}>
-								<div className="feature-card p-4 h-100">
+					<div className="features-grid mb-5">
+						{features.map(
+							(feature: Feature, index: number): JSX.Element => (
+								<div className="feature-card p-4" key={index}>
 									<div className="d-flex align-items-start align-items-center">
 										<div className="feature-icon me-3">
 											<i className={`bi ${feature.icon}`} style={{ fontSize: "2rem" }}></i>
 										</div>
 										<div>
-											<h5 className="fw-bold text-dark mb-2">{feature.title}</h5>
+											<h5 className="fw-bold mb-2">{feature.title}</h5>
 											<p className="about-text-muted mb-0">{feature.description}</p>
 										</div>
 									</div>
 								</div>
-							</Col>
-						))}
-					</Row>
+							),
+						)}
+					</div>
 
 					{/* Release Notes Section */}
 					<Row className="justify-content-center mb-2">
 						<Col lg={8} className="text-center mb-2">
-							<h2 className="display-5 fw-bold text-dark">Release Notes</h2>
+							<h2 className="display-5 fw-bold">Release Notes</h2>
 						</Col>
 					</Row>
 					<Row className="justify-content-center">
 						<Col lg={10}>
 							<div style={{ width: "100%", marginTop: "10px" }}>
-								<Accordion>
-									{versions.map((version, idx) => (
-										<Accordion.Item eventKey={String(idx)} key={version}>
-											<Accordion.Header>V{version}</Accordion.Header>
-											<Accordion.Body style={{ margin: "10px" }}>
-												<div
-													className="release-notes-content"
-													dangerouslySetInnerHTML={{ __html: releaseNotes[version] }}
-												/>
-											</Accordion.Body>
-										</Accordion.Item>
-									))}
-								</Accordion>
+								{versions.map(
+									(version: string): JSX.Element => (
+										<ReleaseNoteAccordion
+											key={version}
+											version={version}
+											content={releaseNotes[version]}
+											isOpen={openVersion === version}
+											onToggle={() => setOpenVersion(openVersion === version ? null : version)}
+										/>
+									),
+								)}
 							</div>
 						</Col>
 					</Row>

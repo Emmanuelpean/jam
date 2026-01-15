@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, MouseEvent } from "react";
-import { ContextMenu, MenuItem, SubMenuItem } from "../components/tables/ContextMenu";
+import { ContextMenu, MenuItem } from "../components/ContextMenu/ContextMenu";
 
 interface ContextMenuState {
 	position: { x: number; y: number };
@@ -7,7 +7,7 @@ interface ContextMenuState {
 	selectedItem: any;
 	show: boolean;
 	compact?: boolean;
-	onItemClick?: (menuItem: MenuItem | SubMenuItem, selectedItem: any) => void;
+	onItemClick?: (menuItem: MenuItem, selectedItem: any) => void;
 }
 
 interface ContextMenuContextType {
@@ -32,7 +32,7 @@ export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ childre
 		selectedItem: any,
 		compact: boolean = false,
 	) => {
-		const onItemClick = (menuItem: MenuItem | SubMenuItem, selectedItem: any): void => {
+		const onItemClick = (menuItem: MenuItem, selectedItem: any): void => {
 			if (menuItem.function) {
 				menuItem.function(selectedItem);
 			}
@@ -53,7 +53,7 @@ export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ childre
 		setMenuState((prev) => ({ ...prev, show: false }));
 	};
 
-	const handleMenuItemClick = (menuItem: MenuItem | SubMenuItem, selectedItem: any) => {
+	const handleMenuItemClick = (menuItem: MenuItem, selectedItem: any) => {
 		menuState.onItemClick?.(menuItem, selectedItem);
 		closeContextMenu();
 	};

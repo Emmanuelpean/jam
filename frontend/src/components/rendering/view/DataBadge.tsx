@@ -1,8 +1,8 @@
 import React, { JSX, MouseEvent, useRef } from "react";
-import { MenuItem, MenuItemKey } from "../../tables/ContextMenu";
+import { MenuItem } from "../../ContextMenu/ContextMenu";
 import { DataModalHandle } from "../../modals/DataModal/DataModal";
 import { useContextMenu } from "../../../contexts/ContextMenuContext";
-import FollowUpModal, { FollowUpModalHandle } from "../../modals/FollowUpModal";
+import FollowUpModal, { FollowUpModalHandle } from "../../modals/FollowUpModal/FollowUpModal";
 import { LocationModal } from "../../modals/LocationModal";
 import { CompanyModal } from "../../modals/CompanyModal";
 import { PersonModal } from "../../modals/PersonModal";
@@ -35,7 +35,7 @@ export interface DataBadgeProps<T extends JamData> {
 	icon?: string;
 	displayText?: string | ((item: T) => string);
 	badgeClass?: string;
-	menuItemKeys?: MenuItemKey[];
+	menuItemKeys?: string[];
 	compact?: boolean;
 }
 
@@ -45,7 +45,7 @@ const createBadgeModalManager = <T extends JamData>(
 	entityType: EntityType,
 	defaultBadgeClass: string = "bg-info",
 	defaultDisplayText: (item: T) => string,
-	defaultMenuItemKeys: MenuItemKey[] = ["view", "edit", "delete"],
+	defaultMenuItemKeys: string[] = ["view", "edit", "delete"],
 ) => {
 	return ({
 		item,

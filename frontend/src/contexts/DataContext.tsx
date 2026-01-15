@@ -481,7 +481,15 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				const api: CrudApi<JamData> = entityTypeToApi(entityType);
 				await api.delete(id, token);
 				const setter = entityTypeToSetter(entityType);
-				setter((prev: any[]): any[] => prev.filter((item: any) => item.id !== id));
+				setter((prev: any[]): any[] => prev.filter((item: any): boolean => item.id !== id));
+				if (entityType === "job") {
+					setRawInterviews((prev: InterviewData[]): InterviewData[] =>
+						prev.filter((interview: InterviewData): boolean => interview.job_id !== id),
+					);
+					setRawJobApplicationUpdates((prev: JobApplicationUpdateData[]): JobApplicationUpdateData[] =>
+						prev.filter((update: JobApplicationUpdateData): boolean => update.job_id !== id),
+					);
+				}
 			} catch (error) {
 				console.error(`Failed to delete ${entityType}:`, error);
 				throw error;

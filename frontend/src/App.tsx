@@ -9,7 +9,7 @@ import JobsPage from "./pages/JobsPage";
 import PersonPage from "./pages/PersonPage";
 import KeywordsPage from "./pages/KeywordsPage";
 import InterviewsPage from "./pages/InterviewsPage";
-import JobScraperDashboard from "./pages/Services/JobScraperDashboard/JobScraperDashboardPage";
+import JobScraperDashboard from "./pages/Services/JobScrapingDashboard/JobScraperDashboardPage";
 import AggregatorsPage from "./pages/AggregatorsPage";
 import { NotAuthorisedPage, NotFoundPage } from "./pages/NotFoundPage";
 import { Sidebar } from "./components/sidebar/Sidebar";
@@ -29,6 +29,7 @@ import { AlertProvider } from "./contexts/AlertContext";
 import JobRatingDashboard from "./pages/Services/JobRatingDashboard/JobRatingDashboardPage";
 import SpeculativeApplicationsPage from "./pages/SpeculativeApplicationsPage";
 import { ContextMenuProvider } from "./contexts/ContextMenuContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -174,7 +175,10 @@ function App(): JSX.Element {
 	const toastMethods: UseToastReturn = useToast();
 
 	// Compose all providers in a clean, readable way
-	const AllProviders = React.useMemo(() => composeProviders(AuthProvider, LoadingProvider, DataProviderWrapper), []);
+	const AllProviders = React.useMemo(
+		() => composeProviders(ThemeProvider, AuthProvider, LoadingProvider, DataProviderWrapper),
+		[],
+	);
 
 	return (
 		<BrowserRouter basename="/jam">

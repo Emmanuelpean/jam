@@ -3,7 +3,7 @@ import { DataContextValue, JamData, useDataContext } from "../../../contexts/Dat
 import InterviewsTable from "../../tables/InterviewTable";
 import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
-import LocationMap from "../../maps/LocationMap";
+import LocationMap from "../../Maps/LocationMap";
 import {
 	AggregatorData,
 	CompanyData,

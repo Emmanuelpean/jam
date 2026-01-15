@@ -15,6 +15,7 @@ import { getTableIcon } from "../../../components/rendering/view/Icons";
 import { useServiceErrors } from "../../../hooks/useServiceErrors";
 import { DateRange } from "../../../utils/TimeUtils";
 import "../Service.css";
+import PageHeader from "../../PageHeader/PageHeader";
 
 export interface FormData {
 	period_hours: number;
@@ -117,17 +118,7 @@ const JobScraperDashboard = (): JSX.Element => {
 
 	return (
 		<div>
-			<div className="table-header-section mb-4">
-				<div className="d-flex align-items-center justify-content-between p-4 border-0 bg-white shadow-sm rounded-3">
-					<div className="d-flex align-items-center">
-						<div className="header-icon-wrapper me-3">
-							<i className={`bi-${getTableIcon("TOAST Dashboard")}`}></i>
-						</div>
-						<h4 className="mb-0 fw-bold text-dark">TOAST Dashboard</h4>
-					</div>
-				</div>
-			</div>
-
+			<PageHeader title={"TOAST Dashboard"} icon={getTableIcon("TOAST Dashboard")} />
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
 					<div className="d-flex align-items-start">

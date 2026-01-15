@@ -21,13 +21,14 @@ import {
 	useDeleteEntity,
 } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
-import { MenuItem, MenuItemKey } from "./ContextMenu";
+import { MenuItem } from "../ContextMenu/ContextMenu";
 import LoadingSpinner from "../spinner/Spinner";
 import { DataModalHandle, modalModes } from "../modals/DataModal/DataModal";
 import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 import "./DataTable.css";
-import FollowUpModal, { FollowUpModalHandle } from "../modals/FollowUpModal";
+import FollowUpModal, { FollowUpModalHandle } from "../modals/FollowUpModal/FollowUpModal";
 import { useContextMenu } from "../../contexts/ContextMenuContext";
+import PageHeader from "../../pages/PageHeader/PageHeader";
 
 export type Direction = "asc" | "desc";
 
@@ -40,7 +41,7 @@ export interface DataTableProps {
 	data?: any | null;
 	columns?: TableColumn[];
 	showAdd?: boolean;
-	menuItems?: string[] | ((item: any) => MenuItemKey[]);
+	menuItems?: string[] | ((item: any) => string[]);
 }
 
 export interface GenericTableProps {
@@ -57,7 +58,7 @@ export interface GenericTableProps {
 	// Table configuration
 	columns?: TableColumn[];
 	initialSortConfig?: Partial<SortConfig>;
-	menuItems?: MenuItemKey[] | ((item: any) => MenuItemKey[]);
+	menuItems?: string[] | ((item: any) => string[]);
 
 	// Modal configuration
 	Modal: React.ComponentType<any>;
@@ -505,19 +506,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	return (
 		<>
 			<div className={"table-container"}>
-				{title && (
-					<div className="table-header-section mb-4">
-						<div className="d-flex align-items-center justify-content-between p-4 border-0 bg-white shadow-sm rounded-3">
-							<div className="d-flex align-items-center">
-								<div className="header-icon-wrapper me-3">
-									<i className={`bi-${getTableIcon(title)}`}></i>
-								</div>
-								<h4 className="mb-0 fw-bold text-dark">{title}</h4>
-							</div>
-							{data.length > 0 && <div className="table-count-badge">{data.length}</div>}
-						</div>
-					</div>
-				)}
+				{title && <PageHeader title={title} data={data} icon={getTableIcon(title)} />}
 
 				<div
 					className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
