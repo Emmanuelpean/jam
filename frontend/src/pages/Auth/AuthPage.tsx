@@ -45,7 +45,7 @@ function AuthForm(): JSX.Element {
 	const [registrationStep, setRegistrationStep] = useState<number>(1);
 	const [formData, setFormData] = useState<FormData>(defaultFormData);
 	const [resetToken, setResetToken] = useState<string>("");
-	const [showBanner, setShowBanner] = useState<boolean>(true);
+	const [showTestInfo, setShowTestInfo] = useState(false);
 	const [showMobileWarning, setShowMobileWarning] = useState<boolean>(false);
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
@@ -474,11 +474,71 @@ function AuthForm(): JSX.Element {
 		);
 	}
 
+	const handleDemoLogin = async (): Promise<void> => {
+		setLoading(true);
+		try {
+			const result: GenericResponse = await login("test_user@test.com", "test_password");
+			if (result.success) {
+				navigate("/dashboard");
+			} else {
+				showToastError(result.message, "Login Failed");
+			}
+		} catch (error) {
+			const apiError = error as ApiError;
+			showToastError(apiError.message || "Failed to login with demo account.", "Demo Login Failed");
+		} finally {
+			setLoading(false);
+			setShowTestInfo(false);
+		}
+	};
+
 	return (
 		<div className="auth-container">
+			<div className="floating-demo-info">
+				<button
+					className="demo-info-trigger"
+					onClick={() => setShowTestInfo(!showTestInfo)}
+					aria-label="Demo account"
+					disabled={loading}
+				>
+					<i className={`bi bi-backpack3`} style={{ fontSize: "20px" }}></i>
+					<span className="demo-text">Try Demo</span>
+				</button>
+				{showTestInfo && (
+					<>
+						<div className="demo-backdrop" onClick={() => setShowTestInfo(false)} />
+						<div className="demo-info-panel">
+							<button
+								className="demo-close-btn"
+								onClick={() => setShowTestInfo(false)}
+								aria-label="Close"
+							>
+								✕
+							</button>
+							<h3 className="demo-title">Welcome to JAM</h3>
+							<p className="demo-welcome">
+								You can try the app using a demo account with pre-populated data.
+							</p>
+							<ActionButton
+								className="demo-login-btn"
+								onClick={handleDemoLogin}
+								loading={loading}
+								defaultText={"Login with Demo Account"}
+								loadingText={"Logging in..."}
+								defaultIcon={"bi bi-box-arrow-in-right"}
+							/>
+							<p className="demo-note">
+								<small className="text-muted">
+									This is a test account with sample job applications and data.
+								</small>
+							</p>
+						</div>
+					</>
+				)}
+			</div>
 			<div className="auth-logo">
 				<div className="logo-container logo-container-vertical">
-					<JamLogo style={{ height: "175px", width: "auto" }} />
+					<JamLogo style={{ height: "175px", width: "auto", userSelect: "none" }} />
 					<div className="logo-text-below text-gradient-primary" style={{ fontSize: "50px" }}>
 						Job Application Manager
 					</div>
@@ -500,40 +560,6 @@ function AuthForm(): JSX.Element {
 					<p className="mb-0 small">
 						JAM is not fully optimised for small screens yet. For the best experience, please use a tablet
 						or desktop device.
-					</p>
-				</Alert>
-			)}
-
-			{mode === "login" && showBanner && (
-				<Alert
-					variant="info"
-					dismissible
-					onClose={() => setShowBanner(false)}
-					className="mb-3"
-					style={{ maxWidth: "500px" }}
-				>
-					<Alert.Heading className="h6 d-flex align-items-center mb-2">
-						<i className="bi bi-rocket-takeoff-fill me-2"></i>
-						Welcome to JAM!
-					</Alert.Heading>
-					<p className="mb-2 small">Thanks for testing! Try out the app with these demo credentials:</p>
-					<div className="d-flex flex-column gap-1 mb-2" style={{ fontSize: "0.875rem" }}>
-						<div>
-							<strong>Email:</strong>{" "}
-							<code className="bg-light px-2 py-1 rounded">test_user@test.com</code>
-						</div>
-						<div>
-							<strong>Password:</strong> <code className="bg-light px-2 py-1 rounded">test_password</code>
-						</div>
-					</div>
-					<p className="mb-0 small text-muted">
-						Found a bug or have feedback?{" "}
-						<a
-							href="mailto:jam.support@emmanuelpean.me?subject=JAM Feedback"
-							className="text-decoration-none fw-semibold"
-						>
-							Let me know!
-						</a>
 					</p>
 				</Alert>
 			)}
