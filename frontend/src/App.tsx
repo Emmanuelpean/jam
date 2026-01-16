@@ -175,21 +175,20 @@ function App(): JSX.Element {
 	const toastMethods: UseToastReturn = useToast();
 
 	// Compose all providers in a clean, readable way
-	const AllProviders = React.useMemo(
-		() => composeProviders(ThemeProvider, AuthProvider, LoadingProvider, DataProviderWrapper),
-		[],
-	);
+	const AllProviders = React.useMemo(() => composeProviders(AuthProvider, LoadingProvider, DataProviderWrapper), []);
 
 	return (
 		<BrowserRouter basename="/jam">
 			<AllProviders>
 				<AlertProvider>
 					<ToastContext.Provider value={toastMethods}>
-						<ContextMenuProvider>
-							<AppLayout>
-								<AppRoutes />
-							</AppLayout>
-						</ContextMenuProvider>
+						<ThemeProvider>
+							<ContextMenuProvider>
+								<AppLayout>
+									<AppRoutes />
+								</AppLayout>
+							</ContextMenuProvider>
+						</ThemeProvider>
 						<ToastStack toasts={toastMethods.toasts} onClose={toastMethods.hideToast} position="top-end" />
 					</ToastContext.Provider>
 				</AlertProvider>

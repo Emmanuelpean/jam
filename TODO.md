@@ -39,3 +39,5 @@
 * [ ] Run the service API on a different worker
 * [ ] Add loading spinner when using the context menu
 * [X] Delete interviews and updates when associated job is deleted
+* [ ] Get the new inbox for support/info
+* [ ] Fix the action button height changing during loading
