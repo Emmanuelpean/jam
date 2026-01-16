@@ -177,7 +177,7 @@ export const renderUpcomingInterviewItem = (
 				{/* Interview content */}
 				<div className="flex-grow-1 min-width-0">
 					<div className="d-flex align-items-start justify-content-between mb-1">
-						<div className="fw-semibold text-dark" style={{ fontSize: "0.95rem" }}>
+						<div className="fw-semibold" style={{ fontSize: "0.95rem" }}>
 							{interview.type} (interview #{interview.number})
 						</div>
 						<small className="text-muted flex-shrink-0 ms-2">{formatActivityDate(interview.date!)}</small>

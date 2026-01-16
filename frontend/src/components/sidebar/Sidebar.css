@@ -197,9 +197,14 @@
     color: #dc3545;
 }
 
-.logout-item:hover {
-    background-color: #f8d7da;
-    color: #a71d2a;
+[data-mode="light"] .logout-item:hover {
+    background-color: rgb(254 226 226);
+    color: rgb(153 27 27);
+}
+
+[data-mode="dark"] .logout-item:hover {
+    background-color: rgb(239 68 68 / 15%);
+    color: rgb(252 165 165);
 }
 
 /* Tooltips for collapsed state */
