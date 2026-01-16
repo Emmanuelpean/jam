@@ -20,6 +20,7 @@ export interface SettingData extends BaseOut {
 
 export interface UserPreferences {
 	theme: string;
+	dark_mode: boolean;
 	chase_threshold: number;
 	deadline_threshold: number;
 	update_limit: number;

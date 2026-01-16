@@ -76,6 +76,7 @@ class UserPreferencesUpdate(BaseModel):
     """User preferences update schema"""
 
     theme: str | None = None
+    dark_mode: bool = False
     chase_threshold: int | None = None
     deadline_threshold: int | None = None
     update_limit: int | None = None

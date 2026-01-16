@@ -142,12 +142,14 @@ class UserPreferences(Owned, Base):
     Attributes:
     -----------
     - `theme` (str): The theme of the application.
+    - `dark_mode` (bool): Indicates whether dark mode is enabled.
     - `chase_threshold` (int): The threshold for chasing jobs in the dashboard.
     - `deadline_threshold` (int): The threshold for deadlines in the dashboard.
     - `update_limit` (int): Max number updates displayed in the dashboard.
     - `default_currency` (str): The default currency for salary fields."""
 
     theme = Column(String, nullable=False, server_default="mixed-berry")
+    dark_mode = Column(Boolean, nullable=False, server_default=expression.false())
     chase_threshold = Column(Integer, nullable=False, server_default="14")
     deadline_threshold = Column(Integer, nullable=False, server_default="7")
     update_limit = Column(Integer, nullable=False, server_default="10")
