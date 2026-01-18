@@ -1,5 +1,6 @@
-import React from "react";
-import { Button, Modal } from "react-bootstrap";
+import React, { JSX, useState } from "react";
+import { Modal } from "react-bootstrap";
+import { ActionButton, ButtonVariant } from "../rendering/form/ActionButton";
 
 type AlertType = "success" | "warning" | "error" | "info" | "danger" | "primary";
 
@@ -13,8 +14,9 @@ export interface AlertState {
 	id?: string | null;
 	cancelText?: string | null;
 	confirmText?: string;
+	loadingText?: string;
 	onCancel?: (() => void) | null;
-	onSuccess?: (() => void) | null;
+	onSuccess?: (() => void | Promise<void>) | null;
 }
 
 interface AlertModalProps {
@@ -31,7 +33,7 @@ const DEFAULT_ALERT_ICONS: Record<AlertType, string> = {
 	primary: "bi-question-circle-fill text-primary",
 };
 
-const buttonVariants: Record<AlertType, string> = {
+const buttonVariants: Record<AlertType, ButtonVariant> = {
 	success: "success",
 	warning: "warning",
 	error: "danger",
@@ -40,65 +42,68 @@ const buttonVariants: Record<AlertType, string> = {
 	primary: "primary",
 };
 
-const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }) => {
-	const iconClass = alertState.icon || DEFAULT_ALERT_ICONS[alertState.type || "info"] || DEFAULT_ALERT_ICONS.info;
-	const variant = buttonVariants[alertState.type || "primary"] || "primary";
-	const isConfirmation = !!alertState.cancelText;
-
-	// Generate a fallback ID if none is provided
-	const modalId = alertState.id || `alert-modal-${alertState.type || "default"}`;
-
-	// Handle size prop - "md" is the default for Modal, so we pass undefined for "md"
+const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertModalProps): JSX.Element => {
+	const iconClass: string =
+		alertState.icon || DEFAULT_ALERT_ICONS[alertState.type || "info"] || DEFAULT_ALERT_ICONS.info;
+	const variant: ButtonVariant = buttonVariants[alertState.type || "primary"] || "primary";
+	const modalId: string = alertState.id || `alert-modal-${alertState.type || "default"}`;
 	const modalSize = alertState.size && alertState.size !== "md" ? (alertState.size as "sm" | "lg" | "xl") : undefined;
+	const [loading, setLoading] = useState<boolean>(false);
+
+	const handleConfirm = async (): Promise<void> => {
+		if (alertState.onSuccess) {
+			setLoading(true);
+			try {
+				console.log("here");
+				await alertState.onSuccess();
+				console.log("done");
+				hideAlert();
+			} catch (error) {
+			} finally {
+				setLoading(false);
+			}
+		} else {
+			hideAlert();
+		}
+	};
 
 	return (
-		<Modal
-			id={modalId}
-			show={alertState.show}
-			onHide={alertState.onCancel || hideAlert}
-			size={modalSize}
-			centered={true}
-			backdrop={true}
-			keyboard={true}
-		>
+		<Modal show={alertState.show} onHide={hideAlert} centered size={modalSize} id={modalId}>
 			<Modal.Header closeButton>
-				<Modal.Title id={`${modalId}-title`}>
-					{iconClass && <i className={`${iconClass} me-2`} />}
-					{alertState.title}
-				</Modal.Title>
+				{iconClass && <i className={`bi ${iconClass} me-2`} />}
+				<Modal.Title>{alertState.title}</Modal.Title>
 			</Modal.Header>
-
-			<Modal.Body id={`${modalId}-body`}>
-				<div className={isConfirmation ? "py-2" : "text-center py-3"}>
-					{typeof alertState.message === "string" ? (
-						<p className="mb-0">{alertState.message}</p>
-					) : (
-						alertState.message
+			<Modal.Body>
+				{typeof alertState.message === "string" ? (
+					<p className="mb-0">{alertState.message}</p>
+				) : (
+					alertState.message
+				)}
+			</Modal.Body>
+			<Modal.Footer>
+				<div className="modal-buttons-container">
+					{alertState.cancelText && (
+						<ActionButton
+							variant="secondary"
+							onClick={() => {
+								alertState.onCancel?.();
+								hideAlert();
+							}}
+							disabled={loading}
+							defaultText={alertState.cancelText}
+						/>
+					)}
+					{alertState.confirmText && (
+						<ActionButton
+							variant={variant}
+							onClick={handleConfirm}
+							loading={loading}
+							loadingText={alertState.loadingText || "Processing..."}
+							disabled={loading}
+							defaultText={alertState.confirmText}
+						/>
 					)}
 				</div>
-			</Modal.Body>
-
-			<Modal.Footer className="d-flex gap-1" id={`${modalId}-footer`}>
-				{alertState.cancelText && (
-					<Button
-						id={`${modalId}-cancel-button`}
-						variant="secondary"
-						onClick={alertState.onCancel || hideAlert}
-						className="flex-fill"
-					>
-						{alertState.cancelText}
-					</Button>
-				)}
-				{alertState.confirmText && (
-					<Button
-						id={`${modalId}-confirm-button`}
-						variant={variant}
-						onClick={alertState.onSuccess || hideAlert}
-						className="flex-fill"
-					>
-						{alertState.confirmText}
-					</Button>
-				)}
 			</Modal.Footer>
 		</Modal>
 	);

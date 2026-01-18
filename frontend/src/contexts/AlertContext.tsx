@@ -10,7 +10,7 @@ interface AlertConfig {
 	icon?: string | null;
 	size?: "sm" | "md" | "lg" | "xl";
 	id?: string | null;
-	onSuccess?: (() => void) | null;
+	onSuccess?: (() => void | Promise<void>) | null;
 	onCancel?: (() => void) | null;
 }
 
@@ -44,6 +44,10 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		onCancel: null,
 	});
 
+	const hideAlert = (): void => {
+		setAlertState((prev: AlertState) => ({ ...prev, show: false }));
+	};
+
 	const showAlert = ({
 		title = "Alert",
 		message,
@@ -67,11 +71,18 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 				icon,
 				size,
 				id,
-				onSuccess: (): void => {
-					if (onSuccess) onSuccess();
-					resolve(true);
-					hideAlert();
-				},
+				onSuccess: onSuccess
+					? async (): Promise<void> => {
+							try {
+								await onSuccess();
+								resolve(true);
+							} catch (error) {
+								throw error;
+							}
+						}
+					: (): void => {
+							resolve(true);
+						},
 				onCancel: (): void => {
 					if (onCancel) onCancel();
 					resolve(false);
@@ -79,10 +90,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 				},
 			});
 		});
-	};
-
-	const hideAlert = (): void => {
-		setAlertState((prev: AlertState) => ({ ...prev, show: false }));
 	};
 
 	const showSuccess = ({
