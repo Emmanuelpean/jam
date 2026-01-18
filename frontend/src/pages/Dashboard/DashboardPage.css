@@ -1,9 +1,9 @@
-.card-header {
-    background: var(--bs-card-color);
+.table-card-header {
+    background: var(--bs-body-bg) !important;
     position: relative;
 }
 
-.card-header::before {
+.table-card-header::before {
     content: '';
     position: absolute;
     bottom: 0;

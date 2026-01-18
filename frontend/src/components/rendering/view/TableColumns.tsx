@@ -193,16 +193,6 @@ export const tableColumns = {
 		...overrides,
 	}),
 
-	appThemeColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "theme",
-		label: "Theme",
-		sortable: true,
-		searchable: true,
-		type: "text",
-		render: renderFunctions.appTheme,
-		...overrides,
-	}),
-
 	roleColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "role",
 		label: "Role",
@@ -360,7 +350,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "date",
-		searchFields: (item: JamData) => ("last_login" in item && item.last_login ? toDdMmYyyy(item.last_login) : ""),
+		searchFields: (item: JamData) => ("last_login" in item && item.last_login ? toDdMmYyyy(item.last_login) : null),
 		render: (params: RenderParams) => renderFunctions._date(params, "last_login"),
 		...overrides,
 	}),
@@ -437,22 +427,22 @@ export const tableColumns = {
 	}),
 
 	toastActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
-		key: "toast_active",
-		label: "TOAST",
+		key: "premium_active",
+		label: "Premium",
 		sortable: true,
 		searchable: false,
 		type: "text",
-		render: renderFunctions.toastActive,
+		render: renderFunctions.premiumActive,
 		...overrides,
 	}),
 
-	isEnabledColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
+	isActiveColumn: (overrides: TableColumnOverrides = {}): TableColumn => ({
 		key: "is_enabled",
-		label: "Enabled",
+		label: "Active",
 		sortable: true,
 		searchable: true,
 		type: "text",
-		render: renderFunctions.isEnabled,
+		render: renderFunctions.isActive,
 		...overrides,
 	}),
 

@@ -300,19 +300,12 @@ export const renderFunctions = {
 		return <i className={icon}></i>;
 	},
 
-	toastActive: (param: RenderParams): ReactNode => {
-		const toastActive: boolean = param.item?.toast_active;
-		const icon: string = getToastIcon(toastActive);
-		return <i className={icon}></i>;
+	premiumActive: (param: RenderParams): ReactNode => {
+		return getTrueFalseBadge(param.item?.premium.is_active);
 	},
 
 	isActive: (param: RenderParams): ReactNode => {
-		const isActive: boolean = param.item?.is_active;
-		return getActiveBadge(isActive);
-	},
-
-	isEnabled: (param: RenderParams): ReactNode => {
-		return getTrueFalseBadge(param.item?.is_enabled);
+		return getTrueFalseBadge(param.item?.is_active);
 	},
 
 	isRecruiter: (param: RenderParams): ReactNode => {

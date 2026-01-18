@@ -31,6 +31,7 @@ export const Sidebar = () => {
 	const [isExpanded, setIsExpanded] = useState<boolean>(false);
 	const [expandedSubmenu, setExpandedSubmenu] = useState<string | null>(null);
 	const collapseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const dropdownRef = useRef<HTMLDivElement | null>(null);
 	const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 990);
 
 	useEffect(() => {
@@ -38,6 +39,23 @@ export const Sidebar = () => {
 		window.addEventListener("resize", handleResize);
 		return (): void => window.removeEventListener("resize", handleResize);
 	}, []);
+
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+				setShowDropdown(false);
+			}
+		};
+
+		// Only add listener when dropdown is visible
+		if (showDropdown) {
+			document.addEventListener("mousedown", handleClickOutside);
+		}
+
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [showDropdown]);
 
 	const handleSidebarToggle = (): void => setIsExpanded((prev: boolean): boolean => !prev);
 
@@ -65,7 +83,7 @@ export const Sidebar = () => {
 			adminOnly: true,
 			position: "bottom",
 			submenu: [
-				{ path: "/job-scraping-dashboard", text: "TOAST Dashboard" },
+				{ path: "/job-scraping-dashboard", text: "Job Scraping Dashboard" },
 				{ path: "/job-rating-dashboard", text: "Job Rating Dashboard" },
 				{ path: "/users", text: "Users" },
 				{ path: "/app-settings", text: "Settings" },
@@ -226,24 +244,26 @@ export const Sidebar = () => {
 					</button>
 				)}
 				<div className="sidebar-header">
-					<div onClick={() => setShowDropdown(!showDropdown)} style={{ cursor: "pointer" }}>
-						<div className="logo-container">
-							<JamLogo
-								style={{
-									height: "57px",
-									width: "auto",
-									userSelect: "none",
-								}}
-							/>
-							<span className="logo-text">JAM</span>
+					<div ref={dropdownRef}>
+						<div onClick={() => setShowDropdown(!showDropdown)} style={{ cursor: "pointer" }}>
+							<div className="logo-container">
+								<JamLogo
+									style={{
+										height: "57px",
+										width: "auto",
+										userSelect: "none",
+									}}
+								/>
+								<span className="logo-text">JAM</span>
+							</div>
 						</div>
-					</div>
 
-					<ThemeSelector
-						currentTheme={currentUser?.preferences.theme || DEFAULT_THEME}
-						onThemeChange={handleThemeChange}
-						isVisible={showDropdown && isExpanded}
-					/>
+						<ThemeSelector
+							currentTheme={currentUser?.preferences.theme || DEFAULT_THEME}
+							onThemeChange={handleThemeChange}
+							isVisible={showDropdown && isExpanded}
+						/>
+					</div>
 				</div>
 
 				<nav className="sidebar-nav sidebar-nav-top">{renderNavigationItems(topNavigationItems)}</nav>

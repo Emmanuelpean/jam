@@ -124,10 +124,10 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	toastActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
-		key: "toast_active",
-		label: "TOAST",
-		render: renderFunctions.toastActive,
+	premiumActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "premium_active",
+		label: "Premium Active",
+		render: renderFunctions.premiumActive,
 		...overrides,
 	}),
 

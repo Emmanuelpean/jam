@@ -272,7 +272,7 @@
 .sidebar-open-btn {
     position: fixed;
     top: 16px;
-    z-index: 2100;
+    z-index: 1;
     background: var(--bs-tertiary-bg);
     border: none;
     border-radius: 6px;

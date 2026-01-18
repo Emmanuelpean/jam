@@ -1,9 +1,7 @@
-
 .time-selection-container {
     padding: 0 0 1rem;
 }
 
-/* Custom radio button group */
 .radio-group {
     display: flex;
     gap: 1rem;
@@ -22,7 +20,7 @@
 }
 
 .custom-radio:hover {
-    background: var(--primary-light);
+    background: var(--bs-tertiary-bg);
 }
 
 /* Hide default radio button */
@@ -30,7 +28,8 @@
     appearance: none;
     width: 20px;
     height: 20px;
-    border: 2px solid var(--primary-mid);
+    border: 2px solid var(--bs-border-color);
+    background-color: var(--bg-tertiary);
     border-radius: 50%;
     position: relative;
     cursor: pointer;
@@ -38,17 +37,50 @@
     flex-shrink: 0;
 }
 
+.custom-radio input[type="radio"]:hover {
+    border-color: var(--primary-mid);
+}
+
 /* Radio button checked state - gradient circle */
 .custom-radio input[type="radio"]:checked {
     border-color: var(--primary-end);
     background: var(--primary-gradient);
-    box-shadow: 0 0 0 4px var(--jam-glow), 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 0 4px var(--jam-glow), 0 2px 8px rgb(0 0 0 / 20%);
 }
 
 /* Radio label styling */
 .radio-label {
     font-weight: 600;
     font-size: 1rem;
-    color: #333;
+    color: var(--text-primary);
     transition: color 0.3s ease;
+}
+
+.custom-radio:hover .radio-label {
+    color: var(--primary-mid);
+}
+
+/* Dark mode specific datetime-local input styling */
+body[data-mode="dark"] input[type="datetime-local"] {
+    color-scheme: dark;
+}
+
+body[data-mode="light"] input[type="datetime-local"] {
+    color-scheme: light;
+}
+
+/* Ensure datetime inputs have proper dark mode contrast */
+input[type="datetime-local"] {
+    background-color: var(--bs-form-control-bg);
+    color: var(--bs-form-control-color);
+    border-color: var(--bs-form-control-border-color);
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: var(--calendar-icon-filter, none);
+    cursor: pointer;
+}
+
+body[data-mode="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
 }
