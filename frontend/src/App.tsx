@@ -180,8 +180,8 @@ function App(): JSX.Element {
 	return (
 		<BrowserRouter basename="/jam">
 			<AllProviders>
-				<AlertProvider>
-					<ToastContext.Provider value={toastMethods}>
+				<ToastContext.Provider value={toastMethods}>
+					<AlertProvider>
 						<ThemeProvider>
 							<ContextMenuProvider>
 								<AppLayout>
@@ -190,8 +190,8 @@ function App(): JSX.Element {
 							</ContextMenuProvider>
 						</ThemeProvider>
 						<ToastStack toasts={toastMethods.toasts} onClose={toastMethods.hideToast} position="top-end" />
-					</ToastContext.Provider>
-				</AlertProvider>
+					</AlertProvider>
+				</ToastContext.Provider>
 			</AllProviders>
 		</BrowserRouter>
 	);

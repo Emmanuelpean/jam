@@ -1,25 +1,27 @@
 import React, { JSX } from "react";
 import { Button, OverlayTrigger, Spinner, Tooltip } from "react-bootstrap";
 
+export type ButtonVariant =
+	| "primary"
+	| "secondary"
+	| "success"
+	| "danger"
+	| "warning"
+	| "info"
+	| "light"
+	| "dark"
+	| "outline-primary"
+	| "outline-secondary"
+	| "outline-success"
+	| "outline-danger"
+	| "outline-warning"
+	| "outline-info"
+	| "outline-light"
+	| "outline-dark";
+
 interface ActionButtonProps {
 	id?: string;
-	variant?:
-		| "primary"
-		| "secondary"
-		| "success"
-		| "danger"
-		| "warning"
-		| "info"
-		| "light"
-		| "dark"
-		| "outline-primary"
-		| "outline-secondary"
-		| "outline-success"
-		| "outline-danger"
-		| "outline-warning"
-		| "outline-info"
-		| "outline-light"
-		| "outline-dark";
+	variant?: ButtonVariant;
 	type?: "button" | "submit" | "reset";
 	size?: "sm" | "lg";
 	className?: string;

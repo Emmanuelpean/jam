@@ -338,13 +338,11 @@ textarea.form-control {
 .btn-secondary {
     background: linear-gradient(135deg, #8b9dc3 0%, #6b7280 100%);
     color: white;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
 
 .btn-secondary:hover {
     background: linear-gradient(135deg, #7a8db0 0%, #5a6268 100%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgb(107 114 128 / 30%), 0 4px 8px rgb(0 0 0 / 15%);
 }
 
 
@@ -352,13 +350,11 @@ textarea.form-control {
     background: linear-gradient(135deg, #fc8181 0%, #f56565 25%, #e53e3e 50%, #c53030 75%, #9b2c2c 100%);
     color: white;
     text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
-    box-shadow: 0 6px 20px rgb(245 101 101 / 30%), 0 2px 4px rgb(0 0 0 / 10%);
 }
 
 .btn-danger:hover {
     background: linear-gradient(135deg, #f56565 0%, #e53e3e 25%, #c53030 50%, #9b2c2c 75%, #742a2a 100%);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgb(245 101 101 / 40%), 0 4px 8px rgb(0 0 0 / 15%);
 }
 
 
