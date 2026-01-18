@@ -91,7 +91,7 @@ TOAST_USER_INDEX_2 = 6
 SETTINGS_DATA = [
     {
         "name": "allowlist",
-        "value": ",".join([data["email"] for data in USER_DATA] + ["newuser@user.com"]),
+        "value": ", ".join([data["email"] for data in USER_DATA] + ["newuser@user.com"]),
         "description": "Emails allowed to sign up",
     },
     {

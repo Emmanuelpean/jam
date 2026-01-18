@@ -290,7 +290,10 @@ def generate_data_table_crud_router(
             query = filter_query(query, table_model, filter_params)
 
             results = query.limit(limit).all()
-            return [filter_out_non_owned(result, current_user.id) for result in results]
+            if current_user.is_admin:
+                return results
+            else:
+                return [filter_out_non_owned(result, current_user.id) for result in results]
 
     if "get" in allowed_actions or "get_one" in allowed_actions:
 
@@ -319,7 +322,10 @@ def generate_data_table_crud_router(
             # Ensure that the user is authorised to view this entry
             check_ownership(entry, current_user)
 
-            return filter_out_non_owned(entry, current_user.id)
+            if current_user.is_admin:
+                return entry
+            else:
+                return filter_out_non_owned(entry, current_user.id)
 
     # ------------------------------------------------------ POST ------------------------------------------------------
 
@@ -388,7 +394,10 @@ def generate_data_table_crud_router(
                 db.commit()
                 db.refresh(new_entry)
 
-            return filter_out_non_owned(new_entry, current_user.id)
+            if current_user.is_admin:
+                return new_entry
+            else:
+                return filter_out_non_owned(new_entry, current_user.id)
 
     # ------------------------------------------------------- PUT ------------------------------------------------------
 
@@ -472,7 +481,10 @@ def generate_data_table_crud_router(
                     )
 
             # Return the updated entry
-            return filter_out_non_owned(entry, current_user.id)
+            if current_user.is_admin:
+                return entry
+            else:
+                return filter_out_non_owned(entry, current_user.id)
 
     # ----------------------------------------------------- DELETE -----------------------------------------------------
 

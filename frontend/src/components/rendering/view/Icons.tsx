@@ -42,7 +42,7 @@ export function getTableIcon(title: string): string {
 		Users: getEntityIcon("user"),
 		Settings: getEntityIcon("setting"),
 		"User Settings": "gear",
-		"TOAST Dashboard": "envelope-arrow-down",
+		"Job Scraping Dashboard": "envelope-arrow-down",
 		About: "info-circle",
 		Admin: "person-gear",
 		"Job Rating Dashboard": "star-half",

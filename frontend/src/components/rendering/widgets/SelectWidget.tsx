@@ -7,78 +7,6 @@ import { CustomSelectOption } from "../form/CustomSelectOption";
 import { ModalViewFields } from "../view/ModalFields";
 import { GroupedSelectOption, SelectOption } from "../form/FormOptions";
 
-const getCustomSelectStyles = (isDarkMode: boolean) => ({
-	control: (provided: any, state: any) => ({
-		...provided,
-		backgroundColor: isDarkMode ? "var(--bg-tertiary)" : "rgb(255 255 255 / 100%)",
-		borderColor: state.isFocused ? "var(--primary-mid)" : isDarkMode ? "var(--border-color)" : "#e8eaed",
-		color: isDarkMode ? "var(--text-primary)" : "#2c3e50",
-		minHeight: "48px",
-		"&:hover": {
-			borderColor: "var(--primary-mid)",
-		},
-	}),
-	menu: (provided: any) => ({
-		...provided,
-		backgroundColor: isDarkMode ? "var(--bg-card)" : "white",
-		border: isDarkMode ? "1px solid var(--border-color)" : "1px solid #e8eaed",
-		boxShadow: isDarkMode ? "0 4px 12px rgba(0, 0, 0, 0.4)" : "0 4px 12px rgba(0, 0, 0, 0.1)",
-	}),
-	menuList: (provided: any) => ({
-		...provided,
-		backgroundColor: isDarkMode ? "var(--bg-card)" : "white",
-	}),
-	option: (provided: any, state: any) => ({
-		...provided,
-		backgroundColor: state.isSelected
-			? "var(--primary-mid)"
-			: state.isFocused
-				? isDarkMode
-					? "rgba(255, 255, 255, 0.05)"
-					: "#f8f9fa"
-				: isDarkMode
-					? "var(--bg-card)"
-					: "white",
-		color: state.isSelected ? "white" : isDarkMode ? "var(--text-primary)" : "#2c3e50",
-		"&:active": {
-			backgroundColor: "var(--primary-light)",
-		},
-	}),
-	singleValue: (provided: any) => ({
-		...provided,
-		color: isDarkMode ? "var(--text-primary)" : "#2c3e50",
-	}),
-	multiValue: (provided: any) => ({
-		...provided,
-		backgroundColor: "var(--primary-mid)",
-	}),
-	multiValueLabel: (provided: any) => ({
-		...provided,
-		color: "white",
-	}),
-	multiValueRemove: (provided: any) => ({
-		...provided,
-		backgroundColor: "var(--primary-end)",
-		color: "white",
-		"&:hover": {
-			backgroundColor: "var(--primary-dark)",
-			color: "white",
-		},
-	}),
-	placeholder: (provided: any) => ({
-		...provided,
-		color: isDarkMode ? "var(--text-muted)" : "rgb(173 181 189)",
-	}),
-	input: (provided: any) => ({
-		...provided,
-		color: isDarkMode ? "var(--text-primary)" : "#2c3e50",
-	}),
-	groupHeading: (provided: any) => ({
-		...provided,
-		color: isDarkMode ? "var(--text-secondary)" : "#6c757d",
-		backgroundColor: isDarkMode ? "var(--bg-tertiary)" : "#f8f9fa",
-	}),
-});
 export interface SelectWidgetPreviewConfig {
 	enabled: boolean;
 	fields: ModalViewFields;
@@ -336,7 +264,6 @@ export const SelectInput = ({
 				parentData={data}
 				transformParentData={field.addButton?.transformParentData}
 				onAddSuccess={handleAddSuccess}
-				styles={getCustomSelectStyles(isDarkMode)}
 			/>
 			{previewConfig?.enabled && (
 				<FloatingPreview

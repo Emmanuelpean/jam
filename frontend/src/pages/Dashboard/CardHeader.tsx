@@ -1,4 +1,5 @@
 import { Card } from "react-bootstrap";
+import "./DashboardPage.css";
 
 interface TableCardHeaderProps {
 	icon: string;

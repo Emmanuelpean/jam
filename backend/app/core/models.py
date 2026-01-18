@@ -36,7 +36,7 @@ def get_setting_value(db, name: str, default: Any):
     :param name: The name of the setting to retrieve.
     :param default: The default value to return if the setting is not found."""
 
-    entry = db.query(Setting).filter(Setting.name == name).first()
+    entry = db.query(Setting).filter(Setting.name == name).filter(Setting.is_active).first()
     if entry:
         return entry.value
     else:

@@ -56,6 +56,7 @@ export interface UserDataTransform {
 	is_admin: boolean;
 	password: string;
 	is_active: boolean;
+	premium: { is_active: boolean };
 }
 
 export interface UserDataUpdate {

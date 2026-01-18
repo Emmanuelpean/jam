@@ -15,11 +15,13 @@ export const UserModal = forwardRef<DataModalHandle, JamDataModalProps>(({ size 
 		const formFieldsArray: Fields = [
 			[formFields.email({ required: true }), ...(isAddMode ? [formFields.password({ required: true })] : [])],
 			[formFields.isAdmin(), formFields.isActive()],
+			[formFields.toastActive()],
 		];
 
 		const viewFieldsArray: Fields = [
 			[modalViewFields.email()],
 			[modalViewFields.isAdmin(), modalViewFields.isActive()],
+			[modalViewFields.premiumActive()],
 		];
 
 		return {
@@ -40,12 +42,13 @@ export const UserModal = forwardRef<DataModalHandle, JamDataModalProps>(({ size 
 		return errors;
 	};
 
-	const transformFormData = (formData: UserDataTransform): UserDataTransform => {
+	const transformFormData = (formData: any): UserDataTransform => {
 		return {
 			email: formData.email?.trim(),
 			password: formData.password?.trim(),
 			is_admin: formData.is_admin || false,
 			is_active: formData.is_active || false,
+			premium: { is_active: formData.premium_active },
 		};
 	};
 

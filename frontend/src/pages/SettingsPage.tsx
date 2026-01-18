@@ -8,7 +8,7 @@ const SettingsPage = () => {
 		tableColumns.nameColumn(),
 		tableColumns.valueColumn(),
 		tableColumns.descriptionColumn(),
-		tableColumns.isEnabledColumn(),
+		tableColumns.isActiveColumn(),
 		tableColumns.createdAtColumn(),
 	];
 

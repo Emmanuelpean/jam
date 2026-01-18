@@ -6,11 +6,11 @@ import { tableColumns } from "../components/rendering/view/TableColumns";
 export const UserManagementPage: React.FC = () => {
 	const columns = [
 		tableColumns.idColumn(),
+		tableColumns.nameColumn(),
 		tableColumns.emailColumn(),
-		tableColumns.appThemeColumn(),
 		tableColumns.lastLoginColumn(),
 		tableColumns.isAdminColumn(),
-		tableColumns.isEnabledColumn(),
+		tableColumns.isActiveColumn(),
 		tableColumns.toastActiveColumn(),
 		tableColumns.createdAtColumn(),
 	];

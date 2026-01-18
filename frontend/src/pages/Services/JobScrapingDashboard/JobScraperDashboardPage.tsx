@@ -118,7 +118,7 @@ const JobScraperDashboard = (): JSX.Element => {
 
 	return (
 		<div>
-			<PageHeader title={"TOAST Dashboard"} icon={getTableIcon("TOAST Dashboard")} />
+			<PageHeader title={"Job Scraping Dashboard"} icon={getTableIcon("Job Scraping Dashboard")} />
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
 					<div className="d-flex align-items-start">
