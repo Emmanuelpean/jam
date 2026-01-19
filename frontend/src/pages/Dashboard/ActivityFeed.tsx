@@ -12,6 +12,33 @@ import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, JobData } from
 import { formatActivityDate } from "../../utils/TimeUtils";
 import { CardHeader } from "./CardHeader";
 
+const getActivityColor = (type: string): string => {
+	const colorMap: { [key: string]: string } = {
+		Application: "bg-primary",
+		Interview: "bg-success",
+		"Job Application Update": "bg-info",
+	};
+	return colorMap[type] || "#2563eb";
+};
+
+const getActivityBadge = (type: string): ((param: RenderParams) => ReactNode) => {
+	const badgeMap: Record<string, (param: RenderParams) => ReactNode> = {
+		Application: renderFunctions.jobBadge,
+		Interview: renderFunctions.interviewBadge,
+		"Job Application Update": renderFunctions.jobApplicationUpdateBadge,
+	};
+	return badgeMap[type] || renderFunctions.jobBadge;
+};
+
+const getActivityIcon = (type: string): string => {
+	const iconMap: { [key: string]: string } = {
+		Application: getTableIcon("Job Applications"),
+		Interview: getTableIcon("Interviews"),
+		"Job Application Update": getTableIcon("Job Application Updates"),
+	};
+	return iconMap[type] || "bi-plus-circle-fill";
+};
+
 interface ActivityFeedCardProps<T> {
 	icon: string;
 	title: string;
@@ -66,33 +93,6 @@ export interface RecentActivity {
 }
 
 export const renderRecentActivityItem = (activity: RecentActivity, index: number, isLast: boolean): JSX.Element => {
-	const getActivityIcon = (type: string): string => {
-		const iconMap: { [key: string]: string } = {
-			Application: getTableIcon("Job Applications"),
-			Interview: getTableIcon("Interviews"),
-			"Job Application Update": getTableIcon("Job Application Updates"),
-		};
-		return iconMap[type] || "bi-plus-circle-fill";
-	};
-
-	const getActivityColor = (type: string): string => {
-		const colorMap: { [key: string]: string } = {
-			Application: "#2563eb",
-			Interview: "#10b981",
-			"Job Application Update": "#f59e42",
-		};
-		return colorMap[type] || "#2563eb";
-	};
-
-	const getActivityBadge = (type: string): ((param: RenderParams) => ReactNode) => {
-		const badgeMap: Record<string, (param: RenderParams) => ReactNode> = {
-			Application: renderFunctions.jobBadge,
-			Interview: renderFunctions.interviewBadge,
-			"Job Application Update": renderFunctions.jobApplicationUpdateBadge,
-		};
-		return badgeMap[type] || renderFunctions.jobBadge;
-	};
-
 	const getActivityNumber = (activity: RecentActivity): string => {
 		if (activity.type === "Interview" || activity.type === "Job Application Update") {
 			return `#${"number" in activity.data ? activity.data.number : ""}`;
@@ -120,11 +120,10 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 				{/* Activity icon */}
 				<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
 					<div
-						className="rounded-circle d-flex align-items-center justify-content-center"
+						className={`rounded-circle d-flex align-items-center justify-content-center ${activityColor}`}
 						style={{
 							width: "35px",
 							height: "35px",
-							backgroundColor: activityColor,
 						}}
 					>
 						<i className={`bi-${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
@@ -155,6 +154,8 @@ export const renderUpcomingInterviewItem = (
 		key: "activity-item-" + index,
 		render: (params: RenderParams) => renderFunctions.interviewBadge(params),
 	};
+	const activityColor: string = getActivityColor("Interview");
+	const activityIcon: string = getActivityIcon("Interview");
 
 	return (
 		<div key={`interview-${index}`} className={`activity-item ${!isLast ? "mb-4" : "mb-3"}`}>
@@ -164,14 +165,13 @@ export const renderUpcomingInterviewItem = (
 				{/* Interview icon */}
 				<div className="flex-shrink-0 me-3 position-relative" style={{ zIndex: 1 }}>
 					<div
-						className="rounded-circle d-flex align-items-center justify-content-center"
+						className={`rounded-circle d-flex align-items-center justify-content-center ${activityColor}`}
 						style={{
 							width: "35px",
 							height: "35px",
-							backgroundColor: "#8b5cf6",
 						}}
 					>
-						<i className="bi bi-people-fill text-white" style={{ fontSize: "1rem" }}></i>
+						<i className={`bi-${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
 					</div>
 				</div>
 				{/* Interview content */}
