@@ -108,7 +108,7 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 
 	const jobField: ViewField = {
 		key: "activity-item-" + index,
-		render: (params: RenderParams) => activityBadge(params),
+		render: (params: RenderParams): ReactNode => activityBadge(params),
 	};
 
 	return (
@@ -133,11 +133,11 @@ export const renderRecentActivityItem = (activity: RecentActivity, index: number
 
 				{/* Activity content */}
 				<div className="flex-grow-1 min-width-0">
-					<div className="d-flex align-items-start justify-content-between mb-1">
-						<div className="fw-semibold" style={{ fontSize: "1rem" }}>
+					<div className="activity-header d-flex align-items-start justify-content-between mb-1">
+						<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>
 							{activity.type} {getActivityNumber(activity)}
 						</div>
-						<small className="text-muted flex-shrink-0 ms-2">{formatActivityDate(activity.date)}</small>
+						<small className="text-muted activity-date">{formatActivityDate(activity.date)}</small>
 					</div>
 					<RenderViewFieldWithContext field={jobField} item={activityData} id={index.toString()} />
 				</div>
@@ -176,11 +176,11 @@ export const renderUpcomingInterviewItem = (
 				</div>
 				{/* Interview content */}
 				<div className="flex-grow-1 min-width-0">
-					<div className="d-flex align-items-start justify-content-between mb-1">
-						<div className="fw-semibold" style={{ fontSize: "0.95rem" }}>
+					<div className="activity-header d-flex align-items-start justify-content-between mb-1">
+						<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>
 							{interview.type} (interview #{interview.number})
 						</div>
-						<small className="text-muted flex-shrink-0 ms-2">{formatActivityDate(interview.date!)}</small>
+						<small className="text-muted activity-date">{formatActivityDate(interview.date)}</small>
 					</div>
 					<RenderViewFieldWithContext field={jobField} item={interview} id={index.toString()} />
 				</div>
