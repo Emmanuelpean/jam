@@ -88,7 +88,6 @@ export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ childre
 				loadingActionsRef.current.set(entityId, new Set());
 			}
 			loadingActionsRef.current.get(entityId)!.add(menuItem.action);
-			console.log("Loading actions:", loadingActionsRef.current);
 
 			setMenuState(
 				(prev: ContextMenuState): ContextMenuState => ({
