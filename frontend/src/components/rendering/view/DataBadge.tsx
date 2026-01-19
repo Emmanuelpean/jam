@@ -190,6 +190,6 @@ export const JobApplicationUpdateBadge = createBadgeModalManager(
 export const InterviewBadge = createBadgeModalManager(
 	InterviewModal,
 	"interview",
-	"bg-primary",
+	"bg-success",
 	(item: JobData): string => item.title,
 );
