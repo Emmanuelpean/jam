@@ -171,7 +171,7 @@ export interface DataContextValue {
 
 	// Generic update functions
 	addEntity: <T extends EntityType>(type: T, data: any) => ApiResponsePromise<JamData>;
-	updateEntity: <T extends EntityType>(type: T, id: number, data: any) => ApiResponsePromise<JamData>;
+	updateEntity: <T extends EntityType>(type: T, id: number, data: Partial<JamData>) => ApiResponsePromise<JamData>;
 	deleteEntity: <T extends EntityType>(type: T, id: number) => Promise<void>;
 	getEntityData: <T extends EntityType>(type: T) => JamData[];
 }

@@ -378,7 +378,6 @@ export const renderFunctions = {
 	},
 
 	scrapedLocationMap: (param: RenderParams): ReactNode => {
-		console.log(param.item);
 		return <LocationMap locations={[param.item]} scrollWheelZoom={false} />;
 	},
 

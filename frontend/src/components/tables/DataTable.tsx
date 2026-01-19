@@ -17,8 +17,8 @@ import { TableColumn } from "../rendering/view/TableColumns";
 import {
 	useActivateEntity,
 	useDeactivateEntity,
-	useDeactivateHandler,
-	useDeleteEntity,
+	useDeactivateEntityConfirm,
+	useDeleteEntityConfirm,
 } from "../../utils/DeleteHandler";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { MenuItem } from "../ContextMenu/ContextMenu";
@@ -310,12 +310,12 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		}
 	};
 
-	const activeHandler = useDeactivateHandler(entityType);
-	const deleteHandler = useDeleteEntity(entityType);
-	const activateEntityHandler = useActivateEntity(entityType);
-	const deactivateEntityHandler = useDeactivateEntity(entityType);
+	const activeHandler: (item: JamData) => Promise<boolean> = useDeactivateEntityConfirm(entityType);
+	const deleteHandler: (item: JamData) => Promise<boolean> = useDeleteEntityConfirm(entityType);
+	const activateEntityHandler: (item: JamData) => Promise<boolean> = useActivateEntity(entityType);
+	const deactivateEntityHandler: (item: JamData) => Promise<boolean> = useDeactivateEntity(entityType);
 
-	const handleDelete = async (item: JamData) => {
+	const handleDelete = async (item: JamData): Promise<boolean> => {
 		let result: boolean;
 		if (mode === "import") {
 			result = await activeHandler(item);
@@ -325,6 +325,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		if (result && isServerPagination) {
 			fetchData().then((_): null => null);
 		}
+		return result;
 	};
 
 	const handleSuccess = (importedItem: any): void => {
@@ -355,14 +356,14 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		if (showAllEntries) {
 			currentPageData = sortedData;
 		} else {
-			const startIndex = currentPage * pageSize;
-			const endIndex = startIndex + pageSize;
+			const startIndex: number = currentPage * pageSize;
+			const endIndex: number = startIndex + pageSize;
 			currentPageData = sortedData.slice(startIndex, endIndex);
 		}
 	}
 
-	const handleSnoozeItem = (weeks: number) => {
-		return async (item: EnrichedJobData): Promise<void> => {
+	const handleSnoozeItem = (weeks: number): ((item: JamData) => Promise<void>) => {
+		return async (item: JamData): Promise<void> => {
 			try {
 				const snoozeDate = new Date();
 				snoozeDate.setDate(snoozeDate.getDate() + weeks * 7);
@@ -374,7 +375,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 						}
 					});
 			} catch (error) {
-				showToastError(`Failed to snooze ${item.title}. Please try again.`);
+				showToastError(`Failed to snooze ${(item as EnrichedJobData).title}. Please try again.`);
 			}
 		};
 	};
@@ -398,12 +399,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				action: "snooze",
 				icon: "alarm",
 				text: "Snooze for...",
-				hasSubmenu: true,
-				submenu: [
-					{ action: "snooze-1", text: "1 week", function: handleSnoozeItem(1) },
-					{ action: "snooze-2", text: "2 weeks", function: handleSnoozeItem(2) },
-					{ action: "snooze-3", text: "3 weeks", function: handleSnoozeItem(3) },
-					{ action: "snooze-4", text: "4 weeks", function: handleSnoozeItem(4) },
+				submenus: [
+					{ action: "snooze-1", text: "1 week", function: handleSnoozeItem(1), showLoading: true },
+					{ action: "snooze-2", text: "2 weeks", function: handleSnoozeItem(2), showLoading: true },
+					{ action: "snooze-3", text: "3 weeks", function: handleSnoozeItem(3), showLoading: true },
+					{ action: "snooze-4", text: "4 weeks", function: handleSnoozeItem(4), showLoading: true },
 				],
 			},
 			{
@@ -424,19 +424,21 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				icon: "check-circle",
 				text: "Activate",
 				function: activateEntityHandler,
+				showLoading: true,
 			},
 			{
 				action: "deactivate",
 				icon: "slash-circle",
 				text: "Deactivate",
 				function: deactivateEntityHandler,
+				showLoading: true,
 			},
 			{
 				action: "followup",
 				icon: "bell",
 				text: "Follow-up Email",
-				function: (item: JobData): void => {
-					followUpModalRef.current?.show(item);
+				function: (item: JamData): void => {
+					followUpModalRef.current?.show(item as JobData);
 				},
 			},
 		];
@@ -465,10 +467,11 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		event.preventDefault();
 		event.stopPropagation();
 
-		const items = getContextMenuItems(item);
+		const items: MenuItem[] = getContextMenuItems(item);
 		openContextMenu(
 			event as any, // Cast to satisfy MouseEvent<HTMLElement>
 			items,
+			entityType,
 			item,
 			compact,
 		);
@@ -560,71 +563,75 @@ export const DataTable: React.FC<GenericTableProps> = ({
 							>
 								<thead className="custom-header">
 									<tr>
-										{columns.map((column) => (
-											<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
-												<div className="d-flex align-items-center justify-content-between">
-													<div
-														className={
-															column.sortable ? "cursor-pointer user-select-none" : ""
-														}
-														onClick={() => column.sortable && handleSort(column.key)}
-														id={`table-header-${column.key}`}
-														style={compact ? { fontSize: "0.875rem" } : {}}
-													>
-														{column.label}
-														{column.sortable && (
-															<span className="ms-1">
-																<i
-																	className={`bi bi-arrow-${
-																		sortConfig.key === column.key
-																			? sortConfig.direction === "asc"
-																				? "up"
-																				: "down"
-																			: "down-up"
-																	}`}
-																	style={compact ? { fontSize: "0.75rem" } : {}}
-																></i>
-															</span>
-														)}
+										{columns.map(
+											(column: TableColumn): JSX.Element => (
+												<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
+													<div className="d-flex align-items-center justify-content-between">
+														<div
+															className={
+																column.sortable ? "cursor-pointer user-select-none" : ""
+															}
+															onClick={() => column.sortable && handleSort(column.key)}
+															id={`table-header-${column.key}`}
+															style={compact ? { fontSize: "0.875rem" } : {}}
+														>
+															{column.label}
+															{column.sortable && (
+																<span className="ms-1">
+																	<i
+																		className={`bi bi-arrow-${
+																			sortConfig.key === column.key
+																				? sortConfig.direction === "asc"
+																					? "up"
+																					: "down"
+																				: "down-up"
+																		}`}
+																		style={compact ? { fontSize: "0.75rem" } : {}}
+																	></i>
+																</span>
+															)}
+														</div>
 													</div>
-												</div>
-											</th>
-										))}
+												</th>
+											),
+										)}
 									</tr>
 								</thead>
 								<tbody>
-									{currentPageData.map((item, index) => (
-										<tr
-											key={item.id || index}
-											id={`table-row-${entityType}-${item.id}`}
-											className={`table-row-clickable`}
-											onClick={(e) => handleRowClick(e, item)}
-											onContextMenu={(e) => handleRowRightClick(item, e)}
-											style={{ cursor: "pointer" }}
-										>
-											{columns.map((column, columnIndex) => (
-												<td
-													key={column.key}
-													className="align-middle"
-													style={{
-														...(columnIndex === 0 ? { fontWeight: "bold" } : {}),
-														...(compact
-															? {
-																	padding: "0.5rem",
-																	fontSize: "0.875rem",
-																}
-															: {}),
-													}}
-												>
-													<RenderViewFieldWithContext
-														field={column}
-														item={item}
-														id={`table-row-${item.id}`}
-													/>
-												</td>
-											))}
-										</tr>
-									))}
+									{currentPageData.map(
+										(item: JamData, index: number): JSX.Element => (
+											<tr
+												key={item.id || index}
+												id={`table-row-${entityType}-${item.id}`}
+												className={`table-row-clickable`}
+												onClick={(e) => handleRowClick(e, item)}
+												onContextMenu={(e) => handleRowRightClick(item, e)}
+												style={{ cursor: "pointer" }}
+											>
+												{columns.map((column, columnIndex) => (
+													<td
+														key={column.key}
+														className="align-middle"
+														style={{
+															...(columnIndex === 0 ? { fontWeight: "bold" } : {}),
+															...(compact
+																? {
+																		padding: "0.5rem",
+																		fontSize: "0.875rem",
+																	}
+																: {}),
+														}}
+													>
+														<RenderViewFieldWithContext
+															field={column}
+															item={item}
+															id={`table-row-${item.id}`}
+														/>
+													</td>
+												))}
+											</tr>
+										),
+									)}
 									{currentPageData.length === 0 && (
 										<tr>
 											<td

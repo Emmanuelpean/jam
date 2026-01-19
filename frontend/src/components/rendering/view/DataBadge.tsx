@@ -11,7 +11,7 @@ import { JobModal } from "../../modals/JobModal";
 import { AggregatorModal } from "../../modals/AggregatorModal";
 import { JobApplicationUpdateModal } from "../../modals/JobApplicationUpdateModal";
 import { InterviewModal } from "../../modals/InterviewModal";
-import { useDeleteEntity } from "../../../utils/DeleteHandler";
+import { useDeleteEntityConfirm } from "../../../utils/DeleteHandler";
 import { DataContextValue, EntityType, JamData, useDataContext } from "../../../contexts/DataContext";
 import { getEntityIcon } from "./Icons";
 import { useGlobalToast } from "../../../hooks/useNotificationToast";
@@ -62,17 +62,19 @@ const createBadgeModalManager = <T extends JamData>(
 		const modalRef = useRef<DataModalHandle>(null);
 		const { openContextMenu } = useContextMenu();
 		const followUpModalRef = useRef<FollowUpModalHandle>(null);
-		const deleteHandler = useDeleteEntity(entityType);
+		const deleteHandler = useDeleteEntityConfirm(entityType);
 		const dataContext: DataContextValue = useDataContext();
 		const { showToastSuccess } = useGlobalToast();
 
-		const handleRemove = (id: number): void => {
+		const handleRemove = (item: JamData): void => {
 			if (parentItem && parentKey) {
 				let updatedParent;
 				if (Array.isArray((parentItem as any)[parentKey])) {
 					updatedParent = {
 						...parentItem,
-						[parentKey]: (parentItem as any)[parentKey].filter((itemId: number): boolean => itemId !== id),
+						[parentKey]: (parentItem as any)[parentKey].filter(
+							(itemId: number): boolean => itemId !== item.id,
+						),
 					};
 				} else {
 					updatedParent = {
@@ -95,17 +97,17 @@ const createBadgeModalManager = <T extends JamData>(
 				action: "remove",
 				icon: "x-circle",
 				text: "Remove",
-				color: "#dc3545",
+				color: "#ff8e3f",
 				function: handleRemove,
 			},
 			{
 				action: "followup",
 				icon: "bell",
 				text: "Follow-up Email",
-				function: (item: PersonData): void => {
-					followUpModalRef.current?.show(parentItem as JobData, item);
+				function: (item: JamData): void => {
+					followUpModalRef.current?.show(parentItem as JobData, item as PersonData);
 				},
-				displayCondition: (item: PersonData): boolean => !!(item.email && parentItem),
+				displayCondition: (item: JamData): boolean => !!((item as PersonData).email && parentItem),
 			},
 		];
 
@@ -115,8 +117,8 @@ const createBadgeModalManager = <T extends JamData>(
 
 		const handleContextMenu = (e: MouseEvent<HTMLSpanElement>) => {
 			if (menuItems.length === 0) return;
-
-			openContextMenu(e, menuItems, item, compact);
+			if (!item) return;
+			openContextMenu(e, menuItems, entityType, item, compact);
 		};
 
 		const getText = (): string => {
