@@ -54,9 +54,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 		if (alertState.onSuccess) {
 			setLoading(true);
 			try {
-				console.log("here");
 				await alertState.onSuccess();
-				console.log("done");
 				hideAlert();
 			} catch (error) {
 			} finally {

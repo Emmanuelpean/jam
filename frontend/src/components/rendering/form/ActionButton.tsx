@@ -86,7 +86,7 @@ export const ActionButton = ({
 								className="me-2"
 							/>
 						)}
-						{loadingText}
+						{loadingText ? loadingText : defaultText ? defaultText : "Loading..."}
 					</div>
 				</>
 			);

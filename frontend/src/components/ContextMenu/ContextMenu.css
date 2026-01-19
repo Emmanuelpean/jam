@@ -49,3 +49,19 @@
 .context-submenu {
     animation: side-in-from-right 0.12s ease-out forwards;
 }
+
+.context-menu-item .spinning {
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.context-menu-item.loading {
+    pointer-events: none;
+    opacity: 0.7;
+    cursor: wait;
+}

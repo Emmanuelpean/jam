@@ -94,10 +94,8 @@ export const PremiumTab = (): JSX.Element => {
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
 		const url = new URL(window.location.href);
-		console.log(window.location.href);
 
 		if (params.get("success") === "true") {
-			console.log("here");
 			// Set up polling to check subscription status
 			let pollCount = 0;
 			const maxPolls = 100; // Poll up to 10 times

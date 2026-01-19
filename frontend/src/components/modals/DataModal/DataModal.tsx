@@ -23,10 +23,10 @@ import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArr
 import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
 import {
-	useDeleteEntity,
+	useDeleteEntityConfirm,
 	useActivateEntity,
 	useDeactivateEntity,
-	useDeactivateHandler,
+	useDeactivateEntityConfirm,
 } from "../../../utils/DeleteHandler";
 import { useAlert } from "../../../contexts/AlertContext";
 import { ApiResponse } from "../../../services/api/Base";
@@ -64,7 +64,6 @@ export interface DataModalProps {
 	defaultActiveTab?: string | null; // default active tab key
 	entityType: EntityType; // entity type for API operations
 	onSuccess?: (data: any, onSuccess?: (newData: any) => void) => void; // called when an entry is successfully added/modified
-	onDelete?: () => void; // called when an entry is successfully deleted
 	warningMessage?: (data: any) => WarningMessageConfig[] | null; // optional warning message to display
 	canEdit?: boolean | ((formData: any) => string); // Controls edit button and edit mode access
 	canDelete?: boolean | ((formData: any) => string); // Controls delete button and edit mode access
@@ -100,7 +99,6 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			transformFormData = null,
 			transformInputData = null,
 			onSuccess,
-			onDelete,
 			warningMessage,
 			canEdit = true,
 			canDelete = true,
@@ -143,9 +141,10 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		const [onSuccessCallback, setOnSuccessCallback] = useState<((data: any) => void) | null>(null);
 		const [formData, setFormData] = useState<Record<string, any>>({});
 		const [originalFormData, setOriginalFormData] = useState<Record<string, any>>({});
-		const [submitting, setSubmitting] = useState(false);
+		const [submitting, setSubmitting] = useState<boolean>(false);
+		const [activeLoading, setActiveLoading] = useState<boolean>(false);
 		const [errors, setErrors] = useState<Errors>({});
-		const [isEditing, setIsEditing] = useState(false);
+		const [isEditing, setIsEditing] = useState<boolean>(false);
 		const { currentUser } = useAuth();
 		const dataContext: DataContextValue = useDataContext();
 		const [activeTab, setActiveTab] = useState<string | null>(() => {
@@ -374,37 +373,30 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 		// ----------------------------------------------------- DELETE ----------------------------------------------------
 
-		const deactivateHandler = useDeactivateHandler(entityType);
-		const deleteHandler = useDeleteEntity(entityType);
-		const activateEntityHandler = useActivateEntity(entityType);
-		const deactivateEntityHandler = useDeactivateEntity(entityType);
+		const deactivateEntityConfirm: (item: JamData) => Promise<boolean> = useDeactivateEntityConfirm(entityType);
+		const deleteEntityConfirm: (item: JamData) => Promise<boolean> = useDeleteEntityConfirm(entityType);
+		const activateEntity: (item: JamData) => Promise<boolean> = useActivateEntity(entityType);
+		const deactivateEntity: (item: JamData) => Promise<boolean> = useDeactivateEntity(entityType);
 
-		const handleDeleteClick = async () => {
-			if (mode === "import") {
-				const confirm: boolean = await deactivateHandler(effectiveData);
-				if (confirm) {
-					onDelete?.();
-					handleHideImmediate();
-				}
-			} else {
-				const confirm: boolean = await deleteHandler(effectiveData);
-				if (confirm) {
-					onDelete?.();
-					handleHideImmediate();
-				}
-			}
+		const handleDeleteClick = async (): Promise<void> => {
+			// Either deactivate or delete based on mode, then close the modal
+			const handler: (item: JamData) => Promise<boolean> =
+				mode === "import" ? deactivateEntityConfirm : deleteEntityConfirm;
+			handler(effectiveData).then((): void => {
+				handleHideImmediate();
+			});
 		};
 
-		const toggleActivate = async () => {
-			if (effectiveData.is_active) {
-				deactivateEntityHandler(effectiveData).then(() => {
-					handleHideImmediate();
-				});
-			} else {
-				activateEntityHandler(effectiveData).then(() => {
-					handleHideImmediate();
-				});
-			}
+		const handleActivateClick = async (): Promise<void> => {
+			// Either deactivate or activate based on current state, then close the modal
+			setActiveLoading(true);
+			const handler: (item: JamData) => Promise<boolean> = effectiveData.is_active
+				? deactivateEntity
+				: activateEntity;
+			handler(effectiveData).then((): void => {
+				handleHideImmediate();
+				setActiveLoading(false);
+			});
 		};
 
 		const handleChange = (e: SyntheticEvent): void => {
@@ -785,8 +777,10 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 								<ActionButton
 									id={getModalId() + "-deactivate-button"}
 									variant="danger"
-									onClick={toggleActivate}
+									onClick={handleActivateClick}
+									loading={activeLoading}
 									defaultText={effectiveData?.is_active ? "Deactivate" : "Activate"}
+									loadingText={effectiveData?.is_active ? "Deactivating..." : "Activating..."}
 									fullWidth={false}
 								/>
 								{canEdit && (

@@ -40,7 +40,7 @@ const JobToChaseTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: 
 			modalSize="xl"
 			showSearch={false}
 			showAdd={false}
-			menuItems={["view", "edit", "snooze", "followup", "delete"]}
+			menuItems={["view", "edit", "snooze", "delete"]}
 			modalProps={{ defaultActiveTab: "application" }}
 		/>
 	);
