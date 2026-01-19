@@ -367,13 +367,12 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			try {
 				const snoozeDate = new Date();
 				snoozeDate.setDate(snoozeDate.getDate() + weeks * 7);
-				dataContext
-					.updateEntity(entityType, item.id, { followup_snooze_datetime: snoozeDate.toISOString() })
-					.then((response: ApiResponse<JamData>) => {
-						if ("title" in response.data) {
-							showToastSuccess(`${response.data.title} was snoozed for ${weeks} week(s).`);
-						}
-					});
+				const response: ApiResponse<JamData> = await dataContext.updateEntity(entityType, item.id, {
+					followup_snooze_datetime: snoozeDate.toISOString(),
+				});
+				if ("title" in response.data) {
+					showToastSuccess(`${response.data.title} was snoozed for ${weeks} week(s).`);
+				}
 			} catch (error) {
 				showToastError(`Failed to snooze ${(item as EnrichedJobData).title}. Please try again.`);
 			}

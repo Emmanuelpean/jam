@@ -29,7 +29,7 @@ interface MenuLevelProps {
 	isSubmenu?: boolean;
 	onMouseEnter?: () => void;
 	onMouseLeave?: () => void;
-	onClose: () => void; // TODO remove?
+	onClose: () => void;
 	disabled?: boolean;
 }
 
@@ -49,7 +49,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 	const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
 	const [submenuPosition, setSubmenuPosition] = useState<ContextMenuPosition>({ x: 0, y: 0 });
 	const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-	const preventCloseRef = useRef<boolean>(false); // ADD THIS
+	const preventCloseRef = useRef<boolean>(false);
 
 	const handleMouseEnter = (menuItem: MenuItem, e: MouseEvent): void => {
 		if (disabled) return;
@@ -65,7 +65,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 			setSubmenuPosition({ x: rect.right + 5, y: rect.top });
 			setActiveSubmenu(menuItem.action);
 		} else {
-			if (!isAnyItemLoading && !preventCloseRef.current) {
+			if (!disabled && !preventCloseRef.current) {
 				setActiveSubmenu(null);
 			}
 		}
@@ -87,7 +87,6 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 
 	const handleItemClick = (e: MouseEvent, menuItem: MenuItem): void => {
 		e.stopPropagation();
-		console.log(menuItem);
 		if (!menuItem.loading && !menuItem.submenus?.length && !disabled) {
 			onItemClick(menuItem, entityType, selectedItem);
 			if (menuItem.showLoading !== true) {
@@ -103,8 +102,6 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 	const activeSubMenuItem: MenuItem | undefined = menuItems.find(
 		(item: MenuItem): boolean => item.action === activeSubmenu,
 	);
-
-	const isAnyItemLoading: boolean = filteredItems.some((item: MenuItem): boolean | undefined => item.loading);
 
 	return (
 		<>
@@ -123,7 +120,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 					(menuItem: MenuItem, index: number): JSX.Element => (
 						<div
 							key={menuItem.action}
-							className={`context-menu-item ${menuItem.loading ? "loading" : ""} ${isAnyItemLoading && !menuItem.loading ? "disabled" : ""}`}
+							className={`context-menu-item ${menuItem.loading ? "loading" : ""} ${disabled && !menuItem.loading ? "disabled" : ""}`}
 							style={{
 								padding: compact ? "6px 12px" : "8px 16px",
 								fontSize: compact ? "13px" : "14px",
@@ -132,9 +129,9 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 										? "1px solid var(--bs-form-control-border-color)"
 										: "none",
 								color: menuItem.color || "inherit",
-								opacity: isAnyItemLoading ? 0.5 : 1,
-								pointerEvents: isAnyItemLoading ? "none" : "auto",
-								cursor: isAnyItemLoading ? "not-allowed" : "pointer",
+								opacity: disabled ? 0.5 : 1,
+								pointerEvents: disabled ? "none" : "auto",
+								cursor: disabled ? "not-allowed" : "pointer",
 							}}
 							onClick={(e: MouseEvent): void => handleItemClick(e, menuItem)}
 							onMouseEnter={(e: MouseEvent): void => handleMouseEnter(menuItem, e)}
@@ -167,7 +164,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 					onMouseEnter={handleSubmenuMouseEnter}
 					onMouseLeave={handleMouseLeave}
 					onClose={onClose}
-					disabled={isAnyItemLoading}
+					disabled={disabled}
 				/>
 			)}
 		</>
@@ -218,6 +215,19 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 		};
 	}, [onClose]);
 
+	const checkAnyItemLoading = (items: MenuItem[]): boolean => {
+		return items.some((item: MenuItem): boolean => {
+			if (item.loading) return true;
+			if (item.submenus) return checkAnyItemLoading(item.submenus);
+			return false;
+		});
+	};
+
+	const filteredItems: MenuItem[] = menuItems.filter(
+		(menuItem: MenuItem): boolean => !menuItem.displayCondition || menuItem.displayCondition(selectedItem),
+	);
+	const isAnyItemLoading: boolean = checkAnyItemLoading(filteredItems);
+
 	return (
 		<div ref={menuRef}>
 			<MenuLevel
@@ -228,6 +238,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 				compact={compact}
 				position={position}
 				onClose={onClose}
+				disabled={isAnyItemLoading}
 			/>
 		</div>
 	);
