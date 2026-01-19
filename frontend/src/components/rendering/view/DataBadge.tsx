@@ -118,7 +118,7 @@ const createBadgeModalManager = <T extends JamData>(
 		const handleContextMenu = (e: MouseEvent<HTMLSpanElement>) => {
 			if (menuItems.length === 0) return;
 			if (!item) return;
-			openContextMenu(e, menuItems, entityType, item, compact);
+			openContextMenu(e, menuItems, item, compact);
 		};
 
 		const getText = (): string => {

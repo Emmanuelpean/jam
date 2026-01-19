@@ -29,6 +29,7 @@ import "./DataTable.css";
 import FollowUpModal, { FollowUpModalHandle } from "../modals/FollowUpModal/FollowUpModal";
 import { useContextMenu } from "../../contexts/ContextMenuContext";
 import PageHeader from "../../pages/PageHeader/PageHeader";
+import { useProgressOverlay } from "../../contexts/useProgressOverlayContext";
 
 export type Direction = "asc" | "desc";
 
@@ -399,10 +400,34 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				icon: "alarm",
 				text: "Snooze for...",
 				submenus: [
-					{ action: "snooze-1", text: "1 week", function: handleSnoozeItem(1), showLoading: true },
-					{ action: "snooze-2", text: "2 weeks", function: handleSnoozeItem(2), showLoading: true },
-					{ action: "snooze-3", text: "3 weeks", function: handleSnoozeItem(3), showLoading: true },
-					{ action: "snooze-4", text: "4 weeks", function: handleSnoozeItem(4), showLoading: true },
+					{
+						action: "snooze-1",
+						text: "1 week",
+						function: handleSnoozeItem(1),
+						showLoading: true,
+						loadingMessage: "Snoozing Job...",
+					},
+					{
+						action: "snooze-2",
+						text: "2 weeks",
+						function: handleSnoozeItem(2),
+						showLoading: true,
+						loadingMessage: "Snoozing Job...",
+					},
+					{
+						action: "snooze-3",
+						text: "3 weeks",
+						function: handleSnoozeItem(3),
+						showLoading: true,
+						loadingMessage: "Snoozing Job...",
+					},
+					{
+						action: "snooze-4",
+						text: "4 weeks",
+						function: handleSnoozeItem(4),
+						showLoading: true,
+						loadingMessage: "Snoozing Job...",
+					},
 				],
 			},
 			{
@@ -424,6 +449,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				text: "Activate",
 				function: activateEntityHandler,
 				showLoading: true,
+				loadingMessage: "Activating Scraping Filter...",
 			},
 			{
 				action: "deactivate",
@@ -431,6 +457,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				text: "Deactivate",
 				function: deactivateEntityHandler,
 				showLoading: true,
+				loadingMessage: "Deactivating Scraping Filter...",
 			},
 			{
 				action: "followup",
@@ -470,7 +497,6 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		openContextMenu(
 			event as any, // Cast to satisfy MouseEvent<HTMLElement>
 			items,
-			entityType,
 			item,
 			compact,
 		);
