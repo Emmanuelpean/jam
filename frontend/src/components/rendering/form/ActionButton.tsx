@@ -19,11 +19,19 @@ export type ButtonVariant =
 	| "outline-light"
 	| "outline-dark";
 
+type ButtonSize = "sm" | "md" | "lg";
+
+const BUTTON_HEIGHTS: Record<ButtonSize, number> = {
+	sm: 40,
+	md: 52,
+	lg: 60,
+};
+
 interface ActionButtonProps {
 	id?: string;
 	variant?: ButtonVariant;
 	type?: "button" | "submit" | "reset";
-	size?: "sm" | "lg";
+	size?: ButtonSize;
 	className?: string;
 	disabled?: boolean;
 	loading?: boolean;
@@ -44,7 +52,7 @@ export const ActionButton = ({
 	id,
 	variant = "primary",
 	type = "button",
-	size = "lg",
+	size = "md",
 	className = "",
 	disabled = false,
 	loading = false,
@@ -55,60 +63,49 @@ export const ActionButton = ({
 	fullWidth = true,
 	onClick,
 	customContent,
-	customLoadingContent,
 	tooltip,
 	tooltipPlacement = "top",
 	style,
 	...otherProps
 }: ActionButtonProps): JSX.Element => {
 	const buttonClasses = `${className} ${fullWidth ? "w-100" : ""}`.trim();
-
 	const renderContent = (): React.ReactNode => {
-		if (loading) {
-			// Use custom loading content if provided
-			if (customLoadingContent) {
-				return customLoadingContent;
-			}
-
-			// Default loading content
-			return (
-				<>
-					<div className="d-flex align-items-center justify-content-center">
-						{loadingIcon ? (
-							<i className={`${loadingIcon} me-2`}></i>
-						) : (
-							<Spinner
-								as="span"
-								animation="border"
-								size="sm"
-								role="status"
-								aria-hidden="true"
-								className="me-2"
-							/>
-						)}
-						{loadingText ? loadingText : defaultText ? defaultText : "Loading..."}
-					</div>
-				</>
-			);
-		}
-
-		// Use custom content if provided
-		if (customContent) {
-			return customContent;
-		}
-
-		// Default content
 		return (
-			<>
-				<div className="d-flex align-items-center justify-content-center">
-					{defaultIcon && <i className={`${defaultIcon} me-2`} style={{ fontSize: "20px" }}></i>}
+			<div className="position-relative d-flex align-items-center justify-content-center w-100">
+				{/* Default text + icon */}
+				<span
+					className={
+						loading
+							? "invisible d-flex align-items-center justify-content-center"
+							: "d-flex align-items-center justify-content-center"
+					}
+					style={{ width: "100%", gap: "0.5rem" }} // reserve space for spinner/icon
+				>
+					{defaultIcon && <i className={`${defaultIcon}`} style={{ fontSize: "20px" }} />}
 					{defaultText}
-				</div>
-			</>
+				</span>
+
+				{/* Loading overlay */}
+				{loading && (
+					<span
+						className="position-absolute d-flex align-items-center justify-content-center"
+						style={{ inset: 0, gap: "0.5rem" }}
+					>
+						{loadingIcon ? (
+							<i className={`${loadingIcon}`} />
+						) : (
+							<Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+						)}
+						{loadingText ?? defaultText ?? "Loading..."}
+					</span>
+				)}
+			</div>
 		);
 	};
 
-	const button = (
+	const buttonHeight: number = BUTTON_HEIGHTS[size];
+
+	const button: JSX.Element = (
 		<div
 			tabIndex={0}
 			style={{
@@ -121,11 +118,18 @@ export const ActionButton = ({
 				id={id}
 				variant={variant}
 				type={type}
-				size={size}
 				disabled={disabled || loading}
 				className={buttonClasses}
 				onClick={onClick}
-				style={{ ...style, height: "100%", width: "100%" }}
+				style={{
+					...style,
+					height: `${buttonHeight}px`,
+					minHeight: `${buttonHeight}px`,
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					width: "100%",
+				}}
 				{...otherProps}
 			>
 				{renderContent()}

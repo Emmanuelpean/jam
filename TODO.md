@@ -27,7 +27,7 @@
 * [ ] Change the service runner to work with multiple workers
 * [ ] Limit the number of scraped jobs per user per month, and set limits for AI rating
 * [ ] finish adding configs endpoint
-* [ ] Add loading to delete for scraped jobs
+* [X] Add loading to delete for scraped jobs
 * [X] Rename TOAST dashboard
 * [ ] Add loading to graphs on TOAST dashboard
 * [ ] Add acknowledgements for open source libraries used
@@ -40,7 +40,7 @@
 * [X] Add loading spinner when using the context menu
 * [X] Delete interviews and updates when associated job is deleted
 * [ ] Get the new inbox for support/info
-* [ ] Fix the action button height changing during loading
+* [X] Fix the action button height changing during loading
 * [ ] Non data modal should not be affected by the small screen full size
 * [X] Allow badges to collapse on small screens (...)
 * [X] Dropdowns styles are broken in dark mode (in light mode multiselect is not working as expected)
