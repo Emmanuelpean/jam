@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, ReactNode, MouseEvent, JSX } from "react";
-import { ContextMenu, MenuItem } from "../components/ContextMenu/ContextMenu";
+import { checkAnyItemLoading, ContextMenu, MenuItem } from "../components/ContextMenu/ContextMenu";
 import { EntityType, JamData } from "./DataContext";
 
 interface ContextMenuState {
@@ -73,6 +73,10 @@ export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ childre
 	};
 
 	const closeContextMenu = (): void => {
+		// Don't close if items are loading
+		if (checkAnyItemLoading(menuState.menuItems)) {
+			return;
+		}
 		setMenuState((prev: ContextMenuState): ContextMenuState => ({ ...prev, show: false }));
 	};
 
