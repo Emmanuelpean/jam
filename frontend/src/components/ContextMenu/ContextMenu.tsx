@@ -2,6 +2,14 @@ import React, { MouseEvent, useEffect, useRef, useState, JSX } from "react";
 import "./ContextMenu.css";
 import { EntityType, JamData } from "../../contexts/DataContext";
 
+export const checkAnyItemLoading = (items: MenuItem[]): boolean => {
+	return items.some((item: MenuItem): boolean => {
+		if (item.loading) return true;
+		if (item.submenus) return checkAnyItemLoading(item.submenus);
+		return false;
+	});
+};
+
 export interface MenuItem {
 	action: string;
 	icon?: string;
@@ -71,8 +79,13 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 		}
 	};
 
+	const filteredItems: MenuItem[] = menuItems.filter(
+		(menuItem: MenuItem): boolean => !menuItem.displayCondition || menuItem.displayCondition(selectedItem),
+	);
+
 	const handleMouseLeave = (): void => {
-		if (preventCloseRef.current) return;
+		if (preventCloseRef.current || checkAnyItemLoading(filteredItems)) return;
+
 		submenuTimeoutRef.current = setTimeout(() => {
 			setActiveSubmenu(null);
 		}, 200);
@@ -94,10 +107,6 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 			}
 		}
 	};
-
-	const filteredItems: MenuItem[] = menuItems.filter(
-		(menuItem: MenuItem): boolean => !menuItem.displayCondition || menuItem.displayCondition(selectedItem),
-	);
 
 	const activeSubMenuItem: MenuItem | undefined = menuItems.find(
 		(item: MenuItem): boolean => item.action === activeSubmenu,
@@ -214,14 +223,6 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 			document.removeEventListener("keydown", handleKeyPress);
 		};
 	}, [onClose]);
-
-	const checkAnyItemLoading = (items: MenuItem[]): boolean => {
-		return items.some((item: MenuItem): boolean => {
-			if (item.loading) return true;
-			if (item.submenus) return checkAnyItemLoading(item.submenus);
-			return false;
-		});
-	};
 
 	const filteredItems: MenuItem[] = menuItems.filter(
 		(menuItem: MenuItem): boolean => !menuItem.displayCondition || menuItem.displayCondition(selectedItem),
