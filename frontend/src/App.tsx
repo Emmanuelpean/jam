@@ -30,6 +30,7 @@ import JobRatingDashboard from "./pages/Services/JobRatingDashboard/JobRatingDas
 import SpeculativeApplicationsPage from "./pages/SpeculativeApplicationsPage";
 import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -182,14 +183,20 @@ function App(): JSX.Element {
 			<AllProviders>
 				<ToastContext.Provider value={toastMethods}>
 					<AlertProvider>
-						<ThemeProvider>
-							<ContextMenuProvider>
-								<AppLayout>
-									<AppRoutes />
-								</AppLayout>
-							</ContextMenuProvider>
-						</ThemeProvider>
-						<ToastStack toasts={toastMethods.toasts} onClose={toastMethods.hideToast} position="top-end" />
+						<ProgressOverlayProvider>
+							<ThemeProvider>
+								<ContextMenuProvider>
+									<AppLayout>
+										<AppRoutes />
+									</AppLayout>
+								</ContextMenuProvider>
+							</ThemeProvider>
+							<ToastStack
+								toasts={toastMethods.toasts}
+								onClose={toastMethods.hideToast}
+								position="top-end"
+							/>
+						</ProgressOverlayProvider>
 					</AlertProvider>
 				</ToastContext.Provider>
 			</AllProviders>

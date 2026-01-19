@@ -1,71 +1,43 @@
-import React, { createContext, useContext, useState, useRef, ReactNode, MouseEvent, JSX } from "react";
-import { checkAnyItemLoading, ContextMenu, MenuItem } from "../components/ContextMenu/ContextMenu";
-import { EntityType, JamData } from "./DataContext";
+import React, { createContext, JSX, MouseEvent, ReactNode, useContext, useState } from "react";
+import { ContextMenu, MenuItem } from "../components/ContextMenu/ContextMenu";
+import { JamData } from "./DataContext";
+import { useProgressOverlay } from "./useProgressOverlayContext";
 
 interface ContextMenuState {
 	position: { x: number; y: number };
 	menuItems: MenuItem[];
-	entityType: EntityType | null;
 	selectedItem: JamData | null;
 	show: boolean;
 	compact?: boolean;
 }
 
 interface ContextMenuContextType {
-	openContextMenu: (
-		e: MouseEvent<HTMLElement>,
-		menuItems: MenuItem[],
-		entityType: EntityType,
-		selectedItem: JamData,
-		compact?: boolean,
-	) => void;
+	openContextMenu: (e: MouseEvent, menuItems: MenuItem[], selectedItem: JamData, compact?: boolean) => void;
 	closeContextMenu: () => void;
 }
 
 const ContextMenuContext = createContext<ContextMenuContextType | undefined>(undefined);
 
 export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ children }): JSX.Element => {
+	const { showProgress, hideProgress } = useProgressOverlay();
 	const [menuState, setMenuState] = useState<ContextMenuState>({
 		position: { x: 0, y: 0 },
 		menuItems: [],
-		entityType: null,
 		selectedItem: null,
 		show: false,
 		compact: false,
 	});
 
-	// Track loading actions by entity ID and action: Map<entityId, Set<action>>
-	const loadingActionsRef = useRef<Map<string, Set<string>>>(new Map());
-	const [, forceUpdate] = useState({});
-
-	const getEntityId = (entityType: EntityType, item: JamData): string => {
-		return entityType + item.id.toString();
-	};
-
-	const applyLoadingState = (menuItems: MenuItem[], entityId: string): MenuItem[] => {
-		return menuItems.map((item: MenuItem): MenuItem => {
-			const entityLoadingActions: Set<string> | undefined = loadingActionsRef.current.get(entityId);
-			return {
-				...item,
-				loading: entityLoadingActions?.has(item.action) ?? false,
-				submenus: item.submenus ? applyLoadingState(item.submenus, entityId) : undefined,
-			};
-		});
-	};
-
 	const openContextMenu = (
-		e: MouseEvent<HTMLElement>,
+		e: MouseEvent,
 		menuItems: MenuItem[],
-		entityType: EntityType,
-		selectedItem: any,
+		selectedItem: JamData,
 		compact: boolean = false,
 	): void => {
 		e.preventDefault();
-		const entityId: string = getEntityId(entityType, selectedItem);
 		setMenuState({
 			position: { x: e.clientX, y: e.clientY },
-			menuItems: applyLoadingState(menuItems, entityId),
-			entityType,
+			menuItems,
 			selectedItem,
 			show: true,
 			compact,
@@ -73,46 +45,25 @@ export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ childre
 	};
 
 	const closeContextMenu = (): void => {
-		// Don't close if items are loading
-		if (checkAnyItemLoading(menuState.menuItems)) {
-			return;
-		}
 		setMenuState((prev: ContextMenuState): ContextMenuState => ({ ...prev, show: false }));
 	};
 
-	const handleMenuItemClick = async (
-		menuItem: MenuItem,
-		entityType: EntityType,
-		selectedItem: JamData,
-	): Promise<void> => {
-		if (menuItem.function) {
-			const entityId: string = getEntityId(entityType, selectedItem);
+	const handleMenuItemClick = async (menuItem: MenuItem, selectedItem: JamData): Promise<void> => {
+		if (!menuItem.function) {
+			closeContextMenu();
+			return;
+		}
 
-			if (!loadingActionsRef.current.has(entityId)) {
-				loadingActionsRef.current.set(entityId, new Set());
+		if (menuItem.showLoading) {
+			showProgress(menuItem.loadingMessage);
+		}
+
+		try {
+			await menuItem.function(selectedItem);
+		} finally {
+			if (menuItem.showLoading) {
+				hideProgress();
 			}
-			loadingActionsRef.current.get(entityId)!.add(menuItem.action);
-
-			setMenuState(
-				(prev: ContextMenuState): ContextMenuState => ({
-					...prev,
-					menuItems: applyLoadingState(prev.menuItems, entityId),
-				}),
-			);
-
-			try {
-				await menuItem.function(selectedItem);
-			} finally {
-				loadingActionsRef.current.get(entityId)?.delete(menuItem.action);
-				if (loadingActionsRef.current.get(entityId)?.size === 0) {
-					loadingActionsRef.current.delete(entityId);
-				}
-				if (menuItem.showLoading) {
-					closeContextMenu();
-				}
-				forceUpdate({});
-			}
-		} else {
 			closeContextMenu();
 		}
 	};
@@ -120,15 +71,15 @@ export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ childre
 	return (
 		<ContextMenuContext.Provider value={{ openContextMenu, closeContextMenu }}>
 			{children}
-			{menuState.show && menuState.selectedItem && menuState.entityType && (
+			{menuState.show && menuState.selectedItem && (
 				<ContextMenu
 					position={menuState.position}
 					menuItems={menuState.menuItems}
-					entityType={menuState.entityType}
 					selectedItem={menuState.selectedItem}
 					onClose={closeContextMenu}
 					onItemClick={handleMenuItemClick}
 					compact={menuState.compact}
+					entityType={"job"}
 				/>
 			)}
 		</ContextMenuContext.Provider>
@@ -136,7 +87,7 @@ export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ childre
 };
 
 export const useContextMenu = (): ContextMenuContextType => {
-	const context: ContextMenuContextType | undefined = useContext(ContextMenuContext);
+	const context = useContext(ContextMenuContext);
 	if (!context) {
 		throw new Error("useContextMenu must be used within a ContextMenuProvider");
 	}

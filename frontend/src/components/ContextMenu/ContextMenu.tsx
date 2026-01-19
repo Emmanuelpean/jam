@@ -1,14 +1,6 @@
-import React, { MouseEvent, useEffect, useRef, useState, JSX } from "react";
+import React, { JSX, MouseEvent, useEffect, useRef, useState } from "react";
 import "./ContextMenu.css";
 import { EntityType, JamData } from "../../contexts/DataContext";
-
-export const checkAnyItemLoading = (items: MenuItem[]): boolean => {
-	return items.some((item: MenuItem): boolean => {
-		if (item.loading) return true;
-		if (item.submenus) return checkAnyItemLoading(item.submenus);
-		return false;
-	});
-};
 
 export interface MenuItem {
 	action: string;
@@ -18,8 +10,8 @@ export interface MenuItem {
 	function?: (item: JamData) => Promise<boolean | void> | void;
 	submenus?: MenuItem[];
 	displayCondition?: (item: JamData) => boolean;
-	loading?: boolean;
 	showLoading?: boolean;
+	loadingMessage?: string;
 }
 
 export interface ContextMenuPosition {
@@ -29,9 +21,8 @@ export interface ContextMenuPosition {
 
 interface MenuLevelProps {
 	menuItems: MenuItem[];
-	entityType: EntityType;
 	selectedItem: JamData;
-	onItemClick: (menuItem: MenuItem, entityType: EntityType, item: JamData) => void;
+	onItemClick: (menuItem: MenuItem, item: JamData) => void;
 	compact: boolean;
 	position: ContextMenuPosition;
 	isSubmenu?: boolean;
@@ -43,7 +34,6 @@ interface MenuLevelProps {
 
 const MenuLevel: React.FC<MenuLevelProps> = ({
 	menuItems,
-	entityType,
 	selectedItem,
 	onItemClick,
 	compact,
@@ -52,7 +42,6 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 	isSubmenu = false,
 	onMouseEnter,
 	onMouseLeave,
-	disabled = false,
 }: MenuLevelProps): JSX.Element => {
 	const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
 	const [submenuPosition, setSubmenuPosition] = useState<ContextMenuPosition>({ x: 0, y: 0 });
@@ -60,8 +49,6 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 	const preventCloseRef = useRef<boolean>(false);
 
 	const handleMouseEnter = (menuItem: MenuItem, e: MouseEvent): void => {
-		if (disabled) return;
-
 		if (submenuTimeoutRef.current) {
 			clearTimeout(submenuTimeoutRef.current);
 			submenuTimeoutRef.current = null;
@@ -72,10 +59,8 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 			const rect: DOMRect = itemElement.getBoundingClientRect();
 			setSubmenuPosition({ x: rect.right + 5, y: rect.top });
 			setActiveSubmenu(menuItem.action);
-		} else {
-			if (!disabled && !preventCloseRef.current) {
-				setActiveSubmenu(null);
-			}
+		} else if (!preventCloseRef.current) {
+			setActiveSubmenu(null);
 		}
 	};
 
@@ -84,7 +69,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 	);
 
 	const handleMouseLeave = (): void => {
-		if (preventCloseRef.current || checkAnyItemLoading(filteredItems)) return;
+		if (preventCloseRef.current) return;
 
 		submenuTimeoutRef.current = setTimeout(() => {
 			setActiveSubmenu(null);
@@ -100,11 +85,9 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 
 	const handleItemClick = (e: MouseEvent, menuItem: MenuItem): void => {
 		e.stopPropagation();
-		if (!menuItem.loading && !menuItem.submenus?.length && !disabled) {
-			onItemClick(menuItem, entityType, selectedItem);
-			if (menuItem.showLoading !== true) {
-				onClose();
-			}
+		if (!menuItem.submenus?.length) {
+			onItemClick(menuItem, selectedItem);
+			onClose();
 		}
 	};
 
@@ -115,7 +98,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 	return (
 		<>
 			<div
-				className={`${isSubmenu ? "context-submenu" : "context-menu"}`}
+				className={isSubmenu ? "context-submenu" : "context-menu"}
 				style={{
 					top: position.y,
 					left: position.x,
@@ -129,7 +112,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 					(menuItem: MenuItem, index: number): JSX.Element => (
 						<div
 							key={menuItem.action}
-							className={`context-menu-item ${menuItem.loading ? "loading" : ""} ${disabled && !menuItem.loading ? "disabled" : ""}`}
+							className={`context-menu-item`}
 							style={{
 								padding: compact ? "6px 12px" : "8px 16px",
 								fontSize: compact ? "13px" : "14px",
@@ -138,9 +121,6 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 										? "1px solid var(--bs-form-control-border-color)"
 										: "none",
 								color: menuItem.color || "inherit",
-								opacity: disabled ? 0.5 : 1,
-								pointerEvents: disabled ? "none" : "auto",
-								cursor: disabled ? "not-allowed" : "pointer",
 							}}
 							onClick={(e: MouseEvent): void => handleItemClick(e, menuItem)}
 							onMouseEnter={(e: MouseEvent): void => handleMouseEnter(menuItem, e)}
@@ -148,14 +128,10 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 							id={`context-menu-${menuItem.action}`}
 						>
 							<span>
-								{menuItem.loading ? (
-									<i className="bi bi-arrow-repeat me-2 spinning"></i>
-								) : (
-									menuItem.icon && <i className={`bi bi-${menuItem.icon} me-2`}></i>
-								)}
+								{menuItem.icon && <i className={`bi bi-${menuItem.icon} me-2`} />}
 								{menuItem.text}
 							</span>
-							{menuItem.submenus?.length && <i className="bi bi-chevron-right"></i>}
+							{menuItem.submenus?.length && <i className="bi bi-chevron-right" />}
 						</div>
 					),
 				)}
@@ -164,16 +140,14 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 			{activeSubmenu && activeSubMenuItem?.submenus && (
 				<MenuLevel
 					menuItems={activeSubMenuItem.submenus}
-					entityType={entityType}
 					selectedItem={selectedItem}
 					onItemClick={onItemClick}
 					compact={compact}
 					position={submenuPosition}
-					isSubmenu={true}
+					isSubmenu
 					onMouseEnter={handleSubmenuMouseEnter}
 					onMouseLeave={handleMouseLeave}
 					onClose={onClose}
-					disabled={disabled}
 				/>
 			)}
 		</>
@@ -186,14 +160,13 @@ export interface ContextMenuProps {
 	entityType: EntityType;
 	selectedItem: JamData;
 	onClose: () => void;
-	onItemClick: (menuItem: MenuItem, entityType: EntityType, item: JamData) => void;
+	onItemClick: (menuItem: MenuItem, item: JamData) => void;
 	compact?: boolean;
 }
 
 export const ContextMenu: React.FC<ContextMenuProps> = ({
 	position,
 	menuItems,
-	entityType,
 	selectedItem,
 	onClose,
 	onItemClick,
@@ -202,7 +175,6 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 	const menuRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		// Close the menu on outside click or Escape key press
 		const handleGlobalClick = (e: Event): void => {
 			if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
 				onClose();
@@ -224,22 +196,15 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 		};
 	}, [onClose]);
 
-	const filteredItems: MenuItem[] = menuItems.filter(
-		(menuItem: MenuItem): boolean => !menuItem.displayCondition || menuItem.displayCondition(selectedItem),
-	);
-	const isAnyItemLoading: boolean = checkAnyItemLoading(filteredItems);
-
 	return (
 		<div ref={menuRef}>
 			<MenuLevel
 				menuItems={menuItems}
-				entityType={entityType}
 				selectedItem={selectedItem}
 				onItemClick={onItemClick}
 				compact={compact}
 				position={position}
 				onClose={onClose}
-				disabled={isAnyItemLoading}
 			/>
 		</div>
 	);
