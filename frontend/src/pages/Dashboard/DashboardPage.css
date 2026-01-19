@@ -98,3 +98,16 @@
         min-height: 400px;
     }
 }
+
+@media (width <= 1200px) {
+    .activity-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .activity-date {
+        margin-left: 0 !important;
+        margin-top: 2px;
+        margin-bottom: 2px;
+    }
+}

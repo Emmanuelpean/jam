@@ -29,7 +29,6 @@ import "./DataTable.css";
 import FollowUpModal, { FollowUpModalHandle } from "../modals/FollowUpModal/FollowUpModal";
 import { useContextMenu } from "../../contexts/ContextMenuContext";
 import PageHeader from "../../pages/PageHeader/PageHeader";
-import { useProgressOverlay } from "../../contexts/useProgressOverlayContext";
 
 export type Direction = "asc" | "desc";
 
@@ -372,7 +371,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 					followup_snooze_datetime: snoozeDate.toISOString(),
 				});
 				if ("title" in response.data) {
-					showToastSuccess(`${response.data.title} was snoozed for ${weeks} week(s).`);
+					showToastSuccess(
+						`${response.data.title} was snoozed for ${weeks} week` + (weeks > 1 ? "s" : "") + ".",
+					);
 				}
 			} catch (error) {
 				showToastError(`Failed to snooze ${(item as EnrichedJobData).title}. Please try again.`);

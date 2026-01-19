@@ -416,6 +416,16 @@ textarea.form-control {
     row-gap: 5px;
 }
 
+@media (width <= 1200px) {
+    .badge {
+        max-width: 200px;
+        display: inline-block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
 /* ---------------------------------------------------- CHECKBOX ---------------------------------------------------- */
 
 .form-check-input {
@@ -495,6 +505,7 @@ textarea.form-control {
 
 ::-webkit-scrollbar {
     width: 8px;
+    height: 8px
 }
 
 ::-webkit-scrollbar-track {
