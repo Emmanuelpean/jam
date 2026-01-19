@@ -41,7 +41,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		size: "md",
 		id: null,
 		onSuccess: null,
-		onCancel: null,
 	});
 
 	const hideAlert = (): void => {
@@ -58,7 +57,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		size = "md",
 		id = null,
 		onSuccess = null,
-		onCancel = null,
 	}: AlertConfig): Promise<boolean> => {
 		return new Promise((resolve): void => {
 			setAlertState({
@@ -83,11 +81,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 					: (): void => {
 							resolve(true);
 						},
-				onCancel: (): void => {
-					if (onCancel) onCancel();
-					resolve(false);
-					hideAlert();
-				},
 			});
 		});
 	};

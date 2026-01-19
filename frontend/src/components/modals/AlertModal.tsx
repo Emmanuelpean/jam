@@ -15,7 +15,6 @@ export interface AlertState {
 	cancelText?: string | null;
 	confirmText?: string;
 	loadingText?: string;
-	onCancel?: (() => void) | null;
 	onSuccess?: (() => void | Promise<void>) | null;
 }
 
@@ -84,7 +83,6 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 						<ActionButton
 							variant="secondary"
 							onClick={() => {
-								alertState.onCancel?.();
 								hideAlert();
 							}}
 							disabled={loading}
