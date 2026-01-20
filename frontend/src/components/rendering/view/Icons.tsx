@@ -41,6 +41,7 @@ export function getTableIcon(title: string): string {
 		"Job Applications": "person-workspace",
 		Users: getEntityIcon("user"),
 		Settings: getEntityIcon("setting"),
+		"Job Alerts": getEntityIcon("scrapedJob"),
 		"User Settings": "gear",
 		"Job Scraping Dashboard": "envelope-arrow-down",
 		About: "info-circle",
@@ -64,6 +65,7 @@ export function getEntityIcon(entityType: EntityType): string {
 		user: "person-lines-fill",
 		setting: "database-gear",
 		speculativeApplication: "envelope-paper",
+		scrapedJob: "inbox",
 	};
 	return iconMap[entityType] || "";
 }

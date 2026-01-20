@@ -5,14 +5,14 @@ import { Card } from "react-bootstrap";
 interface TableHeaderProps {
 	title: string;
 	subtitle?: string;
-	data?: unknown[];
+	count?: number;
 	icon: string;
 	className?: string;
 }
 
 const PageHeader: React.FC<TableHeaderProps> = ({
 	title,
-	data,
+	count,
 	icon,
 	subtitle,
 	className = "",
@@ -30,7 +30,7 @@ const PageHeader: React.FC<TableHeaderProps> = ({
 							{subtitle && <small className="text-muted">{subtitle}</small>}
 						</div>
 					</div>
-					{data && data.length > 0 && <div className="table-count-badge">{data.length}</div>}
+					{count && <div className="table-count-badge">{count}</div>}
 				</div>
 			</Card>
 		</div>

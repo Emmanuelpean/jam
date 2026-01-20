@@ -9,7 +9,10 @@ import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import ScrapingFilterTable from "./ScrapingFilterTable";
 import { JobData, JobDataTransform } from "../../services/schemas/DataTables";
 
-const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableProps): JSX.Element => {
+const ScrapedJobsTable: React.FC<DataTableProps> = ({
+	columns = [],
+	title = undefined,
+}: DataTableProps): JSX.Element => {
 	const dataContext: DataContextValue = useDataContext();
 	const [showFilters, setShowFilters] = useState(false);
 	const { addEntity } = useDataContext();
@@ -35,6 +38,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 			url: formData.url?.trim() || null,
 			salary_min: formData.salary_min || null,
 			salary_max: formData.salary_max || null,
+			salary_currency: formData.salary_currency || null,
 			personal_rating: formData.personal_rating || null,
 			company_id: formData.company_id || null,
 			location_id: formData.location_id || null,
@@ -50,6 +54,7 @@ const ScrapedJobsTable: React.FC<DataTableProps> = ({ columns = [] }: DataTableP
 	return (
 		<>
 			<DataTable
+				title={title}
 				entityType="scrapedJob"
 				mode="import"
 				columns={defaultColumns}

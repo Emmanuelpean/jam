@@ -278,18 +278,18 @@ textarea.form-control {
 
 .select-widget-with-secondary .secondary-value {
     padding: 8px 12px;
-    background-color: #f5f5f5;
-    border: 1px solid #ccc;
+    background-color: var(--bg-tertiary) !important;
+    border: 1px solid var(--bs-border-color);
     border-radius: 4px;
     font-size: 14px;
-    color: #333;
+    color: var(--text-primary);
     white-space: nowrap;
     min-width: fit-content;
 }
 
 .select-widget-with-secondary .arrow-indicator {
     font-size: 18px;
-    color: #666;
+    color: var(--text-primary);
     user-select: none;
     min-width: 20px;
     text-align: center;

@@ -42,6 +42,7 @@ export interface DataTableProps {
 	columns?: TableColumn[];
 	showAdd?: boolean;
 	menuItems?: string[] | ((item: any) => string[]);
+	title?: string;
 }
 
 export interface GenericTableProps {
@@ -535,7 +536,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	return (
 		<>
 			<div className={"table-container"}>
-				{title && <PageHeader title={title} data={data} icon={getTableIcon(title)} />}
+				{title && <PageHeader title={title} count={totalCount || data.length} icon={getTableIcon(title)} />}
 
 				<div
 					className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
