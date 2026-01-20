@@ -5,8 +5,8 @@
 
 .help-tooltip {
 	position: absolute;
-	background-color: #333;
-	color: white;
+	background-color: var(--bs-card-border-color);
+	color: var(--text-primary);
 	padding: 8px 12px;
 	border-radius: 6px;
 	font-size: 14px;
@@ -54,7 +54,7 @@
 	top: 50%;
 	transform: translateY(-50%);
 	border: 5px solid transparent;
-	border-right-color: #333;
+	border-right-color: var(--bs-card-border-color);
 }
 
 .help-tooltip-arrow-left {
@@ -62,7 +62,7 @@
 	top: 50%;
 	transform: translateY(-50%);
 	border: 5px solid transparent;
-	border-left-color: #333;
+	border-left-color: var(--bs-card-border-color);
 }
 
 .help-tooltip-arrow-top {
@@ -70,7 +70,7 @@
 	left: 50%;
 	transform: translateX(-50%);
 	border: 5px solid transparent;
-	border-top-color: #333;
+	border-top-color: var(--bs-card-border-color);
 }
 
 .help-tooltip-arrow-bottom {
@@ -78,5 +78,5 @@
 	left: 50%;
 	transform: translateX(-50%);
 	border: 5px solid transparent;
-	border-bottom-color: #333;
+	border-bottom-color: var(--bs-card-border-color);
 }

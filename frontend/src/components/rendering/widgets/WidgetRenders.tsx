@@ -11,6 +11,7 @@ import React, { JSX } from "react";
 import { HelpBubble } from "./HelpBubble";
 import { UrlInput } from "./UrlInput";
 import { CurrentUser } from "../../../contexts/AuthContext";
+import {Toggle} from "./Toggle";
 
 export interface SyntheticEvent {
 	target: {
@@ -87,6 +88,18 @@ export const FormField = (
 		return (
 			<Form.Group className="mb-3" id={`${field.name}-form-group`}>
 				<Checkbox {...widgetProps} />
+				{error && (
+					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
+						{displayError(error)}
+					</div>
+				)}
+			</Form.Group>
+		);
+	}
+	if (field.type === "toggle") {
+		return (
+			<Form.Group className="mb-3" id={`${field.name}-form-group`}>
+				<Toggle {...widgetProps} />
 				{error && (
 					<div className="invalid-feedback d-block" id={`${field.name}-error-message`}>
 						{displayError(error)}
