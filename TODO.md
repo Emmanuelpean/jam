@@ -33,10 +33,10 @@
 * [ ] Add acknowledgements for open source libraries used
 * [ ] Add acknowledgements for services
 * [ ] Add favourite filters for scraping
-* [ ] Fix frontend packages incompatibility issues
+* [X] Fix frontend packages incompatibility issues
 * [ ] Create free coupons for TOAST for first few users for a couple months
 * [X] Add trial period for TOAST
-* [ ] Run the service API on a different worker
+* [X] Run the service API on a different worker
 * [X] Add loading spinner when using the context menu
 * [X] Delete interviews and updates when associated job is deleted
 * [ ] Get the new inbox for support/info

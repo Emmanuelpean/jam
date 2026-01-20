@@ -29,6 +29,8 @@ job search can be a time-consuming and tedious process, requiring to keep track 
 Create and activate a virtual environment, and run:
 ```console
 $ pip install -e .[dev]
+$ cd frontend/
+$ npm i
 ```
 
 ## Usage
