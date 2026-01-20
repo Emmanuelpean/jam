@@ -1,4 +1,4 @@
-import { api, ApiResponsePromise } from "./Base";
+import { baseApi, ApiResponsePromise } from "./Base";
 import { createCrudApi, CrudApi } from "./Crud";
 import { UserData, UserDataUpdate, UserQualification } from "../schemas/Core";
 
@@ -45,39 +45,39 @@ export const authApi: AuthApi = {
 		const formData = new FormData();
 		formData.append("username", email);
 		formData.append("password", password);
-		return api.postFormData("login/", formData);
+		return baseApi.postFormData("login/", formData);
 	},
 
 	register: async (registerData: RegisterData): ApiResponsePromise<GenericResponse> => {
-		return api.post("register/", registerData);
+		return baseApi.post("register/", registerData);
 	},
 
 	getCurrentUser: async (token: string): ApiResponsePromise<UserData> => {
-		return api.get("current-user/", token);
+		return baseApi.get("current-user/", token);
 	},
 
 	updateCurrentUser: async (data: UserDataUpdate, token: string): ApiResponsePromise<UpdateCurrentUserResponse> => {
-		return api.put("current-user/", data, token);
+		return baseApi.put("current-user/", data, token);
 	},
 
 	checkPendingEmail: async (token: string): ApiResponsePromise<boolean> => {
-		return api.get("current-user/check-pending-email/", token);
+		return baseApi.get("current-user/check-pending-email/", token);
 	},
 
 	verifyEmail: async (token: string): ApiResponsePromise<GenericResponse> => {
-		return api.get(`register/verify-email/${token}`);
+		return baseApi.get(`register/verify-email/${token}`);
 	},
 
 	requestPasswordReset: async (email: string): ApiResponsePromise<GenericResponse> => {
-		return api.post("password/forgot", { email });
+		return baseApi.post("password/forgot", { email });
 	},
 
 	verifyNewEmail: async (token: string): ApiResponsePromise<GenericResponse> => {
-		return api.get(`current-user/verify-email/${token}`);
+		return baseApi.get(`current-user/verify-email/${token}`);
 	},
 
 	resetPassword: async (token: string, newPassword: string): ApiResponsePromise<GenericResponse> => {
-		return api.post("password/reset", {
+		return baseApi.post("password/reset", {
 			token,
 			new_password: newPassword,
 		});
@@ -90,9 +90,10 @@ export interface UserQualificationApi {
 }
 
 export const userQualificationApi: UserQualificationApi = {
-	getLatest: (token: string): ApiResponsePromise<UserQualification> => api.get("user-qualifications/latest", token),
+	getLatest: (token: string): ApiResponsePromise<UserQualification> =>
+		baseApi.get("user-qualifications/latest", token),
 	upsert: (data: any, token: string): ApiResponsePromise<UserQualification> =>
-		api.post("user-qualifications/", data, token),
+		baseApi.post("user-qualifications/", data, token),
 };
 
 export interface ExportCrudApi {
@@ -100,5 +101,5 @@ export interface ExportCrudApi {
 }
 
 export const exportApi: ExportCrudApi = {
-	download: (filename: string, token: string): Promise<void> => api.downloadFile("export/", filename, token),
+	download: (filename: string, token: string): Promise<void> => baseApi.downloadFile("export/", filename, token),
 };

@@ -1,4 +1,5 @@
 export const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+export const API_SERVICE_URL: string = process.env.REACT_APP_API_SERVICE_URL || "http://localhost:8001";
 
 export interface ApiError extends Error {
 	status?: number | null;
@@ -60,9 +61,11 @@ const handleResponse = async (response: Response, isBlob: boolean = false): ApiR
 	};
 };
 
-class ApiService {
+export class ApiService {
+	constructor(private readonly baseUrl: string) {}
+
 	async get(endpoint: string, token: string | null = null, options: RequestOptions = {}): ApiResponsePromise {
-		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "GET",
 			headers: getAuthHeaders(token || ""),
 		});
@@ -70,7 +73,7 @@ class ApiService {
 	}
 
 	async post(endpoint: string, data: any, token: string | null = null): ApiResponsePromise {
-		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "POST",
 			headers: getAuthHeaders(token || ""),
 			body: JSON.stringify(data),
@@ -79,7 +82,7 @@ class ApiService {
 	}
 
 	async put(endpoint: string, data: any, token: string | null = null): ApiResponsePromise {
-		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "PUT",
 			headers: getAuthHeaders(token || ""),
 			body: JSON.stringify(data),
@@ -88,7 +91,7 @@ class ApiService {
 	}
 
 	async delete(endpoint: string, token: string | null = null): ApiResponsePromise {
-		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "DELETE",
 			headers: getAuthHeaders(token || ""),
 		});
@@ -97,7 +100,7 @@ class ApiService {
 
 	async postFormData(endpoint: string, formData: FormData, token: string | null = null): ApiResponsePromise {
 		const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-		const response: Response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "POST",
 			headers,
 			body: formData,
@@ -118,4 +121,5 @@ class ApiService {
 	}
 }
 
-export const api = new ApiService();
+export const baseApi = new ApiService(API_BASE_URL);
+export const serviceApi = new ApiService(API_SERVICE_URL);

@@ -8,7 +8,7 @@ import {
 	JamData,
 	useDataContext,
 } from "../../contexts/DataContext";
-import { api, ApiResponse } from "../../services/api/Base";
+import { baseApi, ApiResponse } from "../../services/api/Base";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";
@@ -170,7 +170,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				search: debouncedSearchTerm,
 			});
 
-			const response: ApiResponse = await api.get(`${endpoint}/paged?${params.toString()}`, token);
+			const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
 			setFetchedData(response.data.items);
 			setTotalCount(response.data.total);
 		} catch (error: any) {

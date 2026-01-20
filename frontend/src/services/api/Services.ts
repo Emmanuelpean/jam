@@ -1,5 +1,5 @@
 import { JobRatingData, JobRatingServiceLogData, JobScrapingServiceLogData, ScrapedJobData } from "../schemas/Services";
-import { api, ApiResponsePromise } from "./Base";
+import { baseApi, ApiResponsePromise, serviceApi } from "./Base";
 import { createCrudApi, CrudApi } from "./Crud";
 
 // Scraped Job API
@@ -10,9 +10,9 @@ export interface ScrapedJobCrudApi extends CrudApi<ScrapedJobData> {
 
 export const scrapedJobApi: ScrapedJobCrudApi = {
 	...createCrudApi("scraped-jobs"),
-	getCount: (token: string): ApiResponsePromise<{ count: number }> => api.get("scraped-jobs/count", token),
+	getCount: (token: string): ApiResponsePromise<{ count: number }> => baseApi.get("scraped-jobs/count", token),
 	getByFilterId: (filterId: number, token: string): ApiResponsePromise<ScrapedJobData[]> =>
-		api.get(`scraped-jobs/filtered-by-filter/${filterId}`, token),
+		baseApi.get(`scraped-jobs/filtered-by-filter/${filterId}`, token),
 };
 
 // Job Rating APIs
@@ -26,13 +26,13 @@ export interface ServiceLogCrudApi<T = any> extends CrudApi {
 export const jobScraperServiceLogApi: ServiceLogCrudApi<JobScrapingServiceLogData> = {
 	...createCrudApi("job-scraping-service-logs"),
 	getLatest: (token: string): ApiResponsePromise<JobScrapingServiceLogData> =>
-		api.get("job-scraping-service-logs/latest", token),
+		baseApi.get("job-scraping-service-logs/latest", token),
 };
 
 export const jobRatingServiceLogApi: ServiceLogCrudApi<JobRatingServiceLogData> = {
 	...createCrudApi("job-rating-service-logs"),
 	getLatest: (token: string): ApiResponsePromise<JobRatingServiceLogData> =>
-		api.get("job-rating-service-logs/latest", token),
+		baseApi.get("job-rating-service-logs/latest", token),
 };
 
 // Service Runner APIs
@@ -83,15 +83,15 @@ interface JobRatingServiceRunnerApi extends BaseServiceApi {
 function createServiceApi(servicePath: string): BaseServiceApi {
 	return {
 		getStatus: async (token: string): ApiResponsePromise<ServiceStatus> => {
-			return api.get(`${servicePath}/status`, token);
+			return serviceApi.get(`${servicePath}/status`, token);
 		},
 
 		stop: async (token: string): ApiResponsePromise<ServiceRunnerResponse> => {
-			return api.post(`${servicePath}/stop`, {}, token);
+			return serviceApi.post(`${servicePath}/stop`, {}, token);
 		},
 
 		getLogs: async (lines: number, token: string): ApiResponsePromise<LogResponse> => {
-			return api.get(`${servicePath}/logs?lines=${lines}`, token);
+			return serviceApi.get(`${servicePath}/logs?lines=${lines}`, token);
 		},
 	};
 }
@@ -105,7 +105,7 @@ export const jobScraperServiceApi: JobScraperServiceRunnerApi = {
 		token: string,
 	): ApiResponsePromise<ServiceRunnerResponse> => {
 		const data: StartJobScraperServiceRunnerRequest = { period_hours: periodHours, timedelta_days: timedeltaDays };
-		return api.post("job-scraper-service/start", data, token);
+		return serviceApi.post("job-scraper-service/start", data, token);
 	},
 };
 
@@ -113,6 +113,6 @@ export const jobRatingServiceRunnerApi: JobRatingServiceRunnerApi = {
 	...createServiceApi("job-rating-service-runner"),
 	start: async (periodHours: number, token: string): ApiResponsePromise<ServiceRunnerResponse> => {
 		const data: StartServiceRunnerRequest = { period_hours: periodHours };
-		return api.post("job-rating-service-runner/start", data, token);
+		return serviceApi.post("job-rating-service-runner/start", data, token);
 	},
 };
