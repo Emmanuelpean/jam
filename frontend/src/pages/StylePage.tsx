@@ -22,6 +22,7 @@ import {StarRating} from "../components/rendering/widgets/StarRating";
 import {SelectInput} from "../components/rendering/widgets/SelectWidget";
 import {Textarea} from "../components/rendering/widgets/TextArea";
 import {Toggle} from "../components/rendering/widgets/Toggle";
+import {UrlInput} from "../components/rendering/widgets/UrlInput";
 
 /* -------------------------------- THEME TOGGLE -------------------------------- */
 
@@ -137,6 +138,13 @@ export const StyleGuidePage: React.FC = () => {
 		label: "Text Area",
 		type: "textarea",
 		placeholder: "Enter multiple lines of text here...",
+	};
+
+	const urlField: ModalFormField = {
+		name: "url",
+		label: "URL Input",
+		type: "url",
+		placeholder: "Enter a valid URL",
 	};
 
 	return (
@@ -256,6 +264,10 @@ export const StyleGuidePage: React.FC = () => {
 
 						<Col md={12}>
 							<Textarea field={textareaField} value={formData.textarea} handleChange={handleChange} />
+						</Col>
+
+						<Col md={12}>
+							<UrlInput field={urlField} value={"vsdv"} handleChange={handleChange}></UrlInput>
 						</Col>
 					</Row>
 				</Form>

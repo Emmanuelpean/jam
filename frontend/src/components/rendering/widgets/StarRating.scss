@@ -23,9 +23,8 @@
 }
 
 .star-rating-star.bi-star-fill {
-	background: var(--primary-mid);
+	background: var(--primary-gradient);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
-	filter: drop-shadow(0 2px 4px var(--jam-glow));
 }
