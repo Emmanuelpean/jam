@@ -1,15 +1,15 @@
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { Button, ButtonGroup, Dropdown, Modal } from "react-bootstrap";
-import { useAlert } from "../../../contexts/AlertContext";
-import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
-import { GroupedSelectOption, useFormOptions } from "../../rendering/form/FormOptions";
-import { useAuth } from "../../../contexts/AuthContext";
-import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
-import { ModalFormField } from "../../rendering/form/FormRenders";
-import { areDifferent } from "../../../utils/Utils";
+import { useAlert } from "../../contexts/AlertContext";
+import { DataContextValue, useDataContext } from "../../contexts/DataContext";
+import { GroupedSelectOption, useFormOptions } from "../rendering/form/FormOptions";
+import { useAuth } from "../../contexts/AuthContext";
+import { Errors, FormField, SyntheticEvent } from "../rendering/widgets/WidgetRenders";
+import { ModalFormField } from "../rendering/form/FormRenders";
+import { areDifferent } from "../../utils/Utils";
 import "./FollowUpModal.css";
-import { useGlobalToast } from "../../../hooks/useNotificationToast";
-import { CompanyData, JobData, PersonData } from "../../../services/schemas/DataTables";
+import { useGlobalToast } from "../../hooks/useNotificationToast";
+import { CompanyData, JobData, PersonData } from "../../services/schemas/DataTables";
 
 export interface FollowUpModalHandle {
 	show: (job: JobData, person?: PersonData) => void;
