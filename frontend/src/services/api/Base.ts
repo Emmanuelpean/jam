@@ -62,7 +62,11 @@ const handleResponse = async (response: Response, isBlob: boolean = false): ApiR
 };
 
 export class ApiService {
-	constructor(private readonly baseUrl: string) {}
+	private readonly baseUrl: string;
+
+	constructor(baseUrl: string) {
+		this.baseUrl = baseUrl;
+	}
 
 	async get(endpoint: string, token: string | null = null, options: RequestOptions = {}): ApiResponsePromise {
 		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {

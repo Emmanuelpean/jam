@@ -31,7 +31,6 @@ import SpeculativeApplicationsPage from "./pages/SpeculativeApplicationsPage";
 import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
-import ScrapedJobsTable from "./components/tables/ScrapedJobTable";
 import { ScrapedJobsPage } from "./pages/ScrapedJobsPage";
 
 export function useSwetrixPageViews() {
@@ -47,11 +46,6 @@ export const ToastContext = createContext<UseToastReturn | undefined>(undefined)
 
 interface AppLayoutProps {
 	children: ReactNode;
-}
-
-function composeProviders(...providers: React.ComponentType<{ children: ReactNode }>[]) {
-	return ({ children }: { children: ReactNode }): ReactNode =>
-		providers.reduceRight((acc: ReactNode, Provider) => <Provider>{acc}</Provider>, children);
 }
 
 function AppLayout({ children }: AppLayoutProps): JSX.Element {
@@ -178,31 +172,32 @@ function AppRoutes(): JSX.Element {
 function App(): JSX.Element {
 	const toastMethods: UseToastReturn = useToast();
 
-	// Compose all providers in a clean, readable way
-	const AllProviders = React.useMemo(() => composeProviders(AuthProvider, LoadingProvider, DataProviderWrapper), []);
-
 	return (
 		<BrowserRouter basename="/jam">
-			<AllProviders>
-				<ToastContext.Provider value={toastMethods}>
-					<AlertProvider>
-						<ProgressOverlayProvider>
-							<ThemeProvider>
-								<ContextMenuProvider>
-									<AppLayout>
-										<AppRoutes />
-									</AppLayout>
-								</ContextMenuProvider>
-							</ThemeProvider>
-							<ToastStack
-								toasts={toastMethods.toasts}
-								onClose={toastMethods.hideToast}
-								position="top-end"
-							/>
-						</ProgressOverlayProvider>
-					</AlertProvider>
-				</ToastContext.Provider>
-			</AllProviders>
+			<AuthProvider>
+				<LoadingProvider>
+					<DataProviderWrapper>
+						<ToastContext.Provider value={toastMethods}>
+							<AlertProvider>
+								<ProgressOverlayProvider>
+									<ThemeProvider>
+										<ContextMenuProvider>
+											<AppLayout>
+												<AppRoutes />
+											</AppLayout>
+										</ContextMenuProvider>
+									</ThemeProvider>
+									<ToastStack
+										toasts={toastMethods.toasts}
+										onClose={toastMethods.hideToast}
+										position="top-end"
+									/>
+								</ProgressOverlayProvider>
+							</AlertProvider>
+						</ToastContext.Provider>
+					</DataProviderWrapper>
+				</LoadingProvider>
+			</AuthProvider>
 		</BrowserRouter>
 	);
 }
