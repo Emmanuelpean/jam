@@ -1,9 +1,14 @@
+@use "./variables" as *;
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
 
 * {
 	margin: 0;
 	padding: 0;
+}
+
+body {
+	--danger-color: #e74c3c;
 }
 
 body[data-mode="light"] {
@@ -94,13 +99,13 @@ html {
 }
 
 .text-danger {
-	color: #e74c3c !important;
+	color: var(--danger-color);
 	font-weight: bold;
 }
 
 .invalid-feedback {
 	display: block;
-	color: #e74c3c;
+	color: var(--danger-color);
 	font-size: 0.875rem;
 	margin-top: 0.5rem;
 	font-weight: 500;
@@ -305,24 +310,13 @@ textarea.form-control {
 	font-weight: 600;
 	font-size: 1rem;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 	border: none;
 }
 
+// Primary button (e.g. submit)
 .btn-primary {
 	background: var(--primary-gradient);
-	text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
-}
-
-.btn-outline-primary {
-	border: 2px solid var(--primary-mid) !important;
-	color: var(--primary-mid);
-	background: transparent;
-}
-
-.btn-outline-primary:hover {
-	border: 2px solid !important;
-	background: var(--primary-gradient);
-	color: white;
 }
 
 .btn-primary:hover {
@@ -330,6 +324,21 @@ textarea.form-control {
 	transform: translateY(-2px);
 }
 
+.btn-outline-primary {
+	border: 2px solid var(--primary-mid);
+	color: var(--primary-mid);
+	background: transparent;
+	background-clip: padding-box;
+	transition: all 0.3s;
+}
+
+.btn-outline-primary:hover {
+	border-color: transparent;
+	background: var(--primary-gradient) border-box;
+	color: white;
+}
+
+// Cancel button
 .btn-secondary {
 	background: linear-gradient(135deg, #8b9dc3 0%, #6b7280 100%);
 	color: white;
@@ -340,6 +349,7 @@ textarea.form-control {
 	transform: translateY(-2px);
 }
 
+// Danger button (e.g. delete)
 .btn-danger {
 	background: linear-gradient(135deg, #fc8181 0%, #f56565 25%, #e53e3e 50%, #c53030 75%, #9b2c2c 100%);
 	color: white;
@@ -360,42 +370,50 @@ textarea.form-control {
 	font-size: 0.75rem;
 	letter-spacing: 0.025em;
 	text-transform: uppercase;
-	box-shadow: 0 2px 6px rgb(0 0 0 / 15%);
+	transition: all 0.2s ease;
+}
+
+.badge:hover {
+	transform: translateY(-1px);
 }
 
 .badge.bg-primary {
-	background: var(--primary-gradient);
-	color: white;
-	text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+	background: var(--badge-primary-bg) !important;
+	color: var(--badge-primary-color) !important;
 }
 
-.badge.bg-warning {
-	background: linear-gradient(135deg, #f6ad55 0%, #ed8936 50%, #dd6b20 100%);
-	color: white;
-	text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+.badge.bg-info {
+	background: var(--badge-info-bg) !important;
+	color: var(--badge-info-color) !important;
 }
 
 .badge.bg-success {
-	background: linear-gradient(135deg, #48bb78 0%, #38a169 50%, #2f855a 100%);
-	color: white;
-	text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+	background: var(--badge-success-bg) !important;
+	color: var(--badge-success-color) !important;
+}
+
+.badge.bg-warning {
+	background: var(--badge-warning-bg) !important;
+	color: var(--badge-warning-color) !important;
+}
+
+.badge.bg-secondary {
+	background: var(--badge-secondary-bg) !important;
+	color: var(--badge-secondary-color) !important;
+}
+
+.badge.bg-dark {
+	background: var(--badge-dark-bg) !important;
+	color: var(--badge-dark-color) !important;
 }
 
 .badge.bg-danger {
 	background: linear-gradient(135deg, #f56565 0%, #e53e3e 50%, #c53030 100%);
 	color: white;
-	text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
-}
-
-.badge.bg-secondary {
-	background: linear-gradient(135deg, #8b9dc3 0%, #6b7280 50%, #4b5563 100%);
-	color: white;
-	text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
 }
 
 .clickable-badge {
 	cursor: pointer !important;
-	transition: opacity 0.2s ease;
 }
 
 .clickable-badge:hover {
@@ -408,7 +426,8 @@ textarea.form-control {
 	row-gap: 5px;
 }
 
-@media (width <= 1200px) {
+// Make badges truncate on smaller screens
+@media (width <= $tablet-breakpoint) {
 	.badge {
 		max-width: 200px;
 		display: inline-block;
@@ -418,26 +437,32 @@ textarea.form-control {
 	}
 }
 
+@media (width <= $mobile-breakpoint) {
+	.badge {
+		max-width: 120px;
+	}
+}
+
 /* ---------------------------------------------------- CHECKBOX ---------------------------------------------------- */
 
 .form-check-input {
-	width: 1.15rem;
-	height: 1.15rem;
+	width: 1.2rem;
+	height: 1.2rem;
 	margin-left: 0 !important;
 	margin-right: 10px !important;
 	padding: 2px !important;
 	outline-offset: 2px;
+	background: var(--bg-tertiary);
+	border: 2px solid var(--bs-border-color) !important;
 }
 
 .form-check-input:checked {
 	background: var(--primary-gradient);
-	border-color: var(--primary-mid);
 }
 
 .form-check-input:focus {
 	outline: 2px solid var(--primary-mid);
-	outline-offset: 2px;
-	box-shadow: 0 0 0 0.25rem var(--jam-glow);
+	box-shadow: 0 0 0 0.25rem var(--jam-glow);  // TODO
 }
 
 .form-check {
@@ -445,21 +470,37 @@ textarea.form-control {
 	padding-right: 0.5rem;
 }
 
-/* --------------------------------------------------- BACKGROUNDS -------------------------------------------------- */
+/* ----------------------------------------------------- TOGGLE ----------------------------------------------------- */
 
-.bg-light {
-	background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%) !important;
-	border: 1px solid #dee2e6;
-	border-radius: 12px;
-	padding: 1.5rem;
-	box-shadow: inset 0 2px 4px rgb(0 0 0 / 5%);
+.form-switch .form-check-input {
+	width: 2.5rem;
+	height: 1.25rem;
+	background-color: var(--bg-tertiary);
+	position: relative;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+	background-image: none !important;
 }
 
-.bg-light h6 {
-	color: #34495e;
-	font-weight: 600;
-	margin-bottom: 1.25rem;
-	font-size: 1.1rem;
+.form-switch .form-check-input::before {
+	content: "";
+	position: absolute;
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+	background-color: white;
+	top: 50%;
+	left: 3px;
+	transform: translateY(-50%);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+	background-color: var(--primary-mid);
+}
+
+.form-switch .form-check-input:checked::before {
+	left: calc(100% - 17px);
 }
 
 /* ----------------------------------------------------- SPINNER ---------------------------------------------------- */
@@ -576,40 +617,4 @@ textarea.form-control {
 .progress-text {
 	color: var(--text-primary);
 	font-size: 0;
-}
-
-/* ----------------------------------------------------- TOGGLE ----------------------------------------------------- */
-
-.form-switch .form-check-input {
-	width: 2.5rem;
-	height: 1.25rem;
-	background-color: #cbd5e0;
-	border: none;
-	position: relative;
-	cursor: pointer;
-	transition: background-color 0.3s ease;
-	background-image: none !important;
-}
-
-.form-switch .form-check-input::before {
-	content: "";
-	position: absolute;
-	width: 1rem;
-	height: 1rem;
-	border-radius: 50%;
-	background-color: white;
-	top: 50%;
-	left: 0.125rem;
-	transform: translateY(-50%);
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-	box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
-}
-
-.form-switch .form-check-input:checked {
-	background-color: var(--primary-mid);
-	border: none;
-}
-
-.form-switch .form-check-input:checked::before {
-	left: calc(100% - 1.125rem);
 }

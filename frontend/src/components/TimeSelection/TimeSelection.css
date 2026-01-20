@@ -61,28 +61,3 @@
 .custom-radio:hover .radio-label {
 	color: var(--primary-mid);
 }
-
-/* Dark mode specific datetime-local input styling */
-body[data-mode="dark"] input[type="datetime-local"] {
-	color-scheme: dark;
-}
-
-body[data-mode="light"] input[type="datetime-local"] {
-	color-scheme: light;
-}
-
-/* Ensure datetime inputs have proper dark mode contrast */
-input[type="datetime-local"] {
-	background-color: var(--bs-form-control-bg);
-	color: var(--bs-form-control-color);
-	border-color: var(--bs-form-control-border-color);
-}
-
-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-	filter: var(--calendar-icon-filter, none);
-	cursor: pointer;
-}
-
-body[data-mode="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-	filter: invert(1);
-}

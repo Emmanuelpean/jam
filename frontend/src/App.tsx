@@ -32,6 +32,7 @@ import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
 import { ScrapedJobsPage } from "./pages/ScrapedJobsPage";
+import { StyleGuidePage } from "./pages/StylePage";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -130,6 +131,7 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/locations", element: <LocationsPage />, protected: true },
 	{ path: "/companies", element: <CompaniesPage />, protected: true },
 	{ path: "/jobs", element: <JobsPage />, protected: true },
+	{ path: "/style-guide", element: <StyleGuidePage />, protected: true, adminOnly: true },
 	{
 		path: "/speculative-applications",
 		element: <SpeculativeApplicationsPage />,
