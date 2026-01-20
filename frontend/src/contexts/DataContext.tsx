@@ -92,7 +92,7 @@ export const entityTypeToGenericName = (entityType: EntityType): string => {
 
 export const entityTypeToName = (
 	entityType: EntityType,
-	dataContext: DataContextValue,
+	dataContext: DataContextValue
 ): ((data: JamData) => string) => {
 	// noinspection JSUnusedGlobalSymbols
 	const nameMap: Record<EntityType, (data: JamData) => string> = {
@@ -104,7 +104,7 @@ export const entityTypeToName = (
 		speculativeApplication: (data: JamData): string => {
 			const company: CompanyData = findItemById(
 				dataContext.companies,
-				(data as SpeculativeApplicationData).company_id,
+				(data as SpeculativeApplicationData).company_id
 			)!;
 			return "Speculative Application for " + company.name;
 		},
@@ -120,7 +120,8 @@ export const entityTypeToName = (
 		setting: (data: JamData): string => (data as SettingData).name,
 		user: (data: JamData): string => (data as UserData).email,
 		scrapedJob: (data: JamData): string => (data as ScrapedJobData)?.title || "Scraped Job",
-		scrapingFilter: (data: JamData): string => getScrapingFilterName(data as ScrapingFilterData),
+		scrapingFilter: (data: JamData): string =>
+			getScrapingFilterName(data as ScrapingFilterData),
 	};
 	return nameMap[entityType];
 };
@@ -171,24 +172,35 @@ export interface DataContextValue {
 
 	// Generic update functions
 	addEntity: <T extends EntityType>(type: T, data: any) => ApiResponsePromise<JamData>;
-	updateEntity: <T extends EntityType>(type: T, id: number, data: Partial<JamData>) => ApiResponsePromise<JamData>;
+	updateEntity: <T extends EntityType>(
+		type: T,
+		id: number,
+		data: Partial<JamData>
+	) => ApiResponsePromise<JamData>;
 	deleteEntity: <T extends EntityType>(type: T, id: number) => Promise<void>;
 	getEntityData: <T extends EntityType>(type: T) => JamData[];
 }
 
 const DataContext = createContext<DataContextValue | undefined>(undefined);
 
-export const DataProvider: React.FC<{ token: string; children: React.ReactNode }> = ({ token, children }) => {
+export const DataProvider: React.FC<{ token: string; children: React.ReactNode }> = ({
+	token,
+	children,
+}) => {
 	const { currentUser } = useAuth();
 	const [rawJobs, setRawJobs] = useState<JobData[]>([]);
 	const [companies, setCompanies] = useState<CompanyData[]>([]);
 	const [persons, setPersons] = useState<PersonData[]>([]);
 	const [rawInterviews, setRawInterviews] = useState<InterviewData[]>([]);
-	const [rawJobApplicationUpdates, setRawJobApplicationUpdates] = useState<JobApplicationUpdateData[]>([]);
+	const [rawJobApplicationUpdates, setRawJobApplicationUpdates] = useState<
+		JobApplicationUpdateData[]
+	>([]);
 	const [aggregators, setAggregators] = useState<AggregatorData[]>([]);
 	const [keywords, setKeywords] = useState<KeywordData[]>([]);
 	const [locations, setLocations] = useState<LocationData[]>([]);
-	const [speculativeApplications, setSpeculativeApplications] = useState<SpeculativeApplicationData[]>([]);
+	const [speculativeApplications, setSpeculativeApplications] = useState<
+		SpeculativeApplicationData[]
+	>([]);
 	const [settings, setSettings] = useState<SettingData[]>([]);
 	const [scrapingFilters, setScrapingFilters] = useState<ScrapingFilterData[]>([]);
 	const [users, setUsers] = useState<UserData[]>([]);
@@ -199,17 +211,23 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	const { showLoading, hideLoading, updateProgress } = useLoading();
 	const [error, setError] = useState<ApiError | null>(null);
 
-	const interviews: EnrichedInterviewData[] = useMemo<EnrichedInterviewData[]>((): EnrichedInterviewData[] => {
+	const interviews: EnrichedInterviewData[] = useMemo<
+		EnrichedInterviewData[]
+	>((): EnrichedInterviewData[] => {
 		// Enrich interviews with their sequence number per job
 		return rawInterviews.map((interview: InterviewData): EnrichedInterviewData => {
-			const job: JobData | undefined = rawJobs.find((j: JobData): boolean => j.id === interview.job_id)!;
+			const job: JobData | undefined = rawJobs.find(
+				(j: JobData): boolean => j.id === interview.job_id
+			)!;
 
 			let jobInterviews: InterviewData[] = rawInterviews.filter(
-				(i: InterviewData): boolean => i.job_id === job.id,
+				(i: InterviewData): boolean => i.job_id === job.id
 			);
 			jobInterviews = sortByKey(jobInterviews, "date", true);
 
-			const index: number = jobInterviews.findIndex((i: InterviewData): boolean => i.id === interview.id);
+			const index: number = jobInterviews.findIndex(
+				(i: InterviewData): boolean => i.id === interview.id
+			);
 
 			return {
 				...interview,
@@ -223,21 +241,27 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 	>((): EnrichedJobApplicationUpdateData[] => {
 		// Enrich updates with their sequence number per job
 
-		return rawJobApplicationUpdates.map((update: JobApplicationUpdateData): EnrichedJobApplicationUpdateData => {
-			const job: JobData | undefined = rawJobs.find((j: JobData): boolean => j.id === update.job_id)!;
+		return rawJobApplicationUpdates.map(
+			(update: JobApplicationUpdateData): EnrichedJobApplicationUpdateData => {
+				const job: JobData | undefined = rawJobs.find(
+					(j: JobData): boolean => j.id === update.job_id
+				)!;
 
-			let jobUpdates: JobApplicationUpdateData[] = rawJobApplicationUpdates.filter(
-				(u: JobApplicationUpdateData): boolean => u.job_id === job.id,
-			);
-			jobUpdates = sortByKey(jobUpdates, "date", true);
+				let jobUpdates: JobApplicationUpdateData[] = rawJobApplicationUpdates.filter(
+					(u: JobApplicationUpdateData): boolean => u.job_id === job.id
+				);
+				jobUpdates = sortByKey(jobUpdates, "date", true);
 
-			const index: number = jobUpdates.findIndex((u: JobApplicationUpdateData): boolean => u.id === update.id);
+				const index: number = jobUpdates.findIndex(
+					(u: JobApplicationUpdateData): boolean => u.id === update.id
+				);
 
-			return {
-				...update,
-				number: index + 1,
-			};
-		});
+				return {
+					...update,
+					number: index + 1,
+				};
+			}
+		);
 	}, [rawJobApplicationUpdates]);
 
 	const jobs: EnrichedJobData[] = useMemo<EnrichedJobData[]>((): EnrichedJobData[] => {
@@ -245,10 +269,10 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 		return rawJobs.map((job: JobData): EnrichedJobData => {
 			const jobInterviews: InterviewData[] = rawInterviews.filter(
-				(i: InterviewData): boolean => i.job_id === job.id,
+				(i: InterviewData): boolean => i.job_id === job.id
 			);
 			const jobUpdates: JobApplicationUpdateData[] = rawJobApplicationUpdates.filter(
-				(u: JobApplicationUpdateData): boolean => u.job_id === job.id,
+				(u: JobApplicationUpdateData): boolean => u.job_id === job.id
 			);
 
 			// Calculate last_update_date
@@ -256,8 +280,11 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			if (job.application_date) {
 				const dates: Date[] = [new Date(job.application_date)];
 				jobInterviews.forEach((i: InterviewData) => i.date && dates.push(new Date(i.date)));
-				jobUpdates.forEach((u: JobApplicationUpdateData) => u.date && dates.push(new Date(u.date)));
-				lastUpdateDate = dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
+				jobUpdates.forEach(
+					(u: JobApplicationUpdateData) => u.date && dates.push(new Date(u.date))
+				);
+				lastUpdateDate =
+					dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
 			}
 
 			// Calculate last_update_type
@@ -268,7 +295,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 				if (jobInterviews.length > 0) {
 					const latestInterview = jobInterviews.reduce((latest, current) =>
-						new Date(current.date) > new Date(latest.date) ? current : latest,
+						new Date(current.date) > new Date(latest.date) ? current : latest
 					);
 					if (new Date(latestInterview.date) > mostRecentDate) {
 						mostRecentDate = new Date(latestInterview.date);
@@ -278,7 +305,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 
 				if (jobUpdates.length > 0) {
 					const latestUpdate = jobUpdates.reduce((latest, current) =>
-						new Date(current.date) > new Date(latest.date) ? current : latest,
+						new Date(current.date) > new Date(latest.date) ? current : latest
 					);
 					if (new Date(latestUpdate.date) > mostRecentDate) {
 						lastUpdateType = `Update (${jobUpdates.length})`;
@@ -304,7 +331,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			let jobName: string = job.title;
 			if (job.company_id) {
 				const company: CompanyData | undefined = companies.find(
-					(c: CompanyData): boolean => c.id === job.company_id,
+					(c: CompanyData): boolean => c.id === job.company_id
 				);
 				if (company) {
 					jobName = `${job.title} (${company.name})`;
@@ -332,29 +359,53 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				promise: speculativeApplicationsApi.getAll(token),
 				label: "Speculative Applications",
 			} as TypedFetchOperation<SpeculativeApplicationData[]>,
-			{ promise: companiesApi.getAll(token), label: "Companies" } as TypedFetchOperation<CompanyData[]>,
-			{ promise: personsApi.getAll(token), label: "Persons" } as TypedFetchOperation<PersonData[]>,
-			{ promise: interviewsApi.getAll(token), label: "Interviews" } as TypedFetchOperation<InterviewData[]>,
+			{ promise: companiesApi.getAll(token), label: "Companies" } as TypedFetchOperation<
+				CompanyData[]
+			>,
+			{ promise: personsApi.getAll(token), label: "Persons" } as TypedFetchOperation<
+				PersonData[]
+			>,
+			{ promise: interviewsApi.getAll(token), label: "Interviews" } as TypedFetchOperation<
+				InterviewData[]
+			>,
 			{
 				promise: jobApplicationUpdatesApi.getAll(token),
 				label: "Job Application Updates",
 			} as TypedFetchOperation<JobApplicationUpdateData[]>,
-			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" } as TypedFetchOperation<AggregatorData[]>,
-			{ promise: keywordsApi.getAll(token), label: "Keywords" } as TypedFetchOperation<KeywordData[]>,
-			{ promise: locationsApi.getAll(token), label: "Locations" } as TypedFetchOperation<LocationData[]>,
-			{ promise: scrapingFilterApi.getAll(token), label: "Scraping Filters" } as TypedFetchOperation<
-				ScrapingFilterData[]
+			{ promise: aggregatorsApi.getAll(token), label: "Aggregators" } as TypedFetchOperation<
+				AggregatorData[]
 			>,
-			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Currency[]>,
-			{ promise: countriesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<Country[]>,
-			{ promise: configApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<any>,
+			{ promise: keywordsApi.getAll(token), label: "Keywords" } as TypedFetchOperation<
+				KeywordData[]
+			>,
+			{ promise: locationsApi.getAll(token), label: "Locations" } as TypedFetchOperation<
+				LocationData[]
+			>,
+			{
+				promise: scrapingFilterApi.getAll(token),
+				label: "Scraping Filters",
+			} as TypedFetchOperation<ScrapingFilterData[]>,
+			{ promise: currenciesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<
+				Currency[]
+			>,
+			{ promise: countriesApi.getAll(token), label: "Miscellaneous" } as TypedFetchOperation<
+				Country[]
+			>,
+			{
+				promise: configApi.getAll(token),
+				label: "Miscellaneous",
+			} as TypedFetchOperation<any>,
 		];
 
 		// Add admin-only calls if user is admin
 		if (currentUser?.is_admin) {
 			fetchOperations.push(
-				{ promise: settingsApi.getAll(token), label: "Settings" } as TypedFetchOperation<SettingData[]>,
-				{ promise: userApi.getAll(token), label: "Users" } as TypedFetchOperation<UserData[]>,
+				{ promise: settingsApi.getAll(token), label: "Settings" } as TypedFetchOperation<
+					SettingData[]
+				>,
+				{ promise: userApi.getAll(token), label: "Users" } as TypedFetchOperation<
+					UserData[]
+				>
 			);
 		}
 
@@ -369,14 +420,16 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			const trackedPromises = fetchOperations.map(({ promise, label }) =>
 				promise.then(
 					(
-						result: ApiResponse<(JamData | Country | Currency)[]>,
+						result: ApiResponse<(JamData | Country | Currency)[]>
 					): ApiResponse<(JamData | Country | Currency)[]> => {
 						completedOperations++;
-						const progressPercentage: number = Math.round((completedOperations / totalOperations) * 100);
+						const progressPercentage: number = Math.round(
+							(completedOperations / totalOperations) * 100
+						);
 						updateProgress(progressPercentage, `Loading ${label}...`);
 						return result;
-					},
-				),
+					}
+				)
 			);
 
 			const results = await Promise.all(trackedPromises);
@@ -456,7 +509,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				throw error;
 			}
 		},
-		[token],
+		[token]
 	);
 
 	const updateEntity = useCallback(
@@ -465,14 +518,16 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				const api: CrudApi<JamData> = entityTypeToApi(entityType);
 				const apiResult: ApiResponse<JamData> = await api.update(id, updatedData, token);
 				const setter = entityTypeToSetter(entityType);
-				setter((prev: any[]): any[] => prev.map((item: any) => (item.id === id ? apiResult.data : item)));
+				setter((prev: any[]): any[] =>
+					prev.map((item: any) => (item.id === id ? apiResult.data : item))
+				);
 				return apiResult;
 			} catch (error) {
 				console.error(`Failed to update ${entityType}:`, error);
 				throw error;
 			}
 		},
-		[token],
+		[token]
 	);
 
 	const deleteEntity = useCallback(
@@ -484,10 +539,13 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				setter((prev: any[]): any[] => prev.filter((item: any): boolean => item.id !== id));
 				if (entityType === "job") {
 					setRawInterviews((prev: InterviewData[]): InterviewData[] =>
-						prev.filter((interview: InterviewData): boolean => interview.job_id !== id),
+						prev.filter((interview: InterviewData): boolean => interview.job_id !== id)
 					);
-					setRawJobApplicationUpdates((prev: JobApplicationUpdateData[]): JobApplicationUpdateData[] =>
-						prev.filter((update: JobApplicationUpdateData): boolean => update.job_id !== id),
+					setRawJobApplicationUpdates(
+						(prev: JobApplicationUpdateData[]): JobApplicationUpdateData[] =>
+							prev.filter(
+								(update: JobApplicationUpdateData): boolean => update.job_id !== id
+							)
 					);
 				}
 			} catch (error) {
@@ -495,7 +553,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 				throw error;
 			}
 		},
-		[token],
+		[token]
 	);
 
 	const getEntityData = useCallback(
@@ -531,7 +589,7 @@ export const DataProvider: React.FC<{ token: string; children: React.ReactNode }
 			_scrapedJobs,
 			scrapingFilters,
 			speculativeApplications,
-		],
+		]
 	);
 
 	useEffect(() => {

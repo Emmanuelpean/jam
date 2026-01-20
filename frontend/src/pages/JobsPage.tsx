@@ -1,6 +1,6 @@
 import React, { JSX } from "react";
 import { DataTable } from "../components/tables/DataTable";
-import { JobModal } from "../components/modals/JobModal";
+import { JobModal } from "../components/DataModal/JobModal";
 import { TableColumn, tableColumns } from "../components/rendering/view/TableColumns";
 
 const JobsPage = (): JSX.Element => {

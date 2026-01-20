@@ -1,86 +1,88 @@
 .time-selection-container {
-    padding: 0 0 1rem;
+	padding: 0 0 1rem;
 }
 
 .radio-group {
-    display: flex;
-    gap: 1rem;
-    flex-shrink: 0;
+	display: flex;
+	gap: 1rem;
+	flex-shrink: 0;
 }
 
 .custom-radio {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    user-select: none;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	cursor: pointer;
+	padding: 0.5rem 1rem;
+	border-radius: 8px;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	user-select: none;
 }
 
 .custom-radio:hover {
-    background: var(--bs-tertiary-bg);
+	background: var(--bs-tertiary-bg);
 }
 
 /* Hide default radio button */
 .custom-radio input[type="radio"] {
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--bs-border-color);
-    background-color: var(--bg-tertiary);
-    border-radius: 50%;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    flex-shrink: 0;
+	appearance: none;
+	width: 20px;
+	height: 20px;
+	border: 2px solid var(--bs-border-color);
+	background-color: var(--bg-tertiary);
+	border-radius: 50%;
+	position: relative;
+	cursor: pointer;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	flex-shrink: 0;
 }
 
 .custom-radio input[type="radio"]:hover {
-    border-color: var(--primary-mid);
+	border-color: var(--primary-mid);
 }
 
 /* Radio button checked state - gradient circle */
 .custom-radio input[type="radio"]:checked {
-    border-color: var(--primary-end);
-    background: var(--primary-gradient);
-    box-shadow: 0 0 0 4px var(--jam-glow), 0 2px 8px rgb(0 0 0 / 20%);
+	border-color: var(--primary-end);
+	background: var(--primary-gradient);
+	box-shadow:
+		0 0 0 4px var(--jam-glow),
+		0 2px 8px rgb(0 0 0 / 20%);
 }
 
 /* Radio label styling */
 .radio-label {
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--text-primary);
-    transition: color 0.3s ease;
+	font-weight: 600;
+	font-size: 1rem;
+	color: var(--text-primary);
+	transition: color 0.3s ease;
 }
 
 .custom-radio:hover .radio-label {
-    color: var(--primary-mid);
+	color: var(--primary-mid);
 }
 
 /* Dark mode specific datetime-local input styling */
 body[data-mode="dark"] input[type="datetime-local"] {
-    color-scheme: dark;
+	color-scheme: dark;
 }
 
 body[data-mode="light"] input[type="datetime-local"] {
-    color-scheme: light;
+	color-scheme: light;
 }
 
 /* Ensure datetime inputs have proper dark mode contrast */
 input[type="datetime-local"] {
-    background-color: var(--bs-form-control-bg);
-    color: var(--bs-form-control-color);
-    border-color: var(--bs-form-control-border-color);
+	background-color: var(--bs-form-control-bg);
+	color: var(--bs-form-control-color);
+	border-color: var(--bs-form-control-border-color);
 }
 
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-    filter: var(--calendar-icon-filter, none);
-    cursor: pointer;
+	filter: var(--calendar-icon-filter, none);
+	cursor: pointer;
 }
 
 body[data-mode="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
+	filter: invert(1);
 }

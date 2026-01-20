@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { getTableIcon } from "../rendering/view/Icons";
 import { ThemeSelector } from "./ThemeSelector";
-import "./Sidebar.css";
+import "./Sidebar.scss";
 import { DEFAULT_THEME } from "../../utils/Theme";
 
 interface NavigationItem {
@@ -24,7 +24,7 @@ interface NavigationSubItem {
 	text: string;
 }
 
-export const Sidebar = () => {
+export const Sidebar = (): JSX.Element => {
 	const location = useLocation();
 	const { logout, currentUser } = useAuth();
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
@@ -65,14 +65,14 @@ export const Sidebar = () => {
 		{ path: "/scraped-jobs", text: "Job Alerts", position: "top" },
 		{ path: "/speculative-applications", text: "Speculative Applications", position: "top" },
 		{ path: "/persons", text: "People", position: "top" },
-		{ path: "/locations", text: "Locations", position: "top" },
 		{ path: "/companies", text: "Companies", position: "top" },
-		{ path: "/aggregators", text: "Job Aggregators", position: "top" },
-		{ path: "/keywords", text: "Tags", position: "top" },
 		{
 			text: "Other",
 			position: "top",
 			submenu: [
+				{ path: "/locations", text: "Locations" },
+				{ path: "/aggregators", text: "Job Aggregators" },
+				{ path: "/keywords", text: "Tags" },
 				{ path: "/interviews", text: "Interviews" },
 				{ path: "/job-application-updates", text: "Job Application Updates" },
 			],
@@ -90,12 +90,18 @@ export const Sidebar = () => {
 				{ path: "/app-settings", text: "Settings" },
 			],
 		},
-		{ icon: "box-arrow-right", text: "Logout", position: "bottom", onClick: logout, className: "logout-item" },
+		{
+			icon: "box-arrow-right",
+			text: "Logout",
+			position: "bottom",
+			onClick: logout,
+			className: "logout-item",
+		},
 	];
 
 	const getFilteredNavigationItems = (position: string): NavigationItem[] => {
 		let filteredItems: NavigationItem[] = navigationItems.filter(
-			(item: NavigationItem): boolean => item.position === position,
+			(item: NavigationItem): boolean => item.position === position
 		);
 		if (currentUser?.is_admin) {
 			return filteredItems;
@@ -126,7 +132,11 @@ export const Sidebar = () => {
 			setShowDropdown(false);
 			// Collapse inactive submenus
 			navigationItems.forEach((item: NavigationItem): void => {
-				if (item.submenu && expandedSubmenu === item.text && !isGroupMenuActive(item.submenu)) {
+				if (
+					item.submenu &&
+					expandedSubmenu === item.text &&
+					!isGroupMenuActive(item.submenu)
+				) {
 					setExpandedSubmenu(null);
 				}
 			});
@@ -197,7 +207,9 @@ export const Sidebar = () => {
 									}}
 								>
 									<span className="nav-icon">
-										<i className={`bi bi-${subItem?.icon || getTableIcon(subItem.text)}`}></i>
+										<i
+											className={`bi bi-${subItem?.icon || getTableIcon(subItem.text)}`}
+										></i>
 									</span>
 									<span className="nav-text-container">
 										<span className="nav-text">{subItem.text}</span>
@@ -230,7 +242,11 @@ export const Sidebar = () => {
 	return (
 		<>
 			{isMobile && !isExpanded && (
-				<button className="sidebar-open-btn" onClick={handleSidebarToggle} aria-label="Toggle sidebar">
+				<button
+					className="sidebar-open-btn"
+					onClick={handleSidebarToggle}
+					aria-label="Toggle sidebar"
+				>
 					<i className="bi bi-list" style={{ fontSize: 24 }}></i>
 				</button>
 			)}
@@ -240,13 +256,20 @@ export const Sidebar = () => {
 				onMouseLeave={!isMobile ? handleMouseLeave : undefined}
 			>
 				{isMobile && isExpanded && (
-					<button className="sidebar-close-btn" onClick={handleSidebarToggle} aria-label="Close sidebar">
+					<button
+						className="sidebar-close-btn"
+						onClick={handleSidebarToggle}
+						aria-label="Close sidebar"
+					>
 						<i className="bi bi-x-lg" style={{ fontSize: 24 }}></i>
 					</button>
 				)}
 				<div className="sidebar-header">
 					<div ref={dropdownRef}>
-						<div onClick={() => setShowDropdown(!showDropdown)} style={{ cursor: "pointer" }}>
+						<div
+							onClick={() => setShowDropdown(!showDropdown)}
+							style={{ cursor: "pointer" }}
+						>
 							<div className="logo-container">
 								<JamLogo
 									style={{
@@ -267,9 +290,13 @@ export const Sidebar = () => {
 					</div>
 				</div>
 
-				<nav className="sidebar-nav sidebar-nav-top">{renderNavigationItems(topNavigationItems)}</nav>
+				<nav className="sidebar-nav sidebar-nav-top">
+					{renderNavigationItems(topNavigationItems)}
+				</nav>
 
-				<nav className="sidebar-nav sidebar-nav-bottom">{renderNavigationItems(bottomNavigationItems)}</nav>
+				<nav className="sidebar-nav sidebar-nav-bottom">
+					{renderNavigationItems(bottomNavigationItems)}
+				</nav>
 			</div>
 		</>
 	);

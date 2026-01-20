@@ -13,7 +13,7 @@ import { getTableIcon } from "../../../components/rendering/view/Icons";
 import { DateRange } from "../../../utils/TimeUtils";
 import { useJobRatingServiceLogs } from "../../../hooks/useJobRatingServiceLog";
 import { useJobRatingErrors } from "../../../hooks/useJobRatingErrors";
-import "../Service.css";
+import "../Service.scss";
 import PageHeader from "../../PageHeader/PageHeader";
 
 export interface FormData {
@@ -33,13 +33,12 @@ const JobRatingDashboard = (): JSX.Element => {
 	});
 	const [loading, setLoading] = useState<boolean>(false);
 	const { showToastSuccess } = useGlobalToast();
-	const { previousServiceLogs, latestServiceLog, fetchLatestServiceLog, serviceLogError } = useJobRatingServiceLogs(
-		serviceStatus?.service_running || false,
-		dateRange,
-	);
+	const { previousServiceLogs, latestServiceLog, fetchLatestServiceLog, serviceLogError } =
+		useJobRatingServiceLogs(serviceStatus?.service_running || false, dateRange);
 	const { scraperErrors: previousRatingErrors, error: previousRatingRequestError } =
 		useJobRatingErrors(previousServiceLogs);
-	const { scraperErrors: lastRatingErrors, error: latestRatingRequestError } = useJobRatingErrors(latestServiceLog);
+	const { scraperErrors: lastRatingErrors, error: latestRatingRequestError } =
+		useJobRatingErrors(latestServiceLog);
 
 	useEffect((): void => {
 		if (serviceStatus && serviceStatus?.service_runner_status === "stopped") {
@@ -49,7 +48,9 @@ const JobRatingDashboard = (): JSX.Element => {
 		}
 	}, [serviceStatus]);
 
-	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
+	const onChangeFormField = (
+		event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent
+	): void => {
 		const target = event.target as HTMLInputElement;
 		const { name, value } = target;
 
@@ -104,12 +105,19 @@ const JobRatingDashboard = (): JSX.Element => {
 		{ key: "status", label: "Service status", value: statusError },
 		{ key: "serviceLogs", label: "Service logs", value: serviceLogError },
 		{ key: "lastRatingError", label: "Last rating error", value: latestRatingRequestError },
-		{ key: "latestRatingError", label: "Latest rating error", value: previousRatingRequestError },
+		{
+			key: "latestRatingError",
+			label: "Latest rating error",
+			value: previousRatingRequestError,
+		},
 	].filter((e) => e.value);
 
 	return (
 		<div>
-			<PageHeader title={"Job Rating Dashboard"} icon={getTableIcon("Job Rating Dashboard")} />
+			<PageHeader
+				title={"Job Rating Dashboard"}
+				icon={getTableIcon("Job Rating Dashboard")}
+			/>
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
 					<div className="d-flex align-items-start">
@@ -119,7 +127,8 @@ const JobRatingDashboard = (): JSX.Element => {
 							<ul className="mb-0">
 								{collectedErrors.map((error) => (
 									<li key={error.key}>
-										<strong>{error.label}:</strong> {formatErrorMessage(error.value)}
+										<strong>{error.label}:</strong>{" "}
+										{formatErrorMessage(error.value)}
 									</li>
 								))}
 							</ul>
@@ -138,9 +147,15 @@ const JobRatingDashboard = (): JSX.Element => {
 				onStop={handleStop}
 			/>
 
-			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
+			<LatestRunProgress
+				latestLog={latestServiceLog}
+				isRunning={serviceStatus?.service_running || false}
+			/>
 
-			<LogViewer api={jobRatingServiceRunnerApi} isServiceRunning={serviceStatus?.service_running || false} />
+			<LogViewer
+				api={jobRatingServiceRunnerApi}
+				isServiceRunning={serviceStatus?.service_running || false}
+			/>
 
 			<RunHistoryChart
 				serviceLogData={previousServiceLogs}

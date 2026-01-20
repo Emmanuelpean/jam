@@ -1,5 +1,5 @@
 import { Form } from "react-bootstrap";
-import "./UrlInput.css";
+import "./UrlInput.scss";
 import { WidgetProps } from "./WidgetRenders";
 import React, { JSX } from "react";
 

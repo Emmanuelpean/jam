@@ -1,5 +1,10 @@
 import React, { ReactNode } from "react";
-import { renderFunctions, RenderParams, RenderViewFieldWithContext, ViewField } from "./ViewRenders";
+import {
+	renderFunctions,
+	RenderParams,
+	RenderViewFieldWithContext,
+	ViewField,
+} from "./ViewRenders";
 
 export interface ModalViewField extends ViewField {
 	label?: string;
@@ -20,7 +25,10 @@ export const renderModalViewField = (field: ModalViewField, item: any, id: strin
 		return (
 			<>
 				<div className="text-center p-1">
-					<h2 className="display-6 fw-bold mt-4 mb-4" style={{ color: "var(--primary-mid)" }}>
+					<h2
+						className="display-6 fw-bold mt-4 mb-4"
+						style={{ color: "var(--primary-mid)" }}
+					>
 						{output}
 					</h2>
 				</div>
@@ -99,7 +107,8 @@ export const modalViewFields = {
 	applicationNote: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_note",
 		label: "Notes",
-		render: (params: RenderParams) => renderFunctions.applicationNote({ ...params, view: true }),
+		render: (params: RenderParams) =>
+			renderFunctions.applicationNote({ ...params, view: true }),
 		...overrides,
 	}),
 
@@ -252,14 +261,16 @@ export const modalViewFields = {
 	interviewerBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "person",
 		label: "Interviewers",
-		render: (params: RenderParams) => renderFunctions.InterviewerBadges({ ...params, view: true }),
+		render: (params: RenderParams) =>
+			renderFunctions.InterviewerBadges({ ...params, view: true }),
 		...overrides,
 	}),
 
 	appliedViaBadge: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "applied_via",
 		label: "Applied Via",
-		render: (params: RenderParams) => renderFunctions.AppliedViaBadge({ ...params, view: true }),
+		render: (params: RenderParams) =>
+			renderFunctions.AppliedViaBadge({ ...params, view: true }),
 		...overrides,
 	}),
 
@@ -313,7 +324,8 @@ export const modalViewFields = {
 	applicationStatus: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "application_status",
 		label: "Status",
-		render: (params: RenderParams) => renderFunctions.applicationStatus({ ...params, view: true }),
+		render: (params: RenderParams) =>
+			renderFunctions.applicationStatus({ ...params, view: true }),
 		...overrides,
 	}),
 

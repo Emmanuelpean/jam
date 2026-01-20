@@ -5,7 +5,7 @@ import { AccountTab } from "./AccountTab";
 import { PreferencesTab } from "./PreferencesTab";
 import { QualificationsTab } from "./QualificationsTab";
 import { PremiumTab } from "./PremiumTab";
-import "./UserSettingsPage.css";
+import "./UserSettingsPage.scss";
 import { getTableIcon } from "../../components/rendering/view/Icons";
 import { useAuth } from "../../contexts/AuthContext";
 import PageHeader from "../PageHeader/PageHeader";
@@ -72,7 +72,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 										{item.label}
 									</span>
 								</button>
-							) : null,
+							) : null
 						)}
 					</div>
 				</Col>

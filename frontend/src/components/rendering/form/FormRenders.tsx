@@ -13,7 +13,7 @@ import {
 	SelectOption,
 	updateTypeOptions,
 } from "./FormOptions";
-import { DataModalHandle } from "../../modals/DataModal/DataModal";
+import { DataModalHandle } from "../../DataModal/DataModal/DataModal";
 
 export interface ModalFormField {
 	name: string;
@@ -151,7 +151,9 @@ export const formFields = {
 		name: "theme",
 		label: "App Theme",
 		type: "select",
-		options: THEMES.map((theme: Theme): SelectOption => ({ value: theme.key, label: theme.name })),
+		options: THEMES.map(
+			(theme: Theme): SelectOption => ({ value: theme.key, label: theme.name })
+		),
 		...overrides,
 	}),
 
@@ -256,7 +258,10 @@ export const formFields = {
 		...overrides,
 	}),
 
-	country: (countries: SelectOption[] = [], overrides: FormFieldOverride = {}): ModalFormField => ({
+	country: (
+		countries: SelectOption[] = [],
+		overrides: FormFieldOverride = {}
+	): ModalFormField => ({
 		name: "country",
 		label: "Country",
 		type: "select",
@@ -373,7 +378,7 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "company_id",
 		label: "Company",
@@ -391,7 +396,7 @@ export const formFields = {
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "company_id",
 		secondaryName: "company",
@@ -410,7 +415,7 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "location_id",
 		label: "Location",
@@ -428,7 +433,7 @@ export const formFields = {
 		options: SelectOption[] = [],
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "location_id",
 		secondaryName: "location",
@@ -447,7 +452,7 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "keywords",
 		label: "Tags",
@@ -465,7 +470,7 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "contacts",
 		label: "Contacts",
@@ -483,7 +488,7 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "interviewers",
 		label: "Interviewers",
@@ -512,7 +517,7 @@ export const formFields = {
 		modalRef: React.RefObject<DataModalHandle | null>,
 		transformParentData?: ((parentData: any) => any) | null,
 		previewConfig: SelectWidgetPreviewConfig | null = null,
-		overrides: FormFieldOverride = {},
+		overrides: FormFieldOverride = {}
 	): ModalFormField => ({
 		name: "aggregator_id",
 		label: "Aggregator",

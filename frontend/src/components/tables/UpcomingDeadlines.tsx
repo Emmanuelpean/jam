@@ -1,9 +1,12 @@
 import React, { useEffect, useState, JSX } from "react";
 import { DataTableProps, DataTable } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
-import { JobModal } from "../modals/JobModal";
+import { JobModal } from "../DataModal/JobModal";
 
-const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
+const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({
+	data = [],
+	columns = [],
+}: DataTableProps): JSX.Element => {
 	const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
 	useEffect(() => {
@@ -23,10 +26,14 @@ const UpcomingDeadlinesTable: React.FC<DataTableProps> = ({ data = [], columns =
 				];
 
 	if (windowWidth < 1300) {
-		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "location");
+		defaultColumns = defaultColumns.filter(
+			(col: TableColumn): boolean => col.key !== "location"
+		);
 	}
 	if (windowWidth < 1000) {
-		defaultColumns = defaultColumns.filter((col: TableColumn): boolean => col.key !== "company");
+		defaultColumns = defaultColumns.filter(
+			(col: TableColumn): boolean => col.key !== "company"
+		);
 	}
 
 	return (

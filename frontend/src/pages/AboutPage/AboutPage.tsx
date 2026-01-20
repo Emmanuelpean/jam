@@ -24,11 +24,19 @@ interface ReleaseNoteAccordionProps {
 	onToggle: () => void;
 }
 
-const ReleaseNoteAccordion = ({ version, content, isOpen, onToggle }: ReleaseNoteAccordionProps): JSX.Element => {
+const ReleaseNoteAccordion = ({
+	version,
+	content,
+	isOpen,
+	onToggle,
+}: ReleaseNoteAccordionProps): JSX.Element => {
 	const contentRef = React.useRef<HTMLDivElement>(null);
 
 	return (
-		<div className="simple-accordion mb-2" style={{ paddingLeft: "10px", paddingRight: "10px" }}>
+		<div
+			className="simple-accordion mb-2"
+			style={{ paddingLeft: "10px", paddingRight: "10px" }}
+		>
 			<div
 				className="simple-accordion-header d-flex align-items-center justify-content-between py-2 border-bottom"
 				onClick={onToggle}
@@ -48,7 +56,10 @@ const ReleaseNoteAccordion = ({ version, content, isOpen, onToggle }: ReleaseNot
 				}}
 			>
 				<div className="simple-accordion-content" style={{ margin: "10px" }}>
-					<div className="release-notes-content" dangerouslySetInnerHTML={{ __html: content }} />
+					<div
+						className="release-notes-content"
+						dangerouslySetInnerHTML={{ __html: content }}
+					/>
 				</div>
 			</div>
 		</div>
@@ -87,12 +98,14 @@ const AboutPage = (): JSX.Element => {
 		{
 			icon: "bi-star-half",
 			title: "Job Rating",
-			description: "Automatically rate scraped jobs based on your preferences to prioritise applications",
+			description:
+				"Automatically rate scraped jobs based on your preferences to prioritise applications",
 		},
 		{
 			icon: "bi-envelope-arrow-up",
 			title: "Follow-Up Email Generator",
-			description: "Automatically generate personalized follow-up email drafts for your applications",
+			description:
+				"Automatically generate personalized follow-up email drafts for your applications",
 		},
 	];
 
@@ -156,14 +169,21 @@ const AboutPage = (): JSX.Element => {
 						<Col lg={10}>
 							<Card className="glass-card border-0 p-4">
 								<Card.Body className="text-center">
-									<h2 className="display-5 fw-bold mb-4">Streamline Your Job Search Journey</h2>
-									<p className="fs-5 about-text-muted mb-4" style={{ lineHeight: "1.625" }}>
-										Job searching is overwhelming. Between tracking applications, following up with
-										contacts, and preparing for interviews, it's easy to lose sight of opportunities
-										that could change your career.{" "}
-										<strong style={{ color: "var(--primary-mid)" }}>Jam</strong> brings everything
-										together in one place—applications - interviews, contacts, and notes - so you
-										can stay organised and focused on landing your dream job.
+									<h2 className="display-5 fw-bold mb-4">
+										Streamline Your Job Search Journey
+									</h2>
+									<p
+										className="fs-5 about-text-muted mb-4"
+										style={{ lineHeight: "1.625" }}
+									>
+										Job searching is overwhelming. Between tracking
+										applications, following up with contacts, and preparing for
+										interviews, it's easy to lose sight of opportunities that
+										could change your career.{" "}
+										<strong style={{ color: "var(--primary-mid)" }}>Jam</strong>{" "}
+										brings everything together in one place—applications -
+										interviews, contacts, and notes - so you can stay organised
+										and focused on landing your dream job.
 									</p>
 								</Card.Body>
 							</Card>
@@ -182,15 +202,20 @@ const AboutPage = (): JSX.Element => {
 								<div className="feature-card p-4" key={index}>
 									<div className="d-flex align-items-start align-items-center">
 										<div className="feature-icon me-3">
-											<i className={`bi ${feature.icon}`} style={{ fontSize: "2rem" }}></i>
+											<i
+												className={`bi ${feature.icon}`}
+												style={{ fontSize: "2rem" }}
+											></i>
 										</div>
 										<div>
 											<h5 className="fw-bold mb-2">{feature.title}</h5>
-											<p className="about-text-muted mb-0">{feature.description}</p>
+											<p className="about-text-muted mb-0">
+												{feature.description}
+											</p>
 										</div>
 									</div>
 								</div>
-							),
+							)
 						)}
 					</div>
 
@@ -210,9 +235,13 @@ const AboutPage = (): JSX.Element => {
 											version={version}
 											content={releaseNotes[version]}
 											isOpen={openVersion === version}
-											onToggle={() => setOpenVersion(openVersion === version ? null : version)}
+											onToggle={() =>
+												setOpenVersion(
+													openVersion === version ? null : version
+												)
+											}
 										/>
-									),
+									)
 								)}
 							</div>
 						</Col>

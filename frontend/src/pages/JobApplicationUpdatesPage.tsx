@@ -1,5 +1,5 @@
 import React from "react";
-import { JobApplicationUpdateModal } from "../components/modals/JobApplicationUpdateModal";
+import { JobApplicationUpdateModal } from "../components/DataModal/JobApplicationUpdateModal";
 import { DataTable } from "../components/tables/DataTable";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 

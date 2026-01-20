@@ -34,7 +34,7 @@ export function findClosestOption(options: SelectOption[], name: string): string
 export function findExactOption(options: SelectOption[], name: string): string | null | undefined {
 	if (!name || options.length === 0) return null;
 	const match: SelectOption | undefined = options.find(
-		(opt: SelectOption): boolean => opt.label.toLowerCase() === name.toLowerCase(),
+		(opt: SelectOption): boolean => opt.label.toLowerCase() === name.toLowerCase()
 	);
 	return match ? match.value : null;
 }
@@ -59,7 +59,7 @@ interface UseFormOptionsReturn {
 export const toSelectOptions = <T extends Record<string, any>>(
 	data: T[],
 	valueKey: keyof T | ((item: T) => any) = "id",
-	labelKey: keyof T | ((item: T) => any) = "name",
+	labelKey: keyof T | ((item: T) => any) = "name"
 ): SelectOption[] => {
 	const sorted = [...data].sort((a, b) => {
 		const aLabel = typeof labelKey === "function" ? labelKey(a) : a[labelKey];
@@ -72,7 +72,7 @@ export const toSelectOptions = <T extends Record<string, any>>(
 			value: typeof valueKey === "function" ? valueKey(item) : item[valueKey],
 			label: typeof labelKey === "function" ? labelKey(item) : item[labelKey],
 			data: item,
-		}),
+		})
 	);
 };
 
@@ -81,7 +81,11 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 
 	const getCompanyPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
-		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
+		fields: [
+			modalViewFields.name({ isTitle: true }),
+			modalViewFields.url(),
+			[modalViewFields.description()],
+		],
 		getDataById: (id: number) => findItemById(dataContext.companies, id),
 	};
 
@@ -97,7 +101,10 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 
 	const getLocationPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
-		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.locationMap({ label: "" })],
+		fields: [
+			modalViewFields.name({ isTitle: true }),
+			modalViewFields.locationMap({ label: "" }),
+		],
 		getDataById: (id: number) => findItemById(dataContext.locations, id),
 	};
 
@@ -119,20 +126,25 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 
 	const getContactOptions = (job: JobData): GroupedSelectOption[] => {
 		const persons: PersonData[] = dataContext.persons.filter(
-			(person: PersonData): boolean => person.email !== null,
+			(person: PersonData): boolean => person.email !== null
 		);
 		const jobContacts: PersonData[] = persons.filter((person: PersonData): boolean =>
-			job.contacts?.includes(person.id),
+			job.contacts?.includes(person.id)
 		);
 		const interviews: InterviewData[] = dataContext.interviews.filter(
-			(interview: InterviewData): boolean => interview.job_id === job.id,
+			(interview: InterviewData): boolean => interview.job_id === job.id
 		);
 		const interviewContacts: PersonData[] = persons.filter((person: PersonData): boolean =>
-			interviews.some((interview: InterviewData) => interview.interviewers?.includes(person.id)),
+			interviews.some((interview: InterviewData) =>
+				interview.interviewers?.includes(person.id)
+			)
 		);
 		return [
 			{ label: "Job Contacts", options: toSelectOptions(jobContacts, "id", getPersonLabel) },
-			{ label: "Interviewers", options: toSelectOptions(interviewContacts, "id", getPersonLabel) },
+			{
+				label: "Interviewers",
+				options: toSelectOptions(interviewContacts, "id", getPersonLabel),
+			},
 			{ label: "All Contacts", options: toSelectOptions(persons, "id", getPersonLabel) },
 		];
 	};
@@ -140,39 +152,39 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 	// Convert data to SelectOptions and memoize
 	const companyOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(dataContext.companies),
-		[dataContext.companies],
+		[dataContext.companies]
 	);
 	const locationOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(dataContext.locations),
-		[dataContext.locations],
+		[dataContext.locations]
 	);
 	const keywordOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(dataContext.keywords),
-		[dataContext.keywords],
+		[dataContext.keywords]
 	);
 	const personOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(dataContext.persons, "id", getPersonLabel),
-		[dataContext.persons],
+		[dataContext.persons]
 	);
 	const aggregatorOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(dataContext.aggregators),
-		[dataContext.aggregators],
+		[dataContext.aggregators]
 	);
 	const jobOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(dataContext.jobs, "id", "name"),
-		[dataContext.jobs],
+		[dataContext.jobs]
 	);
 	const countryOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(dataContext.countries, "name", "name"),
-		[dataContext.countries],
+		[dataContext.countries]
 	);
 	const currencyOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(dataContext.currencies, "code", "symbol"),
-		[dataContext.currencies],
+		[dataContext.currencies]
 	);
 	const currencyNameOptions: SelectOption[] = useMemo(
 		(): SelectOption[] => toSelectOptions(dataContext.currencies, "code", "name"),
-		[dataContext.currencies],
+		[dataContext.currencies]
 	);
 
 	return {

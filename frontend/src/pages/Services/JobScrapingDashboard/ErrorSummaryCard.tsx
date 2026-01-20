@@ -29,7 +29,7 @@ export const ErrorSummaryCard = ({
 	const serviceErrors = errorView === "current" ? latestServiceErrors : lastServiceErrors;
 
 	const criticalErrorCount: number = criticalErrorLogs.filter(
-		(l: JobScrapingServiceLogData): boolean => !!(l.error_message && l.error_message.trim()),
+		(l: JobScrapingServiceLogData): boolean => !!(l.error_message && l.error_message.trim())
 	).length;
 
 	const handleViewToggle = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -68,12 +68,16 @@ export const ErrorSummaryCard = ({
 							{criticalErrorLogs
 								.slice()
 								.sort(
-									(a: JobScrapingServiceLogData, b: JobScrapingServiceLogData): number =>
-										new Date(b.run_datetime).getTime() - new Date(a.run_datetime).getTime(),
+									(
+										a: JobScrapingServiceLogData,
+										b: JobScrapingServiceLogData
+									): number =>
+										new Date(b.run_datetime).getTime() -
+										new Date(a.run_datetime).getTime()
 								)
 								.filter(
 									(log: JobScrapingServiceLogData): boolean =>
-										!!(log.error_message && log.error_message.trim()),
+										!!(log.error_message && log.error_message.trim())
 								)
 								.map(
 									(log: JobScrapingServiceLogData, idx: number): JSX.Element => (
@@ -81,11 +85,16 @@ export const ErrorSummaryCard = ({
 											<div className="small mb-1">
 												{new Date(log.run_datetime).toLocaleString()}
 											</div>
-											<div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+											<div
+												style={{
+													whiteSpace: "pre-wrap",
+													wordBreak: "break-word",
+												}}
+											>
 												{log.error_message}
 											</div>
 										</div>
-									),
+									)
 								)}
 						</div>
 					)}
@@ -93,7 +102,9 @@ export const ErrorSummaryCard = ({
 
 				{/* Service Errors Column */}
 				<div style={{ flex: 1 }}>
-					<h5 className="mb-3">Service Errors ({Object.keys(serviceErrors).length} unique)</h5>
+					<h5 className="mb-3">
+						Service Errors ({Object.keys(serviceErrors).length} unique)
+					</h5>
 					{Object.keys(serviceErrors).length === 0 ? (
 						<div className="text-muted">No service errors</div>
 					) : (
@@ -107,7 +118,12 @@ export const ErrorSummaryCard = ({
 												{count} {count > 1 ? "occurrences" : "occurrence"}
 											</span>
 										</div>
-										<div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+										<div
+											style={{
+												whiteSpace: "pre-wrap",
+												wordBreak: "break-word",
+											}}
+										>
 											{errorMsg}
 										</div>
 									</div>
@@ -118,7 +134,9 @@ export const ErrorSummaryCard = ({
 
 				{/* Scrape Errors Column */}
 				<div style={{ flex: 1 }}>
-					<h5 className="mb-3">Scrape Errors ({Object.keys(scrapeErrors).length} unique)</h5>
+					<h5 className="mb-3">
+						Scrape Errors ({Object.keys(scrapeErrors).length} unique)
+					</h5>
 					{Object.keys(scrapeErrors).length === 0 ? (
 						<div className="text-muted">No scrape errors</div>
 					) : (
@@ -129,11 +147,15 @@ export const ErrorSummaryCard = ({
 									<div key={idx} className="alert alert-warning">
 										<div className="d-flex justify-content-between align-items-start mb-2">
 											<span className="badge bg-warning">
-												{error.count} {error.count > 1 ? "occurrences" : "occurrence"}
+												{error.count}{" "}
+												{error.count > 1 ? "occurrences" : "occurrence"}
 											</span>
 										</div>
 										<div
-											style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+											style={{
+												whiteSpace: "pre-wrap",
+												wordBreak: "break-word",
+											}}
 											className="mb-2"
 										>
 											{errorMsg}

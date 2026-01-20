@@ -17,7 +17,7 @@ const animatedComponents = makeAnimated();
 
 // Type guard to check if options are grouped
 const isGroupedOptions = (
-	options: readonly (SelectOption | GroupedSelectOption)[],
+	options: readonly (SelectOption | GroupedSelectOption)[]
 ): options is readonly GroupedSelectOption[] => {
 	return options.length > 0 && "options" in options[0]!;
 };
@@ -25,7 +25,7 @@ const isGroupedOptions = (
 // Helper function to find option in both flat and grouped arrays
 const findOption = (
 	options: readonly (SelectOption | GroupedSelectOption)[] | undefined,
-	targetValue: string,
+	targetValue: string
 ): SelectOption | undefined => {
 	if (!options || options.length === 0) return undefined;
 
@@ -57,11 +57,14 @@ const CustomDropdownIndicator = (props: any): JSX.Element => {
 				if (customProps.addButtonModalRef) {
 					if (customProps.transformParentData && customProps.parentData) {
 						const defaultData = customProps.transformParentData(customProps.parentData);
-						customProps.addButtonModalRef.current?.showAdd(defaultData, (newData: any) => {
-							if (customProps.onAddSuccess) {
-								customProps.onAddSuccess(newData);
+						customProps.addButtonModalRef.current?.showAdd(
+							defaultData,
+							(newData: any) => {
+								if (customProps.onAddSuccess) {
+									customProps.onAddSuccess(newData);
+								}
 							}
-						});
+						);
 					} else {
 						customProps.addButtonModalRef.current?.showAdd({}, (newData: any) => {
 							if (customProps.onAddSuccess) {
@@ -152,7 +155,7 @@ export const SelectInput = ({
 				handleChange(syntheticEvent);
 			}
 		},
-		[field.name, handleChange, isMulti, value],
+		[field.name, handleChange, isMulti, value]
 	);
 
 	const handleHover = useCallback(
@@ -168,7 +171,7 @@ export const SelectInput = ({
 				setShowPreview(true);
 			}
 		},
-		[previewConfig],
+		[previewConfig]
 	);
 
 	const handleHoverEnd = useCallback(() => {
@@ -222,7 +225,7 @@ export const SelectInput = ({
 				value={selectedValue}
 				onChange={(
 					selectedOptions: MultiValue<SelectOption> | SingleValue<SelectOption>,
-					_actionMeta: ActionMeta<SelectOption>,
+					_actionMeta: ActionMeta<SelectOption>
 				) => {
 					if (isMulti) {
 						const ids: string[] = Array.isArray(selectedOptions)
@@ -240,7 +243,9 @@ export const SelectInput = ({
 						const syntheticEvent: SyntheticEvent = {
 							target: {
 								name: field.name,
-								value: selectedOptions ? (selectedOptions as SelectOption).value : null,
+								value: selectedOptions
+									? (selectedOptions as SelectOption).value
+									: null,
 							},
 						};
 						handleChange(syntheticEvent);

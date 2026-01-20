@@ -44,7 +44,9 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }): 
 			} else {
 				// Otherwise use system preference
 				if (window.matchMedia) {
-					const systemPreference: boolean = window.matchMedia("(prefers-color-scheme: dark)").matches;
+					const systemPreference: boolean = window.matchMedia(
+						"(prefers-color-scheme: dark)"
+					).matches;
 					setIsDarkMode(systemPreference);
 				}
 			}
@@ -87,14 +89,18 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }): 
 
 		if (currentUser) {
 			updateCurrentUser({ preferences: { dark_mode: newValue } }).catch((err) =>
-				showToastError("Failed to update user preferences:", err),
+				showToastError("Failed to update user preferences:", err)
 			);
 		} else {
 			localStorage.setItem("darkMode", JSON.stringify(`manual:${newValue}`));
 		}
 	};
 
-	return <ThemeContext.Provider value={{ isDarkMode, handleDarkModeToggle }}>{children}</ThemeContext.Provider>;
+	return (
+		<ThemeContext.Provider value={{ isDarkMode, handleDarkModeToggle }}>
+			{children}
+		</ThemeContext.Provider>
+	);
 };
 
 export const useTheme = () => {

@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import "./PageHeader.css";
+import "./PageHeader.scss";
 import { Card } from "react-bootstrap";
 
 interface TableHeaderProps {

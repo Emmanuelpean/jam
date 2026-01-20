@@ -1,7 +1,7 @@
 import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
-import { InterviewModal } from "../modals/InterviewModal";
+import { InterviewModal } from "../DataModal/InterviewModal";
 
 interface InterviewsTableProps extends DataTableProps {
 	jobId?: number;

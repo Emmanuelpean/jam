@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Form } from "react-bootstrap";
 import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
-import { ValidationErrors } from "../../components/modals/DataModal/DataModal";
+import { ValidationErrors } from "../../components/DataModal/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
 import { ApiResponse } from "../../services/api/Base";
@@ -37,7 +37,8 @@ export const QualificationsTab: React.FC = () => {
 		const fetchQualifications = async () => {
 			if (!token) return;
 			try {
-				const response: ApiResponse<UserQualification> = await userQualificationApi.getLatest(token);
+				const response: ApiResponse<UserQualification> =
+					await userQualificationApi.getLatest(token);
 				const data = response.data;
 				if (data) {
 					setFormData({
@@ -81,7 +82,7 @@ export const QualificationsTab: React.FC = () => {
 
 			const apiResult: ApiResponse<UserQualification> = await userQualificationApi.upsert(
 				qualificationData,
-				token,
+				token
 			);
 			formData.qualification_id = apiResult.data.id;
 			showToastSuccess("Qualifications saved successfully.");

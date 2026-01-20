@@ -10,7 +10,9 @@ interface PlatformStatsTableProps {
 }
 
 const getPlatformStat = (log: JobScrapingServiceLogData, platform: string, key: string): number => {
-	const stat: PlatformStat | undefined = log.platform_stats.find((p: PlatformStat): boolean => p.name === platform);
+	const stat: PlatformStat | undefined = log.platform_stats.find(
+		(p: PlatformStat): boolean => p.name === platform
+	);
 	if (!stat) return 0;
 
 	const value = (stat as any)[key];
@@ -27,7 +29,10 @@ const getPlatformStat = (log: JobScrapingServiceLogData, platform: string, key: 
 	return typeof value === "number" ? value : 0;
 };
 
-export const PlatformStatsTable = ({ platformStats, latestLog }: PlatformStatsTableProps): JSX.Element => {
+export const PlatformStatsTable = ({
+	platformStats,
+	latestLog,
+}: PlatformStatsTableProps): JSX.Element => {
 	return (
 		<Table striped bordered hover size="sm">
 			<thead>
@@ -45,13 +50,35 @@ export const PlatformStatsTable = ({ platformStats, latestLog }: PlatformStatsTa
 					(platformStat: PlatformStat): JSX.Element => (
 						<tr key={platformStat.name}>
 							<td>{capitalise(platformStat.name)}</td>
-							<td>{getPlatformStat(latestLog, platformStat.name, "job_found_ids")}</td>
-							<td>{getPlatformStat(latestLog, platformStat.name, "job_to_scrape_ids")}</td>
-							<td>{getPlatformStat(latestLog, platformStat.name, "job_scrape_succeeded_ids")}</td>
-							<td>{getPlatformStat(latestLog, platformStat.name, "job_scrape_failed_ids")}</td>
-							<td>{getPlatformStat(latestLog, platformStat.name, "job_scrape_skipped_ids")}</td>
+							<td>
+								{getPlatformStat(latestLog, platformStat.name, "job_found_ids")}
+							</td>
+							<td>
+								{getPlatformStat(latestLog, platformStat.name, "job_to_scrape_ids")}
+							</td>
+							<td>
+								{getPlatformStat(
+									latestLog,
+									platformStat.name,
+									"job_scrape_succeeded_ids"
+								)}
+							</td>
+							<td>
+								{getPlatformStat(
+									latestLog,
+									platformStat.name,
+									"job_scrape_failed_ids"
+								)}
+							</td>
+							<td>
+								{getPlatformStat(
+									latestLog,
+									platformStat.name,
+									"job_scrape_skipped_ids"
+								)}
+							</td>
 						</tr>
-					),
+					)
 				)}
 			</tbody>
 		</Table>

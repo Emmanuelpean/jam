@@ -1,5 +1,5 @@
 import React, { JSX, useState } from "react";
-import "./StarRating.css";
+import "./StarRating.scss";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 
 export const StarRating = ({ field, value, handleChange }: WidgetProps): JSX.Element => {

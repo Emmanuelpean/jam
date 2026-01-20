@@ -38,7 +38,9 @@ export interface WidgetProps {
 
 export const displayError = (errorMessage: string | null): JSX.Element[] | null => {
 	if (!errorMessage) return null;
-	return errorMessage.split("\n").map((line: string, index: number): JSX.Element => <div key={index}>{line}</div>);
+	return errorMessage
+		.split("\n")
+		.map((line: string, index: number): JSX.Element => <div key={index}>{line}</div>);
 };
 
 export const DefaultInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
@@ -65,7 +67,7 @@ export const FormField = (
 	formData: any,
 	handleChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
 	errors: Errors,
-	currentUser?: CurrentUser | null,
+	currentUser?: CurrentUser | null
 ) => {
 	const value: any = formData[field.name];
 	const secondaryValue: any = field.secondaryName ? formData[field.secondaryName] : null;

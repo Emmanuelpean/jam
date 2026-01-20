@@ -1,7 +1,7 @@
 import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
-import { ScrapedJobModal } from "../modals/ScrapedJobModal";
+import { ScrapedJobModal } from "../DataModal/ScrapedJobModal";
 
 const ScrapedJobsTableReadOnly: React.FC<DataTableProps> = ({
 	data = [],

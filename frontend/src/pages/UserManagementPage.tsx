@@ -1,6 +1,6 @@
 import React from "react";
 import DataTable from "../components/tables/DataTable";
-import { UserModal } from "../components/modals/UserModal";
+import { UserModal } from "../components/DataModal/UserModal";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
 export const UserManagementPage: React.FC = () => {

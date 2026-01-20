@@ -43,7 +43,14 @@ interface ToastStackProps {
 	position?: ToastPosition;
 }
 
-const NotificationToast: React.FC<NotificationToastProps> = ({ show, message, variant, delay, onClose, title }) => {
+const NotificationToast: React.FC<NotificationToastProps> = ({
+	show,
+	message,
+	variant,
+	delay,
+	onClose,
+	title,
+}) => {
 	const [isHiding, setIsHiding] = useState<boolean>(false);
 	const [progress, setProgress] = useState<number>(100);
 
@@ -109,7 +116,10 @@ const NotificationToast: React.FC<NotificationToastProps> = ({ show, message, va
 	if (!show) return null;
 
 	return (
-		<div className={`custom-toast ${variant} ${isHiding ? "hiding" : ""}`} onClick={handleClose}>
+		<div
+			className={`custom-toast ${variant} ${isHiding ? "hiding" : ""}`}
+			onClick={handleClose}
+		>
 			<div className="custom-toast-header">
 				<div className="custom-toast-title-wrapper">
 					<i className={`bi ${getIcon()} toast-icon`}></i>

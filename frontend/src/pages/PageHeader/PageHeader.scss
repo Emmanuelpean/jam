@@ -1,0 +1,17 @@
+.header-icon-wrapper {
+	width: 56px;
+	height: 56px;
+	background: var(--primary-gradient);
+	border-radius: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 8px 25px rgb(0 0 0 / 15%);
+	aspect-ratio: 1 / 1;
+	color: white;
+}
+
+.header-icon-wrapper i {
+	font-size: 1.5rem;
+	color: white;
+}

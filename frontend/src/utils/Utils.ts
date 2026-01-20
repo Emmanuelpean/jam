@@ -68,7 +68,11 @@ export const getColumnClass = (count: number): string => {
 	}
 };
 
-export const sortByKey = <T extends Record<string, any>>(array: T[], key: keyof T, ascending: boolean = true): T[] => {
+export const sortByKey = <T extends Record<string, any>>(
+	array: T[],
+	key: keyof T,
+	ascending: boolean = true
+): T[] => {
 	return array.sort((a: T, b: T) => {
 		const valueA = a[key];
 		const valueB = b[key];

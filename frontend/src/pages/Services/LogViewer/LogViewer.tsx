@@ -2,7 +2,7 @@ import React, { JSX, useEffect, useRef, useState } from "react";
 import { BaseServiceApi, LogResponse } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../components/spinner/Spinner";
-import "./LogViewer.css";
+import "./LogViewer.scss";
 import { ApiResponse } from "../../../services/api/Base";
 
 interface LogViewerProps {
@@ -67,7 +67,10 @@ const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
 					<>
 						<span className="log-count"> ({logs.total_lines} total lines)</span>
 						{logs.lines.length > 0 && !logsExpanded && (
-							<span className="log-preview"> - {logs.lines[logs.lines.length - 1]}</span>
+							<span className="log-preview">
+								{" "}
+								- {logs.lines[logs.lines.length - 1]}
+							</span>
 						)}
 					</>
 				)}
@@ -104,7 +107,8 @@ const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
 							</div>
 							<pre className="log-content">
 								{logs.lines.map((line: string, idx: number): JSX.Element => {
-									const lineNumber: number = logs.total_lines - logs.lines.length + idx + 1;
+									const lineNumber: number =
+										logs.total_lines - logs.lines.length + idx + 1;
 									return (
 										<div key={idx} className="log-line">
 											<span className="log-line-number">{lineNumber}</span>

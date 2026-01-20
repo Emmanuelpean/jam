@@ -5,7 +5,9 @@ import { normaliseArray } from "../utils/Utils";
 import { useAuth } from "../contexts/AuthContext";
 import { ApiResponse } from "../services/api/Base";
 
-export const useJobRatingErrors = (latestLog: JobRatingServiceLogData | JobRatingServiceLogData[] | null) => {
+export const useJobRatingErrors = (
+	latestLog: JobRatingServiceLogData | JobRatingServiceLogData[] | null
+) => {
 	const { token } = useAuth();
 	const [scraperErrors, setScraperErrors] = useState<Record<string, number>>({});
 	const [error, setError] = useState<Error | null>(null);
@@ -17,11 +19,15 @@ export const useJobRatingErrors = (latestLog: JobRatingServiceLogData | JobRatin
 			try {
 				// Get the job rating failed IDs from the logs
 				const logs: JobRatingServiceLogData[] = normaliseArray(latestLog);
-				let ids: number[] = logs.flatMap((log: JobRatingServiceLogData): number[] => log.rated_job_failed_ids);
+				let ids: number[] = logs.flatMap(
+					(log: JobRatingServiceLogData): number[] => log.rated_job_failed_ids
+				);
 				ids = [...new Set(ids)];
 
 				// Get the job rating data for the failed IDs
-				const jobRatings: ApiResponse<JobRatingData[]> = await jobRatingApi.getAll(token, { id: ids });
+				const jobRatings: ApiResponse<JobRatingData[]> = await jobRatingApi.getAll(token, {
+					id: ids,
+				});
 				const errorCounts: Record<string, number> = {};
 				jobRatings.data.forEach((job: JobRatingData): void => {
 					if (!job.is_success && job.error) {

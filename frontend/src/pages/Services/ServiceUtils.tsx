@@ -4,7 +4,7 @@ import { ServiceStatus, ThreadStatus } from "../../services/api/Services";
 import { SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { formatDuration } from "../../utils/TimeUtils";
 import { HelpBubble } from "../../components/rendering/widgets/HelpBubble";
-import { SeriesData } from "../../components/Charts/LineChart";
+import { SeriesData } from "../../components/Chart/LineChart";
 
 export const successColor = "#22c55e";
 export const failureColor = "#ef4444";
@@ -44,7 +44,10 @@ export const getServiceStatus = (isRunning: boolean): string => {
 	return isRunning ? "bi-check-circle-fill" : "bi-x-circle-fill";
 };
 
-export const getServiceStatusMessage = (status: ServiceStatus, remainingTime: number | null): string => {
+export const getServiceStatusMessage = (
+	status: ServiceStatus,
+	remainingTime: number | null
+): string => {
 	if (status.service_runner_status === "stopped") {
 		return "Stopped";
 	}
@@ -61,7 +64,7 @@ export const RenderLabeledInput = (
 	value: number,
 	unitText: string = "",
 	isRequired: boolean = false,
-	onChange?: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
+	onChange?: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void
 ): JSX.Element => {
 	return (
 		<Form.Group id={id}>
@@ -80,7 +83,12 @@ export const RenderLabeledInput = (
 	);
 };
 
-export const createSeries = (logs: any[], id: string, color: string, getValue: (log: any) => number): SeriesData => ({
+export const createSeries = (
+	logs: any[],
+	id: string,
+	color: string,
+	getValue: (log: any) => number
+): SeriesData => ({
 	id,
 	color,
 	data: logs

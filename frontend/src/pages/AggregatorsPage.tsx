@@ -1,5 +1,5 @@
 import React from "react";
-import { AggregatorModal } from "../components/modals/AggregatorModal";
+import { AggregatorModal } from "../components/DataModal/AggregatorModal";
 import { DataTable } from "../components/tables/DataTable";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 

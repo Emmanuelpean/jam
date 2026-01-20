@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, Col, Row } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
-import "./DashboardPage.css";
+import "./DashboardPage.scss";
 import {
 	EnrichedInterviewData,
 	EnrichedJobApplicationUpdateData,
@@ -34,22 +34,25 @@ const Dashboard: React.FC = () => {
 	const now = new Date();
 
 	const jobApplications: EnrichedJobData[] = dataContext.jobs.filter(
-		(job: EnrichedJobData): Date | string | null | undefined => job.application_date || job.application_status,
+		(job: EnrichedJobData): Date | string | null | undefined =>
+			job.application_date || job.application_status
 	);
 
 	const jobApplicationPending: EnrichedJobData[] = jobApplications.filter(
 		(job: EnrichedJobData): boolean | string | null | undefined =>
-			job.application_status && !["rejected", "withdrawn"].includes(job.application_status),
+			job.application_status && !["rejected", "withdrawn"].includes(job.application_status)
 	);
 
 	const needsChase: EnrichedJobData[] = jobApplicationPending.filter(
 		(job: EnrichedJobData): boolean | 0 | null | undefined =>
 			job.days_since_last_update &&
 			job.days_since_last_update > currentUser.preferences.chase_threshold &&
-			(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now),
+			(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now)
 	);
 
-	const thresholdDate = new Date(now.getTime() + currentUser.preferences.deadline_threshold * 24 * 60 * 60 * 1000);
+	const thresholdDate = new Date(
+		now.getTime() + currentUser.preferences.deadline_threshold * 24 * 60 * 60 * 1000
+	);
 
 	const upcomingDeadlines: EnrichedJobData[] = dataContext.jobs.filter(
 		(job: EnrichedJobData) =>
@@ -57,14 +60,15 @@ const Dashboard: React.FC = () => {
 			!job.application_status &&
 			job.deadline &&
 			new Date(job.deadline) > now &&
-			new Date(job.deadline) <= thresholdDate,
+			new Date(job.deadline) <= thresholdDate
 	);
 
 	const upcomingInterviews: EnrichedInterviewData[] = sortByKey(
 		dataContext.interviews.filter(
-			(interview: EnrichedInterviewData): boolean | null | undefined => new Date(interview.date!) >= now,
+			(interview: EnrichedInterviewData): boolean | null | undefined =>
+				new Date(interview.date!) >= now
 		),
-		"date",
+		"date"
 	);
 
 	const allUpdates: RecentActivity[] = [];

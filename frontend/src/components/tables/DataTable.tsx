@@ -23,9 +23,9 @@ import {
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { MenuItem } from "../ContextMenu/ContextMenu";
 import LoadingSpinner from "../spinner/Spinner";
-import { DataModalHandle, modalModes } from "../modals/DataModal/DataModal";
+import { DataModalHandle, modalModes } from "../DataModal/DataModal/DataModal";
 import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
-import "./DataTable.css";
+import "./DataTable.scss";
 import FollowUpModal, { FollowUpModalHandle } from "../FollowUpModal/FollowUpModal";
 import { useContextMenu } from "../../contexts/ContextMenuContext";
 import PageHeader from "../../pages/PageHeader/PageHeader";
@@ -130,7 +130,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 	// Search and sort
 	const [sortConfig, setSortConfig] = useState<SortConfig>(
-		(initialSortConfig as SortConfig) || { key: "created_at", direction: "desc" },
+		(initialSortConfig as SortConfig) || { key: "created_at", direction: "desc" }
 	);
 	const [searchTerm, setSearchTerm] = useState<string>("");
 
@@ -170,7 +170,10 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				search: debouncedSearchTerm,
 			});
 
-			const response: ApiResponse = await baseApi.get(`${endpoint}/paged?${params.toString()}`, token);
+			const response: ApiResponse = await baseApi.get(
+				`${endpoint}/paged?${params.toString()}`,
+				token
+			);
 			setFetchedData(response.data.items);
 			setTotalCount(response.data.total);
 		} catch (error: any) {
@@ -190,7 +193,15 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		if (isServerPagination) {
 			fetchData().then((_): null => null);
 		}
-	}, [endpoint, token, currentPage, pageSize, sortConfig, isServerPagination, debouncedSearchTerm]);
+	}, [
+		endpoint,
+		token,
+		currentPage,
+		pageSize,
+		sortConfig,
+		isServerPagination,
+		debouncedSearchTerm,
+	]);
 
 	const getData = (): JamData[] => {
 		if (providedData !== undefined) {
@@ -213,7 +224,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			}
 			setSortConfig({ key, direction });
 		},
-		[sortConfig],
+		[sortConfig]
 	);
 
 	// Data processing
@@ -222,7 +233,10 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		const searchTermLower: string = searchTerm.toLowerCase();
 
 		// Filter by search term
-		if (searchTermLower && columns.some((col: TableColumn): boolean | undefined => col.searchable)) {
+		if (
+			searchTermLower &&
+			columns.some((col: TableColumn): boolean | undefined => col.searchable)
+		) {
 			filteredData = filteredData.filter((item: JamData): boolean => {
 				return columns.some((column: TableColumn): boolean | undefined => {
 					if (!column.searchable) return false;
@@ -245,7 +259,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		if (sortConfig.key) {
 			filteredData.sort((a: any, b: any): 0 | 1 | -1 => {
 				const column: TableColumn | undefined = columns.find(
-					(col: TableColumn): boolean => col.key === sortConfig.key,
+					(col: TableColumn): boolean => col.key === sortConfig.key
 				);
 				let aValue: any, bValue: any;
 				if (!column) return 0;
@@ -311,10 +325,13 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		}
 	};
 
-	const activeHandler: (item: JamData) => Promise<boolean> = useDeactivateEntityConfirm(entityType);
+	const activeHandler: (item: JamData) => Promise<boolean> =
+		useDeactivateEntityConfirm(entityType);
 	const deleteHandler: (item: JamData) => Promise<boolean> = useDeleteEntityConfirm(entityType);
-	const activateEntityHandler: (item: JamData) => Promise<boolean> = useActivateEntity(entityType);
-	const deactivateEntityHandler: (item: JamData) => Promise<boolean> = useDeactivateEntity(entityType);
+	const activateEntityHandler: (item: JamData) => Promise<boolean> =
+		useActivateEntity(entityType);
+	const deactivateEntityHandler: (item: JamData) => Promise<boolean> =
+		useDeactivateEntity(entityType);
 
 	const handleDelete = async (item: JamData): Promise<boolean> => {
 		let result: boolean;
@@ -368,16 +385,24 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			try {
 				const snoozeDate = new Date();
 				snoozeDate.setDate(snoozeDate.getDate() + weeks * 7);
-				const response: ApiResponse<JamData> = await dataContext.updateEntity(entityType, item.id, {
-					followup_snooze_datetime: snoozeDate.toISOString(),
-				});
+				const response: ApiResponse<JamData> = await dataContext.updateEntity(
+					entityType,
+					item.id,
+					{
+						followup_snooze_datetime: snoozeDate.toISOString(),
+					}
+				);
 				if ("title" in response.data) {
 					showToastSuccess(
-						`${response.data.title} was snoozed for ${weeks} week` + (weeks > 1 ? "s" : "") + ".",
+						`${response.data.title} was snoozed for ${weeks} week` +
+							(weeks > 1 ? "s" : "") +
+							"."
 					);
 				}
 			} catch (error) {
-				showToastError(`Failed to snooze ${(item as EnrichedJobData).title}. Please try again.`);
+				showToastError(
+					`Failed to snooze ${(item as EnrichedJobData).title}. Please try again.`
+				);
 			}
 		};
 	};
@@ -486,7 +511,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		}
 		return allowedActions
 			.map((action: string): MenuItem | undefined =>
-				baseItems.find((menuItem: MenuItem): boolean => menuItem.action === action),
+				baseItems.find((menuItem: MenuItem): boolean => menuItem.action === action)
 			)
 			.filter((item: MenuItem | undefined): item is MenuItem => item !== undefined);
 	};
@@ -500,7 +525,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 			event as any, // Cast to satisfy MouseEvent<HTMLElement>
 			items,
 			item,
-			compact,
+			compact
 		);
 	};
 	// Get button text based on mode
@@ -536,14 +561,23 @@ export const DataTable: React.FC<GenericTableProps> = ({
 	return (
 		<>
 			<div className={"table-container"}>
-				{title && <PageHeader title={title} count={totalCount || data.length} icon={getTableIcon(title)} />}
+				{title && (
+					<PageHeader
+						title={title}
+						count={totalCount || data.length}
+						icon={getTableIcon(title)}
+					/>
+				)}
 
 				<div
 					className={`d-flex justify-content-between ${compact ? "mb-2" : "mb-3"}`}
 					style={{ gap: compact ? "0.5rem" : "1rem" }}
 				>
 					{showSearch && !compact && (
-						<div className="d-flex align-items-center gap-3" style={{ flex: 1, width: "auto" }}>
+						<div
+							className="d-flex align-items-center gap-3"
+							style={{ flex: 1, width: "auto" }}
+						>
 							<input
 								type="text"
 								className="form-control"
@@ -572,7 +606,10 @@ export const DataTable: React.FC<GenericTableProps> = ({
 							}}
 							id={`add-${entityType}-button`}
 						>
-							<i className={`${getAddButtonIcon()} me-2`} style={{ fontSize: "1.1rem" }}></i>
+							<i
+								className={`${getAddButtonIcon()} me-2`}
+								style={{ fontSize: "1.1rem" }}
+							></i>
 							{getAddButtonText()}
 						</Button>
 					)}
@@ -592,35 +629,56 @@ export const DataTable: React.FC<GenericTableProps> = ({
 									<tr>
 										{columns.map(
 											(column: TableColumn): JSX.Element => (
-												<th key={column.key} style={compact ? { padding: "0.5rem" } : {}}>
+												<th
+													key={column.key}
+													style={compact ? { padding: "0.5rem" } : {}}
+												>
 													<div className="d-flex align-items-center justify-content-between">
 														<div
 															className={
-																column.sortable ? "cursor-pointer user-select-none" : ""
+																column.sortable
+																	? "cursor-pointer user-select-none"
+																	: ""
 															}
-															onClick={() => column.sortable && handleSort(column.key)}
+															onClick={() =>
+																column.sortable &&
+																handleSort(column.key)
+															}
 															id={`table-header-${column.key}`}
-															style={compact ? { fontSize: "0.875rem" } : {}}
+															style={
+																compact
+																	? { fontSize: "0.875rem" }
+																	: {}
+															}
 														>
 															{column.label}
 															{column.sortable && (
 																<span className="ms-1">
 																	<i
 																		className={`bi bi-arrow-${
-																			sortConfig.key === column.key
-																				? sortConfig.direction === "asc"
+																			sortConfig.key ===
+																			column.key
+																				? sortConfig.direction ===
+																					"asc"
 																					? "up"
 																					: "down"
 																				: "down-up"
 																		}`}
-																		style={compact ? { fontSize: "0.75rem" } : {}}
+																		style={
+																			compact
+																				? {
+																						fontSize:
+																							"0.75rem",
+																					}
+																				: {}
+																		}
 																	></i>
 																</span>
 															)}
 														</div>
 													</div>
 												</th>
-											),
+											)
 										)}
 									</tr>
 								</thead>
@@ -640,7 +698,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 														key={column.key}
 														className="align-middle"
 														style={{
-															...(columnIndex === 0 ? { fontWeight: "bold" } : {}),
+															...(columnIndex === 0
+																? { fontWeight: "bold" }
+																: {}),
 															...(compact
 																? {
 																		padding: "0.5rem",
@@ -657,7 +717,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 													</td>
 												))}
 											</tr>
-										),
+										)
 									)}
 									{currentPageData.length === 0 && (
 										<tr>
@@ -673,7 +733,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 														: {}
 												}
 											>
-												{emptyMessage || `No ${pluralize(entityName)} found`}
+												{emptyMessage ||
+													`No ${pluralize(entityName)} found`}
 											</td>
 										</tr>
 									)}
@@ -683,7 +744,9 @@ export const DataTable: React.FC<GenericTableProps> = ({
 
 						{/* Pagination */}
 						{!showAllEntries && displayTotal > 20 && (
-							<div className={`d-flex justify-content-between align-items-center mt-0`}>
+							<div
+								className={`d-flex justify-content-between align-items-center mt-0`}
+							>
 								<div className="d-flex align-items-center gap-0">
 									{[
 										{
@@ -693,13 +756,17 @@ export const DataTable: React.FC<GenericTableProps> = ({
 											label: "First",
 										},
 										{
-											action: () => setCurrentPage(Math.max(0, currentPage - 1)),
+											action: () =>
+												setCurrentPage(Math.max(0, currentPage - 1)),
 											disabled: currentPage === 0,
 											icon: "chevron-left",
 											label: "Previous",
 										},
 										{
-											action: () => setCurrentPage(Math.min(totalPages - 1, currentPage + 1)),
+											action: () =>
+												setCurrentPage(
+													Math.min(totalPages - 1, currentPage + 1)
+												),
 											disabled: currentPage >= totalPages - 1,
 											icon: "chevron-right",
 											label: "Next",
@@ -722,9 +789,12 @@ export const DataTable: React.FC<GenericTableProps> = ({
 												aria-label={label}
 												style={compact ? { fontSize: "0.75rem" } : {}}
 											>
-												<i className={`bi bi-${icon}`} aria-hidden="true"></i>
+												<i
+													className={`bi bi-${icon}`}
+													aria-hidden="true"
+												></i>
 											</Button>
-										),
+										)
 									)}
 								</div>
 								<div className="d-flex align-items-center gap-2">
@@ -734,7 +804,8 @@ export const DataTable: React.FC<GenericTableProps> = ({
 											style={compact ? { fontSize: "0.75rem" } : {}}
 										>
 											{currentPage * pageSize + 1} to{" "}
-											{Math.min((currentPage + 1) * pageSize, totalCount)} of {totalCount}
+											{Math.min((currentPage + 1) * pageSize, totalCount)} of{" "}
+											{totalCount}
 										</span>
 									)}
 									<span
@@ -756,7 +827,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 												<option key={size} value={size}>
 													Show {size} Entries
 												</option>
-											),
+											)
 										)}
 									</Form.Select>
 								</div>
