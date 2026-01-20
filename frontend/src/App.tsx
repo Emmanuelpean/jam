@@ -31,6 +31,8 @@ import SpeculativeApplicationsPage from "./pages/SpeculativeApplicationsPage";
 import { ContextMenuProvider } from "./contexts/ContextMenuContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
+import ScrapedJobsTable from "./components/tables/ScrapedJobTable";
+import { ScrapedJobsPage } from "./pages/ScrapedJobsPage";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -140,6 +142,7 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/interviews", element: <InterviewsPage />, protected: true },
 	{ path: "/aggregators", element: <AggregatorsPage />, protected: true },
 	{ path: "/job-application-updates", element: <JobApplicationUpdatesPage />, protected: true },
+	{ path: "/scraped-jobs", element: <ScrapedJobsPage />, protected: true },
 	{ path: "/dashboard", element: <Dashboard />, protected: true },
 	{ path: "/settings/:tab", element: <UserSettingsPage />, protected: true },
 	{ path: "/settings", element: <Navigate to="/settings/account" replace />, protected: true },

@@ -21,6 +21,7 @@ import {
 import ScrapedJobsTable from "../../components/tables/ScrapedJobTable";
 import { scrapedJobApi } from "../../services/api/Services";
 import { sortByKey } from "../../utils/Utils";
+import { getEntityIcon } from "../../components/rendering/view/Icons";
 
 const Dashboard: React.FC = () => {
 	const dataContext: DataContextValue = useDataContext();
@@ -223,10 +224,11 @@ const Dashboard: React.FC = () => {
 							style={{ height: "100%", minHeight: 0 }}
 						>
 							<CardHeader
-								icon="inbox"
+								icon={getEntityIcon("scrapedJob")}
 								title="Job Alerts"
 								subtitle="Jobs that you received from job boards"
 								badgeValue={scrapedJobCount}
+								path={"/scraped-jobs"}
 							/>
 							<Card.Body
 								className="p-0 flex-grow-1 d-flex flex-column"
