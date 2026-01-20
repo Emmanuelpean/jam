@@ -1,4 +1,4 @@
-import { api, ApiResponsePromise } from "./Base";
+import { baseApi, ApiResponsePromise } from "./Base";
 
 export interface SubscriptionStatus {
 	status: string | null;
@@ -17,14 +17,14 @@ export interface PaymentsApi {
 
 export const paymentsApi: PaymentsApi = {
 	getSubscriptionStatus: async (token: string): ApiResponsePromise<SubscriptionStatus> => {
-		return api.get(`payments/subscription-status/`, token);
+		return baseApi.get(`payments/subscription-status/`, token);
 	},
 
 	createPortalSession: async (token: string): ApiResponsePromise<PortalSessionResponse> => {
-		return api.post("payments/create-portal-session", {}, token);
+		return baseApi.post("payments/create-portal-session", {}, token);
 	},
 
 	createSubscriptionCheckout: async (token: string): ApiResponsePromise<PortalSessionResponse> => {
-		return api.post("payments/create-subscription-checkout", {}, token);
+		return baseApi.post("payments/create-subscription-checkout", {}, token);
 	},
 };
