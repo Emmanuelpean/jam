@@ -54,7 +54,7 @@
 .radio-label {
 	font-weight: 600;
 	font-size: 1rem;
-	color: var(--text-primary);
+	color: var(--bs-body-color);
 	transition: color 0.3s ease;
 }
 

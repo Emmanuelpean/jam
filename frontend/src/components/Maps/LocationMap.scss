@@ -14,7 +14,7 @@
 
 .leaflet-popup-content-wrapper {
 	background-color: var(--bg-tertiary);
-	color: var(--text-primary);
+	color: var(--bs-body-color);
 }
 
 .leaflet-popup-tip {
@@ -22,7 +22,7 @@
 }
 
 .leaflet-container a.leaflet-popup-close-button {
-	color: var(--text-primary);
+	color: var(--bs-body-color);
 }
 
 .leaflet-container a.leaflet-popup-close-button:hover {

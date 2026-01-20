@@ -11,34 +11,24 @@
 
 .url-open-button {
 	position: absolute;
+	right: 1rem;
 	top: 50%;
-	right: 15px;
 	transform: translateY(-50%);
-	background: none;
-	border: none;
-	color: var(--text-primary);
-	font-size: 16px;
-	padding: 4px;
+	color: var(--bs-body-color);
+	font-size: 1rem;
 	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 24px;
-	height: 24px;
-	border-radius: 4px;
+	padding: 0.25rem;
+	z-index: 10;
+	background: transparent;
+	border: none;
 	transition: all 0.2s ease;
-	z-index: 1;
 }
 
-.url-open-button:hover:not(.disabled) {
-	color: var(--bs-muted-color) !important;
-	background-color: rgb(0 0 0 / 5%);
+.url-open-button:hover {
+	color: var(--primary-mid) !important;
 }
 
-.url-open-button:active:not(.disabled) {
-	background-color: rgb(0 0 0 / 10%);
-}
-
-.url-scrape-button.disabled {
-	color: #ced4da;
+.url-open-button:disabled {
+	color: var(--btn-disabled-bg) !important;
+	pointer-events: none;
 }

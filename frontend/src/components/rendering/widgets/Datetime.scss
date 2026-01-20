@@ -13,11 +13,16 @@
 	right: 1rem;
 	top: 50%;
 	transform: translateY(-50%);
-	color: var(--text-primary);
+	color: var(--bs-body-color);
 	font-size: 1rem;
 	cursor: pointer;
 	padding: 0.25rem;
 	z-index: 10;
 	background: transparent;
 	border: none;
+	transition: all 0.2s ease;
+}
+
+.datetime-embedded-icon:hover {
+	color: var(--primary-mid) !important;
 }
