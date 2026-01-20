@@ -26,7 +26,7 @@ import LoadingSpinner from "../spinner/Spinner";
 import { DataModalHandle, modalModes } from "../modals/DataModal/DataModal";
 import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 import "./DataTable.css";
-import FollowUpModal, { FollowUpModalHandle } from "../modals/FollowUpModal/FollowUpModal";
+import FollowUpModal, { FollowUpModalHandle } from "../FollowUpModal/FollowUpModal";
 import { useContextMenu } from "../../contexts/ContextMenuContext";
 import PageHeader from "../../pages/PageHeader/PageHeader";
 

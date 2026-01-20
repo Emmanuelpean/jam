@@ -2,7 +2,7 @@ import React, { JSX, MouseEvent, useRef } from "react";
 import { MenuItem } from "../../ContextMenu/ContextMenu";
 import { DataModalHandle } from "../../modals/DataModal/DataModal";
 import { useContextMenu } from "../../../contexts/ContextMenuContext";
-import FollowUpModal, { FollowUpModalHandle } from "../../modals/FollowUpModal/FollowUpModal";
+import FollowUpModal, { FollowUpModalHandle } from "../../FollowUpModal/FollowUpModal";
 import { LocationModal } from "../../modals/LocationModal";
 import { CompanyModal } from "../../modals/CompanyModal";
 import { PersonModal } from "../../modals/PersonModal";
