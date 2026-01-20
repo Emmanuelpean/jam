@@ -8,10 +8,7 @@ interface LatestRunProgressProps {
 	isRunning: boolean;
 }
 
-export const LatestRunProgress = ({
-	latestLog,
-	isRunning,
-}: LatestRunProgressProps): JSX.Element | null => {
+export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressProps): JSX.Element | null => {
 	if (!latestLog) return null;
 
 	return (
@@ -29,23 +26,20 @@ export const LatestRunProgress = ({
 						{new Date(latestLog.run_datetime).toLocaleString()}
 					</p>
 					<p className="metric-item">
-						<span className="status-label">Duration:</span>{" "}
-						{formatDuration(latestLog.run_duration)}
+						<span className="status-label">Duration:</span> {formatDuration(latestLog.run_duration)}
 					</p>
 				</div>
 
 				<div className="metric-group">
 					<p className="metric-item">
-						<span className="status-label">Jobs Found:</span>{" "}
-						{latestLog.rated_job_found_ids.length}
+						<span className="status-label">Jobs Found:</span> {latestLog.rated_job_found_ids.length}
 					</p>
 					<p className="metric-item">
 						<span className="status-label">Rating Succeeded:</span>{" "}
 						{latestLog.rated_job_succeeded_ids.length}
 					</p>
 					<p className="metric-item">
-						<span className="status-label">Rating Failed:</span>{" "}
-						{latestLog.rated_job_failed_ids.length}
+						<span className="status-label">Rating Failed:</span> {latestLog.rated_job_failed_ids.length}
 					</p>
 				</div>
 			</div>
@@ -63,10 +57,7 @@ export const LatestRunProgress = ({
 				/>
 				<ProgressBar
 					title="Jobs Processed"
-					current={
-						latestLog.rated_job_succeeded_ids.length +
-						latestLog.rated_job_failed_ids.length
-					}
+					current={latestLog.rated_job_succeeded_ids.length + latestLog.rated_job_failed_ids.length}
 					total={latestLog.rated_job_found_ids.length}
 				/>
 			</div>

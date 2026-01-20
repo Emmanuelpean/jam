@@ -23,11 +23,7 @@ export const NotAllowed = (errorCode: string, errorTitle: string, errorMessage: 
 							<i className="bi bi-house-fill me-2"></i>
 							Go Home
 						</Link>
-						<button
-							onClick={goBack}
-							className="btn btn-outline-secondary"
-							type="button"
-						>
+						<button onClick={goBack} className="btn btn-outline-secondary" type="button">
 							<i className="bi bi-arrow-left me-2"></i>
 							Go Back
 						</button>

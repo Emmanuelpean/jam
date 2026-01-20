@@ -1,6 +1,5 @@
 export const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
-export const API_SERVICE_URL: string =
-	process.env.REACT_APP_API_SERVICE_URL || "http://localhost:8001";
+export const API_SERVICE_URL: string = process.env.REACT_APP_API_SERVICE_URL || "http://localhost:8001";
 
 export interface ApiError extends Error {
 	status?: number | null;
@@ -69,11 +68,7 @@ export class ApiService {
 		this.baseUrl = baseUrl;
 	}
 
-	async get(
-		endpoint: string,
-		token: string | null = null,
-		options: RequestOptions = {}
-	): ApiResponsePromise {
+	async get(endpoint: string, token: string | null = null, options: RequestOptions = {}): ApiResponsePromise {
 		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "GET",
 			headers: getAuthHeaders(token || ""),
@@ -107,11 +102,7 @@ export class ApiService {
 		return handleResponse(response);
 	}
 
-	async postFormData(
-		endpoint: string,
-		formData: FormData,
-		token: string | null = null
-	): ApiResponsePromise {
+	async postFormData(endpoint: string, formData: FormData, token: string | null = null): ApiResponsePromise {
 		const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "POST",
@@ -121,11 +112,7 @@ export class ApiService {
 		return handleResponse(response);
 	}
 
-	async downloadFile(
-		endpoint: string,
-		filename: string,
-		token: string | null = null
-	): Promise<void> {
+	async downloadFile(endpoint: string, filename: string, token: string | null = null): Promise<void> {
 		const blob = await this.get(endpoint, token, { responseType: "blob" });
 		const url: string = window.URL.createObjectURL(blob.data);
 		const link: HTMLAnchorElement = document.createElement("a");

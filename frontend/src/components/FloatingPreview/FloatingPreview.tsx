@@ -1,10 +1,6 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
 import { Card } from "react-bootstrap";
-import {
-	ModalViewField,
-	ModalViewFields,
-	renderModalViewField,
-} from "../rendering/view/ModalFields";
+import { ModalViewField, ModalViewFields, renderModalViewField } from "../rendering/view/ModalFields";
 import "./FloatingPreview.scss";
 import { getColumnClass, normaliseArray } from "../../utils/Utils";
 
@@ -15,12 +11,7 @@ export interface FloatingPreviewProps {
 	show: boolean;
 }
 
-export const FloatingPreview = ({
-	data,
-	fields,
-	position,
-	show,
-}: FloatingPreviewProps): JSX.Element | null => {
+export const FloatingPreview = ({ data, fields, position, show }: FloatingPreviewProps): JSX.Element | null => {
 	const [adjustedPosition, setAdjustedPosition] = useState(position);
 	const previewRef = useRef<HTMLDivElement>(null);
 
@@ -60,10 +51,7 @@ export const FloatingPreview = ({
 
 	if (!show || !data) return null;
 
-	const renderFieldGroup = (
-		item: ModalViewField | ModalViewField[],
-		index: number
-	): JSX.Element => {
+	const renderFieldGroup = (item: ModalViewField | ModalViewField[], index: number): JSX.Element => {
 		const itemList: ModalViewField[] = normaliseArray(item);
 		const columnClass = getColumnClass(itemList.length);
 
@@ -72,11 +60,7 @@ export const FloatingPreview = ({
 				{itemList.map((field: ModalViewField): JSX.Element => {
 					return (
 						<div key={field.key} className={columnClass}>
-							{renderModalViewField(
-								field as ModalViewField,
-								data,
-								`floating-preview-${data.id}`
-							)}
+							{renderModalViewField(field as ModalViewField, data, `floating-preview-${data.id}`)}
 						</div>
 					);
 				})}
@@ -98,9 +82,7 @@ export const FloatingPreview = ({
 			onMouseDown={handleMouseDown}
 		>
 			<Card>
-				<Card.Body>
-					{fields.map((item, index: number) => renderFieldGroup(item, index))}
-				</Card.Body>
+				<Card.Body>{fields.map((item, index: number) => renderFieldGroup(item, index))}</Card.Body>
 			</Card>
 		</div>
 	);

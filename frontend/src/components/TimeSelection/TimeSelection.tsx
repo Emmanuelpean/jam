@@ -22,10 +22,7 @@ const timeUnitOptions: SelectOption[] = [
 	{ value: "years", label: "Years" },
 ];
 
-const TimeSelection: React.FC<TimeSelectionProps> = ({
-	onDateRangeChange,
-	defaultMode = "period",
-}) => {
+const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaultMode = "period" }) => {
 	const [mode, setMode] = useState<SelectionMode>(defaultMode);
 	const [amount, setAmount] = useState<number>(1);
 	const [unit, setUnit] = useState<TimeUnit>("weeks");

@@ -45,14 +45,8 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				}),
 			],
 			[formFields.attendanceType(), formFields.location(locations, locationModalRef)],
-			[
-				formFields.keywords(keywords, keywordModalRef),
-				formFields.contacts(persons, personModalRef),
-			],
-			[
-				formFields.salaryMin({ placeholder: "35000" }),
-				formFields.salaryMax({ placeholder: "45000" }),
-			],
+			[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
+			[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
 			[
 				formFields.personalRating(),
 				formFields.deadline(),
@@ -129,9 +123,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 				source_id: jobData.source_id || null,
 				keywords: jobData.keywords || [],
 				contacts: jobData.contacts || [],
-				application_date: jobData.application_date
-					? new Date(jobData.application_date)
-					: null,
+				application_date: jobData.application_date ? new Date(jobData.application_date) : null,
 				application_url: jobData.application_url?.trim() || null,
 				application_status: jobData.application_status?.trim() || null,
 				applied_via: jobData.applied_via?.trim() || null,
@@ -152,14 +144,11 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 			}
 
 			if (formData.url) {
-				const urlDuplicates: EnrichedJobData[] = dataContext.jobs.filter(
-					(job: EnrichedJobData): boolean => {
-						return (
-							job.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() &&
-							job.id !== formData?.id
-						);
-					}
-				);
+				const urlDuplicates: EnrichedJobData[] = dataContext.jobs.filter((job: EnrichedJobData): boolean => {
+					return (
+						job.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() && job.id !== formData?.id
+					);
+				});
 				if (urlDuplicates.length > 0) {
 					errors.url = `A Job with this URL already exists`;
 				}
@@ -171,9 +160,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 			return jobData?.application_status ? (
 				<>
 					Job Application{" "}
-					<span
-						className={`badge ${getApplicationStatusBadgeClass(jobData.application_status)} badge`}
-					>
+					<span className={`badge ${getApplicationStatusBadgeClass(jobData.application_status)} badge`}>
 						{jobData.application_status}
 					</span>
 				</>

@@ -64,11 +64,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 					{isLoading && (
 						<div className="global-loading-overlay">
 							<div className="d-flex flex-column justify-content-center align-items-center h-100">
-								<div
-									className="spinner-border mb-3"
-									role="status"
-									id="loading-spinner"
-								>
+								<div className="spinner-border mb-3" role="status" id="loading-spinner">
 									<span className="visually-hidden">Loading...</span>
 								</div>
 								<p className="text-muted mb-3">{loadingMessage}</p>
@@ -168,28 +164,21 @@ const routeConfigs: RouteConfig[] = [
 function AppRoutes(): JSX.Element {
 	return (
 		<Routes>
-			{routeConfigs.map(
-				({
-					path,
-					element,
-					protected: isProtected,
-					adminOnly,
-				}: RouteConfig): JSX.Element => {
-					let routeElement: JSX.Element = element;
+			{routeConfigs.map(({ path, element, protected: isProtected, adminOnly }: RouteConfig): JSX.Element => {
+				let routeElement: JSX.Element = element;
 
-					if (isProtected && adminOnly) {
-						routeElement = (
-							<ProtectedRoute>
-								<AdminProtectedRoute>{element}</AdminProtectedRoute>
-							</ProtectedRoute>
-						);
-					} else if (isProtected) {
-						routeElement = <ProtectedRoute>{element}</ProtectedRoute>;
-					}
-
-					return <Route key={path} path={path} element={routeElement} />;
+				if (isProtected && adminOnly) {
+					routeElement = (
+						<ProtectedRoute>
+							<AdminProtectedRoute>{element}</AdminProtectedRoute>
+						</ProtectedRoute>
+					);
+				} else if (isProtected) {
+					routeElement = <ProtectedRoute>{element}</ProtectedRoute>;
 				}
-			)}
+
+				return <Route key={path} path={path} element={routeElement} />;
+			})}
 		</Routes>
 	);
 }

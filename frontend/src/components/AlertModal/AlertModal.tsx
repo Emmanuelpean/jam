@@ -41,20 +41,12 @@ const buttonVariants: Record<AlertType, ButtonVariant> = {
 	primary: "primary",
 };
 
-const AlertModal: React.FC<AlertModalProps> = ({
-	alertState,
-	hideAlert,
-}: AlertModalProps): JSX.Element => {
+const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertModalProps): JSX.Element => {
 	const iconClass: string =
-		alertState.icon ||
-		DEFAULT_ALERT_ICONS[alertState.type || "info"] ||
-		DEFAULT_ALERT_ICONS.info;
+		alertState.icon || DEFAULT_ALERT_ICONS[alertState.type || "info"] || DEFAULT_ALERT_ICONS.info;
 	const variant: ButtonVariant = buttonVariants[alertState.type || "primary"] || "primary";
 	const modalId: string = alertState.id || `alert-modal-${alertState.type || "default"}`;
-	const modalSize =
-		alertState.size && alertState.size !== "md"
-			? (alertState.size as "sm" | "lg" | "xl")
-			: undefined;
+	const modalSize = alertState.size && alertState.size !== "md" ? (alertState.size as "sm" | "lg" | "xl") : undefined;
 	const [loading, setLoading] = useState<boolean>(false);
 
 	const handleConfirm = async (): Promise<void> => {

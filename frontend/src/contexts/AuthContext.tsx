@@ -1,18 +1,6 @@
-import React, {
-	createContext,
-	ReactNode,
-	useCallback,
-	useContext,
-	useEffect,
-	useState,
-} from "react";
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-	authApi,
-	GenericResponse,
-	LoginResponse,
-	UpdateCurrentUserResponse,
-} from "../services/api/Users";
+import { authApi, GenericResponse, LoginResponse, UpdateCurrentUserResponse } from "../services/api/Users";
 import { ApiError, ApiResponse } from "../services/api/Base";
 import { DEFAULT_THEME } from "../utils/Theme";
 import { UserData, UserDataUpdate } from "../services/schemas/Core";
@@ -25,9 +13,7 @@ export interface AuthContextType {
 	currentUser: CurrentUser | null;
 	token: string | null;
 	login: (email: string, password: string) => Promise<GenericResponse>;
-	updateCurrentUser: (
-		userData: UserDataUpdate
-	) => Promise<ApiResponse<UpdateCurrentUserResponse> | null>;
+	updateCurrentUser: (userData: UserDataUpdate) => Promise<ApiResponse<UpdateCurrentUserResponse> | null>;
 	fetchUserInfo: (authToken: string) => Promise<void>;
 	logout: () => void;
 	isAuthenticated: boolean;
@@ -97,26 +83,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		userData: UserDataUpdate
 	): Promise<ApiResponse<UpdateCurrentUserResponse> | null> => {
 		if (!token) return null;
-		const response: ApiResponse<UpdateCurrentUserResponse> = await authApi.updateCurrentUser(
-			userData,
-			token
-		);
+		const response: ApiResponse<UpdateCurrentUserResponse> = await authApi.updateCurrentUser(userData, token);
 		if (response.data.logged_out) {
 			logout();
 			return response;
 		}
 		const userResponse: ApiResponse<UserData> = await authApi.getCurrentUser(token);
-		setCurrentUser((prev: CurrentUser | null) =>
-			prev ? { ...prev, ...userResponse.data } : prev
-		);
+		setCurrentUser((prev: CurrentUser | null) => (prev ? { ...prev, ...userResponse.data } : prev));
 		return response;
 	};
 
 	useEffect(() => {
-		document.documentElement.setAttribute(
-			"data-theme",
-			currentUser?.preferences.theme || DEFAULT_THEME
-		);
+		document.documentElement.setAttribute("data-theme", currentUser?.preferences.theme || DEFAULT_THEME);
 	}, [currentUser]);
 
 	// Check if token exists on load and fetch user info

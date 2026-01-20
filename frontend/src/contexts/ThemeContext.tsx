@@ -44,9 +44,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }): 
 			} else {
 				// Otherwise use system preference
 				if (window.matchMedia) {
-					const systemPreference: boolean = window.matchMedia(
-						"(prefers-color-scheme: dark)"
-					).matches;
+					const systemPreference: boolean = window.matchMedia("(prefers-color-scheme: dark)").matches;
 					setIsDarkMode(systemPreference);
 				}
 			}
@@ -96,11 +94,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }): 
 		}
 	};
 
-	return (
-		<ThemeContext.Provider value={{ isDarkMode, handleDarkModeToggle }}>
-			{children}
-		</ThemeContext.Provider>
-	);
+	return <ThemeContext.Provider value={{ isDarkMode, handleDarkModeToggle }}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = () => {

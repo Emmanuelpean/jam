@@ -1,10 +1,5 @@
 import React, { forwardRef } from "react";
-import DataModal, {
-	DataModalHandle,
-	JamDataModalProps,
-	Fields,
-	ValidationErrors,
-} from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { tableColumns } from "../rendering/view/TableColumns";
@@ -52,10 +47,8 @@ export const LocationModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 			// Check if any value has been set
 			const hasCity: string | null | undefined = formData.city && formData.city.trim();
-			const hasPostcode: string | null | undefined =
-				formData.postcode && formData.postcode.trim();
-			const hasCountry: string | null | undefined =
-				formData.country && formData.country.trim();
+			const hasPostcode: string | null | undefined = formData.postcode && formData.postcode.trim();
+			const hasCountry: string | null | undefined = formData.country && formData.country.trim();
 			const hasAnyValue: boolean = !!(hasCity || hasPostcode || hasCountry);
 			if (!hasAnyValue) {
 				errors.city =
@@ -66,25 +59,15 @@ export const LocationModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 			// Check if the location already exist
 			if (Object.keys(errors).length === 0) {
-				const duplicates: LocationData[] = dataContext.locations.filter(
-					(location: LocationData): boolean => {
-						const cityMatch: boolean =
-							location.city?.trim().toLowerCase() ===
-							formData.city?.trim().toLowerCase();
-						const postcodeMatch: boolean =
-							location.postcode?.trim().toLowerCase() ===
-							formData.postcode?.trim().toLowerCase();
-						const countryMatch: boolean =
-							location.country?.trim().toLowerCase() ===
-							formData.country?.trim().toLowerCase();
-						return (
-							cityMatch &&
-							postcodeMatch &&
-							countryMatch &&
-							formData?.id !== location.id
-						);
-					}
-				);
+				const duplicates: LocationData[] = dataContext.locations.filter((location: LocationData): boolean => {
+					const cityMatch: boolean =
+						location.city?.trim().toLowerCase() === formData.city?.trim().toLowerCase();
+					const postcodeMatch: boolean =
+						location.postcode?.trim().toLowerCase() === formData.postcode?.trim().toLowerCase();
+					const countryMatch: boolean =
+						location.country?.trim().toLowerCase() === formData.country?.trim().toLowerCase();
+					return cityMatch && postcodeMatch && countryMatch && formData?.id !== location.id;
+				});
 
 				if (duplicates.length > 0) {
 					const duplicateName = duplicates[0]!.name;

@@ -12,12 +12,7 @@ import { AggregatorModal } from "../../DataModal/AggregatorModal";
 import { JobApplicationUpdateModal } from "../../DataModal/JobApplicationUpdateModal";
 import { InterviewModal } from "../../DataModal/InterviewModal";
 import { useDeleteEntityConfirm } from "../../../utils/DeleteHandler";
-import {
-	DataContextValue,
-	EntityType,
-	JamData,
-	useDataContext,
-} from "../../../contexts/DataContext";
+import { DataContextValue, EntityType, JamData, useDataContext } from "../../../contexts/DataContext";
 import { getEntityIcon } from "./Icons";
 import { useGlobalToast } from "../../../hooks/useNotificationToast";
 import {
@@ -88,11 +83,9 @@ const createBadgeModalManager = <T extends JamData>(
 					};
 				}
 				if (parentEntityType) {
-					dataContext
-						.updateEntity(parentEntityType, parentItem.id, updatedParent)
-						.then((_) => {
-							showToastSuccess("Association removed successfully.");
-						});
+					dataContext.updateEntity(parentEntityType, parentItem.id, updatedParent).then((_) => {
+						showToastSuccess("Association removed successfully.");
+					});
 				}
 			}
 		};
@@ -120,8 +113,7 @@ const createBadgeModalManager = <T extends JamData>(
 				function: (item: JamData): void => {
 					followUpModalRef.current?.show(parentItem as JobData, item as PersonData);
 				},
-				displayCondition: (item: JamData): boolean =>
-					!!((item as PersonData).email && parentItem),
+				displayCondition: (item: JamData): boolean => !!((item as PersonData).email && parentItem),
 			},
 		];
 
@@ -188,12 +180,7 @@ export const KeywordBadge = createBadgeModalManager(
 	"bg-secondary",
 	(item: KeywordData): string => item.name
 );
-export const JobBadge = createBadgeModalManager(
-	JobModal,
-	"job",
-	"bg-primary",
-	(item: JobData): string => item.name
-);
+export const JobBadge = createBadgeModalManager(JobModal, "job", "bg-primary", (item: JobData): string => item.name);
 export const AggregatorBadge = createBadgeModalManager(
 	AggregatorModal,
 	"aggregator",

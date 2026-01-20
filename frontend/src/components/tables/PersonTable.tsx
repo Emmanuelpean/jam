@@ -3,10 +3,7 @@ import { DataTableProps, DataTable } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { PersonModal } from "../DataModal/PersonModal";
 
-const PersonTable: React.FC<DataTableProps> = ({
-	data = [],
-	columns = [],
-}: DataTableProps): JSX.Element => {
+const PersonTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns

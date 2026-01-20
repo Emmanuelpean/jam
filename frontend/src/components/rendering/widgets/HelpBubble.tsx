@@ -8,12 +8,7 @@ interface HelpBubbleProps {
 	container?: HTMLElement;
 }
 
-export const HelpBubble: React.FC<HelpBubbleProps> = ({
-	helpText,
-	placement = "right",
-	size = "14px",
-	container,
-}) => {
+export const HelpBubble: React.FC<HelpBubbleProps> = ({ helpText, placement = "right", size = "14px", container }) => {
 	const [isVisible, setIsVisible] = useState(false);
 	const iconRef = useRef<HTMLSpanElement>(null);
 

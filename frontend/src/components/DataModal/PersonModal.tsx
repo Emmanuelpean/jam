@@ -1,10 +1,5 @@
 import React, { forwardRef, JSX } from "react";
-import DataModal, {
-	DataModalHandle,
-	JamDataModalProps,
-	Fields,
-	ValidationErrors,
-} from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { useFormOptions } from "../rendering/form/FormOptions";
@@ -19,14 +14,8 @@ export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		const dataContext: DataContextValue = useDataContext();
 
 		const formFieldsArray: Fields = [
-			[
-				formFields.firstName({ placeholder: "Jane" }),
-				formFields.lastName({ placeholder: "Doe" }),
-			],
-			[
-				formFields.company(companies, companyModalRef),
-				formFields.role({ placeholder: "Team Leader" }),
-			],
+			[formFields.firstName({ placeholder: "Jane" }), formFields.lastName({ placeholder: "Doe" })],
+			[formFields.company(companies, companyModalRef), formFields.role({ placeholder: "Team Leader" })],
 			[formFields.email({ placeholder: "jane.doe@company.com" }), formFields.phone()],
 			formFields.linkedinUrl({ placeholder: "https://linkedin.com/in/janedoe" }),
 			formFields.isRecruiter(),
@@ -58,10 +47,8 @@ export const PersonModal = forwardRef<DataModalHandle, JamDataModalProps>(
 
 			const duplicates: PersonData[] = dataContext.persons.filter(
 				(person: PersonData): boolean =>
-					person.first_name.trim().toLowerCase() ===
-						formData.first_name.trim().toLowerCase() &&
-					person.last_name.trim().toLowerCase() ===
-						formData.last_name.trim().toLowerCase() &&
+					person.first_name.trim().toLowerCase() === formData.first_name.trim().toLowerCase() &&
+					person.last_name.trim().toLowerCase() === formData.last_name.trim().toLowerCase() &&
 					person.company_id === formData.company_id &&
 					person.id !== formData?.id
 			);

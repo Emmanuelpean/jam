@@ -57,14 +57,11 @@ const CustomDropdownIndicator = (props: any): JSX.Element => {
 				if (customProps.addButtonModalRef) {
 					if (customProps.transformParentData && customProps.parentData) {
 						const defaultData = customProps.transformParentData(customProps.parentData);
-						customProps.addButtonModalRef.current?.showAdd(
-							defaultData,
-							(newData: any) => {
-								if (customProps.onAddSuccess) {
-									customProps.onAddSuccess(newData);
-								}
+						customProps.addButtonModalRef.current?.showAdd(defaultData, (newData: any) => {
+							if (customProps.onAddSuccess) {
+								customProps.onAddSuccess(newData);
 							}
-						);
+						});
 					} else {
 						customProps.addButtonModalRef.current?.showAdd({}, (newData: any) => {
 							if (customProps.onAddSuccess) {
@@ -243,9 +240,7 @@ export const SelectInput = ({
 						const syntheticEvent: SyntheticEvent = {
 							target: {
 								name: field.name,
-								value: selectedOptions
-									? (selectedOptions as SelectOption).value
-									: null,
+								value: selectedOptions ? (selectedOptions as SelectOption).value : null,
 							},
 						};
 						handleChange(syntheticEvent);

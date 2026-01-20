@@ -34,8 +34,7 @@ const Dashboard: React.FC = () => {
 	const now = new Date();
 
 	const jobApplications: EnrichedJobData[] = dataContext.jobs.filter(
-		(job: EnrichedJobData): Date | string | null | undefined =>
-			job.application_date || job.application_status
+		(job: EnrichedJobData): Date | string | null | undefined => job.application_date || job.application_status
 	);
 
 	const jobApplicationPending: EnrichedJobData[] = jobApplications.filter(
@@ -50,9 +49,7 @@ const Dashboard: React.FC = () => {
 			(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now)
 	);
 
-	const thresholdDate = new Date(
-		now.getTime() + currentUser.preferences.deadline_threshold * 24 * 60 * 60 * 1000
-	);
+	const thresholdDate = new Date(now.getTime() + currentUser.preferences.deadline_threshold * 24 * 60 * 60 * 1000);
 
 	const upcomingDeadlines: EnrichedJobData[] = dataContext.jobs.filter(
 		(job: EnrichedJobData) =>
@@ -65,8 +62,7 @@ const Dashboard: React.FC = () => {
 
 	const upcomingInterviews: EnrichedInterviewData[] = sortByKey(
 		dataContext.interviews.filter(
-			(interview: EnrichedInterviewData): boolean | null | undefined =>
-				new Date(interview.date!) >= now
+			(interview: EnrichedInterviewData): boolean | null | undefined => new Date(interview.date!) >= now
 		),
 		"date"
 	);

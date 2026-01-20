@@ -63,13 +63,9 @@ export const ErrorSummaryCard = ({
 								.slice()
 								.sort(
 									(a: ServiceLog, b: ServiceLog): number =>
-										new Date(b.run_datetime).getTime() -
-										new Date(a.run_datetime).getTime()
+										new Date(b.run_datetime).getTime() - new Date(a.run_datetime).getTime()
 								)
-								.filter(
-									(log: ServiceLog): boolean =>
-										!!(log.error_message && log.error_message.trim())
-								)
+								.filter((log: ServiceLog): boolean => !!(log.error_message && log.error_message.trim()))
 								.map(
 									(log: ServiceLog, idx: number): JSX.Element => (
 										<div key={idx} className="alert alert-danger">
@@ -93,9 +89,7 @@ export const ErrorSummaryCard = ({
 
 				{/* Rating Errors Column */}
 				<div style={{ flex: 1 }}>
-					<h5 className="mb-3">
-						Job Rating Errors ({Object.keys(scrapeErrors).length} unique)
-					</h5>
+					<h5 className="mb-3">Job Rating Errors ({Object.keys(scrapeErrors).length} unique)</h5>
 					{Object.keys(scrapeErrors).length === 0 ? (
 						<div className="text-muted">No scrape errors</div>
 					) : (

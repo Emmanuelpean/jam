@@ -132,11 +132,7 @@ export const Sidebar = (): JSX.Element => {
 			setShowDropdown(false);
 			// Collapse inactive submenus
 			navigationItems.forEach((item: NavigationItem): void => {
-				if (
-					item.submenu &&
-					expandedSubmenu === item.text &&
-					!isGroupMenuActive(item.submenu)
-				) {
+				if (item.submenu && expandedSubmenu === item.text && !isGroupMenuActive(item.submenu)) {
 					setExpandedSubmenu(null);
 				}
 			});
@@ -207,9 +203,7 @@ export const Sidebar = (): JSX.Element => {
 									}}
 								>
 									<span className="nav-icon">
-										<i
-											className={`bi bi-${subItem?.icon || getTableIcon(subItem.text)}`}
-										></i>
+										<i className={`bi bi-${subItem?.icon || getTableIcon(subItem.text)}`}></i>
 									</span>
 									<span className="nav-text-container">
 										<span className="nav-text">{subItem.text}</span>
@@ -242,11 +236,7 @@ export const Sidebar = (): JSX.Element => {
 	return (
 		<>
 			{isMobile && !isExpanded && (
-				<button
-					className="sidebar-open-btn"
-					onClick={handleSidebarToggle}
-					aria-label="Toggle sidebar"
-				>
+				<button className="sidebar-open-btn" onClick={handleSidebarToggle} aria-label="Toggle sidebar">
 					<i className="bi bi-list" style={{ fontSize: 24 }}></i>
 				</button>
 			)}
@@ -256,20 +246,13 @@ export const Sidebar = (): JSX.Element => {
 				onMouseLeave={!isMobile ? handleMouseLeave : undefined}
 			>
 				{isMobile && isExpanded && (
-					<button
-						className="sidebar-close-btn"
-						onClick={handleSidebarToggle}
-						aria-label="Close sidebar"
-					>
+					<button className="sidebar-close-btn" onClick={handleSidebarToggle} aria-label="Close sidebar">
 						<i className="bi bi-x-lg" style={{ fontSize: 24 }}></i>
 					</button>
 				)}
 				<div className="sidebar-header">
 					<div ref={dropdownRef}>
-						<div
-							onClick={() => setShowDropdown(!showDropdown)}
-							style={{ cursor: "pointer" }}
-						>
+						<div onClick={() => setShowDropdown(!showDropdown)} style={{ cursor: "pointer" }}>
 							<div className="logo-container">
 								<JamLogo
 									style={{
@@ -290,13 +273,9 @@ export const Sidebar = (): JSX.Element => {
 					</div>
 				</div>
 
-				<nav className="sidebar-nav sidebar-nav-top">
-					{renderNavigationItems(topNavigationItems)}
-				</nav>
+				<nav className="sidebar-nav sidebar-nav-top">{renderNavigationItems(topNavigationItems)}</nav>
 
-				<nav className="sidebar-nav sidebar-nav-bottom">
-					{renderNavigationItems(bottomNavigationItems)}
-				</nav>
+				<nav className="sidebar-nav sidebar-nav-bottom">{renderNavigationItems(bottomNavigationItems)}</nav>
 			</div>
 		</>
 	);

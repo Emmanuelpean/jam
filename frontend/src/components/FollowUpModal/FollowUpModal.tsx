@@ -74,9 +74,8 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 		let companyString: string | null = null;
 		if (contact?.is_recruiter && contact.company_id !== job.company_id) {
 			companyString =
-				dataContext.companies.find(
-					(c: CompanyData): boolean => c.id === contact?.company_id
-				)?.name || "[Company Name]";
+				dataContext.companies.find((c: CompanyData): boolean => c.id === contact?.company_id)?.name ||
+				"[Company Name]";
 		}
 		return jobFollowUpEmail(
 			contact?.first_name || "[Contact Name]",
@@ -117,10 +116,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 	const hasUnsavedChanges = (): boolean => {
 		const keys: string[] = Object.keys(formData);
 		return keys.some((key: string): boolean => {
-			return areDifferent(
-				formData[key as keyof FormData],
-				originalFormData[key as keyof FormData]
-			);
+			return areDifferent(formData[key as keyof FormData], originalFormData[key as keyof FormData]);
 		});
 	};
 
@@ -275,11 +271,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 							className="email-service-dropdown flex-fill"
 							style={{ width: "100%" }}
 						>
-							<Button
-								variant="primary"
-								onClick={(): void => handleSend("default")}
-								id={"send-btn"}
-							>
+							<Button variant="primary" onClick={(): void => handleSend("default")} id={"send-btn"}>
 								<i className="bi bi-send-fill me-2"></i>
 								Send Email
 							</Button>

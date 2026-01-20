@@ -94,13 +94,7 @@ export const ActionButton = ({
 						{loadingIcon ? (
 							<i className={`${loadingIcon}`} />
 						) : (
-							<Spinner
-								as="span"
-								animation="border"
-								size="sm"
-								role="status"
-								aria-hidden="true"
-							/>
+							<Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
 						)}
 						{loadingText ?? defaultText ?? "Loading..."}
 					</span>
@@ -146,10 +140,7 @@ export const ActionButton = ({
 	// Wrap with tooltip if provided
 	if (tooltip) {
 		return (
-			<OverlayTrigger
-				placement={tooltipPlacement}
-				overlay={<Tooltip id={`${id}-tooltip`}>{tooltip}</Tooltip>}
-			>
+			<OverlayTrigger placement={tooltipPlacement} overlay={<Tooltip id={`${id}-tooltip`}>{tooltip}</Tooltip>}>
 				{button}
 			</OverlayTrigger>
 		);

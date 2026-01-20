@@ -8,11 +8,7 @@ import {
 	ViewField,
 } from "../../components/rendering/view/ViewRenders";
 import { getTableIcon } from "../../components/rendering/view/Icons";
-import {
-	EnrichedInterviewData,
-	EnrichedJobApplicationUpdateData,
-	JobData,
-} from "../../services/schemas/DataTables";
+import { EnrichedInterviewData, EnrichedJobApplicationUpdateData, JobData } from "../../services/schemas/DataTables";
 import { formatActivityDate } from "../../utils/TimeUtils";
 import { CardHeader } from "./CardHeader";
 
@@ -72,10 +68,7 @@ export const ActivityFeedCard = <T,>({
 			{items.length === 0 ? (
 				<div className="text-center py-5 px-4 flex-grow-1 d-flex flex-column justify-content-center">
 					<div className="mb-3">
-						<i
-							className={`bi bi-${emptyIcon} text-muted`}
-							style={{ fontSize: "3.5rem" }}
-						></i>
+						<i className={`bi bi-${emptyIcon} text-muted`} style={{ fontSize: "3.5rem" }}></i>
 					</div>
 					<h6 className="text-muted fw-semibold">{emptyTitle}</h6>
 					<p className="text-muted small mb-0">{emptyDescription}</p>
@@ -85,9 +78,7 @@ export const ActivityFeedCard = <T,>({
 					className="activity-timeline px-4 flex-grow-1"
 					style={{ overflowY: "auto", height: "100%", minHeight: 0 }}
 				>
-					{items.map((item, index) =>
-						renderItem(item, index, index === items.length - 1)
-					)}
+					{items.map((item, index) => renderItem(item, index, index === items.length - 1))}
 				</div>
 			)}
 		</Card.Body>
@@ -101,11 +92,7 @@ export interface RecentActivity {
 	job_id: number | null | undefined | string;
 }
 
-export const renderRecentActivityItem = (
-	activity: RecentActivity,
-	index: number,
-	isLast: boolean
-): JSX.Element => {
+export const renderRecentActivityItem = (activity: RecentActivity, index: number, isLast: boolean): JSX.Element => {
 	const getActivityNumber = (activity: RecentActivity): string => {
 		if (activity.type === "Interview" || activity.type === "Job Application Update") {
 			return `#${"number" in activity.data ? activity.data.number : ""}`;
@@ -139,10 +126,7 @@ export const renderRecentActivityItem = (
 							height: "35px",
 						}}
 					>
-						<i
-							className={`bi-${activityIcon} text-white`}
-							style={{ fontSize: "1rem" }}
-						></i>
+						<i className={`bi-${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
 					</div>
 				</div>
 
@@ -152,15 +136,9 @@ export const renderRecentActivityItem = (
 						<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>
 							{activity.type} {getActivityNumber(activity)}
 						</div>
-						<small className="text-muted activity-date">
-							{formatActivityDate(activity.date)}
-						</small>
+						<small className="text-muted activity-date">{formatActivityDate(activity.date)}</small>
 					</div>
-					<RenderViewFieldWithContext
-						field={jobField}
-						item={activityData}
-						id={index.toString()}
-					/>
+					<RenderViewFieldWithContext field={jobField} item={activityData} id={index.toString()} />
 				</div>
 			</div>
 		</div>
@@ -193,10 +171,7 @@ export const renderUpcomingInterviewItem = (
 							height: "35px",
 						}}
 					>
-						<i
-							className={`bi-${activityIcon} text-white`}
-							style={{ fontSize: "1rem" }}
-						></i>
+						<i className={`bi-${activityIcon} text-white`} style={{ fontSize: "1rem" }}></i>
 					</div>
 				</div>
 				{/* Interview content */}
@@ -205,15 +180,9 @@ export const renderUpcomingInterviewItem = (
 						<div className="fw-semibold activity-title" style={{ fontSize: "1rem" }}>
 							{interview.type} (interview #{interview.number})
 						</div>
-						<small className="text-muted activity-date">
-							{formatActivityDate(interview.date)}
-						</small>
+						<small className="text-muted activity-date">{formatActivityDate(interview.date)}</small>
 					</div>
-					<RenderViewFieldWithContext
-						field={jobField}
-						item={interview}
-						id={index.toString()}
-					/>
+					<RenderViewFieldWithContext field={jobField} item={interview} id={index.toString()} />
 				</div>
 			</div>
 		</div>

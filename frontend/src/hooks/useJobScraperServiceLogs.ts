@@ -9,20 +9,15 @@ import { ApiResponse } from "../services/api/Base";
 
 export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: DateRange) => {
 	const { token } = useAuth();
-	const [previousServiceLogs, setPreviousServiceLogs] = useState<
-		JobScrapingServiceLogData[] | null
-	>(null);
-	const [latestServiceLog, setLatestServiceLog] = useState<JobScrapingServiceLogData | null>(
-		null
-	);
+	const [previousServiceLogs, setPreviousServiceLogs] = useState<JobScrapingServiceLogData[] | null>(null);
+	const [latestServiceLog, setLatestServiceLog] = useState<JobScrapingServiceLogData | null>(null);
 	const [platformOptions, setPlatformOptions] = useState<SelectOption[]>([]);
 	const [serviceLogError, setServiceLogError] = useState<string | null>(null);
 
 	const fetchLatestServiceLog = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const log: ApiResponse<JobScrapingServiceLogData> =
-				await jobScraperServiceLogApi.getLatest(token);
+			const log: ApiResponse<JobScrapingServiceLogData> = await jobScraperServiceLogApi.getLatest(token);
 			if (log.data) {
 				setLatestServiceLog(log.data);
 			}
@@ -35,11 +30,10 @@ export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: D
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token) return;
 		try {
-			const logs: ApiResponse<JobScrapingServiceLogData[]> =
-				await jobScraperServiceLogApi.getAll(token, {
-					start_date: new Date(dateRange.start).toISOString(),
-					end_date: new Date(dateRange.end).toISOString(),
-				});
+			const logs: ApiResponse<JobScrapingServiceLogData[]> = await jobScraperServiceLogApi.getAll(token, {
+				start_date: new Date(dateRange.start).toISOString(),
+				end_date: new Date(dateRange.end).toISOString(),
+			});
 			setPreviousServiceLogs(logs.data);
 
 			// Extract unique platforms from logs
@@ -48,9 +42,7 @@ export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: D
 				...Array.from(
 					new Set(
 						logs.data.flatMap((log: JobScrapingServiceLogData): string[] =>
-							log.platform_stats
-								? log.platform_stats.map((stat: PlatformStat): string => stat.name)
-								: []
+							log.platform_stats ? log.platform_stats.map((stat: PlatformStat): string => stat.name) : []
 						)
 					)
 				).map(

@@ -15,11 +15,7 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
-			: [
-					tableColumns.dateColumn(),
-					tableColumns.updateTypeColumn(),
-					tableColumns.noteColumn(),
-				];
+			: [tableColumns.dateColumn(), tableColumns.updateTypeColumn(), tableColumns.noteColumn()];
 
 	return (
 		<DataTable

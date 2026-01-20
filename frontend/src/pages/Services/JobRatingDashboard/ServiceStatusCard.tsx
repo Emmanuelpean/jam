@@ -39,9 +39,7 @@ export const ServiceStatusCard = ({
 							<span
 								className={`status-badge ${["started", "starting"].includes(status.service_runner_status) ? "badge-success" : "badge-danger"}`}
 							>
-								<i
-									className={`bi ${serviceRunnerStatusIcons[status.service_runner_status]} me-2`}
-								></i>
+								<i className={`bi ${serviceRunnerStatusIcons[status.service_runner_status]} me-2`}></i>
 								{serviceRunnerStatusLabels[status.service_runner_status]}
 							</span>
 						</div>
@@ -50,9 +48,7 @@ export const ServiceStatusCard = ({
 							<span
 								className={`status-badge ${status.service_running ? "badge-success" : "badge-danger"}`}
 							>
-								<i
-									className={`bi ${getServiceStatus(status.service_running)} me-2`}
-								></i>
+								<i className={`bi ${getServiceStatus(status.service_running)} me-2`}></i>
 								{getServiceStatusMessage(status, remainingTime)}
 							</span>
 						</div>
@@ -75,10 +71,7 @@ export const ServiceStatusCard = ({
 					<div className="actions-section">
 						<ActionButton
 							id="confirm-start-button"
-							disabled={
-								loading ||
-								["stopping", "starting"].includes(status?.service_runner_status)
-							}
+							disabled={loading || ["stopping", "starting"].includes(status?.service_runner_status)}
 							loading={loading}
 							loadingText={
 								status?.service_runner_status === "stopping"

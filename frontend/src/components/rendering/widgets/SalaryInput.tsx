@@ -18,9 +18,8 @@ export const SalaryInput = ({
 		: currentUser?.preferences.default_currency;
 
 	const currentSymbol: string =
-		dataContext.currencies.filter(
-			(currency: Currency): boolean => currency.code === currencyCode
-		)[0]?.symbol || "N/A";
+		dataContext.currencies.filter((currency: Currency): boolean => currency.code === currencyCode)[0]?.symbol ||
+		"N/A";
 
 	return (
 		<>

@@ -1,9 +1,5 @@
 import React, { forwardRef } from "react";
-import DataModal, {
-	DataModalHandle,
-	JamDataModalProps,
-	ValidationErrors,
-} from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, JamDataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { tableColumns } from "../rendering/view/TableColumns";
@@ -25,11 +21,7 @@ export const CompanyModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					}),
 				],
 			],
-			view: [
-				modalViewFields.name({ isTitle: true }),
-				modalViewFields.url(),
-				[modalViewFields.description()],
-			],
+			view: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
 		};
 
 		const additionalFields: ModalViewField[] = [
@@ -59,8 +51,7 @@ export const CompanyModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			const errors: ValidationErrors = {};
 			const nameDuplicates: CompanyData[] = dataContext.companies.filter(
 				(company: CompanyData): boolean =>
-					company.name.toLowerCase() === formData.name.trim().toLowerCase() &&
-					company.id !== formData?.id
+					company.name.toLowerCase() === formData.name.trim().toLowerCase() && company.id !== formData?.id
 			);
 
 			if (nameDuplicates.length > 0) {

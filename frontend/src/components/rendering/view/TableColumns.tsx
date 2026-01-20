@@ -350,8 +350,7 @@ export const tableColumns = {
 		sortable: true,
 		searchable: true,
 		type: "date",
-		searchFields: (item: JamData) =>
-			"last_login" in item && item.last_login ? toDdMmYyyy(item.last_login) : null,
+		searchFields: (item: JamData) => ("last_login" in item && item.last_login ? toDdMmYyyy(item.last_login) : null),
 		render: (params: RenderParams) => renderFunctions._date(params, "last_login"),
 		...overrides,
 	}),
@@ -548,8 +547,7 @@ export const tableColumns = {
 		label: "Job Applications",
 		sortable: true,
 		searchable: false,
-		render: (param: RenderParams) =>
-			renderFunctions._jobApplicationCount(param, "application_aggregator_id"),
+		render: (param: RenderParams) => renderFunctions._jobApplicationCount(param, "application_aggregator_id"),
 		...overrides,
 	}),
 

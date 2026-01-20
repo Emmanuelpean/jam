@@ -11,14 +11,7 @@ interface TableCardHeaderProps {
 	onClick?: () => void;
 }
 
-export const CardHeader: React.FC<TableCardHeaderProps> = ({
-	icon,
-	title,
-	subtitle,
-	badgeValue,
-	path,
-	onClick,
-}) => {
+export const CardHeader: React.FC<TableCardHeaderProps> = ({ icon, title, subtitle, badgeValue, path, onClick }) => {
 	const navigate = useNavigate();
 
 	const handleClick = (): void => {
@@ -31,10 +24,7 @@ export const CardHeader: React.FC<TableCardHeaderProps> = ({
 	};
 
 	const content = (
-		<div
-			className="d-flex align-items-center"
-			style={{ cursor: path || onClick ? "pointer" : "default" }}
-		>
+		<div className="d-flex align-items-center" style={{ cursor: path || onClick ? "pointer" : "default" }}>
 			<div className="header-icon-wrapper me-3">
 				<i className={`bi bi-${icon}`}></i>
 			</div>

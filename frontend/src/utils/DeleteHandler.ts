@@ -12,11 +12,7 @@ import { ApiResponsePromise } from "../services/api/Base";
 
 interface EntityOperationConfig {
 	entityType: EntityType;
-	operation: (
-		entityType: EntityType,
-		id: number,
-		data?: any
-	) => Promise<null> | ApiResponsePromise<JamData>;
+	operation: (entityType: EntityType, id: number, data?: any) => Promise<null> | ApiResponsePromise<JamData>;
 	successMessage: (entityTypeName: string) => string;
 	errorMessage: (entityName: string) => string;
 	confirmationConfig?: {
@@ -25,9 +21,7 @@ interface EntityOperationConfig {
 	};
 }
 
-const useEntityOperation = (
-	config: EntityOperationConfig
-): ((item: JamData) => Promise<boolean>) => {
+const useEntityOperation = (config: EntityOperationConfig): ((item: JamData) => Promise<boolean>) => {
 	const { entityType, operation, successMessage, errorMessage, confirmationConfig } = config;
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const { showDelete } = useAlert();
@@ -66,9 +60,7 @@ const useEntityOperation = (
 	};
 };
 
-export const useDeleteEntityConfirm = (
-	entityType: EntityType
-): ((item: JamData) => Promise<boolean>) => {
+export const useDeleteEntityConfirm = (entityType: EntityType): ((item: JamData) => Promise<boolean>) => {
 	const { deleteEntity } = useDataContext();
 	return useEntityOperation({
 		entityType: entityType,
@@ -84,9 +76,7 @@ export const useDeleteEntityConfirm = (
 	});
 };
 
-export const useDeactivateEntityConfirm = (
-	entityType: EntityType
-): ((item: JamData) => Promise<boolean>) => {
+export const useDeactivateEntityConfirm = (entityType: EntityType): ((item: JamData) => Promise<boolean>) => {
 	const { updateEntity } = useDataContext();
 	return useEntityOperation({
 		entityType: entityType,
@@ -103,9 +93,7 @@ export const useDeactivateEntityConfirm = (
 	});
 };
 
-export const useActivateEntity = (
-	entityType: EntityType
-): ((item: JamData) => Promise<boolean>) => {
+export const useActivateEntity = (entityType: EntityType): ((item: JamData) => Promise<boolean>) => {
 	const { updateEntity } = useDataContext();
 	return useEntityOperation({
 		entityType: entityType,
@@ -117,9 +105,7 @@ export const useActivateEntity = (
 	});
 };
 
-export const useDeactivateEntity = (
-	entityType: EntityType
-): ((item: JamData) => Promise<boolean>) => {
+export const useDeactivateEntity = (entityType: EntityType): ((item: JamData) => Promise<boolean>) => {
 	const { updateEntity } = useDataContext();
 	return useEntityOperation({
 		entityType: entityType,

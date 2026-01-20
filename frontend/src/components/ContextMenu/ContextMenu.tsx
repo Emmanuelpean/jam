@@ -65,8 +65,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 	};
 
 	const filteredItems: MenuItem[] = menuItems.filter(
-		(menuItem: MenuItem): boolean =>
-			!menuItem.displayCondition || menuItem.displayCondition(selectedItem)
+		(menuItem: MenuItem): boolean => !menuItem.displayCondition || menuItem.displayCondition(selectedItem)
 	);
 
 	const handleMouseLeave = (): void => {
@@ -103,13 +102,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 				style={{
 					top: position.y,
 					left: position.x,
-					minWidth: compact
-						? isSubmenu
-							? "100px"
-							: "120px"
-						: isSubmenu
-							? "120px"
-							: "150px",
+					minWidth: compact ? (isSubmenu ? "100px" : "120px") : isSubmenu ? "120px" : "150px",
 				}}
 				onClick={(e: MouseEvent): void => e.stopPropagation()}
 				onMouseEnter={onMouseEnter}
