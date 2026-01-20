@@ -6,15 +6,7 @@ interface ProgressOverlayProps {
 	show: boolean;
 	title?: string;
 	message?: string | React.ReactNode;
-	spinnerVariant?:
-		| "primary"
-		| "secondary"
-		| "success"
-		| "danger"
-		| "warning"
-		| "info"
-		| "light"
-		| "dark";
+	spinnerVariant?: "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "light" | "dark";
 }
 
 export const ProgressOverlay: React.FC<ProgressOverlayProps> = ({
@@ -26,11 +18,7 @@ export const ProgressOverlay: React.FC<ProgressOverlayProps> = ({
 	return (
 		<div className={`progress-overlay ${show ? "show" : ""}`}>
 			<div className="progress-overlay-card">
-				<Spinner
-					animation="border"
-					variant={spinnerVariant}
-					style={{ width: "3rem", height: "3rem" }}
-				/>
+				<Spinner animation="border" variant={spinnerVariant} style={{ width: "3rem", height: "3rem" }} />
 
 				{title && (
 					<h5 className="mt-3 mb-0 text-center" style={{ fontWeight: 600 }}>

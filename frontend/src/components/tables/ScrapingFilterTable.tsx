@@ -64,8 +64,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	};
 
 	const renderBodyContent = (): JSX.Element => {
-		const data: ScrapingFilterData[] =
-			activeTab === "active" ? activeFilters : deactivatedFilters;
+		const data: ScrapingFilterData[] = activeTab === "active" ? activeFilters : deactivatedFilters;
 		const showAdd: boolean = activeTab === "active";
 
 		return (
@@ -156,9 +155,9 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 
 			<Modal.Body>
 				<i style={{ margin: "0 10px 10px 10px", display: "block" }}>
-					Filters allow you to filter out specific jobs from your job alerts. For example,
-					if you do not want to view jobs from company "ABC Corp", you can create a filter
-					with Type "Company", Operator "Equals", and Value "ABC Corp".
+					Filters allow you to filter out specific jobs from your job alerts. For example, if you do not want
+					to view jobs from company "ABC Corp", you can create a filter with Type "Company", Operator
+					"Equals", and Value "ABC Corp".
 				</i>
 				{renderTabs()}
 			</Modal.Body>

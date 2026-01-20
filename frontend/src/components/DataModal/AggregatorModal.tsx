@@ -1,9 +1,5 @@
 import React, { forwardRef } from "react";
-import DataModal, {
-	DataModalHandle,
-	JamDataModalProps,
-	ValidationErrors,
-} from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, JamDataModalProps, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { ModalViewField, modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
@@ -46,8 +42,7 @@ export const AggregatorModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			);
 			const urlDuplicates: AggregatorData[] = dataContext.aggregators.filter(
 				(aggregator: AggregatorData): boolean =>
-					aggregator.url.toLowerCase() === formData.url.trim().toLowerCase() &&
-					aggregator.id !== formData?.id
+					aggregator.url.toLowerCase() === formData.url.trim().toLowerCase() && aggregator.id !== formData?.id
 			);
 
 			if (nameDuplicates.length > 0) {

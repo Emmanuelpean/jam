@@ -9,10 +9,7 @@ interface LatestRunProgressProps {
 	isRunning: boolean;
 }
 
-export const LatestRunProgress = ({
-	latestLog,
-	isRunning,
-}: LatestRunProgressProps): JSX.Element | null => {
+export const LatestRunProgress = ({ latestLog, isRunning }: LatestRunProgressProps): JSX.Element | null => {
 	if (!latestLog) return null;
 
 	return (
@@ -30,8 +27,7 @@ export const LatestRunProgress = ({
 						{new Date(latestLog.run_datetime).toLocaleString()}
 					</p>
 					<p className="metric-item">
-						<span className="status-label">Duration:</span>{" "}
-						{formatDuration(latestLog.run_duration)}
+						<span className="status-label">Duration:</span> {formatDuration(latestLog.run_duration)}
 					</p>
 				</div>
 
@@ -40,21 +36,16 @@ export const LatestRunProgress = ({
 						<span className="status-label">Jobs Found:</span> {latestLog.job_found_n}
 					</p>
 					<p className="metric-item">
-						<span className="status-label">Scraping Succeeded:</span>{" "}
-						{latestLog.job_scrape_succeeded_n}
+						<span className="status-label">Scraping Succeeded:</span> {latestLog.job_scrape_succeeded_n}
 					</p>
 					<p className="metric-item">
-						<span className="status-label">Scraping Failed:</span>{" "}
-						{latestLog.job_scrape_failed_n}
+						<span className="status-label">Scraping Failed:</span> {latestLog.job_scrape_failed_n}
 					</p>
 					<p className="metric-item"></p>
 				</div>
 
 				<div className="metric-group">
-					<PlatformStatsTable
-						platformStats={latestLog.platform_stats}
-						latestLog={latestLog}
-					/>
+					<PlatformStatsTable platformStats={latestLog.platform_stats} latestLog={latestLog} />
 				</div>
 			</div>
 

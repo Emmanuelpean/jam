@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-	PlatformStat,
-	ScrapedJobData,
-	JobScrapingServiceLogData,
-} from "../services/schemas/Services";
+import { PlatformStat, ScrapedJobData, JobScrapingServiceLogData } from "../services/schemas/Services";
 import { scrapedJobApi } from "../services/api/Services";
 import { normaliseArray } from "../utils/Utils";
 import { useAuth } from "../contexts/AuthContext";
@@ -61,10 +57,7 @@ export const useJobScraperErrors = (
 					return;
 				}
 
-				const scraped_jobs: ApiResponse<ScrapedJobData[]> = await scrapedJobApi.getAll(
-					token,
-					{ id: ids }
-				);
+				const scraped_jobs: ApiResponse<ScrapedJobData[]> = await scrapedJobApi.getAll(token, { id: ids });
 
 				const errorCounts: Record<string, ErrorCount> = {};
 				scraped_jobs.data.forEach((job: ScrapedJobData): void => {

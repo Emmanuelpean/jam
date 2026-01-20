@@ -5,11 +5,7 @@ import "./AuthPage.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Alert, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
-import {
-	Errors,
-	FormField,
-	SyntheticEvent,
-} from "../../components/rendering/widgets/WidgetRenders";
+import { Errors, FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
@@ -18,19 +14,12 @@ import { ApiError, ApiResponse } from "../../services/api/Base";
 import { useLoading } from "../../contexts/LoadingContext";
 import { DEFAULT_THEME } from "../../utils/Theme";
 
-type AuthMode =
-	| "login"
-	| "register"
-	| "forgotPassword"
-	| "resetPassword"
-	| "verifyEmail"
-	| "verifyNewEmail";
+type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
 let isVerifying: boolean = false;
 
 const determineAuthMode = (pathname: string, token: string | null): AuthMode => {
-	const normalizedPath: string =
-		pathname.endsWith("/") && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
+	const normalizedPath: string = pathname.endsWith("/") && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
 
 	if (normalizedPath === "/reset-password" && token) return "resetPassword";
 	if (normalizedPath === "/verify-email") return "verifyEmail";
@@ -52,9 +41,7 @@ function AuthForm(): JSX.Element {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
-	const [mode, setMode] = useState<AuthMode>(() =>
-		determineAuthMode(location.pathname, searchParams.get("token"))
-	);
+	const [mode, setMode] = useState<AuthMode>(() => determineAuthMode(location.pathname, searchParams.get("token")));
 	const [registrationStep, setRegistrationStep] = useState<number>(1);
 	const [formData, setFormData] = useState<FormData>(defaultFormData);
 	const [resetToken, setResetToken] = useState<string>("");
@@ -236,10 +223,7 @@ function AuthForm(): JSX.Element {
 		if (["login", "resetPassword"].includes(mode)) {
 			if (!formData.password) {
 				errors.password = "Password is required.";
-			} else if (
-				["resetPassword"].includes(mode) &&
-				formData.password.length < MIN_PASSWORD_LENGTH
-			) {
+			} else if (["resetPassword"].includes(mode) && formData.password.length < MIN_PASSWORD_LENGTH) {
 				errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
 			}
 
@@ -275,10 +259,7 @@ function AuthForm(): JSX.Element {
 			}
 		} catch (error) {
 			const apiError = error as ApiError;
-			showToastError(
-				apiError.message || "Failed to login. An unknown error occurred",
-				"Login Failed"
-			);
+			showToastError(apiError.message || "Failed to login. An unknown error occurred", "Login Failed");
 		} finally {
 			setLoading(false);
 		}
@@ -370,10 +351,7 @@ function AuthForm(): JSX.Element {
 		setLoading(true);
 
 		try {
-			const response: ApiResponse = await authApi.resetPassword(
-				resetToken,
-				formData.password
-			);
+			const response: ApiResponse = await authApi.resetPassword(resetToken, formData.password);
 			showToastSuccess(response.data.message, "Password Reset Successful");
 			switchToLogin();
 		} catch (error) {
@@ -436,8 +414,7 @@ function AuthForm(): JSX.Element {
 		type: "password",
 		label: "Confirm Password",
 		icon: "bi bi-lock-fill",
-		placeholder:
-			mode === "resetPassword" ? "Confirm your new password" : "Confirm your password",
+		placeholder: mode === "resetPassword" ? "Confirm your new password" : "Confirm your password",
 		autoComplete: "new-password",
 	};
 
@@ -508,10 +485,7 @@ function AuthForm(): JSX.Element {
 			}
 		} catch (error) {
 			const apiError = error as ApiError;
-			showToastError(
-				apiError.message || "Failed to login with demo account.",
-				"Demo Login Failed"
-			);
+			showToastError(apiError.message || "Failed to login with demo account.", "Demo Login Failed");
 		} finally {
 			setLoading(false);
 			setShowTestInfo(false);
@@ -565,10 +539,7 @@ function AuthForm(): JSX.Element {
 			<div className="auth-logo">
 				<div className="logo-container logo-container-vertical">
 					<JamLogo style={{ height: "175px", width: "auto", userSelect: "none" }} />
-					<div
-						className="logo-text-below text-gradient-primary"
-						style={{ fontSize: "50px" }}
-					>
+					<div className="logo-text-below text-gradient-primary" style={{ fontSize: "50px" }}>
 						Job Application Manager
 					</div>
 				</div>
@@ -587,8 +558,8 @@ function AuthForm(): JSX.Element {
 						Limited Mobile Support
 					</Alert.Heading>
 					<p className="mb-0 small">
-						JAM is not fully optimised for small screens yet. For the best experience,
-						please use a tablet or desktop device.
+						JAM is not fully optimised for small screens yet. For the best experience, please use a tablet
+						or desktop device.
 					</p>
 				</Alert>
 			)}
@@ -601,9 +572,7 @@ function AuthForm(): JSX.Element {
 						{mode === "register" && (
 							<div className="mb-3">
 								<div className="d-flex justify-content-between align-items-center mb-2">
-									<small className="text-muted">
-										Step {registrationStep} of 2
-									</small>
+									<small className="text-muted">Step {registrationStep} of 2</small>
 								</div>
 								<div className="progress" style={{ height: "4px" }}>
 									<div
@@ -620,15 +589,13 @@ function AuthForm(): JSX.Element {
 
 						{mode === "forgotPassword" && (
 							<p className="text-muted mb-4">
-								Enter your email address and we'll send you a link to reset your
-								password.
+								Enter your email address and we'll send you a link to reset your password.
 							</p>
 						)}
 
 						{mode === "resetPassword" && (
 							<p className="text-muted mb-4">
-								Please enter your new password below. Make sure it's strong and
-								secure.
+								Please enter your new password below. Make sure it's strong and secure.
 							</p>
 						)}
 
@@ -636,24 +603,9 @@ function AuthForm(): JSX.Element {
 							{/* Registration Step 1 */}
 							{mode === "register" && registrationStep === 1 && (
 								<>
-									{FormField(
-										emailField,
-										formData,
-										handleInputChange,
-										fieldErrors
-									)}
-									{FormField(
-										passwordField,
-										formData,
-										handleInputChange,
-										fieldErrors
-									)}
-									{FormField(
-										confirmPasswordField,
-										formData,
-										handleInputChange,
-										fieldErrors
-									)}
+									{FormField(emailField, formData, handleInputChange, fieldErrors)}
+									{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+									{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
 									{FormField(
 										termsField,
 										{ terms: acceptedTerms },
@@ -667,36 +619,16 @@ function AuthForm(): JSX.Element {
 							{/* Registration Step 2 */}
 							{mode === "register" && registrationStep === 2 && (
 								<>
-									{FormField(
-										firstNameField,
-										formData,
-										handleInputChange,
-										fieldErrors
-									)}
-									{FormField(
-										lastNameField,
-										formData,
-										handleInputChange,
-										fieldErrors
-									)}
+									{FormField(firstNameField, formData, handleInputChange, fieldErrors)}
+									{FormField(lastNameField, formData, handleInputChange, fieldErrors)}
 								</>
 							)}
 
 							{/* Login Mode */}
 							{mode === "login" && (
 								<>
-									{FormField(
-										emailField,
-										formData,
-										handleInputChange,
-										fieldErrors
-									)}
-									{FormField(
-										passwordField,
-										formData,
-										handleInputChange,
-										fieldErrors
-									)}
+									{FormField(emailField, formData, handleInputChange, fieldErrors)}
+									{FormField(passwordField, formData, handleInputChange, fieldErrors)}
 									<div className="text-end mb-3">
 										<button
 											type="button"
@@ -713,31 +645,14 @@ function AuthForm(): JSX.Element {
 
 							{/* Forgot Password Mode */}
 							{mode === "forgotPassword" && (
-								<>
-									{FormField(
-										emailField,
-										formData,
-										handleInputChange,
-										fieldErrors
-									)}
-								</>
+								<>{FormField(emailField, formData, handleInputChange, fieldErrors)}</>
 							)}
 
 							{/* Reset Password Mode */}
 							{mode === "resetPassword" && (
 								<>
-									{FormField(
-										passwordField,
-										formData,
-										handleInputChange,
-										fieldErrors
-									)}
-									{FormField(
-										confirmPasswordField,
-										formData,
-										handleInputChange,
-										fieldErrors
-									)}
+									{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+									{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
 								</>
 							)}
 

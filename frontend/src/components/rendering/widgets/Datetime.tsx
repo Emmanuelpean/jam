@@ -75,11 +75,7 @@ export const LocalDatetimeInput = ({
 				className={`bi bi-clock datetime-embedded-icon`}
 				onClick={setCurrentValue}
 				id={field.name + "_set_current"}
-				title={
-					inputType === "datetime-local"
-						? "Set to current date and time"
-						: "Set to current date"
-				}
+				title={inputType === "datetime-local" ? "Set to current date and time" : "Set to current date"}
 			></i>
 		</div>
 	);

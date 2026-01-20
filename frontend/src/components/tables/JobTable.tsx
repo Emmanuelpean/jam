@@ -3,10 +3,7 @@ import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../DataModal/JobModal";
 
-const JobsTable: React.FC<DataTableProps> = ({
-	data = [],
-	columns = [],
-}: DataTableProps): JSX.Element => {
+const JobsTable: React.FC<DataTableProps> = ({ data = [], columns = [] }: DataTableProps): JSX.Element => {
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns

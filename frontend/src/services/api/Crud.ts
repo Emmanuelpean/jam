@@ -8,10 +8,7 @@ export interface CrudApi<T = any> {
 	delete: (id: number, token: string) => ApiResponsePromise<null>;
 }
 
-export const createCrudApi = <T = any>(
-	endpoint: string,
-	apiService: ApiService = baseApi
-): CrudApi<T> => ({
+export const createCrudApi = <T = any>(endpoint: string, apiService: ApiService = baseApi): CrudApi<T> => ({
 	getAll: (token: string, queryParams: QueryParams | null = null): ApiResponsePromise<T[]> => {
 		let url: string = `${endpoint}/`;
 		if (queryParams) {
@@ -35,12 +32,9 @@ export const createCrudApi = <T = any>(
 
 		return apiService.get(url, token);
 	},
-	get: (id: number, token: string): ApiResponsePromise<T> =>
-		apiService.get(`${endpoint}/${id}`, token),
-	create: (data: any, token: string): ApiResponsePromise<T> =>
-		apiService.post(`${endpoint}/`, data, token),
+	get: (id: number, token: string): ApiResponsePromise<T> => apiService.get(`${endpoint}/${id}`, token),
+	create: (data: any, token: string): ApiResponsePromise<T> => apiService.post(`${endpoint}/`, data, token),
 	update: (id: number, data: any, token: string): ApiResponsePromise<T> =>
 		apiService.put(`${endpoint}/${id}`, data, token),
-	delete: (id: number, token: string): ApiResponsePromise<null> =>
-		apiService.delete(`${endpoint}/${id}`, token),
+	delete: (id: number, token: string): ApiResponsePromise<null> => apiService.delete(`${endpoint}/${id}`, token),
 });

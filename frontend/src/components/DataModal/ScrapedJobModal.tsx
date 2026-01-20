@@ -46,13 +46,9 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				placeholder: "",
 			}),
 			[
-				formFields.scrapedCompany(
-					companies,
-					companyModalRef,
-					(scrapedJob: ScrapedJobData) => ({
-						name: scrapedJob.company,
-					})
-				),
+				formFields.scrapedCompany(companies, companyModalRef, (scrapedJob: ScrapedJobData) => ({
+					name: scrapedJob.company,
+				})),
 				formFields.url({
 					label: "Job URL",
 					placeholder: "https://linkedin.com/jobs/453635",
@@ -60,35 +56,21 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				}),
 			],
 			[
-				formFields.scrapedLocation(
-					locations,
-					locationModalRef,
-					(scrapedJob: ScrapedJobData) => ({
-						postcode: scrapedJob.location_postcode,
-						city: scrapedJob.location_city,
-						country: scrapedJob.location_country,
-					})
-				),
+				formFields.scrapedLocation(locations, locationModalRef, (scrapedJob: ScrapedJobData) => ({
+					postcode: scrapedJob.location_postcode,
+					city: scrapedJob.location_city,
+					country: scrapedJob.location_country,
+				})),
 				formFields.attendanceType(),
 			],
-			[
-				formFields.keywords(keywords, keywordModalRef),
-				formFields.contacts(persons, personModalRef),
-			],
-			[
-				formFields.salaryMin({ placeholder: "35000" }),
-				formFields.salaryMax({ placeholder: "45000" }),
-			],
+			[formFields.keywords(keywords, keywordModalRef), formFields.contacts(persons, personModalRef)],
+			[formFields.salaryMin({ placeholder: "35000" }), formFields.salaryMax({ placeholder: "45000" })],
 			[
 				formFields.personalRating(),
 				formFields.deadline(),
-				formFields.aggregator(
-					aggregators,
-					aggregatorModalRef,
-					(scrapedJob: ScrapedJobData) => ({
-						name: scrapedJob.platform ? capitalise(scrapedJob.platform) : undefined,
-					})
-				),
+				formFields.aggregator(aggregators, aggregatorModalRef, (scrapedJob: ScrapedJobData) => ({
+					name: scrapedJob.platform ? capitalise(scrapedJob.platform) : undefined,
+				})),
 			],
 			formFields.note({
 				placeholder:
@@ -110,8 +92,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			const errors: ValidationErrors = {};
 			const duplicates: EnrichedJobData[] = dataContext.jobs.filter(
 				(job: EnrichedJobData): boolean =>
-					job.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() &&
-					job.id !== formData?.id
+					job.url?.trim().toLowerCase() === formData.url?.trim().toLowerCase() && job.id !== formData?.id
 			);
 			if (duplicates.length > 0) {
 				errors.name = `A Job with this URL already exists`;

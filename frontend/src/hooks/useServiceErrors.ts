@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import { JobScrapingServiceLogData, ServiceError } from "../services/schemas/Services";
 import { normaliseArray } from "../utils/Utils";
 
-export const useServiceErrors = (
-	latestLog: JobScrapingServiceLogData | JobScrapingServiceLogData[] | null
-) => {
+export const useServiceErrors = (latestLog: JobScrapingServiceLogData | JobScrapingServiceLogData[] | null) => {
 	const [serviceErrors, setServiceErrors] = useState<Record<string, number>>({});
 
 	useEffect(() => {

@@ -22,14 +22,7 @@ export const ActionToggle: React.FC<ActionToggleProps> = ({
 }) => {
 	return (
 		<div className={`d-flex align-items-center ${className}`}>
-			{loading && (
-				<Spinner
-					animation="border"
-					size="sm"
-					className="me-2"
-					aria-label="Loading toggle state"
-				/>
-			)}
+			{loading && <Spinner animation="border" size="sm" className="me-2" aria-label="Loading toggle state" />}
 			<Form.Check
 				type="switch"
 				id={id}

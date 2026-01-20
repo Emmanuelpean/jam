@@ -19,13 +19,7 @@ import {
 } from "../../../contexts/DataContext";
 import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../../rendering/form/ActionButton";
-import {
-	areDifferent,
-	findItemByKey,
-	flattenArray,
-	getColumnClass,
-	normaliseArray,
-} from "../../../utils/Utils";
+import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArray } from "../../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
 import { ModalFormField } from "../../rendering/form/FormRenders";
 import {
@@ -58,9 +52,7 @@ export type modalModes = "view" | "edit" | "add" | "import" | "detail";
 
 export interface DataModalProps {
 	mode?: modalModes; // modal mode
-	fields?:
-		| { view: Fields; form: Fields }
-		| ((data: any, mode: string) => { view: Fields; form: Fields }); // fields to display
+	fields?: { view: Fields; form: Fields } | ((data: any, mode: string) => { view: Fields; form: Fields }); // fields to display
 	data?: any; // data to populate the fields (required for import mode)
 	validation?: ((data: any) => any) | null; // custom validation method before submit
 	transformFormData?: ((data: any) => any) | null; // custom data transformation before submit
@@ -123,40 +115,30 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		useImperativeHandle(ref, () => ({
 			showView: (data: JamData): void => {
 				setId(data.id);
-				transformInputData
-					? setEffectiveData(transformInputData(data))
-					: setEffectiveData(data);
+				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
 				setMode("view");
 				setInternalShow(true);
 			},
 			showEdit: (data: JamData): void => {
 				setId(data.id);
-				transformInputData
-					? setEffectiveData(transformInputData(data))
-					: setEffectiveData(data);
+				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
 				setMode("edit");
 				setInternalShow(true);
 			},
 			showAdd: (data: JamData, successCallback?: (newData: JamData) => void) => {
-				transformInputData
-					? setEffectiveData(transformInputData(data))
-					: setEffectiveData(data);
+				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
 				setMode("add");
 				setOnSuccessCallback(() => successCallback || null);
 				setInternalShow(true);
 			},
 			showImport: (data: JamData) => {
-				transformInputData
-					? setEffectiveData(transformInputData(data))
-					: setEffectiveData(data);
+				transformInputData ? setEffectiveData(transformInputData(data)) : setEffectiveData(data);
 				setMode("import");
 				setInternalShow(true);
 			},
 		}));
 
-		const [onSuccessCallback, setOnSuccessCallback] = useState<((data: any) => void) | null>(
-			null
-		);
+		const [onSuccessCallback, setOnSuccessCallback] = useState<((data: any) => void) | null>(null);
 		const [formData, setFormData] = useState<Record<string, any>>({});
 		const [originalFormData, setOriginalFormData] = useState<Record<string, any>>({});
 		const [submitting, setSubmitting] = useState<boolean>(false);
@@ -196,8 +178,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			const currentTab: TabConfig | null = getCurrentTabConfig();
 
 			// Handle fields as function or object
-			const fieldsConfig =
-				typeof fields === "function" ? fields(effectiveData, mode) : fields;
+			const fieldsConfig = typeof fields === "function" ? fields(effectiveData, mode) : fields;
 
 			if (!currentTab) {
 				return {
@@ -213,8 +194,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 		};
 
 		const getAllFields = (): { view: Fields; form: Fields } => {
-			const fieldsConfig =
-				typeof fields === "function" ? fields(effectiveData, mode) : fields;
+			const fieldsConfig = typeof fields === "function" ? fields(effectiveData, mode) : fields;
 
 			if (!hasTabs || !tabs) {
 				return {
@@ -223,12 +203,8 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				};
 			} else {
 				return {
-					form: tabs.flatMap((tab: TabConfig) =>
-						filterConditionalFields(tab.fields.form)
-					),
-					view: tabs.flatMap((tab: TabConfig) =>
-						filterConditionalFields(tab.fields.view)
-					),
+					form: tabs.flatMap((tab: TabConfig) => filterConditionalFields(tab.fields.form)),
+					view: tabs.flatMap((tab: TabConfig) => filterConditionalFields(tab.fields.view)),
 				};
 			}
 		};
@@ -270,8 +246,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			if (hasUnsavedChanges()) {
 				const confirmed = await showDelete({
 					title: "Unsaved Changes",
-					message:
-						"You have unsaved changes. Are you sure you want to close without saving?",
+					message: "You have unsaved changes. Are you sure you want to close without saving?",
 					confirmText: "Close without saving",
 					cancelText: "Cancel",
 				});
@@ -354,11 +329,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 		// ------------------------------------------------- MODAL CONTENT -------------------------------------------------
 
-		const renderFieldGroup = (
-			item: Field | Field[],
-			index: number,
-			isFormMode = true
-		): JSX.Element => {
+		const renderFieldGroup = (item: Field | Field[], index: number, isFormMode = true): JSX.Element => {
 			const itemList: Field[] = normaliseArray(item);
 
 			// Handle title fields in view mode
@@ -371,11 +342,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 					return (
 						<div className={hasElementsUnderneath ? "mb-3" : ""} key={index}>
-							{renderModalViewField(
-								firstItem as ModalViewField,
-								effectiveData,
-								getModalId()
-							)}
+							{renderModalViewField(firstItem as ModalViewField, effectiveData, getModalId())}
 						</div>
 					);
 				}
@@ -384,11 +351,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			const columnClass = getColumnClass(itemList.length);
 
 			return (
-				<div
-					key={index}
-					className="row mb-3"
-					style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}
-				>
+				<div key={index} className="row mb-3" style={{ paddingRight: "0.3rem", paddingLeft: "0.3rem" }}>
 					{itemList.map((field: Field, fieldIndex: number) => {
 						const fieldKey =
 							("key" in field ? field.key : null) ||
@@ -399,18 +362,8 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 						return (
 							<div key={fieldKey} className={columnClass}>
 								{isViewField(field)
-									? renderModalViewField(
-											field as ModalViewField,
-											effectiveData,
-											getModalId()
-										)
-									: FormField(
-											field as ModalFormField,
-											formData,
-											handleChange,
-											errors,
-											currentUser
-										)}
+									? renderModalViewField(field as ModalViewField, effectiveData, getModalId())
+									: FormField(field as ModalFormField, formData, handleChange, errors, currentUser)}
 							</div>
 						);
 					})}
@@ -420,13 +373,10 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 		// ----------------------------------------------------- DELETE ----------------------------------------------------
 
-		const deactivateEntityConfirm: (item: JamData) => Promise<boolean> =
-			useDeactivateEntityConfirm(entityType);
-		const deleteEntityConfirm: (item: JamData) => Promise<boolean> =
-			useDeleteEntityConfirm(entityType);
+		const deactivateEntityConfirm: (item: JamData) => Promise<boolean> = useDeactivateEntityConfirm(entityType);
+		const deleteEntityConfirm: (item: JamData) => Promise<boolean> = useDeleteEntityConfirm(entityType);
 		const activateEntity: (item: JamData) => Promise<boolean> = useActivateEntity(entityType);
-		const deactivateEntity: (item: JamData) => Promise<boolean> =
-			useDeactivateEntity(entityType);
+		const deactivateEntity: (item: JamData) => Promise<boolean> = useDeactivateEntity(entityType);
 
 		const handleDeleteClick = async (): Promise<void> => {
 			// Either deactivate or delete based on mode, then close the modal
@@ -460,9 +410,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			}
 		};
 
-		const filterConditionalFields = <T extends Field>(
-			fieldsToFilter: (T | T[])[]
-		): (T | T[])[] => {
+		const filterConditionalFields = <T extends Field>(fieldsToFilter: (T | T[])[]): (T | T[])[] => {
 			return fieldsToFilter
 				.map((item: T | T[]): T | T[] | null => {
 					if (Array.isArray(item)) {
@@ -514,9 +462,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				if (typeof validation === "function") {
 					const customErrorsResult = validation(formData);
 					const customErrors =
-						customErrorsResult instanceof Promise
-							? await customErrorsResult
-							: customErrorsResult;
+						customErrorsResult instanceof Promise ? await customErrorsResult : customErrorsResult;
 					Object.keys(customErrors).forEach((fieldName) => {
 						newErrors[fieldName] = customErrors[fieldName];
 					});
@@ -550,19 +496,13 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				}
 
 				// Transform data if needed
-				const dataToSubmit: any = transformFormData
-					? transformFormData(formData)
-					: formData;
+				const dataToSubmit: any = transformFormData ? transformFormData(formData) : formData;
 
 				// Submit to API
 				const apiResult: ApiResponse<JamData> =
 					mode === "add"
 						? await dataContext.addEntity(entityType, dataToSubmit)
-						: await dataContext.updateEntity(
-								entityType,
-								effectiveData.id,
-								dataToSubmit
-							);
+						: await dataContext.updateEntity(entityType, effectiveData.id, dataToSubmit);
 				if (mode === "add" || mode === "edit" || mode === "import") {
 					handleHideImmediate();
 				} else {
@@ -623,9 +563,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 				<Modal.Header closeButton>
 					<Modal.Title>
 						<span style={{ display: "flex", alignItems: "center" }}>
-							{icon && (
-								<i className={`${icon} me-2`} style={{ fontSize: "1.05em" }} />
-							)}
+							{icon && <i className={`${icon} me-2`} style={{ fontSize: "1.05em" }} />}
 							<span>{text}</span>
 						</span>
 					</Modal.Title>
@@ -654,9 +592,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 							{errors.submit && <Alert variant="danger">{errors.submit}</Alert>}
 							<div>
 								{currentFields.form.map((item, index: number) => (
-									<div key={`form-field-${index}`}>
-										{renderFieldGroup(item, index, true)}
-									</div>
+									<div key={`form-field-${index}`}>{renderFieldGroup(item, index, true)}</div>
 								))}
 							</div>
 						</div>
@@ -678,17 +614,11 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 							{currentAdditionalFields && currentAdditionalFields.length > 0 && (
 								<div className="outside-card-content mt-3">
-									{currentAdditionalFields.map(
-										(item: ModalViewField, index: number) => (
-											<div key={`outside-field-${index}`} className="mb-3">
-												{renderModalViewField(
-													item,
-													effectiveData,
-													getModalId()
-												)}
-											</div>
-										)
-									)}
+									{currentAdditionalFields.map((item: ModalViewField, index: number) => (
+										<div key={`outside-field-${index}`} className="mb-3">
+											{renderModalViewField(item, effectiveData, getModalId())}
+										</div>
+									))}
 								</div>
 							)}
 						</div>
@@ -711,10 +641,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 					<>
 						<div className="custom-tab-nav">
 							{tabs.map((tab: TabConfig): JSX.Element => {
-								const tabTitle =
-									typeof tab.title === "function"
-										? tab.title(effectiveData)
-										: tab.title;
+								const tabTitle = typeof tab.title === "function" ? tab.title(effectiveData) : tab.title;
 
 								return (
 									<button
@@ -832,9 +759,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 									<ActionButton
 										id={getModalId() + "-cancel-button"}
 										variant="secondary"
-										onClick={
-											mode === "edit" ? handleHideImmediate : handleEditToView
-										}
+										onClick={mode === "edit" ? handleHideImmediate : handleEditToView}
 										defaultText={mode === "edit" ? "Close" : "Cancel"}
 										fullWidth={false}
 									/>
@@ -854,14 +779,8 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 									variant="danger"
 									onClick={handleActivateClick}
 									loading={activeLoading}
-									defaultText={
-										effectiveData?.is_active ? "Deactivate" : "Activate"
-									}
-									loadingText={
-										effectiveData?.is_active
-											? "Deactivating..."
-											: "Activating..."
-									}
+									defaultText={effectiveData?.is_active ? "Deactivate" : "Activate"}
+									loadingText={effectiveData?.is_active ? "Deactivating..." : "Activating..."}
 									fullWidth={false}
 								/>
 								{canEdit && (

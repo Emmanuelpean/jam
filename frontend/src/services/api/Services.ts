@@ -1,9 +1,4 @@
-import {
-	JobRatingData,
-	JobRatingServiceLogData,
-	JobScrapingServiceLogData,
-	ScrapedJobData,
-} from "../schemas/Services";
+import { JobRatingData, JobRatingServiceLogData, JobScrapingServiceLogData, ScrapedJobData } from "../schemas/Services";
 import { baseApi, ApiResponsePromise, serviceApi } from "./Base";
 import { createCrudApi, CrudApi } from "./Crud";
 
@@ -15,8 +10,7 @@ export interface ScrapedJobCrudApi extends CrudApi<ScrapedJobData> {
 
 export const scrapedJobApi: ScrapedJobCrudApi = {
 	...createCrudApi("scraped-jobs"),
-	getCount: (token: string): ApiResponsePromise<{ count: number }> =>
-		baseApi.get("scraped-jobs/count", token),
+	getCount: (token: string): ApiResponsePromise<{ count: number }> => baseApi.get("scraped-jobs/count", token),
 	getByFilterId: (filterId: number, token: string): ApiResponsePromise<ScrapedJobData[]> =>
 		baseApi.get(`scraped-jobs/filtered-by-filter/${filterId}`, token),
 };
@@ -78,11 +72,7 @@ export interface BaseServiceApi {
 
 // Specific interfaces extending the base
 interface JobScraperServiceRunnerApi extends BaseServiceApi {
-	start(
-		periodHours: number,
-		timedeltaDays: number,
-		token: string
-	): ApiResponsePromise<ServiceRunnerResponse>;
+	start(periodHours: number, timedeltaDays: number, token: string): ApiResponsePromise<ServiceRunnerResponse>;
 }
 
 interface JobRatingServiceRunnerApi extends BaseServiceApi {
@@ -124,10 +114,7 @@ export const jobScraperServiceApi: JobScraperServiceRunnerApi = {
 
 export const jobRatingServiceRunnerApi: JobRatingServiceRunnerApi = {
 	...createServiceApi("job-rating-service-runner"),
-	start: async (
-		periodHours: number,
-		token: string
-	): ApiResponsePromise<ServiceRunnerResponse> => {
+	start: async (periodHours: number, token: string): ApiResponsePromise<ServiceRunnerResponse> => {
 		const data: StartServiceRunnerRequest = { period_hours: periodHours };
 		return serviceApi.post("job-rating-service-runner/start", data, token);
 	},

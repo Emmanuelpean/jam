@@ -56,10 +56,7 @@ export const formatDuration = (seconds: number | null): string => {
 	}
 };
 
-export const periodToDays = (
-	amount: number,
-	unit: "days" | "weeks" | "months" | "years"
-): number => {
+export const periodToDays = (amount: number, unit: "days" | "weeks" | "months" | "years"): number => {
 	switch (unit) {
 		case "days":
 			return amount;
@@ -79,10 +76,7 @@ export interface DateRange {
 	end: Date | string;
 }
 
-export const getDateRange = (
-	amount: number,
-	unit: "days" | "weeks" | "months" | "years"
-): DateRange => {
+export const getDateRange = (amount: number, unit: "days" | "weeks" | "months" | "years"): DateRange => {
 	const days: number = periodToDays(amount, unit);
 
 	const end = new Date();

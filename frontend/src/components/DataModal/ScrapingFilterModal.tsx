@@ -1,10 +1,5 @@
 import React, { forwardRef, JSX } from "react";
-import DataModal, {
-	DataModalHandle,
-	JamDataModalProps,
-	Fields,
-	ValidationErrors,
-} from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
@@ -31,9 +26,7 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle, JamDataModalProps
 			view: viewFieldsArray,
 		};
 
-		const customValidation = async (
-			formData: ScrapingFilterData
-		): Promise<ValidationErrors> => {
+		const customValidation = async (formData: ScrapingFilterData): Promise<ValidationErrors> => {
 			const errors: ValidationErrors = {};
 
 			const duplicates: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
@@ -46,10 +39,7 @@ export const ScrapingFilterModal = forwardRef<DataModalHandle, JamDataModalProps
 			);
 
 			if (duplicates.length > 0) {
-				errors.type =
-					errors.operator =
-					errors.value =
-						`A filter with these values already exist`;
+				errors.type = errors.operator = errors.value = `A filter with these values already exist`;
 			}
 			return errors;
 		};

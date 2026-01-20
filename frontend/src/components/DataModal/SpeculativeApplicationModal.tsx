@@ -1,20 +1,12 @@
 import React, { forwardRef, useRef } from "react";
-import DataModal, {
-	DataModalHandle,
-	DataModalProps,
-	Fields,
-	ValidationErrors,
-} from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, DataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { useFormOptions } from "../rendering/form/FormOptions";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { CompanyModal } from "./CompanyModal";
 import { PersonModal } from "./PersonModal";
-import {
-	SpeculativeApplicationData,
-	SpeculativeApplicationDataTransform,
-} from "../../services/schemas/DataTables";
+import { SpeculativeApplicationData, SpeculativeApplicationDataTransform } from "../../services/schemas/DataTables";
 
 export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModalProps>(
 	({ size = "lg" }: DataModalProps, ref) => {
@@ -28,10 +20,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModal
 				formFields.datetime({ required: false }),
 				formFields.company(companies, companyModalRef, null, null, { required: true }),
 			],
-			[
-				formFields.email({ name: "contact_email" }),
-				formFields.contacts(persons, personModalRef),
-			],
+			[formFields.email({ name: "contact_email" }), formFields.contacts(persons, personModalRef)],
 			formFields.note(),
 		];
 
@@ -41,9 +30,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModal
 			modalViewFields.note(),
 		];
 
-		const transformData = (
-			formData: SpeculativeApplicationDataTransform
-		): SpeculativeApplicationDataTransform => {
+		const transformData = (formData: SpeculativeApplicationDataTransform): SpeculativeApplicationDataTransform => {
 			return {
 				date: formData.date ? new Date(formData.date) : null,
 				note: formData.note?.trim() || null,
@@ -53,21 +40,15 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModal
 			};
 		};
 
-		const customValidation = async (
-			formData: SpeculativeApplicationData
-		): Promise<ValidationErrors> => {
+		const customValidation = async (formData: SpeculativeApplicationData): Promise<ValidationErrors> => {
 			const errors: ValidationErrors = {};
 
 			if (formData.company_id) {
-				const urlDuplicates: SpeculativeApplicationData[] =
-					dataContext.speculativeApplications.filter(
-						(application: SpeculativeApplicationData): boolean => {
-							return (
-								application.company_id === formData.company_id &&
-								application.id !== formData?.id
-							);
-						}
-					);
+				const urlDuplicates: SpeculativeApplicationData[] = dataContext.speculativeApplications.filter(
+					(application: SpeculativeApplicationData): boolean => {
+						return application.company_id === formData.company_id && application.id !== formData?.id;
+					}
+				);
 				if (urlDuplicates.length > 0) {
 					errors.company_id = `A Speculative Application for this company already exists`;
 				}

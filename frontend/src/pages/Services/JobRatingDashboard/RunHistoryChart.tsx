@@ -22,12 +22,8 @@ export const RunHistoryChart = ({
 		if (!serviceLogData) return;
 
 		const durationSeries: SeriesData[] = [
-			createSeries(
-				serviceLogData,
-				"Run Duration (h)",
-				infoColor,
-				(log: JobRatingServiceLogData): number =>
-					log.run_duration ? log.run_duration / 3600 : 0
+			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: JobRatingServiceLogData): number =>
+				log.run_duration ? log.run_duration / 3600 : 0
 			),
 		];
 
@@ -60,18 +56,10 @@ export const RunHistoryChart = ({
 			</div>
 			<div style={{ display: "flex" }}>
 				{logData && logData[0] && (
-					<LineChart
-						data={logData[0]}
-						xAxisLabel="Run date"
-						yAxisLabel="Number of jobs rated"
-					/>
+					<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of jobs rated" />
 				)}
 				{logData && logData[1] && (
-					<LineChart
-						data={logData[1]}
-						xAxisLabel="Run date"
-						yAxisLabel="Run duration [h]"
-					/>
+					<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
 				)}
 			</div>
 		</div>

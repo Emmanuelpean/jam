@@ -151,9 +151,7 @@ export const formFields = {
 		name: "theme",
 		label: "App Theme",
 		type: "select",
-		options: THEMES.map(
-			(theme: Theme): SelectOption => ({ value: theme.key, label: theme.name })
-		),
+		options: THEMES.map((theme: Theme): SelectOption => ({ value: theme.key, label: theme.name })),
 		...overrides,
 	}),
 
@@ -258,10 +256,7 @@ export const formFields = {
 		...overrides,
 	}),
 
-	country: (
-		countries: SelectOption[] = [],
-		overrides: FormFieldOverride = {}
-	): ModalFormField => ({
+	country: (countries: SelectOption[] = [], overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "country",
 		label: "Country",
 		type: "select",

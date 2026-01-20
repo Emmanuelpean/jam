@@ -44,10 +44,7 @@ export const getServiceStatus = (isRunning: boolean): string => {
 	return isRunning ? "bi-check-circle-fill" : "bi-x-circle-fill";
 };
 
-export const getServiceStatusMessage = (
-	status: ServiceStatus,
-	remainingTime: number | null
-): string => {
+export const getServiceStatusMessage = (status: ServiceStatus, remainingTime: number | null): string => {
 	if (status.service_runner_status === "stopped") {
 		return "Stopped";
 	}
@@ -83,12 +80,7 @@ export const RenderLabeledInput = (
 	);
 };
 
-export const createSeries = (
-	logs: any[],
-	id: string,
-	color: string,
-	getValue: (log: any) => number
-): SeriesData => ({
+export const createSeries = (logs: any[], id: string, color: string, getValue: (log: any) => number): SeriesData => ({
 	id,
 	color,
 	data: logs

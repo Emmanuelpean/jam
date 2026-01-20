@@ -73,9 +73,7 @@ export const AccountTab: React.FC = () => {
 	const validateForm = (): boolean => {
 		const newErrors: ValidationErrors = {};
 		const hasAccountChanges =
-			formData.email !== currentUser?.email ||
-			formData.new_password ||
-			formData.confirm_password;
+			formData.email !== currentUser?.email || formData.new_password || formData.confirm_password;
 
 		if (hasAccountChanges && !formData.current_password) {
 			newErrors.current_password = "Current password is required to update email or password";
@@ -116,8 +114,7 @@ export const AccountTab: React.FC = () => {
 			if (formData.first_name !== undefined) updateData.first_name = formData.first_name;
 			if (formData.last_name !== undefined) updateData.last_name = formData.last_name;
 
-			const response: ApiResponse<UpdateCurrentUserResponse> | null =
-				await updateCurrentUser(updateData);
+			const response: ApiResponse<UpdateCurrentUserResponse> | null = await updateCurrentUser(updateData);
 			if (!response) return;
 
 			const responseData = response.data;
@@ -134,10 +131,7 @@ export const AccountTab: React.FC = () => {
 					showToastError(responseData.message, "Error Updating Settings");
 				}
 			} else if (responseData.logged_out) {
-				showToastSuccess(
-					"Password updated successfully. Please log in again.",
-					"Password Changed"
-				);
+				showToastSuccess("Password updated successfully. Please log in again.", "Password Changed");
 			} else {
 				showToastSuccess("Account settings updated successfully.");
 			}
@@ -194,9 +188,7 @@ export const AccountTab: React.FC = () => {
 		label: "New Password",
 		placeholder: "Enter new password",
 		isDisabled: currentUser?.is_demo,
-		helpText: currentUser?.is_demo
-			? "This is a test account. Password changes are disabled."
-			: null,
+		helpText: currentUser?.is_demo ? "This is a test account. Password changes are disabled." : null,
 	};
 
 	const confirmPasswordField: ModalFormField = {
@@ -205,9 +197,7 @@ export const AccountTab: React.FC = () => {
 		label: "Confirm New Password",
 		placeholder: "Confirm new password",
 		isDisabled: currentUser?.is_demo,
-		helpText: currentUser?.is_demo
-			? "This is a test account. Password changes are disabled."
-			: null,
+		helpText: currentUser?.is_demo ? "This is a test account. Password changes are disabled." : null,
 	};
 
 	const firstNameField: ModalFormField = {
@@ -230,9 +220,9 @@ export const AccountTab: React.FC = () => {
 
 			{hasPendingEmail && (
 				<Alert variant="info">
-					<Alert.Heading>Email Change Pending</Alert.Heading>A verification email has been
-					sent to <strong>{currentUser?.pending_email_change}</strong>. Please check your
-					inbox and click the verification link to complete your email change.
+					<Alert.Heading>Email Change Pending</Alert.Heading>A verification email has been sent to{" "}
+					<strong>{currentUser?.pending_email_change}</strong>. Please check your inbox and click the
+					verification link to complete your email change.
 				</Alert>
 			)}
 
@@ -253,9 +243,7 @@ export const AccountTab: React.FC = () => {
 			{FormField(currentPasswordField, formData, handleInputChange, errors)}
 			<Row>
 				<Col md={6}>{FormField(newPasswordField, formData, handleInputChange, errors)}</Col>
-				<Col md={6}>
-					{FormField(confirmPasswordField, formData, handleInputChange, errors)}
-				</Col>
+				<Col md={6}>{FormField(confirmPasswordField, formData, handleInputChange, errors)}</Col>
 			</Row>
 
 			<hr className="my-4" />

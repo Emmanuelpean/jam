@@ -24,9 +24,7 @@ export const paymentsApi: PaymentsApi = {
 		return baseApi.post("payments/create-portal-session", {}, token);
 	},
 
-	createSubscriptionCheckout: async (
-		token: string
-	): ApiResponsePromise<PortalSessionResponse> => {
+	createSubscriptionCheckout: async (token: string): ApiResponsePromise<PortalSessionResponse> => {
 		return baseApi.post("payments/create-subscription-checkout", {}, token);
 	},
 };

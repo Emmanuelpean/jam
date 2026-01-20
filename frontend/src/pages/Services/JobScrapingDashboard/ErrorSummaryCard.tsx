@@ -68,12 +68,8 @@ export const ErrorSummaryCard = ({
 							{criticalErrorLogs
 								.slice()
 								.sort(
-									(
-										a: JobScrapingServiceLogData,
-										b: JobScrapingServiceLogData
-									): number =>
-										new Date(b.run_datetime).getTime() -
-										new Date(a.run_datetime).getTime()
+									(a: JobScrapingServiceLogData, b: JobScrapingServiceLogData): number =>
+										new Date(b.run_datetime).getTime() - new Date(a.run_datetime).getTime()
 								)
 								.filter(
 									(log: JobScrapingServiceLogData): boolean =>
@@ -102,9 +98,7 @@ export const ErrorSummaryCard = ({
 
 				{/* Service Errors Column */}
 				<div style={{ flex: 1 }}>
-					<h5 className="mb-3">
-						Service Errors ({Object.keys(serviceErrors).length} unique)
-					</h5>
+					<h5 className="mb-3">Service Errors ({Object.keys(serviceErrors).length} unique)</h5>
 					{Object.keys(serviceErrors).length === 0 ? (
 						<div className="text-muted">No service errors</div>
 					) : (
@@ -134,9 +128,7 @@ export const ErrorSummaryCard = ({
 
 				{/* Scrape Errors Column */}
 				<div style={{ flex: 1 }}>
-					<h5 className="mb-3">
-						Scrape Errors ({Object.keys(scrapeErrors).length} unique)
-					</h5>
+					<h5 className="mb-3">Scrape Errors ({Object.keys(scrapeErrors).length} unique)</h5>
 					{Object.keys(scrapeErrors).length === 0 ? (
 						<div className="text-muted">No scrape errors</div>
 					) : (
@@ -147,8 +139,7 @@ export const ErrorSummaryCard = ({
 									<div key={idx} className="alert alert-warning">
 										<div className="d-flex justify-content-between align-items-start mb-2">
 											<span className="badge bg-warning">
-												{error.count}{" "}
-												{error.count > 1 ? "occurrences" : "occurrence"}
+												{error.count} {error.count > 1 ? "occurrences" : "occurrence"}
 											</span>
 										</div>
 										<div

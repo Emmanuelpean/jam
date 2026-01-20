@@ -37,8 +37,7 @@ export const QualificationsTab: React.FC = () => {
 		const fetchQualifications = async () => {
 			if (!token) return;
 			try {
-				const response: ApiResponse<UserQualification> =
-					await userQualificationApi.getLatest(token);
+				const response: ApiResponse<UserQualification> = await userQualificationApi.getLatest(token);
 				const data = response.data;
 				if (data) {
 					setFormData({

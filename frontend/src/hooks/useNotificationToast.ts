@@ -17,12 +17,7 @@ interface Toast {
 // Define the return type for useToast hook
 export interface UseToastReturn {
 	toasts: Toast[];
-	showToast: (
-		message: string,
-		variant?: ToastVariant,
-		title?: string | null,
-		delay?: number
-	) => void;
+	showToast: (message: string, variant?: ToastVariant, title?: string | null, delay?: number) => void;
 	hideToast: (id: number) => void;
 	hideAllToasts: () => void;
 	showToastSuccess: (message: string, title?: string | null, delay?: number) => void;
@@ -66,35 +61,19 @@ export const useToast = (): UseToastReturn => {
 		setToasts([]);
 	};
 
-	const showToastSuccess = (
-		message: string,
-		title: string | null = null,
-		delay: number = 5000
-	): void => {
+	const showToastSuccess = (message: string, title: string | null = null, delay: number = 5000): void => {
 		showToast(message, "success", title, delay);
 	};
 
-	const showToastError = (
-		message: string,
-		title: string | null = null,
-		delay: number = 5000
-	): void => {
+	const showToastError = (message: string, title: string | null = null, delay: number = 5000): void => {
 		showToast(message, "danger", title, delay);
 	};
 
-	const showToastWarning = (
-		message: string,
-		title: string | null = null,
-		delay: number = 5000
-	): void => {
+	const showToastWarning = (message: string, title: string | null = null, delay: number = 5000): void => {
 		showToast(message, "warning", title, delay);
 	};
 
-	const showToastInfo = (
-		message: string,
-		title: string | null = null,
-		delay: number = 5000
-	): void => {
+	const showToastInfo = (message: string, title: string | null = null, delay: number = 5000): void => {
 		showToast(message, "info", title, delay);
 	};
 

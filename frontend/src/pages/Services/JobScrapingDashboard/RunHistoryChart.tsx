@@ -21,9 +21,7 @@ const failureColor = "#ef4444";
 const infoColor = "#0d38e3";
 
 const getPlatformStat = (log: JobScrapingServiceLogData, platform: string, key: string): number => {
-	const stat: PlatformStat | undefined = log.platform_stats.find(
-		(p: PlatformStat): boolean => p.name === platform
-	);
+	const stat: PlatformStat | undefined = log.platform_stats.find((p: PlatformStat): boolean => p.name === platform);
 	if (!stat) return 0;
 
 	const value = (stat as any)[key];
@@ -60,12 +58,8 @@ export const RunHistoryChart = ({
 		if (!serviceLogData) return;
 
 		const durationSeries: SeriesData[] = [
-			createSeries(
-				serviceLogData,
-				"Run Duration (h)",
-				infoColor,
-				(log: JobScrapingServiceLogData): number =>
-					log.run_duration ? log.run_duration / 3600 : 0
+			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: JobScrapingServiceLogData): number =>
+				log.run_duration ? log.run_duration / 3600 : 0
 			),
 		];
 
@@ -103,22 +97,19 @@ export const RunHistoryChart = ({
 					serviceLogData,
 					`${selectedPlatform} Jobs Found`,
 					successColor,
-					(log: JobScrapingServiceLogData): number =>
-						getPlatformStat(log, selectedPlatform, "job_found_ids")
+					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_found_ids")
 				),
 				createSeries(
 					serviceLogData,
 					`${selectedPlatform} Jobs Scraped`,
 					failureColor,
-					(log: JobScrapingServiceLogData): number =>
-						getPlatformStat(log, selectedPlatform, "job_scraped_n")
+					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_scraped_n")
 				),
 				createSeries(
 					serviceLogData,
 					`${selectedPlatform} Failed`,
 					infoColor,
-					(log: JobScrapingServiceLogData): number =>
-						getPlatformStat(log, selectedPlatform, "job_failed_n")
+					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_failed_n")
 				),
 			];
 			setLogData([platformSeries, durationSeries]);
@@ -152,18 +143,10 @@ export const RunHistoryChart = ({
 			</div>
 			<div style={{ display: "flex" }}>
 				{logData && logData[0] && (
-					<LineChart
-						data={logData[0]}
-						xAxisLabel="Run date"
-						yAxisLabel="Number of scraped jobs"
-					/>
+					<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of scraped jobs" />
 				)}
 				{logData && logData[1] && (
-					<LineChart
-						data={logData[1]}
-						xAxisLabel="Run date"
-						yAxisLabel="Run duration [h]"
-					/>
+					<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
 				)}
 			</div>
 		</div>

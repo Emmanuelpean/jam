@@ -81,11 +81,7 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 
 	const getCompanyPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
-		fields: [
-			modalViewFields.name({ isTitle: true }),
-			modalViewFields.url(),
-			[modalViewFields.description()],
-		],
+		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.url(), [modalViewFields.description()]],
 		getDataById: (id: number) => findItemById(dataContext.companies, id),
 	};
 
@@ -101,10 +97,7 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 
 	const getLocationPreviewConfig: SelectWidgetPreviewConfig = {
 		enabled: true,
-		fields: [
-			modalViewFields.name({ isTitle: true }),
-			modalViewFields.locationMap({ label: "" }),
-		],
+		fields: [modalViewFields.name({ isTitle: true }), modalViewFields.locationMap({ label: "" })],
 		getDataById: (id: number) => findItemById(dataContext.locations, id),
 	};
 
@@ -135,9 +128,7 @@ export const useFormOptions = (): UseFormOptionsReturn => {
 			(interview: InterviewData): boolean => interview.job_id === job.id
 		);
 		const interviewContacts: PersonData[] = persons.filter((person: PersonData): boolean =>
-			interviews.some((interview: InterviewData) =>
-				interview.interviewers?.includes(person.id)
-			)
+			interviews.some((interview: InterviewData) => interview.interviewers?.includes(person.id))
 		);
 		return [
 			{ label: "Job Contacts", options: toSelectOptions(jobContacts, "id", getPersonLabel) },

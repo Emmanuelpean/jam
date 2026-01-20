@@ -128,10 +128,7 @@ export const LineChart = ({
 
 	return (
 		<ResponsiveContainer width="100%" height={height}>
-			<RechartsLineChart
-				data={transformedData}
-				margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-			>
+			<RechartsLineChart data={transformedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
 				<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
 				<XAxis
 					dataKey="x"
@@ -139,12 +136,7 @@ export const LineChart = ({
 					tick={{ fontSize: fontsize, fill: "var(--bs-body-color)" }}
 					stroke="var(--bs-border-color)"
 				>
-					<Label
-						value={xAxisLabel}
-						offset={-5}
-						position="insideBottom"
-						fill="var(--bs-body-color)"
-					/>
+					<Label value={xAxisLabel} offset={-5} position="insideBottom" fill="var(--bs-body-color)" />
 				</XAxis>
 				<YAxis
 					tickFormatter={(value) => String(yAxisFormatter(value) ?? "")}
@@ -171,9 +163,7 @@ export const LineChart = ({
 					formatter={(value) => (
 						<span
 							style={{
-								color: hiddenSeries.has(value)
-									? "var(--bs-muted-color)"
-									: "var(--bs-body-color)",
+								color: hiddenSeries.has(value) ? "var(--bs-muted-color)" : "var(--bs-body-color)",
 							}}
 						>
 							{value}
