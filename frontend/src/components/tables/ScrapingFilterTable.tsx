@@ -2,7 +2,7 @@ import React, { JSX, useState, useLayoutEffect, useRef } from "react";
 import { Modal } from "react-bootstrap";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
-import { ScrapingFilterModal } from "../modals/ScrapingFilterModal";
+import { ScrapingFilterModal } from "../DataModal/ScrapingFilterModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { ScrapingFilterData } from "../../services/schemas/Services";
 
@@ -35,11 +35,11 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 				];
 
 	const activeFilters: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
-		(filter: ScrapingFilterData): boolean => filter.is_active,
+		(filter: ScrapingFilterData): boolean => filter.is_active
 	);
 
 	const deactivatedFilters: ScrapingFilterData[] = dataContext.scrapingFilters.filter(
-		(filter: ScrapingFilterData): boolean => !filter.is_active,
+		(filter: ScrapingFilterData): boolean => !filter.is_active
 	);
 
 	const tabs: { key: tabKeys; title: string }[] = [
@@ -64,7 +64,8 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 	};
 
 	const renderBodyContent = (): JSX.Element => {
-		const data: ScrapingFilterData[] = activeTab === "active" ? activeFilters : deactivatedFilters;
+		const data: ScrapingFilterData[] =
+			activeTab === "active" ? activeFilters : deactivatedFilters;
 		const showAdd: boolean = activeTab === "active";
 
 		return (
@@ -132,7 +133,7 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 						>
 							{tab.title}
 						</button>
-					),
+					)
 				)}
 			</div>
 			<div className="custom-tab-content">{renderBodyContent()}</div>
@@ -155,9 +156,9 @@ const ScrapingFilterTable: React.FC<ScrapingFilterTableProps> = ({
 
 			<Modal.Body>
 				<i style={{ margin: "0 10px 10px 10px", display: "block" }}>
-					Filters allow you to filter out specific jobs from your job alerts. For example, if you do not want
-					to view jobs from company "ABC Corp", you can create a filter with Type "Company", Operator
-					"Equals", and Value "ABC Corp".
+					Filters allow you to filter out specific jobs from your job alerts. For example,
+					if you do not want to view jobs from company "ABC Corp", you can create a filter
+					with Type "Company", Operator "Equals", and Value "ABC Corp".
 				</i>
 				{renderTabs()}
 			</Modal.Body>

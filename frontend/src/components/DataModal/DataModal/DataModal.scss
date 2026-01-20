@@ -1,0 +1,199 @@
+@use "../../../variables" as *;
+
+.modal-dialog {
+	margin: 5vh auto;
+	display: flex;
+	align-items: flex-start;
+}
+
+.modal-content {
+	border-radius: 16px !important;
+	display: flex;
+	flex-direction: column;
+	max-height: 90vh;
+	height: 100%;
+	overflow: hidden;
+}
+
+.modal-body {
+	flex: 1 1 auto;
+	overflow: hidden auto;
+	min-height: 0;
+	padding: 1.5rem;
+}
+
+.modal-header .modal-title {
+	font-weight: 600;
+	font-size: 1.3rem;
+	text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+	max-height: 80vh;
+	overflow-y: auto;
+}
+
+.modal-header {
+	background: var(--primary-gradient);
+	color: white;
+	border-bottom: none;
+	border-radius: 16px 16px 0 0;
+	padding: 1.5rem 2rem;
+	flex-shrink: 0;
+}
+
+/* Close button */
+.modal-header .btn-close {
+	filter: invert(1);
+	opacity: 0.8;
+	background-size: 1.2em;
+	transition: all 0.2s ease;
+}
+
+.modal-header .btn-close:hover {
+	opacity: 1;
+	transform: scale(1.1);
+}
+
+/* Handle form wrapper in edit mode */
+.modal-content form {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+/* Ensure content containers don't interfere */
+.modal-content-visible {
+	height: auto !important;
+	overflow: visible;
+	flex: 1 1 auto;
+}
+
+.modal-footer {
+	border-top: 1px solid rgb(0 0 0 / 8%);
+	border-radius: 0 0 16px 16px;
+	padding: 1.25rem 2rem;
+	flex-shrink: 0;
+}
+
+.modal-buttons-container {
+	display: flex;
+	justify-content: center;
+	gap: 15px;
+	width: 100%;
+	margin: 0 auto;
+}
+
+.modal:not(:last-of-type) .modal-content::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background-color: rgb(0 0 0 / 50%);
+	z-index: 10;
+	pointer-events: none;
+	border-radius: inherit;
+	transition: background-color 0.3s ease;
+}
+
+.modal-body .card {
+	border-radius: 12px;
+}
+
+.modal-content-animated {
+	transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	overflow: hidden !important;
+}
+
+/* Specific fixes for tabbed modals */
+.modal-body .tab-content .modal-content-animated {
+	height: auto !important;
+	min-height: auto !important;
+	overflow: visible !important;
+}
+
+.custom-tab-nav {
+	display: flex;
+	flex-flow: row nowrap;
+	justify-content: center;
+	margin-bottom: 1rem;
+	gap: 25px;
+	flex-shrink: 0;
+}
+
+.custom-tab-button {
+	border: none;
+	border-radius: 0;
+	padding: 0.5rem;
+	font-weight: 500;
+	color: #6c757d;
+	background: transparent;
+	transition: all 0.3s ease;
+	text-align: center;
+	white-space: nowrap;
+	position: relative;
+	margin-bottom: -2px;
+	width: 100%;
+	cursor: pointer;
+	border-bottom: 2px solid #e9ecef;
+}
+
+.custom-tab-button:hover {
+	color: var(--primary-mid);
+	background: rgb(var(--primary-mid), 0.05);
+}
+
+.custom-tab-button.active {
+	color: var(--primary-mid);
+	font-weight: 600;
+	background: transparent;
+	border-bottom: 3px solid var(--primary-mid);
+}
+
+.custom-tab-content {
+	flex: 1 1 auto;
+	overflow: visible;
+	min-height: 0;
+}
+
+.modal-content-animated-inner {
+	padding-left: 2px;
+	padding-right: 2px;
+	overflow: visible;
+}
+
+/* Mobile fullscreen slide-in from right */
+@media (width <= $mobile-breakpoint) {
+	.data-modal .modal-dialog {
+		position: fixed;
+		inset: 0;
+		margin: 0 !important;
+		max-width: none !important;
+		width: 100% !important;
+		height: 100% !important;
+	}
+
+	.data-modal.modal.fade .modal-dialog {
+		transform: translateX(-100%);
+		transition: transform 0.3s ease-out;
+		margin: 0;
+		max-width: none;
+		width: 100%;
+		height: 100%;
+		align-items: stretch;
+	}
+
+	.data-modal.modal.show .modal-dialog {
+		transform: translateX(0);
+	}
+
+	.data-modal .modal-content {
+		height: 100%;
+		width: 100%;
+		max-height: 100vh !important;
+		border-radius: 0 !important;
+		border: none;
+	}
+
+	/* Ensure modal fills viewport properly */
+	.data-modal.modal {
+		padding: 0 !important;
+	}
+}

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Form } from "react-bootstrap";
 import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
-import { ValidationErrors } from "../../components/modals/DataModal/DataModal";
+import { ValidationErrors } from "../../components/DataModal/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useFormOptions } from "../../components/rendering/form/FormOptions";
 import { useAuth } from "../../contexts/AuthContext";
@@ -57,7 +57,10 @@ export const PreferencesTab: React.FC = () => {
 			newErrors.deadline_threshold = "Deadline threshold must be between 1 and 365 days";
 		}
 
-		if (formData.update_limit !== undefined && (formData.update_limit < 1 || formData.update_limit > 1000)) {
+		if (
+			formData.update_limit !== undefined &&
+			(formData.update_limit < 1 || formData.update_limit > 1000)
+		) {
 			newErrors.update_limit = "Update limit must be between 1 and 1000";
 		}
 
@@ -72,11 +75,15 @@ export const PreferencesTab: React.FC = () => {
 
 		try {
 			const updateData: any = { default_currency: formData.default_currency };
-			if (formData.chase_threshold !== undefined) updateData.chase_threshold = formData.chase_threshold;
-			if (formData.deadline_threshold !== undefined) updateData.deadline_threshold = formData.deadline_threshold;
-			if (formData.update_limit !== undefined) updateData.update_limit = formData.update_limit;
+			if (formData.chase_threshold !== undefined)
+				updateData.chase_threshold = formData.chase_threshold;
+			if (formData.deadline_threshold !== undefined)
+				updateData.deadline_threshold = formData.deadline_threshold;
+			if (formData.update_limit !== undefined)
+				updateData.update_limit = formData.update_limit;
 
-			const response: ApiResponse<UpdateCurrentUserResponse> | null = await updateCurrentUser(updateData);
+			const response: ApiResponse<UpdateCurrentUserResponse> | null =
+				await updateCurrentUser(updateData);
 			if (!response) return;
 
 			showToastSuccess("Preferences updated successfully.");
@@ -137,8 +144,9 @@ export const PreferencesTab: React.FC = () => {
 				<i className="bi bi-palette"></i> Appearance
 			</h5>
 			<p id="theme-hint">
-				<strong>{findItemByKey(THEMES, currentUser?.preferences.theme)?.name}</strong> is not your favourite
-				flavour of JAM?! You can easily pick another theme by clicking on the JAM logo in the sidebar.
+				<strong>{findItemByKey(THEMES, currentUser?.preferences.theme)?.name}</strong> is
+				not your favourite flavour of JAM?! You can easily pick another theme by clicking on
+				the JAM logo in the sidebar.
 			</p>
 			<div className="mt-4">
 				<ActionButton

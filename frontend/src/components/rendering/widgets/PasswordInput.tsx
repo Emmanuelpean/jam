@@ -1,7 +1,7 @@
 import React, { JSX, useState } from "react";
 import { Form } from "react-bootstrap";
 import { WidgetProps } from "./WidgetRenders";
-import "./PasswordInput.css";
+import "./PasswordInput.scss";
 
 export const PasswordInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
 	const [showPassword, setShowPassword] = useState<boolean>(false);

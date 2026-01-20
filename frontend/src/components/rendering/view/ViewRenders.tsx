@@ -55,7 +55,11 @@ import {
 	LocationBadge,
 	PersonBadge,
 } from "./DataBadge";
-import { JobRatingData, ScrapedJobData, ScrapingFilterData } from "../../../services/schemas/Services";
+import {
+	JobRatingData,
+	ScrapedJobData,
+	ScrapingFilterData,
+} from "../../../services/schemas/Services";
 import { Currency } from "../../../services/schemas/Others";
 
 // Parameters passed to the view render functions
@@ -87,26 +91,33 @@ function filterByKey<T>(items: T[], key: string, id: number | undefined): T[] {
 	});
 }
 
-function getJamData<T extends { id: number }>(jamData: T[], id: number | undefined | null): T | undefined {
+function getJamData<T extends { id: number }>(
+	jamData: T[],
+	id: number | undefined | null
+): T | undefined {
 	return jamData.find((data: T): boolean => data.id === id);
 }
 
-function getJamDataList<T extends { id: number }>(jamData: T[], ids: number[] | null | undefined): T[] {
+function getJamDataList<T extends { id: number }>(
+	jamData: T[],
+	ids: number[] | null | undefined
+): T[] {
 	if (!ids) return [];
 	return jamData.filter((data: T): boolean => ids.includes(data.id));
 }
 
 const getScrapingFilterTypeLabel = (scrapingFilter: ScrapingFilterData): string | null => {
 	return (
-		scrapingFilterTypeOptions.filter((option: SelectOption): boolean => option.value === scrapingFilter.type)[0]
-			?.label || null
+		scrapingFilterTypeOptions.filter(
+			(option: SelectOption): boolean => option.value === scrapingFilter.type
+		)[0]?.label || null
 	);
 };
 
 const getScrapingFilterOperatorLabel = (scrapingFilter: ScrapingFilterData): string | null => {
 	return (
 		scrapingFilterOperatorOptions.filter(
-			(option: SelectOption): boolean => option.value === scrapingFilter.operator,
+			(option: SelectOption): boolean => option.value === scrapingFilter.operator
 		)[0]?.label || null
 	);
 };
@@ -167,8 +178,9 @@ export const renderFunctions = {
 
 	updateType: (param: RenderParams): ReactNode => {
 		const updateType: string | null =
-			updateTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]?.label ||
-			null;
+			updateTypeOptions.filter(
+				(option: SelectOption): boolean => option.value === param.item?.type
+			)[0]?.label || null;
 		if (updateType) {
 			const icon = getUpdateTypeIcon(updateType);
 			return (
@@ -183,8 +195,9 @@ export const renderFunctions = {
 
 	interviewType: (param: RenderParams): ReactNode => {
 		return (
-			interviewTypeOptions.filter((option: SelectOption): boolean => option.value === param.item?.type)[0]
-				?.label || null
+			interviewTypeOptions.filter(
+				(option: SelectOption): boolean => option.value === param.item?.type
+			)[0]?.label || null
 		);
 	},
 
@@ -206,13 +219,22 @@ export const renderFunctions = {
 
 	// --------------------------------------------------- LINK/EMAIL --------------------------------------------------
 
-	_url: (param: RenderParams, attribute: string, displayText: string | null = null): ReactNode => {
+	_url: (
+		param: RenderParams,
+		attribute: string,
+		displayText: string | null = null
+	): ReactNode => {
 		const url: string | undefined = param.item?.[attribute];
 		if (url) {
 			const safeUrl: string = ensureHttpPrefix(url);
 			const linkText: string = displayText || safeUrl?.slice(8);
 			return (
-				<a href={safeUrl} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
+				<a
+					href={safeUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="text-decoration-none"
+				>
 					{linkText} <i className="bi bi-box-arrow-up-right ms-1"></i>
 				</a>
 			);
@@ -256,7 +278,12 @@ export const renderFunctions = {
 		const linkedinUrl: string | undefined = param.item?.linkedin_url;
 		if (linkedinUrl) {
 			return (
-				<a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-decoration-none">
+				<a
+					href={linkedinUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="text-decoration-none"
+				>
 					<i className="bi bi-linkedin me-1"></i>
 					Profile <i className="bi bi-box-arrow-up-right ms-1"></i>
 				</a>
@@ -320,8 +347,9 @@ export const renderFunctions = {
 		const salary_min: number | undefined | null = param.item?.salary_min;
 		const salary_max: number | undefined | null = param.item?.salary_max;
 		const salaryCurrency: string | undefined | null =
-			param.dataContext.currencies.find((currency: Currency) => currency.code === param.item?.salary_currency)
-				?.symbol || "";
+			param.dataContext.currencies.find(
+				(currency: Currency) => currency.code === param.item?.salary_currency
+			)?.symbol || "";
 		if (!salary_min && !salary_max) {
 			return null;
 		}
@@ -364,10 +392,14 @@ export const renderFunctions = {
 	applicationStatus: (param: RenderParams): ReactNode => {
 		const status: string | null =
 			applicationStatusOptions.filter(
-				(option: SelectOption): boolean => option.value === param.item?.application_status,
+				(option: SelectOption): boolean => option.value === param.item?.application_status
 			)[0]?.label || null;
 		if (status) {
-			return <span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>{status}</span>;
+			return (
+				<span className={`badge ${getApplicationStatusBadgeClass(status)} badge`}>
+					{status}
+				</span>
+			);
 		}
 	},
 
@@ -420,7 +452,9 @@ export const renderFunctions = {
 						</thead>
 						<tbody>
 							<tr>
-								<td className="text-center fw-semibold">{job_rating.overall_score}</td>
+								<td className="text-center fw-semibold">
+									{job_rating.overall_score}
+								</td>
 								<td className="text-center">{job_rating.educational_score}</td>
 								<td className="text-center">{job_rating.experience_score}</td>
 								<td className="text-center">{job_rating.interest_score}</td>
@@ -477,7 +511,9 @@ export const renderFunctions = {
 			const ctx: DataContextValue = param.dataContext;
 			const job: EnrichedJobData | undefined = getJamData(ctx.jobs, param.item.job_id);
 			if (job) {
-				return <InterviewBadge item={param.item} badgeId={param.id} displayText={job.name} />;
+				return (
+					<InterviewBadge item={param.item} badgeId={param.id} displayText={job.name} />
+				);
 			}
 		}
 	},
@@ -487,14 +523,23 @@ export const renderFunctions = {
 			const ctx: DataContextValue = param.dataContext;
 			const job: EnrichedJobData | undefined = getJamData(ctx.jobs, param.item.job_id);
 			if (job) {
-				return <JobApplicationUpdateBadge item={param.item} badgeId={param.id} displayText={job.name} />;
+				return (
+					<JobApplicationUpdateBadge
+						item={param.item}
+						badgeId={param.id}
+						displayText={job.name}
+					/>
+				);
 			}
 		}
 	},
 
 	LocationBadge: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const location: LocationData | undefined = getJamData(ctx.locations, param.item?.location_id);
+		const location: LocationData | undefined = getJamData(
+			ctx.locations,
+			param.item?.location_id
+		);
 		const attendanceType: string | null = param.item?.attendance_type;
 
 		let icon: string;
@@ -507,8 +552,9 @@ export const renderFunctions = {
 		}
 
 		let attendanceString: string | null =
-			attendanceTypeOptions.filter((option: SelectOption): boolean => option.value === attendanceType)[0]
-				?.label || null;
+			attendanceTypeOptions.filter(
+				(option: SelectOption): boolean => option.value === attendanceType
+			)[0]?.label || null;
 
 		let displayText: string | null = null;
 		if (location && attendanceString) {
@@ -522,7 +568,14 @@ export const renderFunctions = {
 		}
 
 		if (displayText) {
-			return <LocationBadge item={location} badgeId={param.id} icon={icon} displayText={displayText} />;
+			return (
+				<LocationBadge
+					item={location}
+					badgeId={param.id}
+					icon={icon}
+					displayText={displayText}
+				/>
+			);
 		} else {
 			return null;
 		}
@@ -538,9 +591,15 @@ export const renderFunctions = {
 		return null;
 	},
 
-	_aggregatorBadge: (param: RenderParams, idKey: keyof JobData | keyof ScrapedJobData): ReactNode => {
+	_aggregatorBadge: (
+		param: RenderParams,
+		idKey: keyof JobData | keyof ScrapedJobData
+	): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const aggregator: AggregatorData | undefined = getJamData(ctx.aggregators, param.item?.[idKey]);
+		const aggregator: AggregatorData | undefined = getJamData(
+			ctx.aggregators,
+			param.item?.[idKey]
+		);
 
 		if (aggregator) {
 			return <AggregatorBadge item={aggregator} badgeId={param.id} />;
@@ -556,8 +615,9 @@ export const renderFunctions = {
 		}
 		if (appliedVia) {
 			const text: string =
-				appliedViaOptions.filter((option: SelectOption): boolean => option.value === appliedVia)[0]?.label ||
-				appliedVia;
+				appliedViaOptions.filter(
+					(option: SelectOption): boolean => option.value === appliedVia
+				)[0]?.label || appliedVia;
 			return (
 				<span className={"badge bg-info"} id={param.id}>
 					{text}
@@ -598,7 +658,11 @@ export const renderFunctions = {
 				<div className="badge-group">
 					{persons.map((person: PersonData, index: number) => (
 						<span key={person.id || index} className="me-1">
-							<PersonBadge item={person} badgeId={`${param.id}-${index}`} parentItem={parent} />
+							<PersonBadge
+								item={person}
+								badgeId={`${param.id}-${index}`}
+								parentItem={parent}
+							/>
 						</span>
 					))}
 				</div>
@@ -627,7 +691,11 @@ export const renderFunctions = {
 
 	JobApplicationUpdateTable: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const updates: JobApplicationUpdateData[] = filterByKey(ctx.jobApplicationUpdates, "job_id", param.item?.id);
+		const updates: JobApplicationUpdateData[] = filterByKey(
+			ctx.jobApplicationUpdates,
+			"job_id",
+			param.item?.id
+		);
 		return <JobApplicationUpdateTable data={updates} jobId={param.item?.id} />;
 	},
 
@@ -637,7 +705,12 @@ export const renderFunctions = {
 		const ctx: DataContextValue = param.dataContext;
 		const jobs: EnrichedJobData[] = filterByKey(ctx.jobs, key, param.item?.id);
 		return (
-			<Accordion title="Jobs" data={jobs} icon={getTableIcon("Jobs")} helpText={param.helpText}>
+			<Accordion
+				title="Jobs"
+				data={jobs}
+				icon={getTableIcon("Jobs")}
+				helpText={param.helpText}
+			>
 				{(data: EnrichedJobData[]) => <JobsTable data={data} columns={param.columns} />}
 			</Accordion>
 		);
@@ -647,15 +720,26 @@ export const renderFunctions = {
 		const ctx: DataContextValue = param.dataContext;
 		const interviews: InterviewData[] = filterByKey(ctx.interviews, key, param.item?.id);
 		return (
-			<Accordion title="Interviews" data={interviews} icon={getTableIcon("Interviews")} helpText={param.helpText}>
-				{(data: InterviewData[]) => <InterviewsTable data={data} showAdd={false} columns={param.columns} />}
+			<Accordion
+				title="Interviews"
+				data={interviews}
+				icon={getTableIcon("Interviews")}
+				helpText={param.helpText}
+			>
+				{(data: InterviewData[]) => (
+					<InterviewsTable data={data} showAdd={false} columns={param.columns} />
+				)}
 			</Accordion>
 		);
 	},
 
 	accordionJobApplicationTable: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
-		const jobs: EnrichedJobData[] = filterByKey(ctx.jobs, "application_aggregator_id", param.item?.id);
+		const jobs: EnrichedJobData[] = filterByKey(
+			ctx.jobs,
+			"application_aggregator_id",
+			param.item?.id
+		);
 		return (
 			<Accordion
 				title="Job Applications"
@@ -672,7 +756,12 @@ export const renderFunctions = {
 		const ctx: DataContextValue = param.dataContext;
 		const persons: PersonData[] = filterByKey(ctx.persons, "company_id", param.item?.id);
 		return (
-			<Accordion title="Persons" data={persons} icon={getTableIcon("Persons")} helpText={param.helpText}>
+			<Accordion
+				title="Persons"
+				data={persons}
+				icon={getTableIcon("Persons")}
+				helpText={param.helpText}
+			>
 				{(data: PersonData[]) => <PersonTable data={data} columns={param.columns} />}
 			</Accordion>
 		);
@@ -749,7 +838,9 @@ const AccordionScrapedJobTable: React.FC<{ param: RenderParams }> = ({ param }) 
 			icon={getTableIcon("Scraped Jobs")}
 			helpText="Scraped Jobs that were filtered by this filter."
 		>
-			{(rows: ScrapedJobData[]) => <ScrapedJobsTableReadOnly data={rows} columns={param.columns} />}
+			{(rows: ScrapedJobData[]) => (
+				<ScrapedJobsTableReadOnly data={rows} columns={param.columns} />
+			)}
 		</Accordion>
 	);
 };

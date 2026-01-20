@@ -14,7 +14,7 @@ import { useJobScraperErrors } from "../../../hooks/useJobScraperErrors";
 import { getTableIcon } from "../../../components/rendering/view/Icons";
 import { useServiceErrors } from "../../../hooks/useServiceErrors";
 import { DateRange } from "../../../utils/TimeUtils";
-import "../Service.css";
+import "../Service.scss";
 import PageHeader from "../../PageHeader/PageHeader";
 
 export interface FormData {
@@ -29,23 +29,25 @@ const JobScraperDashboard = (): JSX.Element => {
 		end: new Date(),
 	});
 	const [selectedPlatform, setSelectedPlatform] = useState("all");
-	const { serviceStatus, remainingTime, fetchStatus, statusError } = useServiceRunnerStatus(jobScraperServiceApi);
+	const { serviceStatus, remainingTime, fetchStatus, statusError } =
+		useServiceRunnerStatus(jobScraperServiceApi);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: serviceStatus?.period_hours || 0,
 		timedelta_days: serviceStatus?.service_kwargs?.timedelta_days || 0,
 	});
 	const [loading, setLoading] = useState<boolean>(false);
 	const { showToastSuccess } = useGlobalToast();
-	const { previousServiceLogs, latestServiceLog, platformOptions, fetchLatestServiceLog, serviceLogError } =
-		useJobScraperServiceLogs(serviceStatus?.service_running || false, dateRange);
-	const { scraperErrors: latestScraperErrors, error: lastestScraperRequestError } = useJobScraperErrors(
-		latestServiceLog,
-		selectedPlatform,
-	);
-	const { scraperErrors: previousScraperErrors, error: previousScraperRequestError } = useJobScraperErrors(
+	const {
 		previousServiceLogs,
-		selectedPlatform,
-	);
+		latestServiceLog,
+		platformOptions,
+		fetchLatestServiceLog,
+		serviceLogError,
+	} = useJobScraperServiceLogs(serviceStatus?.service_running || false, dateRange);
+	const { scraperErrors: latestScraperErrors, error: lastestScraperRequestError } =
+		useJobScraperErrors(latestServiceLog, selectedPlatform);
+	const { scraperErrors: previousScraperErrors, error: previousScraperRequestError } =
+		useJobScraperErrors(previousServiceLogs, selectedPlatform);
 	const { serviceErrors: lastServiceErrors } = useServiceErrors(latestServiceLog);
 	const { serviceErrors: previousServiceErrors } = useServiceErrors(previousServiceLogs);
 
@@ -58,7 +60,9 @@ const JobScraperDashboard = (): JSX.Element => {
 		}
 	}, [serviceStatus]);
 
-	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
+	const onChangeFormField = (
+		event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent
+	): void => {
 		const target = event.target as HTMLInputElement;
 		const { name, value } = target;
 
@@ -112,13 +116,24 @@ const JobScraperDashboard = (): JSX.Element => {
 	const collectedErrors = [
 		{ key: "status", label: "Service status", value: statusError },
 		{ key: "serviceLogs", label: "Service logs", value: serviceLogError },
-		{ key: "lastestScraperRequestError", label: "Last rating error", value: lastestScraperRequestError },
-		{ key: "previousScraperRequestError", label: "Latest rating error", value: previousScraperRequestError },
+		{
+			key: "lastestScraperRequestError",
+			label: "Last rating error",
+			value: lastestScraperRequestError,
+		},
+		{
+			key: "previousScraperRequestError",
+			label: "Latest rating error",
+			value: previousScraperRequestError,
+		},
 	].filter((e) => e.value);
 
 	return (
 		<div>
-			<PageHeader title={"Job Scraping Dashboard"} icon={getTableIcon("Job Scraping Dashboard")} />
+			<PageHeader
+				title={"Job Scraping Dashboard"}
+				icon={getTableIcon("Job Scraping Dashboard")}
+			/>
 			{collectedErrors.length > 0 && (
 				<div className="alert alert-danger mb-4 shadow-sm rounded-3" role="alert">
 					<div className="d-flex align-items-start">
@@ -128,7 +143,8 @@ const JobScraperDashboard = (): JSX.Element => {
 							<ul className="mb-0">
 								{collectedErrors.map((error) => (
 									<li key={error.key}>
-										<strong>{error.label}:</strong> {formatErrorMessage(error.value)}
+										<strong>{error.label}:</strong>{" "}
+										{formatErrorMessage(error.value)}
 									</li>
 								))}
 							</ul>
@@ -147,9 +163,15 @@ const JobScraperDashboard = (): JSX.Element => {
 				onStop={handleStop}
 			/>
 
-			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
+			<LatestRunProgress
+				latestLog={latestServiceLog}
+				isRunning={serviceStatus?.service_running || false}
+			/>
 
-			<LogViewer api={jobScraperServiceApi} isServiceRunning={serviceStatus?.service_running || false} />
+			<LogViewer
+				api={jobScraperServiceApi}
+				isServiceRunning={serviceStatus?.service_running || false}
+			/>
 
 			<RunHistoryChart
 				serviceLogData={previousServiceLogs}

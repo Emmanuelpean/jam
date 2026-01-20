@@ -1,7 +1,7 @@
 import React, { JSX } from "react";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
-import { JobApplicationUpdateModal } from "../modals/JobApplicationUpdateModal";
+import { JobApplicationUpdateModal } from "../DataModal/JobApplicationUpdateModal";
 
 interface JobApplicationUpdatesTableProps extends DataTableProps {
 	jobId: number;
@@ -15,7 +15,11 @@ const JobApplicationUpdatesTable: React.FC<JobApplicationUpdatesTableProps> = ({
 	const defaultColumns: TableColumn[] =
 		columns.length > 0
 			? columns
-			: [tableColumns.dateColumn(), tableColumns.updateTypeColumn(), tableColumns.noteColumn()];
+			: [
+					tableColumns.dateColumn(),
+					tableColumns.updateTypeColumn(),
+					tableColumns.noteColumn(),
+				];
 
 	return (
 		<DataTable

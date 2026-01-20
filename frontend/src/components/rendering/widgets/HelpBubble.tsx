@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import ReactDOM from "react-dom";
-import "./HelpBubble.css";
+import "./HelpBubble.scss";
 interface HelpBubbleProps {
 	helpText: string;
 	placement?: "top" | "bottom" | "left" | "right";
@@ -8,7 +8,12 @@ interface HelpBubbleProps {
 	container?: HTMLElement;
 }
 
-export const HelpBubble: React.FC<HelpBubbleProps> = ({ helpText, placement = "right", size = "14px", container }) => {
+export const HelpBubble: React.FC<HelpBubbleProps> = ({
+	helpText,
+	placement = "right",
+	size = "14px",
+	container,
+}) => {
 	const [isVisible, setIsVisible] = useState(false);
 	const iconRef = useRef<HTMLSpanElement>(null);
 
@@ -42,7 +47,7 @@ export const HelpBubble: React.FC<HelpBubbleProps> = ({ helpText, placement = "r
 					{helpText}
 					<div className={`help-tooltip-arrow help-tooltip-arrow-${placement}`}></div>
 				</div>,
-				container || document.body, // Use container if provided
+				container || document.body // Use container if provided
 			)
 		: null;
 

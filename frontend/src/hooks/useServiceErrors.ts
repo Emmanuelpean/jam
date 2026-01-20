@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { JobScrapingServiceLogData, ServiceError } from "../services/schemas/Services";
 import { normaliseArray } from "../utils/Utils";
 
-export const useServiceErrors = (latestLog: JobScrapingServiceLogData | JobScrapingServiceLogData[] | null) => {
+export const useServiceErrors = (
+	latestLog: JobScrapingServiceLogData | JobScrapingServiceLogData[] | null
+) => {
 	const [serviceErrors, setServiceErrors] = useState<Record<string, number>>({});
 
 	useEffect(() => {
@@ -12,7 +14,7 @@ export const useServiceErrors = (latestLog: JobScrapingServiceLogData | JobScrap
 			try {
 				const logs: JobScrapingServiceLogData[] = normaliseArray(latestLog);
 				const allErrors: ServiceError[] = logs.flatMap(
-					(log: JobScrapingServiceLogData): ServiceError[] => log.service_errors,
+					(log: JobScrapingServiceLogData): ServiceError[] => log.service_errors
 				);
 
 				// Count errors by message

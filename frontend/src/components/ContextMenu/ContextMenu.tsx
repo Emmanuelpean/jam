@@ -1,5 +1,5 @@
 import React, { JSX, MouseEvent, useEffect, useRef, useState } from "react";
-import "./ContextMenu.css";
+import "./ContextMenu.scss";
 import { EntityType, JamData } from "../../contexts/DataContext";
 
 export interface MenuItem {
@@ -65,7 +65,8 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 	};
 
 	const filteredItems: MenuItem[] = menuItems.filter(
-		(menuItem: MenuItem): boolean => !menuItem.displayCondition || menuItem.displayCondition(selectedItem),
+		(menuItem: MenuItem): boolean =>
+			!menuItem.displayCondition || menuItem.displayCondition(selectedItem)
 	);
 
 	const handleMouseLeave = (): void => {
@@ -92,7 +93,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 	};
 
 	const activeSubMenuItem: MenuItem | undefined = menuItems.find(
-		(item: MenuItem): boolean => item.action === activeSubmenu,
+		(item: MenuItem): boolean => item.action === activeSubmenu
 	);
 
 	return (
@@ -102,7 +103,13 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 				style={{
 					top: position.y,
 					left: position.x,
-					minWidth: compact ? (isSubmenu ? "100px" : "120px") : isSubmenu ? "120px" : "150px",
+					minWidth: compact
+						? isSubmenu
+							? "100px"
+							: "120px"
+						: isSubmenu
+							? "120px"
+							: "150px",
 				}}
 				onClick={(e: MouseEvent): void => e.stopPropagation()}
 				onMouseEnter={onMouseEnter}
@@ -133,7 +140,7 @@ const MenuLevel: React.FC<MenuLevelProps> = ({
 							</span>
 							{menuItem.submenus?.length && <i className="bi bi-chevron-right" />}
 						</div>
-					),
+					)
 				)}
 			</div>
 

@@ -24,9 +24,10 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							Acceptance of Terms
 						</h4>
 						<p className="terms-text">
-							By accessing and using the Job Application Manager ("the Service"), you accept and agree to
-							be bound by the terms and provision of this agreement. If you do not agree to abide by the
-							above, please do not use this service.
+							By accessing and using the Job Application Manager ("the Service"), you
+							accept and agree to be bound by the terms and provision of this
+							agreement. If you do not agree to abide by the above, please do not use
+							this service.
 						</p>
 					</div>
 
@@ -36,9 +37,9 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							Description of Service
 						</h4>
 						<p className="terms-text">
-							Job Application Manager is a web-based application that helps users organise and track their
-							job applications, interviews, and related career management activities. The Service allows
-							you to:
+							Job Application Manager is a web-based application that helps users
+							organise and track their job applications, interviews, and related
+							career management activities. The Service allows you to:
 						</p>
 						<ul className="terms-list">
 							<li>Create and manage job application records</li>
@@ -57,12 +58,17 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							<h5 className="terms-subsection-title">3.1 Registration</h5>
 							<ul className="terms-list">
 								<li>
-									You must provide accurate, complete, and up-to-date information during registration
+									You must provide accurate, complete, and up-to-date information
+									during registration
 								</li>
 								<li>
-									You are responsible for maintaining the confidentiality of your account credentials
+									You are responsible for maintaining the confidentiality of your
+									account credentials
 								</li>
-								<li>You are responsible for all activities that occur under your account</li>
+								<li>
+									You are responsible for all activities that occur under your
+									account
+								</li>
 							</ul>
 						</div>
 
@@ -70,9 +76,12 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							<h5 className="terms-subsection-title">3.2 Account Security</h5>
 							<ul className="terms-list">
 								<li>Choose a strong password and keep it secure</li>
-								<li>Notify us immediately of any unauthorised use of your account</li>
 								<li>
-									We are not liable for any loss or damage arising from unauthorised account access
+									Notify us immediately of any unauthorised use of your account
+								</li>
+								<li>
+									We are not liable for any loss or damage arising from
+									unauthorised account access
 								</li>
 							</ul>
 						</div>
@@ -88,8 +97,8 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							<ul className="terms-list">
 								<li>You retain ownership of all data you submit to the Service</li>
 								<li>
-									You grant us a limited license to store, process, and display your data to provide
-									the Service
+									You grant us a limited license to store, process, and display
+									your data to provide the Service
 								</li>
 								<li>You are responsible for backing up your data</li>
 							</ul>
@@ -98,8 +107,14 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 						<div className="terms-subsection">
 							<h5 className="terms-subsection-title">4.2 Data Usage</h5>
 							<ul className="terms-list">
-								<li>We will not share your personal job application data with third parties.</li>
-								<li>We may use aggregated, anonymised data for service improvement and analytics</li>
+								<li>
+									We will not share your personal job application data with third
+									parties.
+								</li>
+								<li>
+									We may use aggregated, anonymised data for service improvement
+									and analytics
+								</li>
 								<li>You may export or delete your data at any time</li>
 							</ul>
 						</div>
@@ -126,8 +141,9 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							Privacy
 						</h4>
 						<p className="terms-text">
-							Your privacy is important to us. Our data handling practices are governed by our Privacy
-							Policy, which is incorporated into these terms by reference. Key points:
+							Your privacy is important to us. Our data handling practices are
+							governed by our Privacy Policy, which is incorporated into these terms
+							by reference. Key points:
 						</p>
 						<ul className="terms-list">
 							<li>We collect only necessary information to provide the Service</li>
@@ -146,19 +162,31 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							<h5 className="terms-subsection-title">7.1 Uptime</h5>
 							<ul className="terms-list">
 								<li>
-									We strive to maintain high service availability but do not guarantee 100% uptime
+									We strive to maintain high service availability but do not
+									guarantee 100% uptime
 								</li>
-								<li>We may perform maintenance that temporarily interrupts service</li>
-								<li>We will provide advance notice of planned maintenance when possible</li>
+								<li>
+									We may perform maintenance that temporarily interrupts service
+								</li>
+								<li>
+									We will provide advance notice of planned maintenance when
+									possible
+								</li>
 							</ul>
 						</div>
 
 						<div className="terms-subsection">
 							<h5 className="terms-subsection-title">7.2 Service Modifications</h5>
 							<ul className="terms-list">
-								<li>We reserve the right to modify, suspend, or discontinue the Service</li>
+								<li>
+									We reserve the right to modify, suspend, or discontinue the
+									Service
+								</li>
 								<li>We will provide reasonable notice of significant changes</li>
-								<li>Continued use after changes constitutes acceptance of modifications</li>
+								<li>
+									Continued use after changes constitutes acceptance of
+									modifications
+								</li>
 							</ul>
 						</div>
 					</div>
@@ -172,7 +200,10 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							<h5 className="terms-subsection-title">8.1 Your Rights</h5>
 							<ul className="terms-list">
 								<li>You retain rights to your data and content</li>
-								<li>We grant you a limited license to use the Service for its intended purpose</li>
+								<li>
+									We grant you a limited license to use the Service for its
+									intended purpose
+								</li>
 							</ul>
 						</div>
 					</div>
@@ -187,9 +218,17 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 						</p>
 						<ul className="terms-list">
 							<li>THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES</li>
-							<li>WE ARE NOT LIABLE FOR INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES</li>
-							<li>OUR TOTAL LIABILITY IS LIMITED TO THE AMOUNT YOU PAID FOR THE SERVICE</li>
-							<li>WE ARE NOT RESPONSIBLE FOR DATA LOSS, THOUGH WE IMPLEMENT REASONABLE SAFEGUARDS</li>
+							<li>
+								WE ARE NOT LIABLE FOR INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+							</li>
+							<li>
+								OUR TOTAL LIABILITY IS LIMITED TO THE AMOUNT YOU PAID FOR THE
+								SERVICE
+							</li>
+							<li>
+								WE ARE NOT RESPONSIBLE FOR DATA LOSS, THOUGH WE IMPLEMENT REASONABLE
+								SAFEGUARDS
+							</li>
 						</ul>
 					</div>
 
@@ -199,8 +238,8 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							Indemnification
 						</h4>
 						<p className="terms-text">
-							You agree to indemnify and hold us harmless from any claims, damages, or losses arising
-							from:
+							You agree to indemnify and hold us harmless from any claims, damages, or
+							losses arising from:
 						</p>
 						<ul className="terms-list">
 							<li>Your use of the Service</li>
@@ -228,7 +267,9 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 							<ul className="terms-list">
 								<li>We may terminate accounts that violate these terms</li>
 								<li>We may terminate the Service with reasonable notice</li>
-								<li>We will provide data export opportunities before termination</li>
+								<li>
+									We will provide data export opportunities before termination
+								</li>
 							</ul>
 						</div>
 					</div>
@@ -240,7 +281,9 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 						</h4>
 						<div className="terms-subsection">
 							<h5 className="terms-subsection-title">12.1 Governing Law</h5>
-							<p className="terms-text">These terms are governed by applicable local laws.</p>
+							<p className="terms-text">
+								These terms are governed by applicable local laws.
+							</p>
 						</div>
 					</div>
 
@@ -252,28 +295,32 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 						<div className="terms-subsection">
 							<h5 className="terms-subsection-title">13.1 Entire Agreement</h5>
 							<p className="terms-text">
-								These terms constitute the entire agreement between you and us regarding the Service.
+								These terms constitute the entire agreement between you and us
+								regarding the Service.
 							</p>
 						</div>
 
 						<div className="terms-subsection">
 							<h5 className="terms-subsection-title">13.2 Severability</h5>
 							<p className="terms-text">
-								If any provision is found unenforceable, the remaining provisions remain in effect.
+								If any provision is found unenforceable, the remaining provisions
+								remain in effect.
 							</p>
 						</div>
 
 						<div className="terms-subsection">
 							<h5 className="terms-subsection-title">13.3 Updates</h5>
 							<p className="terms-text">
-								We may update these terms periodically. Continued use constitutes acceptance of changes.
+								We may update these terms periodically. Continued use constitutes
+								acceptance of changes.
 							</p>
 						</div>
 
 						<div className="terms-subsection">
 							<h5 className="terms-subsection-title">13.4 Contact</h5>
 							<p className="terms-text">
-								For questions about these terms, please contact us through the application.
+								For questions about these terms, please contact us through the
+								application.
 							</p>
 						</div>
 					</div>

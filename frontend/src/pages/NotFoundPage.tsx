@@ -23,7 +23,11 @@ export const NotAllowed = (errorCode: string, errorTitle: string, errorMessage: 
 							<i className="bi bi-house-fill me-2"></i>
 							Go Home
 						</Link>
-						<button onClick={goBack} className="btn btn-outline-secondary" type="button">
+						<button
+							onClick={goBack}
+							className="btn btn-outline-secondary"
+							type="button"
+						>
 							<i className="bi bi-arrow-left me-2"></i>
 							Go Back
 						</button>
@@ -38,7 +42,7 @@ export const NotFoundPage = () => {
 	return NotAllowed(
 		"404",
 		"Oops! Something Is Jamming Our Radars",
-		"The page you're looking for might have been removed, had its name changed, or is temporarily unavailable.",
+		"The page you're looking for might have been removed, had its name changed, or is temporarily unavailable."
 	);
 };
 
@@ -46,6 +50,6 @@ export const NotAuthorisedPage = () => {
 	return NotAllowed(
 		"403",
 		"Access Denied: You Shall Not Pass!",
-		"Sorry, you don't have the necessary permissions to access this resource.",
+		"Sorry, you don't have the necessary permissions to access this resource."
 	);
 };

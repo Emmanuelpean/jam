@@ -32,7 +32,10 @@ export interface AuthApi {
 	login: (email: string, password: string) => ApiResponsePromise<LoginResponse>;
 	register: (registerData: RegisterData) => ApiResponsePromise<GenericResponse>;
 	getCurrentUser: (token: string) => ApiResponsePromise<UserData>;
-	updateCurrentUser: (data: UserDataUpdate, token: string) => ApiResponsePromise<UpdateCurrentUserResponse>;
+	updateCurrentUser: (
+		data: UserDataUpdate,
+		token: string
+	) => ApiResponsePromise<UpdateCurrentUserResponse>;
 	verifyEmail: (token: string) => ApiResponsePromise<GenericResponse>;
 	verifyNewEmail: (token: string) => ApiResponsePromise<GenericResponse>;
 	checkPendingEmail: (token: string) => ApiResponsePromise<boolean>;
@@ -56,7 +59,10 @@ export const authApi: AuthApi = {
 		return baseApi.get("current-user/", token);
 	},
 
-	updateCurrentUser: async (data: UserDataUpdate, token: string): ApiResponsePromise<UpdateCurrentUserResponse> => {
+	updateCurrentUser: async (
+		data: UserDataUpdate,
+		token: string
+	): ApiResponsePromise<UpdateCurrentUserResponse> => {
 		return baseApi.put("current-user/", data, token);
 	},
 
@@ -76,7 +82,10 @@ export const authApi: AuthApi = {
 		return baseApi.get(`current-user/verify-email/${token}`);
 	},
 
-	resetPassword: async (token: string, newPassword: string): ApiResponsePromise<GenericResponse> => {
+	resetPassword: async (
+		token: string,
+		newPassword: string
+	): ApiResponsePromise<GenericResponse> => {
 		return baseApi.post("password/reset", {
 			token,
 			new_password: newPassword,
@@ -101,5 +110,6 @@ export interface ExportCrudApi {
 }
 
 export const exportApi: ExportCrudApi = {
-	download: (filename: string, token: string): Promise<void> => baseApi.downloadFile("export/", filename, token),
+	download: (filename: string, token: string): Promise<void> =>
+		baseApi.downloadFile("export/", filename, token),
 };

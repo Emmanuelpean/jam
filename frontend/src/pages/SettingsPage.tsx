@@ -1,7 +1,7 @@
 import React from "react";
 import DataTable from "../components/tables/DataTable";
 import { tableColumns } from "../components/rendering/view/TableColumns";
-import { SettingModal } from "../components/modals/SettingModal";
+import { SettingModal } from "../components/DataModal/SettingModal";
 
 const SettingsPage = () => {
 	const columns = [

@@ -7,7 +7,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { Errors, FormField, SyntheticEvent } from "../rendering/widgets/WidgetRenders";
 import { ModalFormField } from "../rendering/form/FormRenders";
 import { areDifferent } from "../../utils/Utils";
-import "./FollowUpModal.css";
+import "./FollowUpModal.scss";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { CompanyData, JobData, PersonData } from "../../services/schemas/DataTables";
 
@@ -27,7 +27,7 @@ export function jobFollowUpEmail(
 	hiringManager: string,
 	jobTitle: string,
 	yourName: string,
-	company: string | null = null,
+	company: string | null = null
 ): string {
 	company = company ? ` at ${company}` : "";
 	return `Hi ${hiringManager},
@@ -74,14 +74,15 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 		let companyString: string | null = null;
 		if (contact?.is_recruiter && contact.company_id !== job.company_id) {
 			companyString =
-				dataContext.companies.find((c: CompanyData): boolean => c.id === contact?.company_id)?.name ||
-				"[Company Name]";
+				dataContext.companies.find(
+					(c: CompanyData): boolean => c.id === contact?.company_id
+				)?.name || "[Company Name]";
 		}
 		return jobFollowUpEmail(
 			contact?.first_name || "[Contact Name]",
 			job?.title || "[Job Title]",
 			currentUser?.name || "[Your Name]",
-			companyString,
+			companyString
 		);
 	};
 
@@ -116,7 +117,10 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 	const hasUnsavedChanges = (): boolean => {
 		const keys: string[] = Object.keys(formData);
 		return keys.some((key: string): boolean => {
-			return areDifferent(formData[key as keyof FormData], originalFormData[key as keyof FormData]);
+			return areDifferent(
+				formData[key as keyof FormData],
+				originalFormData[key as keyof FormData]
+			);
 		});
 	};
 
@@ -125,17 +129,17 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 			(prev: FormData): FormData => ({
 				...prev,
 				[e.target.name]: e.target.value,
-			}),
+			})
 		);
 		if (e.target.name === "contactId" && currentJob) {
 			const contact: PersonData | undefined = dataContext.persons.find(
-				(person: PersonData): boolean => person.id === parseInt(e.target.value),
+				(person: PersonData): boolean => person.id === parseInt(e.target.value)
 			);
 			setFormData(
 				(prev: FormData): FormData => ({
 					...prev,
 					body: generateEmailBody(contact, currentJob),
-				}),
+				})
 			);
 		}
 		if (errors[e.target.name]) {
@@ -186,7 +190,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 
 	const buildEmailUrl = (service: mailClient): string => {
 		const contact: PersonData | undefined = dataContext.persons.find(
-			(person: PersonData): boolean => person.id === formData.contactId,
+			(person: PersonData): boolean => person.id === formData.contactId
 		);
 
 		const emailAddress: string = contact?.email || "";
@@ -213,7 +217,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 		});
 		if (result) {
 			const contact: PersonData | undefined = dataContext.persons.find(
-				(person: PersonData): boolean => person.id === formData.contactId,
+				(person: PersonData): boolean => person.id === formData.contactId
 			);
 			dataContext
 				.addEntity("jobApplicationUpdate", {
@@ -271,7 +275,11 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 							className="email-service-dropdown flex-fill"
 							style={{ width: "100%" }}
 						>
-							<Button variant="primary" onClick={(): void => handleSend("default")} id={"send-btn"}>
+							<Button
+								variant="primary"
+								onClick={(): void => handleSend("default")}
+								id={"send-btn"}
+							>
 								<i className="bi bi-send-fill me-2"></i>
 								Send Email
 							</Button>

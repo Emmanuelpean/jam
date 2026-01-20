@@ -1,18 +1,23 @@
 import React, { JSX, MouseEvent, useRef } from "react";
 import { MenuItem } from "../../ContextMenu/ContextMenu";
-import { DataModalHandle } from "../../modals/DataModal/DataModal";
+import { DataModalHandle } from "../../DataModal/DataModal/DataModal";
 import { useContextMenu } from "../../../contexts/ContextMenuContext";
 import FollowUpModal, { FollowUpModalHandle } from "../../FollowUpModal/FollowUpModal";
-import { LocationModal } from "../../modals/LocationModal";
-import { CompanyModal } from "../../modals/CompanyModal";
-import { PersonModal } from "../../modals/PersonModal";
-import { KeywordModal } from "../../modals/KeywordModal";
-import { JobModal } from "../../modals/JobModal";
-import { AggregatorModal } from "../../modals/AggregatorModal";
-import { JobApplicationUpdateModal } from "../../modals/JobApplicationUpdateModal";
-import { InterviewModal } from "../../modals/InterviewModal";
+import { LocationModal } from "../../DataModal/LocationModal";
+import { CompanyModal } from "../../DataModal/CompanyModal";
+import { PersonModal } from "../../DataModal/PersonModal";
+import { KeywordModal } from "../../DataModal/KeywordModal";
+import { JobModal } from "../../DataModal/JobModal";
+import { AggregatorModal } from "../../DataModal/AggregatorModal";
+import { JobApplicationUpdateModal } from "../../DataModal/JobApplicationUpdateModal";
+import { InterviewModal } from "../../DataModal/InterviewModal";
 import { useDeleteEntityConfirm } from "../../../utils/DeleteHandler";
-import { DataContextValue, EntityType, JamData, useDataContext } from "../../../contexts/DataContext";
+import {
+	DataContextValue,
+	EntityType,
+	JamData,
+	useDataContext,
+} from "../../../contexts/DataContext";
 import { getEntityIcon } from "./Icons";
 import { useGlobalToast } from "../../../hooks/useNotificationToast";
 import {
@@ -45,7 +50,7 @@ const createBadgeModalManager = <T extends JamData>(
 	entityType: EntityType,
 	defaultBadgeClass: string = "bg-info",
 	defaultDisplayText: (item: T) => string,
-	defaultMenuItemKeys: string[] = ["view", "edit", "delete"],
+	defaultMenuItemKeys: string[] = ["view", "edit", "delete"]
 ) => {
 	return ({
 		item,
@@ -73,7 +78,7 @@ const createBadgeModalManager = <T extends JamData>(
 					updatedParent = {
 						...parentItem,
 						[parentKey]: (parentItem as any)[parentKey].filter(
-							(itemId: number): boolean => itemId !== item.id,
+							(itemId: number): boolean => itemId !== item.id
 						),
 					};
 				} else {
@@ -83,16 +88,24 @@ const createBadgeModalManager = <T extends JamData>(
 					};
 				}
 				if (parentEntityType) {
-					dataContext.updateEntity(parentEntityType, parentItem.id, updatedParent).then((_) => {
-						showToastSuccess("Association removed successfully.");
-					});
+					dataContext
+						.updateEntity(parentEntityType, parentItem.id, updatedParent)
+						.then((_) => {
+							showToastSuccess("Association removed successfully.");
+						});
 				}
 			}
 		};
 		const availableMenuItems: MenuItem[] = [
 			{ action: "view", icon: "eye", text: "View", function: modalRef.current?.showView },
 			{ action: "edit", icon: "pencil", text: "Edit", function: modalRef.current?.showEdit },
-			{ action: "delete", icon: "trash", text: "Delete", color: "#dc3545", function: deleteHandler },
+			{
+				action: "delete",
+				icon: "trash",
+				text: "Delete",
+				color: "#dc3545",
+				function: deleteHandler,
+			},
 			{
 				action: "remove",
 				icon: "x-circle",
@@ -107,12 +120,13 @@ const createBadgeModalManager = <T extends JamData>(
 				function: (item: JamData): void => {
 					followUpModalRef.current?.show(parentItem as JobData, item as PersonData);
 				},
-				displayCondition: (item: JamData): boolean => !!((item as PersonData).email && parentItem),
+				displayCondition: (item: JamData): boolean =>
+					!!((item as PersonData).email && parentItem),
 			},
 		];
 
 		const menuItems: MenuItem[] = availableMenuItems.filter((menuItem: MenuItem): boolean =>
-			menuItemKeys.includes(menuItem.action),
+			menuItemKeys.includes(menuItem.action)
 		);
 
 		const handleContextMenu = (e: MouseEvent<HTMLSpanElement>) => {
@@ -154,42 +168,47 @@ export const PersonBadge = createBadgeModalManager(
 	"person",
 	"bg-info",
 	(item: PersonData): string => item.name,
-	["view", "edit", "delete", "followup"],
+	["view", "edit", "delete", "followup"]
 );
 export const CompanyBadge = createBadgeModalManager(
 	CompanyModal,
 	"company",
 	"bg-success",
-	(item: CompanyData): string => item.name,
+	(item: CompanyData): string => item.name
 );
 export const LocationBadge = createBadgeModalManager(
 	LocationModal,
 	"location",
 	"bg-warning",
-	(item: LocationData): string => item.name,
+	(item: LocationData): string => item.name
 );
 export const KeywordBadge = createBadgeModalManager(
 	KeywordModal,
 	"keyword",
 	"bg-secondary",
-	(item: KeywordData): string => item.name,
+	(item: KeywordData): string => item.name
 );
-export const JobBadge = createBadgeModalManager(JobModal, "job", "bg-primary", (item: JobData): string => item.name);
+export const JobBadge = createBadgeModalManager(
+	JobModal,
+	"job",
+	"bg-primary",
+	(item: JobData): string => item.name
+);
 export const AggregatorBadge = createBadgeModalManager(
 	AggregatorModal,
 	"aggregator",
 	"bg-dark",
-	(item: AggregatorData): string => item.name,
+	(item: AggregatorData): string => item.name
 );
 export const JobApplicationUpdateBadge = createBadgeModalManager(
 	JobApplicationUpdateModal,
 	"jobApplicationUpdate",
 	"bg-info",
-	(item: JobData): string => item.title,
+	(item: JobData): string => item.title
 );
 export const InterviewBadge = createBadgeModalManager(
 	InterviewModal,
 	"interview",
 	"bg-success",
-	(item: JobData): string => item.title,
+	(item: JobData): string => item.title
 );

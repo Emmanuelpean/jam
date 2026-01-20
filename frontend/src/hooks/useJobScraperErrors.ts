@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import { PlatformStat, ScrapedJobData, JobScrapingServiceLogData } from "../services/schemas/Services";
+import {
+	PlatformStat,
+	ScrapedJobData,
+	JobScrapingServiceLogData,
+} from "../services/schemas/Services";
 import { scrapedJobApi } from "../services/api/Services";
 import { normaliseArray } from "../utils/Utils";
 import { useAuth } from "../contexts/AuthContext";
@@ -12,7 +16,7 @@ export interface ErrorCount {
 
 export const useJobScraperErrors = (
 	latestLog: JobScrapingServiceLogData | JobScrapingServiceLogData[] | null,
-	platform: string,
+	platform: string
 ) => {
 	const { token } = useAuth();
 	const [scraperErrors, setScraperErrors] = useState<Record<string, ErrorCount>>({});
@@ -32,7 +36,7 @@ export const useJobScraperErrors = (
 					// Collect IDs from all logs for the specific platform
 					logs.forEach((log: JobScrapingServiceLogData): void => {
 						const platformStat: PlatformStat | undefined = log.platform_stats.find(
-							(stat: PlatformStat): boolean => stat.name === platform,
+							(stat: PlatformStat): boolean => stat.name === platform
 						);
 						if (platformStat?.job_scrape_failed_ids) {
 							ids.push(...platformStat.job_scrape_failed_ids);
@@ -57,7 +61,10 @@ export const useJobScraperErrors = (
 					return;
 				}
 
-				const scraped_jobs: ApiResponse<ScrapedJobData[]> = await scrapedJobApi.getAll(token, { id: ids });
+				const scraped_jobs: ApiResponse<ScrapedJobData[]> = await scrapedJobApi.getAll(
+					token,
+					{ id: ids }
+				);
 
 				const errorCounts: Record<string, ErrorCount> = {};
 				scraped_jobs.data.forEach((job: ScrapedJobData): void => {

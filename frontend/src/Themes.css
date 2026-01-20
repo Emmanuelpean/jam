@@ -1,208 +1,238 @@
 /* Mixed Berry Jam Theme */
 :root[data-theme="mixed-berry"] {
-    --theme-name: 'Mixed Berry Jam';
-    --primary-start: #a29bfe;
-    --primary-mid: #6c5ce7;
-    --primary-end: #fd79a8;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #9085fd 0%, #5b4bd1 50%, #fc5d95 100%);
-    --primary-light: #d1cbfe;
-    --primary-dark: #4a3bb8;
-    --jam-glow: rgb(162 155 254 / 30%);
+	--theme-name: "Mixed Berry Jam";
+	--primary-start: #a29bfe;
+	--primary-mid: #6c5ce7;
+	--primary-end: #fd79a8;
+	--primary-gradient: linear-gradient(
+		135deg,
+		var(--primary-start) 0%,
+		var(--primary-mid) 50%,
+		var(--primary-end) 100%
+	);
+	--primary-hover-gradient: linear-gradient(135deg, #9085fd 0%, #5b4bd1 50%, #fc5d95 100%);
+	--primary-light: #d1cbfe;
+	--primary-dark: #4a3bb8;
+	--jam-glow: rgb(162 155 254 / 30%);
 
-    /* Badge colors */
-    --badge-primary-bg: var(--primary-gradient);
-    --badge-primary-color: white;
-    --badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
-    --badge-info-color: white;
-    --badge-success-bg: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 100%);
-    --badge-success-color: white;
-    --badge-warning-bg: linear-gradient(135deg, var(--primary-end) 0%, #fab1a0 100%);
-    --badge-warning-color: white;
-    --badge-secondary-bg: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%);
-    --badge-secondary-color: black;
-    --badge-dark-bg: linear-gradient(135deg, var(--primary-dark) 0%, #2d3436 100%);
-    --badge-dark-color: white;
+	/* Badge colors */
+	--badge-primary-bg: var(--primary-gradient);
+	--badge-primary-color: white;
+	--badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
+	--badge-info-color: white;
+	--badge-success-bg: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 100%);
+	--badge-success-color: white;
+	--badge-warning-bg: linear-gradient(135deg, var(--primary-end) 0%, #fab1a0 100%);
+	--badge-warning-color: white;
+	--badge-secondary-bg: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%);
+	--badge-secondary-color: black;
+	--badge-dark-bg: linear-gradient(135deg, var(--primary-dark) 0%, #2d3436 100%);
+	--badge-dark-color: white;
 }
 
 /* Strawberry Jam Theme */
 :root[data-theme="strawberry"] {
-    --theme-name: 'Strawberry Jam';
-    --primary-start: #ff9a9e;
-    --primary-mid: #ff6b6b;
-    --primary-end: #c44569;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #ff8a8e 0%, #ff5252 50%, #b73e56 100%);
-    --primary-light: #ffccce;
-    --primary-dark: #a63952;
-    --jam-glow: rgb(255 154 158 / 30%);
+	--theme-name: "Strawberry Jam";
+	--primary-start: #ff9a9e;
+	--primary-mid: #ff6b6b;
+	--primary-end: #c44569;
+	--primary-gradient: linear-gradient(
+		135deg,
+		var(--primary-start) 0%,
+		var(--primary-mid) 50%,
+		var(--primary-end) 100%
+	);
+	--primary-hover-gradient: linear-gradient(135deg, #ff8a8e 0%, #ff5252 50%, #b73e56 100%);
+	--primary-light: #ffccce;
+	--primary-dark: #a63952;
+	--jam-glow: rgb(255 154 158 / 30%);
 
-    /* Badge colors */
-    --badge-primary-bg: var(--primary-gradient);
-    --badge-primary-color: white;
-    --badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
-    --badge-info-color: black;
-    --badge-success-bg: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 100%);
-    --badge-success-color: white;
-    --badge-warning-bg: linear-gradient(135deg, var(--primary-end) 0%, #ffb8a3 100%);
-    --badge-warning-color: white;
-    --badge-secondary-bg: linear-gradient(135deg, #ffe5e7 0%, #ffb8bb 100%);
-    --badge-secondary-color: black;
-    --badge-dark-bg: linear-gradient(135deg, var(--primary-dark) 0%, #8b2e45 100%);
-    --badge-dark-color: white;
+	/* Badge colors */
+	--badge-primary-bg: var(--primary-gradient);
+	--badge-primary-color: white;
+	--badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
+	--badge-info-color: black;
+	--badge-success-bg: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 100%);
+	--badge-success-color: white;
+	--badge-warning-bg: linear-gradient(135deg, var(--primary-end) 0%, #ffb8a3 100%);
+	--badge-warning-color: white;
+	--badge-secondary-bg: linear-gradient(135deg, #ffe5e7 0%, #ffb8bb 100%);
+	--badge-secondary-color: black;
+	--badge-dark-bg: linear-gradient(135deg, var(--primary-dark) 0%, #8b2e45 100%);
+	--badge-dark-color: white;
 }
 
 /* Blueberry Jam Theme */
 :root[data-theme="blueberry"] {
-    --theme-name: 'Blueberry Jam';
-    --primary-start: #a8edea;
-    --primary-mid: #686de0;
-    --primary-end: #4834d4;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #98e7e4 0%, #5a5fcf 50%, #3d2db7 100%);
-    --primary-light: #c8f3f0;
-    --primary-dark: #2d1f8f;
-    --jam-glow: rgb(168 237 234 / 30%);
+	--theme-name: "Blueberry Jam";
+	--primary-start: #a8edea;
+	--primary-mid: #686de0;
+	--primary-end: #4834d4;
+	--primary-gradient: linear-gradient(
+		135deg,
+		var(--primary-start) 0%,
+		var(--primary-mid) 50%,
+		var(--primary-end) 100%
+	);
+	--primary-hover-gradient: linear-gradient(135deg, #98e7e4 0%, #5a5fcf 50%, #3d2db7 100%);
+	--primary-light: #c8f3f0;
+	--primary-dark: #2d1f8f;
+	--jam-glow: rgb(168 237 234 / 30%);
 
-    /* Badge colors */
-    --badge-primary-bg: var(--primary-gradient);
-    --badge-primary-color: white;
-    --badge-info-bg: linear-gradient(135deg, #b5cbe6 0%, #606b7c 100%);
-    --badge-info-color: white;
-    --badge-success-bg: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 100%);
-    --badge-success-color: white;
-    --badge-warning-bg: linear-gradient(135deg, #b5cbe6 0%, #428195 100%);
-    --badge-warning-color: white;
-    --badge-secondary-bg: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%);
-    --badge-secondary-color: black;
-    --badge-dark-bg: linear-gradient(135deg, var(--primary-dark) 0%, #1e1464 100%);
-    --badge-dark-color: white;
+	/* Badge colors */
+	--badge-primary-bg: var(--primary-gradient);
+	--badge-primary-color: white;
+	--badge-info-bg: linear-gradient(135deg, #b5cbe6 0%, #606b7c 100%);
+	--badge-info-color: white;
+	--badge-success-bg: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 100%);
+	--badge-success-color: white;
+	--badge-warning-bg: linear-gradient(135deg, #b5cbe6 0%, #428195 100%);
+	--badge-warning-color: white;
+	--badge-secondary-bg: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%);
+	--badge-secondary-color: black;
+	--badge-dark-bg: linear-gradient(135deg, var(--primary-dark) 0%, #1e1464 100%);
+	--badge-dark-color: white;
 }
 
 /* Raspberry Jam Theme */
 :root[data-theme="raspberry"] {
-    --theme-name: 'Raspberry Jam';
-    --primary-start: #fde4a3;
-    --primary-mid: #fd79a8;
-    --primary-end: #e84393;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #ffe3c2 0%, #fc5d95 50%, #e32e7c 100%);
-    --primary-light: #fff6e8;
-    --primary-dark: #d1206b;
-    --jam-glow: rgb(255 236 210 / 30%);
+	--theme-name: "Raspberry Jam";
+	--primary-start: #fde4a3;
+	--primary-mid: #fd79a8;
+	--primary-end: #e84393;
+	--primary-gradient: linear-gradient(
+		135deg,
+		var(--primary-start) 0%,
+		var(--primary-mid) 50%,
+		var(--primary-end) 100%
+	);
+	--primary-hover-gradient: linear-gradient(135deg, #ffe3c2 0%, #fc5d95 50%, #e32e7c 100%);
+	--primary-light: #fff6e8;
+	--primary-dark: #d1206b;
+	--jam-glow: rgb(255 236 210 / 30%);
 
-    /* Badge colors */
-    --badge-primary-bg: var(--primary-gradient);
-    --badge-primary-color: white;
-    --badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
-    --badge-info-color: black;
-    --badge-success-bg: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 100%);
-    --badge-success-color: white;
-    --badge-warning-bg: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
-    --badge-warning-color: white;
-    --badge-secondary-bg: linear-gradient(135deg, #fff6e8 0%, #fde4a3 100%);
-    --badge-secondary-color: black;
-    --badge-dark-bg: linear-gradient(135deg, var(--primary-dark) 0%, #b81a5a 100%);
-    --badge-dark-color: white;
+	/* Badge colors */
+	--badge-primary-bg: var(--primary-gradient);
+	--badge-primary-color: white;
+	--badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
+	--badge-info-color: black;
+	--badge-success-bg: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 100%);
+	--badge-success-color: white;
+	--badge-warning-bg: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+	--badge-warning-color: white;
+	--badge-secondary-bg: linear-gradient(135deg, #fff6e8 0%, #fde4a3 100%);
+	--badge-secondary-color: black;
+	--badge-dark-bg: linear-gradient(135deg, var(--primary-dark) 0%, #b81a5a 100%);
+	--badge-dark-color: white;
 }
 
 /* Forest Berry Theme */
 :root[data-theme="forest-berry"] {
-    --theme-name: 'Forest Berry';
-    --primary-start: #d4e4d4;
-    --primary-mid: #a8b3a8;
-    --primary-end: #1a2e1a;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #c4d4c4 0%, #9aa59a 50%, #162816 100%);
-    --primary-light: #e4f4e4;
-    --primary-dark: #0f1a0f;
-    --jam-glow: rgb(212 228 212 / 30%);
+	--theme-name: "Forest Berry";
+	--primary-start: #d4e4d4;
+	--primary-mid: #a8b3a8;
+	--primary-end: #1a2e1a;
+	--primary-gradient: linear-gradient(
+		135deg,
+		var(--primary-start) 0%,
+		var(--primary-mid) 50%,
+		var(--primary-end) 100%
+	);
+	--primary-hover-gradient: linear-gradient(135deg, #c4d4c4 0%, #9aa59a 50%, #162816 100%);
+	--primary-light: #e4f4e4;
+	--primary-dark: #0f1a0f;
+	--jam-glow: rgb(212 228 212 / 30%);
 
-    /* Badge colors */
-    --badge-primary-bg: var(--primary-gradient);
-    --badge-primary-color: white;
-    --badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
-    --badge-info-color: black;
-    --badge-success-bg: linear-gradient(135deg, #b8d4a8 0%, #8aa878 100%);
-    --badge-success-color: white;
-    --badge-warning-bg: linear-gradient(135deg, #f4e4a4 0%, #d4c484 100%);
-    --badge-warning-color: black;
-    --badge-secondary-bg: linear-gradient(135deg, #c4d4c4 0%, #9aa59a 100%);
-    --badge-secondary-color: white;
-    --badge-dark-bg: linear-gradient(135deg, var(--primary-end) 0%, var(--primary-dark) 100%);
-    --badge-dark-color: white;
+	/* Badge colors */
+	--badge-primary-bg: var(--primary-gradient);
+	--badge-primary-color: white;
+	--badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
+	--badge-info-color: black;
+	--badge-success-bg: linear-gradient(135deg, #b8d4a8 0%, #8aa878 100%);
+	--badge-success-color: white;
+	--badge-warning-bg: linear-gradient(135deg, #f4e4a4 0%, #d4c484 100%);
+	--badge-warning-color: black;
+	--badge-secondary-bg: linear-gradient(135deg, #c4d4c4 0%, #9aa59a 100%);
+	--badge-secondary-color: white;
+	--badge-dark-bg: linear-gradient(135deg, var(--primary-end) 0%, var(--primary-dark) 100%);
+	--badge-dark-color: white;
 }
 
 /* Wild Blackberry Theme */
 :root[data-theme="blackberry"] {
-    --theme-name: 'Wild Blackberry';
-    --primary-start: #d8c8e8;
-    --primary-mid: #8a7a9a;
-    --primary-end: #0a0015;
-    --primary-gradient: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-mid) 50%, var(--primary-end) 100%);
-    --primary-hover-gradient: linear-gradient(135deg, #ccb8dc 0%, #7e6e8e 50%, #080012 100%);
-    --primary-light: #e8d8f8;
-    --primary-dark: #050008;
-    --jam-glow: rgb(216 200 232 / 30%);
+	--theme-name: "Wild Blackberry";
+	--primary-start: #d8c8e8;
+	--primary-mid: #8a7a9a;
+	--primary-end: #0a0015;
+	--primary-gradient: linear-gradient(
+		135deg,
+		var(--primary-start) 0%,
+		var(--primary-mid) 50%,
+		var(--primary-end) 100%
+	);
+	--primary-hover-gradient: linear-gradient(135deg, #ccb8dc 0%, #7e6e8e 50%, #080012 100%);
+	--primary-light: #e8d8f8;
+	--primary-dark: #050008;
+	--jam-glow: rgb(216 200 232 / 30%);
 
-    /* Badge colors */
-    --badge-primary-bg: var(--primary-gradient);
-    --badge-primary-color: white;
-    --badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
-    --badge-info-color: black;
-    --badge-success-bg: linear-gradient(135deg, #b8a8d8 0%, #8a7a9a 100%);
-    --badge-success-color: white;
-    --badge-warning-bg: linear-gradient(135deg, #c8b8e8 0%, #6b2356 100%);
-    --badge-warning-color: white;
-    --badge-secondary-bg: linear-gradient(135deg, #d8c8e8 0%, #a898b8 100%);
-    --badge-secondary-color: black;
-    --badge-dark-bg: linear-gradient(135deg, #2a1e36 0%, var(--primary-dark) 100%);
-    --badge-dark-color: white;
+	/* Badge colors */
+	--badge-primary-bg: var(--primary-gradient);
+	--badge-primary-color: white;
+	--badge-info-bg: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-start) 100%);
+	--badge-info-color: black;
+	--badge-success-bg: linear-gradient(135deg, #b8a8d8 0%, #8a7a9a 100%);
+	--badge-success-color: white;
+	--badge-warning-bg: linear-gradient(135deg, #c8b8e8 0%, #6b2356 100%);
+	--badge-warning-color: white;
+	--badge-secondary-bg: linear-gradient(135deg, #d8c8e8 0%, #a898b8 100%);
+	--badge-secondary-color: black;
+	--badge-dark-bg: linear-gradient(135deg, #2a1e36 0%, var(--primary-dark) 100%);
+	--badge-dark-color: white;
 }
 
 /* Override the badge styles to use theme variables */
 .bg-primary {
-    background: var(--badge-primary-bg) !important;
-    color: var(--badge-primary-color) !important;
-    border: none;
+	background: var(--badge-primary-bg) !important;
+	color: var(--badge-primary-color) !important;
+	border: none;
 }
 
 .bg-info {
-    background: var(--badge-info-bg) !important;
-    color: var(--badge-info-color) !important;
-    border: none;
+	background: var(--badge-info-bg) !important;
+	color: var(--badge-info-color) !important;
+	border: none;
 }
 
 .bg-success {
-    background: var(--badge-success-bg) !important;
-    color: var(--badge-success-color) !important;
-    border: none;
+	background: var(--badge-success-bg) !important;
+	color: var(--badge-success-color) !important;
+	border: none;
 }
 
 .bg-warning {
-    background: var(--badge-warning-bg) !important;
-    color: var(--badge-warning-color) !important;
-    border: none;
+	background: var(--badge-warning-bg) !important;
+	color: var(--badge-warning-color) !important;
+	border: none;
 }
 
 .bg-secondary {
-    background: var(--badge-secondary-bg) !important;
-    color: var(--badge-secondary-color) !important;
-    border: none;
+	background: var(--badge-secondary-bg) !important;
+	color: var(--badge-secondary-color) !important;
+	border: none;
 }
 
 .bg-dark {
-    background: var(--badge-dark-bg) !important;
-    color: var(--badge-dark-color) !important;
-    border: none;
+	background: var(--badge-dark-bg) !important;
+	color: var(--badge-dark-color) !important;
+	border: none;
 }
 
 .badge {
-    transition: all 0.2s ease;
-    text-shadow: 0 0 0;
+	transition: all 0.2s ease;
+	text-shadow: 0 0 0;
 }
 
 .badge:hover {
-    box-shadow: 0 0 12px var(--jam-glow);
-    transform: translateY(-1px);
+	box-shadow: 0 0 12px var(--jam-glow);
+	transform: translateY(-1px);
 }

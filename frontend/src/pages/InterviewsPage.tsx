@@ -1,6 +1,6 @@
 import React from "react";
 import DataTable from "../components/tables/DataTable";
-import { InterviewModal } from "../components/modals/InterviewModal";
+import { InterviewModal } from "../components/DataModal/InterviewModal";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const InterviewsPage = () => {

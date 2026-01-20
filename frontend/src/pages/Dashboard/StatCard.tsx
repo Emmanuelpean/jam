@@ -20,7 +20,10 @@ export const StatCard: React.FC<StatCardProps> = ({
 		<Card.Body className="d-flex align-items-center">
 			<div className="flex-grow-1">
 				<div className="d-flex align-items-center mb-2">
-					<i className={`bi bi-${icon} text-${variant} me-2`} style={{ fontSize: "1.5rem" }}></i>
+					<i
+						className={`bi bi-${icon} text-${variant} me-2`}
+						style={{ fontSize: "1.5rem" }}
+					></i>
 					<h5 className="card-itemName mb-0">{name}</h5>
 				</div>
 				<div className={`display-6 fw-bold text-${variant}`}>{value}</div>

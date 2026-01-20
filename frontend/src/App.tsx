@@ -23,7 +23,7 @@ import { ToastStack } from "./components/toasts/Toast";
 import SettingsPage from "./pages/SettingsPage";
 import AboutPage from "./pages/AboutPage/AboutPage";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./App.css";
+import "./App.scss";
 import "./Themes.css";
 import { AlertProvider } from "./contexts/AlertContext";
 import JobRatingDashboard from "./pages/Services/JobRatingDashboard/JobRatingDashboardPage";
@@ -64,7 +64,11 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 					{isLoading && (
 						<div className="global-loading-overlay">
 							<div className="d-flex flex-column justify-content-center align-items-center h-100">
-								<div className="spinner-border mb-3" role="status" id="loading-spinner">
+								<div
+									className="spinner-border mb-3"
+									role="status"
+									id="loading-spinner"
+								>
 									<span className="visually-hidden">Loading...</span>
 								</div>
 								<p className="text-muted mb-3">{loadingMessage}</p>
@@ -130,7 +134,11 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/locations", element: <LocationsPage />, protected: true },
 	{ path: "/companies", element: <CompaniesPage />, protected: true },
 	{ path: "/jobs", element: <JobsPage />, protected: true },
-	{ path: "/speculative-applications", element: <SpeculativeApplicationsPage />, protected: true },
+	{
+		path: "/speculative-applications",
+		element: <SpeculativeApplicationsPage />,
+		protected: true,
+	},
 	{ path: "/persons", element: <PersonPage />, protected: true },
 	{ path: "/keywords", element: <KeywordsPage />, protected: true },
 	{ path: "/interviews", element: <InterviewsPage />, protected: true },
@@ -141,8 +149,18 @@ const routeConfigs: RouteConfig[] = [
 	{ path: "/settings/:tab", element: <UserSettingsPage />, protected: true },
 	{ path: "/settings", element: <Navigate to="/settings/account" replace />, protected: true },
 	{ path: "/users", element: <UserManagementPage />, protected: true, adminOnly: true },
-	{ path: "/job-scraping-dashboard", element: <JobScraperDashboard />, protected: true, adminOnly: true },
-	{ path: "/job-rating-dashboard", element: <JobRatingDashboard />, protected: true, adminOnly: true },
+	{
+		path: "/job-scraping-dashboard",
+		element: <JobScraperDashboard />,
+		protected: true,
+		adminOnly: true,
+	},
+	{
+		path: "/job-rating-dashboard",
+		element: <JobRatingDashboard />,
+		protected: true,
+		adminOnly: true,
+	},
 	{ path: "/app-settings", element: <SettingsPage />, protected: true, adminOnly: true },
 	{ path: "*", element: <NotFoundPage /> },
 ];
@@ -150,21 +168,28 @@ const routeConfigs: RouteConfig[] = [
 function AppRoutes(): JSX.Element {
 	return (
 		<Routes>
-			{routeConfigs.map(({ path, element, protected: isProtected, adminOnly }: RouteConfig): JSX.Element => {
-				let routeElement: JSX.Element = element;
+			{routeConfigs.map(
+				({
+					path,
+					element,
+					protected: isProtected,
+					adminOnly,
+				}: RouteConfig): JSX.Element => {
+					let routeElement: JSX.Element = element;
 
-				if (isProtected && adminOnly) {
-					routeElement = (
-						<ProtectedRoute>
-							<AdminProtectedRoute>{element}</AdminProtectedRoute>
-						</ProtectedRoute>
-					);
-				} else if (isProtected) {
-					routeElement = <ProtectedRoute>{element}</ProtectedRoute>;
+					if (isProtected && adminOnly) {
+						routeElement = (
+							<ProtectedRoute>
+								<AdminProtectedRoute>{element}</AdminProtectedRoute>
+							</ProtectedRoute>
+						);
+					} else if (isProtected) {
+						routeElement = <ProtectedRoute>{element}</ProtectedRoute>;
+					}
+
+					return <Route key={path} path={path} element={routeElement} />;
 				}
-
-				return <Route key={path} path={path} element={routeElement} />;
-			})}
+			)}
 		</Routes>
 	);
 }

@@ -8,7 +8,7 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { LocationData } from "../../services/schemas/DataTables";
 import { ScrapedJobData } from "../../services/schemas/Services";
 import { GeoLocation } from "../../services/schemas/Base";
-import "./LocationMap.css";
+import "./LocationMap.scss";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -35,7 +35,11 @@ const isScrapedJobData = (location: MapLocation): location is ScrapedJobData => 
 
 const formatLocationName = (location: MapLocation): string => {
 	if (isScrapedJobData(location)) {
-		const parts = [location.location_postcode, location.location_city, location.location_country].filter(Boolean);
+		const parts = [
+			location.location_postcode,
+			location.location_city,
+			location.location_country,
+		].filter(Boolean);
 		return parts.join(", ") || "Unknown Location";
 	}
 	return location.name;
@@ -52,7 +56,8 @@ const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpd
 			if (!map || !map.getContainer() || !map.getPane("mapPane")) return;
 
 			const geolocatedLocations: GeolocatedMapLocation[] = locations.filter(
-				(location: MapLocation): location is GeolocatedMapLocation => location.geolocation !== null,
+				(location: MapLocation): location is GeolocatedMapLocation =>
+					location.geolocation !== null
 			);
 
 			try {
@@ -63,12 +68,19 @@ const MapViewUpdater: React.FC<MapViewUpdaterProps> = ({ locations }: MapViewUpd
 					map.setView([20, 0], 2, { animate: false });
 				} else if (geolocatedLocations.length === 1) {
 					const location = geolocatedLocations[0]!;
-					map.setView([location.geolocation.latitude, location.geolocation.longitude], 10, {
-						animate: false,
-					});
+					map.setView(
+						[location.geolocation.latitude, location.geolocation.longitude],
+						10,
+						{
+							animate: false,
+						}
+					);
 				} else {
 					const bounds = L.latLngBounds(
-						geolocatedLocations.map((loc) => [loc.geolocation.latitude, loc.geolocation.longitude]),
+						geolocatedLocations.map((loc) => [
+							loc.geolocation.latitude,
+							loc.geolocation.longitude,
+						])
 					);
 					map.fitBounds(bounds, { padding: [20, 20], animate: false });
 				}
@@ -108,7 +120,8 @@ const LocationMap: React.FC<LocationMapProps> = ({
 		const observer = new MutationObserver((mutations: MutationRecord[]) => {
 			mutations.forEach((mutation: MutationRecord): void => {
 				if (mutation.type === "attributes" && mutation.attributeName === "data-mode") {
-					const newMode: boolean = document.documentElement.getAttribute("data-mode") === "dark";
+					const newMode: boolean =
+						document.documentElement.getAttribute("data-mode") === "dark";
 					setIsDarkMode(newMode);
 				}
 			});
@@ -174,7 +187,10 @@ const LocationMap: React.FC<LocationMapProps> = ({
 						(location): JSX.Element => (
 							<Marker
 								key={`${location.id}-${location.geolocation!.latitude}-${location.geolocation!.longitude}`}
-								position={[location.geolocation!.latitude, location.geolocation!.longitude]}
+								position={[
+									location.geolocation!.latitude,
+									location.geolocation!.longitude,
+								]}
 							>
 								<Popup>
 									<div>
@@ -182,7 +198,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
 									</div>
 								</Popup>
 							</Marker>
-						),
+						)
 					)}
 				</MapContainer>
 			</div>

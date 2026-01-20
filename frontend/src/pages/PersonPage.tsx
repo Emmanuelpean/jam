@@ -1,6 +1,6 @@
 import React from "react";
 import DataTable from "../components/tables/DataTable";
-import { PersonModal } from "../components/modals/PersonModal";
+import { PersonModal } from "../components/DataModal/PersonModal";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const PersonsPage = () => {

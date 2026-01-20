@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useState } from "react";
 import { PlatformStat, JobScrapingServiceLogData } from "../../../services/schemas/Services";
 import { SelectOption } from "../../../components/rendering/form/FormOptions";
-import { LineChart, SeriesData } from "../../../components/Charts/LineChart";
+import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
 import TimeSelection from "../../../components/TimeSelection/TimeSelection";
 import { DateRange } from "../../../utils/TimeUtils";
 import Select from "react-select";
@@ -21,7 +21,9 @@ const failureColor = "#ef4444";
 const infoColor = "#0d38e3";
 
 const getPlatformStat = (log: JobScrapingServiceLogData, platform: string, key: string): number => {
-	const stat: PlatformStat | undefined = log.platform_stats.find((p: PlatformStat): boolean => p.name === platform);
+	const stat: PlatformStat | undefined = log.platform_stats.find(
+		(p: PlatformStat): boolean => p.name === platform
+	);
 	if (!stat) return 0;
 
 	const value = (stat as any)[key];
@@ -58,8 +60,12 @@ export const RunHistoryChart = ({
 		if (!serviceLogData) return;
 
 		const durationSeries: SeriesData[] = [
-			createSeries(serviceLogData, "Run Duration (h)", infoColor, (log: JobScrapingServiceLogData): number =>
-				log.run_duration ? log.run_duration / 3600 : 0,
+			createSeries(
+				serviceLogData,
+				"Run Duration (h)",
+				infoColor,
+				(log: JobScrapingServiceLogData): number =>
+					log.run_duration ? log.run_duration / 3600 : 0
 			),
 		];
 
@@ -69,25 +75,25 @@ export const RunHistoryChart = ({
 					serviceLogData,
 					"Successful Jobs",
 					successColor,
-					(log: JobScrapingServiceLogData): number => log.job_scrape_succeeded_n,
+					(log: JobScrapingServiceLogData): number => log.job_scrape_succeeded_n
 				),
 				createSeries(
 					serviceLogData,
 					"Failed Jobs",
 					failureColor,
-					(log: JobScrapingServiceLogData): number => log.job_scrape_failed_n,
+					(log: JobScrapingServiceLogData): number => log.job_scrape_failed_n
 				),
 				createSeries(
 					serviceLogData,
 					"Copied Jobs",
 					infoColor,
-					(log: JobScrapingServiceLogData): number => log.job_scrape_copied_n,
+					(log: JobScrapingServiceLogData): number => log.job_scrape_copied_n
 				),
 				createSeries(
 					serviceLogData,
 					"Skipped Jobs",
 					"#fbbf24",
-					(log: JobScrapingServiceLogData): number => log.job_scrape_skipped_n,
+					(log: JobScrapingServiceLogData): number => log.job_scrape_skipped_n
 				),
 			];
 			setLogData([jobSeries, durationSeries]);
@@ -97,19 +103,22 @@ export const RunHistoryChart = ({
 					serviceLogData,
 					`${selectedPlatform} Jobs Found`,
 					successColor,
-					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_found_ids"),
+					(log: JobScrapingServiceLogData): number =>
+						getPlatformStat(log, selectedPlatform, "job_found_ids")
 				),
 				createSeries(
 					serviceLogData,
 					`${selectedPlatform} Jobs Scraped`,
 					failureColor,
-					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_scraped_n"),
+					(log: JobScrapingServiceLogData): number =>
+						getPlatformStat(log, selectedPlatform, "job_scraped_n")
 				),
 				createSeries(
 					serviceLogData,
 					`${selectedPlatform} Failed`,
 					infoColor,
-					(log: JobScrapingServiceLogData): number => getPlatformStat(log, selectedPlatform, "job_failed_n"),
+					(log: JobScrapingServiceLogData): number =>
+						getPlatformStat(log, selectedPlatform, "job_failed_n")
 				),
 			];
 			setLogData([platformSeries, durationSeries]);
@@ -117,7 +126,7 @@ export const RunHistoryChart = ({
 	}, [serviceLogData, selectedPlatform]);
 
 	const selectedOption: SelectOption | undefined = platformOptions.find(
-		(opt: SelectOption): boolean => opt.value === selectedPlatform,
+		(opt: SelectOption): boolean => opt.value === selectedPlatform
 	);
 
 	return (
@@ -143,10 +152,18 @@ export const RunHistoryChart = ({
 			</div>
 			<div style={{ display: "flex" }}>
 				{logData && logData[0] && (
-					<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of scraped jobs" />
+					<LineChart
+						data={logData[0]}
+						xAxisLabel="Run date"
+						yAxisLabel="Number of scraped jobs"
+					/>
 				)}
 				{logData && logData[1] && (
-					<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
+					<LineChart
+						data={logData[1]}
+						xAxisLabel="Run date"
+						yAxisLabel="Run duration [h]"
+					/>
 				)}
 			</div>
 		</div>

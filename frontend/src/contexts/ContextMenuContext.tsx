@@ -12,13 +12,20 @@ interface ContextMenuState {
 }
 
 interface ContextMenuContextType {
-	openContextMenu: (e: MouseEvent, menuItems: MenuItem[], selectedItem: JamData, compact?: boolean) => void;
+	openContextMenu: (
+		e: MouseEvent,
+		menuItems: MenuItem[],
+		selectedItem: JamData,
+		compact?: boolean
+	) => void;
 	closeContextMenu: () => void;
 }
 
 const ContextMenuContext = createContext<ContextMenuContextType | undefined>(undefined);
 
-export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ children }): JSX.Element => {
+export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({
+	children,
+}): JSX.Element => {
 	const { showProgress, hideProgress } = useProgressOverlay();
 	const [menuState, setMenuState] = useState<ContextMenuState>({
 		position: { x: 0, y: 0 },
@@ -32,7 +39,7 @@ export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ childre
 		e: MouseEvent,
 		menuItems: MenuItem[],
 		selectedItem: JamData,
-		compact: boolean = false,
+		compact: boolean = false
 	): void => {
 		e.preventDefault();
 		setMenuState({
@@ -48,7 +55,10 @@ export const ContextMenuProvider: React.FC<{ children: ReactNode }> = ({ childre
 		setMenuState((prev: ContextMenuState): ContextMenuState => ({ ...prev, show: false }));
 	};
 
-	const handleMenuItemClick = async (menuItem: MenuItem, selectedItem: JamData): Promise<void> => {
+	const handleMenuItemClick = async (
+		menuItem: MenuItem,
+		selectedItem: JamData
+	): Promise<void> => {
 		if (!menuItem.function) {
 			closeContextMenu();
 			return;
