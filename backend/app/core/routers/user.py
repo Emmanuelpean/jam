@@ -125,7 +125,7 @@ def get_current_user_profile(
 
 @current_user_router.put("/", response_model=schemas.CurrentUserUpdateResponse)
 def update_account(
-    user_update: schemas.UserUpdate,
+    user_update: schemas.CurrentUserUpdate,
     current_user: models.User = Depends(oauth2.get_current_user),
     db: Session = Depends(database.get_db),
 ) -> dict:

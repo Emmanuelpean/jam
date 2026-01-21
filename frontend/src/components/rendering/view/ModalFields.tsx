@@ -131,6 +131,20 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
+	jobRatingActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "job_rating_active",
+		label: "Job Rating Active",
+		render: renderFunctions.jobRatingActive,
+		...overrides,
+	}),
+
+	jobScrapingActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+		key: "job_scraping_active",
+		label: "Job Rating Active",
+		render: renderFunctions.jobRatingActive,
+		...overrides,
+	}),
+
 	city: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "city",
 		label: "City",

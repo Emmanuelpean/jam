@@ -1,6 +1,6 @@
 import React, { JSX, MouseEvent, useRef } from "react";
 import { MenuItem } from "../../ContextMenu/ContextMenu";
-import { DataModalHandle } from "../../DataModal/DataModal/DataModal";
+import { DataModalHandle } from "../../DataModal/DataModal";
 import { useContextMenu } from "../../../contexts/ContextMenuContext";
 import FollowUpModal, { FollowUpModalHandle } from "../../FollowUpModal/FollowUpModal";
 import { LocationModal } from "../../DataModal/LocationModal";

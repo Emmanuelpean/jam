@@ -3,6 +3,7 @@ import { Form, InputGroup } from "react-bootstrap";
 import { WidgetProps } from "./WidgetRenders";
 import { DataContextValue, useDataContext } from "../../../contexts/DataContext";
 import { Currency } from "../../../services/schemas/Others";
+import { toKey } from "../../../utils/StringUtils";
 
 export const SalaryInput = ({
 	field,
@@ -26,9 +27,9 @@ export const SalaryInput = ({
 			<InputGroup>
 				<InputGroup.Text>{currentSymbol}</InputGroup.Text>
 				<Form.Control
-					id={field.name}
+					id={toKey(field.name)}
 					type="text"
-					name={field.name}
+					name={toKey(field.name)}
 					value={value || ""}
 					onChange={handleChange}
 					placeholder={field.placeholder}

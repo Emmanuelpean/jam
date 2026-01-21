@@ -178,6 +178,46 @@ class TestCurrentUser:
         # Verify response does NOT indicate logout
         assert response.json().get("logged_out") is None
 
+    def test_update_premium(self, session, regular_user_client, test_regular_user) -> None:
+        """Test updating user premium details that don't require password."""
+
+        # Get initial token version
+        initial_token_version = test_regular_user.token_version
+
+        assert test_regular_user.premium.job_scraping_active is True
+        update_data = {"premium": {"job_scraping_active": False}}
+        response = regular_user_client.put("/current-user", json=update_data)
+        assert response.status_code == 200
+
+        updated_user = self.get_user(test_regular_user.id, session)
+        assert not updated_user.premium.job_scraping_active
+
+        # Verify token version NOT incremented (no password/email change)
+        assert updated_user.token_version == initial_token_version
+
+        # Verify response does NOT indicate logout
+        assert response.json().get("logged_out") is None
+
+    def test_update_premium_is_active(self, session, regular_user_client, test_regular_user) -> None:
+        """Test updating user premium is_active does not work"""
+
+        # Get initial token version
+        initial_token_version = test_regular_user.token_version
+
+        assert test_regular_user.premium.is_active is True
+        update_data = {"premium": {"is_active": False}}
+        response = regular_user_client.put("/current-user", json=update_data)
+        assert response.status_code == 200
+
+        updated_user = self.get_user(test_regular_user.id, session)
+        assert updated_user.premium.is_active
+
+        # Verify token version NOT incremented (no password/email change)
+        assert updated_user.token_version == initial_token_version
+
+        # Verify response does NOT indicate logout
+        assert response.json().get("logged_out") is None
+
     def test_unauthorised_update(self, session, client, test_regular_user) -> None:
         """Test updating without authentication."""
 

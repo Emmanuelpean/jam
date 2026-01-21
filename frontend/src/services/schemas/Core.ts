@@ -45,6 +45,7 @@ export interface PremiumDetailsUpdate {
 // --------------------------------------------------- STRIPE DETAILS --------------------------------------------------
 
 export interface StripeDetails {
+	// TODO remove
 	customer_id: string | null;
 	subscription_id: string | null;
 }
@@ -56,7 +57,7 @@ export interface UserDataTransform {
 	is_admin: boolean;
 	password: string;
 	is_active: boolean;
-	premium: { is_active: boolean };
+	premium: { is_active: boolean; job_rating_active: boolean; job_scraping_active: boolean };
 }
 
 export interface UserDataUpdate {

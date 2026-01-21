@@ -301,7 +301,15 @@ export const renderFunctions = {
 	},
 
 	premiumActive: (param: RenderParams): ReactNode => {
-		return getTrueFalseBadge(param.item?.premium.is_active);
+		return getTrueFalseBadge(param.item?.premium?.is_active);
+	},
+
+	jobRatingActive: (param: RenderParams): ReactNode => {
+		return getTrueFalseBadge(param.item?.premium?.job_rating_active);
+	},
+
+	jobScrapingActive: (param: RenderParams): ReactNode => {
+		return getTrueFalseBadge(param.item?.premium?.job_scraping_active);
 	},
 
 	isActive: (param: RenderParams): ReactNode => {

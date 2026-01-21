@@ -5,7 +5,7 @@ import "./AuthPage.css";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Alert, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
-import { Errors, FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { Errors, rendFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
@@ -603,10 +603,10 @@ function AuthForm(): JSX.Element {
 							{/* Registration Step 1 */}
 							{mode === "register" && registrationStep === 1 && (
 								<>
-									{FormField(emailField, formData, handleInputChange, fieldErrors)}
-									{FormField(passwordField, formData, handleInputChange, fieldErrors)}
-									{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
-									{FormField(
+									{rendFormField(emailField, formData, handleInputChange, fieldErrors)}
+									{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
+									{rendFormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
+									{rendFormField(
 										termsField,
 										{ terms: acceptedTerms },
 										//@ts-ignore
@@ -619,16 +619,16 @@ function AuthForm(): JSX.Element {
 							{/* Registration Step 2 */}
 							{mode === "register" && registrationStep === 2 && (
 								<>
-									{FormField(firstNameField, formData, handleInputChange, fieldErrors)}
-									{FormField(lastNameField, formData, handleInputChange, fieldErrors)}
+									{rendFormField(firstNameField, formData, handleInputChange, fieldErrors)}
+									{rendFormField(lastNameField, formData, handleInputChange, fieldErrors)}
 								</>
 							)}
 
 							{/* Login Mode */}
 							{mode === "login" && (
 								<>
-									{FormField(emailField, formData, handleInputChange, fieldErrors)}
-									{FormField(passwordField, formData, handleInputChange, fieldErrors)}
+									{rendFormField(emailField, formData, handleInputChange, fieldErrors)}
+									{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
 									<div className="text-end mb-3">
 										<button
 											type="button"
@@ -645,14 +645,14 @@ function AuthForm(): JSX.Element {
 
 							{/* Forgot Password Mode */}
 							{mode === "forgotPassword" && (
-								<>{FormField(emailField, formData, handleInputChange, fieldErrors)}</>
+								<>{rendFormField(emailField, formData, handleInputChange, fieldErrors)}</>
 							)}
 
 							{/* Reset Password Mode */}
 							{mode === "resetPassword" && (
 								<>
-									{FormField(passwordField, formData, handleInputChange, fieldErrors)}
-									{FormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
+									{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
+									{rendFormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
 								</>
 							)}
 

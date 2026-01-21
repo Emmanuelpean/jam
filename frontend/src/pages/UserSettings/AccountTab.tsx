@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Alert, Col, Row, Form } from "react-bootstrap";
-import { ValidationErrors } from "../../components/DataModal/DataModal/DataModal";
+import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
 import { authApi, exportApi, UpdateCurrentUserResponse } from "../../services/api/Users";
 import { ApiError, ApiResponse } from "../../services/api/Base";
-import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { rendFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 
@@ -230,20 +230,20 @@ export const AccountTab: React.FC = () => {
 				<i className="bi bi-person"></i> Personal Information
 			</h5>
 			<Row>
-				<Col md={6}>{FormField(firstNameField, formData, handleInputChange, errors)}</Col>
-				<Col md={6}>{FormField(lastNameField, formData, handleInputChange, errors)}</Col>
+				<Col md={6}>{rendFormField(firstNameField, formData, handleInputChange, errors)}</Col>
+				<Col md={6}>{rendFormField(lastNameField, formData, handleInputChange, errors)}</Col>
 			</Row>
-			{FormField(emailField, formData, handleInputChange, errors)}
+			{rendFormField(emailField, formData, handleInputChange, errors)}
 
 			<hr className="my-4" />
 
 			<h5 className="mb-3">
 				<i className="bi bi-lock"></i> Security
 			</h5>
-			{FormField(currentPasswordField, formData, handleInputChange, errors)}
+			{rendFormField(currentPasswordField, formData, handleInputChange, errors)}
 			<Row>
-				<Col md={6}>{FormField(newPasswordField, formData, handleInputChange, errors)}</Col>
-				<Col md={6}>{FormField(confirmPasswordField, formData, handleInputChange, errors)}</Col>
+				<Col md={6}>{rendFormField(newPasswordField, formData, handleInputChange, errors)}</Col>
+				<Col md={6}>{rendFormField(confirmPasswordField, formData, handleInputChange, errors)}</Col>
 			</Row>
 
 			<hr className="my-4" />

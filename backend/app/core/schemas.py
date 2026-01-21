@@ -72,8 +72,9 @@ class TokenData(BaseModel):
 # ------------------------------------------------- USER PREFERENCES ---------------------------------------------------
 
 
-class UserPreferencesUpdate(BaseModel):
-    """User preferences update schema"""
+class UserPreferencesCreate(BaseModel):
+    """User preferences create schema
+    Defaults are handled in the database layer."""
 
     theme: str | None = None
     dark_mode: bool = False
@@ -83,34 +84,42 @@ class UserPreferencesUpdate(BaseModel):
     default_currency: str | None = None
 
 
+class UserPreferencesUpdate(UserPreferencesCreate):
+    """User preferences update schema"""
+
+    pass
+
+
 class UserPreferencesOut(Out, UserPreferencesUpdate):
     """User preferences output schema"""
 
     pass
 
 
-# --------------------------------------------------- STRIPE DETAILS ---------------------------------------------------
-
-
-class StripeDetailsOut(Out):
-    """Stripe details output schema"""
-
-    customer_id: str | None = None
-    subscription_id: str | None = None
-
-
 # --------------------------------------------------- PREMIUM DETAILS --------------------------------------------------
 
 
-class PremiumDetailsOut(Out):
+class PremiumDetailsCreate(BaseModel):
+    """Premium details create schema"""
+
+    is_active: bool = False
+    job_scraping_active: bool = True
+    job_rating_active: bool = True
+
+
+class PremiumDetailsOut(PremiumDetailsCreate, Out):
     """Premium details output schema"""
 
-    is_active: bool
-    job_scraping_active: bool
-    job_rating_active: bool
+    pass
 
 
-class PremiumDetailsUpdate(BaseModel):
+class PremiumDetailsUpdate(PremiumDetailsCreate):
+    """Premium details update schema"""
+
+    pass
+
+
+class CurrentUserPremiumDetailsUpdate(BaseModel):
     """Premium details update schema"""
 
     job_scraping_active: bool | None = None
@@ -121,7 +130,7 @@ class PremiumDetailsUpdate(BaseModel):
 
 
 class UserCreate(BaseModel):
-    """User create schema"""
+    """User create schema for the admin endpoint"""
 
     email: EmailField
     password: str
@@ -130,10 +139,12 @@ class UserCreate(BaseModel):
     is_demo: bool = False
     first_name: str | None = None
     last_name: str | None = None
+    premium: PremiumDetailsCreate | None = None
+    preferences: UserPreferencesCreate | None = None
 
 
 class UserOut(Out):
-    """User output schema"""
+    """User output schema for the admin endpoint"""
 
     email: EmailField
     is_active: bool
@@ -146,24 +157,34 @@ class UserOut(Out):
     name: str | None = None
     token_version: int
     pending_email_change: str | None
-
-    # Nested relationships
     preferences: UserPreferencesOut | None
-    stripe_details: StripeDetailsOut | None
     premium: PremiumDetailsOut | None
 
 
 class UserUpdate(BaseModel):
-    """User account update schema"""
+    """User account update schema for the admin endpoint"""
 
     email: EmailField | None = None
     password: str | None = None
-    current_password: str | None = None
+    is_active: bool = True
+    is_admin: bool = False
+    is_demo: bool = False
     first_name: str | None = None
     last_name: str | None = None
-
     preferences: UserPreferencesUpdate | None = None
     premium: PremiumDetailsUpdate | None = None
+
+
+class CurrentUserUpdate(BaseModel):
+    """User account update schema"""
+
+    email: EmailField | None = None
+    current_password: str | None = None
+    password: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    preferences: UserPreferencesUpdate | None = None
+    premium: CurrentUserPremiumDetailsUpdate | None = None
 
 
 class CurrentUserUpdateResponse(BaseModel):

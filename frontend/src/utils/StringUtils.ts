@@ -49,3 +49,7 @@ export const capitalise = (str: string): string => {
 		return "";
 	}
 };
+
+export const toKey = (str: string | string[]): string => {
+	return (Array.isArray(str) ? str : [str]).join(".");
+};

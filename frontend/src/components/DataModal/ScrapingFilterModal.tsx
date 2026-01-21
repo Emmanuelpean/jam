@@ -1,5 +1,5 @@
 import React, { forwardRef, JSX } from "react";
-import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal/DataModal";
+import DataModal, { DataModalHandle, JamDataModalProps, Fields, ValidationErrors } from "./DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { modalViewFields } from "../rendering/view/ModalFields";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";

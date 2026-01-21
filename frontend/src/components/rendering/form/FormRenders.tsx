@@ -1,4 +1,4 @@
-import { JSX } from "react";
+import React, { JSX } from "react";
 import { Theme, THEMES } from "../../../utils/Theme";
 import { SelectWidgetPreviewConfig } from "../widgets/SelectWidget";
 import {
@@ -13,10 +13,10 @@ import {
 	SelectOption,
 	updateTypeOptions,
 } from "./FormOptions";
-import { DataModalHandle } from "../../DataModal/DataModal/DataModal";
+import { DataModalHandle } from "../../DataModal/DataModal";
 
 export interface ModalFormField {
-	name: string;
+	name: string | string[];
 	secondaryName?: string;
 	label?: string | JSX.Element;
 	icon?: string;
@@ -162,10 +162,24 @@ export const formFields = {
 		...overrides,
 	}),
 
-	toastActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "premium_active",
+	premiumActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: ["premium", "is_active"],
 		label: "Premium Active",
-		type: "checkbox",
+		type: "toggle",
+		...overrides,
+	}),
+
+	jobScrapingActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: ["premium", "job_scraping_active"],
+		label: "Job Scraping Active",
+		type: "toggle",
+		...overrides,
+	}),
+
+	jobRatingActive: (overrides: FormFieldOverride = {}): ModalFormField => ({
+		name: ["premium", "job_rating_active"],
+		label: "Job Rating Active",
+		type: "toggle",
 		...overrides,
 	}),
 

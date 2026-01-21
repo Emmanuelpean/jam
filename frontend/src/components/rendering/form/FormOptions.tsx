@@ -62,8 +62,8 @@ export const toSelectOptions = <T extends Record<string, any>>(
 	labelKey: keyof T | ((item: T) => any) = "name"
 ): SelectOption[] => {
 	const sorted = [...data].sort((a, b) => {
-		const aLabel = typeof labelKey === "function" ? labelKey(a) : a[labelKey];
-		const bLabel = typeof labelKey === "function" ? labelKey(b) : b[labelKey];
+		const aLabel: any = typeof labelKey === "function" ? labelKey(a) : a[labelKey];
+		const bLabel: any = typeof labelKey === "function" ? labelKey(b) : b[labelKey];
 		return String(aLabel).localeCompare(String(bLabel));
 	});
 
