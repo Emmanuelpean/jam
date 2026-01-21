@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, JSX } from "react";
+import { createContext, JSX, ReactNode, useContext, useState } from "react";
 import AlertModal, { AlertState } from "../components/AlertModal/AlertModal";
 
 interface AlertConfig {

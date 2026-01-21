@@ -1,28 +1,28 @@
 .datetime-input-wrapper {
-	position: relative;
-	display: flex;
-	align-items: center;
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .datetime-input-with-icon {
-	padding-right: 3rem !important;
+    padding-right: 3rem !important;
 }
 
 .datetime-embedded-icon {
-	position: absolute;
-	right: 1rem;
-	top: 50%;
-	transform: translateY(-50%);
-	color: var(--bs-body-color);
-	font-size: 1rem;
-	cursor: pointer;
-	padding: 0.25rem;
-	z-index: 10;
-	background: transparent;
-	border: none;
-	transition: all 0.2s ease;
+    font-size: 1rem;
+    position: absolute;
+    z-index: 10;
+    top: 50%;
+    right: 1rem;
+    padding: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    transform: translateY(-50%);
+    color: var(--bs-body-color);
+    border: none;
+    background: transparent;
 }
 
 .datetime-embedded-icon:hover {
-	color: var(--primary-mid) !important;
+    color: var(--primary-mid) !important;
 }

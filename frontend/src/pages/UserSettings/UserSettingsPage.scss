@@ -1,10 +1,10 @@
 .settings-sidebar .list-group-item {
-	border: none;
-	border-radius: 0;
-	padding: 1rem 1.5rem;
-	transition: all 0.2s ease;
+    padding: 1rem 1.5rem;
+    transition: all 0.2s ease;
+    border: none;
+    border-radius: 0;
 }
 
 .settings-sidebar .list-group-item.active {
-	background-color: var(--primary-mid);
+    background-color: var(--primary-mid);
 }

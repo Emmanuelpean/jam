@@ -184,8 +184,8 @@ export const SelectInput = ({
 	if (field.addButton?.modalRef) {
 		selectComponents.DropdownIndicator = CustomDropdownIndicator;
 	} else {
-		selectComponents.DropdownIndicator = undefined;
-		selectComponents.IndicatorSeparator = undefined;
+		// selectComponents.DropdownIndicator = undefined;
+		// selectComponents.IndicatorSeparator = undefined;
 	}
 
 	if (previewConfig?.enabled) {

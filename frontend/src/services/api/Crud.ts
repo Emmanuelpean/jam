@@ -1,4 +1,4 @@
-import { baseApi, ApiResponsePromise, ApiService, QueryParams } from "./Base";
+import { ApiResponsePromise, ApiService, baseApi, QueryParams } from "./Base";
 
 export interface CrudApi<T = any> {
 	getAll: (token: string, queryParams?: QueryParams | null) => ApiResponsePromise<T[]>;

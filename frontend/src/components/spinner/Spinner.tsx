@@ -6,10 +6,7 @@ interface LoadingSpinnerProps {
 	textColor?: string;
 }
 
-const LoadingSpinner = ({
-	text = "Loading...",
-	size = "md"
-}: LoadingSpinnerProps): JSX.Element => {
+const LoadingSpinner = ({ text = "Loading...", size = "md" }: LoadingSpinnerProps): JSX.Element => {
 	const sizeClasses = {
 		sm: "spinner-border-sm",
 		md: "",
@@ -21,11 +18,7 @@ const LoadingSpinner = ({
 			<div className={`spinner-border ${sizeClasses[size]}`} role="status">
 				<span className="visually-hidden">{text}</span>
 			</div>
-			{text ? (
-				<span className="mt-3">
-					{text}
-				</span>
-			) : null}
+			{text ? <span className="mt-3">{text}</span> : null}
 		</div>
 	);
 };

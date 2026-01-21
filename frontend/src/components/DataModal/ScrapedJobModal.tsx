@@ -1,8 +1,8 @@
 import React, { forwardRef, JSX, useRef } from "react";
 import DataModal, {
 	DataModalHandle,
-	JamDataModalProps,
 	Fields,
+	JamDataModalProps,
 	ValidationErrors,
 	WarningMessageConfig,
 } from "./DataModal";

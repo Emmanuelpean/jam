@@ -8,7 +8,7 @@ import {
 	JamData,
 	useDataContext,
 } from "../../contexts/DataContext";
-import { baseApi, ApiResponse } from "../../services/api/Base";
+import { ApiResponse, baseApi } from "../../services/api/Base";
 import { getTableIcon } from "../rendering/view/Icons";
 import { RenderViewFieldWithContext } from "../rendering/view/ViewRenders";
 import { accessAttribute } from "../../utils/Utils";

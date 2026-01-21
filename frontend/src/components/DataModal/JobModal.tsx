@@ -67,7 +67,7 @@ export const JobModal = forwardRef<DataModalHandle, JobAndApplicationProps>(
 			modalViewFields.note(),
 			[modalViewFields.salaryRange(), modalViewFields.personalRating()],
 			[modalViewFields.sourceBadge(), modalViewFields.url({ label: "Job URL" })],
-			[modalViewFields.keywordBadges(), modalViewFields.personBadges()],
+			[modalViewFields.keywordBadges(), modalViewFields.personBadges({}, ["view", "edit", "delete", "followup"])],
 			[modalViewFields.deadline()],
 		];
 

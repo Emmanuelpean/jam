@@ -92,7 +92,7 @@ const AboutPage = (): JSX.Element => {
 		{
 			icon: "bi-envelope-arrow-up",
 			title: "Follow-Up Email Generator",
-			description: "Automatically generate personalized follow-up email drafts for your applications",
+			description: "Automatically generate personalised follow-up email drafts for your applications",
 		},
 	];
 

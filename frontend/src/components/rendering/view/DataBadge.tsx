@@ -155,13 +155,12 @@ const createDataBadge = <T extends JamData>(
 	};
 };
 
-export const PersonBadge = createDataBadge(
-	PersonModal,
-	"person",
-	"bg-info",
-	(item: PersonData): string => item.name,
-	["view", "edit", "delete", "followup"]
-);
+export const PersonBadge = createDataBadge(PersonModal, "person", "bg-info", (item: PersonData): string => item.name, [
+	"view",
+	"edit",
+	"delete",
+	"followup",
+]);
 export const CompanyBadge = createDataBadge(
 	CompanyModal,
 	"company",

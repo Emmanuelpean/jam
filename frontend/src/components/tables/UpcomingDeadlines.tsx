@@ -1,5 +1,5 @@
-import React, { useEffect, useState, JSX } from "react";
-import { DataTableProps, DataTable } from "./DataTable";
+import React, { JSX, useEffect, useState } from "react";
+import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";
 import { JobModal } from "../DataModal/JobModal";
 

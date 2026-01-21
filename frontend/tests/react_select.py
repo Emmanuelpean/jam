@@ -1,15 +1,14 @@
 """Module to interact with react-select components using Selenium"""
 
 import time
-from typing import Any
-
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait
+from typing import Any
 
 
 def get_all_element_ids(driver) -> list[str]:

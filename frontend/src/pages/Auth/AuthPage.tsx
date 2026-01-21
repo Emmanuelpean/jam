@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useState, useRef } from "react";
+import React, { JSX, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { FormData, useAuth } from "../../contexts/AuthContext";
 import "./AuthPage.css";

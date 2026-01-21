@@ -1,6 +1,6 @@
 import React, { JSX } from "react";
 import { Table } from "react-bootstrap";
-import { PlatformStat, JobScrapingServiceLogData } from "../../../services/schemas/Services";
+import { JobScrapingServiceLogData, PlatformStat } from "../../../services/schemas/Services";
 
 import { capitalise } from "../../../utils/StringUtils";
 

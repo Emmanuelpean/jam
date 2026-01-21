@@ -1,9 +1,8 @@
 """Test the main pages of JAM"""
 
 import datetime as dt
-import time
-
 import pytest
+import time
 from selenium.webdriver.common.by import By
 
 from conftest import contiguous_subdicts, models, BaseTest

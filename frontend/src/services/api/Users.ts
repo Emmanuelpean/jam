@@ -1,4 +1,4 @@
-import { baseApi, ApiResponsePromise } from "./Base";
+import { ApiResponsePromise, baseApi } from "./Base";
 import { createCrudApi, CrudApi } from "./Crud";
 import { UserData, UserDataUpdate, UserQualification } from "../schemas/Core";
 
