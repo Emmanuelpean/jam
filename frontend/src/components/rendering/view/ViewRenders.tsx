@@ -597,7 +597,7 @@ export const renderFunctions = {
 		return null;
 	},
 
-	_personBadges: (param: RenderParams, key: string, parent: JamData): ReactNode => {
+	_personBadges: (param: RenderParams, key: string, parent: JamData, menuItemKeys: string[] = ["view", "edit", "delete"]): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;
 		const persons: PersonData[] = getJamDataList(ctx.persons, param.item?.[key]);
 
@@ -606,7 +606,7 @@ export const renderFunctions = {
 				<div className="badge-group">
 					{persons.map((person: PersonData, index: number) => (
 						<span key={person.id || index} className="me-1">
-							<PersonBadge item={person} badgeId={`${param.id}-${index}`} parentItem={parent} />
+							<PersonBadge item={person} badgeId={`${param.id}-${index}`} menuItemKeys={menuItemKeys} parentItem={parent} />
 						</span>
 					))}
 				</div>
@@ -615,9 +615,13 @@ export const renderFunctions = {
 		return null;
 	},
 
-	ContactBadges: (param: RenderParams): ReactNode => {
-		return renderFunctions._personBadges(param, "contacts", param.item);
+	ContactBadges: (param: RenderParams, menuItemKeys?: string[]): ReactNode => {
+		return renderFunctions._personBadges(param, "contacts", param.item, menuItemKeys);
 	},
+
+    // ContactBadges: (param: RenderParams): ReactNode => {
+    //     return renderFunctions._personBadges(param, "contacts", param.item);
+    // },
 
 	InterviewerBadges: (param: RenderParams): ReactNode => {
 		const ctx: DataContextValue = param.dataContext;

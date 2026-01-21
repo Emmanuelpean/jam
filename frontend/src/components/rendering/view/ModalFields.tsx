@@ -249,10 +249,10 @@ export const modalViewFields = {
 		...overrides,
 	}),
 
-	personBadges: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
+	personBadges: (overrides: ModalViewFieldOverride = {}, menuItemKeys?: string[]): ModalViewField => ({
 		key: "person",
 		label: "Contacts",
-		render: renderFunctions.ContactBadges,
+		render: (params: RenderParams): ReactNode => renderFunctions.ContactBadges(params, menuItemKeys),
 		...overrides,
 	}),
 
