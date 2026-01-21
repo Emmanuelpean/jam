@@ -40,7 +40,7 @@ export interface DataBadgeProps<T extends JamData> {
 }
 
 // Create badge manager with modal integration
-const createBadgeModalManager = <T extends JamData>(
+const createDataBadge = <T extends JamData>(
 	ModalComponent: FlexibleModalComponent,
 	entityType: EntityType,
 	defaultBadgeClass: string = "bg-info",
@@ -59,7 +59,7 @@ const createBadgeModalManager = <T extends JamData>(
 		menuItemKeys = defaultMenuItemKeys,
 		compact = true,
 	}: DataBadgeProps<T>): JSX.Element => {
-		const modalRef = useRef<DataModalHandle>(null);
+		const dataModalRef = useRef<DataModalHandle>(null);
 		const { openContextMenu } = useContextMenu();
 		const followUpModalRef = useRef<FollowUpModalHandle>(null);
 		const deleteHandler = useDeleteEntityConfirm(entityType);
@@ -90,8 +90,8 @@ const createBadgeModalManager = <T extends JamData>(
 			}
 		};
 		const availableMenuItems: MenuItem[] = [
-			{ action: "view", icon: "eye", text: "View", function: modalRef.current?.showView },
-			{ action: "edit", icon: "pencil", text: "Edit", function: modalRef.current?.showEdit },
+			{ action: "view", icon: "eye", text: "View", function: dataModalRef.current?.showView },
+			{ action: "edit", icon: "pencil", text: "Edit", function: dataModalRef.current?.showEdit },
 			{
 				action: "delete",
 				icon: "trash",
@@ -141,59 +141,59 @@ const createBadgeModalManager = <T extends JamData>(
 			<>
 				<span
 					className={`badge ${badgeClass} clickable-badge`}
-					onClick={() => item && modalRef.current?.showView(item)}
+					onClick={() => item && dataModalRef.current?.showView(item)}
 					onContextMenu={handleContextMenu}
 					id={badgeId}
 				>
 					<i className={`bi bi-${icon || getEntityIcon(entityType)} me-2`}></i>
 					{getText()}
 				</span>
-				<ModalComponent ref={modalRef} />
+				<ModalComponent ref={dataModalRef} />
 				<FollowUpModal ref={followUpModalRef} />
 			</>
 		);
 	};
 };
 
-export const PersonBadge = createBadgeModalManager(
+export const PersonBadge = createDataBadge(
 	PersonModal,
 	"person",
 	"bg-info",
 	(item: PersonData): string => item.name,
 	["view", "edit", "delete", "followup"]
 );
-export const CompanyBadge = createBadgeModalManager(
+export const CompanyBadge = createDataBadge(
 	CompanyModal,
 	"company",
 	"bg-success",
 	(item: CompanyData): string => item.name
 );
-export const LocationBadge = createBadgeModalManager(
+export const LocationBadge = createDataBadge(
 	LocationModal,
 	"location",
 	"bg-warning",
 	(item: LocationData): string => item.name
 );
-export const KeywordBadge = createBadgeModalManager(
+export const KeywordBadge = createDataBadge(
 	KeywordModal,
 	"keyword",
 	"bg-secondary",
 	(item: KeywordData): string => item.name
 );
-export const JobBadge = createBadgeModalManager(JobModal, "job", "bg-primary", (item: JobData): string => item.name);
-export const AggregatorBadge = createBadgeModalManager(
+export const JobBadge = createDataBadge(JobModal, "job", "bg-primary", (item: JobData): string => item.name);
+export const AggregatorBadge = createDataBadge(
 	AggregatorModal,
 	"aggregator",
 	"bg-dark",
 	(item: AggregatorData): string => item.name
 );
-export const JobApplicationUpdateBadge = createBadgeModalManager(
+export const JobApplicationUpdateBadge = createDataBadge(
 	JobApplicationUpdateModal,
 	"jobApplicationUpdate",
 	"bg-info",
 	(item: JobData): string => item.title
 );
-export const InterviewBadge = createBadgeModalManager(
+export const InterviewBadge = createDataBadge(
 	InterviewModal,
 	"interview",
 	"bg-success",
