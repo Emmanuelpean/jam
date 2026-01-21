@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { FormData, useAuth } from "../../contexts/AuthContext";
-import "./AuthPage.css";
+import "./AuthPage.scss";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Alert, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";

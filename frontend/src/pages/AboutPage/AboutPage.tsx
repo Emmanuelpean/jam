@@ -6,7 +6,7 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Card from "react-bootstrap/Card";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./AboutPage.css";
+import "./AboutPage.scss";
 import v100 from "../../releaseNotes/V1_0_0";
 import v110 from "../../releaseNotes/V1_1_0";
 import v120 from "../../releaseNotes/V1_2_0";
