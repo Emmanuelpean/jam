@@ -1,5 +1,5 @@
 import { JobRatingData, JobRatingServiceLogData, JobScrapingServiceLogData, ScrapedJobData } from "../schemas/Services";
-import { baseApi, ApiResponsePromise, serviceApi } from "./Base";
+import { ApiResponsePromise, baseApi, serviceApi } from "./Base";
 import { createCrudApi, CrudApi } from "./Crud";
 
 // Scraped Job API

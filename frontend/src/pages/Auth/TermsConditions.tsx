@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { Modal, Button } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 import "./TermsConditions.css";
 
 interface TermsAndConditionsProps {

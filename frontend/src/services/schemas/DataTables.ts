@@ -1,4 +1,4 @@
-import { BaseOut, GeoLocation, OwnedOut } from "./Base";
+import { GeoLocation, OwnedOut } from "./Base";
 
 // ------------------------------------------------------- KEYWORD ------------------------------------------------------
 

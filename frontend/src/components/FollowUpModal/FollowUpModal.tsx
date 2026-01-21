@@ -139,7 +139,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 			);
 		}
 		if (errors[e.target.name]) {
-			setErrors((prev: Errors) => ({ ...prev, [e.target.name]: "" }));
+			setErrors((prev: Errors): Errors => ({ ...prev, [e.target.name]: "" }));
 		}
 	};
 

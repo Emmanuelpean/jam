@@ -1,11 +1,12 @@
 import React, { JSX, useEffect, useState } from "react";
-import { PlatformStat, JobScrapingServiceLogData } from "../../../services/schemas/Services";
+import { JobScrapingServiceLogData, PlatformStat } from "../../../services/schemas/Services";
 import { SelectOption } from "../../../components/rendering/form/FormOptions";
 import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
 import TimeSelection from "../../../components/TimeSelection/TimeSelection";
 import { DateRange } from "../../../utils/TimeUtils";
-import Select from "react-select";
 import { createSeries } from "../ServiceUtils";
+import { ModalFormField } from "../../../components/rendering/form/FormRenders";
+import { SelectInput } from "../../../components/rendering/widgets/SelectWidget";
 
 interface RunHistoryChartProps {
 	serviceLogData: JobScrapingServiceLogData[] | null;
@@ -47,12 +48,6 @@ export const RunHistoryChart = ({
 	isRunning,
 }: RunHistoryChartProps): JSX.Element => {
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
-
-	const handlePlatformChange = (option: SelectOption | null): void => {
-		if (option) {
-			onPlatformChange(option.value);
-		}
-	};
 
 	useEffect(() => {
 		if (!serviceLogData) return;
@@ -116,9 +111,13 @@ export const RunHistoryChart = ({
 		}
 	}, [serviceLogData, selectedPlatform]);
 
-	const selectedOption: SelectOption | undefined = platformOptions.find(
-		(opt: SelectOption): boolean => opt.value === selectedPlatform
-	);
+	const platformField: ModalFormField = {
+		name: "platform",
+		type: "select",
+		label: "Platform",
+		options: platformOptions,
+		isClearable: false,
+	};
 
 	return (
 		<div className="status-card mt-4">
@@ -131,12 +130,13 @@ export const RunHistoryChart = ({
 				<TimeSelection onDateRangeChange={onDateRangeChange} defaultMode="period" />
 				<div className="mb-4">
 					<div style={{ minWidth: "250px" }}>
-						<Select
-							classNamePrefix="react-select"
-							value={selectedOption}
-							onChange={handlePlatformChange}
-							options={platformOptions}
-							isSearchable={false}
+						<SelectInput
+							field={platformField}
+							value={selectedPlatform}
+							error={null}
+							handleChange={(event: any) => {
+								onPlatformChange(event.target.value);
+							}}
 						/>
 					</div>
 				</div>

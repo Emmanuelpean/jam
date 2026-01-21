@@ -12,17 +12,17 @@ import {
 	Spinner,
 	Stack,
 } from "react-bootstrap";
-import {ModalFormField} from "../components/rendering/form/FormRenders";
-import {Checkbox} from "../components/rendering/widgets/Checkbox";
-import {HelpBubble} from "../components/rendering/widgets/HelpBubble";
-import {PasswordInput} from "../components/rendering/widgets/PasswordInput";
-import {SalaryInput} from "../components/rendering/widgets/SalaryInput";
-import {LocalDatetimeInput} from "../components/rendering/widgets/Datetime";
-import {StarRating} from "../components/rendering/widgets/StarRating";
-import {SelectInput} from "../components/rendering/widgets/SelectWidget";
-import {Textarea} from "../components/rendering/widgets/TextArea";
-import {Toggle} from "../components/rendering/widgets/Toggle";
-import {UrlInput} from "../components/rendering/widgets/UrlInput";
+import { ModalFormField } from "../components/rendering/form/FormRenders";
+import { Checkbox } from "../components/rendering/widgets/Checkbox";
+import { HelpBubble } from "../components/rendering/widgets/HelpBubble";
+import { PasswordInput } from "../components/rendering/widgets/PasswordInput";
+import { SalaryInput } from "../components/rendering/widgets/SalaryInput";
+import { LocalDatetimeInput } from "../components/rendering/widgets/Datetime";
+import { StarRating } from "../components/rendering/widgets/StarRating";
+import { SelectInput } from "../components/rendering/widgets/SelectWidget";
+import { Textarea } from "../components/rendering/widgets/TextArea";
+import { Toggle } from "../components/rendering/widgets/Toggle";
+import { UrlInput } from "../components/rendering/widgets/UrlInput";
 
 /* -------------------------------- THEME TOGGLE -------------------------------- */
 
@@ -221,7 +221,11 @@ export const StyleGuidePage: React.FC = () => {
 						</Col>
 
 						<Col md={6}>
-							<PasswordInput field={passwordField} value={formData.password} handleChange={handleChange} />
+							<PasswordInput
+								field={passwordField}
+								value={formData.password}
+								handleChange={handleChange}
+							/>
 						</Col>
 
 						<Col md={6}>

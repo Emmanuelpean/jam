@@ -3,16 +3,15 @@
 import json
 import os
 import platform
+import psutil
 import queue
 import re
+import requests
 import shutil
 import subprocess
 import sys
 import threading
 from pathlib import Path
-
-import psutil
-import requests
 from selenium.webdriver import Keys, ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support.select import Select

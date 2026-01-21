@@ -1,4 +1,4 @@
-import React, { JSX, useState, useLayoutEffect, useRef } from "react";
+import React, { JSX, useLayoutEffect, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { DataTable, DataTableProps } from "./DataTable";
 import { TableColumn, tableColumns } from "../rendering/view/TableColumns";

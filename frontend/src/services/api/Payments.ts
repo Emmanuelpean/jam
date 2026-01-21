@@ -1,4 +1,4 @@
-import { baseApi, ApiResponsePromise } from "./Base";
+import { ApiResponsePromise, baseApi } from "./Base";
 
 export interface SubscriptionStatus {
 	status: string | null;

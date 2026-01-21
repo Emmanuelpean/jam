@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import Select from "react-select";
+import React, { useEffect, useState } from "react";
 import "./TimeSelection.css";
 import { DateRange, getDateRange, TimeUnit } from "../../utils/TimeUtils";
+import { SelectInput } from "../rendering/widgets/SelectWidget";
+import { ModalFormField } from "../rendering/form/FormRenders";
 
 type SelectionMode = "period" | "dateRange";
 
@@ -40,11 +41,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 	useEffect(() => {
 		if (mode === "period") {
 			updateDateRange();
-
-			const intervalId = setInterval(() => {
-				updateDateRange();
-			}, 60000);
-
+			const intervalId = setInterval(updateDateRange, 60000);
 			return () => clearInterval(intervalId);
 		}
 	}, [mode, amount, unit]);
@@ -65,12 +62,6 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 		}
 	};
 
-	const handleUnitChange = (option: SelectOption | null): void => {
-		if (option) {
-			setUnit(option.value);
-		}
-	};
-
 	const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
 		const newStartDate: string = e.target.value;
 		setStartDate(newStartDate);
@@ -87,9 +78,14 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 		}
 	};
 
-	const selectedOption: SelectOption | undefined = timeUnitOptions.find(
-		(opt: SelectOption): boolean => opt.value === unit
-	);
+	const timeUnitField: ModalFormField = {
+		name: "timeUnit",
+		type: "select",
+		label: "Unit",
+		options: timeUnitOptions,
+		placeholder: "Select unit",
+		isClearable: false,
+	};
 
 	return (
 		<div className="time-selection-container">
@@ -129,13 +125,14 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 							placeholder="Amount"
 						/>
 						<div style={{ minWidth: "150px" }}>
-							<Select
-								classNamePrefix="react-select"
-                                className={`react-select-container`}
-								value={selectedOption}
-								onChange={handleUnitChange}
-								options={timeUnitOptions}
-								isSearchable={false}
+							<SelectInput
+								field={timeUnitField}
+								value={unit}
+								error={null}
+								handleChange={(event: any) => {
+									// SelectInput emits SyntheticEvent with target.value being the selected option's value
+									if (event?.target?.value) setUnit(event.target.value as TimeUnit);
+								}}
 							/>
 						</div>
 					</>

@@ -23,10 +23,10 @@ import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArr
 import { ModalViewField, renderModalViewField } from "../rendering/view/ModalFields";
 import { ModalFormField } from "../rendering/form/FormRenders";
 import {
-	useDeleteEntityConfirm,
 	useActivateEntity,
 	useDeactivateEntity,
 	useDeactivateEntityConfirm,
+	useDeleteEntityConfirm,
 } from "../../utils/DeleteHandler";
 import { useAlert } from "../../contexts/AlertContext";
 import { ApiResponse } from "../../services/api/Base";

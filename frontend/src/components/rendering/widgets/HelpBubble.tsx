@@ -1,6 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import "./HelpBubble.scss";
+
 interface HelpBubbleProps {
 	helpText: string;
 	placement?: "top" | "bottom" | "left" | "right";

@@ -1,19 +1,19 @@
 thead.custom-header {
-	--bs-table-bg: transparent;
-	background: var(--primary-gradient);
-	color: white;
+    color: white;
+    background: var(--primary-gradient);
+    --bs-table-bg: transparent;
 }
 
 thead.custom-header th {
-	color: white;
+    color: white;
 }
 
 .text-gradient-primary {
-	background: var(--primary-gradient);
-	background-clip: text;
-	-webkit-text-fill-color: transparent;
+    background: var(--primary-gradient);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .table-container {
-	margin: auto;
+    margin: auto;
 }
