@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { THEMES } from "../../utils/Theme";
+import React, { useState, JSX, CSSProperties } from "react";
+import { Theme, THEMES } from "../../utils/Theme";
 import { useAuth } from "../../contexts/AuthContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { DarkModeToggle } from "./DarkModeToggle";
@@ -10,7 +10,7 @@ interface ThemeSelectorProps {
 	isVisible: boolean;
 }
 
-interface CSSColors {
+interface ThemeColor {
 	start: string;
 	mid: string;
 	end: string;
@@ -20,7 +20,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 	currentTheme,
 	onThemeChange,
 	isVisible,
-}: ThemeSelectorProps) => {
+}: ThemeSelectorProps): JSX.Element | null => {
 	const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 	const { showToastError } = useGlobalToast();
 	const { updateCurrentUser } = useAuth();
@@ -35,7 +35,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 		onThemeChange();
 	};
 
-	const getCurrentCSSColors = (): CSSColors => {
+	const getCurrentCSSColors = (): ThemeColor => {
 		const computedStyle: CSSStyleDeclaration = getComputedStyle(document.documentElement);
 		return {
 			start: computedStyle.getPropertyValue("--primary-start").trim(),
@@ -44,19 +44,19 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 		};
 	};
 
-	const getThemeColors = (themeKey: string): CSSColors => {
+	const getThemeColors = (themeKey: string): ThemeColor => {
 		const originalTheme: string | null = document.documentElement.getAttribute("data-theme");
 		document.documentElement.setAttribute("data-theme", themeKey);
-		const colors: CSSColors = getCurrentCSSColors();
+		const colors: ThemeColor = getCurrentCSSColors();
 		if (originalTheme) {
 			document.documentElement.setAttribute("data-theme", originalTheme);
 		}
 		return colors;
 	};
 
-	const renderColorPreview = (colors: CSSColors) => (
+	const renderColorPreview = (colors: ThemeColor): JSX.Element => (
 		<div style={{ display: "flex", alignItems: "center", marginRight: "8px" }}>
-			{Object.values(colors).map((color, index) => (
+			{Object.values(colors).map((color: string, index: number): JSX.Element => (
 				<div
 					key={index}
 					style={{
@@ -71,8 +71,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 		</div>
 	);
 
-	const getDropdownItemStyle = (itemKey: string, isActive: boolean): React.CSSProperties => {
-		const baseStyle: React.CSSProperties = {
+	const getDropdownItemStyle = (itemKey: string, isActive: boolean): CSSProperties => {
+		const baseStyle: CSSProperties = {
 			display: "flex",
 			alignItems: "center",
 			padding: "8px 12px",
@@ -105,16 +105,16 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 	return (
 		<div className="theme-dropdown">
 			<div className="fw-medium text-muted small mb-2 px-2">Themes</div>
-			{THEMES.map((theme) => {
-				const previewColors = getThemeColors(theme.key);
-				const isCurrentTheme = currentTheme === theme.key;
+			{THEMES.map((theme: Theme): JSX.Element => {
+				const previewColors: ThemeColor = getThemeColors(theme.key);
+				const isCurrentTheme: boolean = currentTheme === theme.key;
 				return (
 					<div
 						key={theme.key}
 						style={getDropdownItemStyle(theme.key, isCurrentTheme)}
-						onClick={() => handleThemeChange(theme.key)}
-						onMouseEnter={() => setHoveredItem(theme.key)}
-						onMouseLeave={() => setHoveredItem(null)}
+						onClick={(): Promise<void> => handleThemeChange(theme.key)}
+						onMouseEnter={(): void => setHoveredItem(theme.key)}
+						onMouseLeave={(): void => setHoveredItem(null)}
 					>
 						{renderColorPreview(previewColors)}
 						<div>
