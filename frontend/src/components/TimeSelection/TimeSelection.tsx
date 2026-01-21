@@ -121,7 +121,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 					<>
 						<input
 							type="number"
-							className="form-control form-control-jam"
+							className="form-control"
 							style={{ width: "100px", height: "52px" }}
 							min="1"
 							value={amount}
@@ -131,6 +131,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 						<div style={{ minWidth: "150px" }}>
 							<Select
 								classNamePrefix="react-select"
+                                className={`react-select-container`}
 								value={selectedOption}
 								onChange={handleUnitChange}
 								options={timeUnitOptions}
@@ -144,7 +145,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 					<>
 						<input
 							type="datetime-local"
-							className="form-control form-control-jam"
+							className="form-control"
 							style={{ width: "200px", height: "52px" }}
 							value={startDate}
 							onChange={handleStartDateChange}
@@ -152,7 +153,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({ onDateRangeChange, defaul
 						<span className="text-muted fw-bold">to</span>
 						<input
 							type="datetime-local"
-							className="form-control form-control-jam"
+							className="form-control"
 							style={{ width: "200px", height: "52px" }}
 							value={endDate}
 							onChange={handleEndDateChange}
