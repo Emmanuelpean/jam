@@ -45,6 +45,6 @@
 * [X] Allow badges to collapse on small screens (...)
 * [X] Dropdowns styles are broken in dark mode (in light mode multiselect is not working as expected)
 * [ ] On Small screens, elements on multiple columns and rows are all on same column but spacing differs
-* [ ] Finish the dark mode
+* [ ] Finish the dark mode - Missing dark mode in select widget in time selector
 * [X] Fix the settings table column and modal active states
 * [ ] Redo the users table
