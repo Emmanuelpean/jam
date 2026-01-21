@@ -68,7 +68,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 								<div className="spinner-border mb-3" role="status" id="loading-spinner">
 									<span className="visually-hidden">Loading...</span>
 								</div>
-								<p className="text-muted mb-3">{loadingMessage}</p>
+								<p className="mb-3">{loadingMessage}</p>
 								{progress !== undefined && (
 									<div className="progress" style={{ width: "350px" }}>
 										<div

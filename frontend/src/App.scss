@@ -54,7 +54,7 @@ body[data-mode="dark"] {
 	--bs-tertiary-bg: var(--bs-border-color);
 
 	/* Text */
-	--bs-body-color: #e5e7eb;
+	--bs-body-color: rgb(234, 237, 241);
 	--bs-secondary-color: #cbd5e1;
 	--bs-muted-color: #94a3b8;
 	--placeholder-text-color: #9f9f9f;
@@ -78,9 +78,9 @@ body[data-mode="dark"] {
 
 	/* Custom app variables */
 	--bg-primary: rgb(15, 23, 42);
-	--bg-secondary: rgb(20, 28, 47);
+	--bg-secondary: rgb(20, 28, 40);
 	--bg-tertiary: rgb(15, 15, 15);
-	--input-background-color: rgb(20, 28, 47);
+	--input-background-color: rgb(23, 36, 55);
 	--btn-disabled-bg: rgb(117, 117, 117);
 }
 
@@ -159,9 +159,7 @@ html {
 .react-select-container .react-select__control--is-focused {
 	border-color: var(--primary-mid);
 	background-color: var(--input-background-color);
-	box-shadow:
-		0 0 0 0.25rem var(--jam-glow),
-		0 4px 12px rgb(0 0 0 / 10%);
+	box-shadow: 0 0 0 0.25rem var(--jam-glow), 0 4px 12px rgb(0 0 0 / 10%);
 }
 
 .form-control::placeholder,
@@ -465,7 +463,7 @@ textarea.form-control {
 
 .form-check-input:focus {
 	outline: 2px solid var(--primary-mid);
-	box-shadow: 0 0 0 0.25rem var(--jam-glow);  // TODO
+	box-shadow: 0 0 0 0.25rem var(--jam-glow);
 }
 
 .form-check {
@@ -493,7 +491,7 @@ textarea.form-control {
 	border-radius: 50%;
 	background-color: var(--bs-tertiary-bg);
 	top: 50%;
-	left: 3px;
+	left: 2px;
 	transform: translateY(-50%);
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -508,18 +506,7 @@ textarea.form-control {
 
 /* ----------------------------------------------------- SPINNER ---------------------------------------------------- */
 
-.spinner-border-sm {
-	width: 1.25rem;
-	height: 1.25rem;
-	margin-right: 0.75rem;
-	border-color: currentcolor transparent !important;
-}
-
 .spinner-border {
-	border-color: var(--primary-end) transparent var(--primary-end) transparent;
-}
-
-.text-primary .spinner-border {
 	border-color: var(--primary-end) transparent var(--primary-end) transparent;
 }
 
@@ -527,12 +514,6 @@ textarea.form-control {
 	position: fixed;
 	inset: 0 0 0 70px; /* Account for sidebar width */
 	background: var(--bs-body-bg);
-}
-
-.content-hidden {
-	pointer-events: none;
-	opacity: 0;
-	transition: opacity 0.3s ease;
 }
 
 /* ---------------------------------------------------- SCROLLBAR --------------------------------------------------- */
@@ -543,7 +524,7 @@ textarea.form-control {
 }
 
 ::-webkit-scrollbar-track {
-	background: rgb(0 0 0 / 10%);
+	background: var(--bs-border-color);
 	border-radius: 4px;
 }
 
@@ -579,11 +560,6 @@ textarea.form-control {
 	background: none;
 }
 
-.accordion-button:focus {
-	border-color: var(--primary-light);
-	box-shadow: 0 0 0 0.25rem var(--jam-glow);
-}
-
 .accordion-body {
 	padding: 0 !important;
 	padding-left: 0.5rem !important;
@@ -600,7 +576,7 @@ textarea.form-control {
 /* ------------------------------------------------- PROGRESS BAR -------------------------------------------------- */
 
 .progress {
-	background: linear-gradient(145deg, #e9ecef 0%, #dee2e6 100%);
+	background: var(--bs-border-color-translucent);
 	border-radius: 12px;
 	height: 20px;
 	box-shadow: inset 0 2px 4px rgb(0 0 0 / 8%);
@@ -612,12 +588,10 @@ textarea.form-control {
 	font-weight: 600;
 	transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 	color: white;
-	text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
-	box-shadow: 0 2px 6px var(--jam-glow);
 	position: relative;
 }
 
+// Hide text inside progress bar to prevent layout shift
 .progress-text {
-	color: var(--bs-body-color);
 	font-size: 0;
 }
