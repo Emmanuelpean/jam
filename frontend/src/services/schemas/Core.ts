@@ -42,14 +42,6 @@ export interface PremiumDetailsUpdate {
 	job_rating_active?: boolean | null;
 }
 
-// --------------------------------------------------- STRIPE DETAILS --------------------------------------------------
-
-export interface StripeDetails {
-	// TODO remove
-	customer_id: string | null;
-	subscription_id: string | null;
-}
-
 // ----------------------------------------------------- USER DATA -----------------------------------------------------
 
 export interface UserDataTransform {
@@ -82,7 +74,6 @@ export interface UserData extends OwnedOut {
 	pending_email_change: string | null;
 	premium: PremiumDetails;
 	preferences: UserPreferences;
-	stripe_details: StripeDetails;
 }
 
 // ------------------------------------------------ USER QUALIFICATIONS ------------------------------------------------

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, JSX } from "react";
 import { Alert, Col, Row, Form } from "react-bootstrap";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
@@ -8,9 +8,10 @@ import { ApiError, ApiResponse } from "../../services/api/Base";
 import { rendFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
+import { contactSupportMessage } from "../../utils/Utils";
 
 interface AccountFormData {
-	email: string;
+	email?: string;
 	current_password?: string;
 	new_password?: string;
 	confirm_password?: string;
@@ -18,7 +19,7 @@ interface AccountFormData {
 	last_name?: string;
 }
 
-export const AccountTab: React.FC = () => {
+export const AccountTab: React.FC = (): JSX.Element => {
 	const { currentUser, token, updateCurrentUser } = useAuth();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [formData, setFormData] = useState<AccountFormData>(() => ({
@@ -35,7 +36,7 @@ export const AccountTab: React.FC = () => {
 	const hasPendingEmail: boolean = !!currentUser?.pending_email_change;
 
 	useEffect(() => {
-		const checkPending = async () => {
+		const checkPending = async (): Promise<void> => {
 			if (!hasPendingEmail || !token) return;
 			try {
 				const valid: ApiResponse<boolean> = await authApi.checkPendingEmail(token);
@@ -49,31 +50,34 @@ export const AccountTab: React.FC = () => {
 				showToastError("Failed to verify pending email status.");
 			}
 		};
-		checkPending();
+		checkPending().then((): void => {});
 	}, [token, hasPendingEmail, showToastError]);
 
-	const downloadJobsExport = async (token: string | null) => {
+	const downloadJobsExport = async (): Promise<void> => {
 		if (!token) return;
 		try {
 			await exportApi.download("jam_export.zip", token);
 			showToastSuccess("Data downloaded");
 		} catch (e) {
-			showToastError("Failed to download data");
+			showToastError("Failed to download data." + contactSupportMessage);
 		}
 	};
 
-	const handleInputChange = (e: SyntheticEvent) => {
+	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
-		setFormData((prev) => ({ ...prev, [name]: value }));
+		setFormData((prev: AccountFormData): AccountFormData => ({ ...prev, [name]: value }));
 		if (errors[name]) {
-			setErrors((prev) => ({ ...prev, [name]: "" }));
+			setErrors((prev: ValidationErrors): ValidationErrors => ({ ...prev, [name]: "" }));
 		}
 	};
 
 	const validateForm = (): boolean => {
 		const newErrors: ValidationErrors = {};
-		const hasAccountChanges =
-			formData.email !== currentUser?.email || formData.new_password || formData.confirm_password;
+		const hasAccountChanges: boolean = !!(
+			formData.email !== currentUser?.email ||
+			formData.new_password ||
+			formData.confirm_password
+		);
 
 		if (hasAccountChanges && !formData.current_password) {
 			newErrors.current_password = "Current password is required to update email or password";
@@ -96,14 +100,14 @@ export const AccountTab: React.FC = () => {
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent): Promise<void> => {
 		e.preventDefault();
 		if (!validateForm() || !token) return;
 		setSubmitting(true);
 
 		try {
 			const updateData: any = {};
-			const emailChanged = formData.email && formData.email !== currentUser?.email;
+			const emailChanged: boolean = !!(formData.email && formData.email !== currentUser?.email);
 
 			if (formData.current_password) {
 				updateData.current_password = formData.current_password;
@@ -117,16 +121,18 @@ export const AccountTab: React.FC = () => {
 			const response: ApiResponse<UpdateCurrentUserResponse> | null = await updateCurrentUser(updateData);
 			if (!response) return;
 
-			const responseData = response.data;
+			const responseData: UpdateCurrentUserResponse = response.data;
 
 			if (emailChanged) {
 				if (responseData.success) {
 					showToastSuccess(responseData.message, "Email Change Pending");
-					setFormData((prev) => ({
-						...prev,
-						email: currentUser?.email || "",
-						current_password: "",
-					}));
+					setFormData(
+						(prev: AccountFormData): AccountFormData => ({
+							...prev,
+							email: currentUser?.email || "",
+							current_password: "",
+						})
+					);
 				} else {
 					showToastError(responseData.message, "Error Updating Settings");
 				}
@@ -137,12 +143,14 @@ export const AccountTab: React.FC = () => {
 			}
 
 			if (formData.new_password) {
-				setFormData((prev) => ({
-					...prev,
-					new_password: "",
-					confirm_password: "",
-					current_password: "",
-				}));
+				setFormData(
+					(prev: AccountFormData): AccountFormData => ({
+						...prev,
+						new_password: "",
+						confirm_password: "",
+						current_password: "",
+					})
+				);
 			}
 		} catch (error) {
 			const apiError = error as ApiError;
@@ -151,7 +159,7 @@ export const AccountTab: React.FC = () => {
 			} else if (apiError.status === 401) {
 				showToastError("Current password is incorrect. Please try again.");
 			} else {
-				showToastError("An unknown error occurred. Please try again later.");
+				showToastError("An unknown error occurred." + contactSupportMessage);
 			}
 		} finally {
 			setSubmitting(false);
@@ -254,7 +262,7 @@ export const AccountTab: React.FC = () => {
 			<p className="text-muted">Download all your job application data</p>
 			<ActionButton
 				variant="secondary"
-				onClick={() => downloadJobsExport(token)}
+				onClick={downloadJobsExport}
 				defaultIcon="download"
 				defaultText="Download Data"
 			/>

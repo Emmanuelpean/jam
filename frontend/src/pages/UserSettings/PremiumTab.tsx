@@ -87,10 +87,6 @@ export const PremiumTab = (): JSX.Element => {
 		}
 	};
 
-	useEffect((): void => {
-		fetchSubscriptionStatus().finally(() => {});
-	}, [currentUser?.stripe_details.subscription_id]);
-
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
 		const url = new URL(window.location.href);
