@@ -1,6 +1,6 @@
 import React, { JSX, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, Col, Row } from "react-bootstrap";
+import { Col, Row } from "react-bootstrap";
 import { AccountTab } from "./AccountTab";
 import { PreferencesTab } from "./PreferencesTab";
 import { QualificationsTab } from "./QualificationsTab";
@@ -25,7 +25,7 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 	const { tab } = useParams<{ tab: tabs }>();
 
 	// Set active tab based on URL parameter
-	const activeTab = tab || "account";
+	const activeTab: tabs = tab || "account";
 
 	// Redirect to default tab if no tab specified
 	useEffect(() => {

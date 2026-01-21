@@ -82,3 +82,6 @@ export const sortByKey = <T extends Record<string, any>>(array: T[], key: keyof 
 export const normaliseArray = <T>(item: T | T[] | null | undefined): T[] => {
 	return Array.isArray(item) ? item : item ? [item] : [];
 };
+
+export const contactSupportMessage: string =
+	"Please try again later or contact support @ " + process.env.REACT_APP_SUPPORT_EMAIL + " for assistance.";
