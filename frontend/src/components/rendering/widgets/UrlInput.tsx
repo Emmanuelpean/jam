@@ -2,6 +2,7 @@ import { Form } from "react-bootstrap";
 import "./UrlInput.scss";
 import { WidgetProps } from "./WidgetRenders";
 import React, { JSX } from "react";
+import { toKey } from "../../../utils/StringUtils";
 
 export const UrlInput = ({ field, value, handleChange, error }: WidgetProps): JSX.Element => {
 	const handleOpenUrl = () => {
@@ -18,9 +19,9 @@ export const UrlInput = ({ field, value, handleChange, error }: WidgetProps): JS
 	return (
 		<div className="url-input-wrapper">
 			<Form.Control
-				id={field.name}
+				id={toKey(field.name)}
 				type={field.type || "url"}
-				name={field.name}
+				name={toKey(field.name)}
 				value={value || ""}
 				onChange={handleChange}
 				placeholder={field.placeholder || "Enter URL"}

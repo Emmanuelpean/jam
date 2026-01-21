@@ -18,7 +18,6 @@ USER_DATA = [
         "is_verified": True,
         "first_name": "Admin",
         "last_name": "User",
-        "premium": {"is_active": True},
     },
     # Inactive user
     {

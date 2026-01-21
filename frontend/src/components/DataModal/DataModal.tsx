@@ -9,28 +9,31 @@ import React, {
 	useState,
 } from "react";
 import { Alert, Card, Form, Modal } from "react-bootstrap";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import {
 	DataContextValue,
 	EntityType,
 	entityTypeToGenericName,
 	JamData,
 	useDataContext,
-} from "../../../contexts/DataContext";
-import { Errors, FormField, SyntheticEvent } from "../../rendering/widgets/WidgetRenders";
-import { ActionButton } from "../../rendering/form/ActionButton";
-import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArray } from "../../../utils/Utils";
-import { ModalViewField, renderModalViewField } from "../../rendering/view/ModalFields";
-import { ModalFormField } from "../../rendering/form/FormRenders";
+} from "../../contexts/DataContext";
+import { Errors, rendFormField, SyntheticEvent } from "../rendering/widgets/WidgetRenders";
+import { ActionButton } from "../rendering/form/ActionButton";
+import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArray } from "../../utils/Utils";
+import { ModalViewField, renderModalViewField } from "../rendering/view/ModalFields";
+import { ModalFormField } from "../rendering/form/FormRenders";
 import {
 	useDeleteEntityConfirm,
 	useActivateEntity,
 	useDeactivateEntity,
 	useDeactivateEntityConfirm,
-} from "../../../utils/DeleteHandler";
-import { useAlert } from "../../../contexts/AlertContext";
-import { ApiResponse } from "../../../services/api/Base";
+} from "../../utils/DeleteHandler";
+import { useAlert } from "../../contexts/AlertContext";
+import { ApiResponse } from "../../services/api/Base";
+import set from "lodash/set";
+import get from "lodash/get";
 import "./DataModal.scss";
+import { toKey } from "../../utils/StringUtils";
 
 export type Field = ModalViewField | ModalFormField;
 export type Fields = (Field | Field[])[];
@@ -360,10 +363,16 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 						// Always render based on field type, not mode
 						return (
-							<div key={fieldKey} className={columnClass}>
+							<div key={toKey(fieldKey)} className={columnClass}>
 								{isViewField(field)
 									? renderModalViewField(field as ModalViewField, effectiveData, getModalId())
-									: FormField(field as ModalFormField, formData, handleChange, errors, currentUser)}
+									: rendFormField(
+											field as ModalFormField,
+											formData,
+											handleChange,
+											errors,
+											currentUser
+										)}
 							</div>
 						);
 					})}
@@ -401,13 +410,15 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 
 		const handleChange = (e: SyntheticEvent): void => {
 			const { name, type, checked, value } = e.target;
-			setFormData((prev) => ({
-				...prev,
-				[name]: type === "checkbox" ? checked : value,
-			}));
-			if (errors[name]) {
-				setErrors((prev: Errors) => ({ ...prev, [name]: "" }));
-			}
+			const nextValue = type === "checkbox" ? checked : value;
+
+			setFormData((prev) => {
+				const next = structuredClone(prev);
+				set(next, name, nextValue); // name like "premium.is_active"
+				return next;
+			});
+
+			if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
 		};
 
 		const filterConditionalFields = <T extends Field>(fieldsToFilter: (T | T[])[]): (T | T[])[] => {
@@ -473,7 +484,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			if (hasTabs && tabs) {
 				for (const tab of tabs) {
 					const tabFields = flattenArray(filterConditionalFields(tab.fields.form));
-					if (tabFields.some((field: ModalFormField) => newErrors[field.name])) {
+					if (tabFields.some((field: ModalFormField) => get(newErrors, field.name))) {
 						setActiveTab(tab.key);
 						break;
 					}

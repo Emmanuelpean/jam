@@ -11,7 +11,9 @@ import React, { JSX } from "react";
 import { HelpBubble } from "./HelpBubble";
 import { UrlInput } from "./UrlInput";
 import { CurrentUser } from "../../../contexts/AuthContext";
-import {Toggle} from "./Toggle";
+import { Toggle } from "./Toggle";
+import get from "lodash/get";
+import { toKey } from "../../../utils/StringUtils";
 
 export interface SyntheticEvent {
 	target: {
@@ -46,9 +48,10 @@ export const DefaultInput = ({ field, value, handleChange, error }: WidgetProps)
 	return (
 		<>
 			<Form.Control
-				id={field.name}
+				id={toKey(field.name)}
 				type={field.type || "text"}
-				name={field.name}
+				name={toKey(field.name)}
+				key={toKey(field.name)}
 				value={value || ""}
 				onChange={handleChange}
 				placeholder={field.placeholder}
@@ -61,16 +64,16 @@ export const DefaultInput = ({ field, value, handleChange, error }: WidgetProps)
 	);
 };
 
-export const FormField = (
+export const rendFormField = (
 	field: ModalFormField,
 	formData: any,
 	handleChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,
 	errors: Errors,
 	currentUser?: CurrentUser | null
 ) => {
-	const value: any = formData[field.name];
-	const secondaryValue: any = field.secondaryName ? formData[field.secondaryName] : null;
-	const error: string | null | undefined = errors[field.name];
+	const value: any = get(formData, field.name);
+	const secondaryValue: any = field.secondaryName ? get(formData, field.secondaryName) : null;
+	const error: string | null | undefined = get(errors, field.name);
 	const previewConfig = field.previewConfig;
 
 	const widgetProps: WidgetProps = {

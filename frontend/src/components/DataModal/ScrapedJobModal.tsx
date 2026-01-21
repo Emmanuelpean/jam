@@ -5,7 +5,7 @@ import DataModal, {
 	Fields,
 	ValidationErrors,
 	WarningMessageConfig,
-} from "./DataModal/DataModal";
+} from "./DataModal";
 import { formFields } from "../rendering/form/FormRenders";
 import { findClosestOption, findExactOption, useFormOptions } from "../rendering/form/FormOptions";
 import { modalViewFields } from "../rendering/view/ModalFields";

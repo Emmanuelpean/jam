@@ -4,7 +4,7 @@ import { useAlert } from "../../contexts/AlertContext";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { GroupedSelectOption, useFormOptions } from "../rendering/form/FormOptions";
 import { useAuth } from "../../contexts/AuthContext";
-import { Errors, FormField, SyntheticEvent } from "../rendering/widgets/WidgetRenders";
+import { Errors, rendFormField, SyntheticEvent } from "../rendering/widgets/WidgetRenders";
 import { ModalFormField } from "../rendering/form/FormRenders";
 import { areDifferent } from "../../utils/Utils";
 import "./FollowUpModal.scss";
@@ -248,9 +248,9 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 				<Modal.Title>Follow Up Email Generator</Modal.Title>
 			</Modal.Header>
 			<Modal.Body>
-				{FormField(selectField, formData, handleChange, errors, currentUser)}
-				{FormField(subjectField, formData, handleChange, errors, currentUser)}
-				{FormField(bodyField, formData, handleChange, errors, currentUser)}
+				{rendFormField(selectField, formData, handleChange, errors, currentUser)}
+				{rendFormField(subjectField, formData, handleChange, errors, currentUser)}
+				{rendFormField(bodyField, formData, handleChange, errors, currentUser)}
 			</Modal.Body>
 			<Modal.Footer className={"modal-footer"}>
 				<div className={"modal-buttons-container"}>

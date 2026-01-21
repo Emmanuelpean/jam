@@ -6,6 +6,7 @@ import { FloatingPreview } from "../../FloatingPreview/FloatingPreview";
 import { CustomSelectOption } from "../form/CustomSelectOption";
 import { ModalViewFields } from "../view/ModalFields";
 import { GroupedSelectOption, SelectOption } from "../form/FormOptions";
+import { toKey } from "../../../utils/StringUtils";
 
 export interface SelectWidgetPreviewConfig {
 	enabled: boolean;
@@ -103,29 +104,7 @@ export const SelectInput = ({
 	const lastPreviewIdRef = useRef<string | null>(null);
 	const isMulti: boolean = field.type === "multiselect";
 	let selectedValue: SelectOption | SelectOption[] | null = null;
-	// Add dark mode detection
-	const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-		return document.documentElement.getAttribute("data-mode") === "dark";
-	});
 
-	// Listen for dark mode changes
-	useCallback(() => {
-		const observer = new MutationObserver((mutations) => {
-			mutations.forEach((mutation) => {
-				if (mutation.type === "attributes" && mutation.attributeName === "data-mode") {
-					const newMode = document.documentElement.getAttribute("data-mode") === "dark";
-					setIsDarkMode(newMode);
-				}
-			});
-		});
-
-		observer.observe(document.documentElement, {
-			attributes: true,
-			attributeFilter: ["data-mode"],
-		});
-
-		return () => observer.disconnect();
-	}, []);
 	const handleAddSuccess = useCallback(
 		(newData: any) => {
 			// Auto-select the newly added item
@@ -136,7 +115,7 @@ export const SelectInput = ({
 				const currentIds = Array.isArray(value) ? value : [];
 				const syntheticEvent: SyntheticEvent = {
 					target: {
-						name: field.name,
+						name: toKey(field.name),
 						value: [...currentIds, newId],
 					},
 				};
@@ -145,7 +124,7 @@ export const SelectInput = ({
 				// For single select, replace value
 				const syntheticEvent: SyntheticEvent = {
 					target: {
-						name: field.name,
+						name: toKey(field.name),
 						value: newId,
 					},
 				};
@@ -218,7 +197,7 @@ export const SelectInput = ({
 	const selectElement = (
 		<>
 			<Select<SelectOption, boolean>
-				name={field.name}
+				name={toKey(field.name)}
 				value={selectedValue}
 				onChange={(
 					selectedOptions: MultiValue<SelectOption> | SingleValue<SelectOption>,
@@ -231,7 +210,7 @@ export const SelectInput = ({
 
 						const syntheticEvent: SyntheticEvent = {
 							target: {
-								name: field.name,
+								name: toKey(field.name),
 								value: ids,
 							},
 						};
@@ -239,7 +218,7 @@ export const SelectInput = ({
 					} else {
 						const syntheticEvent: SyntheticEvent = {
 							target: {
-								name: field.name,
+								name: toKey(field.name),
 								value: selectedOptions ? (selectedOptions as SelectOption).value : null,
 							},
 						};
@@ -247,7 +226,7 @@ export const SelectInput = ({
 					}
 				}}
 				onMenuClose={handleMenuClose}
-				id={field.name}
+				id={toKey(field.name)}
 				options={field.options || []}
 				closeMenuOnSelect={!isMulti}
 				placeholder={field.placeholder || `Select ${field.label}`}

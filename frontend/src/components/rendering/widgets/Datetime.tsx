@@ -2,6 +2,7 @@ import React, { JSX } from "react";
 import { Form } from "react-bootstrap";
 import { SyntheticEvent, WidgetProps } from "./WidgetRenders";
 import "./Datetime.scss";
+import { toKey } from "../../../utils/StringUtils";
 
 export const formatDateTime = (datetime?: string | Date): string => {
 	if (!datetime) {
@@ -47,7 +48,7 @@ export const LocalDatetimeInput = ({
 		e.stopPropagation();
 		const syntheticEvent: SyntheticEvent = {
 			target: {
-				name: field.name,
+				name: toKey(field.name),
 				value: inputType === "datetime-local" ? formatDateTime() : formatDate(new Date()),
 			},
 		};
@@ -62,9 +63,9 @@ export const LocalDatetimeInput = ({
 	return (
 		<div className="datetime-input-wrapper">
 			<Form.Control
-				id={field.name}
+				id={toKey(field.name)}
 				type={inputType}
-				name={field.name}
+				name={toKey(field.name)}
 				value={formattedValue}
 				onChange={handleChange}
 				isInvalid={!!error}

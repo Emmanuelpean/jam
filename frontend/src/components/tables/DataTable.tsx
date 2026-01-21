@@ -23,7 +23,7 @@ import {
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { MenuItem } from "../ContextMenu/ContextMenu";
 import LoadingSpinner from "../spinner/Spinner";
-import { DataModalHandle, modalModes } from "../DataModal/DataModal/DataModal";
+import { DataModalHandle, modalModes } from "../DataModal/DataModal";
 import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 import "./DataTable.scss";
 import FollowUpModal, { FollowUpModalHandle } from "../FollowUpModal/FollowUpModal";

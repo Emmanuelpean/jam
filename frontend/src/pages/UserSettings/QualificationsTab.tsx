@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Form } from "react-bootstrap";
-import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
-import { ValidationErrors } from "../../components/DataModal/DataModal/DataModal";
+import { rendFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
 import { ApiResponse } from "../../services/api/Base";
@@ -138,11 +138,11 @@ export const QualificationsTab: React.FC = () => {
 			<p className="text-muted mb-4">
 				Help us match you with the right opportunities by providing your qualifications
 			</p>
-			{FormField(experienceField, formData, handleInputChange, errors)}
-			{FormField(skillsField, formData, handleInputChange, errors)}
-			{FormField(qualitiesField, formData, handleInputChange, errors)}
-			{FormField(educationField, formData, handleInputChange, errors)}
-			{FormField(interestsField, formData, handleInputChange, errors)}
+			{rendFormField(experienceField, formData, handleInputChange, errors)}
+			{rendFormField(skillsField, formData, handleInputChange, errors)}
+			{rendFormField(qualitiesField, formData, handleInputChange, errors)}
+			{rendFormField(educationField, formData, handleInputChange, errors)}
+			{rendFormField(interestsField, formData, handleInputChange, errors)}
 
 			<div className="mt-4">
 				<ActionButton

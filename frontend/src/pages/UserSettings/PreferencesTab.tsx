@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Form } from "react-bootstrap";
-import { FormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
-import { ValidationErrors } from "../../components/DataModal/DataModal/DataModal";
+import { rendFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useFormOptions } from "../../components/rendering/form/FormOptions";
 import { useAuth } from "../../contexts/AuthContext";
@@ -76,7 +76,9 @@ export const PreferencesTab: React.FC = () => {
 			if (formData.deadline_threshold !== undefined) updateData.deadline_threshold = formData.deadline_threshold;
 			if (formData.update_limit !== undefined) updateData.update_limit = formData.update_limit;
 
-			const response: ApiResponse<UpdateCurrentUserResponse> | null = await updateCurrentUser(updateData);
+			const response: ApiResponse<UpdateCurrentUserResponse> | null = await updateCurrentUser({
+				preferences: updateData,
+			});
 			if (!response) return;
 
 			showToastSuccess("Preferences updated successfully.");
@@ -124,14 +126,14 @@ export const PreferencesTab: React.FC = () => {
 			<h5 className="mb-3">
 				<i className="bi bi-speedometer"></i> Dashboard Settings
 			</h5>
-			{FormField(chaseThresholdField, formData, handleInputChange, errors)}
-			{FormField(deadlineThresholdField, formData, handleInputChange, errors)}
-			{FormField(updateLimitField, formData, handleInputChange, errors)}
+			{rendFormField(chaseThresholdField, formData, handleInputChange, errors)}
+			{rendFormField(deadlineThresholdField, formData, handleInputChange, errors)}
+			{rendFormField(updateLimitField, formData, handleInputChange, errors)}
 			<hr className="my-4" />
 			<h5 className="mb-3">
 				<i className="bi bi-currency-dollar"></i> Currency Settings
 			</h5>
-			{FormField(currencyField, formData, handleInputChange, errors)}
+			{rendFormField(currencyField, formData, handleInputChange, errors)}
 			<hr className="my-4" />
 			<h5 className="mb-3">
 				<i className="bi bi-palette"></i> Appearance
