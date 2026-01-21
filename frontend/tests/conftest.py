@@ -3,15 +3,16 @@
 import json
 import os
 import platform
-import psutil
 import queue
 import re
-import requests
 import shutil
 import subprocess
 import sys
 import threading
 from pathlib import Path
+
+import psutil
+import requests
 from selenium.webdriver import Keys, ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support.select import Select
@@ -29,12 +30,8 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 from react_select import ReactSelect
 
-from tests.conftest import (
-    session,
-    database_url,
-    test_users,
-    engine,
-)
+# noinspection PyUnusedImports
+from tests.conftest import session, database_url, test_users, engine, test_interviews, test_job_application_updates
 from tests.conftest import *
 
 

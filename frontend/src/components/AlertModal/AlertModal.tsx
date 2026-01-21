@@ -81,6 +81,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 				<div className="modal-buttons-container">
 					{alertState.cancelText && (
 						<ActionButton
+							id={`${modalId}-cancel-button`}
 							variant="secondary"
 							onClick={() => {
 								hideAlert();
@@ -91,6 +92,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 					)}
 					{alertState.confirmText && (
 						<ActionButton
+							id={`${modalId}-confirm-button`}
 							variant={variant}
 							onClick={handleConfirm}
 							loading={loading}
