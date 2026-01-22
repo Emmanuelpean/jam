@@ -25,7 +25,7 @@ class TestSendVerificationWithRateLimit:
             "verification",
             test_regular_user,
             session,
-            lambda x, y: None,
+            lambda x, y, z: None,
             "verify-email",
             name="Verification",
         )

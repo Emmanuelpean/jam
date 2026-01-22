@@ -50,12 +50,12 @@ class TestUserTokenIsValid:
     @pytest.mark.parametrize(
         "token_type, minutes_ago, expected_valid",
         [
-            ("verification", 10, True),  # verification: 10 min ago = valid
-            ("verification", 25, False),  # verification: 25 min ago = expired
+            ("verification", 35, True),  # verification: 10 min ago = valid
+            ("verification", 70, False),  # verification: 25 min ago = expired
             ("password_reset", 10, True),  # password_reset: 10 min ago = valid
-            ("password_reset", 25, False),  # password_reset: 25 min ago = expired
+            ("password_reset", 35, False),  # password_reset: 25 min ago = expired
             ("email_change", 10, True),  # email_change: 10 min ago = valid
-            ("email_change", 25, False),  # email_change: 25 min ago = expired
+            ("email_change", 65, False),  # email_change: 25 min ago = expired
         ],
     )
     def test_is_valid_different_token_types(

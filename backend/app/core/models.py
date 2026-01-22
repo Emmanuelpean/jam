@@ -201,10 +201,10 @@ class UserToken(Owned, Base):
         """Check if token is valid"""
 
         # Define expiration times based on token type
-        expiration_minutes = {  # TODO store in env
+        expiration_minutes = {
             "verification": settings.verification_token_expiration_minutes,
-            "password_reset": settings.verification_token_expiration_minutes,
-            "email_change": settings.verification_token_expiration_minutes,
+            "password_reset": settings.password_reset_token_expiration_minutes,
+            "email_change": settings.email_change_token_expiration_minutes,
         }
 
         # noinspection PyTypeChecker

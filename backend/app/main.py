@@ -16,7 +16,8 @@ from app.payments import test_routers as payment_test_routers
 from app.routers import export as export_routers
 from app.routers import others as other_routers
 
-app = FastAPI()  # TODO add version and app name
+
+app = FastAPI(title="JAM", version=settings.app_version)
 
 
 def get_allowed_origins() -> list[str]:

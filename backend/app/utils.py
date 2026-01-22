@@ -4,7 +4,6 @@ import hashlib
 import json
 import logging
 import os
-from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Optional
@@ -186,40 +185,3 @@ class AppLogger:
             backup_count=5,
             console_output=True,
         )
-
-    @classmethod
-    def log_execution_time(cls, logger: logging.Logger, start_time: datetime, operation: str):
-        """
-        Log execution time for an operation
-
-        :param logger: Logger instance
-        :param start_time: Start time of the operation
-        :param operation: Description of the operation
-        """
-        end_time = datetime.now()
-        duration = end_time - start_time
-        logger.info(f"{operation} completed in {duration.total_seconds():.2f} seconds")
-
-    @classmethod
-    def log_stats(cls, logger: logging.Logger, stats: dict, title: str = "Operation Statistics"):
-        """
-        Log statistics in a formatted way
-
-        :param logger: Logger instance
-        :param stats: Dictionary of statistics
-        :param title: Title for the statistics block
-        """
-        logger.info("=" * 50)
-        logger.info(title)
-        logger.info("=" * 50)
-
-        for key, value in stats.items():
-            if isinstance(value, list):
-                logger.info(f"{key}: {len(value)} items")
-                if value:  # Log first few items if list is not empty
-                    sample = value[:3]
-                    logger.debug(f"  Sample {key}: {sample}")
-            else:
-                logger.info(f"{key}: {value}")
-
-        logger.info("=" * 50)

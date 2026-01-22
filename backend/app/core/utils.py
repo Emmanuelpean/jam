@@ -111,7 +111,7 @@ def send_verification_with_rate_limit(
     try:
         # Send the email to the user with the plain token
         verification_url = f"{settings.frontend_url}/{endpoint}/?token={plain_token}"
-        send_email_function(user.email, verification_url)
+        send_email_function(user.email, verification_url, user.first_name)
         return base_schemas.GenericResponse(
             success=True,
             message=f"{name} email sent successfully.",
@@ -179,7 +179,7 @@ def send_email_change_email(
         token_type="email_change",
         user=user,
         db=db,
-        send_email_function=lambda _, url: email_service.send_email_change_verification(new_email, url),
+        send_email_function=lambda _, url, name: email_service.send_email_change_verification(new_email, url, name),
         endpoint="verify-new-email",
         pending_email=new_email,
         name="Email change verification",

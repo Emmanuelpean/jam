@@ -1,8 +1,16 @@
 """JAM configuration"""
 
+import tomllib
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def get_app_version() -> str:
+    """Get the version of the application"""
+
+    data = tomllib.loads(Path("../pyproject.toml").read_text(encoding="utf-8"))
+    return data["project"]["version"]
 
 
 class Settings(BaseSettings):
@@ -19,6 +27,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int
 
     # Application settings
+    app_version: str = get_app_version()
     max_file_size_mb: int
 
     # Other settings
@@ -43,6 +52,8 @@ class Settings(BaseSettings):
 
     # Verification settings
     verification_token_expiration_minutes: int
+    password_reset_token_expiration_minutes: int
+    email_change_token_expiration_minutes: int
     verification_email_min_interval_seconds: int
 
     # BrightData
