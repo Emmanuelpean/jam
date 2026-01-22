@@ -22,6 +22,27 @@
     }
 }
 
+@keyframes side-in-from-left {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.context-submenu {
+    animation: side-in-from-right 0.12s ease-out forwards;
+}
+
+.context-submenu.context-submenu--left {
+    animation: side-in-from-left 0.12s ease-out forwards;
+}
+
+
 .context-menu,
 .context-submenu {
     position: fixed;
