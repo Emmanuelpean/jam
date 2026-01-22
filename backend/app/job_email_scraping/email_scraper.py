@@ -592,4 +592,3 @@ job_scraping_service_runner = ServiceRunner(
     service_function=JobEmailScraper().run_scraping,
     service_kwargs=dict(timedelta_days=3),
 )
-JobEmailScraper().run_scraping()

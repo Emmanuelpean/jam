@@ -93,14 +93,16 @@ class EmailService(object):
         self,
         recipient: str,
         verification_url: str,
+        recipient_name: str | None = None,
     ) -> None:
         """Send a verification email to the specified recipient.
         :param recipient: The recipient's email address.
-        :param verification_url: The email verification URL."""
+        :param verification_url: The email verification URL.
+        :param recipient_name: The recipient name."""
 
         template = self.templates.env.get_template("email_confirmation.html")
         html_content = template.render(
-            name="there",
+            name=recipient_name if recipient_name else "there",
             confirmation_url=verification_url,
             token_expiry_min=settings.verification_token_expiration_minutes,
         )
@@ -117,16 +119,18 @@ class EmailService(object):
         self,
         recipient: str,
         verification_url: str,
+        recipient_name: str | None = None,
     ) -> None:
         """Send an email change verification email to the specified recipient.
         :param recipient: The recipient's email address.
-        :param verification_url: The email change verification URL."""
+        :param verification_url: The email change verification URL.
+        :param recipient_name: The recipient name."""
 
         template = self.templates.env.get_template("email_change.html")
         html_content = template.render(
-            name="there",
+            name=recipient_name if recipient_name else "there",
             confirmation_url=verification_url,
-            token_expiry_min=settings.verification_token_expiration_minutes,
+            token_expiry_min=settings.email_change_token_expiration_minutes,
         )
 
         self.send_email(
@@ -141,14 +145,18 @@ class EmailService(object):
         self,
         recipient: str,
         reset_url: str,
+        recipient_name: str | None = None,
     ) -> None:
         """Send a password reset email to the specified recipient.
         :param recipient: The recipient's email address.
-        :param reset_url: The password reset URL."""
+        :param reset_url: The password reset URL.
+        :param recipient_name: The recipient name."""
 
         template = self.templates.env.get_template("password_reset.html")
         html_content = template.render(
-            reset_url=reset_url, token_expiry_min=settings.verification_token_expiration_minutes
+            name=recipient_name if recipient_name else "there",
+            reset_url=reset_url,
+            token_expiry_min=settings.password_reset_token_expiration_minutes,
         )
 
         self.send_email(
@@ -435,7 +443,7 @@ class EmailService(object):
         return emails
 
     @staticmethod
-    def _decode_header(header: str) -> str:
+    def _decode_header(header: str | None) -> str:
         """Decode email header.
         :param header: Raw header string
         :return: Decoded header string"""

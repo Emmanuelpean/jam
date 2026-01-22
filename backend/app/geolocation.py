@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app import utils
 from app.models import Geolocation
+from app.config import settings
 
 
 def call_geocoding_api(query: str) -> tuple[float, float, dict]:
@@ -19,7 +20,7 @@ def call_geocoding_api(query: str) -> tuple[float, float, dict]:
     base_url = "https://nominatim.openstreetmap.org/search"
     params = {"q": query, "format": "json", "limit": 1, "addressdetails": 1}
 
-    headers = {"User-Agent": "JAM/1.0 (emmanuel.pean@gmail.com)"}  # TODO: Update with appropriate contact info
+    headers = {"User-Agent": f"JAM/{settings.app_version} ({settings.main_email_username})"}
 
     try:
         response = requests.get(base_url, params=params, headers=headers, timeout=5)
