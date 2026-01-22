@@ -21,16 +21,18 @@ templates = Jinja2Templates(directory="templates")
 class EmailService(object):
     """Email service class for sending and reading emails."""
 
-    sender = settings.email_username
-    password = settings.email_password
     smtp_server = settings.email_smtp_host
     smtp_port = settings.email_smtp_port
     imap_server = settings.email_imap_host
     imap_port = settings.email_imap_port
 
-    def __init__(self) -> None:
-        """Initialize the EmailService class."""
+    def __init__(self, email_username: str, email_password: str) -> None:
+        """Initialise the EmailService class
+        :param email_username: The email username for SMTP/IMAP authentication.
+        :param email_password: The email password for SMTP/IMAP authentication."""
 
+        self.email_username = email_username
+        self.email_password = email_password
         self.logger = AppLogger.create_service_logger("email_service", "INFO")
         self.test_emails = []
 
@@ -57,7 +59,7 @@ class EmailService(object):
         :param subject: The subject of the email.
         :param body: The body of the email in HTML format.
         :param message_type: The type of email being sent (for logging purposes).
-        :param sender: The sender's email address (optional, defaults to configured sender)."""
+        :param sender: The sender's email address alias (optional, defaults to configured sender)."""
 
         if settings.test_mode:
             self.test_emails.append(
@@ -65,7 +67,7 @@ class EmailService(object):
                     "recipient": recipient,
                     "subject": subject,
                     "body": body,
-                    "sender": sender or self.sender,
+                    "sender": sender or self.email_username,
                     "timestamp": datetime.now().isoformat(),
                 }
             )
@@ -73,15 +75,15 @@ class EmailService(object):
 
         try:
             msg = MIMEMultipart()
-            msg["From"] = settings.email_username if sender is None else sender
+            msg["From"] = self.email_username if sender is None else sender
             msg["To"] = recipient
             msg["Subject"] = subject
             msg.attach(MIMEText(body, "html"))
 
-            with smtplib.SMTP(settings.email_smtp_host, settings.email_smtp_port) as server:
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()
-                server.login(settings.email_username, settings.email_password)
-                server.sendmail(settings.email_username, recipient, msg.as_string())
+                server.login(self.email_username, self.email_password)
+                server.sendmail(self.email_username, recipient, msg.as_string())
                 self.logger.info(f"{message_type} email sent to %s with subject: %s", recipient, subject)
         except Exception as e:
             self.logger.error(f"Failed to send {message_type} email to %s: %s", recipient, str(e))
@@ -227,13 +229,12 @@ class EmailService(object):
             "Trial end notification",
         )
 
-    @staticmethod
-    def _connect_imap() -> imaplib.IMAP4_SSL:
+    def _connect_imap(self) -> imaplib.IMAP4_SSL:
         """Connect to IMAP server and login.
         :return: IMAP connection object"""
 
-        mail = imaplib.IMAP4_SSL(settings.email_imap_host, settings.email_imap_port)
-        mail.login(settings.email_username, settings.email_password)
+        mail = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
+        mail.login(self.email_username, self.email_password)
         return mail
 
     def get_test_emails(self, recipient: str = None) -> list[dict]:
@@ -485,4 +486,4 @@ class EmailService(object):
             mail.logout()
 
 
-email_service = EmailService()
+email_service = EmailService(settings.main_email_username, settings.main_email_password)

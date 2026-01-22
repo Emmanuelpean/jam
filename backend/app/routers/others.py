@@ -33,7 +33,7 @@ def get_config() -> dict:
     """Get the application configuration."""
 
     return {
-        "scraper_email": settings.scraper_email,
+        "scraper_email": settings.scraper_email_username,
         "support_email": settings.support_email,
         "platform_sender_emails": {value: key for key, value in PLATFORM_SENDER_EMAILS.items()},
     }

@@ -39,12 +39,13 @@
 * [X] Run the service API on a different worker
 * [X] Add loading spinner when using the context menu
 * [X] Delete interviews and updates when associated job is deleted
-* [ ] Get the new inbox for support/info
+* [X] Get the new inbox for support/info
 * [X] Fix the action button height changing during loading
-* [ ] Non data modal should not be affected by the small screen full size
+* [X] Non data modal should not be affected by the small screen full size
 * [X] Allow badges to collapse on small screens (...)
 * [X] Dropdowns styles are broken in dark mode (in light mode multiselect is not working as expected)
 * [ ] On Small screens, elements on multiple columns and rows are all on same column but spacing differs
-* [ ] Finish the dark mode - Missing dark mode in select widget in time selector
+* [X] Finish the dark mode - Missing dark mode in select widget in time selector
 * [X] Fix the settings table column and modal active states
-* [ ] Redo the users table
+* [X] Redo the users table
+* [ ] Add tests for the user table

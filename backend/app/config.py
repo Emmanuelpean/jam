@@ -26,13 +26,14 @@ class Settings(BaseSettings):
     test_mode: bool
 
     # Email configuration
-    email_username: str
-    email_password: str
+    main_email_username: str
+    main_email_password: str
+    scraper_email_username: str
+    scraper_email_password: str
     email_smtp_port: int
     email_smtp_host: str
     email_imap_port: int
     email_imap_host: str
-    scraper_email: str
     info_email: str
     support_email: str
 

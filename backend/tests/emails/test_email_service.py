@@ -30,12 +30,12 @@ class TestEmailService:
         # Verify SMTP calls
         mock_smtp.assert_called_once_with(email_svc.smtp_server, email_svc.smtp_port)
         mock_server.starttls.assert_called_once()
-        mock_server.login.assert_called_once_with(email_svc.sender, email_svc.password)
+        mock_server.login.assert_called_once_with(email_svc.email_username, email_svc.email_password)
         mock_server.sendmail.assert_called_once()
 
         # Verify email content
         call_args = mock_server.sendmail.call_args[0]
-        assert call_args[0] == email_svc.sender  # From
+        assert call_args[0] == email_svc.email_username  # From
         assert call_args[1] == "test@example.com"  # To
 
     @patch("app.config.settings.test_mode", False)
@@ -57,7 +57,7 @@ class TestEmailService:
 
         # Verify custom sender is used
         call_args = mock_server.sendmail.call_args[0]
-        assert call_args[0] == email_svc.sender  # Still logs in with main sender
+        assert call_args[0] == email_svc.email_username  # Still logs in with main sender
         # But message shows custom sender in the From field
 
     @patch("app.config.settings.test_mode", False)
@@ -100,7 +100,7 @@ class TestEmailServiceIMAP:
         result = email_svc._connect_imap()
 
         mock_imap.assert_called_once_with(email_svc.imap_server, email_svc.imap_port)
-        mock_mail.login.assert_called_once_with(email_svc.sender, email_svc.password)
+        mock_mail.login.assert_called_once_with(email_svc.email_username, email_svc.email_password)
         assert result == mock_mail
 
     @patch("imaplib.IMAP4_SSL")
@@ -363,8 +363,8 @@ class TestEmailServiceIntegration:
         ):
 
             svc = EmailService()
-            assert svc.sender == "test@example.com"
-            assert svc.password == "testpass"
+            assert svc.email_username == "test@example.com"
+            assert svc.email_password == "testpass"
             assert svc.smtp_server == "smtp.example.com"
             assert svc.smtp_port == 587
             assert svc.imap_server == "imap.example.com"
