@@ -42,7 +42,7 @@ class JobEmailScraper(EmailService):
         """Object constructor
         :param db: optional database session for testing"""
 
-        EmailService.__init__(self)
+        EmailService.__init__(self, settings.scraper_email_username, settings.scraper_email_password)
         self.location_parser = LocationParser()
         self.logger = AppLogger.create_service_logger(SERVICE_NAME, "INFO")
         self.db = next(get_db()) if db is None else db
@@ -395,7 +395,7 @@ class JobEmailScraper(EmailService):
             forwarded = False
             try:
                 email_ids = self.get_email_ids(
-                    recipient_email=settings.scraper_email,
+                    recipient_email=settings.scraper_email_username,
                     sender_email=user.email,
                     timedelta_days=timedelta_days,
                     from_email=list(PLATFORM_SENDER_EMAILS.keys()),
@@ -404,7 +404,7 @@ class JobEmailScraper(EmailService):
                 if not email_ids:
                     email_ids = self.get_email_ids(
                         from_email=user.email,
-                        to_email=settings.scraper_email,
+                        to_email=settings.scraper_email_username,
                         timedelta_days=timedelta_days,
                     )
                     forwarded = True
@@ -592,3 +592,4 @@ job_scraping_service_runner = ServiceRunner(
     service_function=JobEmailScraper().run_scraping,
     service_kwargs=dict(timedelta_days=3),
 )
+JobEmailScraper().run_scraping()
