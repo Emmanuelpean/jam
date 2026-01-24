@@ -1,11 +1,13 @@
 """Test the main pages of JAM"""
 
 import datetime as dt
-import pytest
 import time
+
+import pytest
 from selenium.webdriver.common.by import By
 
 from conftest import contiguous_subdicts, models, BaseTest
+from tests.utils.test_data import ADMIN_USER_INDEX
 
 
 class BaseTablePage(BaseTest):
@@ -36,7 +38,8 @@ class BaseTablePage(BaseTest):
         self.modal_utils = getattr(self, f"{self.entry_type}_modal_utils")
         self.test_fixture = [self.test_fixture] if isinstance(self.test_fixture, str) else self.test_fixture
         self.test_entries, *self.add_test_entries = [request.getfixturevalue(fixture) for fixture in self.test_fixture]
-        self.test_entries = [entry for entry in self.test_entries if entry.owner_id == self.user.id]
+        if hasattr(self.test_entries, "owner_id"):
+            self.test_entries = [entry for entry in self.test_entries if entry.owner_id == self.user.id]
         self.test_entry = self.test_entries[self.test_entry_index]
         self.sorting_columns = self.columns if not self.sorting_columns else None
         self.login()
@@ -97,6 +100,12 @@ class BaseTablePage(BaseTest):
         else:
             return ""
 
+    def get_entries_count(self) -> int:
+        if hasattr(self.test_entries[0], "owner_id"):
+            return len(self.db.query(self.model).filter_by(owner_id=self.user.id).all())
+        else:
+            return len(self.db.query(self.model).all())
+
     # --------------------------------------------------- VIEW TESTS ---------------------------------------------------
 
     def test_view_entry(self) -> None:
@@ -154,7 +163,7 @@ class BaseTablePage(BaseTest):
         self.table_utils.set_page_item_select("100")
 
         # Determine the number of entries in the db and in the table
-        n_entries = len(self.db.query(self.model).filter_by(owner_id=self.user.id).all())
+        n_entries = self.get_entries_count()
         initial_table_count = len(self.table_utils.table_rows)
 
         # Add the new entry
@@ -164,7 +173,7 @@ class BaseTablePage(BaseTest):
         self.modal_utils.wait_for_edit_modal_close()
 
         # Check that the new entry was properly added to the db and table
-        n_entries_new = len(self.db.query(self.model).filter_by(owner_id=self.user.id).all())
+        n_entries_new = self.get_entries_count()
         assert n_entries_new == n_entries + 1, "Expected entry to be added to database"
         new_table_count = len(self.table_utils.table_rows)
         assert new_table_count == initial_table_count + 1, "Expected entry to be added to table"
@@ -638,3 +647,17 @@ class TestSpeculativeApplicationPage(BaseTablePage):
     test_data = {"company_id": "LocalBiz"}
     duplicate_fields = ["company_id"]
     model = models.SpeculativeApplication
+
+
+class TestSettingsPage(BaseTablePage):
+    """Test class for Job Application Update Page functionalities"""
+
+    endpoint = "settings"
+    page_url = "app-settings"
+    test_fixture = "test_settings"
+    entry_type = "setting"
+    required_fields = ["name", "value"]
+    test_data = {"name": "test_name", "value": "test_value"}
+    duplicate_fields = ["name"]
+    model = models.Setting
+    user_index = ADMIN_USER_INDEX
