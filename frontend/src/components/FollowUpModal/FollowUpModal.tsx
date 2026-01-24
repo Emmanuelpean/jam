@@ -145,7 +145,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 
 	const handleCloseWithConfirmation = async (): Promise<void> => {
 		if (hasUnsavedChanges()) {
-			const confirmed = await showConfirm({
+			const confirmed: boolean = await showConfirm({
 				title: "Close Modal?",
 				message: "Are you sure you want to close this modal?",
 				confirmText: "Close",
@@ -211,6 +211,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 			confirmText: "Yes",
 			cancelText: "No",
 		});
+		console.log("AAA", result);
 		if (result) {
 			const contact: PersonData | undefined = dataContext.persons.find(
 				(person: PersonData): boolean => person.id === formData.contactId
@@ -227,6 +228,7 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 					hide();
 				});
 		} else {
+			console.log(result);
 			hide();
 		}
 	};

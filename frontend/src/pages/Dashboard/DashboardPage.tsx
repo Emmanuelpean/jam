@@ -7,8 +7,8 @@ import {
 	EnrichedJobApplicationUpdateData,
 	EnrichedJobData,
 } from "../../services/schemas/DataTables";
-import JobsToChase from "../../components/tables/JobsToChase";
-import UpcomingDeadlinesTable from "../../components/tables/UpcomingDeadlines";
+import JobsToChase from "../../components/table/JobsToChase";
+import UpcomingDeadlinesTable from "../../components/table/UpcomingDeadlines";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { StatCard } from "./StatCard";
 import { CardHeader } from "./CardHeader";
@@ -18,7 +18,7 @@ import {
 	renderRecentActivityItem,
 	renderUpcomingInterviewItem,
 } from "./ActivityFeed";
-import ScrapedJobsTable from "../../components/tables/ScrapedJobTable";
+import ScrapedJobsTable from "../../components/table/ScrapedJobTable";
 import { scrapedJobApi } from "../../services/api/Services";
 import { sortByKey } from "../../utils/Utils";
 import { getEntityIcon } from "../../components/rendering/view/Icons";
