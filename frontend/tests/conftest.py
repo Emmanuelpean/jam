@@ -852,6 +852,8 @@ class DataModalUtils(BaseUtilsClass):
             self.check_job_view_modal(entry)
         elif self.entry_type == "speculativeApplication":
             self.check_speculative_application_view_modal(entry)
+        elif self.entry_type == "setting":
+            self.check_setting_view_modal(entry)
         else:
             raise AssertionError("Not implemented")
 
@@ -1150,6 +1152,22 @@ class DataModalUtils(BaseUtilsClass):
         else:
             expected += "Notes\nNot Provided\n"
         expected += "Close\nEdit"
+        assert modal.text == expected
+
+        # Close modal
+        self.cancel_button("view").click()
+        self.wait_for_view_modal_close()
+
+    def check_setting_view_modal(self, entry: models.Setting):
+        """Helper method to test the view modal for a settings entry"""
+
+        modal = self.wait_for_view_modal()
+        expected = f"Setting Details\n" f"Name\n{entry.name}\n" f"Value\n{entry.value}\n" f"Description\n"
+        if entry.description:
+            expected += f"{entry.description}\n"
+        else:
+            expected += "Not Provided\n"
+        expected += f"Active\n" f"Close\nEdit"
         assert modal.text == expected
 
         # Close modal
@@ -1767,6 +1785,10 @@ class BaseTest(BaseUtils):
     scrapingFilter_modal_utils: DataModalUtils = None
     scrapingFilter_table_utils: DataTableUtils = None
 
+    # Settings
+    setting_modal_utils: DataModalUtils = None
+    setting_table_utils: DataTableUtils = None
+
     # Others
     auth_utils: AuthentificationUtils = None
     user_settings_utils: UserSettingsUtils = None
@@ -1837,6 +1859,7 @@ class BaseTest(BaseUtils):
                 "speculativeApplication",
                 "scrapedJob",
                 "scrapingFilter",
+                "setting",
             ]
 
             shared_kwargs = {
