@@ -354,7 +354,7 @@ class TestEmailVerification(BaseTest):
         self._register_and_verify_redirect(test_email, test_password)
         user = session.query(models.User).filter(models.User.email == test_email).first()
         token = session.query(models.UserToken).filter(models.UserToken.owner_id == user.id).first()
-        token.created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=20)
+        token.created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=67)
         session.commit()
         invalid_verification_url = self.auth_utils.get_verification_link_from_email(test_email)
         self.driver.get(invalid_verification_url)

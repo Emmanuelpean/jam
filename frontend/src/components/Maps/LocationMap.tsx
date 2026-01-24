@@ -122,7 +122,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
 		return () => observer.disconnect();
 	}, []);
 
-	const geolocatedLocations = locations.filter((location: MapLocation) => !!location.geolocation);
+	const geolocatedLocations: MapLocation[] = locations.filter((location: MapLocation) => !!location.geolocation);
 	const currentTileConfig = isDarkMode ? MAP_TILES.dark : MAP_TILES.light;
 
 	if (geolocatedLocations.length === 0) {
@@ -146,6 +146,9 @@ const LocationMap: React.FC<LocationMapProps> = ({
 		);
 	}
 
+	const attribution: string =
+		'&copy; <a href="https://www.openstreetmap.org/copyright"> OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
 	return (
 		<div>
 			<div
@@ -163,15 +166,10 @@ const LocationMap: React.FC<LocationMapProps> = ({
 					style={{ height: "100%", width: "100%" }}
 					scrollWheelZoom={scrollWheelZoom}
 				>
-					<TileLayer
-						attribution={
-							'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-						}
-						url={currentTileConfig.url}
-					/>
+					<TileLayer attribution={attribution} url={currentTileConfig.url} />
 					<MapViewUpdater locations={geolocatedLocations} />
 					{geolocatedLocations.map(
-						(location): JSX.Element => (
+						(location: MapLocation): JSX.Element => (
 							<Marker
 								key={`${location.id}-${location.geolocation!.latitude}-${location.geolocation!.longitude}`}
 								position={[location.geolocation!.latitude, location.geolocation!.longitude]}

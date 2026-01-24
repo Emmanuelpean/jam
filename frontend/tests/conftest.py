@@ -896,7 +896,7 @@ class DataModalUtils(BaseUtilsClass):
         expected = (
             f"Location Details\nCity\n{entry.city}\nPostcode\n{entry.postcode}"
             f"\nCountry\n{entry.country}\n"
-            f"Location on Map\n+\n−\nLeaflet | © OpenStreetMap\n"
+            f"Location on Map\n+\n−\nLeaflet | © OpenStreetMap contributors © CARTO\n"
             f"Jobs\n({len(entry.jobs)})\nInterviews\n({len(entry.interviews)})\n"
             f"Close\nEdit"
         )
