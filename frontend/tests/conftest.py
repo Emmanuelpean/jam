@@ -702,6 +702,15 @@ class BaseUtilsClass(BaseUtils):
         self.client = client
 
 
+def format_field(label: str, value: str | None) -> str:
+    """Format a field for display in a view modal, showing 'Not Provided' for None values.
+    :param label: The field label to display
+    :param value: The value to display, or None
+    :return: Formatted string with label and value or 'Not Provided'"""
+
+    return f"{label}\n{value if value else 'Not Provided'}\n"
+
+
 class DataModalUtils(BaseUtilsClass):
     """Base class for testing data modals"""
 
@@ -960,19 +969,14 @@ class DataModalUtils(BaseUtilsClass):
         elif entry.location:
             expected += "Location\n" f"{entry.location.name.upper()} ({entry.attendance_type.upper()})\n"
         else:
-            expected += "Location\nNot Provided\n"
+            expected += format_field("Location", None)
 
-        if entry.interviewers:
-            expected += (
-                "Interviewers\n" f"{', '.join([interviewer.name.upper() for interviewer in entry.interviewers])}\n"
-            )
-        else:
-            expected += "Interviewers\nNot Provided\n"
+        interviewers = (
+            ", ".join([interviewer.name.upper() for interviewer in entry.interviewers]) if entry.interviewers else None
+        )
+        expected += format_field("Interviewers", interviewers)
 
-        if entry.note:
-            expected += f"Notes\n{entry.note}\n"
-        else:
-            expected += "Notes\nNot Provided\n"
+        expected += format_field("Notes", entry.note)
 
         expected += "Close\nEdit"
 
@@ -996,10 +1000,6 @@ class DataModalUtils(BaseUtilsClass):
                 f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
                 "Type\n"
                 f"{entry.type[0].upper() + entry.type[1:]}\n"
-                "Notes\n"
-                f"{entry.note}\n"
-                "Close\n"
-                "Edit"
             )
         else:
             expected = (
@@ -1008,11 +1008,9 @@ class DataModalUtils(BaseUtilsClass):
                 f"{display_time.strftime("%d/%m/%Y %H:%M")}\n"
                 "Type\n"
                 f"{entry.type[0].upper() + entry.type[1:]}\n"
-                "Notes\n"
-                f"{entry.note}\n"
-                "Close\n"
-                "Edit"
             )
+        expected += format_field("Notes", entry.note)
+        expected += "Close\nEdit"
         assert modal.text == expected
 
         # Close modal
@@ -1027,10 +1025,10 @@ class DataModalUtils(BaseUtilsClass):
         if entry.application_status:
             expected += f" {entry.application_status.upper()}"
         expected += f"\n{entry.title}\n"
-        if entry.company:
-            expected += f"Company\n{entry.company.name.upper()}\n"
-        else:
-            expected += "Company\nNot Provided\n"
+
+        company = entry.company.name.upper() if entry.company else None
+        expected += format_field("Company", company)
+
         if entry.attendance_type and not entry.location:
             expected += f"Location\n{entry.attendance_type.upper()}\n"
         elif entry.attendance_type and entry.location:
@@ -1038,43 +1036,31 @@ class DataModalUtils(BaseUtilsClass):
         elif not entry.attendance_type and entry.location:
             expected += f"Location\n{entry.location.name.upper()}\n"
         else:
-            expected += "Location\nNot Provided\n"
-        if entry.description:
-            expected += f"Description\n{entry.description}\n"
-        else:
-            expected += "Description\nNot Provided\n"
-        if entry.note:
-            expected += f"Notes\n{entry.note}\n"
-        else:
-            expected += "Notes\nNot Provided\n"
-        salary_range = self.salary_range(entry)
-        if salary_range:
-            expected += f"Salary Range\n{salary_range}\n"
-        else:
-            expected += "Salary Range\nNot Provided\n"
+            expected += format_field("Location", None)
+
+        expected += format_field("Description", entry.description)
+        expected += format_field("Notes", entry.note)
+        expected += format_field("Salary Range", self.salary_range(entry))
+
         expected += "Personal Rating\n"
         if not entry.personal_rating:
             expected += "Not Provided\n"
-        if entry.source:
-            expected += f"Source Aggregator\n{entry.source.name.upper()}\n"
-        else:
-            expected += "Source Aggregator\nNot Provided\n"
-        if entry.url:
-            expected += f"Job URL\n{entry.url.replace('https://', '')}\n"
-        else:
-            expected += "Job URL\nNot Provided\n"
-        if entry.keywords:
-            expected += f"Tags\n{'\n'.join([tag.name.upper() for tag in entry.keywords])}\n"
-        else:
-            expected += "Tags\nNot Provided\n"
-        if entry.contacts:
-            expected += f"Contacts\n{'\n'.join([person.name.upper() for person in entry.contacts])}\n"
-        else:
-            expected += "Contacts\nNot Provided\n"
-        if entry.deadline:
-            expected += f"Application Deadline\n{entry.deadline.strftime('%d/%m/%Y')}\n"
-        else:
-            expected += "Application Deadline\nNot Provided\n"
+
+        source = entry.source.name.upper() if entry.source else None
+        expected += format_field("Source Aggregator", source)
+
+        url = entry.url.replace("https://", "") if entry.url else None
+        expected += format_field("Job URL", url)
+
+        tags = "\n".join([tag.name.upper() for tag in entry.keywords]) if entry.keywords else None
+        expected += format_field("Tags", tags)
+
+        contacts = "\n".join([person.name.upper() for person in entry.contacts]) if entry.contacts else None
+        expected += format_field("Contacts", contacts)
+
+        deadline = entry.deadline.strftime("%d/%m/%Y") if entry.deadline else None
+        expected += format_field("Application Deadline", deadline)
+
         expected += "Close\nEdit"
         assert modal.text == expected
 
@@ -1085,29 +1071,25 @@ class DataModalUtils(BaseUtilsClass):
             expected += f"Job Application {entry.application_status.upper()}\n"
         else:
             expected += "Job Application\n"
-        if entry.application_date:
-            display_time = entry.application_date.astimezone()
-            expected += f"Application Date\n{display_time.strftime("%d/%m/%Y")}\n"
-        else:
-            expected += "Date\nNot Provided\n"
-        if entry.application_status:
-            expected += f"Status\n{entry.application_status.upper()}\n"
-        else:
-            expected += "Status\nNot Provided\n"
+
+        app_date = entry.application_date.astimezone().strftime("%d/%m/%Y") if entry.application_date else None
+        expected += format_field("Application Date" if entry.application_date else "Date", app_date)
+
+        app_status = entry.application_status.upper() if entry.application_status else None
+        expected += format_field("Status", app_status)
+
         if entry.applied_via == "aggregator" and entry.application_aggregator:
-            expected += f"Applied Via\n{entry.application_aggregator.name.upper()}\n"
+            applied_via = entry.application_aggregator.name.upper()
         elif entry.applied_via:
-            expected += f"Applied Via\n{entry.applied_via.upper()}\n"
+            applied_via = entry.applied_via.upper()
         else:
-            expected += "Applied Via\nNot Provided\n"
-        if entry.application_url:
-            expected += f"Application URL\n{entry.application_url.replace("https://", "")}\n"
-        else:
-            expected += "Application URL\nNot Provided\n"
-        if entry.note:
-            expected += f"Notes\n{entry.application_note}\n"
-        else:
-            expected += "Notes\nNot Provided\n"
+            applied_via = None
+        expected += format_field("Applied Via", applied_via)
+
+        app_url = entry.application_url.replace("https://", "") if entry.application_url else None
+        expected += format_field("Application URL", app_url)
+
+        expected += format_field("Notes", entry.application_note if entry.note else None)
         expected += (
             "Add Interview\n"
             "Date\n"
@@ -1134,23 +1116,16 @@ class DataModalUtils(BaseUtilsClass):
 
         modal = self.wait_for_view_modal()
         expected = "Speculative Application Details\n" "Company\n" f"{entry.company.name.upper()}\n"
-        if entry.date:
-            display_time = entry.date.astimezone()
-            expected += f"Date & Time\n{display_time.strftime("%d/%m/%Y %H:%M")}\n"
-        else:
-            expected += "Date & Time\nNot Provided\n"
-        if entry.contact_email:
-            expected += f"Contact Email\n{entry.contact_email}\n"
-        else:
-            expected += "Contact Email\nNot Provided\n"
-        if entry.contacts:
-            expected += f"Contacts\n{'\n'.join([person.name.upper() for person in entry.contacts])}\n"
-        else:
-            expected += "Contacts\nNot Provided\n"
-        if entry.note:
-            expected += f"Notes\n{entry.note}\n"
-        else:
-            expected += "Notes\nNot Provided\n"
+
+        date_time = entry.date.astimezone().strftime("%d/%m/%Y %H:%M") if entry.date else None
+        expected += format_field("Date & Time", date_time)
+
+        expected += format_field("Contact Email", entry.contact_email)
+
+        contacts = "\n".join([person.name.upper() for person in entry.contacts]) if entry.contacts else None
+        expected += format_field("Contacts", contacts)
+
+        expected += format_field("Notes", entry.note)
         expected += "Close\nEdit"
         assert modal.text == expected
 
@@ -1162,11 +1137,8 @@ class DataModalUtils(BaseUtilsClass):
         """Helper method to test the view modal for a settings entry"""
 
         modal = self.wait_for_view_modal()
-        expected = f"Setting Details\n" f"Name\n{entry.name}\n" f"Value\n{entry.value}\n" f"Description\n"
-        if entry.description:
-            expected += f"{entry.description}\n"
-        else:
-            expected += "Not Provided\n"
+        expected = f"Setting Details\n" f"Name\n{entry.name}\n" f"Value\n{entry.value}\n"
+        expected += format_field("Description", entry.description)
         expected += f"Active\n" f"Close\nEdit"
         assert modal.text == expected
 
