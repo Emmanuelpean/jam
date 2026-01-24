@@ -38,7 +38,7 @@ class BaseTablePage(BaseTest):
         self.modal_utils = getattr(self, f"{self.entry_type}_modal_utils")
         self.test_fixture = [self.test_fixture] if isinstance(self.test_fixture, str) else self.test_fixture
         self.test_entries, *self.add_test_entries = [request.getfixturevalue(fixture) for fixture in self.test_fixture]
-        if hasattr(self.test_entries, "owner_id"):
+        if hasattr(self.test_entries[0], "owner_id"):
             self.test_entries = [entry for entry in self.test_entries if entry.owner_id == self.user.id]
         self.test_entry = self.test_entries[self.test_entry_index]
         self.sorting_columns = self.columns if not self.sorting_columns else None
