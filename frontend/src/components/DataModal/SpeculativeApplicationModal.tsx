@@ -26,10 +26,7 @@ export const SpeculativeApplicationModal = forwardRef<DataModalHandle, DataModal
 
 		const jobViewFields: Fields = [
 			[modalViewFields.companyBadge(), modalViewFields.datetime()],
-			[
-				modalViewFields.contactEmail(),
-				modalViewFields.personBadges({ key: "contacts" }, ["view", "edit", "delete"]),
-			],
+			[modalViewFields.contactEmail(), modalViewFields.personBadges({ key: "contacts" })],
 			modalViewFields.note(),
 		];
 

@@ -1,7 +1,7 @@
 import React, { ReactNode, useEffect, useState } from "react";
 import { DataContextValue, JamData, useDataContext } from "../../../contexts/DataContext";
-import InterviewsTable from "../../tables/InterviewTable";
-import JobApplicationUpdateTable from "../../tables/JobApplicationUpdateTable";
+import InterviewsTable from "../../table/InterviewTable";
+import JobApplicationUpdateTable from "../../table/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../Maps/LocationMap";
 import {
@@ -15,8 +15,8 @@ import {
 	LocationData,
 	PersonData,
 } from "../../../services/schemas/DataTables";
-import JobsTable from "../../tables/JobTable";
-import PersonTable from "../../tables/PersonTable";
+import JobsTable from "../../table/JobTable";
+import PersonTable from "../../table/PersonTable";
 import { TableColumn } from "./TableColumns";
 import { Accordion } from "./Accordion";
 import { formatTimedelta, toDdMmYyyy, toDdMmYyyyHhMm } from "../../../utils/TimeUtils";
@@ -41,7 +41,7 @@ import {
 } from "../form/FormOptions";
 import { scrapedJobApi } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
-import ScrapedJobsTableReadOnly from "../../tables/ScrapedJobTableReadOnly";
+import ScrapedJobsTableReadOnly from "../../table/ScrapedJobTableReadOnly";
 import LoadingSpinner from "../../spinner/Spinner";
 import {
 	AggregatorBadge,

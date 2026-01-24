@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { DataTable } from "../components/tables/DataTable";
+import { DataTable } from "../components/table/DataTable";
 import { TableColumn, tableColumns } from "../components/rendering/view/TableColumns";
 import { SpeculativeApplicationModal } from "../components/DataModal/SpeculativeApplicationModal";
 
