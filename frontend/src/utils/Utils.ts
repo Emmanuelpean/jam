@@ -1,8 +1,3 @@
-export interface Progress {
-	current: number;
-	total: number;
-}
-
 export const accessAttribute = (item: any, key: string | null | undefined) => {
 	if (!key) return item;
 	const parts = key.split(".");
@@ -83,5 +78,5 @@ export const normaliseArray = <T>(item: T | T[] | null | undefined): T[] => {
 	return Array.isArray(item) ? item : item ? [item] : [];
 };
 
-export const contactSupportMessage: string =
+export const contactSupportMessage: string =  // TODO get support email from settings
 	"Please try again later or contact support @ " + process.env.REACT_APP_SUPPORT_EMAIL + " for assistance.";
