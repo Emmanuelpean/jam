@@ -415,7 +415,7 @@ export const renderFunctions = {
 			<div className="card shadow-sm">
 				<div className="card-body p-3">
 					<table className="table table-sm table-striped table-hover mb-2">
-						<thead className="table-light">
+						<thead>
 							<tr>
 								<th className="text-center">Overall</th>
 								<th className="text-center">Educational</th>

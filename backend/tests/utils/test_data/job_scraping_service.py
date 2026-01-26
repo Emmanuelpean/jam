@@ -796,11 +796,23 @@ SCRAPED_JOB_DATA = [
         "is_scraped": True,
         "is_failed": False,
         "title": "Full Stack Engineer",
-        "description": "Join our growing startup as a full stack engineer...",
         "company": "StartupXYZ",
         "attendance_type": "remote",
         "salary_min": 90000.0,
         "salary_max": 130000.0,
+        "description": """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut vitae nunc sed metus elementum 
+        dignissim. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. 
+        Donec vulputate felis nulla. Cras ac urna in diam maximus euismod. Quisque laoreet ex vel felis tristique, 
+        id viverra mi fermentum. Nullam hendrerit justo odio, tempor varius lectus venenatis placerat. Nunc blandit, 
+        purus non ornare condimentum, tortor nisi euismod ipsum, ut dictum quam ex a neque. Sed rhoncus purus eu felis 
+        placerat blandit. Curabitur rutrum consequat enim nec rutrum. Praesent gravida sem a justo ullamcorper blandit. 
+        Vestibulum rutrum sem augue, eu malesuada elit dignissim nec. Aenean cursus feugiat elit, eget mattis risus 
+        dignissim id. In sit amet hendrerit nisi. Ut venenatis leo ut odio eleifend, eget mollis sem vulputate. 
+        Phasellus finibus eget quam eget iaculis. Maecenas ullamcorper varius nisi, eu porta nulla iaculis vel. 
+        Donec bibendum nisl viverra odio vehicula molestie. Sed laoreet lorem vel enim porta, id facilisis risus 
+        scelerisque. Donec vehicula, arcu ut vestibulum tincidunt, urna nulla tristique neque, id faucibus dui magna 
+        eget nisi. Mauris fringilla sagittis aliquet. Quisque facilisis vulputate diam, sit amet lacinia lectus commodo 
+        in. Phasellus quis aliquam ex. Fusce in ornare est.""",
         "salary_currency": "GBP",
         "url": "https://indeed.com/viewjob?jk=987654321",
         "scrape_datetime": "2025-08-22T09:45:32.789012+00:00",

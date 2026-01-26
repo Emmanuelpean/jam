@@ -44,6 +44,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 			formFields.jobTitle({ placeholder: "Python Software Engineer" }),
 			formFields.description({
 				placeholder: "",
+				autoHeight: true,
 			}),
 			[
 				formFields.scrapedCompany(companies, companyModalRef, (scrapedJob: ScrapedJobData) => ({
