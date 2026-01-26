@@ -24,7 +24,7 @@ import SettingsPage from "./pages/SettingsPage";
 import AboutPage from "./pages/About/AboutPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.scss";
-import "./Themes.css";
+import "./Themes.scss";
 import { AlertProvider } from "./contexts/AlertContext";
 import JobRatingDashboard from "./pages/Services/JobRatingDashboard/JobRatingDashboardPage";
 import SpeculativeApplicationsPage from "./pages/SpeculativeApplicationsPage";
@@ -55,7 +55,13 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const { currentUser } = useAuth();
 	useSwetrixPageViews();
 
-	const isAuthPage: boolean = location.pathname === "/login" || location.pathname === "/register";
+	const isAuthPage: boolean = [
+		"/login",
+		"/register",
+		"/forgot-password",
+		"/verify-email",
+		"/verify-new-email",
+	].includes(location.pathname);
 
 	return (
 		<div style={{ display: "flex", minHeight: "100vh" }}>

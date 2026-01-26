@@ -18,6 +18,8 @@ type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "ver
 
 let isVerifying: boolean = false;
 
+const TABLET_BREAKPOINT = 993;
+
 const determineAuthMode = (pathname: string, token: string | null): AuthMode => {
 	const normalizedPath: string = pathname.endsWith("/") && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
 
@@ -37,16 +39,20 @@ const defaultFormData: FormData = {
 	lastName: "",
 };
 
+interface Feature {
+	icon: string;
+	text: string;
+	description: string;
+}
+
 function AuthForm(): JSX.Element {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
-	const [mode, setMode] = useState<AuthMode>(() => determineAuthMode(location.pathname, searchParams.get("token")));
+	const [mode, setMode] = useState<AuthMode>(determineAuthMode(location.pathname, searchParams.get("token")));
 	const [registrationStep, setRegistrationStep] = useState<number>(1);
 	const [formData, setFormData] = useState<FormData>(defaultFormData);
 	const [resetToken, setResetToken] = useState<string>("");
-	const [showTestInfo, setShowTestInfo] = useState(false);
-	const [isClosingDemo, setIsClosingDemo] = useState(false);
 	const [showMobileWarning, setShowMobileWarning] = useState<boolean>(false);
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
@@ -54,7 +60,7 @@ function AuthForm(): JSX.Element {
 	const [fieldErrors, setFieldErrors] = useState<Errors>({});
 	const { logout, login, isAuthenticated } = useAuth();
 	const { showToastSuccess, showToastError } = useGlobalToast();
-	const MIN_PASSWORD_LENGTH = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
+	const MINPASSWORDLENGTH: number = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
 	const { showLoading, hideLoading } = useLoading();
 	const contentRef = useRef<HTMLDivElement>(null);
 	const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
@@ -62,6 +68,7 @@ function AuthForm(): JSX.Element {
 	const [displayedMode, setDisplayedMode] = useState<AuthMode>(mode);
 	const [displayedStep, setDisplayedStep] = useState<number>(registrationStep);
 	const prevModeRef = useRef<string | null>(null);
+	const [isLargeScreen, setIsLargeScreen] = useState<boolean>(window.innerWidth > TABLET_BREAKPOINT);
 
 	useEffect(() => {
 		if (contentRef.current) {
@@ -73,12 +80,9 @@ function AuthForm(): JSX.Element {
 		const isInitialMount: boolean = prevModeRef.current === null;
 		const modeKey = `${mode}-${registrationStep}`;
 
-		if (prevModeRef.current === modeKey) {
-			return;
-		}
+		if (prevModeRef.current === modeKey) return;
 
 		if (isInitialMount) {
-			// Initial mount: just sync and measure, no animation
 			prevModeRef.current = modeKey;
 			requestAnimationFrame(() => {
 				if (contentRef.current) {
@@ -88,9 +92,7 @@ function AuthForm(): JSX.Element {
 			return;
 		}
 
-		// Mode change: animate
 		setContentVisible(false);
-
 		const fadeOutTimer = setTimeout(() => {
 			setDisplayedMode(mode);
 			setDisplayedStep(registrationStep);
@@ -130,7 +132,6 @@ function AuthForm(): JSX.Element {
 		if (!["verifyEmail", "verifyNewEmail"].includes(mode) || isVerifying) return;
 
 		const verifyToken: string | null = searchParams.get("token");
-
 		let api = null;
 		if (mode === "verifyEmail") {
 			api = authApi.verifyEmail;
@@ -167,6 +168,8 @@ function AuthForm(): JSX.Element {
 
 	useEffect(() => {
 		const checkScreenSize = () => {
+			const isLarge = window.innerWidth > TABLET_BREAKPOINT;
+			setIsLargeScreen(isLarge);
 			setShowMobileWarning(window.innerWidth < 768);
 		};
 
@@ -185,10 +188,12 @@ function AuthForm(): JSX.Element {
 		);
 
 		if (fieldErrors[name as keyof Errors]) {
-			setFieldErrors((prev: Errors) => ({
-				...prev,
-				[name]: "",
-			}));
+			setFieldErrors(
+				(prev: Errors): Errors => ({
+					...prev,
+					[name]: "",
+				})
+			);
 		}
 	};
 
@@ -225,17 +230,16 @@ function AuthForm(): JSX.Element {
 		const errors: Errors = {};
 
 		if (mode === "register") {
-			const step = currentStep ?? registrationStep;
-
+			const step: number = currentStep ?? registrationStep;
 			if (step === 1) {
-				if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+				if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
 					errors.email = "Please provide a valid email address.";
 				}
 
 				if (!formData.password) {
 					errors.password = "Password is required.";
-				} else if (formData.password.length < MIN_PASSWORD_LENGTH) {
-					errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
+				} else if (formData.password.length < MINPASSWORDLENGTH) {
+					errors.password = `Password must be at least ${MINPASSWORDLENGTH} characters long.`;
 				}
 
 				if (!formData.confirmPassword) {
@@ -261,7 +265,7 @@ function AuthForm(): JSX.Element {
 		}
 
 		if (["login", "forgotPassword"].includes(mode)) {
-			if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+			if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
 				errors.email = "Please provide a valid email address.";
 			}
 		}
@@ -269,16 +273,16 @@ function AuthForm(): JSX.Element {
 		if (["login", "resetPassword"].includes(mode)) {
 			if (!formData.password) {
 				errors.password = "Password is required.";
-			} else if (["resetPassword"].includes(mode) && formData.password.length < MIN_PASSWORD_LENGTH) {
-				errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
+			} else if (mode === "resetPassword" && formData.password.length < MINPASSWORDLENGTH) {
+				errors.password = `Password must be at least ${MINPASSWORDLENGTH} characters long.`;
 			}
+		}
 
-			if (["resetPassword"].includes(mode)) {
-				if (!formData.confirmPassword) {
-					errors.confirmPassword = "Please confirm your password.";
-				} else if (formData.password !== formData.confirmPassword) {
-					errors.confirmPassword = "Passwords do not match.";
-				}
+		if (mode === "resetPassword") {
+			if (!formData.confirmPassword) {
+				errors.confirmPassword = "Please confirm your password.";
+			} else if (formData.password !== formData.confirmPassword) {
+				errors.confirmPassword = "Passwords do not match.";
 			}
 		}
 
@@ -289,9 +293,7 @@ function AuthForm(): JSX.Element {
 		const errors: Errors = validateForm();
 		setFieldErrors(errors);
 
-		if (Object.keys(errors).length > 0) {
-			return;
-		}
+		if (Object.keys(errors).length > 0) return;
 
 		setLoading(true);
 
@@ -315,9 +317,7 @@ function AuthForm(): JSX.Element {
 		const errors: Errors = validateForm(registrationStep);
 		setFieldErrors(errors);
 
-		if (Object.keys(errors).length > 0) {
-			return;
-		}
+		if (Object.keys(errors).length > 0) return;
 
 		setRegistrationStep(2);
 	};
@@ -331,9 +331,7 @@ function AuthForm(): JSX.Element {
 		const errors: Errors = validateForm(registrationStep);
 		setFieldErrors(errors);
 
-		if (Object.keys(errors).length > 0) {
-			return;
-		}
+		if (Object.keys(errors).length > 0) return;
 
 		setLoading(true);
 
@@ -369,9 +367,7 @@ function AuthForm(): JSX.Element {
 		const errors = validateForm();
 		setFieldErrors(errors);
 
-		if (Object.keys(errors).length > 0) {
-			return;
-		}
+		if (Object.keys(errors).length > 0) return;
 
 		setLoading(true);
 
@@ -390,12 +386,9 @@ function AuthForm(): JSX.Element {
 		const errors = validateForm();
 		setFieldErrors(errors);
 
-		if (Object.keys(errors).length > 0) {
-			return;
-		}
+		if (Object.keys(errors).length > 0) return;
 
 		setLoading(true);
-
 		try {
 			const response: ApiResponse = await authApi.resetPassword(resetToken, formData.password);
 			showToastSuccess(response.data.message, "Password Reset Successful");
@@ -412,16 +405,16 @@ function AuthForm(): JSX.Element {
 		e.preventDefault();
 
 		if (mode === "resetPassword") {
-			handleResetPassword().then(() => {});
+			handleResetPassword().then();
 		} else if (mode === "forgotPassword") {
-			handleForgotPassword().then(() => {});
+			handleForgotPassword().then();
 		} else if (mode === "login") {
-			handleLogin().then(() => {});
+			handleLogin().then();
 		} else if (mode === "register") {
 			if (registrationStep === 1) {
 				handleNextStep();
 			} else {
-				handleRegister().then(() => {});
+				handleRegister().then();
 			}
 		}
 	};
@@ -451,7 +444,7 @@ function AuthForm(): JSX.Element {
 		placeholder: displayedMode === "resetPassword" ? "Enter your new password" : "Enter your password",
 		autoComplete: displayedMode === "login" ? "current-password" : "new-password",
 		helpText: ["register", "resetPassword"].includes(displayedMode)
-			? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`
+			? `Password must be at least ${MINPASSWORDLENGTH} characters long`
 			: null,
 	};
 
@@ -488,8 +481,8 @@ function AuthForm(): JSX.Element {
 				: displayedMode === "login"
 					? "Login"
 					: displayedStep === 1
-						? "Create Account"
-						: "Personal Information";
+						? "Get Started"
+						: "Tell Us About Yourself";
 
 	const termsField: ModalFormField = {
 		name: "terms",
@@ -509,24 +502,53 @@ function AuthForm(): JSX.Element {
 		),
 	};
 
+	const featureItems: Feature[] = [
+		{
+			icon: "bi bi-briefcase",
+			text: "Manage job application records",
+			description: "Create and manage comprehensive job application records with all the details you need",
+		},
+		{
+			icon: "bi bi-calendar-check",
+			text: "Track interviews and outcomes",
+			description: "Schedule interviews, set reminders, and track outcomes efficiently",
+		},
+		{
+			icon: "bi bi-bar-chart",
+			text: "Monitor status and deadlines",
+			description: "Keep track of application status, progress, and never miss important deadlines",
+		},
+		{
+			icon: "bi bi-inbox",
+			text: "Scrape job alerts from emails",
+			description: "Automatically scrape job alerts from popular job board email notifications",
+		},
+		{
+			icon: "bi bi-star-half",
+			text: "Auto-rate jobs by preference",
+			description: "Automatically rate scraped jobs based on your preferences to prioritise applications",
+		},
+		{
+			icon: "bi bi-envelope-arrow-up",
+			text: "Generate follow-up emails",
+			description: "Automatically generate personalised follow-up email drafts for your applications",
+		},
+	];
+
 	if (isAuthenticated) {
 		return (
-			<div className="auth-container">
-				<div className="d-flex flex-column align-items-center">
-					<Spinner animation="border" variant="primary" />
-					<p className="mt-3 text-muted">Redirecting to dashboard...</p>
+			<div className="auth-page-wrapper">
+				<div className="auth-form-panel">
+					<div className="auth-container">
+						<div className="d-flex flex-column align-items-center">
+							<Spinner animation="border" variant="primary" />
+							<p className="mt-3 text-muted">Redirecting to dashboard...</p>
+						</div>
+					</div>
 				</div>
 			</div>
 		);
 	}
-
-	const closeDemo = (): void => {
-		setIsClosingDemo(true);
-		setTimeout(() => {
-			setShowTestInfo(false);
-			setIsClosingDemo(false);
-		}, 200);
-	};
 
 	const handleDemoLogin = async (): Promise<void> => {
 		setLoading(true);
@@ -545,274 +567,310 @@ function AuthForm(): JSX.Element {
 			showToastError(apiError.message || "Failed to login with demo account.", "Demo Login Failed");
 		} finally {
 			setLoading(false);
-			closeDemo();
 		}
 	};
 
 	return (
-		<div className="auth-container">
-			<div className="floating-demo-info">
-				<button
-					className="demo-info-trigger"
-					onClick={() => setShowTestInfo(!showTestInfo)}
-					aria-label="Demo account"
-					disabled={loading}
-				>
-					<i className={`bi bi-backpack3`} style={{ fontSize: "20px" }}></i>
-					<span className="demo-text">Try JAM</span>
-				</button>
-				{showTestInfo && (
-					<>
-						<div className={`demo-backdrop${isClosingDemo ? " closing" : ""}`} onClick={closeDemo} />
-						<div className={`demo-info-panel${isClosingDemo ? " closing" : ""}`}>
-							<button className="demo-close-btn" onClick={closeDemo} aria-label="Close">
-								✕
-							</button>
-							<h3 className="demo-title">Welcome to JAM</h3>
-							<p className="demo-welcome">
-								You can try the app using a demo account with pre-populated data.
-							</p>
-							<ActionButton
-								className="demo-login-btn"
-								onClick={handleDemoLogin}
-								loading={loading}
-								defaultText={"Login with Demo Account"}
-								loadingText={"Logging in..."}
-								defaultIcon={"bi bi-box-arrow-in-right"}
-							/>
+		<div className="auth-page-wrapper">
+			{/* Left branding panel - conditionally rendered based on screen size */}
+			{isLargeScreen && (
+				<div className="auth-branding-panel">
+					<div className="branding-content">
+						<div className="branding-logo">
+							<JamLogo />
 						</div>
-					</>
-				)}
-			</div>
-			<div className="auth-logo">
-				<div className="logo-container logo-container-vertical">
-					<JamLogo style={{ height: "175px", width: "auto", userSelect: "none" }} />
-					<div className="logo-text-below text-gradient-primary" style={{ fontSize: "50px" }}>
-						Job Application Manager
+						<h1 className="branding-title">Job Application Manager</h1>
+						<p className="branding-tagline">
+							Streamline your job search. Track applications, manage deadlines, and land your dream job.
+						</p>
+						<ul className="feature-list">
+							{featureItems.map(
+								(feature: Feature, index: number): JSX.Element => (
+									<li key={index} className="feature-item">
+										<div className="feature-icon">
+											<i className={feature.icon}></i>
+										</div>
+										<span className="feature-text">{feature.text}</span>
+										<div className="feature-tooltip">{feature.description}</div>
+									</li>
+								)
+							)}
+						</ul>
 					</div>
 				</div>
-			</div>
-
-			{showMobileWarning && (
-				<Alert
-					variant="warning"
-					dismissible
-					onClose={() => setShowMobileWarning(false)}
-					className="mb-3"
-					style={{ maxWidth: "500px" }}
-				>
-					<Alert.Heading className="h6 d-flex align-items-center mb-2">
-						<i className="bi bi-exclamation-triangle-fill me-2"></i>
-						Limited Mobile Support
-					</Alert.Heading>
-					<p className="mb-0 small">
-						JAM is not fully optimised for small screens yet. For the best experience, please use a tablet
-						or desktop device.
-					</p>
-				</Alert>
 			)}
 
-			<Card className="auth-card border-0" style={{ height: contentHeight, overflow: "hidden" }}>
-				<div
-					ref={contentRef}
-					style={{
-						padding: "2.5rem",
-						opacity: contentVisible ? 1 : 0,
-						transition: "opacity 0.15s ease-in-out",
-					}}
-				>
-					<Card.Body>
-						<Card.Title className="text-primary">{cardTitle}</Card.Title>
-
-						{displayedMode === "register" && (
-							<div className="mb-3">
-								<div className="d-flex justify-content-between align-items-center mb-2">
-									<small className="text-muted">Step {displayedStep} of 2</small>
+			{/* Right form panel */}
+			<div className="auth-form-panel">
+				<div className="auth-container">
+					{/* Mobile logo - conditionally rendered based on screen size */}
+					{!isLargeScreen && (
+						<div className="auth-logo">
+							<div className="logo-container logo-container-vertical">
+								<div className="branding-logo" style={{ marginBottom: 0 }}>
+									<JamLogo />
 								</div>
-								<div className="progress" style={{ height: "4px" }}>
-									<div
-										className="progress-bar"
-										role="progressbar"
-										style={{ width: `${(displayedStep / 2) * 100}%` }}
-										aria-valuenow={(displayedStep / 2) * 100}
-										aria-valuemin={0}
-										aria-valuemax={100}
-									></div>
-								</div>
+								<div className="logo-text-below text-gradient-primary">Job Application Manager</div>
 							</div>
-						)}
+						</div>
+					)}
 
-						{displayedMode === "forgotPassword" && (
-							<p className="text-muted mb-4">
-								Enter your email address and we'll send you a link to reset your password.
+					{showMobileWarning && (
+						<Alert
+							variant="warning"
+							dismissible
+							onClose={() => setShowMobileWarning(false)}
+							className="mb-3"
+							style={{ maxWidth: "500px" }}
+						>
+							<Alert.Heading className="h6 d-flex align-items-center mb-2">
+								<i className="bi bi-exclamation-triangle-fill me-2"></i>
+								Limited Mobile Support
+							</Alert.Heading>
+							<p className="mb-0 small">
+								JAM is not fully optimised for small screens yet. For the best experience, please use a
+								tablet or desktop device.
 							</p>
-						)}
+						</Alert>
+					)}
 
-						{displayedMode === "resetPassword" && (
-							<p className="text-muted mb-4">
-								Please enter your new password below. Make sure it's strong and secure.
-							</p>
-						)}
+					<Card
+						className="auth-card border-0"
+						style={{
+							height: contentHeight,
+							overflow: "hidden",
+						}}
+					>
+						<div
+							ref={contentRef}
+							style={{
+								padding: "2.5rem",
+								opacity: contentVisible ? 1 : 0,
+								transition: "opacity 0.15s ease-in-out",
+							}}
+						>
+							<Card.Body>
+								<Card.Title className="text-primary">{cardTitle}</Card.Title>
 
-						<Form onSubmit={handleSubmit} autoComplete="on">
-							{/* Registration Step 1 */}
-							{displayedMode === "register" && displayedStep === 1 && (
-								<>
-									{rendFormField(emailField, formData, handleInputChange, fieldErrors)}
-									{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
-									{rendFormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
-									{rendFormField(
-										termsField,
-										{ terms: acceptedTerms },
-										//@ts-ignore
-										handleTermsCheckboxChange,
-										fieldErrors
-									)}
-								</>
-							)}
-
-							{/* Registration Step 2 */}
-							{displayedMode === "register" && displayedStep === 2 && (
-								<>
-									{rendFormField(firstNameField, formData, handleInputChange, fieldErrors)}
-									{rendFormField(lastNameField, formData, handleInputChange, fieldErrors)}
-								</>
-							)}
-
-							{/* Login Mode */}
-							{displayedMode === "login" && (
-								<>
-									{rendFormField(emailField, formData, handleInputChange, fieldErrors)}
-									{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
-									<div className="text-end mb-3">
-										<button
-											type="button"
-											onClick={switchToForgotPassword}
-											className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent small"
-											style={{ cursor: "pointer" }}
-											id="forgot-password-link"
-										>
-											Forgot your password?
-										</button>
+								{displayedMode === "register" && (
+									<div className="mb-3">
+										<div className="d-flex justify-content-between align-items-center mb-2">
+											<small className="text-muted">Step {displayedStep} of 2</small>
+										</div>
+										<div className="progress" style={{ height: "4px" }}>
+											<div
+												className="progress-bar"
+												role="progressbar"
+												style={{ width: `${(displayedStep / 2) * 100}%` }}
+												aria-valuenow={(displayedStep / 2) * 100}
+												aria-valuemin={0}
+												aria-valuemax={100}
+											></div>
+										</div>
 									</div>
-								</>
-							)}
-
-							{/* Forgot Password Mode */}
-							{displayedMode === "forgotPassword" && (
-								<>{rendFormField(emailField, formData, handleInputChange, fieldErrors)}</>
-							)}
-
-							{/* Reset Password Mode */}
-							{displayedMode === "resetPassword" && (
-								<>
-									{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
-									{rendFormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
-								</>
-							)}
-
-							{/* Action buttons */}
-							<div className="d-grid gap-2">
-								{displayedMode === "register" && displayedStep === 2 && (
-									<ActionButton
-										type="button"
-										onClick={handlePreviousStep}
-										variant="secondary"
-										className="fw-semibold"
-										defaultText="Back"
-										defaultIcon="bi bi-arrow-left"
-									/>
 								)}
 
-								<ActionButton
-									type="submit"
-									id="confirm-button"
-									disabled={loading}
-									loading={loading}
-									className="fw-semibold"
-									loadingText={
-										displayedMode === "resetPassword"
-											? "Resetting Password..."
-											: displayedMode === "forgotPassword"
-												? "Sending..."
-												: displayedMode === "login"
-													? "Logging in..."
-													: displayedStep === 1
-														? "Next..."
-														: "Creating Account..."
-									}
-									defaultText={
-										displayedMode === "resetPassword"
-											? "Reset Password"
-											: displayedMode === "forgotPassword"
-												? "Send Reset Link"
-												: displayedMode === "login"
-													? "Login"
-													: displayedStep === 1
-														? "Next"
-														: "Create Account"
-									}
-									defaultIcon={
-										displayedMode === "resetPassword"
-											? "bi bi-shield-lock"
-											: displayedMode === "forgotPassword"
-												? "bi bi-envelope-paper"
-												: displayedMode === "login"
-													? "bi bi-box-arrow-in-right"
-													: displayedStep === 1
-														? "bi bi-arrow-right"
-														: "bi bi-person-plus"
-									}
-								/>
+								{displayedMode === "forgotPassword" && (
+									<p className="text-muted mb-4">
+										Enter your email address and we'll send you a link to reset your password.
+									</p>
+								)}
+
+								{displayedMode === "resetPassword" && (
+									<p className="text-muted mb-4">
+										Please enter your new password below. Make sure it's strong and secure.
+									</p>
+								)}
+
+								<Form onSubmit={handleSubmit} autoComplete="on">
+									{/* Registration Step 1 */}
+									{displayedMode === "register" && displayedStep === 1 && (
+										<>
+											{rendFormField(emailField, formData, handleInputChange, fieldErrors)}
+											{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
+											{rendFormField(
+												confirmPasswordField,
+												formData,
+												handleInputChange,
+												fieldErrors
+											)}
+											{rendFormField(
+												termsField,
+												{ terms: acceptedTerms },
+												// @ts-ignore
+												handleTermsCheckboxChange,
+												fieldErrors
+											)}
+										</>
+									)}
+
+									{/* Registration Step 2 */}
+									{displayedMode === "register" && displayedStep === 2 && (
+										<>
+											{rendFormField(firstNameField, formData, handleInputChange, fieldErrors)}
+											{rendFormField(lastNameField, formData, handleInputChange, fieldErrors)}
+										</>
+									)}
+
+									{/* Login Mode */}
+									{displayedMode === "login" && (
+										<>
+											{rendFormField(emailField, formData, handleInputChange, fieldErrors)}
+											{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
+											<div className="text-end mb-3">
+												<button
+													type="button"
+													onClick={switchToForgotPassword}
+													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent small"
+													style={{ cursor: "pointer" }}
+													id="forgot-password-link"
+												>
+													Forgot your password?
+												</button>
+											</div>
+										</>
+									)}
+
+									{/* Forgot Password Mode */}
+									{displayedMode === "forgotPassword" && (
+										<>{rendFormField(emailField, formData, handleInputChange, fieldErrors)}</>
+									)}
+
+									{/* Reset Password Mode */}
+									{displayedMode === "resetPassword" && (
+										<>
+											{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
+											{rendFormField(
+												confirmPasswordField,
+												formData,
+												handleInputChange,
+												fieldErrors
+											)}
+										</>
+									)}
+
+									{/* Action buttons */}
+									<div className="d-grid gap-2">
+										{displayedMode === "register" && displayedStep === 2 && (
+											<ActionButton
+												type="button"
+												onClick={handlePreviousStep}
+												variant="secondary"
+												className="fw-semibold"
+												defaultText="Back"
+												defaultIcon="bi bi-arrow-left"
+											/>
+										)}
+										<ActionButton
+											type="submit"
+											id="confirm-button"
+											disabled={loading}
+											loading={loading}
+											className="fw-semibold"
+											loadingText={
+												displayedMode === "resetPassword"
+													? "Resetting Password..."
+													: displayedMode === "forgotPassword"
+														? "Sending..."
+														: displayedMode === "login"
+															? "Signing in..."
+															: displayedStep === 1
+																? "Please wait..."
+																: "Creating Account..."
+											}
+											defaultText={
+												displayedMode === "resetPassword"
+													? "Reset Password"
+													: displayedMode === "forgotPassword"
+														? "Send Reset Link"
+														: displayedMode === "login"
+															? "Sign In"
+															: displayedStep === 1
+																? "Continue"
+																: "Create Account"
+											}
+											defaultIcon={
+												displayedMode === "resetPassword"
+													? "bi bi-shield-lock"
+													: displayedMode === "forgotPassword"
+														? "bi bi-envelope-paper"
+														: displayedMode === "login"
+															? "bi bi-box-arrow-in-right"
+															: displayedStep === 1
+																? "bi bi-arrow-right"
+																: "bi bi-person-plus"
+											}
+										/>
+									</div>
+								</Form>
+
+								<Card.Footer className="bg-transparent border-0 text-center">
+									<small className="text-muted">
+										{displayedMode === "resetPassword" || displayedMode === "forgotPassword" ? (
+											<>
+												Remember your password?{" "}
+												<button
+													type="button"
+													onClick={switchToLogin}
+													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+													style={{ cursor: "pointer" }}
+												>
+													Back to Sign In
+												</button>
+											</>
+										) : displayedMode === "login" ? (
+											<>
+												Don't have an account?{" "}
+												<button
+													type="button"
+													id="switch-mode-button"
+													onClick={switchToRegister}
+													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+													style={{ cursor: "pointer" }}
+												>
+													Sign Up
+												</button>
+											</>
+										) : (
+											<>
+												Already have an account?{" "}
+												<button
+													type="button"
+													id="switch-mode-button"
+													onClick={switchToLogin}
+													className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
+													style={{ cursor: "pointer" }}
+												>
+													Sign In
+												</button>
+											</>
+										)}
+									</small>
+								</Card.Footer>
+							</Card.Body>
+						</div>
+					</Card>
+
+					{/* Try the app button - only show on login mode */}
+					{displayedMode === "login" && (
+						<div className="try-app-container">
+							<div className="try-app-divider">
+								<span>or</span>
 							</div>
-						</Form>
-
-						<Card.Footer className="bg-transparent border-0 text-center">
-							<small className="text-muted">
-								{displayedMode === "resetPassword" || displayedMode === "forgotPassword" ? (
-									<>
-										Remember your password?{" "}
-										<button
-											type="button"
-											onClick={switchToLogin}
-											className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-											style={{ cursor: "pointer" }}
-										>
-											Back to Login
-										</button>
-									</>
-								) : displayedMode === "login" ? (
-									<>
-										Don't have an account?{" "}
-										<button
-											type="button"
-											id="switch-mode-button"
-											onClick={switchToRegister}
-											className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-											style={{ cursor: "pointer" }}
-										>
-											Create one here
-										</button>
-									</>
-								) : (
-									<>
-										Already have an account?{" "}
-										<button
-											type="button"
-											id="switch-mode-button"
-											onClick={switchToLogin}
-											className="btn-link text-decoration-none fw-semibold text-primary p-0 border-0 bg-transparent"
-											style={{ cursor: "pointer" }}
-										>
-											Login here
-										</button>
-									</>
-								)}
-							</small>
-						</Card.Footer>
-					</Card.Body>
+							<ActionButton
+								className="try-app-btn"
+								onClick={handleDemoLogin}
+								loading={loading}
+								disabled={loading}
+								defaultText="Try JAM with Demo Account"
+								loadingText="Loading demo..."
+								defaultIcon="bi bi-play-circle"
+								variant="outline-primary"
+							/>
+						</div>
+					)}
 				</div>
-			</Card>
+			</div>
 
 			<TermsAndConditions show={showTerms} onHide={() => setShowTerms(false)} />
 		</div>

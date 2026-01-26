@@ -33,3 +33,4 @@ yarn-error.log*
 reports/
 .coverage
 test_logs
+.claude
