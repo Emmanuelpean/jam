@@ -2,15 +2,21 @@ import React, { JSX, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { ActionButton, ButtonVariant } from "../rendering/form/ActionButton";
 
-type AlertType = "success" | "warning" | "error" | "info" | "danger" | "primary";
+export type AlertType = "success" | "warning" | "error" | "info" | "danger" | "primary";
+export type BootstrapModalSize = "sm" | "lg" | "xl" | undefined;
+export type ModalSize = "sm" | "md" | "lg" | "xl";
+
+export const getModalSize = (size?: ModalSize): BootstrapModalSize => {
+	return size && size !== "md" ? (size as "sm" | "lg" | "xl") : undefined;
+};
 
 export interface AlertState {
 	show: boolean;
 	type?: AlertType;
 	title?: string;
-	message?: string | React.ReactNode;
+	message?: string;
 	icon?: string | null;
-	size?: "sm" | "md" | "lg" | "xl";
+	size?: ModalSize;
 	id?: string | null;
 	cancelText?: string | null;
 	confirmText?: string;
@@ -46,7 +52,6 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 		alertState.icon || DEFAULT_ALERT_ICONS[alertState.type || "info"] || DEFAULT_ALERT_ICONS.info;
 	const variant: ButtonVariant = buttonVariants[alertState.type || "primary"] || "primary";
 	const modalId: string = alertState.id || `alert-modal-${alertState.type || "default"}`;
-	const modalSize = alertState.size && alertState.size !== "md" ? (alertState.size as "sm" | "lg" | "xl") : undefined;
 	const [loading, setLoading] = useState<boolean>(false);
 
 	const handleConfirm = async (): Promise<void> => {
@@ -65,7 +70,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 	};
 
 	return (
-		<Modal show={alertState.show} onHide={hideAlert} centered size={modalSize} id={modalId}>
+		<Modal show={alertState.show} onHide={hideAlert} centered size={getModalSize(alertState.size)} id={modalId}>
 			<Modal.Header closeButton>
 				{iconClass && <i className={`bi ${iconClass} me-2`} />}
 				<Modal.Title>{alertState.title}</Modal.Title>

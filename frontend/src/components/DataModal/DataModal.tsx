@@ -34,6 +34,7 @@ import set from "lodash/set";
 import get from "lodash/get";
 import "./DataModal.scss";
 import { toKey } from "../../utils/StringUtils";
+import { getModalSize, ModalSize } from "../AlertModal/AlertModal";
 
 export type Field = ModalViewField | ModalFormField;
 export type Fields = (Field | Field[])[];
@@ -62,7 +63,7 @@ export interface DataModalProps {
 	transformInputData?: ((data: any) => any) | null; // custom data transformation when loading data into the form
 	additionalFields?: ModalViewField[]; // additional fields displayed outside the card in view mode
 	entityName?: string; // name of the item being managed, used in titles and messages
-	size?: "sm" | "lg" | "xl"; // modal size
+	size?: ModalSize; // modal size
 	tabs?: TabConfig[] | null; // optional tabs configuration
 	defaultActiveTab?: string | null; // default active tab key
 	entityType: EntityType; // entity type for API operations
@@ -860,7 +861,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 					className="data-modal"
 					show={internalShow}
 					onHide={handleCloseWithConfirmation}
-					size={size}
+					size={getModalSize(size)}
 					centered={true}
 					backdrop={true}
 					keyboard={true}
