@@ -64,7 +64,7 @@ export const DefaultInput = ({ field, value, handleChange, error }: WidgetProps)
 	);
 };
 
-export const rendFormField = (
+export const renderFormField = (
 	field: ModalFormField,
 	formData: any,
 	handleChange: (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent) => void,

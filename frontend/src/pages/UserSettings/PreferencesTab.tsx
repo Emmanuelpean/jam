@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Form } from "react-bootstrap";
-import { rendFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useFormOptions } from "../../components/rendering/form/FormOptions";
@@ -138,14 +138,14 @@ export const PreferencesTab: React.FC = () => {
 			<h5 className="mb-3">
 				<i className="bi bi-speedometer"></i> Dashboard Settings
 			</h5>
-			{rendFormField(chaseThresholdField, formData, handleInputChange, errors)}
-			{rendFormField(deadlineThresholdField, formData, handleInputChange, errors)}
-			{rendFormField(updateLimitField, formData, handleInputChange, errors)}
+			{renderFormField(chaseThresholdField, formData, handleInputChange, errors)}
+			{renderFormField(deadlineThresholdField, formData, handleInputChange, errors)}
+			{renderFormField(updateLimitField, formData, handleInputChange, errors)}
 			<hr className="my-4" />
 			<h5 className="mb-3">
 				<i className="bi bi-currency-dollar"></i> Currency Settings
 			</h5>
-			{rendFormField(currencyField, formData, handleInputChange, errors)}
+			{renderFormField(currencyField, formData, handleInputChange, errors)}
 			<hr className="my-4" />
 			<h5 className="mb-3">
 				<i className="bi bi-palette"></i> Appearance

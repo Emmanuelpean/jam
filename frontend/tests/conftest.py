@@ -31,7 +31,15 @@ from selenium.webdriver.support.wait import WebDriverWait
 from react_select import ReactSelect
 
 # noinspection PyUnusedImports
-from tests.conftest import session, database_url, test_users, engine, test_interviews, test_job_application_updates
+from tests.conftest import (
+    session,
+    database_url,
+    test_users,
+    engine,
+    test_interviews,
+    test_job_application_updates,
+    test_settings,
+)
 from tests.conftest import *
 
 
@@ -1457,6 +1465,7 @@ class AuthentificationUtils(BaseUtilsClass):
         """Switch between login and register modes"""
 
         self.get_element("switch-mode-button").click()
+        time.sleep(0.5)
 
     def go_to_verification_url(self, token: str) -> None:
         """Navigate to login page with verification token"""

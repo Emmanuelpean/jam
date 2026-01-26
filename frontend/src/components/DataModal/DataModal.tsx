@@ -17,7 +17,7 @@ import {
 	JamData,
 	useDataContext,
 } from "../../contexts/DataContext";
-import { Errors, rendFormField, SyntheticEvent } from "../rendering/widgets/WidgetRenders";
+import { Errors, renderFormField, SyntheticEvent } from "../rendering/widgets/WidgetRenders";
 import { ActionButton } from "../rendering/form/ActionButton";
 import { areDifferent, findItemByKey, flattenArray, getColumnClass, normaliseArray } from "../../utils/Utils";
 import { ModalViewField, renderModalViewField } from "../rendering/view/ModalFields";
@@ -367,7 +367,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 							<div key={toKey(fieldKey)} className={columnClass}>
 								{isViewField(field)
 									? renderModalViewField(field as ModalViewField, effectiveData, getModalId())
-									: rendFormField(
+									: renderFormField(
 											field as ModalFormField,
 											formData,
 											handleChange,
