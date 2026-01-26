@@ -41,6 +41,7 @@ export interface ModalFormField {
 	displayCondition?: (item: any) => boolean;
 	previewConfig?: SelectWidgetPreviewConfig | null;
 	isDisabled?: boolean;
+	autoHeight?: boolean;
 }
 
 interface FormFieldOverride extends Partial<ModalFormField> {}
@@ -146,14 +147,6 @@ export const formFields = {
 	}),
 
 	// ------------------------------------------------- USERS ------------------------------------------------
-
-	appTheme: (overrides: FormFieldOverride = {}): ModalFormField => ({
-		name: "theme",
-		label: "App Theme",
-		type: "select",
-		options: THEMES.map((theme: Theme): SelectOption => ({ value: theme.key, label: theme.name })),
-		...overrides,
-	}),
 
 	isAdmin: (overrides: FormFieldOverride = {}): ModalFormField => ({
 		name: "is_admin",
