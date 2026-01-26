@@ -205,32 +205,31 @@ const FollowUpModal = forwardRef<FollowUpModalHandle>((_, ref) => {
 	};
 
 	const createUpdate = async (): Promise<void> => {
-		const result: boolean = await showConfirm({
-			title: "Create Update?",
+		showConfirm({
+			title: "Create Job Application Update?",
 			message: "Have you sent the follow up email? An update will be created for this job.",
 			confirmText: "Yes",
 			cancelText: "No",
+		}).then((result: boolean): void => {
+			if (result) {
+				const contact: PersonData | undefined = dataContext.persons.find(
+					(person: PersonData): boolean => person.id === formData.contactId
+				);
+				dataContext
+					.addEntity("jobApplicationUpdate", {
+						type: "sent",
+						job_id: currentJob?.id,
+						note: `Follow up email sent to ${contact?.name}\n\nSubject: ${formData.subject}\n\n${formData.body}`,
+						date: new Date().toISOString(),
+					})
+					.then((): void => {
+						showToastSuccess("Follow up email update created successfully.");
+						hide();
+					});
+			} else {
+				hide();
+			}
 		});
-		console.log("AAA", result);
-		if (result) {
-			const contact: PersonData | undefined = dataContext.persons.find(
-				(person: PersonData): boolean => person.id === formData.contactId
-			);
-			dataContext
-				.addEntity("jobApplicationUpdate", {
-					type: "sent",
-					job_id: currentJob?.id,
-					note: `Follow up email sent to ${contact?.name}\n\nSubject: ${formData.subject}\n\n${formData.body}`,
-					date: new Date().toISOString(),
-				})
-				.then((): void => {
-					showToastSuccess("Follow up email update created successfully.");
-					hide();
-				});
-		} else {
-			console.log(result);
-			hide();
-		}
 	};
 
 	const handleSend = (service: mailClient): void => {
