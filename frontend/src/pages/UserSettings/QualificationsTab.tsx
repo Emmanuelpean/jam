@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Form } from "react-bootstrap";
-import { rendFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
@@ -138,11 +138,11 @@ export const QualificationsTab: React.FC = () => {
 			<p className="text-muted mb-4">
 				Help us match you with the right opportunities by providing your qualifications
 			</p>
-			{rendFormField(experienceField, formData, handleInputChange, errors)}
-			{rendFormField(skillsField, formData, handleInputChange, errors)}
-			{rendFormField(qualitiesField, formData, handleInputChange, errors)}
-			{rendFormField(educationField, formData, handleInputChange, errors)}
-			{rendFormField(interestsField, formData, handleInputChange, errors)}
+			{renderFormField(experienceField, formData, handleInputChange, errors)}
+			{renderFormField(skillsField, formData, handleInputChange, errors)}
+			{renderFormField(qualitiesField, formData, handleInputChange, errors)}
+			{renderFormField(educationField, formData, handleInputChange, errors)}
+			{renderFormField(interestsField, formData, handleInputChange, errors)}
 
 			<div className="mt-4">
 				<ActionButton

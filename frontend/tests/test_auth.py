@@ -5,7 +5,6 @@ including login, registration, form validation, and mode switching functionality
 """
 
 import datetime as dt
-import time
 
 from conftest import models, BaseTest
 
@@ -105,7 +104,6 @@ class TestSignUp(BaseTest):
         self.auth_utils.wait_for_login()
         self.auth_utils.switch_mode()
         self.auth_utils.wait_for_register()
-        time.sleep(0.4)  # Wait for animation
         self.auth_utils.switch_mode()
         self.auth_utils.wait_for_login()
 

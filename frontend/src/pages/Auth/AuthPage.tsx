@@ -5,7 +5,7 @@ import "./AuthPage.scss";
 import { ReactComponent as JamLogo } from "../../assets/Logo.svg";
 import { Alert, Card, Form, Spinner } from "react-bootstrap";
 import TermsAndConditions from "./TermsConditions";
-import { Errors, rendFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { Errors, renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
@@ -60,7 +60,7 @@ function AuthForm(): JSX.Element {
 	const [fieldErrors, setFieldErrors] = useState<Errors>({});
 	const { logout, login, isAuthenticated } = useAuth();
 	const { showToastSuccess, showToastError } = useGlobalToast();
-	const MINPASSWORDLENGTH: number = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
+	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
 	const { showLoading, hideLoading } = useLoading();
 	const contentRef = useRef<HTMLDivElement>(null);
 	const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
@@ -71,10 +71,21 @@ function AuthForm(): JSX.Element {
 	const [isLargeScreen, setIsLargeScreen] = useState<boolean>(window.innerWidth > TABLET_BREAKPOINT);
 
 	useEffect(() => {
-		if (contentRef.current) {
-			setContentHeight(contentRef.current.scrollHeight);
-		}
-	}, [fieldErrors]);
+		const el = contentRef.current;
+		if (!el) return;
+
+		// Initial measure (covers first paint)
+		setContentHeight(el.scrollHeight);
+
+		const ro = new ResizeObserver(() => {
+			// Use scrollHeight so overflow-hidden wrapper always fits full content
+			setContentHeight(el.scrollHeight);
+		});
+
+		ro.observe(el);
+
+		return () => ro.disconnect();
+	}, []);
 
 	useEffect(() => {
 		const isInitialMount: boolean = prevModeRef.current === null;
@@ -84,11 +95,6 @@ function AuthForm(): JSX.Element {
 
 		if (isInitialMount) {
 			prevModeRef.current = modeKey;
-			requestAnimationFrame(() => {
-				if (contentRef.current) {
-					setContentHeight(contentRef.current.scrollHeight);
-				}
-			});
 			return;
 		}
 
@@ -99,9 +105,6 @@ function AuthForm(): JSX.Element {
 			prevModeRef.current = modeKey;
 
 			requestAnimationFrame(() => {
-				if (contentRef.current) {
-					setContentHeight(contentRef.current.scrollHeight);
-				}
 				setTimeout(() => {
 					setContentVisible(true);
 				}, 300);
@@ -238,8 +241,8 @@ function AuthForm(): JSX.Element {
 
 				if (!formData.password) {
 					errors.password = "Password is required.";
-				} else if (formData.password.length < MINPASSWORDLENGTH) {
-					errors.password = `Password must be at least ${MINPASSWORDLENGTH} characters long.`;
+				} else if (formData.password.length < MIN_PASSWORD_LENGTH) {
+					errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
 				}
 
 				if (!formData.confirmPassword) {
@@ -273,8 +276,8 @@ function AuthForm(): JSX.Element {
 		if (["login", "resetPassword"].includes(mode)) {
 			if (!formData.password) {
 				errors.password = "Password is required.";
-			} else if (mode === "resetPassword" && formData.password.length < MINPASSWORDLENGTH) {
-				errors.password = `Password must be at least ${MINPASSWORDLENGTH} characters long.`;
+			} else if (mode === "resetPassword" && formData.password.length < MIN_PASSWORD_LENGTH) {
+				errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
 			}
 		}
 
@@ -444,7 +447,7 @@ function AuthForm(): JSX.Element {
 		placeholder: displayedMode === "resetPassword" ? "Enter your new password" : "Enter your password",
 		autoComplete: displayedMode === "login" ? "current-password" : "new-password",
 		helpText: ["register", "resetPassword"].includes(displayedMode)
-			? `Password must be at least ${MINPASSWORDLENGTH} characters long`
+			? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`
 			: null,
 	};
 
@@ -506,22 +509,19 @@ function AuthForm(): JSX.Element {
 		{
 			icon: "bi bi-briefcase",
 			text: "Manage job application records",
-			description: "Create and manage comprehensive job application records with all the details you need",
-		},
-		{
-			icon: "bi bi-calendar-check",
-			text: "Track interviews and outcomes",
-			description: "Schedule interviews, set reminders, and track outcomes efficiently",
+			description: "Create and manage job application records with all the details you need",
 		},
 		{
 			icon: "bi bi-bar-chart",
 			text: "Monitor status and deadlines",
-			description: "Keep track of application status, progress, and never miss important deadlines",
+			description:
+				"Keep track of application status, progress, upcoming interviews, and never miss important deadlines",
 		},
 		{
 			icon: "bi bi-inbox",
 			text: "Scrape job alerts from emails",
-			description: "Automatically scrape job alerts from popular job board email notifications",
+			description:
+				"Automatically scrape job alerts from popular job board email notifications like LinkedIn and Indeed",
 		},
 		{
 			icon: "bi bi-star-half",
@@ -686,15 +686,15 @@ function AuthForm(): JSX.Element {
 									{/* Registration Step 1 */}
 									{displayedMode === "register" && displayedStep === 1 && (
 										<>
-											{rendFormField(emailField, formData, handleInputChange, fieldErrors)}
-											{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
-											{rendFormField(
+											{renderFormField(emailField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(
 												confirmPasswordField,
 												formData,
 												handleInputChange,
 												fieldErrors
 											)}
-											{rendFormField(
+											{renderFormField(
 												termsField,
 												{ terms: acceptedTerms },
 												// @ts-ignore
@@ -707,16 +707,16 @@ function AuthForm(): JSX.Element {
 									{/* Registration Step 2 */}
 									{displayedMode === "register" && displayedStep === 2 && (
 										<>
-											{rendFormField(firstNameField, formData, handleInputChange, fieldErrors)}
-											{rendFormField(lastNameField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(firstNameField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(lastNameField, formData, handleInputChange, fieldErrors)}
 										</>
 									)}
 
 									{/* Login Mode */}
 									{displayedMode === "login" && (
 										<>
-											{rendFormField(emailField, formData, handleInputChange, fieldErrors)}
-											{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(emailField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
 											<div className="text-end mb-3">
 												<button
 													type="button"
@@ -733,14 +733,14 @@ function AuthForm(): JSX.Element {
 
 									{/* Forgot Password Mode */}
 									{displayedMode === "forgotPassword" && (
-										<>{rendFormField(emailField, formData, handleInputChange, fieldErrors)}</>
+										<>{renderFormField(emailField, formData, handleInputChange, fieldErrors)}</>
 									)}
 
 									{/* Reset Password Mode */}
 									{displayedMode === "resetPassword" && (
 										<>
-											{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
-											{rendFormField(
+											{renderFormField(passwordField, formData, handleInputChange, fieldErrors)}
+											{renderFormField(
 												confirmPasswordField,
 												formData,
 												handleInputChange,

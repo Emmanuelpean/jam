@@ -5,7 +5,7 @@ import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
 import { authApi, exportApi, UpdateCurrentUserResponse } from "../../services/api/Users";
 import { ApiError, ApiResponse } from "../../services/api/Base";
-import { rendFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
+import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { contactSupportMessage } from "../../utils/Utils";
@@ -238,20 +238,20 @@ export const AccountTab: React.FC = (): JSX.Element => {
 				<i className="bi bi-person"></i> Personal Information
 			</h5>
 			<Row>
-				<Col md={6}>{rendFormField(firstNameField, formData, handleInputChange, errors)}</Col>
-				<Col md={6}>{rendFormField(lastNameField, formData, handleInputChange, errors)}</Col>
+				<Col md={6}>{renderFormField(firstNameField, formData, handleInputChange, errors)}</Col>
+				<Col md={6}>{renderFormField(lastNameField, formData, handleInputChange, errors)}</Col>
 			</Row>
-			{rendFormField(emailField, formData, handleInputChange, errors)}
+			{renderFormField(emailField, formData, handleInputChange, errors)}
 
 			<hr className="my-4" />
 
 			<h5 className="mb-3">
 				<i className="bi bi-lock"></i> Security
 			</h5>
-			{rendFormField(currentPasswordField, formData, handleInputChange, errors)}
+			{renderFormField(currentPasswordField, formData, handleInputChange, errors)}
 			<Row>
-				<Col md={6}>{rendFormField(newPasswordField, formData, handleInputChange, errors)}</Col>
-				<Col md={6}>{rendFormField(confirmPasswordField, formData, handleInputChange, errors)}</Col>
+				<Col md={6}>{renderFormField(newPasswordField, formData, handleInputChange, errors)}</Col>
+				<Col md={6}>{renderFormField(confirmPasswordField, formData, handleInputChange, errors)}</Col>
 			</Row>
 
 			<hr className="my-4" />
