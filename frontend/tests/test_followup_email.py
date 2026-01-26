@@ -40,7 +40,6 @@ class TestFollowUpEmail(BaseTest):
             "Send Email"
         )
         assert modal.text == expected
-        self.followup_modal.contact.open_menu()
         self.followup_modal.contact.select_by_visible_text("Alex Johnson (CloudFirst Inc)")
         assert "Alex" in self.followup_modal.body.text
 

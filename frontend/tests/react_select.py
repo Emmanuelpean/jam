@@ -172,6 +172,7 @@ class ReactSelect(object):
     def select_by_visible_text(self, text) -> None:
         """Select all options that display text matching the argument"""
 
+        self.open_menu()
         wanted_elements_indexes = [self._get_option_index(i) for i in self.options if i.text.strip() == text.strip()]
 
         if len(wanted_elements_indexes) == 0:

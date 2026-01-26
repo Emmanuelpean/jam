@@ -819,7 +819,6 @@ class DataModalUtils(BaseUtilsClass):
                     "application_status",
                 ):
                     select = ReactSelect(self.get_element(key))
-                    select.open_menu()
                     select.select_by_visible_text(value)
                 elif key in ["date", "application_date"]:
                     self.get_element(key + "_set_current").click()
@@ -1526,12 +1525,6 @@ class UserSettingsUtils(BaseUtilsClass):
         return self.get_element("confirm_password")
 
     @property
-    def theme_hint(self) -> WebElement:
-        """Get the theme hint text"""
-
-        return self.get_element("theme-hint")
-
-    @property
     def chase_threshold(self) -> WebElement:
         """Get the chase threshold input"""
 
@@ -1548,6 +1541,23 @@ class UserSettingsUtils(BaseUtilsClass):
         """Get the update limit input"""
 
         return self.get_element("update_limit")
+
+    @property
+    def currency(self) -> ReactSelect:
+        """Get the currency field"""
+
+        return ReactSelect(self.get_element("default_currency"))
+
+    def get_theme(self, theme_key: str) -> WebElement:
+        """Get the theme field"""
+
+        return self.get_element(theme_key + "-theme")
+
+    @property
+    def dark_mode_toggle(self) -> WebElement:
+        """Get the dark mode toggle button"""
+
+        return self.get_element("theme-switch-label")
 
     def confirm(self) -> None:
         """Confirm the form submission"""

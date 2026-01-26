@@ -6,8 +6,8 @@ export const DarkModeToggle: React.FC = () => {
 	const { isDarkMode, handleDarkModeToggle } = useTheme();
 
 	return (
-		<div className="dark-mode-toggle-container">
-			<label className="dark-mode-toggle" htmlFor="theme-switch">
+		<div className="dark-mode-toggle-container" id={"theme-switch-div"}>
+			<label className="dark-mode-toggle" htmlFor="theme-switch" id={"theme-switch-label"}>
 				<input
 					type="checkbox"
 					id="theme-switch"
