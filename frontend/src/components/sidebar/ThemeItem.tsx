@@ -43,8 +43,8 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({
 	onClick,
 	onMouseEnter,
 	onMouseLeave,
-}) => {
-	const colors = getThemeColors(themeKey);
+}: ThemeItemProps): JSX.Element => {
+	const colors: ThemeColor = getThemeColors(themeKey);
 
 	const getItemStyle = (): CSSProperties => {
 		const baseStyle: CSSProperties = {
@@ -77,6 +77,7 @@ export const ThemeItem: React.FC<ThemeItemProps> = ({
 
 	return (
 		<div
+			id={`${themeKey}-theme`}
 			style={getItemStyle()}
 			onClick={onClick}
 			onMouseEnter={onMouseEnter}

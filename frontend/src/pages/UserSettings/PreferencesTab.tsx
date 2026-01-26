@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, JSX } from "react";
 import { Form } from "react-bootstrap";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
@@ -150,21 +150,26 @@ export const PreferencesTab: React.FC = () => {
 			<h5 className="mb-3">
 				<i className="bi bi-palette"></i> Appearance
 			</h5>
+			<p>
+				Hint: You can also easily change the app theme and mode on the fly by clicking on the JAM logo in the
+				sidebar.
+			</p>
 			<div className="mb-3">
 				<label className="form-label">Theme</label>
 				<div className="d-flex flex-wrap gap-2">
-					{THEMES.map((theme: Theme) => (
-						<ThemeItem
-							key={theme.key}
-							themeKey={theme.key}
-							themeName={theme.name}
-							isActive={currentTheme === theme.key}
-							isHovered={hoveredTheme === theme.key}
-							onClick={() => handleThemeChange(theme.key)}
-							onMouseEnter={() => setHoveredTheme(theme.key)}
-							onMouseLeave={() => setHoveredTheme(null)}
-						/>
-					))}
+					{THEMES.map(
+						(theme: Theme): JSX.Element => (
+							<ThemeItem
+								themeKey={theme.key}
+								themeName={theme.name}
+								isActive={currentTheme === theme.key}
+								isHovered={hoveredTheme === theme.key}
+								onClick={() => handleThemeChange(theme.key)}
+								onMouseEnter={() => setHoveredTheme(theme.key)}
+								onMouseLeave={() => setHoveredTheme(null)}
+							/>
+						)
+					)}
 				</div>
 			</div>
 			<div className="mb-3">

@@ -35,18 +35,19 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 	return (
 		<div className="theme-dropdown">
 			<div className="fw-medium text-muted small mb-2 px-2">Themes</div>
-			{THEMES.map((theme: Theme): JSX.Element => (
-				<ThemeItem
-					key={theme.key}
-					themeKey={theme.key}
-					themeName={theme.name}
-					isActive={currentTheme === theme.key}
-					isHovered={hoveredItem === theme.key}
-					onClick={(): Promise<void> => handleThemeChange(theme.key)}
-					onMouseEnter={(): void => setHoveredItem(theme.key)}
-					onMouseLeave={(): void => setHoveredItem(null)}
-				/>
-			))}
+			{THEMES.map(
+				(theme: Theme): JSX.Element => (
+					<ThemeItem
+						themeKey={theme.key}
+						themeName={theme.name}
+						isActive={currentTheme === theme.key}
+						isHovered={hoveredItem === theme.key}
+						onClick={(): Promise<void> => handleThemeChange(theme.key)}
+						onMouseEnter={(): void => setHoveredItem(theme.key)}
+						onMouseLeave={(): void => setHoveredItem(null)}
+					/>
+				)
+			)}
 			<DarkModeToggle />
 		</div>
 	);

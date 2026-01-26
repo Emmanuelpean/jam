@@ -13,13 +13,12 @@ from tests.utils.test_data import TOAST_USER_1_INDEX
 class TestAccountSettingsPage(BaseTest):
     """Test class for the User Settings Page"""
 
-    page_url = "settings"
+    page_url = "settings/account"
 
     def setup_function(self, request) -> None:
         """Setup function"""
 
         self.login()
-        self.user_settings_utils.go_to_account_tab()
 
     # ------------------------------------------------- UPDATING EMAIL -------------------------------------------------
 
@@ -168,24 +167,45 @@ class TestPreferenceSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.deadline_threshold, "101")
         self.set_text(self.user_settings_utils.update_limit, "102")
         self.user_settings_utils.confirm()
-        time.sleep(0.1)
+        self.assert_toast_message("Preferences updated successfully.")
 
         assert self.db_user.preferences.chase_threshold == 100
         assert self.db_user.preferences.deadline_threshold == 101
         assert self.db_user.preferences.update_limit == 102
 
+    def test_currency_settings(self) -> None:
+        """Test changing the currency settings"""
+
+        self.user_settings_utils.currency.select_by_visible_text("US Dollar")
+        self.user_settings_utils.confirm()
+        self.assert_toast_message("Preferences updated successfully.")
+        assert self.db_user.preferences.default_currency == "USD"
+
+    def test_theme_settings(self) -> None:
+        """Test changing the theme settings"""
+
+        self.user_settings_utils.get_theme("raspberry").click()
+        time.sleep(0.1)
+        assert self.db_user.preferences.theme == "raspberry"
+
+    def test_toggle_dark_model(self) -> None:
+        """Toggle Dark Model"""
+
+        self.user_settings_utils.dark_mode_toggle.click()
+        time.sleep(0.1)
+        assert self.db_user.preferences.dark_mode
+
 
 class TestQualificationSettingsPage(BaseTest):
     """Test class for the Qualification Settings Page"""
 
-    page_url = "settings"
+    page_url = "settings/qualifications"
     user_index = TOAST_USER_1_INDEX
 
     def setup_function(self, request) -> None:
         """Setup function"""
 
         self.login()
-        self.user_settings_utils.go_to_qualifications_tab()
 
     def test_qualification_settings(self) -> None:
         """Test changing the qualification settings"""
@@ -195,6 +215,8 @@ class TestQualificationSettingsPage(BaseTest):
         self.user_settings_utils.confirm()
         self.assert_toast_message("Qualifications saved successfully.")
         assert self.db.query(models.UserQualification).filter_by(owner_id=self.user.id).count() == 1
+
+        # Modify qualifications
         self.set_text(self.user_settings_utils.experience_input, "Different Experience")
         self.user_settings_utils.confirm()
         self.assert_toast_message("Qualifications saved successfully.")
@@ -202,6 +224,17 @@ class TestQualificationSettingsPage(BaseTest):
         qualification = self.db.query(models.UserQualification).filter_by(owner_id=self.user.id).first()
         assert qualification.qualities == "New Quality"
         assert qualification.experience == "Different Experience"
+
+        # Refresh page and modify qualifications
+        self.driver.refresh()
+        self.set_text(self.user_settings_utils.experience_input, "Different Experience1")
+        self.user_settings_utils.confirm()
+        self.assert_toast_message("Qualifications saved successfully.")
+        assert self.db.query(models.UserQualification).filter_by(owner_id=self.user.id).count() == 1
+        self.db.expire_all()
+        qualification = self.db.query(models.UserQualification).filter_by(owner_id=self.user.id).first()
+        assert qualification.qualities == "New Quality"
+        assert qualification.experience == "Different Experience1"
 
 
 class PremiumSettingsUtils(BaseUtilsClass):
