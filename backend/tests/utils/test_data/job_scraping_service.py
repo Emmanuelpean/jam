@@ -787,6 +787,7 @@ SCRAPED_JOB_DATA = [
         "scrape_datetime": "2025-08-15T14:32:18.123456+00:00",
         "service_log_id": 1,
         "geolocation_id": 4,  # San Francisco, United States
+        "deadline": "2024-01-01 00:00:00",
     },
     {
         "external_job_id": "987654321",

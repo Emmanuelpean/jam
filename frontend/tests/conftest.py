@@ -1337,11 +1337,13 @@ class AuthentificationUtils(BaseUtilsClass):
         """Go to the register page"""
 
         self.go_to_page(f"register")
+        time.sleep(0.5)  # animation
 
     def go_to_forgot_password(self) -> None:
         """Go to the forgot password page"""
 
         self.go_to_page(f"forgot-password")
+        time.sleep(0.5)  # animation
 
     def set_email(self, email: str) -> None:
         """Set the email field to the given value"""
@@ -1465,6 +1467,7 @@ class AuthentificationUtils(BaseUtilsClass):
         """Navigate to forgot password page"""
 
         self.get_element("forgot-password-link").click()
+        time.sleep(0.5)
 
 
 class UserSettingsUtils(BaseUtilsClass):

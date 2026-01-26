@@ -1,149 +1,263 @@
 import React, { JSX } from "react";
-import { Button, Modal } from "react-bootstrap";
-import "./TermsConditions.css";
+import { Button, Card, Modal } from "react-bootstrap";
+import "./TermsConditions.scss";
 
 interface TermsAndConditionsProps {
 	show: boolean;
 	onHide: () => void;
 }
 
+interface TermsSectionProps {
+	number: number;
+	title: string;
+	children: React.ReactNode;
+}
+
+const TermsSection: React.FC<TermsSectionProps> = ({ number, title, children }: TermsSectionProps): JSX.Element => {
+	return (
+		<Card className={`terms-section terms-default`}>
+			<Card.Header className="terms-card-header">
+				<span className="section-number">{number}</span>
+				{title}
+			</Card.Header>
+			<Card.Body>{children}</Card.Body>
+		</Card>
+	);
+};
+
+interface TermsSubsectionProps {
+	title: string;
+	children: React.ReactNode;
+}
+
+const TermsSubsection: React.FC<TermsSubsectionProps> = ({ title, children }) => (
+	<div className="terms-subsection">
+		<h5 className="terms-subsection-title">{title}</h5>
+		{children}
+	</div>
+);
+
 function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Element {
 	return (
 		<Modal show={show} onHide={onHide} scrollable className="terms-modal">
 			<Modal.Header closeButton className="terms-header">
 				<Modal.Title className="d-flex align-items-center">
-					<i className="bi bi-file-text me-2"></i>
+					<i className="bi bi-file-earmark-text me-2"></i>
 					Terms and Conditions
 				</Modal.Title>
 			</Modal.Header>
 			<Modal.Body className="terms-body">
 				<div className="terms-content">
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">1.</span>
-							Acceptance of Terms
-						</h4>
-						<p className="terms-text">
-							By accessing and using the Job Application Manager ("the Service"), you accept and agree to
-							be bound by the terms and provision of this agreement. If you do not agree to abide by the
-							above, please do not use this service.
-						</p>
-					</div>
+					<Card>
+						<Card.Body>
+							<i className="bi bi-calendar-check me-2"></i>
+							<strong>Last Updated:</strong> January 2025
+						</Card.Body>
+					</Card>
 
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">2.</span>
-							Description of Service
-						</h4>
+					<TermsSection number={1} title="Acceptance of Terms">
 						<p className="terms-text">
-							Job Application Manager is a web-based application that helps users organise and track their
-							job applications, interviews, and related career management activities. The Service allows
-							you to:
+							By accessing and using the Job Application Manager ("JAM", "the Service"), you accept and
+							agree to be bound by these Terms and Conditions. If you do not agree to these terms, please
+							do not use this Service. We reserve the right to update these terms at any time, and
+							continued use of the Service constitutes acceptance of any modifications.
 						</p>
-						<ul className="terms-list">
-							<li>Create and manage job application records</li>
-							<li>Track interview schedules and outcomes</li>
-							<li>Store company and contact information</li>
-							<li>Monitor application status, progress, and deadline</li>
-						</ul>
-					</div>
+					</TermsSection>
 
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">3.</span>
-							User Accounts
-						</h4>
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">3.1 Registration</h5>
+					<TermsSection number={2} title="Description of Service">
+						<p className="terms-text">
+							JAM is a web-based application designed to help users organise and track their job
+							applications, interviews, and career management activities.
+						</p>
+						<TermsSubsection title="2.1 Free Features">
+							<ul className="terms-list">
+								<li>Create and manage job application records with detailed tracking</li>
+								<li>Track interview schedules, outcomes, and interviewer information</li>
+								<li>Store company, location, and recruiter contact information</li>
+								<li>Monitor application status, deadlines, and follow-up reminders</li>
+								<li>Export all your data at any time</li>
+							</ul>
+						</TermsSubsection>
+						<TermsSubsection title="2.2 Premium Features (TOAST Subscription)">
 							<ul className="terms-list">
 								<li>
-									You must provide accurate, complete, and up-to-date information during registration
+									<strong>Automated Email Scraping:</strong> Extract job postings from LinkedIn,
+									Indeed, NHS Jobs, and other job alert emails
 								</li>
+								<li>
+									<strong>AI-Powered Job Rating:</strong> Intelligent matching of jobs against your
+									qualifications using artificial intelligence
+								</li>
+								<li>
+									<strong>Smart Filtering:</strong> Advanced exclusion and favourite filters for job
+									alerts
+								</li>
+							</ul>
+						</TermsSubsection>
+					</TermsSection>
+
+					<TermsSection number={3} title="Subscription and Payment">
+						<TermsSubsection title="3.1 TOAST Premium Subscription">
+							<ul className="terms-list">
+								<li>
+									<strong>Price:</strong> £5.00 per month (GBP)
+								</li>
+								<li>
+									<strong>Free Trial:</strong> New customers receive a 14-day free trial with no
+									payment method required
+								</li>
+								<li>
+									<strong>Returning Customers:</strong> Users who have previously subscribed are not
+									eligible for a free trial and must provide payment details upfront
+								</li>
+								<li>Subscriptions automatically renew monthly unless cancelled</li>
+							</ul>
+						</TermsSubsection>
+						<TermsSubsection title="3.2 Cancellation and Refunds">
+							<ul className="terms-list">
+								<li>You may cancel your subscription at any time via the Stripe Customer Portal</li>
+								<li>
+									Upon cancellation, you retain access to premium features until the end of your
+									current billing period
+								</li>
+								<li>
+									Refunds are not provided for partial months or unused portions of your subscription
+								</li>
+								<li>
+									If your trial ends without adding a payment method, premium features will be
+									disabled automatically
+								</li>
+							</ul>
+						</TermsSubsection>
+						<TermsSubsection title="3.3 Payment Processing">
+							<p className="terms-text mb-0">
+								All payments are processed securely through Stripe. We do not store your full credit
+								card details on our servers. By subscribing, you agree to Stripe's terms of service.
+							</p>
+						</TermsSubsection>
+					</TermsSection>
+
+					<TermsSection number={4} title="User Accounts">
+						<TermsSubsection title="4.1 Registration">
+							<ul className="terms-list">
+								<li>
+									You must provide accurate, complete, and current information during registration
+								</li>
+								<li>Email verification is required to activate your account</li>
 								<li>
 									You are responsible for maintaining the confidentiality of your account credentials
 								</li>
 								<li>You are responsible for all activities that occur under your account</li>
+								<li>You must be at least 16 years old to use this Service</li>
 							</ul>
-						</div>
-
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">3.2 Account Security</h5>
+						</TermsSubsection>
+						<TermsSubsection title="4.2 Account Security">
 							<ul className="terms-list">
 								<li>Choose a strong password and keep it secure</li>
 								<li>Notify us immediately of any unauthorised use of your account</li>
+								<li>We use industry-standard password hashing to protect your credentials</li>
 								<li>
-									We are not liable for any loss or damage arising from unauthorised account access
+									We are not liable for any loss arising from unauthorised account access due to your
+									failure to protect your credentials
 								</li>
 							</ul>
-						</div>
-					</div>
+						</TermsSubsection>
+					</TermsSection>
 
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">4.</span>
-							User Content and Data
-						</h4>
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">4.1 Your Data</h5>
+					<TermsSection number={5} title="User Data and Privacy">
+						<TermsSubsection title="5.1 Data We Collect">
 							<ul className="terms-list">
-								<li>You retain ownership of all data you submit to the Service</li>
 								<li>
-									You grant us a limited license to store, process, and display your data to provide
-									the Service
+									<strong>Account Information:</strong> Email address, name, and hashed password
 								</li>
-								<li>You are responsible for backing up your data</li>
+								<li>
+									<strong>Professional Profile:</strong> Experience, education, skills, and career
+									interests (if you choose to provide them)
+								</li>
+								<li>
+									<strong>Job Application Data:</strong> Job postings, companies, contacts,
+									interviews, and application notes
+								</li>
+								<li>
+									<strong>Email Content:</strong> For premium users, job alert emails processed
+									through our scraping service
+								</li>
+								<li>
+									<strong>Usage Preferences:</strong> Theme settings, display preferences, and
+									notification thresholds
+								</li>
 							</ul>
-						</div>
-
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">4.2 Data Usage</h5>
+						</TermsSubsection>
+						<TermsSubsection title="5.2 How We Use Your Data">
 							<ul className="terms-list">
-								<li>We will not share your personal job application data with third parties.</li>
-								<li>We may use aggregated, anonymised data for service improvement and analytics</li>
-								<li>You may export or delete your data at any time</li>
+								<li>To provide and improve the Service</li>
+								<li>To process job alert emails and extract job postings (premium feature)</li>
+								<li>
+									To provide AI-powered job matching against your qualifications (premium feature)
+								</li>
+								<li>
+									To send transactional emails (verification, password resets, subscription notices)
+								</li>
+								<li>We do not sell your personal information to third parties</li>
+								<li>We may use anonymised, aggregated data for analytics and service improvement</li>
 							</ul>
-						</div>
-					</div>
+						</TermsSubsection>
+						<TermsSubsection title="5.3 Data Ownership and Export">
+							<ul className="terms-list">
+								<li>You retain full ownership of all data you submit to the Service</li>
+								<li>You may export all your data at any time as CSV files</li>
+								<li>You may request complete deletion of your account and all associated data</li>
+								<li>Upon account deletion, all your data is permanently removed from our systems</li>
+							</ul>
+						</TermsSubsection>
+					</TermsSection>
 
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">5.</span>
-							Acceptable Use
-						</h4>
+					<TermsSection number={6} title="Third-Party Services">
+						<p className="terms-text">
+							JAM integrates with the following third-party services to provide its functionality:
+						</p>
+						<TermsSubsection title="6.1 AI Services">
+							<p className="terms-text mb-0">
+								Our AI job rating feature uses <strong>OpenAI's API</strong> to analyse job descriptions
+								and match them against your qualifications. When you use this feature, relevant job and
+								qualification data is sent to OpenAI for processing. OpenAI's data retention and privacy
+								policies apply to this processing.
+							</p>
+						</TermsSubsection>
+						<TermsSubsection title="6.2 Payment Processing">
+							<p className="terms-text mb-0">
+								Subscription payments are handled by <strong>Stripe</strong>. Your payment information
+								is processed directly by Stripe and is subject to their privacy policy and terms of
+								service.
+							</p>
+						</TermsSubsection>
+						<TermsSubsection title="6.3 Job Data Providers">
+							<p className="terms-text mb-0">
+								Premium features utilise <strong>Apify</strong> and <strong>BrightData</strong> to
+								collect and enrich job posting data from various platforms. These services help us
+								retrieve detailed job information from LinkedIn, Indeed, and other job boards. Their
+								respective privacy policies and terms of service apply to data processed through their
+								platforms.
+							</p>
+						</TermsSubsection>
+					</TermsSection>
+
+					<TermsSection number={7} title="Acceptable Use">
 						<p className="terms-text">You agree NOT to use the Service to:</p>
-						<ul className="terms-list terms-prohibited">
+						<ul className="terms-list">
 							<li>Upload malicious code, viruses, or harmful content</li>
-							<li>Attempt to gain unauthorised access to our systems</li>
-							<li>Share false, misleading, or inaccurate information</li>
+							<li>Attempt to gain unauthorised access to our systems or other users' accounts</li>
+							<li>Share false, misleading, or fraudulent information</li>
 							<li>Violate any applicable laws or regulations</li>
 							<li>Interfere with other users' use of the Service</li>
+							<li>Use automated tools to scrape or access the Service beyond intended functionality</li>
+							<li>Resell, redistribute, or commercially exploit the Service without authorisation</li>
+							<li>Use the Service to spam employers or send unsolicited communications</li>
 						</ul>
-					</div>
+					</TermsSection>
 
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">6.</span>
-							Privacy
-						</h4>
-						<p className="terms-text">
-							Your privacy is important to us. Our data handling practices are governed by our Privacy
-							Policy, which is incorporated into these terms by reference. Key points:
-						</p>
-						<ul className="terms-list">
-							<li>We collect only necessary information to provide the Service</li>
-							<li>We use industry-standard security measures to protect your data</li>
-							<li>We do not sell your personal information to third parties</li>
-							<li>You can request data deletion at any time</li>
-						</ul>
-					</div>
-
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">7.</span>
-							Service Availability
-						</h4>
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">7.1 Uptime</h5>
+					<TermsSection number={8} title="Service Availability">
+						<TermsSubsection title="8.1 Uptime and Maintenance">
 							<ul className="terms-list">
 								<li>
 									We strive to maintain high service availability but do not guarantee 100% uptime
@@ -151,137 +265,124 @@ function TermsAndConditions({ show, onHide }: TermsAndConditionsProps): JSX.Elem
 								<li>We may perform maintenance that temporarily interrupts service</li>
 								<li>We will provide advance notice of planned maintenance when possible</li>
 							</ul>
-						</div>
-
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">7.2 Service Modifications</h5>
+						</TermsSubsection>
+						<TermsSubsection title="8.2 Third-Party Dependencies">
+							<p className="terms-text mb-0">
+								Premium features depend on third-party APIs (OpenAI, job platforms, data providers). We
+								cannot guarantee the availability or accuracy of these external services. Changes to
+								third-party platforms may affect feature functionality.
+							</p>
+						</TermsSubsection>
+						<TermsSubsection title="8.3 Service Modifications">
 							<ul className="terms-list">
-								<li>We reserve the right to modify, suspend, or discontinue the Service</li>
+								<li>We reserve the right to modify, suspend, or discontinue features</li>
 								<li>We will provide reasonable notice of significant changes</li>
 								<li>Continued use after changes constitutes acceptance of modifications</li>
 							</ul>
-						</div>
-					</div>
+						</TermsSubsection>
+					</TermsSection>
 
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">8.</span>
-							Intellectual Property
-						</h4>
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">8.1 Your Rights</h5>
-							<ul className="terms-list">
-								<li>You retain rights to your data and content</li>
-								<li>We grant you a limited license to use the Service for its intended purpose</li>
-							</ul>
-						</div>
-					</div>
-
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">9.</span>
-							Limitation of Liability
-						</h4>
+					<TermsSection number={9} title="Limitation of Liability">
 						<p className="terms-text">
-							<strong>TO THE MAXIMUM EXTENT PERMITTED BY LAW:</strong>
+							<strong>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW:</strong>
 						</p>
 						<ul className="terms-list">
-							<li>THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES</li>
-							<li>WE ARE NOT LIABLE FOR INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES</li>
-							<li>OUR TOTAL LIABILITY IS LIMITED TO THE AMOUNT YOU PAID FOR THE SERVICE</li>
-							<li>WE ARE NOT RESPONSIBLE FOR DATA LOSS, THOUGH WE IMPLEMENT REASONABLE SAFEGUARDS</li>
+							<li>
+								THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND,
+								EXPRESS OR IMPLIED
+							</li>
+							<li>WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE</li>
+							<li>
+								WE ARE NOT LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE
+								DAMAGES
+							</li>
+							<li>
+								OUR TOTAL LIABILITY IS LIMITED TO THE AMOUNT YOU PAID FOR THE SERVICE IN THE 12 MONTHS
+								PRECEDING THE CLAIM
+							</li>
+							<li>
+								WE ARE NOT RESPONSIBLE FOR DATA LOSS, THOUGH WE IMPLEMENT REASONABLE SAFEGUARDS. YOU ARE
+								RESPONSIBLE FOR MAINTAINING YOUR OWN BACKUPS
+							</li>
+							<li>
+								WE ARE NOT LIABLE FOR ANY EMPLOYMENT DECISIONS, JOB OUTCOMES, OR CAREER CONSEQUENCES
+								RESULTING FROM YOUR USE OF THE SERVICE
+							</li>
+							<li>
+								AI-GENERATED JOB RATINGS AND RECOMMENDATIONS ARE PROVIDED FOR INFORMATIONAL PURPOSES
+								ONLY AND SHOULD NOT BE RELIED UPON AS THE SOLE BASIS FOR CAREER DECISIONS
+							</li>
+							<li>
+								WE ARE NOT RESPONSIBLE FOR THE ACCURACY, COMPLETENESS, OR AVAILABILITY OF JOB DATA
+								OBTAINED FROM THIRD-PARTY SOURCES
+							</li>
 						</ul>
-					</div>
+					</TermsSection>
 
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">10.</span>
-							Indemnification
-						</h4>
+					<TermsSection number={10} title="Indemnification">
 						<p className="terms-text">
-							You agree to indemnify and hold us harmless from any claims, damages, or losses arising
-							from:
+							You agree to indemnify, defend, and hold harmless JAM, its operators, and affiliates from
+							any claims, damages, losses, liabilities, and expenses (including legal fees) arising from:
 						</p>
 						<ul className="terms-list">
-							<li>Your use of the Service</li>
-							<li>Your violation of these terms</li>
-							<li>Your violation of any third-party rights</li>
+							<li>Your use or misuse of the Service</li>
+							<li>Your violation of these Terms and Conditions</li>
+							<li>Your violation of any third-party rights, including intellectual property rights</li>
+							<li>Your violation of any applicable laws or regulations</li>
+							<li>Any content or data you submit to the Service</li>
 						</ul>
-					</div>
+					</TermsSection>
 
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">11.</span>
-							Termination
-						</h4>
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">11.1 By You</h5>
+					<TermsSection number={11} title="Termination">
+						<TermsSubsection title="11.1 Termination by You">
 							<ul className="terms-list">
-								<li>You may terminate your account at any time</li>
-								<li>Upon termination, you may export your data</li>
-								<li>Some provisions of these terms survive termination</li>
+								<li>You may delete your account at any time through account settings</li>
+								<li>You may export your data before deletion</li>
+								<li>Active subscriptions will be automatically cancelled upon account deletion</li>
 							</ul>
-						</div>
-
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">11.2 By Us</h5>
+						</TermsSubsection>
+						<TermsSubsection title="11.2 Termination by Us">
 							<ul className="terms-list">
-								<li>We may terminate accounts that violate these terms</li>
-								<li>We may terminate the Service with reasonable notice</li>
-								<li>We will provide data export opportunities before termination</li>
+								<li>We may suspend or terminate accounts that violate these terms</li>
+								<li>We may terminate the Service with 30 days' notice</li>
+								<li>We will provide data export opportunities before service termination</li>
+								<li>Termination does not entitle you to refunds for paid subscription periods</li>
 							</ul>
-						</div>
-					</div>
+						</TermsSubsection>
+					</TermsSection>
 
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">12.</span>
-							Dispute Resolution
-						</h4>
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">12.1 Governing Law</h5>
-							<p className="terms-text">These terms are governed by applicable local laws.</p>
-						</div>
-					</div>
-
-					<div className="terms-section">
-						<h4 className="terms-section-title">
-							<span className="section-number">13.</span>
-							General Provisions
-						</h4>
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">13.1 Entire Agreement</h5>
-							<p className="terms-text">
-								These terms constitute the entire agreement between you and us regarding the Service.
+					<TermsSection number={12} title="General Provisions">
+						<TermsSubsection title="12.1 Governing Law">
+							<p className="terms-text mb-0">
+								These terms are governed by the laws of England and Wales. Any disputes shall be subject
+								to the exclusive jurisdiction of the courts of England and Wales.
 							</p>
-						</div>
-
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">13.2 Severability</h5>
-							<p className="terms-text">
-								If any provision is found unenforceable, the remaining provisions remain in effect.
+						</TermsSubsection>
+						<TermsSubsection title="12.2 Severability">
+							<p className="terms-text mb-0">
+								If any provision of these terms is found to be unenforceable or invalid, that provision
+								shall be limited or eliminated to the minimum extent necessary, and the remaining
+								provisions shall remain in full force and effect.
 							</p>
-						</div>
-
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">13.3 Updates</h5>
-							<p className="terms-text">
-								We may update these terms periodically. Continued use constitutes acceptance of changes.
+						</TermsSubsection>
+						<TermsSubsection title="12.3 Entire Agreement">
+							<p className="terms-text mb-0">
+								These Terms and Conditions constitute the entire agreement between you and JAM regarding
+								use of the Service, superseding any prior agreements.
 							</p>
-						</div>
-
-						<div className="terms-subsection">
-							<h5 className="terms-subsection-title">13.4 Contact</h5>
-							<p className="terms-text">
-								For questions about these terms, please contact us through the application.
+						</TermsSubsection>
+						<TermsSubsection title="12.4 Contact">
+							<p className="terms-text mb-0">
+								For questions about these terms or the Service, please contact us through the
+								application's feedback feature or support channels.
 							</p>
-						</div>
-					</div>
+						</TermsSubsection>
+					</TermsSection>
 				</div>
 			</Modal.Body>
 			<Modal.Footer className="terms-footer">
 				<Button variant="primary" onClick={onHide} style={{ width: "100%" }}>
-					<i className="bi bi-check-circle me-2"></i>I Understand
+					<i className="bi bi-check-circle me-2"></i>I Understand and Accept
 				</Button>
 			</Modal.Footer>
 		</Modal>

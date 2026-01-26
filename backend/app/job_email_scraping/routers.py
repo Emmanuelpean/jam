@@ -3,7 +3,7 @@
 Provides REST API endpoints for managing job alert emails, scraped job postings,
 and service execution logs with CRUD operations and admin access controls."""
 
-from datetime import datetime
+import datetime as dt
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, HTTPException
@@ -61,9 +61,19 @@ def get_all(
     page_size: int = 10,
     sort_by: str = "scrape_datetime",
     sort_direction: Literal["asc", "desc"] = "desc",
+    show_past_deadline: bool = False,
     search: str | None = None,
-):
-    """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped."""
+) -> dict:
+    """Retrieve paginated scraped jobs for the current user that have not been imported, are active and successfully scraped.
+    :param request: Request
+    :param db: Database session
+    :param current_user: Current user
+    :param page: Page number
+    :param page_size: Page size
+    :param sort_by: sort key
+    :param sort_direction: sort direction
+    :param show_past_deadline: Show scraped jobs with past deadlines
+    :param search: Search term"""
 
     # Base query with eager loading of job_rating
     # noinspection PyComparisonWithNone
@@ -76,6 +86,14 @@ def get_all(
         .filter(models.ScrapedJob.is_active)
         .filter(models.ScrapedJob.exclusion_filter_id == None)
     )
+
+    if not show_past_deadline:
+        query = query.filter(
+            or_(
+                models.ScrapedJob.deadline.is_(None),
+                models.ScrapedJob.deadline >= dt.datetime.now(dt.timezone.utc),
+            )
+        )
 
     # Apply search filter
     if search:
@@ -212,8 +230,8 @@ eis_service_log_router = APIRouter(prefix="/job-scraping-service-logs", tags=["j
 # GET endpoint for admins to get the service logs
 @eis_service_log_router.get("/", response_model=list[schemas.JobEmailScrapingServiceLogOut])
 def get_service_logs_by_date_range(
-    start_date: datetime | None = Query(None, description="Start date for filtering (ISO format)"),
-    end_date: datetime | None = Query(None, description="End date for filtering (ISO format)"),
+    start_date: dt.datetime | None = Query(None, description="Start date for filtering (ISO format)"),
+    end_date: dt.datetime | None = Query(None, description="End date for filtering (ISO format)"),
     delta_days: int | None = Query(None, description="Number of days to go back in time"),
     limit: int | None = Query(None, description="Maximum number of logs to return"),
     current_user: models.User = Depends(get_current_user),
