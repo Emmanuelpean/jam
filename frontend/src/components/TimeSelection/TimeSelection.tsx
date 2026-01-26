@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "./TimeSelection.css";
+import "./TimeSelection.scss";
 import { DateRange, getDateRange, TimeUnit } from "../../utils/TimeUtils";
 import { SelectInput } from "../rendering/widgets/SelectWidget";
 import { ModalFormField } from "../rendering/form/FormRenders";
