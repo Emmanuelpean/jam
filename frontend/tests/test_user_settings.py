@@ -50,7 +50,7 @@ class TestAccountSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.current_password, self.user.plain_password)
         self.set_text(self.user_settings_utils.email, new_email)
         self.user_settings_utils.confirm()
-        self.assert_toast_message("Verification email sent successfully.")
+        self.assert_toast_message("Email change verification email sent successfully.")
         verification_url = self.get_verification_link_from_email(new_email)
         self.driver.get(verification_url)
         self.assert_toast_message("Email address changed successfully. You can now log in with your new email.")
@@ -64,7 +64,7 @@ class TestAccountSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.current_password, self.user.plain_password)
         self.set_text(self.user_settings_utils.email, new_email)
         self.user_settings_utils.confirm()
-        self.assert_toast_message("Verification email sent successfully.")
+        self.assert_toast_message("Email change verification email sent successfully.")
         invalid_verification_url = self.get_verification_link_from_email(new_email)[:-4]
         self.driver.get(invalid_verification_url)
         self.assert_toast_message(
@@ -79,7 +79,7 @@ class TestAccountSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.current_password, self.user.plain_password)
         self.set_text(self.user_settings_utils.email, new_email)
         self.user_settings_utils.confirm()
-        self.assert_toast_message("Verification email sent successfully.")
+        self.assert_toast_message("Email change verification email sent successfully.")
         user = session.query(models.User).filter(models.User.email == self.user.email).first()
         user.verification_token_created_at = dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=20)
         invalid_verification_url = self.get_verification_link_from_email(new_email)[:-4]
@@ -144,28 +144,25 @@ class TestAccountSettingsPage(BaseTest):
 class TestPreferenceSettingsPage(BaseTest):
     """Test class for the Preference Settings Page"""
 
-    page_url = "settings"
+    page_url = "settings/preferences"
 
     def setup_function(self, request) -> None:
         """Setup function"""
 
         self.login()
-        self.user_settings_utils.go_to_preferences_tab()
-
-    def test_theme_hint(self) -> None:
-        """Test theme hint"""
-
-        assert self.user_settings_utils.theme_hint.text == (
-            "Mixed Berry is not your favourite flavour of JAM?! You can easily pick "
-            "another theme by clicking on the JAM logo in the sidebar."
-        )
 
     def test_dashboard_settings(self) -> None:
         """Test changing the dashboard settings"""
 
-        assert self.db_user.chase_threshold == 14
-        assert self.db_user.deadline_threshold == 7
-        assert self.db_user.update_limit == 10
+        assert self.user_settings_utils.chase_threshold.get_attribute("value") == str(
+            self.db_user.preferences.chase_threshold
+        )
+        assert self.user_settings_utils.deadline_threshold.get_attribute("value") == str(
+            self.db_user.preferences.deadline_threshold
+        )
+        assert self.user_settings_utils.update_limit.get_attribute("value") == str(
+            self.db_user.preferences.update_limit
+        )
 
         self.set_text(self.user_settings_utils.chase_threshold, "100")
         self.set_text(self.user_settings_utils.deadline_threshold, "101")
@@ -173,9 +170,9 @@ class TestPreferenceSettingsPage(BaseTest):
         self.user_settings_utils.confirm()
         time.sleep(0.1)
 
-        assert self.db_user.chase_threshold == 100
-        assert self.db_user.deadline_threshold == 101
-        assert self.db_user.update_limit == 102
+        assert self.db_user.preferences.chase_threshold == 100
+        assert self.db_user.preferences.deadline_threshold == 101
+        assert self.db_user.preferences.update_limit == 102
 
 
 class TestQualificationSettingsPage(BaseTest):

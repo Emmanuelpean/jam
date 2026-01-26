@@ -57,6 +57,8 @@ function AuthForm(): JSX.Element {
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
 	const [loading, setLoading] = useState<boolean>(false);
+	const [demoLoading, setDemoLoading] = useState<boolean>(false);
+	const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
 	const [fieldErrors, setFieldErrors] = useState<Errors>({});
 	const { logout, login, isAuthenticated } = useAuth();
 	const { showToastSuccess, showToastError } = useGlobalToast();
@@ -299,6 +301,7 @@ function AuthForm(): JSX.Element {
 		if (Object.keys(errors).length > 0) return;
 
 		setLoading(true);
+		setButtonDisabled(true);
 
 		try {
 			const result: GenericResponse = await login(formData.email, formData.password);
@@ -313,6 +316,7 @@ function AuthForm(): JSX.Element {
 			showToastError(apiError.message || "Failed to login. An unknown error occurred", "Login Failed");
 		} finally {
 			setLoading(false);
+			setButtonDisabled(false);
 		}
 	};
 
@@ -337,6 +341,7 @@ function AuthForm(): JSX.Element {
 		if (Object.keys(errors).length > 0) return;
 
 		setLoading(true);
+		setButtonDisabled(true);
 
 		try {
 			const result: ApiResponse<GenericResponse> = await authApi.register({
@@ -363,6 +368,7 @@ function AuthForm(): JSX.Element {
 			);
 		} finally {
 			setLoading(false);
+			setButtonDisabled(false);
 		}
 	};
 
@@ -373,6 +379,7 @@ function AuthForm(): JSX.Element {
 		if (Object.keys(errors).length > 0) return;
 
 		setLoading(true);
+		setButtonDisabled(true);
 
 		try {
 			const response: ApiResponse = await authApi.requestPasswordReset(formData.email);
@@ -382,6 +389,7 @@ function AuthForm(): JSX.Element {
 			showToastError(apiError.message, "Error Sending Reset Link");
 		} finally {
 			setLoading(false);
+			setButtonDisabled(false);
 		}
 	};
 
@@ -392,6 +400,7 @@ function AuthForm(): JSX.Element {
 		if (Object.keys(errors).length > 0) return;
 
 		setLoading(true);
+		setButtonDisabled(true);
 		try {
 			const response: ApiResponse = await authApi.resetPassword(resetToken, formData.password);
 			showToastSuccess(response.data.message, "Password Reset Successful");
@@ -401,6 +410,7 @@ function AuthForm(): JSX.Element {
 			showToastError(apiError.message, "Reset Failed");
 		} finally {
 			setLoading(false);
+			setButtonDisabled(false);
 		}
 	};
 
@@ -551,7 +561,8 @@ function AuthForm(): JSX.Element {
 	}
 
 	const handleDemoLogin = async (): Promise<void> => {
-		setLoading(true);
+		setDemoLoading(true);
+		setButtonDisabled(true);
 		try {
 			const result: GenericResponse = await login(
 				process.env.REACT_APP_DEMO_USERNAME || "",
@@ -566,7 +577,8 @@ function AuthForm(): JSX.Element {
 			const apiError = error as ApiError;
 			showToastError(apiError.message || "Failed to login with demo account.", "Demo Login Failed");
 		} finally {
-			setLoading(false);
+			setDemoLoading(false);
+			setButtonDisabled(false);
 		}
 	};
 
@@ -764,7 +776,7 @@ function AuthForm(): JSX.Element {
 										<ActionButton
 											type="submit"
 											id="confirm-button"
-											disabled={loading}
+											disabled={buttonDisabled}
 											loading={loading}
 											className="fw-semibold"
 											loadingText={
@@ -860,8 +872,8 @@ function AuthForm(): JSX.Element {
 							<ActionButton
 								className="try-app-btn"
 								onClick={handleDemoLogin}
-								loading={loading}
-								disabled={loading}
+								loading={demoLoading}
+								disabled={buttonDisabled}
 								defaultText="Try JAM with Demo Account"
 								loadingText="Loading demo..."
 								defaultIcon="bi bi-play-circle"

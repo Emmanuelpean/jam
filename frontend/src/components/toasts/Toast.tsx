@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "./Toast.css";
+import "./Toast.scss";
 
 // Define the toast variant types
 type ToastVariant = "success" | "danger" | "warning" | "info";
