@@ -46,6 +46,7 @@ function AuthForm(): JSX.Element {
 	const [formData, setFormData] = useState<FormData>(defaultFormData);
 	const [resetToken, setResetToken] = useState<string>("");
 	const [showTestInfo, setShowTestInfo] = useState(false);
+	const [isClosingDemo, setIsClosingDemo] = useState(false);
 	const [showMobileWarning, setShowMobileWarning] = useState<boolean>(false);
 	const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 	const [showTerms, setShowTerms] = useState<boolean>(false);
@@ -57,12 +58,57 @@ function AuthForm(): JSX.Element {
 	const { showLoading, hideLoading } = useLoading();
 	const contentRef = useRef<HTMLDivElement>(null);
 	const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
+	const [contentVisible, setContentVisible] = useState(true);
+	const [displayedMode, setDisplayedMode] = useState<AuthMode>(mode);
+	const [displayedStep, setDisplayedStep] = useState<number>(registrationStep);
+	const prevModeRef = useRef<string | null>(null);
 
 	useEffect(() => {
 		if (contentRef.current) {
 			setContentHeight(contentRef.current.scrollHeight);
 		}
+	}, [fieldErrors]);
+
+	useEffect(() => {
+		const isInitialMount: boolean = prevModeRef.current === null;
+		const modeKey = `${mode}-${registrationStep}`;
+
+		if (prevModeRef.current === modeKey) {
+			return;
+		}
+
+		if (isInitialMount) {
+			// Initial mount: just sync and measure, no animation
+			prevModeRef.current = modeKey;
+			requestAnimationFrame(() => {
+				if (contentRef.current) {
+					setContentHeight(contentRef.current.scrollHeight);
+				}
+			});
+			return;
+		}
+
+		// Mode change: animate
+		setContentVisible(false);
+
+		const fadeOutTimer = setTimeout(() => {
+			setDisplayedMode(mode);
+			setDisplayedStep(registrationStep);
+			prevModeRef.current = modeKey;
+
+			requestAnimationFrame(() => {
+				if (contentRef.current) {
+					setContentHeight(contentRef.current.scrollHeight);
+				}
+				setTimeout(() => {
+					setContentVisible(true);
+				}, 300);
+			});
+		}, 150);
+
+		return () => clearTimeout(fadeOutTimer);
 	}, [mode, registrationStep, fieldErrors]);
+
 	document.documentElement.setAttribute("data-theme", DEFAULT_THEME);
 
 	useEffect(() => {
@@ -400,11 +446,11 @@ function AuthForm(): JSX.Element {
 	const passwordField: ModalFormField = {
 		name: "password",
 		type: "password",
-		label: mode === "resetPassword" ? "New Password" : "Password",
+		label: displayedMode === "resetPassword" ? "New Password" : "Password",
 		icon: "bi bi-lock-fill",
-		placeholder: mode === "resetPassword" ? "Enter your new password" : "Enter your password",
-		autoComplete: mode === "login" ? "current-password" : "new-password",
-		helpText: ["register", "resetPassword"].includes(mode)
+		placeholder: displayedMode === "resetPassword" ? "Enter your new password" : "Enter your password",
+		autoComplete: displayedMode === "login" ? "current-password" : "new-password",
+		helpText: ["register", "resetPassword"].includes(displayedMode)
 			? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`
 			: null,
 	};
@@ -414,7 +460,7 @@ function AuthForm(): JSX.Element {
 		type: "password",
 		label: "Confirm Password",
 		icon: "bi bi-lock-fill",
-		placeholder: mode === "resetPassword" ? "Confirm your new password" : "Confirm your password",
+		placeholder: displayedMode === "resetPassword" ? "Confirm your new password" : "Confirm your password",
 		autoComplete: "new-password",
 	};
 
@@ -435,13 +481,13 @@ function AuthForm(): JSX.Element {
 	};
 
 	const cardTitle: string =
-		mode === "resetPassword"
+		displayedMode === "resetPassword"
 			? "Set New Password"
-			: mode === "forgotPassword"
+			: displayedMode === "forgotPassword"
 				? "Reset Your Password"
-				: mode === "login"
+				: displayedMode === "login"
 					? "Login"
-					: registrationStep === 1
+					: displayedStep === 1
 						? "Create Account"
 						: "Personal Information";
 
@@ -474,10 +520,21 @@ function AuthForm(): JSX.Element {
 		);
 	}
 
+	const closeDemo = (): void => {
+		setIsClosingDemo(true);
+		setTimeout(() => {
+			setShowTestInfo(false);
+			setIsClosingDemo(false);
+		}, 200);
+	};
+
 	const handleDemoLogin = async (): Promise<void> => {
 		setLoading(true);
 		try {
-			const result: GenericResponse = await login("test_user@test.com", "test_password");
+			const result: GenericResponse = await login(
+				process.env.REACT_APP_DEMO_USERNAME || "",
+				process.env.REACT_APP_DEMO_PASSWORD || ""
+			);
 			if (result.success) {
 				navigate("/dashboard");
 			} else {
@@ -488,7 +545,7 @@ function AuthForm(): JSX.Element {
 			showToastError(apiError.message || "Failed to login with demo account.", "Demo Login Failed");
 		} finally {
 			setLoading(false);
-			setShowTestInfo(false);
+			closeDemo();
 		}
 	};
 
@@ -502,17 +559,13 @@ function AuthForm(): JSX.Element {
 					disabled={loading}
 				>
 					<i className={`bi bi-backpack3`} style={{ fontSize: "20px" }}></i>
-					<span className="demo-text">Try Demo</span>
+					<span className="demo-text">Try JAM</span>
 				</button>
 				{showTestInfo && (
 					<>
-						<div className="demo-backdrop" onClick={() => setShowTestInfo(false)} />
-						<div className="demo-info-panel">
-							<button
-								className="demo-close-btn"
-								onClick={() => setShowTestInfo(false)}
-								aria-label="Close"
-							>
+						<div className={`demo-backdrop${isClosingDemo ? " closing" : ""}`} onClick={closeDemo} />
+						<div className={`demo-info-panel${isClosingDemo ? " closing" : ""}`}>
+							<button className="demo-close-btn" onClick={closeDemo} aria-label="Close">
 								✕
 							</button>
 							<h3 className="demo-title">Welcome to JAM</h3>
@@ -527,11 +580,6 @@ function AuthForm(): JSX.Element {
 								loadingText={"Logging in..."}
 								defaultIcon={"bi bi-box-arrow-in-right"}
 							/>
-							<p className="demo-note">
-								<small className="text-muted">
-									This is a test account with sample job applications and data.
-								</small>
-							</p>
 						</div>
 					</>
 				)}
@@ -564,22 +612,29 @@ function AuthForm(): JSX.Element {
 				</Alert>
 			)}
 
-			<Card className="auth-card border-0" style={{ height: contentHeight }}>
-				<div ref={contentRef} style={{ padding: "2.5rem" }}>
+			<Card className="auth-card border-0" style={{ height: contentHeight, overflow: "hidden" }}>
+				<div
+					ref={contentRef}
+					style={{
+						padding: "2.5rem",
+						opacity: contentVisible ? 1 : 0,
+						transition: "opacity 0.15s ease-in-out",
+					}}
+				>
 					<Card.Body>
 						<Card.Title className="text-primary">{cardTitle}</Card.Title>
 
-						{mode === "register" && (
+						{displayedMode === "register" && (
 							<div className="mb-3">
 								<div className="d-flex justify-content-between align-items-center mb-2">
-									<small className="text-muted">Step {registrationStep} of 2</small>
+									<small className="text-muted">Step {displayedStep} of 2</small>
 								</div>
 								<div className="progress" style={{ height: "4px" }}>
 									<div
 										className="progress-bar"
 										role="progressbar"
-										style={{ width: `${(registrationStep / 2) * 100}%` }}
-										aria-valuenow={(registrationStep / 2) * 100}
+										style={{ width: `${(displayedStep / 2) * 100}%` }}
+										aria-valuenow={(displayedStep / 2) * 100}
 										aria-valuemin={0}
 										aria-valuemax={100}
 									></div>
@@ -587,13 +642,13 @@ function AuthForm(): JSX.Element {
 							</div>
 						)}
 
-						{mode === "forgotPassword" && (
+						{displayedMode === "forgotPassword" && (
 							<p className="text-muted mb-4">
 								Enter your email address and we'll send you a link to reset your password.
 							</p>
 						)}
 
-						{mode === "resetPassword" && (
+						{displayedMode === "resetPassword" && (
 							<p className="text-muted mb-4">
 								Please enter your new password below. Make sure it's strong and secure.
 							</p>
@@ -601,7 +656,7 @@ function AuthForm(): JSX.Element {
 
 						<Form onSubmit={handleSubmit} autoComplete="on">
 							{/* Registration Step 1 */}
-							{mode === "register" && registrationStep === 1 && (
+							{displayedMode === "register" && displayedStep === 1 && (
 								<>
 									{rendFormField(emailField, formData, handleInputChange, fieldErrors)}
 									{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
@@ -617,7 +672,7 @@ function AuthForm(): JSX.Element {
 							)}
 
 							{/* Registration Step 2 */}
-							{mode === "register" && registrationStep === 2 && (
+							{displayedMode === "register" && displayedStep === 2 && (
 								<>
 									{rendFormField(firstNameField, formData, handleInputChange, fieldErrors)}
 									{rendFormField(lastNameField, formData, handleInputChange, fieldErrors)}
@@ -625,7 +680,7 @@ function AuthForm(): JSX.Element {
 							)}
 
 							{/* Login Mode */}
-							{mode === "login" && (
+							{displayedMode === "login" && (
 								<>
 									{rendFormField(emailField, formData, handleInputChange, fieldErrors)}
 									{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
@@ -644,12 +699,12 @@ function AuthForm(): JSX.Element {
 							)}
 
 							{/* Forgot Password Mode */}
-							{mode === "forgotPassword" && (
+							{displayedMode === "forgotPassword" && (
 								<>{rendFormField(emailField, formData, handleInputChange, fieldErrors)}</>
 							)}
 
 							{/* Reset Password Mode */}
-							{mode === "resetPassword" && (
+							{displayedMode === "resetPassword" && (
 								<>
 									{rendFormField(passwordField, formData, handleInputChange, fieldErrors)}
 									{rendFormField(confirmPasswordField, formData, handleInputChange, fieldErrors)}
@@ -658,7 +713,7 @@ function AuthForm(): JSX.Element {
 
 							{/* Action buttons */}
 							<div className="d-grid gap-2">
-								{mode === "register" && registrationStep === 2 && (
+								{displayedMode === "register" && displayedStep === 2 && (
 									<ActionButton
 										type="button"
 										onClick={handlePreviousStep}
@@ -676,35 +731,35 @@ function AuthForm(): JSX.Element {
 									loading={loading}
 									className="fw-semibold"
 									loadingText={
-										mode === "resetPassword"
+										displayedMode === "resetPassword"
 											? "Resetting Password..."
-											: mode === "forgotPassword"
+											: displayedMode === "forgotPassword"
 												? "Sending..."
-												: mode === "login"
+												: displayedMode === "login"
 													? "Logging in..."
-													: registrationStep === 1
+													: displayedStep === 1
 														? "Next..."
 														: "Creating Account..."
 									}
 									defaultText={
-										mode === "resetPassword"
+										displayedMode === "resetPassword"
 											? "Reset Password"
-											: mode === "forgotPassword"
+											: displayedMode === "forgotPassword"
 												? "Send Reset Link"
-												: mode === "login"
+												: displayedMode === "login"
 													? "Login"
-													: registrationStep === 1
+													: displayedStep === 1
 														? "Next"
 														: "Create Account"
 									}
 									defaultIcon={
-										mode === "resetPassword"
+										displayedMode === "resetPassword"
 											? "bi bi-shield-lock"
-											: mode === "forgotPassword"
+											: displayedMode === "forgotPassword"
 												? "bi bi-envelope-paper"
-												: mode === "login"
+												: displayedMode === "login"
 													? "bi bi-box-arrow-in-right"
-													: registrationStep === 1
+													: displayedStep === 1
 														? "bi bi-arrow-right"
 														: "bi bi-person-plus"
 									}
@@ -714,7 +769,7 @@ function AuthForm(): JSX.Element {
 
 						<Card.Footer className="bg-transparent border-0 text-center">
 							<small className="text-muted">
-								{mode === "resetPassword" || mode === "forgotPassword" ? (
+								{displayedMode === "resetPassword" || displayedMode === "forgotPassword" ? (
 									<>
 										Remember your password?{" "}
 										<button
@@ -726,7 +781,7 @@ function AuthForm(): JSX.Element {
 											Back to Login
 										</button>
 									</>
-								) : mode === "login" ? (
+								) : displayedMode === "login" ? (
 									<>
 										Don't have an account?{" "}
 										<button

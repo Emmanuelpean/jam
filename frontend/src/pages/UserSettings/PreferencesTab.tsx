@@ -8,9 +8,10 @@ import { useAuth } from "../../contexts/AuthContext";
 import { UpdateCurrentUserResponse } from "../../services/api/Users";
 import { ApiResponse } from "../../services/api/Base";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
-import { findItemByKey } from "../../utils/Utils";
-import { THEMES } from "../../utils/Theme";
+import { Theme, THEMES } from "../../utils/Theme";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
+import { DarkModeToggle } from "../../components/sidebar/DarkModeToggle";
+import { ThemeItem } from "../../components/sidebar/ThemeItem";
 
 interface PreferencesFormData {
 	default_currency: string;
@@ -31,6 +32,17 @@ export const PreferencesTab: React.FC = () => {
 	}));
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState(false);
+	const [hoveredTheme, setHoveredTheme] = useState<string | null>(null);
+	const currentTheme = currentUser?.preferences.theme || "default";
+
+	const handleThemeChange = async (themeKey: string): Promise<void> => {
+		try {
+			await updateCurrentUser({ preferences: { theme: themeKey } });
+		} catch (error) {
+			showToastError("Failed to save theme preference.");
+			console.error("Error saving theme:", error);
+		}
+	};
 
 	const handleInputChange = (e: SyntheticEvent) => {
 		const { name, value } = e.target;
@@ -138,10 +150,27 @@ export const PreferencesTab: React.FC = () => {
 			<h5 className="mb-3">
 				<i className="bi bi-palette"></i> Appearance
 			</h5>
-			<p id="theme-hint">
-				<strong>{findItemByKey(THEMES, currentUser?.preferences.theme)?.name}</strong> is not your favourite
-				flavour of JAM?! You can easily pick another theme by clicking on the JAM logo in the sidebar.
-			</p>
+			<div className="mb-3">
+				<label className="form-label">Theme</label>
+				<div className="d-flex flex-wrap gap-2">
+					{THEMES.map((theme: Theme) => (
+						<ThemeItem
+							key={theme.key}
+							themeKey={theme.key}
+							themeName={theme.name}
+							isActive={currentTheme === theme.key}
+							isHovered={hoveredTheme === theme.key}
+							onClick={() => handleThemeChange(theme.key)}
+							onMouseEnter={() => setHoveredTheme(theme.key)}
+							onMouseLeave={() => setHoveredTheme(null)}
+						/>
+					))}
+				</div>
+			</div>
+			<div className="mb-3">
+				<label className="form-label">Mode</label>
+				<DarkModeToggle />
+			</div>
 			<div className="mt-4">
 				<ActionButton
 					type="submit"

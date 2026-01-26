@@ -12,7 +12,7 @@
     box-shadow: 0 20px 60px rgb(0 0 0 / 15%);
     width: 100%;
     max-width: 520px;
-    transition: var(--transition);
+    transition: height 0.3s ease-in-out;
 }
 
 .auth-card .card-body {
@@ -29,6 +29,7 @@
 }
 
 .btn-link {
+    color: var(--primary-mid) !important;
     background: none !important;
     border: none !important;
     text-decoration: none !important;
@@ -103,7 +104,31 @@
     inset: 0;
     background-color: rgb(0 0 0 / 50%);
     z-index: 9998;
-    animation: fade-in 0.2s ease-in-out;
+    animation: backdrop-fade-in 0.2s ease-in-out forwards;
+
+    &.closing {
+        animation: backdrop-fade-out 0.2s ease-in-out forwards;
+    }
+}
+
+@keyframes backdrop-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes backdrop-fade-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }
 
 /* Floating info panel */
@@ -118,10 +143,14 @@
     padding: 1.5rem;
     box-shadow: 0 10px 40px rgb(0 0 0 / 20%);
     z-index: 9999;
-    animation: fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: panel-fade-in 0.2s ease-in-out forwards;
+
+    &.closing {
+        animation: panel-fade-out 0.2s ease-in-out forwards;
+    }
 }
 
-@keyframes fade-in {
+@keyframes panel-fade-in {
     from {
         opacity: 0;
         transform: translateY(-20px);
@@ -130,6 +159,18 @@
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes panel-fade-out {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
     }
 }
 
@@ -171,11 +212,6 @@
     color: #495057;
     font-size: 0.9rem;
     line-height: 1.5;
-}
-
-.demo-note {
-    margin: 0.75rem 0 0;
-    text-align: center;
 }
 
 /* Responsive adjustments */

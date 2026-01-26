@@ -52,14 +52,30 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
 
         self.get_user_data(test_users, test_scraped_jobs)
         client = self._get_authorised_client(authorised_clients)
-        response = client.get(self.endpoint + "/paged/?page=1&page_size=5")
+        response = client.get(self.endpoint + "/paged/?page=1&page_size=5&show_past_deadline=true")
         assert response.status_code == status.HTTP_200_OK
         scraped_jobs = response.json()
         assert scraped_jobs["total"] == 51
         assert len(scraped_jobs["items"]) == 5
 
+    def test_get_all_no_past_deadlines(
+        self,
+        test_users,
+        authorised_clients,
+        test_scraped_jobs,
+    ) -> None:
+        """Test retrieving all scraped jobs for the authorised user that are scraped, not imported, active"""
+
+        self.get_user_data(test_users, test_scraped_jobs)
+        client = self._get_authorised_client(authorised_clients)
+        response = client.get(self.endpoint + "/paged/?page=1&page_size=5")
+        assert response.status_code == status.HTTP_200_OK
+        scraped_jobs = response.json()
+        assert scraped_jobs["total"] == 50
+        assert len(scraped_jobs["items"]) == 5
+
     def test_get_count(self, test_users, authorised_clients, test_scraped_jobs) -> None:
-        """Test retrieving count of scraped jobs for the authorized user that are scraped, not imported, active"""
+        """Test retrieving count of scraped jobs for the authorised user that are scraped, not imported, active"""
 
         client = self._get_authorised_client(authorised_clients)
         response = client.get(self.endpoint + "/count")

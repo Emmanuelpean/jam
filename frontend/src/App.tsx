@@ -21,7 +21,7 @@ import UserSettingsPage from "./pages/UserSettings/UserSettingsPage";
 import { useToast, UseToastReturn } from "./hooks/useNotificationToast";
 import { ToastStack } from "./components/toasts/Toast";
 import SettingsPage from "./pages/SettingsPage";
-import AboutPage from "./pages/AboutPage/AboutPage";
+import AboutPage from "./pages/About/AboutPage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.scss";
 import "./Themes.css";
