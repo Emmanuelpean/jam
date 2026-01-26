@@ -51,37 +51,39 @@ const UserSettingsPage: React.FC = (): JSX.Element => {
 	};
 
 	return (
-		<div className="container-fluid d-flex flex-column">
+		<div className="container-fluid d-flex flex-column user-settings-page">
 			<PageHeader title={"User Settings"} icon={getTableIcon("User Settings")} />
-			<Row className="flex-grow-1 g-0">
-				<Col md={2} className="settings-sidebar border-end">
-					<div className="list-group list-group-flush">
-						{menuItems.map((item: MenuItem): JSX.Element | null =>
-							!(item.conditional === false) ? (
-								<button
-									key={item.id}
-									id={`${item.id}-tab`}
-									type="button"
-									className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${
-										activeTab === item.id ? "active" : ""
-									}`}
-									onClick={(): void => handleTabChange(item.id)}
-								>
-									<span>
-										<i className={`bi bi-${item.icon} me-2`}></i>
-										{item.label}
-									</span>
-								</button>
-							) : null
-						)}
+			<Row className="flex-grow-1 g-0 settings-layout">
+				<Col md={3} lg={2} className="settings-sidebar-col">
+					<div className="settings-sidebar">
+						<nav className="settings-nav">
+							{menuItems.map((item: MenuItem): JSX.Element | null =>
+								!(item.conditional === false) ? (
+									<button
+										key={item.id}
+										id={`${item.id}-tab`}
+										type="button"
+										className={`settings-nav-item ${activeTab === item.id ? "active" : ""}`}
+										onClick={(): void => handleTabChange(item.id)}
+									>
+										<span className="settings-nav-icon">
+											<i className={`bi bi-${item.icon}`}></i>
+										</span>
+										<span className="settings-nav-label">{item.label}</span>
+									</button>
+								) : null
+							)}
+						</nav>
 					</div>
 				</Col>
 
-				<Col className="p-4 overflow-auto">
-					{activeTab === "account" && <AccountTab />}
-					{activeTab === "preferences" && <PreferencesTab />}
-					{activeTab === "qualifications" && <QualificationsTab />}
-					{activeTab === "premium" && <PremiumTab />}
+				<Col className="settings-content-col">
+					<div className="settings-content">
+						{activeTab === "account" && <AccountTab />}
+						{activeTab === "preferences" && <PreferencesTab />}
+						{activeTab === "qualifications" && <QualificationsTab />}
+						{activeTab === "premium" && <PremiumTab />}
+					</div>
 				</Col>
 			</Row>
 		</div>
