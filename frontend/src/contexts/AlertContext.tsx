@@ -11,7 +11,6 @@ interface AlertConfig {
 	size?: "sm" | "md" | "lg" | "xl";
 	id?: string | null;
 	onSuccess?: (() => void | Promise<void>) | null;
-	onCancel?: (() => void) | null;
 }
 
 interface AlertContextType {
@@ -41,10 +40,11 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		size: "md",
 		id: null,
 		onSuccess: null,
+		onCancel: null,
 	});
 
 	const hideAlert = (): void => {
-		setAlertState((prev: AlertState) => ({ ...prev, show: false }));
+		setAlertState((prev: AlertState): AlertState => ({ ...prev, show: false }));
 	};
 
 	const showAlert = ({
@@ -81,6 +81,9 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 					: (): void => {
 							resolve(true);
 						},
+				onCancel: (): void => {
+					resolve(false);
+				},
 			});
 		});
 	};
@@ -173,7 +176,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		size = "md",
 		id = null,
 		onSuccess = null,
-		onCancel = null,
 	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title,
@@ -185,7 +187,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 			size,
 			id: id || "confirm-alert-modal",
 			onSuccess,
-			onCancel,
 		});
 	};
 
@@ -197,7 +198,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		size = "md",
 		id = null,
 		onSuccess = null,
-		onCancel = null,
 	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title,
@@ -209,7 +209,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 			size,
 			id: id || "delete-alert-modal",
 			onSuccess,
-			onCancel,
 		});
 	};
 
@@ -221,7 +220,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 		size = "md",
 		id = null,
 		onSuccess = null,
-		onCancel = null,
 	}: Partial<AlertConfig> = {}): Promise<boolean> => {
 		return showAlert({
 			title,
@@ -233,7 +231,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }): JSX.Elemen
 			size,
 			id: id || "logout-alert-modal",
 			onSuccess,
-			onCancel,
 		});
 	};
 

@@ -22,6 +22,7 @@ export interface AlertState {
 	confirmText?: string;
 	loadingText?: string;
 	onSuccess?: (() => void | Promise<void>) | null;
+	onCancel?: (() => void | Promise<void>) | null;
 }
 
 interface AlertModalProps {
@@ -69,6 +70,11 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 		}
 	};
 
+	const handleCancel = async (): Promise<void> => {
+		alertState.onCancel?.();
+		hideAlert();
+	};
+
 	return (
 		<Modal show={alertState.show} onHide={hideAlert} centered size={getModalSize(alertState.size)} id={modalId}>
 			<Modal.Header closeButton>
@@ -88,9 +94,7 @@ const AlertModal: React.FC<AlertModalProps> = ({ alertState, hideAlert }: AlertM
 						<ActionButton
 							id={`${modalId}-cancel-button`}
 							variant="secondary"
-							onClick={() => {
-								hideAlert();
-							}}
+							onClick={handleCancel}
 							disabled={loading}
 							defaultText={alertState.cancelText}
 						/>

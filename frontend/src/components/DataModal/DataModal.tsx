@@ -392,8 +392,8 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			// Either deactivate or delete based on mode, then close the modal
 			const handler: (item: JamData) => Promise<boolean> =
 				mode === "import" ? deactivateEntityConfirm : deleteEntityConfirm;
-			handler(effectiveData).then((): void => {
-				handleHideImmediate();
+			handler(effectiveData).then((result: boolean): void => {
+				if (result) handleHideImmediate();
 			});
 		};
 
@@ -403,8 +403,10 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			const handler: (item: JamData) => Promise<boolean> = effectiveData.is_active
 				? deactivateEntity
 				: activateEntity;
-			handler(effectiveData).then((): void => {
-				handleHideImmediate();
+			handler(effectiveData).then((result: boolean): void => {
+				if (result) {
+					handleHideImmediate();
+				}
 				setActiveLoading(false);
 			});
 		};
