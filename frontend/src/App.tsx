@@ -62,6 +62,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 		"/forgot-password",
 		"/verify-email",
 		"/verify-new-email",
+		"/reset-password",
 	].includes(location.pathname);
 
 	return (
@@ -192,37 +193,43 @@ function AppRoutes(): JSX.Element {
 	);
 }
 
-function App(): JSX.Element {
+function AppContent(): JSX.Element {
 	const toastMethods: UseToastReturn = useToast();
 
 	return (
+		<BrowserRouter basename="/jam">
+			<AuthProvider>
+				<LoadingProvider>
+					<DataProviderWrapper>
+						<ToastContext.Provider value={toastMethods}>
+							<AlertProvider>
+								<ProgressOverlayProvider>
+									<ThemeProvider>
+										<ContextMenuProvider>
+											<AppLayout>
+												<AppRoutes />
+											</AppLayout>
+										</ContextMenuProvider>
+									</ThemeProvider>
+									<ToastStack
+										toasts={toastMethods.toasts}
+										onClose={toastMethods.hideToast}
+										position="top-end"
+									/>
+								</ProgressOverlayProvider>
+							</AlertProvider>
+						</ToastContext.Provider>
+					</DataProviderWrapper>
+				</LoadingProvider>
+			</AuthProvider>
+		</BrowserRouter>
+	);
+}
+
+function App(): JSX.Element {
+	return (
 		<ConfigProvider>
-			<BrowserRouter basename="/jam">
-				<AuthProvider>
-					<LoadingProvider>
-						<DataProviderWrapper>
-							<ToastContext.Provider value={toastMethods}>
-								<AlertProvider>
-									<ProgressOverlayProvider>
-										<ThemeProvider>
-											<ContextMenuProvider>
-												<AppLayout>
-													<AppRoutes />
-												</AppLayout>
-											</ContextMenuProvider>
-										</ThemeProvider>
-										<ToastStack
-											toasts={toastMethods.toasts}
-											onClose={toastMethods.hideToast}
-											position="top-end"
-										/>
-									</ProgressOverlayProvider>
-								</AlertProvider>
-							</ToastContext.Provider>
-						</DataProviderWrapper>
-					</LoadingProvider>
-				</AuthProvider>
-			</BrowserRouter>
+			<AppContent />
 		</ConfigProvider>
 	);
 }

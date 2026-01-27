@@ -1,9 +1,10 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi, GenericResponse, LoginResponse, UpdateCurrentUserResponse } from "../services/api/Users";
-import { ApiError, ApiResponse } from "../services/api/Base";
+import { ApiResponse } from "../services/api/Base";
 import { DEFAULT_THEME } from "../utils/Theme";
 import { UserData, UserDataUpdate } from "../services/schemas/Core";
+import { handleApiError } from "../services/api/ApiError";
 
 export interface CurrentUser extends UserData {
 	token: string | null;
@@ -53,30 +54,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		async (authToken: string): Promise<void> => {
 			try {
 				const userData: ApiResponse<UserData> = await authApi.getCurrentUser(authToken);
+
 				setCurrentUser({
-					token: token,
+					token: authToken,
 					...userData.data,
 				});
-				setUserFetched(true);
 			} catch (error) {
-				const apiError = error as ApiError;
-				console.error("Failed to fetch user info:", apiError);
+				console.error("Failed to fetch user info:", error);
 
-				// If token is invalid, clear it
-				if (apiError.status === 401 || apiError.status === 403) {
+				const { status } = handleApiError(error);
+
+				// Invalid token — log out user
+				if (status === 401 || status === 403) {
 					localStorage.removeItem("token");
 					setToken(null);
 					setCurrentUser(null);
 				} else {
-					// If it's a network error, set basic auth state without admin
-					// We can't create a valid CurrentUser without email, so set to null
-					// The user will remain logged in via the token, but without user data
 					setCurrentUser(null);
-					setUserFetched(true);
 				}
+			} finally {
+				setUserFetched(true);
 			}
 		},
-		[userFetched, currentUser, token]
+		[token, setToken, setCurrentUser, setUserFetched]
 	);
 
 	const updateCurrentUser = async (

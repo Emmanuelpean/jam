@@ -243,7 +243,7 @@ def test_backend_server(database_url, worker_id, engine, frontend_url) -> Genera
         print_backend_pid()
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture(scope="session")
 def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Generator[str, None, None]:
     """Start a test frontend server for integration tests"""
     print("=" * 60)
@@ -664,10 +664,16 @@ class BaseUtils(object):
 
         return self.get_element("delete-alert-modal")
 
+    @property
+    def toast(self) -> WebElement:
+        """Get the toast modal on the modal"""
+
+        return self.get_element("toast")
+
     def assert_toast_message(self, error_message: str) -> None:
         """Assert that the given error message is displayed on the page"""
 
-        element = self.get_element("toast")
+        element = self.toast
         assert error_message in element.text, f"Message not found: {error_message}"
         element.click()  # Dismiss toast
 
@@ -1812,7 +1818,7 @@ class BaseTest(BaseUtils):
                 "protocol_handler": {"excluded_schemes": {"mailto": True}},
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            # chrome_options.add_argument("--headless=new")
+            chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")

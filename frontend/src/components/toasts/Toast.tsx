@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, JSX } from "react";
 import "./Toast.scss";
 
 // Define the toast variant types
@@ -24,6 +24,8 @@ interface Toast {
 	variant: ToastVariant;
 	title: string | null;
 	delay: number;
+	email?: string;
+	emailBody?: string;
 }
 
 // Props for NotificationToast component
@@ -34,6 +36,8 @@ interface NotificationToastProps {
 	delay: number;
 	onClose: () => void;
 	title: string | null;
+	emailAddress?: string;
+	emailBody?: string;
 }
 
 // Props for ToastStack component
@@ -43,7 +47,16 @@ interface ToastStackProps {
 	position?: ToastPosition;
 }
 
-const NotificationToast: React.FC<NotificationToastProps> = ({ show, message, variant, delay, onClose, title }) => {
+const NotificationToast: React.FC<NotificationToastProps> = ({
+	show,
+	message,
+	variant,
+	delay,
+	onClose,
+	title,
+	emailAddress,
+	emailBody,
+}: NotificationToastProps): JSX.Element | null => {
 	const [isHiding, setIsHiding] = useState<boolean>(false);
 	const [progress, setProgress] = useState<number>(100);
 
@@ -74,6 +87,14 @@ const NotificationToast: React.FC<NotificationToastProps> = ({ show, message, va
 		setTimeout(() => {
 			onClose();
 		}, 300); // Match animation duration
+	};
+
+	const handleContextMenu = (_: any): void => {
+		if (!emailAddress) return;
+		window.location.href = emailBody
+			? `mailto:${emailAddress}?body=${encodeURIComponent(emailBody)}`
+			: `mailto:${emailAddress}`;
+		handleClose();
 	};
 
 	const getIcon = (): string => {
@@ -109,7 +130,11 @@ const NotificationToast: React.FC<NotificationToastProps> = ({ show, message, va
 	if (!show) return null;
 
 	return (
-		<div className={`custom-toast ${variant} ${isHiding ? "hiding" : ""}`} onClick={handleClose}>
+		<div
+			className={`custom-toast ${variant} ${isHiding ? "hiding" : ""}`}
+			onClick={handleClose}
+			onContextMenu={handleContextMenu}
+		>
 			<div className="custom-toast-header">
 				<div className="custom-toast-title-wrapper">
 					<i className={`bi ${getIcon()} toast-icon`}></i>
@@ -121,6 +146,11 @@ const NotificationToast: React.FC<NotificationToastProps> = ({ show, message, va
 			</div>
 			<div className="custom-toast-body" id="toast">
 				{message}
+				{emailAddress && (
+					<div className="text-muted" style={{ fontSize: "0.85em", marginTop: "0.5rem" }}>
+						Right-click to send email
+					</div>
+				)}
 			</div>
 			<div className="custom-toast-progress" style={{ width: `${progress}%` }}></div>
 		</div>
@@ -142,6 +172,8 @@ const ToastStack: React.FC<ToastStackProps> = ({ toasts, onClose, position = "to
 					variant={toast.variant}
 					title={toast.title}
 					delay={toast.delay}
+					emailAddress={toast.email}
+					emailBody={toast.emailBody}
 					onClose={() => onClose(toast.id)}
 				/>
 			))}

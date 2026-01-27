@@ -4,11 +4,10 @@ import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
 import { authApi, exportApi, UpdateCurrentUserResponse } from "../../services/api/Users";
-import { ApiError, ApiResponse } from "../../services/api/Base";
+import { ApiResponse } from "../../services/api/Base";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
-import { contactSupportMessage } from "../../utils/Utils";
 
 interface AccountFormData {
 	email?: string;
@@ -21,7 +20,7 @@ interface AccountFormData {
 
 export const AccountTab: React.FC = (): JSX.Element => {
 	const { currentUser, token, updateCurrentUser } = useAuth();
-	const { showToastSuccess, showToastError } = useGlobalToast();
+	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
 	const [formData, setFormData] = useState<AccountFormData>(() => ({
 		email: currentUser?.email || "",
 		current_password: "",
@@ -46,8 +45,8 @@ export const AccountTab: React.FC = (): JSX.Element => {
 						"Verification Expired"
 					);
 				}
-			} catch (err) {
-				showToastError("Failed to verify pending email status.");
+			} catch (error) {
+				showApiError(error, "Pending email check", "Failed to verify pending email status.");
 			}
 		};
 		checkPending().then((): void => {});
@@ -58,8 +57,8 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		try {
 			await exportApi.download("jam_export.zip", token);
 			showToastSuccess("Data downloaded");
-		} catch (e) {
-			showToastError("Failed to download data." + contactSupportMessage);
+		} catch (error) {
+			showApiError(error, "Download Failed", "An unknown error occcurred while downloading the data.");
 		}
 	};
 
@@ -153,14 +152,11 @@ export const AccountTab: React.FC = (): JSX.Element => {
 				);
 			}
 		} catch (error) {
-			const apiError = error as ApiError;
-			if (apiError.status === 400) {
-				showToastError("Email is already in use. Please try a different email.");
-			} else if (apiError.status === 401) {
-				showToastError("Current password is incorrect. Please try again.");
-			} else {
-				showToastError("An unknown error occurred." + contactSupportMessage);
-			}
+			showApiError(
+				error,
+				"Account Update Failed",
+				"An unknown error occured while trying to update your account details."
+			);
 		} finally {
 			setSubmitting(false);
 		}
