@@ -373,24 +373,23 @@ export const PremiumTab = (): JSX.Element => {
 							</p>
 
 							<h6 className="premium-feature-section-title">How It Works</h6>
-							<p className="small">
-								<strong>Stage 1: Email Scraping</strong>When a job alert email is forwarded to the JAM
-								inbox, the system parses it to extract key details such as job title, salary, location,
-								and company, depending on what each job board provides.
+							<p>
+								<strong>Stage 1 - Email Scraping</strong>: When a job alert email is forwarded to the
+								JAM inbox, the system parses it to extract key details such as job title, salary,
+								location, and company, depending on what each job board provides.
 							</p>
-							<p className="small mb-0">
-								<strong>Stage 2: Deep Scraping</strong>JAM then visits the corresponding job board page
-								to collect richer information like the full job description. This deeper scraping is
-								limited to XX jobs per month per user. After this limit is reached, new job alert emails
-								are still parsed, but their job pages are not scraped further.
+							<p className="mb-4">
+								<strong>Stage 2 - Deep Scraping</strong>: JAM then visits the corresponding job board
+								page to collect richer information like the full job description. This deeper scraping
+								is limited to XX jobs per month per user. After this limit is reached, new job alert
+								emails are still parsed, but their job pages are not scraped further.
 							</p>
 							<p>
 								Each scraped job appears in your dashboard, where you can review, import, or remove it.
 								The location and company fields are automatically suggested based on your existing
-								entries to maintain consistency. If you receive too many job alerts, you can use
-								scraping filters to control which jobs are captured—for example, you can add a filter to
+								entries. You can also apply scraping filters to refine the results. For example, you can
 								exclude jobs posted by specific companies or filter by location, salary range, or
-								keywords..
+								keywords.
 							</p>
 						</Card.Body>
 					</Card>
