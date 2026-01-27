@@ -28,4 +28,3 @@ export const currenciesApi: CrudApi<Currency> = createCrudApi("others/currencies
 export const scrapingFilterApi: CrudApi<ScrapingFilterData> = createCrudApi("scraping-filters");
 export const speculativeApplicationsApi: CrudApi<SpeculativeApplicationData> =
 	createCrudApi("speculative-applications");
-export const configApi: CrudApi = createCrudApi("config");

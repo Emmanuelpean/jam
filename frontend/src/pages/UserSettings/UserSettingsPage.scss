@@ -10,7 +10,7 @@
 
 /* Sidebar Column */
 .settings-sidebar-col {
-    background-color: var(--bs-body-bg);
+    max-width: 300px !important;
     border-right: 1px solid var(--bs-border-color);
 }
 
@@ -99,11 +99,9 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding-bottom: 0.75rem;
     margin-bottom: 1.25rem;
     font-weight: 600;
     color: var(--bs-heading-color);
-    border-bottom: 2px solid var(--bs-border-color);
 }
 
 .settings-content h5 i {
@@ -117,49 +115,50 @@
     opacity: 0.5;
 }
 
-/* Responsive adjustments */
-@media (width <= 767px) {
-    .settings-sidebar-col {
-        border-right: none;
-        border-bottom: 1px solid var(--bs-border-color);
-    }
-
-    .settings-sidebar {
-        padding: 0.75rem;
-    }
-
-    .settings-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .settings-nav-item {
-        flex: 1 1 auto;
-        justify-content: center;
-        min-width: fit-content;
-        padding: 0.75rem 1rem;
-    }
-
-    .settings-nav-label {
-        display: none;
-    }
-
-    .settings-nav-icon {
-        margin: 0;
-    }
-
-    .settings-content {
-        padding: 1.5rem 1rem;
-    }
-}
-
-@media (width >= 768px) and (width <= 991px) {
-    .settings-nav-label {
-        font-size: 0.875rem;
-    }
-
-    .settings-nav-item {
-        padding: 0.75rem;
-    }
-}
+//
+///* Responsive adjustments */
+//@media (width <= 767px) {
+//    .settings-sidebar-col {
+//        border-right: none;
+//        border-bottom: 1px solid var(--bs-border-color);
+//    }
+//
+//    .settings-sidebar {
+//        padding: 0.75rem;
+//    }
+//
+//    .settings-nav {
+//        flex-direction: row;
+//        flex-wrap: wrap;
+//        gap: 0.5rem;
+//    }
+//
+//    .settings-nav-item {
+//        flex: 1 1 auto;
+//        justify-content: center;
+//        min-width: fit-content;
+//        padding: 0.75rem 1rem;
+//    }
+//
+//    .settings-nav-label {
+//        display: none;
+//    }
+//
+//    .settings-nav-icon {
+//        margin: 0;
+//    }
+//
+//    .settings-content {
+//        padding: 1.5rem 1rem;
+//    }
+//}
+//
+//@media (width >= 768px) and (width <= 991px) {
+//    .settings-nav-label {
+//        font-size: 0.875rem;
+//    }
+//
+//    .settings-nav-item {
+//        padding: 0.75rem;
+//    }
+//}

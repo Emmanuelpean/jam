@@ -1,8 +1,8 @@
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX, useEffect, useState, ReactNode } from "react";
 import { Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
-import { DataContextValue, useDataContext } from "../../contexts/DataContext";
+import { useConfig } from "../../contexts/ConfigContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ApiResponse } from "../../services/api/Base";
 import { ActionToggle } from "../../components/rendering/form/ActionToggle";
@@ -10,20 +10,24 @@ import { paymentsApi, PortalSessionResponse, SubscriptionStatus } from "../../se
 import LoadingSpinner from "../../components/spinner/Spinner";
 
 const defaultSubscriptionStatus = {
-	status: "unknowm",
+	status: "unknown",
 	trial_end: null,
 };
 
 interface SubscriptionStatusDisplay {
 	title: string;
-	message: string;
+	message: string | ReactNode;
 	variant: "success" | "danger" | "warning" | "info";
 	showSubscribeButton: boolean;
 	badgeVariant: "success" | "danger" | "warning" | "info" | "primary";
 	icon: string;
 }
 
-const getSubscriptionStatusDisplay = (status: string | null, trialEnd: number | null): SubscriptionStatusDisplay => {
+const getSubscriptionStatusDisplay = (
+	status: string | null,
+	trialEnd: number | null,
+	supportEmail: string
+): SubscriptionStatusDisplay => {
 	if (!status) {
 		return {
 			title: "Free Plan",
@@ -55,7 +59,11 @@ const getSubscriptionStatusDisplay = (status: string | null, trialEnd: number | 
 	} else {
 		return {
 			title: "Unknown Status",
-			message: "Please contact support for assistance",
+			message: (
+				<>
+					Please contact <a href={`mailto:${supportEmail}`}>support</a> for assistance
+				</>
+			),
 			variant: "warning",
 			badgeVariant: "warning",
 			showSubscribeButton: false,
@@ -66,7 +74,7 @@ const getSubscriptionStatusDisplay = (status: string | null, trialEnd: number | 
 
 export const PremiumTab = (): JSX.Element => {
 	const { currentUser, token, updateCurrentUser, fetchUserInfo } = useAuth();
-	const dataContext: DataContextValue = useDataContext();
+	const { config } = useConfig();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [stripeLoading, setStripeLoading] = useState<boolean>(false);
 	const [subscriptionLoading, setSubscriptionLoading] = useState<boolean>(false);
@@ -167,7 +175,8 @@ export const PremiumTab = (): JSX.Element => {
 
 	const statusDisplay: SubscriptionStatusDisplay = getSubscriptionStatusDisplay(
 		subscriptionStatus.status,
-		subscriptionStatus.trial_end
+		subscriptionStatus.trial_end,
+		config?.support_email
 	);
 	const hasActiveSubscription = ["active", "trialing", "paused"].includes(subscriptionStatus.status || "");
 
@@ -201,7 +210,7 @@ export const PremiumTab = (): JSX.Element => {
 	return (
 		<>
 			<Card className="mb-4">
-				<Card.Body>
+				<Card.Body className={"premium-card"}>
 					{subscriptionLoading ? (
 						<div className="py-5">
 							<LoadingSpinner text={"Loading subscription status..."} />
@@ -314,7 +323,7 @@ export const PremiumTab = (): JSX.Element => {
 								forwarding job alert emails to:
 							</p>
 							<p className="text-center">
-								<strong>{dataContext.config?.scraper_email}</strong>
+								<strong>{config?.scraper_email}</strong>
 							</p>
 							<p>
 								Simply set up email forwarding rules in your inbox, and new job opportunities will be
@@ -323,7 +332,7 @@ export const PremiumTab = (): JSX.Element => {
 							<p className="mb-2">The following job boards are currently supported:</p>
 							<div className="d-flex flex-wrap gap-2 mb-3">
 								{jobBoards.map((board) => {
-									const email = dataContext.config?.platform_sender_emails?.[board.emailKey];
+									const email = config?.platform_sender_emails?.[board.emailKey];
 
 									return (
 										<OverlayTrigger
@@ -356,9 +365,7 @@ export const PremiumTab = (): JSX.Element => {
 								})}
 							</div>
 							You can also request support for additional job boards by contacting{" "}
-							<a
-								href={`mailto:${dataContext.config?.support_email}?subject=Job Board Integration Request`}
-							>
+							<a href={`mailto:${config?.support_email}?subject=Job Board Integration Request`}>
 								support
 							</a>
 							.<h4 style={{ paddingTop: "1.5rem" }}>How It Works</h4>

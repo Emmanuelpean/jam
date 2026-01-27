@@ -33,6 +33,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
 import { ScrapedJobsPage } from "./pages/ScrapedJobsPage";
 import { StyleGuidePage } from "./pages/StylePage";
+import { ConfigProvider } from "./contexts/ConfigContext";
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -195,32 +196,34 @@ function App(): JSX.Element {
 	const toastMethods: UseToastReturn = useToast();
 
 	return (
-		<BrowserRouter basename="/jam">
-			<AuthProvider>
-				<LoadingProvider>
-					<DataProviderWrapper>
-						<ToastContext.Provider value={toastMethods}>
-							<AlertProvider>
-								<ProgressOverlayProvider>
-									<ThemeProvider>
-										<ContextMenuProvider>
-											<AppLayout>
-												<AppRoutes />
-											</AppLayout>
-										</ContextMenuProvider>
-									</ThemeProvider>
-									<ToastStack
-										toasts={toastMethods.toasts}
-										onClose={toastMethods.hideToast}
-										position="top-end"
-									/>
-								</ProgressOverlayProvider>
-							</AlertProvider>
-						</ToastContext.Provider>
-					</DataProviderWrapper>
-				</LoadingProvider>
-			</AuthProvider>
-		</BrowserRouter>
+		<ConfigProvider>
+			<BrowserRouter basename="/jam">
+				<AuthProvider>
+					<LoadingProvider>
+						<DataProviderWrapper>
+							<ToastContext.Provider value={toastMethods}>
+								<AlertProvider>
+									<ProgressOverlayProvider>
+										<ThemeProvider>
+											<ContextMenuProvider>
+												<AppLayout>
+													<AppRoutes />
+												</AppLayout>
+											</ContextMenuProvider>
+										</ThemeProvider>
+										<ToastStack
+											toasts={toastMethods.toasts}
+											onClose={toastMethods.hideToast}
+											position="top-end"
+										/>
+									</ProgressOverlayProvider>
+								</AlertProvider>
+							</ToastContext.Provider>
+						</DataProviderWrapper>
+					</LoadingProvider>
+				</AuthProvider>
+			</BrowserRouter>
+		</ConfigProvider>
 	);
 }
 
