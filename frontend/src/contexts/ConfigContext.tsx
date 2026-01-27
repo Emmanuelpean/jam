@@ -7,7 +7,7 @@ export interface ConfigContextValue {
 	error: Error | null;
 }
 
-interface Config {
+export interface Config {
 	scraper_email: string;
 	support_email: string;
 	platform_sender_emails: Record<string, string>;

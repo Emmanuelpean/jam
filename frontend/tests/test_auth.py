@@ -94,6 +94,14 @@ class TestLogIn(BaseTest):
         # Verify error message
         self.auth_utils.assert_password_error_message("Password is required")
 
+    def test_unexpected_error(self) -> None:
+        """Test login with unexpected error"""
+
+        self.auth_utils.set_email("crash@crash.com")
+        self.auth_utils.set_password("Test123!")
+        self.auth_utils.confirm()
+        self.auth_utils.assert_toast_message("An unknown error occurred during login.\nRight-click to send email")
+
 
 class TestSignUp(BaseTest):
 

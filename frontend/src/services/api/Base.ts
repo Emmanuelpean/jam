@@ -1,10 +1,25 @@
+import { ApiError } from "./ApiError";
+
 export const API_BASE_URL: string = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 export const API_SERVICE_URL: string = process.env.REACT_APP_API_SERVICE_URL || "http://localhost:8001";
 
-export interface ApiError extends Error {
-	status?: number | null;
-	data?: any;
-}
+const parseResponseBody = async (response: Response): Promise<any> => {
+	if (response.status === 204) {
+		return null;
+	}
+
+	const contentType: string = response.headers.get("content-type") || "";
+
+	if (contentType.includes("application/json")) {
+		return response.json();
+	}
+
+	if (contentType.includes("text/")) {
+		return response.text();
+	}
+
+	return response.blob();
+};
 
 export interface QueryParams {
 	[key: string]: any;
@@ -26,33 +41,13 @@ export interface ApiResponse<T = any> {
 
 export type ApiResponsePromise<T = any> = Promise<ApiResponse<T>>;
 
-const handleResponse = async (response: Response, isBlob: boolean = false): ApiResponsePromise => {
-	// Enhanced error handling
+const handleResponse = async <T>(response: Response, responseType?: boolean): Promise<ApiResponse<T>> => {
+	const data = responseType ? await response.blob() : await parseResponseBody(response);
+
 	if (!response.ok) {
-		const errorData = await response.json().catch(() => ({}));
-		const error: ApiError = new Error(errorData.detail);
-		error.status = response.status;
-		error.data = errorData;
-		throw error;
-	}
+		const message = (data && (data.message || data.detail)) || `Request failed with status ${response.status}`;
 
-	let data: any;
-
-	if (isBlob) {
-		data = await response.blob();
-	} else {
-		// Check if response has content before parsing JSON
-		const text: string = await response.text();
-		if (!text) {
-			data = null;
-		} else {
-			try {
-				data = JSON.parse(text);
-			} catch (error) {
-				console.warn("Failed to parse JSON response:", text);
-				data = null;
-			}
-		}
+		throw new ApiError(message, response.status, data);
 	}
 
 	return {

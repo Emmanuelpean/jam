@@ -10,9 +10,10 @@ import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { authApi, GenericResponse } from "../../services/api/Users";
-import { ApiError, ApiResponse } from "../../services/api/Base";
+import { ApiResponse } from "../../services/api/Base";
 import { useLoading } from "../../contexts/LoadingContext";
 import { DEFAULT_THEME } from "../../utils/Theme";
+import { ApiError } from "../../services/api/ApiError";
 
 type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
@@ -61,7 +62,7 @@ function AuthForm(): JSX.Element {
 	const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
 	const [fieldErrors, setFieldErrors] = useState<Errors>({});
 	const { logout, login, isAuthenticated } = useAuth();
-	const { showToastSuccess, showToastError } = useGlobalToast();
+	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
 	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
 	const { showLoading, hideLoading } = useLoading();
 	const contentRef = useRef<HTMLDivElement>(null);
@@ -297,6 +298,7 @@ function AuthForm(): JSX.Element {
 	const handleLogin = async (): Promise<void> => {
 		const errors: Errors = validateForm();
 		setFieldErrors(errors);
+		const errorTitle: string = "Login Failed";
 
 		if (Object.keys(errors).length > 0) return;
 
@@ -309,11 +311,10 @@ function AuthForm(): JSX.Element {
 			if (result.success) {
 				navigate("/dashboard");
 			} else {
-				showToastError(result.message, "Login Failed");
+				showToastError(result.message, errorTitle);
 			}
 		} catch (error) {
-			const apiError = error as ApiError;
-			showToastError(apiError.message || "Failed to login. An unknown error occurred", "Login Failed");
+			showApiError(error, errorTitle, "An unknown error occurred during login.");
 		} finally {
 			setLoading(false);
 			setButtonDisabled(false);
@@ -337,6 +338,7 @@ function AuthForm(): JSX.Element {
 	const handleRegister = async (): Promise<void> => {
 		const errors: Errors = validateForm(registrationStep);
 		setFieldErrors(errors);
+		const errorTitle: string = "Registration Failed";
 
 		if (Object.keys(errors).length > 0) return;
 
@@ -358,14 +360,10 @@ function AuthForm(): JSX.Element {
 					"Registration Successful"
 				);
 			} else {
-				showToastError(result.data.message, "Registration Failed");
+				showToastError(result.data.message, errorTitle);
 			}
 		} catch (error) {
-			const apiError = error as ApiError;
-			showToastError(
-				apiError.message || "Failed to create an account. An unknown error occurred",
-				"Registration Failed"
-			);
+			showApiError(error, errorTitle, "An unknown error occurred during registration.");
 		} finally {
 			setLoading(false);
 			setButtonDisabled(false);
@@ -373,8 +371,9 @@ function AuthForm(): JSX.Element {
 	};
 
 	const handleForgotPassword = async (): Promise<void> => {
-		const errors = validateForm();
+		const errors: Errors = validateForm();
 		setFieldErrors(errors);
+		const errorTitle: string = "Error Sending Password Reset Link";
 
 		if (Object.keys(errors).length > 0) return;
 
@@ -385,8 +384,7 @@ function AuthForm(): JSX.Element {
 			const response: ApiResponse = await authApi.requestPasswordReset(formData.email);
 			showToastSuccess(response.data.message, "Reset Link Sent");
 		} catch (error) {
-			const apiError = error as ApiError;
-			showToastError(apiError.message, "Error Sending Reset Link");
+			showApiError(error, errorTitle, "An unknown error occurred while sending the password reset link.");
 		} finally {
 			setLoading(false);
 			setButtonDisabled(false);
@@ -394,8 +392,9 @@ function AuthForm(): JSX.Element {
 	};
 
 	const handleResetPassword = async (): Promise<void> => {
-		const errors = validateForm();
+		const errors: Errors = validateForm();
 		setFieldErrors(errors);
+		const errorTitle: string = "Error Resetting Password";
 
 		if (Object.keys(errors).length > 0) return;
 
@@ -406,10 +405,32 @@ function AuthForm(): JSX.Element {
 			showToastSuccess(response.data.message, "Password Reset Successful");
 			switchToLogin();
 		} catch (error) {
-			const apiError = error as ApiError;
-			showToastError(apiError.message, "Reset Failed");
+			showApiError(error, errorTitle, "An unknown error occurred while resetting your password.");
 		} finally {
 			setLoading(false);
+			setButtonDisabled(false);
+		}
+	};
+
+	const handleDemoLogin = async (): Promise<void> => {
+		setDemoLoading(true);
+		setButtonDisabled(true);
+		const errorTitle: string = "Demo Login Failed";
+
+		try {
+			const result: GenericResponse = await login(
+				process.env.REACT_APP_DEMO_USERNAME || "",
+				process.env.REACT_APP_DEMO_PASSWORD || ""
+			);
+			if (result.success) {
+				navigate("/dashboard");
+			} else {
+				showToastError(result.message, errorTitle);
+			}
+		} catch (error) {
+			showApiError(error, errorTitle, "An unknown error occurred while trying to login with the demo account.");
+		} finally {
+			setDemoLoading(false);
 			setButtonDisabled(false);
 		}
 	};
@@ -559,28 +580,6 @@ function AuthForm(): JSX.Element {
 			</div>
 		);
 	}
-
-	const handleDemoLogin = async (): Promise<void> => {
-		setDemoLoading(true);
-		setButtonDisabled(true);
-		try {
-			const result: GenericResponse = await login(
-				process.env.REACT_APP_DEMO_USERNAME || "",
-				process.env.REACT_APP_DEMO_PASSWORD || ""
-			);
-			if (result.success) {
-				navigate("/dashboard");
-			} else {
-				showToastError(result.message, "Login Failed");
-			}
-		} catch (error) {
-			const apiError = error as ApiError;
-			showToastError(apiError.message || "Failed to login with demo account.", "Demo Login Failed");
-		} finally {
-			setDemoLoading(false);
-			setButtonDisabled(false);
-		}
-	};
 
 	return (
 		<div className="auth-page-wrapper">
@@ -864,23 +863,21 @@ function AuthForm(): JSX.Element {
 					</Card>
 
 					{/* Try the app button - only show on login mode */}
-					{displayedMode === "login" && (
-						<div className="try-app-container">
-							<div className="try-app-divider">
-								<span>or</span>
-							</div>
-							<ActionButton
-								className="try-app-btn"
-								onClick={handleDemoLogin}
-								loading={demoLoading}
-								disabled={buttonDisabled}
-								defaultText="Try JAM with Demo Account"
-								loadingText="Loading demo..."
-								defaultIcon="bi bi-play-circle"
-								variant="outline-primary"
-							/>
+					<div className="try-app-container">
+						<div className="try-app-divider">
+							<span>or</span>
 						</div>
-					)}
+						<ActionButton
+							className="try-app-btn"
+							onClick={handleDemoLogin}
+							loading={demoLoading}
+							disabled={buttonDisabled}
+							defaultText="Try JAM with Demo Account"
+							loadingText="Loading demo..."
+							defaultIcon="bi bi-play-circle"
+							variant="outline-primary"
+						/>
+					</div>
 				</div>
 			</div>
 

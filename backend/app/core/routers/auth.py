@@ -7,9 +7,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app import utils, models, database, base_schemas
+from app.config import settings
 from app.core import schemas, oauth2
-from app.emails.email_service import email_service
 from app.core.utils import send_email_verification_email, send_password_reset_email, get_token
+from app.emails.email_service import email_service
 
 # -------------------------------------------------------- LOGIN -------------------------------------------------------
 
@@ -31,6 +32,9 @@ def login(
     :raises HTTPException with a 429 status code if verification email rate limit is exceeded"""
 
     user_email = utils.clean_email(user_credentials.username)
+
+    if settings.test_mode and user_email == "crash@crash.com":
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
     # Find the user in the list based on the email provided
     user = db.query(models.User).filter(models.User.email == user_email).first()
