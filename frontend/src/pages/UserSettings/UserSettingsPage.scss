@@ -162,3 +162,181 @@
 //        padding: 0.75rem;
 //    }
 //}
+
+/* Premium Tab Styles */
+
+.premium-status-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+}
+
+.premium-price-tag {
+    background: var(--bs-tertiary-bg);
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    display: inline-block;
+}
+
+.premium-divider {
+    border-top: 1px solid var(--bs-border-color);
+    margin: 2rem 0;
+}
+
+.premium-why-section {
+    background: var(--bs-tertiary-bg);
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+/* Feature Cards */
+.premium-features-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+
+    i {
+        font-size: 1.5rem;
+        color: var(--primary-mid);
+    }
+}
+
+.premium-feature-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgb(0 0 0 / 8%);
+
+    .card-body {
+        padding: 1.5rem;
+    }
+}
+
+.premium-feature-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.premium-feature-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.premium-feature-title-section {
+    flex: 1;
+    margin-left: 1rem;
+}
+
+.premium-feature-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--bs-heading-color);
+}
+
+.premium-feature-subtitle {
+    font-size: 0.85rem;
+    color: var(--bs-secondary-color);
+    margin: 0;
+}
+
+/* Email highlight box */
+.email-highlight {
+    background: var(--bs-tertiary-bg);
+    border: 1px dashed var(--primary-mid);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    margin: 1rem 0;
+
+    code {
+        font-size: 1rem;
+        color: var(--primary-mid);
+        font-weight: 600;
+        background: none;
+    }
+
+    .copy-hint {
+        font-size: 0.75rem;
+        color: var(--bs-secondary-color);
+        margin-top: 0.5rem;
+    }
+}
+
+/* Job board badges */
+.job-board-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+
+}
+
+/* Section headings within feature cards */
+.feature-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--bs-heading-color);
+    margin: 1.5rem 0 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &::before {
+        content: "";
+        width: 3px;
+        height: 1em;
+        background: var(--primary-gradient);
+        border-radius: 2px;
+    }
+}
+
+/* Scoring dimensions list */
+.scoring-dimensions {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--bs-border-color);
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &::before {
+            content: "\F26A"; /* Bootstrap icon check-circle */
+            font-family: "bootstrap-icons", sans-serif;
+            color: var(--primary-mid);
+            font-size: 1rem;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        strong {
+            color: var(--bs-heading-color);
+        }
+    }
+}

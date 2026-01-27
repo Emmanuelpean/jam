@@ -52,6 +52,6 @@
 * [ ] Add toggle to hide scraped jobs with past deadline
 * [ ] Display the AI prompt in the user settings
 * [ ] Display reason why scraped job was not rated
-* [ ] Update terms and conditions
-* [ ] Fix demo mode drop down
+* [X] Update terms and conditions
+* [X] Fix demo mode drop down
 * [ ] Add account deletion option (delete subscription in this case)
