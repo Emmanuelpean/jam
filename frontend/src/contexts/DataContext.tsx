@@ -14,7 +14,7 @@ import {
 	settingsApi,
 	speculativeApplicationsApi,
 } from "../services/api/DataTables";
-import { ApiError, ApiResponse, ApiResponsePromise } from "../services/api/Base";
+import { ApiResponse, ApiResponsePromise } from "../services/api/Base";
 import { userApi } from "../services/api/Users";
 import { scrapedJobApi } from "../services/api/Services";
 import { useAuth } from "./AuthContext";
@@ -39,6 +39,7 @@ import {
 import { SettingData, UserData } from "../services/schemas/Core";
 import { ScrapedJobData, ScrapingFilterData } from "../services/schemas/Services";
 import { Country, Currency } from "../services/schemas/Others";
+import { ApiError } from "../services/api/ApiError";
 
 export type EntityType =
 	| "job"
