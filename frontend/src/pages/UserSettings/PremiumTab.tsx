@@ -173,6 +173,12 @@ export const PremiumTab = (): JSX.Element => {
 		});
 	};
 
+	const copyScraperEmail = (e: React.MouseEvent): void => {
+		navigator.clipboard.writeText(config.support_email).then((_: void): void => {
+			showToastSuccess(`${config.support_email} copied to clipboard`);
+		});
+	};
+
 	const statusDisplay: SubscriptionStatusDisplay = getSubscriptionStatusDisplay(
 		subscriptionStatus.status,
 		subscriptionStatus.trial_end,
@@ -325,12 +331,16 @@ export const PremiumTab = (): JSX.Element => {
 								to:
 							</p>
 
-							<div className="email-highlight">
+							<div className="email-highlight" onClick={copyScraperEmail}>
 								<code>{config?.scraper_email}</code>
-								<div className="copy-hint">Click to copy • Set up email forwarding rules</div>
+								<div className="copy-hint">Click to copy</div>
 							</div>
+							<p>
+								Simply set up email forwarding rules in your inbox, and new job opportunities will be
+								automatically added to your dashboard.
+							</p>
 
-							<p className="mb-2">Supported job boards:</p>
+							<h6 className="premium-feature-section-title">Supported job boards:</h6>
 							<div className="job-board-badges">
 								{jobBoards.map((board) => {
 									const email = config?.platform_sender_emails?.[board.emailKey];
