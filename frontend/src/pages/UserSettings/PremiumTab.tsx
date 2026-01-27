@@ -209,6 +209,7 @@ export const PremiumTab = (): JSX.Element => {
 
 	return (
 		<>
+			{/* Hero Card */}
 			<Card className="mb-4">
 				<Card.Body className={"premium-card"}>
 					{subscriptionLoading ? (
@@ -219,77 +220,68 @@ export const PremiumTab = (): JSX.Element => {
 						<>
 							{/* Subscription Status Section */}
 							<div className="text-center mb-4">
-								<div className="d-flex align-items-center justify-content-center gap-3 mb-3">
-									<i className={`${statusDisplay.icon} fs-1`}></i>
-									<div className="text-start">
-										<h3 className="mb-1" id={"status-title"}>
-											{statusDisplay.title}
-										</h3>
-										<p className="text-muted mb-0" style={{ fontSize: "0.95rem" }}>
-											{statusDisplay.message}
-										</p>
-									</div>
+								<div className="premium-status-icon mx-auto mb-3">
+									<i className={statusDisplay.icon}></i>
 								</div>
+								<h3 className="mb-2" id="status-title">
+									{statusDisplay.title}
+								</h3>
+								<p className="text-muted mb-4" style={{ fontSize: "1rem" }}>
+									{statusDisplay.message}
+								</p>
 
 								{/* Action Buttons */}
-								<div className="d-flex flex-column align-items-center gap-2">
-									{statusDisplay.showSubscribeButton ? (
-										<>
-											<div className="mb-2">
-												<h4 className="mb-1">£5/month</h4>
-												<p className="text-muted mb-0">14-day free trial • Cancel anytime</p>
-											</div>
-											<ActionButton
-												onClick={handleSubscribe}
-												defaultIcon="bi-gem"
-												id={"subscribe-button"}
-												defaultText="Start Free Trial"
-												loading={stripeLoading}
-												loadingText="Loading..."
-											/>
-										</>
-									) : hasActiveSubscription ? (
-										<>
-											<div className="mb-2">
-												<h5 className="mb-1">£5/month</h5>
-												<p className="text-muted mb-0 small">Cancel anytime</p>
-											</div>
-											<ActionButton
-												onClick={handleManageSubscription}
-												variant={"secondary"}
-												defaultIcon="bi-gear"
-												loading={stripeLoading}
-												id={"manage-subscription-button"}
-												defaultText="Manage Subscription"
-												loadingText={"Loading..."}
-											/>
-										</>
-									) : null}
-								</div>
+								{statusDisplay.showSubscribeButton ? (
+									<div className="d-flex flex-column align-items-center gap-3">
+										<div className="premium-price-tag">
+											<span style={{ fontSize: "1.5rem", fontWeight: 700 }}>£5</span>
+											<span style={{ opacity: 0.8 }}>/month</span>
+										</div>
+										<p className="text-muted mb-0">14-day free trial • Cancel anytime</p>
+										<ActionButton
+											onClick={handleSubscribe}
+											defaultIcon="bi-gem"
+											id="subscribe-button"
+											defaultText="Start Free Trial"
+											loading={stripeLoading}
+											loadingText="Loading..."
+											variant="light"
+										/>
+									</div>
+								) : hasActiveSubscription ? (
+									<div className="d-flex flex-column align-items-center gap-3">
+										<div className="premium-price-tag">
+											<span style={{ fontSize: "1.25rem", fontWeight: 600 }}>£5</span>
+											<span style={{ opacity: 0.8 }}>/month</span>
+										</div>
+										<ActionButton
+											onClick={handleManageSubscription}
+											variant="light"
+											defaultIcon="bi-gear"
+											loading={stripeLoading}
+											id="manage-subscription-button"
+											defaultText="Manage Subscription"
+											loadingText="Loading..."
+										/>
+									</div>
+								) : null}
 							</div>
 
-							{/* Premium Description - Now Below Status */}
-							<div
-								className="text-start mt-4 pt-4"
-								style={{
-									maxWidth: "900px",
-									margin: "0 auto",
-									borderTop: "1px solid rgba(0,0,0,0.1)",
-								}}
-							>
-								<h4 className="mb-3">Why Premium?</h4>
-								<p>
+							{/* Premium Description */}
+							<div className="premium-divider" />
+							<div className="premium-why-section">
+								<h4 className="mb-3">
+									<i className="bi bi-lightbulb me-2"></i>Why Premium?
+								</h4>
+								<p className="mb-2">
 									If you're actively job hunting, you likely receive dozens of job alert emails every
 									day from platforms like LinkedIn, Indeed, and others. Manually reviewing each job is
-									time-consuming and exhausting, you have to open every email, click through to job
-									listings, and evaluate whether each role matches your qualifications.
+									time-consuming and exhausting.
 								</p>
-								<p>
-									<strong>JAM Premium (TOAST)</strong> eliminates this wasted time by automatically
-									scraping jobs from your email alerts, intelligently rating them based on your
-									qualifications, and presenting everything in a unified dashboard. Instead of sifting
-									through dozens of emails and job boards, you get a single, organised view with
-									AI-powered match scores highlighting the opportunities that matter most.
+								<p className="mb-0">
+									<strong>JAM Premium</strong> eliminates this wasted time by automatically scraping
+									jobs from your email alerts, intelligently rating them based on your qualifications,
+									and presenting everything in a unified dashboard with AI-powered match scores.
 								</p>
 							</div>
 						</>
@@ -297,16 +289,25 @@ export const PremiumTab = (): JSX.Element => {
 				</Card.Body>
 			</Card>
 
-			<h4 className="mb-3">Premium Features</h4>
+			{/* Features Section */}
+			<div className="premium-features-title">
+				<i className="bi bi-stars"></i>
+				<h4 className="mb-0">Premium Features</h4>
+			</div>
 
 			<Row>
+				{/* Email Scraping Feature */}
 				<Col md={6} className="mb-3">
-					<Card className="h-100">
+					<Card className="h-100 premium-feature-card">
 						<Card.Body>
-							<div className="d-flex align-items-center justify-content-between mb-3">
+							<div className="premium-feature-header">
 								<div className="d-flex align-items-center">
-									<i className="bi bi-envelope fs-1 me-3"></i>
-									<h5 className="mb-0">Automatic Job Alert Email Scraping</h5>
+									<div className="premium-feature-icon-wrapper">
+										<i className="bi bi-envelope-paper"></i>
+									</div>
+									<div className="premium-feature-title-section">
+										<p className="premium-feature-title">Job Scraping</p>
+									</div>
 								</div>
 								{currentUser?.premium.is_active && (
 									<ActionToggle
@@ -318,22 +319,21 @@ export const PremiumTab = (): JSX.Element => {
 									/>
 								)}
 							</div>
+
 							<p>
-								Automatically scrape and import jobs from job boards such as LinkedIn and Indeed by
-								forwarding job alert emails to:
+								Automatically scrape and import jobs from job boards by forwarding your job alert emails
+								to:
 							</p>
-							<p className="text-center">
-								<strong>{config?.scraper_email}</strong>
-							</p>
-							<p>
-								Simply set up email forwarding rules in your inbox, and new job opportunities will be
-								automatically added to your dashboard.
-							</p>
-							<p className="mb-2">The following job boards are currently supported:</p>
-							<div className="d-flex flex-wrap gap-2 mb-3">
+
+							<div className="email-highlight">
+								<code>{config?.scraper_email}</code>
+								<div className="copy-hint">Click to copy • Set up email forwarding rules</div>
+							</div>
+
+							<p className="mb-2">Supported job boards:</p>
+							<div className="job-board-badges">
 								{jobBoards.map((board) => {
 									const email = config?.platform_sender_emails?.[board.emailKey];
-
 									return (
 										<OverlayTrigger
 											key={board.name}
@@ -364,47 +364,50 @@ export const PremiumTab = (): JSX.Element => {
 									);
 								})}
 							</div>
-							You can also request support for additional job boards by contacting{" "}
-							<a href={`mailto:${config?.support_email}?subject=Job Board Integration Request`}>
-								support
-							</a>
-							.<h4 style={{ paddingTop: "1.5rem" }}>How It Works</h4>
-							<p>
-								Job scraping happens in two <strong>stages</strong>.
+
+							<p className="small text-muted">
+								Need another job board?{" "}
+								<a href={`mailto:${config?.support_email}?subject=Job Board Integration Request`}>
+									Contact support
+								</a>
 							</p>
-							<p>
-								<strong>Stage 1 – Email processing:</strong>
-								<br /> When a job alert email is forwarded to the JAM inbox, the system parses it to
-								extract key details such as job title, salary, location, and company, depending on what
-								each job board provides.
+
+							<h6 className="premium-feature-section-title">How It Works</h6>
+							<p className="small">
+								<strong>Stage 1: Email Scraping</strong>When a job alert email is forwarded to the JAM
+								inbox, the system parses it to extract key details such as job title, salary, location,
+								and company, depending on what each job board provides.
 							</p>
-							<p>
-								<strong>Stage 2 – Deep scraping:</strong>
-								<br /> JAM then visits the corresponding job board page to collect richer information
-								like the full job description. This deeper scraping is limited to XX jobs per month per
-								user. After this limit is reached, new job alert emails are still parsed, but their job
-								pages are not scraped further.
+							<p className="small mb-0">
+								<strong>Stage 2: Deep Scraping</strong>JAM then visits the corresponding job board page
+								to collect richer information like the full job description. This deeper scraping is
+								limited to XX jobs per month per user. After this limit is reached, new job alert emails
+								are still parsed, but their job pages are not scraped further.
 							</p>
-							<h4 style={{ paddingTop: "1rem" }}>Managing scraped jobs</h4>
 							<p>
 								Each scraped job appears in your dashboard, where you can review, import, or remove it.
 								The location and company fields are automatically suggested based on your existing
 								entries to maintain consistency. If you receive too many job alerts, you can use
 								scraping filters to control which jobs are captured—for example, you can add a filter to
 								exclude jobs posted by specific companies or filter by location, salary range, or
-								keywords.
+								keywords..
 							</p>
 						</Card.Body>
 					</Card>
 				</Col>
 
+				{/* AI Matching Feature */}
 				<Col md={6} className="mb-3">
-					<Card className="h-100">
+					<Card className="h-100 premium-feature-card">
 						<Card.Body>
-							<div className="d-flex align-items-center justify-content-between mb-3">
+							<div className="premium-feature-header">
 								<div className="d-flex align-items-center">
-									<i className="bi bi-robot fs-1 me-3"></i>
-									<h5 className="mb-0">AI Job Matching</h5>
+									<div className="premium-feature-icon-wrapper">
+										<i className="bi bi-robot"></i>
+									</div>
+									<div className="premium-feature-title-section">
+										<p className="premium-feature-title">AI Job Matching</p>
+									</div>
 								</div>
 								{currentUser?.premium.is_active && (
 									<ActionToggle
@@ -416,40 +419,44 @@ export const PremiumTab = (): JSX.Element => {
 									/>
 								)}
 							</div>
+
 							<p>
-								Transform your job search with intelligent automation. Our advanced AI system
-								continuously analyses every job opportunity against your unique qualifications,
-								delivering personalized match scores so you can focus on the roles that truly matter.
+								Our AI analyses every job opportunity against your qualifications, delivering
+								personalised match scores so you can focus on roles that truly matter.
 							</p>
 
-							<h4>How It Works</h4>
-							<p>
-								When new jobs are collected from your connected job boards, our AI automatically
-								evaluates each one against your qualifications. The system considers your professional
-								experience, education, technical skills, and career interests to provide comprehensive
-								match scores—no manual work required.
+							<h6 className="premium-feature-section-title">How It Works</h6>
+							<p className="small">
+								When jobs are collected, AI automatically evaluates each one against your experience,
+								education, skills, and interests - no manual work required.
 							</p>
 
-							<h4>Comprehensive Scoring Across 5 Key Dimensions</h4>
-							<ul>
+							<h6 className="premium-feature-section-title">Scoring Dimensions</h6>
+							<ul className="scoring-dimensions">
 								<li>
-									<strong>Overall Match Score</strong> - Holistic assessment combining all factors to
-									determine how well the position fits your complete profile
+									<span>
+										<strong>Overall Match</strong> — Holistic assessment of profile fit
+									</span>
 								</li>
 								<li>
-									<strong>Technical Fit</strong> - How your skills, tools, and methodologies align
-									with requirements
+									<span>
+										<strong>Technical Fit</strong> — Skills and methodology alignment
+									</span>
 								</li>
 								<li>
-									<strong>Experience Alignment</strong> - Whether your background and career level
-									match expectations
+									<span>
+										<strong>Experience</strong> — Background and career level match
+									</span>
 								</li>
 								<li>
-									<strong>Educational Match</strong> - How your academic credentials fit the position
+									<span>
+										<strong>Education</strong> — Academic credential compatibility
+									</span>
 								</li>
 								<li>
-									<strong>Interest Score</strong> - Whether the role aligns with your career goals and
-									passions
+									<span>
+										<strong>Interest</strong> — Career goals and passion alignment
+									</span>
 								</li>
 							</ul>
 						</Card.Body>
