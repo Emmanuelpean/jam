@@ -10,17 +10,19 @@ from app.payments import logger
 
 
 def process_subscription_event(
+    customer_id: str,
+    subscription_id: str,
     event_type: str,
-    subscription_data: dict,
+    trial_end: float | None,
     db: Session,
 ) -> None:
     """Process subscription event for a given user.
+    :param subscription_id: Stripe subscription id
+    :param customer_id: Stripe customer id
     :param event_type: Stripe event type
-    :param subscription_data: Stripe subscription object data
+    :param trial_end: Stripe trial end
     :param db: Database session"""
 
-    subscription_id = subscription_data.get("id")
-    customer_id = subscription_data.get("customer")
     user = db.query(User).filter(User.stripe_details.has(customer_id=customer_id)).first()
     logger.info("Customer id: " + str(customer_id))
     logger.info(f"Received event: {event_type} for customer {customer_id}")
@@ -41,7 +43,7 @@ def process_subscription_event(
     # Handle trial ending soon
     elif event_type == "customer.subscription.trial_will_end":
         try:
-            trial_end_date = dt.datetime.fromtimestamp(subscription_data.get("trial_end"))
+            trial_end_date = dt.datetime.fromtimestamp(trial_end)
             email_service.send_trial_end_notification(user.email, trial_end_date)
             logger.info(f"Trial ending notification sent to user {user.id}")
         except Exception as e:

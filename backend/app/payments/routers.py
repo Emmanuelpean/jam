@@ -3,6 +3,7 @@
 import stripe
 from fastapi import Request, Depends, HTTPException
 from sqlalchemy.orm import Session
+from starlette import status
 
 from app.config import settings
 from app.core.oauth2 import get_current_user
@@ -18,7 +19,7 @@ async def create_subscription_checkout(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict:
-    """Create a Stripe Checkout Session for a monthly subscription.
+    """Create a Stripe Customer and Checkout Session for the current user.
     New customers get a 14-day trial without payment method required.
     Returning customers must provide payment method upfront.
     :param current_user: Authenticated user from JWT token
@@ -32,14 +33,20 @@ async def create_subscription_checkout(
         checkout_session = await stripe.checkout.Session.create_async(**checkout_params)
         logger.info(f"Created checkout session {checkout_session.id} for user {current_user.id}")
         return {"url": checkout_session.url}
-    except HTTPException:
+    except HTTPException:  # re-raise internal HTTP exceptions
         raise
     except stripe.error.StripeError as e:
         logger.error(f"Stripe error creating checkout for user {current_user.id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=503, detail="Payment service temporarily unavailable. Please try again.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payment service temporarily unavailable. Please try again.",
+        )
     except Exception as e:
         logger.error(f"Unexpected error creating checkout for user {current_user.id}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred. Please try again.",
+        )
 
 
 @payment_router.post("/webhook")
@@ -57,16 +64,18 @@ async def stripe_webhook(
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, settings.stripe_webhook_secret)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid payload")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid payload")
     except stripe.error.SignatureVerificationError:
-        raise HTTPException(status_code=400, detail="Invalid signature")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature")
 
-    # Delegate to shared business logic
-    process_subscription_event(event.type, event.data.object, db)
+    subscription_id = event.data.object.get("id")
+    customer_id = event.data.object.get("customer")
+    trial_end = event.data.object.get("trial_end")
+    process_subscription_event(customer_id, subscription_id, event.type, trial_end, db)
     return {"status": "success"}
 
 
-@payment_router.post("/create-portal-session")
+@payment_router.post("/create-portal-session")  # TODO
 async def create_portal_session(
     current_user: User = Depends(get_current_user),
 ) -> dict:
@@ -76,12 +85,14 @@ async def create_portal_session(
     :raises HTTPException: On customer not found or Stripe errors"""
 
     try:
-        user_email = current_user.email
-        customers = await stripe.Customer.list_async(email=user_email, limit=1)
+        customers = await stripe.Customer.list_async(email=current_user.email, limit=1)
 
         if not customers.data:
             logger.warning(f"No Stripe customer found for user {current_user.id}")
-            raise HTTPException(status_code=404, detail="No subscription found. Please subscribe first.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No subscription found. Please subscribe first.",
+            )
 
         customer = customers.data[0]
 
@@ -105,11 +116,11 @@ async def create_portal_session(
         raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
 
 
-@payment_router.get("/subscription-status/")
+@payment_router.get("/subscription-status")
 async def get_subscription_status(
     current_user: User = Depends(get_current_user),
 ) -> dict:
-    """Get subscription status and trial information.
+    """Get subscription status and trial information for the current user.
     :param current_user: Authenticated user from JWT token
     :return: dict with subscription status and trial info"""
 
@@ -117,10 +128,7 @@ async def get_subscription_status(
         return {"status": None, "trial_end": None}
     try:
         data = await stripe.Subscription.retrieve_async(current_user.stripe_details.subscription_id)
-        return {
-            "status": data.status,
-            "trial_end": data.trial_end,
-        }
+        return {"status": data.status, "trial_end": data.trial_end}
     except stripe.error.StripeError as e:
-        logger.error(f"Failed to retrieve subscription {current_user.stripe_details.subscription_id}: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Failed to retrieve subscription for user {current_user.id}: {e}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

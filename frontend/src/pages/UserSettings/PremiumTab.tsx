@@ -23,6 +23,13 @@ interface SubscriptionStatusDisplay {
 	icon: string;
 }
 
+interface JobBoard {
+	name: string;
+	url: string;
+	emailKey: string;
+	icon: string;
+}
+
 const getSubscriptionStatusDisplay = (
 	status: string | null,
 	trialEnd: number | null,
@@ -38,7 +45,7 @@ const getSubscriptionStatusDisplay = (
 			icon: "bi-star",
 		};
 	} else if (trialEnd) {
-		const remainingDays = Math.ceil((trialEnd - Date.now() / 1000) / 86400);
+		const remainingDays: number = Math.ceil((trialEnd - Date.now() / 1000) / 86400);
 		return {
 			title: "Premium (Trial)",
 			message: `${remainingDays} day${remainingDays !== 1 ? "s" : ""} remaining in your free trial`,
@@ -88,6 +95,7 @@ export const PremiumTab = (): JSX.Element => {
 			setSubscriptionLoading(true);
 			const response: ApiResponse<SubscriptionStatus> = await paymentsApi.getSubscriptionStatus(token);
 			setSubscriptionStatus(response.data);
+			console.log(response);
 		} catch (error) {
 			setSubscriptionStatus({ status: "error", trial_end: null });
 		} finally {
@@ -95,42 +103,35 @@ export const PremiumTab = (): JSX.Element => {
 		}
 	};
 
+	fetchSubscriptionStatus().then();
+
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
-		const url = new URL(window.location.href);
 
 		if (params.get("success") === "true") {
 			// Set up polling to check subscription status
-			let pollCount = 0;
-			const maxPolls = 100; // Poll up to 10 times
-			const pollingInterval = 3000; // Poll every 3 seconds
+			let pollCount: number = 0;
+			const maxPolls: number = 100;
+			const pollingInterval: number = 3000;
 
-			const intervalId = setInterval(() => {
-				console.log("Polling for subscription status...");
+			const intervalId = setInterval((): void => {
 				pollCount++;
-
 				if (pollCount >= maxPolls) {
 					clearInterval(intervalId);
 					return;
 				}
 
 				// Poll user data and subscription status
-				if (token) {
-					fetchUserInfo(token).then(() => {
-						paymentsApi.getSubscriptionStatus(token).then(() => {});
-					});
-				}
+				fetchSubscriptionStatus().then();
 			}, pollingInterval);
 
-			window.history.replaceState({}, document.title, url.pathname);
-
-			return () => {
+			return (): void => {
 				clearInterval(intervalId);
 			};
 		}
 	}, [token]);
 
-	const handleSubscribe = async () => {
+	const handleSubscribe = async (): Promise<void> => {
 		if (!token) return;
 		setStripeLoading(true);
 
@@ -148,12 +149,12 @@ export const PremiumTab = (): JSX.Element => {
 		}
 	};
 
-	const handleManageSubscription = async () => {
+	const handleManageSubscription = async (): Promise<void> => {
 		if (!token) return;
 		setStripeLoading(true);
 
 		try {
-			const response = await paymentsApi.createPortalSession(token);
+			const response: ApiResponse<PortalSessionResponse> = await paymentsApi.createPortalSession(token);
 			if (response.data?.url) {
 				window.location.href = response.data.url;
 			} else {
@@ -166,14 +167,14 @@ export const PremiumTab = (): JSX.Element => {
 		}
 	};
 
-	const handleRightClick = (e: React.MouseEvent, email: string) => {
+	const handleRightClick = (e: React.MouseEvent, email: string): void => {
 		e.preventDefault();
 		navigator.clipboard.writeText(email).then((_: void): void => {
 			showToastSuccess(`${email} copied to clipboard`);
 		});
 	};
 
-	const copyScraperEmail = (e: React.MouseEvent): void => {
+	const copyScraperEmail = (_: React.MouseEvent): void => {
 		navigator.clipboard.writeText(config.support_email).then((_: void): void => {
 			showToastSuccess(`${config.support_email} copied to clipboard`);
 		});
@@ -184,33 +185,33 @@ export const PremiumTab = (): JSX.Element => {
 		subscriptionStatus.trial_end,
 		config?.support_email
 	);
-	const hasActiveSubscription = ["active", "trialing", "paused"].includes(subscriptionStatus.status || "");
+	const hasActiveSubscription: boolean = ["active", "trialing", "paused"].includes(subscriptionStatus.status || "");
 
-	const jobBoards = [
+	const jobBoards: JobBoard[] = [
 		{ name: "LinkedIn", url: "https://linkedin.com", icon: "linkedin", emailKey: "linkedin" },
 		{ name: "Indeed", url: "https://indeed.com", icon: "briefcase", emailKey: "indeed" },
 		{ name: "VeganJobs", url: "https://veganjobs.com", icon: "flower1", emailKey: "veganjobs" },
 		{ name: "NHS", url: "https://www.jobs.nhs.uk", icon: "hospital", emailKey: "nhs" },
 	];
 
-	const handleToggleJobRating = () => {
+	const handleToggleJobRating = (): void => {
 		setJobRatingLoading(true);
 		updateCurrentUser({
 			premium: { job_rating_active: !currentUser?.premium.job_rating_active },
 		})
-			.then(() => {})
-			.catch(() => showToastError("Failed to update settings"))
-			.finally(() => setJobRatingLoading(false));
+			.then((): void => {})
+			.catch((): void => showToastError("Failed to update settings"))
+			.finally((): void => setJobRatingLoading(false));
 	};
 
-	const handleToggleJobScraping = () => {
+	const handleToggleJobScraping = (): void => {
 		setJobScrapingLoading(true);
 		updateCurrentUser({
 			premium: { job_scraping_active: !currentUser?.premium.job_scraping_active },
 		})
-			.then(() => {})
-			.catch(() => showToastError("Failed to update settings"))
-			.finally(() => setJobScrapingLoading(false));
+			.then((): void => {})
+			.catch((): void => showToastError("Failed to update settings"))
+			.finally((): void => setJobScrapingLoading(false));
 	};
 
 	return (
