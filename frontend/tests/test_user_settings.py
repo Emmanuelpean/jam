@@ -1,10 +1,14 @@
 """Tests for the User Settings Page"""
 
 import datetime as dt
+import os
+import subprocess
 import time
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
+from app.config import settings
 from app.utils import verify_password
 from conftest import models, BaseTest, BaseUtilsClass
 from tests.utils.test_data import TOAST_USER_1_INDEX
@@ -245,13 +249,10 @@ class PremiumSettingsUtils(BaseUtilsClass):
         response = self.client.delete("/test/delete-all-customers")
         assert response.status_code == 200
 
-    def call_stripe_create_webhook(self, user) -> None:
-        """Call Stripe webhook to simulate an event"""
+    def advance_clock(self, days: int = 15) -> None:
+        """Advance the Stripe clock"""
 
-        response = self.client.post(
-            "/test/webhook",
-            json={"type": "customer.subscription.created", "customer_id": user.stripe_details.customer_id},
-        )
+        response = self.client.get("/test/advance_test_clock", {"days": days})
         assert response.status_code == 200
 
     @property
@@ -270,13 +271,14 @@ class PremiumSettingsUtils(BaseUtilsClass):
         """Set payment details in the Stripe iframe"""
 
         self.driver.switch_to.frame(0)
-        self.set_text(self.get_element("Field-numberInput"), "4242 4242 4242 4242")
-        self.set_text(self.get_element("Field-cvcInput"), "123")
-        self.get_element("Field-countryInput").send_keys("United States")
-        self.set_text(self.get_element("Field-expiryInput"), "1228")
-        self.set_text(self.get_element("Field-postalCodeInput"), "10001")
+        self.get_element("card-tab").click()
+        self.set_text(self.get_element("payment-numberInput"), "4242 4242 4242 4242")
+        self.set_text(self.get_element("payment-cvcInput"), "123")
+        self.get_element("payment-countryInput", timeout=2).send_keys("United States")
+        self.set_text(self.get_element("payment-expiryInput"), "1228")
+        self.set_text(self.get_element("payment-postalCodeInput"), "10001")
         self.driver.switch_to.default_content()
-        self.get_element("[data-test='confirm']", By.CSS_SELECTOR).click()
+        self.confirm_button.click()
 
     @property
     def status_title(self) -> WebElement:
@@ -308,6 +310,18 @@ class PremiumSettingsUtils(BaseUtilsClass):
 
         return self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR)
 
+    @property
+    def confirm_button(self) -> WebElement:
+        """Confirm button element"""
+
+        return self.get_element("[data-test='confirm']", By.CSS_SELECTOR)
+
+    @property
+    def cancel_feedback(self) -> WebElement:
+        """Confirm button element"""
+
+        return self.get_element("[data-testid='cancellation_reason_cancel']", By.CSS_SELECTOR)
+
 
 class TestPremiumSettingsPage(BaseTest):
     """Test class for the Premium Settings Page"""
@@ -322,8 +336,28 @@ class TestPremiumSettingsPage(BaseTest):
     def setup_function(self, request) -> None:
         """Setup function"""
 
+        stripe_cmd = r'"C:\Program Files\Stripe\stripe.exe"' if os.name == "nt" else "stripe"
+        self.stripe_listener = subprocess.Popen(
+            f"{stripe_cmd} listen --forward-to {settings.backend_url}/payments/webhooks",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=True,
+            text=True,
+        )
+
+        # Wait for stripe listener to be ready (it outputs "Ready!" when connected)
+        timeout = 30
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            line = self.stripe_listener.stdout.readline()
+            if line:
+                print(f"[STRIPE] {line.strip()}")
+                if "Ready!" in line:
+                    break
+        else:
+            raise RuntimeError("Stripe listener failed to start within timeout")
+
         self.login()
-        self.user_settings_utils.go_to_premium_tab()
         self.premium_settings_utils = PremiumSettingsUtils(
             self.driver,
             self.frontend_base_url,
@@ -332,10 +366,12 @@ class TestPremiumSettingsPage(BaseTest):
             self.client,
         )
 
-    def test_premium_page_content(self) -> None:
-        """Test premium page content"""
+    def teardown_function(self, _request) -> None:
+        """Teardown function"""
 
-        assert self.check_element_exists("subscribe-button")
+        if self.stripe_listener:
+            self.stripe_listener.terminate()
+            self.stripe_listener.wait()
 
     def test_stripe_payment(self) -> None:
         """Test the Stripe payment modal interaction"""
@@ -344,14 +380,21 @@ class TestPremiumSettingsPage(BaseTest):
         self.premium_settings_utils.delete_stripe_data()
         self.premium_settings_utils.subscribe_button.click()
         self.premium_settings_utils.start_trial_button.click()
-        time.sleep(1)
-        self.premium_settings_utils.call_stripe_create_webhook(self.db_user)
-        time.sleep(3)
         assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
         assert self.db_user.premium.is_active
 
         # Manage subscription and add payment method
         self.premium_settings_utils.manage_subscription_button.click()
         self.premium_settings_utils.add_payment_method_button.click()
+        time.sleep(3)
         self.premium_settings_utils.set_payment_details()
         self.premium_settings_utils.return_to_business_link.click()
+        assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
+        assert self.db_user.premium.is_active
+
+        # Cancel subscription
+        self.premium_settings_utils.manage_subscription_button.click()
+        self.premium_settings_utils.cancel_subscription_button.click()
+        self.premium_settings_utils.confirm_button.click()
+        self.premium_settings_utils.cancel_feedback.click()
+        self.premium_settings_utils.advance_clock()

@@ -167,23 +167,25 @@ async def advance_test_clock(
         raise HTTPException(status_code=500, detail="An error occurred. Please try again.")
 
 
-class WebhookRequest(BaseModel):
-    type: str
-    customer_id: str
-
-
-@test_router.post("/webhook")
-async def stripe_webhook(
-    event: WebhookRequest,
-    db: Session = Depends(get_db),
-) -> dict:
-    """Handle Stripe webhook events - signature verification only."""
-
-    subscriptions = await stripe.Subscription.list_async(customer=event.customer_id, limit=1)
-
-    if not subscriptions.data:
-        raise HTTPException(status_code=404, detail="No subscription found for customer")
-
-    subscription = subscriptions.data[0]
-    process_subscription_event(event.customer_id, subscription.id, event.type, subscription.trial_end, db)
-    return {"status": "success"}
+#
+#
+# class WebhookRequest(BaseModel):
+#     type: str
+#     customer_id: str
+#
+#
+# @test_router.post("/webhook")
+# async def stripe_webhook(
+#     event: WebhookRequest,
+#     db: Session = Depends(get_db),
+# ) -> dict:
+#     """Handle Stripe webhook events - signature verification only."""
+#
+#     subscriptions = await stripe.Subscription.list_async(customer=event.customer_id, limit=1)
+#
+#     if not subscriptions.data:
+#         raise HTTPException(status_code=404, detail="No subscription found for customer")
+#
+#     subscription = subscriptions.data[0]
+#     process_subscription_event(event.customer_id, subscription.id, event.type, subscription.trial_end, db)
+#     return {"status": "success"}

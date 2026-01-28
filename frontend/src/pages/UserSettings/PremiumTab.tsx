@@ -89,46 +89,75 @@ export const PremiumTab = (): JSX.Element => {
 	const [jobScrapingLoading, setJobScrapingLoading] = useState<boolean>(false);
 	const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>(defaultSubscriptionStatus);
 
-	const fetchSubscriptionStatus = async (): Promise<void> => {
-		if (!token) return;
+	const fetchSubscriptionStatus = async (showLoading: boolean = true): Promise<SubscriptionStatus> => {
+		if (!token) return defaultSubscriptionStatus;
 		try {
-			setSubscriptionLoading(true);
+			if (showLoading) setSubscriptionLoading(true);
 			const response: ApiResponse<SubscriptionStatus> = await paymentsApi.getSubscriptionStatus(token);
 			setSubscriptionStatus(response.data);
 			console.log(response);
+			return response.data;
 		} catch (error) {
-			setSubscriptionStatus({ status: "error", trial_end: null });
+			const errorStatus = { status: "error", trial_end: null };
+			setSubscriptionStatus(errorStatus);
+			return errorStatus;
 		} finally {
-			setSubscriptionLoading(false);
+			if (showLoading) setSubscriptionLoading(false);
 		}
 	};
 
-	fetchSubscriptionStatus().then();
-
+	// Initial fetch and polling logic
 	useEffect(() => {
+		if (!token) return;
+
 		const params = new URLSearchParams(window.location.search);
+		const shouldPoll = params.get("success") === "true" || sessionStorage.getItem("stripe_redirect") === "true";
 
-		if (params.get("success") === "true") {
-			// Set up polling to check subscription status
+		// Clear flags immediately
+		if (shouldPoll) {
+			sessionStorage.removeItem("stripe_redirect");
+			window.history.replaceState({}, document.title, window.location.pathname);
+		}
+
+		let intervalId: ReturnType<typeof setInterval> | null = null;
+		let isCancelled = false;
+
+		const initAndPoll = async (): Promise<void> => {
+			const initialStatus = await fetchSubscriptionStatus();
+
+			if (!shouldPoll || isCancelled) return;
+
+			// Start polling to detect status changes
 			let pollCount: number = 0;
-			const maxPolls: number = 100;
-			const pollingInterval: number = 3000;
+			const maxPolls: number = 30;
+			const pollingInterval: number = 2000;
 
-			const intervalId = setInterval((): void => {
+			intervalId = setInterval(async (): Promise<void> => {
 				pollCount++;
-				if (pollCount >= maxPolls) {
-					clearInterval(intervalId);
+				if (pollCount >= maxPolls || isCancelled) {
+					if (intervalId) clearInterval(intervalId);
 					return;
 				}
 
-				// Poll user data and subscription status
-				fetchSubscriptionStatus().then();
+				const newStatus = await fetchSubscriptionStatus(false);
+				if (newStatus.status !== initialStatus.status && newStatus.status !== "unknown") {
+					if (intervalId) clearInterval(intervalId);
+					// Refresh user info to sync premium status
+					if (token) void fetchUserInfo(token);
+				}
 			}, pollingInterval);
+		};
 
-			return (): void => {
-				clearInterval(intervalId);
-			};
-		}
+		void initAndPoll();
+
+		return (): void => {
+			isCancelled = true;
+			if (intervalId) clearInterval(intervalId);
+		};
+	}, [token]);
+
+	useEffect(() => {
+		fetchSubscriptionStatus().then();
 	}, [token]);
 
 	const handleSubscribe = async (): Promise<void> => {
@@ -138,13 +167,16 @@ export const PremiumTab = (): JSX.Element => {
 		try {
 			const response: ApiResponse<PortalSessionResponse> = await paymentsApi.createSubscriptionCheckout(token);
 			if (response.data?.url) {
+				// Set flag to trigger polling when user returns from Stripe
+				sessionStorage.setItem("stripe_redirect", "true");
 				window.location.href = response.data.url;
 			} else {
 				showToastError("Failed to create checkout session. Please try again.");
+				setStripeLoading(false);
 			}
 		} catch (error) {
+			console.log(error);
 			showToastError("Failed to create checkout session. Please try again.");
-		} finally {
 			setStripeLoading(false);
 		}
 	};
@@ -156,13 +188,15 @@ export const PremiumTab = (): JSX.Element => {
 		try {
 			const response: ApiResponse<PortalSessionResponse> = await paymentsApi.createPortalSession(token);
 			if (response.data?.url) {
+				// Set flag to trigger polling when user returns from Stripe
+				sessionStorage.setItem("stripe_redirect", "true");
 				window.location.href = response.data.url;
 			} else {
 				showToastError("Failed to open subscription management. Please try again.");
+				setStripeLoading(false);
 			}
 		} catch (error) {
 			showToastError("Failed to open subscription management. Please try again.");
-		} finally {
 			setStripeLoading(false);
 		}
 	};
@@ -252,7 +286,6 @@ export const PremiumTab = (): JSX.Element => {
 											defaultText="Start Free Trial"
 											loading={stripeLoading}
 											loadingText="Loading..."
-											variant="light"
 										/>
 									</div>
 								) : hasActiveSubscription ? (
@@ -263,7 +296,6 @@ export const PremiumTab = (): JSX.Element => {
 										</div>
 										<ActionButton
 											onClick={handleManageSubscription}
-											variant="light"
 											defaultIcon="bi-gear"
 											loading={stripeLoading}
 											id="manage-subscription-button"
