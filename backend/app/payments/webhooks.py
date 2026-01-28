@@ -1,4 +1,4 @@
-"""Payment-related API routes using Stripe for subscription management."""
+"""Stripe webhooks module"""
 
 import datetime as dt
 
@@ -24,9 +24,9 @@ def process_subscription_event(
     :param db: Database session"""
 
     user = db.query(User).filter(User.stripe_details.has(customer_id=customer_id)).first()
-    logger.info("Customer id: " + str(customer_id))
     logger.info(f"Received event: {event_type} for customer {customer_id}")
 
+    # Handle subscription creation
     if event_type == "customer.subscription.created":
         user.stripe_details.subscription_id = subscription_id
         user.premium.is_active = True

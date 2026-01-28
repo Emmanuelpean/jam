@@ -1,5 +1,7 @@
 """Payment-related API endpoints using FastAPI and Stripe."""
 
+import json
+
 import stripe
 from fastapi import Request, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -9,9 +11,10 @@ from app.config import settings
 from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.models import User
-from app.payments import checkout
+from app.payments.checkout import build_checkout_params
 from app.payments import payment_router, logger
 from app.payments.webhooks import process_subscription_event
+from app.payments.customer import get_or_create_stripe_customer
 
 
 @payment_router.post("/create-subscription-checkout")
@@ -28,8 +31,8 @@ async def create_subscription_checkout(
     :raises HTTPException: On Stripe or database errors"""
 
     try:
-        customer_id = await checkout.get_or_create_stripe_customer(current_user, db)
-        checkout_params = await checkout.build_checkout_params(customer_id)
+        customer_id = await get_or_create_stripe_customer(current_user, db)
+        checkout_params = await build_checkout_params(current_user, customer_id)
         checkout_session = await stripe.checkout.Session.create_async(**checkout_params)
         logger.info(f"Created checkout session {checkout_session.id} for user {current_user.id}")
         return {"url": checkout_session.url}
@@ -49,7 +52,7 @@ async def create_subscription_checkout(
         )
 
 
-@payment_router.post("/webhook")
+@payment_router.post("/webhooks")
 async def stripe_webhook(
     request: Request,
     db: Session = Depends(get_db),
@@ -61,44 +64,52 @@ async def stripe_webhook(
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
 
-    try:
-        event = stripe.Webhook.construct_event(payload, sig_header, settings.stripe_webhook_secret)
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid payload")
-    except stripe.error.SignatureVerificationError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature")
+    if settings.test_mode:
+        # Just parse JSON directly in dev/test mode
+        event = json.loads(payload)
+        print("[Stripe Event]", event)
+    else:
+        # Production verification
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, settings.stripe_webhook_secret)
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid payload")
+        except stripe.error.SignatureVerificationError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature")
 
-    subscription_id = event.data.object.get("id")
-    customer_id = event.data.object.get("customer")
-    trial_end = event.data.object.get("trial_end")
-    process_subscription_event(customer_id, subscription_id, event.type, trial_end, db)
+    obj = event["data"]["object"]
+    subscription_id = obj.get("id")
+    customer_id = obj.get("customer")
+    trial_end = obj.get("trial_end")
+    event_type = event.get("type")
+
+    process_subscription_event(customer_id, subscription_id, event_type, trial_end, db)
     return {"status": "success"}
 
 
 @payment_router.post("/create-portal-session")  # TODO
 async def create_portal_session(
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ) -> dict:
     """Create a Stripe Customer Portal session for subscription management.
     :param current_user: Authenticated user from JWT token
+    :param db: Database session
     :return: dict with portal URL
     :raises HTTPException: On customer not found or Stripe errors"""
 
     try:
-        customers = await stripe.Customer.list_async(email=current_user.email, limit=1)
-
-        if not customers.data:
-            logger.warning(f"No Stripe customer found for user {current_user.id}")
+        if not current_user.stripe_details.customer_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No subscription found. Please subscribe first.",
+                detail="No customer found. Please subscribe first.",
             )
-
-        customer = customers.data[0]
+        # Make sure that Stripe and JAM are synced
+        customer_id = await get_or_create_stripe_customer(current_user, db)
 
         # Create portal session
         portal_session = await stripe.billing_portal.Session.create_async(
-            customer=customer.id,
+            customer=customer_id,
             return_url=f"{settings.frontend_url}/settings/premium/?success=true",
         )
 
