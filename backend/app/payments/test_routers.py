@@ -6,6 +6,7 @@ import datetime as dt
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+from starlette import status
 
 from app.core.oauth2 import get_current_user
 from app.database import get_db
@@ -70,10 +71,16 @@ async def delete_all_stripe_customers() -> dict:
 
     except stripe.error.StripeError as e:
         logger.error(f"Stripe error during bulk deletion: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=503, detail="Payment service error. Please try again.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Payment service error. Please try again.",
+        )
     except Exception as e:
         logger.error(f"Unexpected error during bulk deletion: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="An error occurred during deletion.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred during deletion.",
+        )
 
 
 class AdvanceClockRequest(BaseModel):
@@ -178,9 +185,5 @@ async def stripe_webhook(
         raise HTTPException(status_code=404, detail="No subscription found for customer")
 
     subscription = subscriptions.data[0]
-    process_subscription_event(
-        event.type,
-        {"customer": event.customer_id, "id": subscription.id, "trial_end": subscription.trial_end},
-        db,
-    )
+    process_subscription_event(event.customer_id, subscription.id, event.type, subscription.trial_end, db)
     return {"status": "success"}
