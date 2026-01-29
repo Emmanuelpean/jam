@@ -2,7 +2,7 @@ import { ApiResponsePromise, baseApi } from "./Base";
 
 export interface SubscriptionStatus {
 	status: string | null;
-	trial_end: number | null;
+	trial_days_remaining: number | null;
 }
 
 export interface PortalSessionResponse {

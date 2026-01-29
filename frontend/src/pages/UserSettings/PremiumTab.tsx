@@ -11,7 +11,7 @@ import LoadingSpinner from "../../components/spinner/Spinner";
 
 const defaultSubscriptionStatus = {
 	status: "unknown",
-	trial_end: null,
+	trial_days_remaining: null,
 };
 
 interface SubscriptionStatusDisplay {
@@ -32,7 +32,7 @@ interface JobBoard {
 
 const getSubscriptionStatusDisplay = (
 	status: string | null,
-	trialEnd: number | null,
+	trialDaysRemaining: number | null,
 	supportEmail: string
 ): SubscriptionStatusDisplay => {
 	if (!status || status === "canceled") {
@@ -44,11 +44,10 @@ const getSubscriptionStatusDisplay = (
 			showSubscribeButton: true,
 			icon: "bi-star",
 		};
-	} else if (trialEnd) {
-		const remainingDays: number = Math.ceil((trialEnd - Date.now() / 1000) / 86400);
+	} else if (trialDaysRemaining !== null && trialDaysRemaining > 0) {
 		return {
 			title: "Premium (Trial)",
-			message: `${remainingDays} day${remainingDays !== 1 ? "s" : ""} remaining in your free trial`,
+			message: `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} remaining in your free trial`,
 			variant: "success",
 			badgeVariant: "success",
 			showSubscribeButton: false,
@@ -98,7 +97,7 @@ export const PremiumTab = (): JSX.Element => {
 			console.log(response);
 			return response.data;
 		} catch (error) {
-			const errorStatus = { status: "error", trial_end: null };
+			const errorStatus = { status: "error", trial_days_remaining: null };
 			setSubscriptionStatus(errorStatus);
 			return errorStatus;
 		} finally {
@@ -216,7 +215,7 @@ export const PremiumTab = (): JSX.Element => {
 
 	const statusDisplay: SubscriptionStatusDisplay = getSubscriptionStatusDisplay(
 		subscriptionStatus.status,
-		subscriptionStatus.trial_end,
+		subscriptionStatus.trial_days_remaining,
 		config?.support_email
 	);
 	const hasActiveSubscription: boolean = ["active", "trialing", "paused"].includes(subscriptionStatus.status || "");
