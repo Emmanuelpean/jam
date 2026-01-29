@@ -1,13 +1,14 @@
 import React, { JSX, useEffect, useState } from "react";
-import { Alert, Col, Form, Row } from "react-bootstrap";
+import { Alert, Col, Form, Modal, Row } from "react-bootstrap";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
-import { authApi, exportApi, UpdateCurrentUserResponse } from "../../services/api/Users";
+import { authApi, exportApi, GenericResponse, UpdateCurrentUserResponse } from "../../services/api/Users";
 import { ApiResponse } from "../../services/api/Base";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
+import { useNavigate } from "react-router-dom";
 
 interface AccountFormData {
 	email?: string;
@@ -16,11 +17,13 @@ interface AccountFormData {
 	confirm_password?: string;
 	first_name?: string;
 	last_name?: string;
+	delete_password?: string;
 }
 
 export const AccountTab: React.FC = (): JSX.Element => {
-	const { currentUser, token, updateCurrentUser } = useAuth();
+	const { currentUser, token, updateCurrentUser, logout } = useAuth();
 	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
+	const navigate = useNavigate();
 	const [formData, setFormData] = useState<AccountFormData>(() => ({
 		email: currentUser?.email || "",
 		current_password: "",
@@ -28,9 +31,12 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		confirm_password: "",
 		first_name: currentUser?.first_name || "",
 		last_name: currentUser?.last_name || "",
+		delete_password: "",
 	}));
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState(false);
+	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.MIN_PASSWORD_LENGTH || "8");
 	const hasPendingEmail: boolean = !!currentUser?.pending_email_change;
 
@@ -60,6 +66,35 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		} catch (error) {
 			showApiError(error, "Download Failed", "An unknown error occcurred while downloading the data.");
 		}
+	};
+
+	const handleDeleteAccount = async (): Promise<void> => {
+		if (!formData.delete_password) return;
+		if (!token) return;
+		setDeleting(true);
+
+		try {
+			const response: ApiResponse<GenericResponse> = await authApi.deleteAccount(formData.delete_password, token);
+			if (response.data.success) {
+				showToastSuccess("Your account has been permanently deleted.", "Account Deleted");
+				logout();
+				navigate("/");
+			}
+		} catch (error) {
+			showApiError(error, "Account Deletion Failed", "Failed to delete your account due to an unknown error");
+		} finally {
+			setDeleting(false);
+		}
+	};
+
+	const openDeleteModal = (): void => {
+		setShowDeleteModal(true);
+		formData.delete_password = "";
+	};
+
+	const closeDeleteModal = (): void => {
+		setShowDeleteModal(false);
+		formData.delete_password = "";
 	};
 
 	const handleInputChange = (e: SyntheticEvent): void => {
@@ -181,7 +216,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		label: "Current Password",
 		placeholder: "Enter your current password",
 		helpText: currentUser?.is_demo
-			? "This is a test account. Email and password changes are disabled."
+			? "This is a test account. Email and password change are disabled."
 			: "Required to change your email or password",
 		isDisabled: currentUser?.is_demo,
 	};
@@ -192,7 +227,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		label: "New Password",
 		placeholder: "Enter new password",
 		isDisabled: currentUser?.is_demo,
-		helpText: currentUser?.is_demo ? "This is a test account. Password changes are disabled." : null,
+		helpText: currentUser?.is_demo ? "This is a test account. Password change is disabled." : null,
 	};
 
 	const confirmPasswordField: ModalFormField = {
@@ -201,7 +236,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		label: "Confirm New Password",
 		placeholder: "Confirm new password",
 		isDisabled: currentUser?.is_demo,
-		helpText: currentUser?.is_demo ? "This is a test account. Password changes are disabled." : null,
+		helpText: currentUser?.is_demo ? "This is a test account. Password change is disabled." : null,
 	};
 
 	const firstNameField: ModalFormField = {
@@ -216,6 +251,12 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		type: "text",
 		label: "Last Name",
 		placeholder: "Enter your last name",
+	};
+
+	const deletePasswordField: ModalFormField = {
+		name: "delete_password",
+		type: "password",
+		label: "Password",
 	};
 
 	return (
@@ -273,6 +314,53 @@ export const AccountTab: React.FC = (): JSX.Element => {
 					defaultText={submitting ? "Saving..." : "Save Account Settings"}
 				/>
 			</div>
+
+			<hr className="my-4" />
+
+			<h5 className="mb-3 text-danger">
+				<i className="bi bi-exclamation-triangle text-danger"></i> Danger Zone
+			</h5>
+			<p className="text-muted">
+				Permanently delete your account and all associated data. This action cannot be undone.
+			</p>
+			<ActionButton
+				variant="danger"
+				onClick={openDeleteModal}
+				defaultIcon="trash"
+				defaultText="Delete Account"
+				disabled={currentUser?.is_demo}
+			/>
+			{currentUser?.is_demo && (
+				<p className="text-muted mt-2">
+					<small>This is a test account. Account deletion is disabled.</small>
+				</p>
+			)}
+
+			<Modal show={showDeleteModal} onHide={closeDeleteModal} centered>
+				<Modal.Header closeButton>
+					<Modal.Title>
+						<i className="bi bi-exclamation-triangle"></i> Delete Account
+					</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					<Alert variant="danger">
+						<strong>Warning:</strong> This action is permanent and cannot be undone. All your data will be
+						permanently deleted.
+					</Alert>
+					<p>Please enter your password to confirm account deletion:</p>
+					{renderFormField(deletePasswordField, formData, handleInputChange, errors)}
+				</Modal.Body>
+				<Modal.Footer>
+					<ActionButton variant="secondary" onClick={closeDeleteModal} defaultText="Cancel" />
+					<ActionButton
+						variant="danger"
+						onClick={handleDeleteAccount}
+						disabled={deleting || !formData.delete_password}
+						defaultIcon="trash"
+						defaultText={deleting ? "Deleting..." : "Delete Account"}
+					/>
+				</Modal.Footer>
+			</Modal>
 		</Form>
 	);
 };

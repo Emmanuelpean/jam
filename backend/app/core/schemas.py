@@ -237,3 +237,12 @@ class CheckPendingEmailResponse(BaseModel):
 
     has_pending_email: bool
     pending_email: str | None = None
+
+
+# -------------------------------------------------- ACCOUNT DELETION --------------------------------------------------
+
+
+class AccountDeleteRequest(BaseModel):
+    """Account deletion request schema"""
+
+    password: str
