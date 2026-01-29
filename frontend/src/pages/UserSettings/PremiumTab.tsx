@@ -266,7 +266,7 @@ export const PremiumTab = (): JSX.Element => {
 								<h3 className="mb-2" id="status-title">
 									{statusDisplay.title}
 								</h3>
-								<p className="text-muted mb-4" style={{ fontSize: "1rem" }}>
+								<p className="text-muted mb-4" style={{ fontSize: "1rem" }} id={"status-message"}>
 									{statusDisplay.message}
 								</p>
 

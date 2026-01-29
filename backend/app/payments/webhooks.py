@@ -35,14 +35,13 @@ async def process_subscription_event(
         db.commit()
         logger.info(f"Subscription created: {subscription_id} for user {user.id}")
 
-    # Handle subscription deletion
+    # Handle subscription deletion by setting premium as not active
     elif event_type == "customer.subscription.deleted":
-        user.stripe_details.subscription_id = None
         user.premium.is_active = False
         db.commit()
         logger.info(f"Subscription deleted for user {user.id}")
 
-    # Handle trial ending soon
+    # Handle trial ending soon, send email to user
     elif event_type == "customer.subscription.trial_will_end":
         try:
             trial_end_date = dt.datetime.fromtimestamp(trial_end)
@@ -51,23 +50,6 @@ async def process_subscription_event(
         except Exception as e:
             logger.error(f"Failed to send trial ending email to user {user.id}: {e}")
         logger.info(f"Trial ending soon for user {user.id}")
-
-    # # Handle payment method added via portal
-    # elif event_type == "setup_intent.succeeded":
-    #     if customer_id and payment_method_id:
-    #         # Set as customer's default payment method
-    #         await stripe.Customer.modify_async(
-    #             customer_id,
-    #             invoice_settings={"default_payment_method": payment_method_id},
-    #         )
-    #
-    #         # Update active and trialing subscriptions to use this payment method
-    #         for sub_status in ["active", "trialing"]:
-    #             subscriptions = await stripe.Subscription.list_async(customer=customer_id, status=sub_status)
-    #             for sub in subscriptions.data:
-    #                 await stripe.Subscription.modify_async(sub.id, default_payment_method=payment_method_id)
-    #
-    #         logger.info(f"Set default payment method {payment_method_id} for customer {customer_id}")
 
     elif event_type in ["billing_portal.session.created", "customer.created"]:
         pass

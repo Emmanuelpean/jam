@@ -144,6 +144,9 @@ async def get_subscription_status(
         return {"status": None, "trial_days_remaining": None}
     try:
         subscription = await stripe.Subscription.retrieve_async(current_user.stripe_details.subscription_id)
+        logger.info(
+            f"Retrieved subscription status for user {current_user.id}. Remaining trial days: {subscription.trial_end}"
+        )
 
         trial_days_remaining = None
         if subscription.trial_end:

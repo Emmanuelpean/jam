@@ -289,6 +289,12 @@ class PremiumSettingsUtils(BaseUtilsClass):
         return self.get_element("status-title")
 
     @property
+    def status_message(self) -> WebElement:
+        """Status message element"""
+
+        return self.get_element("status-message")
+
+    @property
     def add_payment_method_button(self) -> WebElement:
         """Add payment method button element"""
 
@@ -381,17 +387,18 @@ class TestPremiumSettingsPage(BaseTest):
             self.stripe_listener.terminate()
             self.stripe_listener.wait()
 
-    def test_trial_card_15days(self) -> None:
-        """Test the Stripe payment modal interaction"""
+    def _activate_trial(self) -> None:
+        """Activate the user trial"""
 
-        # 1. Activate trial subscription and check user updated
         self.premium_settings_utils.delete_stripe_data()
         self.premium_settings_utils.subscribe_button.click()
         self.premium_settings_utils.start_trial_button.click()
         assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
         assert self.db_user.premium.is_active
 
-        # 2. Manage subscription and add payment method
+    def _add_payment_method(self) -> None:
+        """Add payment method"""
+
         self.premium_settings_utils.manage_subscription_button.click()
         self.premium_settings_utils.add_payment_method_button.click()
         time.sleep(3)
@@ -400,7 +407,20 @@ class TestPremiumSettingsPage(BaseTest):
         assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
         assert self.db_user.premium.is_active
 
-        # Cancel subscription and move clock forward by 15 days, the subscription should be cancelled
+    def test_trial_card_15days_card(self) -> None:
+        """Test the Stripe payment modal interaction
+        1. Activate trial subscription
+        2. Add payment method
+        3. Cancel subscription and move the clock forward by 15 days
+        4. Subscribe again"""
+
+        # 1. Activate trial subscription and check user updated
+        self._activate_trial()
+
+        # 2. Manage subscription and add payment method
+        self._add_payment_method()
+
+        # 3. Cancel subscription and move clock forward by 15 days, the subscription should be cancelled
         self.premium_settings_utils.manage_subscription_button.click()
         self.premium_settings_utils.cancel_subscription_button.click()
         self.premium_settings_utils.confirm_button.click()
@@ -421,26 +441,20 @@ class TestPremiumSettingsPage(BaseTest):
         self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR).click()
         assert self.premium_settings_utils.status_title.text == "Premium"
 
-    def test_stripe_payment_paying(self) -> None:
+    def test_trial_elapses(self) -> None:
         """Test the Stripe payment modal interaction"""
 
         # 1. Activate trial subscription and check user updated
-        self.premium_settings_utils.delete_stripe_data()
-        self.premium_settings_utils.subscribe_button.click()
-        self.premium_settings_utils.start_trial_button.click()
-        assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
-        assert self.db_user.premium.is_active
+        self._activate_trial()
 
-        # 2. Manage subscription and add payment method
-        self.premium_settings_utils.manage_subscription_button.click()
-        self.premium_settings_utils.add_payment_method_button.click()
-        time.sleep(3)
-        self.premium_settings_utils.set_payment_details()
-        self.premium_settings_utils.return_to_business_link.click()
+        # Move clock forward by 13 days
+        self.premium_settings_utils.advance_clock(13)
+        self.driver.refresh()
         assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
-        assert self.db_user.premium.is_active
+        assert self.premium_settings_utils.status_message.text == "1 day remaining in your free trial"
 
-        # Move clock forward by 15 days
-        self.premium_settings_utils.advance_clock(15)
+        # Move the clock further by 2 days and ensure that the user is not premium anymore
+        self.premium_settings_utils.advance_clock(2)
         self.driver.refresh()
         assert self.premium_settings_utils.status_title.text == "Free Plan"
+        assert not self.db_user.premium.is_active

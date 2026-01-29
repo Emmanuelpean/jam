@@ -55,3 +55,4 @@
 * [X] Update terms and conditions
 * [X] Fix demo mode drop down
 * [ ] Add account deletion option (delete subscription in this case)
+* [X] Withdrawn, rejected or offered jobs are not shown in the needs chase dashboard anymore.
