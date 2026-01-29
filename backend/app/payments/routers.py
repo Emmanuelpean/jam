@@ -2,7 +2,6 @@
 
 import json
 
-import stripe
 from fastapi import Request, Depends, HTTPException
 from sqlalchemy.orm import Session
 from starlette import status
@@ -12,7 +11,7 @@ from app.core.oauth2 import get_current_user
 from app.database import get_db
 from app.models import User
 from app.payments.checkout import build_checkout_params
-from app.payments import payment_router, logger
+from app.payments import payment_router, logger, stripe
 from app.payments.webhooks import process_subscription_event
 from app.payments.customer import get_or_create_stripe_customer
 
@@ -32,7 +31,7 @@ async def create_subscription_checkout(
 
     try:
         customer_id = await get_or_create_stripe_customer(current_user, db)
-        checkout_params = await build_checkout_params(current_user, customer_id)
+        checkout_params = await build_checkout_params(customer_id)
         checkout_session = await stripe.checkout.Session.create_async(**checkout_params)
         logger.info(f"Created checkout session {checkout_session.id} for user {current_user.id}")
         return {"url": checkout_session.url}
@@ -78,12 +77,16 @@ async def stripe_webhook(
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature")
 
     obj = event["data"]["object"]
-    subscription_id = obj.get("id")
-    customer_id = obj.get("customer")
-    trial_end = obj.get("trial_end")
     event_type = event.get("type")
 
-    process_subscription_event(customer_id, subscription_id, event_type, trial_end, db)
+    await process_subscription_event(
+        customer_id=obj.get("customer"),
+        event_type=event_type,
+        db=db,
+        subscription_id=obj.get("id"),
+        trial_end=obj.get("trial_end"),
+        payment_method_id=obj.get("payment_method"),
+    )
     return {"status": "success"}
 
 

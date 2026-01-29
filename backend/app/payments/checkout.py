@@ -1,21 +1,16 @@
 """Stripe checkout module"""
 
 from app.config import settings
-from app.models import User
 from app.payments import stripe, logger
 
 
-async def build_checkout_params(
-    current_user: User,
-    customer_id: str,
-) -> dict:
+async def build_checkout_params(customer_id: str) -> dict:
     """Build checkout session parameters based on customer history.
-    :param current_user: Current user object
     :param customer_id: Stripe customer ID
     :return: Dictionary of checkout session parameters"""
 
-    # Check if customer had any paid/completed subscriptions
-    subscriptions = await stripe.Subscription.list_async(customer=customer_id, limit=100)
+    # Check if customer had any previous subscriptions (including cancelled)
+    subscriptions = await stripe.Subscription.list_async(customer=customer_id, status="all", limit=1)
 
     checkout_params = {
         "customer": customer_id,
@@ -34,9 +29,8 @@ async def build_checkout_params(
         "subscription_data": {},
     }
 
-    # Previous customer - no trial, payment required
+    # Previous subscriber - no trial, payment required
     if subscriptions.data:
-        logger.info(str(subscriptions.data))
         checkout_params["payment_method_collection"] = "always"
         logger.info(f"No trial for returning customer {customer_id} - payment required")
 

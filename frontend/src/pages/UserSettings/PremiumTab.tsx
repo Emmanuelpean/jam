@@ -35,7 +35,7 @@ const getSubscriptionStatusDisplay = (
 	trialEnd: number | null,
 	supportEmail: string
 ): SubscriptionStatusDisplay => {
-	if (!status) {
+	if (!status || status === "canceled") {
 		return {
 			title: "Free Plan",
 			message: "Upgrade to unlock powerful automation features",

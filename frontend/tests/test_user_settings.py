@@ -252,7 +252,7 @@ class PremiumSettingsUtils(BaseUtilsClass):
     def advance_clock(self, days: int = 15) -> None:
         """Advance the Stripe clock"""
 
-        response = self.client.get("/test/advance_test_clock", {"days": days})
+        response = self.client.post("/test/advance-test-clock", json={"days": days})
         assert response.status_code == 200
 
     @property
@@ -279,6 +279,7 @@ class PremiumSettingsUtils(BaseUtilsClass):
         self.set_text(self.get_element("payment-postalCodeInput"), "10001")
         self.driver.switch_to.default_content()
         self.confirm_button.click()
+        time.sleep(3)
 
     @property
     def status_title(self) -> WebElement:
@@ -336,6 +337,12 @@ class TestPremiumSettingsPage(BaseTest):
     def setup_function(self, request) -> None:
         """Setup function"""
 
+        # Kill any leftover stripe processes from previous runs
+        if os.name == "nt":
+            subprocess.run("taskkill /F /IM stripe.exe", shell=True, capture_output=True)
+        else:
+            subprocess.run("pkill -f 'stripe listen'", shell=True, capture_output=True)
+
         stripe_cmd = r'"C:\Program Files\Stripe\stripe.exe"' if os.name == "nt" else "stripe"
         self.stripe_listener = subprocess.Popen(
             f"{stripe_cmd} listen --forward-to {settings.backend_url}/payments/webhooks",
@@ -373,17 +380,17 @@ class TestPremiumSettingsPage(BaseTest):
             self.stripe_listener.terminate()
             self.stripe_listener.wait()
 
-    def test_stripe_payment(self) -> None:
+    def test_trial_card_15days(self) -> None:
         """Test the Stripe payment modal interaction"""
 
-        # Activate trial subscription
+        # 1. Activate trial subscription and check user updated
         self.premium_settings_utils.delete_stripe_data()
         self.premium_settings_utils.subscribe_button.click()
         self.premium_settings_utils.start_trial_button.click()
         assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
         assert self.db_user.premium.is_active
 
-        # Manage subscription and add payment method
+        # 2. Manage subscription and add payment method
         self.premium_settings_utils.manage_subscription_button.click()
         self.premium_settings_utils.add_payment_method_button.click()
         time.sleep(3)
@@ -392,9 +399,35 @@ class TestPremiumSettingsPage(BaseTest):
         assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
         assert self.db_user.premium.is_active
 
-        # Cancel subscription
+        # Cancel subscription and move clock forward by 15 days
         self.premium_settings_utils.manage_subscription_button.click()
         self.premium_settings_utils.cancel_subscription_button.click()
         self.premium_settings_utils.confirm_button.click()
         self.premium_settings_utils.cancel_feedback.click()
-        self.premium_settings_utils.advance_clock()
+        self.premium_settings_utils.advance_clock(15)
+        self.premium_settings_utils.return_to_business_link.click()
+        assert self.premium_settings_utils.status_title.text == "Free Plan"
+
+    def test_stripe_payment_paying(self) -> None:
+        """Test the Stripe payment modal interaction"""
+
+        # 1. Activate trial subscription and check user updated
+        self.premium_settings_utils.delete_stripe_data()
+        self.premium_settings_utils.subscribe_button.click()
+        self.premium_settings_utils.start_trial_button.click()
+        assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
+        assert self.db_user.premium.is_active
+
+        # 2. Manage subscription and add payment method
+        self.premium_settings_utils.manage_subscription_button.click()
+        self.premium_settings_utils.add_payment_method_button.click()
+        time.sleep(3)
+        self.premium_settings_utils.set_payment_details()
+        self.premium_settings_utils.return_to_business_link.click()
+        assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
+        assert self.db_user.premium.is_active
+
+        # Move clock forward by 15 days
+        self.premium_settings_utils.advance_clock(15)
+        self.driver.refresh()
+        assert self.premium_settings_utils.status_title.text == "Free Plan"
