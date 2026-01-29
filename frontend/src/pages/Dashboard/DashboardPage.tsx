@@ -43,10 +43,12 @@ const Dashboard: React.FC = () => {
 	);
 
 	const needsChase: EnrichedJobData[] = jobApplicationPending.filter(
-		(job: EnrichedJobData): boolean | 0 | null | undefined =>
+		(job: EnrichedJobData) =>
 			job.days_since_last_update &&
 			job.days_since_last_update > currentUser.preferences.chase_threshold &&
-			(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now)
+			(!job.followup_snooze_datetime || job.followup_snooze_datetime <= now) &&
+			job.application_status &&
+			!["rejected", "offer", "withdrawn"].includes(job.application_status)
 	);
 
 	const thresholdDate = new Date(now.getTime() + currentUser.preferences.deadline_threshold * 24 * 60 * 60 * 1000);
