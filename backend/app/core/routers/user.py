@@ -317,3 +317,36 @@ def check_email_pending(
         return {"has_pending_email": False, "pending_email": None}
 
     return {"has_pending_email": True, "pending_email": token_entry.pending_email}
+
+
+@current_user_router.delete("/", response_model=base_schemas.GenericResponse)
+def delete_account(
+    delete_request: schemas.AccountDeleteRequest,
+    current_user: models.User = Depends(oauth2.get_current_user),
+    db: Session = Depends(database.get_db),
+) -> dict[str, str | bool]:
+    """Delete the current user's account permanently.
+    :param delete_request: The account deletion request with password.
+    :param current_user: The current authenticated user.
+    :param db: The database session.
+    :returns: A message indicating the result of the account deletion."""
+
+    # Prevent demo users from deleting their account
+    if current_user.is_demo:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Test users cannot delete their account.",
+        )
+
+    # Verify password before deletion
+    if not utils.verify_password(delete_request.password, current_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Failed to delete account. Password is incorrect.",
+        )
+
+    # Delete the user (cascading deletes will handle related data)
+    db.delete(current_user)
+    db.commit()
+
+    return {"message": "Account deleted successfully.", "success": True}

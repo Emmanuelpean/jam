@@ -89,10 +89,11 @@ export class ApiService {
 		return handleResponse(response);
 	}
 
-	async delete(endpoint: string, token: string | null = null): ApiResponsePromise {
+	async delete(endpoint: string, data: any = null, token: string | null = null): ApiResponsePromise {
 		const response: Response = await fetch(`${this.baseUrl}/${endpoint}`, {
 			method: "DELETE",
 			headers: getAuthHeaders(token || ""),
+			...(data && { body: JSON.stringify(data) }),
 		});
 		return handleResponse(response);
 	}

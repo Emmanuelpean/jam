@@ -473,6 +473,262 @@ class TestTokenVersioning:
         assert response.status_code == 200
 
 
+class TestDeleteAccount:
+    """Test suite for account deletion endpoint."""
+
+    def test_delete_account_success(self, regular_user_client, test_regular_user, session) -> None:
+        """Test successful account deletion with correct password."""
+
+        # Get user ID before deletion
+        user_id = test_regular_user.id
+
+        # Verify user exists
+        user = session.query(models.User).filter(models.User.id == user_id).first()
+        assert user is not None
+
+        # Delete account
+        delete_data = {"password": test_regular_user.plain_password}
+        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+
+        assert response.status_code == 200
+        assert response.json()["success"] is True
+        assert "deleted successfully" in response.json()["message"].lower()
+
+        # Verify user was deleted
+        user = session.query(models.User).filter(models.User.id == user_id).first()
+        assert user is None
+
+    def test_delete_account_incorrect_password(self, regular_user_client, test_regular_user, session) -> None:
+        """Test account deletion fails with incorrect password."""
+
+        user_id = test_regular_user.id
+
+        # Try to delete with wrong password
+        delete_data = {"password": "wrongpassword"}
+        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+
+        assert response.status_code == 401
+        assert "incorrect" in response.json()["detail"].lower()
+
+        # Verify user still exists
+        user = session.query(models.User).filter(models.User.id == user_id).first()
+        assert user is not None
+
+    def test_delete_account_demo_user_fails(self, demo_user_client, test_demo_user, session) -> None:
+        """Test that demo users cannot delete their account."""
+
+        user_id = test_demo_user.id
+
+        # Try to delete demo account
+        delete_data = {"password": test_demo_user.plain_password}
+        response = demo_user_client.request("DELETE", "/current-user", json=delete_data)
+
+        assert response.status_code == 403
+        assert "test users cannot delete" in response.json()["detail"].lower()
+
+        # Verify demo user still exists
+        user = session.query(models.User).filter(models.User.id == user_id).first()
+        assert user is not None
+
+    def test_delete_account_unauthenticated(self, client) -> None:
+        """Test that unauthenticated users cannot delete accounts."""
+
+        delete_data = {"password": "somepassword"}
+        response = client.request("DELETE", "/current-user", json=delete_data)
+
+        assert response.status_code == 401
+
+    def test_delete_account_empty_password(self, regular_user_client, test_regular_user, session) -> None:
+        """Test account deletion fails with empty password."""
+
+        user_id = test_regular_user.id
+
+        # Try to delete with empty password
+        delete_data = {"password": ""}
+        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+
+        assert response.status_code == 401
+        assert "incorrect" in response.json()["detail"].lower()
+
+        # Verify user still exists
+        user = session.query(models.User).filter(models.User.id == user_id).first()
+        assert user is not None
+
+    def test_delete_account_cascades_to_related_data(self, regular_user_client, test_regular_user, session) -> None:
+        """Test that deleting account cascades to all related data."""
+
+        user_id = test_regular_user.id
+
+        # Verify user has related data
+        assert test_regular_user.preferences is not None
+        assert test_regular_user.premium is not None
+        preferences_id = test_regular_user.preferences.id
+        premium_id = test_regular_user.premium.id
+
+        # Create a Job for the user
+        # noinspection PyArgumentList
+        job = models.Job(title="Test Job", owner_id=user_id)
+        session.add(job)
+        session.commit()
+        job_id = job.id
+
+        # Create a Person and link it to the Job
+        # noinspection PyArgumentList
+        person = models.Person(first_name="John", last_name="Doe", owner_id=user_id)
+        session.add(person)
+        session.commit()
+        person_id = person.id
+        person.jobs.append(job)
+        session.commit()
+
+        # Create a service log for JobEmail
+        # noinspection PyArgumentList
+        email_service_log = models.JobEmailScrapingServiceLog(run_datetime=datetime.now(timezone.utc))
+        session.add(email_service_log)
+        session.commit()
+
+        # Create a JobEmail
+        # noinspection PyArgumentList
+        job_email = models.JobEmail(
+            external_email_id=f"test_email_{user_id}",
+            subject="Test Job Alert",
+            sender="jobs@linkedin.com",
+            date_received=datetime.now(timezone.utc),
+            platform="LinkedIn",
+            body="Test email body",
+            service_log_id=email_service_log.id,
+            owner_id=user_id,
+        )
+        session.add(job_email)
+        session.commit()
+        job_email_id = job_email.id
+
+        # Create a ScrapedJob and link it to the JobEmail
+        # noinspection PyArgumentList
+        scraped_job = models.ScrapedJob(
+            external_job_id=f"test_scraped_job_{user_id}",
+            platform="LinkedIn",
+            title="Test Scraped Job",
+            service_log_id=email_service_log.id,
+            owner_id=user_id,
+        )
+        session.add(scraped_job)
+        session.commit()
+        scraped_job_id = scraped_job.id
+        scraped_job.emails.append(job_email)
+        session.commit()
+
+        # Create a UserQualification for JobRating
+        # noinspection PyArgumentList
+        user_qualification = models.UserQualification(
+            experience="Test experience", owner_id=user_id
+        )
+        session.add(user_qualification)
+        session.commit()
+        user_qualification_id = user_qualification.id
+
+        # Create a JobRating for the ScrapedJob
+        # noinspection PyArgumentList
+        job_rating = job_rating_models.JobRating(
+            overall_score=8,
+            scraped_job_id=scraped_job_id,
+            user_qualification_id=user_qualification_id,
+            owner_id=user_id,
+        )
+        session.add(job_rating)
+        session.commit()
+        job_rating_id = job_rating.id
+
+        # Delete account
+        delete_data = {"password": test_regular_user.plain_password}
+        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+
+        assert response.status_code == 200
+
+        # Verify user was deleted
+        user = session.query(models.User).filter(models.User.id == user_id).first()
+        assert user is None
+
+        # Verify preferences were cascade deleted
+        preferences = session.query(models.UserPreferences).filter(models.UserPreferences.id == preferences_id).first()
+        assert preferences is None
+
+        # Verify premium settings were cascade deleted
+        premium = session.query(models.PremiumSettings).filter(models.PremiumSettings.id == premium_id).first()
+        assert premium is None
+
+        # Verify Job was cascade deleted
+        job = session.query(models.Job).filter(models.Job.id == job_id).first()
+        assert job is None
+
+        # Verify Person was cascade deleted
+        person = session.query(models.Person).filter(models.Person.id == person_id).first()
+        assert person is None
+
+        # Verify JobEmail was cascade deleted
+        job_email = session.query(models.JobEmail).filter(models.JobEmail.id == job_email_id).first()
+        assert job_email is None
+
+        # Verify ScrapedJob was cascade deleted
+        scraped_job = session.query(models.ScrapedJob).filter(models.ScrapedJob.id == scraped_job_id).first()
+        assert scraped_job is None
+
+        # Verify JobRating was cascade deleted
+        job_rating = session.query(job_rating_models.JobRating).filter(job_rating_models.JobRating.id == job_rating_id).first()
+        assert job_rating is None
+
+        # Verify UserQualification was cascade deleted
+        user_qualification = session.query(models.UserQualification).filter(models.UserQualification.id == user_qualification_id).first()
+        assert user_qualification is None
+
+    def test_delete_account_invalidates_token(self, regular_user_client, test_regular_user, session) -> None:
+        """Test that deleting account prevents further API calls with the same token."""
+
+        # Verify token works before deletion
+        response = regular_user_client.get("/current-user")
+        assert response.status_code == 200
+
+        # Delete account
+        delete_data = {"password": test_regular_user.plain_password}
+        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+        assert response.status_code == 200
+
+        # Try to use the same token after deletion - should fail
+        response = regular_user_client.get("/current-user")
+        assert response.status_code == 401
+
+    def test_delete_account_with_user_tokens(self, regular_user_client, test_regular_user, session) -> None:
+        """Test that deleting account also deletes associated user tokens."""
+
+        from app.core.utils import generate_token
+
+        user_id = test_regular_user.id
+
+        # Create an email change token for the user
+        generate_token(test_regular_user.id, "email_change", session, pending_email="newemail@test.com")
+
+        # Verify token exists
+        user_token = (
+            session.query(models.UserToken)
+            .filter(models.UserToken.owner_id == user_id, models.UserToken.token_type == "email_change")
+            .first()
+        )
+        assert user_token is not None
+
+        # Delete account
+        delete_data = {"password": test_regular_user.plain_password}
+        response = regular_user_client.request("DELETE", "/current-user", json=delete_data)
+        assert response.status_code == 200
+
+        # Verify user token was cascade deleted
+        user_token = (
+            session.query(models.UserToken)
+            .filter(models.UserToken.owner_id == user_id, models.UserToken.token_type == "email_change")
+            .first()
+        )
+        assert user_token is None
+
+
 class TestUserQualificationsCRUD(CRUDTestBase):
 
     endpoint = "user-qualifications"

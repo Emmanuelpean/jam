@@ -53,6 +53,13 @@ USER_DATA = [
         "is_verified": True,
         "premium": {"is_active": True},
     },
+    {
+        "email": "demo@example.com",
+        "password": "password5",
+        "is_verified": True,
+        "premium": {"is_active": True},
+        "is_demo": True,
+    },
 ]
 
 # Regular user
