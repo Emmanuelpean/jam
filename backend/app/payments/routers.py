@@ -1,6 +1,8 @@
 """Payment-related API endpoints using FastAPI and Stripe."""
 
 import json
+import math
+import time
 
 from fastapi import Request, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -136,13 +138,28 @@ async def get_subscription_status(
 ) -> dict:
     """Get subscription status and trial information for the current user.
     :param current_user: Authenticated user from JWT token
-    :return: dict with subscription status and trial info"""
+    :return: dict with subscription status and remaining trial days"""
 
     if not current_user.stripe_details.subscription_id:
-        return {"status": None, "trial_end": None}
+        return {"status": None, "trial_days_remaining": None}
     try:
-        data = await stripe.Subscription.retrieve_async(current_user.stripe_details.subscription_id)
-        return {"status": data.status, "trial_end": data.trial_end}
+        subscription = await stripe.Subscription.retrieve_async(current_user.stripe_details.subscription_id)
+
+        trial_days_remaining = None
+        if subscription.trial_end:
+            # Get current time - use test clock time if customer has one
+            current_time = time.time()
+            if current_user.stripe_details.customer_id:
+                customer = await stripe.Customer.retrieve_async(current_user.stripe_details.customer_id)
+                if customer.get("test_clock"):
+                    test_clock = await stripe.test_helpers.TestClock.retrieve_async(customer["test_clock"])
+                    current_time = test_clock.frozen_time
+
+            # Calculate remaining days (round up so partial days count as 1)
+            remaining_seconds = subscription.trial_end - current_time
+            trial_days_remaining = max(0, math.ceil(remaining_seconds / 86400))
+
+        return {"status": subscription.status, "trial_days_remaining": trial_days_remaining}
     except stripe.error.StripeError as e:
         logger.error(f"Failed to retrieve subscription for user {current_user.id}: {e}")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
