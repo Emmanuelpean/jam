@@ -3,6 +3,7 @@
 import email
 import imaplib
 import smtplib
+import uuid
 from datetime import datetime, timedelta
 from email.header import decode_header
 from email.mime.multipart import MIMEMultipart
@@ -317,15 +318,105 @@ class EmailService(object):
             # Default to all if no criteria
             search_query = " ".join(search_criteria) if search_criteria else "ALL"
 
-            # Execute search
-            status, message_ids = mail.search(None, search_query)
+            # Execute search using UID instead of sequence numbers
+            # noinspection PyTypeChecker
+            status, message_ids = mail.uid("search", None, search_query)
 
             if status != "OK":
                 return []
 
-            # Parse message IDs
+            # Parse message UIDs (more stable than sequence numbers)
             email_ids = message_ids[0].split()
             return [msg_id.decode() for msg_id in email_ids]
+
+        finally:
+            mail.close()
+            mail.logout()
+
+    def get_email_ids_with_uuid(
+        self,
+        recipient_email: str = "",
+        sender_email: str = "",
+        inbox: str = "INBOX",
+        timedelta_days: int | float = 3,
+        subject_contains: str = "",
+        from_email: list[str] | str = "",
+        to_email: str = "",
+    ) -> list[dict[str, str]]:
+        """Search for messages and return UID with a deterministic UUID based on UID + timestamp.
+        :param recipient_email: Filter by recipient email address
+        :param sender_email: Filter by sender email address
+        :param inbox: Mailbox to search in (default is INBOX)
+        :param timedelta_days: Number of days to search for emails
+        :param subject_contains: Filter by subject content
+        :param from_email: Filter by 'From' email address
+        :param to_email: Filter by 'To' email address
+        :return: List of dicts with 'uid' and 'unique_id' (deterministic UUID)"""
+
+        mail = self._connect_imap()
+
+        try:
+            mail.select(inbox)
+
+            # Build IMAP search criteria (same as get_email_ids)
+            search_criteria = []
+
+            if timedelta_days:
+                since_date = (datetime.now() - timedelta(days=timedelta_days)).strftime("%d-%b-%Y")
+                search_criteria.append(f"SINCE {since_date}")
+
+            if recipient_email:
+                search_criteria.append(f'HEADER X-Forwarded-To "{recipient_email}"')
+
+            if sender_email:
+                search_criteria.append(f'HEADER Delivered-To "{sender_email}"')
+
+            if subject_contains:
+                search_criteria.append(f'SUBJECT "{subject_contains}"')
+
+            if from_email:
+                search_criteria.append(build_multi_from_query(from_email))
+
+            if to_email:
+                search_criteria.append(f'HEADER To "{to_email}"')
+
+            search_query = " ".join(search_criteria) if search_criteria else "ALL"
+
+            # Get UIDs
+            # noinspection PyTypeChecker
+            status, message_ids = mail.uid("search", None, search_query)
+
+            if status != "OK":
+                return []
+
+            email_uids = message_ids[0].split()
+
+            # Fetch INTERNALDATE for all UIDs in one go (much faster)
+            if not email_uids:
+                return []
+
+            uid_range = b",".join(email_uids).decode()
+            status, fetch_data = mail.uid("fetch", uid_range, "(INTERNALDATE)")
+
+            if status != "OK":
+                return []
+
+            # Parse results and create UUIDs
+            results = []
+            for item in fetch_data:
+
+                item = str(item)
+                uid_match = item.split("UID ")[1].split(" ")[0] if "UID " in item else None
+                date_match = item.split('INTERNALDATE "')[1].split('"')[0] if 'INTERNALDATE "' in item else None
+
+                if uid_match and date_match:
+                    # Create deterministic UUID from UID + timestamp
+                    unique_string = f"{inbox}:{uid_match}:{date_match}"
+                    unique_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, unique_string))
+
+                    results.append(unique_id)
+
+            return results
 
         finally:
             mail.close()
@@ -336,7 +427,7 @@ class EmailService(object):
         email_id: str,
     ) -> dict[str, str | datetime] | None:
         """Get the content of a specific email by ID.
-        :param email_id: The email message ID
+        :param email_id: The email message UID (unique identifier)
         :return: Dictionary with email details (subject, from, date, body)"""
 
         mail = self._connect_imap()
@@ -344,8 +435,8 @@ class EmailService(object):
         try:
             mail.select("INBOX")
 
-            # Fetch the email
-            status, msg_data = mail.fetch(email_id, "(RFC822)")
+            # Fetch the email using UID
+            status, msg_data = mail.uid("fetch", email_id, "(RFC822)")
 
             if status != "OK":
                 return None
@@ -359,6 +450,7 @@ class EmailService(object):
             subject = self._decode_header(msg["Subject"])
             from_email = clean_email_address(self._decode_header(msg["From"]))
             to_email = clean_email_address(self._decode_header(msg["To"]))
+            message_id = msg.get("Message-ID", "").strip()
 
             # Extract date
             date = msg["Date"]
@@ -416,6 +508,7 @@ class EmailService(object):
 
             return {
                 "id": email_id,
+                "message_id": message_id,
                 "subject": subject,
                 "from": from_email,
                 "to": to_email,
@@ -467,7 +560,7 @@ class EmailService(object):
         email_id: str,
     ) -> bool:
         """Delete an email by ID from the inbox.
-        :param email_id: The email message ID to delete
+        :param email_id: The email message UID to delete
         :return: True if deletion successful, False otherwise"""
 
         if settings.test_mode:
@@ -478,8 +571,8 @@ class EmailService(object):
         try:
             mail.select("INBOX")
 
-            # Mark the email as deleted
-            status, _ = mail.store(email_id, "+FLAGS", "\\Deleted")
+            # Mark the email as deleted using UID
+            status, _ = mail.uid("store", email_id, "+FLAGS", "\\Deleted")
 
             if status != "OK":
                 return False
