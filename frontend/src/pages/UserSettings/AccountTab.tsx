@@ -36,6 +36,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	const [errors, setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState(false);
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [showConfirmModal, setShowConfirmModal] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.MIN_PASSWORD_LENGTH || "8");
 	const hasPendingEmail: boolean = !!currentUser?.pending_email_change;
@@ -89,12 +90,23 @@ export const AccountTab: React.FC = (): JSX.Element => {
 
 	const openDeleteModal = (): void => {
 		setShowDeleteModal(true);
-		formData.delete_password = "";
+		setFormData((prev: AccountFormData): AccountFormData => ({ ...prev, delete_password: "" }));
 	};
 
 	const closeDeleteModal = (): void => {
 		setShowDeleteModal(false);
-		formData.delete_password = "";
+		setFormData((prev: AccountFormData): AccountFormData => ({ ...prev, delete_password: "" }));
+	};
+
+	const proceedToConfirmation = (): void => {
+		if (!formData.delete_password) return;
+		setShowDeleteModal(false);
+		setShowConfirmModal(true);
+	};
+
+	const closeConfirmModal = (): void => {
+		setShowConfirmModal(false);
+		setFormData((prev: AccountFormData): AccountFormData => ({ ...prev, delete_password: "" }));
 	};
 
 	const handleInputChange = (e: SyntheticEvent): void => {
@@ -339,7 +351,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 			<Modal show={showDeleteModal} onHide={closeDeleteModal} centered>
 				<Modal.Header closeButton>
 					<Modal.Title>
-						<i className="bi bi-exclamation-triangle"></i> Delete Account
+						<i className="bi bi-exclamation-triangle text-danger"></i> Delete Account
 					</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
@@ -354,10 +366,48 @@ export const AccountTab: React.FC = (): JSX.Element => {
 					<ActionButton variant="secondary" onClick={closeDeleteModal} defaultText="Cancel" />
 					<ActionButton
 						variant="danger"
+						onClick={proceedToConfirmation}
+						disabled={!formData.delete_password}
+						defaultIcon="arrow-right"
+						defaultText="Continue"
+					/>
+				</Modal.Footer>
+			</Modal>
+
+			<Modal show={showConfirmModal} onHide={closeConfirmModal} size={"lg"} centered>
+				<Modal.Header closeButton>
+					<Modal.Title>
+						<i className="bi bi-exclamation-triangle-fill text-danger"></i> Final Confirmation
+					</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					<Alert variant="danger">
+						<Alert.Heading>Are you absolutely sure?</Alert.Heading>
+						<p className="mb-0">
+							This will permanently delete your account and all associated data including:
+						</p>
+						<ul className="mt-2 mb-0">
+							<li>All job applications and tracking data</li>
+							<li>Saved jobs and email alerts</li>
+							<li>User preferences and settings</li>
+							<li>Interview records and notes</li>
+							<li>All contacts and companies</li>
+						</ul>
+					</Alert>
+					<p className="text-center fw-bold mb-0">This action cannot be undone.</p>
+				</Modal.Body>
+				<Modal.Footer>
+					<ActionButton
+						variant="secondary"
+						onClick={closeConfirmModal}
+						defaultText="Cancel"
+					/>
+					<ActionButton
+						variant="danger"
 						onClick={handleDeleteAccount}
-						disabled={deleting || !formData.delete_password}
+						disabled={deleting}
 						defaultIcon="trash"
-						defaultText={deleting ? "Deleting..." : "Delete Account"}
+						defaultText={deleting ? "Deleting..." : "Yes, Delete My Account"}
 					/>
 				</Modal.Footer>
 			</Modal>
