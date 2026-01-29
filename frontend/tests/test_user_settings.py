@@ -7,6 +7,7 @@ import time
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support.select import Select
 
 from app.config import settings
 from app.utils import verify_password
@@ -399,14 +400,26 @@ class TestPremiumSettingsPage(BaseTest):
         assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
         assert self.db_user.premium.is_active
 
-        # Cancel subscription and move clock forward by 15 days
+        # Cancel subscription and move clock forward by 15 days, the subscription should be cancelled
         self.premium_settings_utils.manage_subscription_button.click()
         self.premium_settings_utils.cancel_subscription_button.click()
         self.premium_settings_utils.confirm_button.click()
         self.premium_settings_utils.cancel_feedback.click()
         self.premium_settings_utils.advance_clock(15)
         self.premium_settings_utils.return_to_business_link.click()
+        self.driver.refresh()
         assert self.premium_settings_utils.status_title.text == "Free Plan"
+
+        # Try to subscribe again
+        self.premium_settings_utils.subscribe_button.click()
+        self.get_element("[data-testid='card-accordion-item']", By.CSS_SELECTOR).click()
+        self.set_text(self.get_element("cardNumber"), "4242 4242 4242 4242")
+        self.set_text(self.get_element("cardCvc"), "123")
+        Select(self.get_element("billingCountry", By.NAME)).select_by_visible_text("United Kingdom")
+        self.set_text(self.get_element("cardExpiry"), "1228")
+        self.set_text(self.get_element("billingName"), "Test User")
+        self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR).click()
+        assert self.premium_settings_utils.status_title.text == "Premium"
 
     def test_stripe_payment_paying(self) -> None:
         """Test the Stripe payment modal interaction"""
