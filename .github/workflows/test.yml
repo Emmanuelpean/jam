@@ -127,7 +127,7 @@ jobs:
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
           coverage run -m pytest -n auto ./backend -v --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
-          pytest -n auto ./frontend/test_auth.py -v
+          pytest -n auto ./frontend -v
 
       - name: Upload test logs and screenshots
         uses: actions/upload-artifact@v4
