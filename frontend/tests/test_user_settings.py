@@ -353,11 +353,21 @@ class PremiumSettingsUtils(BaseUtilsClass):
 
         return self.get_element("status-title")
 
+    def assert_status_title(self, expected_title: str) -> None:
+        """Assert status title"""
+
+        assert self.get_element("status-title").text == expected_title
+
     @property
     def status_message(self) -> WebElement:
         """Status message element"""
 
         return self.get_element("status-message")
+
+    def assert_status_message(self, expected_message: str) -> None:
+        """Assert status message"""
+
+        assert self.get_element("status-message").text == expected_message
 
     @property
     def add_payment_method_button(self) -> WebElement:
@@ -458,7 +468,8 @@ class TestPremiumSettingsPage(BaseTest):
         self.premium_settings_utils.delete_stripe_data()
         self.premium_settings_utils.subscribe_button.click()
         self.premium_settings_utils.start_trial_button.click()
-        assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
+        self.wait_for_page("settings/premium")
+        self.premium_settings_utils.assert_status_title("Premium (Trial)")
         assert self.db_user.premium.is_active
 
     def _add_payment_method(self) -> None:
@@ -469,8 +480,36 @@ class TestPremiumSettingsPage(BaseTest):
         time.sleep(3)
         self.premium_settings_utils.set_payment_details()
         self.premium_settings_utils.return_to_business_link.click()
-        assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
+        self.premium_settings_utils.assert_status_title("Premium (Trial)")
         assert self.db_user.premium.is_active
+
+    def test_trial_payment(self) -> None:
+        """Test the Stripe payment modal interaction"""
+
+        self._activate_trial()
+        self._add_payment_method()
+        self.premium_settings_utils.advance_clock(15)
+        time.sleep(5)
+        self.driver.refresh()
+        self.premium_settings_utils.assert_status_title("Premium")
+
+    def test_trial_elapses(self) -> None:
+        """Test the Stripe payment modal interaction"""
+
+        # 1. Activate trial subscription and check user updated
+        self._activate_trial()
+
+        # 2. Move clock forward by 13 days and check that 1 day is left on trial
+        self.premium_settings_utils.advance_clock(13)
+        self.driver.refresh()
+        self.premium_settings_utils.assert_status_title("Premium (Trial)")
+        self.premium_settings_utils.assert_status_message("1 day remaining in your free trial")
+
+        # 3. Move the clock further by 2 days and ensure that the user is not premium any more
+        self.premium_settings_utils.advance_clock(2)
+        self.driver.refresh()
+        self.premium_settings_utils.assert_status_title("Free Plan")
+        assert not self.db_user.premium.is_active
 
     def test_trial_card_15days_card(self) -> None:
         """Test the Stripe payment modal interaction
@@ -492,8 +531,9 @@ class TestPremiumSettingsPage(BaseTest):
         self.premium_settings_utils.cancel_feedback.click()
         self.premium_settings_utils.advance_clock(15)
         self.premium_settings_utils.return_to_business_link.click()
+        self.wait_for_page("settings/premium")
         self.driver.refresh()
-        assert self.premium_settings_utils.status_title.text == "Free Plan"
+        self.premium_settings_utils.assert_status_title("Free Plan")
 
         # Try to subscribe again
         self.premium_settings_utils.subscribe_button.click()
@@ -504,30 +544,6 @@ class TestPremiumSettingsPage(BaseTest):
         self.set_text(self.get_element("cardExpiry"), "1228")
         self.set_text(self.get_element("billingName"), "Test User")
         self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR).click()
-        assert self.premium_settings_utils.status_title.text == "Premium"
-
-    def test_trial_elapses(self) -> None:
-        """Test the Stripe payment modal interaction"""
-
-        # 1. Activate trial subscription and check user updated
-        self._activate_trial()
-
-        # 2. Move clock forward by 13 days and check that 1 day is left on trial
-        self.premium_settings_utils.advance_clock(13)
+        self.wait_for_page("settings/premium")
         self.driver.refresh()
-        assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
-        assert self.premium_settings_utils.status_message.text == "1 day remaining in your free trial"
-
-        # 3. Move the clock further by 2 days and ensure that the user is not premium anymore
-        self.premium_settings_utils.advance_clock(2)
-        self.driver.refresh()
-        assert self.premium_settings_utils.status_title.text == "Free Plan"
-        assert not self.db_user.premium.is_active
-
-    def test_trial_payment(self) -> None:
-        """Test the Stripe payment modal interaction"""
-
-        self._activate_trial()
-        self._add_payment_method()
-        self.premium_settings_utils.advance_clock(15)
-        assert self.premium_settings_utils.status_title.text == "Premium"
+        self.premium_settings_utils.assert_status_title("Premium")
