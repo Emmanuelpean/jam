@@ -24,7 +24,7 @@ from app import database
 from app import models as models
 from app.config import settings
 from app.main import app
-from core.oauth2 import create_access_token
+from app.core.oauth2 import create_access_token
 from app.utils import hash_token
 from tests.geolocation import mock_geocoding_side_effect
 from tests.utils import create_data as crd
