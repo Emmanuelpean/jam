@@ -69,7 +69,7 @@ jobs:
       STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
       STRIPE_TOAST_PRICE_ID: ${{ secrets.STRIPE_TOAST_PRICE_ID }}
 
-      # Frontend Configuration
+      # Frontend Config
       REACT_APP_API_BASE_URL: ${{ vars.REACT_APP_API_BASE_URL }}
       REACT_APP_API_SERVICE_URL: ${{ vars.REACT_APP_SERVICE_BASE_URL }}
       REACT_APP_ENABLE_ANALYTICS: ${{ vars.REACT_APP_ENABLE_ANALYTICS }}
