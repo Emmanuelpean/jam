@@ -284,6 +284,10 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     if not os.path.exists(node_modules_path):
         print("⚠️  node_modules not found, you may need to run 'npm install' first")
 
+    # CREATE LOG FILES FOR FRONTEND OUTPUT
+    frontend_log_file = LOGS_DIR / f"frontend_server_{worker_id}.log"
+    print(f"Frontend logs will be saved to: {frontend_log_file}")
+
     # Start the frontend server
     print("Starting frontend server subprocess...")
     process = subprocess.Popen(
@@ -304,13 +308,17 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     print(f"Waiting for frontend server at {frontend_url}...")
     print("This will take 30-60 seconds for React to compile...")
 
-    def read_output(this_process, this_output_queue) -> None:
+    def read_output(this_process, this_output_queue, log_file) -> None:
         """Read output from the frontend server subprocess and put it in a queue"""
-        for _line in iter(this_process.stdout.readline, ""):
-            this_output_queue.put(_line.strip())
+        with open(log_file, "w") as log:
+            for _line in iter(this_process.stdout.readline, ""):
+                line_stripped = _line.strip()
+                this_output_queue.put(line_stripped)
+                log.write(_line)
+                log.flush()
 
     output_queue = queue.Queue()
-    output_thread = threading.Thread(target=read_output, args=(process, output_queue))
+    output_thread = threading.Thread(target=read_output, args=(process, output_queue, frontend_log_file))
     output_thread.daemon = True
     output_thread.start()
 
@@ -339,7 +347,8 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
                 print("Recent output before failure:")
                 for prev_line in recent_lines[-20:]:
                     print(f"  {prev_line}")
-                raise Exception(f"Frontend compilation failed - see output above for details")
+                print(f"Full compilation output saved to: {frontend_log_file}")
+                raise Exception(f"Frontend compilation failed - check {frontend_log_file} for details")
 
         if attempt % 10 == 0 and recent_lines:
             print(f"Recent frontend output (attempt {attempt + 1}/90):")
@@ -368,8 +377,9 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
         print("Final frontend output:")
         for line in remaining_output[-20:]:
             print(f"  {line}")
+        print(f"Full output saved to: {frontend_log_file}")
         kill_process_tree(process.pid)
-        raise Exception("Frontend server failed to start - see output above")
+        raise Exception(f"Frontend server failed to start - check {frontend_log_file} for full output")
 
     print(f"✅ Frontend server startup completed successfully on port {port}!")
     yield frontend_url + "/jam"
@@ -381,6 +391,7 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
     if kill_process_on_port(port):
         print(f"Found and killed additional process on port {port}")
     print("✅ Frontend server cleanup completed.")
+    print(f"Frontend logs saved in: {LOGS_DIR}")
 
 
 def contiguous_subdicts(dictionary: dict) -> list[dict]:
