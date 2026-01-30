@@ -32,9 +32,9 @@ jobs:
       MAX_FILE_SIZE_MB: ${{ vars.MAX_FILE_SIZE_MB }}
       LOG_DIRECTORY: ${{ vars.LOG_DIRECTORY }}
       TEST_MODE: ${{ vars.TEST_MODE }}
-      MIN_PASSWORD_LENGTH: $ {{ vars.MIN_PASSWORD_LENGTH }}
-      APP_DEMO_USERNAME: $ {{ vars.APP_DEMO_USERNAME }}
-      APP_DEMO_PASSWORD: $ {{ vars.APP_DEMO_PASSWORD }}
+      MIN_PASSWORD_LENGTH: ${{ vars.MIN_PASSWORD_LENGTH }}
+      APP_DEMO_USERNAME: ${{ vars.APP_DEMO_USERNAME }}
+      APP_DEMO_PASSWORD: ${{ vars.APP_DEMO_PASSWORD }}
 
       # Email Configuration
       MAIN_EMAIL_USERNAME: ${{ secrets.MAIN_EMAIL_USERNAME }}
@@ -124,7 +124,7 @@ jobs:
       - name: Configure Stripe CLI
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
-          echo "$STRIPE_SECRET_KEY" | stripe login --api-key
+          stripe login --api-key "$STRIPE_SECRET_KEY"
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
 
