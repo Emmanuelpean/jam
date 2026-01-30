@@ -32,10 +32,15 @@ jobs:
       MAX_FILE_SIZE_MB: ${{ vars.MAX_FILE_SIZE_MB }}
       LOG_DIRECTORY: ${{ vars.LOG_DIRECTORY }}
       TEST_MODE: ${{ vars.TEST_MODE }}
+      MIN_PASSWORD_LENGTH: $ {{ vars.MIN_PASSWORD_LENGTH }}
+      APP_DEMO_USERNAME: $ {{ vars.APP_DEMO_USERNAME }}
+      APP_DEMO_PASSWORD: $ {{ vars.APP_DEMO_PASSWORD }}
 
       # Email Configuration
-      EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
-      EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+      MAIN_EMAIL_USERNAME: ${{ secrets.MAIN_EMAIL_USERNAME }}
+      MAIN_EMAIL_PASSWORD: ${{ secrets.MAIN_EMAIL_PASSWORD }}
+      SCRAPER_EMAIL_USERNAME: ${{ secrets.SCRAPER_EMAIL_USERNAME}}
+      SCRAPER_EMAIL_PASSWORD: ${{ secrets.SCRAPER_EMAIL_PASSWORD}}
       EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
       EMAIL_SMTP_HOST: ${{ secrets.EMAIL_SMTP_HOST }}
       EMAIL_IMAP_PORT: ${{ secrets.EMAIL_IMAP_PORT }}
@@ -67,8 +72,6 @@ jobs:
       # Frontend Configuration
       REACT_APP_API_BASE_URL: ${{ vars.REACT_APP_API_BASE_URL }}
       REACT_APP_API_SERVICE_URL: ${{ vars.REACT_APP_SERVICE_BASE_URL }}
-      REACT_APP_STRIPE_PUBLISHABLE_KEY: ${{ secrets.REACT_APP_STRIPE_PUBLISHABLE_KEY }}
-      REACT_APP_MIN_PASSWORD_LENGTH: ${{ vars.REACT_APP_MIN_PASSWORD_LENGTH }}
       REACT_APP_ENABLE_ANALYTICS: ${{ vars.REACT_APP_ENABLE_ANALYTICS }}
 
     services:
@@ -99,7 +102,7 @@ jobs:
 
       - name: Update pip and install dependencies
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
-        run: | 
+        run: |
           python -m pip install --upgrade pip
           python -m pip install ./backend[dev]
 
@@ -109,6 +112,21 @@ jobs:
           cd frontend
           npm install --legacy-peer-deps
           cd ..
+
+      - name: Install Stripe CLI
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: |
+          curl -s https://packages.stripe.dev/api/security/keypair/stripe-cli-gpg/public | sudo gpg --dearmor -o /usr/share/keyrings/stripe.gpg
+          echo "deb [signed-by=/usr/share/keyrings/stripe.gpg] https://packages.stripe.dev/stripe-cli-debian-local stable main" | sudo tee /etc/apt/sources.list.d/stripe.list
+          sudo apt-get update
+          sudo apt-get install -y stripe
+
+      - name: Configure Stripe CLI
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
+        run: |
+          echo "$STRIPE_SECRET_KEY" | stripe login --api-key
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
 
       - name: Run Tests with Pytest and Coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"

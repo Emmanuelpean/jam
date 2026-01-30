@@ -7,6 +7,7 @@ import pytest
 
 from app.job_email_scraping.email_parsers.utils import Platform, remove_style_tags
 from app.job_email_scraping.job_scrapers import JobResult
+from app import models
 from app.models import (
     JobEmail,
     ScrapedJob,
@@ -355,6 +356,11 @@ class TestExtractEmailData:
 class TestProcessEmails:
     """Test class for JobScraper.process_emails method"""
 
+    @staticmethod
+    def get_premium_users(db) -> list[models.User]:
+        """Return premium users list"""
+        return db.query(models.User).filter(models.User.premium.has(is_active=True)).all()
+
     def test_single_user(self, test_job_scraper, session, test_users, test_eis_service_log) -> None:
         """Test successful processing of emails for a single user with LinkedIn email"""
 
@@ -387,7 +393,7 @@ class TestProcessEmails:
             test_job_scraper.process_emails(timedelta_days=1, service_log=test_eis_service_log)
 
             # Verify service log updates
-            assert len(test_eis_service_log.user_processed_ids) == 3
+            assert len(test_eis_service_log.user_processed_ids) == len(self.get_premium_users(session))
 
             # Verify the platform stats
             platform_stat = (
@@ -452,7 +458,7 @@ class TestProcessEmails:
             test_job_scraper.process_emails(timedelta_days=1, service_log=test_eis_service_log)
 
             # Verify service log updates
-            assert len(test_eis_service_log.user_processed_ids) == 3
+            assert len(test_eis_service_log.user_processed_ids) == len(self.get_premium_users(session))
 
             # Verify the platform stats
             platform_stat = (
@@ -523,7 +529,7 @@ class TestProcessEmails:
 
             # Verify service log updates
             n_job = len(email["parsed_output"])
-            assert len(test_eis_service_log.user_processed_ids) == 3
+            assert len(test_eis_service_log.user_processed_ids) == len(self.get_premium_users(session))
 
             # Verify the platform stats
             platform_stat = (

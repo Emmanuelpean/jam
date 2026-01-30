@@ -14,6 +14,7 @@ import { ApiResponse } from "../../services/api/Base";
 import { useLoading } from "../../contexts/LoadingContext";
 import { DEFAULT_THEME } from "../../utils/Theme";
 import { ApiError } from "../../services/api/ApiError";
+import { useConfig } from "../../contexts/ConfigContext";
 
 type AuthMode = "login" | "register" | "forgotPassword" | "resetPassword" | "verifyEmail" | "verifyNewEmail";
 
@@ -49,6 +50,7 @@ interface Feature {
 function AuthForm(): JSX.Element {
 	const location = useLocation();
 	const navigate = useNavigate();
+	const { config } = useConfig();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [mode, setMode] = useState<AuthMode>(determineAuthMode(location.pathname, searchParams.get("token")));
 	const [registrationStep, setRegistrationStep] = useState<number>(1);
@@ -63,7 +65,6 @@ function AuthForm(): JSX.Element {
 	const [fieldErrors, setFieldErrors] = useState<Errors>({});
 	const { logout, login, isAuthenticated } = useAuth();
 	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
-	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.REACT_APP_MIN_PASSWORD_LENGTH || "8");
 	const { showLoading, hideLoading } = useLoading();
 	const contentRef = useRef<HTMLDivElement>(null);
 	const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
@@ -244,8 +245,8 @@ function AuthForm(): JSX.Element {
 
 				if (!formData.password) {
 					errors.password = "Password is required.";
-				} else if (formData.password.length < MIN_PASSWORD_LENGTH) {
-					errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
+				} else if (formData.password.length < config.min_password_length) {
+					errors.password = `Password must be at least ${config.min_password_length} characters long.`;
 				}
 
 				if (!formData.confirmPassword) {
@@ -279,8 +280,8 @@ function AuthForm(): JSX.Element {
 		if (["login", "resetPassword"].includes(mode)) {
 			if (!formData.password) {
 				errors.password = "Password is required.";
-			} else if (mode === "resetPassword" && formData.password.length < MIN_PASSWORD_LENGTH) {
-				errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
+			} else if (mode === "resetPassword" && formData.password.length < config.min_password_length) {
+				errors.password = `Password must be at least ${config.min_password_length} characters long.`;
 			}
 		}
 
@@ -418,10 +419,7 @@ function AuthForm(): JSX.Element {
 		const errorTitle: string = "Demo Login Failed";
 
 		try {
-			const result: GenericResponse = await login(
-				process.env.REACT_APP_DEMO_USERNAME || "",
-				process.env.REACT_APP_DEMO_PASSWORD || ""
-			);
+			const result: GenericResponse = await login(config.app_demo_username, config.app_demo_password);
 			if (result.success) {
 				navigate("/dashboard");
 			} else {
@@ -478,7 +476,7 @@ function AuthForm(): JSX.Element {
 		placeholder: displayedMode === "resetPassword" ? "Enter your new password" : "Enter your password",
 		autoComplete: displayedMode === "login" ? "current-password" : "new-password",
 		helpText: ["register", "resetPassword"].includes(displayedMode)
-			? `Password must be at least ${MIN_PASSWORD_LENGTH} characters long`
+			? `Password must be at least ${config.min_password_length} characters long`
 			: null,
 	};
 

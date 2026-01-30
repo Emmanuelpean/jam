@@ -512,14 +512,22 @@ class TestPremiumSettingsPage(BaseTest):
         # 1. Activate trial subscription and check user updated
         self._activate_trial()
 
-        # Move clock forward by 13 days
+        # 2. Move clock forward by 13 days and check that 1 day is left on trial
         self.premium_settings_utils.advance_clock(13)
         self.driver.refresh()
         assert self.premium_settings_utils.status_title.text == "Premium (Trial)"
         assert self.premium_settings_utils.status_message.text == "1 day remaining in your free trial"
 
-        # Move the clock further by 2 days and ensure that the user is not premium anymore
+        # 3. Move the clock further by 2 days and ensure that the user is not premium anymore
         self.premium_settings_utils.advance_clock(2)
         self.driver.refresh()
         assert self.premium_settings_utils.status_title.text == "Free Plan"
         assert not self.db_user.premium.is_active
+
+    def test_trial_payment(self) -> None:
+        """Test the Stripe payment modal interaction"""
+
+        self._activate_trial()
+        self._add_payment_method()
+        self.premium_settings_utils.advance_clock(15)
+        assert self.premium_settings_utils.status_title.text == "Premium"

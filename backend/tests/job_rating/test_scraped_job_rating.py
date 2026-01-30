@@ -7,6 +7,11 @@ from app.job_rating.scraped_job_rating import score_scraped_jobs
 
 class TestScoreScrapedJobs(object):
 
+    @staticmethod
+    def get_premium_users(db) -> list[models.User]:
+        """Return premium users list"""
+        return db.query(models.User).filter(models.User.premium.has(is_active=True)).all()
+
     def test_success(self, session, test_scraped_jobs, test_user_qualifications) -> None:
         """Test scoring scraped jobs successfully"""
 
@@ -22,8 +27,8 @@ class TestScoreScrapedJobs(object):
         assert len(service_log.rated_job_found_ids) == 41
         assert len(service_log.rated_job_succeeded_ids) == 41
         assert len(service_log.rated_job_failed_ids) == 0
-        assert len(service_log.user_found_ids) == 3
-        assert len(service_log.user_processed_ids) == 3
+        assert len(service_log.user_found_ids) == len(self.get_premium_users(session))
+        assert len(service_log.user_processed_ids) == len(self.get_premium_users(session)) - 1
 
     def test_skipped(self, session, test_scraped_jobs, test_user_qualifications, test_eis_service_logs) -> None:
         """Test scoring scraped jobs successfully"""
@@ -55,5 +60,5 @@ class TestScoreScrapedJobs(object):
         assert len(service_log.rated_job_found_ids) == 41
         assert len(service_log.rated_job_succeeded_ids) == 41
         assert len(service_log.rated_job_failed_ids) == 0
-        assert len(service_log.user_found_ids) == 3
-        assert len(service_log.user_processed_ids) == 3
+        assert len(service_log.user_found_ids) == len(self.get_premium_users(session))
+        assert len(service_log.user_processed_ids) == len(self.get_premium_users(session)) - 1

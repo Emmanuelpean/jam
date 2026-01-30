@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # Application settings
     app_version: str = get_app_version()
     max_file_size_mb: int
+    min_password_length: int
+    app_demo_username: str
+    app_demo_password: str
 
     # Other settings
     log_directory: str
@@ -74,6 +77,7 @@ class Settings(BaseSettings):
     stripe_secret_key: str
     stripe_webhook_secret: str
     stripe_toast_price_id: str
+    stripe_publishable_key: str
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).parent.parent / ".env",

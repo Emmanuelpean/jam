@@ -121,7 +121,7 @@ class TestEmailServiceIMAP:
 
         mock_mail = MagicMock()
         mock_imap.return_value = mock_mail
-        mock_mail.search.return_value = ("OK", [b"1 2 3 4 5"])
+        mock_mail.uid.return_value = ("OK", [b"1 2 3 4 5"])
 
         email_ids = email_svc.get_email_ids(
             recipient_email="test@example.com",
@@ -129,7 +129,7 @@ class TestEmailServiceIMAP:
         )
 
         mock_mail.select.assert_called_once_with("INBOX")
-        mock_mail.search.assert_called_once()
+        mock_mail.uid.assert_called_once()
         assert email_ids == ["1", "2", "3", "4", "5"]
         mock_mail.close.assert_called_once()
         mock_mail.logout.assert_called_once()
@@ -140,7 +140,7 @@ class TestEmailServiceIMAP:
 
         mock_mail = MagicMock()
         mock_imap.return_value = mock_mail
-        mock_mail.search.return_value = ("OK", [b"10 11"])
+        mock_mail.uid.return_value = ("OK", [b"10 11"])
 
         email_ids = email_svc.get_email_ids(
             recipient_email="recipient@example.com",
@@ -158,7 +158,7 @@ class TestEmailServiceIMAP:
 
         mock_mail = MagicMock()
         mock_imap.return_value = mock_mail
-        mock_mail.search.return_value = ("OK", [b""])
+        mock_mail.uid.return_value = ("OK", [b""])
 
         email_ids = email_svc.get_email_ids()
 
@@ -170,7 +170,7 @@ class TestEmailServiceIMAP:
 
         mock_mail = MagicMock()
         mock_imap.return_value = mock_mail
-        mock_mail.search.return_value = ("NO", [])
+        mock_mail.uid.return_value = ("NO", [])
 
         email_ids = email_svc.get_email_ids()
 
@@ -192,7 +192,7 @@ class TestEmailServiceIMAP:
             b"\r\n"
             b"This is the email body."
         )
-        mock_mail.fetch.return_value = ("OK", [(b"1", email_message)])
+        mock_mail.uid.return_value = ("OK", [(b"1", email_message)])
 
         content = email_svc.get_email_data("1")
 
@@ -229,7 +229,7 @@ class TestEmailServiceIMAP:
             b"<html>HTML body</html>\r\n"
             b"--boundary123--"
         )
-        mock_mail.fetch.return_value = ("OK", [(b"2", multipart_email)])
+        mock_mail.uid.return_value = ("OK", [(b"2", multipart_email)])
 
         content = email_svc.get_email_data("2")
 
@@ -242,7 +242,7 @@ class TestEmailServiceIMAP:
 
         mock_mail = MagicMock()
         mock_imap.return_value = mock_mail
-        mock_mail.fetch.return_value = ("NO", None)
+        mock_mail.uid.return_value = ("NO", None)
 
         content = email_svc.get_email_data("999")
 
@@ -254,9 +254,6 @@ class TestEmailServiceIMAP:
 
         mock_mail = MagicMock()
         mock_imap.return_value = mock_mail
-
-        # Mock search results
-        mock_mail.search.return_value = ("OK", [b"1 2 3"])
 
         # Mock email content
         email_1 = (
@@ -281,10 +278,12 @@ class TestEmailServiceIMAP:
             b"Body 3"
         )
 
-        mock_mail.fetch.side_effect = [
-            ("OK", [(b"3", email_3)]),
-            ("OK", [(b"2", email_2)]),
-            ("OK", [(b"1", email_1)]),
+        # Configure uid to return search results first, then fetch results
+        mock_mail.uid.side_effect = [
+            ("OK", [b"1 2 3"]),  # search result
+            ("OK", [(b"3", email_3)]),  # fetch for id 3
+            ("OK", [(b"2", email_2)]),  # fetch for id 2
+            ("OK", [(b"1", email_1)]),  # fetch for id 1
         ]
 
         emails = email_svc.get_emails()
@@ -301,7 +300,7 @@ class TestEmailServiceIMAP:
 
         mock_mail = MagicMock()
         mock_imap.return_value = mock_mail
-        mock_mail.search.return_value = ("OK", [b""])
+        mock_mail.uid.return_value = ("OK", [b""])
 
         emails = email_svc.get_emails()
 
