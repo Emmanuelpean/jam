@@ -476,7 +476,7 @@ function AuthForm(): JSX.Element {
 		placeholder: displayedMode === "resetPassword" ? "Enter your new password" : "Enter your password",
 		autoComplete: displayedMode === "login" ? "current-password" : "new-password",
 		helpText: ["register", "resetPassword"].includes(displayedMode)
-			? `Password must be at least ${config.min_password_length} characters long`
+			? `Password must be at least ${config?.min_password_length} characters long`
 			: null,
 	};
 

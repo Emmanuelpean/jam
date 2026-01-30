@@ -56,6 +56,11 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	const { currentUser } = useAuth();
 	useSwetrixPageViews();
 
+	const normalisedPathname: string =
+		location.pathname !== "/" && location.pathname.endsWith("/")
+			? location.pathname.slice(0, -1)
+			: location.pathname;
+
 	const isAuthPage: boolean = [
 		"/login",
 		"/register",
@@ -63,7 +68,7 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 		"/verify-email",
 		"/verify-new-email",
 		"/reset-password",
-	].includes(location.pathname);
+	].includes(normalisedPathname);
 
 	return (
 		<div style={{ display: "flex", minHeight: "100vh" }}>
