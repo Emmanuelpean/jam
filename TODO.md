@@ -54,5 +54,5 @@
 * [ ] Display reason why scraped job was not rated
 * [X] Update terms and conditions
 * [X] Fix demo mode drop down
-* [ ] Add account deletion option (delete subscription in this case)
+* [ ] Add account deletion option (delete subscription in this case) (tests required)
 * [X] Withdrawn, rejected or offered jobs are not shown in the needs chase dashboard anymore.

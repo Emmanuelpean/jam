@@ -9,6 +9,7 @@ from app.core import oauth2, schemas
 from app.core.utils import send_email_change_email
 from app.emails.email_service import email_service
 from app.routers import generate_data_table_crud_router
+from app.payments import stripe
 
 
 # -------------------------------------------------------- USERS -------------------------------------------------------
@@ -344,6 +345,13 @@ def delete_account(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Failed to delete account. Password is incorrect.",
         )
+
+    # Cancel Stripe subscription if active
+    if current_user.stripe_details and current_user.stripe_details.subscription_id:
+        try:
+            stripe.Subscription.delete(current_user.stripe_details.subscription_id)
+        except Exception as e:
+            print(f"Failed to cancel Stripe subscription for user {current_user.id}: {e}")
 
     # Delete the user (cascading deletes will handle related data)
     db.delete(current_user)

@@ -44,7 +44,7 @@ class TestAccountSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.current_password, "wrong")
         self.set_text(self.user_settings_utils.email, "test@test.com")
         self.user_settings_utils.confirm()
-        self.assert_toast_message("Current password is incorrect. Please try again.")
+        self.assert_toast_message("The current password is incorrect.")
 
     def test_change_email_success(self) -> None:
         """Test changing the email address"""
@@ -55,6 +55,7 @@ class TestAccountSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.email, new_email)
         self.user_settings_utils.confirm()
         self.assert_toast_message("Email change verification email sent successfully.")
+        assert new_email in self.get_element("pending-email-info").text
         verification_url = self.get_verification_link_from_email(new_email)
         self.driver.get(verification_url)
         self.assert_toast_message("Email address changed successfully. You can now log in with your new email.")
@@ -98,7 +99,7 @@ class TestAccountSettingsPage(BaseTest):
         self.set_text(self.user_settings_utils.current_password, self.user.plain_password)
         self.set_text(self.user_settings_utils.email, test_users[2].email)
         self.user_settings_utils.confirm()
-        self.assert_toast_message("Email is already in use. Please try a different email.")
+        self.assert_toast_message("Email already registered")
         assert self.db_user.email == self.user.email
 
     def test_change_email_incorrect_format(self, test_users) -> None:
@@ -143,6 +144,70 @@ class TestAccountSettingsPage(BaseTest):
         self.user_settings_utils.confirm()
         self.user_settings_utils.assert_confirm_password_error_message("Passwords do not match")
         assert verify_password(self.user.plain_password, self.db_user.password)
+
+    # -------------------------------------------------- DATA EXPORT ---------------------------------------------------
+
+    def test_download_data_export(self) -> None:
+        """Test downloading user data export"""
+
+        # Find and click the download data button
+        self.user_settings_utils.download_data_button.click()
+
+        # Wait for the download to complete (toast notification)
+        self.assert_toast_message("Data downloaded")
+
+    # ------------------------------------------------ ACCOUNT DELETION ------------------------------------------------
+
+    def test_delete_account_cancel_first_modal(self) -> None:
+        """Test cancelling account deletion from the first modal"""
+
+        self.user_settings_utils.delete_account_button.click()
+        self.user_settings_utils.cancel_delete_button.click()
+        assert self.db_user is not None
+        assert self.db_user.email == self.user.email
+
+    def test_delete_account_cancel_confirmation_modal(self) -> None:
+        """Test cancelling account deletion from the confirmation modal"""
+
+        self.user_settings_utils.delete_account_button.click()
+        self.set_text(self.user_settings_utils.delete_password, self.user.plain_password)
+        self.user_settings_utils.continue_delete_button.click()
+        self.user_settings_utils.cancel_confirm_delete_button.click()
+        assert self.db_user is not None
+        assert self.db_user.email == self.user.email
+
+    def test_delete_account_success(self, session) -> None:
+        """Test successful account deletion"""
+
+        user_id = self.user.id
+        self.user_settings_utils.delete_account_button.click()
+        self.set_text(self.user_settings_utils.delete_password, self.user.plain_password)
+        self.user_settings_utils.continue_delete_button.click()
+        self.user_settings_utils.final_delete_button.click()
+        self.wait_for_page("login")
+        self.assert_toast_message("Your account has been permanently deleted.")
+        deleted_user = session.query(models.User).filter(models.User.id == user_id).first()
+        assert deleted_user is None
+
+    def test_delete_account_wrong_password(self) -> None:
+        """Test account deletion with wrong password"""
+
+        self.user_settings_utils.delete_account_button.click()
+        self.set_text(self.user_settings_utils.delete_password, self.user.plain_password + "something")
+        self.user_settings_utils.continue_delete_button.click()
+        self.user_settings_utils.final_delete_button.click()
+        self.assert_toast_message("Failed to delete account. Password is incorrect.")
+        assert self.db_user is not None
+        assert self.db_user.email == self.user.email
+
+    def test_download_data_before_deletion(self, session) -> None:
+        """Test downloading data from the confirmation modal before deletion"""
+
+        self.user_settings_utils.delete_account_button.click()
+        self.set_text(self.user_settings_utils.delete_password, self.user.plain_password)
+        self.user_settings_utils.continue_delete_button.click()
+        self.user_settings_utils.download_data_modal_button.click()
+        self.assert_toast_message("Data downloaded")
 
 
 class TestPreferenceSettingsPage(BaseTest):
