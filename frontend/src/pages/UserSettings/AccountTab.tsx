@@ -38,6 +38,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 	const [showConfirmModal, setShowConfirmModal] = useState(false);
 	const [deleting, setDeleting] = useState(false);
+	const [downloadingData, setDownloadingData] = useState(false);
 	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.MIN_PASSWORD_LENGTH || "8");
 	const hasPendingEmail: boolean = !!currentUser?.pending_email_change;
 
@@ -61,11 +62,14 @@ export const AccountTab: React.FC = (): JSX.Element => {
 
 	const downloadJobsExport = async (): Promise<void> => {
 		if (!token) return;
+		setDownloadingData(true);
 		try {
 			await exportApi.download("jam_export.zip", token);
 			showToastSuccess("Data downloaded");
 		} catch (error) {
-			showApiError(error, "Download Failed", "An unknown error occcurred while downloading the data.");
+			showApiError(error, "Download Failed", "An unknown error occurred while downloading the data.");
+		} finally {
+			setDownloadingData(false);
 		}
 	};
 
@@ -276,7 +280,7 @@ export const AccountTab: React.FC = (): JSX.Element => {
 			{errors.general && <Alert variant="danger">{errors.general}</Alert>}
 
 			{hasPendingEmail && (
-				<Alert variant="info">
+				<Alert variant="info" id={"pending-email-info"}>
 					<Alert.Heading>Email Change Pending</Alert.Heading>A verification email has been sent to{" "}
 					<strong>{currentUser?.pending_email_change}</strong>. Please check your inbox and click the
 					verification link to complete your email change.
@@ -312,8 +316,12 @@ export const AccountTab: React.FC = (): JSX.Element => {
 			<ActionButton
 				variant="secondary"
 				onClick={downloadJobsExport}
-				defaultIcon="download"
-				defaultText="Download Data"
+				disabled={downloadingData}
+				loading={downloadingData}
+				defaultIcon={"bi-download"}
+				defaultText={"Download Data"}
+				loadingText={"Downloading..."}
+				id="download-data-button"
 			/>
 
 			<div className="mt-4">
@@ -321,9 +329,10 @@ export const AccountTab: React.FC = (): JSX.Element => {
 					type="submit"
 					variant="primary"
 					disabled={submitting}
-					defaultIcon="save"
+					defaultIcon="bi-save"
 					id={"confirm-button"}
-					defaultText={submitting ? "Saving..." : "Save Account Settings"}
+					defaultText={"Save Account Settings"}
+					loadingText={"Saving..."}
 				/>
 			</div>
 
@@ -338,9 +347,10 @@ export const AccountTab: React.FC = (): JSX.Element => {
 			<ActionButton
 				variant="danger"
 				onClick={openDeleteModal}
-				defaultIcon="trash"
+				defaultIcon="bi-trash"
 				defaultText="Delete Account"
 				disabled={currentUser?.is_demo}
+				id="delete-account-button"
 			/>
 			{currentUser?.is_demo && (
 				<p className="text-muted mt-2">
@@ -348,10 +358,10 @@ export const AccountTab: React.FC = (): JSX.Element => {
 				</p>
 			)}
 
-			<Modal show={showDeleteModal} onHide={closeDeleteModal} centered>
+			<Modal show={showDeleteModal} onHide={closeDeleteModal} size={"lg"} centered id="delete-account-modal">
 				<Modal.Header closeButton>
 					<Modal.Title>
-						<i className="bi bi-exclamation-triangle text-danger"></i> Delete Account
+						<i className="bi bi-exclamation-triangle"></i> Delete Account
 					</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
@@ -363,21 +373,27 @@ export const AccountTab: React.FC = (): JSX.Element => {
 					{renderFormField(deletePasswordField, formData, handleInputChange, errors)}
 				</Modal.Body>
 				<Modal.Footer>
-					<ActionButton variant="secondary" onClick={closeDeleteModal} defaultText="Cancel" />
+					<ActionButton
+						variant="secondary"
+						onClick={closeDeleteModal}
+						defaultText="Cancel"
+						id="cancel-delete-button"
+					/>
 					<ActionButton
 						variant="danger"
 						onClick={proceedToConfirmation}
 						disabled={!formData.delete_password}
-						defaultIcon="arrow-right"
+						defaultIcon="bi-arrow-right"
 						defaultText="Continue"
+						id="continue-delete-button"
 					/>
 				</Modal.Footer>
 			</Modal>
 
-			<Modal show={showConfirmModal} onHide={closeConfirmModal} size={"lg"} centered>
+			<Modal show={showConfirmModal} onHide={closeConfirmModal} size={"lg"} centered id="confirm-delete-modal">
 				<Modal.Header closeButton>
 					<Modal.Title>
-						<i className="bi bi-exclamation-triangle-fill text-danger"></i> Final Confirmation
+						<i className="bi bi-exclamation-triangle-fill"></i> Final Confirmation
 					</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
@@ -392,22 +408,47 @@ export const AccountTab: React.FC = (): JSX.Element => {
 							<li>User preferences and settings</li>
 							<li>Interview records and notes</li>
 							<li>All contacts and companies</li>
+							{currentUser?.premium?.is_active && (
+								<li className="fw-bold">
+									Your active premium subscription (will be cancelled immediately)
+								</li>
+							)}
 						</ul>
 					</Alert>
-					<p className="text-center fw-bold mb-0">This action cannot be undone.</p>
+					<Alert variant="info">
+						<Alert.Heading className="h6">
+							<i className="bi bi-download"></i> Download Your Data
+						</Alert.Heading>
+						<p className="mb-2">
+							Before you delete your account, you may want to download a copy of your data for your
+							records.
+						</p>
+						<ActionButton
+							variant="primary"
+							onClick={downloadJobsExport}
+							disabled={downloadingData}
+							loading={downloadingData}
+							defaultIcon={"bi-download"}
+							defaultText={"Download My Data"}
+							loadingText={"Downloading..."}
+							id="download-data-modal-button"
+						/>
+					</Alert>
 				</Modal.Body>
 				<Modal.Footer>
 					<ActionButton
 						variant="secondary"
 						onClick={closeConfirmModal}
 						defaultText="Cancel"
+						id="cancel-confirm-delete-button"
 					/>
 					<ActionButton
 						variant="danger"
 						onClick={handleDeleteAccount}
 						disabled={deleting}
-						defaultIcon="trash"
+						defaultIcon={"bi-trash"}
 						defaultText={deleting ? "Deleting..." : "Yes, Delete My Account"}
+						id="final-delete-button"
 					/>
 				</Modal.Footer>
 			</Modal>

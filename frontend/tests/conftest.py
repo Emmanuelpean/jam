@@ -1598,6 +1598,66 @@ class UserSettingsUtils(BaseUtilsClass):
         self._assert_message("confirm_password-", error_message)
 
     @property
+    def download_data_button(self) -> WebElement:
+        """Get the download data button"""
+
+        return self.get_element("download-data-button")
+
+    @property
+    def delete_account_button(self) -> WebElement:
+        """Get the delete account button"""
+
+        return self.get_element("delete-account-button")
+
+    @property
+    def delete_password(self) -> WebElement:
+        """Get the delete password field"""
+
+        return self.get_element("delete_password")
+
+    @property
+    def delete_account_modal(self) -> WebElement:
+        """Get the delete account modal"""
+
+        return self.get_element("delete-account-modal")
+
+    @property
+    def cancel_delete_button(self) -> WebElement:
+        """Get the cancel delete button in first modal"""
+
+        return self.get_element("cancel-delete-button")
+
+    @property
+    def continue_delete_button(self) -> WebElement:
+        """Get the continue button in first modal"""
+
+        return self.get_element("continue-delete-button")
+
+    @property
+    def confirm_delete_modal(self) -> WebElement:
+        """Get the confirmation delete modal"""
+
+        return self.get_element("confirm-delete-modal")
+
+    @property
+    def download_data_modal_button(self) -> WebElement:
+        """Get the download data button in confirmation modal"""
+
+        return self.get_element("download-data-modal-button")
+
+    @property
+    def cancel_confirm_delete_button(self) -> WebElement:
+        """Get the cancel button in confirmation modal"""
+
+        return self.get_element("cancel-confirm-delete-button")
+
+    @property
+    def final_delete_button(self) -> WebElement:
+        """Get the final delete button"""
+
+        return self.get_element("final-delete-button")
+
+    @property
     def experience_input(self) -> WebElement:
         """Get the experience input field"""
 
