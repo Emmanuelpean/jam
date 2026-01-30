@@ -56,3 +56,5 @@
 * [X] Fix demo mode drop down
 * [ ] Add account deletion option (delete subscription in this case) (tests required)
 * [X] Withdrawn, rejected or offered jobs are not shown in the needs chase dashboard anymore.
+* [ ] Fix the password reset bug
+* [ ] Run the build first for faster selenium testing?

@@ -335,8 +335,11 @@ def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Genera
                 compiled = True
                 print(f"✅ Frontend compiled: {line}")
             elif "failed to compile" in line.lower() or "compilation failed" in line.lower():
-                print(f"❌ Frontend compilation failed: {line}")
-                raise Exception(f"Frontend compilation failed: {line}")
+                print(f"❌ Frontend compilation failed!")
+                print("Recent output before failure:")
+                for prev_line in recent_lines[-20:]:
+                    print(f"  {prev_line}")
+                raise Exception(f"Frontend compilation failed - see output above for details")
 
         if attempt % 10 == 0 and recent_lines:
             print(f"Recent frontend output (attempt {attempt + 1}/90):")
