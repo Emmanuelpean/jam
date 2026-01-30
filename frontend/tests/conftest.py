@@ -431,7 +431,7 @@ class BaseUtils(object):
     def wait_for_page(self, page_url: str) -> None:
         """Wait for the dashboard to load"""
 
-        self.wait.until(ec.url_matches(f"^{self.frontend_base_url}/{page_url}"))
+        self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
 
     def get_all_element_ids(self) -> list[str]:
         """Get all element IDs present on the current page"""
