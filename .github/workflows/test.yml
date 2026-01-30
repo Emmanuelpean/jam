@@ -112,7 +112,7 @@ jobs:
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
           cd frontend
-          npm install --legacy-peer-deps
+          npm install
           cd ..
 
       - name: Install Stripe CLI
