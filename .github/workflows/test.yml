@@ -121,13 +121,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y stripe
 
-      - name: Configure Stripe CLI
-        if: "!contains(github.event.head_commit.message, '[skip tests]')"
-        run: |
-          stripe login --api-key "$STRIPE_SECRET_KEY"
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-
       - name: Run Tests with Pytest and Coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
