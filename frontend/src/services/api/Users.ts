@@ -85,7 +85,7 @@ export const authApi: AuthApi = {
 	},
 
 	deleteAccount: async (password: string, token: string): ApiResponsePromise<GenericResponse> => {
-		return baseApi.delete("current-user/", { password }, token);
+		return baseApi.delete("current-user/", token, { password });
 	},
 };
 
