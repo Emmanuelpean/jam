@@ -11,6 +11,9 @@ export interface Config {
 	scraper_email: string;
 	support_email: string;
 	platform_sender_emails: Record<string, string>;
+	min_password_length: number;
+	app_demo_username: string;
+	app_demo_password: string;
 }
 
 const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);

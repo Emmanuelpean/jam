@@ -9,6 +9,7 @@ import { renderFormField, SyntheticEvent } from "../../components/rendering/widg
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { useNavigate } from "react-router-dom";
+import { useConfig } from "../../contexts/ConfigContext";
 
 interface AccountFormData {
 	email?: string;
@@ -21,6 +22,7 @@ interface AccountFormData {
 }
 
 export const AccountTab: React.FC = (): JSX.Element => {
+	const { config } = useConfig();
 	const { currentUser, token, updateCurrentUser, logout } = useAuth();
 	const { showToastSuccess, showToastError, showApiError } = useGlobalToast();
 	const navigate = useNavigate();
@@ -39,7 +41,6 @@ export const AccountTab: React.FC = (): JSX.Element => {
 	const [showConfirmModal, setShowConfirmModal] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 	const [downloadingData, setDownloadingData] = useState(false);
-	const MIN_PASSWORD_LENGTH: number = parseInt(process.env.MIN_PASSWORD_LENGTH || "8");
 	const hasPendingEmail: boolean = !!currentUser?.pending_email_change;
 
 	useEffect(() => {
@@ -138,8 +139,8 @@ export const AccountTab: React.FC = (): JSX.Element => {
 		}
 
 		if (formData.new_password || formData.confirm_password) {
-			if (formData.new_password && formData.new_password.length < MIN_PASSWORD_LENGTH) {
-				newErrors.new_password = `New password must be at least ${MIN_PASSWORD_LENGTH} characters long`;
+			if (formData.new_password && formData.new_password.length < config.min_password_length) {
+				newErrors.new_password = `New password must be at least ${config.min_password_length} characters long`;
 			}
 			if (formData.new_password !== formData.confirm_password) {
 				newErrors.confirm_password = "Passwords do not match";
