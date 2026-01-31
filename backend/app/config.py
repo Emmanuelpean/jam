@@ -74,10 +74,9 @@ class Settings(BaseSettings):
     apify_api_key: str
 
     # Stripe
-    stripe_secret_key: str
+    stripe_api_key: str
     stripe_webhook_secret: str
     stripe_toast_price_id: str
-    # stripe_publishable_key: str
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).parent.parent / ".env",

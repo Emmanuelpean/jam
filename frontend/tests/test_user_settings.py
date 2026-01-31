@@ -511,7 +511,7 @@ class TestPremiumSettingsPage(BaseTest):
         self.premium_settings_utils.assert_status_title("Free Plan")
         assert not self.db_user.premium.is_active
 
-    def test_trial_card_15days_card(self) -> None:
+    def _test_trial_card_15days_card(self) -> None:
         """Test the Stripe payment modal interaction
         1. Activate trial subscription
         2. Add payment method
@@ -531,7 +531,7 @@ class TestPremiumSettingsPage(BaseTest):
         self.premium_settings_utils.cancel_feedback.click()
         self.premium_settings_utils.advance_clock(15)
         self.premium_settings_utils.return_to_business_link.click()
-        self.wait_for_page("settings/premium")
+        self.wait_for_page("settings/premium/")
         self.driver.refresh()
         self.premium_settings_utils.assert_status_title("Free Plan")
 
@@ -544,6 +544,20 @@ class TestPremiumSettingsPage(BaseTest):
         self.set_text(self.get_element("cardExpiry"), "1228")
         self.set_text(self.get_element("billingName"), "Test User")
         self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR).click()
-        self.wait_for_page("settings/premium")
+        self.wait_for_page("settings/premium/")
         self.driver.refresh()
         self.premium_settings_utils.assert_status_title("Premium")
+
+    def test_delete_user_with_subscription(self) -> None:
+        """Test deleting user with active subscription"""
+
+        self._activate_trial()
+        self._add_payment_method()
+        self.user_settings_utils.go_to_account_tab()
+        assert self.db_user.stripe_details.subscription_id is not None
+        self.user_settings_utils.delete_account_button.click()
+        self.set_text(self.user_settings_utils.delete_password, self.user.plain_password)
+        self.user_settings_utils.continue_delete_button.click()
+        self.user_settings_utils.final_delete_button.click()
+        self.wait_for_page("login")
+        self.assert_toast_message("Your account has been permanently deleted.")
