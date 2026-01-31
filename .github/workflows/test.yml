@@ -67,7 +67,7 @@ jobs:
       APIFY_API_KEY: ${{ secrets.APIFY_API_KEY }}
 
       # Payment Configuration
-      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_API_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
       STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
       STRIPE_TOAST_PRICE_ID: ${{ secrets.STRIPE_TOAST_PRICE_ID }}
 
