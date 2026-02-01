@@ -409,8 +409,9 @@ class TestPremiumSettingsPage(BaseTest):
             subprocess.run("pkill -f 'stripe listen'", shell=True, capture_output=True)
 
         stripe_cmd = r'"C:\Program Files\Stripe\stripe.exe"' if os.name == "nt" else "stripe"
+        stripe_api_key = settings.stripe_api_key
         self.stripe_listener = subprocess.Popen(
-            f"{stripe_cmd} listen --forward-to {settings.backend_url}/payments/webhooks",
+            f"{stripe_cmd} listen --api-key {stripe_api_key} --forward-to {settings.backend_url}/payments/webhooks",
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             shell=True,
