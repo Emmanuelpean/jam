@@ -245,7 +245,8 @@ def test_backend_server(database_url, worker_id, engine, frontend_url) -> Genera
 
 @pytest.fixture(scope="session")
 def stripe_listener(test_backend_server, worker_id) -> Generator[subprocess.Popen | None, None, None]:
-    """Start Stripe webhook listener after backend is ready"""
+    """Start Stripe webhook listener after backend is ready
+    This fixture must be explicitly requested by tests that need Stripe webhooks."""
 
     # Extract port from backend URL
     backend_port = test_backend_server.split(":")[-1]
@@ -1995,12 +1996,14 @@ class BaseTest(BaseUtils):
         self,
         test_frontend_server,
         test_backend_server,
+        stripe_listener,
         request,
         test_users,
         authorised_clients,
         session,
     ) -> Generator[None, None, None]:
         """Set up the test environment before each test with test data"""
+
         self._test_name = request.node.name
         try:
             # Configure Chrome options to disable password prompts
@@ -2037,6 +2040,7 @@ class BaseTest(BaseUtils):
             # Frontend/Backend
             self.frontend_base_url = test_frontend_server
             self.backend_base_url = test_backend_server
+            self.stripe_listener = stripe_listener
 
             # Client/User
             self.user = test_users[self.user_index]
