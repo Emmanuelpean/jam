@@ -42,6 +42,13 @@ export interface PremiumDetailsUpdate {
 	job_rating_active?: boolean | null;
 }
 
+// --------------------------------------------------- STRIPE DETAILS --------------------------------------------------
+
+export interface StripeDetails {
+	subscription_status: string | null;
+	trial_end_date: number | null;
+}
+
 // ----------------------------------------------------- USER DATA -----------------------------------------------------
 
 export interface UserDataTransform {
@@ -49,7 +56,7 @@ export interface UserDataTransform {
 	is_admin: boolean;
 	password: string;
 	is_active: boolean;
-	premium: { is_active: boolean; job_rating_active: boolean; job_scraping_active: boolean };
+	premium: PremiumDetails;
 }
 
 export interface UserDataUpdate {
@@ -74,6 +81,7 @@ export interface UserData extends OwnedOut {
 	pending_email_change: string | null;
 	premium: PremiumDetails;
 	preferences: UserPreferences;
+	stripe_details: StripeDetails;
 }
 
 // ------------------------------------------------ USER QUALIFICATIONS ------------------------------------------------

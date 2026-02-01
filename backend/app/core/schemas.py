@@ -126,6 +126,16 @@ class CurrentUserPremiumDetailsUpdate(BaseModel):
     job_rating_active: bool | None = None
 
 
+# ------------------------------------------------------- STRIPE -------------------------------------------------------
+
+
+class StripeDetails(BaseModel):
+    """Stripe details schema"""
+
+    subscription_status: str | None = None
+    trial_end_date: int | None = None
+
+
 # -------------------------------------------------------- USERS -------------------------------------------------------
 
 
@@ -159,6 +169,7 @@ class UserOut(Out):
     pending_email_change: str | None
     preferences: UserPreferencesOut | None
     premium: PremiumDetailsOut | None
+    stripe_details: StripeDetails | None
 
 
 class UserUpdate(BaseModel):

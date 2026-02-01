@@ -432,6 +432,7 @@ class BaseUtils(object):
         """Wait for the dashboard to load"""
 
         self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
+        print("Failed to wait for URL", self.driver.current_url)
 
     def get_all_element_ids(self) -> list[str]:
         """Get all element IDs present on the current page"""
@@ -598,6 +599,42 @@ class BaseUtils(object):
 
         except Exception as e:
             return f"Error checking overlap: {e}"
+
+    def wait_for_element_text(
+        self,
+        element_id: str,
+        expected_text: str,
+        selector: str = By.ID,
+        timeout: float = 10.0,
+    ) -> WebElement:
+        """Wait for an element's text to become the expected value.
+        :param element_id: ID of the element to check
+        :param expected_text: The text value to wait for
+        :param selector: Selector to use for finding the element
+        :param timeout: How long to wait before raising an error
+        :return: The element once its text matches"""
+
+        def text_matches(driver):
+            try:
+                el = driver.find_element(selector, element_id)
+                return el if el.text == expected_text else False
+            except:
+                return False
+
+        try:
+            wait = WebDriverWait(self.driver, timeout)
+            return wait.until(text_matches)
+        except TimeoutException:
+            # Get actual text for error message
+            try:
+                element = self.driver.find_element(selector, element_id)
+                actual_text = element.text
+            except:
+                actual_text = "<element not found>"
+            raise AssertionError(
+                f"Element '{element_id}' text did not become '{expected_text}' within {timeout}s. "
+                f"Actual text: '{actual_text}'"
+            )
 
     def wait_for_disappear(
         self,
@@ -1892,7 +1929,7 @@ class BaseTest(BaseUtils):
                 "protocol_handler": {"excluded_schemes": {"mailto": True}},
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_argument("--headless=new")
+            # chrome_options.add_argument("--headless=new")
             chrome_options.add_argument("--window-size=1960,1080")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument("--no-sandbox")

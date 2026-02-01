@@ -162,10 +162,14 @@ class StripeDetails(Owned, Base):
     Attributes:
     -----------
     - `customer_id` (str, optional): Stripe customer identifier.
-    - `subscription_id` (str, optional): Stripe subscription identifier."""
+    - `subscription_id` (str, optional): Stripe subscription identifier.
+    - `subscription_status` (str, optional): Current subscription status.
+    - `trial_end_date` (int, optional): Timestamp of trial end date in seconds since epoch."""
 
     customer_id = Column(String, nullable=True)
     subscription_id = Column(String, nullable=True)
+    subscription_status = Column(String, nullable=True)
+    trial_end_date = Column(Integer, nullable=True)
 
 
 class PremiumSettings(Owned, Base):
