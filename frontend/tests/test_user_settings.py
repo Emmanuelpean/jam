@@ -402,33 +402,40 @@ class TestPremiumSettingsPage(BaseTest):
     def setup_function(self, request) -> None:
         """Setup function"""
 
-        # Kill any leftover stripe processes from previous runs
-        if os.name == "nt":
-            subprocess.run("taskkill /F /IM stripe.exe", shell=True, capture_output=True)
-        else:
-            subprocess.run("pkill -f 'stripe listen'", shell=True, capture_output=True)
+        # Check if we're in CI (GitHub Actions) - if so, skip starting listener
+        is_ci = os.getenv("CI") == "true"
 
-        stripe_cmd = r'"C:\Program Files\Stripe\stripe.exe"' if os.name == "nt" else "stripe"
-        stripe_api_key = settings.stripe_api_key
-        self.stripe_listener = subprocess.Popen(
-            f"{stripe_cmd} listen --api-key {stripe_api_key} --forward-to {settings.backend_url}/payments/webhooks",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            shell=True,
-            text=True,
-        )
+        if not is_ci:
+            # Kill any leftover stripe processes from previous runs
+            if os.name == "nt":
+                subprocess.run("taskkill /F /IM stripe.exe", shell=True, capture_output=True)
+            else:
+                subprocess.run("pkill -f 'stripe listen'", shell=True, capture_output=True)
 
-        # Wait for stripe listener to be ready (it outputs "Ready!" when connected)
-        timeout = 30
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            line = self.stripe_listener.stdout.readline()
-            if line:
-                print(f"[STRIPE] {line.strip()}")
-                if "Ready!" in line:
-                    break
+            stripe_cmd = r'"C:\Program Files\Stripe\stripe.exe"' if os.name == "nt" else "stripe"
+            stripe_api_key = settings.stripe_api_key
+            self.stripe_listener = subprocess.Popen(
+                f"{stripe_cmd} listen --api-key {stripe_api_key} --forward-to {settings.backend_url}/payments/webhooks",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                shell=True,
+                text=True,
+            )
+
+            # Wait for stripe listener to be ready (it outputs "Ready!" when connected)
+            timeout = 30
+            start_time = time.time()
+            while time.time() - start_time < timeout:
+                line = self.stripe_listener.stdout.readline()
+                if line:
+                    print(f"[STRIPE] {line.strip()}")
+                    if "Ready!" in line:
+                        break
+            else:
+                raise RuntimeError("Stripe listener failed to start within timeout")
         else:
-            raise RuntimeError("Stripe listener failed to start within timeout")
+            # In CI, the listener is already running, so just set to None
+            self.stripe_listener = None
 
         self.login()
         self.premium_settings_utils = PremiumSettingsUtils(
