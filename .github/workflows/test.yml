@@ -123,28 +123,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y stripe
 
-      - name: Start Stripe Webhook Listener
-        if: "!contains(github.event.head_commit.message, '[skip tests]')"
-        run: |
-          stripe listen --api-key ${{ secrets.STRIPE_SECRET_KEY }} --forward-to http://localhost:8000/payments/webhooks > stripe.log 2>&1 &
-          echo "Waiting for Stripe listener to be ready..."
-          timeout=30
-          elapsed=0
-          while [ $elapsed -lt $timeout ]; do
-            if grep -q "Ready!" stripe.log 2>/dev/null; then
-              echo "Stripe listener is ready!"
-              cat stripe.log
-              break
-            fi
-            sleep 1
-            elapsed=$((elapsed + 1))
-          done
-          if [ $elapsed -ge $timeout ]; then
-            echo "Stripe listener failed to start. Log contents:"
-            cat stripe.log
-            exit 1
-          fi
-
       - name: Run Tests with Pytest and Coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: pytest -n auto ./frontend/tests/test_user_settings.py::TestPremiumSettingsPage -v
