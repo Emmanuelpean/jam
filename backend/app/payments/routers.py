@@ -112,7 +112,7 @@ async def create_portal_session(
         # Create portal session
         portal_session = await stripe.billing_portal.Session.create_async(
             customer=customer_id,
-            return_url=f"{settings.frontend_url}/settings/premium/?success=true",
+            return_url=f"{settings.frontend_url}/settings/premium?success=true",
         )
 
         logger.info(f"Created portal session for user {current_user.id}")

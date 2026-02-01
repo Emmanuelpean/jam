@@ -434,6 +434,35 @@ class BaseUtils(object):
         self.wait.until(ec.url_to_be(f"{self.frontend_base_url}/{page_url}"))
         print("Failed to wait for URL", self.driver.current_url)
 
+    def advance_browser_clock_days(self, days: int) -> None:
+        self.driver.execute_script(
+            """
+            const RealDate = window.Date;
+
+            const offsetMs = Number(arguments[0]) || 0;
+            const baseTime = RealDate.now() + offsetMs;
+
+            function MockDate(...args) {
+                if (this instanceof MockDate) {
+                    return args.length
+                        ? new RealDate(...args)
+                        : new RealDate(baseTime);
+                }
+                return RealDate();
+            }
+
+            MockDate.prototype = RealDate.prototype;
+
+            // Preserve static methods
+            MockDate.now = () => baseTime;
+            MockDate.parse = RealDate.parse;
+            MockDate.UTC = RealDate.UTC;
+
+            window.Date = MockDate;
+        """,
+            days * 24 * 60 * 60 * 1000,
+        )
+
     def get_all_element_ids(self) -> list[str]:
         """Get all element IDs present on the current page"""
 

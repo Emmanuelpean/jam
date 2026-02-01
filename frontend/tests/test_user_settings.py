@@ -320,20 +320,61 @@ class PremiumSettingsUtils(BaseUtilsClass):
 
         response = self.client.post("/test/advance-test-clock", json={"days": days})
         assert response.status_code == 200
+        self.advance_browser_clock_days(days)
 
     @property
-    def subscribe_button(self) -> WebElement:
+    def subscription_button(self) -> WebElement:
         """Subscribe button element"""
 
-        return self.get_element("subscribe-button")
+        return self.get_element("subscription-button")
+
+    def assert_status_title(self, expected_title: str) -> None:
+        """Assert status title"""
+
+        assert self.wait_for_element_text("status-title", expected_title)
+
+    def assert_status_message(self, expected_message: str) -> None:
+        """Assert status message"""
+
+        assert self.wait_for_element_text("status-message", expected_message)
 
     @property
-    def manage_subscription_button(self) -> WebElement:
-        """Manage subscription button element"""
+    def stripe_add_payment_method_button(self) -> WebElement:
+        """Add payment method button element"""
 
-        return self.get_element("manage-subscription-button")
+        return self.get_element("[data-test='add-payment-method']", By.CSS_SELECTOR)
 
-    def set_payment_details(self) -> None:
+    @property
+    def stripe_cancel_subscription_button(self) -> WebElement:
+        """Cancel subscription button element"""
+
+        return self.get_element("[data-test='cancel-subscription']", By.CSS_SELECTOR)
+
+    @property
+    def stripe_return_to_business_link(self) -> WebElement:
+        """Return to business link element"""
+
+        return self.get_element("[data-testid='return-to-business-link']", By.CSS_SELECTOR)
+
+    @property
+    def stripe_start_trial_button(self) -> WebElement:
+        """Start trial button element"""
+
+        return self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR)
+
+    @property
+    def stripe_confirm_button(self) -> WebElement:
+        """Confirm button element"""
+
+        return self.get_element("[data-test='confirm']", By.CSS_SELECTOR)
+
+    @property
+    def stripe_cancel_feedback(self) -> WebElement:
+        """Confirm button element"""
+
+        return self.get_element("[data-testid='cancellation_reason_cancel']", By.CSS_SELECTOR)
+
+    def set_stripe_payment_details(self) -> None:
         """Set payment details in the Stripe iframe"""
 
         self.driver.switch_to.frame(0)
@@ -344,66 +385,8 @@ class PremiumSettingsUtils(BaseUtilsClass):
         self.set_text(self.get_element("payment-expiryInput"), "1228")
         self.set_text(self.get_element("payment-postalCodeInput"), "10001")
         self.driver.switch_to.default_content()
-        self.confirm_button.click()
+        self.stripe_confirm_button.click()
         time.sleep(3)
-
-    @property
-    def status_title(self) -> WebElement:
-        """Status title element"""
-
-        return self.get_element("status-title")
-
-    def assert_status_title(self, expected_title: str) -> None:
-        """Assert status title"""
-
-        assert self.wait_for_element_text("status-title", expected_title)
-
-    @property
-    def status_message(self) -> WebElement:
-        """Status message element"""
-
-        return self.get_element("status-message")
-
-    def assert_status_message(self, expected_message: str) -> None:
-        """Assert status message"""
-
-        assert self.get_element("status-message").text == expected_message
-
-    @property
-    def add_payment_method_button(self) -> WebElement:
-        """Add payment method button element"""
-
-        return self.get_element("[data-test='add-payment-method']", By.CSS_SELECTOR)
-
-    @property
-    def cancel_subscription_button(self) -> WebElement:
-        """Cancel subscription button element"""
-
-        return self.get_element("[data-test='cancel-subscription']", By.CSS_SELECTOR)
-
-    @property
-    def return_to_business_link(self) -> WebElement:
-        """Return to business link element"""
-
-        return self.get_element("[data-testid='return-to-business-link']", By.CSS_SELECTOR)
-
-    @property
-    def start_trial_button(self) -> WebElement:
-        """Start trial button element"""
-
-        return self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR)
-
-    @property
-    def confirm_button(self) -> WebElement:
-        """Confirm button element"""
-
-        return self.get_element("[data-test='confirm']", By.CSS_SELECTOR)
-
-    @property
-    def cancel_feedback(self) -> WebElement:
-        """Confirm button element"""
-
-        return self.get_element("[data-testid='cancellation_reason_cancel']", By.CSS_SELECTOR)
 
 
 class TestPremiumSettingsPage(BaseTest):
@@ -466,8 +449,9 @@ class TestPremiumSettingsPage(BaseTest):
         """Activate the user trial"""
 
         self.premium_settings_utils.delete_stripe_data()
-        self.premium_settings_utils.subscribe_button.click()
-        self.premium_settings_utils.start_trial_button.click()
+        assert self.premium_settings_utils.subscription_button.text == "Start Free Trial"
+        self.premium_settings_utils.subscription_button.click()
+        self.premium_settings_utils.stripe_start_trial_button.click()
         self.wait_for_page("settings/premium?success=true")
         self.premium_settings_utils.assert_status_title("Premium (Trial)")
         self.premium_settings_utils.assert_status_message("14 days remaining in your free trial")
@@ -476,11 +460,11 @@ class TestPremiumSettingsPage(BaseTest):
     def _add_payment_method(self) -> None:
         """Add payment method"""
 
-        self.premium_settings_utils.manage_subscription_button.click()
-        self.premium_settings_utils.add_payment_method_button.click()
+        self.premium_settings_utils.subscription_button.click()
+        self.premium_settings_utils.stripe_add_payment_method_button.click()
         time.sleep(3)
-        self.premium_settings_utils.set_payment_details()
-        self.premium_settings_utils.return_to_business_link.click()
+        self.premium_settings_utils.set_stripe_payment_details()
+        self.premium_settings_utils.stripe_return_to_business_link.click()
         self.premium_settings_utils.assert_status_title("Premium (Trial)")
         assert self.db_user.premium.is_active
 
@@ -488,9 +472,10 @@ class TestPremiumSettingsPage(BaseTest):
         """Test the Stripe payment modal interaction"""
 
         self._activate_trial()
-        # self._add_payment_method()
+        self._add_payment_method()
         self.premium_settings_utils.advance_clock(15)
         self.premium_settings_utils.assert_status_title("Premium")
+        assert self.premium_settings_utils.subscription_button.text == "Manage Subscription"
 
     def test_trial_elapses(self) -> None:
         """Test the Stripe payment modal interaction"""
@@ -500,14 +485,15 @@ class TestPremiumSettingsPage(BaseTest):
 
         # 2. Move clock forward by 13 days and check that 1 day is left on trial
         self.premium_settings_utils.advance_clock(13)
-        self.driver.refresh()
         self.premium_settings_utils.assert_status_title("Premium (Trial)")
         self.premium_settings_utils.assert_status_message("1 day remaining in your free trial")
+        assert self.premium_settings_utils.subscription_button.text == "Manage Subscription"
+        assert self.db_user.premium.is_active
 
         # 3. Move the clock further by 2 days and ensure that the user is not premium any more
         self.premium_settings_utils.advance_clock(2)
-        self.driver.refresh()
         self.premium_settings_utils.assert_status_title("Free Plan")
+        assert self.premium_settings_utils.subscription_button.text == "Subscribe"
         assert not self.db_user.premium.is_active
 
     def test_trial_card_15days_card(self) -> None:
@@ -524,18 +510,17 @@ class TestPremiumSettingsPage(BaseTest):
         self._add_payment_method()
 
         # 3. Cancel subscription and move clock forward by 15 days, the subscription should be cancelled
-        self.premium_settings_utils.manage_subscription_button.click()
-        self.premium_settings_utils.cancel_subscription_button.click()
-        self.premium_settings_utils.confirm_button.click()
-        self.premium_settings_utils.cancel_feedback.click()
+        self.premium_settings_utils.subscription_button.click()
+        self.premium_settings_utils.stripe_cancel_subscription_button.click()
+        self.premium_settings_utils.stripe_confirm_button.click()
+        self.premium_settings_utils.stripe_cancel_feedback.click()
         self.premium_settings_utils.advance_clock(15)
-        self.premium_settings_utils.return_to_business_link.click()
-        self.wait_for_page("settings/premium/")
-        self.driver.refresh()
+        self.premium_settings_utils.stripe_return_to_business_link.click()
+        self.wait_for_page("settings/premium?success=true")
         self.premium_settings_utils.assert_status_title("Free Plan")
 
         # Try to subscribe again
-        self.premium_settings_utils.subscribe_button.click()
+        self.premium_settings_utils.subscription_button.click()
         self.get_element("[data-testid='card-accordion-item']", By.CSS_SELECTOR).click()
         self.set_text(self.get_element("cardNumber"), "4242 4242 4242 4242")
         self.set_text(self.get_element("cardCvc"), "123")
@@ -543,8 +528,7 @@ class TestPremiumSettingsPage(BaseTest):
         self.set_text(self.get_element("cardExpiry"), "1228")
         self.set_text(self.get_element("billingName"), "Test User")
         self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR).click()
-        self.wait_for_page("settings/premium/")
-        self.driver.refresh()
+        self.wait_for_page("settings/premium?success=true")
         self.premium_settings_utils.assert_status_title("Premium")
 
     def test_delete_user_with_subscription(self) -> None:

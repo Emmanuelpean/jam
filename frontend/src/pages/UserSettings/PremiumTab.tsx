@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useState, ReactNode } from "react";
+import React, { JSX, ReactNode, useEffect, useState } from "react";
 import { Badge, Card, Col, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
 import { useAuth } from "../../contexts/AuthContext";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
@@ -36,6 +36,7 @@ const getSubscriptionStatusDisplay = (
 		const remainingSeconds: number = trialEndDate - nowSeconds;
 		trialDaysRemaining = Math.max(0, Math.ceil(remainingSeconds / (60 * 60 * 24)));
 	}
+	console.log(trialDaysRemaining);
 
 	if (!status || status === "canceled") {
 		return {
@@ -46,7 +47,8 @@ const getSubscriptionStatusDisplay = (
 			showSubscribeButton: true,
 			icon: "bi-star",
 		};
-	} else if (trialDaysRemaining !== null && trialDaysRemaining > 0) {
+	}
+	if (status === "trialing" && trialDaysRemaining !== null && trialDaysRemaining > 0) {
 		return {
 			title: "Premium (Trial)",
 			message: `${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""} remaining in your free trial`,
@@ -55,7 +57,8 @@ const getSubscriptionStatusDisplay = (
 			showSubscribeButton: false,
 			icon: "bi-gem",
 		};
-	} else if (status === "active") {
+	}
+	if (status === "active" || status == "trialing") {
 		return {
 			title: "Premium",
 			message: "All features unlocked",
@@ -64,20 +67,19 @@ const getSubscriptionStatusDisplay = (
 			showSubscribeButton: false,
 			icon: "bi-gem",
 		};
-	} else {
-		return {
-			title: "Unknown Status",
-			message: (
-				<>
-					Please contact <a href={`mailto:${supportEmail}`}>support</a> for assistance
-				</>
-			),
-			variant: "warning",
-			badgeVariant: "warning",
-			showSubscribeButton: false,
-			icon: "bi-question-circle",
-		};
 	}
+	return {
+		title: "Unknown Status",
+		message: (
+			<>
+				Please contact <a href={`mailto:${supportEmail}`}>support</a> for assistance
+			</>
+		),
+		variant: "warning",
+		badgeVariant: "warning",
+		showSubscribeButton: false,
+		icon: "bi-question-circle",
+	};
 };
 
 export const PremiumTab = (): JSX.Element => {
@@ -217,12 +219,16 @@ export const PremiumTab = (): JSX.Element => {
 									<span style={{ fontSize: "1.5rem", fontWeight: 700 }}>£5</span>
 									<span style={{ opacity: 0.8 }}>/month</span>
 								</div>
-								<p className="text-muted mb-0">14-day free trial • Cancel anytime</p>
+								{!currentUser?.stripe_details.trial_end_date && (
+									<p className="text-muted mb-0">14-day free trial • Cancel anytime</p>
+								)}
 								<ActionButton
 									onClick={handleSubscribe}
 									defaultIcon="bi-gem"
-									id="subscribe-button"
-									defaultText="Start Free Trial"
+									id="subscription-button"
+									defaultText={
+										currentUser?.stripe_details.trial_end_date ? "Subscribe" : "Start Free Trial"
+									}
 									loading={stripeLoading}
 									loadingText="Loading..."
 								/>
@@ -237,7 +243,7 @@ export const PremiumTab = (): JSX.Element => {
 									onClick={handleManageSubscription}
 									defaultIcon="bi-gear"
 									loading={stripeLoading}
-									id="manage-subscription-button"
+									id="subscription-button"
 									defaultText="Manage Subscription"
 									loadingText="Loading..."
 								/>

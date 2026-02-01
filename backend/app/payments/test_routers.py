@@ -162,11 +162,26 @@ async def advance_test_clock(
 
         logger.info(f"Advanced test clock {test_clock_id} by {request.days} days for user {current_user.id}")
 
-        # Wait briefly for clock to finish advancing
+        # Wait for the test clock to be ready again (poll up to 30 seconds)
+        max_wait_time = 30
+        poll_interval = 0.5
+        elapsed_time = 0
 
-        await asyncio.sleep(1)
+        while elapsed_time < max_wait_time:
+            await asyncio.sleep(poll_interval)
+            elapsed_time += poll_interval
 
-        # Retrieve updated status
+            updated_clock = await stripe.test_helpers.TestClock.retrieve_async(test_clock_id)
+            if updated_clock.status == "ready":
+                break
+        else:
+            # Timeout waiting for clock to be ready
+            raise HTTPException(
+                status_code=status.HTTP_408_REQUEST_TIMEOUT,
+                detail=f"Test clock did not become ready within {max_wait_time} seconds",
+            )
+
+        # Retrieve final status
         updated_clock = await stripe.test_helpers.TestClock.retrieve_async(test_clock_id)
 
         return {
