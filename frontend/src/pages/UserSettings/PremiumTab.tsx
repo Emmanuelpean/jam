@@ -26,9 +26,17 @@ interface JobBoard {
 
 const getSubscriptionStatusDisplay = (
 	status: string | null,
-	trialDaysRemaining: number | null,
+	trialEndDate: number | null,
 	supportEmail: string
 ): SubscriptionStatusDisplay => {
+	// Calculate trial days remaining from absolute timestamp (seconds since epoch)
+	let trialDaysRemaining: number | null = null;
+	if (trialEndDate !== null) {
+		const nowSeconds: number = Date.now() / 1000;
+		const remainingSeconds: number = trialEndDate - nowSeconds;
+		trialDaysRemaining = Math.max(0, Math.ceil(remainingSeconds / (60 * 60 * 24)));
+	}
+
 	if (!status || status === "canceled") {
 		return {
 			title: "Free Plan",
@@ -86,8 +94,8 @@ export const PremiumTab = (): JSX.Element => {
 
 		// Set up polling interval
 		const intervalId = setInterval((): void => {
-			console.log("Fetching user info");
 			void fetchUserInfo(token);
+			console.log(currentUser);
 		}, 5000);
 
 		return (): void => {

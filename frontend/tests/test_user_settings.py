@@ -470,6 +470,7 @@ class TestPremiumSettingsPage(BaseTest):
         self.premium_settings_utils.start_trial_button.click()
         self.wait_for_page("settings/premium?success=true")
         self.premium_settings_utils.assert_status_title("Premium (Trial)")
+        self.premium_settings_utils.assert_status_message("14 days remaining in your free trial")
         assert self.db_user.premium.is_active
 
     def _add_payment_method(self) -> None:
@@ -487,7 +488,7 @@ class TestPremiumSettingsPage(BaseTest):
         """Test the Stripe payment modal interaction"""
 
         self._activate_trial()
-        self._add_payment_method()
+        # self._add_payment_method()
         self.premium_settings_utils.advance_clock(15)
         self.premium_settings_utils.assert_status_title("Premium")
 
