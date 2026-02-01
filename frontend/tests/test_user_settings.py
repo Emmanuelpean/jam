@@ -5,6 +5,7 @@ import os
 import subprocess
 import time
 
+import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
@@ -389,6 +390,7 @@ class PremiumSettingsUtils(BaseUtilsClass):
         time.sleep(3)
 
 
+@pytest.mark.usefixtures("stripe_listener")
 class TestPremiumSettingsPage(BaseTest):
     """Test class for the Premium Settings Page"""
 
@@ -402,41 +404,6 @@ class TestPremiumSettingsPage(BaseTest):
     def setup_function(self, request) -> None:
         """Setup function"""
 
-        # Check if we're in CI (GitHub Actions) - if so, skip starting listener
-        is_ci = os.getenv("CI") == "true"
-
-        if not is_ci:
-            # Kill any leftover stripe processes from previous runs
-            if os.name == "nt":
-                subprocess.run("taskkill /F /IM stripe.exe", shell=True, capture_output=True)
-            else:
-                subprocess.run("pkill -f 'stripe listen'", shell=True, capture_output=True)
-
-            stripe_cmd = r'"C:\Program Files\Stripe\stripe.exe"' if os.name == "nt" else "stripe"
-            stripe_api_key = settings.stripe_api_key
-            self.stripe_listener = subprocess.Popen(
-                f"{stripe_cmd} listen --api-key {stripe_api_key} --forward-to {settings.backend_url}/payments/webhooks",
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                shell=True,
-                text=True,
-            )
-
-            # Wait for stripe listener to be ready (it outputs "Ready!" when connected)
-            timeout = 30
-            start_time = time.time()
-            while time.time() - start_time < timeout:
-                line = self.stripe_listener.stdout.readline()
-                if line:
-                    print(f"[STRIPE] {line.strip()}")
-                    if "Ready!" in line:
-                        break
-            else:
-                raise RuntimeError("Stripe listener failed to start within timeout")
-        else:
-            # In CI, the listener is already running, so just set to None
-            self.stripe_listener = None
-
         self.login()
         self.premium_settings_utils = PremiumSettingsUtils(
             self.driver,
@@ -445,13 +412,6 @@ class TestPremiumSettingsPage(BaseTest):
             self.db,
             self.client,
         )
-
-    def teardown_function(self, _request) -> None:
-        """Teardown function"""
-
-        if self.stripe_listener:
-            self.stripe_listener.terminate()
-            self.stripe_listener.wait()
 
     def _activate_trial(self) -> None:
         """Activate the user trial"""
