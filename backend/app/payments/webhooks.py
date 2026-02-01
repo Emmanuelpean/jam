@@ -2,7 +2,9 @@
 
 import datetime as dt
 
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from starlette import status
 
 from app.emails.email_service import email_service
 from app.models import User
@@ -15,15 +17,13 @@ async def process_subscription_event(
     db: Session,
     subscription_id: str | None = None,
     trial_end: float | None = None,
-    payment_method_id: str | None = None,
 ) -> None:
     """Process subscription event for a given user.
     :param customer_id: Stripe customer id
     :param event_type: Stripe event type
     :param db: Database session
     :param subscription_id: Stripe subscription id
-    :param trial_end: Stripe trial end
-    :param payment_method_id: Stripe payment method id"""
+    :param trial_end: Stripe trial end"""
 
     user = db.query(User).filter(User.stripe_details.has(customer_id=customer_id)).first()
     logger.info(f"Received event: {event_type} for customer {customer_id}")
@@ -56,3 +56,25 @@ async def process_subscription_event(
 
     else:
         logger.error(f"Unhandled event type: {event_type}")
+
+    # Update the user's subscription status'
+    subscription_status = await get_subscription_status(user)
+    user.stripe_details.subscription_status = subscription_status["status"]
+    user.stripe_details.trial_end_date = subscription_status["trial_end"]
+    db.commit()
+
+
+async def get_subscription_status(current_user: User) -> dict:
+    """Get subscription status and trial information for the current user.
+    :param current_user: Authenticated user from JWT token
+    :return: dict with subscription status and remaining trial days"""
+
+    if not current_user.stripe_details.subscription_id:
+        return {"status": None, "trial_end": None}
+    try:
+        subscription = await stripe.Subscription.retrieve_async(current_user.stripe_details.subscription_id)
+        logger.info(f"Retrieved subscription status for user {current_user.id}. Trial end: {subscription.trial_end}")
+        return {"status": subscription.status, "trial_end": subscription.trial_end}
+    except stripe.error.StripeError as e:
+        logger.error(f"Failed to retrieve subscription for user {current_user.id}: {e}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

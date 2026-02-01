@@ -356,7 +356,7 @@ class PremiumSettingsUtils(BaseUtilsClass):
     def assert_status_title(self, expected_title: str) -> None:
         """Assert status title"""
 
-        assert self.get_element("status-title").text == expected_title
+        assert self.wait_for_element_text("status-title", expected_title)
 
     @property
     def status_message(self) -> WebElement:
@@ -468,7 +468,7 @@ class TestPremiumSettingsPage(BaseTest):
         self.premium_settings_utils.delete_stripe_data()
         self.premium_settings_utils.subscribe_button.click()
         self.premium_settings_utils.start_trial_button.click()
-        self.wait_for_page("settings/premium")
+        self.wait_for_page("settings/premium?success=true")
         self.premium_settings_utils.assert_status_title("Premium (Trial)")
         assert self.db_user.premium.is_active
 
@@ -489,8 +489,6 @@ class TestPremiumSettingsPage(BaseTest):
         self._activate_trial()
         self._add_payment_method()
         self.premium_settings_utils.advance_clock(15)
-        time.sleep(5)
-        self.driver.refresh()
         self.premium_settings_utils.assert_status_title("Premium")
 
     def test_trial_elapses(self) -> None:
@@ -511,7 +509,7 @@ class TestPremiumSettingsPage(BaseTest):
         self.premium_settings_utils.assert_status_title("Free Plan")
         assert not self.db_user.premium.is_active
 
-    def _test_trial_card_15days_card(self) -> None:
+    def test_trial_card_15days_card(self) -> None:
         """Test the Stripe payment modal interaction
         1. Activate trial subscription
         2. Add payment method

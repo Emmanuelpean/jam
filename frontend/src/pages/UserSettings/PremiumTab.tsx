@@ -6,13 +6,7 @@ import { useConfig } from "../../contexts/ConfigContext";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { ApiResponse } from "../../services/api/Base";
 import { ActionToggle } from "../../components/rendering/form/ActionToggle";
-import { paymentsApi, PortalSessionResponse, SubscriptionStatus } from "../../services/api/Payments";
-import LoadingSpinner from "../../components/spinner/Spinner";
-
-const defaultSubscriptionStatus = {
-	status: "unknown",
-	trial_days_remaining: null,
-};
+import { paymentsApi, PortalSessionResponse } from "../../services/api/Payments";
 
 interface SubscriptionStatusDisplay {
 	title: string;
@@ -83,81 +77,23 @@ export const PremiumTab = (): JSX.Element => {
 	const { config } = useConfig();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [stripeLoading, setStripeLoading] = useState<boolean>(false);
-	const [subscriptionLoading, setSubscriptionLoading] = useState<boolean>(false);
 	const [jobRatingLoading, setJobRatingLoading] = useState<boolean>(false);
 	const [jobScrapingLoading, setJobScrapingLoading] = useState<boolean>(false);
-	const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>(defaultSubscriptionStatus);
 
-	const fetchSubscriptionStatus = async (showLoading: boolean = true): Promise<SubscriptionStatus> => {
-		if (!token) return defaultSubscriptionStatus;
-		try {
-			if (showLoading) setSubscriptionLoading(true);
-			const response: ApiResponse<SubscriptionStatus> = await paymentsApi.getSubscriptionStatus(token);
-			setSubscriptionStatus(response.data);
-			console.log(response);
-			return response.data;
-		} catch (error) {
-			const errorStatus = { status: "error", trial_days_remaining: null };
-			setSubscriptionStatus(errorStatus);
-			return errorStatus;
-		} finally {
-			if (showLoading) setSubscriptionLoading(false);
-		}
-	};
-
-	// Initial fetch and polling logic
+	// Poll user data every 5 seconds while tab is active
 	useEffect(() => {
 		if (!token) return;
 
-		const params = new URLSearchParams(window.location.search);
-		const shouldPoll = params.get("success") === "true" || sessionStorage.getItem("stripe_redirect") === "true";
-
-		// Clear flags immediately
-		if (shouldPoll) {
-			sessionStorage.removeItem("stripe_redirect");
-			window.history.replaceState({}, document.title, window.location.pathname);
-		}
-
-		let intervalId: ReturnType<typeof setInterval> | null = null;
-		let isCancelled = false;
-
-		const initAndPoll = async (): Promise<void> => {
-			const initialStatus = await fetchSubscriptionStatus();
-
-			if (!shouldPoll || isCancelled) return;
-
-			// Start polling to detect status changes
-			let pollCount: number = 0;
-			const maxPolls: number = 30;
-			const pollingInterval: number = 2000;
-
-			intervalId = setInterval(async (): Promise<void> => {
-				pollCount++;
-				if (pollCount >= maxPolls || isCancelled) {
-					if (intervalId) clearInterval(intervalId);
-					return;
-				}
-
-				const newStatus = await fetchSubscriptionStatus(false);
-				if (newStatus.status !== initialStatus.status && newStatus.status !== "unknown") {
-					if (intervalId) clearInterval(intervalId);
-					// Refresh user info to sync premium status
-					if (token) void fetchUserInfo(token);
-				}
-			}, pollingInterval);
-		};
-
-		void initAndPoll();
+		// Set up polling interval
+		const intervalId = setInterval((): void => {
+			console.log("Fetching user info");
+			void fetchUserInfo(token);
+		}, 5000);
 
 		return (): void => {
-			isCancelled = true;
-			if (intervalId) clearInterval(intervalId);
+			void clearInterval(intervalId);
 		};
-	}, [token]);
-
-	useEffect(() => {
-		fetchSubscriptionStatus().then();
-	}, [token]);
+	}, [token, fetchUserInfo]);
 
 	const handleSubscribe = async (): Promise<void> => {
 		if (!token) return;
@@ -214,11 +150,13 @@ export const PremiumTab = (): JSX.Element => {
 	};
 
 	const statusDisplay: SubscriptionStatusDisplay = getSubscriptionStatusDisplay(
-		subscriptionStatus.status,
-		subscriptionStatus.trial_days_remaining,
+		currentUser?.stripe_details.subscription_status ?? null,
+		currentUser?.stripe_details.trial_end_date ?? null,
 		config?.support_email
 	);
-	const hasActiveSubscription: boolean = ["active", "trialing", "paused"].includes(subscriptionStatus.status || "");
+	const hasActiveSubscription: boolean = ["active", "trialing", "paused"].includes(
+		currentUser?.stripe_details.subscription_status || ""
+	);
 
 	const jobBoards: JobBoard[] = [
 		{ name: "LinkedIn", url: "https://linkedin.com", icon: "linkedin", emailKey: "linkedin" },
@@ -252,78 +190,70 @@ export const PremiumTab = (): JSX.Element => {
 			{/* Hero Card */}
 			<Card className="mb-4">
 				<Card.Body className={"premium-card"}>
-					{subscriptionLoading ? (
-						<div className="py-5">
-							<LoadingSpinner text={"Loading subscription status..."} />
+					{/* Subscription Status Section */}
+					<div className="text-center mb-4">
+						<div className="premium-status-icon mx-auto mb-3">
+							<i className={statusDisplay.icon}></i>
 						</div>
-					) : (
-						<>
-							{/* Subscription Status Section */}
-							<div className="text-center mb-4">
-								<div className="premium-status-icon mx-auto mb-3">
-									<i className={statusDisplay.icon}></i>
+						<h3 className="mb-2" id="status-title">
+							{statusDisplay.title}
+						</h3>
+						<p className="text-muted mb-4" style={{ fontSize: "1rem" }} id={"status-message"}>
+							{statusDisplay.message}
+						</p>
+
+						{/* Action Buttons */}
+						{statusDisplay.showSubscribeButton ? (
+							<div className="d-flex flex-column align-items-center gap-3">
+								<div className="premium-price-tag">
+									<span style={{ fontSize: "1.5rem", fontWeight: 700 }}>£5</span>
+									<span style={{ opacity: 0.8 }}>/month</span>
 								</div>
-								<h3 className="mb-2" id="status-title">
-									{statusDisplay.title}
-								</h3>
-								<p className="text-muted mb-4" style={{ fontSize: "1rem" }} id={"status-message"}>
-									{statusDisplay.message}
-								</p>
-
-								{/* Action Buttons */}
-								{statusDisplay.showSubscribeButton ? (
-									<div className="d-flex flex-column align-items-center gap-3">
-										<div className="premium-price-tag">
-											<span style={{ fontSize: "1.5rem", fontWeight: 700 }}>£5</span>
-											<span style={{ opacity: 0.8 }}>/month</span>
-										</div>
-										<p className="text-muted mb-0">14-day free trial • Cancel anytime</p>
-										<ActionButton
-											onClick={handleSubscribe}
-											defaultIcon="bi-gem"
-											id="subscribe-button"
-											defaultText="Start Free Trial"
-											loading={stripeLoading}
-											loadingText="Loading..."
-										/>
-									</div>
-								) : hasActiveSubscription ? (
-									<div className="d-flex flex-column align-items-center gap-3">
-										<div className="premium-price-tag">
-											<span style={{ fontSize: "1.25rem", fontWeight: 600 }}>£5</span>
-											<span style={{ opacity: 0.8 }}>/month</span>
-										</div>
-										<ActionButton
-											onClick={handleManageSubscription}
-											defaultIcon="bi-gear"
-											loading={stripeLoading}
-											id="manage-subscription-button"
-											defaultText="Manage Subscription"
-											loadingText="Loading..."
-										/>
-									</div>
-								) : null}
+								<p className="text-muted mb-0">14-day free trial • Cancel anytime</p>
+								<ActionButton
+									onClick={handleSubscribe}
+									defaultIcon="bi-gem"
+									id="subscribe-button"
+									defaultText="Start Free Trial"
+									loading={stripeLoading}
+									loadingText="Loading..."
+								/>
 							</div>
-
-							{/* Premium Description */}
-							<div className="premium-divider" />
-							<div className="premium-why-section">
-								<h4 className="mb-3">
-									<i className="bi bi-lightbulb me-2"></i>Why Premium?
-								</h4>
-								<p className="mb-2">
-									If you're actively job hunting, you likely receive dozens of job alert emails every
-									day from platforms like LinkedIn, Indeed, and others. Manually reviewing each job is
-									time-consuming and exhausting.
-								</p>
-								<p className="mb-0">
-									<strong>JAM Premium</strong> eliminates this wasted time by automatically scraping
-									jobs from your email alerts, intelligently rating them based on your qualifications,
-									and presenting everything in a unified dashboard with AI-powered match scores.
-								</p>
+						) : hasActiveSubscription ? (
+							<div className="d-flex flex-column align-items-center gap-3">
+								<div className="premium-price-tag">
+									<span style={{ fontSize: "1.25rem", fontWeight: 600 }}>£5</span>
+									<span style={{ opacity: 0.8 }}>/month</span>
+								</div>
+								<ActionButton
+									onClick={handleManageSubscription}
+									defaultIcon="bi-gear"
+									loading={stripeLoading}
+									id="manage-subscription-button"
+									defaultText="Manage Subscription"
+									loadingText="Loading..."
+								/>
 							</div>
-						</>
-					)}
+						) : null}
+					</div>
+
+					{/* Premium Description */}
+					<div className="premium-divider" />
+					<div className="premium-why-section">
+						<h4 className="mb-3">
+							<i className="bi bi-lightbulb me-2"></i>Why Premium?
+						</h4>
+						<p className="mb-2">
+							If you're actively job hunting, you likely receive dozens of job alert emails every day from
+							platforms like LinkedIn, Indeed, and others. Manually reviewing each job is time-consuming
+							and exhausting.
+						</p>
+						<p className="mb-0">
+							<strong>JAM Premium</strong> eliminates this wasted time by automatically scraping jobs from
+							your email alerts, intelligently rating them based on your qualifications, and presenting
+							everything in a unified dashboard with AI-powered match scores.
+						</p>
+					</div>
 				</Card.Body>
 			</Card>
 

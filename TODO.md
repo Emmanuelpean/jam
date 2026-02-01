@@ -58,3 +58,4 @@
 * [X] Withdrawn, rejected or offered jobs are not shown in the needs chase dashboard anymore.
 * [X] Fix the password reset bug
 * [ ] Run the build first for faster selenium testing?
+* [ ] Move the service runner settings to their own table.
