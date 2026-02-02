@@ -390,11 +390,12 @@ class PremiumSettingsUtils(BaseUtilsClass):
         time.sleep(3)
 
 
-@pytest.mark.usefixtures("stripe_listener")
+@pytest.mark.xdist_group("stripe")
 class TestPremiumSettingsPage(BaseTest):
     """Test class for the Premium Settings Page"""
 
     page_url = "settings/premium"
+    _stripe_listener = None
 
     def clear_stripe_customer_data(self) -> None:
         """Clear Stripe customer data for the user"""
@@ -403,6 +404,33 @@ class TestPremiumSettingsPage(BaseTest):
 
     def setup_function(self, request) -> None:
         """Setup function"""
+
+        # Kill any leftover stripe processes from previous runs
+        if os.name == "nt":
+            subprocess.run("taskkill /F /IM stripe.exe", shell=True, capture_output=True)
+        else:
+            subprocess.run("pkill -f 'stripe listen'", shell=True, capture_output=True)
+
+        stripe_cmd = r'"C:\Program Files\Stripe\stripe.exe"' if os.name == "nt" else "stripe"
+        self.stripe_listener = subprocess.Popen(
+            f"{stripe_cmd} listen --forward-to {self.backend_base_url}/payments/webhooks",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            shell=True,
+            text=True,
+        )
+
+        # Wait for stripe listener to be ready (it outputs "Ready!" when connected)
+        timeout = 30
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            line = self.stripe_listener.stdout.readline()
+            if line:
+                print(f"[STRIPE] {line.strip()}")
+                if "Ready!" in line:
+                    break
+        else:
+            raise RuntimeError("Stripe listener failed to start within timeout")
 
         self.login()
         self.premium_settings_utils = PremiumSettingsUtils(

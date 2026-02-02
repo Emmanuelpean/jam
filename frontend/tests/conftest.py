@@ -243,62 +243,6 @@ def test_backend_server(database_url, worker_id, engine, frontend_url) -> Genera
         print_backend_pid()
 
 
-@pytest.fixture(scope="session")
-def stripe_listener(test_backend_server, worker_id) -> Generator[subprocess.Popen | None, None, None]:
-    """Start Stripe webhook listener after backend is ready
-    This fixture must be explicitly requested by tests that need Stripe webhooks."""
-
-    # Extract port from backend URL
-    backend_port = test_backend_server.split(":")[-1]
-
-    print("=" * 60)
-    print(f"STARTING STRIPE LISTENER (Worker: {worker_id})")
-    print("=" * 60)
-
-    # Kill any leftover stripe processes from previous runs
-    if os.name == "nt":
-        subprocess.run("taskkill /F /IM stripe.exe", shell=True, capture_output=True)
-    else:
-        subprocess.run("pkill -f 'stripe listen'", shell=True, capture_output=True)
-
-    stripe_cmd = r'"C:\Program Files\Stripe\stripe.exe"' if os.name == "nt" else "stripe"
-    stripe_api_key = settings.stripe_api_key
-    webhook_url = f"http://localhost:{backend_port}/payments/webhooks"
-
-    print(f"Starting Stripe listener forwarding to {webhook_url}")
-
-    listener = subprocess.Popen(
-        f"{stripe_cmd} listen --api-key {stripe_api_key} --forward-to {webhook_url}",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        shell=True,
-        text=True,
-    )
-
-    # Wait for stripe listener to be ready
-    timeout = 30
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        line = listener.stdout.readline()
-        if line:
-            print(f"[STRIPE] {line.strip()}")
-            if "Ready!" in line:
-                print("✅ Stripe listener is ready!")
-                break
-    else:
-        listener.terminate()
-        raise RuntimeError("Stripe listener failed to start within timeout")
-
-    yield listener
-
-    # Cleanup
-    print(f"Cleaning up Stripe listener...")
-    if listener:
-        listener.terminate()
-        listener.wait()
-    print("✅ Stripe listener cleanup completed.")
-
-
 @pytest.fixture(scope="class")
 def test_frontend_server(test_backend_server, worker_id, frontend_url) -> Generator[str, None, None]:
     """Start a test frontend server for integration tests"""
@@ -1996,7 +1940,6 @@ class BaseTest(BaseUtils):
         self,
         test_frontend_server,
         test_backend_server,
-        stripe_listener,
         request,
         test_users,
         authorised_clients,
@@ -2040,7 +1983,6 @@ class BaseTest(BaseUtils):
             # Frontend/Backend
             self.frontend_base_url = test_frontend_server
             self.backend_base_url = test_backend_server
-            self.stripe_listener = stripe_listener
 
             # Client/User
             self.user = test_users[self.user_index]
