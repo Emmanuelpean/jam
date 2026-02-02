@@ -9,6 +9,7 @@ interface ErrorSummaryCardProps {
 	lastServiceErrors: Record<string, number>;
 	latestServiceErrors: Record<string, number>;
 	isRunning: boolean;
+	loading?: boolean;
 }
 
 type ErrorView = "current" | "last";
@@ -20,6 +21,7 @@ export const ErrorSummaryCard = ({
 	lastServiceErrors,
 	latestServiceErrors,
 	isRunning,
+	loading = false,
 }: ErrorSummaryCardProps): JSX.Element => {
 	const [errorView, setErrorView] = useState<ErrorView>("current");
 
@@ -57,29 +59,67 @@ export const ErrorSummaryCard = ({
 				</label>
 			</div>
 
-			<div style={{ display: "flex", gap: "20px", height: "600px", overflow: "auto" }}>
-				{/* Critical Errors Column */}
-				<div style={{ flex: 1 }}>
-					<h5 className="mb-3">Critical Errors ({criticalErrorCount})</h5>
-					{criticalErrorCount === 0 ? (
-						<div className="text-muted">No critical errors</div>
-					) : (
-						<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
-							{criticalErrorLogs
-								.slice()
-								.sort(
-									(a: JobScrapingServiceLogData, b: JobScrapingServiceLogData): number =>
-										new Date(b.run_datetime).getTime() - new Date(a.run_datetime).getTime()
-								)
-								.filter(
-									(log: JobScrapingServiceLogData): boolean =>
-										!!(log.error_message && log.error_message.trim())
-								)
-								.map(
-									(log: JobScrapingServiceLogData, idx: number): JSX.Element => (
-										<div key={idx} className="alert alert-danger">
-											<div className="small mb-1">
-												{new Date(log.run_datetime).toLocaleString()}
+			{loading ? (
+				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "300px" }}>
+					<div className="spinner-border text-primary" role="status">
+						<span className="visually-hidden">Loading...</span>
+					</div>
+				</div>
+			) : (
+				<div style={{ display: "flex", gap: "20px", height: "600px", overflow: "auto" }}>
+					{/* Critical Errors Column */}
+					<div style={{ flex: 1 }}>
+						<h5 className="mb-3">Critical Errors ({criticalErrorCount})</h5>
+						{criticalErrorCount === 0 ? (
+							<div className="text-muted">No critical errors</div>
+						) : (
+							<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
+								{criticalErrorLogs
+									.slice()
+									.sort(
+										(a: JobScrapingServiceLogData, b: JobScrapingServiceLogData): number =>
+											new Date(b.run_datetime).getTime() - new Date(a.run_datetime).getTime()
+									)
+									.filter(
+										(log: JobScrapingServiceLogData): boolean =>
+											!!(log.error_message && log.error_message.trim())
+									)
+									.map(
+										(log: JobScrapingServiceLogData, idx: number): JSX.Element => (
+											<div key={idx} className="alert alert-danger">
+												<div className="small mb-1">
+													{new Date(log.run_datetime).toLocaleString()}
+												</div>
+												<div
+													style={{
+														whiteSpace: "pre-wrap",
+														wordBreak: "break-word",
+													}}
+												>
+													{log.error_message}
+												</div>
+											</div>
+										)
+									)}
+							</div>
+						)}
+					</div>
+
+					{/* Service Errors Column */}
+					<div style={{ flex: 1 }}>
+						<h5 className="mb-3">Service Errors ({Object.keys(serviceErrors).length} unique)</h5>
+						{Object.keys(serviceErrors).length === 0 ? (
+							<div className="text-muted">No service errors</div>
+						) : (
+							<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
+								{Object.entries(serviceErrors)
+									.sort((a, b) => b[1] - a[1])
+									.map(([errorMsg, count], idx) => (
+										<div key={idx} className="alert alert-info">
+											<div className="d-flex justify-content-between align-items-start mb-1">
+												<span className="badge bg-info">
+													{count} {count > 1 ? "occurrences" : "occurrence"}
+												</span>
 											</div>
 											<div
 												style={{
@@ -87,83 +127,53 @@ export const ErrorSummaryCard = ({
 													wordBreak: "break-word",
 												}}
 											>
-												{log.error_message}
+												{errorMsg}
 											</div>
 										</div>
-									)
-								)}
-						</div>
-					)}
-				</div>
+									))}
+							</div>
+						)}
+					</div>
 
-				{/* Service Errors Column */}
-				<div style={{ flex: 1 }}>
-					<h5 className="mb-3">Service Errors ({Object.keys(serviceErrors).length} unique)</h5>
-					{Object.keys(serviceErrors).length === 0 ? (
-						<div className="text-muted">No service errors</div>
-					) : (
-						<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
-							{Object.entries(serviceErrors)
-								.sort((a, b) => b[1] - a[1])
-								.map(([errorMsg, count], idx) => (
-									<div key={idx} className="alert alert-info">
-										<div className="d-flex justify-content-between align-items-start mb-1">
-											<span className="badge bg-info">
-												{count} {count > 1 ? "occurrences" : "occurrence"}
-											</span>
+					{/* Scrape Errors Column */}
+					<div style={{ flex: 1 }}>
+						<h5 className="mb-3">Scrape Errors ({Object.keys(scrapeErrors).length} unique)</h5>
+						{Object.keys(scrapeErrors).length === 0 ? (
+							<div className="text-muted">No scrape errors</div>
+						) : (
+							<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
+								{Object.entries(scrapeErrors)
+									.sort((a, b) => b[1].count - a[1].count)
+									.map(([errorMsg, error], idx) => (
+										<div key={idx} className="alert alert-warning">
+											<div className="d-flex justify-content-between align-items-start mb-2">
+												<span className="badge bg-warning">
+													{error.count} {error.count > 1 ? "occurrences" : "occurrence"}
+												</span>
+											</div>
+											<div
+												style={{
+													whiteSpace: "pre-wrap",
+													wordBreak: "break-word",
+												}}
+												className="mb-2"
+											>
+												{errorMsg}
+											</div>
+											<div className="mt-2" style={{ fontSize: "0.85rem" }}>
+												{error.jobs.map((job, jobIdx) => (
+													<div key={jobIdx}>
+														{job.platform}: {job.jobId}
+													</div>
+												))}
+											</div>
 										</div>
-										<div
-											style={{
-												whiteSpace: "pre-wrap",
-												wordBreak: "break-word",
-											}}
-										>
-											{errorMsg}
-										</div>
-									</div>
-								))}
-						</div>
-					)}
+									))}
+							</div>
+						)}
+					</div>
 				</div>
-
-				{/* Scrape Errors Column */}
-				<div style={{ flex: 1 }}>
-					<h5 className="mb-3">Scrape Errors ({Object.keys(scrapeErrors).length} unique)</h5>
-					{Object.keys(scrapeErrors).length === 0 ? (
-						<div className="text-muted">No scrape errors</div>
-					) : (
-						<div className="error-list d-flex flex-column" style={{ gap: "12px" }}>
-							{Object.entries(scrapeErrors)
-								.sort((a, b) => b[1].count - a[1].count)
-								.map(([errorMsg, error], idx) => (
-									<div key={idx} className="alert alert-warning">
-										<div className="d-flex justify-content-between align-items-start mb-2">
-											<span className="badge bg-warning">
-												{error.count} {error.count > 1 ? "occurrences" : "occurrence"}
-											</span>
-										</div>
-										<div
-											style={{
-												whiteSpace: "pre-wrap",
-												wordBreak: "break-word",
-											}}
-											className="mb-2"
-										>
-											{errorMsg}
-										</div>
-										<div className="mt-2" style={{ fontSize: "0.85rem" }}>
-											{error.jobs.map((job, jobIdx) => (
-												<div key={jobIdx}>
-													{job.platform}: {job.jobId}
-												</div>
-											))}
-										</div>
-									</div>
-								))}
-						</div>
-					)}
-				</div>
-			</div>
+			)}
 		</div>
 	);
 };

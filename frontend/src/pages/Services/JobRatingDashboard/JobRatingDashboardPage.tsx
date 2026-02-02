@@ -26,20 +26,30 @@ const JobRatingDashboard = (): JSX.Element => {
 		start: new Date(),
 		end: new Date(),
 	});
-	const { serviceStatus, remainingTime, fetchStatus, statusError } =
+	const { serviceStatus, remainingTime, fetchStatus, statusError, loading: statusLoading } =
 		useServiceRunnerStatus(jobRatingServiceRunnerApi);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: serviceStatus?.period_hours || 0,
 	});
 	const [loading, setLoading] = useState<boolean>(false);
 	const { showToastSuccess } = useGlobalToast();
-	const { previousServiceLogs, latestServiceLog, fetchLatestServiceLog, serviceLogError } = useJobRatingServiceLogs(
-		serviceStatus?.service_running || false,
-		dateRange
-	);
-	const { scraperErrors: previousRatingErrors, error: previousRatingRequestError } =
-		useJobRatingErrors(previousServiceLogs);
-	const { scraperErrors: lastRatingErrors, error: latestRatingRequestError } = useJobRatingErrors(latestServiceLog);
+	const {
+		previousServiceLogs,
+		latestServiceLog,
+		fetchLatestServiceLog,
+		serviceLogError,
+		loading: logsLoading,
+	} = useJobRatingServiceLogs(serviceStatus?.service_running || false, dateRange);
+	const {
+		scraperErrors: previousRatingErrors,
+		error: previousRatingRequestError,
+		loading: previousRatingErrorsLoading,
+	} = useJobRatingErrors(previousServiceLogs);
+	const {
+		scraperErrors: lastRatingErrors,
+		error: latestRatingRequestError,
+		loading: lastRatingErrorsLoading,
+	} = useJobRatingErrors(latestServiceLog);
 
 	useEffect((): void => {
 		if (serviceStatus && serviceStatus?.service_runner_status === "stopped") {
@@ -154,6 +164,7 @@ const JobRatingDashboard = (): JSX.Element => {
 				serviceLogData={previousServiceLogs}
 				onDateRangeChange={setDateRange}
 				isRunning={serviceStatus?.service_running || false}
+				loading={logsLoading}
 			/>
 
 			<ErrorSummaryCard
@@ -161,6 +172,7 @@ const JobRatingDashboard = (): JSX.Element => {
 				lastRatingErrors={lastRatingErrors}
 				latestRatingErrors={previousRatingErrors}
 				isRunning={serviceStatus?.service_running || false}
+				loading={logsLoading || previousRatingErrorsLoading || lastRatingErrorsLoading}
 			/>
 		</div>
 	);

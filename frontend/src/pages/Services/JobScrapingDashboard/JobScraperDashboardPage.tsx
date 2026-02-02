@@ -29,7 +29,8 @@ const JobScraperDashboard = (): JSX.Element => {
 		end: new Date(),
 	});
 	const [selectedPlatform, setSelectedPlatform] = useState("all");
-	const { serviceStatus, remainingTime, fetchStatus, statusError } = useServiceRunnerStatus(jobScraperServiceApi);
+	const { serviceStatus, remainingTime, fetchStatus, statusError, loading: statusLoading } =
+		useServiceRunnerStatus(jobScraperServiceApi);
 	const [formData, setFormData] = useState<FormData>({
 		period_hours: 0,
 		timedelta_days: 0,
@@ -48,18 +49,28 @@ const JobScraperDashboard = (): JSX.Element => {
 	}, [serviceStatus]);
 
 	const { showToastSuccess } = useGlobalToast();
-	const { previousServiceLogs, latestServiceLog, platformOptions, fetchLatestServiceLog, serviceLogError } =
-		useJobScraperServiceLogs(serviceStatus?.service_running || false, dateRange);
-	const { scraperErrors: latestScraperErrors, error: lastestScraperRequestError } = useJobScraperErrors(
-		latestServiceLog,
-		selectedPlatform
-	);
-	const { scraperErrors: previousScraperErrors, error: previousScraperRequestError } = useJobScraperErrors(
+	const {
 		previousServiceLogs,
-		selectedPlatform
-	);
-	const { serviceErrors: lastServiceErrors } = useServiceErrors(latestServiceLog);
-	const { serviceErrors: previousServiceErrors } = useServiceErrors(previousServiceLogs);
+		latestServiceLog,
+		platformOptions,
+		fetchLatestServiceLog,
+		serviceLogError,
+		loading: logsLoading,
+	} = useJobScraperServiceLogs(serviceStatus?.service_running || false, dateRange);
+	const {
+		scraperErrors: latestScraperErrors,
+		error: lastestScraperRequestError,
+		loading: latestScraperErrorsLoading,
+	} = useJobScraperErrors(latestServiceLog, selectedPlatform);
+	const {
+		scraperErrors: previousScraperErrors,
+		error: previousScraperRequestError,
+		loading: previousScraperErrorsLoading,
+	} = useJobScraperErrors(previousServiceLogs, selectedPlatform);
+	const { serviceErrors: lastServiceErrors, loading: lastServiceErrorsLoading } =
+		useServiceErrors(latestServiceLog);
+	const { serviceErrors: previousServiceErrors, loading: previousServiceErrorsLoading } =
+		useServiceErrors(previousServiceLogs);
 
 	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
 		const target = event.target as HTMLInputElement;
@@ -173,6 +184,7 @@ const JobScraperDashboard = (): JSX.Element => {
 				onPlatformChange={setSelectedPlatform}
 				onDateRangeChange={setDateRange}
 				isRunning={serviceStatus?.service_running || false}
+				loading={logsLoading}
 			/>
 
 			<ErrorSummaryCard
@@ -182,6 +194,13 @@ const JobScraperDashboard = (): JSX.Element => {
 				lastServiceErrors={lastServiceErrors}
 				latestServiceErrors={previousServiceErrors}
 				isRunning={serviceStatus?.service_running || false}
+				loading={
+					logsLoading ||
+					latestScraperErrorsLoading ||
+					previousScraperErrorsLoading ||
+					lastServiceErrorsLoading ||
+					previousServiceErrorsLoading
+				}
 			/>
 		</div>
 	);

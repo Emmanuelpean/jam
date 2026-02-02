@@ -9,12 +9,14 @@ interface RunHistoryChartProps {
 	serviceLogData: JobRatingServiceLogData[] | null;
 	onDateRangeChange: (dateRange: DateRange) => void;
 	isRunning: boolean;
+	loading?: boolean;
 }
 
 export const RunHistoryChart = ({
 	serviceLogData,
 	onDateRangeChange,
 	isRunning,
+	loading = false,
 }: RunHistoryChartProps): JSX.Element => {
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
 
@@ -54,14 +56,22 @@ export const RunHistoryChart = ({
 			<div style={{ display: "flex", justifyContent: "space-between" }}>
 				<TimeSelection onDateRangeChange={onDateRangeChange} defaultMode="period" />
 			</div>
-			<div style={{ display: "flex" }}>
-				{logData && logData[0] && (
-					<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of jobs rated" />
-				)}
-				{logData && logData[1] && (
-					<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
-				)}
-			</div>
+			{loading ? (
+				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "300px" }}>
+					<div className="spinner-border text-primary" role="status">
+						<span className="visually-hidden">Loading...</span>
+					</div>
+				</div>
+			) : (
+				<div style={{ display: "flex" }}>
+					{logData && logData[0] && (
+						<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of jobs rated" />
+					)}
+					{logData && logData[1] && (
+						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
+					)}
+				</div>
+			)}
 		</div>
 	);
 };
