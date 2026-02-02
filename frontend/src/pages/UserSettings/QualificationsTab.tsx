@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, JSX } from "react";
 import { Card, Form } from "react-bootstrap";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
@@ -21,7 +21,7 @@ interface QualificationFormData {
 	interests?: string;
 }
 
-export const QualificationsTab: React.FC = () => {
+export const QualificationsTab: React.FC = (): JSX.Element => {
 	const { token } = useAuth();
 	const { aiSystemPrompts } = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
@@ -33,15 +33,15 @@ export const QualificationsTab: React.FC = () => {
 		education: "",
 		interests: "",
 	});
-	const [errors, setErrors] = useState<ValidationErrors>({});
+	const [errors, _setErrors] = useState<ValidationErrors>({});
 	const [submitting, setSubmitting] = useState(false);
 
 	useEffect(() => {
-		const fetchQualifications = async () => {
+		const fetchQualifications = async (): Promise<void> => {
 			if (!token) return;
 			try {
 				const response: ApiResponse<UserQualification> = await userQualificationApi.getLatest(token);
-				const data = response.data;
+				const data: UserQualification = response.data;
 				if (data) {
 					setFormData({
 						qualification_id: data.id,
@@ -59,15 +59,12 @@ export const QualificationsTab: React.FC = () => {
 		fetchQualifications().then();
 	}, [token]);
 
-	const handleInputChange = (e: SyntheticEvent) => {
+	const handleInputChange = (e: SyntheticEvent): void => {
 		const { name, value } = e.target;
-		setFormData((prev) => ({ ...prev, [name]: value }));
-		if (errors[name]) {
-			setErrors((prev) => ({ ...prev, [name]: "" }));
-		}
+		setFormData((prev: QualificationFormData): QualificationFormData => ({ ...prev, [name]: value }));
 	};
 
-	const handleSubmit = async (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent): Promise<void> => {
 		e.preventDefault();
 		if (!token) return;
 		setSubmitting(true);
@@ -141,6 +138,13 @@ export const QualificationsTab: React.FC = () => {
 		: null;
 	const systemPrompt: string | undefined = latestSystemPrompt?.prompt;
 
+	const hasAtLeastOneQualification: boolean =
+		!!formData.experience?.trim() ||
+		!!formData.skills?.trim() ||
+		!!formData.qualities?.trim() ||
+		!!formData.education?.trim() ||
+		!!formData.interests?.trim();
+
 	return (
 		<>
 			<Form onSubmit={handleSubmit}>
@@ -157,7 +161,7 @@ export const QualificationsTab: React.FC = () => {
 					<ActionButton
 						type="submit"
 						variant="primary"
-						disabled={submitting}
+						disabled={submitting || !hasAtLeastOneQualification}
 						defaultIcon="save"
 						id={"confirm-button"}
 						defaultText={submitting ? "Saving..." : "Save Qualifications"}
