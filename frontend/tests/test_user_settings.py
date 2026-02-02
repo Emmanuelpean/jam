@@ -10,7 +10,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
 
-from app.config import settings
 from app.utils import verify_password
 from conftest import models, BaseTest, BaseUtilsClass
 from tests.utils.test_data import TOAST_USER_1_INDEX
