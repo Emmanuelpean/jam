@@ -18,10 +18,12 @@ import { AggregatorModal } from "./AggregatorModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
 import { ScrapedJobData } from "../../services/schemas/Services";
+import { useConfig } from "../../contexts/ConfigContext";
 
 export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
-	({ size = "xl", onSuccess, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
+	({ size = "xl", onSuccess, onDelete, canEdit = true }: JamDataModalProps, ref): JSX.Element => {
 		const dataContext: DataContextValue = useDataContext();
+		const { config } = useConfig();
 		const companyModalRef = useRef<DataModalHandle>(null);
 		const locationModalRef = useRef<DataModalHandle>(null);
 		const keywordModalRef = useRef<DataModalHandle>(null);
@@ -104,18 +106,46 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 		const warningMessage = (data: ScrapedJobData) => {
 			const result: WarningMessageConfig[] = [];
 
+			const createReportLink = (subject: string, errorMessage: string | null): JSX.Element | null => {
+				const supportEmail: string = config?.support_email;
+				if (!supportEmail) return null;
+
+				const body: string = encodeURIComponent(
+					`Error Details:\n${errorMessage || "Unknown error"}\n\nJob ID: ${data?.id || "N/A"}\nJob Title: ${data?.title || "N/A"}\nJob URL: ${data?.url || "N/A"}`
+				);
+				const mailtoLink = `mailto:${supportEmail}?subject=${encodeURIComponent(subject)}&body=${body}`;
+
+				return (
+					<a href={mailtoLink} style={{ color: "inherit", textDecoration: "underline" }}>
+						report it here
+					</a>
+				);
+			};
+
 			if (data?.is_failed) {
+				const reportLink = createReportLink("Scraped Job Error Report", data?.scrape_error);
 				result.push({
 					key: "inactive",
-					message: "This job could not be scraped properly.",
+					message: (
+						<>
+							This job could not be scraped properly due to an error.
+							{reportLink && <> You can {reportLink}.</>}
+						</>
+					),
 					variant: "warning",
 				});
 			}
 
 			if (data?.job_rating?.is_success === false) {
+				const reportLink = createReportLink("Job Rating Error Report", data?.job_rating?.error);
 				result.push({
 					key: "no_rating",
-					message: "This job could not be rated automatically.",
+					message: (
+						<>
+							This job could not be rated automatically due to an error.
+							{reportLink && <> You can {reportLink}.</>}
+						</>
+					),
 					variant: "warning",
 				});
 			}
@@ -138,6 +168,7 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 					size={size}
 					validation={customValidation}
 					onSuccess={onSuccess}
+					onDelete={onDelete}
 					warningMessage={warningMessage}
 					canEdit={canEdit}
 				/>

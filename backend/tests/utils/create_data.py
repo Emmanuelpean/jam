@@ -9,6 +9,7 @@ from tests.utils.test_data import data_tables
 from tests.utils.test_data import job_rating_service
 from tests.utils.test_data import job_scraping_service
 from tests.utils.test_data import utils as test_data_utils
+from app.job_rating.prompts import seed_ai_prompts
 
 
 def create_settings(db) -> list[models.Setting]:
@@ -20,6 +21,13 @@ def create_settings(db) -> list[models.Setting]:
     db.add_all(settings)
     db.commit()
     return db.query(models.Setting).all()
+
+
+def create_ai_prompts(db) -> tuple[models.AiSystemPrompt, models.AiJobPromptTemplate]:
+    """Create AI prompts for job rating"""
+
+    print("Creating AI prompts...")
+    return seed_ai_prompts(db)
 
 
 def create_users(db, user_data: list[dict] | None = None, rounds=4) -> list[models.User]:
@@ -469,12 +477,12 @@ def create_job_rating_service_logs(db) -> list[models.JobRatingServiceLog]:
     return add_to_db(db, logs)
 
 
-def create_job_ratings(db, users, use_qualifications, scraped_jobs, service_logs) -> list[models.JobRating]:
+def create_job_ratings(db, users, use_qualifications, scraped_jobs, service_logs, ai_prompts) -> list[models.JobRating]:
     """Create sample job ratings"""
 
     print("Creating job ratings...")
     # noinspection PyArgumentList
-    keywords = [
+    job_ratings = [
         models.JobRating(**kwargs)
         for kwargs in override_entries_properties(
             job_rating_service.JOB_RATING_DATA,
@@ -484,4 +492,12 @@ def create_job_ratings(db, users, use_qualifications, scraped_jobs, service_logs
             ("service_log_id", service_logs),
         )
     ]
-    return add_to_db(db, keywords)
+
+    # Assign AI prompts if provided
+    if job_ratings:
+        system_prompt, job_template = ai_prompts
+        for rating in job_ratings:
+            rating.system_prompt_id = system_prompt.id
+            rating.job_prompt_template_id = job_template.id
+
+    return add_to_db(db, job_ratings)

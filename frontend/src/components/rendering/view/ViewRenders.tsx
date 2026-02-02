@@ -4,6 +4,7 @@ import InterviewsTable from "../../table/InterviewTable";
 import JobApplicationUpdateTable from "../../table/JobApplicationUpdateTable";
 import { THEMES } from "../../../utils/Theme";
 import LocationMap from "../../Maps/LocationMap";
+import JobRatingCard from "./JobRatingCard";
 import {
 	AggregatorData,
 	CompanyData,
@@ -411,34 +412,8 @@ export const renderFunctions = {
 		const job_rating: JobRatingData | undefined | null = param.item?.job_rating;
 		if (!job_rating) return null;
 
-		return (
-			<div className="card shadow-sm">
-				<div className="card-body p-3">
-					<table className="table table-sm table-striped table-hover mb-2">
-						<thead>
-							<tr>
-								<th className="text-center">Overall</th>
-								<th className="text-center">Educational</th>
-								<th className="text-center">Experience</th>
-								<th className="text-center">Interest</th>
-								<th className="text-center">Technical</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td className="text-center fw-semibold">{job_rating.overall_score}</td>
-								<td className="text-center">{job_rating.educational_score}</td>
-								<td className="text-center">{job_rating.experience_score}</td>
-								<td className="text-center">{job_rating.interest_score}</td>
-								<td className="text-center">{job_rating.technical_score}</td>
-							</tr>
-						</tbody>
-					</table>
-
-					{job_rating.feedback && <div className="small">{job_rating.feedback}</div>}
-				</div>
-			</div>
-		);
+		// @ts-ignore
+		return <JobRatingCard jobRating={job_rating} />;
 	},
 
 	// ----------------------------------------------------- COUNTS ----------------------------------------------------

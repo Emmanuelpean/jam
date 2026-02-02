@@ -313,6 +313,13 @@ def test_settings(session) -> list[models.Setting]:
     return crd.create_settings(session)
 
 
+@pytest.fixture
+def test_ai_prompts(session) -> tuple[models.AiSystemPrompt, models.AiJobPromptTemplate]:
+    """Create test AI prompts for job rating"""
+
+    return crd.create_ai_prompts(session)
+
+
 # ------------------------------------------------------ TEST DATA -----------------------------------------------------
 
 
@@ -578,12 +585,12 @@ def test_job_rating_service_logs(session) -> list[models.JobRatingServiceLog]:
 
 @pytest.fixture
 def test_job_ratings(
-    session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
+    session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs, test_ai_prompts
 ) -> list[models.JobRating]:
     """Create test job ratings"""
 
     return crd.create_job_ratings(
-        session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs
+        session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs, test_ai_prompts
     )
 
 
@@ -677,7 +684,7 @@ class CRUDTestBase:
 
     def check_output(
         self,
-        test_data,
+        test_data: Any,
         response_data: list[dict] | dict,
     ):
         """Check that the output of a test matches the test data.

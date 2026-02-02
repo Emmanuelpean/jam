@@ -338,6 +338,12 @@ export const DataTable: React.FC<GenericTableProps> = ({
 		});
 	};
 
+	const handleDeleteSuccess = (): void => {
+		if (isServerPagination) {
+			fetchData().then((): null => null);
+		}
+	};
+
 	// Pagination calculations
 	const sortedData: JamData[] = isServerPagination ? data : getSortedData();
 	let currentPageData: any[];
@@ -772,7 +778,7 @@ export const DataTable: React.FC<GenericTableProps> = ({
 				)}
 
 				{children ? children(data) : null}
-				<Modal ref={modalRef} onSuccess={handleSuccess} size={modalSize} {...modalProps} />
+				<Modal ref={modalRef} onSuccess={handleSuccess} onDelete={handleDeleteSuccess} size={modalSize} {...modalProps} />
 			</div>
 			<FollowUpModal ref={followUpModalRef} />
 		</>

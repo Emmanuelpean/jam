@@ -68,6 +68,7 @@ export interface DataModalProps {
 	defaultActiveTab?: string | null; // default active tab key
 	entityType: EntityType; // entity type for API operations
 	onSuccess?: (data: any, onSuccess?: (newData: any) => void) => void; // called when an entry is successfully added/modified
+	onDelete?: () => void; // called when an entry is successfully deleted
 	warningMessage?: (data: any) => WarningMessageConfig[] | null; // optional warning message to display
 	canEdit?: boolean | ((formData: any) => string); // Controls edit button and edit mode access
 	canDelete?: boolean | ((formData: any) => string); // Controls delete button and edit mode access
@@ -103,6 +104,7 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			transformFormData = null,
 			transformInputData = null,
 			onSuccess,
+			onDelete,
 			warningMessage,
 			canEdit = true,
 			canDelete = true,
@@ -393,7 +395,10 @@ const DataModal = forwardRef<DataModalHandle, DataModalProps>(
 			const handler: (item: JamData) => Promise<boolean> =
 				mode === "import" ? deactivateEntityConfirm : deleteEntityConfirm;
 			handler(effectiveData).then((result: boolean): void => {
-				if (result) handleHideImmediate();
+				if (result) {
+					handleHideImmediate();
+					onDelete?.();
+				}
 			});
 		};
 
@@ -880,6 +885,7 @@ export default DataModal;
 
 export interface JamDataModalProps {
 	onSuccess?: (data: any) => void;
+	onDelete?: () => void;
 	size?: "sm" | "lg" | "xl";
 	canEdit?: boolean;
 }
