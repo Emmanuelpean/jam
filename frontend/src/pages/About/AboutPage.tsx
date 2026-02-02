@@ -291,7 +291,7 @@ const AboutPage = (): JSX.Element => {
 													{ name: "OpenAI", url: "https://openai.com" },
 													{ name: "Stripe", url: "https://stripe.com" },
 													{ name: "Apify", url: "https://apify.com" },
-													{ name: "Scrapfly", url: "https://scrapfly.io" },
+													{ name: "BrightData", url: "https://brightdata.com" },
 												],
 											},
 										].map((section) => (

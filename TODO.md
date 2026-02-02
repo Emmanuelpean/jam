@@ -24,7 +24,7 @@
 
 * [ ] Rewrite the test data for the test user
 * [ ] Add payment system for toast
-* [ ] Change the service runner to work with multiple workers
+* [X] Change the service runner to work with multiple workers
 * [ ] Limit the number of scraped jobs per user per month, and set limits for AI rating
 * [ ] finish adding configs endpoint
 * [X] Add loading to delete for scraped jobs
@@ -44,18 +44,17 @@
 * [X] Non data modal should not be affected by the small screen full size
 * [X] Allow badges to collapse on small screens (...)
 * [X] Dropdowns styles are broken in dark mode (in light mode multiselect is not working as expected)
-* [ ] On Small screens, elements on multiple columns and rows are all on same column but spacing differs
+* [ ] On Small screens, modal elements on multiple columns and rows are all on same column but spacing differs
 * [X] Finish the dark mode - Missing dark mode in select widget in time selector
 * [X] Fix the settings table column and modal active states
 * [X] Redo the users table
 * [ ] Add tests for the user table
 * [ ] Add toggle to hide scraped jobs with past deadline
-* [ ] Display the AI prompt in the user settings
-* [ ] Display reason why scraped job was not rated
+* [X] Display the AI prompt in the user settings
+* [X] Display reason why scraped job was not rated
 * [X] Update terms and conditions
 * [X] Fix demo mode drop down
 * [X] Add account deletion option (delete subscription in this case) (tests required)
 * [X] Withdrawn, rejected or offered jobs are not shown in the needs chase dashboard anymore.
 * [X] Fix the password reset bug
 * [ ] Run the build first for faster selenium testing?
-* [ ] Move the service runner settings to their own table.
