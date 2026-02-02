@@ -12,7 +12,7 @@ class TestScoreScrapedJobs(object):
         """Return premium users list"""
         return db.query(models.User).filter(models.User.premium.has(is_active=True)).all()
 
-    def test_success(self, session, test_scraped_jobs, test_user_qualifications) -> None:
+    def test_success(self, session, test_scraped_jobs, test_user_qualifications, test_ai_prompts) -> None:
         """Test scoring scraped jobs successfully"""
 
         score_scraped_jobs(1, session)
@@ -30,7 +30,9 @@ class TestScoreScrapedJobs(object):
         assert len(service_log.user_found_ids) == len(self.get_premium_users(session))
         assert len(service_log.user_processed_ids) == len(self.get_premium_users(session)) - 1
 
-    def test_skipped(self, session, test_scraped_jobs, test_user_qualifications, test_eis_service_logs) -> None:
+    def test_skipped(
+        self, session, test_scraped_jobs, test_user_qualifications, test_eis_service_logs, test_ai_prompts
+    ) -> None:
         """Test scoring scraped jobs successfully"""
 
         # Add a scraped job for a user without qualifications to test skipping

@@ -94,11 +94,13 @@ export interface JobRatingData extends BaseOut {
 	educational_score: number | null;
 	interest_score: number | null;
 	feedback: string | null;
-	script_version: number | null;
 	is_success: boolean | null;
 	error: string | null;
 	scraped_job_id: number | null;
 	user_qualification_id: number | null;
+	job_prompt_template_id: number | null;
+	system_prompt_id: number | null;
+	job_prompt: string | null;
 }
 
 export interface ScrapingFilterTransform {
@@ -115,4 +117,10 @@ export interface ScrapingFilterData extends OwnedOut {
 	case_sensitive: boolean;
 	is_active: boolean;
 	filtered_jobs: number[];
+}
+
+// ---------------------------------------------------- AI PROMPTS ----------------------------------------------------
+
+export interface AiSystemPromptData extends BaseOut {
+	prompt: string;
 }

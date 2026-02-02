@@ -13,7 +13,23 @@ from app.core.oauth2 import get_current_user
 from app.routers import generate_data_table_crud_router
 from app.service_runner import routers
 
-# ---------------------------------------------------- SCRAPED JOBS ----------------------------------------------------
+# --------------------------------------------------- AI SYSTEM PROMPT ---------------------------------------------------
+
+
+ai_system_prompt_router = APIRouter(prefix="/ai-system-prompts", tags=["ai-system-prompts"])
+
+
+@ai_system_prompt_router.get("/", response_model=list[schemas.AiSystemPromptOut])
+def get_all_ai_system_prompts(
+    _current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get all AI system prompts."""
+
+    return db.query(models.AiSystemPrompt).all()
+
+
+# ----------------------------------------------------- JOB RATING -----------------------------------------------------
 
 
 job_rating_router = generate_data_table_crud_router(

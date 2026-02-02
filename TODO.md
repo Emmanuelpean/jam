@@ -24,9 +24,9 @@
 
 * [ ] Rewrite the test data for the test user
 * [ ] Add payment system for toast
-* [ ] Change the service runner to work with multiple workers
+* [X] Change the service runner to work with multiple workers
 * [ ] Limit the number of scraped jobs per user per month, and set limits for AI rating
-* [ ] finish adding configs endpoint
+* [X] finish adding configs endpoint
 * [X] Add loading to delete for scraped jobs
 * [X] Rename TOAST dashboard
 * [ ] Add loading to graphs on TOAST dashboard
@@ -51,6 +51,7 @@
 * [ ] Add tests for the user table
 * [ ] Add toggle to hide scraped jobs with past deadline
 * [ ] Display the AI prompt in the user settings
+* [ ] On database migration, automatically add the system prompt and job prompt template to their associated tables.
 * [ ] Display reason why scraped job was not rated
 * [X] Update terms and conditions
 * [X] Fix demo mode drop down

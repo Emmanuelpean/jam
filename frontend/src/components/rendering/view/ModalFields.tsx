@@ -141,7 +141,7 @@ export const modalViewFields = {
 	jobScrapingActive: (overrides: ModalViewFieldOverride = {}): ModalViewField => ({
 		key: "job_scraping_active",
 		label: "Job Rating Active",
-		render: renderFunctions.jobRatingActive,
+		render: renderFunctions.jobScrapingActive,
 		...overrides,
 	}),
 

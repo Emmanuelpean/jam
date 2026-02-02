@@ -61,6 +61,7 @@ app.include_router(job_scraping_routers.email_scraper_service_router)
 app.include_router(job_scraping_routers.scraping_filter_router)
 
 # Job Rating routers
+app.include_router(job_rating_routers.ai_system_prompt_router)
 app.include_router(job_rating_routers.job_rating_router)
 app.include_router(job_rating_routers.job_rating_service_log_router)
 app.include_router(job_rating_routers.job_rating_service_router)

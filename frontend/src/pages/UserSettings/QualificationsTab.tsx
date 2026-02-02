@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Form } from "react-bootstrap";
+import { Card, Form } from "react-bootstrap";
 import { renderFormField, SyntheticEvent } from "../../components/rendering/widgets/WidgetRenders";
 import { ValidationErrors } from "../../components/DataModal/DataModal";
 import { useGlobalToast } from "../../hooks/useNotificationToast";
 import { useAuth } from "../../contexts/AuthContext";
+import { useDataContext } from "../../contexts/DataContext";
 import { ApiResponse } from "../../services/api/Base";
 import { ModalFormField } from "../../components/rendering/form/FormRenders";
 import { ActionButton } from "../../components/rendering/form/ActionButton";
 import { UserQualification } from "../../services/schemas/Core";
 import { userQualificationApi } from "../../services/api/Users";
+import { AiSystemPromptData } from "../../services/schemas/Services";
 
 interface QualificationFormData {
 	qualification_id?: number;
@@ -21,6 +23,7 @@ interface QualificationFormData {
 
 export const QualificationsTab: React.FC = () => {
 	const { token } = useAuth();
+	const { aiSystemPrompts } = useDataContext();
 	const { showToastSuccess, showToastError } = useGlobalToast();
 	const [formData, setFormData] = useState<QualificationFormData>({
 		qualification_id: undefined,
@@ -133,27 +136,62 @@ export const QualificationsTab: React.FC = () => {
 		rows: 3,
 	};
 
-	return (
-		<Form onSubmit={handleSubmit}>
-			<p className="text-muted mb-4">
-				Help us match you with the right opportunities by providing your qualifications
-			</p>
-			{renderFormField(experienceField, formData, handleInputChange, errors)}
-			{renderFormField(skillsField, formData, handleInputChange, errors)}
-			{renderFormField(qualitiesField, formData, handleInputChange, errors)}
-			{renderFormField(educationField, formData, handleInputChange, errors)}
-			{renderFormField(interestsField, formData, handleInputChange, errors)}
+	const latestSystemPrompt: AiSystemPromptData | null | undefined = aiSystemPrompts?.length
+		? [...aiSystemPrompts].sort((a: AiSystemPromptData, b: AiSystemPromptData): number => b.id - a.id)[0]
+		: null;
+	const systemPrompt: string | undefined = latestSystemPrompt?.prompt;
 
-			<div className="mt-4">
-				<ActionButton
-					type="submit"
-					variant="primary"
-					disabled={submitting}
-					defaultIcon="save"
-					id={"confirm-button"}
-					defaultText={submitting ? "Saving..." : "Save Qualifications"}
-				/>
-			</div>
-		</Form>
+	return (
+		<>
+			<Form onSubmit={handleSubmit}>
+				<p className="text-muted mb-4">
+					Help us match you with the right opportunities by providing your qualifications
+				</p>
+				{renderFormField(experienceField, formData, handleInputChange, errors)}
+				{renderFormField(skillsField, formData, handleInputChange, errors)}
+				{renderFormField(qualitiesField, formData, handleInputChange, errors)}
+				{renderFormField(educationField, formData, handleInputChange, errors)}
+				{renderFormField(interestsField, formData, handleInputChange, errors)}
+
+				<div className="mt-4">
+					<ActionButton
+						type="submit"
+						variant="primary"
+						disabled={submitting}
+						defaultIcon="save"
+						id={"confirm-button"}
+						defaultText={submitting ? "Saving..." : "Save Qualifications"}
+					/>
+				</div>
+			</Form>
+
+			{systemPrompt && (
+				<Card className="mt-4">
+					<Card.Header>
+						<i className="bi bi-robot me-2" />
+						AI System Prompt
+					</Card.Header>
+					<Card.Body>
+						<p className="text-muted mb-2">
+							This is the system prompt used by the AI to evaluate job matches based on your
+							qualifications.
+						</p>
+						<pre
+							style={{
+								whiteSpace: "pre-wrap",
+								wordBreak: "break-word",
+								backgroundColor: "var(--bs-tertiary-bg)",
+								padding: "1rem",
+								borderRadius: "0.375rem",
+								fontSize: "0.875rem",
+								margin: 0,
+							}}
+						>
+							{systemPrompt}
+						</pre>
+					</Card.Body>
+				</Card>
+			)}
+		</>
 	);
 };

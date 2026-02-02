@@ -1,8 +1,44 @@
 """Test data for job rating service related tests."""
 
 JOB_RATING_DATA = [
-    {"scraped_job_id": 1, "overall_score": 4, "user_qualification_id": 1, "owner_id": 1},
-    {"scraped_job_id": 2, "overall_score": 8, "user_qualification_id": 2, "owner_id": 1},
+    {
+        "scraped_job_id": 1,
+        "overall_score": 4,
+        "user_qualification_id": 1,
+        "owner_id": 1,
+        "system_prompt_id": 1,
+        "job_prompt_template_id": 1,
+        "job_prompt": "This is the AI prompt",
+    },
+    {
+        "scraped_job_id": 2,
+        "overall_score": 8,
+        "user_qualification_id": 2,
+        "owner_id": 1,
+        "system_prompt_id": 1,
+        "job_prompt_template_id": 1,
+        "job_prompt": "This is the AI prompt",
+    },
+    {
+        "scraped_job_id": 5,
+        "overall_score": 8,
+        "user_qualification_id": 2,
+        "owner_id": 1,
+        "system_prompt_id": 1,
+        "job_prompt_template_id": 1,
+        "job_prompt": "This is the AI prompt",
+    },
+    {
+        "scraped_job_id": 3,
+        "overall_score": 8,
+        "is_success": False,
+        "error": "Job not found",
+        "user_qualification_id": 2,
+        "owner_id": 1,
+        "system_prompt_id": 1,
+        "job_prompt_template_id": 1,
+        "job_prompt": "This is the AI prompt",
+    },
 ]
 
 JOB_RATING_SERVICE_LOG_DATA = [

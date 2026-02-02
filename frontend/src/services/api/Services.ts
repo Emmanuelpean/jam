@@ -1,4 +1,10 @@
-import { JobRatingData, JobRatingServiceLogData, JobScrapingServiceLogData, ScrapedJobData } from "../schemas/Services";
+import {
+	AiSystemPromptData,
+	JobRatingData,
+	JobRatingServiceLogData,
+	JobScrapingServiceLogData,
+	ScrapedJobData,
+} from "../schemas/Services";
 import { ApiResponsePromise, baseApi, serviceApi } from "./Base";
 import { createCrudApi, CrudApi } from "./Crud";
 
@@ -119,3 +125,5 @@ export const jobRatingServiceRunnerApi: JobRatingServiceRunnerApi = {
 		return serviceApi.post("job-rating-service-runner/start", data, token);
 	},
 };
+
+export const aiSystemPromptsApi: CrudApi<AiSystemPromptData> = createCrudApi("ai-system-prompts");

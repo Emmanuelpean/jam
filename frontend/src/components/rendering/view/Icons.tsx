@@ -65,7 +65,7 @@ export function getEntityIcon(entityType: EntityType): string {
 		user: "person-lines-fill",
 		setting: "database-gear",
 		speculativeApplication: "envelope-paper",
-		scrapedJob: "inbox",
+		scrapedJob: "inboxes",
 	};
 	return iconMap[entityType] || "";
 }

@@ -54,6 +54,7 @@ def seed_database() -> None:
         # App data
         users = crd.create_users(db, None, 12)
         settings = crd.create_settings(db)
+        ai_prompts = crd.create_ai_prompts(db)
 
         # Table data
         keywords = crd.create_keywords(db, users)
@@ -78,14 +79,17 @@ def seed_database() -> None:
         scraped_jobs = crd.create_scraped_jobs(db, alert_emails, users, scraping_filters)
 
         # Job Ratings data
-        job_rating_service_logs = crd.create_job_scraping_service_logs(db)
-        job_ratings = crd.create_job_ratings(db, users, scraped_jobs, user_qualifications, job_rating_service_logs)
+        job_rating_service_logs = crd.create_job_rating_service_logs(db)
+        job_ratings = crd.create_job_ratings(
+            db, users, scraped_jobs, user_qualifications, job_rating_service_logs, ai_prompts
+        )
 
         print("\n" + "=" * 50)
         print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
         print("=" * 50)
         print(f"Users: {len(users)}")
         print(f"Settings: {len(settings)}")
+        print(f"AI Prompts: 2 (system prompt + job template)")
         print(f"Companies: {len(companies)}")
         print(f"Geolocations: {len(geolocations)}")
         print(f"Locations: {len(locations)}")
