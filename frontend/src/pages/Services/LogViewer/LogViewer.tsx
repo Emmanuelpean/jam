@@ -1,5 +1,5 @@
 import React, { JSX, useEffect, useRef, useState } from "react";
-import { BaseServiceApi, LogResponse } from "../../../services/api/Services";
+import { BaseServiceApi, LogResponse, ServiceStatus } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../components/spinner/Spinner";
 import "./LogViewer.scss";
@@ -8,9 +8,10 @@ import { ApiResponse } from "../../../services/api/Base";
 interface LogViewerProps {
 	api: BaseServiceApi;
 	isServiceRunning: boolean;
+	serviceStatus: ServiceStatus | null;
 }
 
-const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
+const LogViewer = ({ api, isServiceRunning, serviceStatus }: LogViewerProps): JSX.Element => {
 	const { token } = useAuth();
 	const [logs, setLogs] = useState<LogResponse | null>(null);
 	const [logsExpanded, setLogsExpanded] = useState<boolean>(false);
@@ -36,15 +37,18 @@ const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
 		}
 	};
 
+	useEffect(() => {
+		void fetchLogs();
+	}, []);
+
 	const handleShowMoreLogs = (): void => {
 		setLogLines((prev: number): number => Math.min(prev + 100, logs?.total_lines || prev));
 	};
 
-	// This effect now doesn't need logLines in dependencies
 	useEffect(() => {
 		if (!logsExpanded) return;
 
-		fetchLogs().then(); // Initial fetch
+		void fetchLogs();
 
 		const pollInterval: 3000 | null = isServiceRunning ? 3000 : null;
 		if (pollInterval !== null) {
@@ -66,9 +70,7 @@ const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
 				{logs && (
 					<>
 						<span className="log-count"> ({logs.total_lines} total lines)</span>
-						{logs.lines.length > 0 && !logsExpanded && (
-							<span className="log-preview"> - {logs.lines[logs.lines.length - 1]}</span>
-						)}
+						{serviceStatus?.last_log && <span className="log-preview"> - {serviceStatus?.last_log}</span>}
 					</>
 				)}
 			</button>
@@ -103,8 +105,8 @@ const LogViewer = ({ api, isServiceRunning }: LogViewerProps): JSX.Element => {
 								)}
 							</div>
 							<pre className="log-content">
-								{logs.lines.map((line: string, idx: number): JSX.Element => {
-									const lineNumber: number = logs.total_lines - logs.lines.length + idx + 1;
+								{[...logs.lines].reverse().map((line: string, idx: number): JSX.Element => {
+									const lineNumber: number = logs.total_lines - idx;
 									return (
 										<div key={idx} className="log-line">
 											<span className="log-line-number">{lineNumber}</span>
