@@ -15,6 +15,7 @@ interface RunHistoryChartProps {
 	onPlatformChange: (value: string) => void;
 	onDateRangeChange: (dateRange: DateRange) => void;
 	isRunning: boolean;
+	loading?: boolean;
 }
 
 const successColor = "#22c55e";
@@ -46,6 +47,7 @@ export const RunHistoryChart = ({
 	onPlatformChange,
 	onDateRangeChange,
 	isRunning,
+	loading = false,
 }: RunHistoryChartProps): JSX.Element => {
 	const [logData, setLogData] = useState<SeriesData[][] | null>(null);
 
@@ -141,14 +143,22 @@ export const RunHistoryChart = ({
 					</div>
 				</div>
 			</div>
-			<div style={{ display: "flex" }}>
-				{logData && logData[0] && (
-					<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of scraped jobs" />
-				)}
-				{logData && logData[1] && (
-					<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
-				)}
-			</div>
+			{loading ? (
+				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "300px" }}>
+					<div className="spinner-border text-primary" role="status">
+						<span className="visually-hidden">Loading...</span>
+					</div>
+				</div>
+			) : (
+				<div style={{ display: "flex" }}>
+					{logData && logData[0] && (
+						<LineChart data={logData[0]} xAxisLabel="Run date" yAxisLabel="Number of scraped jobs" />
+					)}
+					{logData && logData[1] && (
+						<LineChart data={logData[1]} xAxisLabel="Run date" yAxisLabel="Run duration [h]" />
+					)}
+				</div>
+			)}
 		</div>
 	);
 };

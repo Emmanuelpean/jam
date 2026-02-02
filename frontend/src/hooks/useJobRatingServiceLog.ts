@@ -10,6 +10,7 @@ export const useJobRatingServiceLogs = (isServiceRunning: boolean, dateRange: Da
 	const [previousServiceLogs, setPreviousServiceLogs] = useState<JobRatingServiceLogData[] | null>(null);
 	const [latestServiceLog, setLatestServiceLog] = useState<JobRatingServiceLogData | null>(null);
 	const [serviceLogError, setServiceLogError] = useState<string | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
 
 	const fetchLatestServiceLog = async (): Promise<void> => {
 		if (!token) return;
@@ -26,6 +27,7 @@ export const useJobRatingServiceLogs = (isServiceRunning: boolean, dateRange: Da
 
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token) return;
+		setLoading(true);
 		try {
 			const logs: ApiResponse<JobRatingServiceLogData[]> = await jobRatingServiceLogApi.getAll(token, {
 				start_date: new Date(dateRange.start).toISOString(),
@@ -35,6 +37,8 @@ export const useJobRatingServiceLogs = (isServiceRunning: boolean, dateRange: Da
 		} catch (err: any) {
 			setServiceLogError(err.message || "An error occurred while fetching the logs.");
 			console.error("Failed to fetch latest logs:", err);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -55,5 +59,5 @@ export const useJobRatingServiceLogs = (isServiceRunning: boolean, dateRange: Da
 		fetchLatestServiceLog().then();
 	}, [token]);
 
-	return { previousServiceLogs, latestServiceLog, fetchLatestServiceLog, serviceLogError };
+	return { previousServiceLogs, latestServiceLog, fetchLatestServiceLog, serviceLogError, loading };
 };
