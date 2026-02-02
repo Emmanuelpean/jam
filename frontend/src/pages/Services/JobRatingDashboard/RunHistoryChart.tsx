@@ -1,20 +1,16 @@
 import React, { JSX, useEffect, useState } from "react";
 import { JobRatingServiceLogData } from "../../../services/schemas/Services";
 import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
-import TimeSelection from "../../../components/TimeSelection/TimeSelection";
-import { DateRange } from "../../../utils/TimeUtils";
 import { createSeries, failureColor, infoColor, successColor } from "../ServiceUtils";
 
 interface RunHistoryChartProps {
 	serviceLogData: JobRatingServiceLogData[] | null;
-	onDateRangeChange: (dateRange: DateRange) => void;
 	isRunning: boolean;
 	loading?: boolean;
 }
 
 export const RunHistoryChart = ({
 	serviceLogData,
-	onDateRangeChange,
 	isRunning,
 	loading = false,
 }: RunHistoryChartProps): JSX.Element => {
@@ -53,9 +49,6 @@ export const RunHistoryChart = ({
 				Run History
 				{isRunning && <span className="live-indicator ms-2"></span>}
 			</h2>
-			<div style={{ display: "flex", justifyContent: "space-between" }}>
-				<TimeSelection onDateRangeChange={onDateRangeChange} defaultMode="period" />
-			</div>
 			{loading ? (
 				<div className="d-flex justify-content-center align-items-center" style={{ minHeight: "300px" }}>
 					<div className="spinner-border text-primary" role="status">
