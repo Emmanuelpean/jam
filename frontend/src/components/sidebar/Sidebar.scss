@@ -7,7 +7,7 @@
     display: flex;
     overflow: hidden;
     flex-direction: column;
-    width: 67px;
+    width: 64px;
     height: 100vh;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.4s ease;
@@ -45,15 +45,18 @@
     align-items: center;
     height: 100px;
     padding-left: 12px;
-    border-bottom: 1px solid var(--bs-card-border-color);
 }
 
+/* Gradient logo text */
 .logo-text {
     font-size: 50px !important;
     font-weight: 600;
     padding-left: 13.5px;
     user-select: none;
-    color: var(--primary-mid) !important;
+    background: var(--primary-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 /* Theme dropdown */
@@ -77,22 +80,33 @@
 }
 
 .sidebar-nav-top {
+    position: relative;
     padding-top: 1rem;
 }
 
 .sidebar-nav-bottom {
+    position: relative;
     margin-top: auto;
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
-    border-top: 1px solid var(--bs-card-border-color);
+}
+
+.sidebar-nav-top::before,
+.sidebar-nav-bottom::before {
+    position: absolute;
+    top: 0;
+    right: 8px;
+    left: 8px;
+    height: 2px;
+    content: "";
+    background-color: var(--bs-card-border-color);
 }
 
 /* Navigation items */
 .nav-item {
     display: flex;
-    width: calc(100% - 0.4rem);
     margin: 0.1rem 0.2rem;
-    padding: 12px 19px;
+    padding: 10px 17px;
     cursor: pointer;
     text-decoration: none;
     color: var(--bs-body-color);
@@ -103,9 +117,10 @@
     background-color: var(--bs-border-color);
 }
 
+/* Gradient active state */
 .nav-item.active {
     color: white;
-    background-color: var(--primary-mid);
+    background: var(--primary-gradient);
 }
 
 /* Icon styling */
@@ -167,8 +182,15 @@
     opacity: 0;
 }
 
+/* Submenu with left border line */
 .custom-sidebar.expanded .submenu {
+    margin-left: 8px;
     padding-left: 20px;
+    border-left: 2px solid rgb(0 0 0 / 10%);
+}
+
+[data-mode="dark"] .custom-sidebar.expanded .submenu {
+    border-left-color: rgb(255 255 255 / 15%);
 }
 
 .submenu.open {
