@@ -30,8 +30,8 @@
 * [X] Add loading to delete for scraped jobs
 * [X] Rename TOAST dashboard
 * [ ] Add loading to graphs on TOAST dashboard
-* [ ] Add acknowledgements for open source libraries used
-* [ ] Add acknowledgements for services
+* [X] Add acknowledgements for open source libraries used
+* [X] Add acknowledgements for services
 * [ ] Add favourite filters for scraping
 * [X] Fix frontend packages incompatibility issues
 * [ ] Create free coupons for TOAST for first few users for a couple months
@@ -50,9 +50,9 @@
 * [X] Redo the users table
 * [ ] Add tests for the user table
 * [ ] Add toggle to hide scraped jobs with past deadline
-* [ ] Display the AI prompt in the user settings
+* [X] Display the AI prompt in the user settings
 * [ ] On database migration, automatically add the system prompt and job prompt template to their associated tables.
-* [ ] Display reason why scraped job was not rated
+* [X] Display reason why scraped job was not rated
 * [X] Update terms and conditions
 * [X] Fix demo mode drop down
 * [X] Add account deletion option (delete subscription in this case) (tests required)

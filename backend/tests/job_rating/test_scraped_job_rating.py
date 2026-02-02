@@ -29,6 +29,19 @@ class TestScoreScrapedJobs(object):
         assert len(service_log.rated_job_failed_ids) == 0
         assert len(service_log.user_found_ids) == len(self.get_premium_users(session))
         assert len(service_log.user_processed_ids) == len(self.get_premium_users(session)) - 1
+        job_prompt = """### Candidate Profile
+- **Experience**: Not provided
+- **Education**: BSc Computer Science
+- **Skills**: Not provided
+- **Qualities**: Not provided
+- **Interests**: Not provided
+
+### Job Details
+- **Title**: Business Intelligence Developer
+- **Company**: CyberSecure Ltd
+- **Description**: Build scalable systems that impact millions of users...
+"""
+        assert job_ratings[0].job_prompt == job_prompt
 
     def test_skipped(
         self, session, test_scraped_jobs, test_user_qualifications, test_eis_service_logs, test_ai_prompts
