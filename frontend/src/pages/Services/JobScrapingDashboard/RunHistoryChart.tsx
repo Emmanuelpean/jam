@@ -2,8 +2,6 @@ import React, { JSX, useEffect, useState } from "react";
 import { JobScrapingServiceLogData, PlatformStat } from "../../../services/schemas/Services";
 import { SelectOption } from "../../../components/rendering/form/FormOptions";
 import { LineChart, SeriesData } from "../../../components/Chart/LineChart";
-import TimeSelection from "../../../components/TimeSelection/TimeSelection";
-import { DateRange } from "../../../utils/TimeUtils";
 import { createSeries } from "../ServiceUtils";
 import { ModalFormField } from "../../../components/rendering/form/FormRenders";
 import { SelectInput } from "../../../components/rendering/widgets/SelectWidget";
@@ -13,7 +11,6 @@ interface RunHistoryChartProps {
 	selectedPlatform: string;
 	platformOptions: SelectOption[];
 	onPlatformChange: (value: string) => void;
-	onDateRangeChange: (dateRange: DateRange) => void;
 	isRunning: boolean;
 	loading?: boolean;
 }
@@ -45,7 +42,6 @@ export const RunHistoryChart = ({
 	selectedPlatform,
 	platformOptions,
 	onPlatformChange,
-	onDateRangeChange,
 	isRunning,
 	loading = false,
 }: RunHistoryChartProps): JSX.Element => {
@@ -123,24 +119,21 @@ export const RunHistoryChart = ({
 
 	return (
 		<div className="status-card mt-4">
-			<h2 className="card-title">
-				<i className="bi bi-clock-history me-2"></i>
-				Run History
-				{isRunning && <span className="live-indicator ms-2"></span>}
-			</h2>
-			<div style={{ display: "flex", justifyContent: "space-between" }}>
-				<TimeSelection onDateRangeChange={onDateRangeChange} defaultMode="period" />
-				<div className="mb-4">
-					<div style={{ minWidth: "250px" }}>
-						<SelectInput
-							field={platformField}
-							value={selectedPlatform}
-							error={null}
-							handleChange={(event: any) => {
-								onPlatformChange(event.target.value);
-							}}
-						/>
-					</div>
+			<div className="d-flex justify-content-between align-items-center mb-3">
+				<h2 className="card-title mb-0">
+					<i className="bi bi-clock-history me-2"></i>
+					Run History
+					{isRunning && <span className="live-indicator ms-2"></span>}
+				</h2>
+				<div style={{ minWidth: "250px" }}>
+					<SelectInput
+						field={platformField}
+						value={selectedPlatform}
+						error={null}
+						handleChange={(event: any) => {
+							onPlatformChange(event.target.value);
+						}}
+					/>
 				</div>
 			</div>
 			{loading ? (

@@ -56,6 +56,7 @@ const ReleaseNoteAccordion = ({ version, content, isOpen, onToggle }: ReleaseNot
 };
 const AboutPage = (): JSX.Element => {
 	const [openVersion, setOpenVersion] = useState<string | null>(null);
+	const [acknowledgementsOpen, setAcknowledgementsOpen] = useState<boolean>(false);
 	const releaseNotes: Record<string, any> = {
 		"1.2": v120,
 		"1.1": v110,
@@ -214,6 +215,111 @@ const AboutPage = (): JSX.Element => {
 										/>
 									)
 								)}
+							</div>
+						</Col>
+					</Row>
+
+					{/* Acknowledgements Section */}
+					<Row className="justify-content-center mt-5 mb-2">
+						<Col lg={8} className="text-center mb-2">
+							<h2 className="display-5 fw-bold">Acknowledgements</h2>
+						</Col>
+					</Row>
+					<Row className="justify-content-center">
+						<Col lg={10}>
+							<div
+								className="simple-accordion mb-2"
+								style={{ paddingLeft: "10px", paddingRight: "10px" }}
+							>
+								<div
+									className="simple-accordion-header d-flex align-items-center justify-content-between py-2 border-bottom"
+									onClick={() => setAcknowledgementsOpen(!acknowledgementsOpen)}
+									style={{ cursor: "pointer" }}
+								>
+									<div className="d-flex align-items-center">
+										<span className="fw-medium">
+											Open-source projects and services that make Jam possible
+										</span>
+									</div>
+									<i
+										className={`bi ${acknowledgementsOpen ? "bi-chevron-up" : "bi-chevron-down"} text-muted`}
+									></i>
+								</div>
+								<div
+									style={{
+										maxHeight: acknowledgementsOpen ? "1000px" : "0",
+										overflow: "hidden",
+										transition: "max-height 0.3s ease-in-out",
+									}}
+								>
+									<div className="simple-accordion-content" style={{ margin: "10px" }}>
+										{[
+											{
+												title: "Frontend",
+												packages: [
+													{ name: "React", url: "https://react.dev" },
+													{ name: "Bootstrap", url: "https://getbootstrap.com" },
+													{ name: "Bootstrap Icons", url: "https://icons.getbootstrap.com" },
+													{
+														name: "React Bootstrap",
+														url: "https://react-bootstrap.github.io",
+													},
+													{ name: "Recharts", url: "https://recharts.org" },
+													{ name: "Leaflet", url: "https://leafletjs.com" },
+													{ name: "React Router", url: "https://reactrouter.com" },
+													{ name: "React Select", url: "https://react-select.com" },
+													{ name: "Lodash", url: "https://lodash.com" },
+												],
+											},
+											{
+												title: "Backend",
+												packages: [
+													{ name: "FastAPI", url: "https://fastapi.tiangolo.com" },
+													{ name: "SQLAlchemy", url: "https://www.sqlalchemy.org" },
+													{ name: "Pydantic", url: "https://docs.pydantic.dev" },
+													{
+														name: "Beautiful Soup",
+														url: "https://www.crummy.com/software/BeautifulSoup",
+													},
+													{ name: "Gunicorn", url: "https://gunicorn.org" },
+													{ name: "PostgreSQL", url: "https://www.postgresql.org" },
+												],
+											},
+											{
+												title: "Services",
+												packages: [
+													{ name: "OpenAI", url: "https://openai.com" },
+													{ name: "Stripe", url: "https://stripe.com" },
+													{ name: "Apify", url: "https://apify.com" },
+													{ name: "Scrapfly", url: "https://scrapfly.io" },
+												],
+											},
+										].map((section) => (
+											<div key={section.title} className="mb-4">
+												<h5 className="fw-bold mb-3" style={{ color: "var(--primary-mid)" }}>
+													{section.title}
+												</h5>
+												<div className="d-flex flex-wrap gap-2">
+													{section.packages.map((pkg) => (
+														<a
+															key={pkg.name}
+															href={pkg.url}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="glass-badge text-decoration-none"
+															style={{
+																fontSize: "0.875rem",
+																padding: "0.5rem 1rem",
+															}}
+														>
+															{pkg.name}
+														</a>
+													))}
+												</div>
+											</div>
+										))}
+									</div>
+								</div>
 							</div>
 						</Col>
 					</Row>

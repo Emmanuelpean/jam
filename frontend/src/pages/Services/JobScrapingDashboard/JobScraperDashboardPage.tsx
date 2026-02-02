@@ -14,6 +14,7 @@ import { useJobScraperErrors } from "../../../hooks/useJobScraperErrors";
 import { getTableIcon } from "../../../components/rendering/view/Icons";
 import { useServiceErrors } from "../../../hooks/useServiceErrors";
 import { DateRange } from "../../../utils/TimeUtils";
+import TimeSelection from "../../../components/TimeSelection/TimeSelection";
 import "../Service.scss";
 import PageHeader from "../../PageHeader/PageHeader";
 
@@ -177,12 +178,19 @@ const JobScraperDashboard = (): JSX.Element => {
 				serviceStatus={serviceStatus}
 			/>
 
+			<div className="status-card mt-4">
+				<h2 className="card-title">
+					<i className="bi bi-funnel me-2"></i>
+					History Filters
+				</h2>
+				<TimeSelection onDateRangeChange={setDateRange} defaultMode="period" />
+			</div>
+
 			<RunHistoryChart
 				serviceLogData={previousServiceLogs}
 				selectedPlatform={selectedPlatform}
 				platformOptions={platformOptions}
 				onPlatformChange={setSelectedPlatform}
-				onDateRangeChange={setDateRange}
 				isRunning={serviceStatus?.service_running || false}
 				loading={logsLoading}
 			/>
