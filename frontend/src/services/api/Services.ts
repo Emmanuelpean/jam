@@ -44,6 +44,7 @@ export interface ServiceStatus {
 	service_kwargs: any;
 	period_hours: number | null;
 	sleep_until: Date | null;
+	last_log: string | null;
 }
 
 interface ServiceRunnerResponse {

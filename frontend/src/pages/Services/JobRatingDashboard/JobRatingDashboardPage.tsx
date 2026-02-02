@@ -144,7 +144,11 @@ const JobRatingDashboard = (): JSX.Element => {
 
 			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
 
-			<LogViewer api={jobRatingServiceRunnerApi} isServiceRunning={serviceStatus?.service_running || false} />
+			<LogViewer
+				api={jobRatingServiceRunnerApi}
+				isServiceRunning={serviceStatus?.service_running || false}
+				serviceStatus={serviceStatus}
+			/>
 
 			<RunHistoryChart
 				serviceLogData={previousServiceLogs}
