@@ -91,7 +91,9 @@ class ScrapedJob(Owned, Base):
     - `platform` (str): Platform from which the job was scraped (LinkedIn, Indeed, etc.).
     - `is_scraped` (bool): Indicates whether the job has been scraped.
     - `is_failed` (bool): Indicates whether the job scraping failed.
+    - `is_skipped` (bool): Indicates whether the job scraping was skipped (e.g., quota exceeded).
     - `scrape_error` (str, optional): Error message if the job scraping failed.
+    - `skip_reason` (str, optional): Reason why the job scraping was skipped.
     - `scrape_datetime` (datetime, optional): Date and time when the job was scraped.
     - `is_active` (bool): Indicates whether the job is active
     - `is_imported` (bool): Indicates whether the job was imported into a job.
@@ -129,7 +131,9 @@ class ScrapedJob(Owned, Base):
     platform = Column(String, nullable=False)
     is_scraped = Column(Boolean, nullable=False, server_default=expression.false())
     is_failed = Column(Boolean, nullable=False, server_default=expression.false())
+    is_skipped = Column(Boolean, nullable=False, server_default=expression.false())
     scrape_error = Column(String, nullable=True)
+    skip_reason = Column(String, nullable=True)
     scrape_datetime = Column(TIMESTAMP(timezone=True), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default=expression.true())
     is_imported = Column(Boolean, nullable=False, server_default=expression.false())

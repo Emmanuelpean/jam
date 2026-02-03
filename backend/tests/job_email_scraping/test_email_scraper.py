@@ -645,31 +645,6 @@ class TestScrapeJobs:
         assert len(platform_stat.job_scrape_failed_ids) == 0
         assert len(platform_stat.job_scrape_copied_ids) == 0
 
-    def test_indeed_nobrightapi_success(
-        self, indeed_scraped_jobs, test_eis_service_log, job_scraper_with_brightapi_skip, session
-    ) -> None:
-        """Test successful processing of Indeed email jobs"""
-
-        job_scraper_with_brightapi_skip.scrape_jobs(test_eis_service_log)
-
-        # Verify all jobs are now scraped
-        scraped_jobs = session.query(ScrapedJob).filter().all()
-        for job in scraped_jobs:
-            assert job.is_scraped
-            assert job.scrape_error is None
-
-        # Verify the platform stats
-        platform_stat = (
-            session.query(JobEmailScrapingPlatformStat)
-            .filter(JobEmailScrapingPlatformStat.name == Platform.INDEED.value)
-            .first()
-        )
-        assert platform_stat is not None
-        assert len(platform_stat.job_scrape_succeeded_ids) == 0
-        assert len(platform_stat.job_scrape_skipped_ids) == len(indeed_scraped_jobs)
-        assert len(platform_stat.job_scrape_failed_ids) == 0
-        assert len(platform_stat.job_scrape_copied_ids) == 0
-
     def test_linkedin_success(self, linkedin_scraped_jobs, test_eis_service_log, test_job_scraper, session) -> None:
         """Test successful processing of LinkedIn email jobs"""
 
@@ -809,5 +784,55 @@ class TestScrapeJobs:
         assert platform_stat is not None
         assert len(platform_stat.job_scrape_succeeded_ids) == len(nhs_scraped_jobs) - 1
         assert len(platform_stat.job_scrape_filtered_ids) == 1
+        assert len(platform_stat.job_scrape_failed_ids) == 0
+        assert len(platform_stat.job_scrape_copied_ids) == 0
+
+    def test_monthly_quota_exceeded_skips_jobs(
+        self,
+        linkedin_scraped_jobs,
+        test_eis_service_log,
+        test_job_scraper,
+        session,
+        test_users,
+    ) -> None:
+        """Test that jobs are skipped when user exceeds monthly scrape quota"""
+
+        from app.job_email_scraping.email_scraper import MONTHLY_SCRAPE_QUOTA
+
+        n = MONTHLY_SCRAPE_QUOTA + 100
+
+        # Add a large number of scraped jobs
+        for i in range(n):
+            # noinspection PyArgumentList
+            scraped_job = ScrapedJob(
+                owner_id=linkedin_scraped_jobs[0].owner_id,
+                external_job_id=str(i),
+                is_scraped=True,
+                is_failed=False,
+                platform="A",
+                service_log_id=test_eis_service_log.id,
+                scrape_datetime=dt.datetime.now(dt.timezone.utc),
+            )
+            session.add(scraped_job)
+            session.commit()
+
+        test_job_scraper.scrape_jobs(test_eis_service_log)
+
+        # Verify all jobs are skipped (not scraped)
+        for job in linkedin_scraped_jobs:
+            session.refresh(job)
+            assert job.is_scraped is False
+            assert job.is_skipped is True
+            assert job.skip_reason == f"Monthly scrape quota of {MONTHLY_SCRAPE_QUOTA} exceeded"
+
+        # Verify the platform stats show jobs as skipped
+        platform_stat = (
+            session.query(JobEmailScrapingPlatformStat)
+            .filter(JobEmailScrapingPlatformStat.name == Platform.LINKEDIN.value)
+            .first()
+        )
+        assert platform_stat is not None
+        assert len(platform_stat.job_scrape_succeeded_ids) == 0
+        assert len(platform_stat.job_scrape_skipped_ids) == len(linkedin_scraped_jobs)
         assert len(platform_stat.job_scrape_failed_ids) == 0
         assert len(platform_stat.job_scrape_copied_ids) == 0

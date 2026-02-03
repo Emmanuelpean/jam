@@ -185,3 +185,50 @@ class AppLogger:
             backup_count=5,
             console_output=True,
         )
+
+
+def get_last_log_line(logger_name: str) -> str | None:
+    """Get the last line from the service log file efficiently.
+    Reads from the end of the file to avoid loading the entire file.
+    :param logger_name: Name of the logger / log file"""
+
+    log_file_path = os.path.join(settings.log_directory, logger_name + ".log")
+
+    if not os.path.exists(log_file_path):
+        return None
+
+    try:
+        with open(log_file_path, "rb") as f:
+            # Seek to end
+            f.seek(0, 2)
+            position = f.tell()
+
+            if position == 0:
+                return None
+
+            # Read backwards to find the last non-empty line
+            chunk_size = 1024
+            buffer = b""
+
+            while position > 0:
+                read_size = min(chunk_size, position)
+                position -= read_size
+                f.seek(position)
+                buffer = f.read(read_size) + buffer
+
+                # Split and look for a complete line
+                lines = buffer.split(b"\n")
+
+                # Find the last non-empty line
+                for line in reversed(lines):
+                    stripped = line.strip()
+                    if stripped:
+                        try:
+                            return stripped.decode("utf-8")
+                        except UnicodeDecodeError:
+                            return stripped.decode("utf-8", errors="replace")
+
+            return None
+
+    except Exception as e:
+        return f"Error reading log file: {str(e)}"

@@ -1,12 +1,12 @@
 """Email scraper service.
 
 Reads job alert emails from a shared inbox, extracts job IDs for supported
-platforms (linkedin, indeed, veganjobs), stores email and job metadata in the
+platforms (LinkedIn, Indeed, Veganjobs, etc.), stores email and job metadata in the
 database, scrapes full job details (via platform scrapers or from email
-content), and records run statistics in an EisServiceLog."""
+content), and records run statistics in an JobScrapingServiceLog."""
 
 import traceback
-from datetime import datetime
+import datetime as dt
 
 from app import utils, models as models
 from app.config import settings
@@ -47,12 +47,6 @@ class JobEmailScraper(EmailService):
         self.logger = AppLogger.create_service_logger(SERVICE_NAME, "INFO")
         self.db = next(get_db()) if db is None else db
         self.currencies = utils.open_json("app/data/currencies.json")
-
-    @property
-    def indeed_brightapi_setting(self) -> str:
-        """Get the Indeed BrightAPI setting from the database"""
-
-        return models.get_setting_value(self.db, "indeed_scraper", "scraper")
 
     def create_service_log(self, **kwargs) -> JobEmailScrapingServiceLog:
         """Create a new service log entry
@@ -122,6 +116,29 @@ class JobEmailScraper(EmailService):
         self.db.add(err)
         self.db.commit()
         return err
+
+    def get_user_monthly_scrape_count(self, owner_id: int) -> int:
+        """Get the count of jobs scraped by a user in the current month.
+        :param owner_id: User ID
+        :return: Number of jobs scraped this month"""
+
+        start_of_month = dt.datetime.now(dt.timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        count = (
+            self.db.query(ScrapedJob)
+            .filter(ScrapedJob.owner_id == owner_id)
+            .filter(ScrapedJob.is_scraped)
+            .filter(ScrapedJob.is_failed.is_(False))
+            .filter(ScrapedJob.scrape_datetime >= start_of_month)
+            .count()
+        )
+        return count
+
+    def is_user_over_monthly_quota(self, owner_id: int) -> bool:
+        """Check if a user has exceeded their monthly scrape quota.
+        :param owner_id: User ID
+        :return: True if the user has exceeded their quota"""
+
+        return self.get_user_monthly_scrape_count(owner_id) >= settings.monthly_scrape_quota
 
     # ------------------------------------------------ EMAIL PROCESSING ------------------------------------------------
 
@@ -295,7 +312,7 @@ class JobEmailScraper(EmailService):
                     setattr(job_record, key, data[key])
 
         # Scraping information
-        job_record.scrape_datetime = datetime.now()
+        job_record.scrape_datetime = dt.datetime.now()
         job_record.is_scraped = True
 
         self.db.commit()
@@ -341,7 +358,7 @@ class JobEmailScraper(EmailService):
         """Run the email scraping workflow
         :param timedelta_days: Number of days to search for emails"""
 
-        start_time = datetime.now()
+        start_time = dt.datetime.now()
         self.logger.info("Starting email scraping workflow")
         service_log = self.create_service_log(run_datetime=start_time)
 
@@ -353,12 +370,12 @@ class JobEmailScraper(EmailService):
             self.scrape_jobs(service_log)
 
             # Log final statistics
-            service_log.run_duration = (datetime.now() - start_time).total_seconds()
+            service_log.run_duration = (dt.datetime.now() - start_time).total_seconds()
             service_log.is_success = True
 
         except Exception as exception:
             self.logger.exception(f"Critical error in scraping workflow: {exception}")
-            service_log.run_duration = (datetime.now() - start_time).total_seconds()
+            service_log.run_duration = (dt.datetime.now() - start_time).total_seconds()
             service_log.is_success = False
             service_log.error_message = str(exception)
         finally:
@@ -544,13 +561,22 @@ class JobEmailScraper(EmailService):
 
             # Otherwise, scrape the data from the web
             else:
+                # Check if user has exceeded their monthly scrape quota
+                if self.is_user_over_monthly_quota(job_record.owner_id):
+                    self.logger.info(
+                        f"User ID {job_record.owner_id} has exceeded their monthly scrape quota of "
+                        f"{settings.monthly_scrape_quota}. Skipping job ID {job_record.external_job_id}."
+                    )
+                    job_record.is_skipped = True
+                    job_record.skip_reason = f"Monthly scrape quota of {settings.monthly_scrape_quota} exceeded"
+                    self.db.commit()
+                    self.upsert_platform_stat(service_log, job_record.platform, job_scrape_skipped_ids=job_record.id)
+                    continue  # next job record
+
                 if job_record.platform == Platform.LINKEDIN:
                     scraper = LinkedinBrightdataJobScraper(job_record.external_job_id)
                 elif job_record.platform == Platform.INDEED:
-                    if self.indeed_brightapi_setting == "email":
-                        scraper = None
-                    else:
-                        scraper = IndeedApifyJobScraper(job_record.external_job_id)
+                    scraper = IndeedApifyJobScraper(job_record.external_job_id)
                 elif job_record.platform == Platform.VEGANJOBS:
                     scraper = VeganJobsJobScraper(job_record.external_job_id)
                 elif job_record.platform == Platform.NHS:
@@ -562,17 +588,9 @@ class JobEmailScraper(EmailService):
                 # Scrape the data and save them to the database
                 self.logger.info(f"Scraping job ID: {job_record.external_job_id}")
                 try:
-                    if scraper is not None:
-                        job_data = scraper.scrape_job()[0]
-                        self.update_scraped_job_data(job_record, job_data)
-                        self.upsert_platform_stat(
-                            service_log, job_record.platform, job_scrape_succeeded_ids=job_record.id
-                        )
-                    else:
-                        self.update_scraped_job_data(job_record, None)
-                        self.upsert_platform_stat(
-                            service_log, job_record.platform, job_scrape_skipped_ids=job_record.id
-                        )
+                    job_data = scraper.scrape_job()[0]
+                    self.update_scraped_job_data(job_record, job_data)
+                    self.upsert_platform_stat(service_log, job_record.platform, job_scrape_succeeded_ids=job_record.id)
 
                 except:
                     message = (

@@ -72,8 +72,9 @@ def get_service_logs(
     lines: int,
     current_user: User,
 ) -> dict:
-    """Get the last N lines from the service log file
-    :param lines: Number of lines to retrieve (default 100, max 10000)
+    """Get the last N lines from the service log file efficiently.
+    Uses reverse reading for large files to avoid loading the entire file into memory.
+    :param lines: Number of lines to retrieve
     :param logger_name: Name of the logger / log file
     :param current_user: Current authenticated user"""
 
@@ -85,13 +86,68 @@ def get_service_logs(
         return {"lines": [], "total_lines": 0}
 
     try:
-        with open(log_file_path, "r") as f:
-            all_lines = f.readlines()
+        file_size = os.path.getsize(log_file_path)
 
-        total_lines = len(all_lines)
-        log_lines = all_lines[-lines:] if lines < total_lines else all_lines
+        # For small files, just read the whole thing
+        if file_size < 1024 * 1024:  # 1 MB threshold
+            with open(log_file_path, "r", encoding="utf-8") as f:
+                all_lines = f.readlines()
+            total_lines = len(all_lines)
+            log_lines = all_lines[-lines:] if lines < total_lines else all_lines
+            return {"lines": [line.rstrip() for line in log_lines], "total_lines": total_lines}
 
-        return {"lines": [line.rstrip() for line in log_lines], "total_lines": total_lines}
+        # For large files, read from the end in chunks
+        chunk_size = 8192
+        collected_lines = []
+        total_lines = 0
+
+        with open(log_file_path, "rb") as f:
+            # Count total lines efficiently (optional, can skip if not needed)
+            for _ in f:
+                total_lines += 1
+
+            # Now read from the end to get last N lines
+            f.seek(0, 2)  # Seek to end
+            position = f.tell()
+            buffer = b""
+
+            while position > 0 and len(collected_lines) < lines:
+                read_size = min(chunk_size, position)
+                position -= read_size
+                f.seek(position)
+                chunk = f.read(read_size)
+                buffer = chunk + buffer
+
+                # Split into lines and keep collecting
+                buffer_lines = buffer.split(b"\n")
+
+                # If we haven't reached the start, the first element is incomplete
+                if position > 0:
+                    buffer = buffer_lines[0]
+                    new_lines = buffer_lines[1:]
+                else:
+                    new_lines = buffer_lines
+                    buffer = b""
+
+                # Prepend new lines (they're in reverse order relative to file)
+                collected_lines = new_lines + collected_lines
+
+            # Take only the last N lines
+            result_lines = collected_lines[-lines:] if len(collected_lines) > lines else collected_lines
+
+            # Decode and strip
+            decoded_lines = []
+            for line in result_lines:
+                try:
+                    decoded_lines.append(line.decode("utf-8").rstrip())
+                except UnicodeDecodeError:
+                    decoded_lines.append(line.decode("utf-8", errors="replace").rstrip())
+
+            # Filter out empty lines that result from splitting
+            decoded_lines = [line for line in decoded_lines if line]
+
+            return {"lines": decoded_lines, "total_lines": total_lines}
+
     except Exception as e:
         return {"lines": [f"Error reading log file: {str(e)}"], "total_lines": 0}
 
