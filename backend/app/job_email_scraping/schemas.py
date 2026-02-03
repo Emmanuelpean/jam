@@ -6,7 +6,7 @@ from datetime import datetime
 
 from pydantic import field_validator
 
-from app.base_schemas import BaseModel, OwnedOut, Out, serialize_relationships
+from app.base_schemas import BaseModel, OwnedOut, Out, serialise_relationships
 from app.data_tables.schemas import GeolocationOut
 from app.job_rating.schemas import JobRatingOut
 
@@ -44,7 +44,7 @@ class JobEmailOut(JobEmail, OwnedOut):
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
 
-        return serialize_relationships(value)
+        return serialise_relationships(value)
 
 
 # ----------------------------------------------------- SCRAPED JOB ----------------------------------------------------
@@ -98,7 +98,7 @@ class ScrapedJobOut(ScrapedJob, OwnedOut):
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
 
-        return serialize_relationships(value)
+        return serialise_relationships(value)
 
 
 class PaginatedScrapedJobResponse(BaseModel):
@@ -149,7 +149,7 @@ class JobEmailScrapingServiceLogOut(Out):
     @classmethod
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
-        return serialize_relationships(value)
+        return serialise_relationships(value)
 
 
 # --------------------------------------------------- PLATFORM STATS ---------------------------------------------------
@@ -226,4 +226,4 @@ class ScrapingFilterOut(OwnedOut, ScrapingFilterCreate):
     @classmethod
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
-        return serialize_relationships(value)
+        return serialise_relationships(value)

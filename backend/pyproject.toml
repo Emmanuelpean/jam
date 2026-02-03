@@ -52,7 +52,11 @@ build-backend = "setuptools.build_meta"
 repository = "https://github.com/emmanuelpean/jam"
 
 [tool.coverage.run]
+source = ["backend/app"]
 data_file = "reports/coverage/.coverage"
+omit = [
+    "backend/tests/utils/*",
+]
 
 [tool.coverage.html]
 directory = "reports/coverage/htmlcov"
