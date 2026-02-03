@@ -2,7 +2,6 @@
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.elements import ColumnElement
 
 from app.job_email_scraping.models import ScrapedJob, ScrapingExclusionFilter, ScrapingFavouriteFilter
 
@@ -130,7 +129,7 @@ def is_job_favoured_for_user(
         return None
 
 
-def rule_to_sql_predicate(job_filter: ScrapingExclusionFilter) -> ColumnElement[bool]:
+def rule_to_sql_predicate(job_filter: ScrapingExclusionFilter):
     """Convert a rule into a SQLAlchemy expression that matches jobs to EXCLUDE.
     Only applies if the field is not NULL."""
 

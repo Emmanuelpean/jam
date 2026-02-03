@@ -94,7 +94,7 @@ class User(CommonBase, Base):
         # Call parent constructor with remaining kwargs
         super().__init__(**kwargs)
 
-        # Handle preferences - create instance if dict provided or if not already set
+        # Handle preferences - create an instance if dict provided or if not already set
         if preferences_data:
             if isinstance(preferences_data, dict):
                 # noinspection PyArgumentList
@@ -202,9 +202,9 @@ class UserToken(Owned, Base):
 
     @hybrid_property
     def is_valid(self) -> bool:
-        """Check if token is valid"""
+        """Check if the token is valid"""
 
-        # Define expiration times based on token type
+        # Define expiration times based on the token type
         expiration_minutes = {
             "verification": settings.verification_token_expiration_minutes,
             "password_reset": settings.password_reset_token_expiration_minutes,
@@ -214,7 +214,6 @@ class UserToken(Owned, Base):
         # noinspection PyTypeChecker
         minutes = expiration_minutes.get(self.token_type, settings.verification_token_expiration_minutes)
         expiration_time = self.created_at + dt.timedelta(minutes=minutes)
-        # noinspection PyTypeChecker
         return dt.datetime.now(dt.timezone.utc) < expiration_time
 
     @hybrid_property
@@ -237,7 +236,6 @@ class UserQualification(Owned, Base):
     - `qualities` (str): User's personal qualities.
     - `education` (str): User's education details.
     - `interests` (str): User's job interests.
-    - `is_active` (bool): Indicates whether the qualification is active.
 
     Relationships:
     --------------
@@ -252,7 +250,6 @@ class UserQualification(Owned, Base):
     qualities = Column(String, nullable=True)
     education = Column(String, nullable=True)
     interests = Column(String, nullable=True)
-    is_active = Column(Boolean, nullable=False, server_default=expression.true())
 
     job_ratings = relationship("JobRating", back_populates="user_qualification")
 
