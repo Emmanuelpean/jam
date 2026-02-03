@@ -161,7 +161,6 @@ const Dashboard: React.FC = () => {
 					<ActivityFeedCard
 						icon="clock-history"
 						title="Recent Activity"
-						subtitle="Latest job applications, interviews and updates"
 						badgeValue={recentActivity.length}
 						emptyIcon="inbox"
 						emptyTitle="No recent activity"
@@ -175,7 +174,6 @@ const Dashboard: React.FC = () => {
 						<CardHeader
 							icon="telephone"
 							title="Applications Requiring Follow-up"
-							subtitle="Jobs that need your attention"
 							badgeValue={needsChase.length}
 						/>
 						<Card.Body className="p-0 flex-grow-1 overflow-auto">
@@ -191,12 +189,7 @@ const Dashboard: React.FC = () => {
 			<Row className="g-4 mb-4">
 				<Col xs={12} lg={8} className="table-column order-lg-1">
 					<Card className="shadow-sm border-0 h-100 d-flex flex-column">
-						<CardHeader
-							icon="clock"
-							title="Upcoming Deadlines"
-							subtitle="Jobs that need your attention"
-							badgeValue={upcomingDeadlines.length}
-						/>
+						<CardHeader icon="clock" title="Upcoming Deadlines" badgeValue={upcomingDeadlines.length} />
 						<Card.Body className="p-0 flex-grow-1 overflow-auto">
 							<div className="px-3">
 								<UpcomingDeadlinesTable data={upcomingDeadlines} />
@@ -208,7 +201,6 @@ const Dashboard: React.FC = () => {
 					<ActivityFeedCard
 						icon="calendar-event"
 						title="Upcoming Interviews"
-						subtitle="Scheduled interviews"
 						badgeValue={upcomingInterviews.length}
 						emptyIcon="calendar-x"
 						emptyTitle="No upcoming interviews"

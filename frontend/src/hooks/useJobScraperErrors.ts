@@ -17,11 +17,13 @@ export const useJobScraperErrors = (
 	const { token } = useAuth();
 	const [scraperErrors, setScraperErrors] = useState<Record<string, ErrorCount>>({});
 	const [error, setError] = useState<Error | null>(null);
+	const [loading, setLoading] = useState<boolean>(false);
 
 	useEffect(() => {
 		if (!latestLog || !token) return;
 
 		const fetchErrors = async (): Promise<void> => {
+			setLoading(true);
 			try {
 				// Normalize input to array
 				const logs: JobScrapingServiceLogData[] = normaliseArray(latestLog);
@@ -78,11 +80,13 @@ export const useJobScraperErrors = (
 			} catch (err: any) {
 				setError(err || new Error("Failed to fetch scraper errors"));
 				console.error("Failed to fetch scraper errors:", err);
+			} finally {
+				setLoading(false);
 			}
 		};
 
 		fetchErrors().then();
 	}, [latestLog, token, platform]);
 
-	return { scraperErrors, error };
+	return { scraperErrors, error, loading };
 };

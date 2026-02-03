@@ -5,7 +5,7 @@ import "./DashboardPage.scss";
 interface TableCardHeaderProps {
 	icon: string;
 	title: string;
-	subtitle: string;
+	subtitle?: string;
 	badgeValue?: number;
 	path?: string;
 	onClick?: () => void;

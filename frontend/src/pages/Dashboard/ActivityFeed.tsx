@@ -42,7 +42,7 @@ const getActivityIcon = (type: string): string => {
 interface ActivityFeedCardProps<T> {
 	icon: string;
 	title: string;
-	subtitle: string;
+	subtitle?: string;
 	badgeValue: number;
 	emptyIcon: string;
 	emptyTitle: string;

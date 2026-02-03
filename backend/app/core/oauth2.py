@@ -38,7 +38,7 @@ def verify_access_token(
 ) -> schemas.TokenData:
     """Verify the JWT access token validity and extract the user id and token version.
     :param token: JWT access token to be verified.
-    :param credentials_exception: The exception to be raised if the token is invalid or the user ID is not found.
+    :param credentials_exception: the exception to be raised if the token is invalid or the user ID is not found.
     :returns: object containing the user ID and token version extracted from the token."""
 
     try:

@@ -13,6 +13,7 @@ export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: D
 	const [latestServiceLog, setLatestServiceLog] = useState<JobScrapingServiceLogData | null>(null);
 	const [platformOptions, setPlatformOptions] = useState<SelectOption[]>([]);
 	const [serviceLogError, setServiceLogError] = useState<string | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
 
 	const fetchLatestServiceLog = async (): Promise<void> => {
 		if (!token) return;
@@ -29,6 +30,7 @@ export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: D
 
 	const fetchLatestLogs = async (): Promise<void> => {
 		if (!token) return;
+		setLoading(true);
 		try {
 			const logs: ApiResponse<JobScrapingServiceLogData[]> = await jobScraperServiceLogApi.getAll(token, {
 				start_date: new Date(dateRange.start).toISOString(),
@@ -56,6 +58,8 @@ export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: D
 		} catch (err: any) {
 			setServiceLogError(err.message || "An error occurred while fetching the logs.");
 			console.error("Failed to fetch latest logs:", err);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -82,5 +86,6 @@ export const useJobScraperServiceLogs = (isScraperRunning: boolean, dateRange: D
 		platformOptions,
 		fetchLatestServiceLog,
 		serviceLogError,
+		loading,
 	};
 };

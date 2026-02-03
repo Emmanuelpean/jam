@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     min_password_length: int
     app_demo_username: str
     app_demo_password: str
+    monthly_scrape_quota: int
 
     # Other settings
     log_directory: str

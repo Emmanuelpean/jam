@@ -44,12 +44,14 @@
 * [X] Non data modal should not be affected by the small screen full size
 * [X] Allow badges to collapse on small screens (...)
 * [X] Dropdowns styles are broken in dark mode (in light mode multiselect is not working as expected)
-* [ ] On Small screens, elements on multiple columns and rows are all on same column but spacing differs
+* [ ] On Small screens, modal elements on multiple columns and rows are all on same column but spacing differs
 * [X] Finish the dark mode - Missing dark mode in select widget in time selector
 * [X] Fix the settings table column and modal active states
 * [X] Redo the users table
 * [ ] Add tests for the user table
 * [ ] Add toggle to hide scraped jobs with past deadline
+* [X] Display the AI prompt in the user settings
+* [X] Display reason why scraped job was not rated
 * [X] Display the AI prompt in the user settings
 * [ ] On database migration, automatically add the system prompt and job prompt template to their associated tables.
 * [X] Display reason why scraped job was not rated
@@ -59,4 +61,3 @@
 * [X] Withdrawn, rejected or offered jobs are not shown in the needs chase dashboard anymore.
 * [X] Fix the password reset bug
 * [ ] Run the build first for faster selenium testing?
-* [ ] Move the service runner settings to their own table.

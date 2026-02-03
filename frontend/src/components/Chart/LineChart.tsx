@@ -66,14 +66,12 @@ export const LineChart = ({
 	if (!data || data.length === 0 || data[0]?.data.length === 0) {
 		return (
 			<div
-				style={{
-					display: "flex",
-					justifyContent: "center",
-					alignItems: "center",
-					height: height + "px",
-				}}
+				className="d-flex flex-column justify-content-center align-items-center text-muted"
+				style={{ height: height + "px", width: "100%" }}
 			>
-				<p>No data available.</p>
+				<i className="bi bi-bar-chart-line fs-1 mb-2 opacity-50"></i>
+				<p className="mb-1">No data available</p>
+				<small>Try adjusting the date range or filters</small>
 			</div>
 		);
 	}
@@ -127,7 +125,7 @@ export const LineChart = ({
 	};
 
 	return (
-		<ResponsiveContainer width="100%" height={height}>
+		<ResponsiveContainer width={"100%"} height={height}>
 			<RechartsLineChart data={transformedData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
 				<CartesianGrid strokeDasharray="3 3" stroke="var(--bs-border-color)" />
 				<XAxis

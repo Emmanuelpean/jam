@@ -48,7 +48,7 @@ export interface DataTableProps {
 export interface GenericTableProps {
 	// Data source - entity type from DataContext
 	entityType: EntityType;
-	data?: any[];
+	data?: JamData[];
 
 	// Mode
 	mode?: "default" | "import";

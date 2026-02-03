@@ -5,6 +5,7 @@ import time
 from typing import Callable
 
 from app.utils import AppLogger
+from app.utils import get_last_log_line
 
 
 class ServiceRunner:
@@ -141,4 +142,5 @@ class ServiceRunner:
             "service_kwargs": self.service_kwargs,
             "period_hours": self.period_hours,
             "sleep_until": self.sleep_until,
+            "last_log": get_last_log_line(self.service_name),
         }

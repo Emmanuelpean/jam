@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX, useEffect, useRef, useState } from "react";
 import { jobScraperServiceApi } from "../../../services/api/Services";
 import { useAuth } from "../../../contexts/AuthContext";
 import { SyntheticEvent } from "../../../components/rendering/widgets/WidgetRenders";
@@ -14,6 +14,7 @@ import { useJobScraperErrors } from "../../../hooks/useJobScraperErrors";
 import { getTableIcon } from "../../../components/rendering/view/Icons";
 import { useServiceErrors } from "../../../hooks/useServiceErrors";
 import { DateRange } from "../../../utils/TimeUtils";
+import TimeSelection from "../../../components/TimeSelection/TimeSelection";
 import "../Service.scss";
 import PageHeader from "../../PageHeader/PageHeader";
 
@@ -29,34 +30,48 @@ const JobScraperDashboard = (): JSX.Element => {
 		end: new Date(),
 	});
 	const [selectedPlatform, setSelectedPlatform] = useState("all");
-	const { serviceStatus, remainingTime, fetchStatus, statusError } = useServiceRunnerStatus(jobScraperServiceApi);
+	const { serviceStatus, remainingTime, fetchStatus, statusError, loading: statusLoading } =
+		useServiceRunnerStatus(jobScraperServiceApi);
 	const [formData, setFormData] = useState<FormData>({
-		period_hours: serviceStatus?.period_hours || 0,
-		timedelta_days: serviceStatus?.service_kwargs?.timedelta_days || 0,
+		period_hours: 0,
+		timedelta_days: 0,
 	});
+	const hasInitializedForm = useRef(false);
 	const [loading, setLoading] = useState<boolean>(false);
-	const { showToastSuccess } = useGlobalToast();
-	const { previousServiceLogs, latestServiceLog, platformOptions, fetchLatestServiceLog, serviceLogError } =
-		useJobScraperServiceLogs(serviceStatus?.service_running || false, dateRange);
-	const { scraperErrors: latestScraperErrors, error: lastestScraperRequestError } = useJobScraperErrors(
-		latestServiceLog,
-		selectedPlatform
-	);
-	const { scraperErrors: previousScraperErrors, error: previousScraperRequestError } = useJobScraperErrors(
-		previousServiceLogs,
-		selectedPlatform
-	);
-	const { serviceErrors: lastServiceErrors } = useServiceErrors(latestServiceLog);
-	const { serviceErrors: previousServiceErrors } = useServiceErrors(previousServiceLogs);
 
-	useEffect((): void => {
-		if (serviceStatus?.service_runner_status === "stopped") {
+	useEffect(() => {
+		if (serviceStatus && !hasInitializedForm.current) {
 			setFormData({
-				period_hours: serviceStatus.period_hours || 3,
-				timedelta_days: serviceStatus.service_kwargs?.timedelta_days || 1,
+				period_hours: serviceStatus.period_hours || 0,
+				timedelta_days: serviceStatus.service_kwargs?.timedelta_days || 0,
 			});
+			hasInitializedForm.current = true;
 		}
 	}, [serviceStatus]);
+
+	const { showToastSuccess } = useGlobalToast();
+	const {
+		previousServiceLogs,
+		latestServiceLog,
+		platformOptions,
+		fetchLatestServiceLog,
+		serviceLogError,
+		loading: logsLoading,
+	} = useJobScraperServiceLogs(serviceStatus?.service_running || false, dateRange);
+	const {
+		scraperErrors: latestScraperErrors,
+		error: lastestScraperRequestError,
+		loading: latestScraperErrorsLoading,
+	} = useJobScraperErrors(latestServiceLog, selectedPlatform);
+	const {
+		scraperErrors: previousScraperErrors,
+		error: previousScraperRequestError,
+		loading: previousScraperErrorsLoading,
+	} = useJobScraperErrors(previousServiceLogs, selectedPlatform);
+	const { serviceErrors: lastServiceErrors, loading: lastServiceErrorsLoading } =
+		useServiceErrors(latestServiceLog);
+	const { serviceErrors: previousServiceErrors, loading: previousServiceErrorsLoading } =
+		useServiceErrors(previousServiceLogs);
 
 	const onChangeFormField = (event: React.ChangeEvent<HTMLInputElement> | SyntheticEvent): void => {
 		const target = event.target as HTMLInputElement;
@@ -157,15 +172,27 @@ const JobScraperDashboard = (): JSX.Element => {
 
 			<LatestRunProgress latestLog={latestServiceLog} isRunning={serviceStatus?.service_running || false} />
 
-			<LogViewer api={jobScraperServiceApi} isServiceRunning={serviceStatus?.service_running || false} />
+			<LogViewer
+				api={jobScraperServiceApi}
+				isServiceRunning={serviceStatus?.service_running || false}
+				serviceStatus={serviceStatus}
+			/>
+
+			<div className="status-card mt-4">
+				<h2 className="card-title">
+					<i className="bi bi-funnel me-2"></i>
+					History Filters
+				</h2>
+				<TimeSelection onDateRangeChange={setDateRange} defaultMode="period" />
+			</div>
 
 			<RunHistoryChart
 				serviceLogData={previousServiceLogs}
 				selectedPlatform={selectedPlatform}
 				platformOptions={platformOptions}
 				onPlatformChange={setSelectedPlatform}
-				onDateRangeChange={setDateRange}
 				isRunning={serviceStatus?.service_running || false}
+				loading={logsLoading}
 			/>
 
 			<ErrorSummaryCard
@@ -175,6 +202,13 @@ const JobScraperDashboard = (): JSX.Element => {
 				lastServiceErrors={lastServiceErrors}
 				latestServiceErrors={previousServiceErrors}
 				isRunning={serviceStatus?.service_running || false}
+				loading={
+					logsLoading ||
+					latestScraperErrorsLoading ||
+					previousScraperErrorsLoading ||
+					lastServiceErrorsLoading ||
+					previousServiceErrorsLoading
+				}
 			/>
 		</div>
 	);
