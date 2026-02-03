@@ -1,5 +1,8 @@
 """Centralised test data for both conftest.py and seed_database.py"""
 
+# -------------------------------------------------------- USER --------------------------------------------------------
+
+
 USER_DATA = [
     # Regular user
     {
@@ -111,6 +114,9 @@ STRIPE_USER_INDEX = 8
 assert USER_DATA[STRIPE_USER_INDEX]["stripe_details"], "STRIPE_USER_INDEX does not point to a stripe_details user"
 
 
+# ------------------------------------------------------ SETTINGS ------------------------------------------------------
+
+
 SETTINGS_DATA = [
     {
         "name": "allowlist",
@@ -123,6 +129,10 @@ SETTINGS_DATA = [
         "description": "Default role for new persons",
     },
 ]
+
+
+# ------------------------------------------------- USER QUALIFICATIONS ------------------------------------------------
+
 
 USER_QUALIFICATION_DATA = [
     {"owner_id": 1, "education": "BSc Computer Science"},
