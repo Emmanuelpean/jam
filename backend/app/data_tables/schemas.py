@@ -9,7 +9,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, field_validator
 
-from app.base_schemas import OwnedOut, EmailField, serialize_relationships
+from app.base_schemas import OwnedOut, EmailField, serialise_relationships
 
 
 # ------------------------------------------------------- KEYWORD ------------------------------------------------------
@@ -225,7 +225,7 @@ class JobOut(JobCreate, OwnedOut):
     @classmethod
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
-        return serialize_relationships(value)
+        return serialise_relationships(value)
 
 
 class JobUpdate(JobCreate):
@@ -258,7 +258,7 @@ class InterviewOut(InterviewCreate, OwnedOut):
     @classmethod
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
-        return serialize_relationships(value)
+        return serialise_relationships(value)
 
 
 class InterviewUpdate(InterviewCreate):
@@ -317,7 +317,7 @@ class SpeculativeApplicationOut(SpeculativeApplicationCreate, OwnedOut):
     @classmethod
     def serialize_relationships(cls, value) -> list[int]:
         """Serialize relationships to list of IDs"""
-        return serialize_relationships(value)
+        return serialise_relationships(value)
 
 
 class SpeculativeApplicationUpdate(SpeculativeApplicationCreate):

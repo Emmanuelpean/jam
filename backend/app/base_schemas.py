@@ -1,4 +1,4 @@
-"""Pydantic schemas for input and output data validation and serialization"""
+"""Pydantic schemas for input and output data validation and serialisation"""
 
 import datetime as dt
 from typing import Annotated
@@ -10,8 +10,9 @@ from app.utils import clean_email
 EmailField = Annotated[EmailStr, BeforeValidator(clean_email)]
 
 
-def serialize_relationships(value) -> list[int]:
-    """Serialize relationships to list of IDs"""
+def serialise_relationships(value: list) -> list[int]:
+    """Serialise relationships to list of IDs"""
+
     if not value:
         return []
     if isinstance(value[0], int):
