@@ -1,6 +1,6 @@
 import React from "react";
 import { AggregatorModal } from "../components/DataModal/AggregatorModal";
-import { DataTable } from "../components/table/DataTable";
+import { DataTable } from "../components/DataTable/DataTable";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
 const AggregatorsPage = () => {
