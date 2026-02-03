@@ -15,7 +15,7 @@ test_router = APIRouter(prefix="/test", tags=["testing"])
 
 
 @test_router.delete("/delete-all-customers")
-async def delete_all_stripe_customers() -> dict:
+async def delete_all_stripe_customers() -> dict:  # pragma: no cover
     """Delete ALL Stripe customers, test clocks, and cancel all subscriptions.
     WARNING: This permanently deletes ALL customers and test clocks from Stripe
     and immediately cancels all active subscriptions across your entire account.
@@ -112,7 +112,7 @@ class AdvanceClockRequest(BaseModel):
 async def advance_test_clock(
     request: AdvanceClockRequest,
     current_user: User = Depends(get_current_user),
-) -> dict:
+) -> dict:  # pragma: no cover
     """Advance a Stripe test clock by X days for testing subscriptions.
     This allows you to simulate time passing to test trial expirations,
     billing cycles, and subscription renewals without waiting.
