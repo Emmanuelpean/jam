@@ -10,12 +10,17 @@ import subprocess
 import sys
 import threading
 from pathlib import Path
+from typing import Generator, Any
 
 import psutil
+import pytest
 import requests
 from selenium.webdriver import Keys, ActionChains
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.support.select import Select
+
+from app import models
+from app.config import settings
 
 backend_path = os.path.join(os.path.dirname(__file__), "..", "..", "backend")
 sys.path.insert(0, backend_path)
@@ -30,17 +35,15 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.wait import WebDriverWait
 from react_select import ReactSelect
 
-# noinspection PyUnusedImports
-from tests.conftest import (
-    session,
-    database_url,
-    test_users,
-    engine,
-    test_interviews,
-    test_job_application_updates,
-    test_settings,
-)
-from tests.conftest import *
+
+pytest_plugins = [
+    "tests.fixtures.database",
+    "tests.fixtures.clients",
+    "tests.fixtures.users",
+    "tests.fixtures.test_data",
+    "tests.fixtures.job_scraping",
+    "tests.fixtures.job_rating",
+]
 
 
 LOGS_DIR = Path(os.path.join(os.path.dirname(settings.log_directory), "test_logs"))

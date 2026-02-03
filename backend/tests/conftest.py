@@ -12,7 +12,9 @@ The CRUDTestBase class is in tests/utils/crud_test_base.py
 
 import datetime as dt
 import os
-from typing import Any
+import shutil
+from pathlib import Path
+from typing import Any, Generator
 
 import pytest
 from requests import Response
@@ -20,6 +22,7 @@ from starlette import status
 from starlette.testclient import TestClient
 
 from app import models
+from app.config import settings
 from tests.utils import test_data as td
 
 # Load fixtures from separate modules
@@ -34,6 +37,25 @@ pytest_plugins = [
 
 
 # -------------------------------------------------------- UTILS -------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def use_test_log_directory() -> Generator[None, Any, None]:
+    """Ensure logs are written to test_logs during tests."""
+
+    original_log_directory = settings.log_directory
+    log_path = Path(original_log_directory)
+    if log_path.name != "test_logs":
+        settings.log_directory = str(log_path.with_name("test_logs"))
+    test_log_dir = Path(settings.log_directory)
+    if test_log_dir.exists():
+        for entry in test_log_dir.iterdir():
+            if entry.is_dir():
+                shutil.rmtree(entry)
+            else:
+                entry.unlink()
+    yield
+    settings.log_directory = original_log_directory
 
 
 def open_file(filepath: str) -> str:
