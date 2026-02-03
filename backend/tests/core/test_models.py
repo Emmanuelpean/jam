@@ -82,3 +82,54 @@ class TestUserTokenIsValid:
 
         # Test is_valid property
         assert token.is_valid == expected_valid
+
+
+class TestUserTokenDeletesExistingOfSameType:
+    """Test that creating a new token deletes existing tokens of the same type for the same user."""
+
+    @staticmethod
+    def _add_token(session, user_id, token_type, token):
+        """Helper function to add a token to the database."""
+
+        # noinspection PyArgumentList
+        token = models.UserToken(owner_id=user_id, token=token, token_type=token_type)
+        session.add(token)
+        session.commit()
+
+    def test_new_token_deletes_existing_same_type(self, session, test_regular_user) -> None:
+        """Test that creating a new token deletes existing token of the same type."""
+
+        self._add_token(session, test_regular_user.id, "verification", "first_token")
+        assert session.query(models.UserToken).filter_by(token="first_token").first() is not None
+
+        self._add_token(session, test_regular_user.id, "verification", "second_token")
+        assert session.query(models.UserToken).filter_by(token="first_token").first() is None
+        assert session.query(models.UserToken).filter_by(token="second_token").first() is not None
+
+        # Verify only one token exists for this user and type
+        count = (
+            session.query(models.UserToken).filter_by(owner_id=test_regular_user.id, token_type="verification").count()
+        )
+        assert count == 1
+
+    def test_new_token_does_not_delete_different_type(self, session, test_regular_user) -> None:
+        """Test that creating a new token does not delete tokens of a different type."""
+
+        self._add_token(session, test_regular_user.id, "verification", "verification_token")
+        self._add_token(session, test_regular_user.id, "password_reset", "password_reset_token")
+
+        # Verify both tokens still exist
+        assert session.query(models.UserToken).filter_by(token="verification_token").first() is not None
+        assert session.query(models.UserToken).filter_by(token="password_reset_token").first() is not None
+
+    def test_new_token_does_not_delete_other_users_tokens(self, session, test_regular_user, test_users) -> None:
+        """Test that creating a new token does not delete tokens of the same type for other users."""
+
+        other_user = test_users[1]
+
+        self._add_token(session, test_regular_user.id, "verification", "user1_token")
+        self._add_token(session, other_user.id, "verification", "user2_token")
+
+        # Verify both tokens still exist
+        assert session.query(models.UserToken).filter_by(token="user1_token").first() is not None
+        assert session.query(models.UserToken).filter_by(token="user2_token").first() is not None

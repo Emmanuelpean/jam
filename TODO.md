@@ -25,11 +25,11 @@
 * [ ] Rewrite the test data for the test user
 * [ ] Add payment system for toast
 * [X] Change the service runner to work with multiple workers
-* [ ] Limit the number of scraped jobs per user per month, and set limits for AI rating
+* [X] Limit the number of scraped jobs per user per month, and set limits for AI rating
 * [X] finish adding configs endpoint
 * [X] Add loading to delete for scraped jobs
 * [X] Rename TOAST dashboard
-* [ ] Add loading to graphs on TOAST dashboard
+* [X] Add loading to graphs on TOAST dashboard
 * [X] Add acknowledgements for open source libraries used
 * [X] Add acknowledgements for services
 * [ ] Add favourite filters for scraping
