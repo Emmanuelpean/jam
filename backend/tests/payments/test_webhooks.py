@@ -36,7 +36,6 @@ class TestProcessSubscriptionEvent:
         """subscription.created sets subscription_id and activates premium."""
 
         test_stripe_user.premium.is_active = False
-        stripe_user_id = test_stripe_user.id
         session.commit()
         mock_retrieve.return_value = MagicMock(status="trialing", trial_end=1735689600)
 
@@ -48,7 +47,7 @@ class TestProcessSubscriptionEvent:
         )
 
         assert response.status_code == 200
-        user = session.query(models.User).filter(models.User.id == stripe_user_id).first()
+        user = session.query(models.User).filter(models.User.id == test_stripe_user.id).first()
         assert user.stripe_details.subscription_id == "sub_new_123"
         assert user.premium.is_active is True
 
@@ -60,7 +59,6 @@ class TestProcessSubscriptionEvent:
 
         test_stripe_user.stripe_details.subscription_id = "sub_existing"
         test_stripe_user.premium.is_active = True
-        stripe_user_id = test_stripe_user.id
         session.commit()
         mock_retrieve.return_value = MagicMock(status="canceled", trial_end=None)
 
@@ -70,7 +68,7 @@ class TestProcessSubscriptionEvent:
         )
 
         assert response.status_code == 200
-        user = session.query(models.User).filter(models.User.id == stripe_user_id).first()
+        user = session.query(models.User).filter(models.User.id == test_stripe_user.id).first()
         assert user.premium.is_active is False
 
     @patch("app.payments.webhooks.stripe.Subscription.retrieve_async", new_callable=AsyncMock)
@@ -158,14 +156,16 @@ class TestGetSubscriptionStatus:
     ) -> None:
         """User without subscription_id gets None status without calling Stripe."""
 
-        stripe_user_id = test_stripe_user.id
+        test_stripe_user.stripe_details.subscription_id = None
+        session.commit()
+
         response = client.post(
             WEBHOOK_URL, json=create_webhook_event("customer.created", test_stripe_user.stripe_details.customer_id)
         )
 
         assert response.status_code == 200
         mock_retrieve.assert_not_called()
-        user = session.query(models.User).filter(models.User.id == stripe_user_id).first()
+        user = session.query(models.User).filter(models.User.id == test_stripe_user.id).first()
         assert user.stripe_details.subscription_status is None
         assert user.stripe_details.trial_end_date is None
 
@@ -178,7 +178,6 @@ class TestGetSubscriptionStatus:
         test_stripe_user.stripe_details.subscription_id = "sub_existing"
         session.commit()
         mock_retrieve.return_value = MagicMock(status="active", trial_end=1735689600)
-        stripe_user_id = test_stripe_user.id
 
         response = client.post(
             WEBHOOK_URL, json=create_webhook_event("customer.created", test_stripe_user.stripe_details.customer_id)
@@ -186,7 +185,7 @@ class TestGetSubscriptionStatus:
 
         assert response.status_code == 200
         mock_retrieve.assert_called_once_with("sub_existing")
-        user = session.query(models.User).filter(models.User.id == stripe_user_id).first()
+        user = session.query(models.User).filter(models.User.id == test_stripe_user.id).first()
         assert user.stripe_details.subscription_status == "active"
         assert user.stripe_details.trial_end_date == 1735689600
 

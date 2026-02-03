@@ -143,10 +143,7 @@ def client(session) -> Generator[TestClient, Any, None]:
 
     def override_get_db() -> Generator[orm.Session, Any, None]:
         """Override the default database dependency to use the test database session."""
-        try:
-            yield session
-        finally:
-            session.close()
+        yield session
 
     app.dependency_overrides[database.get_db] = override_get_db  # noqa
     yield TestClient(app)

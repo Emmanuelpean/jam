@@ -14,7 +14,7 @@ from app.core.utils import generate_token, send_email_change_email
 from tests.conftest import CRUDTestBase
 
 
-class TestUsersCRUS(CRUDTestBase):
+class TestUsersCRUD(CRUDTestBase):
     endpoint = "/users"
     admin_only = True
     create_schema = schemas.UserCreate
@@ -620,9 +620,7 @@ class TestDeleteAccount:
 
         # Create a UserQualification for JobRating
         # noinspection PyArgumentList
-        user_qualification = models.UserQualification(
-            experience="Test experience", owner_id=user_id
-        )
+        user_qualification = models.UserQualification(experience="Test experience", owner_id=user_id)
         session.add(user_qualification)
         session.commit()
         user_qualification_id = user_qualification.id
@@ -674,11 +672,15 @@ class TestDeleteAccount:
         assert scraped_job is None
 
         # Verify JobRating was cascade deleted
-        job_rating = session.query(job_rating_models.JobRating).filter(job_rating_models.JobRating.id == job_rating_id).first()
+        job_rating = (
+            session.query(job_rating_models.JobRating).filter(job_rating_models.JobRating.id == job_rating_id).first()
+        )
         assert job_rating is None
 
         # Verify UserQualification was cascade deleted
-        user_qualification = session.query(models.UserQualification).filter(models.UserQualification.id == user_qualification_id).first()
+        user_qualification = (
+            session.query(models.UserQualification).filter(models.UserQualification.id == user_qualification_id).first()
+        )
         assert user_qualification is None
 
     def test_delete_account_invalidates_token(self, regular_user_client, test_regular_user, session) -> None:
