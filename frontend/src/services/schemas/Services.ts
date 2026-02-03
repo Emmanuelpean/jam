@@ -87,6 +87,10 @@ export interface ScrapedJobData extends OwnedOut {
 	geolocation: GeoLocation | null;
 }
 
+export interface ScrapedJobUpdate {
+	is_imported: boolean;
+}
+
 export interface JobRatingData extends BaseOut {
 	overall_score: number | null;
 	technical_score: number | null;
@@ -95,6 +99,8 @@ export interface JobRatingData extends BaseOut {
 	interest_score: number | null;
 	feedback: string | null;
 	is_success: boolean | null;
+	is_skipped: boolean | null;
+	skipped_reason: string | null;
 	error: string | null;
 	scraped_job_id: number | null;
 	user_qualification_id: number | null;

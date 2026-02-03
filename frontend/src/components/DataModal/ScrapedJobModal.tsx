@@ -17,7 +17,7 @@ import { PersonModal } from "./PersonModal";
 import { AggregatorModal } from "./AggregatorModal";
 import { DataContextValue, useDataContext } from "../../contexts/DataContext";
 import { EnrichedJobData, JobData } from "../../services/schemas/DataTables";
-import { ScrapedJobData } from "../../services/schemas/Services";
+import { ScrapedJobData, ScrapedJobUpdate } from "../../services/schemas/Services";
 import { useConfig } from "../../contexts/ConfigContext";
 
 export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
@@ -150,10 +150,18 @@ export const ScrapedJobModal = forwardRef<DataModalHandle, JamDataModalProps>(
 				});
 			}
 
+			if (data?.job_rating?.is_skipped) {
+				result.push({
+					key: "skipped",
+					message: "This job was not scraped as you have exhausted your monthly quota.",
+					variant: "info",
+				});
+			}
+
 			return result.length ? result : null;
 		};
 
-		const transformData = (_scrapedJob: ScrapedJobData) => {
+		const transformData = (_scrapedJob: ScrapedJobData): ScrapedJobUpdate => {
 			return { is_imported: true };
 		};
 

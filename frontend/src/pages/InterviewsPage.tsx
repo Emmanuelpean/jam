@@ -1,5 +1,5 @@
 import React from "react";
-import DataTable from "../components/table/DataTable";
+import DataTable from "../components/DataTable/DataTable";
 import { InterviewModal } from "../components/DataModal/InterviewModal";
 import { tableColumns } from "../components/rendering/view/TableColumns";
 
