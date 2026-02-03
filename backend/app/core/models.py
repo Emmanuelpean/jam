@@ -89,6 +89,7 @@ class User(CommonBase, Base):
 
         # Extract relationship data before calling super().__init__
         preferences_data = kwargs.pop("preferences", None)
+        stripe_details_data = kwargs.pop("stripe_details", None)
         premium_data = kwargs.pop("premium", None)
 
         # Call parent constructor with remaining kwargs
@@ -104,8 +105,14 @@ class User(CommonBase, Base):
         elif not self.preferences:
             self.preferences = UserPreferences()
 
-        # Handle stripe_details
-        if not self.stripe_details:
+        # Handle stripe_details - create an instance if dict provided or if not already set
+        if stripe_details_data:
+            if isinstance(stripe_details_data, dict):
+                # noinspection PyArgumentList
+                self.stripe_details = StripeDetails(**stripe_details_data)
+            else:
+                self.stripe_details = stripe_details_data
+        elif not self.stripe_details:
             self.stripe_details = StripeDetails()
 
         # Handle premium - create instance if dict provided or if not already set

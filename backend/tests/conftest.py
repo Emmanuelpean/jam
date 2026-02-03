@@ -303,6 +303,13 @@ def test_user_qualifications(session, test_users) -> list[models.UserQualificati
     return crd.create_user_qualifications(session, test_users)
 
 
+@pytest.fixture
+def test_stripe_user(session, test_users) -> models.User:
+    """Create test user data with stripe data"""
+
+    return test_users[td.STRIPE_USER_INDEX]
+
+
 # -------------------------------------------------------- OTHER -------------------------------------------------------
 
 
