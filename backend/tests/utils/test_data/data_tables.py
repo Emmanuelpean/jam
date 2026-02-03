@@ -5,6 +5,8 @@ from itertools import groupby
 
 from tests.utils.test_data.utils import CURRENT_DATE, RESOURCE_FILES, DATE_FORMAT, DATETIME_FORMAT
 
+# ------------------------------------------------------ COMPANIES -----------------------------------------------------
+
 COMPANY_DATA = [
     {
         "name": "Tech Corp",
@@ -100,6 +102,7 @@ COMPANY_DATA = [
     },
 ]
 
+# ------------------------------------------------------ LOCATIONS -----------------------------------------------------
 
 LOCATION_DATA = [
     {
@@ -224,6 +227,7 @@ LOCATION_DATA = [
     },
 ]
 
+# ---------------------------------------------------- GEOLOCATIONS ----------------------------------------------------
 
 GEOLOCATION_DATA = [
     {
@@ -379,6 +383,7 @@ GEOLOCATION_DATA = [
     },
 ]
 
+# ----------------------------------------------------- AGGREGATORS ----------------------------------------------------
 
 AGGREGATOR_DATA = [
     {
@@ -463,6 +468,7 @@ AGGREGATOR_DATA = [
     },
 ]
 
+# ------------------------------------------------------ KEYWORDS ------------------------------------------------------
 
 KEYWORD_DATA = [
     {
@@ -591,6 +597,7 @@ KEYWORD_DATA = [
     },
 ]
 
+# ------------------------------------------------------- PERSONS ------------------------------------------------------
 
 PERSON_DATA = [
     {
@@ -783,6 +790,7 @@ PERSON_DATA = [
     },
 ]
 
+# -------------------------------------------------------- JOBS --------------------------------------------------------
 
 JOB_DATA = [
     {
@@ -1267,11 +1275,52 @@ JOB_DATA = [
     },
 ]
 
+# Set the job application datetime in the past few weeks
 JOB_APPLICATION_DATETIME = [CURRENT_DATE - dt.timedelta(weeks=i) for i in range(len(JOB_DATA))]
 for job_application, date in zip(JOB_DATA, JOB_APPLICATION_DATETIME):
     if job_application.get("application_date"):
         job_application["application_date"] = date.strftime(DATETIME_FORMAT)
 
+
+JOB_KEYWORD_MAPPINGS = [
+    {"job_id": 1, "keyword_ids": [1, 2, 6, 7]},
+    {"job_id": 2, "keyword_ids": [2, 3, 4, 13]},
+    {"job_id": 3, "keyword_ids": [3, 2, 14]},
+    {"job_id": 4, "keyword_ids": [12, 10, 11, 9]},
+    {"job_id": 5, "keyword_ids": [2, 3, 14, 15]},
+    {"job_id": 9, "keyword_ids": [9, 10, 11, 22, 23]},
+    {"job_id": 10, "keyword_ids": [8, 1, 18]},
+    {"job_id": 11, "keyword_ids": [16, 5, 2]},
+    {"job_id": 12, "keyword_ids": [2, 3, 4, 1]},
+    {"job_id": 13, "keyword_ids": [2, 14, 15]},
+    {"job_id": 15, "keyword_ids": [2, 3, 17]},
+    {"job_id": 18, "keyword_ids": [29, 26]},
+    {"job_id": 19, "keyword_ids": [28, 26]},
+    {"job_id": 20, "keyword_ids": [27, 26]},
+    {"job_id": 21, "keyword_ids": [27]},
+    {"job_id": 22, "keyword_ids": [26, 27]},
+]
+
+JOB_CONTACT_MAPPINGS = [
+    {"job_id": 1, "person_ids": [1, 3]},
+    {"job_id": 2, "person_ids": [2, 4]},
+    {"job_id": 3, "person_ids": [1]},
+    {"job_id": 4, "person_ids": [4]},
+    {"job_id": 5, "person_ids": [5]},
+    {"job_id": 9, "person_ids": [9]},
+    {"job_id": 10, "person_ids": [15]},
+    {"job_id": 11, "person_ids": [10]},
+    {"job_id": 12, "person_ids": [12]},
+    {"job_id": 13, "person_ids": [13]},
+    {"job_id": 15, "person_ids": [11, 16]},
+    {"job_id": 18, "person_ids": [20]},
+    {"job_id": 19, "person_ids": [18]},
+    {"job_id": 20, "person_ids": [17]},
+    {"job_id": 21, "person_ids": [20]},
+    {"job_id": 22, "person_ids": [21]},
+]
+
+# -------------------------------------------------------- FILES -------------------------------------------------------
 
 FILE_DATA = [
     {
@@ -1366,6 +1415,7 @@ FILE_DATA = [
     },
 ]
 
+# ----------------------------------------------------- INTERVIEWS -----------------------------------------------------
 
 INTERVIEW_DATA = [
     {
@@ -1531,12 +1581,35 @@ INTERVIEW_DATA = [
     },
 ]
 
+# Set the interviews date a few weeks after the job application date
 interviews_sorted = sorted(INTERVIEW_DATA, key=lambda x: x["job_id"])
 grouped = {k: list(v) for k, v in groupby(interviews_sorted, key=lambda x: x["job_id"])}
-for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
-    for i, update in enumerate(grouped[update_key]):
-        update["date"] = (date + dt.timedelta(weeks=4) * (i + 1)).strftime(DATETIME_FORMAT)
+for interview_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
+    for i, interview in enumerate(grouped[interview_key]):
+        interview["date"] = (date + dt.timedelta(weeks=4) * (i + 1)).strftime(DATETIME_FORMAT)
 
+
+INTERVIEW_INTERVIEWER_MAPPINGS = [
+    {"interview_id": 1, "person_ids": [1]},
+    {"interview_id": 2, "person_ids": [2]},
+    {"interview_id": 3, "person_ids": [3, 5]},
+    {"interview_id": 4, "person_ids": [1]},
+    {"interview_id": 5, "person_ids": [4]},
+    {"interview_id": 7, "person_ids": [9]},
+    {"interview_id": 8, "person_ids": [12, 11]},
+    {"interview_id": 9, "person_ids": [13]},
+    {"interview_id": 10, "person_ids": [16]},
+    {"interview_id": 11, "person_ids": [10, 15]},
+    {"interview_id": 12, "person_ids": [15]},
+    {"interview_id": 13, "person_ids": [19]},
+    {"interview_id": 14, "person_ids": [20]},
+    {"interview_id": 15, "person_ids": [18, 17]},
+    {"interview_id": 16, "person_ids": [20]},
+    {"interview_id": 17, "person_ids": [21]},
+    {"interview_id": 18, "person_ids": [17, 19]},
+]
+
+# ----------------------------------------------- JOB APPLICATION UPDATES ----------------------------------------------
 
 JOB_APPLICATION_UPDATE_DATA = [
     {
@@ -1688,103 +1761,44 @@ JOB_APPLICATION_UPDATE_DATA = [
     },
 ]
 
+# Set the job application update date a few weeks after the job application date
 job_application_updates_sorted = sorted(JOB_APPLICATION_UPDATE_DATA, key=lambda x: x["job_id"])
 grouped = {k: list(v) for k, v in groupby(job_application_updates_sorted, key=lambda x: x["job_id"])}
 for update_key, date in zip(grouped, JOB_APPLICATION_DATETIME):
     for i, update in enumerate(grouped[update_key]):
         update["date"] = (date + dt.timedelta(weeks=4) * (i + 1)).strftime(DATETIME_FORMAT)
 
-
-JOB_KEYWORD_MAPPINGS = [
-    {"job_id": 1, "keyword_ids": [1, 2, 6, 7]},
-    {"job_id": 2, "keyword_ids": [2, 3, 4, 13]},
-    {"job_id": 3, "keyword_ids": [3, 2, 14]},
-    {"job_id": 4, "keyword_ids": [12, 10, 11, 9]},
-    {"job_id": 5, "keyword_ids": [2, 3, 14, 15]},
-    {"job_id": 9, "keyword_ids": [9, 10, 11, 22, 23]},
-    {"job_id": 10, "keyword_ids": [8, 1, 18]},
-    {"job_id": 11, "keyword_ids": [16, 5, 2]},
-    {"job_id": 12, "keyword_ids": [2, 3, 4, 1]},
-    {"job_id": 13, "keyword_ids": [2, 14, 15]},
-    {"job_id": 15, "keyword_ids": [2, 3, 17]},
-    {"job_id": 18, "keyword_ids": [29, 26]},
-    {"job_id": 19, "keyword_ids": [28, 26]},
-    {"job_id": 20, "keyword_ids": [27, 26]},
-    {"job_id": 21, "keyword_ids": [27]},
-    {"job_id": 22, "keyword_ids": [26, 27]},
-]
-
-
-JOB_CONTACT_MAPPINGS = [
-    {"job_id": 1, "person_ids": [1, 3]},
-    {"job_id": 2, "person_ids": [2, 4]},
-    {"job_id": 3, "person_ids": [1]},
-    {"job_id": 4, "person_ids": [4]},
-    {"job_id": 5, "person_ids": [5]},
-    {"job_id": 9, "person_ids": [9]},
-    {"job_id": 10, "person_ids": [15]},
-    {"job_id": 11, "person_ids": [10]},
-    {"job_id": 12, "person_ids": [12]},
-    {"job_id": 13, "person_ids": [13]},
-    {"job_id": 15, "person_ids": [11, 16]},
-    {"job_id": 18, "person_ids": [20]},
-    {"job_id": 19, "person_ids": [18]},
-    {"job_id": 20, "person_ids": [17]},
-    {"job_id": 21, "person_ids": [20]},
-    {"job_id": 22, "person_ids": [21]},
-]
-
-
-INTERVIEW_INTERVIEWER_MAPPINGS = [
-    {"interview_id": 1, "person_ids": [1]},
-    {"interview_id": 2, "person_ids": [2]},
-    {"interview_id": 3, "person_ids": [3, 5]},
-    {"interview_id": 4, "person_ids": [1]},
-    {"interview_id": 5, "person_ids": [4]},
-    {"interview_id": 7, "person_ids": [9]},
-    {"interview_id": 8, "person_ids": [12, 11]},
-    {"interview_id": 9, "person_ids": [13]},
-    {"interview_id": 10, "person_ids": [16]},
-    {"interview_id": 11, "person_ids": [10, 15]},
-    {"interview_id": 12, "person_ids": [15]},
-    {"interview_id": 13, "person_ids": [19]},
-    {"interview_id": 14, "person_ids": [20]},
-    {"interview_id": 15, "person_ids": [18, 17]},
-    {"interview_id": 16, "person_ids": [20]},
-    {"interview_id": 17, "person_ids": [21]},
-    {"interview_id": 18, "person_ids": [17, 19]},
-]
-
+# ---------------------------------------------- SPECULATIVE APPLICATIONS ----------------------------------------------
 
 SPECULATIVE_APPLICATION_DATA = [
     {
-        "date": dt.datetime(2025, 1, 8, 9, 30, tzinfo=dt.timezone.utc).strftime(DATETIME_FORMAT),
+        "date": "2025-01-08T09:30:00+0000",
         "note": "Initial speculative application for a research scientist position.",
         "contact_email": "careers@photonicsltd.com",
         "company_id": 1,
         "owner_id": 1,
     },
     {
-        "date": dt.datetime(2025, 1, 15, 14, 45, tzinfo=dt.timezone.utc).strftime(DATETIME_FORMAT),
+        "date": "2025-01-15T14:45:00+0000",
         "contact_email": "hr@photonicsltd.com",
         "company_id": 1,
         "owner_id": 1,
     },
     {
-        "date": dt.datetime(2025, 2, 2, 10, 0, tzinfo=dt.timezone.utc).strftime(DATETIME_FORMAT),
+        "date": "2025-02-02T10:00:00+0000",
         "note": "Speculative application submitted via company website.",
         "company_id": 2,
         "owner_id": 1,
     },
     {
-        "date": dt.datetime(2025, 2, 12, 16, 20, tzinfo=dt.timezone.utc).strftime(DATETIME_FORMAT),
+        "date": "2025-02-12T16:20:00+0000",
         "note": "Reached out regarding potential R&D collaboration opportunities.",
         "contact_email": "contact@nanomaterials.io",
         "company_id": 4,
         "owner_id": 2,
     },
     {
-        "date": dt.datetime(2025, 3, 1, 11, 10, tzinfo=dt.timezone.utc).strftime(DATETIME_FORMAT),
+        "date": "2025-03-01T11:10:00+0000",
         "company_id": 7,
         "owner_id": 1,
     },

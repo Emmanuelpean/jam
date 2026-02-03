@@ -1,4 +1,4 @@
-"""Tests for EIS routers."""
+"""Tests for Job Scraping routers."""
 
 import datetime as dt
 
@@ -7,9 +7,9 @@ from starlette import status
 
 from app import models
 from app.job_email_scraping import schemas
-from tests.utils.crud_test_base import CRUDTestBase
-from tests.utils.create_data.utils import add_to_db
-from tests.utils.test_data.job_scraping_service import JOB_EMAIL_DATA, SCRAPING_FILTER_DATA
+from conftest import CRUDTestBase
+from tests.utils.create_data.utils import create_db_entries
+from tests.utils.test_data.job_scraping import JOB_EMAIL_DATA, SCRAPING_FILTER_DATA
 
 
 # --------------------------------------------------- JOB ALERT EMAILS --------------------------------------------------
@@ -24,7 +24,7 @@ class TestJobAlertEmailCRUD(CRUDTestBase):
         "id": 1,
         "subject": "Updated Python",
     }
-    required_fixture = ["test_eis_service_logs"]
+    required_fixture = ["test_job_scraping_service_logs"]
     actions_to_test = ["get_all"]
     admin_only = True
 
@@ -47,15 +47,22 @@ class TestScrapedJobCRUDRegularUser(CRUDTestBase):
         test_users,
         authorised_clients,
         test_scraped_jobs,
+        session,
     ) -> None:
         """Test retrieving all scraped jobs for the authorised user that are scraped, not imported, active"""
 
         self.get_user_data(test_users, test_scraped_jobs)
         client = self._get_authorised_client(authorised_clients)
+        user = self._get_admin_authorised_user(test_users)
         response = client.get(self.endpoint + "/paged/?page=1&page_size=5&show_past_deadline=true")
         assert response.status_code == status.HTTP_200_OK
         scraped_jobs = response.json()
-        assert scraped_jobs["total"] == 51
+        expected = (
+            session.query(models.ScrapedJob)
+            .filter(models.ScrapedJob.is_imported.is_(False), models.ScrapedJob.owner_id == user.id)
+            .count()
+        )
+        assert scraped_jobs["total"] == expected
         assert len(scraped_jobs["items"]) == 5
 
     def test_get_all_no_past_deadlines(
@@ -91,23 +98,27 @@ class TestScrapedJobCRUDAdminUser(CRUDTestBase):
     admin_only = True
 
 
-# -------------------------------------------------- EIS SERVICE LOGS --------------------------------------------------
+# ------------------------------------=--------- JOB SCRAPING SERVICE LOGS ---------------------------------------------
 
 
-class TestEisServiceLog:
+class TestJobScrapingServiceLog:
     """Test suite for Email Ingestion Service log endpoints"""
 
-    def test_get_service_logs_no_filters(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_no_filters(
+        self, admin_client, test_job_scraping_service_logs, test_platform_stats
+    ) -> None:
         """Test retrieving all service logs without filters"""
 
         response = admin_client.get("/job-scraping-service-logs/")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert len(data) == len(test_eis_service_logs)
+        assert len(data) == len(test_job_scraping_service_logs)
         assert data[0]["run_datetime"] >= data[-1]["run_datetime"]
 
-    def test_get_service_logs_with_start_date(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_with_start_date(
+        self, admin_client, test_job_scraping_service_logs, test_platform_stats
+    ) -> None:
         """Test filtering logs by start date"""
 
         start_date = (dt.datetime.now() - dt.timedelta(days=5)).isoformat()
@@ -118,7 +129,9 @@ class TestEisServiceLog:
         for log in data:
             assert log["run_datetime"] >= start_date
 
-    def test_get_service_logs_with_end_date(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_with_end_date(
+        self, admin_client, test_job_scraping_service_logs, test_platform_stats
+    ) -> None:
         """Test filtering logs by end date"""
 
         end_date = (dt.datetime.now() - dt.timedelta(days=2)).isoformat()
@@ -130,7 +143,9 @@ class TestEisServiceLog:
         for log in data:
             assert log["run_datetime"] <= end_date
 
-    def test_get_service_logs_with_date_range(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_with_date_range(
+        self, admin_client, test_job_scraping_service_logs, test_platform_stats
+    ) -> None:
         """Test filtering logs by date range"""
 
         start_date = (dt.datetime.now() - dt.timedelta(days=7)).isoformat()
@@ -146,7 +161,7 @@ class TestEisServiceLog:
             assert start_date <= log["run_datetime"] <= end_date
 
     def test_get_service_logs_with_date_range_in_url(
-        self, admin_client, test_eis_service_logs, test_platform_stats
+        self, admin_client, test_job_scraping_service_logs, test_platform_stats
     ) -> None:
         """Test filtering logs by date range"""
 
@@ -162,7 +177,7 @@ class TestEisServiceLog:
 
     @pytest.mark.parametrize("limit", [1, 5, 10])
     def test_get_service_logs_with_limit(
-        self, admin_client, test_eis_service_logs, test_platform_stats, limit: int
+        self, admin_client, test_job_scraping_service_logs, test_platform_stats, limit: int
     ) -> None:
         """Test limiting number of returned logs"""
 
@@ -172,7 +187,9 @@ class TestEisServiceLog:
         data = response.json()
         assert len(data) <= limit
 
-    def test_get_service_logs_combined_params(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_combined_params(
+        self, admin_client, test_job_scraping_service_logs, test_platform_stats
+    ) -> None:
         """Test combining multiple query parameters"""
 
         response = admin_client.get("/job-scraping-service-logs/", params={"delta_days": 30, "limit": 5})
@@ -182,20 +199,22 @@ class TestEisServiceLog:
         assert len(data) <= 5
 
     def test_get_service_logs_non_admin_forbidden(
-        self, regular_user_client, test_eis_service_logs, test_platform_stats
+        self, regular_user_client, test_job_scraping_service_logs, test_platform_stats
     ) -> None:
         """Test that non-admin users cannot access service logs"""
 
         response = regular_user_client.get("/job-scraping-service-logs/")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_get_service_logs_unauthenticated(self, client, test_eis_service_logs, test_platform_stats) -> None:
+    def test_get_service_logs_unauthenticated(
+        self, client, test_job_scraping_service_logs, test_platform_stats
+    ) -> None:
         """Test that unauthenticated requests are rejected"""
 
         response = client.get("/job-scraping-service-logs/")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_get_latest_log_success(self, admin_client, test_eis_service_logs, test_platform_stats) -> None:
+    def test_get_latest_log_success(self, admin_client, test_job_scraping_service_logs, test_platform_stats) -> None:
         """Test retrieving the latest service log"""
 
         response = admin_client.get("/job-scraping-service-logs/latest")
@@ -217,13 +236,13 @@ class TestEisServiceLog:
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "No service logs found" in response.json()["detail"]
 
-    def test_get_latest_log_non_admin_forbidden(self, regular_user_client, test_eis_service_logs) -> None:
+    def test_get_latest_log_non_admin_forbidden(self, regular_user_client, test_job_scraping_service_logs) -> None:
         """Test that non-admin users cannot access latest log"""
         response = regular_user_client.get("/job-scraping-service-logs/latest")
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_get_latest_log_unauthenticated(self, client, test_eis_service_logs) -> None:
+    def test_get_latest_log_unauthenticated(self, client, test_job_scraping_service_logs) -> None:
         """Test that unauthenticated requests to latest are rejected"""
 
         response = client.get("/job-scraping-service-logs/latest")
@@ -250,11 +269,8 @@ class TestScrapingFilters(CRUDTestBase):
     def _create_filter(session, owner_id: int = 1, **kwargs) -> models.ScrapingExclusionFilter:
         """Helper to create a scraped job filter"""
 
-        # noinspection PyArgumentList
-        filters = models.ScrapingExclusionFilter(
-            type="title", operator="contains", value="Some", owner_id=owner_id, **kwargs
-        )
-        return add_to_db(session, [filters])[0]
+        data = {"type": "title", "operator": "contains", "value": "Some", "owner_id": owner_id, **kwargs}
+        return create_db_entries(session, models.ScrapingExclusionFilter, data)[0]
 
     def test_delete_filter_without_filtered_jobs(self, session, authorised_clients, test_users) -> None:
         """Should delete filter completely when it has no filtered jobs"""
@@ -268,7 +284,7 @@ class TestScrapingFilters(CRUDTestBase):
         assert deleted_filter is None
 
     def test_delete_filter_with_filtered_jobs(
-        self, session, authorised_clients, test_users, test_eis_service_logs
+        self, session, authorised_clients, test_users, test_job_scraping_service_logs
     ) -> None:
         """Should deactivate filter when it has filtered jobs instead of deleting"""
 
@@ -276,16 +292,15 @@ class TestScrapingFilters(CRUDTestBase):
         filter_id = filter_obj.id
 
         # Add a filtered job
-        # noinspection PyArgumentList
-        scraped_job = models.ScrapedJob(
-            external_job_id="A",
-            platform="saf",
-            title="Engineer",
-            exclusion_filter_id=filter_obj.id,
-            owner_id=filter_obj.owner_id,
-            service_log_id=test_eis_service_logs[0].id,
-        )
-        add_to_db(session, [scraped_job])
+        scraped_job_data = {
+            "external_job_id": "A",
+            "platform": "saf",
+            "title": "Engineer",
+            "exclusion_filter_id": filter_obj.id,
+            "owner_id": filter_obj.owner_id,
+            "service_log_id": test_job_scraping_service_logs[0].id,
+        }
+        create_db_entries(session, models.ScrapedJob, scraped_job_data)
 
         response = self.delete(authorised_clients[0], filter_id)
         assert response.status_code == status.HTTP_409_CONFLICT
@@ -313,7 +328,7 @@ class TestScrapingFilters(CRUDTestBase):
     # ----------------------------------------------------- UPDATE -----------------------------------------------------
 
     def test_update_filter_with_filtered_jobs(
-        self, session, authorised_clients, test_users, test_eis_service_logs
+        self, session, authorised_clients, test_users, test_job_scraping_service_logs
     ) -> None:
         """Should update existing filter when it has filtered jobs"""
 
@@ -321,16 +336,15 @@ class TestScrapingFilters(CRUDTestBase):
         filter_id = filter_obj.id
 
         # Add a filtered job
-        # noinspection PyArgumentList
-        scraped_job = models.ScrapedJob(
-            external_job_id="A",
-            platform="saf",
-            title="Engineer",
-            exclusion_filter_id=filter_id,
-            owner_id=filter_obj.owner_id,
-            service_log_id=test_eis_service_logs[0].id,
-        )
-        add_to_db(session, [scraped_job])
+        scraped_job_data = {
+            "external_job_id": "A",
+            "platform": "saf",
+            "title": "Engineer",
+            "exclusion_filter_id": filter_id,
+            "owner_id": filter_obj.owner_id,
+            "service_log_id": test_job_scraping_service_logs[0].id,
+        }
+        create_db_entries(session, models.ScrapedJob, scraped_job_data)
 
         update_data = {"value": "Updated Title"}
         response = self.put(authorised_clients[0], filter_id, update_data)

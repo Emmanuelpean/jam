@@ -100,7 +100,7 @@ export interface JobRatingData extends BaseOut {
 	feedback: string | null;
 	is_success: boolean | null;
 	is_skipped: boolean | null;
-	skipped_reason: string | null;
+	skip_reason: string | null;
 	error: string | null;
 	scraped_job_id: number | null;
 	user_qualification_id: number | null;

@@ -1,4 +1,4 @@
-"""Pytest fixtures for EIS tests"""
+"""Pytest fixtures for Job Scraping tests"""
 
 import datetime as dt
 from typing import Any, Generator
@@ -98,8 +98,8 @@ def mock_nhs_job_scrapers() -> Generator[type[MockNhsBrightdataJobScraper], Any,
 
 
 @pytest.fixture
-def test_eis_service_log(session) -> models.JobEmailScrapingServiceLog:
-    """Create a test EisServiceLog record"""
+def test_job_scraping_service_log(session) -> models.JobEmailScrapingServiceLog:
+    """Create a test JobEmailScrapingServiceLog record"""
 
     # noinspection PyArgumentList
     service_log = models.JobEmailScrapingServiceLog(run_datetime=dt.datetime.now())
@@ -131,7 +131,7 @@ def job_scraper_with_brightapi_skip(session) -> JobEmailScraper:
 
 
 @pytest.fixture
-def email_record_factory(session, test_users, test_eis_service_log) -> Any:
+def email_record_factory(session, test_users, test_job_scraping_service_log) -> Any:
     """Factory fixture for creating email records in the database."""
 
     def _create(email_id: str, user_index: int = 0) -> tuple[models.JobEmail, list[str]]:
@@ -144,7 +144,7 @@ def email_record_factory(session, test_users, test_eis_service_log) -> Any:
             date_received=email_resource["date"],
             platform=email_resource["platform"],
             body=email_resource["body"],
-            service_log_id=test_eis_service_log.id,
+            service_log_id=test_job_scraping_service_log.id,
         )
 
         # noinspection PyArgumentList

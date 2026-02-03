@@ -11,7 +11,7 @@ import app.job_rating.models as job_rating_models
 from app import models, utils
 from app.core import schemas, oauth2
 from app.core.utils import generate_token, send_email_change_email
-from tests.utils.crud_test_base import CRUDTestBase
+from conftest import CRUDTestBase
 
 
 class TestUsersCRUD(CRUDTestBase):

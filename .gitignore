@@ -3,8 +3,6 @@ __pycache__
 backend/.env
 /.idea
 /.idea/misc.xml
-/backend/app/job_email_scraping/eis_secrets.json
-/backend/app/job_email_scraping/token.pickle
 frontend/.env
 logs/
 

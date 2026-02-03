@@ -61,3 +61,5 @@
 * [X] Withdrawn, rejected or offered jobs are not shown in the needs chase dashboard anymore.
 * [X] Fix the password reset bug
 * [ ] Run the build first for faster selenium testing?
+* [ ] Determine what is_scraped stand for (add is_processed?)
+* [ ] Add a button to kick everyone out

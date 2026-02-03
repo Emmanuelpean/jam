@@ -19,18 +19,6 @@ from tests.utils.create_data.data_tables import (
     create_job_application_updates,
     create_speculative_applications,
 )
-from tests.utils.create_data.job_scraping import (
-    create_scraped_jobs,
-    create_job_scraping_service_logs,
-    create_job_scraping_platform_stats,
-    create_job_scraping_service_errors,
-    create_job_alert_emails,
-    create_scraping_filters,
-)
-from tests.utils.create_data.job_rating import (
-    create_job_rating_service_logs,
-    create_job_ratings,
-)
 
 
 def find_non_owned_entry(entries: list, owner_id: int) -> int:
@@ -254,57 +242,3 @@ def test_speculative_applications(
 ) -> list[models.SpeculativeApplication]:
     """Create test speculative application data"""
     return create_speculative_applications(session, test_users, test_persons)
-
-
-@pytest.fixture
-def test_scraped_jobs(
-    session, test_users, test_job_alert_emails, test_scraping_filters, test_geolocations
-) -> list[models.ScrapedJob]:
-    """Create test job alert email jobs"""
-    return create_scraped_jobs(session, test_job_alert_emails, test_users, test_scraping_filters)
-
-
-@pytest.fixture
-def test_eis_service_logs(session) -> list[models.JobEmailScrapingServiceLog]:
-    """Create test service logs"""
-    return create_job_scraping_service_logs(session)
-
-
-@pytest.fixture
-def test_platform_stats(session, test_eis_service_logs) -> list[models.JobEmailScrapingPlatformStat]:
-    """Create test platform stats"""
-    return create_job_scraping_platform_stats(session, test_eis_service_logs)
-
-
-@pytest.fixture
-def test_eis_service_errors(session, test_eis_service_logs) -> list[models.JobEmailScrapingServiceError]:
-    """Create test job_email_scraping service errors"""
-    return create_job_scraping_service_errors(session, test_eis_service_logs)
-
-
-@pytest.fixture
-def test_job_alert_emails(session, test_users, test_eis_service_logs) -> list[models.JobEmail]:
-    """Create test job alert emails"""
-    return create_job_alert_emails(session, test_users, test_eis_service_logs)
-
-
-@pytest.fixture
-def test_job_rating_service_logs(session) -> list[models.JobRatingServiceLog]:
-    """Create test job rating service logs"""
-    return create_job_rating_service_logs(session)
-
-
-@pytest.fixture
-def test_job_ratings(
-    session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs, test_ai_prompts
-) -> list[models.JobRating]:
-    """Create test job ratings"""
-    return create_job_ratings(
-        session, test_users, test_scraped_jobs, test_user_qualifications, test_job_rating_service_logs, test_ai_prompts
-    )
-
-
-@pytest.fixture
-def test_scraping_filters(session, test_users) -> list[models.ScrapingExclusionFilter]:
-    """Create test scraped job filter data"""
-    return create_scraping_filters(session, test_users)

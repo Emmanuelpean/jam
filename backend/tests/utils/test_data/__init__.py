@@ -1,9 +1,9 @@
 """Centralised test data for both conftest.py and seed_database.py"""
 
-from tests.utils.test_data.basics import *
+from tests.utils.test_data.core import *
 from tests.utils.test_data.data_tables import *
-from tests.utils.test_data.job_rating_service import *
-from tests.utils.test_data.job_scraping_service import *
+from tests.utils.test_data.job_rating import *
+from tests.utils.test_data.job_scraping import *
 
 
 def validate_ownership_integrity_detailed(data_collections: dict) -> dict:
