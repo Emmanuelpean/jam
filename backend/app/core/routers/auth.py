@@ -23,7 +23,7 @@ def login(
     user_credentials: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(database.get_db),
 ) -> dict[str, str]:
-    """Login a user.
+    """Log in a user.
     :param user_credentials: The user credentials (note: username is the email field)
     :param db: The database session
     :returns: The access token dictionary
@@ -39,7 +39,7 @@ def login(
     # Find the user in the list based on the email provided
     user = db.query(models.User).filter(models.User.email == user_email).first()
 
-    # Check that the user exist and verify the password
+    # Check that the user exists and verify the password
     if user is None or not utils.verify_password(user_credentials.password, user.password):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid credentials.")
 
@@ -63,7 +63,7 @@ def login(
                 detail=result.message,
             )
 
-    # Update the user last login
+    # Update the user last login date
     user.last_login = dt.datetime.now(dt.timezone.utc)
     db.commit()
 
