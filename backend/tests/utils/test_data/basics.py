@@ -63,8 +63,8 @@ USER_DATA = [
     },
     # User with stripe details
     {
-        "email": "",
-        "password": "",
+        "email": "strip_customer@example.com",
+        "password": "password6",
         "is_verified": True,
         "stripe_details": {"customer_id": "cus_test_123", "subscription_id": "sub_id"},
     },
