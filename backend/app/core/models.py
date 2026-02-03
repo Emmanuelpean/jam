@@ -4,7 +4,7 @@ import datetime as dt
 import math
 from typing import Any
 
-from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, CheckConstraint
+from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, CheckConstraint, event
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import expression
@@ -223,6 +223,18 @@ class UserToken(Owned, Base):
 
         time_since_last_email = int((dt.datetime.now(dt.timezone.utc) - self.created_at).total_seconds())
         return math.ceil(settings.verification_email_min_interval_seconds - time_since_last_email)
+
+
+@event.listens_for(UserToken, "before_insert")
+def delete_existing_tokens_of_same_type(mapper, connection, target):
+    """Delete existing tokens of the same type for the same user before inserting a new one."""
+
+    _ = mapper
+    connection.execute(
+        UserToken.__table__.delete().where(
+            (UserToken.owner_id == target.owner_id) & (UserToken.token_type == target.token_type)
+        )
+    )
 
 
 class UserQualification(Owned, Base):
