@@ -7,9 +7,8 @@ import os
 import sys
 
 from app.database import session_local
-from tests.utils.create_data import (
-    delete_user,
-    create_users,
+from tests.utils.create_data.core import delete_user, create_users
+from tests.utils.create_data.data_tables import (
     create_companies,
     create_locations,
     create_aggregators,
@@ -18,10 +17,12 @@ from tests.utils.create_data import (
     create_jobs,
     create_files,
     create_interviews,
+    create_job_application_updates,
+)
+from tests.utils.create_data.job_scraping import (
     create_job_alert_emails,
     create_scraped_jobs,
     create_job_scraping_service_logs,
-    create_job_application_updates,
     create_scraping_filters,
 )
 

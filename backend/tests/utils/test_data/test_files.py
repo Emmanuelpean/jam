@@ -11,7 +11,7 @@ def get_resources_path() -> Path:
     """Get the path to the resources folder"""
 
     current_dir = Path(__file__).parent
-    return current_dir / "../../resources"
+    return current_dir / "../../utils/resources"
 
 
 def load_file_as_base64(filename: str) -> str | None:

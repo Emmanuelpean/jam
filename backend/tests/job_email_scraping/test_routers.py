@@ -7,8 +7,8 @@ from starlette import status
 
 from app import models
 from app.job_email_scraping import schemas
-from tests.conftest import CRUDTestBase
-from tests.utils.create_data import add_to_db
+from tests.utils.crud_test_base import CRUDTestBase
+from tests.utils.create_data.utils import add_to_db
 from tests.utils.test_data.job_scraping_service import JOB_EMAIL_DATA, SCRAPING_FILTER_DATA
 
 
