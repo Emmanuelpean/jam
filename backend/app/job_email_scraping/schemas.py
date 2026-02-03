@@ -175,7 +175,7 @@ class JobEmailScrapingPlatformStatOut(Out):
     service_log_id: int | None = None
 
 
-# -------------------------------------------------- EIS SERVICE ERROR -------------------------------------------------
+# --------------------------------------------- JOB SCRAPING SERVICE ERROR ---------------------------------------------
 
 
 class JobEmailScrapingServiceErrorOut(Out):

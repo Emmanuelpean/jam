@@ -50,7 +50,7 @@ class JobEmailScraper(EmailService):
 
     def create_service_log(self, **kwargs) -> JobEmailScrapingServiceLog:
         """Create a new service log entry
-        :param kwargs: EisServiceLog keyword arguments"""
+        :param kwargs: JobEmailScrapingServiceLog keyword arguments"""
 
         # noinspection PyArgumentList
         service_log_entry = JobEmailScrapingServiceLog(**kwargs)
@@ -66,7 +66,7 @@ class JobEmailScraper(EmailService):
         **kwargs,
     ) -> JobEmailScrapingPlatformStat:
         """Create a new platform statistics entry
-        :param service_log: associated EisServiceLog instance
+        :param service_log: associated JobEmailScrapingServiceLog instance
         :param platform: Platform enum value
         :param kwargs: PlatformStat keyword arguments"""
 
@@ -95,15 +95,15 @@ class JobEmailScraper(EmailService):
         self.db.refresh(platform_stats)
         return platform_stats
 
-    def log_eis_service_error(
+    def log_service_error(
         self,
         service_log: JobEmailScrapingServiceLog,
         exc: Exception | str,
     ) -> JobEmailScrapingServiceError:
-        """Create an EisServiceError for a caught exception.
-        :param service_log: associated EisServiceLog instance
+        """Create a JobEmailScrapingServiceError for a caught exception.
+        :param service_log: associated JobEmailScrapingServiceLog instance
         :param exc: the caught exception
-        :return: EisServiceError instance"""
+        :return: JobEmailScrapingServiceError instance"""
 
         tb = traceback.format_exc()
         # noinspection PyArgumentList
@@ -152,7 +152,7 @@ class JobEmailScraper(EmailService):
         """Read and save an email to the database
         :param email_id: Email ID
         :param user: User entry associated with this email
-        :param service_log_id: ID of the EisServiceLog instance associated with this email
+        :param service_log_id: ID of the JobEmailScrapingServiceLog instance associated with this email
         :param forwarded: Whether the email was forwarded
         :return: JobEmails instance and whether the record was created or already existing"""
 
@@ -391,7 +391,7 @@ class JobEmailScraper(EmailService):
     ) -> None:
         """For each user, get and save each new email, then extract the job ids and job data.
         :param timedelta_days: Number of days to search for emails
-        :param service_log: EIS Service log entry"""
+        :param service_log: JobEmailScrapingServiceLog entry"""
 
         # Get the list of active users with TOAST active
         users = (
@@ -428,7 +428,7 @@ class JobEmailScraper(EmailService):
                 service_log.email_found_n += len(email_ids)
                 self.logger.info(f"Found {len(email_ids)} emails")
             except Exception as exception:
-                self.log_eis_service_error(service_log, exception)
+                self.log_service_error(service_log, exception)
                 self.logger.exception(f"Failed to search messages due to error: {exception}. Skipping user.")
                 email_ids = []
 
@@ -447,7 +447,7 @@ class JobEmailScraper(EmailService):
                         self.logger.info("Email already exists in database. Skipping email.")
 
                 except Exception as exception:
-                    self.log_eis_service_error(service_log, exception)
+                    self.log_service_error(service_log, exception)
                     self.logger.exception(
                         f"Failed to get and save email data due to error: {exception}. Skipping email."
                     )
@@ -470,7 +470,7 @@ class JobEmailScraper(EmailService):
         try:
             jobs = JOB_PARSERS[email_record.platform](email_record.body)
         except Exception as exception:
-            self.log_eis_service_error(service_log, exception)
+            self.log_service_error(service_log, exception)
             self.logger.exception(
                 f"Failed to parse email ID {email_record.external_email_id} due to error: {exception}."
                 f" Skipping email."
@@ -488,7 +488,7 @@ class JobEmailScraper(EmailService):
             self.logger.info(f"Extracted and saved {len(jobs)} job IDs from {email_record.platform}")
         except Exception as exception:
             error = f"Failed to save job IDs for email ID {email_record.external_email_id} due to error: {exception}. Skipping email."
-            self.log_eis_service_error(service_log, error)
+            self.log_service_error(service_log, error)
             self.logger.exception(error)
 
     def scrape_jobs(self, service_log: JobEmailScrapingServiceLog) -> None:
@@ -522,7 +522,7 @@ class JobEmailScraper(EmailService):
                     f"Failed to check filtering for job ID {job_record.external_job_id} due to error: {exception}. "
                     f"Proceeding with scraping."
                 )
-                self.log_eis_service_error(service_log, error)
+                self.log_service_error(service_log, error)
                 self.logger.exception(error)
 
             try:
@@ -538,7 +538,7 @@ class JobEmailScraper(EmailService):
                     f"Failed to check favouring for job ID {job_record.external_job_id} due to error: {exception}. "
                     f"Proceeding with scraping."
                 )
-                self.log_eis_service_error(service_log, error)
+                self.log_service_error(service_log, error)
                 self.logger.exception(error)
 
             # Find any existing scraped job data in the database

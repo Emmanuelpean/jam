@@ -55,7 +55,7 @@ app.include_router(data_table_routers.speculative_application_update_router)
 # Job Scraping routers
 app.include_router(job_scraping_routers.scraped_job_router)
 app.include_router(job_scraping_routers.job_alert_email_router)
-app.include_router(job_scraping_routers.eis_service_log_router)
+app.include_router(job_scraping_routers.job_scraping_service_log_router)
 app.include_router(job_scraping_routers.scraper_router)
 app.include_router(job_scraping_routers.email_scraper_service_router)
 app.include_router(job_scraping_routers.scraping_filter_router)

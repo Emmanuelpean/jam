@@ -6,7 +6,7 @@ import pytest
 from starlette import status
 
 from app.job_rating import schemas
-from tests.utils.crud_test_base import CRUDTestBase
+from conftest import CRUDTestBase
 
 
 # ----------------------------------------------------- JOB RATINGS ----------------------------------------------------
@@ -21,7 +21,7 @@ class TestJobRatingCRUDAdminUser(CRUDTestBase):
     admin_only = True
 
 
-# -------------------------------------------------- EIS SERVICE LOGS --------------------------------------------------
+# ---------------------------------------------- JOB RATING SERVICE LOGS -----------------------------------------------
 
 
 class TestServiceLog:

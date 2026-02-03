@@ -1,4 +1,4 @@
-"""FastAPI routers for the email ingestion service (EIS) endpoints.
+"""FastAPI routers for the job email scraping service endpoints.
 
 Provides REST API endpoints for managing job alert emails, scraped job postings,
 and service execution logs with CRUD operations and admin access controls."""
@@ -220,15 +220,15 @@ generate_data_table_crud_router(
 )
 
 
-# -------------------------------------------------- EIS SERVICE LOGS --------------------------------------------------
+# ---------------------------------------------- JOB SCRAPING SERVICE LOGS ---------------------------------------------
 
 
 # Email Ingestion Service Log router
-eis_service_log_router = APIRouter(prefix="/job-scraping-service-logs", tags=["job-scraping-service-logs"])
+job_scraping_service_log_router = APIRouter(prefix="/job-scraping-service-logs", tags=["job-scraping-service-logs"])
 
 
 # GET endpoint for admins to get the service logs
-@eis_service_log_router.get("/", response_model=list[schemas.JobEmailScrapingServiceLogOut])
+@job_scraping_service_log_router.get("/", response_model=list[schemas.JobEmailScrapingServiceLogOut])
 def get_service_logs_by_date_range(
     start_date: dt.datetime | None = Query(None, description="Start date for filtering (ISO format)"),
     end_date: dt.datetime | None = Query(None, description="End date for filtering (ISO format)"),
@@ -258,7 +258,7 @@ def get_service_logs_by_date_range(
 
 
 # GET endpoint for admin user to get the latest service log
-@eis_service_log_router.get("/latest", response_model=schemas.JobEmailScrapingServiceLogOut)
+@job_scraping_service_log_router.get("/latest", response_model=schemas.JobEmailScrapingServiceLogOut)
 def get_latest(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),

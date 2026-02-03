@@ -1,5 +1,7 @@
 """Test data for job rating service related tests."""
 
+# ----------------------------------------------------- JOB RATINGS ----------------------------------------------------
+
 JOB_RATING_DATA = [
     {
         "scraped_job_id": 1,
@@ -40,6 +42,8 @@ JOB_RATING_DATA = [
         "job_prompt": "This is the AI prompt",
     },
 ]
+
+# ----------------------------------------------- JOB RATING SERVICE LOGS ----------------------------------------------
 
 JOB_RATING_SERVICE_LOG_DATA = [
     {

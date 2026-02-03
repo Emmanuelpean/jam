@@ -83,64 +83,34 @@ def seed_database() -> None:
     try:
         # App data
         users = create_users(db, None, 12)
-        settings = create_settings(db)
+        create_settings(db)
         ai_prompts = create_ai_prompts(db)
 
         # Table data
         keywords = create_keywords(db, users)
         aggregators = create_aggregators(db, users)
-        geolocations = create_geolocations(db)
+        create_geolocations(db)
         locations = create_locations(db, users)
         companies = create_companies(db, users)
         people = create_people(db, users, companies)
         files = create_files(db, users)
         jobs = create_jobs(db, keywords, people, users, companies, locations, aggregators, files)
-        interviews = create_interviews(db, people, users, locations, jobs)
-        job_application_updates = create_job_application_updates(db, users, jobs)
+        create_interviews(db, people, users, locations, jobs)
+        create_job_application_updates(db, users, jobs)
         user_qualifications = create_user_qualifications(db, users)
-        speculative_applications = create_speculative_applications(db, users, people)
+        create_speculative_applications(db, users, people)
 
-        # EIS data
+        # Job Scraping data
         service_logs = create_job_scraping_service_logs(db)
-        platform_stats = create_job_scraping_platform_stats(db, service_logs)
-        eis_service_errors = create_job_scraping_service_errors(db, service_logs)
+        create_job_scraping_platform_stats(db, service_logs)
+        create_job_scraping_service_errors(db, service_logs)
         alert_emails = create_job_alert_emails(db, users, service_logs)
         scraping_filters = create_scraping_filters(db, users)
         scraped_jobs = create_scraped_jobs(db, alert_emails, users, scraping_filters)
 
-        # Job Ratings data
+        # Job Rating data
         job_rating_service_logs = create_job_rating_service_logs(db)
-        job_ratings = create_job_ratings(
-            db, users, scraped_jobs, user_qualifications, job_rating_service_logs, ai_prompts
-        )
-
-        print("\n" + "=" * 50)
-        print("DATABASE SEEDING COMPLETED SUCCESSFULLY!")
-        print("=" * 50)
-        print(f"Users: {len(users)}")
-        print(f"Settings: {len(settings)}")
-        print(f"AI Prompts: 2 (system prompt + job template)")
-        print(f"Companies: {len(companies)}")
-        print(f"Geolocations: {len(geolocations)}")
-        print(f"Locations: {len(locations)}")
-        print(f"Aggregators: {len(aggregators)}")
-        print(f"Keywords: {len(keywords)}")
-        print(f"People: {len(people)}")
-        print(f"Jobs: {len(jobs)}")
-        print(f"Files: {len(files)}")
-        print(f"Interviews: {len(interviews)}")
-        print(f"Speculative Applications: {len(speculative_applications)}")
-        print(f"Service Logs: {len(service_logs)}")
-        print(f"Job Alert Emails: {len(alert_emails)}")
-        print(f"Scraped Jobs: {len(scraped_jobs)}")
-        print(f"Job Application Updates: {len(job_application_updates)}")
-        print(f"Platform Stats: {len(platform_stats)}")
-        print(f"EIS Service Errors: {len(eis_service_errors)}")
-        print(f"Job Filters: {len(scraping_filters)}")
-        print(f"User Qualifications: {len(user_qualifications)}")
-        print(f"Job Rating Service Logs: {len(job_rating_service_logs)}")
-        print(f"Job Ratings: {len(job_ratings)}")
-        print("=" * 50)
+        create_job_ratings(db, users, scraped_jobs, user_qualifications, job_rating_service_logs, ai_prompts)
 
     except Exception as e:
         print(f"Error during seeding: {e}")

@@ -29,7 +29,7 @@ class TestScoreScrapedJobs(object):
         assert len(service_log.rated_job_failed_ids) == 0
         assert len(service_log.user_found_ids) == len(self.get_premium_users(session))
         assert len(service_log.user_processed_ids) == len(self.get_premium_users(session)) - 1
-        job_prompt = """### Candidate Profile
+        job_prompt = f"""### Candidate Profile
 - **Experience**: Not provided
 - **Education**: BSc Computer Science
 - **Skills**: Not provided
@@ -37,14 +37,14 @@ class TestScoreScrapedJobs(object):
 - **Interests**: Not provided
 
 ### Job Details
-- **Title**: Business Intelligence Developer
-- **Company**: CyberSecure Ltd
-- **Description**: Build scalable systems that impact millions of users...
+- **Title**: {job_ratings[0].scraped_job.title}
+- **Company**: {job_ratings[0].scraped_job.company}
+- **Description**: {job_ratings[0].scraped_job.description}
 """
         assert job_ratings[0].job_prompt == job_prompt
 
     def test_skipped(
-        self, session, test_scraped_jobs, test_user_qualifications, test_eis_service_logs, test_ai_prompts
+        self, session, test_scraped_jobs, test_user_qualifications, test_job_scraping_service_logs, test_ai_prompts
     ) -> None:
         """Test scoring scraped jobs successfully"""
 
@@ -58,7 +58,7 @@ class TestScoreScrapedJobs(object):
             is_failed=False,
             description="A valid description.",
             owner_id=3,
-            service_log_id=test_eis_service_logs[0].id,
+            service_log_id=test_job_scraping_service_logs[0].id,
         )
         session.add(scraped_job)
         session.commit()

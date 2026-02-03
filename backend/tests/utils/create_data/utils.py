@@ -2,10 +2,8 @@
 
 import copy
 
-from app import models
 
-
-def override_entries_properties(data: list[dict], *args) -> list[dict]:
+def override_properties(data: list[dict], *args) -> list[dict]:
     """Override the owner_id in a list of dictionaries
     :param data: list of model entries to override
     :param args: tuples of (key to override, list of models to get new IDs from)"""
@@ -25,17 +23,7 @@ def override_entries_properties(data: list[dict], *args) -> list[dict]:
     return data
 
 
-def add_to_db(db, items: list[models.CommonBase]) -> list:
-    """Add a list of items to the database and commit"""
-
-    db.add_all(items)
-    db.commit()
-    for item in items:
-        db.refresh(item)
-    return items
-
-
-def add_to_db2(db, model, data: list | dict) -> list:
+def create_db_entries(db, model, data: list | dict) -> list:
     """Add a list of items to the database and commit
     :param db: database session
     :param model: model class to create entries from
