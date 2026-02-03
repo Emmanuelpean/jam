@@ -11,7 +11,7 @@ from app.models import User
 from app.payments import stripe, logger
 
 
-async def _create_customer(user: User) -> stripe.Customer:
+async def create_customer(user: User) -> stripe.Customer:
     """Create a Stripe customer, with test clock if in test mode.
     :param user: User object
     :return: Customer object"""
@@ -53,14 +53,14 @@ async def get_or_create_stripe_customer(
                 else:
                     logger.info(f"Retrieved existing Stripe customer {customer.id} for user {user.id}")
             else:
-                customer = await _create_customer(user)
+                customer = await create_customer(user)
                 user.stripe_details.customer_id = customer.id
                 db.commit()
                 logger.info(f"Created new Stripe customer {customer.id} for user {user.id}")
 
         # If no customer, create one
         else:
-            customer = await _create_customer(user)
+            customer = await create_customer(user)
             user.stripe_details.customer_id = customer.id
             db.commit()
             logger.info(f"Created new Stripe customer {customer.id} for user {user.id}")
