@@ -53,12 +53,20 @@ USER_DATA = [
         "is_verified": True,
         "premium": {"is_active": True},
     },
+    # Demo user
     {
         "email": "demo@example.com",
         "password": "password5",
         "is_verified": True,
         "premium": {"is_active": True},
         "is_demo": True,
+    },
+    # User with stripe details
+    {
+        "email": "",
+        "password": "",
+        "is_verified": True,
+        "stripe_details": {"customer_id": "cus_test_123", "subscription_id": "sub_id"},
     },
 ]
 
@@ -88,11 +96,19 @@ assert USER_DATA[DEMO_USER_INDEX]["is_demo"], "DEMO_USER_INDEX does not point to
 
 # TOAST user 1
 TOAST_USER_1_INDEX = 5
-# assert USER_DATA[TOAST_USER_1_INDEX]["premium_active"]
+assert USER_DATA[TOAST_USER_1_INDEX]["premium"]
 
 # TOAST user 2
 TOAST_USER_INDEX_2 = 6
-# assert USER_DATA[TOAST_USER_INDEX_2]["premium_active"]
+assert USER_DATA[TOAST_USER_INDEX_2]["premium"]
+
+# Demo user
+DEMO_USER_INDEX = 7
+assert USER_DATA[DEMO_USER_INDEX]["is_demo"], "DEMO_USER_INDEX does not point to a demo user"
+
+# Stripe user
+STRIPE_USER_INDEX = 8
+assert USER_DATA[STRIPE_USER_INDEX]["stripe_details"], "STRIPE_USER_INDEX does not point to a stripe_details user"
 
 
 SETTINGS_DATA = [
