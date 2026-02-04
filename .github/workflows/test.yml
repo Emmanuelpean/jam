@@ -135,8 +135,7 @@ jobs:
             --cov-report=xml \
             --junitxml=reports/tests/tests.xml
 
-          pytest -n auto --dist loadgroup \
-            ./frontend/tests/test_user_settings.py::TestPremiumSettingsPage -v
+          pytest -n auto --dist loadgroup ./frontend/tests -v
 
       - name: Upload test logs and screenshots
         uses: actions/upload-artifact@v4

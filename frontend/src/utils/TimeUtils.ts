@@ -56,7 +56,7 @@ export const formatDuration = (seconds: number | null): string => {
 	}
 };
 
-export const periodToDays = (amount: number, unit: "days" | "weeks" | "months" | "years"): number => {
+export const periodToDays = (amount: number, unit: TimeUnit): number => {
 	switch (unit) {
 		case "days":
 			return amount;
@@ -76,7 +76,7 @@ export interface DateRange {
 	end: Date | string;
 }
 
-export const getDateRange = (amount: number, unit: "days" | "weeks" | "months" | "years"): DateRange => {
+export const getDateRange = (amount: number, unit: TimeUnit): DateRange => {
 	const days: number = periodToDays(amount, unit);
 
 	const end = new Date();
@@ -87,3 +87,15 @@ export const getDateRange = (amount: number, unit: "days" | "weeks" | "months" |
 };
 
 export type TimeUnit = "days" | "weeks" | "months" | "years";
+
+export const ONE_HOUR_IN_SECONDS = 3600;
+
+export const formatScheduledTime = (date: Date): string => {
+	return date.toLocaleDateString("en-GB", {
+		weekday: "long",
+		day: "numeric",
+		month: "long",
+		hour: "2-digit",
+		minute: "2-digit",
+	});
+};

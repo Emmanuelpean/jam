@@ -1,4 +1,4 @@
-import React, { createContext, JSX, ReactNode, useEffect } from "react";
+import React, { createContext, JSX, ReactNode, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
@@ -34,6 +34,22 @@ import { ProgressOverlayProvider } from "./contexts/useProgressOverlayContext";
 import { ScrapedJobsPage } from "./pages/ScrapedJobsPage";
 import { StyleGuidePage } from "./pages/StylePage";
 import { ConfigProvider } from "./contexts/ConfigContext";
+import { MaintenanceBanner } from "./components/MaintenanceBanner/MaintenanceBanner";
+import { MaintenancePage } from "./pages/MaintenancePage/MaintenancePage";
+
+declare global {
+	interface Window {
+		__TEST_MAINTENANCE_MODE__?: boolean;
+	}
+}
+
+function isMaintenanceModeEnabled(): boolean {
+	// Allow test override via window global (for Selenium tests)
+	if (typeof window !== "undefined" && window.__TEST_MAINTENANCE_MODE__ !== undefined) {
+		return window.__TEST_MAINTENANCE_MODE__;
+	}
+	return process.env.REACT_APP_MAINTENANCE_MODE === "true";
+}
 
 export function useSwetrixPageViews() {
 	const location = useLocation();
@@ -71,37 +87,40 @@ function AppLayout({ children }: AppLayoutProps): JSX.Element {
 	].includes(normalisedPathname);
 
 	return (
-		<div style={{ display: "flex", minHeight: "100vh" }}>
-			{currentUser && <Sidebar />}
-			<div style={{ flex: 1, minWidth: 0 }}>
-				<div className={!isAuthPage ? `main-content` : ""}>
-					{isLoading && (
-						<div className="global-loading-overlay">
-							<div className="d-flex flex-column justify-content-center align-items-center h-100">
-								<div className="spinner-border mb-3" role="status" id="loading-spinner">
-									<span className="visually-hidden">Loading...</span>
-								</div>
-								<p className="mb-3">{loadingMessage}</p>
-								{progress !== undefined && (
-									<div className="progress" style={{ width: "350px" }}>
-										<div
-											className="progress-bar progress-bar-striped progress-bar-animated"
-											role="progressbar"
-											style={{ width: `${progress}%` }}
-											aria-valuenow={progress}
-											aria-valuemin={0}
-											aria-valuemax={100}
-										/>
-										<span className="progress-text">{progress}%</span>
+		<>
+			<MaintenanceBanner />
+			<div style={{ display: "flex", minHeight: "100vh" }}>
+				{currentUser && <Sidebar />}
+				<div style={{ flex: 1, minWidth: 0 }}>
+					<div className={!isAuthPage ? `main-content` : ""}>
+						{isLoading && (
+							<div className="global-loading-overlay">
+								<div className="d-flex flex-column justify-content-center align-items-center h-100">
+									<div className="spinner-border mb-3" role="status" id="loading-spinner">
+										<span className="visually-hidden">Loading...</span>
 									</div>
-								)}
+									<p className="mb-3">{loadingMessage}</p>
+									{progress !== undefined && (
+										<div className="progress" style={{ width: "350px" }}>
+											<div
+												className="progress-bar progress-bar-striped progress-bar-animated"
+												role="progressbar"
+												style={{ width: `${progress}%` }}
+												aria-valuenow={progress}
+												aria-valuemin={0}
+												aria-valuemax={100}
+											/>
+											<span className="progress-text">{progress}%</span>
+										</div>
+									)}
+								</div>
 							</div>
-						</div>
-					)}
-					{!isLoading && <div>{children}</div>}
+						)}
+						{!isLoading && <div>{children}</div>}
+					</div>
 				</div>
 			</div>
-		</div>
+		</>
 	);
 }
 
@@ -200,6 +219,19 @@ function AppRoutes(): JSX.Element {
 
 function AppContent(): JSX.Element {
 	const toastMethods: UseToastReturn = useToast();
+	const [maintenanceMode, setMaintenanceMode] = useState<boolean>(isMaintenanceModeEnabled);
+
+	// Check for maintenance mode changes (allows test injection)
+	useEffect(() => {
+		const interval = setInterval(() => {
+			const currentMode = isMaintenanceModeEnabled();
+			if (currentMode !== maintenanceMode) {
+				setMaintenanceMode(currentMode);
+			}
+		}, 1000);
+
+		return () => clearInterval(interval);
+	}, [maintenanceMode]);
 
 	return (
 		<BrowserRouter basename="/jam">
@@ -210,11 +242,15 @@ function AppContent(): JSX.Element {
 							<AlertProvider>
 								<ProgressOverlayProvider>
 									<ThemeProvider>
-										<ContextMenuProvider>
-											<AppLayout>
-												<AppRoutes />
-											</AppLayout>
-										</ContextMenuProvider>
+										{maintenanceMode ? (
+											<MaintenancePage />
+										) : (
+											<ContextMenuProvider>
+												<AppLayout>
+													<AppRoutes />
+												</AppLayout>
+											</ContextMenuProvider>
+										)}
 									</ThemeProvider>
 									<ToastStack
 										toasts={toastMethods.toasts}
