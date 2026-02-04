@@ -1794,7 +1794,7 @@ SPECULATIVE_APPLICATION_DATA = [
         "date": "2025-02-12T16:20:00+0000",
         "note": "Reached out regarding potential R&D collaboration opportunities.",
         "contact_email": "contact@nanomaterials.io",
-        "company_id": 4,
+        "company_id": 13,  # InnovateTech Solutions (owned by user 2)
         "owner_id": 2,
     },
     {

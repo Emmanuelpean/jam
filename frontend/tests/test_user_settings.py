@@ -3,6 +3,7 @@
 import datetime as dt
 import os
 import subprocess
+import threading
 import time
 
 import pytest
@@ -431,6 +432,14 @@ class TestPremiumSettingsPage(BaseTest):
         else:
             raise RuntimeError("Stripe listener failed to start within timeout")
 
+        # Start a thread to continuously drain stdout so the buffer doesn't fill up and block
+        def drain_stdout():
+            for line in self.stripe_listener.stdout:
+                print(f"[STRIPE] {line.strip()}")
+
+        self._stripe_drain_thread = threading.Thread(target=drain_stdout, daemon=True)
+        self._stripe_drain_thread.start()
+
         self.login()
         self.premium_settings_utils = PremiumSettingsUtils(
             self.driver,
@@ -452,8 +461,8 @@ class TestPremiumSettingsPage(BaseTest):
         self.premium_settings_utils.assert_status_message("14 days remaining in your free trial")
         assert self.db_user.premium.is_active
 
-    def _add_payment_method(self) -> None:
-        """Add payment method"""
+    def _add_payment_method_during_trial(self) -> None:
+        """Add payment method during the trial"""
 
         self.premium_settings_utils.subscription_button.click()
         self.premium_settings_utils.stripe_add_payment_method_button.click()
@@ -463,19 +472,45 @@ class TestPremiumSettingsPage(BaseTest):
         self.premium_settings_utils.assert_status_title("Premium (Trial)")
         assert self.db_user.premium.is_active
 
+    def _add_payment_method_no_subscription(self) -> None:
+        """Add a payment method while the user doesn't have an active subscription"""
+
+        self.premium_settings_utils.subscription_button.click()
+        self.get_element("[data-testid='card-accordion-item']", By.CSS_SELECTOR).click()
+        self.set_text(self.get_element("cardNumber"), "4242 4242 4242 4242")
+        self.set_text(self.get_element("cardCvc"), "123")
+        Select(self.get_element("billingCountry", By.NAME)).select_by_visible_text("United Kingdom")
+        self.set_text(self.get_element("cardExpiry"), "1228")
+        self.set_text(self.get_element("billingName"), "Test User")
+        self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR).click()
+        self.wait_for_page("settings/premium?success=true")
+
+    def _cancel_subscription(self) -> None:
+        """Cancel the user subscription"""
+
+        self.premium_settings_utils.subscription_button.click()
+        self.premium_settings_utils.stripe_cancel_subscription_button.click()
+        self.premium_settings_utils.stripe_confirm_button.click()
+        self.premium_settings_utils.stripe_cancel_feedback.click()
+        self.premium_settings_utils.stripe_return_to_business_link.click()
+        self.wait_for_page("settings/premium?success=true")
+
     def test_trial_payment(self) -> None:
-        """Test the Stripe payment modal interaction"""
+        """Test the Stripe payment modal interaction
+        Activate the trial, add a payment method and move the clock forward by 15 days"""
 
         self._activate_trial()
-        self._add_payment_method()
+        self._add_payment_method_during_trial()
         self.premium_settings_utils.advance_clock(15)
         self.premium_settings_utils.assert_status_title("Premium")
         assert self.premium_settings_utils.subscription_button.text == "Manage Subscription"
 
     def test_trial_elapses(self) -> None:
-        """Test the Stripe payment modal interaction"""
+        """Test the Stripe payment modal interaction
+        Activate the trial subscription, move the clock by 13 days, move the clock by 2 days, and check that the
+        subscription is cancelled"""
 
-        # 1. Activate trial subscription and check user updated
+        # 1. Activate the trial subscription and check user was updated
         self._activate_trial()
 
         # 2. Move clock forward by 13 days and check that 1 day is left on trial
@@ -491,46 +526,30 @@ class TestPremiumSettingsPage(BaseTest):
         assert self.premium_settings_utils.subscription_button.text == "Subscribe"
         assert not self.db_user.premium.is_active
 
-    def test_trial_card_15days_card(self) -> None:
+    def test_trial_subscribe_cancel_subscribe(self) -> None:
         """Test the Stripe payment modal interaction
-        1. Activate trial subscription
-        2. Add payment method
+        1. Activate the trial subscription and add payment method
         3. Cancel subscription and move the clock forward by 15 days
         4. Subscribe again"""
 
-        # 1. Activate trial subscription and check user updated
+        # 1. Activate the trial subscription and add payment method
         self._activate_trial()
+        self._add_payment_method_during_trial()
 
-        # 2. Manage subscription and add payment method
-        self._add_payment_method()
-
-        # 3. Cancel subscription and move clock forward by 15 days, the subscription should be cancelled
-        self.premium_settings_utils.subscription_button.click()
-        self.premium_settings_utils.stripe_cancel_subscription_button.click()
-        self.premium_settings_utils.stripe_confirm_button.click()
-        self.premium_settings_utils.stripe_cancel_feedback.click()
+        # 2. Cancel the subscription and move clock forward by 15 days, the subscription should be cancelled
+        self._cancel_subscription()
         self.premium_settings_utils.advance_clock(15)
-        self.premium_settings_utils.stripe_return_to_business_link.click()
-        self.wait_for_page("settings/premium?success=true")
         self.premium_settings_utils.assert_status_title("Free Plan")
 
-        # Try to subscribe again
-        self.premium_settings_utils.subscription_button.click()
-        self.get_element("[data-testid='card-accordion-item']", By.CSS_SELECTOR).click()
-        self.set_text(self.get_element("cardNumber"), "4242 4242 4242 4242")
-        self.set_text(self.get_element("cardCvc"), "123")
-        Select(self.get_element("billingCountry", By.NAME)).select_by_visible_text("United Kingdom")
-        self.set_text(self.get_element("cardExpiry"), "1228")
-        self.set_text(self.get_element("billingName"), "Test User")
-        self.get_element("[data-testid='hosted-payment-submit-button']", By.CSS_SELECTOR).click()
-        self.wait_for_page("settings/premium?success=true")
+        # 3. Subscribe again
+        self._add_payment_method_no_subscription()
         self.premium_settings_utils.assert_status_title("Premium")
 
     def test_delete_user_with_subscription(self) -> None:
         """Test deleting user with active subscription"""
 
         self._activate_trial()
-        self._add_payment_method()
+        self._add_payment_method_during_trial()
         self.user_settings_utils.go_to_account_tab()
         assert self.db_user.stripe_details.subscription_id is not None
         self.user_settings_utils.delete_account_button.click()
