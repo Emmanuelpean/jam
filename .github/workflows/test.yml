@@ -39,8 +39,8 @@ jobs:
       # Email Configuration
       MAIN_EMAIL_USERNAME: ${{ secrets.MAIN_EMAIL_USERNAME }}
       MAIN_EMAIL_PASSWORD: ${{ secrets.MAIN_EMAIL_PASSWORD }}
-      SCRAPER_EMAIL_USERNAME: ${{ secrets.SCRAPER_EMAIL_USERNAME}}
-      SCRAPER_EMAIL_PASSWORD: ${{ secrets.SCRAPER_EMAIL_PASSWORD}}
+      SCRAPER_EMAIL_USERNAME: ${{ secrets.SCRAPER_EMAIL_USERNAME }}
+      SCRAPER_EMAIL_PASSWORD: ${{ secrets.SCRAPER_EMAIL_PASSWORD }}
       EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
       EMAIL_SMTP_HOST: ${{ secrets.EMAIL_SMTP_HOST }}
       EMAIL_IMAP_PORT: ${{ secrets.EMAIL_IMAP_PORT }}
@@ -80,7 +80,7 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
+          POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           POSTGRES_DB: jam_test
         ports:
           - 5432:5432
@@ -125,14 +125,24 @@ jobs:
 
       - name: Run Tests with Pytest and Coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
-        run: pytest -n auto --dist loadgroup ./frontend/tests/test_user_settings.py::TestPremiumSettingsPage -v
+        run: |
+          pytest -n auto ./backend \
+            --cov=backend \
+            --cov-config=backend/pyproject.toml \
+            --cov-report=term-missing \
+            --cov-report=html \
+            --cov-report=xml \
+            --junitxml=reports/tests/tests.xml
+
+          pytest -n auto --dist loadgroup \
+            ./frontend/tests/test_user_settings.py::TestPremiumSettingsPage -v
 
       - name: Upload test logs and screenshots
         uses: actions/upload-artifact@v4
         if: always() && !contains(github.event.head_commit.message, '[skip tests]')
         with:
           name: test-logs-${{ github.run_number }}
-          path: test_logs/
+          path: ${{ env.LOG_DIRECTORY }}/
           if-no-files-found: ignore
           retention-days: 14
 
@@ -140,15 +150,15 @@ jobs:
         if: always() && !contains(github.event.head_commit.message, '[skip tests]')
         run: |
           echo "=== Test Log Summary ==="
-          if [ -d "test_logs" ]; then
+          if [ -d "$LOG_DIRECTORY" ]; then
             echo "Log directory contents:"
-            ls -lh test_logs/
+            ls -lh "$LOG_DIRECTORY"
             echo ""
             echo "Failed test browser logs:"
-            find test_logs/ -name "*FAILED*browser.log" -exec echo "  - {}" \; 2>/dev/null || echo "  None found"
+            find "$LOG_DIRECTORY" -name "*FAILED*browser.log" -exec echo "  - {}" \; 2>/dev/null || echo "  None found"
             echo ""
             echo "Failed test screenshots:"
-            find test_logs/ -name "*FAILED*.png" -exec echo "  - {}" \; 2>/dev/null || echo "  None found"
+            find "$LOG_DIRECTORY" -name "*FAILED*.png" -exec echo "  - {}" \; 2>/dev/null || echo "  None found"
           else
             echo "No logs directory found (all tests may have passed)"
           fi
@@ -156,10 +166,12 @@ jobs:
       - name: Generate badges and coverage
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
-          coverage xml -o reports/coverage/coverage.xml
-          genbadge tests --input-file=reports/tests/tests.xml --output-file=reports/tests/tests-badge.svg
-          coverage html -d reports/coverage/htmlcov
-          genbadge coverage --output-file=reports/coverage/coverage-badge.svg
+          genbadge tests \
+            --input-file=reports/tests/tests.xml \
+            --output-file=reports/tests/tests-badge.svg
+
+          genbadge coverage \
+            --output-file=reports/coverage/coverage-badge.svg
 
       - name: Commit and push badge
         if: "!contains(github.event.head_commit.message, '[skip tests]')"
